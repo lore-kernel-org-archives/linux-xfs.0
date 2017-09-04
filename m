@@ -1,186 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54516 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:47126 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751639AbdIGUVT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Sep 2017 16:21:19 -0400
-Date: Thu, 7 Sep 2017 16:21:17 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/17] xfs: refactor xfs_del_extent_real
-Message-ID: <20170907202116.GI61662@bfoster.bfoster>
-References: <20170903072956.3175-1-hch@lst.de>
- <20170903072956.3175-9-hch@lst.de>
+        id S1753748AbdIDPeJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Sep 2017 11:34:09 -0400
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+References: <20170829235052.21050-1-david@fromorbit.com>
+ <3637079.ALR5oY5V5m@localhost.localdomain>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <205f6c19-4d89-ea99-6687-b3bbbf3d5264@sandeen.net>
+Date: Mon, 4 Sep 2017 10:34:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170903072956.3175-9-hch@lst.de>
+In-Reply-To: <3637079.ALR5oY5V5m@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 09:29:47AM +0200, Christoph Hellwig wrote:
-> Use xfs_iext_update_extent to update entries in the in-core extent list.
-> This isolates the function from the detailed layout of the extent list,
-> and generally makes the code a lot more readable.
+On 9/4/17 7:31 AM, Chandan Rajendra wrote:
+> On Wednesday, August 30, 2017 5:20:10 AM IST Dave Chinner wrote:
+>> Everyone who tries to modify mkfs quickly learns that it is a pile
+>> of spaghetti, the only difference in opinion is whether it is a
+>> steaming, cold or rotten pile. This patchset attempts to untangle
+>> the ball of pasta and turn it into a set of clear, obvious
+>> operations that lead to a filesystem being formatted correctly.
+>>
+>> The patch series is really in three parts, splitting the code up
+>> into roughly three modules. The first part introduces a mkfs
+>> parameters structure and factors the on-disk formatting code to use
+>> only information in that structure. The second part introduces a
+>> command line input structure and factors the input parsing to use
+>> it. This requires a bunch of temporary code to keep the rest of
+>> the code working. The third part is factoring the input validation
+>> and geometry calculation code to use the input structure and put
+>> the output into the mkfs parameter structure and to remove all the
+>> temporary support code.
+>>
+>> The result is three modules - input parsing, validation+calculations
+>> and formatting - with well defined data flow between them. This also
+>> paves the way to supporting config files to set defaults via a
+>> separate (new) module. The overall data flow now looks like this:
+>>
+>> Build defaults --\
+>>                   ---> mkfs_default_params -> CLI -> mkfs_params
+>> config file -----/
+>>
+>> It is not worth spending a lot of time reviewing the temporary code
+>> that is added - it gets removed before the end of the series. No
+>> attempt has been made to ensure that mkfs works 100% correctly after
+>> each patch is applied - the only guarantee is that it will build
+>> cleanly. It /should/ work if a bisect lands in the middle of the
+>> series, but trying to exhaustively test each patch is OK would take
+>> more effort than it is worth. As such, testing has only been
+>> performed on the whole series.
+>>
+>> The new output from mkfs to indicate where it has sourced the
+>> defaults from causes xfstests to have conniptions. This requires
+>> some updates to the mkfs output filters that are already in place
+>> but it is a fairly trivial update. Test xfs/191 has a couple of new
+>> failures, but that is because the new code now correctly parses
+>> things like agsize so that block and sector size based
+>> specifications work with default mkfs values. This will require test
+>> updates.
+>>
+>> Future work will be to split the xfs_mkfs.c file into a file per
+>> module (i.e. seperate files for CLI parsing, mkfs formating,
+>> validation+calculation and, finally, one for config file support),
+>> but otherwise the majority of the factoring work is now complete.
+>>
+>> Comments, flames, etc all welcome.
+> Hi Dave,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> I am trying to test the "mkfs refactor" patchset on a ppc64 machine. But "git
+> am ~/mkfs-xfs-rewrite/\[PATCH\ 03_42\]\ mkfs_introduce\ a\ structure\ to\
+> hold\ CLI\ options.mbox" fails to apply cleanly on top of xfsprogs/master
+> (with patches 01 and 02 already applied) branch. Can you please let me know
+> the id of the topmost commit on which the "mkfs refactor" patches are applied? 
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I think that
+02c3e10 mkfs: add missing translation
+is the problem, sorry.
 
->  fs/xfs/libxfs/xfs_bmap.c | 60 ++++++++++++++++++++++++------------------------
->  1 file changed, 30 insertions(+), 30 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 0a4bcef1cca8..c15b81611403 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5078,10 +5078,9 @@ xfs_bmap_del_extent_real(
->  	xfs_fsblock_t		del_endblock=0;	/* first block past del */
->  	xfs_fileoff_t		del_endoff;	/* first offset past del */
->  	int			do_fx;	/* free extent at end of routine */
-> -	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
->  	int			error;	/* error return value */
->  	int			flags = 0;/* inode logging flags */
-> -	xfs_bmbt_irec_t		got;	/* current extent entry */
-> +	struct xfs_bmbt_irec	got;	/* current extent entry */
->  	xfs_fileoff_t		got_endoff;	/* first offset past got */
->  	int			i;	/* temp state */
->  	xfs_ifork_t		*ifp;	/* inode fork pointer */
-> @@ -5090,9 +5089,8 @@ xfs_bmap_del_extent_real(
->  	xfs_bmbt_irec_t		new;	/* new record to be inserted */
->  	/* REFERENCED */
->  	uint			qfield;	/* quota field to update */
-> -	xfs_filblks_t		temp;	/* for indirect length calculations */
-> -	xfs_filblks_t		temp2;	/* for indirect length calculations */
->  	int			state = 0;
-> +	struct xfs_bmbt_irec	old;
->  
->  	mp = ip->i_mount;
->  	XFS_STATS_INC(mp, xs_del_exlist);
-> @@ -5105,8 +5103,7 @@ xfs_bmap_del_extent_real(
->  	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
->  	ASSERT(del->br_blockcount > 0);
-> -	ep = xfs_iext_get_ext(ifp, *idx);
-> -	xfs_bmbt_get_all(ep, &got);
-> +	xfs_iext_get_extent(ifp, *idx, &got);
->  	ASSERT(got.br_startoff <= del->br_startoff);
->  	del_endoff = del->br_startoff + del->br_blockcount;
->  	got_endoff = got.br_startoff + got.br_blockcount;
-> @@ -5193,54 +5190,56 @@ xfs_bmap_del_extent_real(
->  		 * Deleting the first part of the extent.
->  		 */
->  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_startoff(ep, del_endoff);
-> -		temp = got.br_blockcount - del->br_blockcount;
-> -		xfs_bmbt_set_blockcount(ep, temp);
-> -		xfs_bmbt_set_startblock(ep, del_endblock);
-> +		got.br_startoff = del_endoff;
-> +		got.br_startblock = del_endblock;
-> +		got.br_blockcount -= del->br_blockcount;
-> +		xfs_iext_update_extent(ifp, *idx, &got);
->  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  		if (!cur) {
->  			flags |= xfs_ilog_fext(whichfork);
->  			break;
->  		}
-> -		if ((error = xfs_bmbt_update(cur, del_endoff, del_endblock,
-> -				got.br_blockcount - del->br_blockcount,
-> -				got.br_state)))
-> +		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-> +				got.br_blockcount, got.br_state);
-> +		if (error)
->  			goto done;
->  		break;
->  	case BMAP_RIGHT_CONTIG:
->  		/*
->  		 * Deleting the last part of the extent.
->  		 */
-> -		temp = got.br_blockcount - del->br_blockcount;
->  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(ep, temp);
-> +		got.br_blockcount -= del->br_blockcount;
-> +		xfs_iext_update_extent(ifp, *idx, &got);
->  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  		if (!cur) {
->  			flags |= xfs_ilog_fext(whichfork);
->  			break;
->  		}
-> -		if ((error = xfs_bmbt_update(cur, got.br_startoff,
-> -				got.br_startblock,
-> -				got.br_blockcount - del->br_blockcount,
-> -				got.br_state)))
-> +		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-> +				got.br_blockcount, got.br_state);
-> +		if (error)
->  			goto done;
->  		break;
->  	case 0:
->  		/*
->  		 * Deleting the middle of the extent.
->  		 */
-> -		temp = del->br_startoff - got.br_startoff;
->  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(ep, temp);
-> +
-> +		old = got;
-> +		got.br_blockcount = del->br_startoff - got.br_startoff;
-> +		xfs_iext_update_extent(ifp, *idx, &got);
-> +
->  		new.br_startoff = del_endoff;
-> -		temp2 = got_endoff - del_endoff;
-> -		new.br_blockcount = temp2;
-> +		new.br_blockcount = got_endoff - del_endoff;
->  		new.br_state = got.br_state;
->  		new.br_startblock = del_endblock;
-> +
->  		flags |= XFS_ILOG_CORE;
->  		if (cur) {
->  			error = xfs_bmbt_update(cur, got.br_startoff,
-> -					got.br_startblock, temp,
-> +					got.br_startblock, got.br_blockcount,
->  					got.br_state);
->  			if (error)
->  				goto done;
-> @@ -5262,7 +5261,8 @@ xfs_bmap_del_extent_real(
->  				 * insert operation.
->  				 */
->  				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
-> -						got.br_startblock, temp, &i);
-> +						got.br_startblock,
-> +						got.br_blockcount, &i);
->  				if (error)
->  					goto done;
->  				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -5270,17 +5270,17 @@ xfs_bmap_del_extent_real(
->  				 * Update the btree record back
->  				 * to the original value.
->  				 */
-> -				error = xfs_bmbt_update(cur, got.br_startoff,
-> -						got.br_startblock,
-> -						got.br_blockcount,
-> -						got.br_state);
-> +				error = xfs_bmbt_update(cur, old.br_startoff,
-> +						old.br_startblock,
-> +						old.br_blockcount,
-> +						old.br_state);
->  				if (error)
->  					goto done;
->  				/*
->  				 * Reset the extent record back
->  				 * to the original value.
->  				 */
-> -				xfs_bmbt_set_blockcount(ep, got.br_blockcount);
-> +				xfs_iext_update_extent(ifp, *idx, &old);
->  				flags = 0;
->  				error = -ENOSPC;
->  				goto done;
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Eric
