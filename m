@@ -1,248 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52468 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750731AbdIEL2s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 07:28:48 -0400
-Date: Tue, 5 Sep 2017 19:28:42 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 14/14] fstests: add crash consistency fsx test using
- dm-log-writes
-Message-ID: <20170905112842.GF8034@eguan.usersys.redhat.com>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
- <1504104706-11965-15-git-send-email-amir73il@gmail.com>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5516 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751620AbdIDGwr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 02:52:47 -0400
+From: Hou Tao <houtao1@huawei.com>
+Subject: [PATCH v3] xfs: add online uevent for mount operation
+Date: Mon, 4 Sep 2017 14:50:59 +0800
+Message-ID: <1504507859-39323-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1504104706-11965-15-git-send-email-amir73il@gmail.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com
 
-On Wed, Aug 30, 2017 at 05:51:46PM +0300, Amir Goldstein wrote:
-> DO NOT MERGE!!! this test fails most likely due to test bug.
-> 
-> The random seed values in this patch fail the test consistently on ext4
-> always with the same fsck error ((end of extent exceeds allowed value).
-> btrfs also fails, but with slightly different fsck errors each run.
-> xfs fails sometimes on file checksum error.
-> 
-> Cherry-picked the test from commit 70d41e17164b
-> in Josef Bacik's fstests tree (https://github.com/josefbacik/fstests).
-> Quoting from Josef's commit message:
-> 
->   The test just runs some ops and exits, then finds all of the good buffers
->   in the directory we provided and:
->   - replays up to the mark given
->   - mounts the file system and compares the md5sum
->   - unmounts and fsck's to check for metadata integrity
-> 
->   dm-log-writes will pretend to do discard and the replay-log tool will
->   replay it properly depending on the underlying device, either by writing
->   0's or actually calling the discard ioctl, so I've enabled discard in the
->   test for maximum fun.
-> 
-> [Amir:]
-> - Removed unneeded _test_falloc_support dynamic FSX_OPTS
-> - Added place holders for using constant random seeds
-> - Add test to new 'replay' group
+It will be useful if there is a corresponding online uevent after
+a XFS filesystem has been mounted. A typical usage of the uevent
+is setting the error configuration for a specific XFS filesystem
+or all XFS filesystems by using udevd.
 
-Perhaps replace it with 'log' group?
+The following is an example of udevd rule which will shutdown
+any XFS filesystem (except the one with the matched UUID) after
+the filesystem gets any IO error and the filesystem with the matched
+UUID will retry 5 times before its shutdown:
 
-> 
-> Cc: Josef Bacik <jbacik@fb.com>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  tests/generic/500     | 138 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/500.out |   2 +
->  tests/generic/group   |   1 +
->  3 files changed, 141 insertions(+)
->  create mode 100755 tests/generic/500
->  create mode 100644 tests/generic/500.out
-> 
-> diff --git a/tests/generic/500 b/tests/generic/500
-> new file mode 100755
-> index 0000000..81d45ef
-> --- /dev/null
-> +++ b/tests/generic/500
-> @@ -0,0 +1,138 @@
-> +#! /bin/bash
-> +# FS QA Test No. 500
-> +#
-> +# Run fsx with log writes to verify power fail safeness.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2015 Facebook. All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +status=1	# failure is the default!
-> +
-> +_cleanup()
-> +{
-> +	_cleanup_log_writes
-> +}
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/dmlogwrites
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_test
-> +_require_scratch_nocheck
-> +_require_log_writes
-> +
-> +rm -f $seqres.full
-> +rm -rf $TEST_DIR/fsxtests
+    ACTION=="online", SUBSYSTEM=="xfs", \
+    ENV{ID_FS_UUID}=="6c1eebfd-d1af-4b69-a0f1-c9b4663df44d", \
+    RUN+="/bin/sh -c 'echo 5 > /sys%p/error/metadata/EIO/max_retries'", \
+    GOTO="end"
 
-Remove it after SANITY_DIR is defined?
+    ACTION=="online", SUBSYSTEM=="xfs", DEVPATH=="/fs/xfs/*", \
+    RUN+="/bin/sh -c 'echo 0 > /sys%p/error/metadata/default/max_retries; \
+	echo 0 > /sys%p/error/metadata/EIO/max_retries; \
+	echo 0 > /sys%p/error/metadata/ENOSPC/max_retries; \
+	echo 0 > /sys%p/error/metadata/ENODEV/max_retries'"
 
-> +
-> +check_files()
-> +{
-> +	local _name=$1
+    LABEL="end"
 
-Don't need underscore for a local var.
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+v3:
+    * code style fixes
+    * use "ID_FS_UUID" instead of "UUID" as the name of uuid environment
+v2:
+    * add UUID property for mount uevent
+    * add an udev example for UUID filtering
+v1:
+    * http://www.spinics.net/lists/linux-xfs/msg09484.html
+---
+ fs/xfs/xfs_super.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-> +
-> +	# Now look for our files
-> +	for i in $(find $SANITY_DIR -type f | grep $_name | grep mark)
-> +	do
-> +		local filename=$(basename $i)
-> +		local mark="${filename##*.}"
-> +		local expected_size=$(_ls_l -h $i | awk '{ print $5 }')
-> +		echo "checking $filename ($expected_size)" >> $seqres.full
-> +		_replay_log $filename
-> +		_scratch_mount
-> +		local expected_md5=$(md5sum $i | cut -f 1 -d ' ')
-> +		local md5=$(md5sum $SCRATCH_MNT/$_name | cut -f 1 -d ' ')
-> +		local size=$(_ls_l -h $SCRATCH_MNT/$_name | awk '{ print $5 }')
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 3a3812b4..1f0d895 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1530,6 +1530,28 @@ xfs_destroy_percpu_counters(
+ 	percpu_counter_destroy(&mp->m_fdblocks);
+ }
+ 
++static void
++xfs_fs_uevent(
++	struct xfs_mount	*mp,
++	enum kobject_action	action)
++{
++#define XFS_UEVENT_MAX_ENV_COUNT 1
++	/* "+ 1" for the trailing NULL pointer */
++	char			*envp[XFS_UEVENT_MAX_ENV_COUNT + 1];
++	const char		*prefix = "ID_FS_UUID=";
++	char			buf[strlen(prefix) + UUID_STRING_LEN + 1];
++	int			i = 0;
++	int			err;
++
++	snprintf(buf, sizeof(buf), "%s%pUb", prefix, &mp->m_super->s_uuid);
++	envp[i++] = buf;
++	envp[i] = NULL;
++	err = kobject_uevent_env(&mp->m_kobj.kobject, action, envp);
++	if (err)
++		xfs_notice(mp, "Sending XFS uevent %d got error %d",
++				action, err);
++}
++
+ STATIC int
+ xfs_fs_fill_super(
+ 	struct super_block	*sb,
+@@ -1667,6 +1689,8 @@ xfs_fs_fill_super(
+ 		goto out_unmount;
+ 	}
+ 
++	xfs_fs_uevent(mp, KOBJ_ONLINE);
++
+ 	return 0;
+ 
+  out_filestream_unmount:
+-- 
+2.5.0
 
-I see this md5 and size patterns are repeating several times in this
-test, write new helpers?
-
-> +		[ "${md5}" != "${expected_md5}" ] && _fatal "$filename ($size) md5sum mismatched"
-
-Use _fail in this test.
-
-> +		_scratch_unmount
-> +		_check_scratch_fs
-> +	done
-> +}
-> +
-> +SANITY_DIR=$TEST_DIR/fsxtests
-> +mkdir $SANITY_DIR
-> +
-> +# Create the log
-> +_init_log_writes
-> +
-> +_log_writes_mkfs >> $seqres.full 2>&1
-> +
-> +# Log writes emulates discard support, turn it on for maximum crying.
-> +_mount_log_writes -o discard
-> +
-> +NUM_FILES=4
-> +NUM_OPS=200
-> +FSX_OPTS="-N $NUM_OPS -d -P $SANITY_DIR -i $LOGWRITES_DMDEV"
-> +# Set random seeds for fsx runs (0 for timestamp + pid)
-> +seeds=(- 2885 2886 2887 2888)
-         ^^ meant 0?
-
-> +# Run fsx for a while
-> +for j in `seq 1 $NUM_FILES`
-> +do
-> +	run_check $here/ltp/fsx $FSX_OPTS -S ${seeds[$j]} -j $j $SCRATCH_MNT/testfile$j &
-> +done
-> +wait
-> +
-> +test_md5=()
-> +test_size=()
-> +for j in `seq 1 $NUM_FILES`
-> +do
-> +	test_md5[$j]=$(md5sum $SCRATCH_MNT/testfile$j | cut -f 1 -d ' ')
-> +	test_size[$j]=$(_ls_l -h $SCRATCH_MNT/testfile$j | awk '{ print $5 }')
-> +done
-> +
-> +# Unmount the scratch dir and tear down the log writes target
-> +_log_writes_mark last
-> +_unmount_log_writes
-> +_log_writes_mark end
-> +_log_writes_remove
-> +_check_scratch_fs
-> +
-> +# check pre umount
-> +_replay_log last
-> +_scratch_mount
-> +_scratch_unmount
-> +_check_scratch_fs
-> +
-> +for j in `seq 1 $NUM_FILES`
-> +do
-> +	check_files testfile$j
-> +done
-> +
-> +# Check the end
-> +_replay_log end
-> +_scratch_mount
-> +for j in `seq 1 $NUM_FILES`
-> +do
-> +	md5=$(md5sum $SCRATCH_MNT/testfile$j | cut -f 1 -d ' ')
-> +	size=$(_ls_l -h $SCRATCH_MNT/testfile$j | awk '{ print $5 }')
-> +	[ "${md5}" != "${test_md5[$j]}" ] && _fatal "testfile$j end md5sum mismatched ($size:${test_size[$j]})"
-> +done
-> +_scratch_unmount
-> +_check_scratch_fs
-> +
-> +echo "Silence is golden"
-> +status=0
-> +exit
-> +
-> diff --git a/tests/generic/500.out b/tests/generic/500.out
-> new file mode 100644
-> index 0000000..883b2ca
-> --- /dev/null
-> +++ b/tests/generic/500.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 500
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 044ec3f..2396b72 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -453,3 +453,4 @@
->  448 auto quick rw
->  449 auto quick acl enospc
->  450 auto quick rw
-> +500 auto log replay
-
-Adding it to auto group seems fine to me.
-
-Thanks,
-Eryu
-
-> -- 
-> 2.7.4
-> 
