@@ -1,105 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48608 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750877AbdIKPCC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Sep 2017 11:02:02 -0400
-Date: Mon, 11 Sep 2017 11:01:57 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs: Uninitialized memory read at xlog_write
-Message-ID: <20170911150157.GA13400@bfoster.bfoster>
-References: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
+Received: from mx2.suse.de ([195.135.220.15]:41650 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753528AbdIDMal (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Sep 2017 08:30:41 -0400
+Date: Mon, 4 Sep 2017 14:30:39 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20170904123039.GA5664@quack2.suse.cz>
+References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
+ <20170903074306.GA8351@infradead.org>
+ <CABXGCsMmEvEh__R2L47jqVnxv9XDaT_KP67jzsUeDLhF2OuOyA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="vkogqOf2sHV7VnPd"
 Content-Disposition: inline
-In-Reply-To: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CABXGCsMmEvEh__R2L47jqVnxv9XDaT_KP67jzsUeDLhF2OuOyA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: sandeen@redhat.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
+To: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Sep 04, 2017 at 09:19:41PM +0900, Tetsuo Handa wrote:
-> Hello.
+
+--vkogqOf2sHV7VnPd
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+
+On Sun 03-09-17 19:08:54, Михаил Гаврилов wrote:
+> On 3 September 2017 at 12:43, Christoph Hellwig <hch@infradead.org> wrote:
+> >
+> > This is:
+> >
+> >         bh = head = page_buffers(page);
+> >
+> > Which looks odd and like some sort of VM/writeback change might
+> > have triggered that we get a page without buffers, despite always
+> > creating buffers in iomap_begin/end and page_mkwrite.
+> >
+> > Ccing linux-mm if anything odd happen in that area recently.
+> >
+> > Can you tell anything about the workload you are running?
+> >
 > 
-> I hit kmemcheck splat using linux-next-20170901.
-> 
-> [ 1360.354052] WARNING: kmemcheck: Caught 32-bit read from uninitialized memory (ffffa17673526960)
-> [ 1360.354053] 00000000000000006a1004080000000000000000000000000000000000000000
-> [ 1360.354059]  u u u u u u u u i i i i i i i i u u u u u u u u u u u u u u u u
-> [ 1360.354063]  ^
-> [ 1360.354080] RIP: 0010:xlog_write+0x378/0x890 [xfs]
-> [ 1360.354080] RSP: 0018:ffffafeac12b7cf0 EFLAGS: 00010202
-> [ 1360.354081] RAX: ffffafeac1808234 RBX: 0000000000000038 RCX: 000000000000000c
-> [ 1360.354082] RDX: 000000000000000e RSI: ffffa17673526960 RDI: ffffafeac180823c
-> [ 1360.354082] RBP: ffffafeac12b7d98 R08: 0000000000000000 R09: 0000000000000000
-> [ 1360.354083] R10: ffffa176737f8000 R11: 0000000000000000 R12: 0000000000000038
-> [ 1360.354083] R13: 0000000000000002 R14: 0000000000000000 R15: ffffa17673526900
-> [ 1360.354084] FS:  0000000000000000(0000) GS:ffffffffb0c30000(0000) knlGS:0000000000000000
-> [ 1360.354085] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1360.354085] CR2: ffffa17674a66320 CR3: 0000000135c77003 CR4: 00000000000606f0
-> [ 1360.354133]  xlog_write+0x378/0x890 [xfs]
-> [ 1360.354142]  xlog_cil_push+0x1f4/0x370 [xfs]
-> [ 1360.354151]  xlog_cil_push_work+0xd/0x10 [xfs]
-> [ 1360.354207]  process_one_work+0x1cd/0x330
-> [ 1360.354208]  worker_thread+0x222/0x3e0
-> [ 1360.354209]  kthread+0xfe/0x130
-> [ 1360.354212]  ret_from_fork+0x25/0x30
-> [ 1360.354213]  0xffffffffffffffff
-> 
+> On XFS partition stored launched KVM VM images, + home partition with
+> Google Chrome profiles.
+> Seems the bug triggering by high memory consumption and using swap
+> which two times larger than system memory.
+> I saw that it happens when swap has reached size of system memory.
 
-I threw a kmemcheck enabled kernel on a couple boxes out of curiosity.
-I didn't reproduce anything related to XFS with the "allow partially
-uninit." option enabled, even after running a quick group run in
-xfstests. Without that option, I did see an xlog_write() splat on a
-rhel7 boot but it was preceded by a constant stream of other reports
-(__d_lookup(), link_path_walk(), etc.) and ultimately resulted in a
-failed/hung bootup (after quite some time). I'm in the process of seeing
-a similar result on a Fedora vm running for-next. This isn't really
-debuggable in the current form due to the volume of preceding errors,
-the required boot time and the fact that my machines ultimately fall
-over.
+Can you reproduce this? I've seen one occurence of this on our distro
+4.4-based kernel but we were never able to reproduce and find the culprit.
+If you can reproduce, could you run with the attached debug patch to see
+whether the WARN_ON triggers? Because my suspicion is that there is some
+subtle race in page table teardown vs writeback vs page reclaim which can
+result in page being dirtied without filesystem being notified about it (I
+have seen very similar oops for ext4 as well which leads me to suspicion
+this is a generic issue). Thanks!
 
-Do you see different behavior? Do you have the "allow partially
-uninitialized memory" option enabled or disabled? I wonder if there are
-fixes for these other errors I'm seeing in linux-next that XFS for-next
-hasn't picked up yet..?
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
-Brian
+--vkogqOf2sHV7VnPd
+Content-Type: text/x-patch; charset=us-ascii
+Content-Disposition: attachment; filename="0001-xfs-Debug-when-page-can-get-dirty-without-buffers.patch"
 
-> # ./scripts/faddr2line fs/xfs/xfs.ko xlog_write+0x378/0x890
-> xlog_write+0x378/0x890:
-> __inline_memcpy at /data/linux-next/./arch/x86/include/asm/string_64.h:13
->  (inlined by) xlog_write at /data/linux-next/fs/xfs/xfs_log.c:2479
-> 
->                         ASSERT(copy_len >= 0);
->     3136:       0f 88 77 01 00 00       js     32b3 <xlog_write+0x4d3>
->                         if (copy_len > 0) {
->     313c:       0f 84 d6 02 00 00       je     3418 <xlog_write+0x638>
->                                 memcpy(ptr, reg->i_addr + copy_off, copy_len);
->     3142:       48 63 da                movslq %edx,%rbx
->     3145:       49 63 f6                movslq %r14d,%rsi
->     3148:       48 89 c7                mov    %rax,%rdi
->                      "1:\ttestb $1,%b4\n\t"
->                      "je 2f\n\t"
->                      "movsb\n"
->                      "2:"
->                      : "=&c" (d0), "=&D" (d1), "=&S" (d2)
->                      : "0" (n / 4), "q" (n), "1" ((long)to), "2" ((long)from)
->     314b:       48 89 da                mov    %rbx,%rdx
->     314e:       48 03 31                add    (%rcx),%rsi
->     3151:       48 c1 ea 02             shr    $0x2,%rdx
->         asm volatile("rep ; movsl\n\t"
->     3155:       48 89 d1                mov    %rdx,%rcx
->     3158:       f3 a5                   rep movsl %ds:(%rsi),%es:(%rdi)    // <= xlog_write+0x378/0x890
->     315a:       f6 c3 02                test   $0x2,%bl
->     315d:       74 02                   je     3161 <xlog_write+0x381>
->     315f:       66 a5                   movsw  %ds:(%rsi),%es:(%rdi)
->     3161:       f6 c3 01                test   $0x1,%bl
->     3164:       74 01                   je     3167 <xlog_write+0x387>
->     3166:       a4                      movsb  %ds:(%rsi),%es:(%rdi)
->     3167:       8b 55 c4                mov    -0x3c(%rbp),%edx
->         *len -= bytes;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>From 6161b656c3c1df43bc552a60056bc12d7913a90b Mon Sep 17 00:00:00 2001
+From: Jan Kara <jack@suse.cz>
+Date: Mon, 4 Sep 2017 14:26:38 +0200
+Subject: [PATCH] xfs: Debug when page can get dirty without buffers
+
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_aops.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6bf120bb1a17..117535086bc7 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1380,6 +1380,7 @@ xfs_vm_set_page_dirty(
+ 	offset = page_offset(page);
+ 
+ 	spin_lock(&mapping->private_lock);
++	WARN_ON_ONCE(!page_has_buffers(page));
+ 	if (page_has_buffers(page)) {
+ 		struct buffer_head *head = page_buffers(page);
+ 		struct buffer_head *bh = head;
+-- 
+2.12.3
+
+
+--vkogqOf2sHV7VnPd--
