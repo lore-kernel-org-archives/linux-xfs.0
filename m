@@ -1,51 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:37402 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753031AbdICWEi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 18:04:38 -0400
-From: Richard Wareing <rwareing@fb.com>
-Subject: Re: [PATCH v2 3/3] fs/xfs: Add rtfallocmin mount option
-Date: Sun, 3 Sep 2017 22:04:08 +0000
-Message-ID: <88C6174E-9DF6-492F-9F19-DDB68687CCC2@fb.com>
-References: <20170902224145.1291030-1-rwareing@fb.com>
- <20170902224145.1291030-4-rwareing@fb.com>
- <20170903085013.GE32385@infradead.org>
-In-Reply-To: <20170903085013.GE32385@infradead.org>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A56EF31D974DFA45B8DB226998F22011@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+Received: from aserp1040.oracle.com ([141.146.126.69]:33160 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753780AbdIDPuU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 11:50:20 -0400
+Date: Mon, 4 Sep 2017 08:49:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 1/2] xfs: evict CoW fork extents when performing
+ finsert/fcollapse
+Message-ID: <20170904154941.GB4660@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "david@fromorbit.com" <david@fromorbit.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@infradead.org>
 
+When we perform an finsert/fcollapse operation, cancel all the CoW
+extents for the affected file offset range so that they don't end up
+pointing to the wrong blocks.
 
-> On Sep 3, 2017, at 1:50 AM, Christoph Hellwig <hch@infradead.org> wrote:
->=20
-> On Sat, Sep 02, 2017 at 03:41:45PM -0700, Richard Wareing wrote:
->> - Gates real-time block device fallocation's to rtfallocmin bytes
->> - Use case: Allows developers to send files to the SSD with ease simply
->>  by fallocating them, if they are below rtfallocmin XFS will allocate th=
-e
->>  blocks from the non-RT device (e.g. an SSD)
->> - Useful to automagically store small files on the SSD vs. RT device
->>  (HDD) for tiered XFS setups without having to rely on XFS specific
->>  ioctl calls.  Userland tools such as rsync can also use fallocation
->>  behavior to migrate files between SSD and RT (HDD) device without
->>  modifiction (e.g. w/ --preallocate flag).
->=20
-> I'd be much happier if this was done inside the allocator, and in
-> affect for any initial allocation, not just fallocate, as that keeps
-> the layering and logic much cleaner.
+Reported-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_bmap_util.c |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-See my comments on your reply to my cover letter.  Would love to hear your =
-thoughts on my reply.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index cd9a540..bc6c6e1 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1459,7 +1459,19 @@ xfs_shift_file_space(
+ 		return error;
+ 
+ 	/*
+-	 * The extent shiting code works on extent granularity. So, if
++	 * Clean out anything hanging around in the cow fork now that
++	 * we've flushed all the dirty data out to disk to avoid having
++	 * CoW extents at the wrong offsets.
++	 */
++	if (xfs_is_reflink_inode(ip)) {
++		error = xfs_reflink_cancel_cow_range(ip, offset, NULLFILEOFF,
++				true);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * The extent shifting code works on extent granularity. So, if
+ 	 * stop_fsb is not the starting block of extent, we need to split
+ 	 * the extent at stop_fsb.
+ 	 */
