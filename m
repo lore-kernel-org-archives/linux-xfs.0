@@ -1,96 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41650 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753528AbdIDMal (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Sep 2017 08:30:41 -0400
-Date: Mon, 4 Sep 2017 14:30:39 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20170904123039.GA5664@quack2.suse.cz>
-References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
- <20170903074306.GA8351@infradead.org>
- <CABXGCsMmEvEh__R2L47jqVnxv9XDaT_KP67jzsUeDLhF2OuOyA@mail.gmail.com>
+Received: from sender-pp-092.zoho.com ([135.84.80.237]:25428 "EHLO
+        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750978AbdIDFGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 01:06:23 -0400
+Subject: Re: What is the proper way to remove an xfs partition?
+References: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
+ <7887d301-c849-e740-57ef-39d9221fcc86@zoho.com>
+ <3e4309b6-f84a-abcc-c075-76e798c70154@telefonica.net>
+ <4741099f-1dcc-acff-46e1-61cd29ecf198@zoho.com>
+ <6bae012e-5ac7-16d7-7ee6-da7b3729aa72@telefonica.net>
+From: ToddAndMargo <ToddAndMargo@zoho.com>
+Message-ID: <2c1aaf9e-d8a3-d321-b8bf-e013e701175c@zoho.com>
+Date: Sun, 3 Sep 2017 22:06:21 -0700
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="vkogqOf2sHV7VnPd"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CABXGCsMmEvEh__R2L47jqVnxv9XDaT_KP67jzsUeDLhF2OuOyA@mail.gmail.com>
+In-Reply-To: <6bae012e-5ac7-16d7-7ee6-da7b3729aa72@telefonica.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
 
-
---vkogqOf2sHV7VnPd
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-
-On Sun 03-09-17 19:08:54, Михаил Гаврилов wrote:
-> On 3 September 2017 at 12:43, Christoph Hellwig <hch@infradead.org> wrote:
-> >
-> > This is:
-> >
-> >         bh = head = page_buffers(page);
-> >
-> > Which looks odd and like some sort of VM/writeback change might
-> > have triggered that we get a page without buffers, despite always
-> > creating buffers in iomap_begin/end and page_mkwrite.
-> >
-> > Ccing linux-mm if anything odd happen in that area recently.
-> >
-> > Can you tell anything about the workload you are running?
-> >
+On 09/03/2017 05:14 PM, Carlos E. R. wrote:
+> On 2017-09-04 02:03, ToddAndMargo wrote:
+>> On 09/03/2017 05:34 AM, Carlos E. R. wrote:
 > 
-> On XFS partition stored launched KVM VM images, + home partition with
-> Google Chrome profiles.
-> Seems the bug triggering by high memory consumption and using swap
-> which two times larger than system memory.
-> I saw that it happens when swap has reached size of system memory.
+> 
+>>> So this is not a problem with XFS, but a problem caused by gparted
+>>> (feature needed). You have to manually destroy key areas manually,
+>>> probably just a few sectors at partition start.
+>>>
+>>>
+>>
+>> Thank you!  And something for 1478707 to reproduce!
+> 
+> If you are interested, these are the openSUSE bugzillas:
+> 
+> https://bugzilla.opensuse.org/show_bug.cgi?id=1046268
+> USB Keys are mis-identified by device notifier
+> 
+> https://bugzilla.opensuse.org/show_bug.cgi?id=1046096
+> Can't mount fat32 USB stick: issue on the partition table
+> 
 
-Can you reproduce this? I've seen one occurence of this on our distro
-4.4-based kernel but we were never able to reproduce and find the culprit.
-If you can reproduce, could you run with the attached debug patch to see
-whether the WARN_ON triggers? Because my suspicion is that there is some
-subtle race in page table teardown vs writeback vs page reclaim which can
-result in page being dirtied without filesystem being notified about it (I
-have seen very similar oops for ext4 as well which leads me to suspicion
-this is a generic issue). Thanks!
+I added the second one to the read hat bug report.
+Thank you!
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
-
---vkogqOf2sHV7VnPd
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-xfs-Debug-when-page-can-get-dirty-without-buffers.patch"
-
->From 6161b656c3c1df43bc552a60056bc12d7913a90b Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Mon, 4 Sep 2017 14:26:38 +0200
-Subject: [PATCH] xfs: Debug when page can get dirty without buffers
-
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_aops.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6bf120bb1a17..117535086bc7 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1380,6 +1380,7 @@ xfs_vm_set_page_dirty(
- 	offset = page_offset(page);
- 
- 	spin_lock(&mapping->private_lock);
-+	WARN_ON_ONCE(!page_has_buffers(page));
- 	if (page_has_buffers(page)) {
- 		struct buffer_head *head = page_buffers(page);
- 		struct buffer_head *bh = head;
--- 
-2.12.3
-
-
---vkogqOf2sHV7VnPd--
