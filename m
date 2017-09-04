@@ -1,132 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23498 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:26963 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753050AbdIDADc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:03:32 -0400
-Date: Sun, 3 Sep 2017 17:03:21 -0700
+        with ESMTP id S1753046AbdIDAXI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:23:08 -0400
+Date: Sun, 3 Sep 2017 17:22:35 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
-Message-ID: <20170904000321.GA4671@magnolia>
-References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
- <20170831150334.GI3775@magnolia>
- <20170831233416.GU10621@dastard>
- <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
- <20170901020643.GY10621@dastard>
- <4cc94844-e154-c002-04b8-9e006bad4750@huawei.com>
- <20170901152016.GY3775@magnolia>
- <20170901215236.GA10621@dastard>
+Subject: Re: [PATCH] misc: fix more stupid compiler warnings
+Message-ID: <20170904002235.GB4671@magnolia>
+References: <20170901222157.GL3775@magnolia>
+ <20170903072432.GA32095@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901215236.GA10621@dastard>
+In-Reply-To: <20170903072432.GA32095@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Sep 02, 2017 at 07:52:36AM +1000, Dave Chinner wrote:
-> On Fri, Sep 01, 2017 at 08:20:16AM -0700, Darrick J. Wong wrote:
-> > On Fri, Sep 01, 2017 at 01:11:09PM +0800, Hou Tao wrote:
-> > > > The "nouuid" mount option means "don't check if there is already a
-> > > > filesystem ialready mounted with the same uuid as the one we are
-> > > > mounting". It does not mean the filesystem does not have a UUID.
-> > > > 
-> > > > Indeed, in xfs_uuid_mount():
-> > > > 
-> > > > xfs_uuid_mount(
-> > > >         struct xfs_mount        *mp)
-> > > > {
-> > > >         uuid_t                  *uuid = &mp->m_sb.sb_uuid;
-> > > >         int                     hole, i;
-> > > > 
-> > > >         /* Publish UUID in struct super_block */
-> > > >         uuid_copy(&mp->m_super->s_uuid, uuid);
-> > > > 
-> > > >         if (mp->m_flags & XFS_MOUNT_NOUUID)
-> > > >                 return 0;
-> > > > 
-> > > > We copy the filesystem's uuid into the VFS superblock before we
-> > > > check the nouuid mount option flag. Hence a mounted XFS filesystem
-> > > > always has a valid UUID in the superblock s_uuid field.
-> > > Maybe you miss the following "uuid_is_null(uuid)" check in xfs_uuid_mount() ?
-> > > 
-> > > xfs_uuid_mount(
-> > >     struct xfs_mount    *mp)
-> > > {
-> > > 
-> > >     if (mp->m_flags & XFS_MOUNT_NOUUID)
-> > >         return 0;
-> > > 
-> > >     if (uuid_is_null(uuid)) {
-> > >         xfs_warn(mp, "Filesystem has null UUID - can't mount");
-> > >         return -EINVAL;
-> > >     }
-> > > 
-> > > And we can clear the uuid of a XFS filesystem, and mount it with "nouuid" option successfully.
-> > > $ xfs_admin -U nil /dev/vda
-> > > $ mount -t xfs -o nouuid /dev/vda /tmp/vda
+On Sun, Sep 03, 2017 at 12:24:33AM -0700, Christoph Hellwig wrote:
+> Can you splits this up a bit to be more self explanatory, e.g.
+> one patch per warning class or logical change?
 > 
-> IMO, that's a bug, because...
+> >  	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
+> > -				be32_to_cpu(free->hdr.nvalid) < 0 ||
+> >  				be32_to_cpu(free->hdr.nused) > maxent ||
+> > -				be32_to_cpu(free->hdr.nused) < 0 ||
+> >  				be32_to_cpu(free->hdr.nused) >
+> >  					be32_to_cpu(free->hdr.nvalid)) {
 > 
-> > > So I still think the null check in xfs_fs_uevent is needed.
-> > 
-> > I was /about/ to reply with "Why does it matter if the UUID is null?
-> > That's just another value, albeit a weird one.", but then I actually
-> > tried it:
-> > 
-> > $ truncate -s 500m /tmp/a
-> > $ mkfs.xfs -m uuid=00000000-0000-0000-0000-000000000000 -f /tmp/a
-> > $ sudo mount /tmp/a /mnt
-> > [161296.189297] XFS (loop0): Filesystem has nil UUID - can't mount
-> > $ sudo mount /tmp/a /mnt -o nouuid
-> > [161301.335715] XFS (loop0): Mounting V5 Filesystem
-> > [161301.335881] XFS (loop0): nil uuid in log - IRIX style log
-> > [161301.338524] XFS (loop0): Ending clean mount
-> > [161311.233536] XFS (loop0): Unmounting Filesystem
-> > 
-> > Now I'm wondering just what that's all about, especially on a v5 fs? :)
+> be32_to_cpu returns uint, so this makese sense.
 > 
-> ... uuids were added to the log to identify external log devices on
-> Linux. THey weren't needed on Irix because external log devices were
-> set up through the volume manager (XLV/XVM) and discovered at mount
-> time by the kernel code (libxfs/mkfs still has support for
-> "volume logs"). On linux, we have an external block device, so
-> something needed to be added to the log record headers so the
-> filesystem could determine it was about to replay the correct log
-> device....
+> > -	(void)getcwd(curdir,MAXPATHLEN);
+> > +	if (!getcwd(curdir, MAXPATHLEN)) {
+> > +		perror("getcwd");
+> > +		strcpy(curdir, ".");
+> > +	}
 > 
-> IOWs finding a log with a null uuid is a big red flag that something
-> is not right with the filesystem setup, and we should definitely not
-> be mounting it if it's a v5 filesystem (uuid is mandatory in that
-> format). For v4, well, irix is long gone, as are the vast majority
-> of Irix XFS filesystems, so we should probably not mount them,
-> either.
+> All this chdir magic will need a lot more explanation.  To me it
+> seems like most of this is a left over from IRIX days where we
+> could have device names relative to a volume.  The proper fix
+> probably is to just remove that whole thing - if we'd ever
+> need to bring it back we should use openat relative to a dirfd
+> instead.
 
-<nod> Patches to reject zero-uuid filesystems welcome. ;)
+Yeah, AFAICT all this getcwd/chdir stuff seems to exist so that
+check_open can change the working directory (it doesn't on Linux) and we
+can change back to continue to use relative paths.  Nothing ever changes
+the directory (at least not in the call paths of libxfs_init) so I think
+we can just rip it out.  As a separate patch.
 
-That said, I think that the uevent should include ID_FS_UUID regardless
-of the fsuuid contents; it's the job of the mount code to decide if the
-uuid is screwy and therefore we should scuttle everything.  I also
-decided to defer this one to 4.15 on the grounds that if the purpose of
-adding a uevent is to get a userspace helper to read in the xfs config,
-let's see at least a draft of that piece on the mailing list first.
-
-TBH I'm also a little confused about the repost of the default config
-values patchset immediately prior to this patch -- if the goal is to
-delegate loading default vs. fs-specific configuration policy to a
-userland daemon via uevent, then why would we need a sysfs directory of
-default config knobs in addition to the existing per-fs knobs?
+In the meantime, do you want me to resend with just the uncontroversial
+bits?
 
 --D
 
+> > +#define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
+> > +#define xfs_inode_set_eofblocks_tag(ip)	do { } while (0)
 > 
-> Cheers,
+> This part looks fine.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> >  #else
+> >  #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
+> > -#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
+> > +#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
+> >  #endif /* DEBUG */
+> 
+> This as well.
+> 
+> > diff --git a/repair/phase6.c b/repair/phase6.c
+> > index b051a44..f360aed 100644
+> > --- a/repair/phase6.c
+> > +++ b/repair/phase6.c
+> > @@ -3092,11 +3092,11 @@ mark_standalone_inodes(xfs_mount_t *mp)
+> >  	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
+> >  			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
+> >  
+> > +	ASSERT(irec != NULL);
+> > +
+> >  	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
+> >  			irec->ino_startnum;
+> >  
+> > -	ASSERT(irec != NULL);
+> > -
+> 
+> What's the point in even having this assert?   Either we turn this
+> into something like
+> 
+> 	if (!irec)
+> 		abort();
+> 
+> or just let the code dereference it.
+> 
+> > -		imap.br_state = (rm_rec->rm_flags & XFS_RMAP_UNWRITTEN ?
+> > +		imap.br_state = ((rm_rec->rm_flags & XFS_RMAP_UNWRITTEN) ?
+> >  				XFS_EXT_UNWRITTEN : XFS_EXT_NORM);
+> 
+> Looks fine.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
