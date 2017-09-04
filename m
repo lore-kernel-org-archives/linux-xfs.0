@@ -1,104 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26963 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753046AbdIDAXI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:23:08 -0400
-Date: Sun, 3 Sep 2017 17:22:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] misc: fix more stupid compiler warnings
-Message-ID: <20170904002235.GB4671@magnolia>
-References: <20170901222157.GL3775@magnolia>
- <20170903072432.GA32095@infradead.org>
+Received: from sender-pp-092.zoho.com ([135.84.80.237]:25461 "EHLO
+        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753036AbdIDAEC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:04:02 -0400
+Subject: Re: What is the proper way to remove an xfs partition?
+References: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
+ <7887d301-c849-e740-57ef-39d9221fcc86@zoho.com>
+ <3e4309b6-f84a-abcc-c075-76e798c70154@telefonica.net>
+From: ToddAndMargo <ToddAndMargo@zoho.com>
+Message-ID: <4741099f-1dcc-acff-46e1-61cd29ecf198@zoho.com>
+Date: Sun, 3 Sep 2017 17:03:56 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170903072432.GA32095@infradead.org>
+In-Reply-To: <3e4309b6-f84a-abcc-c075-76e798c70154@telefonica.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: "Carlos E. R." <robin.listas@telefonica.net>, Linux-XFS mailing list <linux-xfs@vger.kernel.org>
 
-On Sun, Sep 03, 2017 at 12:24:33AM -0700, Christoph Hellwig wrote:
-> Can you splits this up a bit to be more self explanatory, e.g.
-> one patch per warning class or logical change?
+On 09/03/2017 05:34 AM, Carlos E. R. wrote:
+> On 2017-09-02 02:34, ToddAndMargo wrote:
 > 
-> >  	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
-> > -				be32_to_cpu(free->hdr.nvalid) < 0 ||
-> >  				be32_to_cpu(free->hdr.nused) > maxent ||
-> > -				be32_to_cpu(free->hdr.nused) < 0 ||
-> >  				be32_to_cpu(free->hdr.nused) >
-> >  					be32_to_cpu(free->hdr.nvalid)) {
+>>
+>> I don't know if you guys care about such things, but I just
+>> request that gparted do a disk blank
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=1487807
 > 
-> be32_to_cpu returns uint, so this makese sense.
+> It is a known issue with gparted that when you reformat a partition or
+> disk with something else, it doesn't properly erase at least the
+> critical areas of the previous filesystem, causing problems.
 > 
-> > -	(void)getcwd(curdir,MAXPATHLEN);
-> > +	if (!getcwd(curdir, MAXPATHLEN)) {
-> > +		perror("getcwd");
-> > +		strcpy(curdir, ".");
-> > +	}
+> One that has been noticed more than once at openSUSE is this:
 > 
-> All this chdir magic will need a lot more explanation.  To me it
-> seems like most of this is a left over from IRIX days where we
-> could have device names relative to a volume.  The proper fix
-> probably is to just remove that whole thing - if we'd ever
-> need to bring it back we should use openat relative to a dirfd
-> instead.
+> - 'dd' a CD image on an USB stick for operating system installation. For
+> instance, openSUSE-Leap-42.2-NET-x86_64.iso install disk.
+> 
+> - Afterwards, use gparted to remove partitions on the stick, create a
+> new partition, format it as FAT32 (with a label).
+> 
+> Tumbleweed (at some version) thought the USB to still be a CD (printing
+> its old label) and failed to mount it (because it is FAT).
+> 
+> The code detecting filesystem type had to be changed on Tumbleweed, but
+> the cause of the issue is that gparted did not erase the areas at the
+> start of the disk with that information, and the FAT format did not
+> write on them.
+> 
+> 
+> 
+> So this is not a problem with XFS, but a problem caused by gparted
+> (feature needed). You have to manually destroy key areas manually,
+> probably just a few sectors at partition start.
+> 
+> 
 
-Yeah, AFAICT all this getcwd/chdir stuff seems to exist so that
-check_open can change the working directory (it doesn't on Linux) and we
-can change back to continue to use relative paths.  Nothing ever changes
-the directory (at least not in the call paths of libxfs_init) so I think
-we can just rip it out.  As a separate patch.
+Thank you!  And something for 1478707 to reproduce!
 
-In the meantime, do you want me to resend with just the uncontroversial
-bits?
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Computers are like air conditioners.
+They malfunction when you open windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
---D
-
-> > +#define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
-> > +#define xfs_inode_set_eofblocks_tag(ip)	do { } while (0)
-> 
-> This part looks fine.
-> 
-> >  #else
-> >  #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
-> > -#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
-> > +#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
-> >  #endif /* DEBUG */
-> 
-> This as well.
-> 
-> > diff --git a/repair/phase6.c b/repair/phase6.c
-> > index b051a44..f360aed 100644
-> > --- a/repair/phase6.c
-> > +++ b/repair/phase6.c
-> > @@ -3092,11 +3092,11 @@ mark_standalone_inodes(xfs_mount_t *mp)
-> >  	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
-> >  			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
-> >  
-> > +	ASSERT(irec != NULL);
-> > +
-> >  	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
-> >  			irec->ino_startnum;
-> >  
-> > -	ASSERT(irec != NULL);
-> > -
-> 
-> What's the point in even having this assert?   Either we turn this
-> into something like
-> 
-> 	if (!irec)
-> 		abort();
-> 
-> or just let the code dereference it.
-> 
-> > -		imap.br_state = (rm_rec->rm_flags & XFS_RMAP_UNWRITTEN ?
-> > +		imap.br_state = ((rm_rec->rm_flags & XFS_RMAP_UNWRITTEN) ?
-> >  				XFS_EXT_UNWRITTEN : XFS_EXT_NORM);
-> 
-> Looks fine.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
