@@ -1,65 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36451 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752306AbdIAQjn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 12:39:43 -0400
-Date: Fri, 1 Sep 2017 09:39:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 1/2] mkfs: add documentation for forgotten mkfs flags
-Message-ID: <20170901163938.GE3775@magnolia>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34505 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751149AbdIEHg3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 03:36:29 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v857XbZN007741
+        for <linux-xfs@vger.kernel.org>; Tue, 5 Sep 2017 03:36:28 -0400
+Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2csq86hm3a-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2017 03:36:28 -0400
+Received: from localhost
+        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Tue, 5 Sep 2017 17:36:25 +1000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical sectorsize
+Date: Tue, 05 Sep 2017 13:07:07 +0530
+In-Reply-To: <20170905064208.GB15686@vader>
+References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com> <20170905063139.GA679@infradead.org> <20170905064208.GB15686@vader>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <2656563.n056MvCHVb@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@fb.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net, Omar Sandoval <osandov@fb.com>, linux-block@vger.kernel.org
 
-Add documentation for some undocumented mkfs -d and -l flags.
+On Tuesday, September 5, 2017 12:12:08 PM IST Omar Sandoval wrote:
+> On Mon, Sep 04, 2017 at 11:31:39PM -0700, Christoph Hellwig wrote:
+> > On Tue, Sep 05, 2017 at 11:14:42AM +0530, Chandan Rajendra wrote:
+> > > Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
+> > > physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
+> > > physical sector size of loop devices. On ppc64, this causes loop devices
+> > > to have 64k as the physical sector size.
+> > 
+> > Eek.  We'll need to revert the loop change ASAP!
+> 
+> Most annoying patch series ever. It hasn't made it to Linus' tree yet,
+> right? We can revert (although the later change depends on that), fold
+> in a fix, or apply a fix on top of it, whatever Jens prefers.
+> 
+> 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/man8/mkfs.xfs.8 |   22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+My bad. 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 is the commit id from 
+Linux-next. I don't see this commit in Linus's git tree.
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index b2bc223..33831c9 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -367,6 +367,25 @@ values.
- This option disables automatic geometry detection and creates the filesystem
- without stripe geometry alignment even if the underlying storage device provides
- this information.
-+.TP
-+.BI rtinherit= value
-+If set, all inodes created by
-+.B mkfs.xfs
-+will be created with the realtime flag set.
-+Directories will pass on this flag to newly created children.
-+.TP
-+.BI projinherit= value
-+All inodes created by
-+.B mkfs.xfs
-+will be assigned this project quota id.
-+Directories will pass on the project id to newly created children.
-+.TP
-+.BI extszinherit= value
-+All inodes created by
-+.B mkfs.xfs
-+will have this extent size hint applied.
-+The value must be provided in units of filesystem blocks.
-+Directories will pass on this hint to newly created children.
- .RE
- .TP
- .B \-f
-@@ -508,6 +527,9 @@ log section of the filesystem. The valid
- are:
- .RS 1.2i
- .TP
-+.BI agnum= value
-+If the log is internal, allocate it in this AG.
-+.TP
- .BI internal[= value ]
- This is used to specify that the log section is a piece of the data
- section instead of being another device or logical volume. The
+-- 
+chandan
+
