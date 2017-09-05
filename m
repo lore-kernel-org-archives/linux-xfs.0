@@ -1,80 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50868 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752732AbdIBRGc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 13:06:32 -0400
-Date: Sat, 2 Sep 2017 10:06:26 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: revert "xfs: factor rmap btree size into the indlen
- calculations"
-Message-ID: <20170902170626.GC4073@magnolia>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:61192 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752313AbdIEWK4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 18:10:56 -0400
+Date: Wed, 6 Sep 2017 08:10:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical
+ sectorsize
+Message-ID: <20170905221047.GM17782@dastard>
+References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com>
+ <20170905063139.GA679@infradead.org>
+ <20170905064412.GK17782@dastard>
+ <269c55df-eb46-0c9a-6f7f-72a1becd2499@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <269c55df-eb46-0c9a-6f7f-72a1becd2499@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, linux-block@vger.kernel.org
 
-In commit fd26a88093ba we added a worst case estimate for rmapbt blocks
-needed to satisfy the block mapping request.  Since then, we added the
-ability to reserve enough space in each AG such that we should never run
-out of blocks to grow the rmapbt, which makes this calculation
-unnecessary.  Revert the commit because it makes the extra delalloc
-indlen accounting unnecessary and incorrect.
+On Tue, Sep 05, 2017 at 09:17:42AM -0500, Eric Sandeen wrote:
+> 
+> 
+> On 9/5/17 1:44 AM, Dave Chinner wrote:
+> > On Mon, Sep 04, 2017 at 11:31:39PM -0700, Christoph Hellwig wrote:
+> >> On Tue, Sep 05, 2017 at 11:14:42AM +0530, Chandan Rajendra wrote:
+> >>> Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
+> >>> physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
+> >>> physical sector size of loop devices. On ppc64, this causes loop devices
+> >>> to have 64k as the physical sector size.
+> >>
+> >> Eek.  We'll need to revert the loop change ASAP!
+> > 
+> > And, FWIW, making the warning go away if probably a bad idea,
+> > because XFS only supports devices with sector sizes up
+> > to 32k:
+> 
+> Well, TBH removing this warning was my suggestion, because it's
+> automatically fixing values that weren't specified by the user in
+> the first place.  First preference is physical sector size, then
+> fallback to logical but it doesn't need to be noisy about it.
+> 
+> > #define XFS_MIN_SECTORSIZE_LOG  9       /* i.e. 512 bytes */
+> > #define XFS_MAX_SECTORSIZE_LOG  15      /* i.e. 32768 bytes */
+> > 
+> > And so it should be warning about devices trying to tell it to use
+> > something larger....
+> 
+> As long as the logical sector size is small enough, it seems like a
+> silent adjustment is probably ok,  no?
 
-Reported-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |   17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+Think 512e drives. Doing 512 byte sector IO is possible, but slow.
+Someone might actually want to avoid that by having the filesystem
+use 4k sector sizes. However, if for some reason, mkfs selects 512
+byte sectors (the logical size) rather than 4k sector size, then
+shouldn't we be telling the user we're doing something that has a
+"for-the-life-of-the-filesystem" performance impact?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 459f4b4f0..044a363 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -49,7 +49,6 @@
- #include "xfs_rmap.h"
- #include "xfs_ag_resv.h"
- #include "xfs_refcount.h"
--#include "xfs_rmap_btree.h"
- #include "xfs_icache.h"
- 
- 
-@@ -192,12 +191,8 @@ xfs_bmap_worst_indlen(
- 	int		maxrecs;	/* maximum record count at this level */
- 	xfs_mount_t	*mp;		/* mount structure */
- 	xfs_filblks_t	rval;		/* return value */
--	xfs_filblks_t   orig_len;
- 
- 	mp = ip->i_mount;
--
--	/* Calculate the worst-case size of the bmbt. */
--	orig_len = len;
- 	maxrecs = mp->m_bmap_dmxr[0];
- 	for (level = 0, rval = 0;
- 	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-@@ -205,20 +200,12 @@ xfs_bmap_worst_indlen(
- 		len += maxrecs - 1;
- 		do_div(len, maxrecs);
- 		rval += len;
--		if (len == 1) {
--			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-+		if (len == 1)
-+			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
- 				level - 1;
--			break;
--		}
- 		if (level == 0)
- 			maxrecs = mp->m_bmap_dmxr[1];
- 	}
--
--	/* Calculate the worst-case size of the rmapbt. */
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
--		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
--				mp->m_rmap_maxlevels;
--
- 	return rval;
- }
- 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
