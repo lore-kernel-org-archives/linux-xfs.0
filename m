@@ -1,108 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47037 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755638AbdIFRJt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 13:09:49 -0400
-Date: Wed, 6 Sep 2017 11:09:46 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 6/9] ext4: safely transition S_DAX on journaling changes
-Message-ID: <20170906170946.GC17663@linux.intel.com>
-References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
- <20170905223541.20594-7-ross.zwisler@linux.intel.com>
- <20170906094700.GC27916@quack2.suse.cz>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:14017 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752807AbdIEXCA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 19:02:00 -0400
+Date: Wed, 6 Sep 2017 09:00:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: umount XFS hung when stopping the xfsaild kthread
+Message-ID: <20170905230043.GN17782@dastard>
+References: <c869cd34-269b-a13d-5009-390e70aa47ac@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170906094700.GC27916@quack2.suse.cz>
+In-Reply-To: <c869cd34-269b-a13d-5009-390e70aa47ac@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 06, 2017 at 11:47:00AM +0200, Jan Kara wrote:
-> On Tue 05-09-17 16:35:38, Ross Zwisler wrote:
-> > The IOCTL path which switches the journaling mode for an inode is currently
-> > unsafe because it doesn't properly do a writeback and invalidation on the
-> > inode.  In XFS, for example, safe transitions of S_DAX are handled by
-> > xfs_ioctl_setattr_dax_invalidate() which locks out page faults and I/O,
-> > does a writeback via filemap_write_and_wait() and an invalidation via
-> > invalidate_inode_pages2().
-> > 
-> > Without this in place we can see the following kernel warning when we try
-> > and insert a DAX exceptional entry but find that a dirty page cache page is
-> > still in the mapping->radix_tree:
-> > 
-> >  WARNING: CPU: 4 PID: 1052 at mm/filemap.c:262 __delete_from_page_cache+0x375/0x550
-> >  Modules linked in: dax_pmem nd_pmem device_dax nd_btt nfit libnvdimm
-> >  CPU: 4 PID: 1052 Comm: small Not tainted 4.13.0-rc6-00055-gac26931 #3
-> >  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.3-1.fc25 04/01/2014
-> >  task: ffff88020ccd0000 task.stack: ffffc900021d4000
-> >  RIP: 0010:__delete_from_page_cache+0x375/0x550
-> >  RSP: 0000:ffffc900021d7b90 EFLAGS: 00010002
-> >  RAX: 002fffc00001123d RBX: ffffffffffffffff RCX: ffff8801d9440d68
-> >  RDX: 0000000000000000 RSI: ffffffff81fd5b84 RDI: ffffffff81f6f0e5
-> >  RBP: ffffc900021d7be0 R08: 0000000000000000 R09: ffff8801f9938c70
-> >  R10: 0000000000000021 R11: ffff8801f9938c91 R12: ffff8801d9440d70
-> >  R13: ffffea0007fdda80 R14: 0000000000000001 R15: ffff8801d9440d68
-> >  FS:  00007feacc041700(0000) GS:ffff880211800000(0000) knlGS:0000000000000000
-> >  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> >  CR2: 0000000010420000 CR3: 000000020cfd8000 CR4: 00000000000006e0
-> >  Call Trace:
-> >   dax_insert_mapping_entry+0x158/0x2c0
-> >   dax_iomap_fault+0x1020/0x1bb0
-> >   ext4_dax_huge_fault+0xc8/0x160
-> >   ext4_dax_fault+0x10/0x20
-> >   __do_fault+0x20/0x110
-> >   __handle_mm_fault+0x97d/0x1120
-> >   handle_mm_fault+0x188/0x2f0
-> >   __do_page_fault+0x28f/0x590
-> >   trace_do_page_fault+0x58/0x2c0
-> >   do_async_page_fault+0x2c/0x90
-> >   async_page_fault+0x28/0x30
-> > 
-> > I'm pretty sure we could make a test that shows userspace visible data
-> > corruption as well in this scenario.
-> > 
-> > Make it safe to change the journaling mode and turn on or off S_DAX by
-> > adding locking to properly lock out page faults (i_mmap_sem) and then doing
-> > the writeback and invalidate.  I/O is already held off because all callers
-> > of ext4_ioctl_setflags() hold the inode lock.
+On Tue, Sep 05, 2017 at 09:48:45PM +0800, Hou Tao wrote:
+> Hi all,
 > 
-> Yeah, this is a good point. It is just that this is not enough as I
-> discovered in [1]. You also need to tear down & recreate VMAs when changing
-> DAX flag which is a bit tricky. So for now I think returning EBUSY when
-> file is mmaped and we'd like to flip DAX flag is the best solution. Hmm?
+> We recently encounter a XFS umount hang problem. As we can see the following
+> stacks, the umount process was trying to stop the xfsaild kthread and waiting
+> for the exit of the xfsaild thread, and the xfsaild thread was waiting for
+> wake-up.
 > 
-> [1] https://www.spinics.net/lists/linux-xfs/msg09859.html
-
-Yea, thanks for the link, I totally missed this discussion (obviously). 
-
-Cool, I'll rework this for v2.
-
-> > The locking for this new code is complex because of the following:
-> > 
-> > 1) filemap_write_and_wait() eventually calls ext4_writepages(), which
-> > acquires the sbi->s_journal_flag_rwsem.  This lock ranks above the
-> > jbdw_handle which is eventually taken by ext4_journal_start().  This
-> > essentially means that the writeback has to happen outside of the context
-> > of an active journal handle (outside of ext4_journal_start() to
-> > ext4_journal_stop().)
-> > 
-> > 2) To lock out page faults we take a write lock on the ei->i_mmap_sem, and
-> > this lock again ranks above the jbd2_handle taken by ext4_journal_start().
-> > So, as with the writeback code in 1) above we have to take ei->i_mmap_sem
-> > outside of the context of an active journal handle.
+> [<ffffffff810a604a>] kthread_stop+0x4a/0xe0
+> [<ffffffffa0680317>] xfs_trans_ail_destroy+0x17/0x30 [xfs]
+> [<ffffffffa067569e>] xfs_log_unmount+0x1e/0x60 [xfs]
+> [<ffffffffa066ac15>] xfs_unmountfs+0xd5/0x190 [xfs]
+> [<ffffffffa066da62>] xfs_fs_put_super+0x32/0x90 [xfs]
+> [<ffffffff811ebad6>] generic_shutdown_super+0x56/0xe0
+> [<ffffffff811ebf27>] kill_block_super+0x27/0x70
+> [<ffffffff811ec269>] deactivate_locked_super+0x49/0x60
+> [<ffffffff811ec866>] deactivate_super+0x46/0x60
+> [<ffffffff81209995>] mntput_no_expire+0xc5/0x120
+> [<ffffffff8120aacf>] SyS_umount+0x9f/0x3c0
+> [<ffffffff81652a09>] system_call_fastpath+0x16/0x1b
+> [<ffffffffffffffff>] 0xffffffffffffffff
 > 
-> Welcome to the joy of fs locking ;)
-
-:)  Well, I feel like I learned a lot more about ext4 during this patch set!
-
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > CC: stable@vger.kernel.org
+> [<ffffffffa067faa7>] xfsaild+0x537/0x5e0 [xfs]
+> [<ffffffff810a5ddf>] kthread+0xcf/0xe0
+> [<ffffffff81652958>] ret_from_fork+0x58/0x90
+> [<ffffffffffffffff>] 0xffffffffffffffff
 > 
-> 								Honza
+> The kernel version is RHEL7.3 and we are trying to reproduce it (not yet).
+> I have check the related code and suspect the same problem may also exists in
+> the mainline.
 > 
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> The following is the possible sequences which may lead to the hang of umount:
+> 
+> xfsaild: kthread_should_stop() // return false, so xfsaild continue
+> 
+> umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags) // by kthread_stop()
+> 
+> umount: wake_up_process() // because xfsaild is still running, so 0 is returned
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This, to me, is where the problem lies. By the time unmount is
+asking the aild to stop, the xfsaild should already be idle and
+scheduled because unmount has just completed a syncrhonous push of
+the AIL. i.e.  xfs_ail_push_all_sync()) waits for the AIL to empty
+which should result in the aild returning to the idle state and
+sleeping in freezable_schedule().
+
+Work out why the aild is still running after the log has supposedly
+been emptied and unmount records have been written first, then look
+for a solution. Also, as Brian suggested, reproducing on an upstream
+kernel is a good idea, because it's entirely possible this is a
+vendor kernel (i.e.  RHEL) specific bug....
+
+> xfsaild: __set_current_state()
+> xfsaild: schedule() // Now, on one will wake it up
+> 
+> The solution I think is adding an extra kthread_should_stop() before
+> invoking schedule(). Maybe a smp_mb() is needed too, because we needs to
+> ensure the read of the stop flag happens after the write of the task status.
+> Something likes the following patch:
+> 
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 9056c0f..6313f67 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -520,6 +520,11 @@ xfsaild(
+>                 if (!xfs_ail_min(ailp) &&
+>                     ailp->xa_target == ailp->xa_target_prev) {
+>                         spin_unlock(&ailp->xa_lock);
+> +
+> +                       smp_mb();
+> +                       if (kthread_should_stop())
+> +                               break;
+> +
+>                         freezable_schedule();
+>                         tout = 0;
+>                         continue;
+
+This is still racy.  i.e. What happens if the stop bit is set
+between the new kthread_should_stop() check and
+freezable_schedule()? It'll still hang, right?
+
+Also, breaking out of the loop there leaves the task in
+TASK_INTERRUPTIBLE/TASK_KILLABLE state - it needs to leave this
+function in TASK_RUNNING state.
+
+FWIW, it is my understanding that the sort of schedule vs ttwu race
+you are implying exists here are avoided by the task state being set
+to TASK_INTERRUPTIBLE/TASK_KILLABLE and schedule only parking the
+task if the task was in this state. i.e. if ttwu is called before
+schedule, then the task state will have been modified to either
+TASK_WAKING or TASK_RUNNING before schedule is called and so
+schedule() is then effectively a no-op.  In that case, we go around
+the loop again, hit the kthread_should_stop() check, and we stop.
+Hence, if I've remembered this all correctly, I don't think adding
+this extra kthread_should_stop() check will make any difference,
+either.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
