@@ -1,109 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:1437 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750742AbdIGG7n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 02:59:43 -0400
-Date: Thu, 7 Sep 2017 16:59:26 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] spaceman: Add missing link to libuuid
-Message-ID: <20170907065926.GY17782@dastard>
-References: <20170907021900.41040-1-raj.khem@gmail.com>
- <20170907024017.GX17782@dastard>
- <CAMKF1souYmZRaQuBoOv-xR6+S8kj9oHpzZ_rN6V4ecnOr=RuFQ@mail.gmail.com>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:38859 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751082AbdIELln (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 07:41:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAMKF1souYmZRaQuBoOv-xR6+S8kj9oHpzZ_rN6V4ecnOr=RuFQ@mail.gmail.com>
+In-Reply-To: <20170905110737.GD8034@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <1504104706-11965-13-git-send-email-amir73il@gmail.com> <20170905110737.GD8034@eguan.usersys.redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 5 Sep 2017 14:41:42 +0300
+Message-ID: <CAOQ4uxhFC5BM0U9YGyQ9VLAEtiM4wZugtpmv4WtQ-vO4A17HaQ@mail.gmail.com>
+Subject: Re: [PATCH v2 12/14] replay-log: add support for replaying ops in
+ target device sector range
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Sep 06, 2017 at 09:11:11PM -0700, Khem Raj wrote:
-> On Wed, Sep 6, 2017 at 7:40 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Sep 06, 2017 at 07:19:00PM -0700, Khem Raj wrote:
-> >> When uuid is enabled then we see linking failures with gold linker e.g.
-> >>
-> >> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_compare'
-> >> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_copy'
-> >> clang-5.0: error: linker command failed with exit code 1 (use -v to see invocation)
-> >
-> > That's libxfs, not xfs_spaceman....
-> 
-> yes its libxfs but its linking spaceman, I chopped the error logs too
-> much I guess.
+On Tue, Sep 5, 2017 at 2:07 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Wed, Aug 30, 2017 at 05:51:44PM +0300, Amir Goldstein wrote:
+>> Using command line options --start-sector and --end-sector, only
+>> operations acting on the specified target device range will be
+>> replayed.
+>>
+>> Single vebbose mode (-v) prints out only replayed operations.
+>> Double verbose mode (-vv) prints out also skipped operations.
+>>
+>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>> ---
+>>  src/log-writes/log-writes.c | 33 +++++++++++++++++++++++++++++++--
+>>  src/log-writes/log-writes.h |  2 ++
+>>  src/log-writes/replay-log.c | 31 +++++++++++++++++++++++++++++++
+>>  3 files changed, 64 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/src/log-writes/log-writes.c b/src/log-writes/log-writes.c
+>> index ba66a5c..d832c2a 100644
+>> --- a/src/log-writes/log-writes.c
+>> +++ b/src/log-writes/log-writes.c
+>> @@ -119,6 +119,24 @@ int log_discard(struct log *log, struct log_write_entry *entry)
+>>
+>>  /*
+>>   * @log: the log we are replaying.
+>> + * @entry: entry to be replayed.
+>> + *
+>> + * @return: 0 if we should replay the entry, > 0 if we should skip it.
+>> + *
+>> + * Should we skip the entry in our log or replay onto the replay device.
+>> + */
+>> +int log_should_skip(struct log *log, struct log_write_entry *entry)
+>> +{
+>> +     if (!entry->nr_sectors)
+>> +             return 0;
+>> +     if (entry->sector + entry->nr_sectors < log->start_sector ||
+>> +         entry->sector > log->end_sector)
+>
+> Seems values from entry can't be used directly, need le64_to_cpu first I
+> think.
+>
+>> +             return 1;
+>> +     return 0;
+>> +}
+>> +
+>> +/*
+>> + * @log: the log we are replaying.
+>>   * @entry: where we put the entry.
+>>   * @read_data: read the entry data as well, entry must be log->sectorsize sized
+>>   * if this is set.
+>> @@ -137,6 +155,7 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
+>>       char *buf;
+>>       ssize_t ret;
+>>       off_t offset;
+>> +     u64 skip = 0;
+>
+> int skip? and log_should_skip returns int too.
+>
 
-xfs_spaceman does not link against libuuid:
+Right. Thanks
 
-$ ldd spaceman/xfs_spaceman 
-	linux-vdso.so.1 (0x00007ffca4f68000)
-	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fa36f358000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007fa36f6f7000)
-
-Nor libxfs - if it linked against libxfs, it would have to pull in
-4 other libraries, including libuuid:
-
-$ ldd repair/xfs_repair 
-	linux-vdso.so.1 (0x00007ffd96bb4000)
-	libuuid.so.1 => /lib/x86_64-linux-gnu/libuuid.so.1 (0x00007f5da2d4f000)
-	librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007f5da2b47000)
-	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f5da292a000)
-	libblkid.so.1 => /lib/x86_64-linux-gnu/libblkid.so.1 (0x00007f5da26e4000)
-	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f5da2345000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007f5da2f54000)
-
-So whatever build error you are having has nothing to do with
-xfs_spaceman. Have you installed all the necessary libraries?
-
-> >> Signed-off-by: Khem Raj <raj.khem@gmail.com>
-> >> ---
-> >>  spaceman/Makefile | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/spaceman/Makefile b/spaceman/Makefile
-> >> index 95ec3c0..060e0af 100644
-> >> --- a/spaceman/Makefile
-> >> +++ b/spaceman/Makefile
-> >> @@ -9,7 +9,7 @@ LTCOMMAND = xfs_spaceman
-> >>  HFILES = init.h space.h
-> >>  CFILES = init.c file.c prealloc.c trim.c
-> >>
-> >> -LLDLIBS = $(LIBXCMD)
-> >> +LLDLIBS = $(LIBXCMD) $(LIBUUID)
-> >
-> > And spaceman doesn't link against libxfs, nor does libxcmd or
-> > spaceman use uuids so I don't see why this fixes a problem with
-> > libxfs...
-> 
-> I was just following what other binaries were doing, otherwise I agree
-> libuuid should appear in DT_NEEDED flags in libxfs.so so linkers can
-> pull it in automatically.
-> 
-> try using
-> 
-> LDFLAGS = "-fuse-ld=gold" if you want to reproduce the problem on your end.
-
-$ gold -V
-GNU gold (GNU Binutils for Debian 2.29) 1.14
-$ make distclean
-....
-$ LDFLAGS="-fuse-ld=gold" make -j8 Q=
-....
-[LD]     xfs_spaceman
-/bin/bash ../libtool --quiet --tag=CC --mode=link gcc -o xfs_spaceman -fuse-ld=gold -fuse-ld=gold  -fuse-ld=gold  -fuse-ld=gold -static  init.o file.o prealloc.o trim.o freesp.o   ../libxcmd/libxcmd.la
-.....
-$ ldd spaceman/xfs_spaceman 
-	linux-vdso.so.1 (0x00007ffc943e4000)
-	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f2def2e2000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007f2def681000)
-
-TOT builds just fine here on debian unstable using the gold linker,
-and again this shows that spaceman does not link against libuuid.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+FYI, this is also a debugging option.
+I used to to replay operations on a given range that was different between
+good and bad buffers to narrow down the suspects.
