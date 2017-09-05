@@ -1,120 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:14017 "EHLO
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:35323 "EHLO
         ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752807AbdIEXCA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 19:02:00 -0400
-Date: Wed, 6 Sep 2017 09:00:43 +1000
+        by vger.kernel.org with ESMTP id S1753607AbdIEXnk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 19:43:40 -0400
+Date: Wed, 6 Sep 2017 09:42:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: umount XFS hung when stopping the xfsaild kthread
-Message-ID: <20170905230043.GN17782@dastard>
-References: <c869cd34-269b-a13d-5009-390e70aa47ac@huawei.com>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20170905234256.GP17782@dastard>
+References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
+ <20170903074306.GA8351@infradead.org>
+ <20170904014353.GG10621@dastard>
+ <20170904022002.GD4671@magnolia>
+ <20170904121452.GC1761@quack2.suse.cz>
+ <20170904223648.GH10621@dastard>
+ <20170905161734.GA25379@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c869cd34-269b-a13d-5009-390e70aa47ac@huawei.com>
+In-Reply-To: <20170905161734.GA25379@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Sep 05, 2017 at 09:48:45PM +0800, Hou Tao wrote:
-> Hi all,
+On Tue, Sep 05, 2017 at 06:17:34PM +0200, Jan Kara wrote:
+> On Tue 05-09-17 08:36:48, Dave Chinner wrote:
+> > On Mon, Sep 04, 2017 at 02:14:52PM +0200, Jan Kara wrote:
+> > > > Seems like a reasonable revert/change, but given that ext3 was killed
+> > > > off long ago, is it even still the case that the mm can feed releasepage
+> > > > a dirty clean page?  If that is the case, then isn't it time to fix the
+> > > > mm too?
+> > > 
+> > > Yes, ->releasepage() can still get PageDirty page. Whether the page can or
+> > > cannot be reclaimed is still upto filesystem to decide.
+> > 
+> > Yes, and so we have to handle it.  For all I know right now we could
+> > be chasing single bit memory error/corruptions....
 > 
-> We recently encounter a XFS umount hang problem. As we can see the following
-> stacks, the umount process was trying to stop the xfsaild kthread and waiting
-> for the exit of the xfsaild thread, and the xfsaild thread was waiting for
-> wake-up.
-> 
-> [<ffffffff810a604a>] kthread_stop+0x4a/0xe0
-> [<ffffffffa0680317>] xfs_trans_ail_destroy+0x17/0x30 [xfs]
-> [<ffffffffa067569e>] xfs_log_unmount+0x1e/0x60 [xfs]
-> [<ffffffffa066ac15>] xfs_unmountfs+0xd5/0x190 [xfs]
-> [<ffffffffa066da62>] xfs_fs_put_super+0x32/0x90 [xfs]
-> [<ffffffff811ebad6>] generic_shutdown_super+0x56/0xe0
-> [<ffffffff811ebf27>] kill_block_super+0x27/0x70
-> [<ffffffff811ec269>] deactivate_locked_super+0x49/0x60
-> [<ffffffff811ec866>] deactivate_super+0x46/0x60
-> [<ffffffff81209995>] mntput_no_expire+0xc5/0x120
-> [<ffffffff8120aacf>] SyS_umount+0x9f/0x3c0
-> [<ffffffff81652a09>] system_call_fastpath+0x16/0x1b
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> [<ffffffffa067faa7>] xfsaild+0x537/0x5e0 [xfs]
-> [<ffffffff810a5ddf>] kthread+0xcf/0xe0
-> [<ffffffff81652958>] ret_from_fork+0x58/0x90
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> The kernel version is RHEL7.3 and we are trying to reproduce it (not yet).
-> I have check the related code and suspect the same problem may also exists in
-> the mainline.
-> 
-> The following is the possible sequences which may lead to the hang of umount:
-> 
-> xfsaild: kthread_should_stop() // return false, so xfsaild continue
-> 
-> umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags) // by kthread_stop()
-> 
-> umount: wake_up_process() // because xfsaild is still running, so 0 is returned
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> Possibly, although I'm not convinced - as I've mentioned I've seen exact
+> same assertion failure in XFS on our SLE12-SP2 kernel (4.4 based) in one of
+> customers setup. And I've seen two or three times ext4 barfing for exactly
+> same reason - buffers stripped from dirty page.
 
-This, to me, is where the problem lies. By the time unmount is
-asking the aild to stop, the xfsaild should already be idle and
-scheduled because unmount has just completed a syncrhonous push of
-the AIL. i.e.  xfs_ail_push_all_sync()) waits for the AIL to empty
-which should result in the aild returning to the idle state and
-sleeping in freezable_schedule().
+Yeah, we're chasing ghosts at the moment. :/
 
-Work out why the aild is still running after the log has supposedly
-been emptied and unmount records have been written first, then look
-for a solution. Also, as Brian suggested, reproducing on an upstream
-kernel is a good idea, because it's entirely possible this is a
-vendor kernel (i.e.  RHEL) specific bug....
-
-> xfsaild: __set_current_state()
-> xfsaild: schedule() // Now, on one will wake it up
+[....]
+> > > Now XFS shouldn't
+> > > really end up freeing such page - either because those delalloc / unwritten
+> > > checks trigger or because try_to_free_buffers() refuses to free dirty
+> > > buffers.
+> > 
+> > Except if the dirty page has come through the block_invalidation()
+> > path, because all the buffers on the page have been invalidated and
+> > cleaned. i.e. we've already removed BH_Dirty, BH_Delay and
+> > BH_unwritten from all the buffer heads, so invalidated dirty pages
+> > will run right through buffers will be removed.
+> > 
+> > Every caller to ->releasepage() - except the invalidatepage path and
+> > the than the bufferhead stripper - checks PageDirty *after* the
+> > ->releasepage call and return without doing anything because they
+> > aren't supposed to be releasing dirty pages. So if XFS has decided
+> > the page can be released, but a mapping invalidation call then notes
+> > the page is dirty, it won't invalidate the pagei but it will have
+> > had the bufferheads stripped. That's another possible vector, and
+> > one that explicit checking of the page dirty flag will avoid.
 > 
-> The solution I think is adding an extra kthread_should_stop() before
-> invoking schedule(). Maybe a smp_mb() is needed too, because we needs to
-> ensure the read of the stop flag happens after the write of the task status.
-> Something likes the following patch:
+> Are you speaking about the PageDirty check in __remove_mapping()? I agree
+> that checking PageDirty in releasepage would narrow that window for
+> corruption although won't close it completely - there are places in the
+> kernel that call set_page_dirty() without page lock held and can thus race
+> with page invalidation. But I didn't find how any such callsite could race
+> to cause what we are observing...
+
+I was referring to invalidate_complete_page2() - I didn't look down
+the __remove_mapping() path after I found the first example in
+icp2....
+
+> > Hence my question about XFS being able to cancel the page dirty flag
+> > before calling block_invalidation() so that we can untangle the mess
+> > where we can't tell the difference between a "must release a dirty
+> > invalidated page because we've already invalidated the bufferheads"
+> > context and the other "release page only if not dirty" caller
+> > context?
 > 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 9056c0f..6313f67 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -520,6 +520,11 @@ xfsaild(
->                 if (!xfs_ail_min(ailp) &&
->                     ailp->xa_target == ailp->xa_target_prev) {
->                         spin_unlock(&ailp->xa_lock);
-> +
-> +                       smp_mb();
-> +                       if (kthread_should_stop())
-> +                               break;
-> +
->                         freezable_schedule();
->                         tout = 0;
->                         continue;
+> Yeah, I agree that if you add cancel_dirty_page() into
+> xfs_vm_invalidatepage() before calling block_invalidatepage() and then bail
+> on dirty page in xfs_vm_releasepage(), things should work as well and they
+> would be more robust.
 
-This is still racy.  i.e. What happens if the stop bit is set
-between the new kthread_should_stop() check and
-freezable_schedule()? It'll still hang, right?
-
-Also, breaking out of the loop there leaves the task in
-TASK_INTERRUPTIBLE/TASK_KILLABLE state - it needs to leave this
-function in TASK_RUNNING state.
-
-FWIW, it is my understanding that the sort of schedule vs ttwu race
-you are implying exists here are avoided by the task state being set
-to TASK_INTERRUPTIBLE/TASK_KILLABLE and schedule only parking the
-task if the task was in this state. i.e. if ttwu is called before
-schedule, then the task state will have been modified to either
-TASK_WAKING or TASK_RUNNING before schedule is called and so
-schedule() is then effectively a no-op.  In that case, we go around
-the loop again, hit the kthread_should_stop() check, and we stop.
-Hence, if I've remembered this all correctly, I don't think adding
-this extra kthread_should_stop() check will make any difference,
-either.
+Ok, I'll put together a patch to do that. Thanks Jan!
 
 Cheers,
 
