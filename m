@@ -1,65 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40800 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753994AbdIDTdw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 15:33:52 -0400
-Date: Mon, 4 Sep 2017 12:33:52 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: don't unconditionally clear the reflink flag on
- zero-block files
-Message-ID: <20170904193352.GB12275@infradead.org>
-References: <20170904154944.GG4671@magnolia>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33737 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751305AbdIEL3h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 07:29:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170904154944.GG4671@magnolia>
+In-Reply-To: <20170905105025.GB8034@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <1504104706-11965-10-git-send-email-amir73il@gmail.com> <20170905105025.GB8034@eguan.usersys.redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 5 Sep 2017 14:29:35 +0300
+Message-ID: <CAOQ4uxhSRn_-_ZHy8MJWOheZnSUuN9DZuJb_ygD5qwnEEV39LQ@mail.gmail.com>
+Subject: Re: [PATCH v2 09/14] fsx: add support for -g filldata
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@infradead.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 04, 2017 at 08:49:44AM -0700, Darrick J. Wong wrote:
-> If we have speculative cow preallocations hanging around in the cow
-> fork, don't let a truncate operation clear the reflink flag because if
-> we do then there's a chance we'll forget to free those extents when we
-> destroy the incore inode.
-> 
-> Reported-by: Amir Goldstein <amir73il@gmail.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_inode.c |    8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 5599dda..4ec5b7f 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1624,10 +1624,12 @@ xfs_itruncate_extents(
->  		goto out;
->  
->  	/*
-> -	 * Clear the reflink flag if we truncated everything.
-> +	 * Clear the reflink flag if there are no data fork blocks and
-> +	 * there are no extents staged in the cow fork.
->  	 */
-> -	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
-> -		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-> +	if (xfs_is_reflink_inode(ip) && ip->i_cnextents == 0) {
-> +		if (ip->i_d.di_nblocks == 0)
-> +			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
->  		xfs_inode_clear_cowblocks_tag(ip);
+On Tue, Sep 5, 2017 at 1:50 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Wed, Aug 30, 2017 at 05:51:41PM +0300, Amir Goldstein wrote:
+>> -g X: write character X instead of random generated data
+>>
+>> This is useful to compare holes between good and bad buffer.
+>>
+>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>
+> This seems useful, but I don't see this option gets used in this
+> patchset. Perhaps introduce it when it gets used in the test?
 
-This part looks ok:
+I used it for debugging, to compare hexdump of good and bad files
+when I suspected that checksum errors were due to different zeroed
+ranges.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-But while looking at that I decided I'd want to take a look at
-other places where we potentially clear XFS_DIFLAG2_REFLINK.
+>
+>> ---
+>>  ltp/fsx.c | 11 +++++++++--
+>>  1 file changed, 9 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/ltp/fsx.c b/ltp/fsx.c
+>> index dd6b637..a75bc55 100644
+>> --- a/ltp/fsx.c
+>> +++ b/ltp/fsx.c
+>> @@ -132,6 +132,7 @@ unsigned long     simulatedopcount = 0;   /* -b flag */
+>>  int  closeprob = 0;                  /* -c flag */
+>>  int  debug = 0;                      /* -d flag */
+>>  unsigned long        debugstart = 0;         /* -D flag */
+>> +char filldata = 0;                   /* -g flag */
+>>  int  logid = 0;                      /* -j flag */
+>>  int  flush = 0;                      /* -f flag */
+>>  int  do_fsync = 0;                   /* -y flag */
+>> @@ -817,6 +818,8 @@ gendata(char *original_buf, char *good_buf, unsigned offset, unsigned size)
+>>               good_buf[offset] = testcalls % 256;
+>>               if (offset % 2)
+>>                       good_buf[offset] += original_buf[offset];
+>> +             if (filldata)
+>> +                     good_buf[offset] = filldata;
+>
+> If filldata is not null, we're wasting cycles setting good_buf[offset]
+> and overwriting it with filldata. Use a if-else switch? e.g.
+>
 
-In xfs_ioctl_setattr_xflags it seems like it's not currently safe
-for setting the RT flag vs having COW extents?  I also think we'd
-need the iolock for every change to the rt flag, so this probably
-needs a bigger rework..
+considering this is a debugging option that is not meant to optimize
+performance, I don't think that's critical, but I can fix that.
 
-swapext also doesn't seem to flush out existing cow extents.
+Thanks
+Amir.
