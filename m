@@ -1,57 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49494 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750747AbdIRUif (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 16:38:35 -0400
-Date: Mon, 18 Sep 2017 13:38:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove redundant re-initialization of total_nr_pages
-Message-ID: <20170918203830.GV6540@magnolia>
-References: <20170918120157.30134-1-colin.king@canonical.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:43912 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753041AbdIEThp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 15:37:45 -0400
+Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
+        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v85JbZuJ028952
+        for <linux-xfs@vger.kernel.org>; Tue, 5 Sep 2017 12:37:44 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0b-00082601.pphosted.com with ESMTP id 2cs5ckn2x3-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2017 12:37:44 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v3 0/3] XFS real-time device tweaks
+Date: Tue, 5 Sep 2017 12:37:28 -0700
+Message-ID: <20170905193731.909535-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170918120157.30134-1-colin.king@canonical.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin King <colin.king@canonical.com>
-Cc: linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Richard Wareing <rwareing@fb.com>, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-On Mon, Sep 18, 2017 at 01:01:57PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Variable total_nr_pages is being initialized and then updated with
-> the same value, this latter assignment is redundant and can be
-> removed.  Cleans up clang build warning:
-> 
-> Value stored to 'total_nr_pages' during its initialization is never read
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Patch 1: Same, per v2 cover letter.
+Patch 2:
+- Style updated per Christoph Hellwig's comment
+- Fixed bug: statp->f_bavail = statp->f_bfree
+Patch 3: Same, per v2 cover letter.  I'm going to try my hand and
+putting this into the allocator itself per suggestions, perhaps
+there's some non-obvious way I'm not thinking of which can
+reduce the risk that folks hit the non-RT accidentally.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Richard Wareing (3):
+  fs/xfs: Add rtdisable option
+  fs/xfs: Add real-time device support to statfs
+  fs/xfs: Add rtfallocmin mount option
 
-> ---
->  fs/xfs/xfs_buf.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index da14658da310..2f97c12ca75e 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1258,8 +1258,6 @@ xfs_buf_ioapply_map(
->  	int		size;
->  	int		offset;
->  
-> -	total_nr_pages = bp->b_page_count;
-> -
->  	/* skip the pages in the buffer before the start offset */
->  	page_index = 0;
->  	offset = *buf_offset;
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ fs/xfs/xfs_file.c  | 16 ++++++++++++++++
+ fs/xfs/xfs_inode.c |  6 ++++--
+ fs/xfs/xfs_ioctl.c |  7 +++++--
+ fs/xfs/xfs_mount.h |  2 ++
+ fs/xfs/xfs_super.c | 33 ++++++++++++++++++++++++++++++++-
+ 5 files changed, 59 insertions(+), 5 deletions(-)
+
+-- 
+2.9.3
+
