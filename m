@@ -1,54 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:29635 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752129AbdIEQ5T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 12:57:19 -0400
-Received: from mail1.g1.pair.com (localhost [127.0.0.1])
-        by mail1.g1.pair.com (Postfix) with ESMTP id 0D0B2547F47
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2017 12:57:19 -0400 (EDT)
-Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail1.g1.pair.com (Postfix) with ESMTPSA id 6E8DC60B032
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2017 12:57:18 -0400 (EDT)
-Date: Tue, 5 Sep 2017 18:58:23 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: xfs.org has been squatted.
-Message-ID: <20170905185823.0ddc6719@harpe.intellique.com>
+Received: from mondschein.lichtvoll.de ([194.150.191.11]:43099 "EHLO
+        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753802AbdIETEF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 15:04:05 -0400
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: xfs.org has been squatted.
+Date: Tue, 05 Sep 2017 21:04:03 +0200
+Message-ID: <1903269.2mhcKrTT32@merkaba>
+In-Reply-To: <20170905185823.0ddc6719@harpe.intellique.com>
+References: <20170905185823.0ddc6719@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/U5GcdTly_Q.D4+xEc4sxVYe"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_/U5GcdTly_Q.D4+xEc4sxVYe
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Emmanuel Florac - 05.09.17, 18:58:
+> And the XFS FAQ is gone...
+> 
+> How come?
 
+Its still there for me. I just accessed it with Firefox 55. Both xfs.org 
+starting page and the FAQ.
 
-And the XFS FAQ is gone...
+What do you mean by "squatted"?
 
-How come?
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/U5GcdTly_Q.D4+xEc4sxVYe
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlmu168ACgkQX3jQXNUicVZLCwCffuAkfhIS3GwchyLUMuZdAdxB
-g88An0OVmykiCRB+9VFFyBjfHWVOQ1Uf
-=GqmQ
------END PGP SIGNATURE-----
-
---Sig_/U5GcdTly_Q.D4+xEc4sxVYe--
+Thanks
+-- 
+Martin
