@@ -1,17 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:38859 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751082AbdIELln (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 07:41:43 -0400
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:36312 "EHLO
+        mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751036AbdIELwj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 07:52:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170905110737.GD8034@eguan.usersys.redhat.com>
+In-Reply-To: <20170905112842.GF8034@eguan.usersys.redhat.com>
 References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
- <1504104706-11965-13-git-send-email-amir73il@gmail.com> <20170905110737.GD8034@eguan.usersys.redhat.com>
+ <1504104706-11965-15-git-send-email-amir73il@gmail.com> <20170905112842.GF8034@eguan.usersys.redhat.com>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 5 Sep 2017 14:41:42 +0300
-Message-ID: <CAOQ4uxhFC5BM0U9YGyQ9VLAEtiM4wZugtpmv4WtQ-vO4A17HaQ@mail.gmail.com>
-Subject: Re: [PATCH v2 12/14] replay-log: add support for replaying ops in
- target device sector range
+Date: Tue, 5 Sep 2017 14:52:37 +0300
+Message-ID: <CAOQ4uxiFrZvo-Vyb48RFx44cMEg6m0mHf28HXpXGmAyQSquvdQ@mail.gmail.com>
+Subject: Re: [PATCH v2 14/14] fstests: add crash consistency fsx test using dm-log-writes
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
@@ -19,66 +18,64 @@ List-Id: xfs
 To: Eryu Guan <eguan@redhat.com>
 Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Sep 5, 2017 at 2:07 PM, Eryu Guan <eguan@redhat.com> wrote:
-> On Wed, Aug 30, 2017 at 05:51:44PM +0300, Amir Goldstein wrote:
->> Using command line options --start-sector and --end-sector, only
->> operations acting on the specified target device range will be
->> replayed.
+On Tue, Sep 5, 2017 at 2:28 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Wed, Aug 30, 2017 at 05:51:46PM +0300, Amir Goldstein wrote:
+>> DO NOT MERGE!!! this test fails most likely due to test bug.
 >>
->> Single vebbose mode (-v) prints out only replayed operations.
->> Double verbose mode (-vv) prints out also skipped operations.
+>> The random seed values in this patch fail the test consistently on ext4
+>> always with the same fsck error ((end of extent exceeds allowed value).
+>> btrfs also fails, but with slightly different fsck errors each run.
+>> xfs fails sometimes on file checksum error.
 >>
->> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> ---
->>  src/log-writes/log-writes.c | 33 +++++++++++++++++++++++++++++++--
->>  src/log-writes/log-writes.h |  2 ++
->>  src/log-writes/replay-log.c | 31 +++++++++++++++++++++++++++++++
->>  3 files changed, 64 insertions(+), 2 deletions(-)
+>> Cherry-picked the test from commit 70d41e17164b
+>> in Josef Bacik's fstests tree (https://github.com/josefbacik/fstests).
+>> Quoting from Josef's commit message:
 >>
->> diff --git a/src/log-writes/log-writes.c b/src/log-writes/log-writes.c
->> index ba66a5c..d832c2a 100644
->> --- a/src/log-writes/log-writes.c
->> +++ b/src/log-writes/log-writes.c
->> @@ -119,6 +119,24 @@ int log_discard(struct log *log, struct log_write_entry *entry)
+>>   The test just runs some ops and exits, then finds all of the good buffers
+>>   in the directory we provided and:
+>>   - replays up to the mark given
+>>   - mounts the file system and compares the md5sum
+>>   - unmounts and fsck's to check for metadata integrity
 >>
->>  /*
->>   * @log: the log we are replaying.
->> + * @entry: entry to be replayed.
->> + *
->> + * @return: 0 if we should replay the entry, > 0 if we should skip it.
->> + *
->> + * Should we skip the entry in our log or replay onto the replay device.
->> + */
->> +int log_should_skip(struct log *log, struct log_write_entry *entry)
->> +{
->> +     if (!entry->nr_sectors)
->> +             return 0;
->> +     if (entry->sector + entry->nr_sectors < log->start_sector ||
->> +         entry->sector > log->end_sector)
+>>   dm-log-writes will pretend to do discard and the replay-log tool will
+>>   replay it properly depending on the underlying device, either by writing
+>>   0's or actually calling the discard ioctl, so I've enabled discard in the
+>>   test for maximum fun.
+>>
+>> [Amir:]
+>> - Removed unneeded _test_falloc_support dynamic FSX_OPTS
+>> - Added place holders for using constant random seeds
+>> - Add test to new 'replay' group
 >
-> Seems values from entry can't be used directly, need le64_to_cpu first I
-> think.
->
->> +             return 1;
->> +     return 0;
->> +}
+> Perhaps replace it with 'log' group?
+
+Josef's version was in log group. I added replay also to define
+a new group for crash consistency tests.
+...
 >> +
->> +/*
->> + * @log: the log we are replaying.
->>   * @entry: where we put the entry.
->>   * @read_data: read the entry data as well, entry must be log->sectorsize sized
->>   * if this is set.
->> @@ -137,6 +155,7 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
->>       char *buf;
->>       ssize_t ret;
->>       off_t offset;
->> +     u64 skip = 0;
->
-> int skip? and log_should_skip returns int too.
->
+>> +NUM_FILES=4
+>> +NUM_OPS=200
+>> +FSX_OPTS="-N $NUM_OPS -d -P $SANITY_DIR -i $LOGWRITES_DMDEV"
+>> +# Set random seeds for fsx runs (0 for timestamp + pid)
+>> +seeds=(- 2885 2886 2887 2888)
+>          ^^ meant 0?
 
-Right. Thanks
+The for loops below work on index 1..$NUM_FILES, so seeds[0] is not used
+I can change to iterate 0..$((NUMFILES-1)) if that matter.
+Anyway, next version is not going to have preset seed values.
 
-FYI, this is also a debugging option.
-I used to to replay operations on a given range that was different between
-good and bad buffers to narrow down the suspects.
+>> +# Run fsx for a while
+>> +for j in `seq 1 $NUM_FILES`
+>> +do
+>> +     run_check $here/ltp/fsx $FSX_OPTS -S ${seeds[$j]} -j $j $SCRATCH_MNT/testfile$j &
+>> +done
+>> +wait
+>> +
+>> +test_md5=()
+>> +test_size=()
+>> +for j in `seq 1 $NUM_FILES`
+>> +do
+>> +     test_md5[$j]=$(md5sum $SCRATCH_MNT/testfile$j | cut -f 1 -d ' ')
+>> +     test_size[$j]=$(_ls_l -h $SCRATCH_MNT/testfile$j | awk '{ print $5 }')
+>> +done
+>> +
