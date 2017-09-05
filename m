@@ -1,44 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:61073 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:57130 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752393AbdIFU2S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 16:28:18 -0400
-From: Helge Deller <deller@gmx.de>
-Subject: [PATCH 10/14] fs/xfs: Use %pS printk format for direct addresses
-Date: Wed,  6 Sep 2017 22:27:57 +0200
-Message-Id: <1504729681-3504-11-git-send-email-deller@gmx.de>
-In-Reply-To: <1504729681-3504-1-git-send-email-deller@gmx.de>
-References: <1504729681-3504-1-git-send-email-deller@gmx.de>
+        id S1750741AbdIELba (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Sep 2017 07:31:30 -0400
+Date: Tue, 5 Sep 2017 19:31:28 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 07/14] fsx: add optional logid prefix to log messages
+Message-ID: <20170905113128.GG8034@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <1504104706-11965-8-git-send-email-amir73il@gmail.com>
+ <20170905104641.GA8034@eguan.usersys.redhat.com>
+ <CAOQ4uxi1mu5QXt3PJuk27WJvm+vS63ct+VQsDJvxvaLiEGzrAA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxi1mu5QXt3PJuk27WJvm+vS63ct+VQsDJvxvaLiEGzrAA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Petr Mladek <pmladek@suse.com>, Andrew Morton <akpm@linux-foundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Use the %pS instead of the %pF printk format specifier for printing symbols
-from direct addresses. This is needed for the ia64, ppc64 and parisc64
-architectures.
+On Tue, Sep 05, 2017 at 02:24:20PM +0300, Amir Goldstein wrote:
+> On Tue, Sep 5, 2017 at 1:46 PM, Eryu Guan <eguan@redhat.com> wrote:
+> > On Wed, Aug 30, 2017 at 05:51:39PM +0300, Amir Goldstein wrote:
+> >> When writing the intermixed output of several fsx processes
+> >> to a single log file, it is usefull to prefix logs with a log id.
+> >> Use fsx -j <logid> to define the log messages prefix.
+> >
+> > Would it be better to allow any string as prefix, not limit to id
+> > number?
+> >
+> 
+> Maybe, but I didn't see an immediate need for that beyond
+> the concurrent test runs, for with numeric id is sufficient.
 
-Signed-off-by: Helge Deller <deller@gmx.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
----
- fs/xfs/xfs_error.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I agreed, I don't have strong preference on this.
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 2f4feb9..028e50a 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -344,7 +344,7 @@ xfs_verifier_error(
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 
--	xfs_alert(mp, "Metadata %s detected at %pF, %s block 0x%llx",
-+	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
- 		  __return_address, bp->b_ops->name, bp->b_bn);
- 
--- 
-2.1.0
-
+Thanks,
+Eryu
+> 
+> Besides, the function that prepends the prefix, prt()
+> is sometimes uses for continued line, which results with
+> weird looking lines like this one:
+> 
+> 1: 60( 60 mod 256): 1: FALLOC   0x30140 thru 0x30f3c    (0xdfc bytes)
+> 1: EXTENDING1:
+> 
+> So it's not really worth fixing properly, but anything more then a single
+> numeric prefix is going to look quite bad.
