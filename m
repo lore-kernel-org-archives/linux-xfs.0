@@ -1,99 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:35323 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753607AbdIEXnk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 19:43:40 -0400
-Date: Wed, 6 Sep 2017 09:42:56 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20170905234256.GP17782@dastard>
-References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
- <20170903074306.GA8351@infradead.org>
- <20170904014353.GG10621@dastard>
- <20170904022002.GD4671@magnolia>
- <20170904121452.GC1761@quack2.suse.cz>
- <20170904223648.GH10621@dastard>
- <20170905161734.GA25379@quack2.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170905161734.GA25379@quack2.suse.cz>
+Received: from mga01.intel.com ([192.55.52.88]:31464 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753979AbdIEWgQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Sep 2017 18:36:16 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 1/9] ext4: remove duplicate extended attributes defs
+Date: Tue,  5 Sep 2017 16:35:33 -0600
+Message-Id: <20170905223541.20594-2-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
+References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Li Xi <lixi@ddn.com>, Andreas Dilger <adilger@dilger.ca>, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Sep 05, 2017 at 06:17:34PM +0200, Jan Kara wrote:
-> On Tue 05-09-17 08:36:48, Dave Chinner wrote:
-> > On Mon, Sep 04, 2017 at 02:14:52PM +0200, Jan Kara wrote:
-> > > > Seems like a reasonable revert/change, but given that ext3 was killed
-> > > > off long ago, is it even still the case that the mm can feed releasepage
-> > > > a dirty clean page?  If that is the case, then isn't it time to fix the
-> > > > mm too?
-> > > 
-> > > Yes, ->releasepage() can still get PageDirty page. Whether the page can or
-> > > cannot be reclaimed is still upto filesystem to decide.
-> > 
-> > Yes, and so we have to handle it.  For all I know right now we could
-> > be chasing single bit memory error/corruptions....
-> 
-> Possibly, although I'm not convinced - as I've mentioned I've seen exact
-> same assertion failure in XFS on our SLE12-SP2 kernel (4.4 based) in one of
-> customers setup. And I've seen two or three times ext4 barfing for exactly
-> same reason - buffers stripped from dirty page.
+The following commit:
 
-Yeah, we're chasing ghosts at the moment. :/
+commit 9b7365fc1c82 ("ext4: add FS_IOC_FSSETXATTR/FS_IOC_FSGETXATTR
+interface support")
 
-[....]
-> > > Now XFS shouldn't
-> > > really end up freeing such page - either because those delalloc / unwritten
-> > > checks trigger or because try_to_free_buffers() refuses to free dirty
-> > > buffers.
-> > 
-> > Except if the dirty page has come through the block_invalidation()
-> > path, because all the buffers on the page have been invalidated and
-> > cleaned. i.e. we've already removed BH_Dirty, BH_Delay and
-> > BH_unwritten from all the buffer heads, so invalidated dirty pages
-> > will run right through buffers will be removed.
-> > 
-> > Every caller to ->releasepage() - except the invalidatepage path and
-> > the than the bufferhead stripper - checks PageDirty *after* the
-> > ->releasepage call and return without doing anything because they
-> > aren't supposed to be releasing dirty pages. So if XFS has decided
-> > the page can be released, but a mapping invalidation call then notes
-> > the page is dirty, it won't invalidate the pagei but it will have
-> > had the bufferheads stripped. That's another possible vector, and
-> > one that explicit checking of the page dirty flag will avoid.
-> 
-> Are you speaking about the PageDirty check in __remove_mapping()? I agree
-> that checking PageDirty in releasepage would narrow that window for
-> corruption although won't close it completely - there are places in the
-> kernel that call set_page_dirty() without page lock held and can thus race
-> with page invalidation. But I didn't find how any such callsite could race
-> to cause what we are observing...
+added several defines related to extended attributes to ext4.h.  They were
+added within an #ifndef FS_IOC_FSGETXATTR block with the comment:
 
-I was referring to invalidate_complete_page2() - I didn't look down
-the __remove_mapping() path after I found the first example in
-icp2....
+/* Until the uapi changes get merged for project quota... */
 
-> > Hence my question about XFS being able to cancel the page dirty flag
-> > before calling block_invalidation() so that we can untangle the mess
-> > where we can't tell the difference between a "must release a dirty
-> > invalidated page because we've already invalidated the bufferheads"
-> > context and the other "release page only if not dirty" caller
-> > context?
-> 
-> Yeah, I agree that if you add cancel_dirty_page() into
-> xfs_vm_invalidatepage() before calling block_invalidatepage() and then bail
-> on dirty page in xfs_vm_releasepage(), things should work as well and they
-> would be more robust.
+Those uapi changes were merged by this commit:
 
-Ok, I'll put together a patch to do that. Thanks Jan!
+commit 334e580a6f97 ("fs: XFS_IOC_FS[SG]SETXATTR to FS_IOC_FS[SG]ETXATTR
+promotion")
 
-Cheers,
+so all the definitions needed by ext4 are available in
+include/uapi/linux/fs.h.  Remove the duplicates from ext4.h.
 
-Dave.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Li Xi <lixi@ddn.com>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: Andreas Dilger <adilger@dilger.ca>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <dchinner@redhat.com>
+---
+ fs/ext4/ext4.h | 37 -------------------------------------
+ 1 file changed, 37 deletions(-)
+
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index a2bb7d2..c950278 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -644,43 +644,6 @@ enum {
+ #define EXT4_IOC_GET_ENCRYPTION_PWSALT	FS_IOC_GET_ENCRYPTION_PWSALT
+ #define EXT4_IOC_GET_ENCRYPTION_POLICY	FS_IOC_GET_ENCRYPTION_POLICY
+ 
+-#ifndef FS_IOC_FSGETXATTR
+-/* Until the uapi changes get merged for project quota... */
+-
+-#define FS_IOC_FSGETXATTR		_IOR('X', 31, struct fsxattr)
+-#define FS_IOC_FSSETXATTR		_IOW('X', 32, struct fsxattr)
+-
+-/*
+- * Structure for FS_IOC_FSGETXATTR and FS_IOC_FSSETXATTR.
+- */
+-struct fsxattr {
+-	__u32		fsx_xflags;	/* xflags field value (get/set) */
+-	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+-	__u32		fsx_nextents;	/* nextents field value (get)	*/
+-	__u32		fsx_projid;	/* project identifier (get/set) */
+-	unsigned char	fsx_pad[12];
+-};
+-
+-/*
+- * Flags for the fsx_xflags field
+- */
+-#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
+-#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
+-#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
+-#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
+-#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
+-#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
+-#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
+-#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
+-#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
+-#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
+-#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
+-#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+-#define FS_XFLAG_NODEFRAG	0x00002000  	/* do not defragment */
+-#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+-#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this */
+-#endif /* !defined(FS_IOC_FSGETXATTR) */
+-
+ #define EXT4_IOC_FSGETXATTR		FS_IOC_FSGETXATTR
+ #define EXT4_IOC_FSSETXATTR		FS_IOC_FSSETXATTR
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
+
