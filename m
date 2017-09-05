@@ -1,68 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:33575 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752625AbdIEVZB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 17:25:01 -0400
-Received: by mail-pg0-f44.google.com with SMTP id t3so11701069pgt.0
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2017 14:25:01 -0700 (PDT)
-From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH] loop: set physical block size to logical block size
-Date: Tue,  5 Sep 2017 14:24:47 -0700
-Message-Id: <8b3faca77b098c23827e48fc8f5b2ad973f3c23d.1504646604.git.osandov@fb.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:54050 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754121AbdIEWGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 18:06:36 -0400
+Date: Wed, 6 Sep 2017 08:06:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical
+ sectorsize
+Message-ID: <20170905220631.GL17782@dastard>
+References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com>
+ <20170905063139.GA679@infradead.org>
+ <20170905064208.GB15686@vader>
+ <2656563.n056MvCHVb@localhost.localdomain>
+ <89dbce28-5798-f404-4dc8-a85aae36cdec@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <89dbce28-5798-f404-4dc8-a85aae36cdec@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org
-Cc: kernel-team@fb.com, Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>, Karel Zak <kzak@redhat.com>, Milan Broz <gmazyland@gmail.com>, Chandan Rajendra <chandan@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, Omar Sandoval <osandov@osandov.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, sandeen@sandeen.net, Omar Sandoval <osandov@fb.com>, linux-block@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+On Tue, Sep 05, 2017 at 09:00:26AM -0600, Jens Axboe wrote:
+> On 09/05/2017 01:37 AM, Chandan Rajendra wrote:
+> > On Tuesday, September 5, 2017 12:12:08 PM IST Omar Sandoval wrote:
+> >> On Mon, Sep 04, 2017 at 11:31:39PM -0700, Christoph Hellwig wrote:
+> >>> On Tue, Sep 05, 2017 at 11:14:42AM +0530, Chandan Rajendra wrote:
+> >>>> Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
+> >>>> physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
+> >>>> physical sector size of loop devices. On ppc64, this causes loop devices
+> >>>> to have 64k as the physical sector size.
+> >>>
+> >>> Eek.  We'll need to revert the loop change ASAP!
+> >>
+> >> Most annoying patch series ever. It hasn't made it to Linus' tree yet,
+> >> right? We can revert (although the later change depends on that), fold
+> >> in a fix, or apply a fix on top of it, whatever Jens prefers.
+> >>
+> >>
+> > 
+> > My bad. 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 is the commit id from 
+> > Linux-next. I don't see this commit in Linus's git tree.
+> 
+> Right, it's only queued up, and scheduled for the 2nd part of the
+> block changes for 4.14. It should have been PAGE_CACHE_SIZE, but
+> we don't have that anymore...
 
-Commit 6c6b6f28b333 ("loop: set physical block size to PAGE_SIZE")
-caused mkfs.xfs to barf on ppc64 [1]. Always using PAGE_SIZE as the
-physical block size still makes the most sense semantically, but let's
-just lie and always set it to the same value as the logical block size
-(same goes for io_min). In the future we might want to at least bump up
-io_min to PAGE_SIZE but I'm sick of these stupid changes so let's play
-it safe.
+But PAGE_CACHE_SIZE was equal to PAGE_SIZE, so that would have been
+wrong, too.
 
-1: https://marc.info/?l=linux-xfs&m=150459024723753&w=2
+I just don't see why this is necessary, given that buffered IO
+through the upper filesystem will already be doing page
+sized/aligned IO where possible (because that's what the page cache
+does!). And for direct IO the loop device should just export the
+underlying host filesystem logical/physical sector sizes, which
+should be optimal for the backing storage to begin with.
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
- drivers/block/loop.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Someone want to enlighten me as to what problem is being solved
+here?
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 78c47c4b584d..85de67334695 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -1036,6 +1036,8 @@ static int loop_clr_fd(struct loop_device *lo)
- 	memset(lo->lo_crypt_name, 0, LO_NAME_SIZE);
- 	memset(lo->lo_file_name, 0, LO_NAME_SIZE);
- 	blk_queue_logical_block_size(lo->lo_queue, 512);
-+	blk_queue_physical_block_size(lo->lo_queue, 512);
-+	blk_queue_io_min(lo->lo_queue, 512);
- 	if (bdev) {
- 		bdput(bdev);
- 		invalidate_bdev(bdev);
-@@ -1330,6 +1332,8 @@ static int loop_set_block_size(struct loop_device *lo, unsigned long arg)
- 	blk_mq_freeze_queue(lo->lo_queue);
- 
- 	blk_queue_logical_block_size(lo->lo_queue, arg);
-+	blk_queue_physical_block_size(lo->lo_queue, arg);
-+	blk_queue_io_min(lo->lo_queue, arg);
- 	loop_update_dio(lo);
- 
- 	blk_mq_unfreeze_queue(lo->lo_queue);
-@@ -1777,8 +1781,6 @@ static int loop_add(struct loop_device **l, int i)
- 	}
- 	lo->lo_queue->queuedata = lo;
- 
--	blk_queue_physical_block_size(lo->lo_queue, PAGE_SIZE);
--
- 	blk_queue_max_hw_sectors(lo->lo_queue, BLK_DEF_MAX_SECTORS);
- 
- 	/*
+Cheers,
+
+Dave.
 -- 
-2.14.1
-
+Dave Chinner
+david@fromorbit.com
