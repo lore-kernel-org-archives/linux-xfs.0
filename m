@@ -1,50 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21371 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752687AbdIDPuT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 11:50:19 -0400
-Date: Mon, 4 Sep 2017 08:49:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 2/2] xfs: don't unconditionally clear the reflink flag on
- zero-block files
-Message-ID: <20170904154944.GG4671@magnolia>
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:35930 "EHLO
+        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750766AbdIELYW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 07:24:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20170905104641.GA8034@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <1504104706-11965-8-git-send-email-amir73il@gmail.com> <20170905104641.GA8034@eguan.usersys.redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 5 Sep 2017 14:24:20 +0300
+Message-ID: <CAOQ4uxi1mu5QXt3PJuk27WJvm+vS63ct+VQsDJvxvaLiEGzrAA@mail.gmail.com>
+Subject: Re: [PATCH v2 07/14] fsx: add optional logid prefix to log messages
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@infradead.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-If we have speculative cow preallocations hanging around in the cow
-fork, don't let a truncate operation clear the reflink flag because if
-we do then there's a chance we'll forget to free those extents when we
-destroy the incore inode.
+On Tue, Sep 5, 2017 at 1:46 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Wed, Aug 30, 2017 at 05:51:39PM +0300, Amir Goldstein wrote:
+>> When writing the intermixed output of several fsx processes
+>> to a single log file, it is usefull to prefix logs with a log id.
+>> Use fsx -j <logid> to define the log messages prefix.
+>
+> Would it be better to allow any string as prefix, not limit to id
+> number?
+>
 
-Reported-by: Amir Goldstein <amir73il@gmail.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_inode.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Maybe, but I didn't see an immediate need for that beyond
+the concurrent test runs, for with numeric id is sufficient.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5599dda..4ec5b7f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1624,10 +1624,12 @@ xfs_itruncate_extents(
- 		goto out;
- 
- 	/*
--	 * Clear the reflink flag if we truncated everything.
-+	 * Clear the reflink flag if there are no data fork blocks and
-+	 * there are no extents staged in the cow fork.
- 	 */
--	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
--		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-+	if (xfs_is_reflink_inode(ip) && ip->i_cnextents == 0) {
-+		if (ip->i_d.di_nblocks == 0)
-+			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
- 		xfs_inode_clear_cowblocks_tag(ip);
- 	}
- 
+Besides, the function that prepends the prefix, prt()
+is sometimes uses for continued line, which results with
+weird looking lines like this one:
+
+1: 60( 60 mod 256): 1: FALLOC   0x30140 thru 0x30f3c    (0xdfc bytes)
+1: EXTENDING1:
+
+So it's not really worth fixing properly, but anything more then a single
+numeric prefix is going to look quite bad.
