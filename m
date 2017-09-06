@@ -1,117 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31464 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59136 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754017AbdIEWgU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 18:36:20 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 7/9] ext4: prevent data corruption with inline data + DAX
-Date: Tue,  5 Sep 2017 16:35:39 -0600
-Message-Id: <20170905223541.20594-8-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
-References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
+        id S1753347AbdIFLnH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 07:43:07 -0400
+Date: Wed, 6 Sep 2017 07:43:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
+Message-ID: <20170906114305.GC54570@bfoster.bfoster>
+References: <20170902224145.1291030-1-rwareing@fb.com>
+ <20170903085602.GF32385@infradead.org>
+ <30E1D468-6E15-469E-8026-8EE542201422@fb.com>
+ <20170906034443.GQ17782@dastard>
+ <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: Richard Wareing <rwareing@fb.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
 
-If an inode has inline data it is currently prevented from using DAX by a
-check in ext4_should_use_dax().  When the inode grows inline data via
-ext4_create_inline_data() or removes its inline data via
-ext4_destroy_inline_data_nolock(), the value of S_DAX can change.
+On Wed, Sep 06, 2017 at 06:54:41AM +0000, Richard Wareing wrote:
+> 
+> On 9/5/17, 8:45 PM, "Dave Chinner" <david@fromorbit.com> wrote:
+> 
+>     On Sun, Sep 03, 2017 at 10:02:41PM +0000, Richard Wareing wrote:
+>     > 
+>     > > On Sep 3, 2017, at 1:56 AM, Christoph Hellwig
+>     > > <hch@infradead.org> wrote:
+>     > > 
+>     > > On Sat, Sep 02, 2017 at 03:41:42PM -0700, Richard Wareing
+>     > > wrote:
+>     > >> - Replaced rtdefault with rtdisable, this yields similar
+>     > >> operational benefits when combined with the existing mkfs time
+>     > >> setting of the inheritance flag on the root directory.  Allows
+>     > >> temporary disabling of real-time allocation without having to
+>     > >> walk entire FS to remove flags (which could be time consuming).
+>     > >> I still don't think it's super obvious to an admin the
+>     > >> real-time flag was put there at mkfs time (vs. rtdefault being
+>     > >> in mount flags), but this gets me half of what I'm after.
+>     > > 
+>     > > I still don't understand this option.  What is the use case of
+>     > > dynamically switching on/off these default to the rt device?
+>     > > 
+>     > 
+>     > Say you are in a bit of an emergency, and you need IOPs *now*
+>     > (incident recovery), w/ rtdisable you could funnel the IO to the
+>     > SSD
+>     
+>     But it /doesn't do that/. It only disables new files from writing to
+>     the rt device. All reads for data in the RT device and writes to
+>     existing files still go to the RT device.
+>     
+>     
+>     > without having to strip the inheritance bits from all the
+>     > directories (which would require two walks....one to remove and
+>     > one to add them all back).    I think this is about having some
+>     > options during incidents, and a "kill-switch" should the need
+>     > arise.
+>     
+>     And soon after the kill switch is triggered, your tiny data device
+>     will go ENOSPC because changing that mount option effective removed
+>     TBs of free space from the filesystem. Then things will really start
+>     going bad.
+>     
+>     So maybe you didn't think this through properly - the last thing a
+>     typical user would expect is a filesystem reporting TBs of free
+>     space to go ENOSPC and not being able to recover, regardless of what
+>     mount options are present. iAnd they'll be especially confused when
+>     they start looking at inodes and seeing RT bits set all over the
+>     place...
+>     
+>     It's just a recipe for confusion, unexpected behaviour and all I
+>     see here is a support and triage nightmare. Not to mention FB will
+>     move on to something else in a couple of years, and we get stuck
+>     having to maintain it forever more (*cough* filestreams *cough*).
+>     
+> Fair enough, what are your thoughts on rtdefault, if I changed it to *not* set the inheritance bits, but take over this responsibility in their place?  My thinking here is this integrates better than inheritance bits w/ policy management systems such as Chef/Puppet.  Inheritance bits, on the other hand don¹t really lend themselves to machine level policies; they can be sprinkled about all over the FS, and a walk would be required to enforce a machine wide policy.
+> 
+> Or instead of a mount option, would a sysfs option be acceptable?
+> 
+> My hope is we don¹t move on, but collaborate a bit more with the open-source world on these sorts of problems instead of re-inventing the proverbial FS wheel (and re-learning old lessons solved many moons ago by FS developers).  Trying to do my part now, show it can be done and should be done.
+> 
 
-Currently these changes are unsafe because we don't hold off page faults
-and I/O, write back dirty radix tree entries and invalidate all mappings.
-This work is done in XFS via xfs_ioctl_setattr_dax_invalidate(), for
-example.  This unsafe transitioning of S_DAX could potentially lead to data
-corruption.
+FWIW, I'm still a little confused as to the need for this mechanism.
+What exactly is the use case for 1.) your specific environment and 2.)
+to a traditional realtime user?
 
-Fix this issue by preventing the DAX mount option from being used on
-filesystems that were created to support inline data.  Inline data is an
-option given to mkfs.ext4.
+Something like rtdefault (or an rtro option for realtime readonly
+behavior) seems a bit more generic to me if one wanted broad control
+over the feature, but your fallocate mount thingy seems to already
+accomplish that. I.e., if you made that thing set/clear RT on individual
+files based purely on file size and you had a need to quickly disable
+setting RT on new files, why can't you just remount without that option?
+It seems to me you wouldn't need to care about the RT inherit flag
+either way..?
 
-We prevent DAX from being used with inline data as opposed to trying to
-safely manage the transition of S_DAX because of the locking complexities:
+>     > The other problem I see is accessibility and usability.  By making
+>     > these decisions buried in more generic XFS allocation mechanisms
+>     > or fnctl's, few developers are going to really understand how to
+>     > safely use them (e.g. without blowing up their SSD's WAF or
+>     > endurance). 
+>     
+>     The whole point of putting them into the XFS allocator as admin
+>     policies is that *applications developers don't need to know they
+>     exist*.
+>     
+> I get you now: *admins* need to know, but application developers not so much.
+> 
+>     > Fallocation is a better understood notion, easier to
+>     > use and has wider support amongst existing utilities.
+>     
+>     Almost every application I've seen that uses fallocate does
+>     something wrong and/or breaks a longevity or performance
+>     optimisation that filesystems have been making for years. 
+>     
+>     fallocate is "easy to understand" but *difficult to use optimally*
+>     because it's behaviour is tightly bound to the filesystem allocator
+>     algorithms. i.e. it's easy to defeat hidden filesystem optimisations
+>     with fallocate, but it's difficult to understand a sub-optimal
+>     corner case in the filesystem allocator that fallocate could be used
+>     to avoid.
+>     
+>     In reality, we don't want people using fallocate - the filesystem
+>     algorithms should do the right thing so people don't need to modify
+>     their applications. In cases like this, having the filesystem decide
+>     automatically at first allocation what device to use is the right
+>     way to integrate the functionality, not require users to use
+>     fallocate to trigger such a decision and, as a side effect, prevent
+>     the filesystem from making all the other optimisations they still
+>     want it to make.
+> 
+> You make a good point here, on preventing the FS from making other optimizations.  I¹m re-working this as you and others have suggested (new version tomorrow).
+> 
+> And xfs_fsr would be the home for code migrating the file to the real-time device once it grows beyond some tunable size.  
+> 
 
-1) filemap_write_and_wait() eventually calls ext4_writepages(), which
-acquires the sbi->s_journal_flag_rwsem.  This lock ranks above the
-jbdw_handle which is eventually taken by ext4_journal_start().  This
-essentially means that the writeback has to happen outside of the context
-of an active journal handle (outside of ext4_journal_start() to
-ext4_journal_stop().)
+I pretty much agree with everything Dave says here, along with
+Christoph's previous suggestion that this is better off in the allocator
+than in the fallocate path. In the end, I think your current environment
+won't know the difference because you fallocate everything up front
+anyways (notwithstanding Dave's explanation as to why that might not be
+the greatest idea, however). In fact, I think this would be much more
+interesting overall if we could tier per-extent allocation rather than
+per-file, but that of course is one of the limitations of using RT.
 
-2) To lock out page faults we take a write lock on the ei->i_mmap_sem, and
-this lock again ranks above the jbd2_handle taken by ext4_journal_start().
-So, as with the writeback code in 1) above we have to take ei->i_mmap_sem
-outside of the context of an active journal handle.
+That said, while the implementation improvement makes sense, I'm still
+not necessarily convinced that this has a place in the upstream realtime
+feature. I'll grant you that I'm not terribly familiar with the
+historical realtime use case.. Dave, do you see value in such a
+heuristic as it relates to the realtime feature (not this tiering
+setup)? Is there necessarily a mapping between a large file size and a
+file that should be tagged realtime? E.g., I suppose somebody who is
+using traditional realtime (i.e., no SSD) and has a mix of legitimate
+realtime (streaming media) files and large sparse virt disk images or
+something of that nature would need to know to not use this feature
+(i.e., this requires documentation)..?
 
-We are able to work around both of these restrictions and safely transition
-S_DAX when we change the journaling mode, but for inline data it's much
-harder because each of ext4_create_inline_data() and
-ext4_destroy_inline_data_nolock() are passed in journal handles that have
-already been started.
+Brian
 
-To be able to safely writeback and invalidate our dirty inode data we'd
-either need to uplevel the locking, writeback and invalidate into all the
-callers of those two functions, or we'd need to stop our current journal
-handle, do the appropriate locking, writeback and invalidate, unlock and
-restart the journal handle.
-
-These both seem too complex, and I don't know if we have a valid use case
-where we need to combine a filesystem with inline data and DAX, so just
-prevent them from being used together.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-CC: stable@vger.kernel.org
----
- fs/ext4/inline.c | 10 ----------
- fs/ext4/super.c  |  5 +++++
- 2 files changed, 5 insertions(+), 10 deletions(-)
-
-diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
-index 28c5c3a..fd95019 100644
---- a/fs/ext4/inline.c
-+++ b/fs/ext4/inline.c
-@@ -302,11 +302,6 @@ static int ext4_create_inline_data(handle_t *handle,
- 	EXT4_I(inode)->i_inline_size = len + EXT4_MIN_INLINE_DATA_SIZE;
- 	ext4_clear_inode_flag(inode, EXT4_INODE_EXTENTS);
- 	ext4_set_inode_flag(inode, EXT4_INODE_INLINE_DATA);
--	/*
--	 * Propagate changes to inode->i_flags as well - e.g. S_DAX may
--	 * get cleared
--	 */
--	ext4_set_inode_flags(inode);
- 	get_bh(is.iloc.bh);
- 	error = ext4_mark_iloc_dirty(handle, inode, &is.iloc);
- 
-@@ -451,11 +446,6 @@ static int ext4_destroy_inline_data_nolock(handle_t *handle,
- 		}
- 	}
- 	ext4_clear_inode_flag(inode, EXT4_INODE_INLINE_DATA);
--	/*
--	 * Propagate changes to inode->i_flags as well - e.g. S_DAX may
--	 * get set.
--	 */
--	ext4_set_inode_flags(inode);
- 
- 	get_bh(is.iloc.bh);
- 	error = ext4_mark_iloc_dirty(handle, inode, &is.iloc);
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index d61a70e2..d549dfb 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3686,6 +3686,11 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 	}
- 
- 	if (sbi->s_mount_opt & EXT4_MOUNT_DAX) {
-+		if (ext4_has_feature_inline_data(sb)) {
-+			ext4_msg(sb, KERN_ERR, "Cannot use DAX on a filesystem"
-+					" that may contain inline data");
-+			goto failed_mount;
-+		}
- 		err = bdev_dax_supported(sb, blocksize);
- 		if (err)
- 			goto failed_mount;
--- 
-2.9.5
-
+>     > Keep in
+>     > mind, we need our SSDs to last >3 years (w/ only a mere 70-80 TBW;
+>     > 300TBW if we are lucky), so we want to design things such that
+>     > application developers are less likely to step on land mines
+>     > causing pre-mature SSD failure.
+>     
+>     Hmmm. I don't think they way you are using fallocate is doing what
+>     you think it is doing.
+>     
+>     That is, using fallocate to preallocate all files so you can direct
+>     allocation to a different device means that delayed allocation is
+>     turned off. Hence XFS cannot optimise allocation across multiple
+>     files at writeback time. This means that writeback across multiple
+>     files will be sprayed around disjointed preallocated regions. When
+>     using delayed allocation, the filesystem will allocate the blocks
+>     for all the files sequentially and so the block layer merge will
+>     them all into one big contiguous IO.
+>     
+>     IOWs, fallocate sprays write IO around because they decouple
+>     allocation locality from temporal writeback locality and this causes
+>     non-contiguous write patterns which are a significant contributin
+>     factor to write amplification in SSDs.  In comparison, delayed
+>     allocation results in large sequential IOs that minimise write
+>     amplification in the SSD...
+>     
+>     Hence the method you describe that "maximises SSD life" won't help
+>     - if anything it's going to actively harm the SSD life when
+>     compared to just letting the filesystem use delayed allocation and
+>     choose what device to write to at that time....
+> 
+> Wrt to SSDs you are completely correct on this, our fallocate calls were intended to pay up front on the write path for more favorable allocations which pay off during reads on HDDs.  For SSDs this clearly makes less sense, and an optimization we will need to make in our code for the reasons you point out.
+> 
+>     Hacking one-off high level controls into APIs like fallocate does
+>     not work. Allocation policies need to be integrated into the
+>     filesystem allocators for them to be effective and useful to
+>     administrators and applications alike. fallocate is no sustitute for
+>     the black magic that filesystems do to optimise allocation and IO
+>     patterns....
+>     
+>     Cheers,
+>     
+>     Dave.
+>     -- 
+>     Dave Chinner
+>     david@fromorbit.com
+>     
+> 
+> Thanks for the great comments, suggestions & insights.  Learning a lot.
+> 
+> Richard
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
