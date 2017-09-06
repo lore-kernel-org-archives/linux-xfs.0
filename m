@@ -1,50 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:38429 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751153AbdIKOuO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Sep 2017 10:50:14 -0400
-Subject: Re: [PATCH] iomap: fix integer truncation issues in the zeroing and
- dirtying helpers
-References: <20170811151805.22896-1-hch@lst.de>
- <f4d52f4d8b1cb6dfb91acaa8612d4bba@molgen.mpg.de>
- <20170813090855.GA32112@lst.de>
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Message-ID: <34a29739-2f5b-a197-d047-e23be17b5086@molgen.mpg.de>
-Date: Mon, 11 Sep 2017 16:50:12 +0200
+Received: from mail1.g1.pair.com ([66.39.3.162]:19291 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752712AbdIFMfQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:35:16 -0400
+Date: Wed, 6 Sep 2017 14:36:30 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs.org has been squatted.
+Message-ID: <20170906143630.70825219@harpe.intellique.com>
+In-Reply-To: <1903269.2mhcKrTT32@merkaba>
+References: <20170905185823.0ddc6719@harpe.intellique.com>
+        <1903269.2mhcKrTT32@merkaba>
 MIME-Version: 1.0
-In-Reply-To: <20170813090855.GA32112@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/z_84moO.3UcyMYIIP9q+g.o"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, stockhausen@collogia.de, it+linux-nfs@molgen.mpg.de
+To: Martin Steigerwald <martin@lichtvoll.de>
+Cc: linux-xfs@vger.kernel.org
 
-Dear Christoph,
+--Sig_/z_84moO.3UcyMYIIP9q+g.o
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+Le Tue, 05 Sep 2017 21:04:03 +0200
+Martin Steigerwald <martin@lichtvoll.de> =C3=A9crivait:
 
-On 08/13/17 11:08, Christoph Hellwig wrote:
+> Emmanuel Florac - 05.09.17, 18:58:
+> > And the XFS FAQ is gone...
+> >=20
+> > How come? =20
+>=20
+> Its still there for me. I just accessed it with Firefox 55. Both
+> xfs.org starting page and the FAQ.
+>=20
+> What do you mean by "squatted"?
+>=20
 
-> I'm overdue doing another XFS stable backport batch, and I will
-> include this patch.
+redirects to some default wordpress installation. Today it works
+accessing http://xfs.org/index.php ; http://xfs.org doesn't work.
+https://xfs.org redirects to wordpress.
 
-If I am not mistaken, this has not been picked up yet for the stable series.
+Apparently it's the person hosting it that installed wordpress and
+misconfigured the web server, it's not actually squatted.
 
-```
-$ git tag --contains e28ae8e428fefe2facd72cea9f29906ecb9c861d
-v4.13
-v4.13-rc6
-v4.13-rc7
-v4.13.1
-$ git log --grep e28ae8e428fefe2facd72cea9f29906ecb9c861d v4.9.48
-$
-```
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-Do you want me to submit it for inclusion?
+--Sig_/z_84moO.3UcyMYIIP9q+g.o
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Kind regards,
+iEYEARECAAYFAlmv684ACgkQX3jQXNUicVbE8ACeIgKyzfAWNmPhSgk7quS3QIdx
+dyoAn2YD+rgxU+QmtPkzJ/JuacTwNG3U
+=/iEe
+-----END PGP SIGNATURE-----
 
-Paul
+--Sig_/z_84moO.3UcyMYIIP9q+g.o--
