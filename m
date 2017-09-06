@@ -1,75 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63245 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:47037 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754060AbdIEWgW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 18:36:22 -0400
+        id S1755638AbdIFRJt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 13:09:49 -0400
+Date: Wed, 6 Sep 2017 11:09:46 -0600
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 8/9] ext4: add sanity check for encryption + DAX
-Date: Tue,  5 Sep 2017 16:35:40 -0600
-Message-Id: <20170905223541.20594-9-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 6/9] ext4: safely transition S_DAX on journaling changes
+Message-ID: <20170906170946.GC17663@linux.intel.com>
 References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
+ <20170905223541.20594-7-ross.zwisler@linux.intel.com>
+ <20170906094700.GC27916@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170906094700.GC27916@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-We prevent DAX from being used on inodes which are using ext4's built in
-encryption via a check in ext4_should_use_dax().  We do have what appears
-to be an unsafe transition of S_DAX in ext4_set_context(), though, where
-S_DAX can get disabled without us doing a proper writeback + invalidate.
+On Wed, Sep 06, 2017 at 11:47:00AM +0200, Jan Kara wrote:
+> On Tue 05-09-17 16:35:38, Ross Zwisler wrote:
+> > The IOCTL path which switches the journaling mode for an inode is currently
+> > unsafe because it doesn't properly do a writeback and invalidation on the
+> > inode.  In XFS, for example, safe transitions of S_DAX are handled by
+> > xfs_ioctl_setattr_dax_invalidate() which locks out page faults and I/O,
+> > does a writeback via filemap_write_and_wait() and an invalidation via
+> > invalidate_inode_pages2().
+> > 
+> > Without this in place we can see the following kernel warning when we try
+> > and insert a DAX exceptional entry but find that a dirty page cache page is
+> > still in the mapping->radix_tree:
+> > 
+> >  WARNING: CPU: 4 PID: 1052 at mm/filemap.c:262 __delete_from_page_cache+0x375/0x550
+> >  Modules linked in: dax_pmem nd_pmem device_dax nd_btt nfit libnvdimm
+> >  CPU: 4 PID: 1052 Comm: small Not tainted 4.13.0-rc6-00055-gac26931 #3
+> >  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.3-1.fc25 04/01/2014
+> >  task: ffff88020ccd0000 task.stack: ffffc900021d4000
+> >  RIP: 0010:__delete_from_page_cache+0x375/0x550
+> >  RSP: 0000:ffffc900021d7b90 EFLAGS: 00010002
+> >  RAX: 002fffc00001123d RBX: ffffffffffffffff RCX: ffff8801d9440d68
+> >  RDX: 0000000000000000 RSI: ffffffff81fd5b84 RDI: ffffffff81f6f0e5
+> >  RBP: ffffc900021d7be0 R08: 0000000000000000 R09: ffff8801f9938c70
+> >  R10: 0000000000000021 R11: ffff8801f9938c91 R12: ffff8801d9440d70
+> >  R13: ffffea0007fdda80 R14: 0000000000000001 R15: ffff8801d9440d68
+> >  FS:  00007feacc041700(0000) GS:ffff880211800000(0000) knlGS:0000000000000000
+> >  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >  CR2: 0000000010420000 CR3: 000000020cfd8000 CR4: 00000000000006e0
+> >  Call Trace:
+> >   dax_insert_mapping_entry+0x158/0x2c0
+> >   dax_iomap_fault+0x1020/0x1bb0
+> >   ext4_dax_huge_fault+0xc8/0x160
+> >   ext4_dax_fault+0x10/0x20
+> >   __do_fault+0x20/0x110
+> >   __handle_mm_fault+0x97d/0x1120
+> >   handle_mm_fault+0x188/0x2f0
+> >   __do_page_fault+0x28f/0x590
+> >   trace_do_page_fault+0x58/0x2c0
+> >   do_async_page_fault+0x2c/0x90
+> >   async_page_fault+0x28/0x30
+> > 
+> > I'm pretty sure we could make a test that shows userspace visible data
+> > corruption as well in this scenario.
+> > 
+> > Make it safe to change the journaling mode and turn on or off S_DAX by
+> > adding locking to properly lock out page faults (i_mmap_sem) and then doing
+> > the writeback and invalidate.  I/O is already held off because all callers
+> > of ext4_ioctl_setflags() hold the inode lock.
+> 
+> Yeah, this is a good point. It is just that this is not enough as I
+> discovered in [1]. You also need to tear down & recreate VMAs when changing
+> DAX flag which is a bit tricky. So for now I think returning EBUSY when
+> file is mmaped and we'd like to flip DAX flag is the best solution. Hmm?
+> 
+> [1] https://www.spinics.net/lists/linux-xfs/msg09859.html
 
-I actually think we are safe in this case because of the following:
+Yea, thanks for the link, I totally missed this discussion (obviously). 
 
-1) You can't encrypt an existing file.  Encryption can only be set on an
-empty directory, with new inodes in that directory being created with
-encryption turned on, so I don't think it's possible to turn encryption on
-for a file that has open DAX mmaps or outstanding I/Os.
+Cool, I'll rework this for v2.
 
-2) There is no way to turn encryption off on a given file.  Once an inode
-is encrypted, it stays encrypted for the life of that inode, so we don't
-have to worry about the case where we turn encryption off and S_DAX
-suddenly turns on.
+> > The locking for this new code is complex because of the following:
+> > 
+> > 1) filemap_write_and_wait() eventually calls ext4_writepages(), which
+> > acquires the sbi->s_journal_flag_rwsem.  This lock ranks above the
+> > jbdw_handle which is eventually taken by ext4_journal_start().  This
+> > essentially means that the writeback has to happen outside of the context
+> > of an active journal handle (outside of ext4_journal_start() to
+> > ext4_journal_stop().)
+> > 
+> > 2) To lock out page faults we take a write lock on the ei->i_mmap_sem, and
+> > this lock again ranks above the jbd2_handle taken by ext4_journal_start().
+> > So, as with the writeback code in 1) above we have to take ei->i_mmap_sem
+> > outside of the context of an active journal handle.
+> 
+> Welcome to the joy of fs locking ;)
 
-3) The only way we end up in ext4_set_context() to turn on encryption is
-when we are creating a new file in the encrypted directory.  This happens
-as part of ext4_create() before the inode has been allowed to do any I/O.
-Here's the call tree:
+:)  Well, I feel like I learned a lot more about ext4 during this patch set!
 
- ext4_create()
-   __ext4_new_inode()
-	 ext4_set_inode_flags() // sets S_DAX
-	 fscrypt_inherit_context()
-		fscrypt_get_encryption_info();
-		ext4_set_context() // sets EXT4_INODE_ENCRYPT, clears S_DAX
-
-So, I actually think it's safe to transition S_DAX in ext4_set_context()
-without any locking, writebacks or invalidations.  I've added a
-WARN_ON_ONCE() sanity check to make sure that we are notified if we ever
-encounter a case where we are encrypting an inode that already has data,
-in which case we need to add code to safely transition S_DAX.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-CC: stable@vger.kernel.org
----
- fs/ext4/super.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index d549dfb..6604a18 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1159,6 +1159,9 @@ static int ext4_set_context(struct inode *inode, const void *ctx, size_t len,
- 	if (inode->i_ino == EXT4_ROOT_INO)
- 		return -EPERM;
- 
-+	if (WARN_ON_ONCE(IS_DAX(inode) && i_size_read(inode)))
-+		return -EINVAL;
-+
- 	res = ext4_convert_inline_data(inode);
- 	if (res)
- 		return res;
--- 
-2.9.5
-
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > CC: stable@vger.kernel.org
+> 
+> 								Honza
+> 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
