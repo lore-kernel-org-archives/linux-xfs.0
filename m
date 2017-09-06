@@ -1,194 +1,434 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:38796 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750786AbdIFGzc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2017 02:55:32 -0400
-From: Richard Wareing <rwareing@fb.com>
-Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
-Date: Wed, 6 Sep 2017 06:54:41 +0000
-Message-ID: <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
-References: <20170902224145.1291030-1-rwareing@fb.com>
- <20170903085602.GF32385@infradead.org>
- <30E1D468-6E15-469E-8026-8EE542201422@fb.com>
- <20170906034443.GQ17782@dastard>
-In-Reply-To: <20170906034443.GQ17782@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <6D596FDA0C937B45BDCA2D572D7B789E@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+Received: from mx1.redhat.com ([209.132.183.28]:54604 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755547AbdIFQry (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 12:47:54 -0400
+Date: Wed, 6 Sep 2017 12:47:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 12/12] xfs: create a new buf_ops pointer to verify
+ structure metadata
+Message-ID: <20170906164751.GG55280@bfoster.bfoster>
+References: <150394418979.24826.12970283067445908653.stgit@magnolia>
+ <150394426502.24826.9176393746863067568.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150394426502.24826.9176393746863067568.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
+On Mon, Aug 28, 2017 at 11:17:45AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Expose all metadata structure buffer verifier functions via buf_ops.
+> These will be used by the online scrub mechanism to look for problems
+> with buffers that are already sitting around in memory.
+> 
 
-On 9/5/17, 8:45 PM, "Dave Chinner" <david@fromorbit.com> wrote:
+As it is, I think it probably makes sense to post this patch along with
+whatever supporting code uses it. One quick thought in the meantime...
 
-    On Sun, Sep 03, 2017 at 10:02:41PM +0000, Richard Wareing wrote:
-    >=20
-    > > On Sep 3, 2017, at 1:56 AM, Christoph Hellwig
-    > > <hch@infradead.org> wrote:
-    > >=20
-    > > On Sat, Sep 02, 2017 at 03:41:42PM -0700, Richard Wareing
-    > > wrote:
-    > >> - Replaced rtdefault with rtdisable, this yields similar
-    > >> operational benefits when combined with the existing mkfs time
-    > >> setting of the inheritance flag on the root directory.  Allows
-    > >> temporary disabling of real-time allocation without having to
-    > >> walk entire FS to remove flags (which could be time consuming).
-    > >> I still don't think it's super obvious to an admin the
-    > >> real-time flag was put there at mkfs time (vs. rtdefault being
-    > >> in mount flags), but this gets me half of what I'm after.
-    > >=20
-    > > I still don't understand this option.  What is the use case of
-    > > dynamically switching on/off these default to the rt device?
-    > >=20
-    >=20
-    > Say you are in a bit of an emergency, and you need IOPs *now*
-    > (incident recovery), w/ rtdisable you could funnel the IO to the
-    > SSD
-   =20
-    But it /doesn't do that/. It only disables new files from writing to
-    the rt device. All reads for data in the RT device and writes to
-    existing files still go to the RT device.
-   =20
-   =20
-    > without having to strip the inheritance bits from all the
-    > directories (which would require two walks....one to remove and
-    > one to add them all back).    I think this is about having some
-    > options during incidents, and a "kill-switch" should the need
-    > arise.
-   =20
-    And soon after the kill switch is triggered, your tiny data device
-    will go ENOSPC because changing that mount option effective removed
-    TBs of free space from the filesystem. Then things will really start
-    going bad.
-   =20
-    So maybe you didn't think this through properly - the last thing a
-    typical user would expect is a filesystem reporting TBs of free
-    space to go ENOSPC and not being able to recover, regardless of what
-    mount options are present. iAnd they'll be especially confused when
-    they start looking at inodes and seeing RT bits set all over the
-    place...
-   =20
-    It's just a recipe for confusion, unexpected behaviour and all I
-    see here is a support and triage nightmare. Not to mention FB will
-    move on to something else in a couple of years, and we get stuck
-    having to maintain it forever more (*cough* filestreams *cough*).
-   =20
-Fair enough, what are your thoughts on rtdefault, if I changed it to *not* =
-set the inheritance bits, but take over this responsibility in their place?=
-  My thinking here is this integrates better than inheritance bits w/ polic=
-y management systems such as Chef/Puppet.  Inheritance bits, on the other h=
-and don=B9t really lend themselves to machine level policies; they can be s=
-prinkled about all over the FS, and a walk would be required to enforce a m=
-achine wide policy.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c          |   14 ++++++++------
+>  fs/xfs/libxfs/xfs_alloc_btree.c    |    1 +
+>  fs/xfs/libxfs/xfs_attr_leaf.c      |    1 +
+>  fs/xfs/libxfs/xfs_attr_remote.c    |   32 ++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_bmap_btree.c     |    1 +
+>  fs/xfs/libxfs/xfs_da_btree.c       |   25 +++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_dir2_block.c     |    1 +
+>  fs/xfs/libxfs/xfs_dir2_data.c      |    1 +
+>  fs/xfs/libxfs/xfs_dir2_leaf.c      |   16 ++++++++++++++++
+>  fs/xfs/libxfs/xfs_dir2_node.c      |    1 +
+>  fs/xfs/libxfs/xfs_dquot_buf.c      |   12 ++++++++++++
+>  fs/xfs/libxfs/xfs_ialloc.c         |    1 +
+>  fs/xfs/libxfs/xfs_ialloc_btree.c   |    1 +
+>  fs/xfs/libxfs/xfs_refcount_btree.c |    1 +
+>  fs/xfs/libxfs/xfs_rmap_btree.c     |    1 +
+>  fs/xfs/libxfs/xfs_symlink_remote.c |    1 +
+>  fs/xfs/xfs_buf.h                   |    1 +
+>  17 files changed, 105 insertions(+), 6 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index d49b1e3..21a1c21 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -604,6 +604,7 @@ const struct xfs_buf_ops xfs_agfl_buf_ops = {
+>  	.name = "xfs_agfl",
+>  	.verify_read = xfs_agfl_read_verify,
+>  	.verify_write = xfs_agfl_write_verify,
+> +	.verify_struct = xfs_agfl_verify,
+>  };
+>  
+>  /*
+> @@ -2393,10 +2394,10 @@ xfs_alloc_put_freelist(
+>  
+>  static void *
+>  xfs_agf_verify(
+> -	struct xfs_mount *mp,
+> -	struct xfs_buf	*bp)
+> - {
+> -	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(bp);
+>  
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  		if (!uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
+> @@ -2457,7 +2458,7 @@ xfs_agf_read_verify(
+>  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+>  	    !xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF))
+>  		xfs_buf_ioerror(bp, -EFSBADCRC);
+> -	else if (XFS_TEST_ERROR((failed_at = xfs_agf_verify(mp, bp)), mp,
+> +	else if (XFS_TEST_ERROR((failed_at = xfs_agf_verify(bp)), mp,
+>  				XFS_ERRTAG_ALLOC_READ_AGF))
+>  		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+>  
+> @@ -2473,7 +2474,7 @@ xfs_agf_write_verify(
+>  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  	void			*failed_at;
+>  
+> -	if ((failed_at = xfs_agf_verify(mp, bp))) {
+> +	if ((failed_at = xfs_agf_verify(bp))) {
+>  		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+>  		xfs_verifier_error(bp, failed_at);
+>  		return;
+> @@ -2492,6 +2493,7 @@ const struct xfs_buf_ops xfs_agf_buf_ops = {
+>  	.name = "xfs_agf",
+>  	.verify_read = xfs_agf_read_verify,
+>  	.verify_write = xfs_agf_write_verify,
+> +	.verify_struct = xfs_agf_verify,
+>  };
 
-Or instead of a mount option, would a sysfs option be acceptable?
+If we expose the core verifier function of each structure through the
+ops table and the read/write verifiers mostly call that function and do
+some CRC processing based on read or write, I'm wondering how many of
+the unique read/write verifiers could be condensed into a generic buffer
+read and generic buffer write function that invokes the
+->verify_struct() function and does the CRC/LSN check or updates
+appropriately. We'd have to at least include the CRC offset in the
+buf_ops for read verifiers and additionally the lsn offset for write
+verifiers. Thoughts?
 
-My hope is we don=B9t move on, but collaborate a bit more with the open-sou=
-rce world on these sorts of problems instead of re-inventing the proverbial=
- FS wheel (and re-learning old lessons solved many moons ago by FS develope=
-rs).  Trying to do my part now, show it can be done and should be done.
+Brian
 
-    > The other problem I see is accessibility and usability.  By making
-    > these decisions buried in more generic XFS allocation mechanisms
-    > or fnctl's, few developers are going to really understand how to
-    > safely use them (e.g. without blowing up their SSD's WAF or
-    > endurance).=20
-   =20
-    The whole point of putting them into the XFS allocator as admin
-    policies is that *applications developers don't need to know they
-    exist*.
-   =20
-I get you now: *admins* need to know, but application developers not so muc=
-h.
-
-    > Fallocation is a better understood notion, easier to
-    > use and has wider support amongst existing utilities.
-   =20
-    Almost every application I've seen that uses fallocate does
-    something wrong and/or breaks a longevity or performance
-    optimisation that filesystems have been making for years.=20
-   =20
-    fallocate is "easy to understand" but *difficult to use optimally*
-    because it's behaviour is tightly bound to the filesystem allocator
-    algorithms. i.e. it's easy to defeat hidden filesystem optimisations
-    with fallocate, but it's difficult to understand a sub-optimal
-    corner case in the filesystem allocator that fallocate could be used
-    to avoid.
-   =20
-    In reality, we don't want people using fallocate - the filesystem
-    algorithms should do the right thing so people don't need to modify
-    their applications. In cases like this, having the filesystem decide
-    automatically at first allocation what device to use is the right
-    way to integrate the functionality, not require users to use
-    fallocate to trigger such a decision and, as a side effect, prevent
-    the filesystem from making all the other optimisations they still
-    want it to make.
-
-You make a good point here, on preventing the FS from making other optimiza=
-tions.  I=B9m re-working this as you and others have suggested (new version=
- tomorrow).
-
-And xfs_fsr would be the home for code migrating the file to the real-time =
-device once it grows beyond some tunable size. =20
-
-    > Keep in
-    > mind, we need our SSDs to last >3 years (w/ only a mere 70-80 TBW;
-    > 300TBW if we are lucky), so we want to design things such that
-    > application developers are less likely to step on land mines
-    > causing pre-mature SSD failure.
-   =20
-    Hmmm. I don't think they way you are using fallocate is doing what
-    you think it is doing.
-   =20
-    That is, using fallocate to preallocate all files so you can direct
-    allocation to a different device means that delayed allocation is
-    turned off. Hence XFS cannot optimise allocation across multiple
-    files at writeback time. This means that writeback across multiple
-    files will be sprayed around disjointed preallocated regions. When
-    using delayed allocation, the filesystem will allocate the blocks
-    for all the files sequentially and so the block layer merge will
-    them all into one big contiguous IO.
-   =20
-    IOWs, fallocate sprays write IO around because they decouple
-    allocation locality from temporal writeback locality and this causes
-    non-contiguous write patterns which are a significant contributin
-    factor to write amplification in SSDs.  In comparison, delayed
-    allocation results in large sequential IOs that minimise write
-    amplification in the SSD...
-   =20
-    Hence the method you describe that "maximises SSD life" won't help
-    - if anything it's going to actively harm the SSD life when
-    compared to just letting the filesystem use delayed allocation and
-    choose what device to write to at that time....
-
-Wrt to SSDs you are completely correct on this, our fallocate calls were in=
-tended to pay up front on the write path for more favorable allocations whi=
-ch pay off during reads on HDDs.  For SSDs this clearly makes less sense, a=
-nd an optimization we will need to make in our code for the reasons you poi=
-nt out.
-
-    Hacking one-off high level controls into APIs like fallocate does
-    not work. Allocation policies need to be integrated into the
-    filesystem allocators for them to be effective and useful to
-    administrators and applications alike. fallocate is no sustitute for
-    the black magic that filesystems do to optimise allocation and IO
-    patterns....
-   =20
-    Cheers,
-   =20
-    Dave.
-    --=20
-    Dave Chinner
-    david@fromorbit.com
-   =20
-
-Thanks for the great comments, suggestions & insights.  Learning a lot.
-
-Richard
-
-
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+> index 8d4c004..eb79f6c 100644
+> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+> @@ -397,6 +397,7 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+>  	.name = "xfs_allocbt",
+>  	.verify_read = xfs_allocbt_read_verify,
+>  	.verify_write = xfs_allocbt_write_verify,
+> +	.verify_struct = xfs_allocbt_verify,
+>  };
+>  
+>  
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index bde5269..3a563c5 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -339,6 +339,7 @@ const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
+>  	.name = "xfs_attr3_leaf",
+>  	.verify_read = xfs_attr3_leaf_read_verify,
+>  	.verify_write = xfs_attr3_leaf_write_verify,
+> +	.verify_struct = xfs_attr3_leaf_verify,
+>  };
+>  
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index d33a4d3..164c366 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -203,10 +203,42 @@ xfs_attr3_rmt_write_verify(
+>  	ASSERT(len == 0);
+>  }
+>  
+> +static void *
+> +xfs_attr3_rmt_verify_struct(
+> +	struct xfs_buf	*bp)
+> +{
+> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> +	char		*ptr;
+> +	void		*failed_at;
+> +	int		len;
+> +	xfs_daddr_t	bno;
+> +	int		blksize = mp->m_attr_geo->blksize;
+> +
+> +	/* no verification of non-crc buffers */
+> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> +		return NULL;
+> +
+> +	ptr = bp->b_addr;
+> +	bno = bp->b_bn;
+> +	len = BBTOB(bp->b_length);
+> +	ASSERT(len >= blksize);
+> +
+> +	while (len > 0) {
+> +		if ((failed_at = xfs_attr3_rmt_verify(mp, ptr, blksize, bno)))
+> +			return failed_at;
+> +		len -= blksize;
+> +		ptr += blksize;
+> +		bno += BTOBB(blksize);
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+>  const struct xfs_buf_ops xfs_attr3_rmt_buf_ops = {
+>  	.name = "xfs_attr3_rmt",
+>  	.verify_read = xfs_attr3_rmt_read_verify,
+>  	.verify_write = xfs_attr3_rmt_write_verify,
+> +	.verify_struct = xfs_attr3_rmt_verify_struct,
+>  };
+>  
+>  STATIC int
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index d613080..0d5dd7b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -692,6 +692,7 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
+>  	.name = "xfs_bmbt",
+>  	.verify_read = xfs_bmbt_read_verify,
+>  	.verify_write = xfs_bmbt_write_verify,
+> +	.verify_struct = xfs_bmbt_verify,
+>  };
+>  
+>  
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index f3544fb..af738bf 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -247,10 +247,35 @@ xfs_da3_node_read_verify(
+>  	xfs_verifier_error(bp, failed_at);
+>  }
+>  
+> +/* Verify the structure of a da3 block. */
+> +static void *
+> +xfs_da3_node_verify_struct(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_da_blkinfo	*info = bp->b_addr;
+> +
+> +	switch (be16_to_cpu(info->magic)) {
+> +	case XFS_DA3_NODE_MAGIC:
+> +	case XFS_DA_NODE_MAGIC:
+> +		return xfs_da3_node_verify(bp);
+> +	case XFS_ATTR_LEAF_MAGIC:
+> +	case XFS_ATTR3_LEAF_MAGIC:
+> +		bp->b_ops = &xfs_attr3_leaf_buf_ops;
+> +		return bp->b_ops->verify_struct(bp);
+> +	case XFS_DIR2_LEAFN_MAGIC:
+> +	case XFS_DIR3_LEAFN_MAGIC:
+> +		bp->b_ops = &xfs_dir3_leafn_buf_ops;
+> +		return bp->b_ops->verify_struct(bp);
+> +	default:
+> +		return __this_address;
+> +	}
+> +}
+> +
+>  const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+>  	.name = "xfs_da3_node",
+>  	.verify_read = xfs_da3_node_read_verify,
+>  	.verify_write = xfs_da3_node_write_verify,
+> +	.verify_struct = xfs_da3_node_verify_struct,
+>  };
+>  
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 6c54d03..6dce935 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -126,6 +126,7 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
+>  	.name = "xfs_dir3_block",
+>  	.verify_read = xfs_dir3_block_read_verify,
+>  	.verify_write = xfs_dir3_block_write_verify,
+> +	.verify_struct = xfs_dir3_block_verify,
+>  };
+>  
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> index 5e27b71..d08a7ac 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -318,6 +318,7 @@ const struct xfs_buf_ops xfs_dir3_data_buf_ops = {
+>  	.name = "xfs_dir3_data",
+>  	.verify_read = xfs_dir3_data_read_verify,
+>  	.verify_write = xfs_dir3_data_write_verify,
+> +	.verify_struct = xfs_dir3_data_verify,
+>  };
+>  
+>  static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 00dcfef..792fd98 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -218,6 +218,13 @@ __write_verify(
+>  	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
+>  }
+>  
+> +static void *
+> +xfs_dir3_leaf1_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+> +}
+> +
+>  static void
+>  xfs_dir3_leaf1_read_verify(
+>  	struct xfs_buf	*bp)
+> @@ -232,6 +239,13 @@ xfs_dir3_leaf1_write_verify(
+>  	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+>  }
+>  
+> +static void *
+> +xfs_dir3_leafn_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+> +}
+> +
+>  static void
+>  xfs_dir3_leafn_read_verify(
+>  	struct xfs_buf	*bp)
+> @@ -250,12 +264,14 @@ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+>  	.name = "xfs_dir3_leaf1",
+>  	.verify_read = xfs_dir3_leaf1_read_verify,
+>  	.verify_write = xfs_dir3_leaf1_write_verify,
+> +	.verify_struct = xfs_dir3_leaf1_verify,
+>  };
+>  
+>  const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+>  	.name = "xfs_dir3_leafn",
+>  	.verify_read = xfs_dir3_leafn_read_verify,
+>  	.verify_write = xfs_dir3_leafn_write_verify,
+> +	.verify_struct = xfs_dir3_leafn_verify,
+>  };
+>  
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index a11585b..1a5e383 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -155,6 +155,7 @@ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+>  	.name = "xfs_dir3_free",
+>  	.verify_read = xfs_dir3_free_read_verify,
+>  	.verify_write = xfs_dir3_free_write_verify,
+> +	.verify_struct = xfs_dir3_free_verify,
+>  };
+>  
+>  /* Everything ok in the free block header? */
+> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> index 5561011..8ce5239 100644
+> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> @@ -242,6 +242,17 @@ xfs_dquot_buf_verify(
+>  	return true;
+>  }
+>  
+> +static void *
+> +xfs_dquot_buf_verify_struct(
+> +	struct xfs_buf	*bp)
+> +{
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +
+> +	if (!xfs_dquot_buf_verify(mp, bp, 0))
+> +		return __this_address;
+> +	return NULL;
+> +}
+> +
+>  static void
+>  xfs_dquot_buf_read_verify(
+>  	struct xfs_buf	*bp)
+> @@ -298,6 +309,7 @@ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+>  	.name = "xfs_dquot",
+>  	.verify_read = xfs_dquot_buf_read_verify,
+>  	.verify_write = xfs_dquot_buf_write_verify,
+> +	.verify_struct = xfs_dquot_buf_verify_struct,
+>  };
+>  
+>  const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index c63b708..a2c8c1d 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2586,6 +2586,7 @@ const struct xfs_buf_ops xfs_agi_buf_ops = {
+>  	.name = "xfs_agi",
+>  	.verify_read = xfs_agi_read_verify,
+>  	.verify_write = xfs_agi_write_verify,
+> +	.verify_struct = xfs_agi_verify,
+>  };
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index 38d6a50..f920ca6 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -327,6 +327,7 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
+>  	.name = "xfs_inobt",
+>  	.verify_read = xfs_inobt_read_verify,
+>  	.verify_write = xfs_inobt_write_verify,
+> +	.verify_struct = xfs_inobt_verify,
+>  };
+>  
+>  STATIC int
+> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+> index 8d6c0fc..a151b4d 100644
+> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
+> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> @@ -288,6 +288,7 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
+>  	.name			= "xfs_refcountbt",
+>  	.verify_read		= xfs_refcountbt_read_verify,
+>  	.verify_write		= xfs_refcountbt_write_verify,
+> +	.verify_struct		= xfs_refcountbt_verify,
+>  };
+>  
+>  STATIC int
+> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> index 4fd77e7..ec7b216 100644
+> --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> @@ -380,6 +380,7 @@ const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
+>  	.name			= "xfs_rmapbt",
+>  	.verify_read		= xfs_rmapbt_read_verify,
+>  	.verify_write		= xfs_rmapbt_write_verify,
+> +	.verify_struct		= xfs_rmapbt_verify,
+>  };
+>  
+>  STATIC int
+> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> index ef5e754..53732f4 100644
+> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> @@ -173,6 +173,7 @@ const struct xfs_buf_ops xfs_symlink_buf_ops = {
+>  	.name = "xfs_symlink",
+>  	.verify_read = xfs_symlink_read_verify,
+>  	.verify_write = xfs_symlink_write_verify,
+> +	.verify_struct = xfs_symlink_verify,
+>  };
+>  
+>  void
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 2072126..094e3e7 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -139,6 +139,7 @@ struct xfs_buf_ops {
+>  	char *name;
+>  	void (*verify_read)(struct xfs_buf *);
+>  	void (*verify_write)(struct xfs_buf *);
+> +	void *(*verify_struct)(struct xfs_buf *);
+>  };
+>  
+>  typedef struct xfs_buf {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
