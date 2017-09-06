@@ -1,220 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59136 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41450 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753347AbdIFLnH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 07:43:07 -0400
-Date: Wed, 6 Sep 2017 07:43:05 -0400
+        id S1752943AbdIFMSR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:18:17 -0400
+Date: Wed, 6 Sep 2017 08:18:15 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
-Message-ID: <20170906114305.GC54570@bfoster.bfoster>
-References: <20170902224145.1291030-1-rwareing@fb.com>
- <20170903085602.GF32385@infradead.org>
- <30E1D468-6E15-469E-8026-8EE542201422@fb.com>
- <20170906034443.GQ17782@dastard>
- <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
+Subject: Re: umount XFS hung when stopping the xfsaild kthread
+Message-ID: <20170906121815.GD54570@bfoster.bfoster>
+References: <c869cd34-269b-a13d-5009-390e70aa47ac@huawei.com>
+ <20170905230043.GN17782@dastard>
+ <20170906111145.GA54570@bfoster.bfoster>
+ <20170906114742.GT17782@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
+In-Reply-To: <20170906114742.GT17782@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org
 
-On Wed, Sep 06, 2017 at 06:54:41AM +0000, Richard Wareing wrote:
+On Wed, Sep 06, 2017 at 09:47:42PM +1000, Dave Chinner wrote:
+> On Wed, Sep 06, 2017 at 07:11:45AM -0400, Brian Foster wrote:
+> > On Wed, Sep 06, 2017 at 09:00:43AM +1000, Dave Chinner wrote:
+> > > On Tue, Sep 05, 2017 at 09:48:45PM +0800, Hou Tao wrote:
+> > > > Hi all,
+> > > > 
+> > > > We recently encounter a XFS umount hang problem. As we can see the following
+> > > > stacks, the umount process was trying to stop the xfsaild kthread and waiting
+> > > > for the exit of the xfsaild thread, and the xfsaild thread was waiting for
+> > > > wake-up.
+> > > > 
+> > > > [<ffffffff810a604a>] kthread_stop+0x4a/0xe0
+> > > > [<ffffffffa0680317>] xfs_trans_ail_destroy+0x17/0x30 [xfs]
+> > > > [<ffffffffa067569e>] xfs_log_unmount+0x1e/0x60 [xfs]
+> > > > [<ffffffffa066ac15>] xfs_unmountfs+0xd5/0x190 [xfs]
+> > > > [<ffffffffa066da62>] xfs_fs_put_super+0x32/0x90 [xfs]
+> > > > [<ffffffff811ebad6>] generic_shutdown_super+0x56/0xe0
+> > > > [<ffffffff811ebf27>] kill_block_super+0x27/0x70
+> > > > [<ffffffff811ec269>] deactivate_locked_super+0x49/0x60
+> > > > [<ffffffff811ec866>] deactivate_super+0x46/0x60
+> > > > [<ffffffff81209995>] mntput_no_expire+0xc5/0x120
+> > > > [<ffffffff8120aacf>] SyS_umount+0x9f/0x3c0
+> > > > [<ffffffff81652a09>] system_call_fastpath+0x16/0x1b
+> > > > [<ffffffffffffffff>] 0xffffffffffffffff
+> > > > 
+> > > > [<ffffffffa067faa7>] xfsaild+0x537/0x5e0 [xfs]
+> > > > [<ffffffff810a5ddf>] kthread+0xcf/0xe0
+> > > > [<ffffffff81652958>] ret_from_fork+0x58/0x90
+> > > > [<ffffffffffffffff>] 0xffffffffffffffff
+> > > > 
+> > > > The kernel version is RHEL7.3 and we are trying to reproduce it (not yet).
+> > > > I have check the related code and suspect the same problem may also exists in
+> > > > the mainline.
+> > > > 
+> > > > The following is the possible sequences which may lead to the hang of umount:
+> > > > 
+> > > > xfsaild: kthread_should_stop() // return false, so xfsaild continue
+> > > > 
+> > > > umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags) // by kthread_stop()
+> > > > 
+> > > > umount: wake_up_process() // because xfsaild is still running, so 0 is returned
+> > >                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > > 
+> > > This, to me, is where the problem lies. By the time unmount is
+> > > asking the aild to stop, the xfsaild should already be idle and
+> > > scheduled because unmount has just completed a syncrhonous push of
+> > > the AIL. i.e.  xfs_ail_push_all_sync()) waits for the AIL to empty
+> > > which should result in the aild returning to the idle state and
+> > > sleeping in freezable_schedule().
+> > > 
+> > 
+> > I think this behavior is to be expected. The xfsaild() logic schedules
+> > itself out without a timeout when the AIL is empty, but the task may not
+> > see the AIL as empty immediately because the empty state doesn't occur
+> > until I/O completion of the associated buffers removes all of the log
+> > items from the AIL.
 > 
-> On 9/5/17, 8:45 PM, "Dave Chinner" <david@fromorbit.com> wrote:
+> Sure, but xfs_ail_push_all_sync() doesn't return until the AIL is
+> empty:
 > 
->     On Sun, Sep 03, 2017 at 10:02:41PM +0000, Richard Wareing wrote:
->     > 
->     > > On Sep 3, 2017, at 1:56 AM, Christoph Hellwig
->     > > <hch@infradead.org> wrote:
->     > > 
->     > > On Sat, Sep 02, 2017 at 03:41:42PM -0700, Richard Wareing
->     > > wrote:
->     > >> - Replaced rtdefault with rtdisable, this yields similar
->     > >> operational benefits when combined with the existing mkfs time
->     > >> setting of the inheritance flag on the root directory.  Allows
->     > >> temporary disabling of real-time allocation without having to
->     > >> walk entire FS to remove flags (which could be time consuming).
->     > >> I still don't think it's super obvious to an admin the
->     > >> real-time flag was put there at mkfs time (vs. rtdefault being
->     > >> in mount flags), but this gets me half of what I'm after.
->     > > 
->     > > I still don't understand this option.  What is the use case of
->     > > dynamically switching on/off these default to the rt device?
->     > > 
->     > 
->     > Say you are in a bit of an emergency, and you need IOPs *now*
->     > (incident recovery), w/ rtdisable you could funnel the IO to the
->     > SSD
->     
->     But it /doesn't do that/. It only disables new files from writing to
->     the rt device. All reads for data in the RT device and writes to
->     existing files still go to the RT device.
->     
->     
->     > without having to strip the inheritance bits from all the
->     > directories (which would require two walks....one to remove and
->     > one to add them all back).    I think this is about having some
->     > options during incidents, and a "kill-switch" should the need
->     > arise.
->     
->     And soon after the kill switch is triggered, your tiny data device
->     will go ENOSPC because changing that mount option effective removed
->     TBs of free space from the filesystem. Then things will really start
->     going bad.
->     
->     So maybe you didn't think this through properly - the last thing a
->     typical user would expect is a filesystem reporting TBs of free
->     space to go ENOSPC and not being able to recover, regardless of what
->     mount options are present. iAnd they'll be especially confused when
->     they start looking at inodes and seeing RT bits set all over the
->     place...
->     
->     It's just a recipe for confusion, unexpected behaviour and all I
->     see here is a support and triage nightmare. Not to mention FB will
->     move on to something else in a couple of years, and we get stuck
->     having to maintain it forever more (*cough* filestreams *cough*).
->     
-> Fair enough, what are your thoughts on rtdefault, if I changed it to *not* set the inheritance bits, but take over this responsibility in their place?  My thinking here is this integrates better than inheritance bits w/ policy management systems such as Chef/Puppet.  Inheritance bits, on the other hand don¹t really lend themselves to machine level policies; they can be sprinkled about all over the FS, and a walk would be required to enforce a machine wide policy.
+>         spin_lock(&ailp->xa_lock);                                               
+>         while ((lip = xfs_ail_max(ailp)) != NULL) {                              
+>                 prepare_to_wait(&ailp->xa_empty, &wait, TASK_UNINTERRUPTIBLE);   
+>                 ailp->xa_target = lip->li_lsn;                                   
+>                 wake_up_process(ailp->xa_task);                                  
+>                 spin_unlock(&ailp->xa_lock);                                     
+>                 schedule();                                                      
+>                 spin_lock(&ailp->xa_lock);                                       
+>         }                                                                        
+>         spin_unlock(&ailp->xa_lock);                                             
 > 
-> Or instead of a mount option, would a sysfs option be acceptable?
-> 
-> My hope is we don¹t move on, but collaborate a bit more with the open-source world on these sorts of problems instead of re-inventing the proverbial FS wheel (and re-learning old lessons solved many moons ago by FS developers).  Trying to do my part now, show it can be done and should be done.
-> 
-
-FWIW, I'm still a little confused as to the need for this mechanism.
-What exactly is the use case for 1.) your specific environment and 2.)
-to a traditional realtime user?
-
-Something like rtdefault (or an rtro option for realtime readonly
-behavior) seems a bit more generic to me if one wanted broad control
-over the feature, but your fallocate mount thingy seems to already
-accomplish that. I.e., if you made that thing set/clear RT on individual
-files based purely on file size and you had a need to quickly disable
-setting RT on new files, why can't you just remount without that option?
-It seems to me you wouldn't need to care about the RT inherit flag
-either way..?
-
->     > The other problem I see is accessibility and usability.  By making
->     > these decisions buried in more generic XFS allocation mechanisms
->     > or fnctl's, few developers are going to really understand how to
->     > safely use them (e.g. without blowing up their SSD's WAF or
->     > endurance). 
->     
->     The whole point of putting them into the XFS allocator as admin
->     policies is that *applications developers don't need to know they
->     exist*.
->     
-> I get you now: *admins* need to know, but application developers not so much.
-> 
->     > Fallocation is a better understood notion, easier to
->     > use and has wider support amongst existing utilities.
->     
->     Almost every application I've seen that uses fallocate does
->     something wrong and/or breaks a longevity or performance
->     optimisation that filesystems have been making for years. 
->     
->     fallocate is "easy to understand" but *difficult to use optimally*
->     because it's behaviour is tightly bound to the filesystem allocator
->     algorithms. i.e. it's easy to defeat hidden filesystem optimisations
->     with fallocate, but it's difficult to understand a sub-optimal
->     corner case in the filesystem allocator that fallocate could be used
->     to avoid.
->     
->     In reality, we don't want people using fallocate - the filesystem
->     algorithms should do the right thing so people don't need to modify
->     their applications. In cases like this, having the filesystem decide
->     automatically at first allocation what device to use is the right
->     way to integrate the functionality, not require users to use
->     fallocate to trigger such a decision and, as a side effect, prevent
->     the filesystem from making all the other optimisations they still
->     want it to make.
-> 
-> You make a good point here, on preventing the FS from making other optimizations.  I¹m re-working this as you and others have suggested (new version tomorrow).
-> 
-> And xfs_fsr would be the home for code migrating the file to the real-time device once it grows beyond some tunable size.  
+> And so the xfsaild should also be entering the empty, idle state on
+> it's next pass. Given that we then run a buftarg wait, cycle
+> superblock buffer locks and write an unmount record before we
+> tear down the AIL, I'm kinda suprised that the AIL hasn't actually
+> entered the full idle state here.
 > 
 
-I pretty much agree with everything Dave says here, along with
-Christoph's previous suggestion that this is better off in the allocator
-than in the fallocate path. In the end, I think your current environment
-won't know the difference because you fallocate everything up front
-anyways (notwithstanding Dave's explanation as to why that might not be
-the greatest idea, however). In fact, I think this would be much more
-interesting overall if we could tier per-extent allocation rather than
-per-file, but that of course is one of the limitations of using RT.
+Perhaps, but there's mutual exclusion and a wakeup event involved here
+as well. If this task schedules first based on the wakeup event and
+xfsaild happens to be just entering a max timeout sleep, it doesn't seem
+that out of the ordinary for that to be enough time for the unmount
+thread to move along far enough for the stop to race. It may be
+interesting to see if bumping the "empty" timeout improves the ability
+to reproduce, but even without the timeout, I don't think there's any
+guarantee xfsaild ends up scheduled between the last sleep and before
+the kthread_stop(). It seems to me we're simply subject to
+nondeterministic scheduler conditions at that point (or maybe an
+interrupt or something occurs, etc.). This seems to be quite rare, after
+all.
 
-That said, while the implementation improvement makes sense, I'm still
-not necessarily convinced that this has a place in the upstream realtime
-feature. I'll grant you that I'm not terribly familiar with the
-historical realtime use case.. Dave, do you see value in such a
-heuristic as it relates to the realtime feature (not this tiering
-setup)? Is there necessarily a mapping between a large file size and a
-file that should be tagged realtime? E.g., I suppose somebody who is
-using traditional realtime (i.e., no SSD) and has a mix of legitimate
-realtime (streaming media) files and large sparse virt disk images or
-something of that nature would need to know to not use this feature
-(i.e., this requires documentation)..?
+...
+> > Hou,
+> > 
+> > Care to update your patch with this information and the previous
+> > suggestions from Dave and I (pull up the check, add a comment, and make
+> > sure to reset the task state)?
+> 
+> The loop really needs to be completely restructured - we should only
+> need to check kthread_should_stop() once per loop cycle...
+> 
+
+Ok, it seems reasonable to me to clean up the whole thing a bit.
 
 Brian
 
->     > Keep in
->     > mind, we need our SSDs to last >3 years (w/ only a mere 70-80 TBW;
->     > 300TBW if we are lucky), so we want to design things such that
->     > application developers are less likely to step on land mines
->     > causing pre-mature SSD failure.
->     
->     Hmmm. I don't think they way you are using fallocate is doing what
->     you think it is doing.
->     
->     That is, using fallocate to preallocate all files so you can direct
->     allocation to a different device means that delayed allocation is
->     turned off. Hence XFS cannot optimise allocation across multiple
->     files at writeback time. This means that writeback across multiple
->     files will be sprayed around disjointed preallocated regions. When
->     using delayed allocation, the filesystem will allocate the blocks
->     for all the files sequentially and so the block layer merge will
->     them all into one big contiguous IO.
->     
->     IOWs, fallocate sprays write IO around because they decouple
->     allocation locality from temporal writeback locality and this causes
->     non-contiguous write patterns which are a significant contributin
->     factor to write amplification in SSDs.  In comparison, delayed
->     allocation results in large sequential IOs that minimise write
->     amplification in the SSD...
->     
->     Hence the method you describe that "maximises SSD life" won't help
->     - if anything it's going to actively harm the SSD life when
->     compared to just letting the filesystem use delayed allocation and
->     choose what device to write to at that time....
+> Cheers,
 > 
-> Wrt to SSDs you are completely correct on this, our fallocate calls were intended to pay up front on the write path for more favorable allocations which pay off during reads on HDDs.  For SSDs this clearly makes less sense, and an optimization we will need to make in our code for the reasons you point out.
-> 
->     Hacking one-off high level controls into APIs like fallocate does
->     not work. Allocation policies need to be integrated into the
->     filesystem allocators for them to be effective and useful to
->     administrators and applications alike. fallocate is no sustitute for
->     the black magic that filesystems do to optimise allocation and IO
->     patterns....
->     
->     Cheers,
->     
->     Dave.
->     -- 
->     Dave Chinner
->     david@fromorbit.com
->     
-> 
-> Thanks for the great comments, suggestions & insights.  Learning a lot.
-> 
-> Richard
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
