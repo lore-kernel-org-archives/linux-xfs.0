@@ -1,42 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:37948 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750742AbdIGEdZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 00:33:25 -0400
-Date: Thu, 7 Sep 2017 05:33:22 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: iov_iter_pipe warning.
-Message-ID: <20170907043321.GW5426@ZenIV.linux.org.uk>
-References: <20170428152955.mafs3f22srmm34aw@codemonkey.org.uk>
- <20170428164313.GK29622@ZenIV.linux.org.uk>
- <20170428165024.ofyl2atpjwohekqa@codemonkey.org.uk>
- <20170428172024.GL29622@ZenIV.linux.org.uk>
- <20170807201818.kykqzexce6ap6aik@codemonkey.org.uk>
- <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
- <20170829042542.GO4757@magnolia>
- <20170906200337.b5wj3gpfebliindw@codemonkey.org.uk>
- <20170906234617.GW17782@dastard>
- <20170907034835.arjbdpmujs6hs5n4@codemonkey.org.uk>
+Received: from imap.thunk.org ([74.207.234.97]:34026 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932600AbdIFOuI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 10:50:08 -0400
+Date: Wed, 6 Sep 2017 10:50:04 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: test the per-inode DAX flag
+Message-ID: <20170906145004.hlkwta2a4bjlarin@thunk.org>
+References: <20170903093325.GA16272@lst.de>
+ <20170904072431.GW27835@eguan.usersys.redhat.com>
+ <20170904154453.GA6771@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170907034835.arjbdpmujs6hs5n4@codemonkey.org.uk>
+In-Reply-To: <20170904154453.GA6771@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jones <davej@codemonkey.org.uk>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Sep 06, 2017 at 11:48:35PM -0400, Dave Jones wrote:
-
->  > That doesn't seem like an XFS problem - it indicates the pipe we are
->  > filling in generic_file_splice_read() is not being emptied by
->  > whatever we are splicing the file data to....
+On Mon, Sep 04, 2017 at 05:44:53PM +0200, Christoph Hellwig wrote:
+> > Does this test make sense when filesystem was mounted without dax
+> > option? I saw these failures when testing on normal block device without
+> > dax mount option.
 > 
-> The puzzling part is this runs for a day on ext4 or btrfs, whereas I can
-> make xfs fall over pretty quickly.  As Darrick pointed out though, this
-> could be due to xfs being the only user of iomap_dio_rw.
-> 
-> I'm juggling a few other things right now, so probably not going to
-> have much time to dig further on this until after plumbers + 1 wk.
+> And thinking about it - why would we not allow setting the flag,
+> especially given that right now it doesn't have a meaning either
+> with or without DAX..
 
-I'll look into that tomorrow...
+At least for the ext4 patches that have been crossing my screen, the
+claim from the commit description is that with the dax mount option,
+all files are treated as if the DAX flag.  And the point of the DAX
+flag is that if the file system is stored on DAX-capable hardware, and
+you don't want DAX treatment for all files, that you would set the DAX
+flag only for those files where having the file system actually using
+the DAX codepaths would make sense --- as opposed to just using the
+traditional block I/O paths against the /dev/pmem driver.
+
+So I *think* the answer is that the tax makes sense when the file
+system is mounted w/o the dax option, but we do need to check to see
+whether the block device is DAX capable.
+
+It also makes an interesting question how we should be testing DAX
+capable file systems on /dev/pmem0.  Right now I force the use of
+/dev/pmem0 *and* use the DAX mount options so that all of the other
+tests will cause file I/O to use the DAX path.  But for the per-inode
+DAX flag, we would want to mask out the DAX mount option so we can
+test what happens when we toggle the DAX.
+
+But I'm not a DAX expert, so I may have some of this wrong.
+
+    	      	  	       	   	- Ted
