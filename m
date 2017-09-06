@@ -1,108 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42910 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38392 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753928AbdIFMt3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:49:29 -0400
-Date: Wed, 6 Sep 2017 08:49:28 -0400
+        id S1754245AbdIFQoI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 12:44:08 -0400
+Date: Wed, 6 Sep 2017 12:44:07 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
-Message-ID: <20170906124927.GE54570@bfoster.bfoster>
-References: <20170902224145.1291030-1-rwareing@fb.com>
- <20170903085602.GF32385@infradead.org>
- <30E1D468-6E15-469E-8026-8EE542201422@fb.com>
- <20170906034443.GQ17782@dastard>
- <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
- <20170906114305.GC54570@bfoster.bfoster>
- <20170906121200.GU17782@dastard>
+Subject: Re: [PATCH 06/12] xfs: move inode fork verifiers to xfs_dinode_verify
+Message-ID: <20170906164406.GF55280@bfoster.bfoster>
+References: <150394418979.24826.12970283067445908653.stgit@magnolia>
+ <150394422787.24826.14809466383851827337.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170906121200.GU17782@dastard>
+In-Reply-To: <150394422787.24826.14809466383851827337.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Richard Wareing <rwareing@fb.com>, Christoph Hellwig <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 06, 2017 at 10:12:01PM +1000, Dave Chinner wrote:
-> On Wed, Sep 06, 2017 at 07:43:05AM -0400, Brian Foster wrote:
-> > That said, while the implementation improvement makes sense, I'm still
-> > not necessarily convinced that this has a place in the upstream realtime
-> > feature. I'll grant you that I'm not terribly familiar with the
-> > historical realtime use case.. Dave, do you see value in such a
-> > heuristic as it relates to the realtime feature (not this tiering
-> > setup)? Is there necessarily a mapping between a large file size and a
-> > file that should be tagged realtime?
+On Mon, Aug 28, 2017 at 11:17:07AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I don't see it much differently to the inode32 allocator policy.
-> That separates metadata from data based on the type of allocation
-> that is going to take place.  inode32 decides on the AG for the
-> inode data on the first data allocation (via the ag rotor), so
-> there's already precedence for this sort of "locality selection at
-> initial allocation" policy in the XFS allocation algorithms. 
+> Consolidate the fork size and format verifiers to xfs_dinode_verify so
+> that we can reject bad inodes earlier and in a single place.
 > 
-> Some workloads run really well on inode32 because the metadata ends
-> up tightly packed and you can keep lots of disks busy with a dm
-> concat because data IO is effectively distributed over all AGs.
-> We've never done that automatically with the rt device before, but
-> if it allows hybrid setups to be constructed easily then I can see
-> it being beneficial to those same sorts of worklaods....
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c  |   68 ++++++++++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_inode_fork.c |   99 ----------------------------------------
+>  2 files changed, 65 insertions(+), 102 deletions(-)
 > 
-> And, FWIW, auto rtdev selection might also work quite nicely with
-> write once large file workloads (i.e. archives) on SMR drives - data
-> device for the PMR region for metadata and small or temporary files,
-> rt device w/ appropriate extent size for larges files in the SMR
-> region...
 > 
+...
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 0e80f34..bba45f1 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -61,70 +61,11 @@ xfs_iformat_fork(
+...
+> -	if (unlikely(xfs_is_reflink_inode(ip) &&
+> -	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
+> -		xfs_warn(ip->i_mount,
+> -			"corrupt dinode %llu, wrong file type for reflink.",
+> -			ip->i_ino);
+> -		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
+> -				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
+> -		return -EFSCORRUPTED;
+> -	}
+> -
+> -	if (unlikely(xfs_is_reflink_inode(ip) &&
+> -	    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
+> -		xfs_warn(ip->i_mount,
+> -			"corrupt dinode %llu, has reflink+realtime flag set.",
+> -			ip->i_ino);
+> -		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
+> -				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
+> -		return -EFSCORRUPTED;
+> -	}
 
-Ok, that sounds reasonable enough to me. Thanks.
+It looks like a couple of these reflink inode checks have disappeared.
+Intentional?
 
-> > E.g., I suppose somebody who is
-> > using traditional realtime (i.e., no SSD) and has a mix of legitimate
-> > realtime (streaming media) files and large sparse virt disk images or
-> > something of that nature would need to know to not use this feature
-> > (i.e., this requires documentation)..?
-> 
-> It wouldn't be enabled by default. We can't break existing rt device
-> setups, so I don't see any issue here. And, well, someone mixing
-> realtime and sparse virt in the same filesystem and storage isn't
-> going to get reliable realtime response. i.e. nobody in their right
-> mind mixes realtime streaming workloads with anything else - it's
-> always dedicated hardware for RT....
-> 
+...
+> @@ -209,18 +122,6 @@ xfs_iformat_fork(
+>  		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+>  		size = be16_to_cpu(atp->hdr.totsize);
+>  
+> -		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
+> -			xfs_warn(ip->i_mount,
+> -				"corrupt inode %Lu (bad attr fork size %Ld).",
+> -				(unsigned long long) ip->i_ino,
+> -				(long long) size);
+> -			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
+> -					     XFS_ERRLEVEL_LOW,
+> -					     ip->i_mount, dip);
+> -			error = -EFSCORRUPTED;
+> -			break;
+> -		}
+> -
 
-Yes, that's just a dumb example. Let me rephrase...
-
-Is there any legitimate realtime use case a filesystem may not want to
-tag all files of a particular size? E.g., this is more relevant for
-subsequent read requirements than anything, right? (If not, then why do
-we have the flag at all?) If so, then it seems to me this needs to be
-clearly documented...
-
-Note that this use case defines large as >256k. Realtime use cases may
-have a much different definition, yes? I take it that means things like
-amount of physical memory and write workload may also be a significant
-factor in the effectiveness of this heuristic. For example, how much
-pagecache can we dirty before writeback occurs and does an initial
-allocation? How many large files are typically written in parallel?
-Also, what about direct I/O or extent size hints?
-
-All I'm really saying is that I think this at least needs to consider
-the generic use case and have some documentation around any scnarios
-where this might not make sense for traditional users, what values might
-be sane, etc. As opposed to such users seeing an "automagic" knob,
-turning it on thinking it replaces the need to think about how to
-properly lay out the fs and then realizing later that this doesn't do
-what they expect. Thoughts?
+Same question here..?
 
 Brian
 
-> Cheers,
+>  		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+>  		break;
+>  	case XFS_DINODE_FMT_EXTENTS:
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
