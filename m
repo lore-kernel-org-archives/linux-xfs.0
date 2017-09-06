@@ -1,59 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37108 "EHLO sandeen.net"
+Received: from verein.lst.de ([213.95.11.211]:51993 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751366AbdIEORo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 10:17:44 -0400
-Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical
- sectorsize
-References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com>
- <20170905063139.GA679@infradead.org> <20170905064412.GK17782@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <269c55df-eb46-0c9a-6f7f-72a1becd2499@sandeen.net>
-Date: Tue, 5 Sep 2017 09:17:42 -0500
+        id S1752862AbdIFLlS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 07:41:18 -0400
+Date: Wed, 6 Sep 2017 13:41:16 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] xfs: fix incorrect log_flushed on fsync
+Message-ID: <20170906114116.GA25884@lst.de>
+References: <1504280365-25354-1-git-send-email-amir73il@gmail.com> <20170902131955.GB36492@bfoster.bfoster> <CAOQ4uxhLTtMV9FSr4um-dYefmpZ0NJseBiQzykxjy15kLqLsww@mail.gmail.com> <20170905144006.GA48515@bfoster.bfoster> <20170905145442.GA6869@lst.de> <20170905153439.GB48515@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170905064412.GK17782@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170905153439.GB48515@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, linux-block@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-
-
-On 9/5/17 1:44 AM, Dave Chinner wrote:
-> On Mon, Sep 04, 2017 at 11:31:39PM -0700, Christoph Hellwig wrote:
->> On Tue, Sep 05, 2017 at 11:14:42AM +0530, Chandan Rajendra wrote:
->>> Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
->>> physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
->>> physical sector size of loop devices. On ppc64, this causes loop devices
->>> to have 64k as the physical sector size.
->>
->> Eek.  We'll need to revert the loop change ASAP!
+On Tue, Sep 05, 2017 at 11:34:39AM -0400, Brian Foster wrote:
+> In xfs_log_force_lsn(), the iclog has to be ACTIVE. We switch it to
+> WANT_SYNC, bump the refcnt and call release_iclog(). The latter may or
+> may not do anything depending on the refcount. We set log_flushed
+> immediately after the release before we know whether an xlog_sync() has
+> actually occurred (is that your concern?). If XFS_LOG_SYNC is set, we
+> wait on the iclog before _force_lsn() returns, which means the log
+> buffer I/O has to have completed before we return either way. If the
+> iclog is still WANT_SYNC, the release didn't do anything, but we wait on
+> ic_force_wait which is triggered during I/O completion handling. If the
+> iclog is already DIRTY/ACTIVE, then the I/O has already submitted and
+> completed.
 > 
-> And, FWIW, making the warning go away if probably a bad idea,
-> because XFS only supports devices with sector sizes up
-> to 32k:
+> fsync looks like the only the user of log_flushed and it also uses
+> XFS_LOG_SYNC. ISTM that the code is probably still bogus in principle,
+> but in practice the fsync code may be safe. Thoughts? Am I missing
+> something else?
 
-Well, TBH removing this warning was my suggestion, because it's
-automatically fixing values that weren't specified by the user in
-the first place.  First preference is physical sector size, then
-fallback to logical but it doesn't need to be noisy about it.
-
-> #define XFS_MIN_SECTORSIZE_LOG  9       /* i.e. 512 bytes */
-> #define XFS_MAX_SECTORSIZE_LOG  15      /* i.e. 32768 bytes */
-> 
-> And so it should be warning about devices trying to tell it to use
-> something larger....
-
-As long as the logical sector size is small enough, it seems like a
-silent adjustment is probably ok,  no?
-
--Eric
-
-> Cheers,
-> 
-> Dave.
-> 
+Yes, I think you're right - the extra XFS_LOG_SYNC code papers over
+the issue.  But given that the log_flushed indicator makes very
+little sene without XFS_LOG_SYNC it should be ok.
