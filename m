@@ -1,66 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53700 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754229AbdIFCMi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 22:12:38 -0400
-Reply-To: sandeen@redhat.com
-Subject: Re: [PATCH 0/9] add ext4 per-inode DAX flag
-References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
-From: Eric Sandeen <esandeen@redhat.com>
-Message-ID: <f856f8fd-3697-adb1-198b-a9ae2fce405f@redhat.com>
-Date: Tue, 5 Sep 2017 21:12:35 -0500
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:3195 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752943AbdIFMMF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2017 08:12:05 -0400
+Date: Wed, 6 Sep 2017 22:12:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
+Message-ID: <20170906121200.GU17782@dastard>
+References: <20170902224145.1291030-1-rwareing@fb.com>
+ <20170903085602.GF32385@infradead.org>
+ <30E1D468-6E15-469E-8026-8EE542201422@fb.com>
+ <20170906034443.GQ17782@dastard>
+ <9729DF06-8F96-4F93-BF50-133F9BA2770F@fb.com>
+ <20170906114305.GC54570@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170906114305.GC54570@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Richard Wareing <rwareing@fb.com>, Christoph Hellwig <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
 
-On 9/5/17 5:35 PM, Ross Zwisler wrote:
-> The original intent of this series was to add a per-inode DAX flag to ext4
-> so that it would be consistent with XFS.  In my travels I found and fixed
-> several related issues in both ext4 and XFS.
+On Wed, Sep 06, 2017 at 07:43:05AM -0400, Brian Foster wrote:
+> That said, while the implementation improvement makes sense, I'm still
+> not necessarily convinced that this has a place in the upstream realtime
+> feature. I'll grant you that I'm not terribly familiar with the
+> historical realtime use case.. Dave, do you see value in such a
+> heuristic as it relates to the realtime feature (not this tiering
+> setup)? Is there necessarily a mapping between a large file size and a
+> file that should be tagged realtime?
 
-Hi Ross -
+I don't see it much differently to the inode32 allocator policy.
+That separates metadata from data based on the type of allocation
+that is going to take place.  inode32 decides on the AG for the
+inode data on the first data allocation (via the ag rotor), so
+there's already precedence for this sort of "locality selection at
+initial allocation" policy in the XFS allocation algorithms. 
 
-hch had a lot of reasons to nuke the dax flag from orbit, and we just
-/disabled/ it in xfs due to its habit of crashing the kernel...
-so a couple questions:
+Some workloads run really well on inode32 because the metadata ends
+up tightly packed and you can keep lots of disks busy with a dm
+concat because data IO is effectively distributed over all AGs.
+We've never done that automatically with the rt device before, but
+if it allows hybrid setups to be constructed easily then I can see
+it being beneficial to those same sorts of worklaods....
 
-1) does this series pass hch's "test the per-inode DAX flag" fstest?
-2) do we have an agreement that we need this flag at all, or is this
-   just a parity item because xfs has^whad a per-inode flag?
+And, FWIW, auto rtdev selection might also work quite nicely with
+write once large file workloads (i.e. archives) on SMR drives - data
+device for the PMR region for metadata and small or temporary files,
+rt device w/ appropriate extent size for larges files in the SMR
+region...
 
-Thanks,
--Eric
+> E.g., I suppose somebody who is
+> using traditional realtime (i.e., no SSD) and has a mix of legitimate
+> realtime (streaming media) files and large sparse virt disk images or
+> something of that nature would need to know to not use this feature
+> (i.e., this requires documentation)..?
 
-> I'm not fully happy with the ways that ext4 DAX interacts with conflicting
-> features (journaling, inline data and encryption).  My goal with this
-> series was to make all these interactions as consistent as possilble, and
-> of course to make them safe.  If anyone has ideas for improvements, I'm
-> very open.
-> 
-> Ross Zwisler (9):
->   ext4: remove duplicate extended attributes defs
->   xfs: always use DAX if mount option is used
->   xfs: validate bdev support for DAX inode flag
->   ext4: add ext4_should_use_dax()
->   ext4: ext4_change_inode_journal_flag error handling
->   ext4: safely transition S_DAX on journaling changes
->   ext4: prevent data corruption with inline data + DAX
->   ext4: add sanity check for encryption + DAX
->   ext4: add per-inode DAX flag
-> 
->  fs/ext4/ext4.h      | 47 ++++++---------------------------------------
->  fs/ext4/ext4_jbd2.h | 16 ++++++++++++++++
->  fs/ext4/inline.c    | 10 ----------
->  fs/ext4/inode.c     | 45 ++++++++++++++++++++++++-------------------
->  fs/ext4/ioctl.c     | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++--
->  fs/ext4/super.c     |  8 ++++++++
->  fs/xfs/xfs_ioctl.c  | 14 +++++++++++---
->  7 files changed, 119 insertions(+), 76 deletions(-)
-> 
+It wouldn't be enabled by default. We can't break existing rt device
+setups, so I don't see any issue here. And, well, someone mixing
+realtime and sparse virt in the same filesystem and storage isn't
+going to get reliable realtime response. i.e. nobody in their right
+mind mixes realtime streaming workloads with anything else - it's
+always dedicated hardware for RT....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
