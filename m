@@ -1,188 +1,461 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50472 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47104 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755228AbdIGPqz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Sep 2017 11:46:55 -0400
-Date: Thu, 7 Sep 2017 11:46:53 -0400
+        id S1755228AbdIGPq7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Sep 2017 11:46:59 -0400
+Date: Thu, 7 Sep 2017 11:46:58 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/17] xfs: rename bno to end in __xfs_bunmapi
-Message-ID: <20170907154653.GD61662@bfoster.bfoster>
+Subject: Re: [PATCH 05/17] xfs: use xfs_bmap_del_extent_delay for the data
+ fork as well
+Message-ID: <20170907154657.GE61662@bfoster.bfoster>
 References: <20170903072956.3175-1-hch@lst.de>
- <20170903072956.3175-5-hch@lst.de>
+ <20170903072956.3175-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170903072956.3175-5-hch@lst.de>
+In-Reply-To: <20170903072956.3175-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 09:29:43AM +0200, Christoph Hellwig wrote:
-> Rename the bno variable that's used as the end of the range in
-> __xfs_bunmapi to end, which better describes it.  Additionally change
-> the start variable which takes the initial value of bno to be the
-> function parameter itself.
+On Sun, Sep 03, 2017 at 09:29:44AM +0200, Christoph Hellwig wrote:
+> And remove the delalloc code from xfs_bmap_del_extent, which gets renamed
+> to xfs_bmap_del_extent_real to fit the naming scheme used by the other
+> xfs_bmap_{add,del}_extent_* routines.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_bmap.c | 49 ++++++++++++++++++++++++------------------------
->  1 file changed, 24 insertions(+), 25 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 331 ++++++++++++++++-------------------------------
+>  1 file changed, 114 insertions(+), 217 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index b5b30415aa2b..6c65954fc42c 100644
+> index 6c65954fc42c..e6feb71298ba 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5410,7 +5410,7 @@ int						/* error */
->  __xfs_bunmapi(
->  	xfs_trans_t		*tp,		/* transaction pointer */
->  	struct xfs_inode	*ip,		/* incore inode */
-> -	xfs_fileoff_t		bno,		/* starting offset to unmap */
-> +	xfs_fileoff_t		start,		/* first file offset deleted */
->  	xfs_filblks_t		*rlen,		/* i/o: amount remaining */
->  	int			flags,		/* misc flags */
->  	xfs_extnum_t		nexts,		/* number of extents max */
-> @@ -5429,7 +5429,6 @@ __xfs_bunmapi(
->  	int			logflags;	/* transaction logging flags */
->  	xfs_extlen_t		mod;		/* rt extent offset */
->  	xfs_mount_t		*mp;		/* mount structure */
-> -	xfs_fileoff_t		start;		/* first file offset deleted */
->  	int			tmp_logflags;	/* partial logging flags */
->  	int			wasdel;		/* was a delayed alloc extent */
->  	int			whichfork;	/* data or attribute fork */
-> @@ -5437,8 +5436,9 @@ __xfs_bunmapi(
->  	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
->  	xfs_fileoff_t		max_len;
->  	xfs_agnumber_t		prev_agno = NULLAGNUMBER, agno;
-> +	xfs_fileoff_t		end;
+> @@ -5061,10 +5061,10 @@ xfs_bmap_del_extent_cow(
 >  
-> -	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
-> +	trace_xfs_bunmap(ip, start, len, flags, _RET_IP_);
->  
->  	whichfork = xfs_bmapi_whichfork(flags);
->  	ASSERT(whichfork != XFS_COW_FORK);
-> @@ -5477,17 +5477,16 @@ __xfs_bunmapi(
+>  /*
+>   * Called by xfs_bmapi to update file extent records and the btree
+> - * after removing space (or undoing a delayed allocation).
+> + * after removing space.
+>   */
+>  STATIC int				/* error */
+> -xfs_bmap_del_extent(
+> +xfs_bmap_del_extent_real(
+>  	xfs_inode_t		*ip,	/* incore inode pointer */
+>  	xfs_trans_t		*tp,	/* current transaction pointer */
+>  	xfs_extnum_t		*idx,	/* extent number to update/delete */
+> @@ -5075,11 +5075,8 @@ xfs_bmap_del_extent(
+>  	int			whichfork, /* data or attr fork */
+>  	int			bflags)	/* bmapi flags */
+>  {
+> -	xfs_filblks_t		da_new;	/* new delay-alloc indirect blocks */
+> -	xfs_filblks_t		da_old;	/* old delay-alloc indirect blocks */
+>  	xfs_fsblock_t		del_endblock=0;	/* first block past del */
+>  	xfs_fileoff_t		del_endoff;	/* first offset past del */
+> -	int			delay;	/* current block is delayed allocated */
+>  	int			do_fx;	/* free extent at end of routine */
+>  	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
+>  	int			error;	/* error return value */
+> @@ -5114,63 +5111,40 @@ xfs_bmap_del_extent(
+>  	del_endoff = del->br_startoff + del->br_blockcount;
+>  	got_endoff = got.br_startoff + got.br_blockcount;
+>  	ASSERT(got_endoff >= del_endoff);
+> -	delay = isnullstartblock(got.br_startblock);
+> -	ASSERT(isnullstartblock(del->br_startblock) == delay);
+> -	flags = 0;
+> +	ASSERT(!isnullstartblock(got.br_startblock));
+> +	flags = XFS_ILOG_CORE;
+>  	qfield = 0;
+>  	error = 0;
+> -	/*
+> -	 * If deleting a real allocation, must free up the disk space.
+> -	 */
+> -	if (!delay) {
+> -		flags = XFS_ILOG_CORE;
+> -		/*
+> -		 * Realtime allocation.  Free it and record di_nblocks update.
+> -		 */
+> -		if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+> -			xfs_fsblock_t	bno;
+> -			xfs_filblks_t	len;
+> -
+> -			ASSERT(do_mod(del->br_blockcount,
+> -				      mp->m_sb.sb_rextsize) == 0);
+> -			ASSERT(do_mod(del->br_startblock,
+> -				      mp->m_sb.sb_rextsize) == 0);
+> -			bno = del->br_startblock;
+> -			len = del->br_blockcount;
+> -			do_div(bno, mp->m_sb.sb_rextsize);
+> -			do_div(len, mp->m_sb.sb_rextsize);
+> -			error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+> -			if (error)
+> -				goto done;
+> -			do_fx = 0;
+> -			nblks = len * mp->m_sb.sb_rextsize;
+> -			qfield = XFS_TRANS_DQ_RTBCOUNT;
+> -		}
+> -		/*
+> -		 * Ordinary allocation.
+> -		 */
+> -		else {
+> -			do_fx = 1;
+> -			nblks = del->br_blockcount;
+> -			qfield = XFS_TRANS_DQ_BCOUNT;
+> -		}
+> -		/*
+> -		 * Set up del_endblock and cur for later.
+> -		 */
+> -		del_endblock = del->br_startblock + del->br_blockcount;
+> -		if (cur) {
+> -			if ((error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> -					got.br_startblock, got.br_blockcount,
+> -					&i)))
+> -				goto done;
+> -			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -		}
+> -		da_old = da_new = 0;
+> -	} else {
+> -		da_old = startblockval(got.br_startblock);
+> -		da_new = 0;
+> -		nblks = 0;
+> +
+> +	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+> +		xfs_fsblock_t	bno;
+> +		xfs_filblks_t	len;
+> +
+> +		ASSERT(do_mod(del->br_blockcount, mp->m_sb.sb_rextsize) == 0);
+> +		ASSERT(do_mod(del->br_startblock, mp->m_sb.sb_rextsize) == 0);
+> +		bno = del->br_startblock;
+> +		len = del->br_blockcount;
+> +		do_div(bno, mp->m_sb.sb_rextsize);
+> +		do_div(len, mp->m_sb.sb_rextsize);
+> +		error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+> +		if (error)
+> +			goto done;
+>  		do_fx = 0;
+> +		nblks = len * mp->m_sb.sb_rextsize;
+> +		qfield = XFS_TRANS_DQ_RTBCOUNT;
+> +	} else {
+> +		do_fx = 1;
+> +		nblks = del->br_blockcount;
+> +		qfield = XFS_TRANS_DQ_BCOUNT;
+> +	}
+> +
+> +	del_endblock = del->br_startblock + del->br_blockcount;
+> +	if (cur) {
+> +		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> +				got.br_startblock, got.br_blockcount, &i);
+> +		if (error)
+> +			goto done;
+> +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
 >  	}
->  	XFS_STATS_INC(mp, xs_blk_unmap);
->  	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
-> -	start = bno;
-> -	bno = start + len - 1;
-> +	end = start + len - 1;
 >  
 >  	/*
->  	 * Check to see if the given block number is past the end of the
->  	 * file, back up to the last block if so...
->  	 */
-> -	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
-> +	if (!xfs_iext_lookup_extent(ip, ifp, end, &lastx, &got)) {
->  		ASSERT(lastx > 0);
->  		xfs_iext_get_extent(ifp, --lastx, &got);
-> -		bno = got.br_startoff + got.br_blockcount - 1;
-> +		end = got.br_startoff + got.br_blockcount - 1;
+> @@ -5187,8 +5161,6 @@ xfs_bmap_del_extent(
+>  		xfs_iext_remove(ip, *idx, 1,
+>  				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
+>  		--*idx;
+> -		if (delay)
+> -			break;
+>  
+>  		XFS_IFORK_NEXT_SET(ip, whichfork,
+>  			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> @@ -5210,14 +5182,6 @@ xfs_bmap_del_extent(
+>  		xfs_bmbt_set_startoff(ep, del_endoff);
+>  		temp = got.br_blockcount - del->br_blockcount;
+>  		xfs_bmbt_set_blockcount(ep, temp);
+> -		if (delay) {
+> -			temp = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> -				da_old);
+> -			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> -			trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+> -			da_new = temp;
+> -			break;
+> -		}
+>  		xfs_bmbt_set_startblock(ep, del_endblock);
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  		if (!cur) {
+> @@ -5237,14 +5201,6 @@ xfs_bmap_del_extent(
+>  		temp = got.br_blockcount - del->br_blockcount;
+>  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+>  		xfs_bmbt_set_blockcount(ep, temp);
+> -		if (delay) {
+> -			temp = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> -				da_old);
+> -			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> -			trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+> -			da_new = temp;
+> -			break;
+> -		}
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  		if (!cur) {
+>  			flags |= xfs_ilog_fext(whichfork);
+> @@ -5268,89 +5224,60 @@ xfs_bmap_del_extent(
+>  		temp2 = got_endoff - del_endoff;
+>  		new.br_blockcount = temp2;
+>  		new.br_state = got.br_state;
+> -		if (!delay) {
+> -			new.br_startblock = del_endblock;
+> -			flags |= XFS_ILOG_CORE;
+> -			if (cur) {
+> -				if ((error = xfs_bmbt_update(cur,
+> -						got.br_startoff,
+> -						got.br_startblock, temp,
+> -						got.br_state)))
+> -					goto done;
+> -				if ((error = xfs_btree_increment(cur, 0, &i)))
+> -					goto done;
+> -				cur->bc_rec.b = new;
+> -				error = xfs_btree_insert(cur, &i);
+> -				if (error && error != -ENOSPC)
+> -					goto done;
+> +		new.br_startblock = del_endblock;
+> +		flags |= XFS_ILOG_CORE;
+> +		if (cur) {
+> +			error = xfs_bmbt_update(cur, got.br_startoff,
+> +					got.br_startblock, temp,
+> +					got.br_state);
+> +			if (error)
+> +				goto done;
+> +			error = xfs_btree_increment(cur, 0, &i);
+> +			if (error)
+> +				goto done;
+> +			cur->bc_rec.b = new;
+> +			error = xfs_btree_insert(cur, &i);
+> +			if (error && error != -ENOSPC)
+> +				goto done;
+> +			/*
+> +			 * If get no-space back from btree insert, it tried a
+> +			 * split, and we have a zero block reservation.  Fix up
+> +			 * our state and return the error.
+> +			 */
+> +			if (error == -ENOSPC) {
+>  				/*
+> -				 * If get no-space back from btree insert,
+> -				 * it tried a split, and we have a zero
+> -				 * block reservation.
+> -				 * Fix up our state and return the error.
+> +				 * Reset the cursor, don't trust it after any
+> +				 * insert operation.
+>  				 */
+> -				if (error == -ENOSPC) {
+> -					/*
+> -					 * Reset the cursor, don't trust
+> -					 * it after any insert operation.
+> -					 */
+> -					if ((error = xfs_bmbt_lookup_eq(cur,
+> -							got.br_startoff,
+> -							got.br_startblock,
+> -							temp, &i)))
+> -						goto done;
+> -					XFS_WANT_CORRUPTED_GOTO(mp,
+> -								i == 1, done);
+> -					/*
+> -					 * Update the btree record back
+> -					 * to the original value.
+> -					 */
+> -					if ((error = xfs_bmbt_update(cur,
+> -							got.br_startoff,
+> -							got.br_startblock,
+> -							got.br_blockcount,
+> -							got.br_state)))
+> -						goto done;
+> -					/*
+> -					 * Reset the extent record back
+> -					 * to the original value.
+> -					 */
+> -					xfs_bmbt_set_blockcount(ep,
+> -						got.br_blockcount);
+> -					flags = 0;
+> -					error = -ENOSPC;
+> +				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> +						got.br_startblock, temp, &i);
+> +				if (error)
+>  					goto done;
+> -				}
+>  				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			} else
+> -				flags |= xfs_ilog_fext(whichfork);
+> -			XFS_IFORK_NEXT_SET(ip, whichfork,
+> -				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+> -		} else {
+> -			xfs_filblks_t	stolen;
+> -			ASSERT(whichfork == XFS_DATA_FORK);
+> -
+> -			/*
+> -			 * Distribute the original indlen reservation across the
+> -			 * two new extents. Steal blocks from the deleted extent
+> -			 * if necessary. Stealing blocks simply fudges the
+> -			 * fdblocks accounting in xfs_bunmapi().
+> -			 */
+> -			temp = xfs_bmap_worst_indlen(ip, got.br_blockcount);
+> -			temp2 = xfs_bmap_worst_indlen(ip, new.br_blockcount);
+> -			stolen = xfs_bmap_split_indlen(da_old, &temp, &temp2,
+> -						       del->br_blockcount);
+> -			da_new = temp + temp2 - stolen;
+> -			del->br_blockcount -= stolen;
+> -
+> -			/*
+> -			 * Set the reservation for each extent. Warn if either
+> -			 * is zero as this can lead to delalloc problems.
+> -			 */
+> -			WARN_ON_ONCE(!temp || !temp2);
+> -			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> -			new.br_startblock = nullstartblock((int)temp2);
+> -		}
+> +				/*
+> +				 * Update the btree record back
+> +				 * to the original value.
+> +				 */
+> +				error = xfs_bmbt_update(cur, got.br_startoff,
+> +						got.br_startblock,
+> +						got.br_blockcount,
+> +						got.br_state);
+> +				if (error)
+> +					goto done;
+> +				/*
+> +				 * Reset the extent record back
+> +				 * to the original value.
+> +				 */
+> +				xfs_bmbt_set_blockcount(ep, got.br_blockcount);
+> +				flags = 0;
+> +				error = -ENOSPC;
+> +				goto done;
+> +			}
+> +			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> +		} else
+> +			flags |= xfs_ilog_fext(whichfork);
+> +		XFS_IFORK_NEXT_SET(ip, whichfork,
+> +			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  		xfs_iext_insert(ip, *idx + 1, 1, &new, state);
+>  		++*idx;
+> @@ -5358,11 +5285,9 @@ xfs_bmap_del_extent(
 >  	}
 >  
->  	logflags = 0;
-> @@ -5511,13 +5510,13 @@ __xfs_bunmapi(
->  	}
+>  	/* remove reverse mapping */
+> -	if (!delay) {
+> -		error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, del);
+> -		if (error)
+> -			goto done;
+> -	}
+> +	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, del);
+> +	if (error)
+> +		goto done;
 >  
->  	extno = 0;
-> -	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
-> +	while (end != (xfs_fileoff_t)-1 && end >= start && lastx >= 0 &&
->  	       (nexts == 0 || extno < nexts) && max_len > 0) {
->  		/*
-> -		 * Is the found extent after a hole in which bno lives?
-> +		 * Is the found extent after a hole in which end lives?
->  		 * Just back up to the previous extent, if so.
->  		 */
-> -		if (got.br_startoff > bno) {
-> +		if (got.br_startoff > end) {
->  			if (--lastx < 0)
->  				break;
->  			xfs_iext_get_extent(ifp, lastx, &got);
-> @@ -5526,9 +5525,9 @@ __xfs_bunmapi(
->  		 * Is the last block of this extent before the range
->  		 * we're supposed to delete?  If so, we're done.
->  		 */
-> -		bno = XFS_FILEOFF_MIN(bno,
-> +		end = XFS_FILEOFF_MIN(end,
->  			got.br_startoff + got.br_blockcount - 1);
-> -		if (bno < start)
-> +		if (end < start)
->  			break;
->  		/*
->  		 * Then deal with the (possibly delayed) allocated space
-> @@ -5553,8 +5552,8 @@ __xfs_bunmapi(
->  			if (!wasdel)
->  				del.br_startblock += start - got.br_startoff;
->  		}
-> -		if (del.br_startoff + del.br_blockcount > bno + 1)
-> -			del.br_blockcount = bno + 1 - del.br_startoff;
-> +		if (del.br_startoff + del.br_blockcount > end + 1)
-> +			del.br_blockcount = end + 1 - del.br_startoff;
+>  	/*
+>  	 * If we need to, add to list of extents to delete.
+> @@ -5388,13 +5313,6 @@ xfs_bmap_del_extent(
+>  	if (qfield && !(bflags & XFS_BMAPI_REMAP))
+>  		xfs_trans_mod_dquot_byino(tp, ip, qfield, (long)-nblks);
 >  
->  		/* How much can we safely unmap? */
->  		if (max_len < del.br_blockcount) {
-> @@ -5580,10 +5579,10 @@ __xfs_bunmapi(
->  				 * This piece is unwritten, or we're not
->  				 * using unwritten extents.  Skip over it.
->  				 */
-> -				ASSERT(bno >= mod);
-> -				bno -= mod > del.br_blockcount ?
-> +				ASSERT(end >= mod);
-> +				end -= mod > del.br_blockcount ?
->  					del.br_blockcount : mod;
-> -				if (bno < got.br_startoff) {
-> +				if (end < got.br_startoff) {
->  					if (--lastx >= 0)
->  						xfs_iext_get_extent(ifp, lastx,
->  								&got);
-> @@ -5632,9 +5631,9 @@ __xfs_bunmapi(
->  				 * Can't make it unwritten.  There isn't
->  				 * a full extent here so just skip it.
->  				 */
-> -				ASSERT(bno >= del.br_blockcount);
-> -				bno -= del.br_blockcount;
-> -				if (got.br_startoff > bno && --lastx >= 0)
-> +				ASSERT(end >= del.br_blockcount);
-> +				end -= del.br_blockcount;
-> +				if (got.br_startoff > end && --lastx >= 0)
->  					xfs_iext_get_extent(ifp, lastx, &got);
->  				continue;
->  			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
-> @@ -5737,24 +5736,24 @@ __xfs_bunmapi(
->  			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
->  
->  		max_len -= del.br_blockcount;
-> -		bno = del.br_startoff - 1;
-> +		end = del.br_startoff - 1;
->  nodelete:
->  		/*
->  		 * If not done go on to the next (previous) record.
->  		 */
-> -		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
-> +		if (end != (xfs_fileoff_t)-1 && end >= start) {
->  			if (lastx >= 0) {
->  				xfs_iext_get_extent(ifp, lastx, &got);
-> -				if (got.br_startoff > bno && --lastx >= 0)
-> +				if (got.br_startoff > end && --lastx >= 0)
->  					xfs_iext_get_extent(ifp, lastx, &got);
+> -	/*
+> -	 * Account for change in delayed indirect blocks.
+> -	 * Nothing to do for disk quota accounting here.
+> -	 */
+> -	ASSERT(da_old >= da_new);
+> -	if (da_old > da_new)
+> -		xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new), false);
+>  done:
+>  	*logflagsp = flags;
+>  	return error;
+> @@ -5679,62 +5597,41 @@ __xfs_bunmapi(
 >  			}
->  			extno++;
 >  		}
->  	}
-> -	if (bno == (xfs_fileoff_t)-1 || bno < start || lastx < 0)
-> +	if (end == (xfs_fileoff_t)-1 || end < start || lastx < 0)
->  		*rlen = 0;
->  	else
-> -		*rlen = bno - start + 1;
-> +		*rlen = end - start + 1;
 >  
->  	/*
->  	 * Convert to a btree if necessary.
+> -		/*
+> -		 * If it's the case where the directory code is running
+> -		 * with no block reservation, and the deleted block is in
+> -		 * the middle of its extent, and the resulting insert
+> -		 * of an extent would cause transformation to btree format,
+> -		 * then reject it.  The calling code will then swap
+> -		 * blocks around instead.
+> -		 * We have to do this now, rather than waiting for the
+> -		 * conversion to btree format, since the transaction
+> -		 * will be dirty.
+> -		 */
+> -		if (!wasdel && tp->t_blk_res == 0 &&
+> -		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+> -		    XFS_IFORK_NEXTENTS(ip, whichfork) >= /* Note the >= */
+> -			XFS_IFORK_MAXEXT(ip, whichfork) &&
+> -		    del.br_startoff > got.br_startoff &&
+> -		    del.br_startoff + del.br_blockcount <
+> -		    got.br_startoff + got.br_blockcount) {
+> -			error = -ENOSPC;
+> -			goto error0;
+> -		}
+> -
+> -		/*
+> -		 * Unreserve quota and update realtime free space, if
+> -		 * appropriate. If delayed allocation, update the inode delalloc
+> -		 * counter now and wait to update the sb counters as
+> -		 * xfs_bmap_del_extent() might need to borrow some blocks.
+> -		 */
+>  		if (wasdel) {
+> -			ASSERT(startblockval(del.br_startblock) > 0);
+> -			if (isrt) {
+> -				xfs_filblks_t rtexts;
+> -
+> -				rtexts = XFS_FSB_TO_B(mp, del.br_blockcount);
+> -				do_div(rtexts, mp->m_sb.sb_rextsize);
+> -				xfs_mod_frextents(mp, (int64_t)rtexts);
+> -				(void)xfs_trans_reserve_quota_nblks(NULL,
+> -					ip, -((long)del.br_blockcount), 0,
+> -					XFS_QMOPT_RES_RTBLKS);
+> -			} else {
+> -				(void)xfs_trans_reserve_quota_nblks(NULL,
+> -					ip, -((long)del.br_blockcount), 0,
+> -					XFS_QMOPT_RES_REGBLKS);
+> +			error = xfs_bmap_del_extent_delay(ip, whichfork, &lastx,
+> +					&got, &del);
+> +		} else {
+> +			/*
+> +			 * If it's the case where the directory code is running
+> +			 * with no block reservation, and the deleted block is
+> +			 * in the middle of its extent, and the resulting insert
+> +			 * of an extent would cause transformation to btree
+> +			 * format, then reject it.  The calling code will then
+> +			 * swap blocks around instead.  We have to do this now,
+> +			 * rather than waiting for the conversion to btree
+> +			 * format, since the transaction will be dirty.
+> +			 */
+> +			if (tp->t_blk_res == 0 &&
+> +			    XFS_IFORK_FORMAT(ip, whichfork) ==
+> +					XFS_DINODE_FMT_EXTENTS &&
+> +			    XFS_IFORK_NEXTENTS(ip, whichfork) >=
+> +					XFS_IFORK_MAXEXT(ip, whichfork) &&
+> +			    del.br_startoff > got.br_startoff &&
+> +			    del.br_startoff + del.br_blockcount <
+> +			    got.br_startoff + got.br_blockcount) {
+> +				error = -ENOSPC;
+> +				goto error0;
+>  			}
+> -			ip->i_delayed_blks -= del.br_blockcount;
+> +
+> +			error = xfs_bmap_del_extent_real(ip, tp, &lastx, dfops,
+> +					cur, &del, &tmp_logflags, whichfork,
+> +					flags);
+> +			logflags |= tmp_logflags;
+>  		}
+>  
+> -		error = xfs_bmap_del_extent(ip, tp, &lastx, dfops, cur, &del,
+> -				&tmp_logflags, whichfork, flags);
+> -		logflags |= tmp_logflags;
+>  		if (error)
+>  			goto error0;
+>  
+> -		if (!isrt && wasdel)
+> -			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
+> -
+>  		max_len -= del.br_blockcount;
+>  		end = del.br_startoff - 1;
+>  nodelete:
 > -- 
 > 2.11.0
 > 
