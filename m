@@ -1,51 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57130 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750741AbdIELba (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 07:31:30 -0400
-Date: Tue, 5 Sep 2017 19:31:28 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 07/14] fsx: add optional logid prefix to log messages
-Message-ID: <20170905113128.GG8034@eguan.usersys.redhat.com>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
- <1504104706-11965-8-git-send-email-amir73il@gmail.com>
- <20170905104641.GA8034@eguan.usersys.redhat.com>
- <CAOQ4uxi1mu5QXt3PJuk27WJvm+vS63ct+VQsDJvxvaLiEGzrAA@mail.gmail.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:1437 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750742AbdIGG7n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 02:59:43 -0400
+Date: Thu, 7 Sep 2017 16:59:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] spaceman: Add missing link to libuuid
+Message-ID: <20170907065926.GY17782@dastard>
+References: <20170907021900.41040-1-raj.khem@gmail.com>
+ <20170907024017.GX17782@dastard>
+ <CAMKF1souYmZRaQuBoOv-xR6+S8kj9oHpzZ_rN6V4ecnOr=RuFQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi1mu5QXt3PJuk27WJvm+vS63ct+VQsDJvxvaLiEGzrAA@mail.gmail.com>
+In-Reply-To: <CAMKF1souYmZRaQuBoOv-xR6+S8kj9oHpzZ_rN6V4ecnOr=RuFQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Khem Raj <raj.khem@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 05, 2017 at 02:24:20PM +0300, Amir Goldstein wrote:
-> On Tue, Sep 5, 2017 at 1:46 PM, Eryu Guan <eguan@redhat.com> wrote:
-> > On Wed, Aug 30, 2017 at 05:51:39PM +0300, Amir Goldstein wrote:
-> >> When writing the intermixed output of several fsx processes
-> >> to a single log file, it is usefull to prefix logs with a log id.
-> >> Use fsx -j <logid> to define the log messages prefix.
+On Wed, Sep 06, 2017 at 09:11:11PM -0700, Khem Raj wrote:
+> On Wed, Sep 6, 2017 at 7:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Sep 06, 2017 at 07:19:00PM -0700, Khem Raj wrote:
+> >> When uuid is enabled then we see linking failures with gold linker e.g.
+> >>
+> >> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_compare'
+> >> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_copy'
+> >> clang-5.0: error: linker command failed with exit code 1 (use -v to see invocation)
 > >
-> > Would it be better to allow any string as prefix, not limit to id
-> > number?
+> > That's libxfs, not xfs_spaceman....
+> 
+> yes its libxfs but its linking spaceman, I chopped the error logs too
+> much I guess.
+
+xfs_spaceman does not link against libuuid:
+
+$ ldd spaceman/xfs_spaceman 
+	linux-vdso.so.1 (0x00007ffca4f68000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fa36f358000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fa36f6f7000)
+
+Nor libxfs - if it linked against libxfs, it would have to pull in
+4 other libraries, including libuuid:
+
+$ ldd repair/xfs_repair 
+	linux-vdso.so.1 (0x00007ffd96bb4000)
+	libuuid.so.1 => /lib/x86_64-linux-gnu/libuuid.so.1 (0x00007f5da2d4f000)
+	librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007f5da2b47000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f5da292a000)
+	libblkid.so.1 => /lib/x86_64-linux-gnu/libblkid.so.1 (0x00007f5da26e4000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f5da2345000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f5da2f54000)
+
+So whatever build error you are having has nothing to do with
+xfs_spaceman. Have you installed all the necessary libraries?
+
+> >> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+> >> ---
+> >>  spaceman/Makefile | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> >> index 95ec3c0..060e0af 100644
+> >> --- a/spaceman/Makefile
+> >> +++ b/spaceman/Makefile
+> >> @@ -9,7 +9,7 @@ LTCOMMAND = xfs_spaceman
+> >>  HFILES = init.h space.h
+> >>  CFILES = init.c file.c prealloc.c trim.c
+> >>
+> >> -LLDLIBS = $(LIBXCMD)
+> >> +LLDLIBS = $(LIBXCMD) $(LIBUUID)
 > >
+> > And spaceman doesn't link against libxfs, nor does libxcmd or
+> > spaceman use uuids so I don't see why this fixes a problem with
+> > libxfs...
 > 
-> Maybe, but I didn't see an immediate need for that beyond
-> the concurrent test runs, for with numeric id is sufficient.
+> I was just following what other binaries were doing, otherwise I agree
+> libuuid should appear in DT_NEEDED flags in libxfs.so so linkers can
+> pull it in automatically.
+> 
+> try using
+> 
+> LDFLAGS = "-fuse-ld=gold" if you want to reproduce the problem on your end.
 
-I agreed, I don't have strong preference on this.
+$ gold -V
+GNU gold (GNU Binutils for Debian 2.29) 1.14
+$ make distclean
+....
+$ LDFLAGS="-fuse-ld=gold" make -j8 Q=
+....
+[LD]     xfs_spaceman
+/bin/bash ../libtool --quiet --tag=CC --mode=link gcc -o xfs_spaceman -fuse-ld=gold -fuse-ld=gold  -fuse-ld=gold  -fuse-ld=gold -static  init.o file.o prealloc.o trim.o freesp.o   ../libxcmd/libxcmd.la
+.....
+$ ldd spaceman/xfs_spaceman 
+	linux-vdso.so.1 (0x00007ffc943e4000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f2def2e2000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f2def681000)
 
-Thanks,
-Eryu
-> 
-> Besides, the function that prepends the prefix, prt()
-> is sometimes uses for continued line, which results with
-> weird looking lines like this one:
-> 
-> 1: 60( 60 mod 256): 1: FALLOC   0x30140 thru 0x30f3c    (0xdfc bytes)
-> 1: EXTENDING1:
-> 
-> So it's not really worth fixing properly, but anything more then a single
-> numeric prefix is going to look quite bad.
+TOT builds just fine here on debian unstable using the gold linker,
+and again this shows that spaceman does not link against libuuid.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
