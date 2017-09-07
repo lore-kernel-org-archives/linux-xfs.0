@@ -1,111 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42162 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757173AbdIIAux (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Sep 2017 20:50:53 -0400
-Subject: Re: [PATCH] define __ prefixed version of intXY_t types
-References: <20170908233616.26051-1-raj.khem@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7c353810-d8be-51c4-d2a8-9e0833eaf01c@sandeen.net>
-Date: Fri, 8 Sep 2017 19:50:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170908233616.26051-1-raj.khem@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mail-it0-f67.google.com ([209.85.214.67]:33789 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752708AbdIGV0R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 17:26:17 -0400
+Received: by mail-it0-f67.google.com with SMTP id f64so387577itf.0
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Sep 2017 14:26:16 -0700 (PDT)
+From: Andreas Dilger <adilger@dilger.ca>
+Message-Id: <5F58D3F5-D93B-4648-AE01-8A46956FBB4B@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_731D3B21-257E-4633-80D4-CB7DD9B217F4";
+ protocol="application/pgp-signature"; micalg=pgp-sha1
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH 0/9] add ext4 per-inode DAX flag
+Date: Thu, 7 Sep 2017 15:26:10 -0600
+In-Reply-To: <20170907211303.GA23212@linux.intel.com>
+References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
+ <f856f8fd-3697-adb1-198b-a9ae2fce405f@redhat.com>
+ <20170906170754.GB17663@linux.intel.com>
+ <CAPcyv4hfhDT9NFRXL+MT5epiqWHJ0RLraV4P3CZ4EJM6L-s0Nw@mail.gmail.com>
+ <20170907211303.GA23212@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Eric Sandeen <sandeen@redhat.com>, Lukas Czerner <lczerner@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4 <linux-ext4@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, xfs <linux-xfs@vger.kernel.org>
 
-On 9/8/17 6:36 PM, Khem Raj wrote:
-> This is required since musl does not define them
-> unlike glibc
-> 
-> Signed-off-by: Khem Raj <raj.khem@gmail.com>
-> ---
->  include/linux.h | 29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
-> 
-> diff --git a/include/linux.h b/include/linux.h
-> index 9611a37f..1f6319c6 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -40,6 +40,35 @@
->  # undef fsxattr
->  #endif
->  
-> +#ifndef loff_t
-> +#define loff_t off_t
 
-I think you should just switch to off64_t in io/copy_file_range.c,
-the only user of loff_t.
+--Apple-Mail=_731D3B21-257E-4633-80D4-CB7DD9B217F4
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-None of the following double-underscore types are present in
-xfsprogs since this commit:
+On Sep 7, 2017, at 3:13 PM, Ross Zwisler <ross.zwisler@linux.intel.com> =
+wrote:
+>=20
+> On Thu, Sep 07, 2017 at 01:54:45PM -0700, Dan Williams wrote:
+>> On Wed, Sep 6, 2017 at 10:07 AM, Ross Zwisler
+>> <ross.zwisler@linux.intel.com> wrote:
+>>> On Tue, Sep 05, 2017 at 09:12:35PM -0500, Eric Sandeen wrote:
+>>>> On 9/5/17 5:35 PM, Ross Zwisler wrote:
+>>>>> The original intent of this series was to add a per-inode DAX flag =
+to ext4
+>>>>> so that it would be consistent with XFS.  In my travels I found =
+and fixed
+>>>>> several related issues in both ext4 and XFS.
+>>>>=20
+>>>> Hi Ross -
+>>>>=20
+>>>> hch had a lot of reasons to nuke the dax flag from orbit, and we =
+just
+>>>> /disabled/ it in xfs due to its habit of crashing the kernel...
+>>>=20
+>>> Ah, sorry, I wasn't CC'd on those threads and missed them.  For any =
+interested
+>>> bystanders:
+>>>=20
+>>> https://www.spinics.net/lists/linux-ext4/msg57840.html
+>>> https://www.spinics.net/lists/linux-xfs/msg09831.html
+>>> https://www.spinics.net/lists/linux-xfs/msg10124.html
+>>>=20
+>>>> so a couple questions:
+>>>>=20
+>>>> 1) does this series pass hch's "test the per-inode DAX flag" =
+fstest?
+>>>=20
+>>> Nope, it has the exact same problems as the XFS per-inode DAX flag.
+>>>=20
+>>>> 2) do we have an agreement that we need this flag at all, or is =
+this
+>>>>   just a parity item because xfs has^whad a per-inode flag?
+>>>=20
+>>> It was for parity, and because it allows admins finer grained =
+control over
+>>> their system.  Basically all things discussed in response to Lukas's =
+original
+>>> patch in the first link above.
+>>=20
+>> I think it's more than parity. When pmem is slower than page cache it
+>> is actively harmful to have DAX enabled globally for a filesystem. =
+So,
+>> not only should we push for per-inode DAX control, we should also =
+push
+>> to deprecate the mount option. I agree with Christoph that we should
+>> try to automatically and transparently enable DAX where it makes
+>> sense, but we also need a finer-grained mechanism than a mount flag =
+to
+>> force the behavior one way or the other.
+>=20
+> Yep, agreed.  I'll play with how to make this work after I've sorted =
+out all
+> the data corruptions I've found. :)
 
-commit 14f8b6810bd240cc58131483790a099fcf56c073
-Author: Darrick J. Wong <darrick.wong@oracle.com>
-Date:   Fri Aug 4 16:33:51 2017 -0500
+It seems that the majority of problems are from enabling/disabling S_DAX
+on an inode that already has dirty data.  However, I wonder if this =
+could
+be prevented at runtime, and only allow S_DAX to be set when the inode =
+is
+first instantiated, and wouldn't be allowed to change after that?  =
+Setting
+or clearing the per-inode DAX flag might still be allowed, but it =
+wouldn't
+be enabled until the inode is next fetched into cache?  Similarly, for
+inodes that have conflicting features (e.g. inline data or encryption)
+would not be allowed to enable S_DAX.
 
-    xfsprogs: remove double-underscore integer types
-    
-    This is a purely mechanical patch that removes the private
-    __{u,}int{8,16,32,64}_t typedefs in favor of using the system
-    {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
-    the transformation and fix the resulting whitespace and indentation
-    errors:
-    
-    s/typedef\t__uint8_t/typedef __uint8_t\t/g
-    s/typedef\t__uint/typedef __uint/g
-    s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
-    s/__uint8_t\t/__uint8_t\t\t/g
-    s/__uint/uint/g
-    s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
-    s/__int/int/g
-    /^typedef.*int[0-9]*_t;$/d
-    
-    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-    [sandeen: fix whitespace incidentals]
-    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-    Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+My assumption here is that it is possible to fall back to always using
+page cache for such inodes, and flush the data to pmem via the block
+interface for inodes that don't have S_DAX set?
 
-currently on the for-next branch of xfsprogs.  You might want to
-carry that patch until 4.13 is released.
+That would allow the vast majority of cases to work out of the box, or =
+in
+a few rare cases where the DAX feature is being changed (e.g. inline =
+data
+inode on disk growing to external disk blocks) would use the page cache
+until such a time that the inode is dropped from cache and reloaded (at
+worst the next remount).
 
-(and 4a492e7 xfs: remove double-underscore integer types as well)
+Cheers, Andreas
 
--Eric
 
-> +#endif
-> +#ifndef __uint8_t
-> +#define __uint8_t uint8_t
-> +#endif
-> +#ifndef __uint16_t
-> +#define __uint16_t uint16_t
-> +#endif
-> +#ifndef __uint32_t
-> +#define __uint32_t uint32_t
-> +#endif
-> +#ifndef __uint64_t
-> +#define __uint64_t uint64_t
-> +#endif
-> +
-> +#ifndef __int8_t
-> +#define __int8_t int8_t
-> +#endif
-> +#ifndef __int16_t
-> +#define __int16_t int16_t
-> +#endif
-> +#ifndef __int32_t
-> +#define __int32_t int32_t
-> +#endif
-> +#ifndef __int64_t
-> +#define __int64_t int64_t
-> +#endif
-> +
->  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
->  {
->  	return ioctl(fd, cmd, p);
-> 
+
+
+
+
+--Apple-Mail=_731D3B21-257E-4633-80D4-CB7DD9B217F4
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iD8DBQFZsblzpIg59Q01vtYRAnABAKDJDRHlR0nDJAoSc7jm75W+nhjS5ACfU3Uy
+EvECK/H68rvmzhmF9bjQzfo=
+=Or3G
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_731D3B21-257E-4633-80D4-CB7DD9B217F4--
