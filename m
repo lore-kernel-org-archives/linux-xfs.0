@@ -1,94 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58082 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753640AbdIGVIi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Sep 2017 17:08:38 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 1/2] xfs: always use DAX if mount option is used
-Date: Thu,  7 Sep 2017 15:08:31 -0600
-Message-Id: <20170907210832.17969-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170907210832.17969-1-ross.zwisler@linux.intel.com>
-References: <20170907210832.17969-1-ross.zwisler@linux.intel.com>
+Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:6897 "EHLO
+        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755742AbdIGSXk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 14:23:40 -0400
+From: "Lu, Qian" <luqia@amazon.com>
+Subject: XFS mounted with 'discard' option - deleting fio test files slow
+Date: Thu, 7 Sep 2017 18:22:22 +0000
+Message-ID: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <227BB91A1F5E384AB17E94C3F88F70EF@amazon.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Before support for the per-inode DAX flag was disabled the XFS the code had
-an issue where the user couldn't reliably tell whether or not DAX was being
-used to service page faults and I/O when the DAX mount option was used.  In
-this case each inode within the mounted filesystem started with S_DAX set
-due to the mount option, but it could be cleared if someone touched the
-individual inode flag.
-
-For example (v4.13 and before):
-
-  # mount | grep dax
-  /dev/pmem0 on /mnt type xfs
-  (rw,relatime,seclabel,attr2,dax,inode64,sunit=4096,swidth=4096,noquota)
-
-  # touch /mnt/a /mnt/b   # both files currently use DAX
-
-  # xfs_io -c "lsattr" /mnt/*  # neither has the DAX inode option set
-  ----------e----- /mnt/a
-  ----------e----- /mnt/b
-
-  # xfs_io -c "chattr -x" /mnt/a  # this clears S_DAX for /mnt/a
-
-  # xfs_io -c "lsattr" /mnt/*
-  ----------e----- /mnt/a
-  ----------e----- /mnt/b
-
-We end up with both /mnt/a and /mnt/b looking identical from the point of
-view of the mount option and from lsattr, but one is using DAX and the
-other is not.
-
-Fix this by always doing DAX I/O when either the mount option is set or
-when the DAX inode flag is set.  This means that DAX will always be used
-for all inodes on a filesystem mounted with -o dax, making the usage
-reliable and detectable.
-
-This does not fix the race issues that caused the XFS DAX inode option to
-be disabled, so that option will still be disabled.  If/when we re-enable
-it, though, I think we will want this issue to have been fixed.  I also do
-think that we want to fix this in stable kernels.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-CC: stable@vger.kernel.org
----
- fs/xfs/xfs_ioctl.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 5049e8a..26faeb9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1013,7 +1013,7 @@ xfs_diflags_to_linux(
- 	else
- 		inode->i_flags &= ~S_NOATIME;
- #if 0	/* disabled until the flag switching races are sorted out */
--	if (xflags & FS_XFLAG_DAX)
-+	if ((xflags & FS_XFLAG_DAX) || (ip->i_mount->m_flags & XFS_MOUNT_DAX))
- 		inode->i_flags |= S_DAX;
- 	else
- 		inode->i_flags &= ~S_DAX;
-@@ -1104,7 +1104,14 @@ xfs_ioctl_setattr_dax_invalidate(
- 			return -EINVAL;
- 	}
- 
--	/* If the DAX state is not changing, we have nothing to do here. */
-+	/*
-+	 * If the DAX state is not changing, we have nothing to do here.  If
-+	 * the DAX mount option was used we will update the DAX inode flag as
-+	 * the user requested but we will continue to use DAX for I/O and page
-+	 * faults regardless of how the inode flag is set.
-+	 */
-+	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
-+		return 0;
- 	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
- 		return 0;
- 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
--- 
-2.9.5
-
+SGkgWEZTIG1haWxpbmcgbGlzdCwNCsKgDQpSZWNlbnRseSB3ZSByZWNlaXZlZCBhIGJ1ZyByZXBv
+cnQgaW4gdGhlIFhGUyBmaWxlc3lzdGVtIHdpdGggJ2Rpc2NhcmQnIG9wdGlvbi4gSSBoYXZlIGJl
+ZW4gYWJsZSB0byByZXByb2R1Y2UgdGhpcyBpc3N1ZS4gSSB1c2VkIFhGUyBmaWxlc3lzdGVtIHRv
+IGZvcm1hdCBOVk1lIFNTRCBhbmQgbW91bnRlZCB3aXRoICdkaXNjYXJkJyBvcHRpb24uIFdoZW4g
+SSB0cmllZCB0byBkZWxldGUgdGhlIHRlc3QgZmlvIGZpbGVzLCB0aGUgc2Vzc2lvbiB0b29rIGxv
+bmcgdGltZS4gVGhpcyBpc3N1ZSBpcyBiYXNlZCBvbiBMaW51eCA0Ljkgc3RhYmxlIHRyZWUuIEkg
+aGF2ZSBhbHNvIHJlcGVhdGVkIHRoaXMgdGVzdCB3aXRoIExpbnV4IDQuMTMsIDQuMTIsIGFuZCB3
+ZSBhcmUgZmFjaW5nIHRoZSBzYW1lIGlzc3VlLiBUZXN0cyB3ZXJlIHJlcGVhdGVkIHNldmVyYWwg
+dGltZXMgYW5kIGl0IHdhcyBjb25zaXN0ZW50Lg0KwqANClBsZWFzZSBzZWUgZGV0YWlscyBiZWxv
+dy4NCsKgDQoxLiBLZXJuZWwgdmVyc2lvbjogTGludXggaXAtMTcyLTMxLTYtMjQzIDQuOS4zMi0x
+NS40MS5hbXpuMS54ODZfNjQgIzEgU01QIFRodSBKdW4gMjIgMDY6MjA6NTQgVVRDIDIwMTcgeDg2
+XzY0IHg4Nl82NCB4ODZfNjQgR05VL0xpbnV4DQrCoA0KIyBmaW8gLS1uYW1lIGZpb190ZXN0X2Zp
+bGUgLS1kaXJlY3Q9MSAtLXJ3PXJhbmR3cml0ZSAtLWJzPTRrIC0tc2l6ZT01RyAtLW51bWpvYnM9
+OCAtLWdyb3VwX3JlcG9ydGluZw0KLS0+IEludGVycnVwdCB3aXRoIEN0cmwrQw0KIyB0aW1lIHJt
+IC1yZiBmaW9fdGVzdF9maWxlLioNCi0tPiBUaGUgc2Vzc2lvbiBoYW5ncyBhbmQgaW4gJ2Jsb2Nr
+ZWQnIHN0YXRlDQokIGRtZXNnDQouLi4NClvCoCA0OTIuMzI5ODk2XSBJTkZPOiB0YXNrIHJtOjky
+MzEgYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDEyMCBzZWNvbmRzLg0KLi4uDQrCoA0KVGhlbiBJIHRy
+aWVkIHRvIGJhY2twb3J0IHNvbWUgcGF0Y2hlcyBhbmQgcmVwZWF0ZWQgdGhlIHRlc3QuIFRoZSBp
+c3N1ZSBoYXMgYmVlbiBpbXByb3ZlZC4gRXZlbnR1YWxseSAncm0nIGNvbW1hbmQgY29tcGxldGVk
+IGJ1dCB0b29rIGxvbmcgdGltZSgybWluKS4NCsKgDQrCoCAqwqAgQmFja3BvcnRlZCBwYXRjaDog
+NDU2MGU3OCB4ZnM6IGRvbid0IGJsb2NrIHRoZSBsb2cgY29tbWl0IGhhbmRsZXIgZm9yIGRpc2Nh
+cmRzDQrCoA0KwqAjIGZpbyAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFu
+ZHdyaXRlIC0tYnM9NGsgLS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQrC
+oC0tPiBJbnRlcnJ1cHQgd2l0aCBDdHJsK0MNCsKgIyB0aW1lIHJtIC1yZiBmaW9fdGVzdF9maWxl
+LioNCsKgcmVhbMKgIDJtMi4yNDJzDQrCoHVzZXLCoCAwbTAuMDAwcw0KwqBzeXPCoMKgIDBtMjUu
+NTI0cw0KwqANCsKgDQoyLsKgwqDCoCBXaXRoIExpbnV4IDQuMTIgYW5kIDQuMTMuMC1yYzEsIHRo
+ZSBpc3N1ZSBoYXMgYmVlbiBpbXByb3ZlZCBhbmQgdGhlIGNvbW1hbmQgaXMgbm90IHN0dWNrLiBC
+dXQgJ3JtJyBjb21tYW5kIHN0aWxsIHRha2VzIGxvbmcgdGltZSAobW9yZSB0aGFuIDFtaW4pLiBQ
+bGVhc2Ugc2VlIGRldGFpbHMgYmVsb3cuDQrCoA0KS2VybmVsIHZlcnNpb246IExpbnV4IHZlcnNp
+b24gNC4xMy4wLXJjMSsgKGVjMi11c2VyQGlwLTE3Mi0zMS0yMS0yNSkgKGdjYyB2ZXJzaW9uIDQu
+OC4zIDIwMTQwOTExIChSZWQgSGF0IDQuOC4zLTkpIChHQ0MpKSAjMSBTTVAgRnJpIEp1bCAyMSAx
+NzozMTowNiBVVEMgMjAxNw0KwqANCiMgZmlvIC0tbmFtZSBmaW9fdGVzdF9maWxlIC0tZGlyZWN0
+PTEgLS1ydz1yYW5kd3JpdGUgLS1icz00ayAtLXNpemU9NUcgLS1udW1qb2JzPTggLS1ncm91cF9y
+ZXBvcnRpbmcNCi0tPiBJbnRlcnJ1cHQgYXQgYWJvdXQgMzclDQojIHRpbWUgcm0gLXJmIGZpb190
+ZXN0X2ZpbGUuKg0KcmVhbMKgIDFtNTcuOTEycw0KdXNlcsKgIDBtMC4wMDBzDQpzeXPCoMKgIDBt
+MjguODEwcw0KwqANCkNvbXBhcmUgdGhpcyByZXN1bHQgd2l0aDoNCsKgwqDCoMKgYSnCoCBYRlMg
+bW91bnRlZCB3aXRoICdub2Rpc2NhcmQnIG9wdGlvbjogSXQgdG9vayBsZXNzIHRoYW4gMW1pbiB0
+byBydW4gJ3JtJyBjb21tYW5kLg0KwqDCoMKgwqAgDQrCoMKgwqDCoMKgIyBmaW8gLS1uYW1lIGZp
+b190ZXN0X2ZpbGUgLS1kaXJlY3Q9MSAtLXJ3PXJhbmR3cml0ZSAtLWJzPTRrIC0tc2l6ZT01RyAt
+LW51bWpvYnM9OCAtLWdyb3VwX3JlcG9ydGluZw0KwqDCoMKgwqAtLT4gSW50ZXJydXB0IGF0IGFi
+b3V0IDM5JQ0KwqDCoMKgwqDCoCMgdGltZSBybSAtcmYgZmlvX3Rlc3RfZmlsZS4qDQrCoMKgwqDC
+oHJlYWzCoMKgwqDCoCAwbTMxLjE3NnMNCsKgwqDCoMKgIHVzZXLCoMKgwqDCoCAwbTAuMDAwcw0K
+wqDCoMKgwqAgc3lzwqDCoMKgwqDCoCAwbTMwLjAwNXMNCsKgDQrCoMKgwqDCoMKgYinCoMKgwqAg
+RVhUNCBmaWxlIHN5c3RlbSBtb3VudGVkIHdpdGggJ2Rpc2NhcmQnIG9wdGlvbjogSXQgb25seSB0
+b29rIGFib3V0IHNldmVyYWwgc2Vjb25kcyB0byBydW4gJ3JtJyBjb21tYW5kLg0KwqDCoMKgwqDC
+oCANCsKgwqDCoMKgwqDCoCMgZmlvIC0tbmFtZSBmaW9fdGVzdF9maWxlIC0tZGlyZWN0PTEgLS1y
+dz1yYW5kd3JpdGUgLS1icz00ayAtLXNpemU9NUcgLS1udW1qb2JzPTggLS1ncm91cF9yZXBvcnRp
+bmcNCsKgwqDCoMKgwqAtLT4gSW50ZXJydXB0IGF0IGFib3V0IDM2LjIlDQrCoMKgwqDCoMKgIyB0
+aW1lIHJtIC1yZiBmaW9fdGVzdF9maWxlLioNCsKgwqDCoMKgwqByZWFswqDCoMKgwqAgMG00LjY2
+MXMNCsKgwqDCoMKgwqB1c2VywqDCoMKgwqAgMG0wLjAwMHMNCsKgwqDCoMKgwqBzeXPCoMKgwqDC
+oMKgIDBtNC42NTdzDQrCoA0KUGxlYXNlIG5vdGUgaWYgSSB3YWl0IGZvciAnZmlvJyBjb21tYW5k
+IDEwMCUgZG9uZSwgJ3JtJyBjb21tYW5kIHRvb2sgbGVzcyB0aGFuIDFzICgwbTAuMDAxcykuDQrC
+oA0KwqANCjMuwqDCoCBTaGVsbCBzY3JpcHQgd2hpY2ggdHJpZ2dlcnMgdGhlIHByb2JsZW0NCsKg
+DQrCoMKgc3VkbyBzdSAtDQrCoMKgeXVtIGluc3RhbGwgeGZzcHJvZ3MgZmlvIC15DQrCoMKgbWtm
+cy54ZnMgLUsgLWYgLXMgc2l6ZT00MDk2IC9kZXYvbnZtZTBuMQ0KwqDCoG1rZGlyIC1wIC9tZWRp
+YS9kaXNrMQ0KwqDCoG1vdW50IC1vIGRpc2NhcmQgL2Rldi9udm1lMG4xIC9tZWRpYS9kaXNrMQ0K
+wqDCoGNkIC9tZWRpYS9kaXNrMS8NCsKgwqBmaW8gLS1uYW1lIGZpb190ZXN0X2ZpbGUgLS1kaXJl
+Y3Q9MSAtLXJ3PXJhbmR3cml0ZSAtLWJzPTRrIC0tc2l6ZT01RyAtLW51bWpvYnM9OCAtLWdyb3Vw
+X3JlcG9ydGluZw0KwqDCoCAjIEludGVycnVwdCB3aXRoIEN0cmwrQw0KwqDCoHRpbWUgcm0gLXJm
+IGZpb190ZXN0X2ZpbGUuKg0KwqANCsKgDQpCZXN0IFJlZ2FyZHMsDQpRaWFuIEx1DQoNCg0K
