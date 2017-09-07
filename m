@@ -1,94 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38392 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754245AbdIFQoI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 12:44:08 -0400
-Date: Wed, 6 Sep 2017 12:44:07 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/12] xfs: move inode fork verifiers to xfs_dinode_verify
-Message-ID: <20170906164406.GF55280@bfoster.bfoster>
-References: <150394418979.24826.12970283067445908653.stgit@magnolia>
- <150394422787.24826.14809466383851827337.stgit@magnolia>
+Received: from scorn.kernelslacker.org ([45.56.101.199]:34606 "EHLO
+        scorn.kernelslacker.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751538AbdIGDsj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2017 23:48:39 -0400
+Date: Wed, 6 Sep 2017 23:48:35 -0400
+From: Dave Jones <davej@codemonkey.org.uk>
+Subject: Re: iov_iter_pipe warning.
+Message-ID: <20170907034835.arjbdpmujs6hs5n4@codemonkey.org.uk>
+References: <20170421175430.GT29622@ZenIV.linux.org.uk>
+ <20170428152955.mafs3f22srmm34aw@codemonkey.org.uk>
+ <20170428164313.GK29622@ZenIV.linux.org.uk>
+ <20170428165024.ofyl2atpjwohekqa@codemonkey.org.uk>
+ <20170428172024.GL29622@ZenIV.linux.org.uk>
+ <20170807201818.kykqzexce6ap6aik@codemonkey.org.uk>
+ <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
+ <20170829042542.GO4757@magnolia>
+ <20170906200337.b5wj3gpfebliindw@codemonkey.org.uk>
+ <20170906234617.GW17782@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150394422787.24826.14809466383851827337.stgit@magnolia>
+In-Reply-To: <20170906234617.GW17782@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Al Viro <viro@ZenIV.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Mon, Aug 28, 2017 at 11:17:07AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Consolidate the fork size and format verifiers to xfs_dinode_verify so
-> that we can reject bad inodes earlier and in a single place.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_inode_buf.c  |   68 ++++++++++++++++++++++++++-
->  fs/xfs/libxfs/xfs_inode_fork.c |   99 ----------------------------------------
->  2 files changed, 65 insertions(+), 102 deletions(-)
-> 
-> 
-...
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 0e80f34..bba45f1 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -61,70 +61,11 @@ xfs_iformat_fork(
-...
-> -	if (unlikely(xfs_is_reflink_inode(ip) &&
-> -	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
-> -		xfs_warn(ip->i_mount,
-> -			"corrupt dinode %llu, wrong file type for reflink.",
-> -			ip->i_ino);
-> -		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
-> -				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
-> -		return -EFSCORRUPTED;
-> -	}
-> -
-> -	if (unlikely(xfs_is_reflink_inode(ip) &&
-> -	    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
-> -		xfs_warn(ip->i_mount,
-> -			"corrupt dinode %llu, has reflink+realtime flag set.",
-> -			ip->i_ino);
-> -		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
-> -				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
-> -		return -EFSCORRUPTED;
-> -	}
+On Thu, Sep 07, 2017 at 09:46:17AM +1000, Dave Chinner wrote:
+ > On Wed, Sep 06, 2017 at 04:03:37PM -0400, Dave Jones wrote:
+ > > On Mon, Aug 28, 2017 at 09:25:42PM -0700, Darrick J. Wong wrote:
+ > >  > On Mon, Aug 28, 2017 at 04:31:30PM -0400, Dave Jones wrote:
+ > >  > > I'm still trying to narrow down an exact reproducer, but it seems having
+ > >  > > trinity do a combination of sendfile & writev, with pipes and regular
+ > >  > > files as fd's is the best repro.
+ > >  > > 
+ > >  > > Is this a real problem, or am I chasing ghosts ?  That it doesn't happen
+ > >  > > on ext4 or btrfs is making me wonder...
+ > >  > 
+ > >  > <shrug> I haven't heard of any problems w/ directio xfs lately, but OTOH
+ > >  > I think it's the only filesystem that uses iomap_dio_rw, which would
+ > >  > explain why ext4/btrfs don't have this problem.
+ > > 
+ > > Another warning, from likely the same root cause.
+ > > 
+ > > WARNING: CPU: 3 PID: 572 at lib/iov_iter.c:962 iov_iter_pipe+0xe2/0xf0
+ > 
+ > 	WARN_ON(pipe->nrbufs == pipe->buffers);
+ > 
+ >  *      @nrbufs: the number of non-empty pipe buffers in this pipe
+ >  *      @buffers: total number of buffers (should be a power of 2)
+ > 
+ > So that's warning that the pipe buffer is already full before we
+ > try to read from the filesystem?
+ > 
+ > That doesn't seem like an XFS problem - it indicates the pipe we are
+ > filling in generic_file_splice_read() is not being emptied by
+ > whatever we are splicing the file data to....
 
-It looks like a couple of these reflink inode checks have disappeared.
-Intentional?
+The puzzling part is this runs for a day on ext4 or btrfs, whereas I can
+make xfs fall over pretty quickly.  As Darrick pointed out though, this
+could be due to xfs being the only user of iomap_dio_rw.
 
-...
-> @@ -209,18 +122,6 @@ xfs_iformat_fork(
->  		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
->  		size = be16_to_cpu(atp->hdr.totsize);
->  
-> -		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
-> -			xfs_warn(ip->i_mount,
-> -				"corrupt inode %Lu (bad attr fork size %Ld).",
-> -				(unsigned long long) ip->i_ino,
-> -				(long long) size);
-> -			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
-> -					     XFS_ERRLEVEL_LOW,
-> -					     ip->i_mount, dip);
-> -			error = -EFSCORRUPTED;
-> -			break;
-> -		}
-> -
+I'm juggling a few other things right now, so probably not going to
+have much time to dig further on this until after plumbers + 1 wk.
 
-Same question here..?
+	Dave
 
-Brian
-
->  		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
->  		break;
->  	case XFS_DINODE_FMT_EXTENTS:
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
