@@ -1,103 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47426 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46258 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752200AbdIGPrD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Sep 2017 11:47:03 -0400
-Date: Thu, 7 Sep 2017 11:47:02 -0400
+        id S1754931AbdIGPrK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Sep 2017 11:47:10 -0400
+Date: Thu, 7 Sep 2017 11:47:09 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/17] xfs: move some more code into
+Subject: Re: [PATCH 07/17] xfs: use the proper state defines in
  xfs_bmap_del_extent_real
-Message-ID: <20170907154701.GF61662@bfoster.bfoster>
+Message-ID: <20170907154708.GG61662@bfoster.bfoster>
 References: <20170903072956.3175-1-hch@lst.de>
- <20170903072956.3175-7-hch@lst.de>
+ <20170903072956.3175-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170903072956.3175-7-hch@lst.de>
+In-Reply-To: <20170903072956.3175-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 09:29:45AM +0200, Christoph Hellwig wrote:
+On Sun, Sep 03, 2017 at 09:29:46AM +0200, Christoph Hellwig wrote:
+> Use the same defines as the other extent add and delete helpers, which
+> both improves code readability and trace point output.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++------------------------
->  1 file changed, 17 insertions(+), 24 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 21 +++++++++------------
+>  1 file changed, 9 insertions(+), 12 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index e6feb71298ba..add690cb19a3 100644
+> index add690cb19a3..0a4bcef1cca8 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5080,7 +5080,7 @@ xfs_bmap_del_extent_real(
->  	int			do_fx;	/* free extent at end of routine */
->  	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
->  	int			error;	/* error return value */
-> -	int			flags;	/* inode logging flags */
-> +	int			flags = 0;/* inode logging flags */
->  	xfs_bmbt_irec_t		got;	/* current extent entry */
->  	xfs_fileoff_t		got_endoff;	/* first offset past got */
->  	int			i;	/* temp state */
-> @@ -5112,10 +5112,25 @@ xfs_bmap_del_extent_real(
->  	got_endoff = got.br_startoff + got.br_blockcount;
->  	ASSERT(got_endoff >= del_endoff);
->  	ASSERT(!isnullstartblock(got.br_startblock));
-> -	flags = XFS_ILOG_CORE;
->  	qfield = 0;
->  	error = 0;
+> @@ -5162,13 +5162,13 @@ xfs_bmap_del_extent_real(
+>  		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+>  	}
 >  
-> +	/*
-> +	 * If it's the case where the directory code is running with no block
-> +	 * reservation, and the deleted block is in the middle of its extent,
-> +	 * and the resulting insert of an extent would cause transformation to
-> +	 * btree format, then reject it.  The calling code will then swap blocks
-> +	 * around instead.  We have to do this now, rather than waiting for the
-> +	 * conversion to btree format, since the transaction will be dirty then.
-> +	 */
-> +	if (tp->t_blk_res == 0 &&
-> +	    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
-> +	    XFS_IFORK_NEXTENTS(ip, whichfork) >=
-> +			XFS_IFORK_MAXEXT(ip, whichfork) &&
-> +	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
-> +		return -ENOSPC;
+> -	/*
+> -	 * Set flag value to use in switch statement.
+> -	 * Left-contig is 2, right-contig is 1.
+> -	 */
+> -	switch (((got.br_startoff == del->br_startoff) << 1) |
+> -		(got_endoff == del_endoff)) {
+> -	case 3:
+> +	if (got.br_startoff == del->br_startoff)
+> +		state |= BMAP_LEFT_CONTIG;
+> +	if (got_endoff == del_endoff)
+> +		state |= BMAP_RIGHT_CONTIG;
 > +
-> +	flags = XFS_ILOG_CORE;
->  	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
->  		xfs_fsblock_t	bno;
->  		xfs_filblks_t	len;
-> @@ -5601,28 +5616,6 @@ __xfs_bunmapi(
->  			error = xfs_bmap_del_extent_delay(ip, whichfork, &lastx,
->  					&got, &del);
->  		} else {
-> -			/*
-> -			 * If it's the case where the directory code is running
-> -			 * with no block reservation, and the deleted block is
-> -			 * in the middle of its extent, and the resulting insert
-> -			 * of an extent would cause transformation to btree
-> -			 * format, then reject it.  The calling code will then
-> -			 * swap blocks around instead.  We have to do this now,
-> -			 * rather than waiting for the conversion to btree
-> -			 * format, since the transaction will be dirty.
-> -			 */
-> -			if (tp->t_blk_res == 0 &&
-> -			    XFS_IFORK_FORMAT(ip, whichfork) ==
-> -					XFS_DINODE_FMT_EXTENTS &&
-> -			    XFS_IFORK_NEXTENTS(ip, whichfork) >=
-> -					XFS_IFORK_MAXEXT(ip, whichfork) &&
-> -			    del.br_startoff > got.br_startoff &&
-> -			    del.br_startoff + del.br_blockcount <
-> -			    got.br_startoff + got.br_blockcount) {
-> -				error = -ENOSPC;
-> -				goto error0;
-> -			}
+> +	switch (state & (BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG)) {
+> +	case BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
+
+The code looks correct because the states ultimately map to the correct
+logic, but I think this is actually a misuse of the bmap states. The
+contig states are used to define left and right extent contiguity. Here
+(and in del_extent_[delay|cow]()) we use them to track extent
+replacement alignment, which should be represented by the left and right
+filling states (as is done for delalloc/unwritten conversion helpers).
+Perhaps we should fix that all up?
+
+Brian
+
+>  		/*
+>  		 * Matches the whole extent.  Delete the entry.
+>  		 */
+> @@ -5188,8 +5188,7 @@ xfs_bmap_del_extent_real(
+>  			goto done;
+>  		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+>  		break;
 > -
->  			error = xfs_bmap_del_extent_real(ip, tp, &lastx, dfops,
->  					cur, &del, &tmp_logflags, whichfork,
->  					flags);
+> -	case 2:
+> +	case BMAP_LEFT_CONTIG:
+>  		/*
+>  		 * Deleting the first part of the extent.
+>  		 */
+> @@ -5208,8 +5207,7 @@ xfs_bmap_del_extent_real(
+>  				got.br_state)))
+>  			goto done;
+>  		break;
+> -
+> -	case 1:
+> +	case BMAP_RIGHT_CONTIG:
+>  		/*
+>  		 * Deleting the last part of the extent.
+>  		 */
+> @@ -5227,7 +5225,6 @@ xfs_bmap_del_extent_real(
+>  				got.br_state)))
+>  			goto done;
+>  		break;
+> -
+>  	case 0:
+>  		/*
+>  		 * Deleting the middle of the extent.
 > -- 
 > 2.11.0
 > 
