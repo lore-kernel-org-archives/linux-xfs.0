@@ -1,192 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26522 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753885AbdIDRpk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 13:45:40 -0400
-Date: Mon, 4 Sep 2017 10:45:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 2/2] mkfs: pass a custom cowextsize into the created
- filesystem
-Message-ID: <20170904174535.GI4671@magnolia>
-References: <20170901164035.GF3775@magnolia>
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:35924 "EHLO
+        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751780AbdIGHKd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 03:10:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170901164035.GF3775@magnolia>
+In-Reply-To: <20170905113128.GG8034@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <1504104706-11965-8-git-send-email-amir73il@gmail.com> <20170905104641.GA8034@eguan.usersys.redhat.com>
+ <CAOQ4uxi1mu5QXt3PJuk27WJvm+vS63ct+VQsDJvxvaLiEGzrAA@mail.gmail.com> <20170905113128.GG8034@eguan.usersys.redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 7 Sep 2017 10:10:32 +0300
+Message-ID: <CAOQ4uxjG50pRPnLQLT+3b+BVePvfc9QHUaVukRugQzpwptrjjw@mail.gmail.com>
+Subject: Re: [PATCH v2 07/14] fsx: add optional logid prefix to log messages
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Create a -d option to mkfs.xfs that enables administrators to set
-the CoW extent size hint on the created files.
+On Tue, Sep 5, 2017 at 2:31 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Tue, Sep 05, 2017 at 02:24:20PM +0300, Amir Goldstein wrote:
+>> On Tue, Sep 5, 2017 at 1:46 PM, Eryu Guan <eguan@redhat.com> wrote:
+>> > On Wed, Aug 30, 2017 at 05:51:39PM +0300, Amir Goldstein wrote:
+>> >> When writing the intermixed output of several fsx processes
+>> >> to a single log file, it is usefull to prefix logs with a log id.
+>> >> Use fsx -j <logid> to define the log messages prefix.
+>> >
+>> > Would it be better to allow any string as prefix, not limit to id
+>> > number?
+>> >
+>>
+>> Maybe, but I didn't see an immediate need for that beyond
+>> the concurrent test runs, for with numeric id is sufficient.
+>
+> I agreed, I don't have strong preference on this.
+>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: port flags2diflags from the kernel
----
- libxfs/util.c       |   64 +++++++++++++++++++++++++++++++++++++++++++++++++--
- man/man8/mkfs.xfs.8 |    7 ++++++
- mkfs/xfs_mkfs.c     |   20 ++++++++++++++++
- 3 files changed, 89 insertions(+), 2 deletions(-)
+Nah, you were right the first time. Using numeric id was just me
+being lazy and then I had a bug where -j 0 (not surprising) does
+not prefix logs with 0:
+I'll fix this and re-post the fsx patches.
 
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 0e2f29e..b600594 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -175,6 +175,64 @@ libxfs_trans_ichgtime(
- 	}
- }
- 
-+STATIC uint16_t
-+xfs_flags2diflags(
-+	struct xfs_inode	*ip,
-+	unsigned int		xflags)
-+{
-+	/* can't set PREALLOC this way, just preserve it */
-+	uint16_t		di_flags =
-+		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+
-+	if (xflags & FS_XFLAG_IMMUTABLE)
-+		di_flags |= XFS_DIFLAG_IMMUTABLE;
-+	if (xflags & FS_XFLAG_APPEND)
-+		di_flags |= XFS_DIFLAG_APPEND;
-+	if (xflags & FS_XFLAG_SYNC)
-+		di_flags |= XFS_DIFLAG_SYNC;
-+	if (xflags & FS_XFLAG_NOATIME)
-+		di_flags |= XFS_DIFLAG_NOATIME;
-+	if (xflags & FS_XFLAG_NODUMP)
-+		di_flags |= XFS_DIFLAG_NODUMP;
-+	if (xflags & FS_XFLAG_NODEFRAG)
-+		di_flags |= XFS_DIFLAG_NODEFRAG;
-+	if (xflags & FS_XFLAG_FILESTREAM)
-+		di_flags |= XFS_DIFLAG_FILESTREAM;
-+	if (S_ISDIR(VFS_I(ip)->i_mode)) {
-+		if (xflags & FS_XFLAG_RTINHERIT)
-+			di_flags |= XFS_DIFLAG_RTINHERIT;
-+		if (xflags & FS_XFLAG_NOSYMLINKS)
-+			di_flags |= XFS_DIFLAG_NOSYMLINKS;
-+		if (xflags & FS_XFLAG_EXTSZINHERIT)
-+			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-+		if (xflags & FS_XFLAG_PROJINHERIT)
-+			di_flags |= XFS_DIFLAG_PROJINHERIT;
-+	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
-+		if (xflags & FS_XFLAG_REALTIME)
-+			di_flags |= XFS_DIFLAG_REALTIME;
-+		if (xflags & FS_XFLAG_EXTSIZE)
-+			di_flags |= XFS_DIFLAG_EXTSIZE;
-+	}
-+
-+	return di_flags;
-+}
-+
-+STATIC uint64_t
-+xfs_flags2diflags2(
-+	struct xfs_inode	*ip,
-+	unsigned int		xflags)
-+{
-+	uint64_t		di_flags2 =
-+		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
-+
-+	if (xflags & FS_XFLAG_DAX)
-+		di_flags2 |= XFS_DIFLAG2_DAX;
-+	if (xflags & FS_XFLAG_COWEXTSIZE)
-+		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-+
-+	return di_flags2;
-+}
-+
- /*
-  * Allocate an inode on disk and return a copy of its in-core version.
-  * Set mode, nlink, and rdev appropriately within the inode.
-@@ -254,15 +312,17 @@ libxfs_ialloc(
- 	ip->i_d.di_extsize = pip ? 0 : fsx->fsx_extsize;
- 	ip->i_d.di_dmevmask = 0;
- 	ip->i_d.di_dmstate = 0;
--	ip->i_d.di_flags = pip ? 0 : fsx->fsx_xflags;
-+	ip->i_d.di_flags = pip ? 0 : xfs_flags2diflags(ip, fsx->fsx_xflags);
- 
- 	if (ip->i_d.di_version == 3) {
- 		ASSERT(ip->i_d.di_ino == ino);
- 		ASSERT(uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid));
- 		VFS_I(ip)->i_version = 1;
--		ip->i_d.di_flags2 = 0;
-+		ip->i_d.di_flags2 = pip ? 0 : xfs_flags2diflags2(ip,
-+				fsx->fsx_xflags);
- 		ip->i_d.di_crtime.t_sec = (int32_t)VFS_I(ip)->i_mtime.tv_sec;
- 		ip->i_d.di_crtime.t_nsec = (int32_t)VFS_I(ip)->i_mtime.tv_nsec;
-+		ip->i_d.di_cowextsize = pip ? 0 : fsx->fsx_cowextsize;
- 	}
- 
- 	flags = XFS_ILOG_CORE;
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 33831c9..bbbe1c5 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -279,6 +279,13 @@ and
- .B agsize
- suboptions are mutually exclusive.
- .TP
-+.BI cowextsize= value
-+Set the copy-on-write extent size hint on all inodes created by
-+.BR mkfs.xfs "."
-+The value must be provided in units of filesystem blocks.
-+If the value is zero, the default value (currently 32 blocks) will be used.
-+Directories will pass on this hint to newly created children.
-+.TP
- .BI name= value
- This can be used to specify the name of the special file containing
- the filesystem. In this case, the log section must be specified as
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 024cb02..ea0a317 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -187,6 +187,8 @@ struct opt_params dopts = {
- 		"projinherit",
- #define D_EXTSZINHERIT	14
- 		"extszinherit",
-+#define D_COWEXTSIZE	15
-+		"cowextsize",
- 		NULL
- 	},
- 	.subopt_params = {
-@@ -303,6 +305,12 @@ struct opt_params dopts = {
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = D_COWEXTSIZE,
-+		  .conflicts = { LAST_CONFLICT },
-+		  .minval = 0,
-+		  .maxval = UINT_MAX,
-+		  .defaultval = SUBOPT_NEEDS_VAL,
-+		},
- 	},
- };
- 
-@@ -1638,6 +1646,13 @@ main(
- 					fsx.fsx_xflags |=
- 						XFS_DIFLAG_EXTSZINHERIT;
- 					break;
-+				case D_COWEXTSIZE:
-+					fsx.fsx_cowextsize = getnum(value,
-+							&dopts,
-+							D_COWEXTSIZE);
-+					fsx.fsx_xflags |=
-+						FS_XFLAG_COWEXTSIZE;
-+					break;
- 				default:
- 					unknown('d', value);
- 				}
-@@ -2142,6 +2157,11 @@ _("reflink not supported without CRC support\n"));
- 		sb_feat.reflink = false;
- 	}
- 
-+	if ((fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) && !sb_feat.reflink) {
-+		fprintf(stderr,
-+_("cowextsize not supported without reflink support\n"));
-+		usage();
-+	}
- 
- 	if (nsflag || nlflag) {
- 		if (dirblocksize < blocksize ||
+Amir.
