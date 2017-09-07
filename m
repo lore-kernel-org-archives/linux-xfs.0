@@ -1,54 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:34026 "EHLO imap.thunk.org"
+Received: from mx1.redhat.com ([209.132.183.28]:47514 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932600AbdIFOuI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 10:50:08 -0400
-Date: Wed, 6 Sep 2017 10:50:04 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: test the per-inode DAX flag
-Message-ID: <20170906145004.hlkwta2a4bjlarin@thunk.org>
-References: <20170903093325.GA16272@lst.de>
- <20170904072431.GW27835@eguan.usersys.redhat.com>
- <20170904154453.GA6771@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170904154453.GA6771@lst.de>
+        id S1753134AbdIGDpT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Sep 2017 23:45:19 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 93D67C04B32C
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Sep 2017 03:45:19 +0000 (UTC)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 2/2] xfs: kill meaningless variable 'zero'
+Date: Thu,  7 Sep 2017 11:42:54 +0800
+Message-Id: <20170907034254.7180-2-eguan@redhat.com>
+In-Reply-To: <20170907034254.7180-1-eguan@redhat.com>
+References: <20170907034254.7180-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>
 
-On Mon, Sep 04, 2017 at 05:44:53PM +0200, Christoph Hellwig wrote:
-> > Does this test make sense when filesystem was mounted without dax
-> > option? I saw these failures when testing on normal block device without
-> > dax mount option.
-> 
-> And thinking about it - why would we not allow setting the flag,
-> especially given that right now it doesn't have a meaning either
-> with or without DAX..
+In xfs_file_aio_write_checks(), variable 'zero' is there only to
+satisfy xfs_zero_eof(), the result of it is ignored. Now, with
+iomap_zero_range() based xfs_zero_eof(), we can safely pass NULL as
+the last param of it and kill 'zero'.
 
-At least for the ext4 patches that have been crossing my screen, the
-claim from the commit description is that with the dax mount option,
-all files are treated as if the DAX flag.  And the point of the DAX
-flag is that if the file system is stored on DAX-capable hardware, and
-you don't want DAX treatment for all files, that you would set the DAX
-flag only for those files where having the file system actually using
-the DAX codepaths would make sense --- as opposed to just using the
-traditional block I/O paths against the /dev/pmem driver.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ fs/xfs/xfs_file.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-So I *think* the answer is that the tax makes sense when the file
-system is mounted w/o the dax option, but we do need to check to see
-whether the block device is DAX capable.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 812cd17b331f..e7dbeed0f0cb 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -373,8 +373,6 @@ xfs_file_aio_write_checks(
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+ 	if (iocb->ki_pos > i_size_read(inode)) {
+-		bool	zero = false;
+-
+ 		spin_unlock(&ip->i_flags_lock);
+ 		if (!drained_dio) {
+ 			if (*iolock == XFS_IOLOCK_SHARED) {
+@@ -395,7 +393,7 @@ xfs_file_aio_write_checks(
+ 			drained_dio = true;
+ 			goto restart;
+ 		}
+-		error = xfs_zero_eof(ip, iocb->ki_pos, i_size_read(inode), &zero);
++		error = xfs_zero_eof(ip, iocb->ki_pos, i_size_read(inode), NULL);
+ 		if (error)
+ 			return error;
+ 	} else
+-- 
+2.13.5
 
-It also makes an interesting question how we should be testing DAX
-capable file systems on /dev/pmem0.  Right now I force the use of
-/dev/pmem0 *and* use the DAX mount options so that all of the other
-tests will cause file I/O to use the DAX path.  But for the per-inode
-DAX flag, we would want to mask out the DAX mount option so we can
-test what happens when we toggle the DAX.
-
-But I'm not a DAX expert, so I may have some of this wrong.
-
-    	      	  	       	   	- Ted
