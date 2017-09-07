@@ -1,104 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54602 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751639AbdIGUVW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Sep 2017 16:21:22 -0400
-Date: Thu, 7 Sep 2017 16:21:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/17] xfs: refactor xfs_bmap_add_extent_hole_delay
-Message-ID: <20170907202120.GJ61662@bfoster.bfoster>
-References: <20170903072956.3175-1-hch@lst.de>
- <20170903072956.3175-10-hch@lst.de>
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:34189 "EHLO
+        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751884AbdIGUyr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 16:54:47 -0400
+Received: by mail-oi0-f44.google.com with SMTP id l74so664322oih.1
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Sep 2017 13:54:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170903072956.3175-10-hch@lst.de>
+In-Reply-To: <20170906170754.GB17663@linux.intel.com>
+References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
+ <f856f8fd-3697-adb1-198b-a9ae2fce405f@redhat.com> <20170906170754.GB17663@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 7 Sep 2017 13:54:45 -0700
+Message-ID: <CAPcyv4hfhDT9NFRXL+MT5epiqWHJ0RLraV4P3CZ4EJM6L-s0Nw@mail.gmail.com>
+Subject: Re: [PATCH 0/9] add ext4 per-inode DAX flag
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Lukas Czerner <lczerner@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4 <linux-ext4@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 09:29:48AM +0200, Christoph Hellwig wrote:
-> Use xfs_iext_get_extent to find, and xfs_iext_update_extent to update
-> entries in the in-core extent list.  This isolates the function from
-> the detailed layout of the extent list, and generally makes the code
-> a lot more readable.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+On Wed, Sep 6, 2017 at 10:07 AM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> On Tue, Sep 05, 2017 at 09:12:35PM -0500, Eric Sandeen wrote:
+>> On 9/5/17 5:35 PM, Ross Zwisler wrote:
+>> > The original intent of this series was to add a per-inode DAX flag to ext4
+>> > so that it would be consistent with XFS.  In my travels I found and fixed
+>> > several related issues in both ext4 and XFS.
+>>
+>> Hi Ross -
+>>
+>> hch had a lot of reasons to nuke the dax flag from orbit, and we just
+>> /disabled/ it in xfs due to its habit of crashing the kernel...
+>
+> Ah, sorry, I wasn't CC'd on those threads and missed them.  For any interested
+> bystanders:
+>
+> https://www.spinics.net/lists/linux-ext4/msg57840.html
+> https://www.spinics.net/lists/linux-xfs/msg09831.html
+> https://www.spinics.net/lists/linux-xfs/msg10124.html
+>
+>> so a couple questions:
+>>
+>> 1) does this series pass hch's "test the per-inode DAX flag" fstest?
+>
+> Nope, it has the exact same problems as the XFS per-inode DAX flag.
+>
+>> 2) do we have an agreement that we need this flag at all, or is this
+>>    just a parity item because xfs has^whad a per-inode flag?
+>
+> It was for parity, and because it allows admins finer grained control over
+> their system.  Basically all things discussed in response to Lukas's original
+> patch in the first link above.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_bmap.c | 21 +++++++++++----------
->  1 file changed, 11 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index c15b81611403..eae66f7999c8 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2701,7 +2701,7 @@ xfs_bmap_add_extent_hole_delay(
->  	xfs_filblks_t		oldlen=0;	/* old indirect size */
->  	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
->  	int			state;  /* state bits, accessed thru macros */
-> -	xfs_filblks_t		temp=0;	/* temp for indirect calculations */
-> +	xfs_filblks_t		temp;	 /* temp for indirect calculations */
->  
->  	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	state = 0;
-> @@ -2764,14 +2764,14 @@ xfs_bmap_add_extent_hole_delay(
->  			right.br_blockcount;
->  
->  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
->  		oldlen = startblockval(left.br_startblock) +
->  			startblockval(new->br_startblock) +
->  			startblockval(right.br_startblock);
->  		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
->  					 oldlen);
-> -		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
-> -			nullstartblock((int)newlen));
-> +		left.br_startblock = nullstartblock(newlen);
-> +		left.br_blockcount = temp;
-> +		xfs_iext_update_extent(ifp, *idx, &left);
->  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  
->  		xfs_iext_remove(ip, *idx + 1, 1, state);
-> @@ -2787,13 +2787,13 @@ xfs_bmap_add_extent_hole_delay(
->  		temp = left.br_blockcount + new->br_blockcount;
->  
->  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
->  		oldlen = startblockval(left.br_startblock) +
->  			startblockval(new->br_startblock);
->  		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
->  					 oldlen);
-> -		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
-> -			nullstartblock((int)newlen));
-> +		left.br_blockcount = temp;
-> +		left.br_startblock = nullstartblock(newlen);
-> +		xfs_iext_update_extent(ifp, *idx, &left);
->  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  		break;
->  
-> @@ -2809,9 +2809,10 @@ xfs_bmap_add_extent_hole_delay(
->  			startblockval(right.br_startblock);
->  		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
->  					 oldlen);
-> -		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
-> -			new->br_startoff,
-> -			nullstartblock((int)newlen), temp, right.br_state);
-> +		right.br_startoff = new->br_startoff;
-> +		right.br_startblock = nullstartblock(newlen);
-> +		right.br_blockcount = temp;
-> +		xfs_iext_update_extent(ifp, *idx, &right);
->  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  		break;
->  
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think it's more than parity. When pmem is slower than page cache it
+is actively harmful to have DAX enabled globally for a filesystem. So,
+not only should we push for per-inode DAX control, we should also push
+to deprecate the mount option. I agree with Christoph that we should
+try to automatically and transparently enable DAX where it makes
+sense, but we also need a finer-grained mechanism than a mount flag to
+force the behavior one way or the other.
