@@ -1,42 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58082 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752689AbdIGVIi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Sep 2017 17:08:38 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 0/2] xfs: some DAX fixes
-Date: Thu,  7 Sep 2017 15:08:30 -0600
-Message-Id: <20170907210832.17969-1-ross.zwisler@linux.intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:26187 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750966AbdIGXec (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 19:34:32 -0400
+Date: Fri, 8 Sep 2017 09:34:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS mounted with 'discard' option - deleting fio test files slow
+Message-ID: <20170907233401.GC17782@dastard>
+References: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Lu, Qian" <luqia@amazon.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-These two fixes are to the now-disabled per-inode DAX support in XFS.  I
-started working on these in the v4.13 timeframe before the per-inode
-DAX feature was turned off.
 
-I realize that they may not be critical right now since the per-inode DAX
-feature is turned off, but I think that if we ever do re-enable that
-feature we will want these two issues to have been fixed.
+[Your email is full of wacky symbols and needs line wrapping at 72
+columns]
 
-I also do think that they are both vaulable for stable kernels.
+On Thu, Sep 07, 2017 at 06:22:22PM +0000, Lu, Qian wrote:
+> Recently we received a bug report in the XFS filesystem with
+> 'discard' option. I have been able to reproduce this issue. I used
+> XFS filesystem to format NVMe SSD and mounted with 'discard'
+> option. When I tried to delete the test fio files, the session
+> took long time. This issue is based on Linux 4.9 stable tree. I
+> have also repeated this test with Linux 4.13, 4.12, and we are
+> facing the same issue. Tests were repeated several times and it
+> was consistent.
 
-These used to be part of my ext4 per-inode enabling:
+.....
+> 
+> # fio --name fio_test_file --direct=1 --rw=randwrite --bs=4k --size=5G --numjobs=8 --group_reporting
+> --> Interrupt with Ctrl+C
+> # time rm -rf fio_test_file.*
+> real 2m2.242s
+> user 0m0.000s
+> sys 0m25.524s
 
-https://lkml.org/lkml/2017/9/5/748
+4k random write with direct IO. 5GB file. Probably got a million 4k
+extents in it. Which means XFS has sent a million tiny 4k discards
+to the device. Run 'xfs_bmap -vvp fio_test_file.*' to confirm.
 
-But I've since split that into a series of XFS bug fixes (these two) and a
-series of ext4 bug fixes.
+Don't use "-o discard" if you care about performance.
 
-Ross Zwisler (2):
-  xfs: always use DAX if mount option is used
-  xfs: validate bdev support for DAX inode flag
+Cheers,
 
- fs/xfs/xfs_ioctl.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
+Dave.
 -- 
-2.9.5
-
+Dave Chinner
+david@fromorbit.com
