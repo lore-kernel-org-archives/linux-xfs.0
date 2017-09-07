@@ -1,90 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51018 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754245AbdIFQnz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 12:43:55 -0400
-Date: Wed, 6 Sep 2017 12:43:53 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/12] xfs: verify dinode header first
-Message-ID: <20170906164353.GE55280@bfoster.bfoster>
-References: <150394418979.24826.12970283067445908653.stgit@magnolia>
- <150394422155.24826.5926842859371271529.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150394422155.24826.5926842859371271529.stgit@magnolia>
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:37242 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751985AbdIGCTJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2017 22:19:09 -0400
+Received: by mail-pg0-f47.google.com with SMTP id d8so18403903pgt.4
+        for <linux-xfs@vger.kernel.org>; Wed, 06 Sep 2017 19:19:09 -0700 (PDT)
+From: Khem Raj <raj.khem@gmail.com>
+Subject: [PATCH] spaceman: Add missing link to libuuid
+Date: Wed,  6 Sep 2017 19:19:00 -0700
+Message-Id: <20170907021900.41040-1-raj.khem@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Khem Raj <raj.khem@gmail.com>
 
-On Mon, Aug 28, 2017 at 11:17:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move the v3 inode integrity information (crc, owner, metauuid) before we
-> look at anything else in the inode so that we don't waste time on a torn
-> write or a totally garbled block.  This makes xfs_dinode_verify more
-> consistent with the other verifiers.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+When uuid is enabled then we see linking failures with gold linker e.g.
 
-Hmm, was there a practical reason for doing this? In the common case,
-the filesystem is not corrupted and we have to pass all the checks
-anyways. I'd just say keep the code flow simple rather than worry about
-optimizing the error case, unless there's some reason to prioritize some
-error checks over others..?
+libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_compare'
+libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_copy'
+clang-5.0: error: linker command failed with exit code 1 (use -v to see invocation)
 
-Brian
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+---
+ spaceman/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  fs/xfs/libxfs/xfs_inode_buf.c |   23 +++++++++++++----------
->  1 file changed, 13 insertions(+), 10 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index a5bcf2b..b2423a3 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -393,6 +393,19 @@ xfs_dinode_verify(
->  	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
->  		return __this_address;
->  
-> +	/* Verify v3 integrity information first */
-> +	if (dip->di_version >= 3) {
-> +		if (!xfs_sb_version_hascrc(&mp->m_sb))
-> +			return __this_address;
-> +		if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
-> +				      XFS_DINODE_CRC_OFF))
-> +			return __this_address;
-> +		if (be64_to_cpu(dip->di_ino) != ino)
-> +			return __this_address;
-> +		if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_meta_uuid))
-> +			return __this_address;
-> +	}
-> +
->  	/* don't allow invalid i_size */
->  	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
->  		return __this_address;
-> @@ -409,16 +422,6 @@ xfs_dinode_verify(
->  	if (dip->di_version < 3)
->  		return NULL;
->  
-> -	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> -		return __this_address;
-> -	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
-> -			      XFS_DINODE_CRC_OFF))
-> -		return __this_address;
-> -	if (be64_to_cpu(dip->di_ino) != ino)
-> -		return __this_address;
-> -	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_meta_uuid))
-> -		return __this_address;
-> -
->  	flags = be16_to_cpu(dip->di_flags);
->  	flags2 = be64_to_cpu(dip->di_flags2);
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index 95ec3c0..060e0af 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -9,7 +9,7 @@ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+ CFILES = init.c file.c prealloc.c trim.c
+ 
+-LLDLIBS = $(LIBXCMD)
++LLDLIBS = $(LIBXCMD) $(LIBUUID)
+ LTDEPENDENCIES = $(LIBXCMD)
+ LLDFLAGS = -static
+ 
+-- 
+2.14.1
+
