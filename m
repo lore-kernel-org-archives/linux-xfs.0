@@ -1,72 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f50.google.com ([209.85.215.50]:32780 "EHLO
-        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753130AbdIGJFV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 05:05:21 -0400
-Received: by mail-lf0-f50.google.com with SMTP id c80so1001952lfh.0
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Sep 2017 02:05:20 -0700 (PDT)
-Date: Thu, 7 Sep 2017 11:05:17 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: kill meaningless variable 'zero'
-Message-ID: <20170907090517.gdqdllxs55cwk2ep@hades.localdomain>
-References: <20170907034254.7180-1-eguan@redhat.com>
- <20170907034254.7180-2-eguan@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:44788 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756303AbdIHTPm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Sep 2017 15:15:42 -0400
+Subject: Re: [PATCH] spaceman: Add missing link to libuuid
+References: <20170907021900.41040-1-raj.khem@gmail.com>
+ <20170907024017.GX17782@dastard>
+ <CAMKF1srNNkZOYXAoN9MgiyvUoitvYJBEAeE-6XYdyoinrx32Jw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3d43a83a-1b2b-f2de-e610-4a8bd3d3a188@sandeen.net>
+Date: Fri, 8 Sep 2017 14:15:41 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170907034254.7180-2-eguan@redhat.com>
+In-Reply-To: <CAMKF1srNNkZOYXAoN9MgiyvUoitvYJBEAeE-6XYdyoinrx32Jw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
+To: Khem Raj <raj.khem@gmail.com>, Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 07, 2017 at 11:42:54AM +0800, Eryu Guan wrote:
-> In xfs_file_aio_write_checks(), variable 'zero' is there only to
-> satisfy xfs_zero_eof(), the result of it is ignored. Now, with
-> iomap_zero_range() based xfs_zero_eof(), we can safely pass NULL as
-> the last param of it and kill 'zero'.
+On 9/8/17 1:24 PM, Khem Raj wrote:
+> Hi Dave
 > 
-
-Looks good to me, you can add:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> On Wed, Sep 6, 2017 at 7:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> On Wed, Sep 06, 2017 at 07:19:00PM -0700, Khem Raj wrote:
+>>> When uuid is enabled then we see linking failures with gold linker e.g.
+>>>
+>>> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_compare'
+>>> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_copy'
+>>> clang-5.0: error: linker command failed with exit code 1 (use -v to see invocation)
+>>
+>> That's libxfs, not xfs_spaceman....
+>>
+>>>
+>>> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+>>> ---
+>>>  spaceman/Makefile | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/spaceman/Makefile b/spaceman/Makefile
+>>> index 95ec3c0..060e0af 100644
+>>> --- a/spaceman/Makefile
+>>> +++ b/spaceman/Makefile
+>>> @@ -9,7 +9,7 @@ LTCOMMAND = xfs_spaceman
+>>>  HFILES = init.h space.h
+>>>  CFILES = init.c file.c prealloc.c trim.c
+>>>
+>>> -LLDLIBS = $(LIBXCMD)
+>>> +LLDLIBS = $(LIBXCMD) $(LIBUUID)
+>>
+>> And spaceman doesn't link against libxfs, nor does libxcmd or
+>> spaceman use uuids so I don't see why this fixes a problem with
+>> libxfs...
+>>
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 812cd17b331f..e7dbeed0f0cb 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -373,8 +373,6 @@ xfs_file_aio_write_checks(
->  	 */
->  	spin_lock(&ip->i_flags_lock);
->  	if (iocb->ki_pos > i_size_read(inode)) {
-> -		bool	zero = false;
-> -
->  		spin_unlock(&ip->i_flags_lock);
->  		if (!drained_dio) {
->  			if (*iolock == XFS_IOLOCK_SHARED) {
-> @@ -395,7 +393,7 @@ xfs_file_aio_write_checks(
->  			drained_dio = true;
->  			goto restart;
->  		}
-> -		error = xfs_zero_eof(ip, iocb->ki_pos, i_size_read(inode), &zero);
-> +		error = xfs_zero_eof(ip, iocb->ki_pos, i_size_read(inode), NULL);
->  		if (error)
->  			return error;
->  	} else
-> -- 
-> 2.13.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I am building with --disable-static, I wonder if thats not a supported
+> configuration
+> for xfsprogs
 
--- 
-Carlos
+Still doesn't make spaceman link against libxfs or use uuids ;)
+
+I guess I'd suggest starting w/ x86 and a standard toolchain, make
+--disable-static work for you there (I see that it does need some
+fixups), then try things w/ the alternate toolchain and see
+if more work is needed.
+
+-Eric
