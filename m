@@ -1,106 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38246 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([192.55.52.115]:50533 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756704AbdIHRTW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Sep 2017 13:19:22 -0400
-Date: Fri, 8 Sep 2017 13:19:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 17/17] xfs: remove xfs_bmbt_get_state
-Message-ID: <20170908171920.GG905@bfoster.bfoster>
-References: <20170903072956.3175-1-hch@lst.de>
- <20170903072956.3175-18-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170903072956.3175-18-hch@lst.de>
+        id S1756914AbdIHVWC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Sep 2017 17:22:02 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH] xfs: add regression test for DAX mount option usage
+Date: Fri,  8 Sep 2017 15:21:53 -0600
+Message-Id: <20170908212153.14880-1-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170908152805.GA16646@linux.intel.com>
+References: <20170908152805.GA16646@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 09:29:56AM +0200, Christoph Hellwig wrote:
-> Unused after the big bmap refactor.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+This adds a regression test for the following kernel patch:
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+  xfs: always use DAX if mount option is used
 
->  fs/xfs/libxfs/xfs_bmap_btree.c | 29 +----------------------------
->  fs/xfs/libxfs/xfs_bmap_btree.h |  1 -
->  2 files changed, 1 insertion(+), 29 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index e66ebd982cfb..086e6fc8e4fc 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -38,22 +38,6 @@
->  #include "xfs_rmap.h"
->  
->  /*
-> - * Determine the extent state.
-> - */
-> -/* ARGSUSED */
-> -STATIC xfs_exntst_t
-> -xfs_extent_state(
-> -	xfs_filblks_t		blks,
-> -	int			extent_flag)
-> -{
-> -	if (extent_flag) {
-> -		ASSERT(blks != 0);	/* saved for DMIG */
-> -		return XFS_EXT_UNWRITTEN;
-> -	}
-> -	return XFS_EXT_NORM;
-> -}
-> -
-> -/*
->   * Convert on-disk form of btree root to in-memory form.
->   */
->  void
-> @@ -90,7 +74,7 @@ xfs_bmdr_to_bmbt(
->  /*
->   * Convert a compressed bmap extent record to an uncompressed form.
->   * This code must be in sync with the routines xfs_bmbt_get_startoff,
-> - * xfs_bmbt_get_startblock, xfs_bmbt_get_blockcount and xfs_bmbt_get_state.
-> + * xfs_bmbt_get_startblock and xfs_bmbt_get_blockcount.
->   */
->  STATIC void
->  __xfs_bmbt_get_all(
-> @@ -156,17 +140,6 @@ xfs_bmbt_get_startoff(
->  		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
->  }
->  
-> -xfs_exntst_t
-> -xfs_bmbt_get_state(
-> -	xfs_bmbt_rec_host_t	*r)
-> -{
-> -	int	ext_flag;
-> -
-> -	ext_flag = (int)((r->l0) >> (64 - BMBT_EXNTFLAG_BITLEN));
-> -	return xfs_extent_state(xfs_bmbt_get_blockcount(r),
-> -				ext_flag);
-> -}
-> -
->  /*
->   * Extract the blockcount field from an on disk bmap extent record.
->   */
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> index 93f95bcee915..6f891eeb88f6 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> @@ -102,7 +102,6 @@ extern void xfs_bmbt_get_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
->  extern xfs_filblks_t xfs_bmbt_get_blockcount(xfs_bmbt_rec_host_t *r);
->  extern xfs_fsblock_t xfs_bmbt_get_startblock(xfs_bmbt_rec_host_t *r);
->  extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
-> -extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
->  
->  void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
->  extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This test will also pass with kernel v4.14-rc1 and beyond because the XFS
+DAX I/O mount option has been disabled (but not removed), so the
+"chattr -x" to turn off DAX doesn't actually do anything.
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+---
+ tests/xfs/431     | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/431.out |  3 +++
+ tests/xfs/group   |  1 +
+ 3 files changed, 85 insertions(+)
+ create mode 100755 tests/xfs/431
+ create mode 100644 tests/xfs/431.out
+
+diff --git a/tests/xfs/431 b/tests/xfs/431
+new file mode 100755
+index 0000000..4ff3a02
+--- /dev/null
++++ b/tests/xfs/431
+@@ -0,0 +1,81 @@
++#! /bin/bash
++# FS QA Test xfs/431
++#
++# This is a regression test for kernel patch:
++# 	xfs: always use DAX if mount option is used
++# created by Ross Zwisler <ross.zwisler@linux.intel.com>
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# Modify as appropriate.
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_dax
++
++# real QA test starts here
++# format and mount
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount "-o dax" >> $seqres.full 2>&1
++
++pgsize=`$here/src/feature -s`
++
++# disable tracing, clear the existing trace buffer and turn on dax tracepoints
++echo 0 > /sys/kernel/debug/tracing/tracing_on
++echo > /sys/kernel/debug/tracing/trace
++echo 1 > /sys/kernel/debug/tracing/events/fs_dax/enable
++
++# enable tracing for our one mmap I/O, then see if dax was used
++echo 1 > /sys/kernel/debug/tracing/tracing_on
++xfs_io  -t -c "truncate $pgsize" \
++	-c "chattr -x" \
++	-c "mmap -r 0 $pgsize" -c "mread 0 $pgsize" -c "munmap" \
++	-f $SCRATCH_MNT/testfile >> $seqres.full
++echo 0 > /sys/kernel/debug/tracing/tracing_on
++
++grep -q 'xfs_io.*dax_load_hole' /sys/kernel/debug/tracing/trace
++if [[ $? == 0 ]]; then
++	echo "DAX was used"
++else
++	echo "DAX was NOT used"
++fi
++
++# success, all done
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+new file mode 100644
+index 0000000..265dc46
+--- /dev/null
++++ b/tests/xfs/431.out
+@@ -0,0 +1,3 @@
++QA output created by 431
++DAX was used
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 0a449b9..4e7019c 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -427,3 +427,4 @@
+ 428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 429 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++431 auto quick
+-- 
+2.9.5
+
