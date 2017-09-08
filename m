@@ -1,39 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:56712 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757173AbdIIBCO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 21:02:14 -0400
-Date: Sat, 9 Sep 2017 11:02:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] define __ prefixed version of intXY_t types
-Message-ID: <20170909010211.GI17782@dastard>
-References: <20170908233616.26051-1-raj.khem@gmail.com>
- <20170909005609.GH17782@dastard>
+Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:13772 "EHLO
+        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752132AbdIHRSm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 13:18:42 -0400
+From: "Lu, Qian" <luqia@amazon.com>
+Subject: Re: XFS mounted with 'discard' option - deleting fio test files slow
+Date: Fri, 8 Sep 2017 17:17:07 +0000
+Message-ID: <506FE85F-21F5-444C-876D-8C25DBB442EE@amazon.com>
+References: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
+In-Reply-To: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <19B2EAB8231DD34E8D9B2B39211FE6DD@amazon.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170909005609.GH17782@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, amazon-linux-kernel <amazon-linux-kernel@amazon.com>
 
-On Sat, Sep 09, 2017 at 10:56:09AM +1000, Dave Chinner wrote:
-> On Fri, Sep 08, 2017 at 04:36:16PM -0700, Khem Raj wrote:
-> > This is required since musl does not define them
-> > unlike glibc
-> 
-> [u]int*_t types are defined by the C99 standard and are supposed to
-> be provided by stdint.h.  If musl is not providing stdint.h, then
-> the C99 compliant compiler should be.
-
-Sorry, ignore this, I read the defines the wrong way around. (more
-coffee!)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+QWRkaW5nIGFtYXpvbi1saW51eC1rZXJuZWxAYW1hem9uLmNvbQ0KDQpPbiA5LzcvMTcsIDExOjIy
+IEFNLCAiTHUsIFFpYW4iIDxsdXFpYUBhbWF6b24uY29tPiB3cm90ZToNCg0KICAgIEhpIFhGUyBt
+YWlsaW5nIGxpc3QsDQogICAgIA0KICAgIFJlY2VudGx5IHdlIHJlY2VpdmVkIGEgYnVnIHJlcG9y
+dCBpbiB0aGUgWEZTIGZpbGVzeXN0ZW0gd2l0aCAnZGlzY2FyZCcgb3B0aW9uLiBJIGhhdmUgYmVl
+biBhYmxlIHRvIHJlcHJvZHVjZSB0aGlzIGlzc3VlLiBJIHVzZWQgWEZTIGZpbGVzeXN0ZW0gdG8g
+Zm9ybWF0IE5WTWUgU1NEIGFuZCBtb3VudGVkIHdpdGggJ2Rpc2NhcmQnIG9wdGlvbi4gV2hlbiBJ
+IHRyaWVkIHRvIGRlbGV0ZSB0aGUgdGVzdCBmaW8gZmlsZXMsIHRoZSBzZXNzaW9uIHRvb2sgbG9u
+ZyB0aW1lLiBUaGlzIGlzc3VlIGlzIGJhc2VkIG9uIExpbnV4IDQuOSBzdGFibGUgdHJlZS4gSSBo
+YXZlIGFsc28gcmVwZWF0ZWQgdGhpcyB0ZXN0IHdpdGggTGludXggNC4xMywgNC4xMiwgYW5kIHdl
+IGFyZSBmYWNpbmcgdGhlIHNhbWUgaXNzdWUuIFRlc3RzIHdlcmUgcmVwZWF0ZWQgc2V2ZXJhbCB0
+aW1lcyBhbmQgaXQgd2FzIGNvbnNpc3RlbnQuDQogICAgIA0KICAgIFBsZWFzZSBzZWUgZGV0YWls
+cyBiZWxvdy4NCiAgICAgDQogICAgMS4gS2VybmVsIHZlcnNpb246IExpbnV4IGlwLTE3Mi0zMS02
+LTI0MyA0LjkuMzItMTUuNDEuYW16bjEueDg2XzY0ICMxIFNNUCBUaHUgSnVuIDIyIDA2OjIwOjU0
+IFVUQyAyMDE3IHg4Nl82NCB4ODZfNjQgeDg2XzY0IEdOVS9MaW51eA0KICAgICANCiAgICAjIGZp
+byAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFuZHdyaXRlIC0tYnM9NGsg
+LS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQogICAgLS0+IEludGVycnVw
+dCB3aXRoIEN0cmwrQw0KICAgICMgdGltZSBybSAtcmYgZmlvX3Rlc3RfZmlsZS4qDQogICAgLS0+
+IFRoZSBzZXNzaW9uIGhhbmdzIGFuZCBpbiAnYmxvY2tlZCcgc3RhdGUNCiAgICAkIGRtZXNnDQog
+ICAgLi4uDQogICAgWyAgNDkyLjMyOTg5Nl0gSU5GTzogdGFzayBybTo5MjMxIGJsb2NrZWQgZm9y
+IG1vcmUgdGhhbiAxMjAgc2Vjb25kcy4NCiAgICAuLi4NCiAgICAgDQogICAgVGhlbiBJIHRyaWVk
+IHRvIGJhY2twb3J0IHNvbWUgcGF0Y2hlcyBhbmQgcmVwZWF0ZWQgdGhlIHRlc3QuIFRoZSBpc3N1
+ZSBoYXMgYmVlbiBpbXByb3ZlZC4gRXZlbnR1YWxseSAncm0nIGNvbW1hbmQgY29tcGxldGVkIGJ1
+dCB0b29rIGxvbmcgdGltZSgybWluKS4NCiAgICAgDQogICAgICAqICBCYWNrcG9ydGVkIHBhdGNo
+OiA0NTYwZTc4IHhmczogZG9uJ3QgYmxvY2sgdGhlIGxvZyBjb21taXQgaGFuZGxlciBmb3IgZGlz
+Y2FyZHMNCiAgICAgDQogICAgICMgZmlvIC0tbmFtZSBmaW9fdGVzdF9maWxlIC0tZGlyZWN0PTEg
+LS1ydz1yYW5kd3JpdGUgLS1icz00ayAtLXNpemU9NUcgLS1udW1qb2JzPTggLS1ncm91cF9yZXBv
+cnRpbmcNCiAgICAgLS0+IEludGVycnVwdCB3aXRoIEN0cmwrQw0KICAgICAjIHRpbWUgcm0gLXJm
+IGZpb190ZXN0X2ZpbGUuKg0KICAgICByZWFsICAybTIuMjQycw0KICAgICB1c2VyICAwbTAuMDAw
+cw0KICAgICBzeXMgICAwbTI1LjUyNHMNCiAgICAgDQogICAgIA0KICAgIDIuICAgIFdpdGggTGlu
+dXggNC4xMiBhbmQgNC4xMy4wLXJjMSwgdGhlIGlzc3VlIGhhcyBiZWVuIGltcHJvdmVkIGFuZCB0
+aGUgY29tbWFuZCBpcyBub3Qgc3R1Y2suIEJ1dCAncm0nIGNvbW1hbmQgc3RpbGwgdGFrZXMgbG9u
+ZyB0aW1lIChtb3JlIHRoYW4gMW1pbikuIFBsZWFzZSBzZWUgZGV0YWlscyBiZWxvdy4NCiAgICAg
+DQogICAgS2VybmVsIHZlcnNpb246IExpbnV4IHZlcnNpb24gNC4xMy4wLXJjMSsgKGVjMi11c2Vy
+QGlwLTE3Mi0zMS0yMS0yNSkgKGdjYyB2ZXJzaW9uIDQuOC4zIDIwMTQwOTExIChSZWQgSGF0IDQu
+OC4zLTkpIChHQ0MpKSAjMSBTTVAgRnJpIEp1bCAyMSAxNzozMTowNiBVVEMgMjAxNw0KICAgICAN
+CiAgICAjIGZpbyAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFuZHdyaXRl
+IC0tYnM9NGsgLS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQogICAgLS0+
+IEludGVycnVwdCBhdCBhYm91dCAzNyUNCiAgICAjIHRpbWUgcm0gLXJmIGZpb190ZXN0X2ZpbGUu
+Kg0KICAgIHJlYWwgIDFtNTcuOTEycw0KICAgIHVzZXIgIDBtMC4wMDBzDQogICAgc3lzICAgMG0y
+OC44MTBzDQogICAgIA0KICAgIENvbXBhcmUgdGhpcyByZXN1bHQgd2l0aDoNCiAgICAgICAgYSkg
+IFhGUyBtb3VudGVkIHdpdGggJ25vZGlzY2FyZCcgb3B0aW9uOiBJdCB0b29rIGxlc3MgdGhhbiAx
+bWluIHRvIHJ1biAncm0nIGNvbW1hbmQuDQogICAgICAgICANCiAgICAgICAgICMgZmlvIC0tbmFt
+ZSBmaW9fdGVzdF9maWxlIC0tZGlyZWN0PTEgLS1ydz1yYW5kd3JpdGUgLS1icz00ayAtLXNpemU9
+NUcgLS1udW1qb2JzPTggLS1ncm91cF9yZXBvcnRpbmcNCiAgICAgICAgLS0+IEludGVycnVwdCBh
+dCBhYm91dCAzOSUNCiAgICAgICAgICMgdGltZSBybSAtcmYgZmlvX3Rlc3RfZmlsZS4qDQogICAg
+ICAgIHJlYWwgICAgIDBtMzEuMTc2cw0KICAgICAgICAgdXNlciAgICAgMG0wLjAwMHMNCiAgICAg
+ICAgIHN5cyAgICAgIDBtMzAuMDA1cw0KICAgICANCiAgICAgICAgIGIpICAgIEVYVDQgZmlsZSBz
+eXN0ZW0gbW91bnRlZCB3aXRoICdkaXNjYXJkJyBvcHRpb246IEl0IG9ubHkgdG9vayBhYm91dCBz
+ZXZlcmFsIHNlY29uZHMgdG8gcnVuICdybScgY29tbWFuZC4NCiAgICAgICAgICANCiAgICAgICAg
+ICAjIGZpbyAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFuZHdyaXRlIC0t
+YnM9NGsgLS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQogICAgICAgICAt
+LT4gSW50ZXJydXB0IGF0IGFib3V0IDM2LjIlDQogICAgICAgICAjIHRpbWUgcm0gLXJmIGZpb190
+ZXN0X2ZpbGUuKg0KICAgICAgICAgcmVhbCAgICAgMG00LjY2MXMNCiAgICAgICAgIHVzZXIgICAg
+IDBtMC4wMDBzDQogICAgICAgICBzeXMgICAgICAwbTQuNjU3cw0KICAgICANCiAgICBQbGVhc2Ug
+bm90ZSBpZiBJIHdhaXQgZm9yICdmaW8nIGNvbW1hbmQgMTAwJSBkb25lLCAncm0nIGNvbW1hbmQg
+dG9vayBsZXNzIHRoYW4gMXMgKDBtMC4wMDFzKS4NCiAgICAgDQogICAgIA0KICAgIDMuICAgU2hl
+bGwgc2NyaXB0IHdoaWNoIHRyaWdnZXJzIHRoZSBwcm9ibGVtDQogICAgIA0KICAgICAgc3VkbyBz
+dSAtDQogICAgICB5dW0gaW5zdGFsbCB4ZnNwcm9ncyBmaW8gLXkNCiAgICAgIG1rZnMueGZzIC1L
+IC1mIC1zIHNpemU9NDA5NiAvZGV2L252bWUwbjENCiAgICAgIG1rZGlyIC1wIC9tZWRpYS9kaXNr
+MQ0KICAgICAgbW91bnQgLW8gZGlzY2FyZCAvZGV2L252bWUwbjEgL21lZGlhL2Rpc2sxDQogICAg
+ICBjZCAvbWVkaWEvZGlzazEvDQogICAgICBmaW8gLS1uYW1lIGZpb190ZXN0X2ZpbGUgLS1kaXJl
+Y3Q9MSAtLXJ3PXJhbmR3cml0ZSAtLWJzPTRrIC0tc2l6ZT01RyAtLW51bWpvYnM9OCAtLWdyb3Vw
+X3JlcG9ydGluZw0KICAgICAgICMgSW50ZXJydXB0IHdpdGggQ3RybCtDDQogICAgICB0aW1lIHJt
+IC1yZiBmaW9fdGVzdF9maWxlLioNCiAgICAgDQogICAgIA0KICAgIEJlc3QgUmVnYXJkcywNCiAg
+ICBRaWFuIEx1DQogICAgDQogICAgDQogICAgDQoNCg==
