@@ -1,125 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from relayout02-q02.e.movistar.es ([86.109.101.152]:52195 "EHLO
-        relayout02-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753036AbdIDAFJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:05:09 -0400
-Received: from relayout02-redir.e.movistar.es (unknown [86.109.101.202])
-        by relayout02-out.e.movistar.es (Postfix) with ESMTP id 3xlqq732nrzhYHL
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:05:07 +0200 (CEST)
-Received: from Telcontar.valinor (240.red-83-33-32.dynamicip.rima-tde.net [83.33.32.240])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2)
-        by relayout02.e.movistar.es (Postfix) with ESMTPSA id 3xlqq608N5zdZrg
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:05:05 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id DE08112091F
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:05:02 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-        by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id aNr_Ne08TZKi for <linux-xfs@vger.kernel.org>;
-        Mon,  4 Sep 2017 02:05:02 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 4E54C120901
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:05:02 +0200 (CEST)
-Subject: Re: error: "Your hard drive is failing" ???
-References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
- <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
- <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
- <b2a570b1-d062-b880-5371-33c454fac70f@telefonica.net>
- <11db60f4-746c-ea37-96e3-90c43ebc1b2c@zoho.com>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <ca6c56aa-87e0-f55b-39ea-8a3173abfa72@telefonica.net>
-Date: Mon, 4 Sep 2017 02:05:01 +0200
+Received: from sandeen.net ([63.231.237.45]:60762 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753545AbdIHQkP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Sep 2017 12:40:15 -0400
+Subject: Re: [PATCH 1/2] misc: fix more stupid compiler warnings
+References: <20170904011757.GC4671@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b2c7cd45-3afd-24d0-53ae-ee240a5d6fee@sandeen.net>
+Date: Fri, 8 Sep 2017 11:40:14 -0500
 MIME-Version: 1.0
-In-Reply-To: <11db60f4-746c-ea37-96e3-90c43ebc1b2c@zoho.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="cJPEjRhD082oWl2leuRCj6L1FNIPoFcDi"
+In-Reply-To: <20170904011757.GC4671@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---cJPEjRhD082oWl2leuRCj6L1FNIPoFcDi
-Content-Type: multipart/mixed; boundary="HAUxRISF8KRDMr07PITRqDPhqjCoJxRbN";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <ca6c56aa-87e0-f55b-39ea-8a3173abfa72@telefonica.net>
-Subject: Re: error: "Your hard drive is failing" ???
-References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
- <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
- <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
- <b2a570b1-d062-b880-5371-33c454fac70f@telefonica.net>
- <11db60f4-746c-ea37-96e3-90c43ebc1b2c@zoho.com>
-In-Reply-To: <11db60f4-746c-ea37-96e3-90c43ebc1b2c@zoho.com>
+On 9/3/17 8:17 PM, Darrick J. Wong wrote:
+> Fix more compiler warnings about pointless checks, unchecked return
+> values, brace problems, and missing parentheses.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---HAUxRISF8KRDMr07PITRqDPhqjCoJxRbN
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: quoted-printable
+Grab-bag-patch-forgiven-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-On 2017-09-04 01:59, ToddAndMargo wrote:
-> On 09/03/2017 05:32 AM, Carlos E. R. wrote:
->> On 2017-09-03 05:18, ToddAndMargo wrote:
+(one hunk depends on 
+[PATCH 28/29] xfs_repair: rebuild the realtime rmap btree
+so dropped that for now)
 
+-Eric
 
->>> Then I am just going to ignore it then.
->>
->> smartctl daemon may not be aware that you swapped a disk and be
->> confused. You may have to restart it.
->>
->=20
-> Hi Carlos,
->=20
-> I am not finding a smartctl daemon running.  Is it
-> known by another name?
->=20
-> # systemctl status smartctld
-> Unit smartctld.service could not be found.
-
-Telcontar:~ # systemctl status smartd.service=20
-=E2=97=8F smartd.service - Self Monitoring and Reporting Technology (SMAR=
-T) Daemon
-   Loaded: loaded (/usr/lib/systemd/system/smartd.service; enabled; vendo=
-r preset: enabled)
-   Active: active (running) since Thu 2017-08-17 04:13:21 CEST; 2 weeks 3=
- days ago
-     Docs: man:smartd(8)
-           man:smartd.conf(5)
- Main PID: 1588 (smartd)
-    Tasks: 1 (limit: 512)
-   CGroup: /system.slice/smartd.service
-           =E2=94=94=E2=94=801588 /usr/sbin/smartd -n
-
-
-> And can I just do a "systemctl restart xxx" on it?  Or will
-> it just confuse the issue.
-
-I would try a reload first, it works here (openSUSE).
-
---=20
-Cheers / Saludos,
-
-		Carlos E. R.
-		(from 42.2 x86_64 "Malachite" at Telcontar)
-
-
---HAUxRISF8KRDMr07PITRqDPhqjCoJxRbN--
-
---cJPEjRhD082oWl2leuRCj6L1FNIPoFcDi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlmsmK0ACgkQtTMYHG2NR9VJdACgj1RD/CUXjAn3wl9Th+tS19Cm
-RfUAnjuw2WlcNuVhnISCFO0oQ3potqCo
-=wi97
------END PGP SIGNATURE-----
-
---cJPEjRhD082oWl2leuRCj6L1FNIPoFcDi--
+> ---
+>  db/check.c           |    2 --
+>  libxfs/libxfs_priv.h |    4 ++--
+>  libxfs/xfs_bmap.c    |    2 +-
+>  repair/phase6.c      |    4 ----
+>  repair/rmap.c        |    2 +-
+>  5 files changed, 4 insertions(+), 10 deletions(-)
+> 
+> diff --git a/db/check.c b/db/check.c
+> index 12a0aed..6076540 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -3220,9 +3220,7 @@ process_leaf_node_dir_v2_free(
+>  		return;
+>  	}
+>  	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
+> -				be32_to_cpu(free->hdr.nvalid) < 0 ||
+>  				be32_to_cpu(free->hdr.nused) > maxent ||
+> -				be32_to_cpu(free->hdr.nused) < 0 ||
+>  				be32_to_cpu(free->hdr.nused) >
+>  					be32_to_cpu(free->hdr.nvalid)) {
+>  		if (!sflag || v)
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 19bdbdb..94804fe 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -504,8 +504,8 @@ int libxfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+>  bool xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+>  
+>  /* xfs_icache.c */
+> -#define xfs_inode_set_cowblocks_tag(ip)
+> -#define xfs_inode_set_eofblocks_tag(ip)
+> +#define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
+> +#define xfs_inode_set_eofblocks_tag(ip)	do { } while (0)
+>  
+>  /* xfs_stats.h */
+>  #define XFS_STATS_CALC_INDEX(member)	0
+> diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+> index 31a631a..ab5853d 100644
+> --- a/libxfs/xfs_bmap.c
+> +++ b/libxfs/xfs_bmap.c
+> @@ -570,7 +570,7 @@ xfs_bmap_validate_ret(
+>  
+>  #else
+>  #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
+> -#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
+> +#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
+>  #endif /* DEBUG */
+>  
+>  /*
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index b051a44..8fdf8e5 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -3082,8 +3082,6 @@ mark_standalone_inodes(xfs_mount_t *mp)
+>  	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rbmino),
+>  			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rbmino));
+>  
+> -	ASSERT(irec != NULL);
+> -
+>  	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rbmino) -
+>  			irec->ino_startnum;
+>  
+> @@ -3095,8 +3093,6 @@ mark_standalone_inodes(xfs_mount_t *mp)
+>  	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
+>  			irec->ino_startnum;
+>  
+> -	ASSERT(irec != NULL);
+> -
+>  	add_inode_reached(irec, offset);
+>  
+>  	if (fs_quotas)  {
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index 9710565..07d1ba8 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -1542,7 +1542,7 @@ rmap_populate_realtime_rmapbt(
+>  		imap.br_startoff = rm_rec->rm_offset;
+>  		imap.br_startblock = rm_rec->rm_startblock;
+>  		imap.br_blockcount = rm_rec->rm_blockcount;
+> -		imap.br_state = (rm_rec->rm_flags & XFS_RMAP_UNWRITTEN ?
+> +		imap.br_state = ((rm_rec->rm_flags & XFS_RMAP_UNWRITTEN) ?
+>  				XFS_EXT_UNWRITTEN : XFS_EXT_NORM);
+>  		fakei.i_ino = rm_rec->rm_owner;
+>  		error = -libxfs_rmap_map_extent(mp, &dfops, &fakei,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
