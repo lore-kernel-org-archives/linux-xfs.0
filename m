@@ -1,119 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from relayout03-q02.e.movistar.es ([86.109.101.162]:50773 "EHLO
-        relayout03-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751611AbdICMPH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 08:15:07 -0400
-Received: from relayout03-redir.e.movistar.es (relayout03-redir.e.movistar.es [86.109.101.203])
-        by relayout03-out.e.movistar.es (Postfix) with ESMTP id 3xlWtS3ZkPzQlF6
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:56 +0200 (CEST)
-Received: from Telcontar.valinor (130.red-79-146-117.dynamicip.rima-tde.net [79.146.117.130])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2)
-        by relayout03.e.movistar.es (Postfix) with ESMTPSA id 3xlWtS0jCnzMl4B
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:55 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 48F6012094D
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:53 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-        by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id SN-yk7b3gbCw for <linux-xfs@vger.kernel.org>;
-        Sun,  3 Sep 2017 14:06:53 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 199B2120946
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:53 +0200 (CEST)
-Subject: Re: How do I stop the roll backs?
-References: <15e3d125e44.1006338d5356.4004547008347294090@zoho.com>
- <20170901113853.27txrjvdcnc7gcgb@hades.localdomain>
- <52e5faf2-9e64-17e1-c368-38d193ffeb86@zoho.com>
- <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <fc1fbac5-803c-fb11-6175-e17f87d36d95@telefonica.net>
-Date: Sun, 3 Sep 2017 14:06:52 +0200
+Received: from sandeen.net ([63.231.237.45]:33676 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755541AbdIHQz1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Sep 2017 12:55:27 -0400
+Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical
+ sectorsize
+References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <81dc9410-c9d1-20d3-65a6-6763d31b64b7@sandeen.net>
+Date: Fri, 8 Sep 2017 11:55:26 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu"
+In-Reply-To: <20170905054442.28615-1-chandan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu
-Content-Type: multipart/mixed; boundary="NnWn2qBKsqBgRF7kkRIFEKLKslv68Xlrp";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <fc1fbac5-803c-fb11-6175-e17f87d36d95@telefonica.net>
-Subject: Re: How do I stop the roll backs?
-References: <15e3d125e44.1006338d5356.4004547008347294090@zoho.com>
- <20170901113853.27txrjvdcnc7gcgb@hades.localdomain>
- <52e5faf2-9e64-17e1-c368-38d193ffeb86@zoho.com>
- <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
-In-Reply-To: <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
+On 9/5/17 12:44 AM, Chandan Rajendra wrote:
+> Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
+> physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
+> physical sector size of loop devices. On ppc64, this causes loop devices
+> to have 64k as the physical sector size.
+> 
+> With these changes, mkfs.xfs now prints error messages when filesystem
+> blocksize (4k) is less than underlying device's physical
+> sectorsize (64k). These messages (printed on stderr) now cause several
+> xfstests to fail on ppc64 machine since xfstests' _filter_mkfs() isn't
+> able to filter out stderr.
+> 
+> Also, the messages themselves describe a possible sub-optimal setup. But
+> the setup is still usable.
+> 
+> Hence this commit removes the calls to fprintf() used to print the
+> messages.
 
---NnWn2qBKsqBgRF7kkRIFEKLKslv68Xlrp
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: quoted-printable
+So, it looks like the loop change is getting reverted, right ... still -
 
-On 2017-09-02 09:55, Stefan Ring wrote:
-> On Sat, Sep 2, 2017 at 1:41 AM, ToddAndMargo <> wrote:
->>
->> For the full run down and details on this stinker, see
->> https://bugzilla.redhat.com/show_bug.cgi?id=3D1483279
->> It includes a full hardware and OS list.
->=20
-> TBH, I've never heard of SATA hotplug and would not in my wildest
-> dreams expect it to work, let alone put it to work at a customer site.
+Although I suggested this change, I'm rethinking it.  I'm not a fan
+of the warning for a default situation; the user can get this warning
+with nothing but a bare mkfs, which is not good IMHO.
 
-I have been using SATA hotplug for years, and it works reliably.
+(dchinner OTOH thinks we should warn about this suboptimal situation
+in any case - but I really don't think it's mkfs's job to be warning
+about every suboptimal geometry - there are a lot of them out there!)
 
-However, the OS disk can not be swapped, and I have not tested it with
-RAID components.
+What I'd now propose is that we change this warning into a failure,
+but only if a too-small block size was actually /specified/, i.e.
+bsflag is set.  If we're adjusting sector size based on device geometry
+and /default/ blocksize, I think we should just shut up about it.
 
-I use it to connect backup or extra data disks, usually with a single
-big XFS partition on them, sometimes encrypted with LUKS.
+i.e. something like:
 
-It doesn't work on all firmware: for instance on the desktop computer
-I'm using now, there are two SATA connectors that can't hotswap.
+                if ((blocksize < sectorsize) && (blocksize >= ft.lsectorsize)) {
+			if (bsflag) {
+                                fprintf(stderr,
+_("specified blocksize %d cannot be less than device physical sector size %d\n"),
+                                        blocksize, ft.psectorsize);
+                                usage();
+                        }
+                        sectorsize = ft.lsectorsize ? ft.lsectorsize :
+                                                      XFS_MIN_SECTORSIZE;
+                }
 
-https://en.wikipedia.org/wiki/Serial_ATA
+Thoughts?
 
-=C2=ABThe Serial ATA Spec includes logic for SATA device hotplugging. Dev=
-ices
-and motherboards that meet the interoperability specification are
-capable of hot plugging.
+-Eric
 
-Unlike PATA, both SATA and eSATA support hot swapping by design.
-However, this feature requires proper support at the host, device
-(drive), and operating-system levels. In general, all SATA devices
-(drives) support hot swapping (due to the requirements on the
-device-side), also most SATA host adapters support this command.[1]=C2=BB=
-
-
---=20
-Cheers / Saludos,
-
-		Carlos E. R.
-		(from 42.2 x86_64 "Malachite" at Telcontar)
-
-
---NnWn2qBKsqBgRF7kkRIFEKLKslv68Xlrp--
-
---nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlmr8FwACgkQtTMYHG2NR9W4DgCgk1tNZg9/r4lYwwlnh6/EnaeX
-LuYAnRhaa7Jp7LL+ANP+UGhHz0ZJh6tF
-=D+7I
------END PGP SIGNATURE-----
-
---nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu--
+> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+> ---
+>  mkfs/xfs_mkfs.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index dfffae7..0bb3897 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2011,12 +2011,6 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+>  					      XFS_MIN_SECTORSIZE;
+>  
+>  		if ((blocksize < sectorsize) && (blocksize >= ft.lsectorsize)) {
+> -			fprintf(stderr,
+> -_("specified blocksize %d is less than device physical sector size %d\n"),
+> -				blocksize, ft.psectorsize);
+> -			fprintf(stderr,
+> -_("switching to logical sector size %d\n"),
+> -				ft.lsectorsize);
+>  			sectorsize = ft.lsectorsize ? ft.lsectorsize :
+>  						      XFS_MIN_SECTORSIZE;
+>  		}
+> 
