@@ -1,35 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31948 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751045AbdILEpc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Sep 2017 00:45:32 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 1/3] .gitignore: ignore cscope files
-Date: Mon, 11 Sep 2017 22:45:19 -0600
-Message-Id: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33114 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757228AbdIICN5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 22:13:57 -0400
+Received: by mail-pf0-f194.google.com with SMTP id h4so2231182pfk.0
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Sep 2017 19:13:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <0067e494-4404-f808-ff72-ee89ec60aecb@sandeen.net>
+References: <20170909015832.32424-1-raj.khem@gmail.com> <0067e494-4404-f808-ff72-ee89ec60aecb@sandeen.net>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Fri, 8 Sep 2017 19:13:26 -0700
+Message-ID: <CAMKF1soN5rfgoT44o2cWKe2GtETwF8ff7F0=5wGVHSajCLbE4w@mail.gmail.com>
+Subject: Re: [PATCH] xfsprogs: remove remaining double-underscore integer types
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- .gitignore | 4 ++++
- 1 file changed, 4 insertions(+)
+On Fri, Sep 8, 2017 at 7:06 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 9/8/17 8:58 PM, Khem Raj wrote:
+>>  This is a purely mechanical patch that removes the private
+>>     __{u,}int{8,16,32,64}_t use in favor of using the system
+>>     provided {u,}int{8,16,32,64}_t typedefs.
+>
+> As mentioned, this is already present on the for-next branch of xfsprogs-dev:
+>
+> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?h=for-next&id=4a492e72515509ee702286a42afe7d8f89d37636
 
-diff --git a/.gitignore b/.gitignore
-index 28fe84d..2accc37 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -238,3 +238,7 @@
- /tests/xfs/033.out
- /tests/xfs/071.out
- /tests/xfs/096.out
-+
-+# cscope files
-+cscope.*
-+ncscope.*
--- 
-2.9.5
-
+indeed, 2 cherry-picks helped. Ignore this one.
+have a nice one.
