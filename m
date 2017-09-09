@@ -1,93 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr003msb.fastweb.it ([85.18.95.87]:53942 "EHLO
-        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750926AbdIKWOW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 18:14:22 -0400
-Subject: Re: XFS and sector size on thin volumes
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34123 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757227AbdIICDG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 22:03:06 -0400
+Received: by mail-pg0-f67.google.com with SMTP id v82so2025151pgb.1
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Sep 2017 19:03:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Tue, 12 Sep 2017 00:14:19 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <20170909235323.GL17782@dastard>
-References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
- <20170909231215.GK17782@dastard>
- <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
- <20170909235323.GL17782@dastard>
-Message-ID: <838841738c3d8ca84328075615f95475@assyoma.it>
+In-Reply-To: <CAMKF1spJSfBKvuC+agA8j1tDO4nb7d+d0Dq1wNZctUVEZPOTgA@mail.gmail.com>
+References: <20170908233616.26051-1-raj.khem@gmail.com> <7c353810-d8be-51c4-d2a8-9e0833eaf01c@sandeen.net>
+ <CAMKF1spJSfBKvuC+agA8j1tDO4nb7d+d0Dq1wNZctUVEZPOTgA@mail.gmail.com>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Fri, 8 Sep 2017 19:02:35 -0700
+Message-ID: <CAMKF1sqXBxg+TD0MxhJ4rtpBt-h6RtW9PYRin78tjonLdWNspQ@mail.gmail.com>
+Subject: Re: [PATCH] define __ prefixed version of intXY_t types
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-> If a block device is presented with 512 sectors on 4k-only sector
-> drives, then that's a bug. If it's doing so with 512e drives,
-> then that's still a bug because it should be presenting as a
-> 512 byte logical, 4096 byte physical sector size device and in that
-> case mkfs.xfs will choose 4k sectors by default.
-> 
-> IOWs, if the underlying device is correctly presented to mkfs.xfs
-> then it will choose the correct sector size by default.  dm-thinp
-> does the right thing with sector sizes, but I have no idea about
-> ZoL.
+On Fri, Sep 8, 2017 at 6:14 PM, Khem Raj <raj.khem@gmail.com> wrote:
+> On Fri, Sep 8, 2017 at 5:50 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On 9/8/17 6:36 PM, Khem Raj wrote:
+>>> This is required since musl does not define them
+>>> unlike glibc
+>>>
+>>> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+>>> ---
+>>>  include/linux.h | 29 +++++++++++++++++++++++++++++
+>>>  1 file changed, 29 insertions(+)
+>>>
+>>> diff --git a/include/linux.h b/include/linux.h
+>>> index 9611a37f..1f6319c6 100644
+>>> --- a/include/linux.h
+>>> +++ b/include/linux.h
+>>> @@ -40,6 +40,35 @@
+>>>  # undef fsxattr
+>>>  #endif
+>>>
+>>> +#ifndef loff_t
+>>> +#define loff_t off_t
+>>
+>> I think you should just switch to off64_t in io/copy_file_range.c,
+>> the only user of loff_t.
+>
+> OK. I was just following the darwin.h lead but I will make this change in v2
+>
 
-Hi Dave,
-it seems ZVOLs behave... interestingly...
+This seems to work ok with musl, if fcntl.h is included with
+-D_GNU_SOURCE which seems to be the case here so I did not do this
+change.
 
-# 4K volume
-[root@blackhole ~]# zfs create tank/vol1 -V 300M -b 4k
-[root@blackhole ~]# blockdev --getss --getpbsz --getiomin --getioopt 
-/dev/zvol/tank/vol1
-512
-4096
-4096
-4096
+>>
+>> None of the following double-underscore types are present in
+>> xfsprogs since this commit:
+>
+> I think it was not a complete commit. I still see issues. I will see if
+> I can fix them
 
-# 8K volume
-[root@blackhole ~]# zfs create tank/vol1 -V 300M -b 8k
-[root@blackhole ~]# blockdev --getss --getpbsz --getiomin --getioopt 
-/dev/zvol/tank/vol1
-512
-8192
-8192
-8192
+I sent another patch that fixes the remaining issues with __[u]int* uses
+and compiles fine with musl.
 
-# 128K volume
-[root@blackhole ~]# zfs create tank/vol1 -V 300M -b 128k
-[root@blackhole ~]# blockdev --getss --getpbsz --getiomin --getioopt 
-/dev/zvol/tank/vol1
-512
-131072
-131072
-131072
-
-So, it seems that volume's block size does not only change the 
-iomin/ioopt values, but pbsz also. On the other hand, ss is stuck at 
-512B, even if I am using a 512e (4K physical sector size) underlying 
-disk:
-
-[root@blackhole ~]# blockdev --getss --getpbsz --getiomin --getioopt 
-/dev/sdc
-512
-4096
-4096
-0
-
-Creating an XFS filesystem on such a ZVOL will issue the following 
-message:
-
-"specified blocksize 4096 is less than device physical sector size 8192
-switching to logical sector size 512"
-
-In this case, should I specify block size (-b size=4k) at mkfs.xfs time, 
-or not?
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+>
+>>
+>> commit 14f8b6810bd240cc58131483790a099fcf56c073
+>> Author: Darrick J. Wong <darrick.wong@oracle.com>
+>> Date:   Fri Aug 4 16:33:51 2017 -0500
+>>
+>>     xfsprogs: remove double-underscore integer types
+>>
+>>     This is a purely mechanical patch that removes the private
+>>     __{u,}int{8,16,32,64}_t typedefs in favor of using the system
+>>     {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
+>>     the transformation and fix the resulting whitespace and indentation
+>>     errors:
+>>
+>>     s/typedef\t__uint8_t/typedef __uint8_t\t/g
+>>     s/typedef\t__uint/typedef __uint/g
+>>     s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
+>>     s/__uint8_t\t/__uint8_t\t\t/g
+>>     s/__uint/uint/g
+>>     s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
+>>     s/__int/int/g
+>>     /^typedef.*int[0-9]*_t;$/d
+>>
+>>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>     Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+>>     [sandeen: fix whitespace incidentals]
+>>     Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>>
+>> currently on the for-next branch of xfsprogs.  You might want to
+>> carry that patch until 4.13 is released.
+>>
+>> (and 4a492e7 xfs: remove double-underscore integer types as well)
+>>
+>> -Eric
+>>
+>>> +#endif
+>>> +#ifndef __uint8_t
+>>> +#define __uint8_t uint8_t
+>>> +#endif
+>>> +#ifndef __uint16_t
+>>> +#define __uint16_t uint16_t
+>>> +#endif
+>>> +#ifndef __uint32_t
+>>> +#define __uint32_t uint32_t
+>>> +#endif
+>>> +#ifndef __uint64_t
+>>> +#define __uint64_t uint64_t
+>>> +#endif
+>>> +
+>>> +#ifndef __int8_t
+>>> +#define __int8_t int8_t
+>>> +#endif
+>>> +#ifndef __int16_t
+>>> +#define __int16_t int16_t
+>>> +#endif
+>>> +#ifndef __int32_t
+>>> +#define __int32_t int32_t
+>>> +#endif
+>>> +#ifndef __int64_t
+>>> +#define __int64_t int64_t
+>>> +#endif
+>>> +
+>>>  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+>>>  {
+>>>       return ioctl(fd, cmd, p);
+>>>
