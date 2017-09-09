@@ -1,441 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55144 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:42162 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756669AbdIHRTK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Sep 2017 13:19:10 -0400
-Date: Fri, 8 Sep 2017 13:19:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 14/17] xfs: pass a struct xfs_bmbt_irec to
- xfs_bmbt_lookup_eq
-Message-ID: <20170908171908.GD905@bfoster.bfoster>
-References: <20170903072956.3175-1-hch@lst.de>
- <20170903072956.3175-15-hch@lst.de>
+        id S1757173AbdIIAux (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Sep 2017 20:50:53 -0400
+Subject: Re: [PATCH] define __ prefixed version of intXY_t types
+References: <20170908233616.26051-1-raj.khem@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7c353810-d8be-51c4-d2a8-9e0833eaf01c@sandeen.net>
+Date: Fri, 8 Sep 2017 19:50:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170903072956.3175-15-hch@lst.de>
+In-Reply-To: <20170908233616.26051-1-raj.khem@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Khem Raj <raj.khem@gmail.com>, linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 09:29:53AM +0200, Christoph Hellwig wrote:
-> Now that we've massaged the callers into the right form we can always
-> pass the actual extent record instead of the individual fields.
+On 9/8/17 6:36 PM, Khem Raj wrote:
+> This is required since musl does not define them
+> unlike glibc
 > 
-> As an additional benefit the btree cursor will now be prepoulated with
-> the correct extent state instead of having to fix it up later.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Khem Raj <raj.khem@gmail.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 145 +++++++++++++----------------------------------
->  1 file changed, 39 insertions(+), 106 deletions(-)
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
+>  include/linux.h | 29 +++++++++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 9d1e66c708f9..05c0cde3f415 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -113,14 +113,10 @@ xfs_bmap_compute_maxlevels(
->  STATIC int				/* error */
->  xfs_bmbt_lookup_eq(
->  	struct xfs_btree_cur	*cur,
-> -	xfs_fileoff_t		off,
-> -	xfs_fsblock_t		bno,
-> -	xfs_filblks_t		len,
-> +	struct xfs_bmbt_irec	*irec,
->  	int			*stat)	/* success/failure */
+> diff --git a/include/linux.h b/include/linux.h
+> index 9611a37f..1f6319c6 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -40,6 +40,35 @@
+>  # undef fsxattr
+>  #endif
+>  
+> +#ifndef loff_t
+> +#define loff_t off_t
+
+I think you should just switch to off64_t in io/copy_file_range.c,
+the only user of loff_t.
+
+None of the following double-underscore types are present in
+xfsprogs since this commit:
+
+commit 14f8b6810bd240cc58131483790a099fcf56c073
+Author: Darrick J. Wong <darrick.wong@oracle.com>
+Date:   Fri Aug 4 16:33:51 2017 -0500
+
+    xfsprogs: remove double-underscore integer types
+    
+    This is a purely mechanical patch that removes the private
+    __{u,}int{8,16,32,64}_t typedefs in favor of using the system
+    {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
+    the transformation and fix the resulting whitespace and indentation
+    errors:
+    
+    s/typedef\t__uint8_t/typedef __uint8_t\t/g
+    s/typedef\t__uint/typedef __uint/g
+    s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
+    s/__uint8_t\t/__uint8_t\t\t/g
+    s/__uint/uint/g
+    s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
+    s/__int/int/g
+    /^typedef.*int[0-9]*_t;$/d
+    
+    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+    [sandeen: fix whitespace incidentals]
+    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+    Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+currently on the for-next branch of xfsprogs.  You might want to
+carry that patch until 4.13 is released.
+
+(and 4a492e7 xfs: remove double-underscore integer types as well)
+
+-Eric
+
+> +#endif
+> +#ifndef __uint8_t
+> +#define __uint8_t uint8_t
+> +#endif
+> +#ifndef __uint16_t
+> +#define __uint16_t uint16_t
+> +#endif
+> +#ifndef __uint32_t
+> +#define __uint32_t uint32_t
+> +#endif
+> +#ifndef __uint64_t
+> +#define __uint64_t uint64_t
+> +#endif
+> +
+> +#ifndef __int8_t
+> +#define __int8_t int8_t
+> +#endif
+> +#ifndef __int16_t
+> +#define __int16_t int16_t
+> +#endif
+> +#ifndef __int32_t
+> +#define __int32_t int32_t
+> +#endif
+> +#ifndef __int64_t
+> +#define __int64_t int64_t
+> +#endif
+> +
+>  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
 >  {
-> -	cur->bc_rec.b.br_startoff = off;
-> -	cur->bc_rec.b.br_startblock = bno;
-> -	cur->bc_rec.b.br_blockcount = len;
-> +	cur->bc_rec.b = *irec;
->  	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
->  }
->  
-> @@ -1711,9 +1707,7 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
-> -					RIGHT.br_startblock,
-> -					RIGHT.br_blockcount, &i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, &RIGHT, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -1749,9 +1743,7 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -1777,9 +1769,7 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
-> -					RIGHT.br_startblock,
-> -					RIGHT.br_blockcount, &i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, &RIGHT, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -1806,13 +1796,10 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
->  			error = xfs_btree_insert(bma->cur, &i);
->  			if (error)
->  				goto done;
-> @@ -1836,9 +1823,7 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -1872,13 +1857,10 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
->  			error = xfs_btree_insert(bma->cur, &i);
->  			if (error)
->  				goto done;
-> @@ -1924,9 +1906,7 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
-> -					RIGHT.br_startblock,
-> -					RIGHT.br_blockcount, &i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, &RIGHT, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -1959,13 +1939,10 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
->  			error = xfs_btree_insert(bma->cur, &i);
->  			if (error)
->  				goto done;
-> @@ -2035,13 +2012,10 @@ xfs_bmap_add_extent_delay_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
->  			error = xfs_btree_insert(bma->cur, &i);
->  			if (error)
->  				goto done;
-> @@ -2273,9 +2247,8 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			if ((error = xfs_bmbt_lookup_eq(cur, RIGHT.br_startoff,
-> -					RIGHT.br_startblock,
-> -					RIGHT.br_blockcount, &i)))
-> +			error = xfs_bmbt_lookup_eq(cur, &RIGHT, &i);
-> +			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  			if ((error = xfs_btree_delete(cur, &i)))
-> @@ -2315,9 +2288,8 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
-> -					PREV.br_startblock, PREV.br_blockcount,
-> -					&i)))
-> +			error = xfs_bmbt_lookup_eq(cur, &PREV, &i);
-> +			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  			if ((error = xfs_btree_delete(cur, &i)))
-> @@ -2350,9 +2322,8 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			if ((error = xfs_bmbt_lookup_eq(cur, RIGHT.br_startoff,
-> -					RIGHT.br_startblock,
-> -					RIGHT.br_blockcount, &i)))
-> +			error = xfs_bmbt_lookup_eq(cur, &RIGHT, &i);
-> +			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  			if ((error = xfs_btree_delete(cur, &i)))
-> @@ -2382,9 +2353,8 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i)))
-> +			error = xfs_bmbt_lookup_eq(cur, new, &i);
-> +			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  			error = xfs_bmbt_update(cur, &PREV);
-> @@ -2417,9 +2387,7 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2455,9 +2423,7 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2495,9 +2461,7 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_DEXT;
->  		else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2533,21 +2497,17 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  			error = xfs_bmbt_update(cur, &PREV);
->  			if (error)
->  				goto done;
-> -			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i)))
-> +			error = xfs_bmbt_lookup_eq(cur, new, &i);
-> +			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			cur->bc_rec.b.br_state = new->br_state;
->  			if ((error = xfs_btree_insert(cur, &i)))
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2582,9 +2542,7 @@ xfs_bmap_add_extent_unwritten_real(
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2602,13 +2560,11 @@ xfs_bmap_add_extent_unwritten_real(
->  			 * we are about to insert as we can't trust it after
->  			 * the previous insert.
->  			 */
-> -			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
-> -					new->br_startblock, new->br_blockcount,
-> -					&i)))
-> +			error = xfs_bmbt_lookup_eq(cur, new, &i);
-> +			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
->  			/* new middle extent - newext */
-> -			cur->bc_rec.b.br_state = new->br_state;
->  			if ((error = xfs_btree_insert(cur, &i)))
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2917,9 +2873,7 @@ xfs_bmap_add_extent_hole_real(
->  			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(cur, right.br_startoff,
-> -					right.br_startblock, right.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &right, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2954,9 +2908,7 @@ xfs_bmap_add_extent_hole_real(
->  			rval = xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -2984,9 +2936,7 @@ xfs_bmap_add_extent_hole_real(
->  			rval = xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-> -					old.br_startblock, old.br_blockcount,
-> -					&i);
-> +			error = xfs_bmbt_lookup_eq(cur, &old, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -3009,14 +2959,10 @@ xfs_bmap_add_extent_hole_real(
->  			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(cur,
-> -					new->br_startoff,
-> -					new->br_startblock,
-> -					new->br_blockcount, &i);
-> +			error = xfs_bmbt_lookup_eq(cur, new, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			cur->bc_rec.b.br_state = new->br_state;
->  			error = xfs_btree_insert(cur, &i);
->  			if (error)
->  				goto done;
-> @@ -5116,8 +5062,7 @@ xfs_bmap_del_extent_real(
->  
->  	del_endblock = del->br_startblock + del->br_blockcount;
->  	if (cur) {
-> -		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
-> -				got.br_startblock, got.br_blockcount, &i);
-> +		error = xfs_bmbt_lookup_eq(cur, &got, &i);
->  		if (error)
->  			goto done;
->  		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -5220,9 +5165,7 @@ xfs_bmap_del_extent_real(
->  				 * Reset the cursor, don't trust it after any
->  				 * insert operation.
->  				 */
-> -				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
-> -						got.br_startblock,
-> -						got.br_blockcount, &i);
-> +				error = xfs_bmbt_lookup_eq(cur, &got, &i);
->  				if (error)
->  					goto done;
->  				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -5750,8 +5693,7 @@ xfs_bmse_merge(
->  	}
->  
->  	/* lookup and remove the extent to merge */
-> -	error = xfs_bmbt_lookup_eq(cur, got->br_startoff, got->br_startblock,
-> -				   got->br_blockcount, &i);
-> +	error = xfs_bmbt_lookup_eq(cur, got, &i);
->  	if (error)
->  		return error;
->  	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-> @@ -5762,8 +5704,7 @@ xfs_bmse_merge(
->  	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
->  
->  	/* lookup and update size of the previous extent */
-> -	error = xfs_bmbt_lookup_eq(cur, left->br_startoff, left->br_startblock,
-> -				   left->br_blockcount, &i);
-> +	error = xfs_bmbt_lookup_eq(cur, left, &i);
->  	if (error)
->  		return error;
->  	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-> @@ -5879,8 +5820,7 @@ xfs_bmse_shift_one(
->  	new.br_startoff = startoff;
->  
->  	if (cur) {
-> -		error = xfs_bmbt_lookup_eq(cur, got->br_startoff,
-> -				got->br_startblock, got->br_blockcount, &i);
-> +		error = xfs_bmbt_lookup_eq(cur, got, &i);
->  		if (error)
->  			return error;
->  		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-> @@ -6132,10 +6072,7 @@ xfs_bmap_split_extent_at(
->  		cur->bc_private.b.firstblock = *firstfsb;
->  		cur->bc_private.b.dfops = dfops;
->  		cur->bc_private.b.flags = 0;
-> -		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
-> -				got.br_startblock,
-> -				got.br_blockcount,
-> -				&i);
-> +		error = xfs_bmbt_lookup_eq(cur, &got, &i);
->  		if (error)
->  			goto del_cursor;
->  		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, del_cursor);
-> @@ -6159,14 +6096,10 @@ xfs_bmap_split_extent_at(
->  			   XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
->  
->  	if (cur) {
-> -		error = xfs_bmbt_lookup_eq(cur, new.br_startoff,
-> -				new.br_startblock, new.br_blockcount,
-> -				&i);
-> +		error = xfs_bmbt_lookup_eq(cur, &new, &i);
->  		if (error)
->  			goto del_cursor;
->  		XFS_WANT_CORRUPTED_GOTO(mp, i == 0, del_cursor);
-> -		cur->bc_rec.b.br_state = new.br_state;
-> -
->  		error = xfs_btree_insert(cur, &i);
->  		if (error)
->  			goto del_cursor;
-> -- 
-> 2.11.0
+>  	return ioctl(fd, cmd, p);
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
