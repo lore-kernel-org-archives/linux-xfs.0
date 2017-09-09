@@ -1,62 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:34189 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751884AbdIGUyr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 16:54:47 -0400
-Received: by mail-oi0-f44.google.com with SMTP id l74so664322oih.1
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Sep 2017 13:54:47 -0700 (PDT)
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:37439 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757173AbdIIAhG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 20:37:06 -0400
+Received: by mail-pg0-f65.google.com with SMTP id v5so1957723pgn.4
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Sep 2017 17:37:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170906170754.GB17663@linux.intel.com>
-References: <20170905223541.20594-1-ross.zwisler@linux.intel.com>
- <f856f8fd-3697-adb1-198b-a9ae2fce405f@redhat.com> <20170906170754.GB17663@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 7 Sep 2017 13:54:45 -0700
-Message-ID: <CAPcyv4hfhDT9NFRXL+MT5epiqWHJ0RLraV4P3CZ4EJM6L-s0Nw@mail.gmail.com>
-Subject: Re: [PATCH 0/9] add ext4 per-inode DAX flag
+In-Reply-To: <ea036e80-330e-dbe7-2245-63fa7b620bcb@sandeen.net>
+References: <20170907021900.41040-1-raj.khem@gmail.com> <20170907024017.GX17782@dastard>
+ <CAMKF1srNNkZOYXAoN9MgiyvUoitvYJBEAeE-6XYdyoinrx32Jw@mail.gmail.com>
+ <20170908223649.GF17782@dastard> <CAMKF1sqY3F=OG5imx=1bmBNigGnLywT4WqaQUTUMtf8XJe=PGw@mail.gmail.com>
+ <ea036e80-330e-dbe7-2245-63fa7b620bcb@sandeen.net>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Fri, 8 Sep 2017 17:36:35 -0700
+Message-ID: <CAMKF1sr-xVgnj+Y+jQ6kya3TmTcga+kCFGY1zmOjgGOv+yrwqQ@mail.gmail.com>
+Subject: Re: [PATCH] spaceman: Add missing link to libuuid
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Lukas Czerner <lczerner@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4 <linux-ext4@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Wed, Sep 6, 2017 at 10:07 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> On Tue, Sep 05, 2017 at 09:12:35PM -0500, Eric Sandeen wrote:
->> On 9/5/17 5:35 PM, Ross Zwisler wrote:
->> > The original intent of this series was to add a per-inode DAX flag to ext4
->> > so that it would be consistent with XFS.  In my travels I found and fixed
->> > several related issues in both ext4 and XFS.
+On Fri, Sep 8, 2017 at 5:33 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 9/8/17 6:22 PM, Khem Raj wrote:
+>> On Fri, Sep 8, 2017 at 3:36 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> On Fri, Sep 08, 2017 at 11:24:16AM -0700, Khem Raj wrote:
+>>>> Hi Dave
+>>>>
+>>>> On Wed, Sep 6, 2017 at 7:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>>>> On Wed, Sep 06, 2017 at 07:19:00PM -0700, Khem Raj wrote:
+>>>>>> When uuid is enabled then we see linking failures with gold linker e.g.
+>>>>>>
+>>>>>> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_compare'
+>>>>>> libxfs/.libs/libxfs.so: error: undefined reference to 'uuid_copy'
+>>>>>> clang-5.0: error: linker command failed with exit code 1 (use -v to see invocation)
+>>>>>
+>>>>> That's libxfs, not xfs_spaceman....
+>>>>>
+>>>>>>
+>>>>>> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+>>>>>> ---
+>>>>>>  spaceman/Makefile | 2 +-
+>>>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>>
+>>>>>> diff --git a/spaceman/Makefile b/spaceman/Makefile
+>>>>>> index 95ec3c0..060e0af 100644
+>>>>>> --- a/spaceman/Makefile
+>>>>>> +++ b/spaceman/Makefile
+>>>>>> @@ -9,7 +9,7 @@ LTCOMMAND = xfs_spaceman
+>>>>>>  HFILES = init.h space.h
+>>>>>>  CFILES = init.c file.c prealloc.c trim.c
+>>>>>>
+>>>>>> -LLDLIBS = $(LIBXCMD)
+>>>>>> +LLDLIBS = $(LIBXCMD) $(LIBUUID)
+>>>>>
+>>>>> And spaceman doesn't link against libxfs, nor does libxcmd or
+>>>>> spaceman use uuids so I don't see why this fixes a problem with
+>>>>> libxfs...
+>>>>>
+>>>>
+>>>> I am building with --disable-static, I wonder if thats not a supported
+>>>> configuration
+>>>> for xfsprogs
+>>>
+>>> For what reason?
+>>>
 >>
->> Hi Ross -
->>
->> hch had a lot of reasons to nuke the dax flag from orbit, and we just
->> /disabled/ it in xfs due to its habit of crashing the kernel...
+>> this is the distro policy under which I am trying to compile. No other reason.
 >
-> Ah, sorry, I wasn't CC'd on those threads and missed them.  For any interested
-> bystanders:
->
-> https://www.spinics.net/lists/linux-ext4/msg57840.html
-> https://www.spinics.net/lists/linux-xfs/msg09831.html
-> https://www.spinics.net/lists/linux-xfs/msg10124.html
->
->> so a couple questions:
->>
->> 1) does this series pass hch's "test the per-inode DAX flag" fstest?
->
-> Nope, it has the exact same problems as the XFS per-inode DAX flag.
->
->> 2) do we have an agreement that we need this flag at all, or is this
->>    just a parity item because xfs has^whad a per-inode flag?
->
-> It was for parity, and because it allows admins finer grained control over
-> their system.  Basically all things discussed in response to Lukas's original
-> patch in the first link above.
+> which distro has this policy?
 
-I think it's more than parity. When pmem is slower than page cache it
-is actively harmful to have DAX enabled globally for a filesystem. So,
-not only should we push for per-inode DAX control, we should also push
-to deprecate the mount option. I agree with Christoph that we should
-try to automatically and transparently enable DAX where it makes
-sense, but we also need a finer-grained mechanism than a mount flag to
-force the behavior one way or the other.
+Custom distro based on yocto
+
+>
+> There are certainly policies against static linking with /external/
+> libraries, because if libfoo has an exploit, you'd have to find
+> every static linker and fix it, rather than just libfoo.
+>
+> But I can't imagine a policy that says a project cannot statically
+> link with its own /internal/ libraries which are never distributed
+> separately.
+>
+
+I think you are right, in this case we should just make --disable-static
+to be no op or unsupported option in configure
+
+> -Eric
+>
