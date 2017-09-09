@@ -1,66 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49550 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39120 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751288AbdIPWCA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Sep 2017 18:02:00 -0400
-Subject: Re: XFS and sector size on thin volumes
-References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
- <20170909231215.GK17782@dastard>
- <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
- <20170909235323.GL17782@dastard>
- <838841738c3d8ca84328075615f95475@assyoma.it>
- <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
- <e94a47555325c3e87e5d184e1cab20b4@assyoma.it>
- <1357a2ee8280242c68d92cd4aba06f51@assyoma.it>
- <4ca74023-dcaf-9963-1b8f-2c1924866564@sandeen.net>
- <58a80905e97216e37d72e5b7bd9f1643@assyoma.it>
+        id S1750704AbdIITJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Sep 2017 15:09:44 -0400
+Subject: Re: [PATCH] xfsdump: Use c99 defined int64_t instead of __int64_t
+References: <20170909150230.44139-1-raj.khem@gmail.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e15d5e44-e38c-cdde-5893-5455aee04ea8@sandeen.net>
-Date: Sat, 16 Sep 2017 17:01:59 -0500
+Message-ID: <9ba360ec-ef78-ad8d-c83e-9b95f7d60e60@sandeen.net>
+Date: Sat, 9 Sep 2017 14:09:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <58a80905e97216e37d72e5b7bd9f1643@assyoma.it>
+In-Reply-To: <20170909150230.44139-1-raj.khem@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Khem Raj <raj.khem@gmail.com>, linux-xfs@vger.kernel.org
 
+Seems fine, but are the __uint32_t instances in the code not a problem?
 
-
-On 9/16/17 2:59 PM, Gionatan Danti wrote:
-> Il 16-09-2017 20:33 Eric Sandeen ha scritto:
->>
->> I don't think I said that - this is the first time you've mentioned
->> /alignment/, and I've seen no indication of your alignment one way or
->> another.
->>
->>
->>
->>
->> that specifies a 4k block size, which is already the default.
->>
->> You're conflating a lot of issues here - log alignment, sector size,
->> physical & logical block size presented by both the underlying
->> storage and the zvol ...
->>
->> I cannot speak to zvols, as I have no experience with them.
->>
->> But if the underlying storage is 512e/4k then you may want to specify
->> the 4k /sector/ size with -s size=4k.
->>
->> -Eric
->>
-> 
-> Hi Eric, you are right: I messed up the terminology. Sorry for the noise.
-> 
-> I was really speaking about *sector* size. In short, when using ZVOL the physical disk's sector size is not directly announced to the higher layer filesystem. This, in turn, cause mkfs.xfs to automatically select a 512B sector size, even when running on top of 512e/4Kn disks.
-> 
-> From previous emails/threads, I was under impression that XFS sector size only very marginally affect performance. It that true? Can I stick with default mkfs settings? Or should I manually select 4K sector size ("-s size=4k")?
-
-If you have 512/4k disks and mkfs is not defaulting to 4k sector size,
-use "-s size=4k"
-
+Thanks,
 -Eric
+
+On 9/9/17 10:02 AM, Khem Raj wrote:
+> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+> ---
+>  common/hsmapi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/common/hsmapi.c b/common/hsmapi.c
+> index 6054773..0709dbe 100644
+> --- a/common/hsmapi.c
+> +++ b/common/hsmapi.c
+> @@ -585,7 +585,7 @@ HsmModifyExtentMap(
+>  	struct getbmapx	*bmap)
+>  {
+>  	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)contextp;
+> -	__int64_t	length;
+> +	int64_t		length;
+>  
+>  	if (bmap[0].bmv_entries <= 0) {
+>  		return 1;	/* caller must already be at EOF */
+> 
