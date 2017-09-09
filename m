@@ -1,106 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22508 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751686AbdIRSwH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 14:52:07 -0400
-Date: Mon, 18 Sep 2017 11:52:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: check kthread_should_stop() after the setting of
- task state
-Message-ID: <20170918185200.GM6540@magnolia>
-References: <1505205930-2445-1-git-send-email-houtao1@huawei.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54730 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1757364AbdIIKYE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Sep 2017 06:24:04 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v89ANgab045116
+        for <linux-xfs@vger.kernel.org>; Sat, 9 Sep 2017 06:24:03 -0400
+Received: from e23smtp06.au.ibm.com (e23smtp06.au.ibm.com [202.81.31.148])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2cvaeyyxff-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Sep 2017 06:24:03 -0400
+Received: from localhost
+        by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Sat, 9 Sep 2017 20:24:00 +1000
+Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v89ANvCf35586180
+        for <linux-xfs@vger.kernel.org>; Sat, 9 Sep 2017 20:23:57 +1000
+Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
+        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v89ANvcr028299
+        for <linux-xfs@vger.kernel.org>; Sat, 9 Sep 2017 20:23:57 +1000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+Date: Sat, 09 Sep 2017 15:54:42 +0530
+In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
+References: <20170829235052.21050-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1505205930-2445-1-git-send-email-houtao1@huawei.com>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <4482082.l8iRRIlQko@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2017 at 04:45:30PM +0800, Hou Tao wrote:
-> A umount hang is possible when a race occurs between the umount
-> process and the xfsaild kthread. The following sequences outline
-> the race:
+On Wednesday, August 30, 2017 5:20:10 AM IST Dave Chinner wrote:
+> Everyone who tries to modify mkfs quickly learns that it is a pile
+> of spaghetti, the only difference in opinion is whether it is a
+> steaming, cold or rotten pile. This patchset attempts to untangle
+> the ball of pasta and turn it into a set of clear, obvious
+> operations that lead to a filesystem being formatted correctly.
 > 
->     xfsaild: kthread_should_stop()
-> 	     => return false, so xfsaild continue
+> The patch series is really in three parts, splitting the code up
+> into roughly three modules. The first part introduces a mkfs
+> parameters structure and factors the on-disk formatting code to use
+> only information in that structure. The second part introduces a
+> command line input structure and factors the input parsing to use
+> it. This requires a bunch of temporary code to keep the rest of
+> the code working. The third part is factoring the input validation
+> and geometry calculation code to use the input structure and put
+> the output into the mkfs parameter structure and to remove all the
+> temporary support code.
 > 
->     umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags)
-> 	    => by kthread_stop()
->     umount: wake_up_process()
-> 	    => because xfsaild is still running, so 0 is returned
+> The result is three modules - input parsing, validation+calculations
+> and formatting - with well defined data flow between them. This also
+> paves the way to supporting config files to set defaults via a
+> separate (new) module. The overall data flow now looks like this:
 > 
->     xfsaild: __set_current_state(TASK_INTERRUPTIBLE)
->     xfsaild: schedule()
-> 	    => now, xfsaild will wait indefinitely
+> Build defaults --\
+>                   ---> mkfs_default_params -> CLI -> mkfs_params
+> config file -----/
 > 
->     umount: wait_for_completion()
-> 	    => and umount will hang
+> It is not worth spending a lot of time reviewing the temporary code
+> that is added - it gets removed before the end of the series. No
+> attempt has been made to ensure that mkfs works 100% correctly after
+> each patch is applied - the only guarantee is that it will build
+> cleanly. It /should/ work if a bisect lands in the middle of the
+> series, but trying to exhaustively test each patch is OK would take
+> more effort than it is worth. As such, testing has only been
+> performed on the whole series.
 > 
-> To fix that, we need to check kthread_should_stop() after we set
-> the task state, so the xfsaild will either see the stop bit and
-> exit or the task state is reset to runnable by wake_up_process()
-> such that it isn't scheduled out indefinitely and detects the stop
-> bit at the next iteration.
+> The new output from mkfs to indicate where it has sourced the
+> defaults from causes xfstests to have conniptions. This requires
+> some updates to the mkfs output filters that are already in place
+> but it is a fairly trivial update. Test xfs/191 has a couple of new
+> failures, but that is because the new code now correctly parses
+> things like agsize so that block and sector size based
+> specifications work with default mkfs values. This will require test
+> updates.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> Future work will be to split the xfs_mkfs.c file into a file per
+> module (i.e. seperate files for CLI parsing, mkfs formating,
+> validation+calculation and, finally, one for config file support),
+> but otherwise the majority of the factoring work is now complete.
+> 
+> Comments, flames, etc all welcome.
+> 
 
-Looks ok, I guess, but just to reiterate what I said in another email
-15 minutes ago, can this be turned into a regression test?
+I executed xfstests on ppc64 with 4k, 32k & 64k block sizes and did not notice
+any regressions.
 
---D
+Tested-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-> ---
-> v2:
-> 	* comment updates suggested by Brain Foster
-> v1:
-> 	* http://www.spinics.net/lists/linux-xfs/msg10285.html
-> ---
->  fs/xfs/xfs_trans_ail.c | 21 ++++++++++++++++++---
->  1 file changed, 18 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 9056c0f..2d77d9c 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -499,11 +499,26 @@ xfsaild(
->  	current->flags |= PF_MEMALLOC;
->  	set_freezable();
->  
-> -	while (!kthread_should_stop()) {
-> +	while (1) {
->  		if (tout && tout <= 20)
-> -			__set_current_state(TASK_KILLABLE);
-> +			set_current_state(TASK_KILLABLE);
->  		else
-> -			__set_current_state(TASK_INTERRUPTIBLE);
-> +			set_current_state(TASK_INTERRUPTIBLE);
-> +
-> +		/*
-> +		 * Check kthread_should_stop() after we set the task state
-> +		 * to guarantee that we either see the stop bit and exit or
-> +		 * the task state is reset to runnable such that it's not
-> +		 * scheduled out indefinitely and detects the stop bit at
-> +		 * next iteration.
-> +		 *
-> +		 * A memory barrier is included in above task state set to
-> +		 * serialize again kthread_stop().
-> +		 */
-> +		if (kthread_should_stop()) {
-> +			__set_current_state(TASK_RUNNING);
-> +			break;
-> +		}
->  
->  		spin_lock(&ailp->xa_lock);
->  
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+chandan
+
