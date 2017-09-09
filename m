@@ -1,45 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39120 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750704AbdIITJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 Sep 2017 15:09:44 -0400
-Subject: Re: [PATCH] xfsdump: Use c99 defined int64_t instead of __int64_t
-References: <20170909150230.44139-1-raj.khem@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9ba360ec-ef78-ad8d-c83e-9b95f7d60e60@sandeen.net>
-Date: Sat, 9 Sep 2017 14:09:43 -0500
+Received: from mr002msb.fastweb.it ([85.18.95.86]:38316 "EHLO
+        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdIIWL6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Sep 2017 18:11:58 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr002msb.fastweb.it (8.5.140.05)
+        id 59A9E6BA00593F00 for linux-xfs@vger.kernel.org; Sun, 10 Sep 2017 00:11:57 +0200
+Subject: XFS and sector size on thin volumes
 MIME-Version: 1.0
-In-Reply-To: <20170909150230.44139-1-raj.khem@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date: Sun, 10 Sep 2017 00:11:56 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-Seems fine, but are the __uint32_t instances in the code not a problem?
+Hi all,
+I noticed that, when using both LVM thin volumes and ZVOLs, mkfs.xfs 
+default to using 512-byte sector size.
 
-Thanks,
--Eric
+Would setting sector size to 4K be benefical for filesystem performance?
 
-On 9/9/17 10:02 AM, Khem Raj wrote:
-> Signed-off-by: Khem Raj <raj.khem@gmail.com>
-> ---
->  common/hsmapi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/common/hsmapi.c b/common/hsmapi.c
-> index 6054773..0709dbe 100644
-> --- a/common/hsmapi.c
-> +++ b/common/hsmapi.c
-> @@ -585,7 +585,7 @@ HsmModifyExtentMap(
->  	struct getbmapx	*bmap)
->  {
->  	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)contextp;
-> -	__int64_t	length;
-> +	int64_t		length;
->  
->  	if (bmap[0].bmv_entries <= 0) {
->  		return 1;	/* caller must already be at EOF */
-> 
+ From what I know, sector size only affect journal and metadata writes. 
+So, should I manually set sector size to 4K or it is not worth the 
+(minor) inconvenience?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
