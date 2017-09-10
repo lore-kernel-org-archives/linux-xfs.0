@@ -1,297 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53492 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750999AbdIMHG5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Sep 2017 03:06:57 -0400
-Date: Wed, 13 Sep 2017 15:06:54 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 2/3] ext4: test for DAX + journaling corruption
-Message-ID: <20170913070654.GA8034@eguan.usersys.redhat.com>
-References: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
- <20170912044521.22644-2-ross.zwisler@linux.intel.com>
+Received: from scorn.kernelslacker.org ([45.56.101.199]:52918 "EHLO
+        scorn.kernelslacker.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750709AbdIJQHO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Sep 2017 12:07:14 -0400
+Date: Sun, 10 Sep 2017 12:07:10 -0400
+From: Dave Jones <davej@codemonkey.org.uk>
+Subject: Re: iov_iter_pipe warning.
+Message-ID: <20170910160710.7myz4iel2mnvya3b@codemonkey.org.uk>
+References: <20170428165024.ofyl2atpjwohekqa@codemonkey.org.uk>
+ <20170428172024.GL29622@ZenIV.linux.org.uk>
+ <20170807201818.kykqzexce6ap6aik@codemonkey.org.uk>
+ <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
+ <20170829042542.GO4757@magnolia>
+ <20170906200337.b5wj3gpfebliindw@codemonkey.org.uk>
+ <20170906234617.GW17782@dastard>
+ <20170908010441.GZ5426@ZenIV.linux.org.uk>
+ <20170910010756.hnmb233ch7pmnrlx@codemonkey.org.uk>
+ <20170910025712.GC5426@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170912044521.22644-2-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170910025712.GC5426@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: fstests@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 11, 2017 at 10:45:20PM -0600, Ross Zwisler wrote:
-> Add a regression test for the following kernel commit:
-> 
->   ext4: prevent data corruption with journaling + DAX
-> 
-> The test passes if either we successfully compare the data between the mmap
-> with journaling turned on and the one with journaling turned off, or if we
-> fail the chattr command to turn on or off journaling.  The latter is how we
-> prevent this issue in the kernel.
+On Sun, Sep 10, 2017 at 03:57:21AM +0100, Al Viro wrote:
+ > On Sat, Sep 09, 2017 at 09:07:56PM -0400, Dave Jones wrote:
+ > 
+ > > With this in place, I'm still seeing -EBUSY from invalidate_inode_pages2_range
+ > > which doesn't end well...
+ > 
+ > Different issue, and I'm not sure why that WARN_ON() is there in the
+ > first place.  Note that in a similar situation generic_file_direct_write()
+ > simply buggers off and lets the caller do buffered write...
+ > 
+ > iov_iter_pipe() warning is a sign of ->read_iter() on pipe-backed iov_iter
+ > putting into the pipe more than it claims to have done.
 
-Yeah, I noticed that mounting ext4 with "-o dax,data=journal" is not
-allowed, enabling data journaling on a dax mount should be stopped too.
+(from a rerun after hitting that EBUSY warn; hence the taint)
 
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  .gitignore                          |  1 +
->  src/Makefile                        |  2 +-
->  src/t_ext4_dax_journal_corruption.c | 93 +++++++++++++++++++++++++++++++++++++
->  tests/ext4/030                      | 68 +++++++++++++++++++++++++++
->  tests/ext4/030.out                  |  2 +
->  tests/ext4/group                    |  1 +
->  6 files changed, 166 insertions(+), 1 deletion(-)
->  create mode 100644 src/t_ext4_dax_journal_corruption.c
->  create mode 100755 tests/ext4/030
->  create mode 100644 tests/ext4/030.out
-> 
-> diff --git a/.gitignore b/.gitignore
-> index 2accc37..4bdc5bf 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -154,6 +154,7 @@
->  /src/t_mmap_stale_pmd
->  /src/t_mmap_cow_race
->  /src/t_mmap_fallocate
-> +/src/t_ext4_dax_journal_corruption
-
-Better to add new entry in alphabetical order, I know there're already
-some out-of-order entries there, but this one is not affected and better
-to stop adding new ones :)
-
->  
->  # dmapi/ binaries
->  /dmapi/src/common/cmd/read_invis
-> diff --git a/src/Makefile b/src/Makefile
-> index b8aff49..e6558e2 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -13,7 +13,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
->  	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
->  	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
->  	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
-> -	t_mmap_cow_race t_mmap_fallocate fsync-err
-> +	t_mmap_cow_race t_mmap_fallocate fsync-err t_ext4_dax_journal_corruption
->  
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> diff --git a/src/t_ext4_dax_journal_corruption.c b/src/t_ext4_dax_journal_corruption.c
-> new file mode 100644
-> index 0000000..e0d63f8
-> --- /dev/null
-> +++ b/src/t_ext4_dax_journal_corruption.c
-> @@ -0,0 +1,93 @@
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <sys/mman.h>
-> +#include <sys/stat.h>
-> +#include <sys/types.h>
-> +#include <time.h>
-> +#include <unistd.h>
-> +
-> +#define PAGE(a) ((a)*0x1000)
-> +#define STRLEN 256
-> +
-> +void err_exit(char *op)
-> +{
-> +	fprintf(stderr, "%s: %s\n", op, strerror(errno));
-> +	exit(1);
-> +}
-> +
-> +void chattr_cmd(char *chattr, char *cmd, char *file)
-> +{
-> +	int ret;
-> +	char command[STRLEN];
-> +
-> +	ret = snprintf(command, STRLEN, "%s %s %s 2>/dev/null", chattr, cmd, file);
-> +	if (ret < 0)
-> +		err_exit("snprintf");
-> +
-> +	ret = system(command);
-> +	if (ret) /* Success - the kernel fix is to have this chattr fail */
-> +		exit(77);
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	int fd, err, len = PAGE(1);
-> +	char *data, *dax_data, *chattr, *file;
-> +	char string[STRLEN];
-> +
-> +	if (argc < 3) {
-> +		printf("Usage: %s <chattr program> <file>\n", basename(argv[0]));
-> +		exit(0);
-> +	}
-> +
-> +	chattr = argv[1];
-> +	file = argv[2];
-> +
-> +	srand(time(NULL));
-> +	snprintf(string, STRLEN, "random number %d\n", rand());
-> +
-> +	fd = open(file, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
-> +	if (fd < 0)
-> +		err_exit("fd");
-> +
-> +	/* begin with journaling off and DAX on */
-> +	chattr_cmd(chattr, "-j", file);
-> +
-> +	ftruncate(fd, 0);
-> +	fallocate(fd, 0, 0, len);
-> +
-> +	dax_data = mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
-> +	if (!dax_data)
-> +		err_exit("mmap dax_data");
-> +
-> +	/* turns on journaling, and turns off DAX */
-> +	chattr_cmd(chattr, "+j", file);
-
-I'm a bit confused here, just from the test code, it's not obvious to me
-how DAX is turned off. I looked at the kernel code and there's a comment
-saying: "Update inode->i_flags after EXT4_INODE_JOURNAL_DATA was
-updated. E.g. S_DAX may get cleared / set." But isn't the per-inode dax
-flag proposal rejected?
-
-Anyway, some comments to explain how is DAX being turned off would be
-good here.
-
-> +
-> +	data = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-> +	if (!data)
-> +		err_exit("mmap data");
-> +
-> +	/*
-> +	 * Write the data using the non-DAX mapping, and try and read it back
-> +	 * using the DAX mapping.
-> +	 */
-> +	strcpy(data, string);
-> +	if (strcmp(dax_data, string) != 0)
-> +		printf("Data miscompare\n");
-> +
-> +	err = munmap(data, len);
-> +	if (err < 0)
-> +		err_exit("munmap data");
-> +
-> +	err = munmap(dax_data, len);
-> +	if (err < 0)
-> +		err_exit("munmap dax_data");
-> +
-> +	err = close(fd);
-> +	if (err < 0)
-> +		err_exit("close");
-> +	return 0;
-> +}
-> diff --git a/tests/ext4/030 b/tests/ext4/030
-> new file mode 100755
-> index 0000000..3ac4952
-> --- /dev/null
-> +++ b/tests/ext4/030
-> @@ -0,0 +1,68 @@
-> +#! /bin/bash
-> +# FS QA Test ext4/030
-> +#
-> +# This is a regression test for kernel patch:
-> +#   ext4: prevent data corruption with journaling + DAX
-> +# created by Ross Zwisler <ross.zwisler@linux.intel.com>
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# Modify as appropriate.
-> +_supported_os Linux
-> +_supported_fs ext4
-> +_require_scratch_dax
-> +_require_test_program "t_ext4_dax_journal_corruption"
-
-_require_command "$CHATTR_PROG" chattr
-
-> +
-> +# real QA test starts here
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount "-o dax,nodelalloc" >> $seqres.full 2>&1
-
-Hmm, why do we need nodelalloc, need some comments too.
-
-> +
-> +src/t_ext4_dax_journal_corruption $CHATTR_PROG $SCRATCH_MNT/testfile
-
-Let's use "$here/src/t_...", Christoph pointed this out in another
-thread so I pay attention to it in review now :)
-
-Thanks,
-Eryu
-
-> +
-> +if [[ $? != 0 && $? != 77 ]]; then
-> +	echo "Test failed, status $?"
-> +	exit 1
-> +fi
-> +
-> +# success, all done
-> +echo "Silence is golden"
-> +status=0
-> +exit
-> diff --git a/tests/ext4/030.out b/tests/ext4/030.out
-> new file mode 100644
-> index 0000000..06a1c8f
-> --- /dev/null
-> +++ b/tests/ext4/030.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 030
-> +Silence is golden
-> diff --git a/tests/ext4/group b/tests/ext4/group
-> index 257bb64..ef768df 100644
-> --- a/tests/ext4/group
-> +++ b/tests/ext4/group
-> @@ -32,6 +32,7 @@
->  027 auto quick fsmap
->  028 auto quick fsmap
->  029 auto quick fsmap
-> +030 auto quick
->  271 auto rw quick
->  301 aio auto ioctl rw stress defrag
->  302 aio auto ioctl rw stress defrag
-> -- 
-> 2.9.5
-> 
+WARNING: CPU: 0 PID: 14154 at fs/iomap.c:1055 iomap_dio_rw+0x78e/0x840
+CPU: 0 PID: 14154 Comm: trinity-c33 Tainted: G        W       4.13.0-think+ #9 
+task: ffff8801027e3e40 task.stack: ffff8801632d8000
+RIP: 0010:iomap_dio_rw+0x78e/0x840
+RSP: 0018:ffff8801632df370 EFLAGS: 00010286
+RAX: 00000000fffffff0 RBX: ffff880428666428 RCX: ffffffffffffffea
+RDX: ffffed002c65bdef RSI: 0000000000000000 RDI: ffffed002c65be5f
+RBP: ffff8801632df550 R08: ffff88046ae176c0 R09: 0000000000000000
+R10: ffff8801632de960 R11: 0000000000000001 R12: ffff8801632df7f0
+R13: ffffffffffffffea R14: 1ffff1002c65be7c R15: ffff8801632df988
+FS:  00007f3da2100700(0000) GS:ffff88046ae00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000000 CR3: 00000002f6223001 CR4: 00000000001606f0
+DR0: 00007f3da1f3d000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000600
+Call Trace:
+ ? iomap_seek_data+0xb0/0xb0
+ ? find_inode_fast+0xd0/0xd0
+ ? xfs_file_aio_write_checks+0x295/0x320 [xfs]
+ ? __lock_is_held+0x51/0xc0
+ ? xfs_file_dio_aio_write+0x286/0x7e0 [xfs]
+ ? rcu_read_lock_sched_held+0x90/0xa0
+ xfs_file_dio_aio_write+0x286/0x7e0 [xfs]
+ ? xfs_file_aio_write_checks+0x320/0x320 [xfs]
+ ? unwind_get_return_address+0x2f/0x50
+ ? __save_stack_trace+0x92/0x100
+ ? memcmp+0x45/0x70
+ ? depot_save_stack+0x12e/0x480
+ ? save_stack+0x89/0xb0
+ ? save_stack+0x32/0xb0
+ ? kasan_kmalloc+0xa0/0xd0
+ ? __kmalloc+0x157/0x360
+ ? iter_file_splice_write+0x154/0x760
+ ? direct_splice_actor+0x86/0xa0
+ ? splice_direct_to_actor+0x1c4/0x420
+ ? do_splice_direct+0x173/0x1e0
+ ? do_sendfile+0x3a2/0x6d0
+ ? SyS_sendfile64+0xa4/0x130
+ ? do_syscall_64+0x182/0x3e0
+ ? entry_SYSCALL64_slow_path+0x25/0x25
+ ? match_held_lock+0xa6/0x410
+ ? iter_file_splice_write+0x154/0x760
+ xfs_file_write_iter+0x227/0x280 [xfs]
+ do_iter_readv_writev+0x267/0x330
+ ? vfs_dedupe_file_range+0x400/0x400
+ do_iter_write+0xd7/0x280
+ ? splice_from_pipe_next.part.9+0x28/0x160
+ iter_file_splice_write+0x4d5/0x760
+ ? page_cache_pipe_buf_steal+0x2b0/0x2b0
+ ? generic_file_splice_read+0x2e1/0x340
+ ? pipe_to_user+0x80/0x80
+ direct_splice_actor+0x86/0xa0
+ splice_direct_to_actor+0x1c4/0x420
+ ? generic_pipe_buf_nosteal+0x10/0x10
+ ? do_splice_to+0xc0/0xc0
+ do_splice_direct+0x173/0x1e0
+ ? splice_direct_to_actor+0x420/0x420
+ ? rcu_read_lock_sched_held+0x90/0xa0
+ ? rcu_sync_lockdep_assert+0x43/0x70
+ ? __sb_start_write+0x179/0x1e0
+ do_sendfile+0x3a2/0x6d0
+ ? do_compat_pwritev64+0xa0/0xa0
+ ? __lock_is_held+0x2e/0xc0
+ SyS_sendfile64+0xa4/0x130
+ ? SyS_sendfile+0x140/0x140
+ ? mark_held_locks+0x1c/0x90
+ ? do_syscall_64+0xae/0x3e0
+ ? SyS_sendfile+0x140/0x140
+ do_syscall_64+0x182/0x3e0
+ ? syscall_return_slowpath+0x250/0x250
+ ? rcu_read_lock_sched_held+0x90/0xa0
+ ? __context_tracking_exit.part.4+0x223/0x290
+ ? mark_held_locks+0x1c/0x90
+ ? return_from_SYSCALL_64+0x2d/0x7a
+ ? trace_hardirqs_on_caller+0x17a/0x250
+ ? trace_hardirqs_on_thunk+0x1a/0x1c
+ entry_SYSCALL64_slow_path+0x25/0x25
+RIP: 0033:0x7f3da1a2b219
+RSP: 002b:00007ffdd1642f38 EFLAGS: 00000246
+ ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 0000000000000028 RCX: 00007f3da1a2b219
+RDX: 00007f3da1f3d000 RSI: 000000000000005f RDI: 0000000000000060
+RBP: 00007ffdd1642fe0 R08: 30503123188dbe3f R09: ffffffffe7e7e7e7
+R10: 000000000000f000 R11: 0000000000000246 R12: 0000000000000002
+R13: 00007f3da2012058 R14: 00007f3da2100698 R15: 00007f3da2012000
