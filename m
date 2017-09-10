@@ -1,71 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:50325 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751105AbdILXre (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2017 19:47:34 -0400
-Date: Wed, 13 Sep 2017 09:47:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-Message-ID: <20170912234729.GW10621@dastard>
-References: <20170908152805.GA16646@linux.intel.com>
- <20170908212153.14880-1-ross.zwisler@linux.intel.com>
- <20170912064411.GR10621@dastard>
- <20170912153820.GA5000@linux.intel.com>
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:35039 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751831AbdIJUGR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Sep 2017 16:06:17 -0400
+Received: by mail-wr0-f181.google.com with SMTP id m18so11114706wrm.2
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Sep 2017 13:06:16 -0700 (PDT)
+Subject: Re: Testing dm-integrity (WAS: Re: Support for data CRC)
+References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+ <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com>
+ <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
+ <CAJCQCtTF2bWgB1++v3XOwaPqpPxc7-0Lv+Qc_3bebb0zMDNszA@mail.gmail.com>
+ <20170910194350.v5fzbgrzihpjg2pv@breakpoint.cc>
+From: Milan Broz <gmazyland@gmail.com>
+Message-ID: <bb924fb0-ba74-1f14-d1ce-ea567c641c54@gmail.com>
+Date: Sun, 10 Sep 2017 22:06:13 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170912153820.GA5000@linux.intel.com>
+In-Reply-To: <20170910194350.v5fzbgrzihpjg2pv@breakpoint.cc>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, dm-devel@redhat.com
+Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-On Tue, Sep 12, 2017 at 09:38:20AM -0600, Ross Zwisler wrote:
-> On Tue, Sep 12, 2017 at 04:44:11PM +1000, Dave Chinner wrote:
-> > On Fri, Sep 08, 2017 at 03:21:53PM -0600, Ross Zwisler wrote:
-> > > This adds a regression test for the following kernel patch:
-> > > 
-> > >   xfs: always use DAX if mount option is used
-> > > 
-> > > This test will also pass with kernel v4.14-rc1 and beyond because the XFS
-> > > DAX I/O mount option has been disabled (but not removed), so the
-> > > "chattr -x" to turn off DAX doesn't actually do anything.
-> > > 
-> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > Suggested-by: Christoph Hellwig <hch@infradead.org>
-> > .....
-> > > +pgsize=`$here/src/feature -s`
-> > > +
-> > > +# disable tracing, clear the existing trace buffer and turn on dax tracepoints
-> > > +echo 0 > /sys/kernel/debug/tracing/tracing_on
-> > > +echo > /sys/kernel/debug/tracing/trace
-> > > +echo 1 > /sys/kernel/debug/tracing/events/fs_dax/enable
-> > > +
-> > > +# enable tracing for our one mmap I/O, then see if dax was used
-> > > +echo 1 > /sys/kernel/debug/tracing/tracing_on
-> > > +xfs_io  -t -c "truncate $pgsize" \
-> > > +	-c "chattr -x" \
-> > > +	-c "mmap -r 0 $pgsize" -c "mread 0 $pgsize" -c "munmap" \
-> > > +	-f $SCRATCH_MNT/testfile >> $seqres.full
-> > > +echo 0 > /sys/kernel/debug/tracing/tracing_on
-> > 
-> > So what happens when the user is already tracing the test to
-> > find a bug and the test turns all their tracing off?
-> > 
-> > Regardless of this screwing up developer bug triage, do we really
-> > want to add a dependency on kernel tracing into the test harness?
+
+On 09/10/2017 09:43 PM, Sebastian Andrzej Siewior wrote:
+> On 2017-08-22 16:37:07 [-0600], Chris Murphy wrote:
+>> Documentation says either crc or hash is possible, including crc32.
+>> https://www.kernel.org/doc/Documentation/device-mapper/dm-integrity.txt
+>>> My idea was that if the "normal" path is faulty (and noticed by the crc
+>>> check) it (xfs or the dm layer) would try to read the data via an
+>>> alternative path if possible (say on RAID1/5/6).
+>>
+>> Yes you have to build each layer you want separately with this method.
 > 
-> Yep, these are both valid concerns.  I ended up trying to get around both of
-> them by using perf instead in my v2, as suggested by Dan:
+> So I tried this:
 > 
-> https://www.spinics.net/lists/linux-xfs/msg10420.html
+> dmsetup create test-raid1 --table '0 4194304 raid raid1 3 0 region_size 1024 2 - /dev/vdc - /dev/vdd'
+> 
+> # creating the target (size 1)
+> provided_data_sectors=1
+> table="0 $provided_data_sectors integrity /dev/mapper/test-raid1 4096 - D 1 internal_hash:crc32c"
+> dmsetup create dm-int --table "$table"
+> dmsetup remove /dev/mapper/dm-int
+> 
+> # hexdumped. is there a tool for that?
 
-I think similar concerns exist with using perf, too....
+There is integritysetup tool (part of cryptsetup package) that automates format and mount of dm-integrity devices.
+For now in devel git, I expect we will do some release package this month.
+(So no need to use dmsetup here.)
 
-Cheers,
+...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> at some point I expected dm-integrity to check the other disk in RAID.
+
+The dm-integrity has no connection to RAID, it will just return EILSEQ (instead of EIO error)
+to inform that the error is an data integrity error, not a media (or other) IO error.
+
+> Isn't this possible or is my setup wrong at some point? If it is not
+> possible, could it be made possible?
+
+It is up to RAID driver to handle integrity error properly (the same should happen
+for hardware DIF integrity error I guess - you can try to simulate it with scsi_debug).
+
+Milan
