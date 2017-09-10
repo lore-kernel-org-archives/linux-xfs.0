@@ -1,260 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31948 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751320AbdILEpd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Sep 2017 00:45:33 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 2/3] ext4: test for DAX + journaling corruption
-Date: Mon, 11 Sep 2017 22:45:20 -0600
-Message-Id: <20170912044521.22644-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
-References: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:36164 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750739AbdIJASx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Sep 2017 20:18:53 -0400
+Received: by mail-pg0-f68.google.com with SMTP id d8so2977187pgt.3
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Sep 2017 17:18:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <9ba360ec-ef78-ad8d-c83e-9b95f7d60e60@sandeen.net>
+References: <20170909150230.44139-1-raj.khem@gmail.com> <9ba360ec-ef78-ad8d-c83e-9b95f7d60e60@sandeen.net>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Sat, 9 Sep 2017 17:18:22 -0700
+Message-ID: <CAMKF1soFadOi=4EEAZgV4ufmPeFqKRbfMJmUr0W9hCjqPq1YZQ@mail.gmail.com>
+Subject: Re: [PATCH] xfsdump: Use c99 defined int64_t instead of __int64_t
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-Add a regression test for the following kernel commit:
+On Sat, Sep 9, 2017 at 12:09 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> Seems fine, but are the __uint32_t instances in the code not a problem?
+>
 
-  ext4: prevent data corruption with journaling + DAX
+yes they are and I had a seprate patch for them, which I will send
+once  I have fixed the tab formatting issues with it. May be I should squash
+then into one
 
-The test passes if either we successfully compare the data between the mmap
-with journaling turned on and the one with journaling turned off, or if we
-fail the chattr command to turn on or off journaling.  The latter is how we
-prevent this issue in the kernel.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- .gitignore                          |  1 +
- src/Makefile                        |  2 +-
- src/t_ext4_dax_journal_corruption.c | 93 +++++++++++++++++++++++++++++++++++++
- tests/ext4/030                      | 68 +++++++++++++++++++++++++++
- tests/ext4/030.out                  |  2 +
- tests/ext4/group                    |  1 +
- 6 files changed, 166 insertions(+), 1 deletion(-)
- create mode 100644 src/t_ext4_dax_journal_corruption.c
- create mode 100755 tests/ext4/030
- create mode 100644 tests/ext4/030.out
-
-diff --git a/.gitignore b/.gitignore
-index 2accc37..4bdc5bf 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -154,6 +154,7 @@
- /src/t_mmap_stale_pmd
- /src/t_mmap_cow_race
- /src/t_mmap_fallocate
-+/src/t_ext4_dax_journal_corruption
- 
- # dmapi/ binaries
- /dmapi/src/common/cmd/read_invis
-diff --git a/src/Makefile b/src/Makefile
-index b8aff49..e6558e2 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -13,7 +13,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
- 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
- 	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
--	t_mmap_cow_race t_mmap_fallocate fsync-err
-+	t_mmap_cow_race t_mmap_fallocate fsync-err t_ext4_dax_journal_corruption
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/t_ext4_dax_journal_corruption.c b/src/t_ext4_dax_journal_corruption.c
-new file mode 100644
-index 0000000..e0d63f8
---- /dev/null
-+++ b/src/t_ext4_dax_journal_corruption.c
-@@ -0,0 +1,93 @@
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <sys/stat.h>
-+#include <sys/types.h>
-+#include <time.h>
-+#include <unistd.h>
-+
-+#define PAGE(a) ((a)*0x1000)
-+#define STRLEN 256
-+
-+void err_exit(char *op)
-+{
-+	fprintf(stderr, "%s: %s\n", op, strerror(errno));
-+	exit(1);
-+}
-+
-+void chattr_cmd(char *chattr, char *cmd, char *file)
-+{
-+	int ret;
-+	char command[STRLEN];
-+
-+	ret = snprintf(command, STRLEN, "%s %s %s 2>/dev/null", chattr, cmd, file);
-+	if (ret < 0)
-+		err_exit("snprintf");
-+
-+	ret = system(command);
-+	if (ret) /* Success - the kernel fix is to have this chattr fail */
-+		exit(77);
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int fd, err, len = PAGE(1);
-+	char *data, *dax_data, *chattr, *file;
-+	char string[STRLEN];
-+
-+	if (argc < 3) {
-+		printf("Usage: %s <chattr program> <file>\n", basename(argv[0]));
-+		exit(0);
-+	}
-+
-+	chattr = argv[1];
-+	file = argv[2];
-+
-+	srand(time(NULL));
-+	snprintf(string, STRLEN, "random number %d\n", rand());
-+
-+	fd = open(file, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
-+	if (fd < 0)
-+		err_exit("fd");
-+
-+	/* begin with journaling off and DAX on */
-+	chattr_cmd(chattr, "-j", file);
-+
-+	ftruncate(fd, 0);
-+	fallocate(fd, 0, 0, len);
-+
-+	dax_data = mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
-+	if (!dax_data)
-+		err_exit("mmap dax_data");
-+
-+	/* turns on journaling, and turns off DAX */
-+	chattr_cmd(chattr, "+j", file);
-+
-+	data = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-+	if (!data)
-+		err_exit("mmap data");
-+
-+	/*
-+	 * Write the data using the non-DAX mapping, and try and read it back
-+	 * using the DAX mapping.
-+	 */
-+	strcpy(data, string);
-+	if (strcmp(dax_data, string) != 0)
-+		printf("Data miscompare\n");
-+
-+	err = munmap(data, len);
-+	if (err < 0)
-+		err_exit("munmap data");
-+
-+	err = munmap(dax_data, len);
-+	if (err < 0)
-+		err_exit("munmap dax_data");
-+
-+	err = close(fd);
-+	if (err < 0)
-+		err_exit("close");
-+	return 0;
-+}
-diff --git a/tests/ext4/030 b/tests/ext4/030
-new file mode 100755
-index 0000000..3ac4952
---- /dev/null
-+++ b/tests/ext4/030
-@@ -0,0 +1,68 @@
-+#! /bin/bash
-+# FS QA Test ext4/030
-+#
-+# This is a regression test for kernel patch:
-+#   ext4: prevent data corruption with journaling + DAX
-+# created by Ross Zwisler <ross.zwisler@linux.intel.com>
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# Modify as appropriate.
-+_supported_os Linux
-+_supported_fs ext4
-+_require_scratch_dax
-+_require_test_program "t_ext4_dax_journal_corruption"
-+
-+# real QA test starts here
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount "-o dax,nodelalloc" >> $seqres.full 2>&1
-+
-+src/t_ext4_dax_journal_corruption $CHATTR_PROG $SCRATCH_MNT/testfile
-+
-+if [[ $? != 0 && $? != 77 ]]; then
-+	echo "Test failed, status $?"
-+	exit 1
-+fi
-+
-+# success, all done
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/ext4/030.out b/tests/ext4/030.out
-new file mode 100644
-index 0000000..06a1c8f
---- /dev/null
-+++ b/tests/ext4/030.out
-@@ -0,0 +1,2 @@
-+QA output created by 030
-+Silence is golden
-diff --git a/tests/ext4/group b/tests/ext4/group
-index 257bb64..ef768df 100644
---- a/tests/ext4/group
-+++ b/tests/ext4/group
-@@ -32,6 +32,7 @@
- 027 auto quick fsmap
- 028 auto quick fsmap
- 029 auto quick fsmap
-+030 auto quick
- 271 auto rw quick
- 301 aio auto ioctl rw stress defrag
- 302 aio auto ioctl rw stress defrag
--- 
-2.9.5
-
+> Thanks,
+> -Eric
+>
+> On 9/9/17 10:02 AM, Khem Raj wrote:
+>> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+>> ---
+>>  common/hsmapi.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/common/hsmapi.c b/common/hsmapi.c
+>> index 6054773..0709dbe 100644
+>> --- a/common/hsmapi.c
+>> +++ b/common/hsmapi.c
+>> @@ -585,7 +585,7 @@ HsmModifyExtentMap(
+>>       struct getbmapx *bmap)
+>>  {
+>>       dmf_f_ctxt_t    *dmf_f_ctxtp = (dmf_f_ctxt_t *)contextp;
+>> -     __int64_t       length;
+>> +     int64_t         length;
+>>
+>>       if (bmap[0].bmv_entries <= 0) {
+>>               return 1;       /* caller must already be at EOF */
+>>
