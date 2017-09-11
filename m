@@ -1,68 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:35039 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751831AbdIJUGR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Sep 2017 16:06:17 -0400
-Received: by mail-wr0-f181.google.com with SMTP id m18so11114706wrm.2
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Sep 2017 13:06:16 -0700 (PDT)
-Subject: Re: Testing dm-integrity (WAS: Re: Support for data CRC)
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
- <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com>
- <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
- <CAJCQCtTF2bWgB1++v3XOwaPqpPxc7-0Lv+Qc_3bebb0zMDNszA@mail.gmail.com>
- <20170910194350.v5fzbgrzihpjg2pv@breakpoint.cc>
-From: Milan Broz <gmazyland@gmail.com>
-Message-ID: <bb924fb0-ba74-1f14-d1ce-ea567c641c54@gmail.com>
-Date: Sun, 10 Sep 2017 22:06:13 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:38212 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751173AbdIKPt1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Sep 2017 11:49:27 -0400
+Date: Mon, 11 Sep 2017 11:49:25 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: rewrite getbmap using the xfs_iext_* helpers
+Message-ID: <20170911154925.GB13400@bfoster.bfoster>
+References: <20170903155140.17256-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170910194350.v5fzbgrzihpjg2pv@breakpoint.cc>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170903155140.17256-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, dm-devel@redhat.com
-Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-
-On 09/10/2017 09:43 PM, Sebastian Andrzej Siewior wrote:
-> On 2017-08-22 16:37:07 [-0600], Chris Murphy wrote:
->> Documentation says either crc or hash is possible, including crc32.
->> https://www.kernel.org/doc/Documentation/device-mapper/dm-integrity.txt
->>> My idea was that if the "normal" path is faulty (and noticed by the crc
->>> check) it (xfs or the dm layer) would try to read the data via an
->>> alternative path if possible (say on RAID1/5/6).
->>
->> Yes you have to build each layer you want separately with this method.
+On Sun, Sep 03, 2017 at 05:51:39PM +0200, Christoph Hellwig wrote:
+> Currently getbmap uses xfs_bmapi_read to query the extent map, and then
+> fixes up various bits that are eventually reported to userspace.
 > 
-> So I tried this:
+> This patch instead rewrites it to use xfs_iext_lookup_extent and
+> xfs_iext_get_extent to iteratively process the extent map.  This not
+> only avoids the need to allocate a map for the returned xfs_bmbt_irec
+> structures but also greatly simplified the code.
 > 
-> dmsetup create test-raid1 --table '0 4194304 raid raid1 3 0 region_size 1024 2 - /dev/vdc - /dev/vdd'
+> There are two intentional behavior changes compared to the old code:
 > 
-> # creating the target (size 1)
-> provided_data_sectors=1
-> table="0 $provided_data_sectors integrity /dev/mapper/test-raid1 4096 - D 1 internal_hash:crc32c"
-> dmsetup create dm-int --table "$table"
-> dmsetup remove /dev/mapper/dm-int
+>  - the current code reports unwritten extents that don't directly border
+>    a written one as unwritten even when not passing the BMV_IF_PREALLOC
+>    option, contrary to the documentation.  The new code requires the
+>    BMV_IF_PREALLOC flag to report the unwrittent extent bit.
+>  - The new code does never merges consecutive extents, unlike the old
+>    code that sometimes does it based on the boundaries of the
+>    xfs_bmapi_read calls.  Note that the extent merging behavior was
+>    entirely undocumented.
 > 
-> # hexdumped. is there a tool for that?
-
-There is integritysetup tool (part of cryptsetup package) that automates format and mount of dm-integrity devices.
-For now in devel git, I expect we will do some release package this month.
-(So no need to use dmsetup here.)
-
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 525 ++++++++++++++++++++-----------------------------
+>  1 file changed, 208 insertions(+), 317 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index cd9a5400ba4f..a11f4c300643 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
 ...
+> @@ -668,147 +599,107 @@ xfs_getbmap(
+...
+> +		/*
+> +		 * In order to report shared extents accurately, we report each
+> +		 * distinct shared / unshared part of a single bmbt record with
+> +		 * an individual getbmapx record.
+> +		 */
+> +		bno = got.br_startoff + got.br_blockcount;
+> +		rec = got;
+> +		do {
+> +			error = xfs_getbmap_report_one(ip, bmv, out, bmv_end,
+> +					&rec);
+> +			if (error || xfs_getbmap_full(bmv))
+> +				goto out_unlock_ilock;
+> +		} while (xfs_getbmap_next_rec(&rec, bno));
+> +
+> +		if (!xfs_iext_get_extent(ifp, ++idx, &got)) {
+> +			xfs_fileoff_t	end = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> +
+> +			out[bmv->bmv_entries].bmv_oflags |= BMV_OF_LAST;
+> +
 
-> at some point I expected dm-integrity to check the other disk in RAID.
+I'm a little confused about the above bit. Isn't ->bmv_entries already
+incremented past the last reported extent? Further, if there is a hole
+to be reported, we potentially do that just below (which means that
+->bmv_entries may or may not refer to the last reported segment here)..?
 
-The dm-integrity has no connection to RAID, it will just return EILSEQ (instead of EIO error)
-to inform that the error is an data integrity error, not a media (or other) IO error.
+Otherwise the rest of the patch looks good to me.
 
-> Isn't this possible or is my setup wrong at some point? If it is not
-> possible, could it be made possible?
+Brian
 
-It is up to RAID driver to handle integrity error properly (the same should happen
-for hardware DIF integrity error I guess - you can try to simulate it with scsi_debug).
-
-Milan
+> +			if (whichfork != XFS_ATTR_FORK && bno < end &&
+> +			    !xfs_getbmap_full(bmv)) {
+> +				xfs_getbmap_report_hole(ip, bmv, out, bmv_end,
+> +						bno, end);
+>  			}
+> -			bmv->bmv_entries++;
+> -			cur_ext++;
+> +			break;
+>  		}
+> -	} while (nmap && bmv->bmv_length && cur_ext < bmv->bmv_count - 1);
+>  
+> - out_free_map:
+> -	kmem_free(map);
+> - out_unlock_ilock:
+> +		if (bno >= first_bno + len)
+> +			break;
+> +	}
+> +
+> +out_unlock_ilock:
+>  	xfs_iunlock(ip, lock);
+> - out_unlock_iolock:
+> +out_unlock_iolock:
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+>  
+> -	for (i = 0; i < cur_ext; i++) {
+> +	for (i = 0; i < bmv->bmv_entries; i++) {
+>  		/* format results & advance arg */
+>  		error = formatter(&arg, &out[i]);
+>  		if (error)
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
