@@ -1,179 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57402 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48608 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753364AbdIDJif (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Sep 2017 05:38:35 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] generic: reserve correct indirect blocks for delalloc write path
-Date: Mon,  4 Sep 2017 17:38:19 +0800
-Message-Id: <20170904093819.28708-1-eguan@redhat.com>
+        id S1750877AbdIKPCC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Sep 2017 11:02:02 -0400
+Date: Mon, 11 Sep 2017 11:01:57 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs: Uninitialized memory read at xlog_write
+Message-ID: <20170911150157.GA13400@bfoster.bfoster>
+References: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: sandeen@redhat.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
 
-Test that XFS reserves reasonable indirect blocks for delalloc and
-speculative allocation, and doesn't cause any fdblocks corruption.
+On Mon, Sep 04, 2017 at 09:19:41PM +0900, Tetsuo Handa wrote:
+> Hello.
+> 
+> I hit kmemcheck splat using linux-next-20170901.
+> 
+> [ 1360.354052] WARNING: kmemcheck: Caught 32-bit read from uninitialized memory (ffffa17673526960)
+> [ 1360.354053] 00000000000000006a1004080000000000000000000000000000000000000000
+> [ 1360.354059]  u u u u u u u u i i i i i i i i u u u u u u u u u u u u u u u u
+> [ 1360.354063]  ^
+> [ 1360.354080] RIP: 0010:xlog_write+0x378/0x890 [xfs]
+> [ 1360.354080] RSP: 0018:ffffafeac12b7cf0 EFLAGS: 00010202
+> [ 1360.354081] RAX: ffffafeac1808234 RBX: 0000000000000038 RCX: 000000000000000c
+> [ 1360.354082] RDX: 000000000000000e RSI: ffffa17673526960 RDI: ffffafeac180823c
+> [ 1360.354082] RBP: ffffafeac12b7d98 R08: 0000000000000000 R09: 0000000000000000
+> [ 1360.354083] R10: ffffa176737f8000 R11: 0000000000000000 R12: 0000000000000038
+> [ 1360.354083] R13: 0000000000000002 R14: 0000000000000000 R15: ffffa17673526900
+> [ 1360.354084] FS:  0000000000000000(0000) GS:ffffffffb0c30000(0000) knlGS:0000000000000000
+> [ 1360.354085] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [ 1360.354085] CR2: ffffa17674a66320 CR3: 0000000135c77003 CR4: 00000000000606f0
+> [ 1360.354133]  xlog_write+0x378/0x890 [xfs]
+> [ 1360.354142]  xlog_cil_push+0x1f4/0x370 [xfs]
+> [ 1360.354151]  xlog_cil_push_work+0xd/0x10 [xfs]
+> [ 1360.354207]  process_one_work+0x1cd/0x330
+> [ 1360.354208]  worker_thread+0x222/0x3e0
+> [ 1360.354209]  kthread+0xfe/0x130
+> [ 1360.354212]  ret_from_fork+0x25/0x30
+> [ 1360.354213]  0xffffffffffffffff
+> 
 
-This was inspired by an XFS but that too large 'indlen' was returned by
-xfs_bmap_worst_indlen() which can't fit in a 17 bits value
-(STARTBLOCKVALBITS is defined as 17), then leaked 1 << 17 blocks in
-sb_fdblocks.
+I threw a kmemcheck enabled kernel on a couple boxes out of curiosity.
+I didn't reproduce anything related to XFS with the "allow partially
+uninit." option enabled, even after running a quick group run in
+xfstests. Without that option, I did see an xlog_write() splat on a
+rhel7 boot but it was preceded by a constant stream of other reports
+(__d_lookup(), link_path_walk(), etc.) and ultimately resulted in a
+failed/hung bootup (after quite some time). I'm in the process of seeing
+a similar result on a Fedora vm running for-next. This isn't really
+debuggable in the current form due to the volume of preceding errors,
+the required boot time and the fact that my machines ultimately fall
+over.
 
-This was only seen on XFS with rmapbt feature enabled, but nothing
-prevents the test from being a generic test.
+Do you see different behavior? Do you have the "allow partially
+uninitialized memory" option enabled or disabled? I wonder if there are
+fixes for these other errors I'm seeing in linux-next that XFS for-next
+hasn't picked up yet..?
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
+Brian
 
-This reproduces sb_fdblocks corruption issue for me with 1k block size
-rmapbt enabled XFS on x86_64 and ppc64 hosts. Other block size XFS pass
-the test now.
-
- tests/generic/456     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/456.out |   2 +
- tests/generic/group   |   1 +
- 3 files changed, 116 insertions(+)
- create mode 100755 tests/generic/456
- create mode 100644 tests/generic/456.out
-
-diff --git a/tests/generic/456 b/tests/generic/456
-new file mode 100755
-index 000000000000..b878c67c6b0e
---- /dev/null
-+++ b/tests/generic/456
-@@ -0,0 +1,113 @@
-+#! /bin/bash
-+# FS QA Test 456
-+#
-+# Test that XFS reserves reasonable indirect blocks for delalloc and
-+# speculative allocation, and doesn't cause any fdblocks corruption.
-+#
-+# This was inspired by an XFS but that too large 'indlen' was returned by
-+# xfs_bmap_worst_indlen() which can't fit in a 17 bits value (STARTBLOCKVALBITS
-+# is defined as 17), then leaked 1 << 17 blocks in sb_fdblocks.
-+#
-+# This was only seen on XFS with rmapbt feature enabled, but nothing prevents
-+# the test from being a generic test.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+testfile=$SCRATCH_MNT/1G_file.$seq
-+file_size=$((1024 * 1024 * 1024))
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+saved_dirty_background_ratio=0
-+saved_dirty_ratio=0
-+
-+save_dirty_ratio()
-+{
-+	saved_dirty_background_ratio=`cat /proc/sys/vm/dirty_background_ratio`
-+	saved_dirty_ratio=`cat /proc/sys/vm/dirty_ratio`
-+}
-+
-+set_dirty_ratio()
-+{
-+	echo 100 > /proc/sys/vm/dirty_background_ratio
-+	echo 100 > /proc/sys/vm/dirty_ratio
-+}
-+
-+restore_dirty_ratio()
-+{
-+	if [ $saved_dirty_background_ratio -ne 0 ]; then
-+		echo $saved_dirty_background_ratio > /proc/sys/vm/dirty_background_ratio
-+	fi
-+	if [ $saved_dirty_ratio -ne 0 ]; then
-+		echo $saved_dirty_ratio > /proc/sys/vm/dirty_ratio
-+	fi
-+}
-+
-+_cleanup()
-+{
-+	cd /
-+	restore_dirty_ratio
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+# test with scratch device, because test is known to corrupt fs, we don't want
-+# the corruption affect subsequent tests
-+_require_scratch
-+
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount
-+
-+# need at least 1G free space
-+_require_fs_space $SCRATCH_MNT $((1024 * 1024))
-+
-+# To reproduce the bug, we need to keep enough dirty data in memory (1G at
-+# least), so that a large enough delay allocated extent is kept in memory, then
-+# speculative preallocation could allocate large number of blocks based on the
-+# existing extent size.
-+# So we set dirty_background_ratio and dirty_ratio to 100% uncontitionally,
-+# even if the total memory is less than 1G, there's no harm to run a test on a
-+# such host.
-+save_dirty_ratio
-+set_dirty_ratio
-+
-+# buffer write a 1G file, which is enough to trigger the bug,
-+# _check_filesystems will complain about fs corruption after test
-+$XFS_IO_PROG -fc "pwrite -b 1m 0 $file_size" $testfile >/dev/null 2>&1
-+
-+echo "Silence is golden"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/456.out b/tests/generic/456.out
-new file mode 100644
-index 000000000000..248dfeb2ad90
---- /dev/null
-+++ b/tests/generic/456.out
-@@ -0,0 +1,2 @@
-+QA output created by 456
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 6422d51033af..e9f08ab4ef79 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -458,3 +458,4 @@
- 453 auto quick dir
- 454 auto quick attr
- 455 auto rw
-+456 auto quick rw
--- 
-2.13.5
-
+> # ./scripts/faddr2line fs/xfs/xfs.ko xlog_write+0x378/0x890
+> xlog_write+0x378/0x890:
+> __inline_memcpy at /data/linux-next/./arch/x86/include/asm/string_64.h:13
+>  (inlined by) xlog_write at /data/linux-next/fs/xfs/xfs_log.c:2479
+> 
+>                         ASSERT(copy_len >= 0);
+>     3136:       0f 88 77 01 00 00       js     32b3 <xlog_write+0x4d3>
+>                         if (copy_len > 0) {
+>     313c:       0f 84 d6 02 00 00       je     3418 <xlog_write+0x638>
+>                                 memcpy(ptr, reg->i_addr + copy_off, copy_len);
+>     3142:       48 63 da                movslq %edx,%rbx
+>     3145:       49 63 f6                movslq %r14d,%rsi
+>     3148:       48 89 c7                mov    %rax,%rdi
+>                      "1:\ttestb $1,%b4\n\t"
+>                      "je 2f\n\t"
+>                      "movsb\n"
+>                      "2:"
+>                      : "=&c" (d0), "=&D" (d1), "=&S" (d2)
+>                      : "0" (n / 4), "q" (n), "1" ((long)to), "2" ((long)from)
+>     314b:       48 89 da                mov    %rbx,%rdx
+>     314e:       48 03 31                add    (%rcx),%rsi
+>     3151:       48 c1 ea 02             shr    $0x2,%rdx
+>         asm volatile("rep ; movsl\n\t"
+>     3155:       48 89 d1                mov    %rdx,%rcx
+>     3158:       f3 a5                   rep movsl %ds:(%rsi),%es:(%rdi)    // <= xlog_write+0x378/0x890
+>     315a:       f6 c3 02                test   $0x2,%bl
+>     315d:       74 02                   je     3161 <xlog_write+0x381>
+>     315f:       66 a5                   movsw  %ds:(%rsi),%es:(%rdi)
+>     3161:       f6 c3 01                test   $0x1,%bl
+>     3164:       74 01                   je     3167 <xlog_write+0x387>
+>     3166:       a4                      movsb  %ds:(%rsi),%es:(%rdi)
+>     3167:       8b 55 c4                mov    -0x3c(%rbp),%edx
+>         *len -= bytes;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
