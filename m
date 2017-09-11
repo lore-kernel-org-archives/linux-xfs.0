@@ -1,131 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34123 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757227AbdIICDG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 22:03:06 -0400
-Received: by mail-pg0-f67.google.com with SMTP id v82so2025151pgb.1
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Sep 2017 19:03:06 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:35018 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751069AbdIKXpG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Sep 2017 19:45:06 -0400
+Date: Mon, 11 Sep 2017 19:44:54 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: Testing dm-integrity (WAS: Re: Support for data CRC)
+In-Reply-To: <20170911063855.x25kajaqoxatt6zq@breakpoint.cc>
+Message-ID: <alpine.LRH.2.02.1709111942050.31898@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20170821190414.long2535xppcxvvd@breakpoint.cc> <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com> <20170822111053.7jypthbydpkn2tj4@breakpoint.cc> <CAJCQCtTF2bWgB1++v3XOwaPqpPxc7-0Lv+Qc_3bebb0zMDNszA@mail.gmail.com>
+ <20170910194350.v5fzbgrzihpjg2pv@breakpoint.cc> <bb924fb0-ba74-1f14-d1ce-ea567c641c54@gmail.com> <20170911063855.x25kajaqoxatt6zq@breakpoint.cc>
 MIME-Version: 1.0
-In-Reply-To: <CAMKF1spJSfBKvuC+agA8j1tDO4nb7d+d0Dq1wNZctUVEZPOTgA@mail.gmail.com>
-References: <20170908233616.26051-1-raj.khem@gmail.com> <7c353810-d8be-51c4-d2a8-9e0833eaf01c@sandeen.net>
- <CAMKF1spJSfBKvuC+agA8j1tDO4nb7d+d0Dq1wNZctUVEZPOTgA@mail.gmail.com>
-From: Khem Raj <raj.khem@gmail.com>
-Date: Fri, 8 Sep 2017 19:02:35 -0700
-Message-ID: <CAMKF1sqXBxg+TD0MxhJ4rtpBt-h6RtW9PYRin78tjonLdWNspQ@mail.gmail.com>
-Subject: Re: [PATCH] define __ prefixed version of intXY_t types
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Milan Broz <gmazyland@gmail.com>, dm-devel@redhat.com, Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-On Fri, Sep 8, 2017 at 6:14 PM, Khem Raj <raj.khem@gmail.com> wrote:
-> On Fri, Sep 8, 2017 at 5:50 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 9/8/17 6:36 PM, Khem Raj wrote:
->>> This is required since musl does not define them
->>> unlike glibc
->>>
->>> Signed-off-by: Khem Raj <raj.khem@gmail.com>
->>> ---
->>>  include/linux.h | 29 +++++++++++++++++++++++++++++
->>>  1 file changed, 29 insertions(+)
->>>
->>> diff --git a/include/linux.h b/include/linux.h
->>> index 9611a37f..1f6319c6 100644
->>> --- a/include/linux.h
->>> +++ b/include/linux.h
->>> @@ -40,6 +40,35 @@
->>>  # undef fsxattr
->>>  #endif
->>>
->>> +#ifndef loff_t
->>> +#define loff_t off_t
->>
->> I think you should just switch to off64_t in io/copy_file_range.c,
->> the only user of loff_t.
->
-> OK. I was just following the darwin.h lead but I will make this change in v2
->
 
-This seems to work ok with musl, if fcntl.h is included with
--D_GNU_SOURCE which seems to be the case here so I did not do this
-change.
 
->>
->> None of the following double-underscore types are present in
->> xfsprogs since this commit:
->
-> I think it was not a complete commit. I still see issues. I will see if
-> I can fix them
+On Mon, 11 Sep 2017, Sebastian Andrzej Siewior wrote:
 
-I sent another patch that fixes the remaining issues with __[u]int* uses
-and compiles fine with musl.
+> On 2017-09-10 22:06:13 [+0200], Milan Broz wrote:
+> > There is integritysetup tool (part of cryptsetup package) that automates format and mount of dm-integrity devices.
+> > For now in devel git, I expect we will do some release package this month.
+> > (So no need to use dmsetup here.)
+> ah, good, thank. I read the documentation and it mentioned just those
+> steps not a pointer to tool.
+> 
+> > > at some point I expected dm-integrity to check the other disk in RAID.
 
->
->>
->> commit 14f8b6810bd240cc58131483790a099fcf56c073
->> Author: Darrick J. Wong <darrick.wong@oracle.com>
->> Date:   Fri Aug 4 16:33:51 2017 -0500
->>
->>     xfsprogs: remove double-underscore integer types
->>
->>     This is a purely mechanical patch that removes the private
->>     __{u,}int{8,16,32,64}_t typedefs in favor of using the system
->>     {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
->>     the transformation and fix the resulting whitespace and indentation
->>     errors:
->>
->>     s/typedef\t__uint8_t/typedef __uint8_t\t/g
->>     s/typedef\t__uint/typedef __uint/g
->>     s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
->>     s/__uint8_t\t/__uint8_t\t\t/g
->>     s/__uint/uint/g
->>     s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
->>     s/__int/int/g
->>     /^typedef.*int[0-9]*_t;$/d
->>
->>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>     Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
->>     [sandeen: fix whitespace incidentals]
->>     Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->>     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->>
->> currently on the for-next branch of xfsprogs.  You might want to
->> carry that patch until 4.13 is released.
->>
->> (and 4a492e7 xfs: remove double-underscore integer types as well)
->>
->> -Eric
->>
->>> +#endif
->>> +#ifndef __uint8_t
->>> +#define __uint8_t uint8_t
->>> +#endif
->>> +#ifndef __uint16_t
->>> +#define __uint16_t uint16_t
->>> +#endif
->>> +#ifndef __uint32_t
->>> +#define __uint32_t uint32_t
->>> +#endif
->>> +#ifndef __uint64_t
->>> +#define __uint64_t uint64_t
->>> +#endif
->>> +
->>> +#ifndef __int8_t
->>> +#define __int8_t int8_t
->>> +#endif
->>> +#ifndef __int16_t
->>> +#define __int16_t int16_t
->>> +#endif
->>> +#ifndef __int32_t
->>> +#define __int32_t int32_t
->>> +#endif
->>> +#ifndef __int64_t
->>> +#define __int64_t int64_t
->>> +#endif
->>> +
->>>  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
->>>  {
->>>       return ioctl(fd, cmd, p);
->>>
+If you need to check the other disk in case of error, you need to put 
+dm-integrity below the RAID driver - i.e. create two dm-integrity targets 
+on two physical disks and put the RAID target above them.
+
+Mikulas
+
+> > The dm-integrity has no connection to RAID, it will just return EILSEQ (instead of EIO error)
+> > to inform that the error is an data integrity error, not a media (or other) IO error.
+> 
+> okay. Now I have a pointer where to look next.
+> 
+> > Milan
+> 
+> Sebastian
+> 
