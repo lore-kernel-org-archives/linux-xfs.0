@@ -1,77 +1,331 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:42395 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753477AbdIDMTw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 08:19:52 -0400
-Subject: xfs: Uninitialized memory read at xlog_write
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Message-Id: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
-Date: Mon, 4 Sep 2017 21:19:41 +0900
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:57966 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751665AbdIKPtl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Sep 2017 11:49:41 -0400
+Date: Mon, 11 Sep 2017 11:49:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: simplify the xfs_getbmap interface
+Message-ID: <20170911154939.GC13400@bfoster.bfoster>
+References: <20170903155140.17256-1-hch@lst.de>
+ <20170903155140.17256-2-hch@lst.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170903155140.17256-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, dchinner@redhat.com
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-Hello.
+On Sun, Sep 03, 2017 at 05:51:40PM +0200, Christoph Hellwig wrote:
+> Instead of passing in a formatter callback allocate the bmap buffer
+> in the caller and process the entries there.  Additionally replace
+> the in-kernel buffer with a new much smaller structure, and unify
+> the implementation of the different ioctls in a single function.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-I hit kmemcheck splat using linux-next-20170901.
+Looks good to me:
 
-[ 1360.354052] WARNING: kmemcheck: Caught 32-bit read from uninitialized memory (ffffa17673526960)
-[ 1360.354053] 00000000000000006a1004080000000000000000000000000000000000000000
-[ 1360.354059]  u u u u u u u u i i i i i i i i u u u u u u u u u u u u u u u u
-[ 1360.354063]  ^
-[ 1360.354080] RIP: 0010:xlog_write+0x378/0x890 [xfs]
-[ 1360.354080] RSP: 0018:ffffafeac12b7cf0 EFLAGS: 00010202
-[ 1360.354081] RAX: ffffafeac1808234 RBX: 0000000000000038 RCX: 000000000000000c
-[ 1360.354082] RDX: 000000000000000e RSI: ffffa17673526960 RDI: ffffafeac180823c
-[ 1360.354082] RBP: ffffafeac12b7d98 R08: 0000000000000000 R09: 0000000000000000
-[ 1360.354083] R10: ffffa176737f8000 R11: 0000000000000000 R12: 0000000000000038
-[ 1360.354083] R13: 0000000000000002 R14: 0000000000000000 R15: ffffa17673526900
-[ 1360.354084] FS:  0000000000000000(0000) GS:ffffffffb0c30000(0000) knlGS:0000000000000000
-[ 1360.354085] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1360.354085] CR2: ffffa17674a66320 CR3: 0000000135c77003 CR4: 00000000000606f0
-[ 1360.354133]  xlog_write+0x378/0x890 [xfs]
-[ 1360.354142]  xlog_cil_push+0x1f4/0x370 [xfs]
-[ 1360.354151]  xlog_cil_push_work+0xd/0x10 [xfs]
-[ 1360.354207]  process_one_work+0x1cd/0x330
-[ 1360.354208]  worker_thread+0x222/0x3e0
-[ 1360.354209]  kthread+0xfe/0x130
-[ 1360.354212]  ret_from_fork+0x25/0x30
-[ 1360.354213]  0xffffffffffffffff
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-# ./scripts/faddr2line fs/xfs/xfs.ko xlog_write+0x378/0x890
-xlog_write+0x378/0x890:
-__inline_memcpy at /data/linux-next/./arch/x86/include/asm/string_64.h:13
- (inlined by) xlog_write at /data/linux-next/fs/xfs/xfs_log.c:2479
-
-                        ASSERT(copy_len >= 0);
-    3136:       0f 88 77 01 00 00       js     32b3 <xlog_write+0x4d3>
-                        if (copy_len > 0) {
-    313c:       0f 84 d6 02 00 00       je     3418 <xlog_write+0x638>
-                                memcpy(ptr, reg->i_addr + copy_off, copy_len);
-    3142:       48 63 da                movslq %edx,%rbx
-    3145:       49 63 f6                movslq %r14d,%rsi
-    3148:       48 89 c7                mov    %rax,%rdi
-                     "1:\ttestb $1,%b4\n\t"
-                     "je 2f\n\t"
-                     "movsb\n"
-                     "2:"
-                     : "=&c" (d0), "=&D" (d1), "=&S" (d2)
-                     : "0" (n / 4), "q" (n), "1" ((long)to), "2" ((long)from)
-    314b:       48 89 da                mov    %rbx,%rdx
-    314e:       48 03 31                add    (%rcx),%rsi
-    3151:       48 c1 ea 02             shr    $0x2,%rdx
-        asm volatile("rep ; movsl\n\t"
-    3155:       48 89 d1                mov    %rdx,%rcx
-    3158:       f3 a5                   rep movsl %ds:(%rsi),%es:(%rdi)    // <= xlog_write+0x378/0x890
-    315a:       f6 c3 02                test   $0x2,%bl
-    315d:       74 02                   je     3161 <xlog_write+0x381>
-    315f:       66 a5                   movsw  %ds:(%rsi),%es:(%rdi)
-    3161:       f6 c3 01                test   $0x1,%bl
-    3164:       74 01                   je     3167 <xlog_write+0x387>
-    3166:       a4                      movsb  %ds:(%rsi),%es:(%rdi)
-    3167:       8b 55 c4                mov    -0x3c(%rbp),%edx
-        *len -= bytes;
+>  fs/xfs/xfs_bmap_util.c |  38 ++++-----------
+>  fs/xfs/xfs_bmap_util.h |  10 ++--
+>  fs/xfs/xfs_ioctl.c     | 122 ++++++++++++++++++++++++-------------------------
+>  3 files changed, 75 insertions(+), 95 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index a11f4c300643..43cd9a7be15e 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -407,11 +407,11 @@ static int
+>  xfs_getbmap_report_one(
+>  	struct xfs_inode	*ip,
+>  	struct getbmapx		*bmv,
+> -	struct getbmapx		*out,
+> +	struct kgetbmap		*out,
+>  	int64_t			bmv_end,
+>  	struct xfs_bmbt_irec	*got)
+>  {
+> -	struct getbmapx		*p = out + bmv->bmv_entries;
+> +	struct kgetbmap		*p = out + bmv->bmv_entries;
+>  	bool			shared = false, trimmed = false;
+>  	int			error;
+>  
+> @@ -458,12 +458,12 @@ static void
+>  xfs_getbmap_report_hole(
+>  	struct xfs_inode	*ip,
+>  	struct getbmapx		*bmv,
+> -	struct getbmapx		*out,
+> +	struct kgetbmap		*out,
+>  	int64_t			bmv_end,
+>  	xfs_fileoff_t		bno,
+>  	xfs_fileoff_t		end)
+>  {
+> -	struct getbmapx		*p = out + bmv->bmv_entries;
+> +	struct kgetbmap		*p = out + bmv->bmv_entries;
+>  
+>  	if (bmv->bmv_iflags & BMV_IF_NO_HOLES)
+>  		return;
+> @@ -511,47 +511,36 @@ xfs_getbmap_next_rec(
+>   */
+>  int						/* error code */
+>  xfs_getbmap(
+> -	xfs_inode_t		*ip,
+> +	struct xfs_inode	*ip,
+>  	struct getbmapx		*bmv,		/* user bmap structure */
+> -	xfs_bmap_format_t	formatter,	/* format to user */
+> -	void			*arg)		/* formatter arg */
+> +	struct kgetbmap		*out)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	int			iflags = bmv->bmv_iflags;
+> -	int			whichfork, lock, i, error = 0;
+> +	int			whichfork, lock, error = 0;
+>  	int64_t			bmv_end, max_len;
+>  	xfs_fileoff_t		bno, first_bno;
+>  	struct xfs_ifork	*ifp;
+> -	struct getbmapx		*out;
+>  	struct xfs_bmbt_irec	got, rec;
+>  	xfs_filblks_t		len;
+>  	xfs_extnum_t		idx;
+>  
+> +	if (bmv->bmv_iflags & ~BMV_IF_VALID)
+> +		return -EINVAL;
+>  #ifndef DEBUG
+>  	/* Only allow CoW fork queries if we're debugging. */
+>  	if (iflags & BMV_IF_COWFORK)
+>  		return -EINVAL;
+>  #endif
+> -
+>  	if ((iflags & BMV_IF_ATTRFORK) && (iflags & BMV_IF_COWFORK))
+>  		return -EINVAL;
+>  
+> -	if (bmv->bmv_count <= 1)
+> -		return -EINVAL;
+> -	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
+> -		return -ENOMEM;
+> -
+>  	if (bmv->bmv_length < -1)
+>  		return -EINVAL;
+> -
+>  	bmv->bmv_entries = 0;
+>  	if (bmv->bmv_length == 0)
+>  		return 0;
+>  
+> -	out = kmem_zalloc_large(bmv->bmv_count * sizeof(struct getbmapx), 0);
+> -	if (!out)
+> -		return -ENOMEM;
+> -
+>  	if (iflags & BMV_IF_ATTRFORK)
+>  		whichfork = XFS_ATTR_FORK;
+>  	else if (iflags & BMV_IF_COWFORK)
+> @@ -698,15 +687,6 @@ xfs_getbmap(
+>  	xfs_iunlock(ip, lock);
+>  out_unlock_iolock:
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> -
+> -	for (i = 0; i < bmv->bmv_entries; i++) {
+> -		/* format results & advance arg */
+> -		error = formatter(&arg, &out[i]);
+> -		if (error)
+> -			break;
+> -	}
+> -
+> -	kmem_free(out);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 0eaa81dc49be..6cfe747cb142 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -34,10 +34,14 @@ int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+>  int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+>  		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
+>  
+> -/* bmap to userspace formatter - copy to user & advance pointer */
+> -typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *);
+> +struct kgetbmap {
+> +	__s64		bmv_offset;	/* file offset of segment in blocks */
+> +	__s64		bmv_block;	/* starting block (64-bit daddr_t)  */
+> +	__s64		bmv_length;	/* length of segment, blocks	    */
+> +	__s32		bmv_oflags;	/* output flags */
+> +};
+>  int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
+> -		xfs_bmap_format_t formatter, void *arg);
+> +		struct kgetbmap *out);
+>  
+>  /* functions in xfs_bmap.c that are only needed by xfs_bmap_util.c */
+>  int	xfs_bmap_extsize_align(struct xfs_mount *mp, struct xfs_bmbt_irec *gotp,
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 82d14fe6ed95..ed35d322ed59 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1548,17 +1548,26 @@ xfs_ioc_setxflags(
+>  	return error;
+>  }
+>  
+> -STATIC int
+> -xfs_getbmap_format(void **ap, struct getbmapx *bmv)
+> +static bool
+> +xfs_getbmap_format(
+> +	struct kgetbmap		*p,
+> +	struct getbmapx __user	*u,
+> +	size_t			recsize)
+>  {
+> -	struct getbmap __user	*base = (struct getbmap __user *)*ap;
+> -
+> -	/* copy only getbmap portion (not getbmapx) */
+> -	if (copy_to_user(base, bmv, sizeof(struct getbmap)))
+> -		return -EFAULT;
+> -
+> -	*ap += sizeof(struct getbmap);
+> -	return 0;
+> +	if (put_user(p->bmv_offset, &u->bmv_offset) ||
+> +	    put_user(p->bmv_block, &u->bmv_block) ||
+> +	    put_user(p->bmv_length, &u->bmv_length) ||
+> +	    put_user(0, &u->bmv_count) ||
+> +	    put_user(0, &u->bmv_entries))
+> +		return false;
+> +	if (recsize < sizeof(struct getbmapx))
+> +		return true;
+> +	if (put_user(0, &u->bmv_iflags) ||
+> +	    put_user(p->bmv_oflags, &u->bmv_oflags) ||
+> +	    put_user(0, &u->bmv_unused1) ||
+> +	    put_user(0, &u->bmv_unused2))
+> +		return false;
+> +	return true;
+>  }
+>  
+>  STATIC int
+> @@ -1568,68 +1577,57 @@ xfs_ioc_getbmap(
+>  	void			__user *arg)
+>  {
+>  	struct getbmapx		bmx = { 0 };
+> -	int			error;
+> +	struct kgetbmap		*buf;
+> +	size_t			recsize;
+> +	int			error, i;
+>  
+> -	/* struct getbmap is a strict subset of struct getbmapx. */
+> -	if (copy_from_user(&bmx, arg, offsetof(struct getbmapx, bmv_iflags)))
+> -		return -EFAULT;
+> -
+> -	if (bmx.bmv_count < 2)
+> +	switch (cmd) {
+> +	case XFS_IOC_GETBMAPA:
+> +		bmx.bmv_iflags = BMV_IF_ATTRFORK;
+> +		/*FALLTHRU*/
+> +	case XFS_IOC_GETBMAP:
+> +		if (file->f_mode & FMODE_NOCMTIME)
+> +			bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
+> +		/* struct getbmap is a strict subset of struct getbmapx. */
+> +		recsize = sizeof(struct getbmap);
+> +		break;
+> +	case XFS_IOC_GETBMAPX:
+> +		recsize = sizeof(struct getbmapx);
+> +		break;
+> +	default:
+>  		return -EINVAL;
+> +	}
+>  
+> -	bmx.bmv_iflags = (cmd == XFS_IOC_GETBMAPA ? BMV_IF_ATTRFORK : 0);
+> -	if (file->f_mode & FMODE_NOCMTIME)
+> -		bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
+> -
+> -	error = xfs_getbmap(XFS_I(file_inode(file)), &bmx, xfs_getbmap_format,
+> -			    (__force struct getbmap *)arg+1);
+> -	if (error)
+> -		return error;
+> -
+> -	/* copy back header - only size of getbmap */
+> -	if (copy_to_user(arg, &bmx, sizeof(struct getbmap)))
+> -		return -EFAULT;
+> -	return 0;
+> -}
+> -
+> -STATIC int
+> -xfs_getbmapx_format(void **ap, struct getbmapx *bmv)
+> -{
+> -	struct getbmapx __user	*base = (struct getbmapx __user *)*ap;
+> -
+> -	if (copy_to_user(base, bmv, sizeof(struct getbmapx)))
+> -		return -EFAULT;
+> -
+> -	*ap += sizeof(struct getbmapx);
+> -	return 0;
+> -}
+> -
+> -STATIC int
+> -xfs_ioc_getbmapx(
+> -	struct xfs_inode	*ip,
+> -	void			__user *arg)
+> -{
+> -	struct getbmapx		bmx;
+> -	int			error;
+> -
+> -	if (copy_from_user(&bmx, arg, sizeof(bmx)))
+> +	if (copy_from_user(&bmx, arg, recsize))
+>  		return -EFAULT;
+>  
+>  	if (bmx.bmv_count < 2)
+>  		return -EINVAL;
+> +	if (bmx.bmv_count > ULONG_MAX / recsize)
+> +		return -ENOMEM;
+>  
+> -	if (bmx.bmv_iflags & (~BMV_IF_VALID))
+> -		return -EINVAL;
+> +	buf = kmem_zalloc_large(bmx.bmv_count * sizeof(*buf), 0);
+> +	if (!buf)
+> +		return -ENOMEM;
+>  
+> -	error = xfs_getbmap(ip, &bmx, xfs_getbmapx_format,
+> -			    (__force struct getbmapx *)arg+1);
+> +	error = xfs_getbmap(XFS_I(file_inode(file)), &bmx, buf);
+>  	if (error)
+> -		return error;
+> +		goto out_free_buf;
+>  
+> -	/* copy back header */
+> -	if (copy_to_user(arg, &bmx, sizeof(struct getbmapx)))
+> -		return -EFAULT;
+> +	error = -EFAULT;
+> +	if (copy_to_user(arg, &bmx, recsize))
+> +		goto out_free_buf;
+> +	arg += recsize;
+> +
+> +	for (i = 0; i < bmx.bmv_entries; i++) {
+> +		if (!xfs_getbmap_format(buf + i, arg, recsize))
+> +			goto out_free_buf;
+> +		arg += recsize;
+> +	}
+>  
+> +	error = 0;
+> +out_free_buf:
+> +	kmem_free(buf);
+>  	return 0;
+>  }
+>  
+> @@ -1886,10 +1884,8 @@ xfs_file_ioctl(
+>  
+>  	case XFS_IOC_GETBMAP:
+>  	case XFS_IOC_GETBMAPA:
+> -		return xfs_ioc_getbmap(filp, cmd, arg);
+> -
+>  	case XFS_IOC_GETBMAPX:
+> -		return xfs_ioc_getbmapx(ip, arg);
+> +		return xfs_ioc_getbmap(filp, cmd, arg);
+>  
+>  	case FS_IOC_GETFSMAP:
+>  		return xfs_ioc_getfsmap(ip, arg);
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
