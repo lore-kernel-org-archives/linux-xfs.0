@@ -1,60 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:61348 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751404AbdILPiX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Sep 2017 11:38:23 -0400
-Date: Tue, 12 Sep 2017 09:38:20 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-Message-ID: <20170912153820.GA5000@linux.intel.com>
-References: <20170908152805.GA16646@linux.intel.com>
- <20170908212153.14880-1-ross.zwisler@linux.intel.com>
- <20170912064411.GR10621@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:51033 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751065AbdIKIrj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Sep 2017 04:47:39 -0400
+Date: Mon, 11 Sep 2017 10:47:33 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/9] add ext4 per-inode DAX flag
+Message-ID: <20170911084733.GB7120@quack2.suse.cz>
+References: <f856f8fd-3697-adb1-198b-a9ae2fce405f@redhat.com>
+ <20170906170754.GB17663@linux.intel.com>
+ <CAPcyv4hfhDT9NFRXL+MT5epiqWHJ0RLraV4P3CZ4EJM6L-s0Nw@mail.gmail.com>
+ <20170907211303.GA23212@linux.intel.com>
+ <5F58D3F5-D93B-4648-AE01-8A46956FBB4B@dilger.ca>
+ <20170907215148.GA12669@linux.intel.com>
+ <20170907221201.GZ17782@dastard>
+ <20170907221900.GB12669@linux.intel.com>
+ <20170907232543.GB17782@dastard>
+ <20170908153913.jjhzogjs5zpeea5v@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170912064411.GR10621@dastard>
+In-Reply-To: <20170908153913.jjhzogjs5zpeea5v@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Dave Chinner <david@fromorbit.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Andreas Dilger <adilger@dilger.ca>, Dan Williams <dan.j.williams@intel.com>, Eric Sandeen <sandeen@redhat.com>, Lukas Czerner <lczerner@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, linux-ext4 <linux-ext4@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Sep 12, 2017 at 04:44:11PM +1000, Dave Chinner wrote:
-> On Fri, Sep 08, 2017 at 03:21:53PM -0600, Ross Zwisler wrote:
-> > This adds a regression test for the following kernel patch:
+On Fri 08-09-17 11:39:13, Ted Tso wrote:
+> On Fri, Sep 08, 2017 at 09:25:43AM +1000, Dave Chinner wrote:
+> > > Okay, so other ideas (which you have also probably already though of) include:
+> > > 
+> > > 1) Just return -EBUSY if anyone tries to change the DAX flag of an inode with
+> > > open mappings or any open file handles.
 > > 
-> >   xfs: always use DAX if mount option is used
-> > 
-> > This test will also pass with kernel v4.14-rc1 and beyond because the XFS
-> > DAX I/O mount option has been disabled (but not removed), so the
-> > "chattr -x" to turn off DAX doesn't actually do anything.
-> > 
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > Suggested-by: Christoph Hellwig <hch@infradead.org>
-> .....
-> > +pgsize=`$here/src/feature -s`
-> > +
-> > +# disable tracing, clear the existing trace buffer and turn on dax tracepoints
-> > +echo 0 > /sys/kernel/debug/tracing/tracing_on
-> > +echo > /sys/kernel/debug/tracing/trace
-> > +echo 1 > /sys/kernel/debug/tracing/events/fs_dax/enable
-> > +
-> > +# enable tracing for our one mmap I/O, then see if dax was used
-> > +echo 1 > /sys/kernel/debug/tracing/tracing_on
-> > +xfs_io  -t -c "truncate $pgsize" \
-> > +	-c "chattr -x" \
-> > +	-c "mmap -r 0 $pgsize" -c "mread 0 $pgsize" -c "munmap" \
-> > +	-f $SCRATCH_MNT/testfile >> $seqres.full
-> > +echo 0 > /sys/kernel/debug/tracing/tracing_on
+> > You have to have an open fd to change the flag. :)
 > 
-> So what happens when the user is already tracing the test to
-> find a bug and the test turns all their tracing off?
-> 
-> Regardless of this screwing up developer bug triage, do we really
-> want to add a dependency on kernel tracing into the test harness?
+> What if we only allow the S_DAX flag to be *set*, when i_size and
+> i_blocks is zero?  We could also require that only one file descriptor
+> be open against the inode, and that it be opened O_RDONLY.
 
-Yep, these are both valid concerns.  I ended up trying to get around both of
-them by using perf instead in my v2, as suggested by Dan:
+We could do something like that but IMHO it will be a pain to use (e.g.
+think how difficult it would be to switch your existing database to use DAX
+for data files). We can make transition reliable whenever
+inode->i_mapping->i_mmap RB tree is empty (effectively: whenever the file
+is not mmaped). And that should be relaxed enough for most usecases... But
+I agree that it will be somewhat tricky to prevent creation of new mappings
+while we are switching S_DAX flag so it needs more though.
 
-https://www.spinics.net/lists/linux-xfs/msg10420.html
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
