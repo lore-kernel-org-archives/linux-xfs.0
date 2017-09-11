@@ -1,31 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47728 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757210AbdIICG0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Sep 2017 22:06:26 -0400
-Subject: Re: [PATCH] xfsprogs: remove remaining double-underscore integer
- types
-References: <20170909015832.32424-1-raj.khem@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0067e494-4404-f808-ff72-ee89ec60aecb@sandeen.net>
-Date: Fri, 8 Sep 2017 21:06:25 -0500
+Received: from bombadil.infradead.org ([65.50.211.133]:43863 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750920AbdIKGhb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 02:37:31 -0400
+Date: Sun, 10 Sep 2017 23:37:29 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Support for data CRC
+Message-ID: <20170911063729.GA10489@infradead.org>
+References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+ <20170821230232.GS10621@dastard>
+ <20170822055136.GA2697@infradead.org>
+ <20170822111322.jt66qlzvalsiju6n@breakpoint.cc>
+ <20170823061931.GA30488@infradead.org>
+ <20170910195026.7ftxcgmwyri5a5fz@breakpoint.cc>
 MIME-Version: 1.0
-In-Reply-To: <20170909015832.32424-1-raj.khem@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170910195026.7ftxcgmwyri5a5fz@breakpoint.cc>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>, linux-xfs@vger.kernel.org
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On 9/8/17 8:58 PM, Khem Raj wrote:
->  This is a purely mechanical patch that removes the private
->     __{u,}int{8,16,32,64}_t use in favor of using the system
->     provided {u,}int{8,16,32,64}_t typedefs.
+On Sun, Sep 10, 2017 at 09:50:27PM +0200, Sebastian Andrzej Siewior wrote:
+> On 2017-08-22 23:19:31 [-0700], Christoph Hellwig wrote:
+> > as part of the reflink feature.  These out of place writes are
+> > a requirement to implement data checksums, as otherwise your data
+> > and checksum can not be updated atomically.  Everything else is
+> > beyond that at this point is vapourware.  We'd have to decided
+> So using the journal for atomic updates doesn't work then. Which means
+> fragmentation unavoidable.
 
-As mentioned, this is already present on the for-next branch of xfsprogs-dev:
-
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?h=for-next&id=4a492e72515509ee702286a42afe7d8f89d37636
-
--Eric
+Well, in theory you could also do data journalling - but in the end
+out of place writes are probably going to be more efficient, and at
+least for XFS also area already implemented.
