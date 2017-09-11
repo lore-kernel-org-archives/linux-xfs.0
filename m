@@ -1,87 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:13772 "EHLO
-        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752132AbdIHRSm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2017 13:18:42 -0400
-From: "Lu, Qian" <luqia@amazon.com>
-Subject: Re: XFS mounted with 'discard' option - deleting fio test files slow
-Date: Fri, 8 Sep 2017 17:17:07 +0000
-Message-ID: <506FE85F-21F5-444C-876D-8C25DBB442EE@amazon.com>
-References: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
-In-Reply-To: <42228B9C-D2D3-4B9C-BFCF-BC9AED4A9678@amazon.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <19B2EAB8231DD34E8D9B2B39211FE6DD@amazon.com>
-Content-Transfer-Encoding: base64
+Received: from zeniv.linux.org.uk ([195.92.253.2]:44190 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750945AbdIKUHR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 16:07:17 -0400
+Date: Mon, 11 Sep 2017 21:07:13 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: iov_iter_pipe warning.
+Message-ID: <20170911200713.GK5426@ZenIV.linux.org.uk>
+References: <20170908010441.GZ5426@ZenIV.linux.org.uk>
+ <20170910010756.hnmb233ch7pmnrlx@codemonkey.org.uk>
+ <20170910025712.GC5426@ZenIV.linux.org.uk>
+ <20170910211110.GM17782@dastard>
+ <20170910211907.GF5426@ZenIV.linux.org.uk>
+ <20170910220814.GN17782@dastard>
+ <20170910230723.GG5426@ZenIV.linux.org.uk>
+ <20170911003113.GO17782@dastard>
+ <20170911033222.GI5426@ZenIV.linux.org.uk>
+ <20170911064440.GP17782@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170911064440.GP17782@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, amazon-linux-kernel <amazon-linux-kernel@amazon.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Jones <davej@codemonkey.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-QWRkaW5nIGFtYXpvbi1saW51eC1rZXJuZWxAYW1hem9uLmNvbQ0KDQpPbiA5LzcvMTcsIDExOjIy
-IEFNLCAiTHUsIFFpYW4iIDxsdXFpYUBhbWF6b24uY29tPiB3cm90ZToNCg0KICAgIEhpIFhGUyBt
-YWlsaW5nIGxpc3QsDQogICAgIA0KICAgIFJlY2VudGx5IHdlIHJlY2VpdmVkIGEgYnVnIHJlcG9y
-dCBpbiB0aGUgWEZTIGZpbGVzeXN0ZW0gd2l0aCAnZGlzY2FyZCcgb3B0aW9uLiBJIGhhdmUgYmVl
-biBhYmxlIHRvIHJlcHJvZHVjZSB0aGlzIGlzc3VlLiBJIHVzZWQgWEZTIGZpbGVzeXN0ZW0gdG8g
-Zm9ybWF0IE5WTWUgU1NEIGFuZCBtb3VudGVkIHdpdGggJ2Rpc2NhcmQnIG9wdGlvbi4gV2hlbiBJ
-IHRyaWVkIHRvIGRlbGV0ZSB0aGUgdGVzdCBmaW8gZmlsZXMsIHRoZSBzZXNzaW9uIHRvb2sgbG9u
-ZyB0aW1lLiBUaGlzIGlzc3VlIGlzIGJhc2VkIG9uIExpbnV4IDQuOSBzdGFibGUgdHJlZS4gSSBo
-YXZlIGFsc28gcmVwZWF0ZWQgdGhpcyB0ZXN0IHdpdGggTGludXggNC4xMywgNC4xMiwgYW5kIHdl
-IGFyZSBmYWNpbmcgdGhlIHNhbWUgaXNzdWUuIFRlc3RzIHdlcmUgcmVwZWF0ZWQgc2V2ZXJhbCB0
-aW1lcyBhbmQgaXQgd2FzIGNvbnNpc3RlbnQuDQogICAgIA0KICAgIFBsZWFzZSBzZWUgZGV0YWls
-cyBiZWxvdy4NCiAgICAgDQogICAgMS4gS2VybmVsIHZlcnNpb246IExpbnV4IGlwLTE3Mi0zMS02
-LTI0MyA0LjkuMzItMTUuNDEuYW16bjEueDg2XzY0ICMxIFNNUCBUaHUgSnVuIDIyIDA2OjIwOjU0
-IFVUQyAyMDE3IHg4Nl82NCB4ODZfNjQgeDg2XzY0IEdOVS9MaW51eA0KICAgICANCiAgICAjIGZp
-byAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFuZHdyaXRlIC0tYnM9NGsg
-LS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQogICAgLS0+IEludGVycnVw
-dCB3aXRoIEN0cmwrQw0KICAgICMgdGltZSBybSAtcmYgZmlvX3Rlc3RfZmlsZS4qDQogICAgLS0+
-IFRoZSBzZXNzaW9uIGhhbmdzIGFuZCBpbiAnYmxvY2tlZCcgc3RhdGUNCiAgICAkIGRtZXNnDQog
-ICAgLi4uDQogICAgWyAgNDkyLjMyOTg5Nl0gSU5GTzogdGFzayBybTo5MjMxIGJsb2NrZWQgZm9y
-IG1vcmUgdGhhbiAxMjAgc2Vjb25kcy4NCiAgICAuLi4NCiAgICAgDQogICAgVGhlbiBJIHRyaWVk
-IHRvIGJhY2twb3J0IHNvbWUgcGF0Y2hlcyBhbmQgcmVwZWF0ZWQgdGhlIHRlc3QuIFRoZSBpc3N1
-ZSBoYXMgYmVlbiBpbXByb3ZlZC4gRXZlbnR1YWxseSAncm0nIGNvbW1hbmQgY29tcGxldGVkIGJ1
-dCB0b29rIGxvbmcgdGltZSgybWluKS4NCiAgICAgDQogICAgICAqICBCYWNrcG9ydGVkIHBhdGNo
-OiA0NTYwZTc4IHhmczogZG9uJ3QgYmxvY2sgdGhlIGxvZyBjb21taXQgaGFuZGxlciBmb3IgZGlz
-Y2FyZHMNCiAgICAgDQogICAgICMgZmlvIC0tbmFtZSBmaW9fdGVzdF9maWxlIC0tZGlyZWN0PTEg
-LS1ydz1yYW5kd3JpdGUgLS1icz00ayAtLXNpemU9NUcgLS1udW1qb2JzPTggLS1ncm91cF9yZXBv
-cnRpbmcNCiAgICAgLS0+IEludGVycnVwdCB3aXRoIEN0cmwrQw0KICAgICAjIHRpbWUgcm0gLXJm
-IGZpb190ZXN0X2ZpbGUuKg0KICAgICByZWFsICAybTIuMjQycw0KICAgICB1c2VyICAwbTAuMDAw
-cw0KICAgICBzeXMgICAwbTI1LjUyNHMNCiAgICAgDQogICAgIA0KICAgIDIuICAgIFdpdGggTGlu
-dXggNC4xMiBhbmQgNC4xMy4wLXJjMSwgdGhlIGlzc3VlIGhhcyBiZWVuIGltcHJvdmVkIGFuZCB0
-aGUgY29tbWFuZCBpcyBub3Qgc3R1Y2suIEJ1dCAncm0nIGNvbW1hbmQgc3RpbGwgdGFrZXMgbG9u
-ZyB0aW1lIChtb3JlIHRoYW4gMW1pbikuIFBsZWFzZSBzZWUgZGV0YWlscyBiZWxvdy4NCiAgICAg
-DQogICAgS2VybmVsIHZlcnNpb246IExpbnV4IHZlcnNpb24gNC4xMy4wLXJjMSsgKGVjMi11c2Vy
-QGlwLTE3Mi0zMS0yMS0yNSkgKGdjYyB2ZXJzaW9uIDQuOC4zIDIwMTQwOTExIChSZWQgSGF0IDQu
-OC4zLTkpIChHQ0MpKSAjMSBTTVAgRnJpIEp1bCAyMSAxNzozMTowNiBVVEMgMjAxNw0KICAgICAN
-CiAgICAjIGZpbyAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFuZHdyaXRl
-IC0tYnM9NGsgLS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQogICAgLS0+
-IEludGVycnVwdCBhdCBhYm91dCAzNyUNCiAgICAjIHRpbWUgcm0gLXJmIGZpb190ZXN0X2ZpbGUu
-Kg0KICAgIHJlYWwgIDFtNTcuOTEycw0KICAgIHVzZXIgIDBtMC4wMDBzDQogICAgc3lzICAgMG0y
-OC44MTBzDQogICAgIA0KICAgIENvbXBhcmUgdGhpcyByZXN1bHQgd2l0aDoNCiAgICAgICAgYSkg
-IFhGUyBtb3VudGVkIHdpdGggJ25vZGlzY2FyZCcgb3B0aW9uOiBJdCB0b29rIGxlc3MgdGhhbiAx
-bWluIHRvIHJ1biAncm0nIGNvbW1hbmQuDQogICAgICAgICANCiAgICAgICAgICMgZmlvIC0tbmFt
-ZSBmaW9fdGVzdF9maWxlIC0tZGlyZWN0PTEgLS1ydz1yYW5kd3JpdGUgLS1icz00ayAtLXNpemU9
-NUcgLS1udW1qb2JzPTggLS1ncm91cF9yZXBvcnRpbmcNCiAgICAgICAgLS0+IEludGVycnVwdCBh
-dCBhYm91dCAzOSUNCiAgICAgICAgICMgdGltZSBybSAtcmYgZmlvX3Rlc3RfZmlsZS4qDQogICAg
-ICAgIHJlYWwgICAgIDBtMzEuMTc2cw0KICAgICAgICAgdXNlciAgICAgMG0wLjAwMHMNCiAgICAg
-ICAgIHN5cyAgICAgIDBtMzAuMDA1cw0KICAgICANCiAgICAgICAgIGIpICAgIEVYVDQgZmlsZSBz
-eXN0ZW0gbW91bnRlZCB3aXRoICdkaXNjYXJkJyBvcHRpb246IEl0IG9ubHkgdG9vayBhYm91dCBz
-ZXZlcmFsIHNlY29uZHMgdG8gcnVuICdybScgY29tbWFuZC4NCiAgICAgICAgICANCiAgICAgICAg
-ICAjIGZpbyAtLW5hbWUgZmlvX3Rlc3RfZmlsZSAtLWRpcmVjdD0xIC0tcnc9cmFuZHdyaXRlIC0t
-YnM9NGsgLS1zaXplPTVHIC0tbnVtam9icz04IC0tZ3JvdXBfcmVwb3J0aW5nDQogICAgICAgICAt
-LT4gSW50ZXJydXB0IGF0IGFib3V0IDM2LjIlDQogICAgICAgICAjIHRpbWUgcm0gLXJmIGZpb190
-ZXN0X2ZpbGUuKg0KICAgICAgICAgcmVhbCAgICAgMG00LjY2MXMNCiAgICAgICAgIHVzZXIgICAg
-IDBtMC4wMDBzDQogICAgICAgICBzeXMgICAgICAwbTQuNjU3cw0KICAgICANCiAgICBQbGVhc2Ug
-bm90ZSBpZiBJIHdhaXQgZm9yICdmaW8nIGNvbW1hbmQgMTAwJSBkb25lLCAncm0nIGNvbW1hbmQg
-dG9vayBsZXNzIHRoYW4gMXMgKDBtMC4wMDFzKS4NCiAgICAgDQogICAgIA0KICAgIDMuICAgU2hl
-bGwgc2NyaXB0IHdoaWNoIHRyaWdnZXJzIHRoZSBwcm9ibGVtDQogICAgIA0KICAgICAgc3VkbyBz
-dSAtDQogICAgICB5dW0gaW5zdGFsbCB4ZnNwcm9ncyBmaW8gLXkNCiAgICAgIG1rZnMueGZzIC1L
-IC1mIC1zIHNpemU9NDA5NiAvZGV2L252bWUwbjENCiAgICAgIG1rZGlyIC1wIC9tZWRpYS9kaXNr
-MQ0KICAgICAgbW91bnQgLW8gZGlzY2FyZCAvZGV2L252bWUwbjEgL21lZGlhL2Rpc2sxDQogICAg
-ICBjZCAvbWVkaWEvZGlzazEvDQogICAgICBmaW8gLS1uYW1lIGZpb190ZXN0X2ZpbGUgLS1kaXJl
-Y3Q9MSAtLXJ3PXJhbmR3cml0ZSAtLWJzPTRrIC0tc2l6ZT01RyAtLW51bWpvYnM9OCAtLWdyb3Vw
-X3JlcG9ydGluZw0KICAgICAgICMgSW50ZXJydXB0IHdpdGggQ3RybCtDDQogICAgICB0aW1lIHJt
-IC1yZiBmaW9fdGVzdF9maWxlLioNCiAgICAgDQogICAgIA0KICAgIEJlc3QgUmVnYXJkcywNCiAg
-ICBRaWFuIEx1DQogICAgDQogICAgDQogICAgDQoNCg==
+On Mon, Sep 11, 2017 at 04:44:40PM +1000, Dave Chinner wrote:
+
+> > iov_iter_get_pages() for pipe-backed destination does page allocation
+> > and inserts freshly allocated pages into pipe.
+> 
+> Oh, it's hidden more layers down than the code implied I needed to
+> look.
+> 
+> i.e. there's no obvious clue in the function names that there is
+> allocation happening in these paths (get_pipe_pages ->
+> __get_pipe_pages -> push_pipe -> page allocation). The function
+> names imply it's getting a reference to pages (like
+> (get_user_pages()) and the fact it does allocation is inconsistent
+> with it's naming.  Worse, when push_pipe() fails to allocate pages,
+> the error __get_pipe_pages() returns is -EFAULT, which further hides
+> the fact push_pipe() does memory allocation that can fail....
+> 
+> And then there's the companion interface that implies page
+> allocation: pipe_get_pages_alloc(). Which brings me back to there
+> being no obvious clue while reading the code from the top down that
+> pages are being allocated in push_pipe()....
+> 
+> Comments and documentation for this code would help, but I can't
+> find any of that, either. Hence I assumed naming followed familiar
+> patterns and so mistook these interfaces being one that does page
+> allocation and the other for getting references to pre-existing
+> pages.....
+
+_NONE_ of those is a public interface - they are all static, to start
+with.
+
+The whole damn point is to have normal ->read_iter() work for read-to-pipe
+without changes.  That's why -EFAULT as error (rather than some other
+mechanism for saying that pipe is full), etc.
+
+Filesystem should *not* be changed to use that.  At all.  As far as it is
+concerned,
+	copy_to_iter()
+	copy_page_to_iter()
+	iov_iter_get_pages()
+	iov_iter_get_pages_alloc()
+	iov_iter_advance()
+are black boxes.
+
+Note that one of the bugs there applies to normal read() as well - if you
+are reading from a hole in file into an array with a read-only page in
+the middle, you want a short read.  Ignoring return value from iov_iter_zero()
+is wrong for iovec-backed case as well as for pipes.
+
+Another one manages to work for iovec-backed case, albeit with rather odd
+resulting semantics.  readv(2) is underspecified (to put it politely) enough
+for compliance, but it's still bloody strange.  Namely, if you have a contiguous
+50Mb chunk of file on disk and run into e.g. a failure to fault the destination
+pages in halfway through that extent, you act as if *nothing* in the damn thing
+had been read, nevermind that 25Mb had been actually already read and that had
+there been a discontinuity 5Mb prior, the first 20Mb would've been reported
+read just fine.
+
+Strictly speaking that behaviour doesn't violate POSIX.  It is, however,
+atrocious from the QoI standpoint, and for no good reason whatsoever.
+It's quite easy to do better, and doing so would've eliminated the problems
+in pipe-backed case as well (see below).  In addition to that, I would
+consider teaching bio_iov_iter_get_pages() to take the maximal bio size
+as an explict argument.  That would've killed the need of copying the
+iterator and calling iov_iter_advance() in iomap_dio_actor() at all.
+Anyway, the minimal candidate fix follows; it won't do anything about
+the WARN_ON() in there, seeing that those are deliberate "program is
+doing something bogus" things, but it should eliminate all crap with
+->splice_read() misreporting the amount of data it has copied.
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 269b24a01f32..836fe27b00e2 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -832,6 +832,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	struct bio *bio;
+ 	bool need_zeroout = false;
+ 	int nr_pages, ret;
++	size_t copied = 0;
+ 
+ 	if ((pos | length | align) & ((1 << blkbits) - 1))
+ 		return -EINVAL;
+@@ -843,7 +844,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		/*FALLTHRU*/
+ 	case IOMAP_UNWRITTEN:
+ 		if (!(dio->flags & IOMAP_DIO_WRITE)) {
+-			iov_iter_zero(length, dio->submit.iter);
++			length = iov_iter_zero(length, dio->submit.iter);
+ 			dio->size += length;
+ 			return length;
+ 		}
+@@ -880,6 +881,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	}
+ 
+ 	do {
++		size_t n;
+ 		if (dio->error)
+ 			return 0;
+ 
+@@ -897,17 +899,21 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 			return ret;
+ 		}
+ 
++		n = bio->bi_iter.bi_size;
+ 		if (dio->flags & IOMAP_DIO_WRITE) {
+ 			bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
+-			task_io_account_write(bio->bi_iter.bi_size);
++			task_io_account_write(n);
+ 		} else {
+ 			bio_set_op_attrs(bio, REQ_OP_READ, 0);
+ 			if (dio->flags & IOMAP_DIO_DIRTY)
+ 				bio_set_pages_dirty(bio);
+ 		}
+ 
+-		dio->size += bio->bi_iter.bi_size;
+-		pos += bio->bi_iter.bi_size;
++		iov_iter_advance(dio->submit.iter, n);
++
++		dio->size += n;
++		pos += n;
++		copied += n;
+ 
+ 		nr_pages = iov_iter_npages(&iter, BIO_MAX_PAGES);
+ 
+@@ -923,9 +929,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		if (pad)
+ 			iomap_dio_zero(dio, iomap, pos, fs_block_size - pad);
+ 	}
+-
+-	iov_iter_advance(dio->submit.iter, length);
+-	return length;
++	return copied;
+ }
+ 
+ ssize_t
