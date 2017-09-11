@@ -1,40 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34762 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750788AbdIJAaq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Sep 2017 20:30:46 -0400
-Received: by mail-pg0-f68.google.com with SMTP id v82so2988836pgb.1
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Sep 2017 17:30:46 -0700 (PDT)
-From: Khem Raj <raj.khem@gmail.com>
-Subject: [PATCH 1/5] Include fcntl.h for O_EXCL
-Date: Sat,  9 Sep 2017 17:30:31 -0700
-Message-Id: <20170910003035.14285-1-raj.khem@gmail.com>
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:38429 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751153AbdIKOuO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Sep 2017 10:50:14 -0400
+Subject: Re: [PATCH] iomap: fix integer truncation issues in the zeroing and
+ dirtying helpers
+References: <20170811151805.22896-1-hch@lst.de>
+ <f4d52f4d8b1cb6dfb91acaa8612d4bba@molgen.mpg.de>
+ <20170813090855.GA32112@lst.de>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Message-ID: <34a29739-2f5b-a197-d047-e23be17b5086@molgen.mpg.de>
+Date: Mon, 11 Sep 2017 16:50:12 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170813090855.GA32112@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Khem Raj <raj.khem@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, stockhausen@collogia.de, it+linux-nfs@molgen.mpg.de
 
-Fix
-error: 'O_CREAT' undeclared (first use in this function)
+Dear Christoph,
 
-Signed-off-by: Khem Raj <raj.khem@gmail.com>
----
- invutil/invidx.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/invutil/invidx.c b/invutil/invidx.c
-index 67efdf7..325a9a1 100644
---- a/invutil/invidx.c
-+++ b/invutil/invidx.c
-@@ -27,6 +27,7 @@
- #include <sys/stat.h>
- #include <string.h>
- #include <uuid/uuid.h>
-+#include <fcntl.h>
- 
- #include "types.h"
- #include "mlog.h"
--- 
-2.14.1
+On 08/13/17 11:08, Christoph Hellwig wrote:
 
+> I'm overdue doing another XFS stable backport batch, and I will
+> include this patch.
+
+If I am not mistaken, this has not been picked up yet for the stable series.
+
+```
+$ git tag --contains e28ae8e428fefe2facd72cea9f29906ecb9c861d
+v4.13
+v4.13-rc6
+v4.13-rc7
+v4.13.1
+$ git log --grep e28ae8e428fefe2facd72cea9f29906ecb9c861d v4.9.48
+$
+```
+
+Do you want me to submit it for inclusion?
+
+
+Kind regards,
+
+Paul
