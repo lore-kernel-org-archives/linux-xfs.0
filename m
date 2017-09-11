@@ -1,152 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57655 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752020AbdIQVGk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:40 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/25] xfs: refactor buffer logging into buffer dirtying helper
-Date: Sun, 17 Sep 2017 14:06:21 -0700
-Message-Id: <20170917210631.10725-16-hch@lst.de>
-In-Reply-To: <20170917210631.10725-1-hch@lst.de>
-References: <20170917210631.10725-1-hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20741 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750940AbdIKGwi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 02:52:38 -0400
+Date: Mon, 11 Sep 2017 16:52:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Support for data CRC
+Message-ID: <20170911065217.GQ17782@dastard>
+References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+ <20170821230232.GS10621@dastard>
+ <20170822055136.GA2697@infradead.org>
+ <20170822111322.jt66qlzvalsiju6n@breakpoint.cc>
+ <20170823061931.GA30488@infradead.org>
+ <20170910195026.7ftxcgmwyri5a5fz@breakpoint.cc>
+ <20170911063729.GA10489@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170911063729.GA10489@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Sun, Sep 10, 2017 at 11:37:29PM -0700, Christoph Hellwig wrote:
+> On Sun, Sep 10, 2017 at 09:50:27PM +0200, Sebastian Andrzej Siewior wrote:
+> > On 2017-08-22 23:19:31 [-0700], Christoph Hellwig wrote:
+> > > as part of the reflink feature.  These out of place writes are
+> > > a requirement to implement data checksums, as otherwise your data
+> > > and checksum can not be updated atomically.  Everything else is
+> > > beyond that at this point is vapourware.  We'd have to decided
+> > So using the journal for atomic updates doesn't work then. Which means
+> > fragmentation unavoidable.
+> 
+> Well, in theory you could also do data journalling - but in the end
+> out of place writes are probably going to be more efficient, and at
+> least for XFS also area already implemented.
 
-commit 9684010d38eccda733b61106765e9357cf436f65 upstream.
+>From a quick look at the dm-integrity code, it looks like it is just
+a journalling block device. i.e. it logs both the data and the
+calculated CRC in it's internal journal before writing the data and
+CRC to their separate destinations so it can avoid inconsistent
+data/CRCs if a crash occurs.
 
-xfs_trans_log_buf() is responsible for logging the dirty segments of
-a buffer along with setting all of the necessary state on the
-transaction, buffer, bli, etc., to ensure that the associated items
-are marked as dirty and prepared for I/O. We have a couple use cases
-that need to to dirty a buffer in a transaction without actually
-logging dirty ranges of the buffer.  One existing use case is
-ordered buffers, which are currently logged with arbitrary ranges to
-accomplish this even though the content of ordered buffers is never
-written to the log. Another pending use case is to relog an already
-dirty buffer across rolled transactions within the deferred
-operations infrastructure. This is required to prevent a held
-(XFS_BLI_HOLD) buffer from pinning the tail of the log.
+Cheers,
 
-Refactor xfs_trans_log_buf() into a new function that contains all
-of the logic responsible to dirty the transaction, lidp, buffer and
-bli. This new function can be used in the future for the use cases
-outlined above. This patch does not introduce functional changes.
+Dave.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_trans.h     |  4 +++-
- fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
- 2 files changed, 33 insertions(+), 17 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7d627721e4b3..b3632ebe9d9d 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -217,7 +217,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
- void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
--void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
-+void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
-+				  uint);
-+void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
- void		xfs_extent_free_init_defer_op(void);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index cac8abbeca3f..8c99813e5377 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
- }
- 
- /*
-- * This is called to mark bytes first through last inclusive of the given
-- * buffer as needing to be logged when the transaction is committed.
-- * The buffer must already be associated with the given transaction.
-- *
-- * First and last are numbers relative to the beginning of this buffer,
-- * so the first byte in the buffer is numbered 0 regardless of the
-- * value of b_blkno.
-+ * Mark a buffer dirty in the transaction.
-  */
- void
--xfs_trans_log_buf(xfs_trans_t	*tp,
--		  xfs_buf_t	*bp,
--		  uint		first,
--		  uint		last)
-+xfs_trans_dirty_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp)
- {
--	xfs_buf_log_item_t	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
--	ASSERT(first <= last && last < BBTOB(bp->b_length));
- 	ASSERT(bp->b_iodone == NULL ||
- 	       bp->b_iodone == xfs_buf_iodone_callbacks);
- 
-@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	bp->b_iodone = xfs_buf_iodone_callbacks;
- 	bip->bli_item.li_cb = xfs_buf_iodone;
- 
--	trace_xfs_trans_log_buf(bip);
--
- 	/*
- 	 * If we invalidated the buffer within this transaction, then
- 	 * cancel the invalidation now that we're dirtying the buffer
-@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 		bp->b_flags &= ~XBF_STALE;
- 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
- 	}
-+	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
- 
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
-+}
-+
-+/*
-+ * This is called to mark bytes first through last inclusive of the given
-+ * buffer as needing to be logged when the transaction is committed.
-+ * The buffer must already be associated with the given transaction.
-+ *
-+ * First and last are numbers relative to the beginning of this buffer,
-+ * so the first byte in the buffer is numbered 0 regardless of the
-+ * value of b_blkno.
-+ */
-+void
-+xfs_trans_log_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp,
-+	uint			first,
-+	uint			last)
-+{
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+
-+	ASSERT(first <= last && last < BBTOB(bp->b_length));
-+
-+	xfs_trans_dirty_buf(tp, bp);
- 
- 	/*
- 	 * If we have an ordered buffer we are not logging any dirty range but
- 	 * it still needs to be marked dirty and that it has been logged.
- 	 */
--	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
-+	trace_xfs_trans_log_buf(bip);
- 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
- 		xfs_buf_item_log(bip, first, last);
- }
 -- 
-2.14.1
-
+Dave Chinner
+david@fromorbit.com
