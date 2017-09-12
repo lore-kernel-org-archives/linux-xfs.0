@@ -1,42 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([146.0.238.67]:51310 "EHLO
-        Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751038AbdIKGi7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 02:38:59 -0400
-Date: Mon, 11 Sep 2017 08:38:56 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: Testing dm-integrity (WAS: Re: Support for data CRC)
-Message-ID: <20170911063855.x25kajaqoxatt6zq@breakpoint.cc>
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
- <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com>
- <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
- <CAJCQCtTF2bWgB1++v3XOwaPqpPxc7-0Lv+Qc_3bebb0zMDNszA@mail.gmail.com>
- <20170910194350.v5fzbgrzihpjg2pv@breakpoint.cc>
- <bb924fb0-ba74-1f14-d1ce-ea567c641c54@gmail.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:50240 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751036AbdILGqf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2017 02:46:35 -0400
+Date: Tue, 12 Sep 2017 16:44:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
+Message-ID: <20170912064411.GR10621@dastard>
+References: <20170908152805.GA16646@linux.intel.com>
+ <20170908212153.14880-1-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bb924fb0-ba74-1f14-d1ce-ea567c641c54@gmail.com>
+In-Reply-To: <20170908212153.14880-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Milan Broz <gmazyland@gmail.com>
-Cc: dm-devel@redhat.com, Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 2017-09-10 22:06:13 [+0200], Milan Broz wrote:
-> There is integritysetup tool (part of cryptsetup package) that automates format and mount of dm-integrity devices.
-> For now in devel git, I expect we will do some release package this month.
-> (So no need to use dmsetup here.)
-ah, good, thank. I read the documentation and it mentioned just those
-steps not a pointer to tool.
-
-> > at some point I expected dm-integrity to check the other disk in RAID.
+On Fri, Sep 08, 2017 at 03:21:53PM -0600, Ross Zwisler wrote:
+> This adds a regression test for the following kernel patch:
 > 
-> The dm-integrity has no connection to RAID, it will just return EILSEQ (instead of EIO error)
-> to inform that the error is an data integrity error, not a media (or other) IO error.
+>   xfs: always use DAX if mount option is used
+> 
+> This test will also pass with kernel v4.14-rc1 and beyond because the XFS
+> DAX I/O mount option has been disabled (but not removed), so the
+> "chattr -x" to turn off DAX doesn't actually do anything.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+.....
+> +pgsize=`$here/src/feature -s`
+> +
+> +# disable tracing, clear the existing trace buffer and turn on dax tracepoints
+> +echo 0 > /sys/kernel/debug/tracing/tracing_on
+> +echo > /sys/kernel/debug/tracing/trace
+> +echo 1 > /sys/kernel/debug/tracing/events/fs_dax/enable
+> +
+> +# enable tracing for our one mmap I/O, then see if dax was used
+> +echo 1 > /sys/kernel/debug/tracing/tracing_on
+> +xfs_io  -t -c "truncate $pgsize" \
+> +	-c "chattr -x" \
+> +	-c "mmap -r 0 $pgsize" -c "mread 0 $pgsize" -c "munmap" \
+> +	-f $SCRATCH_MNT/testfile >> $seqres.full
+> +echo 0 > /sys/kernel/debug/tracing/tracing_on
 
-okay. Now I have a pointer where to look next.
+So what happens when the user is already tracing the test to
+find a bug and the test turns all their tracing off?
 
-> Milan
+Regardless of this screwing up developer bug triage, do we really
+want to add a dependency on kernel tracing into the test harness?
 
-Sebastian
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
