@@ -1,37 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43863 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750920AbdIKGhb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 02:37:31 -0400
-Date: Sun, 10 Sep 2017 23:37:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Support for data CRC
-Message-ID: <20170911063729.GA10489@infradead.org>
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
- <20170821230232.GS10621@dastard>
- <20170822055136.GA2697@infradead.org>
- <20170822111322.jt66qlzvalsiju6n@breakpoint.cc>
- <20170823061931.GA30488@infradead.org>
- <20170910195026.7ftxcgmwyri5a5fz@breakpoint.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170910195026.7ftxcgmwyri5a5fz@breakpoint.cc>
+Received: from mga02.intel.com ([134.134.136.20]:31948 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751045AbdILEpc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Sep 2017 00:45:32 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 1/3] .gitignore: ignore cscope files
+Date: Mon, 11 Sep 2017 22:45:19 -0600
+Message-Id: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
 
-On Sun, Sep 10, 2017 at 09:50:27PM +0200, Sebastian Andrzej Siewior wrote:
-> On 2017-08-22 23:19:31 [-0700], Christoph Hellwig wrote:
-> > as part of the reflink feature.  These out of place writes are
-> > a requirement to implement data checksums, as otherwise your data
-> > and checksum can not be updated atomically.  Everything else is
-> > beyond that at this point is vapourware.  We'd have to decided
-> So using the journal for atomic updates doesn't work then. Which means
-> fragmentation unavoidable.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ .gitignore | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Well, in theory you could also do data journalling - but in the end
-out of place writes are probably going to be more efficient, and at
-least for XFS also area already implemented.
+diff --git a/.gitignore b/.gitignore
+index 28fe84d..2accc37 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -238,3 +238,7 @@
+ /tests/xfs/033.out
+ /tests/xfs/071.out
+ /tests/xfs/096.out
++
++# cscope files
++cscope.*
++ncscope.*
+-- 
+2.9.5
+
