@@ -1,117 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38212 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([192.55.52.115]:61348 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751173AbdIKPt1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Sep 2017 11:49:27 -0400
-Date: Mon, 11 Sep 2017 11:49:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: rewrite getbmap using the xfs_iext_* helpers
-Message-ID: <20170911154925.GB13400@bfoster.bfoster>
-References: <20170903155140.17256-1-hch@lst.de>
+        id S1751404AbdILPiX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Sep 2017 11:38:23 -0400
+Date: Tue, 12 Sep 2017 09:38:20 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
+Message-ID: <20170912153820.GA5000@linux.intel.com>
+References: <20170908152805.GA16646@linux.intel.com>
+ <20170908212153.14880-1-ross.zwisler@linux.intel.com>
+ <20170912064411.GR10621@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170903155140.17256-1-hch@lst.de>
+In-Reply-To: <20170912064411.GR10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 05:51:39PM +0200, Christoph Hellwig wrote:
-> Currently getbmap uses xfs_bmapi_read to query the extent map, and then
-> fixes up various bits that are eventually reported to userspace.
+On Tue, Sep 12, 2017 at 04:44:11PM +1000, Dave Chinner wrote:
+> On Fri, Sep 08, 2017 at 03:21:53PM -0600, Ross Zwisler wrote:
+> > This adds a regression test for the following kernel patch:
+> > 
+> >   xfs: always use DAX if mount option is used
+> > 
+> > This test will also pass with kernel v4.14-rc1 and beyond because the XFS
+> > DAX I/O mount option has been disabled (but not removed), so the
+> > "chattr -x" to turn off DAX doesn't actually do anything.
+> > 
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Suggested-by: Christoph Hellwig <hch@infradead.org>
+> .....
+> > +pgsize=`$here/src/feature -s`
+> > +
+> > +# disable tracing, clear the existing trace buffer and turn on dax tracepoints
+> > +echo 0 > /sys/kernel/debug/tracing/tracing_on
+> > +echo > /sys/kernel/debug/tracing/trace
+> > +echo 1 > /sys/kernel/debug/tracing/events/fs_dax/enable
+> > +
+> > +# enable tracing for our one mmap I/O, then see if dax was used
+> > +echo 1 > /sys/kernel/debug/tracing/tracing_on
+> > +xfs_io  -t -c "truncate $pgsize" \
+> > +	-c "chattr -x" \
+> > +	-c "mmap -r 0 $pgsize" -c "mread 0 $pgsize" -c "munmap" \
+> > +	-f $SCRATCH_MNT/testfile >> $seqres.full
+> > +echo 0 > /sys/kernel/debug/tracing/tracing_on
 > 
-> This patch instead rewrites it to use xfs_iext_lookup_extent and
-> xfs_iext_get_extent to iteratively process the extent map.  This not
-> only avoids the need to allocate a map for the returned xfs_bmbt_irec
-> structures but also greatly simplified the code.
+> So what happens when the user is already tracing the test to
+> find a bug and the test turns all their tracing off?
 > 
-> There are two intentional behavior changes compared to the old code:
-> 
->  - the current code reports unwritten extents that don't directly border
->    a written one as unwritten even when not passing the BMV_IF_PREALLOC
->    option, contrary to the documentation.  The new code requires the
->    BMV_IF_PREALLOC flag to report the unwrittent extent bit.
->  - The new code does never merges consecutive extents, unlike the old
->    code that sometimes does it based on the boundaries of the
->    xfs_bmapi_read calls.  Note that the extent merging behavior was
->    entirely undocumented.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_bmap_util.c | 525 ++++++++++++++++++++-----------------------------
->  1 file changed, 208 insertions(+), 317 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index cd9a5400ba4f..a11f4c300643 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-...
-> @@ -668,147 +599,107 @@ xfs_getbmap(
-...
-> +		/*
-> +		 * In order to report shared extents accurately, we report each
-> +		 * distinct shared / unshared part of a single bmbt record with
-> +		 * an individual getbmapx record.
-> +		 */
-> +		bno = got.br_startoff + got.br_blockcount;
-> +		rec = got;
-> +		do {
-> +			error = xfs_getbmap_report_one(ip, bmv, out, bmv_end,
-> +					&rec);
-> +			if (error || xfs_getbmap_full(bmv))
-> +				goto out_unlock_ilock;
-> +		} while (xfs_getbmap_next_rec(&rec, bno));
-> +
-> +		if (!xfs_iext_get_extent(ifp, ++idx, &got)) {
-> +			xfs_fileoff_t	end = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> +
-> +			out[bmv->bmv_entries].bmv_oflags |= BMV_OF_LAST;
-> +
+> Regardless of this screwing up developer bug triage, do we really
+> want to add a dependency on kernel tracing into the test harness?
 
-I'm a little confused about the above bit. Isn't ->bmv_entries already
-incremented past the last reported extent? Further, if there is a hole
-to be reported, we potentially do that just below (which means that
-->bmv_entries may or may not refer to the last reported segment here)..?
+Yep, these are both valid concerns.  I ended up trying to get around both of
+them by using perf instead in my v2, as suggested by Dan:
 
-Otherwise the rest of the patch looks good to me.
-
-Brian
-
-> +			if (whichfork != XFS_ATTR_FORK && bno < end &&
-> +			    !xfs_getbmap_full(bmv)) {
-> +				xfs_getbmap_report_hole(ip, bmv, out, bmv_end,
-> +						bno, end);
->  			}
-> -			bmv->bmv_entries++;
-> -			cur_ext++;
-> +			break;
->  		}
-> -	} while (nmap && bmv->bmv_length && cur_ext < bmv->bmv_count - 1);
->  
-> - out_free_map:
-> -	kmem_free(map);
-> - out_unlock_ilock:
-> +		if (bno >= first_bno + len)
-> +			break;
-> +	}
-> +
-> +out_unlock_ilock:
->  	xfs_iunlock(ip, lock);
-> - out_unlock_iolock:
-> +out_unlock_iolock:
->  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
->  
-> -	for (i = 0; i < cur_ext; i++) {
-> +	for (i = 0; i < bmv->bmv_entries; i++) {
->  		/* format results & advance arg */
->  		error = formatter(&arg, &out[i]);
->  		if (error)
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+https://www.spinics.net/lists/linux-xfs/msg10420.html
