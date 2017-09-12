@@ -1,90 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outprodmail02.cc.columbia.edu ([128.59.72.51]:34781 "EHLO
-        outprodmail02.cc.columbia.edu" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751013AbdIKLMV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 07:12:21 -0400
-Received: from hazelnut (hazelnut.cc.columbia.edu [128.59.213.250])
-        by outprodmail02.cc.columbia.edu (8.14.4/8.14.4) with ESMTP id v8BAs8vG046088
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2017 06:56:07 -0400
-Received: from hazelnut (localhost.localdomain [127.0.0.1])
-        by hazelnut (Postfix) with ESMTP id CB9C76D
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2017 06:56:07 -0400 (EDT)
-Received: from sendprodmail02.cc.columbia.edu (sendprodmail02.cc.columbia.edu [128.59.72.14])
-        by hazelnut (Postfix) with ESMTP id AB2246D
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2017 06:56:07 -0400 (EDT)
-Received: from mail-wm0-f69.google.com (mail-wm0-f69.google.com [74.125.82.69])
-        by sendprodmail02.cc.columbia.edu (8.14.4/8.14.4) with ESMTP id v8BAu7so021060
-        (version=TLSv1/SSLv3 cipher=AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2017 06:56:07 -0400
-Received: by mail-wm0-f69.google.com with SMTP id i198so7129268wmf.5
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2017 03:56:07 -0700 (PDT)
-MIME-Version: 1.0
-From: Shankara Pailoor <sp3485@columbia.edu>
-Date: Mon, 11 Sep 2017 06:56:05 -0400
-Message-ID: <CAASgV=ugG=Chc5RK4CK-=FsVm+9UEd-2kSTxQrZFG90bYHpMpw@mail.gmail.com>
-Subject: WARN_ON_ONCE in fs/iomap.c:993
-Content-Type: text/plain; charset="UTF-8"
+Received: from mga02.intel.com ([134.134.136.20]:31948 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751320AbdILEpd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Sep 2017 00:45:33 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 2/3] ext4: test for DAX + journaling corruption
+Date: Mon, 11 Sep 2017 22:45:20 -0600
+Message-Id: <20170912044521.22644-2-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
+References: <20170912044521.22644-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Zhu Aday <andrew.aday@columbia.edu>, syzkaller <syzkaller@googlegroups.com>, viro@zeniv.linux.org.uk
+To: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
 
-Hi,
+Add a regression test for the following kernel commit:
 
-I am fuzzing linux 4.13-rc7 with XFS using syzkaller on x86_64 and I
-found the following warning:
+  ext4: prevent data corruption with journaling + DAX
 
-WARNING: CPU: 2 PID: 5391 at fs/iomap.c:993 iomap_dio_rw+0xc79/0xe70
-fs/iomap.c:993
-Kernel panic - not syncing: panic_on_warn set ...
+The test passes if either we successfully compare the data between the mmap
+with journaling turned on and the one with journaling turned off, or if we
+fail the chattr command to turn on or off journaling.  The latter is how we
+prevent this issue in the kernel.
 
-CPU: 2 PID: 5391 Comm: syz-executor1 Not tainted 4.13.0-rc7 #4
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-Ubuntu-1.8.2-1ubuntu1 04/01/2014
-Call Trace:
- __dump_stack lib/dump_stack.c:16 [inline]
- dump_stack+0xf7/0x1aa lib/dump_stack.c:52
- panic+0x1ae/0x3a7 kernel/panic.c:180
- __warn+0x1c4/0x1d9 kernel/panic.c:541
- report_bug+0x211/0x2d0 lib/bug.c:183
- fixup_bug+0x40/0x90 arch/x86/kernel/traps.c:190
- do_trap_no_signal arch/x86/kernel/traps.c:224 [inline]
- do_trap+0x260/0x390 arch/x86/kernel/traps.c:273
- do_error_trap+0x118/0x340 arch/x86/kernel/traps.c:310
- do_invalid_op+0x1b/0x20 arch/x86/kernel/traps.c:323
- invalid_op+0x18/0x20 arch/x86/entry/entry_64.S:846
-RIP: 0010:iomap_dio_rw+0xc79/0xe70 fs/iomap.c:993
-RSP: 0018:ffff88006d13f6d0 EFLAGS: 00010297
-RAX: ffff880069c3da00 RBX: ffff88006d04c000 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: 0000000000000003 RDI: ffffed000da27ed0
-RBP: ffff88006d13f8c0 R08: 0000000000000001 R09: 1ffff1000da27ddb
-R10: ffff88006d13eea0 R11: 0000000000000002 R12: 1ffff1000da27eea
-R13: 000000007ffff000 R14: 0000000000000000 R15: ffff88006d13fac8
- xfs_file_dio_aio_read+0x19c/0x5a0 fs/xfs/xfs_file.c:220
- xfs_file_read_iter+0x369/0x460 fs/xfs/xfs_file.c:286
- call_read_iter include/linux/fs.h:1737 [inline]
- generic_file_splice_read+0x3f9/0x7b0 fs/splice.c:307
- do_splice_to+0x10a/0x160 fs/splice.c:896
- splice_direct_to_actor+0x23e/0x870 fs/splice.c:968
- do_splice_direct+0x29b/0x3c0 fs/splice.c:1077
- do_sendfile+0x5c9/0xe80 fs/read_write.c:1412
- SYSC_sendfile64 fs/read_write.c:1467 [inline]
- SyS_sendfile64+0xbd/0x160 fs/read_write.c:1459
- entry_SYSCALL_64_fastpath+0x18/0xad
-RIP: 0033:0x451e59
-RSP: 002b:00007fa4a3718c08 EFLAGS: 00000216 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 0000000000718000 RCX: 0000000000451e59
-RDX: 0000000020005ff8 RSI: 0000000000000003 RDI: 0000000000000003
-RBP: 0000000000000046 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000800000000 R11: 0000000000000216 R12: 0000000000000000
-R13: 00007ffde54a34ef R14: 00007fa4a37199c0 R15: 0000000000000000
-Dumping ftrace buffer:
-   (ftrace buffer empty)
-Kernel Offset: 0x18a00000 from 0xffffffff81000000 (relocation range:
-0xffffffff80000000-0xffffffffbfffffff)
-Rebooting in 86400 seconds..
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ .gitignore                          |  1 +
+ src/Makefile                        |  2 +-
+ src/t_ext4_dax_journal_corruption.c | 93 +++++++++++++++++++++++++++++++++++++
+ tests/ext4/030                      | 68 +++++++++++++++++++++++++++
+ tests/ext4/030.out                  |  2 +
+ tests/ext4/group                    |  1 +
+ 6 files changed, 166 insertions(+), 1 deletion(-)
+ create mode 100644 src/t_ext4_dax_journal_corruption.c
+ create mode 100755 tests/ext4/030
+ create mode 100644 tests/ext4/030.out
 
-Here is a reproducer program: https://pastebin.com/tc014k97
-Here are my configs: https://pastebin.com/PWtYUiHD
+diff --git a/.gitignore b/.gitignore
+index 2accc37..4bdc5bf 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -154,6 +154,7 @@
+ /src/t_mmap_stale_pmd
+ /src/t_mmap_cow_race
+ /src/t_mmap_fallocate
++/src/t_ext4_dax_journal_corruption
+ 
+ # dmapi/ binaries
+ /dmapi/src/common/cmd/read_invis
+diff --git a/src/Makefile b/src/Makefile
+index b8aff49..e6558e2 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -13,7 +13,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
+ 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
+ 	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
+-	t_mmap_cow_race t_mmap_fallocate fsync-err
++	t_mmap_cow_race t_mmap_fallocate fsync-err t_ext4_dax_journal_corruption
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/t_ext4_dax_journal_corruption.c b/src/t_ext4_dax_journal_corruption.c
+new file mode 100644
+index 0000000..e0d63f8
+--- /dev/null
++++ b/src/t_ext4_dax_journal_corruption.c
+@@ -0,0 +1,93 @@
++#include <errno.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/mman.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <time.h>
++#include <unistd.h>
++
++#define PAGE(a) ((a)*0x1000)
++#define STRLEN 256
++
++void err_exit(char *op)
++{
++	fprintf(stderr, "%s: %s\n", op, strerror(errno));
++	exit(1);
++}
++
++void chattr_cmd(char *chattr, char *cmd, char *file)
++{
++	int ret;
++	char command[STRLEN];
++
++	ret = snprintf(command, STRLEN, "%s %s %s 2>/dev/null", chattr, cmd, file);
++	if (ret < 0)
++		err_exit("snprintf");
++
++	ret = system(command);
++	if (ret) /* Success - the kernel fix is to have this chattr fail */
++		exit(77);
++}
++
++int main(int argc, char *argv[])
++{
++	int fd, err, len = PAGE(1);
++	char *data, *dax_data, *chattr, *file;
++	char string[STRLEN];
++
++	if (argc < 3) {
++		printf("Usage: %s <chattr program> <file>\n", basename(argv[0]));
++		exit(0);
++	}
++
++	chattr = argv[1];
++	file = argv[2];
++
++	srand(time(NULL));
++	snprintf(string, STRLEN, "random number %d\n", rand());
++
++	fd = open(file, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
++	if (fd < 0)
++		err_exit("fd");
++
++	/* begin with journaling off and DAX on */
++	chattr_cmd(chattr, "-j", file);
++
++	ftruncate(fd, 0);
++	fallocate(fd, 0, 0, len);
++
++	dax_data = mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
++	if (!dax_data)
++		err_exit("mmap dax_data");
++
++	/* turns on journaling, and turns off DAX */
++	chattr_cmd(chattr, "+j", file);
++
++	data = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
++	if (!data)
++		err_exit("mmap data");
++
++	/*
++	 * Write the data using the non-DAX mapping, and try and read it back
++	 * using the DAX mapping.
++	 */
++	strcpy(data, string);
++	if (strcmp(dax_data, string) != 0)
++		printf("Data miscompare\n");
++
++	err = munmap(data, len);
++	if (err < 0)
++		err_exit("munmap data");
++
++	err = munmap(dax_data, len);
++	if (err < 0)
++		err_exit("munmap dax_data");
++
++	err = close(fd);
++	if (err < 0)
++		err_exit("close");
++	return 0;
++}
+diff --git a/tests/ext4/030 b/tests/ext4/030
+new file mode 100755
+index 0000000..3ac4952
+--- /dev/null
++++ b/tests/ext4/030
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# FS QA Test ext4/030
++#
++# This is a regression test for kernel patch:
++#   ext4: prevent data corruption with journaling + DAX
++# created by Ross Zwisler <ross.zwisler@linux.intel.com>
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# Modify as appropriate.
++_supported_os Linux
++_supported_fs ext4
++_require_scratch_dax
++_require_test_program "t_ext4_dax_journal_corruption"
++
++# real QA test starts here
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount "-o dax,nodelalloc" >> $seqres.full 2>&1
++
++src/t_ext4_dax_journal_corruption $CHATTR_PROG $SCRATCH_MNT/testfile
++
++if [[ $? != 0 && $? != 77 ]]; then
++	echo "Test failed, status $?"
++	exit 1
++fi
++
++# success, all done
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/ext4/030.out b/tests/ext4/030.out
+new file mode 100644
+index 0000000..06a1c8f
+--- /dev/null
++++ b/tests/ext4/030.out
+@@ -0,0 +1,2 @@
++QA output created by 030
++Silence is golden
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 257bb64..ef768df 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -32,6 +32,7 @@
+ 027 auto quick fsmap
+ 028 auto quick fsmap
+ 029 auto quick fsmap
++030 auto quick
+ 271 auto rw quick
+ 301 aio auto ioctl rw stress defrag
+ 302 aio auto ioctl rw stress defrag
+-- 
+2.9.5
 
