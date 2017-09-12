@@ -1,84 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:33047 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750817AbdIIHGx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Sep 2017 03:06:53 -0400
-Date: Sat, 9 Sep 2017 17:06:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical
- sectorsize
-Message-ID: <20170909070649.GJ17782@dastard>
-References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com>
- <81dc9410-c9d1-20d3-65a6-6763d31b64b7@sandeen.net>
- <2418689.2OC4k4y5ao@localhost.localdomain>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6453 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751247AbdILIif (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2017 04:38:35 -0400
+Subject: Re: [PATCH] xfs: check kthread_should_stop() after the setting of
+ task state
+References: <1504771497-44154-1-git-send-email-houtao1@huawei.com>
+ <20170908174251.GH905@bfoster.bfoster>
+From: Hou Tao <houtao1@huawei.com>
+Message-ID: <bbc2d571-6305-3713-66be-a11b0b06f6c2@huawei.com>
+Date: Tue, 12 Sep 2017 16:38:03 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2418689.2OC4k4y5ao@localhost.localdomain>
+In-Reply-To: <20170908174251.GH905@bfoster.bfoster>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
-On Sat, Sep 09, 2017 at 12:11:35PM +0530, Chandan Rajendra wrote:
-> On Friday, September 8, 2017 10:25:26 PM IST Eric Sandeen wrote:
-> > On 9/5/17 12:44 AM, Chandan Rajendra wrote:
-> > > Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
-> > > physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
-> > > physical sector size of loop devices. On ppc64, this causes loop devices
-> > > to have 64k as the physical sector size.
-> > > 
-> > > With these changes, mkfs.xfs now prints error messages when filesystem
-> > > blocksize (4k) is less than underlying device's physical
-> > > sectorsize (64k). These messages (printed on stderr) now cause several
-> > > xfstests to fail on ppc64 machine since xfstests' _filter_mkfs() isn't
-> > > able to filter out stderr.
-> > > 
-> > > Also, the messages themselves describe a possible sub-optimal setup. But
-> > > the setup is still usable.
-> > > 
-> > > Hence this commit removes the calls to fprintf() used to print the
-> > > messages.
-> > 
-> > So, it looks like the loop change is getting reverted, right ... still -
-> > 
-> > Although I suggested this change, I'm rethinking it.  I'm not a fan
-> > of the warning for a default situation; the user can get this warning
-> > with nothing but a bare mkfs, which is not good IMHO.
-> > 
-> > (dchinner OTOH thinks we should warn about this suboptimal situation
-> > in any case - but I really don't think it's mkfs's job to be warning
-> > about every suboptimal geometry - there are a lot of them out there!)
-> > 
-> > What I'd now propose is that we change this warning into a failure,
-> > but only if a too-small block size was actually /specified/, i.e.
-> > bsflag is set.  If we're adjusting sector size based on device geometry
-> > and /default/ blocksize, I think we should just shut up about it.
-> > 
-> > i.e. something like:
-> > 
-> >                 if ((blocksize < sectorsize) && (blocksize >= ft.lsectorsize)) {
+Hi,
+
+On 2017/9/9 1:42, Brian Foster wrote:
+> On Thu, Sep 07, 2017 at 04:04:57PM +0800, Hou Tao wrote:
+>> A umount hang is possible when a race occurs between the umount
+>> process and the xfsaild kthread. The following sequences outline
+>> the race:
+>>
+>>     xfsaild: kthread_should_stop()
+>> 	     => return false, so xfsaild continue
+>>
+>>     umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags)
+>> 	    => by kthread_stop()
+>>     umount: wake_up_process()
+>> 	    => because xfsaild is still running, so 0 is returned
+>>
+>>     xfsaild: __set_current_state(TASK_INTERRUPTIBLE)
+>>     xfsaild: schedule()
+>> 	    => now, xfsaild will wait indefinitely
+>>
+>>     umount: wait_for_completion()
+>> 	    => and umount will hang
+>>
+>> To fix that, we need to check kthread_should_stop() after we set
+>> the task state, so the xfsaild will either see the stop bit and
+>> exit or the task state is reset to runnable by wake_up_process()
+>> such that it isn't blocked indefinitely and detects the stop bit
+>> at the next iteration.
+>>
+>> Signed-off-by: Hou Tao <houtao1@huawei.com>
+>> ---
 > 
-> I agree with your changes from a system administrator's perspective. But
-> without these messages, the sectorsize change for the loop device would 
-> most likely not have been noticed.
+> I assume you've verified this against your local reproducer? Otherwise
+> just a nit on the comment...
+Yes, the patch fixes the test case with the delay hacks. After applying the
+patch, I also have tried to move the artificial delay in xfsaild down to the
+next of kthread_should_stop() and there is no hang of umount.
+
+>>  fs/xfs/xfs_trans_ail.c | 17 ++++++++++++++---
+>>  1 file changed, 14 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+>> index 9056c0f..cd6e185 100644
+>> --- a/fs/xfs/xfs_trans_ail.c
+>> +++ b/fs/xfs/xfs_trans_ail.c
+>> @@ -499,11 +499,22 @@ xfsaild(
+>>  	current->flags |= PF_MEMALLOC;
+>>  	set_freezable();
+>>  
+>> -	while (!kthread_should_stop()) {
+>> +	while (1) {
+>>  		if (tout && tout <= 20)
+>> -			__set_current_state(TASK_KILLABLE);
+>> +			set_current_state(TASK_KILLABLE);
+>>  		else
+>> -			__set_current_state(TASK_INTERRUPTIBLE);
+>> +			set_current_state(TASK_INTERRUPTIBLE);
+>> +
+>> +		/*
+>> +		 * Check kthread_should_stop() after we set the task state
+>> +		 * to guarantee that we either see the stop bit and exit or the
+>> +		 * task state is reset to runnable such that it's not blocked
+>> +		 * indefinitely and detects the stop bit at the next iteration.
+>> +		 */
 > 
-> > 			if (bsflag) {
+> I'd change the "it's not blocked indefinitely" wording to something like
+> "it's not scheduled out indefinitely." Also, a mention that the task
+> state sets above include a memory barrier to serialize against
+> kthread_stop() couldn't hurt. Otherwise this looks fine to me:
 > 
-> Just FYI, We should also be checking blflag's value.
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+Thanks for your comments. I will send v2 soon.
 
-Just FYI, my mkfs series reworks this piece of code completely so
-there aren't any flags to check.... :P
+Regards,
 
-And given that we are planning on having config file overrides of
-default mkfs values, we need to keep this warning even on default
-configurations because the distro/site specific default blocksize in
-the config file may trigger this....
+Tao
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
