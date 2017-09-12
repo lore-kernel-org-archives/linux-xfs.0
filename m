@@ -1,27 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50725 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751200AbdIOOy1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:27 -0400
-Received: from [8.25.222.2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dss0g-0003Ha-R1
-        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:26 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: refactor extent manipulation V2
-Date: Fri, 15 Sep 2017 07:54:08 -0700
-Message-Id: <20170915145426.26194-1-hch@lst.de>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:59798 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751311AbdILLNL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2017 07:13:11 -0400
+Date: Tue, 12 Sep 2017 12:13:08 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: iov_iter_pipe warning.
+Message-ID: <20170912111308.GM5426@ZenIV.linux.org.uk>
+References: <20170910025712.GC5426@ZenIV.linux.org.uk>
+ <20170910211110.GM17782@dastard>
+ <20170910211907.GF5426@ZenIV.linux.org.uk>
+ <20170910220814.GN17782@dastard>
+ <20170910230723.GG5426@ZenIV.linux.org.uk>
+ <20170911003113.GO17782@dastard>
+ <20170911033222.GI5426@ZenIV.linux.org.uk>
+ <20170911064440.GP17782@dastard>
+ <20170911200713.GK5426@ZenIV.linux.org.uk>
+ <20170912060214.GS17782@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170912060214.GS17782@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Jones <davej@codemonkey.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-Hi all,
+On Tue, Sep 12, 2017 at 04:02:14PM +1000, Dave Chinner wrote:
 
-this series refactor the extent manipulation routines so that they are
-isolated from the nitty gritty details of the extent list implementation.
-It is the first step towards a more scalable extent list data structure.
+> > Note that one of the bugs there applies to normal read() as well - if you
+> > are reading from a hole in file into an array with a read-only page in
+> > the middle, you want a short read.
+> 
+> And there's another WTF? moment.....
+> 
+> How do we get a read only page in the middle of an array of pages
+> we've been told to write data into? And why isn't that a bug in the
+> code that supplied us with those pages?
 
-Changes since V1:
- - use better fitting XFS_BMAP_* constant in xfs_bmap_del_extent_*
- - various fixes and cleanups in xfs_bmap_add_extent_delay_real
+Sorry, I'd been unclear - I'm talking about read(2) or readv(2) called by
+userland with a read-only piece in the middle of a (user-supplied) buffer.
+Either due to mprotect() or simply with one of the iovecs passed to readv(2)
+having ->iov_base set to some read-only area.
+
+It may be a bug in userland code, but when handling that error is as trivial
+as "don't assume iov_iter_zero(to, n) will return n, use the actual return
+value", resorting to "the userland code was probably buggy and it's O_DIRECT,
+so we can do whatever we want" looks wrong.
