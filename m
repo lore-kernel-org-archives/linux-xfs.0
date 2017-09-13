@@ -1,87 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:43333 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbdIMWXk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 18:23:40 -0400
-Received: by mail-io0-f169.google.com with SMTP id k101so9644015iod.0
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2017 15:23:40 -0700 (PDT)
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:31009
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752087AbdIMVkc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 17:40:32 -0400
+Date: Thu, 14 Sep 2017 07:40:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: Uninitialized memory read at xlog_write
+Message-ID: <20170913214028.GX17782@dastard>
+References: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
+ <20170911150157.GA13400@bfoster.bfoster>
+ <201709131614.FAG69217.MSHFFVOFLJtQOO@I-love.SAKURA.ne.jp>
+ <20170913094335.GV17782@dastard>
+ <201709131859.AHB43227.SOFFOHJVMLFtOQ@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
-In-Reply-To: <20170913220108.GX10621@dastard>
-References: <20170908152805.GA16646@linux.intel.com> <20170908212153.14880-1-ross.zwisler@linux.intel.com>
- <20170912064411.GR10621@dastard> <20170912153820.GA5000@linux.intel.com>
- <20170912234729.GW10621@dastard> <20170913144215.GA12395@linux.intel.com> <20170913220108.GX10621@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 13 Sep 2017 15:23:39 -0700
-Message-ID: <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201709131859.AHB43227.SOFFOHJVMLFtOQ@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: bfoster@redhat.com, sandeen@redhat.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 13, 2017 at 3:01 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Sep 13, 2017 at 08:42:15AM -0600, Ross Zwisler wrote:
->> On Wed, Sep 13, 2017 at 09:47:29AM +1000, Dave Chinner wrote:
->>
->> <>
->>
->> > I think similar concerns exist with using perf, too....
->>
->> I though that using perf addressed both concerns?
->>
->> > > > So what happens when the user is already tracing the test to
->> > > > find a bug and the test turns all their tracing off?
->>
->> By using perf we isolate our tracing from whatever other tracing is happening
->> in the system.  So, unlike the case where we were messing with a system-wide
->> ftrace knob, we run perf on our executable, and someone else can run perf on
->> their executable, and they don't collide.
->
-> Yes, you've addressed the "gets inteh way of other tracing concern,
-> but it's doesn't address the "it's an ugly way to determine a
-> feature is active" concerns. It also creates an implicit stable
-> tracepoint out of whatever you are looking at. i.e. that tracepoint
-> can't go away, nor can it change functionality once a userspace app
-> depends on it's current semantics to function correctly.
->
-> And....
->
->> > > > Regardless of this screwing up developer bug triage, do we really
->> > > > want to add a dependency on kernel tracing into the test harness?
->>
->> Yep, you're right that this adds a dependency on perf.  But unfortunately,
->> without using either perf or ftrace, I don't know of a way to detect whether
->> or not DAX is actually being used.  Can you think of another way?
->
-> ... if there isn't a programmatic interface to tell applications
-> that DAX is in use, then perhaps we're missing a formal userspace
-> API that we should have, yes?
->
->> I tried to do this correctly and just skip the test with _notrun
->> if perf isn't available on the host system.  This is the same
->> thing that happens if you are missing other dependencies for a
->> test (some other command (chacl, getfattr, setfattr) not present,
->> quota tools not installed, required users not present, etc).
->
-> Sure, but if we have user configurable functionality, then using
-> something like ftrace/perf to discover if it's turned is indicative
-> of a bigger problem. i.e. that the user can't tell if the
-> functionality they turned on/off is actually active or not.
->
-> That's a bug that needs fixing, not working around with
-> ftrace/perf in xfstests...
->
+On Wed, Sep 13, 2017 at 06:59:38PM +0900, Tetsuo Handa wrote:
+> Dave Chinner wrote:
+> > On Wed, Sep 13, 2017 at 04:14:37PM +0900, Tetsuo Handa wrote:
+> > > [  OK  ] Stopped target Switch Root.
+> > > 
+> > > [  OK  ] Stopped target Initrd File Systems.[ 1054.691505] WARNING: kmemcheck: Caught 32-bit read from uninitialized memory (ffff880135396660)
+> > > [ 1054.691506] 000000000000000093050a200000000000000000000000000000000000000000
+> > > [ 1054.691511]  u u u u u u u u i i i i i i i i u u u u u u u u u u u u u u u u
+> > > [ 1054.691515]  ^
+> > > [ 1054.691519] RIP: 0010:xlog_write+0x344/0x6b0
+> > 
+> > What line of code does this correspond to?
+> > 
+> 
+>                         /*
+>                          * Copy region.
+>                          *
+>                          * Unmount records just log an opheader, so can have
+>                          * empty payloads with no data region to copy. Hence we
+>                          * only copy the payload if the vector says it has data
+>                          * to copy.
+>                          */
+>                         ASSERT(copy_len >= 0);
+>                         if (copy_len > 0) {
+>                                 memcpy(ptr, reg->i_addr + copy_off, copy_len); // <= xlog_write+0x344/0x6b0
+>                                 xlog_write_adv_cnt(&ptr, &len, &log_offset,
+>                                                    copy_len);
+>                         }
+> 
 
-Yes, we need a way to determine that DAX is enabled, but certainly not
-a VM_DAX flag as that was NAKd by you here:
+Ok, that's what I suspected. The region being copied is set up
+in xlog_cil_insert_format_items(), so problem is in one of the
+->iop_format methods it calls to format the dirty metadata into the
+region.
 
-    https://lkml.org/lkml/2016/9/16/13
+And given that the address is ...6660, it's likely the offset into
+the structure being copied is 96 bytes.
 
-I think one consideration is to just build this into MAP_SYNC.
-MAP_SYNC can only succeed if DAX is enabled and that it is a reliable
-way for userspace to assume DAX. There is some consensus for this
-proposal here:
+$ pahole...
+.....
+struct xfs_log_dinode {
+.....
+       xfs_agino_t                di_next_unlinked;     /*    96     4 */
+.....
 
-    https://lists.01.org/pipermail/linux-nvdimm/2017-August/012086.html
+Try the patch below.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: log a dummy next_unlinked value
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Prevent kmemcheck from throwing warnings about reading 32 bits of
+uninitialised memory when formatting an inode region into the incore
+log buffer by writing a dummy value of zero into the
+di_next_unlinked field.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode_item.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 6d0f74ec31e8..67c59a6c8b7c 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -364,6 +364,9 @@ xfs_inode_to_log_dinode(
+ 	to->di_dmstate = from->di_dmstate;
+ 	to->di_flags = from->di_flags;
+ 
++	/* log a dummy value to ensure logged structure is fully initialised */
++	to->di_next_unlinked = NULLAGINO;
++
+ 	if (from->di_version == 3) {
+ 		to->di_changecount = inode->i_version;
+ 		to->di_crtime.t_sec = from->di_crtime.t_sec;
