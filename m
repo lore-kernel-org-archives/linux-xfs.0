@@ -1,85 +1,228 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33807 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751131AbdINNQl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 09:16:41 -0400
-Date: Thu, 14 Sep 2017 15:16:38 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-Message-ID: <20170914131638.qxbzeocvrkhjcjcu@linux-x5ow.site>
-References: <20170912153820.GA5000@linux.intel.com>
- <20170912234729.GW10621@dastard>
- <20170913144215.GA12395@linux.intel.com>
- <20170913220108.GX10621@dastard>
- <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
- <20170913233438.GY10621@dastard>
- <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
- <20170914004038.GZ10621@dastard>
- <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
- <x49a81xeakx.fsf@segfault.boston.devel.redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:7857 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750950AbdIMG2j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 02:28:39 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1ds1A4-0006nI-6z
+        for linux-xfs@vger.kernel.org; Wed, 13 Sep 2017 16:28:36 +1000
+Date: Wed, 13 Sep 2017 16:28:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE, IMPORTANT] CVE-2017-14340: xfs: unprivileged user kernel
+ oops
+Message-ID: <20170913062836.GU17782@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="OwLcNYc0lM97+oe1"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <x49a81xeakx.fsf@segfault.boston.devel.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Sep 14, 2017 at 08:19:58AM -0400, Jeff Moyer wrote:
-> Dan Williams <dan.j.williams@intel.com> writes:
-> 
-> > On Wed, Sep 13, 2017 at 5:40 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> On Wed, Sep 13, 2017 at 05:28:39PM -0700, Dan Williams wrote:
-> >>> On Wed, Sep 13, 2017 at 4:34 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >>> > /me shrugs
-> >>> >
-> >>> > I just don't like the concept of using tracepoints to as a
-> >>> > definitive diagnostic test for something working because it'll break
-> >>> > when the kernel implementation and tracepoints change. So while we
-> >>> > can probe for perf being present, we can't probe whether the
-> >>> > tracepoint we need behaves as the test expects it to...
-> >>>
-> >>> That concern makes sense.
-> >>>
-> >>> We handle that it a crude way in the libnvdimm unit tests by hard
-> >>> coding a required minimum kernel version and rolling a test forward to
-> >>> depend on a new kernel when assumptions about the kernel-internals
-> >>> change. The tests also inject out-of-tree kernel modules that let us
-> >>> go after specific kernel internal behavior. With this approach we
-> >>> don't end up creating userspace ABI since the test explicitly loads
-> >>> out-of-tree modules.
-> >>
-> >> That's horrible. OT, but how are distros or anyone backporting
-> >> libnvdimm fixes and features supposed to test their kernels work
-> >> correctly with such a test harness?
-> >
-> > The upstream kernel version for the test to assume can be overridden
-> > by an environment variable. It has worked well so far for me when I'm
-> > using it it to test backports, but I don't have much in the way of
-> > third-party feedback.
-> 
-> It sucks.  :-)  What we really want is to depend on a feature being
-> available, not on a kernel version.  We did discuss this a while ago.
-> Let me go dig it up...
->   https://lists.01.org/pipermail/linux-nvdimm/2017-March/009253.html
-> 
-> We never came to any real conclusion on a good way forward, though.
 
-I think I already said this before [1], but can't we make a "features"
-sysfs/debugfs attribute with one bit set for each feature implemented? This
-definitively would help when running the test-suite on a backport.
+--OwLcNYc0lM97+oe1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-[1] https://lists.01.org/pipermail/linux-nvdimm/2016-March/004963.html
+Hi folks,
 
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+I just pushed this XFS vulnerability disclosure to
+oss-security@lists.openwall.com, so it's out in public now though I
+don't know how long it will take to get out through that list.
+
+TL;DR:=20
+
+Every XFS user needs to check if their kernel is compiled with
+CONFIG_XFS_RT=3Dy and if they are you should plan to update your
+kernels as soon as updated kernels filter through the
+upstream/distro channels.
+
+-Dave.
+(Standing in for Darrick, who timed his holiday extremely well)
+
+
+Summary
+-------
+
+XFS mishandles a user settable inode flag in kernels prior to
+4.14-rc1 which can cause a local denial of service via a kernel
+oops.
+
+
+Description
+-----------
+
+Richard Wareing recently discovered that if the XFS kernel code is
+compiled with CONFIG_XFS_RT=3Dy, the code mishandles
+FS_XFLAG_RTINHERIT and FS_XFLAG_REALTIME flags when the filesystem
+does not have a realtime device configured. When an fsync/fdatasync
+operation is run on an inode configured this way, we attempt to
+flush the cache of the non-existent realtime device and the kernel
+will oops.
+
+While a user cannot set the FS_XFLAG_REALTIME directly on such a
+filesystem, we fail to prevent them from setting the
+FS_XFLAG_RTINHERIT on directories.  Hence files can inherit the
+problematic FS_XFLAG_REALTIME flag from their parent directory at
+create time. Setting the FS_XFLAG_RTINHERIT flag does not require
+special privileges, so any user with permission to write to a
+directory can set it.
+
+Details of the oops signature and the trivial reproducer can be
+found in the commit message for the fix below.
+
+
+Scope of vulnerable filesystems
+-------------------------------
+
+This vulnerability was introduced in late 2005 by commit
+f538d4da8d52 ("[XFS] write barrier support"). Hence XFS filesystems
+on all kernels since 2.6.16 are vulnerable except for:
+
+	* Kernels that are compiled with CONFIG_XFS_RT=3Dn are
+	  not vulnerable.
+
+	* XFS filesystems with actual realtime devices are not
+	  not vulnerable.
+
+
+How to recognise a vulnerable system
+------------------------------------
+
+1. Search the boot log for the XFS initialisation message. If this
+message contains the world "realtime" then the kernel is vulnerable
+to the issue:
+
+CONFIG_XFS_RT=3Dy (vulnerable):
+
+# dmesg |grep "XFS with"
+[    1.625711] SGI XFS with ACLs, security attributes, realtime, debug enab=
+led
+
+CONFIG_XFS_RT=3Dn (not vulnerable):
+
+# dmesg |grep "XFS with"
+[    1.625711] SGI XFS with ACLs, security attributes, debug enabled
+
+
+2. If you have a vulnerable kernel, check each XFS filesystems to
+see if they use a realtime device.
+
+This filesystem is not vulnerable as it has a realtime device
+configured:
+
+# xfs_info /mnt |grep ^realtime
+realtime =3D/dev/ram0              extsz=3D4096   blocks=3D2048000, rtexten=
+ts=3D2048000
+
+This filesystem is vulnerable if the kernel is vulnerable as it does
+not have a realtime device:
+
+# xfs_info /mnt |grep ^realtime
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+
+
+Mitigation
+----------
+
+Fixed upstream in 4.14-rc1, commit below.
+
+Backports to supported stable upstream kernels is already underway,
+so fixes will roll out with the next stable kernel releases.
+
+Recompile the kernel with CONFIG_XFS_RT=3Dn. This is recommended for
+users who cannot wait for upstream or distro kernel updates, cannot
+backport the fix themselves and do not use realtime devices.
+
+
+Upstream commit
+---------------
+
+commit b31ff3cdf540110da4572e3e29bd172087af65cc
+Author: Richard Wareing <rwareing@fb.com>
+Date:   Wed Sep 13 09:09:35 2017 +1000
+
+    xfs: XFS_IS_REALTIME_INODE() should be false if no rt device present
+   =20
+    If using a kernel with CONFIG_XFS_RT=3Dy and we set the RHINHERIT flag =
+on
+    a directory in a filesystem that does not have a realtime device and
+    create a new file in that directory, it gets marked as a real time file.
+    When data is written and a fsync is issued, the filesystem attempts to
+    flush a non-existent rt device during the fsync process.
+   =20
+    This results in a crash dereferencing a null buftarg pointer in
+    xfs_blkdev_issue_flush():
+   =20
+      BUG: unable to handle kernel NULL pointer dereference at 000000000000=
+0008
+      IP: xfs_blkdev_issue_flush+0xd/0x20
+      .....
+      Call Trace:
+        xfs_file_fsync+0x188/0x1c0
+        vfs_fsync_range+0x3b/0xa0
+        do_fsync+0x3d/0x70
+        SyS_fsync+0x10/0x20
+        do_syscall_64+0x4d/0xb0
+        entry_SYSCALL64_slow_path+0x25/0x25
+   =20
+    Setting RT inode flags does not require special privileges so any
+    unprivileged user can cause this oops to occur.  To reproduce, confirm
+    kernel is compiled with CONFIG_XFS_RT=3Dy and run:
+   =20
+      # mkfs.xfs -f /dev/pmem0
+      # mount /dev/pmem0 /mnt/test
+      # mkdir /mnt/test/foo
+      # xfs_io -c 'chattr +t' /mnt/test/foo
+      # xfs_io -f -c 'pwrite 0 5m' -c fsync /mnt/test/foo/bar
+   =20
+    Or just run xfstests with MKFS_OPTIONS=3D"-d rtinherit=3D1" and wait.
+   =20
+    Kernels built with CONFIG_XFS_RT=3Dn are not exposed to this bug.
+   =20
+    Fixes: f538d4da8d52 ("[XFS] write barrier support")
+    Cc: <stable@vger.kernel.org>
+    Signed-off-by: Richard Wareing <rwareing@fb.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+
+Timeline:
+
+2017.09.04 - Discussion on xfs@vger.kernel.org (public list) hinted
+	     at crash bug in realtime device support
+2017.09.09 - Bug found and reported to XFS maintainers
+2017.09.12 - Bug reported to security@kernel.org
+2017.09.13 - Fix committed to kernel
+2017.09.13 - Announcement to oss-security
+
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--OwLcNYc0lM97+oe1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJZuNATAAoJEK3oKUf0dfodRqkP/3MudPrQZHLNggNG4YYOrMm1
+/frn6R66VWKP9L6QxsvRAm0pk83XSz1Y9syKKYpE68cVCCnywP3YbQT3rp7oKL4B
++KMNBYLgVX9/E/MRlw8VXBND3C7V4i8Bmy3b6Ly84FMaZUylNQfFR3tP/l1xB5a/
+QD6zES/pURgnPMcBqS3Vq+ZiFg0McSd3bhx7+aP+KszThXGUxzXXTkU2xqKlVxXz
+cQs049nTXEkJ+uMpXKvf9ZtO4fU1XOabYjd5iiOZ+oQ/I7gz8H6WJzbjdSrYdDBr
+TZgCaQTDDUgWbYAjIKGKnodq35QF4E9buoxYxU0EqDbEpHR0mefayHg1s1XzLlUE
+LLI15B1oEDhyqvW+apkUr0BFmARYfE9TXjENnwnLs8e11YEygai4ohJfoR+GYpEy
+WPUF/clTAy6iJ0D65RucIz9/0+lK9OJH4B/dzrjr1yoyOz7+bIKXdYJiQiYn6Bk3
+G7T1SSgvqtIV/gnZ1vNLGf+d/jYvLcTJkfZpV0KgYeFvAErlbjRuf7ciSE9dMYd9
+5Ug04IMyCkDT85b8l+bCJC6tVSxU1wTTC6Y9lhWIPf7vEyWlU9+AZCZkXW6x6QFA
+niXCPEJCtDaXr4Sp+euyF42xKSIcybhjdB1eIDl0+hEMeMPI1aOf1ejm8ZyF5bRe
+eR9eGd3u7NeQF0GsMYuM
+=dHIp
+-----END PGP SIGNATURE-----
+
+--OwLcNYc0lM97+oe1--
