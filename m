@@ -1,82 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54602 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751047AbdIKW27 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Sep 2017 18:28:59 -0400
-Subject: Re: XFS and sector size on thin volumes
-References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
- <20170909231215.GK17782@dastard>
- <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
- <20170909235323.GL17782@dastard>
- <838841738c3d8ca84328075615f95475@assyoma.it>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
-Date: Mon, 11 Sep 2017 17:28:58 -0500
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17938 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751054AbdIMJoB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 05:44:01 -0400
+Date: Wed, 13 Sep 2017 19:43:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: Uninitialized memory read at xlog_write
+Message-ID: <20170913094335.GV17782@dastard>
+References: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
+ <20170911150157.GA13400@bfoster.bfoster>
+ <201709131614.FAG69217.MSHFFVOFLJtQOO@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
-In-Reply-To: <838841738c3d8ca84328075615f95475@assyoma.it>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201709131614.FAG69217.MSHFFVOFLJtQOO@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: bfoster@redhat.com, sandeen@redhat.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
 
-On 9/11/17 5:14 PM, Gionatan Danti wrote:
->> If a block device is presented with 512 sectors on 4k-only sector
->> drives, then that's a bug. If it's doing so with 512e drives,
->> then that's still a bug because it should be presenting as a
->> 512 byte logical, 4096 byte physical sector size device and in that
->> case mkfs.xfs will choose 4k sectors by default.
->>
->> IOWs, if the underlying device is correctly presented to mkfs.xfs
->> then it will choose the correct sector size by default.  dm-thinp
->> does the right thing with sector sizes, but I have no idea about
->> ZoL.
+On Wed, Sep 13, 2017 at 04:14:37PM +0900, Tetsuo Handa wrote:
+> Brian Foster wrote:
+> > I threw a kmemcheck enabled kernel on a couple boxes out of curiosity.
+> > I didn't reproduce anything related to XFS with the "allow partially
+> > uninit." option enabled, even after running a quick group run in
+> > xfstests. Without that option, I did see an xlog_write() splat on a
+> > rhel7 boot but it was preceded by a constant stream of other reports
+> > (__d_lookup(), link_path_walk(), etc.) and ultimately resulted in a
+> > failed/hung bootup (after quite some time). I'm in the process of seeing
+> > a similar result on a Fedora vm running for-next. This isn't really
+> > debuggable in the current form due to the volume of preceding errors,
+> > the required boot time and the fact that my machines ultimately fall
+> > over.
+> > 
+> > Do you see different behavior? Do you have the "allow partially
+> > uninitialized memory" option enabled or disabled? I wonder if there are
+> > fixes for these other errors I'm seeing in linux-next that XFS for-next
+> > hasn't picked up yet..?
 > 
-> Hi Dave,
-> it seems ZVOLs behave... interestingly...
+> When I tested using linux-next-20170901, xlog_write() was the first splat
+> (after I workarounded take_dentry_name_snapshot() splat).
+> Today I retested using linux.git with a different VM and got a different result.
 > 
-> # 4K volume
-> [root@blackhole ~]# zfs create tank/vol1 -V 300M -b 4k
-> [root@blackhole ~]# blockdev --getss --getpbsz --getiomin --getioopt /dev/zvol/tank/vol1
-> 512
-> 4096
-> 4096
-> 4096
-
-<snip> last 3 vals follow volume's block size </snip>
-
-That's all ok, it's just that xfs will have to use the logical sector
-size (512) for its sector size, not the physical - which is large than
-the maximum (4k) block it can handle on x86.
- 
-> So, it seems that volume's block size does not only change the iomin/ioopt values, but pbsz also. On the other hand, ss is stuck at 512B, even if I am using a 512e (4K physical sector size) underlying disk:
+> Here are console log and kernel config as of 6d8ef53e8b2fed8b ("Merge tag 'f2fs-for-4.14'
+> of git://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs") on linux.git .
 > 
-> [root@blackhole ~]# blockdev --getss --getpbsz --getiomin --getioopt /dev/sdc
-> 512
-> 4096
-> 4096
-> 0
+> http://I-love.SAKURA.ne.jp/tmp/serial-20170913.txt.xz
+> http://I-love.SAKURA.ne.jp/tmp/config-4.13-20170913
 > 
-> Creating an XFS filesystem on such a ZVOL will issue the following message:
 > 
-> "specified blocksize 4096 is less than device physical sector size 8192
-> switching to logical sector size 512"
+> CONFIG_HAVE_ARCH_KMEMCHECK=y
+> CONFIG_KMEMCHECK=y
+> # CONFIG_KMEMCHECK_DISABLED_BY_DEFAULT is not set
+> CONFIG_KMEMCHECK_ENABLED_BY_DEFAULT=y
+> # CONFIG_KMEMCHECK_ONESHOT_BY_DEFAULT is not set
+> CONFIG_KMEMCHECK_QUEUE_SIZE=64
+> CONFIG_KMEMCHECK_SHADOW_COPY_SHIFT=5
+> CONFIG_KMEMCHECK_PARTIAL_OK=y
+> # CONFIG_KMEMCHECK_BITOPS_OK is not set
+> 
+> ----------
+>          Mounting Huge Pages File System...
+> 
+> [  OK  ] Stopped target Switch Root.
+> 
+> [  OK  ] Stopped target Initrd File Systems.[ 1054.691505] WARNING: kmemcheck: Caught 32-bit read from uninitialized memory (ffff880135396660)
+> [ 1054.691506] 000000000000000093050a200000000000000000000000000000000000000000
+> [ 1054.691511]  u u u u u u u u i i i i i i i i u u u u u u u u u u u u u u u u
+> [ 1054.691515]  ^
+> [ 1054.691519] RIP: 0010:xlog_write+0x344/0x6b0
 
-That's the warning we (I) talked about getting rid of.  In part because
-you didn't "specify" anything.  :(  It's just telling you that you can't
-go to what it thinks is the "optimal" sector size for the filesystem, i.e.
-the one that matches the physical sector size of the storage; instead it is
-going down to the logical sector size of 512 because it must be <=
-the fs block size.
+What line of code does this correspond to?
 
-> In this case, should I specify block size (-b size=4k) at mkfs.xfs time, or not?
-> Thanks.
+Cheers,
 
-I don't think -b size=4k will change anything.  If you specify -s size=512, that
-might shut up the warning.  If the warning doesn't bother you, I don't think
-anything is particularly wrong with the filesystem it created.
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
