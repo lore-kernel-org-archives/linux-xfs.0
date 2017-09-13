@@ -1,51 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45342 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751211AbdIOOy1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:27 -0400
-Received: from [8.25.222.2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dss0h-0003Ho-9h
-        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:27 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/18] xfs: don't set XFS_BTCUR_BPRV_WASDEL in xfs_bunmapi
-Date: Fri, 15 Sep 2017 07:54:11 -0700
-Message-Id: <20170915145426.26194-4-hch@lst.de>
-In-Reply-To: <20170915145426.26194-1-hch@lst.de>
-References: <20170915145426.26194-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:59006 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751015AbdIMLar (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Sep 2017 07:30:47 -0400
+From: Masatake YAMATO <yamato@redhat.com>
+Subject: [PATCH v2] xfs_repair: don't use do_warn for normal log message
+Date: Wed, 13 Sep 2017 20:30:44 +0900
+Message-Id: <20170913113044.23081-1-yamato@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: yamato@redhat.com
 
-The XFS_BTCUR_BPRV_WASDEL flag is supposed to indicate that we are
-converting a delayed allocation to a real one, which isn't the case
-in xfs_bunmapi.  Setting it could theoretically lead to misaccounting
-here, but it's unlikely that we ever hit it in practice.
+In some case, exit statuses of xfs_repair -n are different even for the
+same file system when -v is specified or not. This patch fixes this
+behavior.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+If -v is specified, do_warn() is used in zero_log() for printing
+a normal message. That makes the exit status to 1 though there
+is no dirtiness in the file system.
+
+The original zero_log():
+
+	error = xlog_find_tail(log, &head_blk, &tail_blk);
+	if (error) {...
+	} else {
+		if (verbose) {
+			do_warn(
+	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
+				head_blk, tail_blkn);
+		}
+
+do_warn() is used for the message, "zero_log:...".  do_log
+should be used instead because this log message is for just reporting the
+values of head_blk, and tail_blk. do_log is for "just reporting".
+
+Using do_warn unintentionally has an impact.
+It causes the exit status of the command.
+do_warn sets fs_is_dirty global variable.
+That refers in main function to decide the exit status.
+
+    void
+    do_warn(char const *msg, ...)
+    {
+	    va_list args;
+
+	    fs_is_dirty = 1;
+
+    int
+    main(int argc, char **argv)
+    {
+    ...
+
+		    if (fs_is_dirty)
+			    return(1);
+
+Signed-off-by: Masatake YAMATO <yamato@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 555ff198e28c..ef30b52c32af 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5725,11 +5725,7 @@ __xfs_bunmapi(
- 					XFS_QMOPT_RES_REGBLKS);
- 			}
- 			ip->i_delayed_blks -= del.br_blockcount;
--			if (cur)
--				cur->bc_private.b.flags |=
--					XFS_BTCUR_BPRV_WASDEL;
--		} else if (cur)
--			cur->bc_private.b.flags &= ~XFS_BTCUR_BPRV_WASDEL;
-+		}
+ Please, ignore the original patch I submitted a few minutes ago.
+ The change is applied to wrong if/else block in the original patch.
  
- 		error = xfs_bmap_del_extent(ip, tp, &lastx, dfops, cur, &del,
- 				&tmp_logflags, whichfork, flags);
+ repair/phase2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/repair/phase2.c b/repair/phase2.c
+index c21778b8..850cd99e 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -86,7 +86,7 @@ zero_log(
+ 			exit(2);
+ 	} else {
+ 		if (verbose) {
+-			do_warn(
++			do_log(
+ 	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
+ 				head_blk, tail_blk);
+ 		}
 -- 
-2.14.1
+2.13.5
 
