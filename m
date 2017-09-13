@@ -1,52 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41404 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751733AbdIODk4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 23:40:56 -0400
-Subject: Re: [ANNOUNCE] xfsdump: master updated to ce8b006
-References: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
- <CAMKF1spg5jrxPnm8_wwsW=pj90pVjsFxsthfiV3FaJfK+z62FQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <aef2d3ee-8a55-771a-f80d-4b9b261614b2@sandeen.net>
-Date: Thu, 14 Sep 2017 22:40:55 -0500
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35047 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751543AbdIMJNP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 05:13:15 -0400
+Received: by mail-qk0-f176.google.com with SMTP id r141so30310852qke.2
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2017 02:13:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAMKF1spg5jrxPnm8_wwsW=pj90pVjsFxsthfiV3FaJfK+z62FQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+From: peykasa Admin <peykasa.xfs@gmail.com>
+Date: Wed, 13 Sep 2017 13:43:13 +0430
+Message-ID: <CAF5xGhqsh9XDGS3hiQrxJ0fdH1tPTKp5B1GR4hvDDzGGLUkH4Q@mail.gmail.com>
+Subject: xfs-quota reports used space incorrectly
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Felix Janda <felix.janda@posteo.de>
+To: linux-xfs@vger.kernel.org
+
+Hi
+
+We face a problem with xfs quota
+
+SENARIO
+we have a file sharing for some users. Each user has a sharing folder.
+Each user has a 1G limitation for his folder. the limitation is created via
+xfs quota.
+
+PROBLEM
+For some users, the used space reported by xfs quota is not equal to the
+real used space.
+xfs quota reports the space is full (1024 M) and nothing can be moved there
+but the real used space is less than that value.
 
 
+We tested many solution and also the xfs_repair, but it didn't resolve.
 
-On 9/14/17 10:31 PM, Khem Raj wrote:
-> On Thu, Sep 14, 2017 at 7:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> Hi folks,
->>
->> The xfsdump repository at:
->>
->>         git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
->>
->> has just been updated.
->>
->> This is comprised solely of fixes for building against musl
->> libc; if all is well I'll tag this and push it out as 3.1.8.
->> If those using musl could report success or failure I'd appreciate it.
->>
-> 
-> Just tried. we still need
-> 
-> https://patchwork.kernel.org/patch/9946149/
-> 
-> to get musl builds going.
-
-Isn't that more a bug in libattr?
-
-Yes, it seems it's been fixed by Felix:
-
-http://git.savannah.nongnu.org/cgit/attr.git/commit/include/attributes.h?id=37a27b6fd09ecb37097b85e5db74e4f77b80fe0a
-
--Eric
+Sincerely yours
+Arian Rmz
