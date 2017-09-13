@@ -1,178 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50895 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdIOOy2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:28 -0400
-Received: from [8.25.222.2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dss0i-0003IT-5m
-        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:28 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/18] xfs: refactor xfs_del_extent_real
-Date: Fri, 15 Sep 2017 07:54:17 -0700
-Message-Id: <20170915145426.26194-10-hch@lst.de>
-In-Reply-To: <20170915145426.26194-1-hch@lst.de>
-References: <20170915145426.26194-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:35304 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751354AbdIMK61 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Sep 2017 06:58:27 -0400
+Date: Wed, 13 Sep 2017 18:58:23 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: [BUG] xfs/104 triggered NULL pointer dereference in iomap based dio
+Message-ID: <20170913105823.GD8034@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Use xfs_iext_update_extent to update entries in the in-core extent list.
-This isolates the function from the detailed layout of the extent list,
-and generally makes the code a lot more readable.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 60 ++++++++++++++++++++++++------------------------
- 1 file changed, 30 insertions(+), 30 deletions(-)
+Recently I noticed multiple crashes triggered by xfs/104 on ppc64 hosts
+in my upstream 4.13 kernel testings. The block layer is involved in the
+call trace so I add linux-block to cc list too. I append the full
+console log to the end of this mail.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 037efc97499f..bd00f4d135af 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5078,10 +5078,9 @@ xfs_bmap_del_extent_real(
- 	xfs_fsblock_t		del_endblock=0;	/* first block past del */
- 	xfs_fileoff_t		del_endoff;	/* first offset past del */
- 	int			do_fx;	/* free extent at end of routine */
--	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
- 	int			error;	/* error return value */
- 	int			flags = 0;/* inode logging flags */
--	xfs_bmbt_irec_t		got;	/* current extent entry */
-+	struct xfs_bmbt_irec	got;	/* current extent entry */
- 	xfs_fileoff_t		got_endoff;	/* first offset past got */
- 	int			i;	/* temp state */
- 	xfs_ifork_t		*ifp;	/* inode fork pointer */
-@@ -5090,9 +5089,8 @@ xfs_bmap_del_extent_real(
- 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
- 	/* REFERENCED */
- 	uint			qfield;	/* quota field to update */
--	xfs_filblks_t		temp;	/* for indirect length calculations */
--	xfs_filblks_t		temp2;	/* for indirect length calculations */
- 	int			state = 0;
-+	struct xfs_bmbt_irec	old;
- 
- 	mp = ip->i_mount;
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -5105,8 +5103,7 @@ xfs_bmap_del_extent_real(
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
- 	ASSERT(del->br_blockcount > 0);
--	ep = xfs_iext_get_ext(ifp, *idx);
--	xfs_bmbt_get_all(ep, &got);
-+	xfs_iext_get_extent(ifp, *idx, &got);
- 	ASSERT(got.br_startoff <= del->br_startoff);
- 	del_endoff = del->br_startoff + del->br_blockcount;
- 	got_endoff = got.br_startoff + got.br_blockcount;
-@@ -5193,54 +5190,56 @@ xfs_bmap_del_extent_real(
- 		 * Deleting the first part of the extent.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_startoff(ep, del_endoff);
--		temp = got.br_blockcount - del->br_blockcount;
--		xfs_bmbt_set_blockcount(ep, temp);
--		xfs_bmbt_set_startblock(ep, del_endblock);
-+		got.br_startoff = del_endoff;
-+		got.br_startblock = del_endblock;
-+		got.br_blockcount -= del->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		if (!cur) {
- 			flags |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
--		if ((error = xfs_bmbt_update(cur, del_endoff, del_endblock,
--				got.br_blockcount - del->br_blockcount,
--				got.br_state)))
-+		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-+				got.br_blockcount, got.br_state);
-+		if (error)
- 			goto done;
- 		break;
- 	case BMAP_RIGHT_FILLING:
- 		/*
- 		 * Deleting the last part of the extent.
- 		 */
--		temp = got.br_blockcount - del->br_blockcount;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
-+		got.br_blockcount -= del->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		if (!cur) {
- 			flags |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
--		if ((error = xfs_bmbt_update(cur, got.br_startoff,
--				got.br_startblock,
--				got.br_blockcount - del->br_blockcount,
--				got.br_state)))
-+		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-+				got.br_blockcount, got.br_state);
-+		if (error)
- 			goto done;
- 		break;
- 	case 0:
- 		/*
- 		 * Deleting the middle of the extent.
- 		 */
--		temp = del->br_startoff - got.br_startoff;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
-+
-+		old = got;
-+		got.br_blockcount = del->br_startoff - got.br_startoff;
-+		xfs_iext_update_extent(ifp, *idx, &got);
-+
- 		new.br_startoff = del_endoff;
--		temp2 = got_endoff - del_endoff;
--		new.br_blockcount = temp2;
-+		new.br_blockcount = got_endoff - del_endoff;
- 		new.br_state = got.br_state;
- 		new.br_startblock = del_endblock;
-+
- 		flags |= XFS_ILOG_CORE;
- 		if (cur) {
- 			error = xfs_bmbt_update(cur, got.br_startoff,
--					got.br_startblock, temp,
-+					got.br_startblock, got.br_blockcount,
- 					got.br_state);
- 			if (error)
- 				goto done;
-@@ -5262,7 +5261,8 @@ xfs_bmap_del_extent_real(
- 				 * insert operation.
- 				 */
- 				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
--						got.br_startblock, temp, &i);
-+						got.br_startblock,
-+						got.br_blockcount, &i);
- 				if (error)
- 					goto done;
- 				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -5270,17 +5270,17 @@ xfs_bmap_del_extent_real(
- 				 * Update the btree record back
- 				 * to the original value.
- 				 */
--				error = xfs_bmbt_update(cur, got.br_startoff,
--						got.br_startblock,
--						got.br_blockcount,
--						got.br_state);
-+				error = xfs_bmbt_update(cur, old.br_startoff,
-+						old.br_startblock,
-+						old.br_blockcount,
-+						old.br_state);
- 				if (error)
- 					goto done;
- 				/*
- 				 * Reset the extent record back
- 				 * to the original value.
- 				 */
--				xfs_bmbt_set_blockcount(ep, got.br_blockcount);
-+				xfs_iext_update_extent(ifp, *idx, &old);
- 				flags = 0;
- 				error = -ENOSPC;
- 				goto done;
--- 
-2.14.1
+Now I can reproduce the crash on x86_64 hosts too by running xfs/104
+many times (usually within 100 iterations). A git-bisect run (I ran it
+for 500 iterations before calling it good in bisect run to be safe)
+pointed the first bad commit to commit acdda3aae146 ("xfs: use
+iomap_dio_rw").
 
+I confirmed the bisect result by checking out a new branch with commit
+acdda3aae146 as HEAD, xfs/104 would crash kernel within 100 iterations,
+then reverting HEAD, xfs/104 passed 1500 iterations.
+
+On one of my test vms, the crash happened as
+
+[  340.419429] BUG: unable to handle kernel NULL pointer dereference at 0000000000000102
+[  340.420408] IP: __queue_work+0x32/0x420
+
+and that IP points to
+
+(gdb) l *(__queue_work+0x32)
+0x9cf32 is in __queue_work (kernel/workqueue.c:1383).
+1378            WARN_ON_ONCE(!irqs_disabled());
+1379
+1380            debug_work_activate(work);
+1381
+1382            /* if draining, only works from the same workqueue are allowed */
+1383            if (unlikely(wq->flags & __WQ_DRAINING) &&
+1384                WARN_ON_ONCE(!is_chained_work(wq)))
+1385                    return;
+1386    retry:
+1387            if (req_cpu == WORK_CPU_UNBOUND)
+
+So looks like "wq" is null. The test vm is a kvm guest running 4.13
+kernel with 4 vcpus and 8G memory.
+
+If more information is needed please let me know.
+
+Thanks,
+Eryu
+
+P.S. console log when crashing
+
+[  339.746983] run fstests xfs/104 at 2017-09-13 17:38:26
+[  340.027352] XFS (vda6): Unmounting Filesystem
+[  340.207107] XFS (vda6): Mounting V5 Filesystem
+[  340.217553] XFS (vda6): Ending clean mount
+[  340.419429] BUG: unable to handle kernel NULL pointer dereference at 0000000000000102
+[  340.420408] IP: __queue_work+0x32/0x420
+[  340.420408] PGD 215373067
+[  340.420408] P4D 215373067
+[  340.420408] PUD 21210d067
+[  340.420408] PMD 0
+[  340.420408]
+[  340.420408] Oops: 0000 [#1] SMP
+[  340.420408] Modules linked in: xfs ip6t_rpfilter ipt_REJECT nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack nf_conntrack libcrc32c ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_mangle ip6table_security ip6table_raw iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter btrfs xor raid6_pq ppdev i2c_piix4 parport_pc i2c_core parport virtio_balloon pcspkr nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables ext4 mbcache jbd2 ata_generic pata_acpi virtio_net virtio_blk ata_piix libata virtio_pci virtio_ring serio_raw virtio floppy
+[  340.420408] CPU: 3 PID: 0 Comm: swapper/3 Not tainted 4.13.0 #64
+[  340.420408] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+[  340.420408] task: ffff8b1d96222500 task.stack: ffffb06bc0cb8000
+[  340.420408] RIP: 0010:__queue_work+0x32/0x420
+[  340.420408] RSP: 0018:ffff8b1d9fd83d18 EFLAGS: 00010046
+[  340.420408] RAX: 0000000000000096 RBX: 0000000000000002 RCX: ffff8b1d9489e6d8
+[  340.420408] RDX: ffff8b1d903c2090 RSI: 0000000000000000 RDI: 0000000000002000
+[  340.420408] RBP: ffff8b1d9fd83d58 R08: 0000000000000400 R09: 0000000000000009
+[  340.420408] R10: ffff8b1d9532b400 R11: 0000000000000000 R12: 0000000000002000
+[  340.420408] R13: 0000000000000000 R14: ffff8b1d903c2090 R15: 0000000000007800
+[  340.420408] FS:  0000000000000000(0000) GS:ffff8b1d9fd80000(0000) knlGS:0000000000000000
+[  340.420408] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  340.420408] CR2: 0000000000000102 CR3: 00000002152ce000 CR4: 00000000000006e0
+[  340.420408] Call Trace:
+[  340.420408]  <IRQ>
+[  340.420408]  ? __slab_free+0x8e/0x260
+[  340.420408]  queue_work_on+0x38/0x40
+[  340.420408]  iomap_dio_bio_end_io+0x86/0x120
+[  340.420408]  bio_endio+0x9f/0x120
+[  340.420408]  blk_update_request+0xa8/0x2f0
+[  340.420408]  blk_mq_end_request+0x1e/0x70
+[  340.420408]  virtblk_request_done+0x22/0x30 [virtio_blk]
+[  340.420408]  __blk_mq_complete_request+0x8f/0x140
+[  340.420408]  blk_mq_complete_request+0x2a/0x30
+[  340.420408]  virtblk_done+0x71/0x100 [virtio_blk]
+[  340.420408]  vring_interrupt+0x34/0x80 [virtio_ring]
+[  340.420408]  __handle_irq_event_percpu+0x7e/0x190
+[  340.420408]  handle_irq_event_percpu+0x32/0x80
+[  340.420408]  handle_irq_event+0x3b/0x60
+[  340.420408]  handle_edge_irq+0x72/0x180
+[  340.420408]  handle_irq+0x6f/0x110
+[  340.420408]  do_IRQ+0x46/0xd0
+[  340.420408]  common_interrupt+0x93/0x93
+[  340.420408] RIP: 0010:native_safe_halt+0x6/0x10
+[  340.420408] RSP: 0018:ffffb06bc0cbbe70 EFLAGS: 00000246 ORIG_RAX: ffffffffffffffae
+[  340.420408] RAX: 0000000000000000 RBX: ffff8b1d96222500 RCX: 0000000000000000
+[  340.420408] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+[  340.420408] RBP: ffffb06bc0cbbe70 R08: 000000000679cadf R09: 0000000000000001
+[  340.420408] R10: 000000000001fdfd R11: 0000000000000000 R12: 0000000000000003
+[  340.420408] R13: ffff8b1d96222500 R14: 0000000000000000 R15: 0000000000000000
+[  340.420408]  </IRQ>
+[  340.420408]  default_idle+0x20/0x100
+[  340.420408]  arch_cpu_idle+0xf/0x20
+[  340.420408]  default_idle_call+0x23/0x30
+[  340.420408]  do_idle+0x174/0x1e0
+[  340.420408]  cpu_startup_entry+0x73/0x80
+[  340.420408]  start_secondary+0x156/0x190
+[  340.420408]  secondary_startup_64+0x9f/0x9f
+[  340.420408] Code: 89 e5 41 57 41 56 41 55 41 54 49 89 f5 53 49 89 d6 41 89 fc 48 83 ec 18 89 7d d4 9c 58 0f 1f 44 00 00 f6 c4 02 0f 85 0a 03 00 00 <41> f6 85 02 01 00 00 01 0f 85 0c 03 00 00 48 b8 eb 83 b5 80 46
+[  340.420408] RIP: __queue_work+0x32/0x420 RSP: ffff8b1d9fd83d18
+[  340.420408] CR2: 0000000000000102
+[  340.420408] ---[ end trace 4ae4f080188b0b36 ]---
+[  340.420408] Kernel panic - not syncing: Fatal exception in interrupt
+[  340.420408] Shutting down cpus with NMI
+[  340.420408] Kernel Offset: 0x6000000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+[  340.420408] ---[ end Kernel panic - not syncing: Fatal exception in interrupt
