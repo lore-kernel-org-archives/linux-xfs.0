@@ -1,98 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57633 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751422AbdIOOy3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:29 -0400
-Received: from [8.25.222.2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dss0j-0003JF-E2
-        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:29 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/18] xfs: remove xfs_bmbt_get_state
-Date: Fri, 15 Sep 2017 07:54:26 -0700
-Message-Id: <20170915145426.26194-19-hch@lst.de>
-In-Reply-To: <20170915145426.26194-1-hch@lst.de>
-References: <20170915145426.26194-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:45492 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751084AbdIMPRb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Sep 2017 11:17:31 -0400
+Subject: Re: backport request/question
+References: <CAGbvivJv=qSRA6Vm2ggjpYcg59gXA0YroYcUHmsJXUfqodtzjQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a83ed475-2822-c502-9ecc-12fcf97d5a17@sandeen.net>
+Date: Wed, 13 Sep 2017 10:17:30 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAGbvivJv=qSRA6Vm2ggjpYcg59gXA0YroYcUHmsJXUfqodtzjQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Wyllys Ingersoll <wyllys.ingersoll@keepertech.com>, linux-xfs@vger.kernel.org
 
-Unused after the big bmap refactor.
+On 9/13/17 9:48 AM, Wyllys Ingersoll wrote:
+> Are the recent XFS fixes in the 4.13 kernel planned for backport to
+> 4.12 or 4.9 kernels?
+> 
+> Im specifically interested in "xfs: don't crash on unexpected holes in
+> dir/attr btrees" as it fixed critical problems triggered by ceph OSD
+> processes running on XFS disks.
+> 
+> 
+> -Wyllys Ingersoll
+>  Keeper Technology
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap_btree.c | 29 +----------------------------
- fs/xfs/libxfs/xfs_bmap_btree.h |  1 -
- 2 files changed, 1 insertion(+), 29 deletions(-)
+The commit itself does not cc: stable, so it won't be automatic.  It will
+likely be up to an interested party to submit it to the stable kernel.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index e66ebd982cfb..086e6fc8e4fc 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -37,22 +37,6 @@
- #include "xfs_cksum.h"
- #include "xfs_rmap.h"
- 
--/*
-- * Determine the extent state.
-- */
--/* ARGSUSED */
--STATIC xfs_exntst_t
--xfs_extent_state(
--	xfs_filblks_t		blks,
--	int			extent_flag)
--{
--	if (extent_flag) {
--		ASSERT(blks != 0);	/* saved for DMIG */
--		return XFS_EXT_UNWRITTEN;
--	}
--	return XFS_EXT_NORM;
--}
--
- /*
-  * Convert on-disk form of btree root to in-memory form.
-  */
-@@ -90,7 +74,7 @@ xfs_bmdr_to_bmbt(
- /*
-  * Convert a compressed bmap extent record to an uncompressed form.
-  * This code must be in sync with the routines xfs_bmbt_get_startoff,
-- * xfs_bmbt_get_startblock, xfs_bmbt_get_blockcount and xfs_bmbt_get_state.
-+ * xfs_bmbt_get_startblock and xfs_bmbt_get_blockcount.
-  */
- STATIC void
- __xfs_bmbt_get_all(
-@@ -156,17 +140,6 @@ xfs_bmbt_get_startoff(
- 		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
- }
- 
--xfs_exntst_t
--xfs_bmbt_get_state(
--	xfs_bmbt_rec_host_t	*r)
--{
--	int	ext_flag;
--
--	ext_flag = (int)((r->l0) >> (64 - BMBT_EXNTFLAG_BITLEN));
--	return xfs_extent_state(xfs_bmbt_get_blockcount(r),
--				ext_flag);
--}
--
- /*
-  * Extract the blockcount field from an on disk bmap extent record.
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 93f95bcee915..6f891eeb88f6 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -102,7 +102,6 @@ extern void xfs_bmbt_get_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
- extern xfs_filblks_t xfs_bmbt_get_blockcount(xfs_bmbt_rec_host_t *r);
- extern xfs_fsblock_t xfs_bmbt_get_startblock(xfs_bmbt_rec_host_t *r);
- extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
--extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
- 
- void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
- extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
--- 
-2.14.1
+Upstream developers are generally just that, and don't have the bandwidth
+to curate patches for older -stable kernels.
 
+If you'd like to send it to stable yourself, the process is outlined in
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/stable-kernel-rules.rst
+
+-Eric
+
+-Eric
