@@ -1,76 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55179 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751413AbdINMCb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 08:02:31 -0400
-Date: Thu, 14 Sep 2017 14:02:29 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v2 4/4] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
-Message-ID: <20170914120229.GA22886@quack2.suse.cz>
-References: <20170914095047.23935-1-agruenba@redhat.com>
- <20170914095047.23935-5-agruenba@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49088 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751516AbdINMUC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Sep 2017 08:20:02 -0400
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
+References: <20170908152805.GA16646@linux.intel.com>
+        <20170908212153.14880-1-ross.zwisler@linux.intel.com>
+        <20170912064411.GR10621@dastard>
+        <20170912153820.GA5000@linux.intel.com>
+        <20170912234729.GW10621@dastard>
+        <20170913144215.GA12395@linux.intel.com>
+        <20170913220108.GX10621@dastard>
+        <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
+        <20170913233438.GY10621@dastard>
+        <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
+        <20170914004038.GZ10621@dastard>
+        <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
+Date: Thu, 14 Sep 2017 08:19:58 -0400
+In-Reply-To: <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
+        (Dan Williams's message of "Wed, 13 Sep 2017 18:24:10 -0700")
+Message-ID: <x49a81xeakx.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170914095047.23935-5-agruenba@redhat.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Thu 14-09-17 11:50:47, Andreas Gruenbacher wrote:
-> @@ -3422,9 +3422,38 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->  	map.m_lblk = first_block;
->  	map.m_len = last_block - first_block + 1;
->  
-> -	if (!(flags & IOMAP_WRITE)) {
-> +	if (flags & IOMAP_REPORT) {
->  		ret = ext4_map_blocks(NULL, inode, &map, 0);
-> -	} else {
-> +		if (ret < 0)
-> +			return ret;
-> +
-> +		if (ret == 0) {
-> +			ext4_lblk_t end = map.m_lblk + map.m_len - 1;
-> +			struct extent_status es;
-> +
-> +			ext4_es_find_delayed_extent_range(inode, map.m_lblk, end, &es);
-> +
-> +			if (!es.es_len || es.es_lblk > end) {
-> +				/* entire range is a hole */
-> +			} else if (es.es_lblk > map.m_lblk) {
-> +				/* range starts with a hole */
-> +				map.m_len = es.es_lblk - map.m_lblk;
-> +			} else {
-> +				ext4_lblk_t offs = 0;
-> +
-> +				if (es.es_lblk < map.m_lblk)
-> +					offs = map.m_lblk - es.es_lblk;
-> +				map.m_lblk = es.es_lblk + offs;
-> +				map.m_pblk = ext4_es_pblock(&es) + offs;
-> +				map.m_len = es.es_len - offs;
-> +				if (ext4_es_is_unwritten(&es))
-> +					map.m_flags |= EXT4_MAP_UNWRITTEN;
+Dan Williams <dan.j.williams@intel.com> writes:
 
-This is not possible. If there is unwritten extent at map->m_lblk, then
-ext4_map_blocks() could not have possibly returned 0. So just delete this
-condition and set map.m_pblk to 0 since delalloc extent has no physical
-possition.
+> On Wed, Sep 13, 2017 at 5:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> On Wed, Sep 13, 2017 at 05:28:39PM -0700, Dan Williams wrote:
+>>> On Wed, Sep 13, 2017 at 4:34 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> > /me shrugs
+>>> >
+>>> > I just don't like the concept of using tracepoints to as a
+>>> > definitive diagnostic test for something working because it'll break
+>>> > when the kernel implementation and tracepoints change. So while we
+>>> > can probe for perf being present, we can't probe whether the
+>>> > tracepoint we need behaves as the test expects it to...
+>>>
+>>> That concern makes sense.
+>>>
+>>> We handle that it a crude way in the libnvdimm unit tests by hard
+>>> coding a required minimum kernel version and rolling a test forward to
+>>> depend on a new kernel when assumptions about the kernel-internals
+>>> change. The tests also inject out-of-tree kernel modules that let us
+>>> go after specific kernel internal behavior. With this approach we
+>>> don't end up creating userspace ABI since the test explicitly loads
+>>> out-of-tree modules.
+>>
+>> That's horrible. OT, but how are distros or anyone backporting
+>> libnvdimm fixes and features supposed to test their kernels work
+>> correctly with such a test harness?
+>
+> The upstream kernel version for the test to assume can be overridden
+> by an environment variable. It has worked well so far for me when I'm
+> using it it to test backports, but I don't have much in the way of
+> third-party feedback.
 
-> +				if (ext4_es_is_delayed(&es))
-> +					delalloc = true;
+It sucks.  :-)  What we really want is to depend on a feature being
+available, not on a kernel version.  We did discuss this a while ago.
+Let me go dig it up...
+  https://lists.01.org/pipermail/linux-nvdimm/2017-March/009253.html
 
-Also ext4_es_is_delayed(&es) is guaranteed to be true since you've looked
-it up by ext4_es_find_delayed_extent_range(). So just set delalloc = true
-unconditionally.
+We never came to any real conclusion on a good way forward, though.
 
-Otherwise the patch looks good so after fixing up these small issues feel
-free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Cheers,
+Jeff
