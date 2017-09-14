@@ -1,63 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60586 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751259AbdIPSd4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Sep 2017 14:33:56 -0400
-Subject: Re: XFS and sector size on thin volumes
-References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
- <20170909231215.GK17782@dastard>
- <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
- <20170909235323.GL17782@dastard>
- <838841738c3d8ca84328075615f95475@assyoma.it>
- <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
- <e94a47555325c3e87e5d184e1cab20b4@assyoma.it>
- <1357a2ee8280242c68d92cd4aba06f51@assyoma.it>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4ca74023-dcaf-9963-1b8f-2c1924866564@sandeen.net>
-Date: Sat, 16 Sep 2017 13:33:55 -0500
+Received: from mail-io0-f171.google.com ([209.85.223.171]:43566 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751724AbdINJR0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2017 05:17:26 -0400
+Received: by mail-io0-f171.google.com with SMTP id k101so16342250iod.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2017 02:17:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1357a2ee8280242c68d92cd4aba06f51@assyoma.it>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170830145921.GB5920@quack2.suse.cz>
+References: <20170829142942.21594-1-agruenba@redhat.com> <20170829142942.21594-5-agruenba@redhat.com>
+ <20170830145921.GB5920@quack2.suse.cz>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Thu, 14 Sep 2017 11:17:24 +0200
+Message-ID: <CAHc6FU4aDVF7fhYVfShnRyg=0P=8T7mJ9D59r2CC1i2OO-SEeQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On 9/16/17 11:43 AM, Gionatan Danti wrote:
-> Il 12-09-2017 07:24 Gionatan Danti ha scritto:
->> Hi Eric,
->> so no performance decrease is expected by letting the journal to be
->> aligned to 512 byte boundary, even on an underlying 512e/4K disk?
+Jan,
 
-I don't think I said that - this is the first time you've mentioned
-/alignment/, and I've seen no indication of your alignment one way or
-another.
+On Wed, Aug 30, 2017 at 4:59 PM, Jan Kara <jack@suse.cz> wrote:
+> On Tue 29-08-17 16:29:42, Andreas Gruenbacher wrote:
+>> From: Christoph Hellwig <hch@lst.de>
+>>
+>> Switch to the iomap_seek_hole and iomap_seek_data helpers for
+>> implementing lseek SEEK_HOLE / SEEK_DATA, and remove all the code that
+>> isn't needed any more.
+>>
+>> Note that with this patch, ext4 will now always depend on the iomap code
+>> instead of only when CONFIG_DAX is enabled, and it requires adding a
+>> call into the extent status tree for iomap_begin as well to properly
+>> deal with delalloc extents.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> [Minor fixes and cleanups by Andreas]
+>> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>
+> ...
+>
+>> @@ -3425,6 +3425,29 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>>
+>>       if (!(flags & IOMAP_WRITE)) {
+>>               ret = ext4_map_blocks(NULL, inode, &map, 0);
+>> +             if (ret < 0)
+>> +                     return ret;
+>
+> One general question about IOMAP_REPORT: When there is unwritten extent, we
+> use page_cache_seek_hole_data() to determine what is actually a hole and
+> what is data. We could use exactly the same function to determine what is a
+> hole and what is data in an IOMAP_HOLE extent, couldn't we? Now I
+> understand that a filesystem is supposed to return IOMAP_DELALLOC extent if
+> there is delayed allocation data covering queried offset so probably it's
+> not a great idea to use that however it still seems a bit like an
+> unnecessary duplication...
 
->> Thanks.
-> 
-> Hi all and sorry for the bump...
-> 
-> So, just to be sure: there is *no* performance penalty in creating an XFS filesystem with 512B sector size on a 512e/4Kn disk (which is not recognized as an AF disk due to the ZVOL in-between)?
+There is no point in scanning the page cache on filesystems that don't
+support delayed allocation, so it does make sense to distinguish the
+two types of mappings.
 
+>> +             if (!ret) {
+>
+> Please go to this branch only for IOMAP_REPORT case to avoid unnecessary
+> overhead for DAX mappings...
+>
+>> +                     struct extent_status es = {};
+>> +
+>> +                     ext4_es_find_delayed_extent_range(inode, map.m_lblk,
+>> +                                     map.m_lblk + map.m_len - 1, &es);
+>> +                     /* Is delalloc data before next block in extent tree? */
+>> +                     if (es.es_len && es.es_lblk < map.m_lblk + map.m_len) {
+>
+> And this is still wrong - I have actually verified that with attached patch
+> that disables caching of extents (so it is equivalent to *very* aggresive
+> slab reclaim happening). With that patch applied you'll get:
+>
+> kvm0:~ # rm /mnt/file; xfs_io -f -c "pwrite 4096 4096" -c "seek -a 0"
+> /mnt/file
+> wrote 4096/4096 bytes at offset 4096
+> 4 KiB, 1 ops; 0.0000 sec (16.693 MiB/sec and 4273.5043 ops/sec)
+> Whence  Result
+> DATA    0
+> HOLE    8192
+>
+> Which is obviously wrong - hole should be 0, data should be 4096.
+>
+> And the reason why this is wrong is that when we are asked to map things at
+> first_block and there is a hole at that offset, we need to just truncate
+> the hole extent returned by ext4_map_blocks() by possibly following
+> delalloc allocation. But we still need to return that there *is a hole* at
+> first_block. But your patch seems to try to return the delalloc extent
+> instead which is wrong.
 
-> 
-> Or should I use "-b size=4k" with mkfs.xfs?
+Got it, thanks for the debug patch. I'll send a fixed version of the series.
 
-that specifies a 4k block size, which is already the default.
+>> +                             ext4_lblk_t offs = 0;
+>> +
+>> +                             if (es.es_lblk < map.m_lblk)
+>> +                                     offs = map.m_lblk - es.es_lblk;
+>> +                             map.m_lblk = es.es_lblk + offs;
+>> +                             map.m_pblk = ext4_es_pblock(&es) + offs;
+>> +                             map.m_len = es.es_len - offs;
+>> +                             if (ext4_es_is_unwritten(&es))
+>> +                                     map.m_flags |= EXT4_MAP_UNWRITTEN;
+>> +                             if (ext4_es_is_delayed(&es))
+>> +                                     delalloc = true;
+>> +                             ret = 1;
+>> +                     }
+>> +             }
+>>       } else {
+>>               int dio_credits;
+>>               handle_t *handle;
 
-You're conflating a lot of issues here - log alignment, sector size,
-physical & logical block size presented by both the underlying
-storage and the zvol ...
-
-I cannot speak to zvols, as I have no experience with them.
-
-But if the underlying storage is 512e/4k then you may want to specify
-the 4k /sector/ size with -s size=4k.
-
--Eric
-
-> Thanks.
-> 
+Thanks,
+Andreas
