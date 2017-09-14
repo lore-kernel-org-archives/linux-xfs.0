@@ -1,47 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr003msb.fastweb.it ([85.18.95.87]:32997 "EHLO
-        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751119AbdILFYg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2017 01:24:36 -0400
-Subject: Re: XFS and sector size on thin volumes
+Received: from mail-it0-f66.google.com ([209.85.214.66]:33897 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbdINMra (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2017 08:47:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Tue, 12 Sep 2017 07:24:32 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
-References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
- <20170909231215.GK17782@dastard>
- <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
- <20170909235323.GL17782@dastard>
- <838841738c3d8ca84328075615f95475@assyoma.it>
- <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
-Message-ID: <e94a47555325c3e87e5d184e1cab20b4@assyoma.it>
+In-Reply-To: <20170914120229.GA22886@quack2.suse.cz>
+References: <20170914095047.23935-1-agruenba@redhat.com> <20170914095047.23935-5-agruenba@redhat.com>
+ <20170914120229.GA22886@quack2.suse.cz>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Thu, 14 Sep 2017 14:47:28 +0200
+Message-ID: <CAHpGcMJY2PZJYLzUS5ejcnfSVkeO-GKL7z1fRONs1AUdyiaULg@mail.gmail.com>
+Subject: Re: [PATCH v2 4/4] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Jan Kara <jack@suse.cz>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Il 12-09-2017 00:28 Eric Sandeen ha scritto:
-> I don't think -b size=4k will change anything.  If you specify -s 
-> size=512, that
-> might shut up the warning.  If the warning doesn't bother you, I don't 
-> think
-> anything is particularly wrong with the filesystem it created.
-> 
-> -Eric
+2017-09-14 14:02 GMT+02:00 Jan Kara <jack@suse.cz>:
+> On Thu 14-09-17 11:50:47, Andreas Gruenbacher wrote:
+>> @@ -3422,9 +3422,38 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>>       map.m_lblk = first_block;
+>>       map.m_len = last_block - first_block + 1;
+>>
+>> -     if (!(flags & IOMAP_WRITE)) {
+>> +     if (flags & IOMAP_REPORT) {
+>>               ret = ext4_map_blocks(NULL, inode, &map, 0);
+>> -     } else {
+>> +             if (ret < 0)
+>> +                     return ret;
+>> +
+>> +             if (ret == 0) {
+>> +                     ext4_lblk_t end = map.m_lblk + map.m_len - 1;
+>> +                     struct extent_status es;
+>> +
+>> +                     ext4_es_find_delayed_extent_range(inode, map.m_lblk, end, &es);
+>> +
+>> +                     if (!es.es_len || es.es_lblk > end) {
+>> +                             /* entire range is a hole */
+>> +                     } else if (es.es_lblk > map.m_lblk) {
+>> +                             /* range starts with a hole */
+>> +                             map.m_len = es.es_lblk - map.m_lblk;
+>> +                     } else {
+>> +                             ext4_lblk_t offs = 0;
+>> +
+>> +                             if (es.es_lblk < map.m_lblk)
+>> +                                     offs = map.m_lblk - es.es_lblk;
+>> +                             map.m_lblk = es.es_lblk + offs;
+>> +                             map.m_pblk = ext4_es_pblock(&es) + offs;
+>> +                             map.m_len = es.es_len - offs;
+>> +                             if (ext4_es_is_unwritten(&es))
+>> +                                     map.m_flags |= EXT4_MAP_UNWRITTEN;
+>
+> This is not possible. If there is unwritten extent at map->m_lblk, then
+> ext4_map_blocks() could not have possibly returned 0. So just delete this
+> condition and set map.m_pblk to 0 since delalloc extent has no physical
+> position.
+>
+>> +                             if (ext4_es_is_delayed(&es))
+>> +                                     delalloc = true;
+>
+> Also ext4_es_is_delayed(&es) is guaranteed to be true since you've looked
+> it up by ext4_es_find_delayed_extent_range(). So just set delalloc = true
+> unconditionally.
 
-Hi Eric,
-so no performance decrease is expected by letting the journal to be 
-aligned to 512 byte boundary, even on an underlying 512e/4K disk?
+Since map.m_pblk is never used in the delalloc case, we can leave it
+undefined above as well.
 
-Thanks.
+> Otherwise the patch looks good so after fixing up these small issues feel
+> free to add:
+>
+> Reviewed-by: Jan Kara <jack@suse.cz>
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+Thanks,
+Andreas
