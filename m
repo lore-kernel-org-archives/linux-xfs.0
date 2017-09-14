@@ -1,91 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:31779 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751054AbdIMJ7o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 05:59:44 -0400
-Subject: Re: xfs: Uninitialized memory read at xlog_write
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <201709042119.CDE26519.MtQJHFOSOFOLVF@I-love.SAKURA.ne.jp>
-        <20170911150157.GA13400@bfoster.bfoster>
-        <201709131614.FAG69217.MSHFFVOFLJtQOO@I-love.SAKURA.ne.jp>
-        <20170913094335.GV17782@dastard>
-In-Reply-To: <20170913094335.GV17782@dastard>
-Message-Id: <201709131859.AHB43227.SOFFOHJVMLFtOQ@I-love.SAKURA.ne.jp>
-Date: Wed, 13 Sep 2017 18:59:38 +0900
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-io0-f169.google.com ([209.85.223.169]:43462 "EHLO
+        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751466AbdINOKE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2017 10:10:04 -0400
+Received: by mail-io0-f169.google.com with SMTP id k101so750201iod.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2017 07:10:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170914131638.qxbzeocvrkhjcjcu@linux-x5ow.site>
+References: <20170912153820.GA5000@linux.intel.com> <20170912234729.GW10621@dastard>
+ <20170913144215.GA12395@linux.intel.com> <20170913220108.GX10621@dastard>
+ <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
+ <20170913233438.GY10621@dastard> <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
+ <20170914004038.GZ10621@dastard> <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
+ <x49a81xeakx.fsf@segfault.boston.devel.redhat.com> <20170914131638.qxbzeocvrkhjcjcu@linux-x5ow.site>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 14 Sep 2017 07:10:02 -0700
+Message-ID: <CAPcyv4j4GUjQBa7ePUGLuHjZcf3G+0suvc7r6wmgGM_G_L5Gcw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: bfoster@redhat.com, sandeen@redhat.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Dave Chinner wrote:
-> On Wed, Sep 13, 2017 at 04:14:37PM +0900, Tetsuo Handa wrote:
-> > Brian Foster wrote:
-> > > I threw a kmemcheck enabled kernel on a couple boxes out of curiosity.
-> > > I didn't reproduce anything related to XFS with the "allow partially
-> > > uninit." option enabled, even after running a quick group run in
-> > > xfstests. Without that option, I did see an xlog_write() splat on a
-> > > rhel7 boot but it was preceded by a constant stream of other reports
-> > > (__d_lookup(), link_path_walk(), etc.) and ultimately resulted in a
-> > > failed/hung bootup (after quite some time). I'm in the process of seeing
-> > > a similar result on a Fedora vm running for-next. This isn't really
-> > > debuggable in the current form due to the volume of preceding errors,
-> > > the required boot time and the fact that my machines ultimately fall
-> > > over.
-> > > 
-> > > Do you see different behavior? Do you have the "allow partially
-> > > uninitialized memory" option enabled or disabled? I wonder if there are
-> > > fixes for these other errors I'm seeing in linux-next that XFS for-next
-> > > hasn't picked up yet..?
-> > 
-> > When I tested using linux-next-20170901, xlog_write() was the first splat
-> > (after I workarounded take_dentry_name_snapshot() splat).
-> > Today I retested using linux.git with a different VM and got a different result.
-> > 
-> > Here are console log and kernel config as of 6d8ef53e8b2fed8b ("Merge tag 'f2fs-for-4.14'
-> > of git://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs") on linux.git .
-> > 
-> > http://I-love.SAKURA.ne.jp/tmp/serial-20170913.txt.xz
-> > http://I-love.SAKURA.ne.jp/tmp/config-4.13-20170913
-> > 
-> > 
-> > CONFIG_HAVE_ARCH_KMEMCHECK=y
-> > CONFIG_KMEMCHECK=y
-> > # CONFIG_KMEMCHECK_DISABLED_BY_DEFAULT is not set
-> > CONFIG_KMEMCHECK_ENABLED_BY_DEFAULT=y
-> > # CONFIG_KMEMCHECK_ONESHOT_BY_DEFAULT is not set
-> > CONFIG_KMEMCHECK_QUEUE_SIZE=64
-> > CONFIG_KMEMCHECK_SHADOW_COPY_SHIFT=5
-> > CONFIG_KMEMCHECK_PARTIAL_OK=y
-> > # CONFIG_KMEMCHECK_BITOPS_OK is not set
-> > 
-> > ----------
-> >          Mounting Huge Pages File System...
-> > 
-> > [  OK  ] Stopped target Switch Root.
-> > 
-> > [  OK  ] Stopped target Initrd File Systems.[ 1054.691505] WARNING: kmemcheck: Caught 32-bit read from uninitialized memory (ffff880135396660)
-> > [ 1054.691506] 000000000000000093050a200000000000000000000000000000000000000000
-> > [ 1054.691511]  u u u u u u u u i i i i i i i i u u u u u u u u u u u u u u u u
-> > [ 1054.691515]  ^
-> > [ 1054.691519] RIP: 0010:xlog_write+0x344/0x6b0
-> 
-> What line of code does this correspond to?
-> 
+On Thu, Sep 14, 2017 at 6:16 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+> On Thu, Sep 14, 2017 at 08:19:58AM -0400, Jeff Moyer wrote:
+>> Dan Williams <dan.j.williams@intel.com> writes:
+>>
+>> > On Wed, Sep 13, 2017 at 5:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> >> On Wed, Sep 13, 2017 at 05:28:39PM -0700, Dan Williams wrote:
+>> >>> On Wed, Sep 13, 2017 at 4:34 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> >>> > /me shrugs
+>> >>> >
+>> >>> > I just don't like the concept of using tracepoints to as a
+>> >>> > definitive diagnostic test for something working because it'll break
+>> >>> > when the kernel implementation and tracepoints change. So while we
+>> >>> > can probe for perf being present, we can't probe whether the
+>> >>> > tracepoint we need behaves as the test expects it to...
+>> >>>
+>> >>> That concern makes sense.
+>> >>>
+>> >>> We handle that it a crude way in the libnvdimm unit tests by hard
+>> >>> coding a required minimum kernel version and rolling a test forward to
+>> >>> depend on a new kernel when assumptions about the kernel-internals
+>> >>> change. The tests also inject out-of-tree kernel modules that let us
+>> >>> go after specific kernel internal behavior. With this approach we
+>> >>> don't end up creating userspace ABI since the test explicitly loads
+>> >>> out-of-tree modules.
+>> >>
+>> >> That's horrible. OT, but how are distros or anyone backporting
+>> >> libnvdimm fixes and features supposed to test their kernels work
+>> >> correctly with such a test harness?
+>> >
+>> > The upstream kernel version for the test to assume can be overridden
+>> > by an environment variable. It has worked well so far for me when I'm
+>> > using it it to test backports, but I don't have much in the way of
+>> > third-party feedback.
+>>
+>> It sucks.  :-)  What we really want is to depend on a feature being
+>> available, not on a kernel version.  We did discuss this a while ago.
+>> Let me go dig it up...
+>>   https://lists.01.org/pipermail/linux-nvdimm/2017-March/009253.html
+>>
+>> We never came to any real conclusion on a good way forward, though.
+>
+> I think I already said this before [1], but can't we make a "features"
+> sysfs/debugfs attribute with one bit set for each feature implemented? This
+> definitively would help when running the test-suite on a backport.
+>
+> [1] https://lists.01.org/pipermail/linux-nvdimm/2016-March/004963.html
 
-                        /*
-                         * Copy region.
-                         *
-                         * Unmount records just log an opheader, so can have
-                         * empty payloads with no data region to copy. Hence we
-                         * only copy the payload if the vector says it has data
-                         * to copy.
-                         */
-                        ASSERT(copy_len >= 0);
-                        if (copy_len > 0) {
-                                memcpy(ptr, reg->i_addr + copy_off, copy_len); // <= xlog_write+0x344/0x6b0
-                                xlog_write_adv_cnt(&ptr, &len, &log_offset,
-                                                   copy_len);
-                        }
+What discouraged me from going that route in the past is the busy work
+of tracking / syncing these new debugfs feature gate flags across 2
+source repositories. If we want to stop depending on kernel version in
+the test suite over time I think the only sane way to manage that
+tight integration is to get ndctl into the kernel tree proper.
+
+...but please say a bit more about the actual pain points with the
+current environment variable approach. You want to be able to have a
+debugfs directory that has something like:
+
+/featureA
+/featureB
+/featureC
+/fixX
+/fixY
+/fixZ
+/quirkQ
+
+...where, depending on backport priorities, a subset of those may not
+exist? Does having the test suite in the kernel tree help or hurt what
+you're trying to do?
