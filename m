@@ -1,176 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59746 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbdIOOy3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:29 -0400
-Received: from [8.25.222.2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dss0j-0003JB-9L
-        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:29 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/18] xfs: remove all xfs_bmbt_set_* helpers except for xfs_bmbt_set_all
-Date: Fri, 15 Sep 2017 07:54:25 -0700
-Message-Id: <20170915145426.26194-18-hch@lst.de>
-In-Reply-To: <20170915145426.26194-1-hch@lst.de>
-References: <20170915145426.26194-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:38172 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751698AbdIOC5B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Sep 2017 22:57:01 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsdump: master updated to ce8b006
+Message-ID: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
+Date: Thu, 14 Sep 2017 21:57:00 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Felix Janda <felix.janda@posteo.de>, Khem Raj <raj.khem@gmail.com>
 
-Unused after the big bmap refactor.
+Hi folks,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap_btree.c | 102 ++++++-----------------------------------
- fs/xfs/libxfs/xfs_bmap_btree.h |   6 ---
- 2 files changed, 14 insertions(+), 94 deletions(-)
+The xfsdump repository at:
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 7e2d981626ef..e66ebd982cfb 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -188,44 +188,27 @@ xfs_bmbt_disk_get_startoff(
- 		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
- }
- 
--
- /*
-- * Set all the fields in a bmap extent record from the arguments.
-+ * Set all the fields in a bmap extent record from the uncompressed form.
-  */
- void
--xfs_bmbt_set_allf(
--	xfs_bmbt_rec_host_t	*r,
--	xfs_fileoff_t		startoff,
--	xfs_fsblock_t		startblock,
--	xfs_filblks_t		blockcount,
--	xfs_exntst_t		state)
-+xfs_bmbt_set_all(
-+	struct xfs_bmbt_rec_host *r,
-+	struct xfs_bmbt_irec	*s)
- {
--	int		extent_flag = (state == XFS_EXT_NORM) ? 0 : 1;
--
--	ASSERT(state == XFS_EXT_NORM || state == XFS_EXT_UNWRITTEN);
--	ASSERT((startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)) == 0);
--	ASSERT((blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0);
-+	int			extent_flag = (s->br_state != XFS_EXT_NORM);
- 
--	ASSERT((startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)) == 0);
-+	ASSERT(s->br_state == XFS_EXT_NORM || s->br_state == XFS_EXT_UNWRITTEN);
-+	ASSERT(!(s->br_startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)));
-+	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
-+	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
- 
- 	r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
--		((xfs_bmbt_rec_base_t)startoff << 9) |
--		((xfs_bmbt_rec_base_t)startblock >> 43);
--	r->l1 = ((xfs_bmbt_rec_base_t)startblock << 21) |
--		((xfs_bmbt_rec_base_t)blockcount &
--		(xfs_bmbt_rec_base_t)xfs_mask64lo(21));
--}
--
--/*
-- * Set all the fields in a bmap extent record from the uncompressed form.
-- */
--void
--xfs_bmbt_set_all(
--	xfs_bmbt_rec_host_t *r,
--	xfs_bmbt_irec_t	*s)
--{
--	xfs_bmbt_set_allf(r, s->br_startoff, s->br_startblock,
--			     s->br_blockcount, s->br_state);
-+		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
-+		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43);
-+	r->l1 = ((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
-+		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
-+		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
- }
- 
- /*
-@@ -253,63 +236,6 @@ xfs_bmbt_disk_set_all(
- 		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
- }
- 
--/*
-- * Set the blockcount field in a bmap extent record.
-- */
--void
--xfs_bmbt_set_blockcount(
--	xfs_bmbt_rec_host_t *r,
--	xfs_filblks_t	v)
--{
--	ASSERT((v & xfs_mask64hi(43)) == 0);
--	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64hi(43)) |
--		  (xfs_bmbt_rec_base_t)(v & xfs_mask64lo(21));
--}
--
--/*
-- * Set the startblock field in a bmap extent record.
-- */
--void
--xfs_bmbt_set_startblock(
--	xfs_bmbt_rec_host_t *r,
--	xfs_fsblock_t	v)
--{
--	ASSERT((v & xfs_mask64hi(12)) == 0);
--	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64hi(55)) |
--		  (xfs_bmbt_rec_base_t)(v >> 43);
--	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64lo(21)) |
--		  (xfs_bmbt_rec_base_t)(v << 21);
--}
--
--/*
-- * Set the startoff field in a bmap extent record.
-- */
--void
--xfs_bmbt_set_startoff(
--	xfs_bmbt_rec_host_t *r,
--	xfs_fileoff_t	v)
--{
--	ASSERT((v & xfs_mask64hi(9)) == 0);
--	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t) xfs_mask64hi(1)) |
--		((xfs_bmbt_rec_base_t)v << 9) |
--		  (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64lo(9));
--}
--
--/*
-- * Set the extent state field in a bmap extent record.
-- */
--void
--xfs_bmbt_set_state(
--	xfs_bmbt_rec_host_t *r,
--	xfs_exntst_t	v)
--{
--	ASSERT(v == XFS_EXT_NORM || v == XFS_EXT_UNWRITTEN);
--	if (v == XFS_EXT_NORM)
--		r->l0 &= xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN);
--	else
--		r->l0 |= xfs_mask64hi(BMBT_EXNTFLAG_BITLEN);
--}
--
- /*
-  * Convert in-memory form of btree root to on-disk form.
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index bd3c56f1cd03..93f95bcee915 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -109,12 +109,6 @@ extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
- extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
- 
- extern void xfs_bmbt_set_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
--extern void xfs_bmbt_set_allf(xfs_bmbt_rec_host_t *r, xfs_fileoff_t o,
--			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
--extern void xfs_bmbt_set_blockcount(xfs_bmbt_rec_host_t *r, xfs_filblks_t v);
--extern void xfs_bmbt_set_startblock(xfs_bmbt_rec_host_t *r, xfs_fsblock_t v);
--extern void xfs_bmbt_set_startoff(xfs_bmbt_rec_host_t *r, xfs_fileoff_t v);
--extern void xfs_bmbt_set_state(xfs_bmbt_rec_host_t *r, xfs_exntst_t v);
- 
- extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
- 			xfs_bmdr_block_t *, int);
--- 
-2.14.1
+	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
 
+has just been updated.
+
+This is comprised solely of fixes for building against musl
+libc; if all is well I'll tag this and push it out as 3.1.8.
+If those using musl could report success or failure I'd appreciate it.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+ce8b006 common/main.c: Include <locale.h>
+
+New Commits:
+
+Felix Janda (8):
+      [663f517] invutil/invidx: include <fcntl.h> for O_CREAT
+      [b848d35] dump/content.c: Include <linux/limits.h> for XATTR_LIST_MAX
+      [a03055f] common/main.c: Replace nonstandard SIGCLD by SIGCHLD
+      [7a0a8e7] librmt/rmtopen: Prefer <signal.h> over <sys/signal.h>
+      [cb66b83] dump/var.c: Include <limits.h> for PATH_MAX
+      [dd47bfa] cleanup: Kill __[u]int*_t types
+      [55b0f0e] common/types.h: explicitly define NBBY (bits per byte)
+      [ce8b006] common/main.c: Include <locale.h>
+
+
+Code Diffstat:
+
+ common/content_inode.h | 4 ++--
+ common/hsmapi.c        | 2 +-
+ common/main.c          | 3 ++-
+ common/types.h         | 4 ++++
+ doc/xfsdump.html       | 8 ++++----
+ dump/content.c         | 1 +
+ dump/var.c             | 1 +
+ inventory/inv_oref.h   | 2 +-
+ inventory/inv_priv.h   | 4 ++--
+ inventory/inventory.h  | 2 +-
+ invutil/invidx.c       | 1 +
+ librmt/rmtopen.c       | 2 +-
+ 12 files changed, 21 insertions(+), 13 deletions(-)
