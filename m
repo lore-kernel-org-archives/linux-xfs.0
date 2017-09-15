@@ -1,120 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:46923 "EHLO
-        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751308AbdINA2k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2017 20:28:40 -0400
-Received: by mail-io0-f180.google.com with SMTP id d16so10828343ioj.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2017 17:28:40 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:45220 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750841AbdIORAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Sep 2017 13:00:24 -0400
+Date: Fri, 15 Sep 2017 13:00:22 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 12/18] xfs: refactor xfs_bmap_add_extent_delay_real
+Message-ID: <20170915170022.GC7276@bfoster.bfoster>
+References: <20170915145426.26194-1-hch@lst.de>
+ <20170915145426.26194-13-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170913233438.GY10621@dastard>
-References: <20170908152805.GA16646@linux.intel.com> <20170908212153.14880-1-ross.zwisler@linux.intel.com>
- <20170912064411.GR10621@dastard> <20170912153820.GA5000@linux.intel.com>
- <20170912234729.GW10621@dastard> <20170913144215.GA12395@linux.intel.com>
- <20170913220108.GX10621@dastard> <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
- <20170913233438.GY10621@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 13 Sep 2017 17:28:39 -0700
-Message-ID: <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170915145426.26194-13-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 13, 2017 at 4:34 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Sep 13, 2017 at 03:23:39PM -0700, Dan Williams wrote:
->> On Wed, Sep 13, 2017 at 3:01 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Wed, Sep 13, 2017 at 08:42:15AM -0600, Ross Zwisler wrote:
->> >> On Wed, Sep 13, 2017 at 09:47:29AM +1000, Dave Chinner wrote:
->> >>
->> >> <>
->> >>
->> >> > I think similar concerns exist with using perf, too....
->> >>
->> >> I though that using perf addressed both concerns?
->> >>
->> >> > > > So what happens when the user is already tracing the test to
->> >> > > > find a bug and the test turns all their tracing off?
->> >>
->> >> By using perf we isolate our tracing from whatever other tracing is happening
->> >> in the system.  So, unlike the case where we were messing with a system-wide
->> >> ftrace knob, we run perf on our executable, and someone else can run perf on
->> >> their executable, and they don't collide.
->> >
->> > Yes, you've addressed the "gets inteh way of other tracing concern,
->> > but it's doesn't address the "it's an ugly way to determine a
->> > feature is active" concerns. It also creates an implicit stable
->> > tracepoint out of whatever you are looking at. i.e. that tracepoint
->> > can't go away, nor can it change functionality once a userspace app
->> > depends on it's current semantics to function correctly.
->> >
->> > And....
->> >
->> >> > > > Regardless of this screwing up developer bug triage, do we really
->> >> > > > want to add a dependency on kernel tracing into the test harness?
->> >>
->> >> Yep, you're right that this adds a dependency on perf.  But unfortunately,
->> >> without using either perf or ftrace, I don't know of a way to detect whether
->> >> or not DAX is actually being used.  Can you think of another way?
->> >
->> > ... if there isn't a programmatic interface to tell applications
->> > that DAX is in use, then perhaps we're missing a formal userspace
->> > API that we should have, yes?
->> >
->> >> I tried to do this correctly and just skip the test with _notrun
->> >> if perf isn't available on the host system.  This is the same
->> >> thing that happens if you are missing other dependencies for a
->> >> test (some other command (chacl, getfattr, setfattr) not present,
->> >> quota tools not installed, required users not present, etc).
->> >
->> > Sure, but if we have user configurable functionality, then using
->> > something like ftrace/perf to discover if it's turned is indicative
->> > of a bigger problem. i.e. that the user can't tell if the
->> > functionality they turned on/off is actually active or not.
->> >
->> > That's a bug that needs fixing, not working around with
->> > ftrace/perf in xfstests...
->> >
->>
->> Yes, we need a way to determine that DAX is enabled, but certainly not
->> a VM_DAX flag as that was NAKd by you here:
->>
->>     https://lkml.org/lkml/2016/9/16/13
->
-> Yeah, the on disk flag doesn't tell you if DAX is actually in use or
-> not.
->
->> I think one consideration is to just build this into MAP_SYNC.
->> MAP_SYNC can only succeed if DAX is enabled and that it is a reliable
->> way for userspace to assume DAX. There is some consensus for this
->> proposal here:
->>
->>     https://lists.01.org/pipermail/linux-nvdimm/2017-August/012086.html
->
-> That'll probe that it can be used, not that it is currently being
-> used.
->
-> /me shrugs
->
-> I just don't like the concept of using tracepoints to as a
-> definitive diagnostic test for something working because it'll break
-> when the kernel implementation and tracepoints change. So while we
-> can probe for perf being present, we can't probe whether the
-> tracepoint we need behaves as the test expects it to...
+On Fri, Sep 15, 2017 at 07:54:20AM -0700, Christoph Hellwig wrote:
+> Use xfs_iext_get_extent to find, and xfs_iext_update_extent to update
+> entries in the in-core extent list.  This isolates the function from
+> the detailed layout of the extent list, and generally makes the code
+> a lot more readable.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 181 +++++++++++++++++++++++++----------------------
+>  1 file changed, 95 insertions(+), 86 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 4fb73c0aca05..8606a775c94b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+...
+> @@ -2078,16 +2095,8 @@ xfs_bmap_add_extent_delay_real(
+>  				goto done;
+>  		}
+>  
+> -		ep = xfs_iext_get_ext(ifp, bma->idx);
+> -		xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx + 2, state, _THIS_IP_);
+> -		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, bma->idx + 2),
+> -			nullstartblock((int)temp2));
+> -		trace_xfs_bmap_post_update(bma->ip, bma->idx + 2, state, _THIS_IP_);
+> -
+>  		bma->idx++;
+> -		da_new = temp + temp2;
+> +		da_new = PREV.br_blockcount + RIGHT.br_blockcount;
 
-That concern makes sense.
+da_new should be the new total indirect reservation. The above sets it
+to the total/remaining delalloc block count. E.g., it should probably be
+something like this:
 
-We handle that it a crude way in the libnvdimm unit tests by hard
-coding a required minimum kernel version and rolling a test forward to
-depend on a new kernel when assumptions about the kernel-internals
-change. The tests also inject out-of-tree kernel modules that let us
-go after specific kernel internal behavior. With this approach we
-don't end up creating userspace ABI since the test explicitly loads
-out-of-tree modules.
+	da_new = startblockval(PREV.br_startblock) +
+		 startblockval(RIGHT.br_startblock);
 
-Of course this is not how xfstests works and it definitely shouldn't,
-but perhaps this specific test case is better suited in the libnvdimm
-unit test framework where it's enabled to dig behind the standard
-interfaces.
+Or alternatively you could set da_new right before diff is calculated
+and reuse it in that calculation. Otherwise the patch looks good.
+
+Brian
+
+>  		break;
+>  
+>  	case BMAP_LEFT_FILLING | BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
