@@ -1,68 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51433 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdIOOy3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:29 -0400
-Received: from [8.25.222.2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dss0j-0003J0-4b
-        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:29 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/18] xfs: replace xfs_bmbt_lookup_ge with xfs_bmbt_lookup_first
-Date: Fri, 15 Sep 2017 07:54:24 -0700
-Message-Id: <20170915145426.26194-17-hch@lst.de>
-In-Reply-To: <20170915145426.26194-1-hch@lst.de>
-References: <20170915145426.26194-1-hch@lst.de>
+Received: from mga14.intel.com ([192.55.52.115]:8485 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751741AbdIOWm3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Sep 2017 18:42:29 -0400
+Date: Fri, 15 Sep 2017 16:42:27 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [fstests PATCH v2] xfs: add regression test for DAX mount option
+ usage
+Message-ID: <20170915224227.GA9020@linux.intel.com>
+References: <CAPcyv4gGpAW7kUCgqSoNCPkFZVYzTVQi3C4x6AFm2KHvFrZSfw@mail.gmail.com>
+ <20170911200103.28226-1-ross.zwisler@linux.intel.com>
+ <20170914065741.GH8034@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170914065741.GH8034@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, fstests@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-We only use xfs_bmbt_lookup_ge to look up the first bmap record in an
-inode, so replace xfs_bmbt_lookup_ge with a special purpose helper that
-is a bit more descriptive.
+On Thu, Sep 14, 2017 at 02:57:41PM +0800, Eryu Guan wrote:
+> Hi Ross,
+> 
+> On Mon, Sep 11, 2017 at 02:01:03PM -0600, Ross Zwisler wrote:
+> > This adds a regression test for the following kernel patch:
+> > 
+> >   xfs: always use DAX if mount option is used
+> > 
+> > This test will also pass with kernel v4.14-rc1 and beyond because the XFS
+> > DAX I/O mount option has been disabled (but not removed), so the
+> > "chattr -x" to turn off DAX doesn't actually do anything.
+> > 
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Suggested-by: Christoph Hellwig <hch@infradead.org>
+> > ---
+> > 
+> > Changes since v1:
+> >  - Use perf instead of tracepoints to detect whether DAX is used. (Dan)
+> 
+> Thanks for the test! But I agreed with Dave here, it doesn't seem like a
+> good idea to depend on the kernel tracepoints in a test, but I can't
+> think of a better solution either, so I didn't get to this patch
+> earlier..
+> 
+> Before XFS disabled the ability to switch on & off per-inode DAX flag,
+> the x flag was only shown after an explicit 'chattr +x', even if XFS was
+> mounted with dax option, e.g.
+> 
+> # mkfs -t xfs -f /dev/ram0
+> # mount -o dax /dev/ram0 /mnt/xfs
+> # echo "test" > /mnt/xfs/testfile
+> # xfs_io -c "lsattr" /mnt/xfs/testfile
+> ---------------- /mnt/xfs/testfile
+> # xfs_io -c "chattr +x" /mnt/xfs/testfile
+> # xfs_io -c "lsattr" /mnt/xfs/testfile
+> ---------------x /mnt/xfs/testfile
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+XFS actually still works this way, you just don't get dax now when you chattr
++x. :-/  But the inode flag is actually still there, gets updated by chattr
+and can be listed with lsattr.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3bb074993141..73498dd7f01a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -121,16 +121,13 @@ xfs_bmbt_lookup_eq(
- }
- 
- STATIC int				/* error */
--xfs_bmbt_lookup_ge(
-+xfs_bmbt_lookup_first(
- 	struct xfs_btree_cur	*cur,
--	xfs_fileoff_t		off,
--	xfs_fsblock_t		bno,
--	xfs_filblks_t		len,
- 	int			*stat)	/* success/failure */
- {
--	cur->bc_rec.b.br_startoff = off;
--	cur->bc_rec.b.br_startblock = bno;
--	cur->bc_rec.b.br_blockcount = len;
-+	cur->bc_rec.b.br_startoff = 0;
-+	cur->bc_rec.b.br_startblock = 0;
-+	cur->bc_rec.b.br_blockcount = 0;
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
- }
- 
-@@ -978,7 +975,8 @@ xfs_bmap_add_attrfork_btree(
- 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
- 		cur->bc_private.b.dfops = dfops;
- 		cur->bc_private.b.firstblock = *firstblock;
--		if ((error = xfs_bmbt_lookup_ge(cur, 0, 0, 0, &stat)))
-+		error = xfs_bmbt_lookup_first(cur, &stat);
-+		if (error)
- 			goto error0;
- 		/* must be at least one entry */
- 		XFS_WANT_CORRUPTED_GOTO(mp, stat == 1, error0);
--- 
-2.14.1
+Actually, that feels like a really bad situation to be in - Christoph & Dave,
+should we do more to remove the flag as long as it's not working?  i.e. remove
+it from the lsattr output and make "chattr +x" fail with -EINVAL or similar?
 
+> I'm wondering if it makes sense to make lsattr print the x flag by
+> default when XFS is mounted with dax option, that way, we have a method
+> to know whether dax is used or not on a particular file too.
+
+Well, the per-inode flag that gets set in the filesystem metadata and the
+actual S_DAX runtime flag which controls whether or not we do DAX I/O and page
+faults are different things, and as we've seen they aren't always
+synchronized.
+
+I think making the 'x' flag in lsattr reflect the current state of S_DAX is
+interesting, but it would suffer from the same TOCTOU races that Dave was
+concerned about for the proposed VM_DAX flag:
+
+https://lkml.org/lkml/2016/9/16/13
+
+It could also be surprising to users - if they had mounted with -o dax, lsattr
+on each of their files would show the 'x' flag, but if they remount without
+that option those 'x' flags would go away.  I think this is surprising because
+normally it takes a chattr to modify the flags.
