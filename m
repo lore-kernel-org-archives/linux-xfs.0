@@ -1,89 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60602 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751200AbdIOJSw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Sep 2017 05:18:52 -0400
-Date: Fri, 15 Sep 2017 11:18:45 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-Message-ID: <20170915091845.pmp3wer5lwx2xhjz@linux-x5ow.site>
-References: <20170913144215.GA12395@linux.intel.com>
- <20170913220108.GX10621@dastard>
- <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
- <20170913233438.GY10621@dastard>
- <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
- <20170914004038.GZ10621@dastard>
- <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
- <x49a81xeakx.fsf@segfault.boston.devel.redhat.com>
- <20170914131638.qxbzeocvrkhjcjcu@linux-x5ow.site>
- <CAPcyv4j4GUjQBa7ePUGLuHjZcf3G+0suvc7r6wmgGM_G_L5Gcw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPcyv4j4GUjQBa7ePUGLuHjZcf3G+0suvc7r6wmgGM_G_L5Gcw@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:57430 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdIOOy2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:28 -0400
+Received: from [8.25.222.2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dss0i-0003IP-13
+        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:28 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/18] xfs: use the state defines in xfs_bmap_del_extent_real
+Date: Fri, 15 Sep 2017 07:54:16 -0700
+Message-Id: <20170915145426.26194-9-hch@lst.de>
+In-Reply-To: <20170915145426.26194-1-hch@lst.de>
+References: <20170915145426.26194-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Sep 14, 2017 at 07:10:02AM -0700, Dan Williams wrote:
-> What discouraged me from going that route in the past is the busy work
-> of tracking / syncing these new debugfs feature gate flags across 2
-> source repositories. If we want to stop depending on kernel version in
-> the test suite over time I think the only sane way to manage that
-> tight integration is to get ndctl into the kernel tree proper.
-> 
-> ...but please say a bit more about the actual pain points with the
-> current environment variable approach.
+Use the same defines as the other extent add and delete helpers, which
+both improves code readability and trace point output.
 
-This means the person which executes the test-suite has to know on which
-feature level (upstream kernel version) the downstream kernel is, I can't
-demand such knowledge from QA.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
-> You want to be able to have a debugfs directory that has something like:
-> 
-> /featureA
-> /featureB
-> /featureC
-> /fixX
-> /fixY
-> /fixZ
-> /quirkQ
-> 
-> ...where, depending on backport priorities, a subset of those may not
-> exist? 
-
-Yes, I thought of a bitmask in one (or two files but a file per feature is OK)
-as well. The idea is borrowed from Daniel Vetter's "Bothing up ioctl()s" blog
-entry [1]:
-"Have a clear way for userspace to figure out whether your new ioctl or ioctl
-extension is supported on a given kernel. If you can't rely on old kernels
-rejecting the new flags/modes or ioctls (since doing that was botched in the
-past) then you need a driver feature flag or revision number somewhere."
-
-> Does having the test suite in the kernel tree help or hurt what
-> you're trying to do?
-
-Having the test suite in the kernel is problematic when you want to distribute
-it to somewhere. I can only talk about my workflow here, but I build an rpm on my
-build server and then scp it to my test host. With the current test-suite I
-have to bring the other modules over as well and install them before the
-kernel rpm to have the linker wrapper trick working. That's OKish for
-developer testing, but for QA (or even testing at partners or customers)
-this gets cumbersome and I really want to have even end customers being able
-to run the test-suite to verify their kernel is working properly.
-
-[1] http://blog.ffwll.ch/2013/11/botching-up-ioctls.html
-
-Byte,
-	Johannes
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index aa4af31750d3..037efc97499f 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5162,13 +5162,13 @@ xfs_bmap_del_extent_real(
+ 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 	}
+ 
+-	/*
+-	 * Set flag value to use in switch statement.
+-	 * Left-contig is 2, right-contig is 1.
+-	 */
+-	switch (((got.br_startoff == del->br_startoff) << 1) |
+-		(got_endoff == del_endoff)) {
+-	case 3:
++	if (got.br_startoff == del->br_startoff)
++		state |= BMAP_LEFT_FILLING;
++	if (got_endoff == del_endoff)
++		state |= BMAP_RIGHT_FILLING;
++
++	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
++	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+@@ -5188,8 +5188,7 @@ xfs_bmap_del_extent_real(
+ 			goto done;
+ 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		break;
+-
+-	case 2:
++	case BMAP_LEFT_FILLING:
+ 		/*
+ 		 * Deleting the first part of the extent.
+ 		 */
+@@ -5208,8 +5207,7 @@ xfs_bmap_del_extent_real(
+ 				got.br_state)))
+ 			goto done;
+ 		break;
+-
+-	case 1:
++	case BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Deleting the last part of the extent.
+ 		 */
+@@ -5227,7 +5225,6 @@ xfs_bmap_del_extent_real(
+ 				got.br_state)))
+ 			goto done;
+ 		break;
+-
+ 	case 0:
+ 		/*
+ 		 * Deleting the middle of the extent.
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.14.1
+
