@@ -1,68 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38172 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751698AbdIOC5B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 22:57:01 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsdump: master updated to ce8b006
-Message-ID: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
-Date: Thu, 14 Sep 2017 21:57:00 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([65.50.211.133]:57787 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751364AbdIOOy2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:28 -0400
+Received: from [8.25.222.2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dss0h-0003IK-Sd
+        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:27 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/18] xfs: use correct state defines in xfs_bmap_del_extent_{cow,delay}
+Date: Fri, 15 Sep 2017 07:54:15 -0700
+Message-Id: <20170915145426.26194-8-hch@lst.de>
+In-Reply-To: <20170915145426.26194-1-hch@lst.de>
+References: <20170915145426.26194-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Felix Janda <felix.janda@posteo.de>, Khem Raj <raj.khem@gmail.com>
+To: linux-xfs@vger.kernel.org
 
-Hi folks,
+Use the _FILLING values to match the usage in the xfs_bmap_add_extent_*
+helpers.  No change in behavior, just better naming in the code and
+tracepoint output.
 
-The xfsdump repository at:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 06f1bd9e144e..aa4af31750d3 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4897,19 +4897,19 @@ xfs_bmap_del_extent_delay(
+ 		state |= BMAP_COWFORK;
+ 
+ 	if (got->br_startoff == del->br_startoff)
+-		state |= BMAP_LEFT_CONTIG;
++		state |= BMAP_LEFT_FILLING;
+ 	if (got_endoff == del_endoff)
+-		state |= BMAP_RIGHT_CONTIG;
++		state |= BMAP_RIGHT_FILLING;
+ 
+-	switch (state & (BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG)) {
+-	case BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
++	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
++	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+ 		xfs_iext_remove(ip, *idx, 1, state);
+ 		--*idx;
+ 		break;
+-	case BMAP_LEFT_CONTIG:
++	case BMAP_LEFT_FILLING:
+ 		/*
+ 		 * Deleting the first part of the extent.
+ 		 */
+@@ -4922,7 +4922,7 @@ xfs_bmap_del_extent_delay(
+ 		xfs_iext_update_extent(ifp, *idx, got);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 		break;
+-	case BMAP_RIGHT_CONTIG:
++	case BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Deleting the last part of the extent.
+ 		 */
+@@ -5007,19 +5007,19 @@ xfs_bmap_del_extent_cow(
+ 	ASSERT(!isnullstartblock(got->br_startblock));
+ 
+ 	if (got->br_startoff == del->br_startoff)
+-		state |= BMAP_LEFT_CONTIG;
++		state |= BMAP_LEFT_FILLING;
+ 	if (got_endoff == del_endoff)
+-		state |= BMAP_RIGHT_CONTIG;
++		state |= BMAP_RIGHT_FILLING;
+ 
+-	switch (state & (BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG)) {
+-	case BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
++	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
++	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+ 		xfs_iext_remove(ip, *idx, 1, state);
+ 		--*idx;
+ 		break;
+-	case BMAP_LEFT_CONTIG:
++	case BMAP_LEFT_FILLING:
+ 		/*
+ 		 * Deleting the first part of the extent.
+ 		 */
+@@ -5030,7 +5030,7 @@ xfs_bmap_del_extent_cow(
+ 		xfs_iext_update_extent(ifp, *idx, got);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 		break;
+-	case BMAP_RIGHT_CONTIG:
++	case BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Deleting the last part of the extent.
+ 		 */
+-- 
+2.14.1
 
-has just been updated.
-
-This is comprised solely of fixes for building against musl
-libc; if all is well I'll tag this and push it out as 3.1.8.
-If those using musl could report success or failure I'd appreciate it.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-ce8b006 common/main.c: Include <locale.h>
-
-New Commits:
-
-Felix Janda (8):
-      [663f517] invutil/invidx: include <fcntl.h> for O_CREAT
-      [b848d35] dump/content.c: Include <linux/limits.h> for XATTR_LIST_MAX
-      [a03055f] common/main.c: Replace nonstandard SIGCLD by SIGCHLD
-      [7a0a8e7] librmt/rmtopen: Prefer <signal.h> over <sys/signal.h>
-      [cb66b83] dump/var.c: Include <limits.h> for PATH_MAX
-      [dd47bfa] cleanup: Kill __[u]int*_t types
-      [55b0f0e] common/types.h: explicitly define NBBY (bits per byte)
-      [ce8b006] common/main.c: Include <locale.h>
-
-
-Code Diffstat:
-
- common/content_inode.h | 4 ++--
- common/hsmapi.c        | 2 +-
- common/main.c          | 3 ++-
- common/types.h         | 4 ++++
- doc/xfsdump.html       | 8 ++++----
- dump/content.c         | 1 +
- dump/var.c             | 1 +
- inventory/inv_oref.h   | 2 +-
- inventory/inv_priv.h   | 4 ++--
- inventory/inventory.h  | 2 +-
- invutil/invidx.c       | 1 +
- librmt/rmtopen.c       | 2 +-
- 12 files changed, 21 insertions(+), 13 deletions(-)
