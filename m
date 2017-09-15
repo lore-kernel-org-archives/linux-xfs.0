@@ -1,36 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:41014 "EHLO imap.thunk.org"
+Received: from sandeen.net ([63.231.237.45]:42966 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751735AbdINVP1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 17:15:27 -0400
-Date: Thu, 14 Sep 2017 17:15:19 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH v3 4/4] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
-Message-ID: <20170914211519.aieumj734uazwlmj@thunk.org>
-References: <20170914140619.29826-1-agruenba@redhat.com>
+        id S1751848AbdIOD7U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Sep 2017 23:59:20 -0400
+Subject: Re: [ANNOUNCE] xfsdump: master updated to ce8b006
+References: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
+ <CAMKF1spg5jrxPnm8_wwsW=pj90pVjsFxsthfiV3FaJfK+z62FQ@mail.gmail.com>
+ <aef2d3ee-8a55-771a-f80d-4b9b261614b2@sandeen.net>
+ <CAMKF1srD3X3241mAgFypoRmw88ycsWRE94PeU7nUZUZ44PJy6w@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <bccf58ec-197f-0294-ce94-6d21c98bac2f@sandeen.net>
+Date: Thu, 14 Sep 2017 22:59:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170914140619.29826-1-agruenba@redhat.com>
+In-Reply-To: <CAMKF1srD3X3241mAgFypoRmw88ycsWRE94PeU7nUZUZ44PJy6w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>
+To: Khem Raj <raj.khem@gmail.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Felix Janda <felix.janda@posteo.de>
 
-On Thu, Sep 14, 2017 at 04:06:19PM +0200, Andreas Gruenbacher wrote:
-> From: Christoph Hellwig <hch@lst.de>
+
+
+On 9/14/17 10:47 PM, Khem Raj wrote:
+> On Thu, Sep 14, 2017 at 8:40 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>
+>>
+>> On 9/14/17 10:31 PM, Khem Raj wrote:
+>>> On Thu, Sep 14, 2017 at 7:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>>> Hi folks,
+>>>>
+>>>> The xfsdump repository at:
+>>>>
+>>>>         git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+>>>>
+>>>> has just been updated.
+>>>>
+>>>> This is comprised solely of fixes for building against musl
+>>>> libc; if all is well I'll tag this and push it out as 3.1.8.
+>>>> If those using musl could report success or failure I'd appreciate it.
+>>>>
+>>>
+>>> Just tried. we still need
+>>>
+>>> https://patchwork.kernel.org/patch/9946149/
+>>>
+>>> to get musl builds going.
+>>
+>> Isn't that more a bug in libattr?
+>>
 > 
-> Here we go, after another round of xfstests.
+> yes it is.
 > 
-> The next question, since it touches vfs infrastructure, is which tree
-> this patch queue should be merged through.  Al?
+>> Yes, it seems it's been fixed by Felix:
+>>
+>> http://git.savannah.nongnu.org/cgit/attr.git/commit/include/attributes.h?id=37a27b6fd09ecb37097b85e5db74e4f77b80fe0a
+>>
+> 
+> attr hasnt been released since this patch was applied so distros may
+> not have this patch yet but I guess distro can be patched.
 
-Discussions with Darrick before he went on vacation/honeymoon was that
-up until now changes to fs/iomap.c had been going through XFS, but
-since these changes didn't affect XFS, and the rest of the patch
-series touches ext4 and ext4 functionality, that he was OK with
-running this patch series through the ext4 tree.  I'm OK as well, so
-unless Al has any objections?
+I'd prefer to have the fix in the right place, if you can handle it.
 
-				- Ted
+Things like coreutils depend on libattr... doesn't really make sense
+to fix all the consumers upstream to work around a broken library,
+rather than fixing the library itself, IMHO.  I can bug Andreas about
+a release.  ;)
+
+Thanks,
+-Eric
