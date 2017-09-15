@@ -1,121 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:15063
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751599AbdIOBEa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2017 21:04:30 -0400
-Date: Fri, 15 Sep 2017 11:03:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Some questions about per-ag metadata space reservations...
-Message-ID: <20170915010322.GZ17782@dastard>
-References: <20170906103054.GR17782@dastard>
- <20170907134457.GC60838@bfoster.bfoster>
- <20170907231136.GA17782@dastard>
- <20170908133353.GA300@bfoster.bfoster>
- <20170909002543.GG17782@dastard>
- <20170911132608.GC9135@bfoster.bfoster>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33653 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750708AbdIOEG2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 00:06:28 -0400
+Received: by mail-pf0-f193.google.com with SMTP id h4so651479pfk.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2017 21:06:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170911132608.GC9135@bfoster.bfoster>
+In-Reply-To: <bccf58ec-197f-0294-ce94-6d21c98bac2f@sandeen.net>
+References: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
+ <CAMKF1spg5jrxPnm8_wwsW=pj90pVjsFxsthfiV3FaJfK+z62FQ@mail.gmail.com>
+ <aef2d3ee-8a55-771a-f80d-4b9b261614b2@sandeen.net> <CAMKF1srD3X3241mAgFypoRmw88ycsWRE94PeU7nUZUZ44PJy6w@mail.gmail.com>
+ <bccf58ec-197f-0294-ce94-6d21c98bac2f@sandeen.net>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Thu, 14 Sep 2017 21:05:57 -0700
+Message-ID: <CAMKF1sovtJGbMCBGDbp6thKD7iNDKDTKv1JxfQzqDfX7Dm8JNA@mail.gmail.com>
+Subject: Re: [ANNOUNCE] xfsdump: master updated to ce8b006
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Felix Janda <felix.janda@posteo.de>
 
-On Mon, Sep 11, 2017 at 09:26:08AM -0400, Brian Foster wrote:
-> On Sat, Sep 09, 2017 at 10:25:43AM +1000, Dave Chinner wrote:
-> > On Fri, Sep 08, 2017 at 09:33:54AM -0400, Brian Foster wrote:
-> > > If that is the case, then it does seem that dynamic reservation based on
-> > > current usage could be a solution in-theory. I.e., basing the
-> > > reservation on usage effectively bases it against "real" space, whether
-> > > the underlying volume is thin or fully allocated. That seems do-able for
-> > > the finobt (if we don't end up removing this reservation entirely) as
-> > > noted above.
-> > 
-> > The finobt case is different to rmap and reflink. finobt should only
-> > require a per-operation reservation to ensure there is space in the
-> > AG to create the finobt record and btree blocks. We do not need a
-> > permanent, maximum sized tree reservation for this - we just need to
-> > ensure all the required space is available in the one AG rather than
-> > globally available before we start the allocation operation.  If we
-> > can do that, then the operation should (in theory) never fail with
-> > ENOSPC...
-> > 
-> 
-> I'm not familiar with the workload that motivated the finobt perag
-> reservation stuff, but I suspect it's something that pushes an fs (or
-> AG) with a ton of inodes to near ENOSPC with a very small finobt, and
-> then runs a bunch of operations that populate the finobt without freeing
-> up enough space in the particular AG.
+On Thu, Sep 14, 2017 at 8:59 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+>
+> On 9/14/17 10:47 PM, Khem Raj wrote:
+>> On Thu, Sep 14, 2017 at 8:40 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>>
+>>>
+>>> On 9/14/17 10:31 PM, Khem Raj wrote:
+>>>> On Thu, Sep 14, 2017 at 7:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>>>> Hi folks,
+>>>>>
+>>>>> The xfsdump repository at:
+>>>>>
+>>>>>         git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+>>>>>
+>>>>> has just been updated.
+>>>>>
+>>>>> This is comprised solely of fixes for building against musl
+>>>>> libc; if all is well I'll tag this and push it out as 3.1.8.
+>>>>> If those using musl could report success or failure I'd appreciate it.
+>>>>>
+>>>>
+>>>> Just tried. we still need
+>>>>
+>>>> https://patchwork.kernel.org/patch/9946149/
+>>>>
+>>>> to get musl builds going.
+>>>
+>>> Isn't that more a bug in libattr?
+>>>
+>>
+>> yes it is.
+>>
+>>> Yes, it seems it's been fixed by Felix:
+>>>
+>>> http://git.savannah.nongnu.org/cgit/attr.git/commit/include/attributes.h?id=37a27b6fd09ecb37097b85e5db74e4f77b80fe0a
+>>>
+>>
+>> attr hasnt been released since this patch was applied so distros may
+>> not have this patch yet but I guess distro can be patched.
+>
+> I'd prefer to have the fix in the right place, if you can handle it.
+>
 
-That's a characteristic of a hardlink backup farm. And, in new-skool
-terms, that's what a reflink- or dedupe- based backup farm will look
-like, too. i.e. old backups get removed freeing up inodes, but no
-data gets freed so the only new free blocks are the directory blocks
-that are no longer in use...
+Me too.
 
-> I suppose that could be due to
-> having zero sized files (which seems pointless in practice), sparsely
-> freeing inodes such that inode chunks are never freed, using the ikeep
-> mount option, and/or otherwise freeing a bunch of small files that only
-> free up space in other AGs before the finobt allocation demand is made.
+> Things like coreutils depend on libattr... doesn't really make sense
+> to fix all the consumers upstream to work around a broken library,
+> rather than fixing the library itself, IMHO.  I can bug Andreas about
+> a release.  ;)
+>
 
-Yup, all of those are potential issues....
+that will be helpful in general, last release was over 4 years ago.
 
-> The larger point is that we don't really know much of anything to try
-> and at least reason about what the original problem could have been, but
-> it seems plausible to create the ENOSPC condition if one tried hard
-> enough.
-
-*nod*. i.e. if you're not freeing data, then unlinking dataless
-inodes may not succeed at ENOSPC. I think we can do better than what
-we currently do, though. e.g. we can simply dump them on the
-unlinked list and process them when there is free space to
-create the necessary finobt btree blocks to index them rather than
-as soon as the last VFS reference goes away (i.e. background
-inode freeing).
-
-> > As for rmap and refcountbt reservations, they have to have space to
-> > allow rmap and CoW operations to succeed when no user data is
-> > modified, and to allow metadata allocations to run without needing
-> > to update every transaction reservation to take into account all the
-> > rmapbt updates that are necessary. These can be many and span
-> > multiple AGs (think badly fragmented directory blocks) and so the
-> > worst case reservation is /huge/ and made upfront worst-case
-> > reservations for rmap/reflink DOA.
-> > 
-> > So we avoided this entire problem by ensuring we always have space for
-> > the rmap/refcount metadata; using 1-2% of disk space permanently
-> > was considered a valid trade off for the simplicity of
-> > implementation. That's what the per-ag reservations implement and
-> > we even added on-disk metadata in the AGF to make this reservation
-> > process low overhead.
-> > 
-> > This was all "it seems like the best compromise" design. We
-> > based it on the existing reserve pool behaviour because it was easy
-> > to do. Now that I'm trying to use these filesystems in anger, I'm
-> > tripping over the problems as a result of this choice to base the
-> > per ag metadata reservations on the reserve pool behaviour.
-> > 
-> 
-> Got it. FWIW, what I was handwaving about sounds like more of a
-> compromise between what we do now (worst case res, user visible) and
-> what it sounds like you're working towards (worst case res, user
-> invisible). By that I mean that I've been thinking about the problem
-> more from the angle of whether we can avoid the worst case reservation.
-> The reservation itself could still be made visible or not either way. Of
-> course, it sounds like changing the reservation requirement for things
-> like the rmapbt would be significantly more complicated than for the
-> finobt, so "hiding" the reservation might be the next best tradeoff.
-
-Yeah, and having done that I'm tripping over the next issue: it's
-possible for the log to be larger than than thin space, so I think
-I'm going to have to cut that out of visible used space, too....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Thanks,
+> -Eric
