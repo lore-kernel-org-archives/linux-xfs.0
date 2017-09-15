@@ -1,90 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f171.google.com ([209.85.161.171]:52965 "EHLO
-        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751323AbdIOMk0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 08:40:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 15 Sep 2017 15:40:24 +0300
-Message-ID: <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:57633 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751422AbdIOOy3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:29 -0400
+Received: from [8.25.222.2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dss0j-0003JF-E2
+        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:29 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 18/18] xfs: remove xfs_bmbt_get_state
+Date: Fri, 15 Sep 2017 07:54:26 -0700
+Message-Id: <20170915145426.26194-19-hch@lst.de>
+In-Reply-To: <20170915145426.26194-1-hch@lst.de>
+References: <20170915145426.26194-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 4:38 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> When calling into _xfs_log_force{,_lsn}() with a pointer
-> to log_flushed variable, log_flushed will be set to 1 if:
-> 1. xlog_sync() is called to flush the active log buffer
-> AND/OR
-> 2. xlog_wait() is called to wait on a syncing log buffers
->
-> xfs_file_fsync() checks the value of log_flushed after
-> _xfs_log_force_lsn() call to optimize away an explicit
-> PREFLUSH request to the data block device after writing
-> out all the file's pages to disk.
->
-> This optimization is incorrect in the following sequence of events:
->
->  Task A                    Task B
->  -------------------------------------------------------
->  xfs_file_fsync()
->    _xfs_log_force_lsn()
->      xlog_sync()
->         [submit PREFLUSH]
->                            xfs_file_fsync()
->                              file_write_and_wait_range()
->                                [submit WRITE X]
->                                [endio  WRITE X]
->                              _xfs_log_force_lsn()
->                                xlog_wait()
->         [endio  PREFLUSH]
->
-> The write X is not guarantied to be on persistent storage
-> when PREFLUSH request in completed, because write A was submitted
-> after the PREFLUSH request, but xfs_file_fsync() of task A will
-> be notified of log_flushed=1 and will skip explicit flush.
->
-> If the system crashes after fsync of task A, write X may not be
-> present on disk after reboot.
->
-> This bug was discovered and demonstrated using Josef Bacik's
-> dm-log-writes target, which can be used to record block io operations
-> and then replay a subset of these operations onto the target device.
-> The test goes something like this:
-> - Use fsx to execute ops of a file and record ops on log device
-> - Every now and then fsync the file, store md5 of file and mark
->   the location in the log
-> - Then replay log onto device for each mark, mount fs and compare
->   md5 of file to stored value
->
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Josef Bacik <jbacik@fb.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->
-> Christoph, Dave,
->
-> It's hard to believe, but I think the reported bug has been around
-> since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
-> not try to test old kernels.
+Unused after the big bmap refactor.
 
-Forgot to tag commit message with:
-Fixes: f538d4da8d52 ("[XFS] write barrier support")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap_btree.c | 29 +----------------------------
+ fs/xfs/libxfs/xfs_bmap_btree.h |  1 -
+ 2 files changed, 1 insertion(+), 29 deletions(-)
 
-Maybe the tag could be added when applying to recent stables,
-so distros and older downstream stables can see the tag.
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index e66ebd982cfb..086e6fc8e4fc 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -37,22 +37,6 @@
+ #include "xfs_cksum.h"
+ #include "xfs_rmap.h"
+ 
+-/*
+- * Determine the extent state.
+- */
+-/* ARGSUSED */
+-STATIC xfs_exntst_t
+-xfs_extent_state(
+-	xfs_filblks_t		blks,
+-	int			extent_flag)
+-{
+-	if (extent_flag) {
+-		ASSERT(blks != 0);	/* saved for DMIG */
+-		return XFS_EXT_UNWRITTEN;
+-	}
+-	return XFS_EXT_NORM;
+-}
+-
+ /*
+  * Convert on-disk form of btree root to in-memory form.
+  */
+@@ -90,7 +74,7 @@ xfs_bmdr_to_bmbt(
+ /*
+  * Convert a compressed bmap extent record to an uncompressed form.
+  * This code must be in sync with the routines xfs_bmbt_get_startoff,
+- * xfs_bmbt_get_startblock, xfs_bmbt_get_blockcount and xfs_bmbt_get_state.
++ * xfs_bmbt_get_startblock and xfs_bmbt_get_blockcount.
+  */
+ STATIC void
+ __xfs_bmbt_get_all(
+@@ -156,17 +140,6 @@ xfs_bmbt_get_startoff(
+ 		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
+ }
+ 
+-xfs_exntst_t
+-xfs_bmbt_get_state(
+-	xfs_bmbt_rec_host_t	*r)
+-{
+-	int	ext_flag;
+-
+-	ext_flag = (int)((r->l0) >> (64 - BMBT_EXNTFLAG_BITLEN));
+-	return xfs_extent_state(xfs_bmbt_get_blockcount(r),
+-				ext_flag);
+-}
+-
+ /*
+  * Extract the blockcount field from an on disk bmap extent record.
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index 93f95bcee915..6f891eeb88f6 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -102,7 +102,6 @@ extern void xfs_bmbt_get_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
+ extern xfs_filblks_t xfs_bmbt_get_blockcount(xfs_bmbt_rec_host_t *r);
+ extern xfs_fsblock_t xfs_bmbt_get_startblock(xfs_bmbt_rec_host_t *r);
+ extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
+-extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
+ 
+ void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
+ extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
+-- 
+2.14.1
 
-The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
-if possible data loss bug should also be disclosed in some distros forum?
-I bet some users would care more about the latter than the former.
-Coincidentally, both data loss and security bugs fix the same commit..
-
-Cheers,
-Amir.
