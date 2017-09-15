@@ -1,73 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42966 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751848AbdIOD7U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 23:59:20 -0400
-Subject: Re: [ANNOUNCE] xfsdump: master updated to ce8b006
-References: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
- <CAMKF1spg5jrxPnm8_wwsW=pj90pVjsFxsthfiV3FaJfK+z62FQ@mail.gmail.com>
- <aef2d3ee-8a55-771a-f80d-4b9b261614b2@sandeen.net>
- <CAMKF1srD3X3241mAgFypoRmw88ycsWRE94PeU7nUZUZ44PJy6w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bccf58ec-197f-0294-ce94-6d21c98bac2f@sandeen.net>
-Date: Thu, 14 Sep 2017 22:59:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAMKF1srD3X3241mAgFypoRmw88ycsWRE94PeU7nUZUZ44PJy6w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([65.50.211.133]:34581 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdIOOy1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:27 -0400
+Received: from [8.25.222.2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dss0h-0003Hf-0c
+        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:27 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/18] xfs: fix incorrect extent state in xfs_bmap_add_extent_unwritten_real
+Date: Fri, 15 Sep 2017 07:54:09 -0700
+Message-Id: <20170915145426.26194-2-hch@lst.de>
+In-Reply-To: <20170915145426.26194-1-hch@lst.de>
+References: <20170915145426.26194-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Khem Raj <raj.khem@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Felix Janda <felix.janda@posteo.de>
+To: linux-xfs@vger.kernel.org
 
+There was one spot in xfs_bmap_add_extent_unwritten_real that didn't use the
+passed in new extent state but always converted to normal, leading to wrong
+behavior when converting from normal to unwritten.
 
+Only found by code inspection, it seems like this code path to move partial
+extent from written to unwritten while merging it with the next extent is
+rarely exercised.
 
-On 9/14/17 10:47 PM, Khem Raj wrote:
-> On Thu, Sep 14, 2017 at 8:40 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->>
->>
->> On 9/14/17 10:31 PM, Khem Raj wrote:
->>> On Thu, Sep 14, 2017 at 7:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->>>> Hi folks,
->>>>
->>>> The xfsdump repository at:
->>>>
->>>>         git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
->>>>
->>>> has just been updated.
->>>>
->>>> This is comprised solely of fixes for building against musl
->>>> libc; if all is well I'll tag this and push it out as 3.1.8.
->>>> If those using musl could report success or failure I'd appreciate it.
->>>>
->>>
->>> Just tried. we still need
->>>
->>> https://patchwork.kernel.org/patch/9946149/
->>>
->>> to get musl builds going.
->>
->> Isn't that more a bug in libattr?
->>
-> 
-> yes it is.
-> 
->> Yes, it seems it's been fixed by Felix:
->>
->> http://git.savannah.nongnu.org/cgit/attr.git/commit/include/attributes.h?id=37a27b6fd09ecb37097b85e5db74e4f77b80fe0a
->>
-> 
-> attr hasnt been released since this patch was applied so distros may
-> not have this patch yet but I guess distro can be patched.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'd prefer to have the fix in the right place, if you can handle it.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 459f4b4f08fe..f2f5bdb9e092 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2573,7 +2573,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 					&i)))
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
+-			cur->bc_rec.b.br_state = XFS_EXT_NORM;
++			cur->bc_rec.b.br_state = new->br_state;
+ 			if ((error = xfs_btree_insert(cur, &i)))
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-- 
+2.14.1
 
-Things like coreutils depend on libattr... doesn't really make sense
-to fix all the consumers upstream to work around a broken library,
-rather than fixing the library itself, IMHO.  I can bug Andreas about
-a release.  ;)
-
-Thanks,
--Eric
