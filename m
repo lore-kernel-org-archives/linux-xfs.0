@@ -1,60 +1,190 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35445 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751797AbdIODsV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2017 23:48:21 -0400
-Received: by mail-pf0-f193.google.com with SMTP id i23so627194pfi.2
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2017 20:48:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <aef2d3ee-8a55-771a-f80d-4b9b261614b2@sandeen.net>
-References: <32b02ec1-de5d-f268-e726-376678c15e17@sandeen.net>
- <CAMKF1spg5jrxPnm8_wwsW=pj90pVjsFxsthfiV3FaJfK+z62FQ@mail.gmail.com> <aef2d3ee-8a55-771a-f80d-4b9b261614b2@sandeen.net>
-From: Khem Raj <raj.khem@gmail.com>
-Date: Thu, 14 Sep 2017 20:47:49 -0700
-Message-ID: <CAMKF1srD3X3241mAgFypoRmw88ycsWRE94PeU7nUZUZ44PJy6w@mail.gmail.com>
-Subject: Re: [ANNOUNCE] xfsdump: master updated to ce8b006
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:33941 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbdIOOy1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:27 -0400
+Received: from [8.25.222.2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dss0h-0003Hj-5T
+        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:27 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/18] xfs: use xfs_iext_get_extent instead of open coding it
+Date: Fri, 15 Sep 2017 07:54:10 -0700
+Message-Id: <20170915145426.26194-3-hch@lst.de>
+In-Reply-To: <20170915145426.26194-1-hch@lst.de>
+References: <20170915145426.26194-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Felix Janda <felix.janda@posteo.de>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Sep 14, 2017 at 8:40 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
-> On 9/14/17 10:31 PM, Khem Raj wrote:
->> On Thu, Sep 14, 2017 at 7:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->>> Hi folks,
->>>
->>> The xfsdump repository at:
->>>
->>>         git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
->>>
->>> has just been updated.
->>>
->>> This is comprised solely of fixes for building against musl
->>> libc; if all is well I'll tag this and push it out as 3.1.8.
->>> If those using musl could report success or failure I'd appreciate it.
->>>
->>
->> Just tried. we still need
->>
->> https://patchwork.kernel.org/patch/9946149/
->>
->> to get musl builds going.
->
-> Isn't that more a bug in libattr?
->
+This avoids exposure to details of the extent list implementation.
 
-yes it is.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 36 ++++++++++++++++--------------------
+ fs/xfs/xfs_trace.h       |  2 +-
+ 2 files changed, 17 insertions(+), 21 deletions(-)
 
-> Yes, it seems it's been fixed by Felix:
->
-> http://git.savannah.nongnu.org/cgit/attr.git/commit/include/attributes.h?id=37a27b6fd09ecb37097b85e5db74e4f77b80fe0a
->
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f2f5bdb9e092..555ff198e28c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1467,7 +1467,7 @@ xfs_bmap_last_extent(
+ 		return 0;
+ 	}
+ 
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, nextents - 1), rec);
++	xfs_iext_get_extent(ifp, nextents - 1, rec);
+ 	*is_empty = 0;
+ 	return 0;
+ }
+@@ -1553,7 +1553,6 @@ xfs_bmap_one_block(
+ 	xfs_inode_t	*ip,		/* incore inode */
+ 	int		whichfork)	/* data or attr fork */
+ {
+-	xfs_bmbt_rec_host_t *ep;	/* ptr to fork's extent */
+ 	xfs_ifork_t	*ifp;		/* inode fork pointer */
+ 	int		rval;		/* return value */
+ 	xfs_bmbt_irec_t	s;		/* internal version of extent */
+@@ -1568,8 +1567,7 @@ xfs_bmap_one_block(
+ 		return 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+-	ep = xfs_iext_get_ext(ifp, 0);
+-	xfs_bmbt_get_all(ep, &s);
++	xfs_iext_get_extent(ifp, 0, &s);
+ 	rval = s.br_startoff == 0 && s.br_blockcount == 1;
+ 	if (rval && whichfork == XFS_DATA_FORK)
+ 		ASSERT(XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize);
+@@ -1655,7 +1653,7 @@ xfs_bmap_add_extent_delay_real(
+ 	 */
+ 	if (bma->idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &LEFT);
++		xfs_iext_get_extent(ifp, bma->idx - 1, &LEFT);
+ 
+ 		if (isnullstartblock(LEFT.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+@@ -1675,7 +1673,7 @@ xfs_bmap_add_extent_delay_real(
+ 	 */
+ 	if (bma->idx < xfs_iext_count(ifp) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx + 1), &RIGHT);
++		xfs_iext_get_extent(ifp, bma->idx + 1, &RIGHT);
+ 
+ 		if (isnullstartblock(RIGHT.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+@@ -2222,7 +2220,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	 */
+ 	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &LEFT);
++		xfs_iext_get_extent(ifp, *idx - 1, &LEFT);
+ 
+ 		if (isnullstartblock(LEFT.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+@@ -2242,7 +2240,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	 */
+ 	if (*idx < xfs_iext_count(ifp) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
++		xfs_iext_get_extent(ifp, *idx + 1, &RIGHT);
+ 		if (isnullstartblock(RIGHT.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+ 	}
+@@ -2716,7 +2714,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
++		xfs_iext_get_extent(ifp, *idx - 1, &left);
+ 
+ 		if (isnullstartblock(left.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+@@ -2728,7 +2726,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if (*idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
++		xfs_iext_get_extent(ifp, *idx, &right);
+ 
+ 		if (isnullstartblock(right.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+@@ -2880,7 +2878,7 @@ xfs_bmap_add_extent_hole_real(
+ 	 */
+ 	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
++		xfs_iext_get_extent(ifp, *idx - 1, &left);
+ 		if (isnullstartblock(left.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+ 	}
+@@ -2891,7 +2889,7 @@ xfs_bmap_add_extent_hole_real(
+ 	 */
+ 	if (*idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
++		xfs_iext_get_extent(ifp, *idx, &right);
+ 		if (isnullstartblock(right.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+ 	}
+@@ -4209,10 +4207,8 @@ xfs_bmapi_allocate(
+ 	if (bma->wasdel) {
+ 		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
+ 		bma->offset = bma->got.br_startoff;
+-		if (bma->idx) {
+-			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1),
+-					 &bma->prev);
+-		}
++		if (bma->idx)
++			xfs_iext_get_extent(ifp, bma->idx - 1, &bma->prev);
+ 	} else {
+ 		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
+ 		if (!bma->eof)
+@@ -4309,7 +4305,7 @@ xfs_bmapi_allocate(
+ 	 * or xfs_bmap_add_extent_hole_real might have merged it into one of
+ 	 * the neighbouring ones.
+ 	 */
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &bma->got);
++	xfs_iext_get_extent(ifp, bma->idx, &bma->got);
+ 
+ 	ASSERT(bma->got.br_startoff <= bma->offset);
+ 	ASSERT(bma->got.br_startoff + bma->got.br_blockcount >=
+@@ -4390,7 +4386,7 @@ xfs_bmapi_convert_unwritten(
+ 	 * xfs_bmap_add_extent_unwritten_real might have merged it into one
+ 	 * of the neighbouring ones.
+ 	 */
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &bma->got);
++	xfs_iext_get_extent(ifp, bma->idx, &bma->got);
+ 
+ 	/*
+ 	 * We may have combined previously unwritten space with written space,
+@@ -5589,8 +5585,8 @@ __xfs_bunmapi(
+ 					del.br_blockcount : mod;
+ 				if (bno < got.br_startoff) {
+ 					if (--lastx >= 0)
+-						xfs_bmbt_get_all(xfs_iext_get_ext(
+-							ifp, lastx), &got);
++						xfs_iext_get_extent(ifp, lastx,
++								&got);
+ 				}
+ 				continue;
+ 			}
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bb5514688d47..0a8999a310b9 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -277,7 +277,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+ 		struct xfs_bmbt_irec	r;
+ 
+ 		ifp = xfs_iext_state_to_fork(ip, state);
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &r);
++		xfs_iext_get_extent(ifp, idx, &r);
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->idx = idx;
+-- 
+2.14.1
 
-attr hasnt been released since this patch was applied so distros may
-not have this patch yet but I guess distro can be patched.
-
-> -Eric
