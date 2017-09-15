@@ -1,47 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:44130 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbdIOJnG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 05:43:06 -0400
-Received: by mail-wr0-f171.google.com with SMTP id v109so1365752wrc.1
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2017 02:43:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
-References: <20170829235052.21050-1-david@fromorbit.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 15 Sep 2017 11:42:44 +0200
-Message-ID: <CACj3i73fYBdBNJPn+VNR90ERW+sdMUmNbEGt-Q9Q6z95=hi0qQ@mail.gmail.com>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:49406 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751385AbdIOOy2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2017 10:54:28 -0400
+Received: from [8.25.222.2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dss0i-0003Ib-F0
+        for linux-xfs@vger.kernel.org; Fri, 15 Sep 2017 14:54:28 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 11/18] xfs: refactor xfs_bmap_add_extent_hole_real
+Date: Fri, 15 Sep 2017 07:54:19 -0700
+Message-Id: <20170915145426.26194-12-hch@lst.de>
+In-Reply-To: <20170915145426.26194-1-hch@lst.de>
+References: <20170915145426.26194-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 1:50 AM, Dave Chinner <david@fromorbit.com> wrote:
->
-> Future work will be to split the xfs_mkfs.c file into a file per
-> module (i.e. seperate files for CLI parsing, mkfs formating,
-> validation+calculation and, finally, one for config file support),
-> but otherwise the majority of the factoring work is now complete.
->
-> Comments, flames, etc all welcome.
->
+Use xfs_iext_update_extent to update entries in the in-core extent list.
+This isolates the function from the detailed layout of the extent list,
+and generally makes the code a lot more readable.
 
-In my review, I didn't saw any issues. It works, it certainly looks
-way better than what I was trying to do, and I didn't notice any
-regression, although my testing was not as thorough as Chandan's. It
-seems that everybody likes these changes, so is there anything that
-prevents it to be merged once xfstests are updated as well?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 48 +++++++++++++++++++++---------------------------
+ 1 file changed, 21 insertions(+), 27 deletions(-)
 
-And thinking about the future, I wonder if there is any point in
-making the suboption tables into one hierarchical like I wanted
-before. The main reason for my attempt was to allow cross-option
-conflicts and the mentioned changes also added conditional conflicts.
-But now with validate_sb_features() containing almost all these
-conflicts, I'm not sure if it would help or if it would rather make it
-more complex and obscure.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 833c76084f38..4fb73c0aca05 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2860,6 +2860,7 @@ xfs_bmap_add_extent_hole_real(
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+ 	int			rval=0;	/* return value (logging flags) */
+ 	int			state;	/* state bits, accessed thru macros */
++	struct xfs_bmbt_irec	old;
+ 
+ 	ASSERT(*idx >= 0);
+ 	ASSERT(*idx <= xfs_iext_count(ifp));
+@@ -2929,9 +2930,8 @@ xfs_bmap_add_extent_hole_real(
+ 		 */
+ 		--*idx;
+ 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+-		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+-			left.br_blockcount + new->br_blockcount +
+-			right.br_blockcount);
++		left.br_blockcount += new->br_blockcount + right.br_blockcount;
++		xfs_iext_update_extent(ifp, *idx, &left);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+ 		xfs_iext_remove(ip, *idx + 1, 1, state);
+@@ -2958,10 +2958,7 @@ xfs_bmap_add_extent_hole_real(
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 			error = xfs_bmbt_update(cur, left.br_startoff,
+ 					left.br_startblock,
+-					left.br_blockcount +
+-						new->br_blockcount +
+-						right.br_blockcount,
+-					left.br_state);
++					left.br_blockcount, left.br_state);
+ 			if (error)
+ 				goto done;
+ 		}
+@@ -2974,26 +2971,25 @@ xfs_bmap_add_extent_hole_real(
+ 		 * Merge the new allocation with the left neighbor.
+ 		 */
+ 		--*idx;
++		old = left;
+ 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+-		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+-			left.br_blockcount + new->br_blockcount);
++		left.br_blockcount += new->br_blockcount;
++		xfs_iext_update_extent(ifp, *idx, &left);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+ 		if (cur == NULL) {
+ 			rval = xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = 0;
+-			error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
+-					left.br_startblock, left.br_blockcount,
++			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
++					old.br_startblock, old.br_blockcount,
+ 					&i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 			error = xfs_bmbt_update(cur, left.br_startoff,
+ 					left.br_startblock,
+-					left.br_blockcount +
+-						new->br_blockcount,
+-					left.br_state);
++					left.br_blockcount, left.br_state);
+ 			if (error)
+ 				goto done;
+ 		}
+@@ -3005,29 +3001,27 @@ xfs_bmap_add_extent_hole_real(
+ 		 * on the right.
+ 		 * Merge the new allocation with the right neighbor.
+ 		 */
++		old = right;
+ 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+-		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+-			new->br_startoff, new->br_startblock,
+-			new->br_blockcount + right.br_blockcount,
+-			right.br_state);
++		right.br_startoff = new->br_startoff;
++		right.br_startblock = new->br_startblock;
++		right.br_blockcount += new->br_blockcount;
++		xfs_iext_update_extent(ifp, *idx, &right);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+ 		if (cur == NULL) {
+ 			rval = xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = 0;
+-			error = xfs_bmbt_lookup_eq(cur,
+-					right.br_startoff,
+-					right.br_startblock,
+-					right.br_blockcount, &i);
++			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
++					old.br_startblock, old.br_blockcount,
++					&i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_bmbt_update(cur, new->br_startoff,
+-					new->br_startblock,
+-					new->br_blockcount +
+-						right.br_blockcount,
+-					right.br_state);
++			error = xfs_bmbt_update(cur, right.br_startoff,
++					right.br_startblock,
++					right.br_blockcount, right.br_state);
+ 			if (error)
+ 				goto done;
+ 		}
+-- 
+2.14.1
 
-Cheers,
-Jan
