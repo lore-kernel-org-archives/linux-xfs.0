@@ -1,72 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49088 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751516AbdINMUC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 08:20:02 -0400
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
-References: <20170908152805.GA16646@linux.intel.com>
-        <20170908212153.14880-1-ross.zwisler@linux.intel.com>
-        <20170912064411.GR10621@dastard>
-        <20170912153820.GA5000@linux.intel.com>
-        <20170912234729.GW10621@dastard>
-        <20170913144215.GA12395@linux.intel.com>
-        <20170913220108.GX10621@dastard>
-        <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
-        <20170913233438.GY10621@dastard>
-        <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
-        <20170914004038.GZ10621@dastard>
-        <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
-Date: Thu, 14 Sep 2017 08:19:58 -0400
-In-Reply-To: <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
-        (Dan Williams's message of "Wed, 13 Sep 2017 18:24:10 -0700")
-Message-ID: <x49a81xeakx.fsf@segfault.boston.devel.redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16131 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751211AbdIPLaA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Sep 2017 07:30:00 -0400
+Date: Sat, 16 Sep 2017 21:29:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+Message-ID: <20170916112956.GB10621@dastard>
+References: <20170829235052.21050-1-david@fromorbit.com>
+ <CACj3i73fYBdBNJPn+VNR90ERW+sdMUmNbEGt-Q9Q6z95=hi0qQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACj3i73fYBdBNJPn+VNR90ERW+sdMUmNbEGt-Q9Q6z95=hi0qQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Dan Williams <dan.j.williams@intel.com> writes:
+On Fri, Sep 15, 2017 at 11:42:44AM +0200, Jan Tulak wrote:
+> On Wed, Aug 30, 2017 at 1:50 AM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > Future work will be to split the xfs_mkfs.c file into a file per
+> > module (i.e. seperate files for CLI parsing, mkfs formating,
+> > validation+calculation and, finally, one for config file support),
+> > but otherwise the majority of the factoring work is now complete.
+> >
+> > Comments, flames, etc all welcome.
+> >
+> 
+> In my review, I didn't saw any issues. It works, it certainly looks
+> way better than what I was trying to do, and I didn't notice any
+> regression, although my testing was not as thorough as Chandan's. It
+> seems that everybody likes these changes, so is there anything that
+> prevents it to be merged once xfstests are updated as well?
 
-> On Wed, Sep 13, 2017 at 5:40 PM, Dave Chinner <david@fromorbit.com> wrote:
->> On Wed, Sep 13, 2017 at 05:28:39PM -0700, Dan Williams wrote:
->>> On Wed, Sep 13, 2017 at 4:34 PM, Dave Chinner <david@fromorbit.com> wrote:
->>> > /me shrugs
->>> >
->>> > I just don't like the concept of using tracepoints to as a
->>> > definitive diagnostic test for something working because it'll break
->>> > when the kernel implementation and tracepoints change. So while we
->>> > can probe for perf being present, we can't probe whether the
->>> > tracepoint we need behaves as the test expects it to...
->>>
->>> That concern makes sense.
->>>
->>> We handle that it a crude way in the libnvdimm unit tests by hard
->>> coding a required minimum kernel version and rolling a test forward to
->>> depend on a new kernel when assumptions about the kernel-internals
->>> change. The tests also inject out-of-tree kernel modules that let us
->>> go after specific kernel internal behavior. With this approach we
->>> don't end up creating userspace ABI since the test explicitly loads
->>> out-of-tree modules.
->>
->> That's horrible. OT, but how are distros or anyone backporting
->> libnvdimm fixes and features supposed to test their kernels work
->> correctly with such a test harness?
->
-> The upstream kernel version for the test to assume can be overridden
-> by an environment variable. It has worked well so far for me when I'm
-> using it it to test backports, but I don't have much in the way of
-> third-party feedback.
+Yeah, the bugs I found last week to do with log sizingi and log
+stripe units. I'll fix them and send out the xfstests mods next
+week. Then I'll wait for Eric to release 4.13.0 and send him a
+pull request....
 
-It sucks.  :-)  What we really want is to depend on a feature being
-available, not on a kernel version.  We did discuss this a while ago.
-Let me go dig it up...
-  https://lists.01.org/pipermail/linux-nvdimm/2017-March/009253.html
+> And thinking about the future, I wonder if there is any point in
+> making the suboption tables into one hierarchical like I wanted
+> before. The main reason for my attempt was to allow cross-option
+> conflicts and the mentioned changes also added conditional
+> conflicts.  But now with validate_sb_features() containing almost
+> all these conflicts, I'm not sure if it would help or if it would
+> rather make it more complex and obscure.
 
-We never came to any real conclusion on a good way forward, though.
+Don't know. But let's focus on getting the features in that people
+want first, then worry about further cleanups...
 
 Cheers,
-Jeff
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
