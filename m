@@ -1,107 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:49586 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750806AbdIKGoo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 02:44:44 -0400
-Date: Mon, 11 Sep 2017 16:44:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: iov_iter_pipe warning.
-Message-ID: <20170911064440.GP17782@dastard>
-References: <20170906234617.GW17782@dastard>
- <20170908010441.GZ5426@ZenIV.linux.org.uk>
- <20170910010756.hnmb233ch7pmnrlx@codemonkey.org.uk>
- <20170910025712.GC5426@ZenIV.linux.org.uk>
- <20170910211110.GM17782@dastard>
- <20170910211907.GF5426@ZenIV.linux.org.uk>
- <20170910220814.GN17782@dastard>
- <20170910230723.GG5426@ZenIV.linux.org.uk>
- <20170911003113.GO17782@dastard>
- <20170911033222.GI5426@ZenIV.linux.org.uk>
+Received: from sandeen.net ([63.231.237.45]:49550 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751288AbdIPWCA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Sep 2017 18:02:00 -0400
+Subject: Re: XFS and sector size on thin volumes
+References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
+ <20170909231215.GK17782@dastard>
+ <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
+ <20170909235323.GL17782@dastard>
+ <838841738c3d8ca84328075615f95475@assyoma.it>
+ <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
+ <e94a47555325c3e87e5d184e1cab20b4@assyoma.it>
+ <1357a2ee8280242c68d92cd4aba06f51@assyoma.it>
+ <4ca74023-dcaf-9963-1b8f-2c1924866564@sandeen.net>
+ <58a80905e97216e37d72e5b7bd9f1643@assyoma.it>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e15d5e44-e38c-cdde-5893-5455aee04ea8@sandeen.net>
+Date: Sat, 16 Sep 2017 17:01:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170911033222.GI5426@ZenIV.linux.org.uk>
+In-Reply-To: <58a80905e97216e37d72e5b7bd9f1643@assyoma.it>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Dave Jones <davej@codemonkey.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 11, 2017 at 04:32:22AM +0100, Al Viro wrote:
-> On Mon, Sep 11, 2017 at 10:31:13AM +1000, Dave Chinner wrote:
+
+
+On 9/16/17 2:59 PM, Gionatan Danti wrote:
+> Il 16-09-2017 20:33 Eric Sandeen ha scritto:
+>>
+>> I don't think I said that - this is the first time you've mentioned
+>> /alignment/, and I've seen no indication of your alignment one way or
+>> another.
+>>
+>>
+>>
+>>
+>> that specifies a 4k block size, which is already the default.
+>>
+>> You're conflating a lot of issues here - log alignment, sector size,
+>> physical & logical block size presented by both the underlying
+>> storage and the zvol ...
+>>
+>> I cannot speak to zvols, as I have no experience with them.
+>>
+>> But if the underlying storage is 512e/4k then you may want to specify
+>> the 4k /sector/ size with -s size=4k.
+>>
+>> -Eric
+>>
 > 
-> > splice does not go down the direct IO path, so iomap_dio_actor()
-> > should never be handled a pipe as the destination for the IO data.
-> > Indeed, splice read has to supply the pages to be put into the pipe,
-> > which the DIO path does not do - it requires pages be supplied to
-> > it. So I'm not sure why we'd care about pipe destination limitations
-> > in the DIO path?
+> Hi Eric, you are right: I messed up the terminology. Sorry for the noise.
 > 
-> splice doesn't give a rat's arse for direct IO; it's up to filesystem.
+> I was really speaking about *sector* size. In short, when using ZVOL the physical disk's sector size is not directly announced to the higher layer filesystem. This, in turn, cause mkfs.xfs to automatically select a 512B sector size, even when running on top of 512e/4Kn disks.
+> 
+> From previous emails/threads, I was under impression that XFS sector size only very marginally affect performance. It that true? Can I stick with default mkfs settings? Or should I manually select 4K sector size ("-s size=4k")?
 
-[....]
+If you have 512/4k disks and mkfs is not defaulting to 4k sector size,
+use "-s size=4k"
 
-It's news to me that splice works on direct IO - I thought it was
-still required page cache based IO for file data for this stuff to
-work. I must have missed the memo saying that splice interfaces now
-work on O_DIRECT fds, there's certainly no documentation or comments
-in the code I could have read to find this out myself...
-
-As it is, we have very little test coverage for splice interfaces,
-and all that I am aware of assumes that sendfile/splice only works
-for buffered IO. So I'm not surprised there are bugs in this code,
-it's likely to be completely untested.
-
-I'm guessing the warnings are being thrown because sendfile's
-source and/or destination is opened O_DIRECT and something else has
-also mmap()d the same files and is doing concurrent sendfile/splice
-and page faults. Hell, it could even be sendfile to/from the same
-file mixing buffered and direct IO, or perhaps vmsplice of a mapped
-range of the same file it's using as the O_DIRECT destination fd.
-None of which are sane things to do and fall under the "not
-supported" category....
-
-> iov_iter_get_pages() for pipe-backed destination does page allocation
-> and inserts freshly allocated pages into pipe.
-
-Oh, it's hidden more layers down than the code implied I needed to
-look.
-
-i.e. there's no obvious clue in the function names that there is
-allocation happening in these paths (get_pipe_pages ->
-__get_pipe_pages -> push_pipe -> page allocation). The function
-names imply it's getting a reference to pages (like
-(get_user_pages()) and the fact it does allocation is inconsistent
-with it's naming.  Worse, when push_pipe() fails to allocate pages,
-the error __get_pipe_pages() returns is -EFAULT, which further hides
-the fact push_pipe() does memory allocation that can fail....
-
-And then there's the companion interface that implies page
-allocation: pipe_get_pages_alloc(). Which brings me back to there
-being no obvious clue while reading the code from the top down that
-pages are being allocated in push_pipe()....
-
-Comments and documentation for this code would help, but I can't
-find any of that, either. Hence I assumed naming followed familiar
-patterns and so mistook these interfaces being one that does page
-allocation and the other for getting references to pre-existing
-pages.....
-
-[snip]
-
-> Normally a filesystem doesn't need to care about splice at all -
-> just use generic_file_splice_read() and be done with that.
-> It will use the normal ->read_iter(), with whatever locking, etc.,
-> your filesystem would do on a normal read.
-
-Yup, that's my point - this is exactly what XFS does, and so I had
-no clue that the generic splice code had been changed to accept and
-use O_DIRECT semantics because no filesystem code was changed to
-enable it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
