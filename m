@@ -1,227 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39414 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751787AbdINJux (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 05:50:53 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v2 1/4] iomap: Switch from blkno to disk offset
-Date: Thu, 14 Sep 2017 11:50:44 +0200
-Message-Id: <20170914095047.23935-2-agruenba@redhat.com>
-In-Reply-To: <20170914095047.23935-1-agruenba@redhat.com>
-References: <20170914095047.23935-1-agruenba@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25730 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751180AbdIPE1u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Sep 2017 00:27:50 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8G4RnVc016492
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 16 Sep 2017 04:27:50 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v8G4RnE2028078
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 16 Sep 2017 04:27:49 GMT
+Received: from ubhmp0007.oracle.com (ubhmp0007.oracle.com [156.151.24.60])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8G4Rn6I017400
+        for <linux-xfs@vger.kernel.org>; Sat, 16 Sep 2017 04:27:49 GMT
+Subject: Re: Status Report 9/8/2012 - 9/15/2017
+From: Allison Henderson <allison.henderson@oracle.com>
+References: <bfd882a4-a457-9b3b-3e3a-1fcca1531ff5@oracle.com>
+Message-ID: <04f32299-3928-93f8-40cb-33e103610f8e@oracle.com>
+Date: Fri, 15 Sep 2017 21:27:48 -0700
+MIME-Version: 1.0
+In-Reply-To: <bfd882a4-a457-9b3b-3e3a-1fcca1531ff5@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-Replace iomap->blkno, the sector number, with iomap->addr, the disk
-offset in bytes.  For invalid disk offsets, use the special value
-IOMAP_NULL_ADDR instead of IOMAP_NULL_BLOCK.
+Oops, didn't mean to send this to the mailing list.  Feel free to ignore 
+for now.  Thx!
 
-This allows to use iomap for mappings which are not block aligned, such
-as inline data on ext4.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>  # iomap, xfs
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/buffer.c           |  4 ++--
- fs/dax.c              |  2 +-
- fs/ext2/inode.c       |  4 ++--
- fs/ext4/inode.c       |  4 ++--
- fs/iomap.c            | 11 +++++------
- fs/nfsd/blocklayout.c |  4 ++--
- fs/xfs/xfs_iomap.c    |  6 +++---
- include/linux/iomap.h | 10 +++++-----
- 8 files changed, 22 insertions(+), 23 deletions(-)
-
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 170df856bdb9..bd4d0923cdce 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -1978,8 +1978,8 @@ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
- 	case IOMAP_MAPPED:
- 		if (offset >= i_size_read(inode))
- 			set_buffer_new(bh);
--		bh->b_blocknr = (iomap->blkno >> (inode->i_blkbits - 9)) +
--				((offset - iomap->offset) >> inode->i_blkbits);
-+		bh->b_blocknr = (iomap->addr + offset - iomap->offset) >>
-+				inode->i_blkbits;
- 		set_buffer_mapped(bh);
- 		break;
- 	}
-diff --git a/fs/dax.c b/fs/dax.c
-index 6afcacb3a87b..feccb4ec45d2 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -938,7 +938,7 @@ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
- 
- static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
- {
--	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
-+	return (iomap->addr + (pos & PAGE_MASK) - iomap->offset) >> 9;
- }
- 
- static loff_t
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 4dca6f348714..1b8fc73de4a1 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -820,11 +820,11 @@ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 
- 	if (ret == 0) {
- 		iomap->type = IOMAP_HOLE;
--		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->addr = IOMAP_NULL_ADDR;
- 		iomap->length = 1 << blkbits;
- 	} else {
- 		iomap->type = IOMAP_MAPPED;
--		iomap->blkno = (sector_t)bno << (blkbits - 9);
-+		iomap->addr = (u64)bno << blkbits;
- 		iomap->length = (u64)ret << blkbits;
- 		iomap->flags |= IOMAP_F_MERGED;
- 	}
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 31db875bc7a1..d9e633c12aae 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3472,7 +3472,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 
- 	if (ret == 0) {
- 		iomap->type = IOMAP_HOLE;
--		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->addr = IOMAP_NULL_ADDR;
- 		iomap->length = (u64)map.m_len << blkbits;
- 	} else {
- 		if (map.m_flags & EXT4_MAP_MAPPED) {
-@@ -3483,7 +3483,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 			WARN_ON_ONCE(1);
- 			return -EIO;
- 		}
--		iomap->blkno = (sector_t)map.m_pblk << (blkbits - 9);
-+		iomap->addr = (u64)map.m_pblk << blkbits;
- 		iomap->length = (u64)map.m_len << blkbits;
- 	}
- 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 269b24a01f32..622c731c57a0 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -350,8 +350,8 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
- 		struct iomap *iomap)
- {
--	sector_t sector = iomap->blkno +
--		(((pos & ~(PAGE_SIZE - 1)) - iomap->offset) >> 9);
-+	sector_t sector = (iomap->addr +
-+			   (pos & PAGE_MASK) - iomap->offset) >> 9;
- 
- 	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev, sector,
- 			offset, bytes);
-@@ -512,9 +512,8 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- 		flags |= FIEMAP_EXTENT_SHARED;
- 
- 	return fiemap_fill_next_extent(fi, iomap->offset,
--			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
-+			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
- 			iomap->length, flags);
--
- }
- 
- static loff_t
-@@ -807,7 +806,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
- 	bio = bio_alloc(GFP_KERNEL, 1);
- 	bio_set_dev(bio, iomap->bdev);
- 	bio->bi_iter.bi_sector =
--		iomap->blkno + ((pos - iomap->offset) >> 9);
-+		(iomap->addr + pos - iomap->offset) >> 9;
- 	bio->bi_private = dio;
- 	bio->bi_end_io = iomap_dio_bio_end_io;
- 
-@@ -886,7 +885,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 		bio = bio_alloc(GFP_KERNEL, nr_pages);
- 		bio_set_dev(bio, iomap->bdev);
- 		bio->bi_iter.bi_sector =
--			iomap->blkno + ((pos - iomap->offset) >> 9);
-+			(iomap->addr + pos - iomap->offset) >> 9;
- 		bio->bi_write_hint = dio->iocb->ki_hint;
- 		bio->bi_private = dio;
- 		bio->bi_end_io = iomap_dio_bio_end_io;
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index c862c2489df0..2d1d37b27dc7 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -65,7 +65,7 @@ nfsd4_block_proc_layoutget(struct inode *inode, const struct svc_fh *fhp,
- 			bex->es = PNFS_BLOCK_READ_DATA;
- 		else
- 			bex->es = PNFS_BLOCK_READWRITE_DATA;
--		bex->soff = (iomap.blkno << 9);
-+		bex->soff = iomap.addr;
- 		break;
- 	case IOMAP_UNWRITTEN:
- 		if (seg->iomode & IOMODE_RW) {
-@@ -78,7 +78,7 @@ nfsd4_block_proc_layoutget(struct inode *inode, const struct svc_fh *fhp,
- 			}
- 
- 			bex->es = PNFS_BLOCK_INVALID_DATA;
--			bex->soff = (iomap.blkno << 9);
-+			bex->soff = iomap.addr;
- 			break;
- 		}
- 		/*FALLTHRU*/
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a1909bc064e9..ac22a5c00079 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -54,13 +54,13 @@ xfs_bmbt_to_iomap(
- 	struct xfs_mount	*mp = ip->i_mount;
- 
- 	if (imap->br_startblock == HOLESTARTBLOCK) {
--		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->addr = IOMAP_NULL_ADDR;
- 		iomap->type = IOMAP_HOLE;
- 	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
--		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->addr = IOMAP_NULL_ADDR;
- 		iomap->type = IOMAP_DELALLOC;
- 	} else {
--		iomap->blkno = xfs_fsb_to_db(ip, imap->br_startblock);
-+		iomap->addr = BBTOB(xfs_fsb_to_db(ip, imap->br_startblock));
- 		if (imap->br_state == XFS_EXT_UNWRITTEN)
- 			iomap->type = IOMAP_UNWRITTEN;
- 		else
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index f64dc6ce5161..7b8a615fa021 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -15,8 +15,8 @@ struct vm_fault;
-  */
- #define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
- #define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
--#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
--#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
-+#define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
-+#define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
- 
- /*
-  * Flags for all iomap mappings:
-@@ -30,12 +30,12 @@ struct vm_fault;
- #define IOMAP_F_SHARED	0x20	/* block shared with another file */
- 
- /*
-- * Magic value for blkno:
-+ * Magic value for addr:
-  */
--#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-+#define IOMAP_NULL_ADDR -1ULL	/* addr is not valid */
- 
- struct iomap {
--	sector_t		blkno;	/* 1st sector of mapping, 512b units */
-+	u64			addr; /* disk offset of mapping, bytes */
- 	loff_t			offset;	/* file offset of mapping, bytes */
- 	u64			length;	/* length of mapping, bytes */
- 	u16			type;	/* type of mapping */
--- 
-2.13.3
+On 09/15/2017 05:09 PM, Allison Henderson wrote:
+>
+> Status Report 9/8/2012 - 9/15/2017
+>   * Resolved lock bug found last week
+>
+>   * Ran the set through xfs tests for attributes and found a few
+>     more bugs
+>
+>   * Looks like I may need to go through the attribute code and remove
+>     all uses of strlen for the attribute names since parent pointer
+>     names are binary
+>
+>   * Also reviewed documentation for xfs-delayed-logging-design to
+>     better understand delayed operations
+>
+> Projection for next week
+>   * continue to stabilize and finish out the set
+>
+> Vacation planned: 9/25th - 9/29th
+>
+> Thanks all!
+> Allison Henderson
 
