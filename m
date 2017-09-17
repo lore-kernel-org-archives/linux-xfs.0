@@ -1,89 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:1398 "EHLO
-        ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751294AbdIPW0h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Sep 2017 18:26:37 -0400
-Date: Sun, 17 Sep 2017 08:26:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [fstests PATCH v2] xfs: add regression test for DAX mount option
- usage
-Message-ID: <20170916222633.GA17782@dastard>
-References: <CAPcyv4gGpAW7kUCgqSoNCPkFZVYzTVQi3C4x6AFm2KHvFrZSfw@mail.gmail.com>
- <20170911200103.28226-1-ross.zwisler@linux.intel.com>
- <20170914065741.GH8034@eguan.usersys.redhat.com>
- <20170915224227.GA9020@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170915224227.GA9020@linux.intel.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:57893 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752086AbdIQVHT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:19 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/47] xfs: check _alloc_read_agf buffer pointer before using
+Date: Sun, 17 Sep 2017 14:06:38 -0700
+Message-Id: <20170917210712.10804-14-hch@lst.de>
+In-Reply-To: <20170917210712.10804-1-hch@lst.de>
+References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Fri, Sep 15, 2017 at 04:42:27PM -0600, Ross Zwisler wrote:
-> On Thu, Sep 14, 2017 at 02:57:41PM +0800, Eryu Guan wrote:
-> > Hi Ross,
-> > 
-> > On Mon, Sep 11, 2017 at 02:01:03PM -0600, Ross Zwisler wrote:
-> > > This adds a regression test for the following kernel patch:
-> > > 
-> > >   xfs: always use DAX if mount option is used
-> > > 
-> > > This test will also pass with kernel v4.14-rc1 and beyond because the XFS
-> > > DAX I/O mount option has been disabled (but not removed), so the
-> > > "chattr -x" to turn off DAX doesn't actually do anything.
-> > > 
-> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > Suggested-by: Christoph Hellwig <hch@infradead.org>
-> > > ---
-> > > 
-> > > Changes since v1:
-> > >  - Use perf instead of tracepoints to detect whether DAX is used. (Dan)
-> > 
-> > Thanks for the test! But I agreed with Dave here, it doesn't seem like a
-> > good idea to depend on the kernel tracepoints in a test, but I can't
-> > think of a better solution either, so I didn't get to this patch
-> > earlier..
-> > 
-> > Before XFS disabled the ability to switch on & off per-inode DAX flag,
-> > the x flag was only shown after an explicit 'chattr +x', even if XFS was
-> > mounted with dax option, e.g.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Of course. lsattr reports the *on-disk inode flag state*. It does
-not report whether the file is using that feature or not, just
-whether the flag is set on disk.
+commit 10479e2dea83d4c421ad05dfc55d918aa8dfc0cd upstream.
 
-Remember, lsattr does not report a "sum of all config states for a
-feature".  It reports on disk state and on disk state only. It
-follows the same semantics as other flags that have equivalent mount
-options like dirsync, sync, noatime, etc.
+In some circumstances, _alloc_read_agf can return an error code of zero
+but also a null AGF buffer pointer.  Check for this and jump out.
 
-> > # mkfs -t xfs -f /dev/ram0
-> > # mount -o dax /dev/ram0 /mnt/xfs
-> > # echo "test" > /mnt/xfs/testfile
-> > # xfs_io -c "lsattr" /mnt/xfs/testfile
-> > ---------------- /mnt/xfs/testfile
-> > # xfs_io -c "chattr +x" /mnt/xfs/testfile
-> > # xfs_io -c "lsattr" /mnt/xfs/testfile
-> > ---------------x /mnt/xfs/testfile
-> 
-> XFS actually still works this way, you just don't get dax now when you chattr
-> +x. :-/  But the inode flag is actually still there, gets updated by chattr
-> and can be listed with lsattr.
-> 
-> Actually, that feels like a really bad situation to be in - Christoph & Dave,
-> should we do more to remove the flag as long as it's not working?  i.e. remove
-> it from the lsattr output and make "chattr +x" fail with -EINVAL or similar?
+Fixes-coverity-id: 1415250
+Fixes-coverity-id: 1415320
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_refcount.c | 4 ++++
+ fs/xfs/xfs_reflink.c         | 2 ++
+ 2 files changed, 6 insertions(+)
 
-How about we concentrate on fixing the problem that led us to
-disable it temporarily in XFS? Then it can be re-enabled and
-problems like this go away...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index e17016163542..d71cb63cdea3 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1640,6 +1640,10 @@ xfs_refcount_recover_cow_leftovers(
+ 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+ 	if (error)
+ 		goto out_trans;
++	if (!agbp) {
++		error = -ENOMEM;
++		goto out_trans;
++	}
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+ 
+ 	/* Find all the leftover CoW staging extents. */
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 350fc64441b1..0015c19c7455 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -169,6 +169,8 @@ xfs_reflink_find_shared(
+ 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+ 	if (error)
+ 		return error;
++	if (!agbp)
++		return -ENOMEM;
+ 
+ 	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.1
+
