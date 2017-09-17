@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37888 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36511 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752005AbdIQVH1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:27 -0400
+        with ESMTP id S1752110AbdIQVHd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:33 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/47] xfs: fix recovery failure when log record header wraps log end
-Date: Sun, 17 Sep 2017 14:06:51 -0700
-Message-Id: <20170917210712.10804-27-hch@lst.de>
+Subject: [PATCH 36/47] xfs: ordered buffer log items are never formatted
+Date: Sun, 17 Sep 2017 14:07:01 -0700
+Message-Id: <20170917210712.10804-37-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,87 +17,69 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 284f1c2c9bebf871861184b0e2c40fa921dd380b upstream.
+commit e9385cc6fb7edf23702de33a2dc82965d92d9392 upstream.
 
-The high-level log recovery algorithm consists of two loops that
-walk the physical log and process log records from the tail to the
-head. The first loop handles the case where the tail is beyond the
-head and processes records up to the end of the physical log. The
-subsequent loop processes records from the beginning of the physical
-log to the head.
+Ordered buffers pass through the logging infrastructure without ever
+being written to the log. The way this works is that the ordered
+buffer status is transferred to the log vector at commit time via
+the ->iop_size() callback. In xlog_cil_insert_format_items(),
+ordered log vectors bypass ->iop_format() processing altogether.
 
-Because log records can wrap around the end of the physical log, the
-first loop mentioned above must handle this case appropriately.
-Records are processed from in-core buffers, which means that this
-algorithm must split the reads of such records into two partial
-I/Os: 1.) from the beginning of the record to the end of the log and
-2.) from the beginning of the log to the end of the record. This is
-further complicated by the fact that the log record header and log
-record data are read into independent buffers.
-
-The current handling of each buffer correctly splits the reads when
-either the header or data starts before the end of the log and wraps
-around the end. The data read does not correctly handle the case
-where the prior header read wrapped or ends on the physical log end
-boundary. blk_no is incremented to or beyond the log end after the
-header read to point to the record data, but the split data read
-logic triggers, attempts to read from an invalid log block and
-ultimately causes log recovery to fail. This can be reproduced
-fairly reliably via xfstests tests generic/047 and generic/388 with
-large iclog sizes (256k) and small (10M) logs.
-
-If the record header read has pushed beyond the end of the physical
-log, the subsequent data read is actually contiguous. Update the
-data read logic to detect the case where blk_no has wrapped, mod it
-against the log size to read from the correct address and issue one
-contiguous read for the log data buffer. The log record is processed
-as normal from the buffer(s), the loop exits after the current
-iteration and the subsequent loop picks up with the first new record
-after the start of the log.
+Therefore it is unnecessary for xfs_buf_item_format() to handle
+ordered buffers. Remove the unnecessary logic and assert that an
+ordered buffer never reaches this point.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_recover.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_buf_item.c | 12 ++----------
+ fs/xfs/xfs_trace.h    |  1 -
+ 2 files changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e06aa2827ecb..9cef8916314a 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5216,7 +5216,7 @@ xlog_do_recovery_pass(
- 	xfs_daddr_t		*first_bad)	/* out: first bad log rec */
- {
- 	xlog_rec_header_t	*rhead;
--	xfs_daddr_t		blk_no;
-+	xfs_daddr_t		blk_no, rblk_no;
- 	xfs_daddr_t		rhead_blk;
- 	char			*offset;
- 	xfs_buf_t		*hbp, *dbp;
-@@ -5369,9 +5369,19 @@ xlog_do_recovery_pass(
- 			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
- 			blk_no += hblks;
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index ff076d11804a..ef2c1375f092 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -323,6 +323,8 @@ xfs_buf_item_format(
+ 	ASSERT((bip->bli_flags & XFS_BLI_STALE) ||
+ 	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
+ 	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
++	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED) ||
++	       (bip->bli_flags & XFS_BLI_STALE));
  
--			/* Read in data for log record */
--			if (blk_no + bblks <= log->l_logBBsize) {
--				error = xlog_bread(log, blk_no, bblks, dbp,
-+			/*
-+			 * Read the log record data in multiple reads if it
-+			 * wraps around the end of the log. Note that if the
-+			 * header already wrapped, blk_no could point past the
-+			 * end of the log. The record data is contiguous in
-+			 * that case.
-+			 */
-+			if (blk_no + bblks <= log->l_logBBsize ||
-+			    blk_no >= log->l_logBBsize) {
-+				/* mod blk_no in case the header wrapped and
-+				 * pushed it beyond the end of the log */
-+				rblk_no = do_mod(blk_no, log->l_logBBsize);
-+				error = xlog_bread(log, rblk_no, bblks, dbp,
- 						   &offset);
- 				if (error)
- 					goto bread_err2;
+ 
+ 	/*
+@@ -347,16 +349,6 @@ xfs_buf_item_format(
+ 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+ 	}
+ 
+-	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
+-							XFS_BLI_ORDERED) {
+-		/*
+-		 * The buffer has been logged just to order it.  It is not being
+-		 * included in the transaction commit, so don't format it.
+-		 */
+-		trace_xfs_buf_item_format_ordered(bip);
+-		return;
+-	}
+-
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+ 					    &bip->bli_formats[i]);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6221c3818c6e..bdf69e1c7410 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -520,7 +520,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
+-DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
 -- 
 2.14.1
 
