@@ -1,122 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49932 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39621 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbdIQVGm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:42 -0400
+        with ESMTP id S1752043AbdIQVGq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:46 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/25] xfs: move bmbt owner change to last step of extent swap
-Date: Sun, 17 Sep 2017 14:06:24 -0700
-Message-Id: <20170917210631.10725-19-hch@lst.de>
+Subject: [PATCH 24/25] xfs: open code end_buffer_async_write in xfs_finish_page_writeback
+Date: Sun, 17 Sep 2017 14:06:30 -0700
+Message-Id: <20170917210631.10725-25-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+commit 8353a814f2518dcfa79a5bb77afd0e7dfa391bb1 upstream.
 
-commit 6fb10d6d22094bc4062f92b9ccbcee2f54033d04 upstream.
+Our loop in xfs_finish_page_writeback, which iterates over all buffer
+heads in a page and then calls end_buffer_async_write, which also
+iterates over all buffers in the page to check if any I/O is in flight
+is not only inefficient, but also potentially dangerous as
+end_buffer_async_write can cause the page and all buffers to be freed.
 
-The extent swap operation currently resets bmbt block owners before
-the inode forks are swapped. The bmbt buffers are marked as ordered
-so they do not have to be physically logged in the transaction.
+Replace it with a single loop that does the work of end_buffer_async_write
+on a per-page basis.
 
-This use of ordered buffers is not safe as bmbt buffers may have
-been previously physically logged. The bmbt owner change algorithm
-needs to be updated to physically log buffers that are already dirty
-when/if they are encountered. This means that an extent swap will
-eventually require multiple rolling transactions to handle large
-btrees. In addition, all inode related changes must be logged before
-the bmbt owner change scan begins and can roll the transaction for
-the first time to preserve fs consistency via log recovery.
-
-In preparation for such fixes to the bmbt owner change algorithm,
-refactor the bmbt scan out of the extent fork swap code to the last
-operation before the transaction is committed. Update
-xfs_swap_extent_forks() to only set the inode log flags when an
-owner change scan is necessary. Update xfs_swap_extents() to trigger
-the owner change based on the inode log flags. Note that since the
-owner change now occurs after the extent fork swap, the inode btrees
-must be fixed up with the inode number of the current inode (similar
-to log recovery).
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 44 ++++++++++++++++++++++++++------------------
- 1 file changed, 26 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_aops.c | 71 ++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 47 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 93e955262d07..ee8fb9a9ed73 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1840,29 +1840,18 @@ xfs_swap_extent_forks(
- 	}
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6bf120bb1a17..f9efd67f6fa1 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -85,11 +85,11 @@ xfs_find_bdev_for_inode(
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
+  *
+- * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
+- * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
+- * the page at all, as we may be racing with memory reclaim and it can free both
+- * the bufferhead chain and the page as it will see the page as clean and
+- * unused.
++ * Note that we open code the action in end_buffer_async_write here so that we
++ * only have to iterate over the buffers attached to the page once.  This is not
++ * only more efficient, but also ensures that we only calls end_page_writeback
++ * at the end of the iteration, and thus avoids the pitfall of having the page
++ * and buffers potentially freed after every call to end_buffer_async_write.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -97,29 +97,44 @@ xfs_finish_page_writeback(
+ 	struct bio_vec		*bvec,
+ 	int			error)
+ {
+-	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh, *next;
++	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
++	bool			busy = false;
+ 	unsigned int		off = 0;
+-	unsigned int		bsize;
++	unsigned long		flags;
  
- 	/*
--	 * Before we've swapped the forks, lets set the owners of the forks
--	 * appropriately. We have to do this as we are demand paging the btree
--	 * buffers, and so the validation done on read will expect the owner
--	 * field to be correctly set. Once we change the owners, we can swap the
--	 * inode forks.
-+	 * Btree format (v3) inodes have the inode number stamped in the bmbt
-+	 * block headers. We can't start changing the bmbt blocks until the
-+	 * inode owner change is logged so recovery does the right thing in the
-+	 * event of a crash. Set the owner change log flags now and leave the
-+	 * bmbt scan as the last step.
- 	 */
- 	if (ip->i_d.di_version == 3 &&
--	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-+	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE)
- 		(*target_log_flags) |= XFS_ILOG_DOWNER;
--		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
--					      tip->i_ino, NULL);
--		if (error)
--			return error;
--	}
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
+-	ASSERT(end < PAGE_SIZE);
++	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
+ 	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
+ 
+-	bh = head = page_buffers(bvec->bv_page);
 -
- 	if (tip->i_d.di_version == 3 &&
--	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-+	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
- 		(*src_log_flags) |= XFS_ILOG_DOWNER;
--		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
--					      ip->i_ino, NULL);
--		if (error)
--			return error;
--	}
- 
- 	/*
- 	 * Swap the data forks of the inodes
-@@ -2091,6 +2080,25 @@ xfs_swap_extents(
- 	xfs_trans_log_inode(tp, ip,  src_log_flags);
- 	xfs_trans_log_inode(tp, tip, target_log_flags);
- 
-+	/*
-+	 * The extent forks have been swapped, but crc=1,rmapbt=0 filesystems
-+	 * have inode number owner values in the bmbt blocks that still refer to
-+	 * the old inode. Scan each bmbt to fix up the owner values with the
-+	 * inode number of the current inode.
-+	 */
-+	if (src_log_flags & XFS_ILOG_DOWNER) {
-+		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
-+					      ip->i_ino, NULL);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
-+	if (target_log_flags & XFS_ILOG_DOWNER) {
-+		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
-+					      tip->i_ino, NULL);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
+-	bsize = bh->b_size;
++	local_irq_save(flags);
++	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
+ 	do {
+-		if (off > end)
+-			break;
+-		next = bh->b_this_page;
+-		if (off < bvec->bv_offset)
+-			goto next_bh;
+-		bh->b_end_io(bh, !error);
+-next_bh:
+-		off += bsize;
+-	} while ((bh = next) != head);
++		if (off >= bvec->bv_offset &&
++		    off < bvec->bv_offset + bvec->bv_len) {
++			ASSERT(buffer_async_write(bh));
++			ASSERT(bh->b_end_io == NULL);
 +
- 	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * transaction goes to disk before returning to the user.
++			if (error) {
++				mark_buffer_write_io_error(bh);
++				clear_buffer_uptodate(bh);
++				SetPageError(bvec->bv_page);
++			} else {
++				set_buffer_uptodate(bh);
++			}
++			clear_buffer_async_write(bh);
++			unlock_buffer(bh);
++		} else if (buffer_async_write(bh)) {
++			ASSERT(buffer_locked(bh));
++			busy = true;
++		}
++		off += bh->b_size;
++	} while ((bh = bh->b_this_page) != head);
++	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
++	local_irq_restore(flags);
++
++	if (!busy)
++		end_page_writeback(bvec->bv_page);
+ }
+ 
+ /*
+@@ -133,8 +148,10 @@ xfs_destroy_ioend(
+ 	int			error)
+ {
+ 	struct inode		*inode = ioend->io_inode;
+-	struct bio		*last = ioend->io_bio;
+-	struct bio		*bio, *next;
++	struct bio		*bio = &ioend->io_inline_bio;
++	struct bio		*last = ioend->io_bio, *next;
++	u64			start = bio->bi_iter.bi_sector;
++	bool			quiet = bio_flagged(bio, BIO_QUIET);
+ 
+ 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec	*bvec;
+@@ -155,6 +172,11 @@ xfs_destroy_ioend(
+ 
+ 		bio_put(bio);
+ 	}
++
++	if (unlikely(error && !quiet)) {
++		xfs_err_ratelimited(XFS_I(inode)->i_mount,
++			"writeback error on sector %llu", start);
++	}
+ }
+ 
+ /*
+@@ -423,7 +445,8 @@ xfs_start_buffer_writeback(
+ 	ASSERT(!buffer_delay(bh));
+ 	ASSERT(!buffer_unwritten(bh));
+ 
+-	mark_buffer_async_write(bh);
++	bh->b_end_io = NULL;
++	set_buffer_async_write(bh);
+ 	set_buffer_uptodate(bh);
+ 	clear_buffer_dirty(bh);
+ }
 -- 
 2.14.1
 
