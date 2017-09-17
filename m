@@ -1,103 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40390 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36405 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752001AbdIQVGf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:35 -0400
+        with ESMTP id S1751878AbdIQVHM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:12 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/25] xfs: fix recovery failure when log record header wraps log end
-Date: Sun, 17 Sep 2017 14:06:11 -0700
-Message-Id: <20170917210631.10725-6-hch@lst.de>
-In-Reply-To: <20170917210631.10725-1-hch@lst.de>
-References: <20170917210631.10725-1-hch@lst.de>
+Subject: 4.9-stable updates for XFS
+Date: Sun, 17 Sep 2017 14:06:25 -0700
+Message-Id: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+Hi all,
 
-commit 284f1c2c9bebf871861184b0e2c40fa921dd380b upstream.
+below are backports up to 4.14-rc1 for XFS.  I've selected all
+clear bugfixes for reported bugs, and a few harmless prep patches
+that allow us to carry late bug fixes as-is instead of providing
+special versions for -stable, which in the past have caused more
+harm than good.
 
-The high-level log recovery algorithm consists of two loops that
-walk the physical log and process log records from the tail to the
-head. The first loop handles the case where the tail is beyond the
-head and processes records up to the end of the physical log. The
-subsequent loop processes records from the beginning of the physical
-log to the head.
-
-Because log records can wrap around the end of the physical log, the
-first loop mentioned above must handle this case appropriately.
-Records are processed from in-core buffers, which means that this
-algorithm must split the reads of such records into two partial
-I/Os: 1.) from the beginning of the record to the end of the log and
-2.) from the beginning of the log to the end of the record. This is
-further complicated by the fact that the log record header and log
-record data are read into independent buffers.
-
-The current handling of each buffer correctly splits the reads when
-either the header or data starts before the end of the log and wraps
-around the end. The data read does not correctly handle the case
-where the prior header read wrapped or ends on the physical log end
-boundary. blk_no is incremented to or beyond the log end after the
-header read to point to the record data, but the split data read
-logic triggers, attempts to read from an invalid log block and
-ultimately causes log recovery to fail. This can be reproduced
-fairly reliably via xfstests tests generic/047 and generic/388 with
-large iclog sizes (256k) and small (10M) logs.
-
-If the record header read has pushed beyond the end of the physical
-log, the subsequent data read is actually contiguous. Update the
-data read logic to detect the case where blk_no has wrapped, mod it
-against the log size to read from the correct address and issue one
-contiguous read for the log data buffer. The log record is processed
-as normal from the buffer(s), the loop exits after the current
-iteration and the subsequent loop picks up with the first new record
-after the start of the log.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_log_recover.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9549188f5a36..36a179f2c931 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5218,7 +5218,7 @@ xlog_do_recovery_pass(
- 	xfs_daddr_t		*first_bad)	/* out: first bad log rec */
- {
- 	xlog_rec_header_t	*rhead;
--	xfs_daddr_t		blk_no;
-+	xfs_daddr_t		blk_no, rblk_no;
- 	xfs_daddr_t		rhead_blk;
- 	char			*offset;
- 	xfs_buf_t		*hbp, *dbp;
-@@ -5371,9 +5371,19 @@ xlog_do_recovery_pass(
- 			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
- 			blk_no += hblks;
- 
--			/* Read in data for log record */
--			if (blk_no + bblks <= log->l_logBBsize) {
--				error = xlog_bread(log, blk_no, bblks, dbp,
-+			/*
-+			 * Read the log record data in multiple reads if it
-+			 * wraps around the end of the log. Note that if the
-+			 * header already wrapped, blk_no could point past the
-+			 * end of the log. The record data is contiguous in
-+			 * that case.
-+			 */
-+			if (blk_no + bblks <= log->l_logBBsize ||
-+			    blk_no >= log->l_logBBsize) {
-+				/* mod blk_no in case the header wrapped and
-+				 * pushed it beyond the end of the log */
-+				rblk_no = do_mod(blk_no, log->l_logBBsize);
-+				error = xlog_bread(log, rblk_no, bblks, dbp,
- 						   &offset);
- 				if (error)
- 					goto bread_err2;
--- 
-2.14.1
-
+In addition to the patches for 4.13-stable there also are various
+patches that are in 4.13 but not in 4.9-stable yet.
