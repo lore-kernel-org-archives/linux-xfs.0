@@ -1,70 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51981 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49770 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751576AbdIQVHV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:21 -0400
+        with ESMTP id S1752075AbdIQVHW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:22 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/47] xfs: fix inobt inode allocation search optimization
-Date: Sun, 17 Sep 2017 14:06:42 -0700
-Message-Id: <20170917210712.10804-18-hch@lst.de>
+Subject: [PATCH 18/47] xfs: clear MS_ACTIVE after finishing log recovery
+Date: Sun, 17 Sep 2017 14:06:43 -0700
+Message-Id: <20170917210712.10804-19-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Omar Sandoval <osandov@fb.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit c44245b3d5435f533ca8346ece65918f84c057f9 upstream.
+commit 8204f8ddaafafcae074746fcf2a05a45e6827603 upstream.
 
-When we try to allocate a free inode by searching the inobt, we try to
-find the inode nearest the parent inode by searching chunks both left
-and right of the chunk containing the parent. As an optimization, we
-cache the leftmost and rightmost records that we previously searched; if
-we do another allocation with the same parent inode, we'll pick up the
-search where it last left off.
+Way back when we established inode block-map redo log items, it was
+discovered that we needed to prevent the VFS from evicting inodes during
+log recovery because any given inode might be have bmap redo items to
+replay even if the inode has no link count and is ultimately deleted,
+and any eviction of an unlinked inode causes the inode to be truncated
+and freed too early.
 
-There's a bug in the case where we found a free inode to the left of the
-parent's chunk: we need to update the cached left and right records, but
-because we already reassigned the right record to point to the left, we
-end up assigning the left record to both the cached left and right
-records.
+To make this possible, we set MS_ACTIVE so that inodes would not be torn
+down immediately upon release.  Unfortunately, this also results in the
+quota inodes not being released at all if a later part of the mount
+process should fail, because we never reclaim the inodes.  So, set
+MS_ACTIVE right before we do the last part of log recovery and clear it
+immediately after we finish the log recovery so that everything
+will be torn down properly if we abort the mount.
 
-This isn't a correctness problem strictly, but it can result in the next
-allocation rechecking chunks unnecessarily or allocating inodes further
-away from the parent than it needs to. Fix it by swapping the record
-pointer after we update the cached left and right records.
-
-Fixes: bd169565993b ("xfs: speed up free inode search")
-Signed-off-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_log.c   | 11 +++++++++++
+ fs/xfs/xfs_mount.c | 10 ----------
+ 2 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index a2818f6e8598..af6acd5f276c 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1236,13 +1236,13 @@ xfs_dialloc_ag_inobt(
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b57ab34fbf3c..c235170f3a07 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -749,9 +749,20 @@ xfs_log_mount_finish(
+ 		return 0;
+ 	}
  
- 			/* free inodes to the left? */
- 			if (useleft && trec.ir_freecount) {
--				rec = trec;
- 				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 				cur = tcur;
++	/*
++	 * During the second phase of log recovery, we need iget and
++	 * iput to behave like they do for an active filesystem.
++	 * xfs_fs_drop_inode needs to be able to prevent the deletion
++	 * of inodes before we're done replaying log items on those
++	 * inodes.  Turn it off immediately after recovery finishes
++	 * so that we don't leak the quota inodes if subsequent mount
++	 * activities fail.
++	 */
++	mp->m_super->s_flags |= MS_ACTIVE;
+ 	error = xlog_recover_finish(mp->m_log);
+ 	if (!error)
+ 		xfs_log_work_queue(mp);
++	mp->m_super->s_flags &= ~MS_ACTIVE;
  
- 				pag->pagl_leftrec = trec.ir_startino;
- 				pag->pagl_rightrec = rec.ir_startino;
- 				pag->pagl_pagino = pagino;
-+				rec = trec;
- 				goto alloc_inode;
- 			}
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 13796f212f98..ab058c7dc598 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -924,15 +924,6 @@ xfs_mountfs(
+ 		}
+ 	}
  
+-	/*
+-	 * During the second phase of log recovery, we need iget and
+-	 * iput to behave like they do for an active filesystem.
+-	 * xfs_fs_drop_inode needs to be able to prevent the deletion
+-	 * of inodes before we're done replaying log items on those
+-	 * inodes.
+-	 */
+-	mp->m_super->s_flags |= MS_ACTIVE;
+-
+ 	/*
+ 	 * Finish recovering the file system.  This part needed to be delayed
+ 	 * until after the root and real-time bitmap inodes were consistently
+@@ -1008,7 +999,6 @@ xfs_mountfs(
+  out_quota:
+ 	xfs_qm_unmount_quotas(mp);
+  out_rtunmount:
+-	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 	xfs_rtunmount_inodes(mp);
+  out_rele_rip:
+ 	IRELE(rip);
 -- 
 2.14.1
 
