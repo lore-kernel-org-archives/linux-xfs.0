@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39100 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54058 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752029AbdIQVGo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:44 -0400
+        with ESMTP id S1752015AbdIQVGm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:42 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/25] xfs: relog dirty buffers during swapext bmbt owner change
-Date: Sun, 17 Sep 2017 14:06:26 -0700
-Message-Id: <20170917210631.10725-21-hch@lst.de>
+Subject: [PATCH 17/25] xfs: skip bmbt block ino validation during owner change
+Date: Sun, 17 Sep 2017 14:06:23 -0700
+Message-Id: <20170917210631.10725-18-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,174 +17,81 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 2dd3d709fc4338681a3aa61658122fa8faa5a437 upstream.
+commit 99c794c639a65cc7b74f30a674048fd100fe9ac8 upstream.
 
-The owner change bmbt scan that occurs during extent swap operations
-does not handle ordered buffer failures. Buffers that cannot be
-marked ordered must be physically logged so previously dirty ranges
-of the buffer can be relogged in the transaction.
+Extent swap uses xfs_btree_visit_blocks() to fix up bmbt block
+owners on v5 (!rmapbt) filesystems. The bmbt scan uses
+xfs_btree_lookup_get_block() to read bmbt blocks which verifies the
+current owner of the block against the parent inode of the bmbt.
+This works during extent swap because the bmbt owners are updated to
+the opposite inode number before the inode extent forks are swapped.
 
-Since the bmbt scan may need to process and potentially log a large
-number of blocks, we can't expect to complete this operation in a
-single transaction. Update extent swap to use a permanent
-transaction with enough log reservation to physically log a buffer.
-Update the bmbt scan to physically log any buffers that cannot be
-ordered and to terminate the scan with -EAGAIN. On -EAGAIN, the
-caller rolls the transaction and restarts the scan. Finally, update
-the bmbt scan helper function to skip bmbt blocks that already match
-the expected owner so they are not reprocessed after scan restarts.
+The modified bmbt blocks are marked as ordered buffers which allows
+everything to commit in a single transaction. If the transaction
+commits to the log and the system crashes such that recovery of the
+extent swap is required, log recovery restarts the bmbt scan to fix
+up any bmbt blocks that may have not been written back before the
+crash. The log recovery bmbt scan occurs after the inode forks have
+been swapped, however. This causes the bmbt block owner verification
+to fail, leads to log recovery failure and requires xfs_repair to
+zap the log to recover.
+
+Define a new invalid inode owner flag to inform the btree block
+lookup mechanism that the current inode may be invalid with respect
+to the current owner of the bmbt block. Set this flag on the cursor
+used for change owner scans to allow this operation to work at
+runtime and during log recovery.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Fixes: bb3be7e7c ("xfs: check for bogus values in btree block headers")
+Cc: stable@vger.kernel.org
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-[darrick: fix the xfs_trans_roll call]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c | 26 ++++++++++++++-------
- fs/xfs/xfs_bmap_util.c    | 57 ++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 65 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_bmap_btree.c | 1 +
+ fs/xfs/libxfs/xfs_btree.c      | 1 +
+ fs/xfs/libxfs/xfs_btree.h      | 3 ++-
+ 3 files changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 85de22513014..a6331ffa51e3 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -858,6 +858,7 @@ xfs_bmbt_change_owner(
+ 	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
+ 	if (!cur)
+ 		return -ENOMEM;
++	cur->bc_private.b.flags |= XFS_BTCUR_BPRV_INVALID_OWNER;
+ 
+ 	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
+ 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 1d15d04e29a5..5bfb88261c7e 100644
+index 0b7905a4e27a..1d15d04e29a5 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4452,10 +4452,15 @@ xfs_btree_block_change_owner(
+@@ -1791,6 +1791,7 @@ xfs_btree_lookup_get_block(
  
- 	/* modify the owner */
- 	block = xfs_btree_get_block(cur, level, &bp);
--	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		if (block->bb_u.l.bb_owner == cpu_to_be64(bbcoi->new_owner))
-+			return 0;
- 		block->bb_u.l.bb_owner = cpu_to_be64(bbcoi->new_owner);
--	else
-+	} else {
-+		if (block->bb_u.s.bb_owner == cpu_to_be32(bbcoi->new_owner))
-+			return 0;
- 		block->bb_u.s.bb_owner = cpu_to_be32(bbcoi->new_owner);
-+	}
- 
- 	/*
- 	 * If the block is a root block hosted in an inode, we might not have a
-@@ -4464,14 +4469,19 @@ xfs_btree_block_change_owner(
- 	 * block is formatted into the on-disk inode fork. We still change it,
- 	 * though, so everything is consistent in memory.
- 	 */
--	if (bp) {
--		if (cur->bc_tp)
--			xfs_trans_ordered_buf(cur->bc_tp, bp);
--		else
--			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
--	} else {
-+	if (!bp) {
- 		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
- 		ASSERT(level == cur->bc_nlevels - 1);
-+		return 0;
-+	}
-+
-+	if (cur->bc_tp) {
-+		if (!xfs_trans_ordered_buf(cur->bc_tp, bp)) {
-+			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
-+			return -EAGAIN;
-+		}
-+	} else {
-+		xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
- 	}
- 
- 	return 0;
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index ee8fb9a9ed73..3e9b7a4fb8fd 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1929,6 +1929,48 @@ xfs_swap_extent_forks(
- 	return 0;
- }
- 
-+/*
-+ * Fix up the owners of the bmbt blocks to refer to the current inode. The
-+ * change owner scan attempts to order all modified buffers in the current
-+ * transaction. In the event of ordered buffer failure, the offending buffer is
-+ * physically logged as a fallback and the scan returns -EAGAIN. We must roll
-+ * the transaction in this case to replenish the fallback log reservation and
-+ * restart the scan. This process repeats until the scan completes.
-+ */
-+static int
-+xfs_swap_change_owner(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	struct xfs_inode	*tmpip)
-+{
-+	int			error;
-+	struct xfs_trans	*tp = *tpp;
-+
-+	do {
-+		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK, ip->i_ino,
-+					      NULL);
-+		/* success or fatal error */
-+		if (error != -EAGAIN)
-+			break;
-+
-+		error = xfs_trans_roll(tpp, NULL);
-+		if (error)
-+			break;
-+		tp = *tpp;
-+
-+		/*
-+		 * Redirty both inodes so they can relog and keep the log tail
-+		 * moving forward.
-+		 */
-+		xfs_trans_ijoin(tp, ip, 0);
-+		xfs_trans_ijoin(tp, tmpip, 0);
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		xfs_trans_log_inode(tp, tmpip, XFS_ILOG_CORE);
-+	} while (true);
-+
-+	return error;
-+}
-+
- int
- xfs_swap_extents(
- 	struct xfs_inode	*ip,	/* target inode */
-@@ -1943,7 +1985,7 @@ xfs_swap_extents(
- 	int			lock_flags;
- 	struct xfs_ifork	*cowfp;
- 	uint64_t		f;
--	int			resblks;
-+	int			resblks = 0;
- 
- 	/*
- 	 * Lock the inodes against other IO, page faults and truncate to
-@@ -1991,11 +2033,8 @@ xfs_swap_extents(
- 			  XFS_SWAP_RMAP_SPACE_RES(mp,
- 				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
- 				XFS_DATA_FORK);
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
--				0, 0, &tp);
--	} else
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0,
--				0, 0, &tp);
-+	}
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
- 	if (error)
- 		goto out_unlock;
- 
-@@ -2087,14 +2126,12 @@ xfs_swap_extents(
- 	 * inode number of the current inode.
- 	 */
- 	if (src_log_flags & XFS_ILOG_DOWNER) {
--		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
--					      ip->i_ino, NULL);
-+		error = xfs_swap_change_owner(&tp, ip, tip);
- 		if (error)
- 			goto out_trans_cancel;
- 	}
- 	if (target_log_flags & XFS_ILOG_DOWNER) {
--		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
--					      tip->i_ino, NULL);
-+		error = xfs_swap_change_owner(&tp, tip, ip);
- 		if (error)
- 			goto out_trans_cancel;
- 	}
+ 	/* Check the inode owner since the verifiers don't. */
+ 	if (xfs_sb_version_hascrc(&cur->bc_mp->m_sb) &&
++	    !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_INVALID_OWNER) &&
+ 	    (cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
+ 	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
+ 			cur->bc_private.b.ip->i_ino)
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 9c95e965cfe5..f2a88c3b1159 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -233,7 +233,8 @@ typedef struct xfs_btree_cur
+ 			short		forksize;	/* fork's inode space */
+ 			char		whichfork;	/* data or attr fork */
+ 			char		flags;		/* flags */
+-#define	XFS_BTCUR_BPRV_WASDEL	1			/* was delayed */
++#define	XFS_BTCUR_BPRV_WASDEL		(1<<0)		/* was delayed */
++#define	XFS_BTCUR_BPRV_INVALID_OWNER	(1<<1)		/* for ext swap */
+ 		} b;
+ 	}		bc_private;	/* per-btree type data */
+ } xfs_btree_cur_t;
 -- 
 2.14.1
 
