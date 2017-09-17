@@ -1,70 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34892 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56249 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752083AbdIQVHT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:19 -0400
+        with ESMTP id S1752106AbdIQVHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:25 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/47] xfs: set firstfsb to NULLFSBLOCK before feeding it to _bmapi_write
-Date: Sun, 17 Sep 2017 14:06:37 -0700
-Message-Id: <20170917210712.10804-13-hch@lst.de>
+Subject: [PATCH 23/47] xfs: remove xfs_trans_ail_delete_bulk
+Date: Sun, 17 Sep 2017 14:06:48 -0700
+Message-Id: <20170917210712.10804-24-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+commit 27af1bbf524459962d1477a38ac6e0b7f79aaecc upstream.
 
-commit 4c1a67bd3606540b9b42caff34a1d5cd94b1cf65 upstream.
+xfs_iflush_done uses an on-stack variable length array to pass the log
+items to be deleted to xfs_trans_ail_delete_bulk.  On-stack VLAs are a
+nasty gcc extension that can lead to unbounded stack allocations, but
+fortunately we can easily avoid them by simply open coding
+xfs_trans_ail_delete_bulk in xfs_iflush_done, which is the only caller
+of it except for the single-item xfs_trans_ail_delete.
 
-We must initialize the firstfsb parameter to _bmapi_write so that it
-doesn't incorrectly treat stack garbage as a restriction on which AGs
-it can search for free space.
-
-Fixes-coverity-id: 1402025
-Fixes-coverity-id: 1415167
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 9 +++++++++
- fs/xfs/xfs_reflink.c     | 2 +-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_inode_item.c | 29 +++++++++++---------
+ fs/xfs/xfs_trans_ail.c  | 71 ++++++++++++++++++++++++-------------------------
+ fs/xfs/xfs_trans_priv.h | 15 +++--------
+ 3 files changed, 55 insertions(+), 60 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b79719a87638..73571fb4dfed 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6639,6 +6639,15 @@ xfs_bmap_finish_one(
- 	bmap.br_blockcount = *blockcount;
- 	bmap.br_state = state;
- 
-+	/*
-+	 * firstfsb is tied to the transaction lifetime and is used to
-+	 * ensure correct AG locking order and schedule work item
-+	 * continuations.  XFS_BUI_MAX_FAST_EXTENTS (== 1) restricts us
-+	 * to only making one bmap call per transaction, so it should
-+	 * be safe to have it as a local variable here.
-+	 */
-+	firstfsb = NULLFSBLOCK;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index d90e7811ccdd..08cb7d1a4a3a 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -731,22 +731,27 @@ xfs_iflush_done(
+ 	 * holding the lock before removing the inode from the AIL.
+ 	 */
+ 	if (need_ail) {
+-		struct xfs_log_item *log_items[need_ail];
+-		int i = 0;
++		bool			mlip_changed = false;
 +
- 	trace_xfs_bmap_deferred(tp->t_mountp,
- 			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
- 			XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 29a75ecb2425..350fc64441b1 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -333,7 +333,7 @@ xfs_reflink_convert_cow_extent(
- 	struct xfs_defer_ops		*dfops)
- {
- 	struct xfs_bmbt_irec		irec = *imap;
--	xfs_fsblock_t			first_block;
-+	xfs_fsblock_t			first_block = NULLFSBLOCK;
- 	int				nimaps = 1;
++		/* this is an opencoded batch version of xfs_trans_ail_delete */
+ 		spin_lock(&ailp->xa_lock);
+ 		for (blip = lip; blip; blip = blip->li_bio_list) {
+-			iip = INODE_ITEM(blip);
+-			if (iip->ili_logged &&
+-			    blip->li_lsn == iip->ili_flush_lsn) {
+-				log_items[i++] = blip;
+-			}
+-			ASSERT(i <= need_ail);
++			if (INODE_ITEM(blip)->ili_logged &&
++			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
++				mlip_changed |= xfs_ail_delete_one(ailp, blip);
+ 		}
+-		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
+-		xfs_trans_ail_delete_bulk(ailp, log_items, i,
+-					  SHUTDOWN_CORRUPT_INCORE);
+-	}
  
- 	if (imap->br_state == XFS_EXT_NORM)
++		if (mlip_changed) {
++			if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
++				xlog_assign_tail_lsn_locked(ailp->xa_mount);
++			if (list_empty(&ailp->xa_ail))
++				wake_up_all(&ailp->xa_empty);
++		}
++		spin_unlock(&ailp->xa_lock);
++
++		if (mlip_changed)
++			xfs_log_space_wake(ailp->xa_mount);
++	}
+ 
+ 	/*
+ 	 * clean up and unlock the flush lock now we are done. We can clear the
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index d6c9c3e9e02b..9056c0f34a3c 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -684,8 +684,23 @@ xfs_trans_ail_update_bulk(
+ 	}
+ }
+ 
+-/*
+- * xfs_trans_ail_delete_bulk - remove multiple log items from the AIL
++bool
++xfs_ail_delete_one(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item 	*lip)
++{
++	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
++
++	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
++	xfs_ail_delete(ailp, lip);
++	lip->li_flags &= ~XFS_LI_IN_AIL;
++	lip->li_lsn = 0;
++
++	return mlip == lip;
++}
++
++/**
++ * Remove a log items from the AIL
+  *
+  * @xfs_trans_ail_delete_bulk takes an array of log items that all need to
+  * removed from the AIL. The caller is already holding the AIL lock, and done
+@@ -706,52 +721,36 @@ xfs_trans_ail_update_bulk(
+  * before returning.
+  */
+ void
+-xfs_trans_ail_delete_bulk(
++xfs_trans_ail_delete(
+ 	struct xfs_ail		*ailp,
+-	struct xfs_log_item	**log_items,
+-	int			nr_items,
++	struct xfs_log_item	*lip,
+ 	int			shutdown_type) __releases(ailp->xa_lock)
+ {
+-	xfs_log_item_t		*mlip;
+-	int			mlip_changed = 0;
+-	int			i;
++	struct xfs_mount	*mp = ailp->xa_mount;
++	bool			mlip_changed;
+ 
+-	mlip = xfs_ail_min(ailp);
+-
+-	for (i = 0; i < nr_items; i++) {
+-		struct xfs_log_item *lip = log_items[i];
+-		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
+-			struct xfs_mount	*mp = ailp->xa_mount;
+-
+-			spin_unlock(&ailp->xa_lock);
+-			if (!XFS_FORCED_SHUTDOWN(mp)) {
+-				xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+-		"%s: attempting to delete a log item that is not in the AIL",
+-						__func__);
+-				xfs_force_shutdown(mp, shutdown_type);
+-			}
+-			return;
++	if (!(lip->li_flags & XFS_LI_IN_AIL)) {
++		spin_unlock(&ailp->xa_lock);
++		if (!XFS_FORCED_SHUTDOWN(mp)) {
++			xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
++	"%s: attempting to delete a log item that is not in the AIL",
++					__func__);
++			xfs_force_shutdown(mp, shutdown_type);
+ 		}
+-
+-		trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
+-		xfs_ail_delete(ailp, lip);
+-		lip->li_flags &= ~XFS_LI_IN_AIL;
+-		lip->li_lsn = 0;
+-		if (mlip == lip)
+-			mlip_changed = 1;
++		return;
+ 	}
+ 
++	mlip_changed = xfs_ail_delete_one(ailp, lip);
+ 	if (mlip_changed) {
+-		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+-			xlog_assign_tail_lsn_locked(ailp->xa_mount);
++		if (!XFS_FORCED_SHUTDOWN(mp))
++			xlog_assign_tail_lsn_locked(mp);
+ 		if (list_empty(&ailp->xa_ail))
+ 			wake_up_all(&ailp->xa_empty);
+-		spin_unlock(&ailp->xa_lock);
++	}
+ 
++	spin_unlock(&ailp->xa_lock);
++	if (mlip_changed)
+ 		xfs_log_space_wake(ailp->xa_mount);
+-	} else {
+-		spin_unlock(&ailp->xa_lock);
+-	}
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 49931b72da8a..d91706c56c63 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -106,18 +106,9 @@ xfs_trans_ail_update(
+ 	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
+ }
+ 
+-void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+-				struct xfs_log_item **log_items, int nr_items,
+-				int shutdown_type)
+-				__releases(ailp->xa_lock);
+-static inline void
+-xfs_trans_ail_delete(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip,
+-	int		shutdown_type) __releases(ailp->xa_lock)
+-{
+-	xfs_trans_ail_delete_bulk(ailp, &lip, 1, shutdown_type);
+-}
++bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
++void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
++		int shutdown_type) __releases(ailp->xa_lock);
+ 
+ static inline void
+ xfs_trans_ail_remove(
 -- 
 2.14.1
 
