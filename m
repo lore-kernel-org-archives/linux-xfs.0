@@ -1,98 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:1100 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752400AbdIAWHm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 18:07:42 -0400
-Date: Sat, 2 Sep 2017 08:07:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix unused variable warning in xfs_buf_item_unlock()
-Message-ID: <20170901220739.GB10621@dastard>
-References: <20170831160458.24886-1-bfoster@redhat.com>
- <20170831164107.GL3775@magnolia>
- <20170831215209.GQ10621@dastard>
- <20170901102420.GA28241@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170901102420.GA28241@bfoster.bfoster>
+Received: from bombadil.infradead.org ([65.50.211.133]:57655 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752020AbdIQVGk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:40 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 15/25] xfs: refactor buffer logging into buffer dirtying helper
+Date: Sun, 17 Sep 2017 14:06:21 -0700
+Message-Id: <20170917210631.10725-16-hch@lst.de>
+In-Reply-To: <20170917210631.10725-1-hch@lst.de>
+References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-On Fri, Sep 01, 2017 at 06:24:20AM -0400, Brian Foster wrote:
-> On Fri, Sep 01, 2017 at 07:52:09AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 31, 2017 at 09:41:07AM -0700, Darrick J. Wong wrote:
-> > > On Thu, Aug 31, 2017 at 12:04:58PM -0400, Brian Foster wrote:
-> > > > The ordered variable generates an unused warning on !DEBUG builds.
-> > > > Separate the initialization of the associated variables from the
-> > > > declarations to quiet gcc.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > 
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > And merged before everyone in different timezones has had a chance
-> > to comment. :(
-> > 
-> > I just built the latest for-next with CONFIG_XFS_DEBUG=n and there's
-> > three set-but-unused warnings, one of which is introduced by this
-> > patch.
-> > 
-> > fs/xfs/libxfs/xfs_inode_fork.c: In function ¿xfs_iext_realloc_indirect¿:
-> > fs/xfs/libxfs/xfs_inode_fork.c:1503:7: error: variable ¿size¿ set but not used [-Werror=unused-but-set-variable]
-> >   int  size;  /* current indirection array size */
-> >        ^~~~
-> > 
-> > fs/xfs/xfs_buf_item.c: In function ¿xfs_buf_item_unlock¿:
-> > fs/xfs/xfs_buf_item.c:573:9: error: variable ¿ordered¿ set but not used [-Werror=unused-but-set-variable]
-> >   bool   ordered;
-> >          ^~~~~~~
-> > 
-> > fs/xfs/xfs_log_recover.c: In function ¿xlog_recover_process_intents¿:
-> > fs/xfs/xfs_log_recover.c:4830:13: error: variable ¿last_lsn¿ set but not used [-Werror=unused-but-set-variable]
-> >   xfs_lsn_t  last_lsn;
-> >              ^~~~~~~~
-> > 
-> > Yeah, maintainer habits die hard; I'm still patching fs/xfs/Makefile
-> > in my build trees with this:
-> > 
-> > -ccflags-y += -I$(src)                  # needed for trace events
-> > +ccflags-y += -I$(src) -Werror -Wunused-but-set-variable
-> > 
-> > Which catches stupid problems like this that will the userspace
-> > libxfs build will trip over when the next merge occurs.
-> > 
-> 
-> Note that the associated bli code is not shared with userspace, fwiw. We
-> should probably fix the warnings regardless...
-> 
-> Hmm, I don't see that option enabled in xfsprogs. Is the issue then that
-> it is more of a default behavior and the kernel disables it somewhere?
+From: Brian Foster <bfoster@redhat.com>
 
-Yup, it's default gcc behaviour since early 5.x, IIRC, and the
-kernel build disables a bunch of different warnings including this
-one.
+commit 9684010d38eccda733b61106765e9357cf436f65 upstream.
 
-> After poking around a bit, that appears to be the case. We can run 'make
-> W=1' to generate these (and more) in the kernel build.
+xfs_trans_log_buf() is responsible for logging the dirty segments of
+a buffer along with setting all of the necessary state on the
+transaction, buffer, bli, etc., to ensure that the associated items
+are marked as dirty and prepared for I/O. We have a couple use cases
+that need to to dirty a buffer in a transaction without actually
+logging dirty ranges of the buffer.  One existing use case is
+ordered buffers, which are currently logged with arbitrary ranges to
+accomplish this even though the content of ordered buffers is never
+written to the log. Another pending use case is to relog an already
+dirty buffer across rolled transactions within the deferred
+operations infrastructure. This is required to prevent a held
+(XFS_BLI_HOLD) buffer from pinning the tail of the log.
 
-Oh, yeah, but we don't want to do that by default because the kernel
-headers throw huge numbers of warnings (e.g. signed v unsigned char)
-that won't ever get fixed.  There's been heat and light expended on
-LKML over fixing these warnings in the past, but the only outcome of
-those discussion was to add the "-W1" option to allow people who
-cared to see all the warnings that don't indicate a problem and
-so won't get fixed....
+Refactor xfs_trans_log_buf() into a new function that contains all
+of the logic responsible to dirty the transaction, lidp, buffer and
+bli. This new function can be used in the future for the use cases
+outlined above. This patch does not introduce functional changes.
 
-Hence I started adding my own flags for XFS builds so I would avoid
-adding code to the kernel that would throw userspace warnings.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_trans.h     |  4 +++-
+ fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 7d627721e4b3..b3632ebe9d9d 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -217,7 +217,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+-void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
++void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
++				  uint);
++void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ 
+ void		xfs_extent_free_init_defer_op(void);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index cac8abbeca3f..8c99813e5377 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
+ }
+ 
+ /*
+- * This is called to mark bytes first through last inclusive of the given
+- * buffer as needing to be logged when the transaction is committed.
+- * The buffer must already be associated with the given transaction.
+- *
+- * First and last are numbers relative to the beginning of this buffer,
+- * so the first byte in the buffer is numbered 0 regardless of the
+- * value of b_blkno.
++ * Mark a buffer dirty in the transaction.
+  */
+ void
+-xfs_trans_log_buf(xfs_trans_t	*tp,
+-		  xfs_buf_t	*bp,
+-		  uint		first,
+-		  uint		last)
++xfs_trans_dirty_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+-	ASSERT(first <= last && last < BBTOB(bp->b_length));
+ 	ASSERT(bp->b_iodone == NULL ||
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
+ 
+@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	bp->b_iodone = xfs_buf_iodone_callbacks;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
+ 
+-	trace_xfs_trans_log_buf(bip);
+-
+ 	/*
+ 	 * If we invalidated the buffer within this transaction, then
+ 	 * cancel the invalidation now that we're dirtying the buffer
+@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bp->b_flags &= ~XBF_STALE;
+ 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+ 	}
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
++}
++
++/*
++ * This is called to mark bytes first through last inclusive of the given
++ * buffer as needing to be logged when the transaction is committed.
++ * The buffer must already be associated with the given transaction.
++ *
++ * First and last are numbers relative to the beginning of this buffer,
++ * so the first byte in the buffer is numbered 0 regardless of the
++ * value of b_blkno.
++ */
++void
++xfs_trans_log_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	uint			first,
++	uint			last)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	ASSERT(first <= last && last < BBTOB(bp->b_length));
++
++	xfs_trans_dirty_buf(tp, bp);
+ 
+ 	/*
+ 	 * If we have an ordered buffer we are not logging any dirty range but
+ 	 * it still needs to be marked dirty and that it has been logged.
+ 	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	trace_xfs_trans_log_buf(bip);
+ 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+ 		xfs_buf_item_log(bip, first, last);
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.1
+
