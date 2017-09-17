@@ -1,138 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55448 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49015 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751876AbdIQVHe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:34 -0400
+        with ESMTP id S1751476AbdIQVHh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:37 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 38/47] xfs: don't log dirty ranges for ordered buffers
-Date: Sun, 17 Sep 2017 14:07:03 -0700
-Message-Id: <20170917210712.10804-39-hch@lst.de>
+Subject: [PATCH 44/47] xfs: fix incorrect log_flushed on fsync
+Date: Sun, 17 Sep 2017 14:07:09 -0700
+Message-Id: <20170917210712.10804-45-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
 
-commit 8dc518dfa7dbd079581269e51074b3c55a65a880 upstream.
+commit 47c7d0b19502583120c3f396c7559e7a77288a68 upstream.
 
-Ordered buffers are attached to transactions and pushed through the
-logging infrastructure just like normal buffers with the exception
-that they are not actually written to the log. Therefore, we don't
-need to log dirty ranges of ordered buffers. xfs_trans_log_buf() is
-called on ordered buffers to set up all of the dirty state on the
-transaction, buffer and log item and prepare the buffer for I/O.
+When calling into _xfs_log_force{,_lsn}() with a pointer
+to log_flushed variable, log_flushed will be set to 1 if:
+1. xlog_sync() is called to flush the active log buffer
+AND/OR
+2. xlog_wait() is called to wait on a syncing log buffers
 
-Now that xfs_trans_dirty_buf() is available, call it from
-xfs_trans_ordered_buf() so the latter is now mutually exclusive with
-xfs_trans_log_buf(). This reflects the implementation of ordered
-buffers and helps eliminate confusion over the need to log ranges of
-ordered buffers just to set up internal log state.
+xfs_file_fsync() checks the value of log_flushed after
+_xfs_log_force_lsn() call to optimize away an explicit
+PREFLUSH request to the data block device after writing
+out all the file's pages to disk.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+This optimization is incorrect in the following sequence of events:
+
+ Task A                    Task B
+ -------------------------------------------------------
+ xfs_file_fsync()
+   _xfs_log_force_lsn()
+     xlog_sync()
+        [submit PREFLUSH]
+                           xfs_file_fsync()
+                             file_write_and_wait_range()
+                               [submit WRITE X]
+                               [endio  WRITE X]
+                             _xfs_log_force_lsn()
+                               xlog_wait()
+        [endio  PREFLUSH]
+
+The write X is not guarantied to be on persistent storage
+when PREFLUSH request in completed, because write A was submitted
+after the PREFLUSH request, but xfs_file_fsync() of task A will
+be notified of log_flushed=1 and will skip explicit flush.
+
+If the system crashes after fsync of task A, write X may not be
+present on disk after reboot.
+
+This bug was discovered and demonstrated using Josef Bacik's
+dm-log-writes target, which can be used to record block io operations
+and then replay a subset of these operations onto the target device.
+The test goes something like this:
+- Use fsx to execute ops of a file and record ops on log device
+- Every now and then fsync the file, store md5 of file and mark
+  the location in the log
+- Then replay log onto device for each mark, mount fs and compare
+  md5 of file to stored value
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Josef Bacik <jbacik@fb.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c  |  6 ++----
- fs/xfs/libxfs/xfs_ialloc.c |  2 --
- fs/xfs/xfs_trans_buf.c     | 26 ++++++++++++++------------
- 3 files changed, 16 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_log.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index e9f26a09a0be..69c3f428b582 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4447,12 +4447,10 @@ xfs_btree_block_change_owner(
- 	 * though, so everything is consistent in memory.
- 	 */
- 	if (bp) {
--		if (cur->bc_tp) {
-+		if (cur->bc_tp)
- 			xfs_trans_ordered_buf(cur->bc_tp, bp);
--			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
--		} else {
-+		else
- 			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
--		}
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fe5f3df8b253..33c9a3aae948 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3337,8 +3337,6 @@ _xfs_log_force(
+ 		 */
+ 		if (iclog->ic_state & XLOG_STATE_IOERROR)
+ 			return -EIO;
+-		if (log_flushed)
+-			*log_flushed = 1;
  	} else {
- 		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
- 		ASSERT(level == cur->bc_nlevels - 1);
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 4536ac588fa3..42fef0731e2a 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -368,8 +368,6 @@ xfs_ialloc_inode_init(
- 				 * transaction and pin the log appropriately.
- 				 */
- 				xfs_trans_ordered_buf(tp, fbuf);
--				xfs_trans_log_buf(tp, fbuf, 0,
--						  BBTOB(fbuf->b_length) - 1);
+ 
+ no_sleep:
+@@ -3442,8 +3440,6 @@ _xfs_log_force_lsn(
+ 
+ 				xlog_wait(&iclog->ic_prev->ic_write_wait,
+ 							&log->l_icloglock);
+-				if (log_flushed)
+-					*log_flushed = 1;
+ 				already_slept = 1;
+ 				goto try_again;
  			}
- 		} else {
- 			fbuf->b_flags |= XBF_DONE;
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 8c99813e5377..3089e8015369 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -560,16 +560,12 @@ xfs_trans_log_buf(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
- 	ASSERT(first <= last && last < BBTOB(bp->b_length));
-+	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
- 
- 	xfs_trans_dirty_buf(tp, bp);
- 
--	/*
--	 * If we have an ordered buffer we are not logging any dirty range but
--	 * it still needs to be marked dirty and that it has been logged.
--	 */
- 	trace_xfs_trans_log_buf(bip);
--	if (!(bip->bli_flags & XFS_BLI_ORDERED))
--		xfs_buf_item_log(bip, first, last);
-+	xfs_buf_item_log(bip, first, last);
- }
- 
- 
-@@ -722,12 +718,11 @@ xfs_trans_inode_alloc_buf(
- }
- 
- /*
-- * Mark the buffer as ordered for this transaction. This means
-- * that the contents of the buffer are not recorded in the transaction
-- * but it is tracked in the AIL as though it was. This allows us
-- * to record logical changes in transactions rather than the physical
-- * changes we make to the buffer without changing writeback ordering
-- * constraints of metadata buffers.
-+ * Mark the buffer as ordered for this transaction. This means that the contents
-+ * of the buffer are not recorded in the transaction but it is tracked in the
-+ * AIL as though it was. This allows us to record logical changes in
-+ * transactions rather than the physical changes we make to the buffer without
-+ * changing writeback ordering constraints of metadata buffers.
-  */
- void
- xfs_trans_ordered_buf(
-@@ -739,9 +734,16 @@ xfs_trans_ordered_buf(
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-+	ASSERT(!xfs_buf_item_dirty_format(bip));
- 
- 	bip->bli_flags |= XFS_BLI_ORDERED;
- 	trace_xfs_buf_item_ordered(bip);
-+
-+	/*
-+	 * We don't log a dirty range of an ordered buffer but it still needs
-+	 * to be marked dirty and that it has been logged.
-+	 */
-+	xfs_trans_dirty_buf(tp, bp);
- }
- 
- /*
+@@ -3477,9 +3473,6 @@ _xfs_log_force_lsn(
+ 			 */
+ 			if (iclog->ic_state & XLOG_STATE_IOERROR)
+ 				return -EIO;
+-
+-			if (log_flushed)
+-				*log_flushed = 1;
+ 		} else {		/* just return */
+ 			spin_unlock(&log->l_icloglock);
+ 		}
 -- 
 2.14.1
 
