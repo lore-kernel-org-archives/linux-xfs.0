@@ -1,209 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56249 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59987 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752106AbdIQVHZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:25 -0400
+        with ESMTP id S1752110AbdIQVH0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:26 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/47] xfs: remove xfs_trans_ail_delete_bulk
-Date: Sun, 17 Sep 2017 14:06:48 -0700
-Message-Id: <20170917210712.10804-24-hch@lst.de>
+Subject: [PATCH 24/47] xfs: Add infrastructure needed for error propagation during buffer IO failure
+Date: Sun, 17 Sep 2017 14:06:49 -0700
+Message-Id: <20170917210712.10804-25-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 27af1bbf524459962d1477a38ac6e0b7f79aaecc upstream.
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-xfs_iflush_done uses an on-stack variable length array to pass the log
-items to be deleted to xfs_trans_ail_delete_bulk.  On-stack VLAs are a
-nasty gcc extension that can lead to unbounded stack allocations, but
-fortunately we can easily avoid them by simply open coding
-xfs_trans_ail_delete_bulk in xfs_iflush_done, which is the only caller
-of it except for the single-item xfs_trans_ail_delete.
+commit 0b80ae6ed13169bd3a244e71169f2cc020b0c57a upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+With the current code, XFS never re-submit a failed buffer for IO,
+because the failed item in the buffer is kept in the flush locked state
+forever.
+
+To be able to resubmit an log item for IO, we need a way to mark an item
+as failed, if, for any reason the buffer which the item belonged to
+failed during writeback.
+
+Add a new log item callback to be used after an IO completion failure
+and make the needed clean ups.
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode_item.c | 29 +++++++++++---------
- fs/xfs/xfs_trans_ail.c  | 71 ++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_trans_priv.h | 15 +++--------
- 3 files changed, 55 insertions(+), 60 deletions(-)
+ fs/xfs/xfs_buf_item.c | 32 +++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h    |  7 +++++--
+ 2 files changed, 36 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index d90e7811ccdd..08cb7d1a4a3a 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -731,22 +731,27 @@ xfs_iflush_done(
- 	 * holding the lock before removing the inode from the AIL.
- 	 */
- 	if (need_ail) {
--		struct xfs_log_item *log_items[need_ail];
--		int i = 0;
-+		bool			mlip_changed = false;
-+
-+		/* this is an opencoded batch version of xfs_trans_ail_delete */
- 		spin_lock(&ailp->xa_lock);
- 		for (blip = lip; blip; blip = blip->li_bio_list) {
--			iip = INODE_ITEM(blip);
--			if (iip->ili_logged &&
--			    blip->li_lsn == iip->ili_flush_lsn) {
--				log_items[i++] = blip;
--			}
--			ASSERT(i <= need_ail);
-+			if (INODE_ITEM(blip)->ili_logged &&
-+			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
-+				mlip_changed |= xfs_ail_delete_one(ailp, blip);
- 		}
--		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
--		xfs_trans_ail_delete_bulk(ailp, log_items, i,
--					  SHUTDOWN_CORRUPT_INCORE);
--	}
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index f6a8422e9562..7573a1f0bc9a 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -29,6 +29,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_inode.h"
  
-+		if (mlip_changed) {
-+			if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
-+				xlog_assign_tail_lsn_locked(ailp->xa_mount);
-+			if (list_empty(&ailp->xa_ail))
-+				wake_up_all(&ailp->xa_empty);
-+		}
-+		spin_unlock(&ailp->xa_lock);
-+
-+		if (mlip_changed)
-+			xfs_log_space_wake(ailp->xa_mount);
-+	}
  
- 	/*
- 	 * clean up and unlock the flush lock now we are done. We can clear the
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index d6c9c3e9e02b..9056c0f34a3c 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -684,8 +684,23 @@ xfs_trans_ail_update_bulk(
+ kmem_zone_t	*xfs_buf_item_zone;
+@@ -1054,6 +1055,31 @@ xfs_buf_do_callbacks(
  	}
  }
  
--/*
-- * xfs_trans_ail_delete_bulk - remove multiple log items from the AIL
-+bool
-+xfs_ail_delete_one(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item 	*lip)
++/*
++ * Invoke the error state callback for each log item affected by the failed I/O.
++ *
++ * If a metadata buffer write fails with a non-permanent error, the buffer is
++ * eventually resubmitted and so the completion callbacks are not run. The error
++ * state may need to be propagated to the log items attached to the buffer,
++ * however, so the next AIL push of the item knows hot to handle it correctly.
++ */
++STATIC void
++xfs_buf_do_callbacks_fail(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
++	struct xfs_log_item	*next;
++	struct xfs_log_item	*lip = bp->b_fspriv;
++	struct xfs_ail		*ailp = lip->li_ailp;
 +
-+	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
-+	xfs_ail_delete(ailp, lip);
-+	lip->li_flags &= ~XFS_LI_IN_AIL;
-+	lip->li_lsn = 0;
-+
-+	return mlip == lip;
++	spin_lock(&ailp->xa_lock);
++	for (; lip; lip = next) {
++		next = lip->li_bio_list;
++		if (lip->li_ops->iop_error)
++			lip->li_ops->iop_error(lip, bp);
++	}
++	spin_unlock(&ailp->xa_lock);
 +}
 +
-+/**
-+ * Remove a log items from the AIL
-  *
-  * @xfs_trans_ail_delete_bulk takes an array of log items that all need to
-  * removed from the AIL. The caller is already holding the AIL lock, and done
-@@ -706,52 +721,36 @@ xfs_trans_ail_update_bulk(
-  * before returning.
-  */
- void
--xfs_trans_ail_delete_bulk(
-+xfs_trans_ail_delete(
- 	struct xfs_ail		*ailp,
--	struct xfs_log_item	**log_items,
--	int			nr_items,
-+	struct xfs_log_item	*lip,
- 	int			shutdown_type) __releases(ailp->xa_lock)
- {
--	xfs_log_item_t		*mlip;
--	int			mlip_changed = 0;
--	int			i;
-+	struct xfs_mount	*mp = ailp->xa_mount;
-+	bool			mlip_changed;
+ static bool
+ xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+@@ -1123,7 +1149,11 @@ xfs_buf_iodone_callback_error(
+ 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+ 		goto permanent_error;
  
--	mlip = xfs_ail_min(ailp);
--
--	for (i = 0; i < nr_items; i++) {
--		struct xfs_log_item *lip = log_items[i];
--		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
--			struct xfs_mount	*mp = ailp->xa_mount;
--
--			spin_unlock(&ailp->xa_lock);
--			if (!XFS_FORCED_SHUTDOWN(mp)) {
--				xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
--		"%s: attempting to delete a log item that is not in the AIL",
--						__func__);
--				xfs_force_shutdown(mp, shutdown_type);
--			}
--			return;
-+	if (!(lip->li_flags & XFS_LI_IN_AIL)) {
-+		spin_unlock(&ailp->xa_lock);
-+		if (!XFS_FORCED_SHUTDOWN(mp)) {
-+			xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
-+	"%s: attempting to delete a log item that is not in the AIL",
-+					__func__);
-+			xfs_force_shutdown(mp, shutdown_type);
- 		}
--
--		trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
--		xfs_ail_delete(ailp, lip);
--		lip->li_flags &= ~XFS_LI_IN_AIL;
--		lip->li_lsn = 0;
--		if (mlip == lip)
--			mlip_changed = 1;
-+		return;
- 	}
+-	/* still a transient error, higher layers will retry */
++	/*
++	 * Still a transient error, run IO completion failure callbacks and let
++	 * the higher layers retry the buffer.
++	 */
++	xfs_buf_do_callbacks_fail(bp);
+ 	xfs_buf_ioerror(bp, 0);
+ 	xfs_buf_relse(bp);
+ 	return true;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index c0e72ab57741..22fddad9fe11 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -65,11 +65,13 @@ typedef struct xfs_log_item {
+ } xfs_log_item_t;
  
-+	mlip_changed = xfs_ail_delete_one(ailp, lip);
- 	if (mlip_changed) {
--		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
--			xlog_assign_tail_lsn_locked(ailp->xa_mount);
-+		if (!XFS_FORCED_SHUTDOWN(mp))
-+			xlog_assign_tail_lsn_locked(mp);
- 		if (list_empty(&ailp->xa_ail))
- 			wake_up_all(&ailp->xa_empty);
--		spin_unlock(&ailp->xa_lock);
-+	}
+ #define	XFS_LI_IN_AIL	0x1
+-#define XFS_LI_ABORTED	0x2
++#define	XFS_LI_ABORTED	0x2
++#define	XFS_LI_FAILED	0x4
  
-+	spin_unlock(&ailp->xa_lock);
-+	if (mlip_changed)
- 		xfs_log_space_wake(ailp->xa_mount);
--	} else {
--		spin_unlock(&ailp->xa_lock);
--	}
- }
+ #define XFS_LI_FLAGS \
+ 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+-	{ XFS_LI_ABORTED,	"ABORTED" }
++	{ XFS_LI_ABORTED,	"ABORTED" }, \
++	{ XFS_LI_FAILED,	"FAILED" }
  
- int
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 49931b72da8a..d91706c56c63 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -106,18 +106,9 @@ xfs_trans_ail_update(
- 	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
- }
+ struct xfs_item_ops {
+ 	void (*iop_size)(xfs_log_item_t *, int *, int *);
+@@ -80,6 +82,7 @@ struct xfs_item_ops {
+ 	void (*iop_unlock)(xfs_log_item_t *);
+ 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
++	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
+ };
  
--void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
--				struct xfs_log_item **log_items, int nr_items,
--				int shutdown_type)
--				__releases(ailp->xa_lock);
--static inline void
--xfs_trans_ail_delete(
--	struct xfs_ail	*ailp,
--	xfs_log_item_t	*lip,
--	int		shutdown_type) __releases(ailp->xa_lock)
--{
--	xfs_trans_ail_delete_bulk(ailp, &lip, 1, shutdown_type);
--}
-+bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
-+void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
-+		int shutdown_type) __releases(ailp->xa_lock);
- 
- static inline void
- xfs_trans_ail_remove(
+ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
 -- 
 2.14.1
 
