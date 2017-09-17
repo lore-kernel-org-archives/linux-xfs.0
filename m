@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41265 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39218 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752002AbdIQVGi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:38 -0400
+        with ESMTP id S1752008AbdIQVGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:36 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/25] xfs: open-code xfs_buf_item_dirty()
-Date: Sun, 17 Sep 2017 14:06:18 -0700
-Message-Id: <20170917210631.10725-13-hch@lst.de>
+Subject: [PATCH 08/25] xfs: handle -EFSCORRUPTED during head/tail verification
+Date: Sun, 17 Sep 2017 14:06:14 -0700
+Message-Id: <20170917210631.10725-9-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,68 +17,69 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit a4f6cf6b2b6b60ec2a05a33a32e65caa4149aa2b upstream.
+commit a4c9b34d6a17081005ec459b57b8effc08f4c731 upstream.
 
-It checks a single flag and has one caller. It probably isn't worth
-its own function.
+Torn write and tail overwrite detection both trigger only on
+-EFSBADCRC errors. While this is the most likely failure scenario
+for each condition, -EFSCORRUPTED is still possible in certain cases
+depending on what ends up on disk when a torn write or partial tail
+overwrite occurs. For example, an invalid log record h_len can lead
+to an -EFSCORRUPTED error when running the log recovery CRC pass.
+
+Therefore, update log head and tail verification to trigger the
+associated head/tail fixups in the event of -EFSCORRUPTED errors
+along with -EFSBADCRC. Also, -EFSCORRUPTED can currently be returned
+from xlog_do_recovery_pass() before rhead_blk is initialized if the
+first record encountered happens to be corrupted. This leads to an
+incorrect 'first_bad' return value. Initialize rhead_blk earlier in
+the function to address that problem as well.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf_item.c  | 11 -----------
- fs/xfs/xfs_buf_item.h  |  1 -
- fs/xfs/xfs_trans_buf.c |  2 +-
- 3 files changed, 1 insertion(+), 13 deletions(-)
+ fs/xfs/xfs_log_recover.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 573fc72c3f23..cdae0ad5e0a5 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -945,17 +945,6 @@ xfs_buf_item_log(
- }
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index a5e2ca8f5cd6..43d5df3a563f 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1102,7 +1102,7 @@ xlog_verify_tail(
+ 	first_bad = 0;
+ 	error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
+ 				      XLOG_RECOVER_CRCPASS, &first_bad);
+-	while (error == -EFSBADCRC && first_bad) {
++	while ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
+ 		int	tail_distance;
  
+ 		/*
+@@ -1188,7 +1188,7 @@ xlog_verify_head(
+ 	 */
+ 	error = xlog_do_recovery_pass(log, *head_blk, tmp_rhead_blk,
+ 				      XLOG_RECOVER_CRCPASS, &first_bad);
+-	if (error == -EFSBADCRC) {
++	if ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
+ 		/*
+ 		 * We've hit a potential torn write. Reset the error and warn
+ 		 * about it.
+@@ -5257,7 +5257,7 @@ xlog_do_recovery_pass(
+ 	LIST_HEAD		(buffer_list);
  
--/*
-- * Return 1 if the buffer has been logged or ordered in a transaction (at any
-- * point, not just the current transaction) and 0 if not.
-- */
--uint
--xfs_buf_item_dirty(
--	xfs_buf_log_item_t	*bip)
--{
--	return (bip->bli_flags & XFS_BLI_DIRTY);
--}
--
- STATIC void
- xfs_buf_item_free(
- 	xfs_buf_log_item_t	*bip)
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 530686e1afb9..e0e744aefaa8 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -64,7 +64,6 @@ typedef struct xfs_buf_log_item {
- int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
- void	xfs_buf_item_relse(struct xfs_buf *);
- void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
--uint	xfs_buf_item_dirty(xfs_buf_log_item_t *);
- void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
- 			      xfs_log_item_t *);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 86987d823d76..cac8abbeca3f 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -435,7 +435,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
- 	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
- 		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_buf_item_relse(bp);
--	} else if (!xfs_buf_item_dirty(bip)) {
-+	} else if (!(bip->bli_flags & XFS_BLI_DIRTY)) {
- /***
- 		ASSERT(bp->b_pincount == 0);
- ***/
+ 	ASSERT(head_blk != tail_blk);
+-	rhead_blk = 0;
++	blk_no = rhead_blk = tail_blk;
+ 
+ 	for (i = 0; i < XLOG_RHASH_SIZE; i++)
+ 		INIT_HLIST_HEAD(&rhash[i]);
+@@ -5335,7 +5335,6 @@ xlog_do_recovery_pass(
+ 	}
+ 
+ 	memset(rhash, 0, sizeof(rhash));
+-	blk_no = rhead_blk = tail_blk;
+ 	if (tail_blk > head_blk) {
+ 		/*
+ 		 * Perform recovery around the end of the physical log.
 -- 
 2.14.1
 
