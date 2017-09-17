@@ -1,288 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58878 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39463 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752073AbdIQVH0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:26 -0400
+        with ESMTP id S1752073AbdIQVHP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:15 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 25/47] xfs: Properly retry failed inode items in case of error during buffer writeback
-Date: Sun, 17 Sep 2017 14:06:50 -0700
-Message-Id: <20170917210712.10804-26-hch@lst.de>
+Subject: [PATCH 05/47] xfs: release bli from transaction properly on fs shutdown
+Date: Sun, 17 Sep 2017 14:06:30 -0700
+Message-Id: <20170917210712.10804-6-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit d3a304b6292168b83b45d624784f973fdc1ca674 upstream.
+commit 79e641ce29cfae5b8fc55fb77ac62d11d2d849c0 upstream.
 
-When a buffer has been failed during writeback, the inode items into it
-are kept flush locked, and are never resubmitted due the flush lock, so,
-if any buffer fails to be written, the items in AIL are never written to
-disk and never unlocked.
+If a filesystem shutdown occurs with a buffer log item in the CIL
+and a log force occurs, the ->iop_unpin() handler is generally
+expected to tear down the bli properly. This entails freeing the bli
+memory and releasing the associated hold on the buffer so it can be
+released and the filesystem unmounted.
 
-This causes unmount operation to hang due these items flush locked in AIL,
-but this also causes the items in AIL to never be written back, even when
-the IO device comes back to normal.
+If this sequence occurs while ->bli_refcount is elevated (i.e.,
+another transaction is open and attempting to modify the buffer),
+however, ->iop_unpin() may not be responsible for releasing the bli.
+Instead, the transaction may release the final ->bli_refcount
+reference and thus xfs_trans_brelse() is responsible for tearing
+down the bli.
 
-I've been testing this patch with a DM-thin device, creating a
-filesystem larger than the real device.
+While xfs_trans_brelse() does drop the reference count, it only
+attempts to release the bli if it is clean (i.e., not in the
+CIL/AIL). If the filesystem is shutdown and the bli is sitting dirty
+in the CIL as noted above, this ends up skipping the last
+opportunity to release the bli. In turn, this leaves the hold on the
+buffer and causes an unmount hang. This can be reproduced by running
+generic/388 in repetition.
 
-When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-errors from the device, and keep spinning on xfsaild (when 'retry
-forever' configuration is set).
+Update xfs_trans_brelse() to handle this shutdown corner case
+correctly. If the final bli reference is dropped and the filesystem
+is shutdown, remove the bli from the AIL (if necessary) and release
+the bli to drop the buffer hold and ensure an unmount does not hang.
 
-At this point, the filesystem can not be unmounted because of the flush locked
-items in AIL, but worse, the items in AIL are never retried at all
-(once xfs_inode_item_push() will skip the items that are flush locked),
-even if the underlying DM-thin device is expanded to the proper size.
-
-This patch fixes both cases, retrying any item that has been failed
-previously, using the infra-structure provided by the previous patch.
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf_item.c   | 28 ++++++++++++++++++++++++++++
- fs/xfs/xfs_buf_item.h   |  3 +++
- fs/xfs/xfs_inode_item.c | 47 +++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trans.h      |  1 +
- fs/xfs/xfs_trans_ail.c  |  3 ++-
- fs/xfs/xfs_trans_priv.h | 31 +++++++++++++++++++++++++++++++
- 6 files changed, 108 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_trans_buf.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 7573a1f0bc9a..573fc72c3f23 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1234,3 +1234,31 @@ xfs_buf_iodone(
- 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
- 	xfs_buf_item_free(BUF_ITEM(lip));
- }
-+
-+/*
-+ * Requeue a failed buffer for writeback
-+ *
-+ * Return true if the buffer has been re-queued properly, false otherwise
-+ */
-+bool
-+xfs_buf_resubmit_failed_buffers(
-+	struct xfs_buf		*bp,
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_log_item	*next;
-+
-+	/*
-+	 * Clear XFS_LI_FAILED flag from all items before resubmit
-+	 *
-+	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
-+	 * function already have it acquired
-+	 */
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		xfs_clear_li_failed(lip);
-+	}
-+
-+	/* Add this buffer back to the delayed write list */
-+	return xfs_buf_delwri_queue(bp, buffer_list);
-+}
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index f7eba99d19dd..530686e1afb9 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -70,6 +70,9 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      xfs_log_item_t *);
- void	xfs_buf_iodone_callbacks(struct xfs_buf *);
- void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-+bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
-+					struct xfs_log_item *,
-+					struct list_head *);
- 
- extern kmem_zone_t	*xfs_buf_item_zone;
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 08cb7d1a4a3a..94915747042c 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -27,6 +27,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_buf_item.h"
- #include "xfs_log.h"
- 
- 
-@@ -475,6 +476,23 @@ xfs_inode_item_unpin(
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
- }
- 
-+/*
-+ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-+ * have been failed during writeback
-+ *
-+ * This informs the AIL that the inode is already flush locked on the next push,
-+ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-+ * dirty data makes it to disk.
-+ */
-+STATIC void
-+xfs_inode_item_error(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	ASSERT(xfs_isiflocked(INODE_ITEM(lip)->ili_inode));
-+	xfs_set_li_failed(lip, bp);
-+}
-+
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
-@@ -484,13 +502,28 @@ xfs_inode_item_push(
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 8ee29ca132dc..86987d823d76 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -356,6 +356,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 		 xfs_buf_t	*bp)
  {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	struct xfs_buf		*bp = NULL;
-+	struct xfs_buf		*bp = lip->li_buf;
- 	uint			rval = XFS_ITEM_SUCCESS;
- 	int			error;
- 
- 	if (xfs_ipincount(ip) > 0)
- 		return XFS_ITEM_PINNED;
- 
-+	/*
-+	 * The buffer containing this item failed to be written back
-+	 * previously. Resubmit the buffer for IO.
-+	 */
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		if (!xfs_buf_trylock(bp))
-+			return XFS_ITEM_LOCKED;
-+
-+		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-+			rval = XFS_ITEM_FLUSHING;
-+
-+		xfs_buf_unlock(bp);
-+		return rval;
-+	}
-+
- 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
- 		return XFS_ITEM_LOCKED;
- 
-@@ -622,7 +655,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_unlock	= xfs_inode_item_unlock,
- 	.iop_committed	= xfs_inode_item_committed,
- 	.iop_push	= xfs_inode_item_push,
--	.iop_committing = xfs_inode_item_committing
-+	.iop_committing = xfs_inode_item_committing,
-+	.iop_error	= xfs_inode_item_error
- };
- 
- 
-@@ -710,7 +744,8 @@ xfs_iflush_done(
- 		 * the AIL lock.
- 		 */
- 		iip = INODE_ITEM(blip);
--		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-+		    lip->li_flags & XFS_LI_FAILED)
- 			need_ail++;
- 
- 		blip = next;
-@@ -718,7 +753,8 @@ xfs_iflush_done(
- 
- 	/* make sure we capture the state of the initial inode. */
- 	iip = INODE_ITEM(lip);
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
-+	    lip->li_flags & XFS_LI_FAILED)
- 		need_ail++;
+ 	xfs_buf_log_item_t	*bip;
++	int			freed;
  
  	/*
-@@ -739,6 +775,9 @@ xfs_iflush_done(
- 			if (INODE_ITEM(blip)->ili_logged &&
- 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
- 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
-+			else {
-+				xfs_clear_li_failed(blip);
-+			}
- 		}
+ 	 * Default to a normal brelse() call if the tp is NULL.
+@@ -419,16 +420,22 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 	/*
+ 	 * Drop our reference to the buf log item.
+ 	 */
+-	atomic_dec(&bip->bli_refcount);
++	freed = atomic_dec_and_test(&bip->bli_refcount);
  
- 		if (mlip_changed) {
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 22fddad9fe11..0318e92aed66 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -50,6 +50,7 @@ typedef struct xfs_log_item {
- 	struct xfs_ail			*li_ailp;	/* ptr to AIL */
- 	uint				li_type;	/* item type */
- 	uint				li_flags;	/* misc flags */
-+	struct xfs_buf			*li_buf;	/* real buffer pointer */
- 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
- 	void				(*li_cb)(struct xfs_buf *,
- 						 struct xfs_log_item *);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9056c0f34a3c..70f5ab017323 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -687,12 +687,13 @@ xfs_trans_ail_update_bulk(
- bool
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
--	struct xfs_log_item 	*lip)
-+	struct xfs_log_item	*lip)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
- 
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
-+	xfs_clear_li_failed(lip);
- 	lip->li_flags &= ~XFS_LI_IN_AIL;
- 	lip->li_lsn = 0;
- 
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index d91706c56c63..b317a3644c00 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -164,4 +164,35 @@ xfs_trans_ail_copy_lsn(
- 	*dst = *src;
- }
- #endif
-+
-+static inline void
-+xfs_clear_li_failed(
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_buf	*bp = lip->li_buf;
-+
-+	ASSERT(lip->li_flags & XFS_LI_IN_AIL);
-+	lockdep_assert_held(&lip->li_ailp->xa_lock);
-+
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		lip->li_flags &= ~XFS_LI_FAILED;
-+		lip->li_buf = NULL;
-+		xfs_buf_rele(bp);
-+	}
-+}
-+
-+static inline void
-+xfs_set_li_failed(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	lockdep_assert_held(&lip->li_ailp->xa_lock);
-+
-+	if (!(lip->li_flags & XFS_LI_FAILED)) {
-+		xfs_buf_hold(bp);
-+		lip->li_flags |= XFS_LI_FAILED;
-+		lip->li_buf = bp;
-+	}
-+}
-+
- #endif	/* __XFS_TRANS_PRIV_H__ */
+ 	/*
+-	 * If the buf item is not tracking data in the log, then
+-	 * we must free it before releasing the buffer back to the
+-	 * free pool.  Before releasing the buffer to the free pool,
+-	 * clear the transaction pointer in b_fsprivate2 to dissolve
+-	 * its relation to this transaction.
++	 * If the buf item is not tracking data in the log, then we must free it
++	 * before releasing the buffer back to the free pool.
++	 *
++	 * If the fs has shutdown and we dropped the last reference, it may fall
++	 * on us to release a (possibly dirty) bli if it never made it to the
++	 * AIL (e.g., the aborted unpin already happened and didn't release it
++	 * due to our reference). Since we're already shutdown and need xa_lock,
++	 * just force remove from the AIL and release the bli here.
+ 	 */
+-	if (!xfs_buf_item_dirty(bip)) {
++	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
++		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
++		xfs_buf_item_relse(bp);
++	} else if (!xfs_buf_item_dirty(bip)) {
+ /***
+ 		ASSERT(bp->b_pincount == 0);
+ ***/
 -- 
 2.14.1
 
