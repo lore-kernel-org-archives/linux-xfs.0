@@ -1,75 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58284 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:45597 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbdIQVGd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:33 -0400
+        with ESMTP id S1751830AbdIQVGe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:34 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/25] xfs: toggle readonly state around xfs_log_mount_finish
-Date: Sun, 17 Sep 2017 14:06:08 -0700
-Message-Id: <20170917210631.10725-3-hch@lst.de>
+Subject: [PATCH 03/25] xfs: Add infrastructure needed for error propagation during buffer IO failure
+Date: Sun, 17 Sep 2017 14:06:09 -0700
+Message-Id: <20170917210631.10725-4-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Eric Sandeen <sandeen@sandeen.net>
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-commit 6f4a1eefdd0ad4561543270a7fceadabcca075dd upstream.
+commit 0b80ae6ed13169bd3a244e71169f2cc020b0c57a upstream.
 
-When we do log recovery on a readonly mount, unlinked inode
-processing does not happen due to the readonly checks in
-xfs_inactive(), which are trying to prevent any I/O on a
-readonly mount.
+With the current code, XFS never re-submit a failed buffer for IO,
+because the failed item in the buffer is kept in the flush locked state
+forever.
 
-This is misguided - we do I/O on readonly mounts all the time,
-for consistency; for example, log recovery.  So do the same
-RDONLY flag twiddling around xfs_log_mount_finish() as we
-do around xfs_log_mount(), for the same reason.
+To be able to resubmit an log item for IO, we need a way to mark an item
+as failed, if, for any reason the buffer which the item belonged to
+failed during writeback.
 
-This all cries out for a big rework but for now this is a
-simple fix to an obvious problem.
+Add a new log item callback to be used after an IO completion failure
+and make the needed clean ups.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/xfs_buf_item.c | 32 +++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h    |  7 +++++--
+ 2 files changed, 36 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 972eda87db2b..f467f1230444 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -743,10 +743,14 @@ xfs_log_mount_finish(
- 	struct xfs_mount	*mp)
- {
- 	int	error = 0;
-+	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index f6a8422e9562..7573a1f0bc9a 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -29,6 +29,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_inode.h"
  
- 	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
- 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
- 		return 0;
-+	} else if (readonly) {
-+		/* Allow unlinked processing to proceed */
-+		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+ 
+ kmem_zone_t	*xfs_buf_item_zone;
+@@ -1054,6 +1055,31 @@ xfs_buf_do_callbacks(
  	}
- 
- 	/*
-@@ -764,6 +768,9 @@ xfs_log_mount_finish(
- 		xfs_log_work_queue(mp);
- 	mp->m_super->s_flags &= ~MS_ACTIVE;
- 
-+	if (readonly)
-+		mp->m_flags |= XFS_MOUNT_RDONLY;
-+
- 	return error;
  }
  
++/*
++ * Invoke the error state callback for each log item affected by the failed I/O.
++ *
++ * If a metadata buffer write fails with a non-permanent error, the buffer is
++ * eventually resubmitted and so the completion callbacks are not run. The error
++ * state may need to be propagated to the log items attached to the buffer,
++ * however, so the next AIL push of the item knows hot to handle it correctly.
++ */
++STATIC void
++xfs_buf_do_callbacks_fail(
++	struct xfs_buf		*bp)
++{
++	struct xfs_log_item	*next;
++	struct xfs_log_item	*lip = bp->b_fspriv;
++	struct xfs_ail		*ailp = lip->li_ailp;
++
++	spin_lock(&ailp->xa_lock);
++	for (; lip; lip = next) {
++		next = lip->li_bio_list;
++		if (lip->li_ops->iop_error)
++			lip->li_ops->iop_error(lip, bp);
++	}
++	spin_unlock(&ailp->xa_lock);
++}
++
+ static bool
+ xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+@@ -1123,7 +1149,11 @@ xfs_buf_iodone_callback_error(
+ 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+ 		goto permanent_error;
+ 
+-	/* still a transient error, higher layers will retry */
++	/*
++	 * Still a transient error, run IO completion failure callbacks and let
++	 * the higher layers retry the buffer.
++	 */
++	xfs_buf_do_callbacks_fail(bp);
+ 	xfs_buf_ioerror(bp, 0);
+ 	xfs_buf_relse(bp);
+ 	return true;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 6bdad6f58934..442d679210a1 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
+ } xfs_log_item_t;
+ 
+ #define	XFS_LI_IN_AIL	0x1
+-#define XFS_LI_ABORTED	0x2
++#define	XFS_LI_ABORTED	0x2
++#define	XFS_LI_FAILED	0x4
+ 
+ #define XFS_LI_FLAGS \
+ 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+-	{ XFS_LI_ABORTED,	"ABORTED" }
++	{ XFS_LI_ABORTED,	"ABORTED" }, \
++	{ XFS_LI_FAILED,	"FAILED" }
+ 
+ struct xfs_item_ops {
+ 	void (*iop_size)(xfs_log_item_t *, int *, int *);
+@@ -79,6 +81,7 @@ struct xfs_item_ops {
+ 	void (*iop_unlock)(xfs_log_item_t *);
+ 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
++	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
+ };
+ 
+ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
 -- 
 2.14.1
 
