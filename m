@@ -1,84 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33682 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:33473 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751878AbdIQVHc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:32 -0400
+        with ESMTP id S1752094AbdIQVHb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:31 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 34/47] xfs: open-code xfs_buf_item_dirty()
-Date: Sun, 17 Sep 2017 14:06:59 -0700
-Message-Id: <20170917210712.10804-35-hch@lst.de>
+Subject: [PATCH 33/47] xfs: check for race with xfs_reclaim_inode() in xfs_ifree_cluster()
+Date: Sun, 17 Sep 2017 14:06:58 -0700
+Message-Id: <20170917210712.10804-34-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Omar Sandoval <osandov@fb.com>
 
-commit a4f6cf6b2b6b60ec2a05a33a32e65caa4149aa2b upstream.
+commit f2e9ad212def50bcf4c098c6288779dd97fff0f0 upstream.
 
-It checks a single flag and has one caller. It probably isn't worth
-its own function.
+After xfs_ifree_cluster() finds an inode in the radix tree and verifies
+that the inode number is what it expected, xfs_reclaim_inode() can swoop
+in and free it. xfs_ifree_cluster() will then happily continue working
+on the freed inode. Most importantly, it will mark the inode stale,
+which will probably be overwritten when the inode slab object is
+reallocated, but if it has already been reallocated then we can end up
+with an inode spuriously marked stale.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+In 8a17d7ddedb4 ("xfs: mark reclaimed inodes invalid earlier") we added
+a second check to xfs_iflush_cluster() to detect this race, but the
+similar RCU lookup in xfs_ifree_cluster() needs the same treatment.
+
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf_item.c  | 11 -----------
- fs/xfs/xfs_buf_item.h  |  1 -
- fs/xfs/xfs_trans_buf.c |  2 +-
- 3 files changed, 1 insertion(+), 13 deletions(-)
+ fs/xfs/xfs_icache.c | 10 +++++-----
+ fs/xfs/xfs_inode.c  | 23 ++++++++++++++++++-----
+ 2 files changed, 23 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 573fc72c3f23..cdae0ad5e0a5 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -945,17 +945,6 @@ xfs_buf_item_log(
- }
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index e279882de427..86a4911520cc 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1078,11 +1078,11 @@ xfs_reclaim_inode(
+ 	 * Because we use RCU freeing we need to ensure the inode always appears
+ 	 * to be reclaimed with an invalid inode number when in the free state.
+ 	 * We do this as early as possible under the ILOCK so that
+-	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
+-	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
+-	 * XFS_ILOCK that it will see either a valid, flushable inode that will
+-	 * serialise correctly, or it will see a clean (and invalid) inode that
+-	 * it can skip.
++	 * xfs_iflush_cluster() and xfs_ifree_cluster() can be guaranteed to
++	 * detect races with us here. By doing this, we guarantee that once
++	 * xfs_iflush_cluster() or xfs_ifree_cluster() has locked XFS_ILOCK that
++	 * it will see either a valid inode that will serialise correctly, or it
++	 * will see an invalid inode that it can skip.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+ 	ip->i_flags = XFS_IRECLAIM;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 98cd905eadca..9e795ab08a53 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2368,11 +2368,24 @@ xfs_ifree_cluster(
+ 			 * already marked stale. If we can't lock it, back off
+ 			 * and retry.
+ 			 */
+-			if (ip != free_ip &&
+-			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+-				rcu_read_unlock();
+-				delay(1);
+-				goto retry;
++			if (ip != free_ip) {
++				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
++					rcu_read_unlock();
++					delay(1);
++					goto retry;
++				}
++
++				/*
++				 * Check the inode number again in case we're
++				 * racing with freeing in xfs_reclaim_inode().
++				 * See the comments in that function for more
++				 * information as to why the initial check is
++				 * not sufficient.
++				 */
++				if (ip->i_ino != inum + i) {
++					xfs_iunlock(ip, XFS_ILOCK_EXCL);
++					continue;
++				}
+ 			}
+ 			rcu_read_unlock();
  
- 
--/*
-- * Return 1 if the buffer has been logged or ordered in a transaction (at any
-- * point, not just the current transaction) and 0 if not.
-- */
--uint
--xfs_buf_item_dirty(
--	xfs_buf_log_item_t	*bip)
--{
--	return (bip->bli_flags & XFS_BLI_DIRTY);
--}
--
- STATIC void
- xfs_buf_item_free(
- 	xfs_buf_log_item_t	*bip)
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 530686e1afb9..e0e744aefaa8 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -64,7 +64,6 @@ typedef struct xfs_buf_log_item {
- int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
- void	xfs_buf_item_relse(struct xfs_buf *);
- void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
--uint	xfs_buf_item_dirty(xfs_buf_log_item_t *);
- void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
- 			      xfs_log_item_t *);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 86987d823d76..cac8abbeca3f 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -435,7 +435,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
- 	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
- 		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_buf_item_relse(bp);
--	} else if (!xfs_buf_item_dirty(bip)) {
-+	} else if (!(bip->bli_flags & XFS_BLI_DIRTY)) {
- /***
- 		ASSERT(bp->b_pincount == 0);
- ***/
 -- 
 2.14.1
 
