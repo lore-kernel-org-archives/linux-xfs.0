@@ -1,214 +1,322 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43729 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42638 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752083AbdIQVH3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:29 -0400
+        with ESMTP id S1752070AbdIQVHP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:15 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 28/47] xfs: fix log recovery corruption error due to tail overwrite
-Date: Sun, 17 Sep 2017 14:06:53 -0700
-Message-Id: <20170917210712.10804-29-hch@lst.de>
+Subject: [PATCH 04/47] xfs: try to avoid blowing out the transaction reservation when bunmaping a shared extent
+Date: Sun, 17 Sep 2017 14:06:29 -0700
+Message-Id: <20170917210712.10804-5-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 4a4f66eac4681378996a1837ad1ffec3a2e2981f upstream.
+commit e1a4e37cc7b665b6804fba812aca2f4d7402c249 upstream.
 
-If we consider the case where the tail (T) of the log is pinned long
-enough for the head (H) to push and block behind the tail, we can
-end up blocked in the following state without enough free space (f)
-in the log to satisfy a transaction reservation:
+In a pathological scenario where we are trying to bunmapi a single
+extent in which every other block is shared, it's possible that trying
+to unmap the entire large extent in a single transaction can generate so
+many EFIs that we overflow the transaction reservation.
 
-	0	phys. log	N
-	[-------HffT---H'--T'---]
+Therefore, use a heuristic to guess at the number of blocks we can
+safely unmap from a reflink file's data fork in an single transaction.
+This should prevent problems such as the log head slamming into the tail
+and ASSERTs that trigger because we've exceeded the transaction
+reservation.
 
-The last good record in the log (before H) refers to T. The tail
-eventually pushes forward (T') leaving more free space in the log
-for writes to H. At this point, suppose space frees up in the log
-for the maximum of 8 in-core log buffers to start flushing out to
-the log. If this pushes the head from H to H', these next writes
-overwrite the previous tail T. This is safe because the items logged
-from T to T' have been written back and removed from the AIL.
+Note that since bunmapi can fail to unmap the entire range, we must also
+teach the deferred unmap code to roll into a new transaction whenever we
+get low on reservation.
 
-If the next log writes (H -> H') happen to fail and result in
-partial records in the log, the filesystem shuts down having
-overwritten T with invalid data. Log recovery correctly locates H on
-the subsequent mount, but H still refers to the now corrupted tail
-T. This results in log corruption errors and recovery failure.
-
-Since the tail overwrite results from otherwise correct runtime
-behavior, it is up to log recovery to try and deal with this
-situation. Update log recovery tail verification to run a CRC pass
-from the first record past the tail to the head. This facilitates
-error detection at T and moves the recovery tail to the first good
-record past H' (similar to truncating the head on torn write
-detection). If corruption is detected beyond the range possibly
-affected by the max number of iclogs, the log is legitimately
-corrupted and log recovery failure is expected.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch: random edits, all bugs are my fault]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_recover.c | 108 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 77 insertions(+), 31 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c     | 37 ++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_bmap.h     |  2 +-
+ fs/xfs/libxfs/xfs_refcount.c | 10 +---------
+ fs/xfs/libxfs/xfs_refcount.h | 16 ++++++++++++++++
+ fs/xfs/xfs_bmap_item.c       | 17 +++++++++++++++--
+ fs/xfs/xfs_trans.h           |  2 +-
+ fs/xfs/xfs_trans_bmap.c      | 11 +++++++++--
+ 7 files changed, 71 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1457fa0f8637..fdad8c9ecbb3 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1029,61 +1029,106 @@ xlog_seek_logrec_hdr(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2a8cbd15d5d1..b79719a87638 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5555,6 +5555,7 @@ __xfs_bunmapi(
+ 	int			whichfork;	/* data or attribute fork */
+ 	xfs_fsblock_t		sum;
+ 	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
++	xfs_fileoff_t		max_len;
+ 
+ 	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
+ 
+@@ -5576,6 +5577,16 @@ __xfs_bunmapi(
+ 	ASSERT(len > 0);
+ 	ASSERT(nexts >= 0);
+ 
++	/*
++	 * Guesstimate how many blocks we can unmap without running the risk of
++	 * blowing out the transaction with a mix of EFIs and reflink
++	 * adjustments.
++	 */
++	if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK)
++		max_len = min(len, xfs_refcount_max_unmap(tp->t_log_res));
++	else
++		max_len = len;
++
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+ 	    (error = xfs_iread_extents(tp, ip, whichfork)))
+ 		return error;
+@@ -5621,7 +5632,7 @@ __xfs_bunmapi(
+ 
+ 	extno = 0;
+ 	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
+-	       (nexts == 0 || extno < nexts)) {
++	       (nexts == 0 || extno < nexts) && max_len > 0) {
+ 		/*
+ 		 * Is the found extent after a hole in which bno lives?
+ 		 * Just back up to the previous extent, if so.
+@@ -5655,6 +5666,15 @@ __xfs_bunmapi(
+ 		}
+ 		if (del.br_startoff + del.br_blockcount > bno + 1)
+ 			del.br_blockcount = bno + 1 - del.br_startoff;
++
++		/* How much can we safely unmap? */
++		if (max_len < del.br_blockcount) {
++			del.br_startoff += del.br_blockcount - max_len;
++			if (!wasdel)
++				del.br_startblock += del.br_blockcount - max_len;
++			del.br_blockcount = max_len;
++		}
++
+ 		sum = del.br_startblock + del.br_blockcount;
+ 		if (isrt &&
+ 		    (mod = do_mod(sum, mp->m_sb.sb_rextsize))) {
+@@ -5835,6 +5855,7 @@ __xfs_bunmapi(
+ 		if (!isrt && wasdel)
+ 			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
+ 
++		max_len -= del.br_blockcount;
+ 		bno = del.br_startoff - 1;
+ nodelete:
+ 		/*
+@@ -6604,25 +6625,24 @@ xfs_bmap_finish_one(
+ 	int				whichfork,
+ 	xfs_fileoff_t			startoff,
+ 	xfs_fsblock_t			startblock,
+-	xfs_filblks_t			blockcount,
++	xfs_filblks_t			*blockcount,
+ 	xfs_exntst_t			state)
+ {
+ 	struct xfs_bmbt_irec		bmap;
+ 	int				nimaps = 1;
+ 	xfs_fsblock_t			firstfsb;
+ 	int				flags = XFS_BMAPI_REMAP;
+-	int				done;
+ 	int				error = 0;
+ 
+ 	bmap.br_startblock = startblock;
+ 	bmap.br_startoff = startoff;
+-	bmap.br_blockcount = blockcount;
++	bmap.br_blockcount = *blockcount;
+ 	bmap.br_state = state;
+ 
+ 	trace_xfs_bmap_deferred(tp->t_mountp,
+ 			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
+ 			XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
+-			ip->i_ino, whichfork, startoff, blockcount, state);
++			ip->i_ino, whichfork, startoff, *blockcount, state);
+ 
+ 	if (whichfork != XFS_DATA_FORK && whichfork != XFS_ATTR_FORK)
+ 		return -EFSCORRUPTED;
+@@ -6641,12 +6661,11 @@ xfs_bmap_finish_one(
+ 					bmap.br_blockcount, flags, &firstfsb,
+ 					bmap.br_blockcount, &bmap, &nimaps,
+ 					dfops);
++		*blockcount = 0;
+ 		break;
+ 	case XFS_BMAP_UNMAP:
+-		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
+-				bmap.br_blockcount, flags, 1, &firstfsb,
+-				dfops, &done);
+-		ASSERT(done);
++		error = __xfs_bunmapi(tp, ip, startoff, blockcount,
++				XFS_BMAPI_REMAP, 1, &firstfsb, dfops);
+ 		break;
+ 	default:
+ 		ASSERT(0);
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index e7d40b39f18f..db53ac7ff6df 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -265,7 +265,7 @@ struct xfs_bmap_intent {
+ int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_defer_ops *dfops,
+ 		struct xfs_inode *ip, enum xfs_bmap_intent_type type,
+ 		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
+-		xfs_filblks_t blockcount, xfs_exntst_t state);
++		xfs_filblks_t *blockcount, xfs_exntst_t state);
+ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+ int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 82a38d86ebad..e17016163542 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -784,14 +784,6 @@ xfs_refcount_merge_extents(
  }
  
  /*
-- * Check the log tail for torn writes. This is required when torn writes are
-- * detected at the head and the head had to be walked back to a previous record.
-- * The tail of the previous record must now be verified to ensure the torn
-- * writes didn't corrupt the previous tail.
-+ * Calculate distance from head to tail (i.e., unused space in the log).
+- * While we're adjusting the refcounts records of an extent, we have
+- * to keep an eye on the number of extents we're dirtying -- run too
+- * many in a single transaction and we'll exceed the transaction's
+- * reservation and crash the fs.  Each record adds 12 bytes to the
+- * log (plus any key updates) so we'll conservatively assume 24 bytes
+- * per record.  We must also leave space for btree splits on both ends
+- * of the range and space for the CUD and a new CUI.
+- *
+  * XXX: This is a pretty hand-wavy estimate.  The penalty for guessing
+  * true incorrectly is a shutdown FS; the penalty for guessing false
+  * incorrectly is more transaction rolls than might be necessary.
+@@ -822,7 +814,7 @@ xfs_refcount_still_have_space(
+ 	else if (overhead > cur->bc_tp->t_log_res)
+ 		return false;
+ 	return  cur->bc_tp->t_log_res - overhead >
+-		cur->bc_private.a.priv.refc.nr_ops * 32;
++		cur->bc_private.a.priv.refc.nr_ops * XFS_REFCOUNT_ITEM_OVERHEAD;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 098dc668ab2c..eafb9d1f3b37 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -67,4 +67,20 @@ extern int xfs_refcount_free_cow_extent(struct xfs_mount *mp,
+ extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno);
+ 
++/*
++ * While we're adjusting the refcounts records of an extent, we have
++ * to keep an eye on the number of extents we're dirtying -- run too
++ * many in a single transaction and we'll exceed the transaction's
++ * reservation and crash the fs.  Each record adds 12 bytes to the
++ * log (plus any key updates) so we'll conservatively assume 32 bytes
++ * per record.  We must also leave space for btree splits on both ends
++ * of the range and space for the CUD and a new CUI.
 + */
-+static inline int
-+xlog_tail_distance(
-+	struct xlog	*log,
-+	xfs_daddr_t	head_blk,
-+	xfs_daddr_t	tail_blk)
-+{
-+	if (head_blk < tail_blk)
-+		return tail_blk - head_blk;
++#define XFS_REFCOUNT_ITEM_OVERHEAD	32
 +
-+	return tail_blk + (log->l_logBBsize - head_blk);
++static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
++{
++	return (log_res * 3 / 4) / XFS_REFCOUNT_ITEM_OVERHEAD;
 +}
 +
-+/*
-+ * Verify the log tail. This is particularly important when torn or incomplete
-+ * writes have been detected near the front of the log and the head has been
-+ * walked back accordingly.
-+ *
-+ * We also have to handle the case where the tail was pinned and the head
-+ * blocked behind the tail right before a crash. If the tail had been pushed
-+ * immediately prior to the crash and the subsequent checkpoint was only
-+ * partially written, it's possible it overwrote the last referenced tail in the
-+ * log with garbage. This is not a coherency problem because the tail must have
-+ * been pushed before it can be overwritten, but appears as log corruption to
-+ * recovery because we have no way to know the tail was updated if the
-+ * subsequent checkpoint didn't write successfully.
-  *
-- * Return an error if CRC verification fails as recovery cannot proceed.
-+ * Therefore, CRC check the log from tail to head. If a failure occurs and the
-+ * offending record is within max iclog bufs from the head, walk the tail
-+ * forward and retry until a valid tail is found or corruption is detected out
-+ * of the range of a possible overwrite.
-  */
- STATIC int
- xlog_verify_tail(
- 	struct xlog		*log,
- 	xfs_daddr_t		head_blk,
--	xfs_daddr_t		tail_blk)
-+	xfs_daddr_t		*tail_blk,
-+	int			hsize)
- {
- 	struct xlog_rec_header	*thead;
- 	struct xfs_buf		*bp;
- 	xfs_daddr_t		first_bad;
--	int			count;
- 	int			error = 0;
- 	bool			wrapped;
--	xfs_daddr_t		tmp_head;
-+	xfs_daddr_t		tmp_tail;
-+	xfs_daddr_t		orig_tail = *tail_blk;
+ #endif	/* __XFS_REFCOUNT_H__ */
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index c4b90e794e41..5a54dcd7e7b1 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -395,6 +395,7 @@ xfs_bui_recover(
+ 	struct xfs_map_extent		*bmap;
+ 	xfs_fsblock_t			startblock_fsb;
+ 	xfs_fsblock_t			inode_fsb;
++	xfs_filblks_t			count;
+ 	bool				op_ok;
+ 	struct xfs_bud_log_item		*budp;
+ 	enum xfs_bmap_intent_type	type;
+@@ -403,6 +404,7 @@ xfs_bui_recover(
+ 	struct xfs_trans		*tp;
+ 	struct xfs_inode		*ip = NULL;
+ 	struct xfs_defer_ops		dfops;
++	struct xfs_bmbt_irec		irec;
+ 	xfs_fsblock_t			firstfsb;
  
- 	bp = xlog_get_bp(log, 1);
- 	if (!bp)
- 		return -ENOMEM;
+ 	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
+@@ -480,13 +482,24 @@ xfs_bui_recover(
+ 	}
+ 	xfs_trans_ijoin(tp, ip, 0);
  
- 	/*
--	 * Seek XLOG_MAX_ICLOGS + 1 records past the current tail record to get
--	 * a temporary head block that points after the last possible
--	 * concurrently written record of the tail.
-+	 * Make sure the tail points to a record (returns positive count on
-+	 * success).
- 	 */
--	count = xlog_seek_logrec_hdr(log, head_blk, tail_blk,
--				     XLOG_MAX_ICLOGS + 1, bp, &tmp_head, &thead,
--				     &wrapped);
--	if (count < 0) {
--		error = count;
-+	error = xlog_seek_logrec_hdr(log, head_blk, *tail_blk, 1, bp,
-+			&tmp_tail, &thead, &wrapped);
-+	if (error < 0)
- 		goto out;
--	}
-+	if (*tail_blk != tmp_tail)
-+		*tail_blk = tmp_tail;
++	count = bmap->me_len;
+ 	error = xfs_trans_log_finish_bmap_update(tp, budp, &dfops, type,
+ 			ip, whichfork, bmap->me_startoff,
+-			bmap->me_startblock, bmap->me_len,
+-			state);
++			bmap->me_startblock, &count, state);
+ 	if (error)
+ 		goto err_dfops;
  
- 	/*
--	 * If the call above didn't find XLOG_MAX_ICLOGS + 1 records, we ran
--	 * into the actual log head. tmp_head points to the start of the record
--	 * so update it to the actual head block.
-+	 * Run a CRC check from the tail to the head. We can't just check
-+	 * MAX_ICLOGS records past the tail because the tail may point to stale
-+	 * blocks cleared during the search for the head/tail. These blocks are
-+	 * overwritten with zero-length records and thus record count is not a
-+	 * reliable indicator of the iclog state before a crash.
- 	 */
--	if (count < XLOG_MAX_ICLOGS + 1)
--		tmp_head = head_blk;
--
--	/*
--	 * We now have a tail and temporary head block that covers at least
--	 * XLOG_MAX_ICLOGS records from the tail. We need to verify that these
--	 * records were completely written. Run a CRC verification pass from
--	 * tail to head and return the result.
--	 */
--	error = xlog_do_recovery_pass(log, tmp_head, tail_blk,
-+	first_bad = 0;
-+	error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
- 				      XLOG_RECOVER_CRCPASS, &first_bad);
-+	while (error == -EFSBADCRC && first_bad) {
-+		int	tail_distance;
-+
-+		/*
-+		 * Is corruption within range of the head? If so, retry from
-+		 * the next record. Otherwise return an error.
-+		 */
-+		tail_distance = xlog_tail_distance(log, head_blk, first_bad);
-+		if (tail_distance > BTOBB(XLOG_MAX_ICLOGS * hsize))
-+			break;
- 
-+		/* skip to the next record; returns positive count on success */
-+		error = xlog_seek_logrec_hdr(log, head_blk, first_bad, 2, bp,
-+				&tmp_tail, &thead, &wrapped);
-+		if (error < 0)
-+			goto out;
-+
-+		*tail_blk = tmp_tail;
-+		first_bad = 0;
-+		error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
-+					      XLOG_RECOVER_CRCPASS, &first_bad);
++	if (count > 0) {
++		ASSERT(type == XFS_BMAP_UNMAP);
++		irec.br_startblock = bmap->me_startblock;
++		irec.br_blockcount = count;
++		irec.br_startoff = bmap->me_startoff;
++		irec.br_state = state;
++		error = xfs_bmap_unmap_extent(tp->t_mountp, &dfops, ip, &irec);
++		if (error)
++			goto err_dfops;
 +	}
 +
-+	if (!error && *tail_blk != orig_tail)
-+		xfs_warn(log->l_mp,
-+		"Tail block (0x%llx) overwrite detected. Updated to 0x%llx",
-+			 orig_tail, *tail_blk);
- out:
- 	xlog_put_bp(bp);
- 	return error;
-@@ -1187,7 +1232,8 @@ xlog_verify_head(
+ 	/* Finish transaction, free inodes. */
+ 	error = xfs_defer_finish(&tp, &dfops, NULL);
  	if (error)
- 		return error;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 98024cb933ef..c0e72ab57741 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -277,6 +277,6 @@ int xfs_trans_log_finish_bmap_update(struct xfs_trans *tp,
+ 		struct xfs_bud_log_item *rudp, struct xfs_defer_ops *dfops,
+ 		enum xfs_bmap_intent_type type, struct xfs_inode *ip,
+ 		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
+-		xfs_filblks_t blockcount, xfs_exntst_t state);
++		xfs_filblks_t *blockcount, xfs_exntst_t state);
  
--	return xlog_verify_tail(log, *head_blk, *tail_blk);
-+	return xlog_verify_tail(log, *head_blk, tail_blk,
-+				be32_to_cpu((*rhead)->h_size));
+ #endif	/* __XFS_TRANS_H__ */
+diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
+index 6408e7d7c08c..14543d93cd4b 100644
+--- a/fs/xfs/xfs_trans_bmap.c
++++ b/fs/xfs/xfs_trans_bmap.c
+@@ -63,7 +63,7 @@ xfs_trans_log_finish_bmap_update(
+ 	int				whichfork,
+ 	xfs_fileoff_t			startoff,
+ 	xfs_fsblock_t			startblock,
+-	xfs_filblks_t			blockcount,
++	xfs_filblks_t			*blockcount,
+ 	xfs_exntst_t			state)
+ {
+ 	int				error;
+@@ -196,16 +196,23 @@ xfs_bmap_update_finish_item(
+ 	void				**state)
+ {
+ 	struct xfs_bmap_intent		*bmap;
++	xfs_filblks_t			count;
+ 	int				error;
+ 
+ 	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
++	count = bmap->bi_bmap.br_blockcount;
+ 	error = xfs_trans_log_finish_bmap_update(tp, done_item, dop,
+ 			bmap->bi_type,
+ 			bmap->bi_owner, bmap->bi_whichfork,
+ 			bmap->bi_bmap.br_startoff,
+ 			bmap->bi_bmap.br_startblock,
+-			bmap->bi_bmap.br_blockcount,
++			&count,
+ 			bmap->bi_bmap.br_state);
++	if (!error && count > 0) {
++		ASSERT(bmap->bi_type == XFS_BMAP_UNMAP);
++		bmap->bi_bmap.br_blockcount = count;
++		return -EAGAIN;
++	}
+ 	kmem_free(bmap);
+ 	return error;
  }
- 
- /*
 -- 
 2.14.1
 
