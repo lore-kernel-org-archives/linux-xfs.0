@@ -1,100 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33938 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58105 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752066AbdIQVHN (ORCPT
+        with ESMTP id S1751878AbdIQVHN (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:13 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/47] xfs: Move handling of missing page into one place in xfs_find_get_desired_pgoff()
-Date: Sun, 17 Sep 2017 14:06:26 -0700
-Message-Id: <20170917210712.10804-2-hch@lst.de>
+Subject: [PATCH 02/47] xfs: fix spurious spin_is_locked() assert failures on non-smp kernels
+Date: Sun, 17 Sep 2017 14:06:27 -0700
+Message-Id: <20170917210712.10804-3-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Jan Kara <jack@suse.cz>
+From: Brian Foster <bfoster@redhat.com>
 
-commit a54fba8f5a0dc36161cacdf2aa90f007f702ec1a upstream.
+commit 95989c46d2a156365867b1d795fdefce71bce378 upstream.
 
-Currently several places in xfs_find_get_desired_pgoff() handle the case
-of a missing page. Make them all handled in one place after the loop has
-terminated.
+The 0-day kernel test robot reports assertion failures on
+!CONFIG_SMP kernels due to failed spin_is_locked() checks. As it
+turns out, spin_is_locked() is hardcoded to return zero on
+!CONFIG_SMP kernels and so this function cannot be relied on to
+verify spinlock state in this configuration.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+To avoid this problem, replace the associated asserts with lockdep
+variants that do the right thing regardless of kernel configuration.
+Drop the one assert that checks for an unlocked lock as there is no
+suitable lockdep variant for that case. This moves the spinlock
+checks from XFS debug code to lockdep, but generally provides the
+same level of protection.
+
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_file.c | 38 ++++++++------------------------------
- 1 file changed, 8 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_buf.c    | 2 +-
+ fs/xfs/xfs_icache.c | 5 ++---
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index df206cfc21f7..2e04b1cdb0d2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1139,29 +1139,8 @@ xfs_find_get_desired_pgoff(
- 		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
- 		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
- 					  want);
--		/*
--		 * No page mapped into given range.  If we are searching holes
--		 * and if this is the first time we got into the loop, it means
--		 * that the given offset is landed in a hole, return it.
--		 *
--		 * If we have already stepped through some block buffers to find
--		 * holes but they all contains data.  In this case, the last
--		 * offset is already updated and pointed to the end of the last
--		 * mapped page, if it does not reach the endpoint to search,
--		 * that means there should be a hole between them.
--		 */
--		if (nr_pages == 0) {
--			/* Data search found nothing */
--			if (type == DATA_OFF)
--				break;
--
--			ASSERT(type == HOLE_OFF);
--			if (lastoff == startoff || lastoff < endoff) {
--				found = true;
--				*offset = lastoff;
--			}
-+		if (nr_pages == 0)
- 			break;
--		}
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 16269271ebd6..24940dd3baa8 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -116,7 +116,7 @@ static inline void
+ __xfs_buf_ioacct_dec(
+ 	struct xfs_buf	*bp)
+ {
+-	ASSERT(spin_is_locked(&bp->b_lock));
++	lockdep_assert_held(&bp->b_lock);
  
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page	*page = pvec.pages[i];
-@@ -1227,21 +1206,20 @@ xfs_find_get_desired_pgoff(
+ 	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
+ 		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 74304b6ce84b..e279882de427 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -66,7 +66,6 @@ xfs_inode_alloc(
  
- 		/*
- 		 * The number of returned pages less than our desired, search
--		 * done.  In this case, nothing was found for searching data,
--		 * but we found a hole behind the last offset.
-+		 * done.
- 		 */
--		if (nr_pages < want) {
--			if (type == HOLE_OFF) {
--				*offset = lastoff;
--				found = true;
--			}
-+		if (nr_pages < want)
- 			break;
--		}
+ 	XFS_STATS_INC(mp, vn_active);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+-	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+ 	ASSERT(!xfs_isiflocked(ip));
+ 	ASSERT(ip->i_ino == 0);
  
- 		index = pvec.pages[i - 1]->index + 1;
- 		pagevec_release(&pvec);
- 	} while (index <= end);
+@@ -192,7 +191,7 @@ xfs_perag_set_reclaim_tag(
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
  
-+	/* No page at lastoff and we are not done - we found a hole. */
-+	if (type == HOLE_OFF && lastoff < endoff) {
-+		*offset = lastoff;
-+		found = true;
-+	}
- out:
- 	pagevec_release(&pvec);
- 	return found;
+-	ASSERT(spin_is_locked(&pag->pag_ici_lock));
++	lockdep_assert_held(&pag->pag_ici_lock);
+ 	if (pag->pag_ici_reclaimable++)
+ 		return;
+ 
+@@ -214,7 +213,7 @@ xfs_perag_clear_reclaim_tag(
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
+ 
+-	ASSERT(spin_is_locked(&pag->pag_ici_lock));
++	lockdep_assert_held(&pag->pag_ici_lock);
+ 	if (--pag->pag_ici_reclaimable)
+ 		return;
+ 
 -- 
 2.14.1
 
