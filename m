@@ -1,75 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47170 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54712 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752103AbdIQVHY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:24 -0400
+        with ESMTP id S1752098AbdIQVHX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:23 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 22/47] xfs: toggle readonly state around xfs_log_mount_finish
-Date: Sun, 17 Sep 2017 14:06:47 -0700
-Message-Id: <20170917210712.10804-23-hch@lst.de>
+Subject: [PATCH 20/47] iomap: fix integer truncation issues in the zeroing and dirtying helpers
+Date: Sun, 17 Sep 2017 14:06:45 -0700
+Message-Id: <20170917210712.10804-21-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Eric Sandeen <sandeen@sandeen.net>
+commit e28ae8e428fefe2facd72cea9f29906ecb9c861d upstream.
 
-commit 6f4a1eefdd0ad4561543270a7fceadabcca075dd upstream.
+Fix the min_t calls in the zeroing and dirtying helpers to perform the
+comparisms on 64-bit types, which prevents them from incorrectly
+being truncated, and larger zeroing operations being stuck in a never
+ending loop.
 
-When we do log recovery on a readonly mount, unlinked inode
-processing does not happen due to the readonly checks in
-xfs_inactive(), which are trying to prevent any I/O on a
-readonly mount.
+Special thanks to Markus Stockhausen for spotting the bug.
 
-This is misguided - we do I/O on readonly mounts all the time,
-for consistency; for example, log recovery.  So do the same
-RDONLY flag twiddling around xfs_log_mount_finish() as we
-do around xfs_log_mount(), for the same reason.
-
-This all cries out for a big rework but for now this is a
-simple fix to an obvious problem.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/iomap.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 4f59cbc0b185..ebe20f1591f1 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -743,10 +743,14 @@ xfs_log_mount_finish(
- 	struct xfs_mount	*mp)
- {
- 	int	error = 0;
-+	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 798c291cbc75..a49db8806a3a 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -281,7 +281,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		unsigned long bytes;	/* Bytes to write to page */
  
- 	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
- 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
- 		return 0;
-+	} else if (readonly) {
-+		/* Allow unlinked processing to proceed */
-+		mp->m_flags &= ~XFS_MOUNT_RDONLY;
- 	}
+ 		offset = (pos & (PAGE_SIZE - 1));
+-		bytes = min_t(unsigned long, PAGE_SIZE - offset, length);
++		bytes = min_t(loff_t, PAGE_SIZE - offset, length);
  
- 	/*
-@@ -764,6 +768,9 @@ xfs_log_mount_finish(
- 		xfs_log_work_queue(mp);
- 	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 		rpage = __iomap_read_page(inode, pos);
+ 		if (IS_ERR(rpage))
+@@ -376,7 +376,7 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+ 		unsigned offset, bytes;
  
-+	if (readonly)
-+		mp->m_flags |= XFS_MOUNT_RDONLY;
-+
- 	return error;
- }
+ 		offset = pos & (PAGE_SIZE - 1); /* Within page */
+-		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
++		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
  
+ 		if (IS_DAX(inode))
+ 			status = iomap_dax_zero(pos, offset, bytes, iomap);
 -- 
 2.14.1
 
