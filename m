@@ -1,97 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54058 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39554 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752015AbdIQVGm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:42 -0400
+        with ESMTP id S1752015AbdIQVGp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/25] xfs: skip bmbt block ino validation during owner change
-Date: Sun, 17 Sep 2017 14:06:23 -0700
-Message-Id: <20170917210631.10725-18-hch@lst.de>
+Subject: [PATCH 22/25] xfs: fix incorrect log_flushed on fsync
+Date: Sun, 17 Sep 2017 14:06:28 -0700
+Message-Id: <20170917210631.10725-23-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
 
-commit 99c794c639a65cc7b74f30a674048fd100fe9ac8 upstream.
+commit 47c7d0b19502583120c3f396c7559e7a77288a68 upstream.
 
-Extent swap uses xfs_btree_visit_blocks() to fix up bmbt block
-owners on v5 (!rmapbt) filesystems. The bmbt scan uses
-xfs_btree_lookup_get_block() to read bmbt blocks which verifies the
-current owner of the block against the parent inode of the bmbt.
-This works during extent swap because the bmbt owners are updated to
-the opposite inode number before the inode extent forks are swapped.
+When calling into _xfs_log_force{,_lsn}() with a pointer
+to log_flushed variable, log_flushed will be set to 1 if:
+1. xlog_sync() is called to flush the active log buffer
+AND/OR
+2. xlog_wait() is called to wait on a syncing log buffers
 
-The modified bmbt blocks are marked as ordered buffers which allows
-everything to commit in a single transaction. If the transaction
-commits to the log and the system crashes such that recovery of the
-extent swap is required, log recovery restarts the bmbt scan to fix
-up any bmbt blocks that may have not been written back before the
-crash. The log recovery bmbt scan occurs after the inode forks have
-been swapped, however. This causes the bmbt block owner verification
-to fail, leads to log recovery failure and requires xfs_repair to
-zap the log to recover.
+xfs_file_fsync() checks the value of log_flushed after
+_xfs_log_force_lsn() call to optimize away an explicit
+PREFLUSH request to the data block device after writing
+out all the file's pages to disk.
 
-Define a new invalid inode owner flag to inform the btree block
-lookup mechanism that the current inode may be invalid with respect
-to the current owner of the bmbt block. Set this flag on the cursor
-used for change owner scans to allow this operation to work at
-runtime and during log recovery.
+This optimization is incorrect in the following sequence of events:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Fixes: bb3be7e7c ("xfs: check for bogus values in btree block headers")
-Cc: stable@vger.kernel.org
+ Task A                    Task B
+ -------------------------------------------------------
+ xfs_file_fsync()
+   _xfs_log_force_lsn()
+     xlog_sync()
+        [submit PREFLUSH]
+                           xfs_file_fsync()
+                             file_write_and_wait_range()
+                               [submit WRITE X]
+                               [endio  WRITE X]
+                             _xfs_log_force_lsn()
+                               xlog_wait()
+        [endio  PREFLUSH]
+
+The write X is not guarantied to be on persistent storage
+when PREFLUSH request in completed, because write A was submitted
+after the PREFLUSH request, but xfs_file_fsync() of task A will
+be notified of log_flushed=1 and will skip explicit flush.
+
+If the system crashes after fsync of task A, write X may not be
+present on disk after reboot.
+
+This bug was discovered and demonstrated using Josef Bacik's
+dm-log-writes target, which can be used to record block io operations
+and then replay a subset of these operations onto the target device.
+The test goes something like this:
+- Use fsx to execute ops of a file and record ops on log device
+- Every now and then fsync the file, store md5 of file and mark
+  the location in the log
+- Then replay log onto device for each mark, mount fs and compare
+  md5 of file to stored value
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Josef Bacik <jbacik@fb.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.c | 1 +
- fs/xfs/libxfs/xfs_btree.c      | 1 +
- fs/xfs/libxfs/xfs_btree.h      | 3 ++-
- 3 files changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 85de22513014..a6331ffa51e3 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -858,6 +858,7 @@ xfs_bmbt_change_owner(
- 	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
- 	if (!cur)
- 		return -ENOMEM;
-+	cur->bc_private.b.flags |= XFS_BTCUR_BPRV_INVALID_OWNER;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index bcb2f860e508..c5107c7bc4bf 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3375,8 +3375,6 @@ _xfs_log_force(
+ 		 */
+ 		if (iclog->ic_state & XLOG_STATE_IOERROR)
+ 			return -EIO;
+-		if (log_flushed)
+-			*log_flushed = 1;
+ 	} else {
  
- 	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
- 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 0b7905a4e27a..1d15d04e29a5 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1791,6 +1791,7 @@ xfs_btree_lookup_get_block(
+ no_sleep:
+@@ -3480,8 +3478,6 @@ _xfs_log_force_lsn(
  
- 	/* Check the inode owner since the verifiers don't. */
- 	if (xfs_sb_version_hascrc(&cur->bc_mp->m_sb) &&
-+	    !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_INVALID_OWNER) &&
- 	    (cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
- 	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
- 			cur->bc_private.b.ip->i_ino)
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 9c95e965cfe5..f2a88c3b1159 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -233,7 +233,8 @@ typedef struct xfs_btree_cur
- 			short		forksize;	/* fork's inode space */
- 			char		whichfork;	/* data or attr fork */
- 			char		flags;		/* flags */
--#define	XFS_BTCUR_BPRV_WASDEL	1			/* was delayed */
-+#define	XFS_BTCUR_BPRV_WASDEL		(1<<0)		/* was delayed */
-+#define	XFS_BTCUR_BPRV_INVALID_OWNER	(1<<1)		/* for ext swap */
- 		} b;
- 	}		bc_private;	/* per-btree type data */
- } xfs_btree_cur_t;
+ 				xlog_wait(&iclog->ic_prev->ic_write_wait,
+ 							&log->l_icloglock);
+-				if (log_flushed)
+-					*log_flushed = 1;
+ 				already_slept = 1;
+ 				goto try_again;
+ 			}
+@@ -3515,9 +3511,6 @@ _xfs_log_force_lsn(
+ 			 */
+ 			if (iclog->ic_state & XLOG_STATE_IOERROR)
+ 				return -EIO;
+-
+-			if (log_flushed)
+-				*log_flushed = 1;
+ 		} else {		/* just return */
+ 			spin_unlock(&log->l_icloglock);
+ 		}
 -- 
 2.14.1
 
