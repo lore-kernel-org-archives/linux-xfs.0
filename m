@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59516 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:41166 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752015AbdIQVGj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:39 -0400
+        with ESMTP id S1751632AbdIQVHd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:33 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/25] xfs: remove unnecessary dirty bli format check for ordered bufs
-Date: Sun, 17 Sep 2017 14:06:19 -0700
-Message-Id: <20170917210631.10725-14-hch@lst.de>
-In-Reply-To: <20170917210631.10725-1-hch@lst.de>
-References: <20170917210631.10725-1-hch@lst.de>
+Subject: [PATCH 37/47] xfs: refactor buffer logging into buffer dirtying helper
+Date: Sun, 17 Sep 2017 14:07:02 -0700
+Message-Id: <20170917210712.10804-38-hch@lst.de>
+In-Reply-To: <20170917210712.10804-1-hch@lst.de>
+References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -17,157 +17,136 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 6453c65d3576bc3e602abb5add15f112755c08ca upstream.
+commit 9684010d38eccda733b61106765e9357cf436f65 upstream.
 
-xfs_buf_item_unlock() historically checked the dirty state of the
-buffer by manually checking the buffer log formats for dirty
-segments. The introduction of ordered buffers invalidated this check
-because ordered buffers have dirty bli's but no dirty (logged)
-segments. The check was updated to accommodate ordered buffers by
-looking at the bli state first and considering the blf only if the
-bli is clean.
+xfs_trans_log_buf() is responsible for logging the dirty segments of
+a buffer along with setting all of the necessary state on the
+transaction, buffer, bli, etc., to ensure that the associated items
+are marked as dirty and prepared for I/O. We have a couple use cases
+that need to to dirty a buffer in a transaction without actually
+logging dirty ranges of the buffer.  One existing use case is
+ordered buffers, which are currently logged with arbitrary ranges to
+accomplish this even though the content of ordered buffers is never
+written to the log. Another pending use case is to relog an already
+dirty buffer across rolled transactions within the deferred
+operations infrastructure. This is required to prevent a held
+(XFS_BLI_HOLD) buffer from pinning the tail of the log.
 
-This logic is safe but unnecessary. There is no valid case where the
-bli is clean yet the blf has dirty segments. The bli is set dirty
-whenever the blf is logged (via xfs_trans_log_buf()) and the blf is
-cleared in the only place BLI_DIRTY is cleared (xfs_trans_binval()).
-
-Remove the conditional blf dirty checks and replace with an assert
-that should catch any discrepencies between bli and blf dirty
-states. Refactor the old blf dirty check into a helper function to
-be used by the assert.
+Refactor xfs_trans_log_buf() into a new function that contains all
+of the logic responsible to dirty the transaction, lidp, buffer and
+bli. This new function can be used in the future for the use cases
+outlined above. This patch does not introduce functional changes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf_item.c | 62 ++++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_buf_item.h |  1 +
- 2 files changed, 33 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_trans.h     |  4 +++-
+ fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index cdae0ad5e0a5..ff076d11804a 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -575,26 +575,18 @@ xfs_buf_item_unlock(
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 0318e92aed66..40555bcaa277 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -222,7 +222,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+-void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
++void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
++				  uint);
++void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ 
+ void		xfs_extent_free_init_defer_op(void);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index cac8abbeca3f..8c99813e5377 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
+ }
+ 
+ /*
+- * This is called to mark bytes first through last inclusive of the given
+- * buffer as needing to be logged when the transaction is committed.
+- * The buffer must already be associated with the given transaction.
+- *
+- * First and last are numbers relative to the beginning of this buffer,
+- * so the first byte in the buffer is numbered 0 regardless of the
+- * value of b_blkno.
++ * Mark a buffer dirty in the transaction.
+  */
+ void
+-xfs_trans_log_buf(xfs_trans_t	*tp,
+-		  xfs_buf_t	*bp,
+-		  uint		first,
+-		  uint		last)
++xfs_trans_dirty_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
  {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	struct xfs_buf		*bp = bip->bli_buf;
--	bool			clean;
--	bool			aborted;
--	int			flags;
-+	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
-+	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
-+	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
-+	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
  
- 	/* Clear the buffer's association with this transaction. */
- 	bp->b_transp = NULL;
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+-	ASSERT(first <= last && last < BBTOB(bp->b_length));
+ 	ASSERT(bp->b_iodone == NULL ||
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
  
+@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	bp->b_iodone = xfs_buf_iodone_callbacks;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
+ 
+-	trace_xfs_trans_log_buf(bip);
+-
  	/*
--	 * If this is a transaction abort, don't return early.  Instead, allow
--	 * the brelse to happen.  Normally it would be done for stale
--	 * (cancelled) buffers at unpin time, but we'll never go through the
--	 * pin/unpin cycle if we abort inside commit.
-+	 * The per-transaction state has been copied above so clear it from the
-+	 * bli.
- 	 */
--	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
--	/*
--	 * Before possibly freeing the buf item, copy the per-transaction state
--	 * so we can reference it safely later after clearing it from the
--	 * buffer log item.
--	 */
--	flags = bip->bli_flags;
- 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
- 
- 	/*
-@@ -602,7 +594,7 @@ xfs_buf_item_unlock(
- 	 * unlock the buffer and free the buf item when the buffer is unpinned
- 	 * for the last time.
- 	 */
--	if (flags & XFS_BLI_STALE) {
-+	if (bip->bli_flags & XFS_BLI_STALE) {
- 		trace_xfs_buf_item_unlock_stale(bip);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
- 		if (!aborted) {
-@@ -620,20 +612,11 @@ xfs_buf_item_unlock(
- 	 * regardless of whether it is dirty or not. A dirty abort implies a
- 	 * shutdown, anyway.
- 	 *
--	 * Ordered buffers are dirty but may have no recorded changes, so ensure
--	 * we only release clean items here.
-+	 * The bli dirty state should match whether the blf has logged segments
-+	 * except for ordered buffers, where only the bli should be dirty.
- 	 */
--	clean = (flags & XFS_BLI_DIRTY) ? false : true;
--	if (clean) {
--		int i;
--		for (i = 0; i < bip->bli_format_count; i++) {
--			if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
--				     bip->bli_formats[i].blf_map_size)) {
--				clean = false;
--				break;
--			}
--		}
--	}
-+	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
-+	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
- 
- 	/*
- 	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
-@@ -652,11 +635,11 @@ xfs_buf_item_unlock(
- 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
- 			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
- 			xfs_buf_item_relse(bp);
--		} else if (clean)
-+		} else if (!dirty)
- 			xfs_buf_item_relse(bp);
+ 	 * If we invalidated the buffer within this transaction, then
+ 	 * cancel the invalidation now that we're dirtying the buffer
+@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bp->b_flags &= ~XBF_STALE;
+ 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
  	}
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
  
--	if (!(flags & XFS_BLI_HOLD))
-+	if (!hold)
- 		xfs_buf_relse(bp);
- }
- 
-@@ -945,6 +928,25 @@ xfs_buf_item_log(
- }
- 
- 
-+/*
-+ * Return true if the buffer has any ranges logged/dirtied by a transaction,
-+ * false otherwise.
-+ */
-+bool
-+xfs_buf_item_dirty_format(
-+	struct xfs_buf_log_item	*bip)
-+{
-+	int			i;
-+
-+	for (i = 0; i < bip->bli_format_count; i++) {
-+		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
-+			     bip->bli_formats[i].blf_map_size))
-+			return true;
-+	}
-+
-+	return false;
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 +}
 +
- STATIC void
- xfs_buf_item_free(
- 	xfs_buf_log_item_t	*bip)
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index e0e744aefaa8..9690ce62c9a7 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -64,6 +64,7 @@ typedef struct xfs_buf_log_item {
- int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
- void	xfs_buf_item_relse(struct xfs_buf *);
- void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
-+bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
- void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
- 			      xfs_log_item_t *);
++/*
++ * This is called to mark bytes first through last inclusive of the given
++ * buffer as needing to be logged when the transaction is committed.
++ * The buffer must already be associated with the given transaction.
++ *
++ * First and last are numbers relative to the beginning of this buffer,
++ * so the first byte in the buffer is numbered 0 regardless of the
++ * value of b_blkno.
++ */
++void
++xfs_trans_log_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	uint			first,
++	uint			last)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	ASSERT(first <= last && last < BBTOB(bp->b_length));
++
++	xfs_trans_dirty_buf(tp, bp);
+ 
+ 	/*
+ 	 * If we have an ordered buffer we are not logging any dirty range but
+ 	 * it still needs to be marked dirty and that it has been logged.
+ 	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	trace_xfs_trans_log_buf(bip);
+ 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+ 		xfs_buf_item_log(bip, first, last);
+ }
 -- 
 2.14.1
 
