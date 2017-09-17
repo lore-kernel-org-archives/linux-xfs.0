@@ -1,100 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54442 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34703 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752013AbdIQVGi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:38 -0400
+        with ESMTP id S1751611AbdIQVGj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/25] xfs: check for race with xfs_reclaim_inode() in xfs_ifree_cluster()
-Date: Sun, 17 Sep 2017 14:06:17 -0700
-Message-Id: <20170917210631.10725-12-hch@lst.de>
+Subject: [PATCH 14/25] xfs: ordered buffer log items are never formatted
+Date: Sun, 17 Sep 2017 14:06:20 -0700
+Message-Id: <20170917210631.10725-15-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Omar Sandoval <osandov@fb.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit f2e9ad212def50bcf4c098c6288779dd97fff0f0 upstream.
+commit e9385cc6fb7edf23702de33a2dc82965d92d9392 upstream.
 
-After xfs_ifree_cluster() finds an inode in the radix tree and verifies
-that the inode number is what it expected, xfs_reclaim_inode() can swoop
-in and free it. xfs_ifree_cluster() will then happily continue working
-on the freed inode. Most importantly, it will mark the inode stale,
-which will probably be overwritten when the inode slab object is
-reallocated, but if it has already been reallocated then we can end up
-with an inode spuriously marked stale.
+Ordered buffers pass through the logging infrastructure without ever
+being written to the log. The way this works is that the ordered
+buffer status is transferred to the log vector at commit time via
+the ->iop_size() callback. In xlog_cil_insert_format_items(),
+ordered log vectors bypass ->iop_format() processing altogether.
 
-In 8a17d7ddedb4 ("xfs: mark reclaimed inodes invalid earlier") we added
-a second check to xfs_iflush_cluster() to detect this race, but the
-similar RCU lookup in xfs_ifree_cluster() needs the same treatment.
+Therefore it is unnecessary for xfs_buf_item_format() to handle
+ordered buffers. Remove the unnecessary logic and assert that an
+ordered buffer never reaches this point.
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c | 10 +++++-----
- fs/xfs/xfs_inode.c  | 23 ++++++++++++++++++-----
- 2 files changed, 23 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_buf_item.c | 12 ++----------
+ fs/xfs/xfs_trace.h    |  1 -
+ 2 files changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0a9e6985a0d0..34227115a5d6 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1124,11 +1124,11 @@ xfs_reclaim_inode(
- 	 * Because we use RCU freeing we need to ensure the inode always appears
- 	 * to be reclaimed with an invalid inode number when in the free state.
- 	 * We do this as early as possible under the ILOCK so that
--	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
--	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
--	 * XFS_ILOCK that it will see either a valid, flushable inode that will
--	 * serialise correctly, or it will see a clean (and invalid) inode that
--	 * it can skip.
-+	 * xfs_iflush_cluster() and xfs_ifree_cluster() can be guaranteed to
-+	 * detect races with us here. By doing this, we guarantee that once
-+	 * xfs_iflush_cluster() or xfs_ifree_cluster() has locked XFS_ILOCK that
-+	 * it will see either a valid inode that will serialise correctly, or it
-+	 * will see an invalid inode that it can skip.
- 	 */
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_flags = XFS_IRECLAIM;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ff48f0096810..97045e8dfed5 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2359,11 +2359,24 @@ xfs_ifree_cluster(
- 			 * already marked stale. If we can't lock it, back off
- 			 * and retry.
- 			 */
--			if (ip != free_ip &&
--			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
--				rcu_read_unlock();
--				delay(1);
--				goto retry;
-+			if (ip != free_ip) {
-+				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-+					rcu_read_unlock();
-+					delay(1);
-+					goto retry;
-+				}
-+
-+				/*
-+				 * Check the inode number again in case we're
-+				 * racing with freeing in xfs_reclaim_inode().
-+				 * See the comments in that function for more
-+				 * information as to why the initial check is
-+				 * not sufficient.
-+				 */
-+				if (ip->i_ino != inum + i) {
-+					xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+					continue;
-+				}
- 			}
- 			rcu_read_unlock();
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index ff076d11804a..ef2c1375f092 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -323,6 +323,8 @@ xfs_buf_item_format(
+ 	ASSERT((bip->bli_flags & XFS_BLI_STALE) ||
+ 	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
+ 	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
++	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED) ||
++	       (bip->bli_flags & XFS_BLI_STALE));
  
+ 
+ 	/*
+@@ -347,16 +349,6 @@ xfs_buf_item_format(
+ 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+ 	}
+ 
+-	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
+-							XFS_BLI_ORDERED) {
+-		/*
+-		 * The buffer has been logged just to order it.  It is not being
+-		 * included in the transaction commit, so don't format it.
+-		 */
+-		trace_xfs_buf_item_format_ordered(bip);
+-		return;
+-	}
+-
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+ 					    &bip->bli_formats[i]);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bcc3cdf8e1c5..bb0099708827 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -517,7 +517,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
+-DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
 -- 
 2.14.1
 
