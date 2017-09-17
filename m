@@ -1,47 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44882 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:44997 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752013AbdIQVGq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:46 -0400
+        with ESMTP id S1752040AbdIQVGp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 25/25] xfs: use kmem_free to free return value of kmem_zalloc
-Date: Sun, 17 Sep 2017 14:06:31 -0700
-Message-Id: <20170917210631.10725-26-hch@lst.de>
+Subject: [PATCH 23/25] xfs: don't set v3 xflags for v2 inodes
+Date: Sun, 17 Sep 2017 14:06:29 -0700
+Message-Id: <20170917210631.10725-24-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Pan Bian <bianpan2016@163.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Pan Bian <bianpan2016@163.com>
+commit dd60687ee541ca3f6df8758f38e6f22f57c42a37 upstream.
 
-commit 6c370590cfe0c36bcd62d548148aa65c984540b7 upstream.
+Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
+if the inode isn't a v3 inode, because di_flags2 only exists on v3.
 
-In function xfs_test_remount_options(), kfree() is used to free memory
-allocated by kmem_zalloc(). But it is better to use kmem_free().
-
-Signed-off-by: Pan Bian <bianpan2016@163.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_ioctl.c | 38 +++++++++++++++++++++++++-------------
+ 1 file changed, 25 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 38aaacdbb8b3..c1c4c2ea1014 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1220,7 +1220,7 @@ xfs_test_remount_options(
- 	tmp_mp->m_super = sb;
- 	error = xfs_parseargs(tmp_mp, options);
- 	xfs_free_fsname(tmp_mp);
--	kfree(tmp_mp);
-+	kmem_free(tmp_mp);
- 
- 	return error;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 06ca244c323a..5049e8ab6e30 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -931,16 +931,15 @@ xfs_ioc_fsgetxattr(
+ 	return 0;
  }
+ 
+-STATIC void
+-xfs_set_diflags(
++STATIC uint16_t
++xfs_flags2diflags(
+ 	struct xfs_inode	*ip,
+ 	unsigned int		xflags)
+ {
+-	unsigned int		di_flags;
+-	uint64_t		di_flags2;
+-
+ 	/* can't set PREALLOC this way, just preserve it */
+-	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
++	uint16_t		di_flags =
++		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
++
+ 	if (xflags & FS_XFLAG_IMMUTABLE)
+ 		di_flags |= XFS_DIFLAG_IMMUTABLE;
+ 	if (xflags & FS_XFLAG_APPEND)
+@@ -970,19 +969,24 @@ xfs_set_diflags(
+ 		if (xflags & FS_XFLAG_EXTSIZE)
+ 			di_flags |= XFS_DIFLAG_EXTSIZE;
+ 	}
+-	ip->i_d.di_flags = di_flags;
+ 
+-	/* diflags2 only valid for v3 inodes. */
+-	if (ip->i_d.di_version < 3)
+-		return;
++	return di_flags;
++}
++
++STATIC uint64_t
++xfs_flags2diflags2(
++	struct xfs_inode	*ip,
++	unsigned int		xflags)
++{
++	uint64_t		di_flags2 =
++		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+ 
+-	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+ 	if (xflags & FS_XFLAG_DAX)
+ 		di_flags2 |= XFS_DIFLAG2_DAX;
+ 	if (xflags & FS_XFLAG_COWEXTSIZE)
+ 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 
+-	ip->i_d.di_flags2 = di_flags2;
++	return di_flags2;
+ }
+ 
+ STATIC void
+@@ -1023,6 +1027,7 @@ xfs_ioctl_setattr_xflags(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	uint64_t		di_flags2;
+ 
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+@@ -1053,7 +1058,14 @@ xfs_ioctl_setattr_xflags(
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
+ 
+-	xfs_set_diflags(ip, fa->fsx_xflags);
++	/* diflags2 only valid for v3 inodes. */
++	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
++	if (di_flags2 && ip->i_d.di_version < 3)
++		return -EINVAL;
++
++	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
++	ip->i_d.di_flags2 = di_flags2;
++
+ 	xfs_diflags_to_linux(ip);
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 -- 
 2.14.1
 
