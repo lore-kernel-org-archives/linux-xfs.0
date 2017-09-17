@@ -1,149 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48162 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:53078 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbdIQVGh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:37 -0400
+        with ESMTP id S1752013AbdIQVGl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:41 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/25] xfs: stop searching for free slots in an inode chunk when there are none
-Date: Sun, 17 Sep 2017 14:06:15 -0700
-Message-Id: <20170917210631.10725-10-hch@lst.de>
+Subject: [PATCH 16/25] xfs: don't log dirty ranges for ordered buffers
+Date: Sun, 17 Sep 2017 14:06:22 -0700
+Message-Id: <20170917210631.10725-17-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 2d32311cf19bfb8c1d2b4601974ddd951f9cfd0b upstream.
+commit 8dc518dfa7dbd079581269e51074b3c55a65a880 upstream.
 
-In a filesystem without finobt, the Space manager selects an AG to alloc a new
-inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
+Ordered buffers are attached to transactions and pushed through the
+logging infrastructure just like normal buffers with the exception
+that they are not actually written to the log. Therefore, we don't
+need to log dirty ranges of ordered buffers. xfs_trans_log_buf() is
+called on ordered buffers to set up all of the dirty state on the
+transaction, buffer and log item and prepare the buffer for I/O.
 
-When the new inode is in the same AG as its parent, the btree will be searched
-starting on the parent's record, and then retried from the top if no slot is
-available beyond the parent's record.
+Now that xfs_trans_dirty_buf() is available, call it from
+xfs_trans_ordered_buf() so the latter is now mutually exclusive with
+xfs_trans_log_buf(). This reflects the implementation of ordered
+buffers and helps eliminate confusion over the need to log ranges of
+ordered buffers just to set up internal log state.
 
-To exit this loop though, xfs_dialloc_ag_inobt() relies on the fact that the
-btree must have a free slot available, once its callers relied on the
-agi->freecount when deciding how/where to allocate this new inode.
-
-In the case when the agi->freecount is corrupted, showing available inodes in an
-AG, when in fact there is none, this becomes an infinite loop.
-
-Add a way to stop the loop when a free slot is not found in the btree, making
-the function to fall into the whole AG scan which will then, be able to detect
-the corruption and shut the filesystem down.
-
-As pointed by Brian, this might impact performance, giving the fact we
-don't reset the search distance anymore when we reach the end of the
-tree, giving it fewer tries before falling back to the whole AG search, but
-it will only affect searches that start within 10 records to the end of the tree.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 55 +++++++++++++++++++++++-----------------------
- 1 file changed, 27 insertions(+), 28 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c  |  6 ++----
+ fs/xfs/libxfs/xfs_ialloc.c |  2 --
+ fs/xfs/xfs_trans_buf.c     | 26 ++++++++++++++------------
+ 3 files changed, 16 insertions(+), 18 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index e0bcc4a59efd..0b7905a4e27a 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4464,12 +4464,10 @@ xfs_btree_block_change_owner(
+ 	 * though, so everything is consistent in memory.
+ 	 */
+ 	if (bp) {
+-		if (cur->bc_tp) {
++		if (cur->bc_tp)
+ 			xfs_trans_ordered_buf(cur->bc_tp, bp);
+-			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
+-		} else {
++		else
+ 			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
+-		}
+ 	} else {
+ 		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
+ 		ASSERT(level == cur->bc_nlevels - 1);
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index abf5beaae907..1e0658a3f155 100644
+index 1e0658a3f155..988bb3f31446 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1133,6 +1133,7 @@ xfs_dialloc_ag_inobt(
- 	int			error;
- 	int			offset;
- 	int			i, j;
-+	int			searchdistance = 10;
+@@ -378,8 +378,6 @@ xfs_ialloc_inode_init(
+ 				 * transaction and pin the log appropriately.
+ 				 */
+ 				xfs_trans_ordered_buf(tp, fbuf);
+-				xfs_trans_log_buf(tp, fbuf, 0,
+-						  BBTOB(fbuf->b_length) - 1);
+ 			}
+ 		} else {
+ 			fbuf->b_flags |= XBF_DONE;
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 8c99813e5377..3089e8015369 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -560,16 +560,12 @@ xfs_trans_log_buf(
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
  
- 	pag = xfs_perag_get(mp, agno);
+ 	ASSERT(first <= last && last < BBTOB(bp->b_length));
++	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
  
-@@ -1159,7 +1160,6 @@ xfs_dialloc_ag_inobt(
- 	if (pagno == agno) {
- 		int		doneleft;	/* done, to the left */
- 		int		doneright;	/* done, to the right */
--		int		searchdistance = 10;
+ 	xfs_trans_dirty_buf(tp, bp);
  
- 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
- 		if (error)
-@@ -1220,21 +1220,9 @@ xfs_dialloc_ag_inobt(
- 		/*
- 		 * Loop until we find an inode chunk with a free inode.
- 		 */
--		while (!doneleft || !doneright) {
-+		while (--searchdistance > 0 && (!doneleft || !doneright)) {
- 			int	useleft;  /* using left inode chunk this time */
+-	/*
+-	 * If we have an ordered buffer we are not logging any dirty range but
+-	 * it still needs to be marked dirty and that it has been logged.
+-	 */
+ 	trace_xfs_trans_log_buf(bip);
+-	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+-		xfs_buf_item_log(bip, first, last);
++	xfs_buf_item_log(bip, first, last);
+ }
  
--			if (!--searchdistance) {
--				/*
--				 * Not in range - save last search
--				 * location and allocate a new inode
--				 */
--				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--				pag->pagl_leftrec = trec.ir_startino;
--				pag->pagl_rightrec = rec.ir_startino;
--				pag->pagl_pagino = pagino;
--				goto newino;
--			}
--
- 			/* figure out the closer block if both are valid. */
- 			if (!doneleft && !doneright) {
- 				useleft = pagino -
-@@ -1278,26 +1266,37 @@ xfs_dialloc_ag_inobt(
- 				goto error1;
- 		}
  
--		/*
--		 * We've reached the end of the btree. because
--		 * we are only searching a small chunk of the
--		 * btree each search, there is obviously free
--		 * inodes closer to the parent inode than we
--		 * are now. restart the search again.
--		 */
--		pag->pagl_pagino = NULLAGINO;
--		pag->pagl_leftrec = NULLAGINO;
--		pag->pagl_rightrec = NULLAGINO;
--		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
--		goto restart_pagno;
-+		if (searchdistance <= 0) {
-+			/*
-+			 * Not in range - save last search
-+			 * location and allocate a new inode
-+			 */
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			pag->pagl_leftrec = trec.ir_startino;
-+			pag->pagl_rightrec = rec.ir_startino;
-+			pag->pagl_pagino = pagino;
+@@ -722,12 +718,11 @@ xfs_trans_inode_alloc_buf(
+ }
+ 
+ /*
+- * Mark the buffer as ordered for this transaction. This means
+- * that the contents of the buffer are not recorded in the transaction
+- * but it is tracked in the AIL as though it was. This allows us
+- * to record logical changes in transactions rather than the physical
+- * changes we make to the buffer without changing writeback ordering
+- * constraints of metadata buffers.
++ * Mark the buffer as ordered for this transaction. This means that the contents
++ * of the buffer are not recorded in the transaction but it is tracked in the
++ * AIL as though it was. This allows us to record logical changes in
++ * transactions rather than the physical changes we make to the buffer without
++ * changing writeback ordering constraints of metadata buffers.
+  */
+ void
+ xfs_trans_ordered_buf(
+@@ -739,9 +734,16 @@ xfs_trans_ordered_buf(
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
++	ASSERT(!xfs_buf_item_dirty_format(bip));
+ 
+ 	bip->bli_flags |= XFS_BLI_ORDERED;
+ 	trace_xfs_buf_item_ordered(bip);
 +
-+		} else {
-+			/*
-+			 * We've reached the end of the btree. because
-+			 * we are only searching a small chunk of the
-+			 * btree each search, there is obviously free
-+			 * inodes closer to the parent inode than we
-+			 * are now. restart the search again.
-+			 */
-+			pag->pagl_pagino = NULLAGINO;
-+			pag->pagl_leftrec = NULLAGINO;
-+			pag->pagl_rightrec = NULLAGINO;
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+			goto restart_pagno;
-+		}
- 	}
++	/*
++	 * We don't log a dirty range of an ordered buffer but it still needs
++	 * to be marked dirty and that it has been logged.
++	 */
++	xfs_trans_dirty_buf(tp, bp);
+ }
  
- 	/*
- 	 * In a different AG from the parent.
- 	 * See if the most recently allocated block has any free.
- 	 */
--newino:
- 	if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
- 		error = xfs_inobt_lookup(cur, be32_to_cpu(agi->agi_newino),
- 					 XFS_LOOKUP_EQ, &i);
+ /*
 -- 
 2.14.1
 
