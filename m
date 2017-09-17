@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34703 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59516 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbdIQVGj (ORCPT
+        with ESMTP id S1752015AbdIQVGj (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/25] xfs: ordered buffer log items are never formatted
-Date: Sun, 17 Sep 2017 14:06:20 -0700
-Message-Id: <20170917210631.10725-15-hch@lst.de>
+Subject: [PATCH 13/25] xfs: remove unnecessary dirty bli format check for ordered bufs
+Date: Sun, 17 Sep 2017 14:06:19 -0700
+Message-Id: <20170917210631.10725-14-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,69 +17,157 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit e9385cc6fb7edf23702de33a2dc82965d92d9392 upstream.
+commit 6453c65d3576bc3e602abb5add15f112755c08ca upstream.
 
-Ordered buffers pass through the logging infrastructure without ever
-being written to the log. The way this works is that the ordered
-buffer status is transferred to the log vector at commit time via
-the ->iop_size() callback. In xlog_cil_insert_format_items(),
-ordered log vectors bypass ->iop_format() processing altogether.
+xfs_buf_item_unlock() historically checked the dirty state of the
+buffer by manually checking the buffer log formats for dirty
+segments. The introduction of ordered buffers invalidated this check
+because ordered buffers have dirty bli's but no dirty (logged)
+segments. The check was updated to accommodate ordered buffers by
+looking at the bli state first and considering the blf only if the
+bli is clean.
 
-Therefore it is unnecessary for xfs_buf_item_format() to handle
-ordered buffers. Remove the unnecessary logic and assert that an
-ordered buffer never reaches this point.
+This logic is safe but unnecessary. There is no valid case where the
+bli is clean yet the blf has dirty segments. The bli is set dirty
+whenever the blf is logged (via xfs_trans_log_buf()) and the blf is
+cleared in the only place BLI_DIRTY is cleared (xfs_trans_binval()).
+
+Remove the conditional blf dirty checks and replace with an assert
+that should catch any discrepencies between bli and blf dirty
+states. Refactor the old blf dirty check into a helper function to
+be used by the assert.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf_item.c | 12 ++----------
- fs/xfs/xfs_trace.h    |  1 -
- 2 files changed, 2 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_buf_item.c | 62 ++++++++++++++++++++++++++-------------------------
+ fs/xfs/xfs_buf_item.h |  1 +
+ 2 files changed, 33 insertions(+), 30 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index ff076d11804a..ef2c1375f092 100644
+index cdae0ad5e0a5..ff076d11804a 100644
 --- a/fs/xfs/xfs_buf_item.c
 +++ b/fs/xfs/xfs_buf_item.c
-@@ -323,6 +323,8 @@ xfs_buf_item_format(
- 	ASSERT((bip->bli_flags & XFS_BLI_STALE) ||
- 	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
- 	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
-+	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED) ||
-+	       (bip->bli_flags & XFS_BLI_STALE));
+@@ -575,26 +575,18 @@ xfs_buf_item_unlock(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	bool			clean;
+-	bool			aborted;
+-	int			flags;
++	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
++	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
++	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
++	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
  
+ 	/* Clear the buffer's association with this transaction. */
+ 	bp->b_transp = NULL;
  
  	/*
-@@ -347,16 +349,6 @@ xfs_buf_item_format(
- 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+-	 * If this is a transaction abort, don't return early.  Instead, allow
+-	 * the brelse to happen.  Normally it would be done for stale
+-	 * (cancelled) buffers at unpin time, but we'll never go through the
+-	 * pin/unpin cycle if we abort inside commit.
++	 * The per-transaction state has been copied above so clear it from the
++	 * bli.
+ 	 */
+-	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
+-	/*
+-	 * Before possibly freeing the buf item, copy the per-transaction state
+-	 * so we can reference it safely later after clearing it from the
+-	 * buffer log item.
+-	 */
+-	flags = bip->bli_flags;
+ 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
+ 
+ 	/*
+@@ -602,7 +594,7 @@ xfs_buf_item_unlock(
+ 	 * unlock the buffer and free the buf item when the buffer is unpinned
+ 	 * for the last time.
+ 	 */
+-	if (flags & XFS_BLI_STALE) {
++	if (bip->bli_flags & XFS_BLI_STALE) {
+ 		trace_xfs_buf_item_unlock_stale(bip);
+ 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		if (!aborted) {
+@@ -620,20 +612,11 @@ xfs_buf_item_unlock(
+ 	 * regardless of whether it is dirty or not. A dirty abort implies a
+ 	 * shutdown, anyway.
+ 	 *
+-	 * Ordered buffers are dirty but may have no recorded changes, so ensure
+-	 * we only release clean items here.
++	 * The bli dirty state should match whether the blf has logged segments
++	 * except for ordered buffers, where only the bli should be dirty.
+ 	 */
+-	clean = (flags & XFS_BLI_DIRTY) ? false : true;
+-	if (clean) {
+-		int i;
+-		for (i = 0; i < bip->bli_format_count; i++) {
+-			if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+-				     bip->bli_formats[i].blf_map_size)) {
+-				clean = false;
+-				break;
+-			}
+-		}
+-	}
++	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
++	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
+ 
+ 	/*
+ 	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
+@@ -652,11 +635,11 @@ xfs_buf_item_unlock(
+ 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+ 			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+-		} else if (clean)
++		} else if (!dirty)
+ 			xfs_buf_item_relse(bp);
  	}
  
--	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
--							XFS_BLI_ORDERED) {
--		/*
--		 * The buffer has been logged just to order it.  It is not being
--		 * included in the transaction commit, so don't format it.
--		 */
--		trace_xfs_buf_item_format_ordered(bip);
--		return;
--	}
--
- 	for (i = 0; i < bip->bli_format_count; i++) {
- 		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
- 					    &bip->bli_formats[i]);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bcc3cdf8e1c5..bb0099708827 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -517,7 +517,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
--DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
+-	if (!(flags & XFS_BLI_HOLD))
++	if (!hold)
+ 		xfs_buf_relse(bp);
+ }
+ 
+@@ -945,6 +928,25 @@ xfs_buf_item_log(
+ }
+ 
+ 
++/*
++ * Return true if the buffer has any ranges logged/dirtied by a transaction,
++ * false otherwise.
++ */
++bool
++xfs_buf_item_dirty_format(
++	struct xfs_buf_log_item	*bip)
++{
++	int			i;
++
++	for (i = 0; i < bip->bli_format_count; i++) {
++		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
++			     bip->bli_formats[i].blf_map_size))
++			return true;
++	}
++
++	return false;
++}
++
+ STATIC void
+ xfs_buf_item_free(
+ 	xfs_buf_log_item_t	*bip)
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index e0e744aefaa8..9690ce62c9a7 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -64,6 +64,7 @@ typedef struct xfs_buf_log_item {
+ int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+ void	xfs_buf_item_relse(struct xfs_buf *);
+ void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
++bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
+ 			      xfs_log_item_t *);
 -- 
 2.14.1
 
