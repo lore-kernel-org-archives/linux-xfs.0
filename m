@@ -1,113 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44997 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:48162 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752040AbdIQVGp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:45 -0400
+        with ESMTP id S1751611AbdIQVGh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:37 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/25] xfs: don't set v3 xflags for v2 inodes
-Date: Sun, 17 Sep 2017 14:06:29 -0700
-Message-Id: <20170917210631.10725-24-hch@lst.de>
+Subject: [PATCH 09/25] xfs: stop searching for free slots in an inode chunk when there are none
+Date: Sun, 17 Sep 2017 14:06:15 -0700
+Message-Id: <20170917210631.10725-10-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit dd60687ee541ca3f6df8758f38e6f22f57c42a37 upstream.
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
-if the inode isn't a v3 inode, because di_flags2 only exists on v3.
+commit 2d32311cf19bfb8c1d2b4601974ddd951f9cfd0b upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+In a filesystem without finobt, the Space manager selects an AG to alloc a new
+inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
+
+When the new inode is in the same AG as its parent, the btree will be searched
+starting on the parent's record, and then retried from the top if no slot is
+available beyond the parent's record.
+
+To exit this loop though, xfs_dialloc_ag_inobt() relies on the fact that the
+btree must have a free slot available, once its callers relied on the
+agi->freecount when deciding how/where to allocate this new inode.
+
+In the case when the agi->freecount is corrupted, showing available inodes in an
+AG, when in fact there is none, this becomes an infinite loop.
+
+Add a way to stop the loop when a free slot is not found in the btree, making
+the function to fall into the whole AG scan which will then, be able to detect
+the corruption and shut the filesystem down.
+
+As pointed by Brian, this might impact performance, giving the fact we
+don't reset the search distance anymore when we reach the end of the
+tree, giving it fewer tries before falling back to the whole AG search, but
+it will only affect searches that start within 10 records to the end of the tree.
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c | 38 +++++++++++++++++++++++++-------------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 55 +++++++++++++++++++++++-----------------------
+ 1 file changed, 27 insertions(+), 28 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 06ca244c323a..5049e8ab6e30 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -931,16 +931,15 @@ xfs_ioc_fsgetxattr(
- 	return 0;
- }
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index abf5beaae907..1e0658a3f155 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1133,6 +1133,7 @@ xfs_dialloc_ag_inobt(
+ 	int			error;
+ 	int			offset;
+ 	int			i, j;
++	int			searchdistance = 10;
  
--STATIC void
--xfs_set_diflags(
-+STATIC uint16_t
-+xfs_flags2diflags(
- 	struct xfs_inode	*ip,
- 	unsigned int		xflags)
- {
--	unsigned int		di_flags;
--	uint64_t		di_flags2;
+ 	pag = xfs_perag_get(mp, agno);
+ 
+@@ -1159,7 +1160,6 @@ xfs_dialloc_ag_inobt(
+ 	if (pagno == agno) {
+ 		int		doneleft;	/* done, to the left */
+ 		int		doneright;	/* done, to the right */
+-		int		searchdistance = 10;
+ 
+ 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
+ 		if (error)
+@@ -1220,21 +1220,9 @@ xfs_dialloc_ag_inobt(
+ 		/*
+ 		 * Loop until we find an inode chunk with a free inode.
+ 		 */
+-		while (!doneleft || !doneright) {
++		while (--searchdistance > 0 && (!doneleft || !doneright)) {
+ 			int	useleft;  /* using left inode chunk this time */
+ 
+-			if (!--searchdistance) {
+-				/*
+-				 * Not in range - save last search
+-				 * location and allocate a new inode
+-				 */
+-				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
+-				pag->pagl_leftrec = trec.ir_startino;
+-				pag->pagl_rightrec = rec.ir_startino;
+-				pag->pagl_pagino = pagino;
+-				goto newino;
+-			}
 -
- 	/* can't set PREALLOC this way, just preserve it */
--	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+	uint16_t		di_flags =
-+		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
+ 			/* figure out the closer block if both are valid. */
+ 			if (!doneleft && !doneright) {
+ 				useleft = pagino -
+@@ -1278,26 +1266,37 @@ xfs_dialloc_ag_inobt(
+ 				goto error1;
+ 		}
+ 
+-		/*
+-		 * We've reached the end of the btree. because
+-		 * we are only searching a small chunk of the
+-		 * btree each search, there is obviously free
+-		 * inodes closer to the parent inode than we
+-		 * are now. restart the search again.
+-		 */
+-		pag->pagl_pagino = NULLAGINO;
+-		pag->pagl_leftrec = NULLAGINO;
+-		pag->pagl_rightrec = NULLAGINO;
+-		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
+-		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-		goto restart_pagno;
++		if (searchdistance <= 0) {
++			/*
++			 * Not in range - save last search
++			 * location and allocate a new inode
++			 */
++			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
++			pag->pagl_leftrec = trec.ir_startino;
++			pag->pagl_rightrec = rec.ir_startino;
++			pag->pagl_pagino = pagino;
 +
- 	if (xflags & FS_XFLAG_IMMUTABLE)
- 		di_flags |= XFS_DIFLAG_IMMUTABLE;
- 	if (xflags & FS_XFLAG_APPEND)
-@@ -970,19 +969,24 @@ xfs_set_diflags(
- 		if (xflags & FS_XFLAG_EXTSIZE)
- 			di_flags |= XFS_DIFLAG_EXTSIZE;
++		} else {
++			/*
++			 * We've reached the end of the btree. because
++			 * we are only searching a small chunk of the
++			 * btree each search, there is obviously free
++			 * inodes closer to the parent inode than we
++			 * are now. restart the search again.
++			 */
++			pag->pagl_pagino = NULLAGINO;
++			pag->pagl_leftrec = NULLAGINO;
++			pag->pagl_rightrec = NULLAGINO;
++			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
++			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++			goto restart_pagno;
++		}
  	}
--	ip->i_d.di_flags = di_flags;
  
--	/* diflags2 only valid for v3 inodes. */
--	if (ip->i_d.di_version < 3)
--		return;
-+	return di_flags;
-+}
-+
-+STATIC uint64_t
-+xfs_flags2diflags2(
-+	struct xfs_inode	*ip,
-+	unsigned int		xflags)
-+{
-+	uint64_t		di_flags2 =
-+		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 
--	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
- 	if (xflags & FS_XFLAG_COWEXTSIZE)
- 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 
--	ip->i_d.di_flags2 = di_flags2;
-+	return di_flags2;
- }
- 
- STATIC void
-@@ -1023,6 +1027,7 @@ xfs_ioctl_setattr_xflags(
- 	struct fsxattr		*fa)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	uint64_t		di_flags2;
- 
- 	/* Can't change realtime flag if any extents are allocated. */
- 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-@@ -1053,7 +1058,14 @@ xfs_ioctl_setattr_xflags(
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
--	xfs_set_diflags(ip, fa->fsx_xflags);
-+	/* diflags2 only valid for v3 inodes. */
-+	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
-+	if (di_flags2 && ip->i_d.di_version < 3)
-+		return -EINVAL;
-+
-+	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
-+	ip->i_d.di_flags2 = di_flags2;
-+
- 	xfs_diflags_to_linux(ip);
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	/*
+ 	 * In a different AG from the parent.
+ 	 * See if the most recently allocated block has any free.
+ 	 */
+-newino:
+ 	if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
+ 		error = xfs_inobt_lookup(cur, be32_to_cpu(agi->agi_newino),
+ 					 XFS_LOOKUP_EQ, &i);
 -- 
 2.14.1
 
