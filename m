@@ -1,50 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33270 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752446AbdIRHNm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Sep 2017 03:13:42 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B77FB8046E
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 07:13:42 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-12-120.pek2.redhat.com [10.72.12.120])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DAFCF1895B
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 07:13:41 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfsprogs/db: version command misses RMAPBT feature string
-Date: Mon, 18 Sep 2017 15:13:35 +0800
-Message-Id: <20170918071335.19365-1-zlang@redhat.com>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34028 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbdIQHdF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 03:33:05 -0400
+Received: by mail-pg0-f67.google.com with SMTP id v82so3518666pgb.1
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2017 00:33:05 -0700 (PDT)
+From: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
+Subject: [PATCH] xfs: Output warning message when discard option was enabled even though the device does not support discard
+Date: Sun, 17 Sep 2017 16:32:52 +0900
+Message-Id: <20170917073252.15432-1-nakayamakenjiro@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
 
-When I create a XFS with "rmapbt=1,reflink=1", "xfs_db -c version"
-didn't show RMAPBT feature. But REFLINK can be found.
+In order to using discard function, it is necessary that not only xfs
+is mounted with discard option, but also the discard function is
+supported by the device. Current code doesn't output any message when
+users mount with discard option on unsupported device, so it is
+difficult to notice that it was not enabled actually.
 
-  # mkfs/mkfs.xfs -f -m rmapbt=1,reflink=1 /dev/sda3
-  # db/xfs_db -c version /dev/sda3
-  versionnum [0xb4a5+0x18a] = V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,REFLINK
+This patch adds the warning message to notice that discard option is
+not enabled due to unsupported device when the filesystem is mounted.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
 ---
- db/sb.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/xfs_super.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/db/sb.c b/db/sb.c
-index 8e7722cd..01d94a66 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -694,6 +694,8 @@ version_string(
- 		strcat(s, ",SPARSE_INODES");
- 	if (xfs_sb_version_hasmetauuid(sbp))
- 		strcat(s, ",META_UUID");
-+	if (xfs_sb_version_hasrmapbt(sbp))
-+		strcat(s, ",RMAPBT");
- 	if (xfs_sb_version_hasreflink(sbp))
- 		strcat(s, ",REFLINK");
- 	return s;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index c996f4ae4a5f..60397f9cc786 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -407,6 +407,13 @@ xfs_parseargs(
+ 		return -EINVAL;
+ 	}
+ #endif
++	if (mp->m_flags & XFS_MOUNT_DISCARD) {
++		struct request_queue *q = bdev_get_queue(sb->s_bdev);
++
++		if (!blk_queue_discard(q))
++			xfs_warn(mp, "mounting with \"discard\" option, but "
++					"the device does not support discard");
++	}
+ 
+ 	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
+ 		xfs_warn(mp, "sunit and swidth must be specified together");
 -- 
 2.13.5
 
