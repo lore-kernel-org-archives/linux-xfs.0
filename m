@@ -1,101 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39463 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49419 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752073AbdIQVHP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:15 -0400
+        with ESMTP id S1751878AbdIQVHQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:16 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/47] xfs: release bli from transaction properly on fs shutdown
-Date: Sun, 17 Sep 2017 14:06:30 -0700
-Message-Id: <20170917210712.10804-6-hch@lst.de>
+Subject: [PATCH 07/47] xfs: don't allow bmap on rt files
+Date: Sun, 17 Sep 2017 14:06:32 -0700
+Message-Id: <20170917210712.10804-8-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 79e641ce29cfae5b8fc55fb77ac62d11d2d849c0 upstream.
+commit 61d819e7bcb7f33da710bf3f5dcb2bcf1e48203c upstream.
 
-If a filesystem shutdown occurs with a buffer log item in the CIL
-and a log force occurs, the ->iop_unpin() handler is generally
-expected to tear down the bli properly. This entails freeing the bli
-memory and releasing the associated hold on the buffer so it can be
-released and the filesystem unmounted.
+bmap returns a dumb LBA address but not the block device that goes with
+that LBA.  Swapfiles don't care about this and will blindly assume that
+the data volume is the correct blockdev, which is totally bogus for
+files on the rt subvolume.  This results in the swap code doing IOs to
+arbitrary locations on the data device(!) if the passed in mapping is a
+realtime file, so just turn off bmap for rt files.
 
-If this sequence occurs while ->bli_refcount is elevated (i.e.,
-another transaction is open and attempting to modify the buffer),
-however, ->iop_unpin() may not be responsible for releasing the bli.
-Instead, the transaction may release the final ->bli_refcount
-reference and thus xfs_trans_brelse() is responsible for tearing
-down the bli.
-
-While xfs_trans_brelse() does drop the reference count, it only
-attempts to release the bli if it is clean (i.e., not in the
-CIL/AIL). If the filesystem is shutdown and the bli is sitting dirty
-in the CIL as noted above, this ends up skipping the last
-opportunity to release the bli. In turn, this leaves the hold on the
-buffer and causes an unmount hang. This can be reproduced by running
-generic/388 in repetition.
-
-Update xfs_trans_brelse() to handle this shutdown corner case
-correctly. If the final bli reference is dropped and the filesystem
-is shutdown, remove the bli from the AIL (if necessary) and release
-the bli to drop the buffer hold and ensure an unmount does not hang.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_trans_buf.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 8ee29ca132dc..86987d823d76 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -356,6 +356,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
- 		 xfs_buf_t	*bp)
- {
- 	xfs_buf_log_item_t	*bip;
-+	int			freed;
- 
- 	/*
- 	 * Default to a normal brelse() call if the tp is NULL.
-@@ -419,16 +420,22 @@ xfs_trans_brelse(xfs_trans_t	*tp,
- 	/*
- 	 * Drop our reference to the buf log item.
- 	 */
--	atomic_dec(&bip->bli_refcount);
-+	freed = atomic_dec_and_test(&bip->bli_refcount);
- 
- 	/*
--	 * If the buf item is not tracking data in the log, then
--	 * we must free it before releasing the buffer back to the
--	 * free pool.  Before releasing the buffer to the free pool,
--	 * clear the transaction pointer in b_fsprivate2 to dissolve
--	 * its relation to this transaction.
-+	 * If the buf item is not tracking data in the log, then we must free it
-+	 * before releasing the buffer back to the free pool.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 578981412615..f750d888bd17 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1566,9 +1566,12 @@ xfs_vm_bmap(
+ 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
+ 	 * bypasseѕ the file system for actual I/O.  We really can't allow
+ 	 * that on reflinks inodes, so we have to skip out here.  And yes,
+-	 * 0 is the magic code for a bmap error..
++	 * 0 is the magic code for a bmap error.
 +	 *
-+	 * If the fs has shutdown and we dropped the last reference, it may fall
-+	 * on us to release a (possibly dirty) bli if it never made it to the
-+	 * AIL (e.g., the aborted unpin already happened and didn't release it
-+	 * due to our reference). Since we're already shutdown and need xa_lock,
-+	 * just force remove from the AIL and release the bli here.
++	 * Since we don't pass back blockdev info, we can't return bmap
++	 * information for rt files either.
  	 */
--	if (!xfs_buf_item_dirty(bip)) {
-+	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
-+		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_buf_item_relse(bp);
-+	} else if (!xfs_buf_item_dirty(bip)) {
- /***
- 		ASSERT(bp->b_pincount == 0);
- ***/
+-	if (xfs_is_reflink_inode(ip)) {
++	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip)) {
+ 		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+ 		return 0;
+ 	}
 -- 
 2.14.1
 
