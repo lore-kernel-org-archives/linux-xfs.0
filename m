@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35353 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34673 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752139AbdIQVHh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:37 -0400
+        with ESMTP id S1752005AbdIQVHi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:38 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 45/47] xfs: don't set v3 xflags for v2 inodes
-Date: Sun, 17 Sep 2017 14:07:10 -0700
-Message-Id: <20170917210712.10804-46-hch@lst.de>
+Subject: [PATCH 46/47] xfs: open code end_buffer_async_write in xfs_finish_page_writeback
+Date: Sun, 17 Sep 2017 14:07:11 -0700
+Message-Id: <20170917210712.10804-47-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,99 +15,143 @@ List-Id: xfs
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit dd60687ee541ca3f6df8758f38e6f22f57c42a37 upstream.
+commit 8353a814f2518dcfa79a5bb77afd0e7dfa391bb1 upstream.
 
-Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
-if the inode isn't a v3 inode, because di_flags2 only exists on v3.
+Our loop in xfs_finish_page_writeback, which iterates over all buffer
+heads in a page and then calls end_buffer_async_write, which also
+iterates over all buffers in the page to check if any I/O is in flight
+is not only inefficient, but also potentially dangerous as
+end_buffer_async_write can cause the page and all buffers to be freed.
+
+Replace it with a single loop that does the work of end_buffer_async_write
+on a per-page basis.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c | 38 +++++++++++++++++++++++++-------------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_aops.c | 72 ++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index be54216027b6..bce2e260f55e 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -928,16 +928,15 @@ xfs_ioc_fsgetxattr(
- 	return 0;
- }
- 
--STATIC void
--xfs_set_diflags(
-+STATIC uint16_t
-+xfs_flags2diflags(
- 	struct xfs_inode	*ip,
- 	unsigned int		xflags)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f750d888bd17..d23889e0bedc 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -90,11 +90,11 @@ xfs_find_bdev_for_inode(
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
+  *
+- * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
+- * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
+- * the page at all, as we may be racing with memory reclaim and it can free both
+- * the bufferhead chain and the page as it will see the page as clean and
+- * unused.
++ * Note that we open code the action in end_buffer_async_write here so that we
++ * only have to iterate over the buffers attached to the page once.  This is not
++ * only more efficient, but also ensures that we only calls end_page_writeback
++ * at the end of the iteration, and thus avoids the pitfall of having the page
++ * and buffers potentially freed after every call to end_buffer_async_write.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -102,29 +102,45 @@ xfs_finish_page_writeback(
+ 	struct bio_vec		*bvec,
+ 	int			error)
  {
--	unsigned int		di_flags;
--	uint64_t		di_flags2;
+-	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh, *next;
++	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
++	bool			busy = false;
+ 	unsigned int		off = 0;
+-	unsigned int		bsize;
++	unsigned long		flags;
+ 
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
+-	ASSERT(end < PAGE_SIZE);
++	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
+ 	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
+ 
+-	bh = head = page_buffers(bvec->bv_page);
 -
- 	/* can't set PREALLOC this way, just preserve it */
--	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+	uint16_t		di_flags =
-+		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
+-	bsize = bh->b_size;
++	local_irq_save(flags);
++	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
+ 	do {
+-		if (off > end)
+-			break;
+-		next = bh->b_this_page;
+-		if (off < bvec->bv_offset)
+-			goto next_bh;
+-		bh->b_end_io(bh, !error);
+-next_bh:
+-		off += bsize;
+-	} while ((bh = next) != head);
++		if (off >= bvec->bv_offset &&
++		    off < bvec->bv_offset + bvec->bv_len) {
++			ASSERT(buffer_async_write(bh));
++			ASSERT(bh->b_end_io == NULL);
 +
- 	if (xflags & FS_XFLAG_IMMUTABLE)
- 		di_flags |= XFS_DIFLAG_IMMUTABLE;
- 	if (xflags & FS_XFLAG_APPEND)
-@@ -967,19 +966,24 @@ xfs_set_diflags(
- 		if (xflags & FS_XFLAG_EXTSIZE)
- 			di_flags |= XFS_DIFLAG_EXTSIZE;
- 	}
--	ip->i_d.di_flags = di_flags;
- 
--	/* diflags2 only valid for v3 inodes. */
--	if (ip->i_d.di_version < 3)
--		return;
-+	return di_flags;
-+}
++			if (error) {
++				mapping_set_error(bvec->bv_page->mapping, -EIO);
++				set_buffer_write_io_error(bh);
++				clear_buffer_uptodate(bh);
++				SetPageError(bvec->bv_page);
++			} else {
++				set_buffer_uptodate(bh);
++			}
++			clear_buffer_async_write(bh);
++			unlock_buffer(bh);
++		} else if (buffer_async_write(bh)) {
++			ASSERT(buffer_locked(bh));
++			busy = true;
++		}
++		off += bh->b_size;
++	} while ((bh = bh->b_this_page) != head);
++	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
++	local_irq_restore(flags);
 +
-+STATIC uint64_t
-+xfs_flags2diflags2(
-+	struct xfs_inode	*ip,
-+	unsigned int		xflags)
-+{
-+	uint64_t		di_flags2 =
-+		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 
--	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
- 	if (xflags & FS_XFLAG_COWEXTSIZE)
- 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 
--	ip->i_d.di_flags2 = di_flags2;
-+	return di_flags2;
++	if (!busy)
++		end_page_writeback(bvec->bv_page);
  }
  
- STATIC void
-@@ -1020,6 +1024,7 @@ xfs_ioctl_setattr_xflags(
- 	struct fsxattr		*fa)
+ /*
+@@ -138,8 +154,10 @@ xfs_destroy_ioend(
+ 	int			error)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	uint64_t		di_flags2;
+ 	struct inode		*inode = ioend->io_inode;
+-	struct bio		*last = ioend->io_bio;
+-	struct bio		*bio, *next;
++	struct bio		*bio = &ioend->io_inline_bio;
++	struct bio		*last = ioend->io_bio, *next;
++	u64			start = bio->bi_iter.bi_sector;
++	bool			quiet = bio_flagged(bio, BIO_QUIET);
  
- 	/* Can't change realtime flag if any extents are allocated. */
- 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-@@ -1050,7 +1055,14 @@ xfs_ioctl_setattr_xflags(
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
+ 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec	*bvec;
+@@ -160,6 +178,11 @@ xfs_destroy_ioend(
  
--	xfs_set_diflags(ip, fa->fsx_xflags);
-+	/* diflags2 only valid for v3 inodes. */
-+	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
-+	if (di_flags2 && ip->i_d.di_version < 3)
-+		return -EINVAL;
+ 		bio_put(bio);
+ 	}
 +
-+	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
-+	ip->i_d.di_flags2 = di_flags2;
-+
- 	xfs_diflags_to_linux(ip);
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	if (unlikely(error && !quiet)) {
++		xfs_err_ratelimited(XFS_I(inode)->i_mount,
++			"writeback error on sector %llu", start);
++	}
+ }
+ 
+ /*
+@@ -427,7 +450,8 @@ xfs_start_buffer_writeback(
+ 	ASSERT(!buffer_delay(bh));
+ 	ASSERT(!buffer_unwritten(bh));
+ 
+-	mark_buffer_async_write(bh);
++	bh->b_end_io = NULL;
++	set_buffer_async_write(bh);
+ 	set_buffer_uptodate(bh);
+ 	clear_buffer_dirty(bh);
+ }
 -- 
 2.14.1
 
