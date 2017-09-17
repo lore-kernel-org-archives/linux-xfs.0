@@ -1,130 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45597 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54442 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751830AbdIQVGe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:34 -0400
+        with ESMTP id S1752013AbdIQVGi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:38 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/25] xfs: Add infrastructure needed for error propagation during buffer IO failure
-Date: Sun, 17 Sep 2017 14:06:09 -0700
-Message-Id: <20170917210631.10725-4-hch@lst.de>
+Subject: [PATCH 11/25] xfs: check for race with xfs_reclaim_inode() in xfs_ifree_cluster()
+Date: Sun, 17 Sep 2017 14:06:17 -0700
+Message-Id: <20170917210631.10725-12-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+From: Omar Sandoval <osandov@fb.com>
 
-commit 0b80ae6ed13169bd3a244e71169f2cc020b0c57a upstream.
+commit f2e9ad212def50bcf4c098c6288779dd97fff0f0 upstream.
 
-With the current code, XFS never re-submit a failed buffer for IO,
-because the failed item in the buffer is kept in the flush locked state
-forever.
+After xfs_ifree_cluster() finds an inode in the radix tree and verifies
+that the inode number is what it expected, xfs_reclaim_inode() can swoop
+in and free it. xfs_ifree_cluster() will then happily continue working
+on the freed inode. Most importantly, it will mark the inode stale,
+which will probably be overwritten when the inode slab object is
+reallocated, but if it has already been reallocated then we can end up
+with an inode spuriously marked stale.
 
-To be able to resubmit an log item for IO, we need a way to mark an item
-as failed, if, for any reason the buffer which the item belonged to
-failed during writeback.
+In 8a17d7ddedb4 ("xfs: mark reclaimed inodes invalid earlier") we added
+a second check to xfs_iflush_cluster() to detect this race, but the
+similar RCU lookup in xfs_ifree_cluster() needs the same treatment.
 
-Add a new log item callback to be used after an IO completion failure
-and make the needed clean ups.
-
+Signed-off-by: Omar Sandoval <osandov@fb.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf_item.c | 32 +++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trans.h    |  7 +++++--
- 2 files changed, 36 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_icache.c | 10 +++++-----
+ fs/xfs/xfs_inode.c  | 23 ++++++++++++++++++-----
+ 2 files changed, 23 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index f6a8422e9562..7573a1f0bc9a 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -29,6 +29,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_inode.h"
- 
- 
- kmem_zone_t	*xfs_buf_item_zone;
-@@ -1054,6 +1055,31 @@ xfs_buf_do_callbacks(
- 	}
- }
- 
-+/*
-+ * Invoke the error state callback for each log item affected by the failed I/O.
-+ *
-+ * If a metadata buffer write fails with a non-permanent error, the buffer is
-+ * eventually resubmitted and so the completion callbacks are not run. The error
-+ * state may need to be propagated to the log items attached to the buffer,
-+ * however, so the next AIL push of the item knows hot to handle it correctly.
-+ */
-+STATIC void
-+xfs_buf_do_callbacks_fail(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_log_item	*next;
-+	struct xfs_log_item	*lip = bp->b_fspriv;
-+	struct xfs_ail		*ailp = lip->li_ailp;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 0a9e6985a0d0..34227115a5d6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1124,11 +1124,11 @@ xfs_reclaim_inode(
+ 	 * Because we use RCU freeing we need to ensure the inode always appears
+ 	 * to be reclaimed with an invalid inode number when in the free state.
+ 	 * We do this as early as possible under the ILOCK so that
+-	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
+-	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
+-	 * XFS_ILOCK that it will see either a valid, flushable inode that will
+-	 * serialise correctly, or it will see a clean (and invalid) inode that
+-	 * it can skip.
++	 * xfs_iflush_cluster() and xfs_ifree_cluster() can be guaranteed to
++	 * detect races with us here. By doing this, we guarantee that once
++	 * xfs_iflush_cluster() or xfs_ifree_cluster() has locked XFS_ILOCK that
++	 * it will see either a valid inode that will serialise correctly, or it
++	 * will see an invalid inode that it can skip.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+ 	ip->i_flags = XFS_IRECLAIM;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ff48f0096810..97045e8dfed5 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2359,11 +2359,24 @@ xfs_ifree_cluster(
+ 			 * already marked stale. If we can't lock it, back off
+ 			 * and retry.
+ 			 */
+-			if (ip != free_ip &&
+-			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+-				rcu_read_unlock();
+-				delay(1);
+-				goto retry;
++			if (ip != free_ip) {
++				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
++					rcu_read_unlock();
++					delay(1);
++					goto retry;
++				}
 +
-+	spin_lock(&ailp->xa_lock);
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		if (lip->li_ops->iop_error)
-+			lip->li_ops->iop_error(lip, bp);
-+	}
-+	spin_unlock(&ailp->xa_lock);
-+}
-+
- static bool
- xfs_buf_iodone_callback_error(
- 	struct xfs_buf		*bp)
-@@ -1123,7 +1149,11 @@ xfs_buf_iodone_callback_error(
- 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
- 		goto permanent_error;
++				/*
++				 * Check the inode number again in case we're
++				 * racing with freeing in xfs_reclaim_inode().
++				 * See the comments in that function for more
++				 * information as to why the initial check is
++				 * not sufficient.
++				 */
++				if (ip->i_ino != inum + i) {
++					xfs_iunlock(ip, XFS_ILOCK_EXCL);
++					continue;
++				}
+ 			}
+ 			rcu_read_unlock();
  
--	/* still a transient error, higher layers will retry */
-+	/*
-+	 * Still a transient error, run IO completion failure callbacks and let
-+	 * the higher layers retry the buffer.
-+	 */
-+	xfs_buf_do_callbacks_fail(bp);
- 	xfs_buf_ioerror(bp, 0);
- 	xfs_buf_relse(bp);
- 	return true;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 6bdad6f58934..442d679210a1 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
- } xfs_log_item_t;
- 
- #define	XFS_LI_IN_AIL	0x1
--#define XFS_LI_ABORTED	0x2
-+#define	XFS_LI_ABORTED	0x2
-+#define	XFS_LI_FAILED	0x4
- 
- #define XFS_LI_FLAGS \
- 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
--	{ XFS_LI_ABORTED,	"ABORTED" }
-+	{ XFS_LI_ABORTED,	"ABORTED" }, \
-+	{ XFS_LI_FAILED,	"FAILED" }
- 
- struct xfs_item_ops {
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
-@@ -79,6 +81,7 @@ struct xfs_item_ops {
- 	void (*iop_unlock)(xfs_log_item_t *);
- 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
- 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-+	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
- };
- 
- void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
 -- 
 2.14.1
 
