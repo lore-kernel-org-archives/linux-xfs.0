@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41695 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43729 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752078AbdIQVH3 (ORCPT
+        with ESMTP id S1752083AbdIQVH3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:29 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 29/47] xfs: handle -EFSCORRUPTED during head/tail verification
-Date: Sun, 17 Sep 2017 14:06:54 -0700
-Message-Id: <20170917210712.10804-30-hch@lst.de>
+Subject: [PATCH 28/47] xfs: fix log recovery corruption error due to tail overwrite
+Date: Sun, 17 Sep 2017 14:06:53 -0700
+Message-Id: <20170917210712.10804-29-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,69 +17,198 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit a4c9b34d6a17081005ec459b57b8effc08f4c731 upstream.
+commit 4a4f66eac4681378996a1837ad1ffec3a2e2981f upstream.
 
-Torn write and tail overwrite detection both trigger only on
--EFSBADCRC errors. While this is the most likely failure scenario
-for each condition, -EFSCORRUPTED is still possible in certain cases
-depending on what ends up on disk when a torn write or partial tail
-overwrite occurs. For example, an invalid log record h_len can lead
-to an -EFSCORRUPTED error when running the log recovery CRC pass.
+If we consider the case where the tail (T) of the log is pinned long
+enough for the head (H) to push and block behind the tail, we can
+end up blocked in the following state without enough free space (f)
+in the log to satisfy a transaction reservation:
 
-Therefore, update log head and tail verification to trigger the
-associated head/tail fixups in the event of -EFSCORRUPTED errors
-along with -EFSBADCRC. Also, -EFSCORRUPTED can currently be returned
-from xlog_do_recovery_pass() before rhead_blk is initialized if the
-first record encountered happens to be corrupted. This leads to an
-incorrect 'first_bad' return value. Initialize rhead_blk earlier in
-the function to address that problem as well.
+	0	phys. log	N
+	[-------HffT---H'--T'---]
+
+The last good record in the log (before H) refers to T. The tail
+eventually pushes forward (T') leaving more free space in the log
+for writes to H. At this point, suppose space frees up in the log
+for the maximum of 8 in-core log buffers to start flushing out to
+the log. If this pushes the head from H to H', these next writes
+overwrite the previous tail T. This is safe because the items logged
+from T to T' have been written back and removed from the AIL.
+
+If the next log writes (H -> H') happen to fail and result in
+partial records in the log, the filesystem shuts down having
+overwritten T with invalid data. Log recovery correctly locates H on
+the subsequent mount, but H still refers to the now corrupted tail
+T. This results in log corruption errors and recovery failure.
+
+Since the tail overwrite results from otherwise correct runtime
+behavior, it is up to log recovery to try and deal with this
+situation. Update log recovery tail verification to run a CRC pass
+from the first record past the tail to the head. This facilitates
+error detection at T and moves the recovery tail to the first good
+record past H' (similar to truncating the head on torn write
+detection). If corruption is detected beyond the range possibly
+affected by the max number of iclogs, the log is legitimately
+corrupted and log recovery failure is expected.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_recover.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_log_recover.c | 108 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 77 insertions(+), 31 deletions(-)
 
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index fdad8c9ecbb3..83e90bf1899f 100644
+index 1457fa0f8637..fdad8c9ecbb3 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -1102,7 +1102,7 @@ xlog_verify_tail(
- 	first_bad = 0;
- 	error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
- 				      XLOG_RECOVER_CRCPASS, &first_bad);
--	while (error == -EFSBADCRC && first_bad) {
-+	while ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
- 		int	tail_distance;
+@@ -1029,61 +1029,106 @@ xlog_seek_logrec_hdr(
+ }
  
- 		/*
-@@ -1188,7 +1188,7 @@ xlog_verify_head(
+ /*
+- * Check the log tail for torn writes. This is required when torn writes are
+- * detected at the head and the head had to be walked back to a previous record.
+- * The tail of the previous record must now be verified to ensure the torn
+- * writes didn't corrupt the previous tail.
++ * Calculate distance from head to tail (i.e., unused space in the log).
++ */
++static inline int
++xlog_tail_distance(
++	struct xlog	*log,
++	xfs_daddr_t	head_blk,
++	xfs_daddr_t	tail_blk)
++{
++	if (head_blk < tail_blk)
++		return tail_blk - head_blk;
++
++	return tail_blk + (log->l_logBBsize - head_blk);
++}
++
++/*
++ * Verify the log tail. This is particularly important when torn or incomplete
++ * writes have been detected near the front of the log and the head has been
++ * walked back accordingly.
++ *
++ * We also have to handle the case where the tail was pinned and the head
++ * blocked behind the tail right before a crash. If the tail had been pushed
++ * immediately prior to the crash and the subsequent checkpoint was only
++ * partially written, it's possible it overwrote the last referenced tail in the
++ * log with garbage. This is not a coherency problem because the tail must have
++ * been pushed before it can be overwritten, but appears as log corruption to
++ * recovery because we have no way to know the tail was updated if the
++ * subsequent checkpoint didn't write successfully.
+  *
+- * Return an error if CRC verification fails as recovery cannot proceed.
++ * Therefore, CRC check the log from tail to head. If a failure occurs and the
++ * offending record is within max iclog bufs from the head, walk the tail
++ * forward and retry until a valid tail is found or corruption is detected out
++ * of the range of a possible overwrite.
+  */
+ STATIC int
+ xlog_verify_tail(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		head_blk,
+-	xfs_daddr_t		tail_blk)
++	xfs_daddr_t		*tail_blk,
++	int			hsize)
+ {
+ 	struct xlog_rec_header	*thead;
+ 	struct xfs_buf		*bp;
+ 	xfs_daddr_t		first_bad;
+-	int			count;
+ 	int			error = 0;
+ 	bool			wrapped;
+-	xfs_daddr_t		tmp_head;
++	xfs_daddr_t		tmp_tail;
++	xfs_daddr_t		orig_tail = *tail_blk;
+ 
+ 	bp = xlog_get_bp(log, 1);
+ 	if (!bp)
+ 		return -ENOMEM;
+ 
+ 	/*
+-	 * Seek XLOG_MAX_ICLOGS + 1 records past the current tail record to get
+-	 * a temporary head block that points after the last possible
+-	 * concurrently written record of the tail.
++	 * Make sure the tail points to a record (returns positive count on
++	 * success).
  	 */
- 	error = xlog_do_recovery_pass(log, *head_blk, tmp_rhead_blk,
+-	count = xlog_seek_logrec_hdr(log, head_blk, tail_blk,
+-				     XLOG_MAX_ICLOGS + 1, bp, &tmp_head, &thead,
+-				     &wrapped);
+-	if (count < 0) {
+-		error = count;
++	error = xlog_seek_logrec_hdr(log, head_blk, *tail_blk, 1, bp,
++			&tmp_tail, &thead, &wrapped);
++	if (error < 0)
+ 		goto out;
+-	}
++	if (*tail_blk != tmp_tail)
++		*tail_blk = tmp_tail;
+ 
+ 	/*
+-	 * If the call above didn't find XLOG_MAX_ICLOGS + 1 records, we ran
+-	 * into the actual log head. tmp_head points to the start of the record
+-	 * so update it to the actual head block.
++	 * Run a CRC check from the tail to the head. We can't just check
++	 * MAX_ICLOGS records past the tail because the tail may point to stale
++	 * blocks cleared during the search for the head/tail. These blocks are
++	 * overwritten with zero-length records and thus record count is not a
++	 * reliable indicator of the iclog state before a crash.
+ 	 */
+-	if (count < XLOG_MAX_ICLOGS + 1)
+-		tmp_head = head_blk;
+-
+-	/*
+-	 * We now have a tail and temporary head block that covers at least
+-	 * XLOG_MAX_ICLOGS records from the tail. We need to verify that these
+-	 * records were completely written. Run a CRC verification pass from
+-	 * tail to head and return the result.
+-	 */
+-	error = xlog_do_recovery_pass(log, tmp_head, tail_blk,
++	first_bad = 0;
++	error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
  				      XLOG_RECOVER_CRCPASS, &first_bad);
--	if (error == -EFSBADCRC) {
-+	if ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
- 		/*
- 		 * We've hit a potential torn write. Reset the error and warn
- 		 * about it.
-@@ -5255,7 +5255,7 @@ xlog_do_recovery_pass(
- 	LIST_HEAD		(buffer_list);
++	while (error == -EFSBADCRC && first_bad) {
++		int	tail_distance;
++
++		/*
++		 * Is corruption within range of the head? If so, retry from
++		 * the next record. Otherwise return an error.
++		 */
++		tail_distance = xlog_tail_distance(log, head_blk, first_bad);
++		if (tail_distance > BTOBB(XLOG_MAX_ICLOGS * hsize))
++			break;
  
- 	ASSERT(head_blk != tail_blk);
--	rhead_blk = 0;
-+	blk_no = rhead_blk = tail_blk;
++		/* skip to the next record; returns positive count on success */
++		error = xlog_seek_logrec_hdr(log, head_blk, first_bad, 2, bp,
++				&tmp_tail, &thead, &wrapped);
++		if (error < 0)
++			goto out;
++
++		*tail_blk = tmp_tail;
++		first_bad = 0;
++		error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
++					      XLOG_RECOVER_CRCPASS, &first_bad);
++	}
++
++	if (!error && *tail_blk != orig_tail)
++		xfs_warn(log->l_mp,
++		"Tail block (0x%llx) overwrite detected. Updated to 0x%llx",
++			 orig_tail, *tail_blk);
+ out:
+ 	xlog_put_bp(bp);
+ 	return error;
+@@ -1187,7 +1232,8 @@ xlog_verify_head(
+ 	if (error)
+ 		return error;
  
- 	for (i = 0; i < XLOG_RHASH_SIZE; i++)
- 		INIT_HLIST_HEAD(&rhash[i]);
-@@ -5333,7 +5333,6 @@ xlog_do_recovery_pass(
- 	}
+-	return xlog_verify_tail(log, *head_blk, *tail_blk);
++	return xlog_verify_tail(log, *head_blk, tail_blk,
++				be32_to_cpu((*rhead)->h_size));
+ }
  
- 	memset(rhash, 0, sizeof(rhash));
--	blk_no = rhead_blk = tail_blk;
- 	if (tail_blk > head_blk) {
- 		/*
- 		 * Perform recovery around the end of the physical log.
+ /*
 -- 
 2.14.1
 
