@@ -1,89 +1,288 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35764 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58878 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752022AbdIQVH2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:28 -0400
+        with ESMTP id S1752073AbdIQVH0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:26 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 27/47] xfs: always verify the log tail during recovery
-Date: Sun, 17 Sep 2017 14:06:52 -0700
-Message-Id: <20170917210712.10804-28-hch@lst.de>
+Subject: [PATCH 25/47] xfs: Properly retry failed inode items in case of error during buffer writeback
+Date: Sun, 17 Sep 2017 14:06:50 -0700
+Message-Id: <20170917210712.10804-26-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-commit 5297ac1f6d7cbf45464a49b9558831f271dfc559 upstream.
+commit d3a304b6292168b83b45d624784f973fdc1ca674 upstream.
 
-Log tail verification currently only occurs when torn writes are
-detected at the head of the log. This was introduced because a
-change in the head block due to torn writes can lead to a change in
-the tail block (each log record header references the current tail)
-and the tail block should be verified before log recovery proceeds.
+When a buffer has been failed during writeback, the inode items into it
+are kept flush locked, and are never resubmitted due the flush lock, so,
+if any buffer fails to be written, the items in AIL are never written to
+disk and never unlocked.
 
-Tail corruption is possible outside of torn write scenarios,
-however. For example, partial log writes can be detected and cleared
-during the initial head/tail block discovery process. If the partial
-write coincides with a tail overwrite, the log tail is corrupted and
-recovery fails.
+This causes unmount operation to hang due these items flush locked in AIL,
+but this also causes the items in AIL to never be written back, even when
+the IO device comes back to normal.
 
-To facilitate correct handling of log tail overwites, update log
-recovery to always perform tail verification. This is necessary to
-detect potential tail overwrite conditions when torn writes may not
-have occurred. This changes normal (i.e., no torn writes) recovery
-behavior slightly to detect and return CRC related errors near the
-tail before actual recovery starts.
+I've been testing this patch with a DM-thin device, creating a
+filesystem larger than the real device.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+When writing enough data to fill the DM-thin device, XFS receives ENOSPC
+errors from the device, and keep spinning on xfsaild (when 'retry
+forever' configuration is set).
+
+At this point, the filesystem can not be unmounted because of the flush locked
+items in AIL, but worse, the items in AIL are never retried at all
+(once xfs_inode_item_push() will skip the items that are flush locked),
+even if the underlying DM-thin device is expanded to the proper size.
+
+This patch fixes both cases, retrying any item that has been failed
+previously, using the infra-structure provided by the previous patch.
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_recover.c | 26 +++-----------------------
- 1 file changed, 3 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_buf_item.c   | 28 ++++++++++++++++++++++++++++
+ fs/xfs/xfs_buf_item.h   |  3 +++
+ fs/xfs/xfs_inode_item.c | 47 +++++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_trans.h      |  1 +
+ fs/xfs/xfs_trans_ail.c  |  3 ++-
+ fs/xfs/xfs_trans_priv.h | 31 +++++++++++++++++++++++++++++++
+ 6 files changed, 108 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9cef8916314a..1457fa0f8637 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1183,31 +1183,11 @@ xlog_verify_head(
- 			ASSERT(0);
- 			return 0;
- 		}
--
--		/*
--		 * Now verify the tail based on the updated head. This is
--		 * required because the torn writes trimmed from the head could
--		 * have been written over the tail of a previous record. Return
--		 * any errors since recovery cannot proceed if the tail is
--		 * corrupt.
--		 *
--		 * XXX: This leaves a gap in truly robust protection from torn
--		 * writes in the log. If the head is behind the tail, the tail
--		 * pushes forward to create some space and then a crash occurs
--		 * causing the writes into the previous record's tail region to
--		 * tear, log recovery isn't able to recover.
--		 *
--		 * How likely is this to occur? If possible, can we do something
--		 * more intelligent here? Is it safe to push the tail forward if
--		 * we can determine that the tail is within the range of the
--		 * torn write (e.g., the kernel can only overwrite the tail if
--		 * it has actually been pushed forward)? Alternatively, could we
--		 * somehow prevent this condition at runtime?
--		 */
--		error = xlog_verify_tail(log, *head_blk, *tail_blk);
- 	}
-+	if (error)
-+		return error;
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 7573a1f0bc9a..573fc72c3f23 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1234,3 +1234,31 @@ xfs_buf_iodone(
+ 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 	xfs_buf_item_free(BUF_ITEM(lip));
+ }
++
++/*
++ * Requeue a failed buffer for writeback
++ *
++ * Return true if the buffer has been re-queued properly, false otherwise
++ */
++bool
++xfs_buf_resubmit_failed_buffers(
++	struct xfs_buf		*bp,
++	struct xfs_log_item	*lip,
++	struct list_head	*buffer_list)
++{
++	struct xfs_log_item	*next;
++
++	/*
++	 * Clear XFS_LI_FAILED flag from all items before resubmit
++	 *
++	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
++	 * function already have it acquired
++	 */
++	for (; lip; lip = next) {
++		next = lip->li_bio_list;
++		xfs_clear_li_failed(lip);
++	}
++
++	/* Add this buffer back to the delayed write list */
++	return xfs_buf_delwri_queue(bp, buffer_list);
++}
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index f7eba99d19dd..530686e1afb9 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -70,6 +70,9 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      xfs_log_item_t *);
+ void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+ void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
++bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
++					struct xfs_log_item *,
++					struct list_head *);
  
--	return error;
-+	return xlog_verify_tail(log, *head_blk, *tail_blk);
+ extern kmem_zone_t	*xfs_buf_item_zone;
+ 
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 08cb7d1a4a3a..94915747042c 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -27,6 +27,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_trans_priv.h"
++#include "xfs_buf_item.h"
+ #include "xfs_log.h"
+ 
+ 
+@@ -475,6 +476,23 @@ xfs_inode_item_unpin(
+ 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
  }
  
- /*
++/*
++ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
++ * have been failed during writeback
++ *
++ * This informs the AIL that the inode is already flush locked on the next push,
++ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
++ * dirty data makes it to disk.
++ */
++STATIC void
++xfs_inode_item_error(
++	struct xfs_log_item	*lip,
++	struct xfs_buf		*bp)
++{
++	ASSERT(xfs_isiflocked(INODE_ITEM(lip)->ili_inode));
++	xfs_set_li_failed(lip, bp);
++}
++
+ STATIC uint
+ xfs_inode_item_push(
+ 	struct xfs_log_item	*lip,
+@@ -484,13 +502,28 @@ xfs_inode_item_push(
+ {
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+-	struct xfs_buf		*bp = NULL;
++	struct xfs_buf		*bp = lip->li_buf;
+ 	uint			rval = XFS_ITEM_SUCCESS;
+ 	int			error;
+ 
+ 	if (xfs_ipincount(ip) > 0)
+ 		return XFS_ITEM_PINNED;
+ 
++	/*
++	 * The buffer containing this item failed to be written back
++	 * previously. Resubmit the buffer for IO.
++	 */
++	if (lip->li_flags & XFS_LI_FAILED) {
++		if (!xfs_buf_trylock(bp))
++			return XFS_ITEM_LOCKED;
++
++		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
++			rval = XFS_ITEM_FLUSHING;
++
++		xfs_buf_unlock(bp);
++		return rval;
++	}
++
+ 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
+ 		return XFS_ITEM_LOCKED;
+ 
+@@ -622,7 +655,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
+ 	.iop_unlock	= xfs_inode_item_unlock,
+ 	.iop_committed	= xfs_inode_item_committed,
+ 	.iop_push	= xfs_inode_item_push,
+-	.iop_committing = xfs_inode_item_committing
++	.iop_committing = xfs_inode_item_committing,
++	.iop_error	= xfs_inode_item_error
+ };
+ 
+ 
+@@ -710,7 +744,8 @@ xfs_iflush_done(
+ 		 * the AIL lock.
+ 		 */
+ 		iip = INODE_ITEM(blip);
+-		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
++		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
++		    lip->li_flags & XFS_LI_FAILED)
+ 			need_ail++;
+ 
+ 		blip = next;
+@@ -718,7 +753,8 @@ xfs_iflush_done(
+ 
+ 	/* make sure we capture the state of the initial inode. */
+ 	iip = INODE_ITEM(lip);
+-	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
++	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
++	    lip->li_flags & XFS_LI_FAILED)
+ 		need_ail++;
+ 
+ 	/*
+@@ -739,6 +775,9 @@ xfs_iflush_done(
+ 			if (INODE_ITEM(blip)->ili_logged &&
+ 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
+ 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
++			else {
++				xfs_clear_li_failed(blip);
++			}
+ 		}
+ 
+ 		if (mlip_changed) {
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 22fddad9fe11..0318e92aed66 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -50,6 +50,7 @@ typedef struct xfs_log_item {
+ 	struct xfs_ail			*li_ailp;	/* ptr to AIL */
+ 	uint				li_type;	/* item type */
+ 	uint				li_flags;	/* misc flags */
++	struct xfs_buf			*li_buf;	/* real buffer pointer */
+ 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
+ 	void				(*li_cb)(struct xfs_buf *,
+ 						 struct xfs_log_item *);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 9056c0f34a3c..70f5ab017323 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -687,12 +687,13 @@ xfs_trans_ail_update_bulk(
+ bool
+ xfs_ail_delete_one(
+ 	struct xfs_ail		*ailp,
+-	struct xfs_log_item 	*lip)
++	struct xfs_log_item	*lip)
+ {
+ 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
+ 
+ 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
+ 	xfs_ail_delete(ailp, lip);
++	xfs_clear_li_failed(lip);
+ 	lip->li_flags &= ~XFS_LI_IN_AIL;
+ 	lip->li_lsn = 0;
+ 
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index d91706c56c63..b317a3644c00 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -164,4 +164,35 @@ xfs_trans_ail_copy_lsn(
+ 	*dst = *src;
+ }
+ #endif
++
++static inline void
++xfs_clear_li_failed(
++	struct xfs_log_item	*lip)
++{
++	struct xfs_buf	*bp = lip->li_buf;
++
++	ASSERT(lip->li_flags & XFS_LI_IN_AIL);
++	lockdep_assert_held(&lip->li_ailp->xa_lock);
++
++	if (lip->li_flags & XFS_LI_FAILED) {
++		lip->li_flags &= ~XFS_LI_FAILED;
++		lip->li_buf = NULL;
++		xfs_buf_rele(bp);
++	}
++}
++
++static inline void
++xfs_set_li_failed(
++	struct xfs_log_item	*lip,
++	struct xfs_buf		*bp)
++{
++	lockdep_assert_held(&lip->li_ailp->xa_lock);
++
++	if (!(lip->li_flags & XFS_LI_FAILED)) {
++		xfs_buf_hold(bp);
++		lip->li_flags |= XFS_LI_FAILED;
++		lip->li_buf = bp;
++	}
++}
++
+ #endif	/* __XFS_TRANS_PRIV_H__ */
 -- 
 2.14.1
 
