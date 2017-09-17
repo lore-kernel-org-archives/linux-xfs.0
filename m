@@ -1,64 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59157 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34665 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752089AbdIQVHU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:20 -0400
+        with ESMTP id S1752123AbdIQVHa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:30 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/47] xfs: fix multi-AG deadlock in xfs_bunmapi
-Date: Sun, 17 Sep 2017 14:06:40 -0700
-Message-Id: <20170917210712.10804-16-hch@lst.de>
+Subject: [PATCH 31/47] xfs: stop searching for free slots in an inode chunk when there are none
+Date: Sun, 17 Sep 2017 14:06:56 -0700
+Message-Id: <20170917210712.10804-32-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 5b094d6dac0451ad89b1dc088395c7b399b7e9e8 upstream.
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-Just like in the allocator we must avoid touching multiple AGs out of
-order when freeing blocks, as freeing still locks the AGF and can cause
-the same AB-BA deadlocks as in the allocation path.
+commit 2d32311cf19bfb8c1d2b4601974ddd951f9cfd0b upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Nikolay Borisov <n.borisov.lkml@gmail.com>
+In a filesystem without finobt, the Space manager selects an AG to alloc a new
+inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
+
+When the new inode is in the same AG as its parent, the btree will be searched
+starting on the parent's record, and then retried from the top if no slot is
+available beyond the parent's record.
+
+To exit this loop though, xfs_dialloc_ag_inobt() relies on the fact that the
+btree must have a free slot available, once its callers relied on the
+agi->freecount when deciding how/where to allocate this new inode.
+
+In the case when the agi->freecount is corrupted, showing available inodes in an
+AG, when in fact there is none, this becomes an infinite loop.
+
+Add a way to stop the loop when a free slot is not found in the btree, making
+the function to fall into the whole AG scan which will then, be able to detect
+the corruption and shut the filesystem down.
+
+As pointed by Brian, this might impact performance, giving the fact we
+don't reset the search distance anymore when we reach the end of the
+tree, giving it fewer tries before falling back to the whole AG search, but
+it will only affect searches that start within 10 records to the end of the tree.
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c | 55 +++++++++++++++++++++++-----------------------
+ 1 file changed, 27 insertions(+), 28 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 73571fb4dfed..2ab50caca14c 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5556,6 +5556,7 @@ __xfs_bunmapi(
- 	xfs_fsblock_t		sum;
- 	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
- 	xfs_fileoff_t		max_len;
-+	xfs_agnumber_t		prev_agno = NULLAGNUMBER, agno;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index af6acd5f276c..4536ac588fa3 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1123,6 +1123,7 @@ xfs_dialloc_ag_inobt(
+ 	int			error;
+ 	int			offset;
+ 	int			i, j;
++	int			searchdistance = 10;
  
- 	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
+ 	pag = xfs_perag_get(mp, agno);
  
-@@ -5658,6 +5659,17 @@ __xfs_bunmapi(
- 		ASSERT(ep != NULL);
- 		del = got;
- 		wasdel = isnullstartblock(del.br_startblock);
+@@ -1149,7 +1150,6 @@ xfs_dialloc_ag_inobt(
+ 	if (pagno == agno) {
+ 		int		doneleft;	/* done, to the left */
+ 		int		doneright;	/* done, to the right */
+-		int		searchdistance = 10;
+ 
+ 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
+ 		if (error)
+@@ -1210,21 +1210,9 @@ xfs_dialloc_ag_inobt(
+ 		/*
+ 		 * Loop until we find an inode chunk with a free inode.
+ 		 */
+-		while (!doneleft || !doneright) {
++		while (--searchdistance > 0 && (!doneleft || !doneright)) {
+ 			int	useleft;  /* using left inode chunk this time */
+ 
+-			if (!--searchdistance) {
+-				/*
+-				 * Not in range - save last search
+-				 * location and allocate a new inode
+-				 */
+-				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
+-				pag->pagl_leftrec = trec.ir_startino;
+-				pag->pagl_rightrec = rec.ir_startino;
+-				pag->pagl_pagino = pagino;
+-				goto newino;
+-			}
+-
+ 			/* figure out the closer block if both are valid. */
+ 			if (!doneleft && !doneright) {
+ 				useleft = pagino -
+@@ -1268,26 +1256,37 @@ xfs_dialloc_ag_inobt(
+ 				goto error1;
+ 		}
+ 
+-		/*
+-		 * We've reached the end of the btree. because
+-		 * we are only searching a small chunk of the
+-		 * btree each search, there is obviously free
+-		 * inodes closer to the parent inode than we
+-		 * are now. restart the search again.
+-		 */
+-		pag->pagl_pagino = NULLAGINO;
+-		pag->pagl_leftrec = NULLAGINO;
+-		pag->pagl_rightrec = NULLAGINO;
+-		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
+-		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-		goto restart_pagno;
++		if (searchdistance <= 0) {
++			/*
++			 * Not in range - save last search
++			 * location and allocate a new inode
++			 */
++			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
++			pag->pagl_leftrec = trec.ir_startino;
++			pag->pagl_rightrec = rec.ir_startino;
++			pag->pagl_pagino = pagino;
 +
-+		/*
-+		 * Make sure we don't touch multiple AGF headers out of order
-+		 * in a single transaction, as that could cause AB-BA deadlocks.
-+		 */
-+		if (!wasdel) {
-+			agno = XFS_FSB_TO_AGNO(mp, del.br_startblock);
-+			if (prev_agno != NULLAGNUMBER && prev_agno > agno)
-+				break;
-+			prev_agno = agno;
++		} else {
++			/*
++			 * We've reached the end of the btree. because
++			 * we are only searching a small chunk of the
++			 * btree each search, there is obviously free
++			 * inodes closer to the parent inode than we
++			 * are now. restart the search again.
++			 */
++			pag->pagl_pagino = NULLAGINO;
++			pag->pagl_leftrec = NULLAGINO;
++			pag->pagl_rightrec = NULLAGINO;
++			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
++			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++			goto restart_pagno;
 +		}
- 		if (got.br_startoff < start) {
- 			del.br_startoff = start;
- 			del.br_blockcount -= start - got.br_startoff;
+ 	}
+ 
+ 	/*
+ 	 * In a different AG from the parent.
+ 	 * See if the most recently allocated block has any free.
+ 	 */
+-newino:
+ 	if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
+ 		error = xfs_inobt_lookup(cur, be32_to_cpu(agi->agi_newino),
+ 					 XFS_LOOKUP_EQ, &i);
 -- 
 2.14.1
 
