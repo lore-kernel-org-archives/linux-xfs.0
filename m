@@ -1,64 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57893 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752086AbdIQVHT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:19 -0400
+Received: from verein.lst.de ([213.95.11.211]:49781 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751871AbdIQVom (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 17 Sep 2017 17:44:42 -0400
+Date: Sun, 17 Sep 2017 23:44:41 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/47] xfs: check _alloc_read_agf buffer pointer before using
-Date: Sun, 17 Sep 2017 14:06:38 -0700
-Message-Id: <20170917210712.10804-14-hch@lst.de>
-In-Reply-To: <20170917210712.10804-1-hch@lst.de>
-References: <20170917210712.10804-1-hch@lst.de>
+Subject: Re: [PATCH 1/2] xfs: rewrite getbmap using the xfs_iext_* helpers
+Message-ID: <20170917214441.GA30786@lst.de>
+References: <20170903155140.17256-1-hch@lst.de> <20170911154925.GB13400@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170911154925.GB13400@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Mon, Sep 11, 2017 at 11:49:25AM -0400, Brian Foster wrote:
+> > +		if (!xfs_iext_get_extent(ifp, ++idx, &got)) {
+> > +			xfs_fileoff_t	end = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> > +
+> > +			out[bmv->bmv_entries].bmv_oflags |= BMV_OF_LAST;
+> > +
+> 
+> I'm a little confused about the above bit. Isn't ->bmv_entries already
+> incremented past the last reported extent?
 
-commit 10479e2dea83d4c421ad05dfc55d918aa8dfc0cd upstream.
+Yes, it needs to be bmv->bmv_entries - 1.
 
-In some circumstances, _alloc_read_agf can return an error code of zero
-but also a null AGF buffer pointer.  Check for this and jump out.
+> Further, if there is a hole
+> to be reported, we potentially do that just below (which means that
+> ->bmv_entries may or may not refer to the last reported segment here)..?
 
-Fixes-coverity-id: 1415250
-Fixes-coverity-id: 1415320
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_refcount.c | 4 ++++
- fs/xfs/xfs_reflink.c         | 2 ++
- 2 files changed, 6 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index e17016163542..d71cb63cdea3 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1640,6 +1640,10 @@ xfs_refcount_recover_cow_leftovers(
- 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
- 	if (error)
- 		goto out_trans;
-+	if (!agbp) {
-+		error = -ENOMEM;
-+		goto out_trans;
-+	}
- 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
- 
- 	/* Find all the leftover CoW staging extents. */
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 350fc64441b1..0015c19c7455 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -169,6 +169,8 @@ xfs_reflink_find_shared(
- 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
- 	if (error)
- 		return error;
-+	if (!agbp)
-+		return -ENOMEM;
- 
- 	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
- 
--- 
-2.14.1
-
+We can't reach this code when the previous extent was a hole.  For the
+whole file hole case we jump straight to out_unlock_ilock after
+filling the hole, for the inbetween extents hole case we break out
+of the loop when running out of space before filling the second extent,
+and the end of file hole case is just below setting BMV_OF_LAST.
