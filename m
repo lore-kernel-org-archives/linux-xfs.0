@@ -1,149 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34665 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:48443 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752123AbdIQVHa (ORCPT
+        with ESMTP id S1752118AbdIQVHa (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:30 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 31/47] xfs: stop searching for free slots in an inode chunk when there are none
-Date: Sun, 17 Sep 2017 14:06:56 -0700
-Message-Id: <20170917210712.10804-32-hch@lst.de>
+Subject: [PATCH 30/47] xfs: add log recovery tracepoint for head/tail
+Date: Sun, 17 Sep 2017 14:06:55 -0700
+Message-Id: <20170917210712.10804-31-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 2d32311cf19bfb8c1d2b4601974ddd951f9cfd0b upstream.
+commit e67d3d4246e5fbb0c7c700426d11241ca9c6f473 upstream.
 
-In a filesystem without finobt, the Space manager selects an AG to alloc a new
-inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
+Torn write detection and tail overwrite detection can shift the log
+head and tail respectively in the event of CRC mismatch or
+corruption errors. Add a high-level log recovery tracepoint to dump
+the final log head/tail and make those values easily attainable in
+debug/diagnostic situations.
 
-When the new inode is in the same AG as its parent, the btree will be searched
-starting on the parent's record, and then retried from the top if no slot is
-available beyond the parent's record.
-
-To exit this loop though, xfs_dialloc_ag_inobt() relies on the fact that the
-btree must have a free slot available, once its callers relied on the
-agi->freecount when deciding how/where to allocate this new inode.
-
-In the case when the agi->freecount is corrupted, showing available inodes in an
-AG, when in fact there is none, this becomes an infinite loop.
-
-Add a way to stop the loop when a free slot is not found in the btree, making
-the function to fall into the whole AG scan which will then, be able to detect
-the corruption and shut the filesystem down.
-
-As pointed by Brian, this might impact performance, giving the fact we
-don't reset the search distance anymore when we reach the end of the
-tree, giving it fewer tries before falling back to the whole AG search, but
-it will only affect searches that start within 10 records to the end of the tree.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 55 +++++++++++++++++++++++-----------------------
- 1 file changed, 27 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_log_recover.c |  2 ++
+ fs/xfs/xfs_trace.h       | 18 ++++++++++++++++++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index af6acd5f276c..4536ac588fa3 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1123,6 +1123,7 @@ xfs_dialloc_ag_inobt(
- 	int			error;
- 	int			offset;
- 	int			i, j;
-+	int			searchdistance = 10;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 83e90bf1899f..edd849b8f14d 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -5596,6 +5596,8 @@ xlog_do_recover(
+ 	xfs_buf_t	*bp;
+ 	xfs_sb_t	*sbp;
  
- 	pag = xfs_perag_get(mp, agno);
- 
-@@ -1149,7 +1150,6 @@ xfs_dialloc_ag_inobt(
- 	if (pagno == agno) {
- 		int		doneleft;	/* done, to the left */
- 		int		doneright;	/* done, to the right */
--		int		searchdistance = 10;
- 
- 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
- 		if (error)
-@@ -1210,21 +1210,9 @@ xfs_dialloc_ag_inobt(
- 		/*
- 		 * Loop until we find an inode chunk with a free inode.
- 		 */
--		while (!doneleft || !doneright) {
-+		while (--searchdistance > 0 && (!doneleft || !doneright)) {
- 			int	useleft;  /* using left inode chunk this time */
- 
--			if (!--searchdistance) {
--				/*
--				 * Not in range - save last search
--				 * location and allocate a new inode
--				 */
--				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--				pag->pagl_leftrec = trec.ir_startino;
--				pag->pagl_rightrec = rec.ir_startino;
--				pag->pagl_pagino = pagino;
--				goto newino;
--			}
--
- 			/* figure out the closer block if both are valid. */
- 			if (!doneleft && !doneright) {
- 				useleft = pagino -
-@@ -1268,26 +1256,37 @@ xfs_dialloc_ag_inobt(
- 				goto error1;
- 		}
- 
--		/*
--		 * We've reached the end of the btree. because
--		 * we are only searching a small chunk of the
--		 * btree each search, there is obviously free
--		 * inodes closer to the parent inode than we
--		 * are now. restart the search again.
--		 */
--		pag->pagl_pagino = NULLAGINO;
--		pag->pagl_leftrec = NULLAGINO;
--		pag->pagl_rightrec = NULLAGINO;
--		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
--		goto restart_pagno;
-+		if (searchdistance <= 0) {
-+			/*
-+			 * Not in range - save last search
-+			 * location and allocate a new inode
-+			 */
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			pag->pagl_leftrec = trec.ir_startino;
-+			pag->pagl_rightrec = rec.ir_startino;
-+			pag->pagl_pagino = pagino;
++	trace_xfs_log_recover(log, head_blk, tail_blk);
 +
-+		} else {
-+			/*
-+			 * We've reached the end of the btree. because
-+			 * we are only searching a small chunk of the
-+			 * btree each search, there is obviously free
-+			 * inodes closer to the parent inode than we
-+			 * are now. restart the search again.
-+			 */
-+			pag->pagl_pagino = NULLAGINO;
-+			pag->pagl_leftrec = NULLAGINO;
-+			pag->pagl_rightrec = NULLAGINO;
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+			goto restart_pagno;
-+		}
- 	}
- 
  	/*
- 	 * In a different AG from the parent.
- 	 * See if the most recently allocated block has any free.
+ 	 * First replay the images in the log.
  	 */
--newino:
- 	if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
- 		error = xfs_inobt_lookup(cur, be32_to_cpu(agi->agi_newino),
- 					 XFS_LOOKUP_EQ, &i);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 2df73f3a73c1..6221c3818c6e 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1991,6 +1991,24 @@ DEFINE_EVENT(xfs_swap_extent_class, name, \
+ DEFINE_SWAPEXT_EVENT(xfs_swap_extent_before);
+ DEFINE_SWAPEXT_EVENT(xfs_swap_extent_after);
+ 
++TRACE_EVENT(xfs_log_recover,
++	TP_PROTO(struct xlog *log, xfs_daddr_t headblk, xfs_daddr_t tailblk),
++	TP_ARGS(log, headblk, tailblk),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_daddr_t, headblk)
++		__field(xfs_daddr_t, tailblk)
++	),
++	TP_fast_assign(
++		__entry->dev = log->l_mp->m_super->s_dev;
++		__entry->headblk = headblk;
++		__entry->tailblk = tailblk;
++	),
++	TP_printk("dev %d:%d headblk 0x%llx tailblk 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->headblk,
++		  __entry->tailblk)
++)
++
+ TRACE_EVENT(xfs_log_recover_record,
+ 	TP_PROTO(struct xlog *log, struct xlog_rec_header *rhead, int pass),
+ 	TP_ARGS(log, rhead, pass),
 -- 
 2.14.1
 
