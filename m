@@ -1,112 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51030 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:46156 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752028AbdIQVGn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:43 -0400
+        with ESMTP id S1751830AbdIQVGh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:06:37 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/25] xfs: disallow marking previously dirty buffers as ordered
-Date: Sun, 17 Sep 2017 14:06:25 -0700
-Message-Id: <20170917210631.10725-20-hch@lst.de>
+Subject: [PATCH 10/25] xfs: evict all inodes involved with log redo item
+Date: Sun, 17 Sep 2017 14:06:16 -0700
+Message-Id: <20170917210631.10725-11-hch@lst.de>
 In-Reply-To: <20170917210631.10725-1-hch@lst.de>
 References: <20170917210631.10725-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, viro@ZenIV.linux.org.uk
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit a5814bceea48ee1c57c4db2bd54b0c0246daf54a upstream.
+commit 799ea9e9c59949008770aab4e1da87f10e99dbe4 upstream.
 
-Ordered buffers are used in situations where the buffer is not
-physically logged but must pass through the transaction/logging
-pipeline for a particular transaction. As a result, ordered buffers
-are not unpinned and written back until the transaction commits to
-the log. Ordered buffers have a strict requirement that the target
-buffer must not be currently dirty and resident in the log pipeline
-at the time it is marked ordered. If a dirty+ordered buffer is
-committed, the buffer is reinserted to the AIL but not physically
-relogged at the LSN of the associated checkpoint. The buffer log
-item is assigned the LSN of the latest checkpoint and the AIL
-effectively releases the previously logged buffer content from the
-active log before the buffer has been written back. If the tail
-pushes forward and a filesystem crash occurs while in this state, an
-inconsistent filesystem could result.
+When we introduced the bmap redo log items, we set MS_ACTIVE on the
+mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
+from being truncated prematurely during log recovery.  This also had the
+effect of putting linked inodes on the lru instead of evicting them.
 
-It is currently the caller responsibility to ensure an ordered
-buffer is not already dirty from a previous modification. This is
-unclear and error prone when not used in situations where it is
-guaranteed a buffer has not been previously modified (such as new
-metadata allocations).
+Unfortunately, we neglected to find all those unreferenced lru inodes
+and evict them after finishing log recovery, which means that we leak
+them if anything goes wrong in the rest of xfs_mountfs, because the lru
+is only cleaned out on unmount.
 
-To facilitate general purpose use of ordered buffers, update
-xfs_trans_ordered_buf() to conditionally order the buffer based on
-state of the log item and return the status of the result. If the
-bli is dirty, do not order the buffer and return false. The caller
-must either physically log the buffer (having acquired the
-appropriate log reservation) or push it from the AIL to clean it
-before it can be marked ordered in the current transaction.
+Therefore, evict unreferenced inodes in the lru list immediately
+after clearing MS_ACTIVE.
 
-Note that ordered buffers are currently only used in two situations:
-1.) inode chunk allocation where previously logged buffers are not
-possible and 2.) extent swap which will be updated to handle ordered
-buffer failures in a separate patch.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: viro@ZenIV.linux.org.uk
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans.h     | 2 +-
- fs/xfs/xfs_trans_buf.c | 7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ fs/inode.c         |  1 +
+ fs/internal.h      |  1 -
+ fs/xfs/xfs_log.c   | 12 ++++++++++++
+ include/linux/fs.h |  1 +
+ 4 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index b3632ebe9d9d..4709823e04b9 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -212,7 +212,7 @@ void		xfs_trans_bhold_release(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_binval(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
--void		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
-+bool		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 3089e8015369..3ba7a96a8abd 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -724,7 +724,7 @@ xfs_trans_inode_alloc_buf(
-  * transactions rather than the physical changes we make to the buffer without
-  * changing writeback ordering constraints of metadata buffers.
-  */
--void
-+bool
- xfs_trans_ordered_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
-@@ -734,7 +734,9 @@ xfs_trans_ordered_buf(
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
--	ASSERT(!xfs_buf_item_dirty_format(bip));
-+
-+	if (xfs_buf_item_dirty_format(bip))
-+		return false;
+diff --git a/fs/inode.c b/fs/inode.c
+index 50370599e371..6a1626e0edaf 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -637,6 +637,7 @@ void evict_inodes(struct super_block *sb)
  
- 	bip->bli_flags |= XFS_BLI_ORDERED;
- 	trace_xfs_buf_item_ordered(bip);
-@@ -744,6 +746,7 @@ xfs_trans_ordered_buf(
- 	 * to be marked dirty and that it has been logged.
- 	 */
- 	xfs_trans_dirty_buf(tp, bp);
-+	return true;
+ 	dispose_list(&dispose);
  }
++EXPORT_SYMBOL_GPL(evict_inodes);
+ 
+ /**
+  * invalidate_inodes	- attempt to free all inodes on a superblock
+diff --git a/fs/internal.h b/fs/internal.h
+index 9676fe11c093..fedfe94d84ba 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -132,7 +132,6 @@ static inline bool atime_needs_update_rcu(const struct path *path,
+ extern void inode_io_list_del(struct inode *inode);
+ 
+ extern long get_nr_dirty_inodes(void);
+-extern void evict_inodes(struct super_block *);
+ extern int invalidate_inodes(struct super_block *, bool);
  
  /*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f467f1230444..bcb2f860e508 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -761,12 +761,24 @@ xfs_log_mount_finish(
+ 	 * inodes.  Turn it off immediately after recovery finishes
+ 	 * so that we don't leak the quota inodes if subsequent mount
+ 	 * activities fail.
++	 *
++	 * We let all inodes involved in redo item processing end up on
++	 * the LRU instead of being evicted immediately so that if we do
++	 * something to an unlinked inode, the irele won't cause
++	 * premature truncation and freeing of the inode, which results
++	 * in log recovery failure.  We have to evict the unreferenced
++	 * lru inodes after clearing MS_ACTIVE because we don't
++	 * otherwise clean up the lru if there's a subsequent failure in
++	 * xfs_mountfs, which leads to us leaking the inodes if nothing
++	 * else (e.g. quotacheck) references the inodes before the
++	 * mount failure occurs.
+ 	 */
+ 	mp->m_super->s_flags |= MS_ACTIVE;
+ 	error = xlog_recover_finish(mp->m_log);
+ 	if (!error)
+ 		xfs_log_work_queue(mp);
+ 	mp->m_super->s_flags &= ~MS_ACTIVE;
++	evict_inodes(mp->m_super);
+ 
+ 	if (readonly)
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index cbfe127bccf8..d0c0ca8ea8c1 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2831,6 +2831,7 @@ static inline void lockdep_annotate_inode_mutex_key(struct inode *inode) { };
+ #endif
+ extern void unlock_new_inode(struct inode *);
+ extern unsigned int get_next_ino(void);
++extern void evict_inodes(struct super_block *sb);
+ 
+ extern void __iget(struct inode * inode);
+ extern void iget_failed(struct inode *);
 -- 
 2.14.1
 
