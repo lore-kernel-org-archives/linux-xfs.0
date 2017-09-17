@@ -1,60 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54712 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:51981 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752098AbdIQVHX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:23 -0400
+        with ESMTP id S1751576AbdIQVHV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:21 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/47] iomap: fix integer truncation issues in the zeroing and dirtying helpers
-Date: Sun, 17 Sep 2017 14:06:45 -0700
-Message-Id: <20170917210712.10804-21-hch@lst.de>
+Subject: [PATCH 17/47] xfs: fix inobt inode allocation search optimization
+Date: Sun, 17 Sep 2017 14:06:42 -0700
+Message-Id: <20170917210712.10804-18-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit e28ae8e428fefe2facd72cea9f29906ecb9c861d upstream.
+From: Omar Sandoval <osandov@fb.com>
 
-Fix the min_t calls in the zeroing and dirtying helpers to perform the
-comparisms on 64-bit types, which prevents them from incorrectly
-being truncated, and larger zeroing operations being stuck in a never
-ending loop.
+commit c44245b3d5435f533ca8346ece65918f84c057f9 upstream.
 
-Special thanks to Markus Stockhausen for spotting the bug.
+When we try to allocate a free inode by searching the inobt, we try to
+find the inode nearest the parent inode by searching chunks both left
+and right of the chunk containing the parent. As an optimization, we
+cache the leftmost and rightmost records that we previously searched; if
+we do another allocation with the same parent inode, we'll pick up the
+search where it last left off.
 
-Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
-Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+There's a bug in the case where we found a free inode to the left of the
+parent's chunk: we need to update the cached left and right records, but
+because we already reassigned the right record to point to the left, we
+end up assigning the left record to both the cached left and right
+records.
+
+This isn't a correctness problem strictly, but it can result in the next
+allocation rechecking chunks unnecessarily or allocating inodes further
+away from the parent than it needs to. Fix it by swapping the record
+pointer after we update the cached left and right records.
+
+Fixes: bd169565993b ("xfs: speed up free inode search")
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 798c291cbc75..a49db8806a3a 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -281,7 +281,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		unsigned long bytes;	/* Bytes to write to page */
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index a2818f6e8598..af6acd5f276c 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1236,13 +1236,13 @@ xfs_dialloc_ag_inobt(
  
- 		offset = (pos & (PAGE_SIZE - 1));
--		bytes = min_t(unsigned long, PAGE_SIZE - offset, length);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, length);
+ 			/* free inodes to the left? */
+ 			if (useleft && trec.ir_freecount) {
+-				rec = trec;
+ 				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 				cur = tcur;
  
- 		rpage = __iomap_read_page(inode, pos);
- 		if (IS_ERR(rpage))
-@@ -376,7 +376,7 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 		unsigned offset, bytes;
+ 				pag->pagl_leftrec = trec.ir_startino;
+ 				pag->pagl_rightrec = rec.ir_startino;
+ 				pag->pagl_pagino = pagino;
++				rec = trec;
+ 				goto alloc_inode;
+ 			}
  
- 		offset = pos & (PAGE_SIZE - 1); /* Within page */
--		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
- 
- 		if (IS_DAX(inode))
- 			status = iomap_dax_zero(pos, offset, bytes, iomap);
 -- 
 2.14.1
 
