@@ -1,69 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51068 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:48980 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753001AbdIRMon (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Sep 2017 08:44:43 -0400
-Date: Mon, 18 Sep 2017 08:44:42 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: Output warning message when discard option was
- enabled even though the device does not support discard
-Message-ID: <20170918124440.GA29965@bfoster.bfoster>
-References: <20170917073252.15432-1-nakayamakenjiro@gmail.com>
+        id S1751651AbdIQRjr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 17 Sep 2017 13:39:47 -0400
+Date: Sun, 17 Sep 2017 19:39:45 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v4 2/3] mm: introduce MAP_VALIDATE a mechanism for
+        adding new mmap flags
+Message-ID: <20170917173945.GA22200@lst.de>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com> <150277753660.23945.11500026891611444016.stgit@dwillia2-desk3.amr.corp.intel.com> <20170815122701.GF27505@quack2.suse.cz> <CAA9_cmc0vejxCsc1NWp5b4C0CSsO5xetF3t6LCoCuEYB6yPiwQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170917073252.15432-1-nakayamakenjiro@gmail.com>
+In-Reply-To: <CAA9_cmc0vejxCsc1NWp5b4C0CSsO5xetF3t6LCoCuEYB6yPiwQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-On Sun, Sep 17, 2017 at 04:32:52PM +0900, Kenjiro Nakayama wrote:
-> In order to using discard function, it is necessary that not only xfs
-> is mounted with discard option, but also the discard function is
-> supported by the device. Current code doesn't output any message when
-> users mount with discard option on unsupported device, so it is
-> difficult to notice that it was not enabled actually.
-> 
-> This patch adds the warning message to notice that discard option is
-> not enabled due to unsupported device when the filesystem is mounted.
-> 
-> Signed-off-by: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
-> ---
->  fs/xfs/xfs_super.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index c996f4ae4a5f..60397f9cc786 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -407,6 +407,13 @@ xfs_parseargs(
->  		return -EINVAL;
->  	}
->  #endif
-> +	if (mp->m_flags & XFS_MOUNT_DISCARD) {
-> +		struct request_queue *q = bdev_get_queue(sb->s_bdev);
-> +
-> +		if (!blk_queue_discard(q))
-> +			xfs_warn(mp, "mounting with \"discard\" option, but "
-> +					"the device does not support discard");
-> +	}
+On Sat, Sep 16, 2017 at 08:44:14PM -0700, Dan Williams wrote:
+> So it wasn't all that easy, and Linus declined to take it. I think we
+> should add a new ->mmap_validate() file operation and save the
+> tree-wide cleanup until later.
 
-Seems reasonable to me. Though perhaps we should move this into
-xfs_fs_fill_super() (where we have a similar check for DAX support of
-the underlying device) and also clear the discard flag so we don't
-continue to queue discards that won't ever succeed.
-
-Brian
-
->  
->  	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
->  		xfs_warn(mp, "sunit and swidth must be specified together");
-> -- 
-> 2.13.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note that we already have a mmap_capabilities callout for nommu,
+I wonder if we could generalize that.
