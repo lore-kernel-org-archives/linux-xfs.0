@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57451 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:50360 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752005AbdIQVHe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:34 -0400
+        with ESMTP id S1752133AbdIQVHf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:35 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 39/47] xfs: skip bmbt block ino validation during owner change
-Date: Sun, 17 Sep 2017 14:07:04 -0700
-Message-Id: <20170917210712.10804-40-hch@lst.de>
+Subject: [PATCH 41/47] xfs: disallow marking previously dirty buffers as ordered
+Date: Sun, 17 Sep 2017 14:07:06 -0700
+Message-Id: <20170917210712.10804-42-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,81 +17,96 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 99c794c639a65cc7b74f30a674048fd100fe9ac8 upstream.
+commit a5814bceea48ee1c57c4db2bd54b0c0246daf54a upstream.
 
-Extent swap uses xfs_btree_visit_blocks() to fix up bmbt block
-owners on v5 (!rmapbt) filesystems. The bmbt scan uses
-xfs_btree_lookup_get_block() to read bmbt blocks which verifies the
-current owner of the block against the parent inode of the bmbt.
-This works during extent swap because the bmbt owners are updated to
-the opposite inode number before the inode extent forks are swapped.
+Ordered buffers are used in situations where the buffer is not
+physically logged but must pass through the transaction/logging
+pipeline for a particular transaction. As a result, ordered buffers
+are not unpinned and written back until the transaction commits to
+the log. Ordered buffers have a strict requirement that the target
+buffer must not be currently dirty and resident in the log pipeline
+at the time it is marked ordered. If a dirty+ordered buffer is
+committed, the buffer is reinserted to the AIL but not physically
+relogged at the LSN of the associated checkpoint. The buffer log
+item is assigned the LSN of the latest checkpoint and the AIL
+effectively releases the previously logged buffer content from the
+active log before the buffer has been written back. If the tail
+pushes forward and a filesystem crash occurs while in this state, an
+inconsistent filesystem could result.
 
-The modified bmbt blocks are marked as ordered buffers which allows
-everything to commit in a single transaction. If the transaction
-commits to the log and the system crashes such that recovery of the
-extent swap is required, log recovery restarts the bmbt scan to fix
-up any bmbt blocks that may have not been written back before the
-crash. The log recovery bmbt scan occurs after the inode forks have
-been swapped, however. This causes the bmbt block owner verification
-to fail, leads to log recovery failure and requires xfs_repair to
-zap the log to recover.
+It is currently the caller responsibility to ensure an ordered
+buffer is not already dirty from a previous modification. This is
+unclear and error prone when not used in situations where it is
+guaranteed a buffer has not been previously modified (such as new
+metadata allocations).
 
-Define a new invalid inode owner flag to inform the btree block
-lookup mechanism that the current inode may be invalid with respect
-to the current owner of the bmbt block. Set this flag on the cursor
-used for change owner scans to allow this operation to work at
-runtime and during log recovery.
+To facilitate general purpose use of ordered buffers, update
+xfs_trans_ordered_buf() to conditionally order the buffer based on
+state of the log item and return the status of the result. If the
+bli is dirty, do not order the buffer and return false. The caller
+must either physically log the buffer (having acquired the
+appropriate log reservation) or push it from the AIL to clean it
+before it can be marked ordered in the current transaction.
+
+Note that ordered buffers are currently only used in two situations:
+1.) inode chunk allocation where previously logged buffers are not
+possible and 2.) extent swap which will be updated to handle ordered
+buffer failures in a separate patch.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Fixes: bb3be7e7c ("xfs: check for bogus values in btree block headers")
-Cc: stable@vger.kernel.org
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.c | 1 +
- fs/xfs/libxfs/xfs_btree.c      | 1 +
- fs/xfs/libxfs/xfs_btree.h      | 3 ++-
- 3 files changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_trans.h     | 2 +-
+ fs/xfs/xfs_trans_buf.c | 7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 5c3918678bb6..9968a746c649 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -888,6 +888,7 @@ xfs_bmbt_change_owner(
- 	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
- 	if (!cur)
- 		return -ENOMEM;
-+	cur->bc_private.b.flags |= XFS_BTCUR_BPRV_INVALID_OWNER;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 40555bcaa277..5669cf00bae0 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -217,7 +217,7 @@ void		xfs_trans_bhold_release(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_binval(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
+-void		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
++bool		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 3089e8015369..3ba7a96a8abd 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -724,7 +724,7 @@ xfs_trans_inode_alloc_buf(
+  * transactions rather than the physical changes we make to the buffer without
+  * changing writeback ordering constraints of metadata buffers.
+  */
+-void
++bool
+ xfs_trans_ordered_buf(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp)
+@@ -734,7 +734,9 @@ xfs_trans_ordered_buf(
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+-	ASSERT(!xfs_buf_item_dirty_format(bip));
++
++	if (xfs_buf_item_dirty_format(bip))
++		return false;
  
- 	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
- 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 69c3f428b582..1df747fadc3a 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1774,6 +1774,7 @@ xfs_btree_lookup_get_block(
+ 	bip->bli_flags |= XFS_BLI_ORDERED;
+ 	trace_xfs_buf_item_ordered(bip);
+@@ -744,6 +746,7 @@ xfs_trans_ordered_buf(
+ 	 * to be marked dirty and that it has been logged.
+ 	 */
+ 	xfs_trans_dirty_buf(tp, bp);
++	return true;
+ }
  
- 	/* Check the inode owner since the verifiers don't. */
- 	if (xfs_sb_version_hascrc(&cur->bc_mp->m_sb) &&
-+	    !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_INVALID_OWNER) &&
- 	    (cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
- 	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
- 			cur->bc_private.b.ip->i_ino)
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 3b0fc1afada5..33c7be2357b9 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -268,7 +268,8 @@ typedef struct xfs_btree_cur
- 			short		forksize;	/* fork's inode space */
- 			char		whichfork;	/* data or attr fork */
- 			char		flags;		/* flags */
--#define	XFS_BTCUR_BPRV_WASDEL	1			/* was delayed */
-+#define	XFS_BTCUR_BPRV_WASDEL		(1<<0)		/* was delayed */
-+#define	XFS_BTCUR_BPRV_INVALID_OWNER	(1<<1)		/* for ext swap */
- 		} b;
- 	}		bc_private;	/* per-btree type data */
- } xfs_btree_cur_t;
+ /*
 -- 
 2.14.1
 
