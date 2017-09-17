@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55391 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39469 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752075AbdIQVHQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:16 -0400
+        with ESMTP id S1752067AbdIQVHU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2017 17:07:20 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/47] xfs: free uncommitted transactions during log recovery
-Date: Sun, 17 Sep 2017 14:06:33 -0700
-Message-Id: <20170917210712.10804-9-hch@lst.de>
+Subject: [PATCH 14/47] xfs: fix quotacheck dquot id overflow infinite loop
+Date: Sun, 17 Sep 2017 14:06:39 -0700
+Message-Id: <20170917210712.10804-15-hch@lst.de>
 In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 References: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,100 +17,37 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 39775431f82f890f4aaa08860a30883d081bffc7 upstream.
+commit cfaf2d034360166e569a4929dd83ae9698bed856 upstream.
 
-Log recovery allocates in-core transaction and member item data
-structures on-demand as it processes the on-disk log. Transactions
-are allocated on first encounter on-disk and stored in a hash table
-structure where they are easily accessible for subsequent lookups.
-Transaction items are also allocated on demand and are attached to
-the associated transactions.
+If a dquot has an id of U32_MAX, the next lookup index increment
+overflows the uint32_t back to 0. This starts the lookup sequence
+over from the beginning, repeats indefinitely and results in a
+livelock.
 
-When a commit record is encountered in the log, the transaction is
-committed to the fs and the in-core structures are freed. If a
-filesystem crashes or shuts down before all in-core log buffers are
-flushed to the log, however, not all transactions may have commit
-records in the log. As expected, the modifications in such an
-incomplete transaction are not replayed to the fs. The in-core data
-structures for the partial transaction are never freed, however,
-resulting in a memory leak.
-
-Update xlog_do_recovery_pass() to first correctly initialize the
-hash table array so empty lists can be distinguished from populated
-lists on function exit. Update xlog_recover_free_trans() to always
-remove the transaction from the list prior to freeing the associated
-memory. Finally, walk the hash table of transaction lists as the
-last step before it goes out of scope and free any transactions that
-may remain on the lists. This prevents a memory leak of partial
-transactions in the log.
+Update xfs_qm_dquot_walk() to explicitly check for the lookup
+overflow and exit the loop.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_recover.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_qm.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9b3d7c76915d..e06aa2827ecb 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4152,7 +4152,7 @@ xlog_recover_commit_trans(
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 8068867a8183..1fdd3face2d9 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -111,6 +111,9 @@ xfs_qm_dquot_walk(
+ 			skipped = 0;
+ 			break;
+ 		}
++		/* we're done if id overflows back to zero */
++		if (!next_index)
++			break;
+ 	}
  
- 	#define XLOG_RECOVER_COMMIT_QUEUE_MAX 100
- 
--	hlist_del(&trans->r_list);
-+	hlist_del_init(&trans->r_list);
- 
- 	error = xlog_recover_reorder_trans(log, trans, pass);
- 	if (error)
-@@ -4354,6 +4354,8 @@ xlog_recover_free_trans(
- 	xlog_recover_item_t	*item, *n;
- 	int			i;
- 
-+	hlist_del_init(&trans->r_list);
-+
- 	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
- 		/* Free the regions in the item. */
- 		list_del(&item->ri_list);
-@@ -5222,12 +5224,16 @@ xlog_do_recovery_pass(
- 	int			error2 = 0;
- 	int			bblks, split_bblks;
- 	int			hblks, split_hblks, wrapped_hblks;
-+	int			i;
- 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
- 	LIST_HEAD		(buffer_list);
- 
- 	ASSERT(head_blk != tail_blk);
- 	rhead_blk = 0;
- 
-+	for (i = 0; i < XLOG_RHASH_SIZE; i++)
-+		INIT_HLIST_HEAD(&rhash[i]);
-+
- 	/*
- 	 * Read the header of the tail block and get the iclog buffer size from
- 	 * h_size.  Use this to tell how many sectors make up the log header.
-@@ -5464,6 +5470,19 @@ xlog_do_recovery_pass(
- 	if (error && first_bad)
- 		*first_bad = rhead_blk;
- 
-+	/*
-+	 * Transactions are freed at commit time but transactions without commit
-+	 * records on disk are never committed. Free any that may be left in the
-+	 * hash table.
-+	 */
-+	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
-+		struct hlist_node	*tmp;
-+		struct xlog_recover	*trans;
-+
-+		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
-+			xlog_recover_free_trans(trans);
-+	}
-+
- 	return error ? error : error2;
- }
- 
+ 	if (skipped) {
 -- 
 2.14.1
 
