@@ -1,109 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59209 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753358AbdIRSfj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 14:35:39 -0400
-Date: Mon, 18 Sep 2017 20:35:49 +0200
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Message-ID: <20170918183549.GA32669@kroah.com>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
- <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
- <20170918171144.GD6540@magnolia>
- <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:55020 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752344AbdIRP1I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Sep 2017 11:27:08 -0400
+Date: Mon, 18 Sep 2017 17:27:06 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [linux-next][XFS][trinity] WARNING: CPU: 32 PID: 31369 at
+        fs/iomap.c:993
+Message-ID: <20170918152706.GA11482@lst.de>
+References: <1505746565.6990.18.camel@abdul.in.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+In-Reply-To: <1505746565.6990.18.camel@abdul.in.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, chandan <chandan@linux.vnet.ibm.com>
 
-On Mon, Sep 18, 2017 at 09:00:30PM +0300, Amir Goldstein wrote:
-> On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
-> >> On Wed, Aug 30, 2017 at 4:38 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> >> > When calling into _xfs_log_force{,_lsn}() with a pointer
-> >> > to log_flushed variable, log_flushed will be set to 1 if:
-> >> > 1. xlog_sync() is called to flush the active log buffer
-> >> > AND/OR
-> >> > 2. xlog_wait() is called to wait on a syncing log buffers
-> >> >
-> >> > xfs_file_fsync() checks the value of log_flushed after
-> >> > _xfs_log_force_lsn() call to optimize away an explicit
-> >> > PREFLUSH request to the data block device after writing
-> >> > out all the file's pages to disk.
-> >> >
-> >> > This optimization is incorrect in the following sequence of events:
-> >> >
-> >> >  Task A                    Task B
-> >> >  -------------------------------------------------------
-> >> >  xfs_file_fsync()
-> >> >    _xfs_log_force_lsn()
-> >> >      xlog_sync()
-> >> >         [submit PREFLUSH]
-> >> >                            xfs_file_fsync()
-> >> >                              file_write_and_wait_range()
-> >> >                                [submit WRITE X]
-> >> >                                [endio  WRITE X]
-> >> >                              _xfs_log_force_lsn()
-> >> >                                xlog_wait()
-> >> >         [endio  PREFLUSH]
-> >> >
-> >> > The write X is not guarantied to be on persistent storage
-> >> > when PREFLUSH request in completed, because write A was submitted
-> >> > after the PREFLUSH request, but xfs_file_fsync() of task A will
-> >> > be notified of log_flushed=1 and will skip explicit flush.
-> >> >
-> >> > If the system crashes after fsync of task A, write X may not be
-> >> > present on disk after reboot.
-> >> >
-> >> > This bug was discovered and demonstrated using Josef Bacik's
-> >> > dm-log-writes target, which can be used to record block io operations
-> >> > and then replay a subset of these operations onto the target device.
-> >> > The test goes something like this:
-> >> > - Use fsx to execute ops of a file and record ops on log device
-> >> > - Every now and then fsync the file, store md5 of file and mark
-> >> >   the location in the log
-> >> > - Then replay log onto device for each mark, mount fs and compare
-> >> >   md5 of file to stored value
-> >> >
-> >> > Cc: Christoph Hellwig <hch@lst.de>
-> >> > Cc: Josef Bacik <jbacik@fb.com>
-> >> > Cc: <stable@vger.kernel.org>
-> >> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> >> > ---
-> >> >
-> >> > Christoph, Dave,
-> >> >
-> >> > It's hard to believe, but I think the reported bug has been around
-> >> > since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
-> >> > not try to test old kernels.
-> >>
-> >> Forgot to tag commit message with:
-> >> Fixes: f538d4da8d52 ("[XFS] write barrier support")
-> >>
-> >> Maybe the tag could be added when applying to recent stables,
-> >> so distros and older downstream stables can see the tag.
-> >>
-> >> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
-> >> if possible data loss bug should also be disclosed in some distros forum?
-> >> I bet some users would care more about the latter than the former.
-> >> Coincidentally, both data loss and security bugs fix the same commit..
-> >
-> > Yes the the patch ought to get sent on to stable w/ fixes tag.  One
-> > would hope that the distros will pick up the stable fixes from there.
+On Mon, Sep 18, 2017 at 08:26:05PM +0530, Abdul Haleem wrote:
+> Hi,
 > 
+> A warning is triggered from:
 > 
-> Greg, for your consideration, please add
->  Fixes: f538d4da8d52 ("[XFS] write barrier support")
-> If not pushed yet.
+> file fs/iomap.c in function iomap_dio_rw
+> 
+>     if (ret)
+>         goto out_free_dio;
+> 
+>     ret = invalidate_inode_pages2_range(mapping,
+>             start >> PAGE_SHIFT, end >> PAGE_SHIFT);
+> >>  WARN_ON_ONCE(ret);
+>     ret = 0;
+> 
+>     inode_dio_begin(inode);
 
-Add it to what?
-
-totally confused,
-
-greg k-h
+This is expected and an indication of a problematic workload - which
+may be triggered by a fuzzer.
