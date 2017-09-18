@@ -1,47 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37080 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbdIRRSv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Sep 2017 13:18:51 -0400
-Subject: Re: [PATCH] xfs_repair: handle missing extent states
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <20170918163944.GC6540@magnolia>
- <f19ea1b1-c86c-d745-b725-ac3befa5e0a3@sandeen.net>
-Message-ID: <ffab0b07-0bdb-8514-dd20-2c1136ff5580@sandeen.net>
-Date: Mon, 18 Sep 2017 12:18:50 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:23626 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752595AbdIRSyH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 14:54:07 -0400
+Date: Mon, 18 Sep 2017 11:54:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs-quota reports used space incorrectly
+Message-ID: <20170918185402.GN6540@magnolia>
+References: <CAF5xGhpC_k6eexQ_DQU1g5-bF5sdYmdw4EOPtKxW9UrqFJtVWA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <f19ea1b1-c86c-d745-b725-ac3befa5e0a3@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAF5xGhpC_k6eexQ_DQU1g5-bF5sdYmdw4EOPtKxW9UrqFJtVWA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, amir73il@gmail.com
+To: peykasa Admin <peykasa.xfs@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 9/18/17 12:16 PM, Eric Sandeen wrote:
->> @@ -812,6 +813,12 @@ _("%s fork in %s inode %" PRIu64 " claims used block %" PRIu64 "\n"),
->>  					forkname, ftype, ino, b);
->>  				goto done;
->>  
->> +			case XR_E_COW:
->> +				do_warn(
->> +_("%s fork in %s inode %" PRIu64 " claims CoW block %" PRIu64 "\n"),
->> +					forkname, ftype, ino, b);
->> +				goto done;
->> +
-> why do cow blocks get a special case and custom warning vs the above cases
-> that just say "metadata?"
+On Tue, Sep 12, 2017 at 04:30:33PM +0430, peykasa Admin wrote:
+> Hi
 > 
-> Obviously it's just nitpicking over the do_warn message string, just
-> double checking on the consistency front. 
+> We face a problem with xfs quota
+> 
+> SENARIO
+> we have a file sharing for some users. Each user has a sharing folder.
+> Each user has a 1G limitation for his folder. the limitation is created via
+> xfs quota.
+> 
+> PROBLEM
+> For some users, the used space reported by xfs quota is not equal to the
+> real used space.
+> xfs quota reports the space is full (1024 M) and nothing can be moved there
+> but the real used space is less than that value.
+> 
+> 
+> We tested many solution and also the xfs_repair, but it didn't resolve.
 
-And this was also found via the rmap, but that fact isn't printed like
-it is for every other type.  For that reason I'd probably rather just add
-XR_RE_COW above the /* fallthrough */ too, for consistency.  Thoughts?
+Would be helpful to know the kernel/xfsprogs versions, how you
+determined 'real used space', and by how much it's off from whatever
+xfs_quota reports.
 
-Thanks,
--Eric
+--D
+
+> 
+> Sincerely yours
+> Arian Rmz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
