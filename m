@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56594 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56578 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdIRJQr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:16:47 -0400
+        with ESMTP id S932436AbdIRJQp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:16:45 -0400
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 50/78] iomap: fix integer truncation issues in the zeroing and dirtying helpers
-Date: Mon, 18 Sep 2017 11:11:59 +0200
-Message-Id: <20170918091133.874153937@linuxfoundation.org>
+Subject: [PATCH 4.9 49/78] xfs: dont leak quotacheck dquots when cow recovery
+Date: Mon, 18 Sep 2017 11:11:58 +0200
+Message-Id: <20170918091133.734186377@linuxfoundation.org>
 In-Reply-To: <20170918091126.077483037@linuxfoundation.org>
 References: <20170918091126.077483037@linuxfoundation.org>
 MIME-Version: 1.0
@@ -15,52 +15,37 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Paul Menzel <pmenzel@molgen.mpg.de>, Christoph Hellwig <hch@lst.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
 
 4.9-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
-From: Christoph Hellwig <hch@lst.de>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit e28ae8e428fefe2facd72cea9f29906ecb9c861d upstream.
+commit 77aff8c76425c8f49b50d0b9009915066739e7d2 upstream.
 
-Fix the min_t calls in the zeroing and dirtying helpers to perform the
-comparisms on 64-bit types, which prevents them from incorrectly
-being truncated, and larger zeroing operations being stuck in a never
-ending loop.
+If we fail a mount on account of cow recovery errors, it's possible that
+a previous quotacheck left some dquots in memory.  The bailout clause of
+xfs_mountfs forgets to purge these, and so we leak them.  Fix that.
 
-Special thanks to Markus Stockhausen for spotting the bug.
-
-Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
-Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/iomap.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -281,7 +281,7 @@ iomap_dirty_actor(struct inode *inode, l
- 		unsigned long bytes;	/* Bytes to write to page */
- 
- 		offset = (pos & (PAGE_SIZE - 1));
--		bytes = min_t(unsigned long, PAGE_SIZE - offset, length);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, length);
- 
- 		rpage = __iomap_read_page(inode, pos);
- 		if (IS_ERR(rpage))
-@@ -376,7 +376,7 @@ iomap_zero_range_actor(struct inode *ino
- 		unsigned offset, bytes;
- 
- 		offset = pos & (PAGE_SIZE - 1); /* Within page */
--		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
- 
- 		if (IS_DAX(inode))
- 			status = iomap_dax_zero(pos, offset, bytes, iomap);
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1004,6 +1004,8 @@ xfs_mountfs(
+ 	IRELE(rip);
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	/* Clean out dquots that might be in memory after quotacheck. */
++	xfs_qm_unmount(mp);
+  out_log_dealloc:
+ 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+ 	xfs_log_mount_cancel(mp);
 
 
