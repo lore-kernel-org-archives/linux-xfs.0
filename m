@@ -1,68 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42039 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752607AbdIRPYc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:24:32 -0400
-Received: from [107.17.164.65] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dtxuR-0005Ez-Ny
-        for linux-xfs@vger.kernel.org; Mon, 18 Sep 2017 15:24:31 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/19] xfs: replace xfs_bmbt_lookup_ge with xfs_bmbt_lookup_first
-Date: Mon, 18 Sep 2017 08:24:20 -0700
-Message-Id: <20170918152422.24345-18-hch@lst.de>
-In-Reply-To: <20170918152422.24345-1-hch@lst.de>
-References: <20170918152422.24345-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:38944 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753372AbdIRRhg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Sep 2017 13:37:36 -0400
+Subject: Re: [PATCH v2 2/2] mkfs: pass a custom cowextsize into the created
+ filesystem
+References: <20170901164035.GF3775@magnolia> <20170904174535.GI4671@magnolia>
+ <0da45d14-7c4a-9cb9-4c0c-6abc309c5001@sandeen.net>
+ <20170918172251.GE6540@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <92956c49-6d6e-c2a5-97c6-38460a25a357@sandeen.net>
+Date: Mon, 18 Sep 2017 12:37:35 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170918172251.GE6540@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-We only use xfs_bmbt_lookup_ge to look up the first bmap record in an
-inode, so replace xfs_bmbt_lookup_ge with a special purpose helper that
-is a bit more descriptive.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5997a19eb809..01a34e9b0cb0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -121,16 +121,13 @@ xfs_bmbt_lookup_eq(
- }
- 
- STATIC int				/* error */
--xfs_bmbt_lookup_ge(
-+xfs_bmbt_lookup_first(
- 	struct xfs_btree_cur	*cur,
--	xfs_fileoff_t		off,
--	xfs_fsblock_t		bno,
--	xfs_filblks_t		len,
- 	int			*stat)	/* success/failure */
- {
--	cur->bc_rec.b.br_startoff = off;
--	cur->bc_rec.b.br_startblock = bno;
--	cur->bc_rec.b.br_blockcount = len;
-+	cur->bc_rec.b.br_startoff = 0;
-+	cur->bc_rec.b.br_startblock = 0;
-+	cur->bc_rec.b.br_blockcount = 0;
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
- }
- 
-@@ -978,7 +975,8 @@ xfs_bmap_add_attrfork_btree(
- 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
- 		cur->bc_private.b.dfops = dfops;
- 		cur->bc_private.b.firstblock = *firstblock;
--		if ((error = xfs_bmbt_lookup_ge(cur, 0, 0, 0, &stat)))
-+		error = xfs_bmbt_lookup_first(cur, &stat);
-+		if (error)
- 			goto error0;
- 		/* must be at least one entry */
- 		XFS_WANT_CORRUPTED_GOTO(mp, stat == 1, error0);
--- 
-2.14.1
+On 9/18/17 12:22 PM, Darrick J. Wong wrote:
+>>> @@ -254,15 +312,17 @@ libxfs_ialloc(
+>>>  	ip->i_d.di_extsize = pip ? 0 : fsx->fsx_extsize;
+>>>  	ip->i_d.di_dmevmask = 0;
+>>>  	ip->i_d.di_dmstate = 0;
+>>> -	ip->i_d.di_flags = pip ? 0 : fsx->fsx_xflags;
+>>> +	ip->i_d.di_flags = pip ? 0 : xfs_flags2diflags(ip, fsx->fsx_xflags);
+>> is this a bugfix?
+> No.
+> 
+> Prior to this patch, the only fsx_xflags bits that mkfs could set are
+> the ones that correspond exactly to di_flags bits, so it was fine to set
+> them directly.  Subtle and annoying, but it worked.
+> 
+> However, the xfs_mkfs.c changes enable us to set FS_XFLAG_COWEXTSIZE,
+> which doesn't correspond to a di_flags bit, so now we need translation
+> functions to return the correct di_flags/di_flags2 values for the given
+> fsx_xflags.
 
+Oh, ok.  Before I guess it was only XFS_DIFLAG_RTINHERIT,
+XFS_DIFLAG_PROJINHERIT and XFS_DIFLAG_EXTSZINHERIT.
+
+Fair enough, maybe I should have seen that.  Thanks.
+
+(I might note it in the changelog on the way in, though, since
+it's subtle and annoying) ;)
+
+-Eric
