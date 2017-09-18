@@ -1,51 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56578 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932436AbdIRJQp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:16:45 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 49/78] xfs: dont leak quotacheck dquots when cow recovery
-Date: Mon, 18 Sep 2017 11:11:58 +0200
-Message-Id: <20170918091133.734186377@linuxfoundation.org>
-In-Reply-To: <20170918091126.077483037@linuxfoundation.org>
-References: <20170918091126.077483037@linuxfoundation.org>
+Received: from mx2.suse.de ([195.135.220.15]:35093 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754996AbdIRJ0m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Sep 2017 05:26:42 -0400
+Date: Mon, 18 Sep 2017 11:26:34 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 2/3] mm: introduce MAP_VALIDATE a mechanism for adding
+ new mmap flags
+Message-ID: <20170918092634.GE32516@quack2.suse.cz>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150277753660.23945.11500026891611444016.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170815122701.GF27505@quack2.suse.cz>
+ <CAA9_cmc0vejxCsc1NWp5b4C0CSsO5xetF3t6LCoCuEYB6yPiwQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAA9_cmc0vejxCsc1NWp5b4C0CSsO5xetF3t6LCoCuEYB6yPiwQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On Sat 16-09-17 20:44:14, Dan Williams wrote:
+> On Tue, Aug 15, 2017 at 5:27 AM, Jan Kara <jack@suse.cz> wrote:
+> > On Mon 14-08-17 23:12:16, Dan Williams wrote:
+> >> The mmap syscall suffers from the ABI anti-pattern of not validating
+> >> unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
+> >> mechanism to define new behavior that is known to fail on older kernels
+> >> without the feature. Use the fact that specifying MAP_SHARED and
+> >> MAP_PRIVATE at the same time is invalid as a cute hack to allow a new
+> >> set of validated flags to be introduced.
+> >>
+> >> This also introduces the ->fmmap() file operation that is ->mmap() plus
+> >> flags. Each ->fmmap() implementation must fail requests when a locally
+> >> unsupported flag is specified.
+> > ...
+> >> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> >> index 1104e5df39ef..bbe755d0caee 100644
+> >> --- a/include/linux/fs.h
+> >> +++ b/include/linux/fs.h
+> >> @@ -1674,6 +1674,7 @@ struct file_operations {
+> >>       long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+> >>       long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+> >>       int (*mmap) (struct file *, struct vm_area_struct *);
+> >> +     int (*fmmap) (struct file *, struct vm_area_struct *, unsigned long);
+> >>       int (*open) (struct inode *, struct file *);
+> >>       int (*flush) (struct file *, fl_owner_t id);
+> >>       int (*release) (struct inode *, struct file *);
+> >> @@ -1748,6 +1749,12 @@ static inline int call_mmap(struct file *file, struct vm_area_struct *vma)
+> >>       return file->f_op->mmap(file, vma);
+> >>  }
+> >>
+> >> +static inline int call_fmmap(struct file *file, struct vm_area_struct *vma,
+> >> +             unsigned long flags)
+> >> +{
+> >> +     return file->f_op->fmmap(file, vma, flags);
+> >> +}
+> >> +
+> >
+> > Hum, I dislike a new file op for this when the only problem with ->mmap is
+> > that it misses 'flags' argument. I understand there are lots of ->mmap
+> > implementations out there and modifying prototype of them all is painful
+> > but is it so bad? Coccinelle patch for this should be rather easy...
+> 
+> So it wasn't all that easy, and Linus declined to take it. I think we
+> should add a new ->mmap_validate() file operation and save the
+> tree-wide cleanup until later.
 
-------------------
+Well, we don't even strictly need the flags passed to ->mmap callback if we
+are willing to use VMA flags. I want to use it for MAP_SYNC anyway... So
+bumping vma->flags to u64 and using a flag is also an option (and frankly
+I'd personally just go for that).
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-
-commit 77aff8c76425c8f49b50d0b9009915066739e7d2 upstream.
-
-If we fail a mount on account of cow recovery errors, it's possible that
-a previous quotacheck left some dquots in memory.  The bailout clause of
-xfs_mountfs forgets to purge these, and so we leak them.  Fix that.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/xfs_mount.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1004,6 +1004,8 @@ xfs_mountfs(
- 	IRELE(rip);
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+	/* Clean out dquots that might be in memory after quotacheck. */
-+	xfs_qm_unmount(mp);
-  out_log_dealloc:
- 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
- 	xfs_log_mount_cancel(mp);
-
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
