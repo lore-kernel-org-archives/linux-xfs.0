@@ -1,150 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47788 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751998AbdIAQkj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 12:40:39 -0400
-Date: Fri, 1 Sep 2017 09:40:35 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:47048 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932707AbdIRRL6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 13:11:58 -0400
+Date: Mon, 18 Sep 2017 10:11:44 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 2/2] mkfs: pass a custom cowextsize into the created
- filesystem
-Message-ID: <20170901164035.GF3775@magnolia>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Message-ID: <20170918171144.GD6540@magnolia>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-Create a -d option to mkfs.xfs that enables administrators to set
-the CoW extent size hint on the created files.
+On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
+> On Wed, Aug 30, 2017 at 4:38 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > When calling into _xfs_log_force{,_lsn}() with a pointer
+> > to log_flushed variable, log_flushed will be set to 1 if:
+> > 1. xlog_sync() is called to flush the active log buffer
+> > AND/OR
+> > 2. xlog_wait() is called to wait on a syncing log buffers
+> >
+> > xfs_file_fsync() checks the value of log_flushed after
+> > _xfs_log_force_lsn() call to optimize away an explicit
+> > PREFLUSH request to the data block device after writing
+> > out all the file's pages to disk.
+> >
+> > This optimization is incorrect in the following sequence of events:
+> >
+> >  Task A                    Task B
+> >  -------------------------------------------------------
+> >  xfs_file_fsync()
+> >    _xfs_log_force_lsn()
+> >      xlog_sync()
+> >         [submit PREFLUSH]
+> >                            xfs_file_fsync()
+> >                              file_write_and_wait_range()
+> >                                [submit WRITE X]
+> >                                [endio  WRITE X]
+> >                              _xfs_log_force_lsn()
+> >                                xlog_wait()
+> >         [endio  PREFLUSH]
+> >
+> > The write X is not guarantied to be on persistent storage
+> > when PREFLUSH request in completed, because write A was submitted
+> > after the PREFLUSH request, but xfs_file_fsync() of task A will
+> > be notified of log_flushed=1 and will skip explicit flush.
+> >
+> > If the system crashes after fsync of task A, write X may not be
+> > present on disk after reboot.
+> >
+> > This bug was discovered and demonstrated using Josef Bacik's
+> > dm-log-writes target, which can be used to record block io operations
+> > and then replay a subset of these operations onto the target device.
+> > The test goes something like this:
+> > - Use fsx to execute ops of a file and record ops on log device
+> > - Every now and then fsync the file, store md5 of file and mark
+> >   the location in the log
+> > - Then replay log onto device for each mark, mount fs and compare
+> >   md5 of file to stored value
+> >
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Josef Bacik <jbacik@fb.com>
+> > Cc: <stable@vger.kernel.org>
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
+> >
+> > Christoph, Dave,
+> >
+> > It's hard to believe, but I think the reported bug has been around
+> > since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
+> > not try to test old kernels.
+> 
+> Forgot to tag commit message with:
+> Fixes: f538d4da8d52 ("[XFS] write barrier support")
+> 
+> Maybe the tag could be added when applying to recent stables,
+> so distros and older downstream stables can see the tag.
+> 
+> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
+> if possible data loss bug should also be disclosed in some distros forum?
+> I bet some users would care more about the latter than the former.
+> Coincidentally, both data loss and security bugs fix the same commit..
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/util.c       |   26 ++++++++++++++++++++++++--
- man/man8/mkfs.xfs.8 |    7 +++++++
- mkfs/xfs_mkfs.c     |   20 ++++++++++++++++++++
- 3 files changed, 51 insertions(+), 2 deletions(-)
+Yes the the patch ought to get sent on to stable w/ fixes tag.  One
+would hope that the distros will pick up the stable fixes from there.
+That said, it's been in the kernel for 12 years without widespread
+complaints about corruption, so I'm not sure this warrants public
+disclosure via CVE/Phoronix vs. just fixing it.
 
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 0e2f29e..4f82d7f 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -175,6 +175,26 @@ libxfs_trans_ichgtime(
- 	}
- }
- 
-+static inline uint16_t
-+xflags_to_diflags(
-+	__u32		xflags)
-+{
-+	/* bottom 15 xflag bits correspond to diflag bits */
-+	return xflags & 0x7FFF;
-+}
-+
-+static inline uint64_t
-+xflags_to_diflags2(
-+	__u32		xflags)
-+{
-+	uint64_t	ret = 0;
-+
-+	if (xflags & FS_XFLAG_COWEXTSIZE)
-+		ret |= XFS_DIFLAG2_COWEXTSIZE;
-+
-+	return ret;
-+}
-+
- /*
-  * Allocate an inode on disk and return a copy of its in-core version.
-  * Set mode, nlink, and rdev appropriately within the inode.
-@@ -254,15 +274,17 @@ libxfs_ialloc(
- 	ip->i_d.di_extsize = pip ? 0 : fsx->fsx_extsize;
- 	ip->i_d.di_dmevmask = 0;
- 	ip->i_d.di_dmstate = 0;
--	ip->i_d.di_flags = pip ? 0 : fsx->fsx_xflags;
-+	ip->i_d.di_flags = pip ? 0 : xflags_to_diflags(fsx->fsx_xflags);
- 
- 	if (ip->i_d.di_version == 3) {
- 		ASSERT(ip->i_d.di_ino == ino);
- 		ASSERT(uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid));
- 		VFS_I(ip)->i_version = 1;
--		ip->i_d.di_flags2 = 0;
-+		ip->i_d.di_flags2 = pip ? 0 :
-+				xflags_to_diflags2(fsx->fsx_xflags);
- 		ip->i_d.di_crtime.t_sec = (int32_t)VFS_I(ip)->i_mtime.tv_sec;
- 		ip->i_d.di_crtime.t_nsec = (int32_t)VFS_I(ip)->i_mtime.tv_nsec;
-+		ip->i_d.di_cowextsize = pip ? 0 : fsx->fsx_cowextsize;
- 	}
- 
- 	flags = XFS_ILOG_CORE;
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 33831c9..bbbe1c5 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -279,6 +279,13 @@ and
- .B agsize
- suboptions are mutually exclusive.
- .TP
-+.BI cowextsize= value
-+Set the copy-on-write extent size hint on all inodes created by
-+.BR mkfs.xfs "."
-+The value must be provided in units of filesystem blocks.
-+If the value is zero, the default value (currently 32 blocks) will be used.
-+Directories will pass on this hint to newly created children.
-+.TP
- .BI name= value
- This can be used to specify the name of the special file containing
- the filesystem. In this case, the log section must be specified as
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 024cb02..ea0a317 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -187,6 +187,8 @@ struct opt_params dopts = {
- 		"projinherit",
- #define D_EXTSZINHERIT	14
- 		"extszinherit",
-+#define D_COWEXTSIZE	15
-+		"cowextsize",
- 		NULL
- 	},
- 	.subopt_params = {
-@@ -303,6 +305,12 @@ struct opt_params dopts = {
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = D_COWEXTSIZE,
-+		  .conflicts = { LAST_CONFLICT },
-+		  .minval = 0,
-+		  .maxval = UINT_MAX,
-+		  .defaultval = SUBOPT_NEEDS_VAL,
-+		},
- 	},
- };
- 
-@@ -1638,6 +1646,13 @@ main(
- 					fsx.fsx_xflags |=
- 						XFS_DIFLAG_EXTSZINHERIT;
- 					break;
-+				case D_COWEXTSIZE:
-+					fsx.fsx_cowextsize = getnum(value,
-+							&dopts,
-+							D_COWEXTSIZE);
-+					fsx.fsx_xflags |=
-+						FS_XFLAG_COWEXTSIZE;
-+					break;
- 				default:
- 					unknown('d', value);
- 				}
-@@ -2142,6 +2157,11 @@ _("reflink not supported without CRC support\n"));
- 		sb_feat.reflink = false;
- 	}
- 
-+	if ((fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) && !sb_feat.reflink) {
-+		fprintf(stderr,
-+_("cowextsize not supported without reflink support\n"));
-+		usage();
-+	}
- 
- 	if (nsflag || nlflag) {
- 		if (dirblocksize < blocksize ||
+--D
+
+> 
+> Cheers,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
