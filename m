@@ -1,105 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47048 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:36052 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932707AbdIRRL6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 13:11:58 -0400
-Date: Mon, 18 Sep 2017 10:11:44 -0700
+        with ESMTP id S1753186AbdIRSnw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 14:43:52 -0400
+Date: Mon, 18 Sep 2017 11:43:42 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Message-ID: <20170918171144.GD6540@magnolia>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
- <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: check kthread_should_stop() after the setting of
+ task state
+Message-ID: <20170918184342.GL6540@magnolia>
+References: <1504771497-44154-1-git-send-email-houtao1@huawei.com>
+ <20170908174251.GH905@bfoster.bfoster>
+ <bbc2d571-6305-3713-66be-a11b0b06f6c2@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
+In-Reply-To: <bbc2d571-6305-3713-66be-a11b0b06f6c2@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: Hou Tao <houtao1@huawei.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, david@fromorbit.com
 
-On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
-> On Wed, Aug 30, 2017 at 4:38 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > When calling into _xfs_log_force{,_lsn}() with a pointer
-> > to log_flushed variable, log_flushed will be set to 1 if:
-> > 1. xlog_sync() is called to flush the active log buffer
-> > AND/OR
-> > 2. xlog_wait() is called to wait on a syncing log buffers
-> >
-> > xfs_file_fsync() checks the value of log_flushed after
-> > _xfs_log_force_lsn() call to optimize away an explicit
-> > PREFLUSH request to the data block device after writing
-> > out all the file's pages to disk.
-> >
-> > This optimization is incorrect in the following sequence of events:
-> >
-> >  Task A                    Task B
-> >  -------------------------------------------------------
-> >  xfs_file_fsync()
-> >    _xfs_log_force_lsn()
-> >      xlog_sync()
-> >         [submit PREFLUSH]
-> >                            xfs_file_fsync()
-> >                              file_write_and_wait_range()
-> >                                [submit WRITE X]
-> >                                [endio  WRITE X]
-> >                              _xfs_log_force_lsn()
-> >                                xlog_wait()
-> >         [endio  PREFLUSH]
-> >
-> > The write X is not guarantied to be on persistent storage
-> > when PREFLUSH request in completed, because write A was submitted
-> > after the PREFLUSH request, but xfs_file_fsync() of task A will
-> > be notified of log_flushed=1 and will skip explicit flush.
-> >
-> > If the system crashes after fsync of task A, write X may not be
-> > present on disk after reboot.
-> >
-> > This bug was discovered and demonstrated using Josef Bacik's
-> > dm-log-writes target, which can be used to record block io operations
-> > and then replay a subset of these operations onto the target device.
-> > The test goes something like this:
-> > - Use fsx to execute ops of a file and record ops on log device
-> > - Every now and then fsync the file, store md5 of file and mark
-> >   the location in the log
-> > - Then replay log onto device for each mark, mount fs and compare
-> >   md5 of file to stored value
-> >
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Josef Bacik <jbacik@fb.com>
-> > Cc: <stable@vger.kernel.org>
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >
-> > Christoph, Dave,
-> >
-> > It's hard to believe, but I think the reported bug has been around
-> > since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
-> > not try to test old kernels.
+On Tue, Sep 12, 2017 at 04:38:03PM +0800, Hou Tao wrote:
+> Hi,
 > 
-> Forgot to tag commit message with:
-> Fixes: f538d4da8d52 ("[XFS] write barrier support")
-> 
-> Maybe the tag could be added when applying to recent stables,
-> so distros and older downstream stables can see the tag.
-> 
-> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
-> if possible data loss bug should also be disclosed in some distros forum?
-> I bet some users would care more about the latter than the former.
-> Coincidentally, both data loss and security bugs fix the same commit..
+> On 2017/9/9 1:42, Brian Foster wrote:
+> > On Thu, Sep 07, 2017 at 04:04:57PM +0800, Hou Tao wrote:
+> >> A umount hang is possible when a race occurs between the umount
+> >> process and the xfsaild kthread. The following sequences outline
+> >> the race:
+> >>
+> >>     xfsaild: kthread_should_stop()
+> >> 	     => return false, so xfsaild continue
+> >>
+> >>     umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags)
+> >> 	    => by kthread_stop()
+> >>     umount: wake_up_process()
+> >> 	    => because xfsaild is still running, so 0 is returned
+> >>
+> >>     xfsaild: __set_current_state(TASK_INTERRUPTIBLE)
+> >>     xfsaild: schedule()
+> >> 	    => now, xfsaild will wait indefinitely
+> >>
+> >>     umount: wait_for_completion()
+> >> 	    => and umount will hang
+> >>
+> >> To fix that, we need to check kthread_should_stop() after we set
+> >> the task state, so the xfsaild will either see the stop bit and
+> >> exit or the task state is reset to runnable by wake_up_process()
+> >> such that it isn't blocked indefinitely and detects the stop bit
+> >> at the next iteration.
+> >>
+> >> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> >> ---
+> > 
+> > I assume you've verified this against your local reproducer? Otherwise
+> > just a nit on the comment...
+> Yes, the patch fixes the test case with the delay hacks. After applying the
+> patch, I also have tried to move the artificial delay in xfsaild down to the
+> next of kthread_should_stop() and there is no hang of umount.
 
-Yes the the patch ought to get sent on to stable w/ fixes tag.  One
-would hope that the distros will pick up the stable fixes from there.
-That said, it's been in the kernel for 12 years without widespread
-complaints about corruption, so I'm not sure this warrants public
-disclosure via CVE/Phoronix vs. just fixing it.
+Can this be turned into an xfstest, please?
 
 --D
 
 > 
-> Cheers,
-> Amir.
+> >>  fs/xfs/xfs_trans_ail.c | 17 ++++++++++++++---
+> >>  1 file changed, 14 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> >> index 9056c0f..cd6e185 100644
+> >> --- a/fs/xfs/xfs_trans_ail.c
+> >> +++ b/fs/xfs/xfs_trans_ail.c
+> >> @@ -499,11 +499,22 @@ xfsaild(
+> >>  	current->flags |= PF_MEMALLOC;
+> >>  	set_freezable();
+> >>  
+> >> -	while (!kthread_should_stop()) {
+> >> +	while (1) {
+> >>  		if (tout && tout <= 20)
+> >> -			__set_current_state(TASK_KILLABLE);
+> >> +			set_current_state(TASK_KILLABLE);
+> >>  		else
+> >> -			__set_current_state(TASK_INTERRUPTIBLE);
+> >> +			set_current_state(TASK_INTERRUPTIBLE);
+> >> +
+> >> +		/*
+> >> +		 * Check kthread_should_stop() after we set the task state
+> >> +		 * to guarantee that we either see the stop bit and exit or the
+> >> +		 * task state is reset to runnable such that it's not blocked
+> >> +		 * indefinitely and detects the stop bit at the next iteration.
+> >> +		 */
+> > 
+> > I'd change the "it's not blocked indefinitely" wording to something like
+> > "it's not scheduled out indefinitely." Also, a mention that the task
+> > state sets above include a memory barrier to serialize against
+> > kthread_stop() couldn't hurt. Otherwise this looks fine to me:
+> > 
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Thanks for your comments. I will send v2 soon.
+> 
+> Regards,
+> 
+> Tao
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
