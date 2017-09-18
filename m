@@ -1,29 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55114 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753054AbdIRPjt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Sep 2017 11:39:49 -0400
-Date: Mon, 18 Sep 2017 17:39:47 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [linux-next][XFS][trinity] WARNING: CPU: 32 PID: 31369 at
-        fs/iomap.c:993
-Message-ID: <20170918153947.GA12635@lst.de>
-References: <1505746565.6990.18.camel@abdul.in.ibm.com> <20170918152706.GA11482@lst.de> <8abed401-1634-760f-6543-4652fa495315@kernel.dk>
+Received: from mail-io0-f171.google.com ([209.85.223.171]:47231 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754230AbdIRPsA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:48:00 -0400
+Received: by mail-io0-f171.google.com with SMTP id e189so3185934ioa.4
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 08:48:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8abed401-1634-760f-6543-4652fa495315@kernel.dk>
+In-Reply-To: <20170918093137.GF32516@quack2.suse.cz>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150277753660.23945.11500026891611444016.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170815122701.GF27505@quack2.suse.cz> <CAA9_cmc0vejxCsc1NWp5b4C0CSsO5xetF3t6LCoCuEYB6yPiwQ@mail.gmail.com>
+ <20170917173945.GA22200@lst.de> <20170918093137.GF32516@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 18 Sep 2017 08:47:59 -0700
+Message-ID: <CAPcyv4g7nv5wma2Nbir15vDZSR_AYKk=wtnxtZh=--qhMJ5DOA@mail.gmail.com>
+Subject: Re: [PATCH v4 2/3] mm: introduce MAP_VALIDATE a mechanism for adding
+ new mmap flags
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Abdul Haleem <abdhalee@linux.vnet.ibm.com>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, chandan <chandan@linux.vnet.ibm.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-mm <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, david <david@fromorbit.com>
 
-On Mon, Sep 18, 2017 at 09:28:55AM -0600, Jens Axboe wrote:
-> If it's expected, why don't we kill the WARN_ON_ONCE()? I get it all
-> the time running xfstests as well.
+On Mon, Sep 18, 2017 at 2:31 AM, Jan Kara <jack@suse.cz> wrote:
+> On Sun 17-09-17 19:39:45, Christoph Hellwig wrote:
+>> On Sat, Sep 16, 2017 at 08:44:14PM -0700, Dan Williams wrote:
+>> > So it wasn't all that easy, and Linus declined to take it. I think we
+>> > should add a new ->mmap_validate() file operation and save the
+>> > tree-wide cleanup until later.
+>>
+>> Note that we already have a mmap_capabilities callout for nommu,
+>> I wonder if we could generalize that.
+>
+> So if I understood Dan right, Linus refused to merge the patch which adds
+> 'flags' argument to ->mmap callback. That is actually logically independent
+> change from validating flags passed to mmap(2) syscall. Dan did it just to
+> save himself from adding a VMA flag for MAP_DIRECT.
+>
+> For validating flags passed to mmap(2), I agree we could use
+> ->mmap_capabilities() instead of mmap_supported_mask Dan has added. But I
+> don't have a strong opinion there.
 
-Dave insisted on it to decourage users/applications from mixing
-mmap and direct I/O.
-
-In many ways a tracepoint might be the better way to diagnose these.
+The drawback I see with mmap_capabilities is that it requires all mmap
+flags to have a corresponding vm_flag. After the cold reaction the
+VM_DAX flag received I'd want to be sure they were on board with this
+direction.
