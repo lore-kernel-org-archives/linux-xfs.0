@@ -1,28 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43818 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753377AbdIRR4w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 13:56:52 -0400
-Date: Mon, 18 Sep 2017 10:56:51 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/7] xfs: Implement fallocate query support mode
-Message-ID: <20170918175651.GA7937@infradead.org>
-References: <1505749947-26360-1-git-send-email-lczerner@redhat.com>
- <1505749947-26360-5-git-send-email-lczerner@redhat.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36552 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754323AbdIROXI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 10:23:08 -0400
+Date: Mon, 18 Sep 2017 16:23:16 +0200
+From: gregkh <gregkh@linuxfoundation.org>
+Subject: Re: stable-rc/linux-4.13.y build: 208 builds: 0 failed, 208 passed,
+ 29 warnings (v4.13.2-53-gb857b6dfc252)
+Message-ID: <20170918142316.GC12458@kroah.com>
+References: <59bfa691.4c3e1c0a.a7b17.e9df@mx.google.com>
+ <CAK8P3a0LYQ8ZRxcPJNOC0++C2D=vG0X1=RVyJssBAjNzmaEaLw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1505749947-26360-5-git-send-email-lczerner@redhat.com>
+In-Reply-To: <CAK8P3a0LYQ8ZRxcPJNOC0++C2D=vG0X1=RVyJssBAjNzmaEaLw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "kernelci.org bot" <bot@kernelci.org>, Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, stable <stable@vger.kernel.org>
 
-This seems to miss any explanation and 6 out of 7 patches.
+On Mon, Sep 18, 2017 at 04:19:08PM +0200, Arnd Bergmann wrote:
+> On Mon, Sep 18, 2017 at 12:57 PM, kernelci.org bot <bot@kernelci.org> wrote:
+> >
+> > stable-rc/linux-4.13.y build: 208 builds: 0 failed, 208 passed, 29 warnings (v4.13.2-53-gb857b6dfc252)
+> 
+> Same as v4.9, please backport
+> 
+> 7bf7a193a90c ("xfs: fix compiler warnings")
 
-That being said, I really detest adding weird query modes to random
-syscalls.  We should expose capabilities through the interface that
-was designed for such things: (f)pathconf, as there are a lot more
-important parameters we currently fail to expose to userspace to
-start with.
+Now applied, thanks.
+
+greg k-h
