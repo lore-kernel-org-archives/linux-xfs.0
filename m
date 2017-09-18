@@ -1,119 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55036 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753777AbdIRJMK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:12:10 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.13 48/52] xfs: dont set v3 xflags for v2 inodes
-Date: Mon, 18 Sep 2017 11:10:16 +0200
-Message-Id: <20170918090911.353411117@linuxfoundation.org>
-In-Reply-To: <20170918090904.072766209@linuxfoundation.org>
-References: <20170918090904.072766209@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from bombadil.infradead.org ([65.50.211.133]:42039 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752607AbdIRPYc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:24:32 -0400
+Received: from [107.17.164.65] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dtxuR-0005Ez-Ny
+        for linux-xfs@vger.kernel.org; Mon, 18 Sep 2017 15:24:31 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 17/19] xfs: replace xfs_bmbt_lookup_ge with xfs_bmbt_lookup_first
+Date: Mon, 18 Sep 2017 08:24:20 -0700
+Message-Id: <20170918152422.24345-18-hch@lst.de>
+In-Reply-To: <20170918152422.24345-1-hch@lst.de>
+References: <20170918152422.24345-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-4.13-stable review patch.  If anyone has any objections, please let me know.
-
-------------------
-
-From: Christoph Hellwig <hch@lst.de>
-
-commit dd60687ee541ca3f6df8758f38e6f22f57c42a37 upstream.
-
-Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
-if the inode isn't a v3 inode, because di_flags2 only exists on v3.
+We only use xfs_bmbt_lookup_ge to look up the first bmap record in an
+inode, so replace xfs_bmbt_lookup_ge with a special purpose helper that
+is a bit more descriptive.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_ioctl.c |   38 +++++++++++++++++++++++++-------------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -931,16 +931,15 @@ xfs_ioc_fsgetxattr(
- 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5997a19eb809..01a34e9b0cb0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -121,16 +121,13 @@ xfs_bmbt_lookup_eq(
  }
  
--STATIC void
--xfs_set_diflags(
-+STATIC uint16_t
-+xfs_flags2diflags(
- 	struct xfs_inode	*ip,
- 	unsigned int		xflags)
+ STATIC int				/* error */
+-xfs_bmbt_lookup_ge(
++xfs_bmbt_lookup_first(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_fileoff_t		off,
+-	xfs_fsblock_t		bno,
+-	xfs_filblks_t		len,
+ 	int			*stat)	/* success/failure */
  {
--	unsigned int		di_flags;
--	uint64_t		di_flags2;
--
- 	/* can't set PREALLOC this way, just preserve it */
--	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+	uint16_t		di_flags =
-+		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+
- 	if (xflags & FS_XFLAG_IMMUTABLE)
- 		di_flags |= XFS_DIFLAG_IMMUTABLE;
- 	if (xflags & FS_XFLAG_APPEND)
-@@ -970,19 +969,24 @@ xfs_set_diflags(
- 		if (xflags & FS_XFLAG_EXTSIZE)
- 			di_flags |= XFS_DIFLAG_EXTSIZE;
- 	}
--	ip->i_d.di_flags = di_flags;
- 
--	/* diflags2 only valid for v3 inodes. */
--	if (ip->i_d.di_version < 3)
--		return;
-+	return di_flags;
-+}
-+
-+STATIC uint64_t
-+xfs_flags2diflags2(
-+	struct xfs_inode	*ip,
-+	unsigned int		xflags)
-+{
-+	uint64_t		di_flags2 =
-+		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 
--	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
- 	if (xflags & FS_XFLAG_COWEXTSIZE)
- 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 
--	ip->i_d.di_flags2 = di_flags2;
-+	return di_flags2;
+-	cur->bc_rec.b.br_startoff = off;
+-	cur->bc_rec.b.br_startblock = bno;
+-	cur->bc_rec.b.br_blockcount = len;
++	cur->bc_rec.b.br_startoff = 0;
++	cur->bc_rec.b.br_startblock = 0;
++	cur->bc_rec.b.br_blockcount = 0;
+ 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
  }
  
- STATIC void
-@@ -1023,6 +1027,7 @@ xfs_ioctl_setattr_xflags(
- 	struct fsxattr		*fa)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	uint64_t		di_flags2;
- 
- 	/* Can't change realtime flag if any extents are allocated. */
- 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-@@ -1053,7 +1058,14 @@ xfs_ioctl_setattr_xflags(
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
--	xfs_set_diflags(ip, fa->fsx_xflags);
-+	/* diflags2 only valid for v3 inodes. */
-+	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
-+	if (di_flags2 && ip->i_d.di_version < 3)
-+		return -EINVAL;
-+
-+	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
-+	ip->i_d.di_flags2 = di_flags2;
-+
- 	xfs_diflags_to_linux(ip);
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-
+@@ -978,7 +975,8 @@ xfs_bmap_add_attrfork_btree(
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+ 		cur->bc_private.b.dfops = dfops;
+ 		cur->bc_private.b.firstblock = *firstblock;
+-		if ((error = xfs_bmbt_lookup_ge(cur, 0, 0, 0, &stat)))
++		error = xfs_bmbt_lookup_first(cur, &stat);
++		if (error)
+ 			goto error0;
+ 		/* must be at least one entry */
+ 		XFS_WANT_CORRUPTED_GOTO(mp, stat == 1, error0);
+-- 
+2.14.1
 
