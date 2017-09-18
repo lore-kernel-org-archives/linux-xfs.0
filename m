@@ -1,74 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48314 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751283AbdIRWFl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 18:05:41 -0400
-Date: Tue, 19 Sep 2017 08:05:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [linux-next][XFS][trinity] WARNING: CPU: 32 PID: 31369 at
- fs/iomap.c:993
-Message-ID: <20170918220502.GL10621@dastard>
-References: <1505746565.6990.18.camel@abdul.in.ibm.com>
- <20170918152706.GA11482@lst.de>
- <8abed401-1634-760f-6543-4652fa495315@kernel.dk>
- <20170918213143.GJ10621@dastard>
- <21c53d3f-5ca9-886d-a326-cb6f1bbddffd@sandeen.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43850 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752992AbdIRPif (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:38:35 -0400
+Date: Mon, 18 Sep 2017 08:38:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs/db: version command misses RMAPBT feature string
+Message-ID: <20170918153829.GB6540@magnolia>
+References: <20170918071335.19365-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <21c53d3f-5ca9-886d-a326-cb6f1bbddffd@sandeen.net>
+In-Reply-To: <20170918071335.19365-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Abdul Haleem <abdhalee@linux.vnet.ibm.com>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, chandan <chandan@linux.vnet.ibm.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 05:00:58PM -0500, Eric Sandeen wrote:
-> On 9/18/17 4:31 PM, Dave Chinner wrote:
-> > On Mon, Sep 18, 2017 at 09:28:55AM -0600, Jens Axboe wrote:
-> >> On 09/18/2017 09:27 AM, Christoph Hellwig wrote:
-> >>> On Mon, Sep 18, 2017 at 08:26:05PM +0530, Abdul Haleem wrote:
-> >>>> Hi,
-> >>>>
-> >>>> A warning is triggered from:
-> >>>>
-> >>>> file fs/iomap.c in function iomap_dio_rw
-> >>>>
-> >>>>     if (ret)
-> >>>>         goto out_free_dio;
-> >>>>
-> >>>>     ret = invalidate_inode_pages2_range(mapping,
-> >>>>             start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> >>>>>>  WARN_ON_ONCE(ret);
-> >>>>     ret = 0;
-> >>>>
-> >>>>     inode_dio_begin(inode);
-> >>>
-> >>> This is expected and an indication of a problematic workload - which
-> >>> may be triggered by a fuzzer.
-> >>
-> >> If it's expected, why don't we kill the WARN_ON_ONCE()? I get it all
-> >> the time running xfstests as well.
-> > 
-> > Because when a user reports a data corruption, the only evidence we
-> > have that they are running an app that does something stupid is this
-> > warning in their syslogs.  Tracepoints are not useful for replacing
-> > warnings about data corruption vectors being triggered.
+On Mon, Sep 18, 2017 at 03:13:35PM +0800, Zorro Lang wrote:
+> When I create a XFS with "rmapbt=1,reflink=1", "xfs_db -c version"
+> didn't show RMAPBT feature. But REFLINK can be found.
 > 
-> Is the full WARN_ON spew really helpful to us, though?  Certainly
-> the user has no idea what it means, and will come away terrified
-> but none the wiser.
+>   # mkfs/mkfs.xfs -f -m rmapbt=1,reflink=1 /dev/sda3
+>   # db/xfs_db -c version /dev/sda3
+>   versionnum [0xb4a5+0x18a] = V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,REFLINK
 > 
-> Would a more informative printk_once() still give us the evidence
-> without the ZOMG I THINK I OOPSED that a WARN_ON produces?  Or do we 
-> want/need the backtrace?
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 
-backtrace is actually useful - that's how I recently learnt that
-splice now supports direct IO.....
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  db/sb.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/db/sb.c b/db/sb.c
+> index 8e7722cd..01d94a66 100644
+> --- a/db/sb.c
+> +++ b/db/sb.c
+> @@ -694,6 +694,8 @@ version_string(
+>  		strcat(s, ",SPARSE_INODES");
+>  	if (xfs_sb_version_hasmetauuid(sbp))
+>  		strcat(s, ",META_UUID");
+> +	if (xfs_sb_version_hasrmapbt(sbp))
+> +		strcat(s, ",RMAPBT");
+>  	if (xfs_sb_version_hasreflink(sbp))
+>  		strcat(s, ",REFLINK");
+>  	return s;
+> -- 
+> 2.13.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
