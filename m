@@ -1,106 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54207 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752735AbdIRPY1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:24:27 -0400
-Received: from [107.17.164.65] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dtxuM-0005Dp-KE
-        for linux-xfs@vger.kernel.org; Mon, 18 Sep 2017 15:24:26 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/19] xfs: use correct state defines in xfs_bmap_del_extent_{cow,delay}
-Date: Mon, 18 Sep 2017 08:24:10 -0700
-Message-Id: <20170918152422.24345-8-hch@lst.de>
-In-Reply-To: <20170918152422.24345-1-hch@lst.de>
-References: <20170918152422.24345-1-hch@lst.de>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:34416 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756507AbdIRSAc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 14:00:32 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170918171144.GD6540@magnolia>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com> <20170918171144.GD6540@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 18 Sep 2017 21:00:30 +0300
+Message-ID: <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Greg KH <greg@kroah.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-Use the _FILLING values to match the usage in the xfs_bmap_add_extent_*
-helpers.  No change in behavior, just better naming in the code and
-tracepoint output.
+On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
+>> On Wed, Aug 30, 2017 at 4:38 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+>> > When calling into _xfs_log_force{,_lsn}() with a pointer
+>> > to log_flushed variable, log_flushed will be set to 1 if:
+>> > 1. xlog_sync() is called to flush the active log buffer
+>> > AND/OR
+>> > 2. xlog_wait() is called to wait on a syncing log buffers
+>> >
+>> > xfs_file_fsync() checks the value of log_flushed after
+>> > _xfs_log_force_lsn() call to optimize away an explicit
+>> > PREFLUSH request to the data block device after writing
+>> > out all the file's pages to disk.
+>> >
+>> > This optimization is incorrect in the following sequence of events:
+>> >
+>> >  Task A                    Task B
+>> >  -------------------------------------------------------
+>> >  xfs_file_fsync()
+>> >    _xfs_log_force_lsn()
+>> >      xlog_sync()
+>> >         [submit PREFLUSH]
+>> >                            xfs_file_fsync()
+>> >                              file_write_and_wait_range()
+>> >                                [submit WRITE X]
+>> >                                [endio  WRITE X]
+>> >                              _xfs_log_force_lsn()
+>> >                                xlog_wait()
+>> >         [endio  PREFLUSH]
+>> >
+>> > The write X is not guarantied to be on persistent storage
+>> > when PREFLUSH request in completed, because write A was submitted
+>> > after the PREFLUSH request, but xfs_file_fsync() of task A will
+>> > be notified of log_flushed=1 and will skip explicit flush.
+>> >
+>> > If the system crashes after fsync of task A, write X may not be
+>> > present on disk after reboot.
+>> >
+>> > This bug was discovered and demonstrated using Josef Bacik's
+>> > dm-log-writes target, which can be used to record block io operations
+>> > and then replay a subset of these operations onto the target device.
+>> > The test goes something like this:
+>> > - Use fsx to execute ops of a file and record ops on log device
+>> > - Every now and then fsync the file, store md5 of file and mark
+>> >   the location in the log
+>> > - Then replay log onto device for each mark, mount fs and compare
+>> >   md5 of file to stored value
+>> >
+>> > Cc: Christoph Hellwig <hch@lst.de>
+>> > Cc: Josef Bacik <jbacik@fb.com>
+>> > Cc: <stable@vger.kernel.org>
+>> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>> > ---
+>> >
+>> > Christoph, Dave,
+>> >
+>> > It's hard to believe, but I think the reported bug has been around
+>> > since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
+>> > not try to test old kernels.
+>>
+>> Forgot to tag commit message with:
+>> Fixes: f538d4da8d52 ("[XFS] write barrier support")
+>>
+>> Maybe the tag could be added when applying to recent stables,
+>> so distros and older downstream stables can see the tag.
+>>
+>> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
+>> if possible data loss bug should also be disclosed in some distros forum?
+>> I bet some users would care more about the latter than the former.
+>> Coincidentally, both data loss and security bugs fix the same commit..
+>
+> Yes the the patch ought to get sent on to stable w/ fixes tag.  One
+> would hope that the distros will pick up the stable fixes from there.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 06f1bd9e144e..aa4af31750d3 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4897,19 +4897,19 @@ xfs_bmap_del_extent_delay(
- 		state |= BMAP_COWFORK;
- 
- 	if (got->br_startoff == del->br_startoff)
--		state |= BMAP_LEFT_CONTIG;
-+		state |= BMAP_LEFT_FILLING;
- 	if (got_endoff == del_endoff)
--		state |= BMAP_RIGHT_CONTIG;
-+		state |= BMAP_RIGHT_FILLING;
- 
--	switch (state & (BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG)) {
--	case BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
-+	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
-+	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
- 		xfs_iext_remove(ip, *idx, 1, state);
- 		--*idx;
- 		break;
--	case BMAP_LEFT_CONTIG:
-+	case BMAP_LEFT_FILLING:
- 		/*
- 		 * Deleting the first part of the extent.
- 		 */
-@@ -4922,7 +4922,7 @@ xfs_bmap_del_extent_delay(
- 		xfs_iext_update_extent(ifp, *idx, got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		break;
--	case BMAP_RIGHT_CONTIG:
-+	case BMAP_RIGHT_FILLING:
- 		/*
- 		 * Deleting the last part of the extent.
- 		 */
-@@ -5007,19 +5007,19 @@ xfs_bmap_del_extent_cow(
- 	ASSERT(!isnullstartblock(got->br_startblock));
- 
- 	if (got->br_startoff == del->br_startoff)
--		state |= BMAP_LEFT_CONTIG;
-+		state |= BMAP_LEFT_FILLING;
- 	if (got_endoff == del_endoff)
--		state |= BMAP_RIGHT_CONTIG;
-+		state |= BMAP_RIGHT_FILLING;
- 
--	switch (state & (BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG)) {
--	case BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
-+	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
-+	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
- 		xfs_iext_remove(ip, *idx, 1, state);
- 		--*idx;
- 		break;
--	case BMAP_LEFT_CONTIG:
-+	case BMAP_LEFT_FILLING:
- 		/*
- 		 * Deleting the first part of the extent.
- 		 */
-@@ -5030,7 +5030,7 @@ xfs_bmap_del_extent_cow(
- 		xfs_iext_update_extent(ifp, *idx, got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		break;
--	case BMAP_RIGHT_CONTIG:
-+	case BMAP_RIGHT_FILLING:
- 		/*
- 		 * Deleting the last part of the extent.
- 		 */
--- 
-2.14.1
+Greg, for your consideration, please add
+ Fixes: f538d4da8d52 ("[XFS] write barrier support")
+If not pushed yet.
 
+> That said, it's been in the kernel for 12 years without widespread
+> complaints about corruption, so I'm not sure this warrants public
+> disclosure via CVE/Phoronix vs. just fixing it.
+>
+
+I'm not sure either.
+My intuition tells me that the chances of hitting the data loss bug
+given a power failure are not slim, but the chances of users knowing
+about the data loss are slim.
+Meaning, the chances of users complaining:
+"I swear, I did fsync, lost power, and after boot data was not there" are slim
+and the chances of developers believing the report on hear say are
+even slimmer.
+
+Oh well. I was just wondering...
+
+Amir.
