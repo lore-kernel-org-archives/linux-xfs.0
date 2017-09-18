@@ -1,98 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53403 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752938AbdIRPYd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:24:33 -0400
-Received: from [107.17.164.65] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dtxuS-0005FC-Mb
-        for linux-xfs@vger.kernel.org; Mon, 18 Sep 2017 15:24:32 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/19] xfs: remove xfs_bmbt_get_state
-Date: Mon, 18 Sep 2017 08:24:22 -0700
-Message-Id: <20170918152422.24345-20-hch@lst.de>
-In-Reply-To: <20170918152422.24345-1-hch@lst.de>
-References: <20170918152422.24345-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:41731 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753128AbdIRRag (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 13:30:36 -0400
+Date: Mon, 18 Sep 2017 10:30:28 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_repair: handle missing extent states
+Message-ID: <20170918173028.GG6540@magnolia>
+References: <20170918163944.GC6540@magnolia>
+ <f19ea1b1-c86c-d745-b725-ac3befa5e0a3@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f19ea1b1-c86c-d745-b725-ac3befa5e0a3@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, amir73il@gmail.com
 
-Unused after the big bmap refactor.
+On Mon, Sep 18, 2017 at 12:16:48PM -0500, Eric Sandeen wrote:
+> On 9/18/17 11:39 AM, Darrick J. Wong wrote:
+> > Missed a couple of the new extent states in the bmbt processing, so add
+> > them to avoid aborting xfs_repair.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/dinode.c |    7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/repair/dinode.c b/repair/dinode.c
+> > index f817b5a..b35a523 100644
+> > --- a/repair/dinode.c
+> > +++ b/repair/dinode.c
+> > @@ -796,6 +796,7 @@ _("%s fork in ino %" PRIu64 " claims free block %" PRIu64 "\n"),
+> >  			case XR_E_FS_MAP:
+> >  			case XR_E_INO:
+> >  			case XR_E_INUSE_FS:
+> > +			case XR_E_REFC:
+> >  				do_warn(
+> >  _("%s fork in inode %" PRIu64 " claims metadata block %" PRIu64 "\n"),
+> >  					forkname, ino, b);
+> 
+> I already whined about the naming and use of these XR_E #defines on irc,
+> but I think that since XR_E_REFC is set in process_rmap_rec when it's found
+> in the rmap btree, this case should be above the /* fallthrough */ so it says 
+> "rmap claims metadata use!\n" like everything else set there, no?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap_btree.c | 29 +----------------------------
- fs/xfs/libxfs/xfs_bmap_btree.h |  1 -
- 2 files changed, 1 insertion(+), 29 deletions(-)
+Sure.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index e66ebd982cfb..086e6fc8e4fc 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -37,22 +37,6 @@
- #include "xfs_cksum.h"
- #include "xfs_rmap.h"
- 
--/*
-- * Determine the extent state.
-- */
--/* ARGSUSED */
--STATIC xfs_exntst_t
--xfs_extent_state(
--	xfs_filblks_t		blks,
--	int			extent_flag)
--{
--	if (extent_flag) {
--		ASSERT(blks != 0);	/* saved for DMIG */
--		return XFS_EXT_UNWRITTEN;
--	}
--	return XFS_EXT_NORM;
--}
--
- /*
-  * Convert on-disk form of btree root to in-memory form.
-  */
-@@ -90,7 +74,7 @@ xfs_bmdr_to_bmbt(
- /*
-  * Convert a compressed bmap extent record to an uncompressed form.
-  * This code must be in sync with the routines xfs_bmbt_get_startoff,
-- * xfs_bmbt_get_startblock, xfs_bmbt_get_blockcount and xfs_bmbt_get_state.
-+ * xfs_bmbt_get_startblock and xfs_bmbt_get_blockcount.
-  */
- STATIC void
- __xfs_bmbt_get_all(
-@@ -156,17 +140,6 @@ xfs_bmbt_get_startoff(
- 		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
- }
- 
--xfs_exntst_t
--xfs_bmbt_get_state(
--	xfs_bmbt_rec_host_t	*r)
--{
--	int	ext_flag;
--
--	ext_flag = (int)((r->l0) >> (64 - BMBT_EXNTFLAG_BITLEN));
--	return xfs_extent_state(xfs_bmbt_get_blockcount(r),
--				ext_flag);
--}
--
- /*
-  * Extract the blockcount field from an on disk bmap extent record.
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 93f95bcee915..6f891eeb88f6 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -102,7 +102,6 @@ extern void xfs_bmbt_get_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
- extern xfs_filblks_t xfs_bmbt_get_blockcount(xfs_bmbt_rec_host_t *r);
- extern xfs_fsblock_t xfs_bmbt_get_startblock(xfs_bmbt_rec_host_t *r);
- extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
--extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
- 
- void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
- extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
--- 
-2.14.1
+--D
 
+> 
+> > @@ -812,6 +813,12 @@ _("%s fork in %s inode %" PRIu64 " claims used block %" PRIu64 "\n"),
+> >  					forkname, ftype, ino, b);
+> >  				goto done;
+> >  
+> > +			case XR_E_COW:
+> > +				do_warn(
+> > +_("%s fork in %s inode %" PRIu64 " claims CoW block %" PRIu64 "\n"),
+> > +					forkname, ftype, ino, b);
+> > +				goto done;
+> > +
+> 
+> why do cow blocks get a special case and custom warning vs the above cases
+> that just say "metadata?"
+> 
+> Obviously it's just nitpicking over the do_warn message string, just
+> double checking on the consistency front. 
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
