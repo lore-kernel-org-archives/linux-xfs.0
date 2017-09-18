@@ -1,440 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:47474 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751762AbdITUqA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 16:46:00 -0400
-Received: by mail-pg0-f43.google.com with SMTP id d8so2334013pgt.4
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2017 13:46:00 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH v3 01/31] usercopy: Prepare for usercopy whitelisting
-Date: Wed, 20 Sep 2017 13:45:07 -0700
-Message-Id: <1505940337-79069-2-git-send-email-keescook@chromium.org>
-In-Reply-To: <1505940337-79069-1-git-send-email-keescook@chromium.org>
-References: <1505940337-79069-1-git-send-email-keescook@chromium.org>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:13924 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750711AbdIRVY5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 17:24:57 -0400
+Date: Tue, 19 Sep 2017 07:24:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Message-ID: <20170918212453.GI10621@dastard>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
+ <20170918171144.GD6540@magnolia>
+ <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Greg KH <greg@kroah.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-From: David Windsor <dave@nullcore.net>
+On Mon, Sep 18, 2017 at 09:00:30PM +0300, Amir Goldstein wrote:
+> On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
+> >> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
+> >> if possible data loss bug should also be disclosed in some distros forum?
+> >> I bet some users would care more about the latter than the former.
+> >> Coincidentally, both data loss and security bugs fix the same commit..
+> >
+> > Yes the the patch ought to get sent on to stable w/ fixes tag.  One
+> > would hope that the distros will pick up the stable fixes from there.
 
-This patch prepares the slab allocator to handle caches having annotations
-(useroffset and usersize) defining usercopy regions.
+Yup, that's the normal process for data integrity/fs corruption
+bugs.
 
-This patch is modified from Brad Spengler/PaX Team's PAX_USERCOPY
-whitelisting code in the last public patch of grsecurity/PaX based on
-my understanding of the code. Changes or omissions from the original
-code are mine and don't reflect the original grsecurity/PaX code.
+> > That said, it's been in the kernel for 12 years without widespread
+> > complaints about corruption, so I'm not sure this warrants public
+> > disclosure via CVE/Phoronix vs. just fixing it.
+> >
+> 
+> I'm not sure either.
+> My intuition tells me that the chances of hitting the data loss bug
+> given a power failure are not slim, but the chances of users knowing
+> about the data loss are slim.
 
-Currently, hardened usercopy performs dynamic bounds checking on slab
-cache objects. This is good, but still leaves a lot of kernel memory
-available to be copied to/from userspace in the face of bugs. To further
-restrict what memory is available for copying, this creates a way to
-whitelist specific areas of a given slab cache object for copying to/from
-userspace, allowing much finer granularity of access control. Slab caches
-that are never exposed to userspace can declare no whitelist for their
-objects, thereby keeping them unavailable to userspace via dynamic copy
-operations. (Note, an implicit form of whitelisting is the use of constant
-sizes in usercopy operations and get_user()/put_user(); these bypass
-hardened usercopy checks since these sizes cannot change at runtime.)
+The chances of hitting it are slim. Power-fail vs fsync data
+integrity testing is something we do actually run as part of QE and
+have for many years.  We've been running such testing for years and
+never tripped over this problem, so I think the likelihood that a
+user will hit it is extremely small. Compare that to the bug we
+issued the CVE for - it's in code we /don't test/, the bug affects
+everyone with that support compiled in (potentially millions of
+systems) and it is a guaranteed local user triggered denial of
+service. There's a big difference in scope and impact between these
+two cases.
 
-To support this whitelist annotation, usercopy region offset and size
-members are added to struct kmem_cache. The slab allocator receives a
-new function, kmem_cache_create_usercopy(), that creates a new cache
-with a usercopy region defined, suitable for declaring spans of fields
-within the objects that get copied to/from userspace.
+Further, we have to consider precedence, developer resources and
+impact when deciding what we issue disclosures for. e.g. Verifying
+the problem, categorising it, finding out what systems it affected,
+working out the best fix for backporting, testing the fix, working
+through all the disclosure processes, etc took three long days of me
+doing nothing else but working on this issue.
 
-In this patch, the default kmem_cache_create() marks the entire allocation
-as whitelisted, leaving it semantically unchanged. Once all fine-grained
-whitelists have been added (in subsequent patches), this will be changed
-to a usersize of 0, making caches created with kmem_cache_create() not
-copyable to/from userspace.
+If we start issuing disclosures for all data integrity and/or
+corruption fixes, then we're going to have no time for anything
+else. That is, a significant number of bugs we fix every release are
+for corruption and/or data integrity issues. The process we use for
+getting them back to stable and distro kernels is to tag them for
+stable kernels. Adding some heavyweight disclosure process on top of
+that isn't going to provide any extra value to distros or users. All
+it does is add significant extra workload to the upstream
+development process.
 
-After the entire usercopy whitelist series is applied, less than 15%
-of the slab cache memory remains exposed to potential usercopy bugs
-after a fresh boot:
+> Meaning, the chances of users complaining:
+> "I swear, I did fsync, lost power, and after boot data was not there" are slim
+> and the chances of developers believing the report on hear say are
+> even slimmer.
 
-Total Slab Memory:           48074720
-Usercopyable Memory:          6367532  13.2%
-         task_struct                    0.2%         4480/1630720
-         RAW                            0.3%            300/96000
-         RAWv6                          2.1%           1408/64768
-         ext4_inode_cache               3.0%       269760/8740224
-         dentry                        11.1%       585984/5273856
-         mm_struct                     29.1%         54912/188448
-         kmalloc-8                    100.0%          24576/24576
-         kmalloc-16                   100.0%          28672/28672
-         kmalloc-32                   100.0%          81920/81920
-         kmalloc-192                  100.0%          96768/96768
-         kmalloc-128                  100.0%        143360/143360
-         names_cache                  100.0%        163840/163840
-         kmalloc-64                   100.0%        167936/167936
-         kmalloc-256                  100.0%        339968/339968
-         kmalloc-512                  100.0%        350720/350720
-         kmalloc-96                   100.0%        455616/455616
-         kmalloc-8192                 100.0%        655360/655360
-         kmalloc-1024                 100.0%        812032/812032
-         kmalloc-4096                 100.0%        819200/819200
-         kmalloc-2048                 100.0%      1310720/1310720
+A disclosure is not going to change that. All it will do is result
+in users seeing ghosts (suggestion bias) and reporting things that
+aren't actually filesystem data loss. e.g. "filesystem lost data on
+crash" when in reality the problem is that the app doesn't use
+fsync...
 
-After some kernel build workloads, the percentage (mainly driven by
-dentry and inode caches expanding) drops under 10%:
+Cheers,
 
-Total Slab Memory:           95516184
-Usercopyable Memory:          8497452   8.8%
-         task_struct                    0.2%         4000/1456000
-         RAW                            0.3%            300/96000
-         RAWv6                          2.1%           1408/64768
-         ext4_inode_cache               3.0%     1217280/39439872
-         dentry                        11.1%     1623200/14608800
-         mm_struct                     29.1%         73216/251264
-         kmalloc-8                    100.0%          24576/24576
-         kmalloc-16                   100.0%          28672/28672
-         kmalloc-32                   100.0%          94208/94208
-         kmalloc-192                  100.0%          96768/96768
-         kmalloc-128                  100.0%        143360/143360
-         names_cache                  100.0%        163840/163840
-         kmalloc-64                   100.0%        245760/245760
-         kmalloc-256                  100.0%        339968/339968
-         kmalloc-512                  100.0%        350720/350720
-         kmalloc-96                   100.0%        563520/563520
-         kmalloc-8192                 100.0%        655360/655360
-         kmalloc-1024                 100.0%        794624/794624
-         kmalloc-4096                 100.0%        819200/819200
-         kmalloc-2048                 100.0%      1257472/1257472
-
-Signed-off-by: David Windsor <dave@nullcore.net>
-[kees: adjust commit log, split out a few extra kmalloc hunks]
-[kees: add field names to function declarations]
-[kees: convert BUGs to WARNs and fail closed]
-[kees: add attack surface reduction analysis to commit log]
-Cc: Christoph Lameter <cl@linux.com>
-Cc: Pekka Enberg <penberg@kernel.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-xfs@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- include/linux/slab.h     | 27 +++++++++++++++++++++------
- include/linux/slab_def.h |  3 +++
- include/linux/slub_def.h |  3 +++
- include/linux/stddef.h   |  2 ++
- mm/slab.c                |  2 +-
- mm/slab.h                |  5 ++++-
- mm/slab_common.c         | 46 ++++++++++++++++++++++++++++++++++++++--------
- mm/slub.c                | 11 +++++++++--
- 8 files changed, 81 insertions(+), 18 deletions(-)
-
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 41473df6dfb0..8b6cb384f8b6 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -126,9 +126,13 @@ struct mem_cgroup;
- void __init kmem_cache_init(void);
- bool slab_is_available(void);
- 
--struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
--			unsigned long,
--			void (*)(void *));
-+struct kmem_cache *kmem_cache_create(const char *name, size_t size,
-+			size_t align, unsigned long flags,
-+			void (*ctor)(void *));
-+struct kmem_cache *kmem_cache_create_usercopy(const char *name,
-+			size_t size, size_t align, unsigned long flags,
-+			size_t useroffset, size_t usersize,
-+			void (*ctor)(void *));
- void kmem_cache_destroy(struct kmem_cache *);
- int kmem_cache_shrink(struct kmem_cache *);
- 
-@@ -144,9 +148,20 @@ void memcg_destroy_kmem_caches(struct mem_cgroup *);
-  * f.e. add ____cacheline_aligned_in_smp to the struct declaration
-  * then the objects will be properly aligned in SMP configurations.
-  */
--#define KMEM_CACHE(__struct, __flags) kmem_cache_create(#__struct,\
--		sizeof(struct __struct), __alignof__(struct __struct),\
--		(__flags), NULL)
-+#define KMEM_CACHE(__struct, __flags)					\
-+		kmem_cache_create(#__struct, sizeof(struct __struct),	\
-+			__alignof__(struct __struct), (__flags), NULL)
-+
-+/*
-+ * To whitelist a single field for copying to/from usercopy, use this
-+ * macro instead for KMEM_CACHE() above.
-+ */
-+#define KMEM_CACHE_USERCOPY(__struct, __flags, __field)			\
-+		kmem_cache_create_usercopy(#__struct,			\
-+			sizeof(struct __struct),			\
-+			__alignof__(struct __struct), (__flags),	\
-+			offsetof(struct __struct, __field),		\
-+			sizeof_field(struct __struct, __field), NULL)
- 
- /*
-  * Common kmalloc functions provided by all allocators
-diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-index 4ad2c5a26399..03eef0df8648 100644
---- a/include/linux/slab_def.h
-+++ b/include/linux/slab_def.h
-@@ -84,6 +84,9 @@ struct kmem_cache {
- 	unsigned int *random_seq;
- #endif
- 
-+	size_t useroffset;		/* Usercopy region offset */
-+	size_t usersize;		/* Usercopy region size */
-+
- 	struct kmem_cache_node *node[MAX_NUMNODES];
- };
- 
-diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-index 0783b622311e..62866a1a767c 100644
---- a/include/linux/slub_def.h
-+++ b/include/linux/slub_def.h
-@@ -134,6 +134,9 @@ struct kmem_cache {
- 	struct kasan_cache kasan_info;
- #endif
- 
-+	size_t useroffset;		/* Usercopy region offset */
-+	size_t usersize;		/* Usercopy region size */
-+
- 	struct kmem_cache_node *node[MAX_NUMNODES];
- };
- 
-diff --git a/include/linux/stddef.h b/include/linux/stddef.h
-index 9c61c7cda936..f00355086fb2 100644
---- a/include/linux/stddef.h
-+++ b/include/linux/stddef.h
-@@ -18,6 +18,8 @@ enum {
- #define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
- #endif
- 
-+#define sizeof_field(structure, field) sizeof((((structure *)0)->field))
-+
- /**
-  * offsetofend(TYPE, MEMBER)
-  *
-diff --git a/mm/slab.c b/mm/slab.c
-index 04dec48c3ed7..87b6e5e0cdaf 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -1281,7 +1281,7 @@ void __init kmem_cache_init(void)
- 	create_boot_cache(kmem_cache, "kmem_cache",
- 		offsetof(struct kmem_cache, node) +
- 				  nr_node_ids * sizeof(struct kmem_cache_node *),
--				  SLAB_HWCACHE_ALIGN);
-+				  SLAB_HWCACHE_ALIGN, 0, 0);
- 	list_add(&kmem_cache->list, &slab_caches);
- 	slab_state = PARTIAL;
- 
-diff --git a/mm/slab.h b/mm/slab.h
-index 073362816acc..044755ff9632 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -21,6 +21,8 @@ struct kmem_cache {
- 	unsigned int size;	/* The aligned/padded/added on size  */
- 	unsigned int align;	/* Alignment as calculated */
- 	unsigned long flags;	/* Active flags on the slab */
-+	size_t useroffset;	/* Usercopy region offset */
-+	size_t usersize;	/* Usercopy region size */
- 	const char *name;	/* Slab name for sysfs */
- 	int refcount;		/* Use counter */
- 	void (*ctor)(void *);	/* Called on object slot creation */
-@@ -97,7 +99,8 @@ extern int __kmem_cache_create(struct kmem_cache *, unsigned long flags);
- extern struct kmem_cache *create_kmalloc_cache(const char *name, size_t size,
- 			unsigned long flags);
- extern void create_boot_cache(struct kmem_cache *, const char *name,
--			size_t size, unsigned long flags);
-+			size_t size, unsigned long flags, size_t useroffset,
-+			size_t usersize);
- 
- int slab_unmergeable(struct kmem_cache *s);
- struct kmem_cache *find_mergeable(size_t size, size_t align,
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 904a83be82de..36408f5f2a34 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -272,6 +272,9 @@ int slab_unmergeable(struct kmem_cache *s)
- 	if (s->ctor)
- 		return 1;
- 
-+	if (s->usersize)
-+		return 1;
-+
- 	/*
- 	 * We may have set a slab to be unmergeable during bootstrap.
- 	 */
-@@ -357,12 +360,16 @@ unsigned long calculate_alignment(unsigned long flags,
- 
- static struct kmem_cache *create_cache(const char *name,
- 		size_t object_size, size_t size, size_t align,
--		unsigned long flags, void (*ctor)(void *),
-+		unsigned long flags, size_t useroffset,
-+		size_t usersize, void (*ctor)(void *),
- 		struct mem_cgroup *memcg, struct kmem_cache *root_cache)
- {
- 	struct kmem_cache *s;
- 	int err;
- 
-+	if (WARN_ON(useroffset + usersize > object_size))
-+		useroffset = usersize = 0;
-+
- 	err = -ENOMEM;
- 	s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
- 	if (!s)
-@@ -373,6 +380,8 @@ static struct kmem_cache *create_cache(const char *name,
- 	s->size = size;
- 	s->align = align;
- 	s->ctor = ctor;
-+	s->useroffset = useroffset;
-+	s->usersize = usersize;
- 
- 	err = init_memcg_params(s, memcg, root_cache);
- 	if (err)
-@@ -397,11 +406,13 @@ static struct kmem_cache *create_cache(const char *name,
- }
- 
- /*
-- * kmem_cache_create - Create a cache.
-+ * kmem_cache_create_usercopy - Create a cache.
-  * @name: A string which is used in /proc/slabinfo to identify this cache.
-  * @size: The size of objects to be created in this cache.
-  * @align: The required alignment for the objects.
-  * @flags: SLAB flags
-+ * @useroffset: Usercopy region offset
-+ * @usersize: Usercopy region size
-  * @ctor: A constructor for the objects.
-  *
-  * Returns a ptr to the cache on success, NULL on failure.
-@@ -421,8 +432,9 @@ static struct kmem_cache *create_cache(const char *name,
-  * as davem.
-  */
- struct kmem_cache *
--kmem_cache_create(const char *name, size_t size, size_t align,
--		  unsigned long flags, void (*ctor)(void *))
-+kmem_cache_create_usercopy(const char *name, size_t size, size_t align,
-+		  unsigned long flags, size_t useroffset, size_t usersize,
-+		  void (*ctor)(void *))
- {
- 	struct kmem_cache *s = NULL;
- 	const char *cache_name;
-@@ -453,7 +465,13 @@ kmem_cache_create(const char *name, size_t size, size_t align,
- 	 */
- 	flags &= CACHE_CREATE_MASK;
- 
--	s = __kmem_cache_alias(name, size, align, flags, ctor);
-+	/* Fail closed on bad usersize of useroffset values. */
-+	if (WARN_ON(!usersize && useroffset) ||
-+	    WARN_ON(size < usersize || size - usersize < useroffset))
-+		usersize = useroffset = 0;
-+
-+	if (!usersize)
-+		s = __kmem_cache_alias(name, size, align, flags, ctor);
- 	if (s)
- 		goto out_unlock;
- 
-@@ -465,7 +483,7 @@ kmem_cache_create(const char *name, size_t size, size_t align,
- 
- 	s = create_cache(cache_name, size, size,
- 			 calculate_alignment(flags, align, size),
--			 flags, ctor, NULL, NULL);
-+			 flags, useroffset, usersize, ctor, NULL, NULL);
- 	if (IS_ERR(s)) {
- 		err = PTR_ERR(s);
- 		kfree_const(cache_name);
-@@ -491,6 +509,15 @@ kmem_cache_create(const char *name, size_t size, size_t align,
- 	}
- 	return s;
- }
-+EXPORT_SYMBOL(kmem_cache_create_usercopy);
-+
-+struct kmem_cache *
-+kmem_cache_create(const char *name, size_t size, size_t align,
-+		unsigned long flags, void (*ctor)(void *))
-+{
-+	return kmem_cache_create_usercopy(name, size, align, flags, 0, size,
-+					  ctor);
-+}
- EXPORT_SYMBOL(kmem_cache_create);
- 
- static void slab_caches_to_rcu_destroy_workfn(struct work_struct *work)
-@@ -603,6 +630,7 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	s = create_cache(cache_name, root_cache->object_size,
- 			 root_cache->size, root_cache->align,
- 			 root_cache->flags & CACHE_CREATE_MASK,
-+			 root_cache->useroffset, root_cache->usersize,
- 			 root_cache->ctor, memcg, root_cache);
- 	/*
- 	 * If we could not create a memcg cache, do not complain, because
-@@ -870,13 +898,15 @@ bool slab_is_available(void)
- #ifndef CONFIG_SLOB
- /* Create a cache during boot when no slab services are available yet */
- void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t size,
--		unsigned long flags)
-+		unsigned long flags, size_t useroffset, size_t usersize)
- {
- 	int err;
- 
- 	s->name = name;
- 	s->size = s->object_size = size;
- 	s->align = calculate_alignment(flags, ARCH_KMALLOC_MINALIGN, size);
-+	s->useroffset = useroffset;
-+	s->usersize = usersize;
- 
- 	slab_init_memcg_params(s);
- 
-@@ -897,7 +927,7 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,
- 	if (!s)
- 		panic("Out of memory when creating slab %s\n", name);
- 
--	create_boot_cache(s, name, size, flags);
-+	create_boot_cache(s, name, size, flags, 0, size);
- 	list_add(&s->list, &slab_caches);
- 	memcg_link_cache(s);
- 	s->refcount = 1;
-diff --git a/mm/slub.c b/mm/slub.c
-index 163352c537ab..fae637726c44 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -4201,7 +4201,7 @@ void __init kmem_cache_init(void)
- 	kmem_cache = &boot_kmem_cache;
- 
- 	create_boot_cache(kmem_cache_node, "kmem_cache_node",
--		sizeof(struct kmem_cache_node), SLAB_HWCACHE_ALIGN);
-+		sizeof(struct kmem_cache_node), SLAB_HWCACHE_ALIGN, 0, 0);
- 
- 	register_hotmemory_notifier(&slab_memory_callback_nb);
- 
-@@ -4211,7 +4211,7 @@ void __init kmem_cache_init(void)
- 	create_boot_cache(kmem_cache, "kmem_cache",
- 			offsetof(struct kmem_cache, node) +
- 				nr_node_ids * sizeof(struct kmem_cache_node *),
--		       SLAB_HWCACHE_ALIGN);
-+		       SLAB_HWCACHE_ALIGN, 0, 0);
- 
- 	kmem_cache = bootstrap(&boot_kmem_cache);
- 
-@@ -5081,6 +5081,12 @@ static ssize_t cache_dma_show(struct kmem_cache *s, char *buf)
- SLAB_ATTR_RO(cache_dma);
- #endif
- 
-+static ssize_t usersize_show(struct kmem_cache *s, char *buf)
-+{
-+	return sprintf(buf, "%zu\n", s->usersize);
-+}
-+SLAB_ATTR_RO(usersize);
-+
- static ssize_t destroy_by_rcu_show(struct kmem_cache *s, char *buf)
- {
- 	return sprintf(buf, "%d\n", !!(s->flags & SLAB_TYPESAFE_BY_RCU));
-@@ -5455,6 +5461,7 @@ static struct attribute *slab_attrs[] = {
- #ifdef CONFIG_FAILSLAB
- 	&failslab_attr.attr,
- #endif
-+	&usersize_attr.attr,
- 
- 	NULL
- };
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
