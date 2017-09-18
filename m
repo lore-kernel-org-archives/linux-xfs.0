@@ -1,178 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60043 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752668AbdIRPY1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 11:24:27 -0400
-Received: from [107.17.164.65] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dtxuN-0005E5-Jy
-        for linux-xfs@vger.kernel.org; Mon, 18 Sep 2017 15:24:27 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/19] xfs: refactor xfs_del_extent_real
-Date: Mon, 18 Sep 2017 08:24:12 -0700
-Message-Id: <20170918152422.24345-10-hch@lst.de>
-In-Reply-To: <20170918152422.24345-1-hch@lst.de>
-References: <20170918152422.24345-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:36922 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932707AbdIRRQt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Sep 2017 13:16:49 -0400
+Subject: Re: [PATCH] xfs_repair: handle missing extent states
+References: <20170918163944.GC6540@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <f19ea1b1-c86c-d745-b725-ac3befa5e0a3@sandeen.net>
+Date: Mon, 18 Sep 2017 12:16:48 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170918163944.GC6540@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, amir73il@gmail.com
 
-Use xfs_iext_update_extent to update entries in the in-core extent list.
-This isolates the function from the detailed layout of the extent list,
-and generally makes the code a lot more readable.
+On 9/18/17 11:39 AM, Darrick J. Wong wrote:
+> Missed a couple of the new extent states in the bmbt processing, so add
+> them to avoid aborting xfs_repair.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  repair/dinode.c |    7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index f817b5a..b35a523 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -796,6 +796,7 @@ _("%s fork in ino %" PRIu64 " claims free block %" PRIu64 "\n"),
+>  			case XR_E_FS_MAP:
+>  			case XR_E_INO:
+>  			case XR_E_INUSE_FS:
+> +			case XR_E_REFC:
+>  				do_warn(
+>  _("%s fork in inode %" PRIu64 " claims metadata block %" PRIu64 "\n"),
+>  					forkname, ino, b);
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 60 ++++++++++++++++++++++++------------------------
- 1 file changed, 30 insertions(+), 30 deletions(-)
+I already whined about the naming and use of these XR_E #defines on irc,
+but I think that since XR_E_REFC is set in process_rmap_rec when it's found
+in the rmap btree, this case should be above the /* fallthrough */ so it says 
+"rmap claims metadata use!\n" like everything else set there, no?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 037efc97499f..bd00f4d135af 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5078,10 +5078,9 @@ xfs_bmap_del_extent_real(
- 	xfs_fsblock_t		del_endblock=0;	/* first block past del */
- 	xfs_fileoff_t		del_endoff;	/* first offset past del */
- 	int			do_fx;	/* free extent at end of routine */
--	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
- 	int			error;	/* error return value */
- 	int			flags = 0;/* inode logging flags */
--	xfs_bmbt_irec_t		got;	/* current extent entry */
-+	struct xfs_bmbt_irec	got;	/* current extent entry */
- 	xfs_fileoff_t		got_endoff;	/* first offset past got */
- 	int			i;	/* temp state */
- 	xfs_ifork_t		*ifp;	/* inode fork pointer */
-@@ -5090,9 +5089,8 @@ xfs_bmap_del_extent_real(
- 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
- 	/* REFERENCED */
- 	uint			qfield;	/* quota field to update */
--	xfs_filblks_t		temp;	/* for indirect length calculations */
--	xfs_filblks_t		temp2;	/* for indirect length calculations */
- 	int			state = 0;
-+	struct xfs_bmbt_irec	old;
- 
- 	mp = ip->i_mount;
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -5105,8 +5103,7 @@ xfs_bmap_del_extent_real(
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
- 	ASSERT(del->br_blockcount > 0);
--	ep = xfs_iext_get_ext(ifp, *idx);
--	xfs_bmbt_get_all(ep, &got);
-+	xfs_iext_get_extent(ifp, *idx, &got);
- 	ASSERT(got.br_startoff <= del->br_startoff);
- 	del_endoff = del->br_startoff + del->br_blockcount;
- 	got_endoff = got.br_startoff + got.br_blockcount;
-@@ -5193,54 +5190,56 @@ xfs_bmap_del_extent_real(
- 		 * Deleting the first part of the extent.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_startoff(ep, del_endoff);
--		temp = got.br_blockcount - del->br_blockcount;
--		xfs_bmbt_set_blockcount(ep, temp);
--		xfs_bmbt_set_startblock(ep, del_endblock);
-+		got.br_startoff = del_endoff;
-+		got.br_startblock = del_endblock;
-+		got.br_blockcount -= del->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		if (!cur) {
- 			flags |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
--		if ((error = xfs_bmbt_update(cur, del_endoff, del_endblock,
--				got.br_blockcount - del->br_blockcount,
--				got.br_state)))
-+		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-+				got.br_blockcount, got.br_state);
-+		if (error)
- 			goto done;
- 		break;
- 	case BMAP_RIGHT_FILLING:
- 		/*
- 		 * Deleting the last part of the extent.
- 		 */
--		temp = got.br_blockcount - del->br_blockcount;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
-+		got.br_blockcount -= del->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		if (!cur) {
- 			flags |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
--		if ((error = xfs_bmbt_update(cur, got.br_startoff,
--				got.br_startblock,
--				got.br_blockcount - del->br_blockcount,
--				got.br_state)))
-+		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-+				got.br_blockcount, got.br_state);
-+		if (error)
- 			goto done;
- 		break;
- 	case 0:
- 		/*
- 		 * Deleting the middle of the extent.
- 		 */
--		temp = del->br_startoff - got.br_startoff;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
-+
-+		old = got;
-+		got.br_blockcount = del->br_startoff - got.br_startoff;
-+		xfs_iext_update_extent(ifp, *idx, &got);
-+
- 		new.br_startoff = del_endoff;
--		temp2 = got_endoff - del_endoff;
--		new.br_blockcount = temp2;
-+		new.br_blockcount = got_endoff - del_endoff;
- 		new.br_state = got.br_state;
- 		new.br_startblock = del_endblock;
-+
- 		flags |= XFS_ILOG_CORE;
- 		if (cur) {
- 			error = xfs_bmbt_update(cur, got.br_startoff,
--					got.br_startblock, temp,
-+					got.br_startblock, got.br_blockcount,
- 					got.br_state);
- 			if (error)
- 				goto done;
-@@ -5262,7 +5261,8 @@ xfs_bmap_del_extent_real(
- 				 * insert operation.
- 				 */
- 				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
--						got.br_startblock, temp, &i);
-+						got.br_startblock,
-+						got.br_blockcount, &i);
- 				if (error)
- 					goto done;
- 				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -5270,17 +5270,17 @@ xfs_bmap_del_extent_real(
- 				 * Update the btree record back
- 				 * to the original value.
- 				 */
--				error = xfs_bmbt_update(cur, got.br_startoff,
--						got.br_startblock,
--						got.br_blockcount,
--						got.br_state);
-+				error = xfs_bmbt_update(cur, old.br_startoff,
-+						old.br_startblock,
-+						old.br_blockcount,
-+						old.br_state);
- 				if (error)
- 					goto done;
- 				/*
- 				 * Reset the extent record back
- 				 * to the original value.
- 				 */
--				xfs_bmbt_set_blockcount(ep, got.br_blockcount);
-+				xfs_iext_update_extent(ifp, *idx, &old);
- 				flags = 0;
- 				error = -ENOSPC;
- 				goto done;
--- 
-2.14.1
 
+> @@ -812,6 +813,12 @@ _("%s fork in %s inode %" PRIu64 " claims used block %" PRIu64 "\n"),
+>  					forkname, ftype, ino, b);
+>  				goto done;
+>  
+> +			case XR_E_COW:
+> +				do_warn(
+> +_("%s fork in %s inode %" PRIu64 " claims CoW block %" PRIu64 "\n"),
+> +					forkname, ftype, ino, b);
+> +				goto done;
+> +
+
+why do cow blocks get a special case and custom warning vs the above cases
+that just say "metadata?"
+
+Obviously it's just nitpicking over the do_warn message string, just
+double checking on the consistency front. 
+
+-Eric
