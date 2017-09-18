@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56378 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56370 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932401AbdIRJQD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:16:03 -0400
+        with ESMTP id S932390AbdIRJQB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:16:01 -0400
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 43/78] xfs: check _alloc_read_agf buffer pointer before using
-Date: Mon, 18 Sep 2017 11:11:52 +0200
-Message-Id: <20170918091132.850826096@linuxfoundation.org>
+Subject: [PATCH 4.9 42/78] xfs: set firstfsb to NULLFSBLOCK before feeding it to _bmapi_write
+Date: Mon, 18 Sep 2017 11:11:51 +0200
+Message-Id: <20170918091132.707444469@linuxfoundation.org>
 In-Reply-To: <20170918091126.077483037@linuxfoundation.org>
 References: <20170918091126.077483037@linuxfoundation.org>
 MIME-Version: 1.0
@@ -24,44 +24,50 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, 
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 10479e2dea83d4c421ad05dfc55d918aa8dfc0cd upstream.
+commit 4c1a67bd3606540b9b42caff34a1d5cd94b1cf65 upstream.
 
-In some circumstances, _alloc_read_agf can return an error code of zero
-but also a null AGF buffer pointer.  Check for this and jump out.
+We must initialize the firstfsb parameter to _bmapi_write so that it
+doesn't incorrectly treat stack garbage as a restriction on which AGs
+it can search for free space.
 
-Fixes-coverity-id: 1415250
-Fixes-coverity-id: 1415320
+Fixes-coverity-id: 1402025
+Fixes-coverity-id: 1415167
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_refcount.c |    4 ++++
- fs/xfs/xfs_reflink.c         |    2 ++
- 2 files changed, 6 insertions(+)
+ fs/xfs/libxfs/xfs_bmap.c |    9 +++++++++
+ fs/xfs/xfs_reflink.c     |    2 +-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1640,6 +1640,10 @@ xfs_refcount_recover_cow_leftovers(
- 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
- 	if (error)
- 		goto out_trans;
-+	if (!agbp) {
-+		error = -ENOMEM;
-+		goto out_trans;
-+	}
- 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6639,6 +6639,15 @@ xfs_bmap_finish_one(
+ 	bmap.br_blockcount = *blockcount;
+ 	bmap.br_state = state;
  
- 	/* Find all the leftover CoW staging extents. */
++	/*
++	 * firstfsb is tied to the transaction lifetime and is used to
++	 * ensure correct AG locking order and schedule work item
++	 * continuations.  XFS_BUI_MAX_FAST_EXTENTS (== 1) restricts us
++	 * to only making one bmap call per transaction, so it should
++	 * be safe to have it as a local variable here.
++	 */
++	firstfsb = NULLFSBLOCK;
++
+ 	trace_xfs_bmap_deferred(tp->t_mountp,
+ 			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
+ 			XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -169,6 +169,8 @@ xfs_reflink_find_shared(
- 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
- 	if (error)
- 		return error;
-+	if (!agbp)
-+		return -ENOMEM;
+@@ -333,7 +333,7 @@ xfs_reflink_convert_cow_extent(
+ 	struct xfs_defer_ops		*dfops)
+ {
+ 	struct xfs_bmbt_irec		irec = *imap;
+-	xfs_fsblock_t			first_block;
++	xfs_fsblock_t			first_block = NULLFSBLOCK;
+ 	int				nimaps = 1;
  
- 	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
- 
+ 	if (imap->br_state == XFS_EXT_NORM)
 
 
