@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55046 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55036 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753784AbdIRJMM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:12:12 -0400
+        with ESMTP id S1753777AbdIRJMK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 05:12:10 -0400
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.13 49/52] xfs: open code end_buffer_async_write in xfs_finish_page_writeback
-Date: Mon, 18 Sep 2017 11:10:17 +0200
-Message-Id: <20170918090911.500831056@linuxfoundation.org>
+Subject: [PATCH 4.13 48/52] xfs: dont set v3 xflags for v2 inodes
+Date: Mon, 18 Sep 2017 11:10:16 +0200
+Message-Id: <20170918090911.353411117@linuxfoundation.org>
 In-Reply-To: <20170918090904.072766209@linuxfoundation.org>
 References: <20170918090904.072766209@linuxfoundation.org>
 MIME-Version: 1.0
@@ -15,7 +15,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
 
 4.13-stable review patch.  If anyone has any objections, please let me know.
 
@@ -23,140 +23,97 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, 
 
 From: Christoph Hellwig <hch@lst.de>
 
-commit 8353a814f2518dcfa79a5bb77afd0e7dfa391bb1 upstream.
+commit dd60687ee541ca3f6df8758f38e6f22f57c42a37 upstream.
 
-Our loop in xfs_finish_page_writeback, which iterates over all buffer
-heads in a page and then calls end_buffer_async_write, which also
-iterates over all buffers in the page to check if any I/O is in flight
-is not only inefficient, but also potentially dangerous as
-end_buffer_async_write can cause the page and all buffers to be freed.
-
-Replace it with a single loop that does the work of end_buffer_async_write
-on a per-page basis.
+Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
+if the inode isn't a v3 inode, because di_flags2 only exists on v3.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/xfs_aops.c |   71 +++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 47 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_ioctl.c |   38 +++++++++++++++++++++++++-------------
+ 1 file changed, 25 insertions(+), 13 deletions(-)
 
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -85,11 +85,11 @@ xfs_find_bdev_for_inode(
-  * associated buffer_heads, paying attention to the start and end offsets that
-  * we need to process on the page.
-  *
-- * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
-- * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
-- * the page at all, as we may be racing with memory reclaim and it can free both
-- * the bufferhead chain and the page as it will see the page as clean and
-- * unused.
-+ * Note that we open code the action in end_buffer_async_write here so that we
-+ * only have to iterate over the buffers attached to the page once.  This is not
-+ * only more efficient, but also ensures that we only calls end_page_writeback
-+ * at the end of the iteration, and thus avoids the pitfall of having the page
-+ * and buffers potentially freed after every call to end_buffer_async_write.
-  */
- static void
- xfs_finish_page_writeback(
-@@ -97,29 +97,44 @@ xfs_finish_page_writeback(
- 	struct bio_vec		*bvec,
- 	int			error)
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -931,16 +931,15 @@ xfs_ioc_fsgetxattr(
+ 	return 0;
+ }
+ 
+-STATIC void
+-xfs_set_diflags(
++STATIC uint16_t
++xfs_flags2diflags(
+ 	struct xfs_inode	*ip,
+ 	unsigned int		xflags)
  {
--	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
--	struct buffer_head	*head, *bh, *next;
-+	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
-+	bool			busy = false;
- 	unsigned int		off = 0;
--	unsigned int		bsize;
-+	unsigned long		flags;
- 
- 	ASSERT(bvec->bv_offset < PAGE_SIZE);
- 	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
--	ASSERT(end < PAGE_SIZE);
-+	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
- 	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
- 
--	bh = head = page_buffers(bvec->bv_page);
+-	unsigned int		di_flags;
+-	uint64_t		di_flags2;
 -
--	bsize = bh->b_size;
-+	local_irq_save(flags);
-+	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
- 	do {
--		if (off > end)
--			break;
--		next = bh->b_this_page;
--		if (off < bvec->bv_offset)
--			goto next_bh;
--		bh->b_end_io(bh, !error);
--next_bh:
--		off += bsize;
--	} while ((bh = next) != head);
-+		if (off >= bvec->bv_offset &&
-+		    off < bvec->bv_offset + bvec->bv_len) {
-+			ASSERT(buffer_async_write(bh));
-+			ASSERT(bh->b_end_io == NULL);
+ 	/* can't set PREALLOC this way, just preserve it */
+-	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
++	uint16_t		di_flags =
++		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
 +
-+			if (error) {
-+				mark_buffer_write_io_error(bh);
-+				clear_buffer_uptodate(bh);
-+				SetPageError(bvec->bv_page);
-+			} else {
-+				set_buffer_uptodate(bh);
-+			}
-+			clear_buffer_async_write(bh);
-+			unlock_buffer(bh);
-+		} else if (buffer_async_write(bh)) {
-+			ASSERT(buffer_locked(bh));
-+			busy = true;
-+		}
-+		off += bh->b_size;
-+	} while ((bh = bh->b_this_page) != head);
-+	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
-+	local_irq_restore(flags);
-+
-+	if (!busy)
-+		end_page_writeback(bvec->bv_page);
- }
- 
- /*
-@@ -133,8 +148,10 @@ xfs_destroy_ioend(
- 	int			error)
- {
- 	struct inode		*inode = ioend->io_inode;
--	struct bio		*last = ioend->io_bio;
--	struct bio		*bio, *next;
-+	struct bio		*bio = &ioend->io_inline_bio;
-+	struct bio		*last = ioend->io_bio, *next;
-+	u64			start = bio->bi_iter.bi_sector;
-+	bool			quiet = bio_flagged(bio, BIO_QUIET);
- 
- 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
- 		struct bio_vec	*bvec;
-@@ -155,6 +172,11 @@ xfs_destroy_ioend(
- 
- 		bio_put(bio);
+ 	if (xflags & FS_XFLAG_IMMUTABLE)
+ 		di_flags |= XFS_DIFLAG_IMMUTABLE;
+ 	if (xflags & FS_XFLAG_APPEND)
+@@ -970,19 +969,24 @@ xfs_set_diflags(
+ 		if (xflags & FS_XFLAG_EXTSIZE)
+ 			di_flags |= XFS_DIFLAG_EXTSIZE;
  	}
+-	ip->i_d.di_flags = di_flags;
+ 
+-	/* diflags2 only valid for v3 inodes. */
+-	if (ip->i_d.di_version < 3)
+-		return;
++	return di_flags;
++}
 +
-+	if (unlikely(error && !quiet)) {
-+		xfs_err_ratelimited(XFS_I(inode)->i_mount,
-+			"writeback error on sector %llu", start);
-+	}
++STATIC uint64_t
++xfs_flags2diflags2(
++	struct xfs_inode	*ip,
++	unsigned int		xflags)
++{
++	uint64_t		di_flags2 =
++		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+ 
+-	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+ 	if (xflags & FS_XFLAG_DAX)
+ 		di_flags2 |= XFS_DIFLAG2_DAX;
+ 	if (xflags & FS_XFLAG_COWEXTSIZE)
+ 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 
+-	ip->i_d.di_flags2 = di_flags2;
++	return di_flags2;
  }
  
- /*
-@@ -423,7 +445,8 @@ xfs_start_buffer_writeback(
- 	ASSERT(!buffer_delay(bh));
- 	ASSERT(!buffer_unwritten(bh));
+ STATIC void
+@@ -1023,6 +1027,7 @@ xfs_ioctl_setattr_xflags(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	uint64_t		di_flags2;
  
--	mark_buffer_async_write(bh);
-+	bh->b_end_io = NULL;
-+	set_buffer_async_write(bh);
- 	set_buffer_uptodate(bh);
- 	clear_buffer_dirty(bh);
- }
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+@@ -1053,7 +1058,14 @@ xfs_ioctl_setattr_xflags(
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
+ 
+-	xfs_set_diflags(ip, fa->fsx_xflags);
++	/* diflags2 only valid for v3 inodes. */
++	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
++	if (di_flags2 && ip->i_d.di_version < 3)
++		return -EINVAL;
++
++	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
++	ip->i_d.di_flags2 = di_flags2;
++
+ 	xfs_diflags_to_linux(ip);
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
 
