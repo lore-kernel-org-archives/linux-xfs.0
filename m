@@ -1,41 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49781 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751871AbdIQVom (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 17 Sep 2017 17:44:42 -0400
-Date: Sun, 17 Sep 2017 23:44:41 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] xfs: rewrite getbmap using the xfs_iext_* helpers
-Message-ID: <20170917214441.GA30786@lst.de>
-References: <20170903155140.17256-1-hch@lst.de> <20170911154925.GB13400@bfoster.bfoster>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47262 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752208AbdIRIWl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 04:22:41 -0400
+Date: Mon, 18 Sep 2017 10:22:51 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: 4.9-stable updates for XFS
+Message-ID: <20170918082251.GA29399@kroah.com>
+References: <20170917210712.10804-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170911154925.GB13400@bfoster.bfoster>
+In-Reply-To: <20170917210712.10804-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Sep 11, 2017 at 11:49:25AM -0400, Brian Foster wrote:
-> > +		if (!xfs_iext_get_extent(ifp, ++idx, &got)) {
-> > +			xfs_fileoff_t	end = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> > +
-> > +			out[bmv->bmv_entries].bmv_oflags |= BMV_OF_LAST;
-> > +
+On Sun, Sep 17, 2017 at 02:06:25PM -0700, Christoph Hellwig wrote:
+> Hi all,
 > 
-> I'm a little confused about the above bit. Isn't ->bmv_entries already
-> incremented past the last reported extent?
+> below are backports up to 4.14-rc1 for XFS.  I've selected all
+> clear bugfixes for reported bugs, and a few harmless prep patches
+> that allow us to carry late bug fixes as-is instead of providing
+> special versions for -stable, which in the past have caused more
+> harm than good.
+> 
+> In addition to the patches for 4.13-stable there also are various
+> patches that are in 4.13 but not in 4.9-stable yet.
 
-Yes, it needs to be bmv->bmv_entries - 1.
+Thanks for all of these, now queued up.
 
-> Further, if there is a hole
-> to be reported, we potentially do that just below (which means that
-> ->bmv_entries may or may not refer to the last reported segment here)..?
-
-We can't reach this code when the previous extent was a hole.  For the
-whole file hole case we jump straight to out_unlock_ilock after
-filling the hole, for the inbetween extents hole case we break out
-of the loop when running out of space before filling the second extent,
-and the end of file hole case is just below setting BMV_OF_LAST.
+greg k-h
