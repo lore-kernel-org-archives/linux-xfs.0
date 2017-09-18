@@ -1,73 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr001msb.fastweb.it ([85.18.95.85]:47131 "EHLO
-        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751273AbdIPT7c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Sep 2017 15:59:32 -0400
-Subject: Re: XFS and sector size on thin volumes
+Received: from mx2.suse.de ([195.135.220.15]:50514 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750710AbdIRHrR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Sep 2017 03:47:17 -0400
+Date: Mon, 18 Sep 2017 09:47:13 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] xfs: add regression test for DAX mount option usage
+Message-ID: <20170918074713.5lravsj234d5pbdj@linux-x5ow.site>
+References: <CAPcyv4hGSLQS1GmTYtzMCBDDNNuK1nLRKme6e-Vpx8_pyaJwrg@mail.gmail.com>
+ <20170913233438.GY10621@dastard>
+ <CAPcyv4hYc5=44vyyL+_hW9qpq54izKMMEOEQq1yHHkZVv-MR0w@mail.gmail.com>
+ <20170914004038.GZ10621@dastard>
+ <CAPcyv4iNcnq9sJVLeju-3Ua+XYfTscOb9iiWDS5yB768WJTOXQ@mail.gmail.com>
+ <x49a81xeakx.fsf@segfault.boston.devel.redhat.com>
+ <20170914131638.qxbzeocvrkhjcjcu@linux-x5ow.site>
+ <CAPcyv4j4GUjQBa7ePUGLuHjZcf3G+0suvc7r6wmgGM_G_L5Gcw@mail.gmail.com>
+ <20170915091845.pmp3wer5lwx2xhjz@linux-x5ow.site>
+ <CAA9_cmdrV13OgnRxpd0W9yYGBm4XP=fdTHDZvCBk4YR7gt8M5g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Sat, 16 Sep 2017 21:59:27 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <4ca74023-dcaf-9963-1b8f-2c1924866564@sandeen.net>
-References: <d95f09118ee6cb2fe0562ad35303715c@assyoma.it>
- <20170909231215.GK17782@dastard>
- <0c59ba403f83e571d695a716ccad5d0a@assyoma.it>
- <20170909235323.GL17782@dastard>
- <838841738c3d8ca84328075615f95475@assyoma.it>
- <9d6b72e9-37ca-70f9-a40d-62ceaafc9db6@sandeen.net>
- <e94a47555325c3e87e5d184e1cab20b4@assyoma.it>
- <1357a2ee8280242c68d92cd4aba06f51@assyoma.it>
- <4ca74023-dcaf-9963-1b8f-2c1924866564@sandeen.net>
-Message-ID: <58a80905e97216e37d72e5b7bd9f1643@assyoma.it>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAA9_cmdrV13OgnRxpd0W9yYGBm4XP=fdTHDZvCBk4YR7gt8M5g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Il 16-09-2017 20:33 Eric Sandeen ha scritto:
-> 
-> I don't think I said that - this is the first time you've mentioned
-> /alignment/, and I've seen no indication of your alignment one way or
-> another.
-> 
-> 
-> 
-> 
-> that specifies a 4k block size, which is already the default.
-> 
-> You're conflating a lot of issues here - log alignment, sector size,
-> physical & logical block size presented by both the underlying
-> storage and the zvol ...
-> 
-> I cannot speak to zvols, as I have no experience with them.
-> 
-> But if the underlying storage is 512e/4k then you may want to specify
-> the 4k /sector/ size with -s size=4k.
-> 
-> -Eric
-> 
+On Fri, Sep 15, 2017 at 10:39:05AM -0700, Dan Williams wrote:
+> Yes, but what we're worried about in the libnvdimm/nfit_test case is
+> internals behind sysfs interfaces. But point taken, we can at least
+> use the presence of certain attributes to gate tests. However, it does
+> mean we lose the tests for when an attribute is missing due to an
+> incomplete backport.
 
-Hi Eric, you are right: I messed up the terminology. Sorry for the 
-noise.
+Of cause, but all we loose is a group of testcases to be run and this can be
+an indication of a bad backport as well, so I think this is quite helpful.
 
-I was really speaking about *sector* size. In short, when using ZVOL the 
-physical disk's sector size is not directly announced to the higher 
-layer filesystem. This, in turn, cause mkfs.xfs to automatically select 
-a 512B sector size, even when running on top of 512e/4Kn disks.
-
- From previous emails/threads, I was under impression that XFS sector 
-size only very marginally affect performance. It that true? Can I stick 
-with default mkfs settings? Or should I manually select 4K sector size 
-("-s size=4k")?
-
-Thanks.
-
+Byte,
+	Johannes
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
