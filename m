@@ -1,101 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:47608 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751053AbdISIux (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 04:50:53 -0400
-Received: by mail-io0-f177.google.com with SMTP id e189so8359649ioa.4
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 01:50:52 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20049 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751823AbdISXi7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 19:38:59 -0400
+Date: Wed, 20 Sep 2017 09:38:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: io_submit() blocks for writes for substantial amount of time
+Message-ID: <20170919233856.GM10621@dastard>
+References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+ <20170919122704.GA3487@bfoster.bfoster>
+ <22a2db70-50e2-7a37-97f5-1751eafc3f7c@scylladb.com>
+ <20170919173850.GA8139@dhcp-41-131.bos.redhat.com>
+ <CAO2XSW5st7MpEAm=XEWHr_e0JHsn0yRk_q+qnj14N=GuTR0hJg@mail.gmail.com>
 MIME-Version: 1.0
-From: Tomasz Grabiec <tgrabiec@scylladb.com>
-Date: Tue, 19 Sep 2017 10:50:51 +0200
-Message-ID: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
-Subject: io_submit() blocks for writes for substantial amount of time
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAO2XSW5st7MpEAm=XEWHr_e0JHsn0yRk_q+qnj14N=GuTR0hJg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Tomasz Grabiec <tgrabiec@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, Avi Kivity <avi@scylladb.com>, linux-xfs@vger.kernel.org
 
-Hi,
+On Tue, Sep 19, 2017 at 07:53:52PM +0200, Tomasz Grabiec wrote:
+> On Tue, Sep 19, 2017 at 7:38 PM, Brian Foster <bfoster@redhat.com> wrote:
+> >> Is that because the disk is nearly full and there are no known flushed
+> >> extents, or because the allocator doesn't prioritize known-flushed extents?
+> >> From your comments below I gather you may not know for sure.
+> >>
+> >
+> > I'm not sure without digging further into it. Hence the question around
+> > free space availability.
+> 
+> The file system was utilized between 90% and 95% out of 165GB during the test.
 
-On some systems we are seeing one of our tests to trigger io_submit()
-calls to block when submitting writes for an order of 100ms [1]. This
-is problematic, because we heavily rely on io_submit() being async.
+Then I'm surprised that you only hit these relatively minor delays.
+Once you get beyond 85-90% full the filesystem is typically not
+running through allocation fast paths as large contiguous free
+spaces are getting to be non-existant (especially for such small
+filesystems like this).
 
-Workload: open, (ftruncate, append*)*, close.
+Continued operation at >85-90% full will run you into premature
+aging situations like free space fragmentation, and then all your
+allocations and then data IO patterns will begin to suffer.  Once
+you get above 95% full, various algorithms will even stop attempting
+optimal allocations and instead start optimising for minimum size at
+the expense of increased file fragmentation.
 
-Kernel version: 4.12.9-300.fc26.x86_64
-mount: /dev/nvme0n1p3 on / type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
+IOWs, expect unpredictable delays in the filesystem once you start
+approaching ENOSPC, and the closer to ENOSPC you get the more
+unpredictable the filesystem behaviour will get. And if you spend
+long periods of time operating near ENOSPC, performance and
+behaviour may not improve unless you free a large amount of space
+(e.g. 50% of filesystem space) so that large contiguous free space
+regions can reform....
 
-The blocking happens in the following places:
+So, yes, you can operate at near ENOSPC conditions. However, it's not
+advisable if you require deterministic/predictable behaviour and/or
+have long term filesystem performance requirements...
 
-(1)
+Cheers,
 
-            7fff9287472f __schedule ([kernel.kallsyms])
-            7fff92874d16 schedule ([kernel.kallsyms])
-            7fff92878d42 schedule_timeout ([kernel.kallsyms])
-            7fff92876478 wait_for_completion ([kernel.kallsyms])
-            7fffc05bf231 xfs_buf_submit_wait ([kernel.kallsyms])
-            7fffc05bf3d3 _xfs_buf_read ([kernel.kallsyms])
-            7fffc05bf4e4 xfs_buf_read_map ([kernel.kallsyms])
-            7fffc05f53ca xfs_trans_read_buf_map ([kernel.kallsyms])
-            7fffc058b432 xfs_btree_read_buf_block.constprop.34
-([kernel.kallsyms])
-            7fffc058b504 xfs_btree_lookup_get_block ([kernel.kallsyms])
-            7fffc058f6ad xfs_btree_lookup ([kernel.kallsyms])
-            7fffc0570919 xfs_alloc_lookup_eq ([kernel.kallsyms])
-            7fffc0570c59 xfs_alloc_fixup_trees ([kernel.kallsyms])
-            7fffc0573a2d xfs_alloc_ag_vextent_near ([kernel.kallsyms])
-            7fffc0573db1 xfs_alloc_ag_vextent ([kernel.kallsyms])
-            7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
-            7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
-            7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
-            7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
-            7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
-            7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
-            7fff922d46ca iomap_apply ([kernel.kallsyms])
-            7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
-            7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
-            7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
-            7fff922bc5d3 aio_write ([kernel.kallsyms])
-            7fff922bcec1 do_io_submit ([kernel.kallsyms])
-            7fff922bdd40 sys_io_submit ([kernel.kallsyms])
-            7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
-                     687 io_submit (/usr/lib64/libaio.so.1.0.1)
-                  112373 seastar::reactor::flush_pending_aio
-(/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
-
-(2)
-
-  7fff9287472f __schedule ([kernel.kallsyms])
-            7fff92874d16 schedule ([kernel.kallsyms])
-            7fffc05e6265 _xfs_log_force ([kernel.kallsyms])
-            7fffc05c2518 xfs_extent_busy_flush ([kernel.kallsyms])
-            7fffc0572ccd xfs_alloc_ag_vextent_size ([kernel.kallsyms])
-            7fffc0573d91 xfs_alloc_ag_vextent ([kernel.kallsyms])
-            7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
-            7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
-            7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
-            7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
-            7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
-            7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
-            7fff922d46ca iomap_apply ([kernel.kallsyms])
-            7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
-            7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
-            7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
-            7fff922bc5d3 aio_write ([kernel.kallsyms])
-            7fff922bcec1 do_io_submit ([kernel.kallsyms])
-            7fff922bdd40 sys_io_submit ([kernel.kallsyms])
-            7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
-                     687 io_submit (/usr/lib64/libaio.so.1.0.1)
-                  112373 seastar::reactor::flush_pending_aio
-(/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
-
-Please advise, is this a known bug? When can it happen? Is there a way
-to work it around to avoid blocking?
-
-[1] https://github.com/scylladb/seastar/issues/340
-
-
-Regards,
-Tomasz Grabiec
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
