@@ -1,38 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58862 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53338 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751016AbdISO6z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Sep 2017 10:58:55 -0400
-Date: Tue, 19 Sep 2017 10:58:51 -0400
+        id S1750973AbdISQfa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Sep 2017 12:35:30 -0400
+Date: Tue, 19 Sep 2017 12:35:28 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] test race when checking i_size on direct i/o read
-Message-ID: <20170919145851.GD3487@bfoster.bfoster>
-References: <799f63d9-de03-eab3-1e6e-cd747aa04c36@redhat.com>
- <20170919073616.GP8034@eguan.usersys.redhat.com>
- <20170919141351.GB3487@bfoster.bfoster>
- <20170919143406.GA7437@infradead.org>
+Subject: Re: [PATCH 13/19] xfs: refactor delalloc accounting in
+ xfs_bmap_add_extent_delay_real
+Message-ID: <20170919163528.GK3487@bfoster.bfoster>
+References: <20170918152422.24345-1-hch@lst.de>
+ <20170918152422.24345-14-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170919143406.GA7437@infradead.org>
+In-Reply-To: <20170918152422.24345-14-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eryu Guan <eguan@redhat.com>, Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, Zheng Liu <wenqing.lz@taobao.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2017 at 07:34:06AM -0700, Christoph Hellwig wrote:
-> On Tue, Sep 19, 2017 at 10:13:52AM -0400, Brian Foster wrote:
-> > Can we pass a boolean or flag to xfs_iomap_write_unwritten() to have it
-> > update the incore i_size after unwritten extent conversion? Then move
-> > (or remove) the associated update from xfs_dio_write_end_io().
+On Mon, Sep 18, 2017 at 08:24:16AM -0700, Christoph Hellwig wrote:
+> Account for all changes to the delalloc reservation in da_new, and use a
+> single call xfs_mod_fdblocks to reserve/free blocks, including always
+> checking for an error.
 > 
-> I don't think we even need a flag - all three callers of
-> xfs_iomap_write_unwritten want to update the file size.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Sounds reasonable to me. I wasn't sure if there was anything special
-about the pnfs case. isize should probably already be stable in the
-writeback case, so perhaps this would be fine as long as we ensure the
-in-core size only increases (as we currently do for di_size).
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Brian
+>  fs/xfs/libxfs/xfs_bmap.c | 32 +++++++++-----------------------
+>  1 file changed, 9 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 731854cc8b58..dbf87add4d6b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1587,7 +1587,6 @@ xfs_bmap_add_extent_delay_real(
+>  	int			whichfork)
+>  {
+>  	struct xfs_bmbt_irec	*new = &bma->got;
+> -	int			diff;	/* temp value */
+>  	int			error;	/* error return value */
+>  	int			i;	/* temp state */
+>  	xfs_ifork_t		*ifp;	/* inode fork pointer */
+> @@ -2085,17 +2084,6 @@ xfs_bmap_add_extent_delay_real(
+>  
+>  		da_new = startblockval(PREV.br_blockcount) +
+>  			 startblockval(RIGHT.br_blockcount);
+> -		diff = da_new - startblockval(old.br_startblock);
+> -		if (bma->cur)
+> -			diff += bma->cur->bc_private.b.allocated;
+> -		if (diff > 0) {
+> -			error = xfs_mod_fdblocks(bma->ip->i_mount,
+> -						 -((int64_t)diff), false);
+> -			ASSERT(!error);
+> -			if (error)
+> -				goto done;
+> -		}
+> -
+>  		bma->idx++;
+>  		break;
+>  
+> @@ -2130,19 +2118,17 @@ xfs_bmap_add_extent_delay_real(
+>  			goto done;
+>  	}
+>  
+> -	/* adjust for changes in reserved delayed indirect blocks */
+> -	if (da_old || da_new) {
+> -		temp = da_new;
+> -		if (bma->cur)
+> -			temp += bma->cur->bc_private.b.allocated;
+> -		if (temp < da_old)
+> -			xfs_mod_fdblocks(bma->ip->i_mount,
+> -					(int64_t)(da_old - temp), false);
+> +	if (bma->cur) {
+> +		da_new += bma->cur->bc_private.b.allocated;
+> +		bma->cur->bc_private.b.allocated = 0;
+>  	}
+>  
+> -	/* clear out the allocated field, done with it now in any case. */
+> -	if (bma->cur)
+> -		bma->cur->bc_private.b.allocated = 0;
+> +	/* adjust for changes in reserved delayed indirect blocks */
+> +	if (da_new != da_old) {
+> +		ASSERT(state == 0 || da_new < da_old);
+> +		error = xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new),
+> +				false);
+> +	}
+>  
+>  	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
+>  done:
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
