@@ -1,39 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38595 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58368 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750974AbdISON6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 10:13:58 -0400
-Date: Tue, 19 Sep 2017 07:13:58 -0700
+        with ESMTP id S1750828AbdISOeI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 10:34:08 -0400
+Date: Tue, 19 Sep 2017 07:34:06 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/7] xfs: Implement fallocate query support mode
-Message-ID: <20170919141358.GA4202@infradead.org>
-References: <1505749947-26360-1-git-send-email-lczerner@redhat.com>
- <1505749947-26360-5-git-send-email-lczerner@redhat.com>
- <20170918175651.GA7937@infradead.org>
- <20170919081538.mk23eue6dysv67b2@rh_laptop>
+Subject: Re: [PATCH] test race when checking i_size on direct i/o read
+Message-ID: <20170919143406.GA7437@infradead.org>
+References: <799f63d9-de03-eab3-1e6e-cd747aa04c36@redhat.com>
+ <20170919073616.GP8034@eguan.usersys.redhat.com>
+ <20170919141351.GB3487@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170919081538.mk23eue6dysv67b2@rh_laptop>
+In-Reply-To: <20170919141351.GB3487@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, Zheng Liu <wenqing.lz@taobao.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2017 at 10:15:38AM +0200, Lukas Czerner wrote:
-> On Mon, Sep 18, 2017 at 10:56:51AM -0700, Christoph Hellwig wrote:
-> > This seems to miss any explanation and 6 out of 7 patches.
-> 
-> See linux-fsdevel for entire patch set.
-> https://www.spinics.net/lists/linux-fsdevel/msg115740.html
+On Tue, Sep 19, 2017 at 10:13:52AM -0400, Brian Foster wrote:
+> Can we pass a boolean or flag to xfs_iomap_write_unwritten() to have it
+> update the incore i_size after unwritten extent conversion? Then move
+> (or remove) the associated update from xfs_dio_write_end_io().
 
-But only one made it to linux-xfs, so please fix your patch sending.
-
-> (f)pathconf on it's own is useless because I need to get this
-> information directly from the file system. Supported fallocate modes can
-> differ with inode flags (encrypted files, extent/indirect based files on
-> ext4). I also need in-kernel interface.
-
-And that is exactly what I want you to do:  finally bite the bullet
-and add pathconf inode operation.
+I don't think we even need a flag - all three callers of
+xfs_iomap_write_unwritten want to update the file size.
