@@ -1,136 +1,394 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34596 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:32798 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751396AbdISM1G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Sep 2017 08:27:06 -0400
-Date: Tue, 19 Sep 2017 08:27:05 -0400
+        id S1750974AbdISONz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Sep 2017 10:13:55 -0400
+Date: Tue, 19 Sep 2017 10:13:52 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: io_submit() blocks for writes for substantial amount of time
-Message-ID: <20170919122704.GA3487@bfoster.bfoster>
-References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+Subject: Re: [PATCH] test race when checking i_size on direct i/o read
+Message-ID: <20170919141351.GB3487@bfoster.bfoster>
+References: <799f63d9-de03-eab3-1e6e-cd747aa04c36@redhat.com>
+ <20170919073616.GP8034@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+In-Reply-To: <20170919073616.GP8034@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tomasz Grabiec <tgrabiec@scylladb.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, Zheng Liu <wenqing.lz@taobao.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2017 at 10:50:51AM +0200, Tomasz Grabiec wrote:
-> Hi,
+On Tue, Sep 19, 2017 at 03:36:16PM +0800, Eryu Guan wrote:
+> On Fri, Aug 18, 2017 at 03:35:02PM -0500, Eric Sandeen wrote:
+> > From: Zheng Liu <wenqing.lz@taobao.com>
+> > 
+> > In this commit a new test case is added to test that i_size races don't
+> > occur under dio reads/writes.  We add a program in /src dir, which
+> > has a writer to issue some append dio writes.  Meanwhile it has a reader
+> > in this test to do some dio reads.  As we expect, reader should read
+> > nothing or data with 'a'.  But it might read some data with '0'.
+> > 
+> > The bug can be reproduced by this test case [1].
+> > 
+> > 1.  http://patchwork.ozlabs.org/patch/311761/
+> > 
+> > This ostensibly tests commit:
+> > 9fe55eea7 Fix race when checking i_size on direct i/o read
+> > 
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Rich Johnston <rjohnston@sgi.com>
+> > Cc: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> > [sandeen: update to recent xfstests, update commitlog]
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > ---
+> > 
+> > This test was originally titled:
+> > 
+> >  xfstests: add a new test case to test i_size updated properly under dio
+> > 
+> > but I think the issue is more of when and how it's tested, not how
+> > it's updated.
+> > 
+> > Note, this passes on xfs on 4.10, but fails on 4.12.
+> > ext4 on 4.10 passes as well but is very slow.
+> > 
+> > iomap dio maybe?  Not sure yet.
 > 
-> On some systems we are seeing one of our tests to trigger io_submit()
-> calls to block when submitting writes for an order of 100ms [1]. This
-> is problematic, because we heavily rely on io_submit() being async.
+> My test with 4.10 kernel suggested that test still failed there. And I
+> digged into this test a bit, and found that it was commit d531d91d6990
+> ("xfs: always use unwritten extents for direct I/O writes") introduced
+> this failure, which is in v3.14 kernel.
 > 
-> Workload: open, (ftruncate, append*)*, close.
+> This is because we start allocating unwritten extents for direct writes
+> that can extend i_size, but in xfs_dio_write_end_io() we update in-core
+> i_size before converting unwritten extents to real allocations. So a
+> racing direct read could find the not-yet converted unwritten extents
+> and read zeros instead of actual data.
 > 
-> Kernel version: 4.12.9-300.fc26.x86_64
-> mount: /dev/nvme0n1p3 on / type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
-> 
-> The blocking happens in the following places:
-> 
-> (1)
-> 
->             7fff9287472f __schedule ([kernel.kallsyms])
->             7fff92874d16 schedule ([kernel.kallsyms])
->             7fff92878d42 schedule_timeout ([kernel.kallsyms])
->             7fff92876478 wait_for_completion ([kernel.kallsyms])
->             7fffc05bf231 xfs_buf_submit_wait ([kernel.kallsyms])
->             7fffc05bf3d3 _xfs_buf_read ([kernel.kallsyms])
->             7fffc05bf4e4 xfs_buf_read_map ([kernel.kallsyms])
->             7fffc05f53ca xfs_trans_read_buf_map ([kernel.kallsyms])
->             7fffc058b432 xfs_btree_read_buf_block.constprop.34
-> ([kernel.kallsyms])
->             7fffc058b504 xfs_btree_lookup_get_block ([kernel.kallsyms])
->             7fffc058f6ad xfs_btree_lookup ([kernel.kallsyms])
->             7fffc0570919 xfs_alloc_lookup_eq ([kernel.kallsyms])
->             7fffc0570c59 xfs_alloc_fixup_trees ([kernel.kallsyms])
->             7fffc0573a2d xfs_alloc_ag_vextent_near ([kernel.kallsyms])
->             7fffc0573db1 xfs_alloc_ag_vextent ([kernel.kallsyms])
->             7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
->             7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
->             7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
->             7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
->             7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
->             7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
->             7fff922d46ca iomap_apply ([kernel.kallsyms])
->             7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
->             7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
->             7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
->             7fff922bc5d3 aio_write ([kernel.kallsyms])
->             7fff922bcec1 do_io_submit ([kernel.kallsyms])
->             7fff922bdd40 sys_io_submit ([kernel.kallsyms])
->             7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
->                      687 io_submit (/usr/lib64/libaio.so.1.0.1)
->                   112373 seastar::reactor::flush_pending_aio
-> (/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
-
-So you have a direct I/O write that requires block allocation. Block
-allocation requires reading free space btree blocks to identify and fix
-up remaining free extent records based on the allocation.
-
-> 
-> (2)
-> 
->   7fff9287472f __schedule ([kernel.kallsyms])
->             7fff92874d16 schedule ([kernel.kallsyms])
->             7fffc05e6265 _xfs_log_force ([kernel.kallsyms])
->             7fffc05c2518 xfs_extent_busy_flush ([kernel.kallsyms])
->             7fffc0572ccd xfs_alloc_ag_vextent_size ([kernel.kallsyms])
->             7fffc0573d91 xfs_alloc_ag_vextent ([kernel.kallsyms])
->             7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
->             7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
->             7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
->             7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
->             7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
->             7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
->             7fff922d46ca iomap_apply ([kernel.kallsyms])
->             7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
->             7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
->             7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
->             7fff922bc5d3 aio_write ([kernel.kallsyms])
->             7fff922bcec1 do_io_submit ([kernel.kallsyms])
->             7fff922bdd40 sys_io_submit ([kernel.kallsyms])
->             7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
->                      687 io_submit (/usr/lib64/libaio.so.1.0.1)
->                   112373 seastar::reactor::flush_pending_aio
-> (/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
+> But I'm not sure what's the best way to fix it. I think taking exclusive
+> iolock instead of shared lock for direct writes that can extend i_size
+> could fix the non-aio dio write case, but aio-dio write still fails,
+> because in the aio-dio write case we defer end_io to a workqueue, which
+> doesn't take any iolock at all..
 > 
 
-Another dio write that requires allocation. The allocation finds a busy
-extent, which means the extent was recently freed but the associated
-freeing transaction has not yet made it to the on-disk log. As such it
-cannot be safely reused, so the allocator flushes the log and retries to
-try and clear the busy state and find an extent.
-
-> Please advise, is this a known bug? When can it happen? Is there a way
-> to work it around to avoid blocking?
-> 
-
-I'm not sure how either could be considered a bug based on the stack
-trace information alone. Allocations may require reading metadata and
-reads are synchronous. This all seems like pretty basic filesystem
-behavior.
-
-I suppose performance may be a separate question. For the latter issue,
-I'd be curious whether leaving more free space available in the
-filesystem would help avoid running into busy extents. Perhaps having
-more memory and thus a larger buffer cache for btree blocks could help
-mitigate the former issue..? The deterministic workaround for both is to
-preallocate the associated file. If the file would be too large, another
-option may be to set an extent size hint to allocate the file in larger
-chunks and amortize the cost of the allocations over multiple writes.
+Can we pass a boolean or flag to xfs_iomap_write_unwritten() to have it
+update the incore i_size after unwritten extent conversion? Then move
+(or remove) the associated update from xfs_dio_write_end_io().
 
 Brian
 
-> [1] https://github.com/scylladb/seastar/issues/340
+> ext4 has no such problem because ext4 converts unwritten extents before
+> updating i_size, and ext4 doesn't support appending aio dio writes.
 > 
+> (Keep the rest of patch untrimmed for reference, as I added linux-xfs to
+> cc list.)
 > 
-> Regards,
-> Tomasz Grabiec
+> Thanks,
+> Eryu
+> 
+> > 
+> > changelog v3:
+> >  * rebase against latest xfstests/master branch
+> >  * update commit log
+> > 
+> > changelog v2:
+> >  * add '-lpthread' into LLDLIBS
+> > 
+> > diff --git a/configure.ac b/configure.ac
+> > index 57092f1..4663004 100644
+> > --- a/configure.ac
+> > +++ b/configure.ac
+> > @@ -59,6 +59,7 @@ AC_PACKAGE_NEED_GETXATTR_LIBATTR
+> >  AC_PACKAGE_NEED_SYS_ACL_H
+> >  AC_PACKAGE_NEED_ACL_LIBACL_H
+> >  AC_PACKAGE_NEED_ACLINIT_LIBACL
+> > +AC_PACKAGE_NEED_PTHREADMUTEXINIT
+> >  
+> >  AC_PACKAGE_WANT_GDBM
+> >  AC_PACKAGE_WANT_AIO
+> > diff --git a/include/builddefs.in b/include/builddefs.in
+> > index cb52b99..fcc8b90 100644
+> > --- a/include/builddefs.in
+> > +++ b/include/builddefs.in
+> > @@ -25,6 +25,7 @@ LIBGDBM = @libgdbm@
+> >  LIBUUID = @libuuid@
+> >  LIBHANDLE = @libhdl@
+> >  LIBDM = @libdm@
+> > +LIBPTHREAD = @libpthread@
+> >  LIBTEST = $(TOPDIR)/lib/libtest.la
+> >  prefix = @prefix@
+> >  
+> > diff --git a/src/Makefile b/src/Makefile
+> > index b8aff49..e9419bd 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -23,7 +23,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+> >  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
+> >  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
+> >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+> > -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
+> > +	dio-invalidate-cache stat_test t_encrypted_d_revalidate diotest
+> >  
+> >  SUBDIRS =
+> >  
+> > diff --git a/src/diotest.c b/src/diotest.c
+> > new file mode 100644
+> > index 0000000..7d2378f
+> > --- /dev/null
+> > +++ b/src/diotest.c
+> > @@ -0,0 +1,166 @@
+> > +/*
+> > + * Copyright (c) 2013 Alibaba Group.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +/*
+> > + * This is a normal case that we do some append dio writes and meanwhile
+> > + * we do some dio reads.  Currently in vfs we don't ensure that i_size
+> > + * is updated properly.  Hence the reader will read some data with '0'.
+> > + * But we expect that the reader should read nothing or data with 'a'.
+> > + */
+> > +
+> > +#include <stdio.h>
+> > +#include <stdlib.h>
+> > +#include <string.h>
+> > +
+> > +#include <unistd.h>
+> > +#include <sys/types.h>
+> > +#include <sys/stat.h>
+> > +#include <fcntl.h>
+> > +#include <errno.h>
+> > +
+> > +#include <pthread.h>
+> > +
+> > +static char *prog;
+> > +
+> > +struct writer_data {
+> > +	int fd;
+> > +	size_t blksize;
+> > +	char *buf;
+> > +};
+> > +
+> > +static void usage(void)
+> > +{
+> > +	fprintf(stderr, "usage: %s [FILE]\n", prog);
+> > +}
+> > +
+> > +static void *writer(void *arg)
+> > +{
+> > +	struct writer_data *data = (struct writer_data *)arg;
+> > +	int ret;
+> > +
+> > +	ret = write(data->fd, data->buf, data->blksize);
+> > +	if (ret < 0)
+> > +		fprintf(stderr, "write file failed: %s\n", strerror(errno));
+> > +
+> > +	return NULL;
+> > +}
+> > +
+> > +int main(int argc, char *argv[])
+> > +{
+> > +	pthread_t tid;
+> > +	struct writer_data wdata;
+> > +	size_t max_blocks = 128;		/* 128 */
+> > +	size_t blksize = 1 * 1024 * 1024;	/* 1M */
+> > +	char *rbuf = NULL, *wbuf = NULL;
+> > +	int rfd = 0, wfd = 0;
+> > +	int i, j;
+> > +	int ret = 0;
+> > +
+> > +	prog = basename(argv[0]);
+> > +
+> > +	if (argc != 2) {
+> > +		usage();
+> > +		exit(1);
+> > +	}
+> > +
+> > +	wfd = open(argv[1], O_CREAT|O_DIRECT|O_WRONLY|O_APPEND|O_TRUNC, S_IRWXU);
+> > +	if (wfd < 0) {
+> > +		fprintf(stderr, "failed to open write file: %s\n",
+> > +			strerror(errno));
+> > +		exit(1);
+> > +	}
+> > +
+> > +	rfd = open(argv[1], O_DIRECT|O_RDONLY, S_IRWXU);
+> > +	if (wfd < 0) {
+> > +		fprintf(stderr, "failed to open read file: %s\n",
+> > +			strerror(errno));
+> > +		ret = 1;
+> > +		goto err;
+> > +	}
+> > +
+> > +	/*
+> > +	 * We set 1024 as an alignment size for write buf.  Feel free to change
+> > +	 * it with 4096.  But the problem is also hitted.
+> > +	 */
+> > +	if (posix_memalign((void **)&wbuf, 1024, blksize)) {
+> > +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
+> > +		ret = 1;
+> > +		goto err;
+> > +	}
+> > +
+> > +	if (posix_memalign((void **)&rbuf, 4096, blksize)) {
+> > +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
+> > +		ret = 1;
+> > +		goto err;
+> > +	}
+> > +
+> > +	memset(wbuf, 'a', blksize);
+> > +	wdata.fd = wfd;
+> > +	wdata.blksize = blksize;
+> > +	wdata.buf = wbuf;
+> > +
+> > +	for (i = 0; i < max_blocks; i++) {
+> > +		void *retval;
+> > +
+> > +		if (pthread_create(&tid, NULL, writer, &wdata)) {
+> > +			fprintf(stderr, "create thread failed: %s\n",
+> > +				strerror(errno));
+> > +			ret = 1;
+> > +			goto err;
+> > +		}
+> > +
+> > +		memset(rbuf, 'b', blksize);
+> > +		do {
+> > +			ret = pread(rfd, rbuf, blksize, i * blksize);
+> > +			if (ret < 0)
+> > +				fprintf(stderr, "read file failed: %s\n",
+> > +					strerror(errno));
+> > +		} while (ret <= 0);
+> > +
+> > +		if (pthread_join(tid, &retval)) {
+> > +			fprintf(stderr, " pthread join failed: %s\n",
+> > +				strerror(errno));
+> > +			ret = 1;
+> > +			goto err;
+> > +		}
+> > +
+> > +		if (ret >= 0) {
+> > +			for (j = 0; j < ret; j ++) {
+> > +				if (rbuf[j] != 'a') {
+> > +					fprintf(stderr, "encounter an error: "
+> > +						"offset %d content %c\n",
+> > +						i, rbuf[j]);
+> > +					ret = 1;
+> > +					goto err;
+> > +				}
+> > +			}
+> > +		}
+> > +	}
+> > +
+> > +err:
+> > +	if (rfd)
+> > +		close(rfd);
+> > +	if (wfd)
+> > +		close(wfd);
+> > +	if (rbuf)
+> > +		free(rbuf);
+> > +	if (wbuf)
+> > +		free(wbuf);
+> > +
+> > +	return ret;
+> > +}
+> > diff --git a/tests/generic/450 b/tests/generic/450
+> > new file mode 100755
+> > index 0000000..cfb424c
+> > --- /dev/null
+> > +++ b/tests/generic/450
+> > @@ -0,0 +1,56 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 450
+> > +#
+> > +# Test i_size is updated properly under dio read/write
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +    cd /
+> > +    rm -f $tmp.* $testfile
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +
+> > +testfile=$TEST_DIR/$seq.$$
+> > +
+> > +[ -x $here/src/diotest ] || _notrun "diotest not built"
+> > +
+> > +$here/src/diotest $testfile # > $seqres.full 2>&1 ||
+> > +	# _fail "i_size isn't update properly!"
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/450.out b/tests/generic/450.out
+> > new file mode 100644
+> > index 0000000..734761a
+> > --- /dev/null
+> > +++ b/tests/generic/450.out
+> > @@ -0,0 +1 @@
+> > +QA output created by 450
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index b9cd0e8..a555fa0 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -452,3 +452,4 @@
+> >  447 auto quick clone
+> >  448 auto quick rw
+> >  449 auto quick acl enospc
+> > +450 auto rw quick
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
