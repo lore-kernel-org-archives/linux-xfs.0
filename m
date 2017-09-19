@@ -1,59 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36440 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751396AbdITVUu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 17:20:50 -0400
-Date: Wed, 20 Sep 2017 14:20:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/19] xfs: fix incorrect extent state in
- xfs_bmap_add_extent_unwritten_real
-Message-ID: <20170920212046.GI7112@magnolia>
-References: <20170918152422.24345-1-hch@lst.de>
- <20170918152422.24345-2-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:34596 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751396AbdISM1G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Sep 2017 08:27:06 -0400
+Date: Tue, 19 Sep 2017 08:27:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: io_submit() blocks for writes for substantial amount of time
+Message-ID: <20170919122704.GA3487@bfoster.bfoster>
+References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170918152422.24345-2-hch@lst.de>
+In-Reply-To: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Tomasz Grabiec <tgrabiec@scylladb.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 08:24:04AM -0700, Christoph Hellwig wrote:
-> There was one spot in xfs_bmap_add_extent_unwritten_real that didn't use the
-> passed in new extent state but always converted to normal, leading to wrong
-> behavior when converting from normal to unwritten.
+On Tue, Sep 19, 2017 at 10:50:51AM +0200, Tomasz Grabiec wrote:
+> Hi,
 > 
-> Only found by code inspection, it seems like this code path to move partial
-> extent from written to unwritten while merging it with the next extent is
-> rarely exercised.
+> On some systems we are seeing one of our tests to trigger io_submit()
+> calls to block when submitting writes for an order of 100ms [1]. This
+> is problematic, because we heavily rely on io_submit() being async.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Workload: open, (ftruncate, append*)*, close.
+> 
+> Kernel version: 4.12.9-300.fc26.x86_64
+> mount: /dev/nvme0n1p3 on / type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
+> 
+> The blocking happens in the following places:
+> 
+> (1)
+> 
+>             7fff9287472f __schedule ([kernel.kallsyms])
+>             7fff92874d16 schedule ([kernel.kallsyms])
+>             7fff92878d42 schedule_timeout ([kernel.kallsyms])
+>             7fff92876478 wait_for_completion ([kernel.kallsyms])
+>             7fffc05bf231 xfs_buf_submit_wait ([kernel.kallsyms])
+>             7fffc05bf3d3 _xfs_buf_read ([kernel.kallsyms])
+>             7fffc05bf4e4 xfs_buf_read_map ([kernel.kallsyms])
+>             7fffc05f53ca xfs_trans_read_buf_map ([kernel.kallsyms])
+>             7fffc058b432 xfs_btree_read_buf_block.constprop.34
+> ([kernel.kallsyms])
+>             7fffc058b504 xfs_btree_lookup_get_block ([kernel.kallsyms])
+>             7fffc058f6ad xfs_btree_lookup ([kernel.kallsyms])
+>             7fffc0570919 xfs_alloc_lookup_eq ([kernel.kallsyms])
+>             7fffc0570c59 xfs_alloc_fixup_trees ([kernel.kallsyms])
+>             7fffc0573a2d xfs_alloc_ag_vextent_near ([kernel.kallsyms])
+>             7fffc0573db1 xfs_alloc_ag_vextent ([kernel.kallsyms])
+>             7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
+>             7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
+>             7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
+>             7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
+>             7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
+>             7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
+>             7fff922d46ca iomap_apply ([kernel.kallsyms])
+>             7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
+>             7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
+>             7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
+>             7fff922bc5d3 aio_write ([kernel.kallsyms])
+>             7fff922bcec1 do_io_submit ([kernel.kallsyms])
+>             7fff922bdd40 sys_io_submit ([kernel.kallsyms])
+>             7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
+>                      687 io_submit (/usr/lib64/libaio.so.1.0.1)
+>                   112373 seastar::reactor::flush_pending_aio
+> (/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+So you have a direct I/O write that requires block allocation. Block
+allocation requires reading free space btree blocks to identify and fix
+up remaining free extent records based on the allocation.
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 459f4b4f08fe..f2f5bdb9e092 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2573,7 +2573,7 @@ xfs_bmap_add_extent_unwritten_real(
->  					&i)))
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			cur->bc_rec.b.br_state = XFS_EXT_NORM;
-> +			cur->bc_rec.b.br_state = new->br_state;
->  			if ((error = xfs_btree_insert(cur, &i)))
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> -- 
-> 2.14.1
+> (2)
 > 
+>   7fff9287472f __schedule ([kernel.kallsyms])
+>             7fff92874d16 schedule ([kernel.kallsyms])
+>             7fffc05e6265 _xfs_log_force ([kernel.kallsyms])
+>             7fffc05c2518 xfs_extent_busy_flush ([kernel.kallsyms])
+>             7fffc0572ccd xfs_alloc_ag_vextent_size ([kernel.kallsyms])
+>             7fffc0573d91 xfs_alloc_ag_vextent ([kernel.kallsyms])
+>             7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
+>             7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
+>             7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
+>             7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
+>             7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
+>             7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
+>             7fff922d46ca iomap_apply ([kernel.kallsyms])
+>             7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
+>             7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
+>             7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
+>             7fff922bc5d3 aio_write ([kernel.kallsyms])
+>             7fff922bcec1 do_io_submit ([kernel.kallsyms])
+>             7fff922bdd40 sys_io_submit ([kernel.kallsyms])
+>             7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
+>                      687 io_submit (/usr/lib64/libaio.so.1.0.1)
+>                   112373 seastar::reactor::flush_pending_aio
+> (/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
+> 
+
+Another dio write that requires allocation. The allocation finds a busy
+extent, which means the extent was recently freed but the associated
+freeing transaction has not yet made it to the on-disk log. As such it
+cannot be safely reused, so the allocator flushes the log and retries to
+try and clear the busy state and find an extent.
+
+> Please advise, is this a known bug? When can it happen? Is there a way
+> to work it around to avoid blocking?
+> 
+
+I'm not sure how either could be considered a bug based on the stack
+trace information alone. Allocations may require reading metadata and
+reads are synchronous. This all seems like pretty basic filesystem
+behavior.
+
+I suppose performance may be a separate question. For the latter issue,
+I'd be curious whether leaving more free space available in the
+filesystem would help avoid running into busy extents. Perhaps having
+more memory and thus a larger buffer cache for btree blocks could help
+mitigate the former issue..? The deterministic workaround for both is to
+preallocate the associated file. If the file would be too large, another
+option may be to set an extent size hint to allocate the file in larger
+chunks and amortize the cost of the allocations over multiple writes.
+
+Brian
+
+> [1] https://github.com/scylladb/seastar/issues/340
+> 
+> 
+> Regards,
+> Tomasz Grabiec
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
