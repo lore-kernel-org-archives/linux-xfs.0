@@ -1,63 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41299 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbdIRUXs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 16:23:48 -0400
-Date: Mon, 18 Sep 2017 13:23:43 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:25330 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750892AbdISSKo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 14:10:44 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8JIAhfu003686
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 18:10:43 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v8JIAhSV001781
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 18:10:43 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8JIAgkI016103
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 18:10:43 GMT
+Date: Tue, 19 Sep 2017 11:10:41 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 00/12] xfs: more and better verifiers
-Message-ID: <20170918202343.GT6540@magnolia>
-References: <150394418979.24826.12970283067445908653.stgit@magnolia>
- <20170906164300.GC55280@bfoster.bfoster>
+Subject: [PATCH] xfs: perag initialization should only touch m_ag_max_usable
+ for AG 0
+Message-ID: <20170919181041.GC7112@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170906164300.GC55280@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Sep 06, 2017 at 12:43:01PM -0400, Brian Foster wrote:
-> On Mon, Aug 28, 2017 at 11:16:29AM -0700, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > This patch series combines all the random little fixes and improvements
-> > to the verifiers that we've been talking about for the past month or so
-> > into a single patch series!
-> > 
-> > We start by refactoring the long format btree block header verifier into
-> > a single helper functionn and de-macroing dir block verifiers to make
-> > them less shouty.  Next, we change verifier functions to return the
-> > approximate instruction pointer of the faulting test so that we can
-> > report more precise fault information to dmesg/tracepoints.  Then, we
-> > move on to creating verifiers for all the inline format fork formats,
-> > and create a helper function for _iget that can dispatch inline
-> > verification.  The ability to supply custom verifier functions will be
-> > used by xfs_repair to deal with corrupt inodes.  The last patch enables
-> > us to (re)check the structure of incore metadata buffers to try to
-> > detect memory corruption.
-> > 
-> 
-> This looks mostly sane to me on a first pass. I noticed that xfs/348 now
-> fails, though it looks like the test just needs an update for the
-> symlink verifier..? Otherwise some random questions to follow..
+We call __xfs_ag_resv_init to make a per-AG reservation for each AG.
+This makes the reservation per-AG, not per-filesystem.  Therefore, it
+is incorrect to adjust m_ag_max_usable for each AG.  Adjust it only
+when we're reserving AG 0's blocks so that we only do it once per fs.
 
-Correct, it will require a change to xfs/348.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
---D
-
-> 
-> Brian
-> 
-> 
-> > --D
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index b008ff3..df3e600 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -156,7 +156,8 @@ __xfs_ag_resv_free(
+ 	trace_xfs_ag_resv_free(pag, type, 0);
+ 
+ 	resv = xfs_perag_resv(pag, type);
+-	pag->pag_mount->m_ag_max_usable += resv->ar_asked;
++	if (pag->pag_agno == 0)
++		pag->pag_mount->m_ag_max_usable += resv->ar_asked;
+ 	/*
+ 	 * AGFL blocks are always considered "free", so whatever
+ 	 * was reserved at mount time must be given back at umount.
+@@ -216,7 +217,14 @@ __xfs_ag_resv_init(
+ 		return error;
+ 	}
+ 
+-	mp->m_ag_max_usable -= ask;
++	/*
++	 * Reduce the maximum per-AG allocation length by however much we're
++	 * trying to reserve for an AG.  Since this is a filesystem-wide
++	 * counter, we only make the adjustment for AG 0.  This assumes that
++	 * there aren't any AGs hungrier for per-AG reservation than AG 0.
++	 */
++	if (pag->pag_agno == 0)
++		mp->m_ag_max_usable -= ask;
+ 
+ 	resv = xfs_perag_resv(pag, type);
+ 	resv->ar_asked = ask;
