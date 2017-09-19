@@ -1,43 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:40536 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751210AbdISD61 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 23:58:27 -0400
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Subject: Re: [PATCH 4/7] xfs: Implement fallocate query support mode
-References: <1505749947-26360-1-git-send-email-lczerner@redhat.com>
-        <1505749947-26360-5-git-send-email-lczerner@redhat.com>
-        <20170918175651.GA7937@infradead.org>
-Date: Tue, 19 Sep 2017 12:28:03 +0900
-In-Reply-To: <20170918175651.GA7937@infradead.org> (Christoph Hellwig's
-        message of "Mon, 18 Sep 2017 10:56:51 -0700")
-Message-ID: <8760cfbc58.fsf@mail.parknet.co.jp>
+Received: from mail-yw0-f171.google.com ([209.85.161.171]:55113 "EHLO
+        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750713AbdISFbj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 01:31:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170918212453.GI10621@dastard>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
+ <20170918171144.GD6540@magnolia> <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+ <20170918212453.GI10621@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 19 Sep 2017 08:31:37 +0300
+Message-ID: <CAOQ4uxhUTZtsX9pW1hdZ4VLzhaVKH3iA8ScG=KVXcYS1Wr4e9Q@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lukas Czerner <lczerner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Greg KH <greg@kroah.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-Christoph Hellwig <hch@infradead.org> writes:
+On Tue, Sep 19, 2017 at 12:24 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Sep 18, 2017 at 09:00:30PM +0300, Amir Goldstein wrote:
+>> On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>> > On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
+>> >> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
+>> >> if possible data loss bug should also be disclosed in some distros forum?
+>> >> I bet some users would care more about the latter than the former.
+>> >> Coincidentally, both data loss and security bugs fix the same commit..
+>> >
+>> > Yes the the patch ought to get sent on to stable w/ fixes tag.  One
+>> > would hope that the distros will pick up the stable fixes from there.
+>
+> Yup, that's the normal process for data integrity/fs corruption
+> bugs.
 
-I myself
+Makes sense. I'm convinced that the normal process is sufficient for this
+sort of bug fix.
 
-Acked-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+>
+>> > That said, it's been in the kernel for 12 years without widespread
+>> > complaints about corruption, so I'm not sure this warrants public
+>> > disclosure via CVE/Phoronix vs. just fixing it.
+>> >
+>>
+>> I'm not sure either.
+>> My intuition tells me that the chances of hitting the data loss bug
+>> given a power failure are not slim, but the chances of users knowing
+>> about the data loss are slim.
+>
+> The chances of hitting it are slim. Power-fail vs fsync data
+> integrity testing is something we do actually run as part of QE and
+> have for many years.  We've been running such testing for years and
+> never tripped over this problem, so I think the likelihood that a
+> user will hit it is extremely small.
 
-to [5/7] fat part though,
+This sentence make me unease.
+Who is We and what QE testing are you referring to?
+Are those tests in xfstests or any other public repository?
+My first reaction to the corruption was "no way, I need to check the test"
+Second reaction after checking the test was "this must very very hard to hit"
+But from closer inspection, it looks like it doesn't take more than running
+a couple of fsync in parallel to get to the "at risk" state, which may persist
+for seconds.
+Of course the chances of users being that unlucky to also get a power
+failure during "at risk" state are low, but I am puzzled how power fail tests
+you claim that exists, didn't catch this sooner.
 
-> That being said, I really detest adding weird query modes to random
-> syscalls.  We should expose capabilities through the interface that
-> was designed for such things: (f)pathconf, as there are a lot more
-> important parameters we currently fail to expose to userspace to
-> start with.
+Anyway, not sure there is much more to discuss, just wanted to see
+if there is a post mortem lesson to be learned from this, beyond the fact that
+dm-log-writes is a valuable testing tool.
 
-This is true. For example, max link count. And it might be able to use
-for fs's bug/issue detection too (in past, userland has to add
-workaround for all cases, because noway to detect the buggy or not).
-
-Thanks.
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cheers,
+Amir.
