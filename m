@@ -1,281 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47541 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750713AbdISFiv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 01:38:51 -0400
-Date: Mon, 18 Sep 2017 22:38:43 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:33261 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750974AbdISFpj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 01:45:39 -0400
+Date: Mon, 18 Sep 2017 22:45:25 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs clones crash issue - illegal state 13 in block map
-Message-ID: <20170919053843.GA7117@magnolia>
-References: <CAOQ4uxgCanEpWx20QvvLvwBbjJiJ2U3oz-e1ZXrv3ZV2d3EPRQ@mail.gmail.com>
- <20170907161330.GA6540@magnolia>
- <CAOQ4uxibPmwRS3P5A-k2JQvCX_hq9Mb_cSOThe-qcVd0136PpQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Message-ID: <20170919054525.GA7112@magnolia>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
+ <20170918171144.GD6540@magnolia>
+ <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+ <20170918212453.GI10621@dastard>
+ <CAOQ4uxhUTZtsX9pW1hdZ4VLzhaVKH3iA8ScG=KVXcYS1Wr4e9Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxibPmwRS3P5A-k2JQvCX_hq9Mb_cSOThe-qcVd0136PpQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxhUTZtsX9pW1hdZ4VLzhaVKH3iA8ScG=KVXcYS1Wr4e9Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Greg KH <greg@kroah.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-On Fri, Sep 08, 2017 at 11:34:58AM +0300, Amir Goldstein wrote:
-> On Thu, Sep 7, 2017 at 7:13 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > On Thu, Sep 07, 2017 at 03:58:56PM +0300, Amir Goldstein wrote:
-> >> Hi guys,
-> >>
-> >> I am getting these errors often when running the crash tests
-> >> with cloned files (generic/502 in my xfstests patches).
-> >>
-> >> Hitting these errors requires first fixing 2 other issues
-> >> that shadow over this issue:
-> >> "xfs: fix incorrect log_flushed on fsync" (in master)
-> >> "xfs: fix leftover CoW extent after truncate"
-> >> available on my tree based on Darrick's simple fix:
-> >> https://github.com/amir73il/linux/commits/xfs-fsync
-> >>
-> >> I get the errors more often (1 out of 5) on a 100G fs on spinning disk.
-> >> On a 10G fs on SSD they are less frequent.
-> >> The log in this email was captured on patched stable 4.9.47 kernel,
-> >> but I am getting the same errors on patched upstream kernel.
-> >>
-> >> I wasn't able to create a deterministic reproducer, so attaching
-> >> the full log from a failed test along with an IO log that can be
-> >> replayed on your disk to examine the outcome.
-> >>
-> >> Following is the output of fsx process #5, which is the process
-> >> that wrote the problematic testfile5.mark0 to the log.
-> >> This process performs only read,zero,fsync before creating
-> >> the log mark.
-> >> The file testfile5 was cloned from an origin 256K file before
-> >> running fsx.
-> >> Later, I used the random seed 35484 in this log for all
-> >> processes and it seemed to increase the probability for failure.
-> >>
-> >> # /old/home/amir/src/xfstests-dev/ltp/fsx -N 100 -d -k -P
-> >> /mnt/test/fsxtests -i /dev/mapper/logwrites-test -S 0 -j 5
-> >> /mnt/scratch/testfile5
-> >> Seed set to 35484
-> >> file_size=262144
-> >> 5: 1 read 0x3f959 thru 0x3ffff (0x6a7 bytes)
-> >> 5: 2 zero from 0x3307e to 0x34f74, (0x1ef6 bytes)
-> >> 5: 3 fsync
-> >> 5: Dumped fsync buffer to testfile5.mark0
-> >>
-> >> In order to get to the crash state you need to get my
-> >> xfstests replay-log patches and replay the attached log
-> >> on a >= 100G scratch device:
-> >>
-> >> # ./src/log-writes/replay-log --log log.xfs.testfile5.mark0 --replay
-> >> $SCRATCH_DEV --end-mark testfile5.mark0
-> >> # mount $SCRATCH_DEV $SCRATCH_MNT
-> >> # umount $SCRATCH_MNT
-> >> # xfs_repair -n $SCRATCH_DEV
-> >> Phase 1 - find and verify superblock...
-> >> Phase 2 - using internal log
-> >>         - zero log...
-> >>         - scan filesystem freespace and inode maps...
-> >>         - found root inode chunk
-> >> Phase 3 - for each AG...
-> >>         - scan (but don't clear) agi unlinked lists...
-> >>         - process known inodes and perform inode discovery...
-> >>         - agno = 0
-> >>
-> >> fatal error -- illegal state 13 in block map 376
-> >>
-> >> Can anyone provide some insight?
+On Tue, Sep 19, 2017 at 08:31:37AM +0300, Amir Goldstein wrote:
+> On Tue, Sep 19, 2017 at 12:24 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Sep 18, 2017 at 09:00:30PM +0300, Amir Goldstein wrote:
+> >> On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >> > On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
+> >> >> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
+> >> >> if possible data loss bug should also be disclosed in some distros forum?
+> >> >> I bet some users would care more about the latter than the former.
+> >> >> Coincidentally, both data loss and security bugs fix the same commit..
+> >> >
+> >> > Yes the the patch ought to get sent on to stable w/ fixes tag.  One
+> >> > would hope that the distros will pick up the stable fixes from there.
 > >
-> > Looks like I missed a couple of extent states in process_bmbt_reclist_int.
+> > Yup, that's the normal process for data integrity/fs corruption
+> > bugs.
+> 
+> Makes sense. I'm convinced that the normal process is sufficient for this
+> sort of bug fix.
+> 
 > >
-> > What happens if you add the following (only compile tested) patch to
-> > xfsprogs?
+> >> > That said, it's been in the kernel for 12 years without widespread
+> >> > complaints about corruption, so I'm not sure this warrants public
+> >> > disclosure via CVE/Phoronix vs. just fixing it.
+> >> >
+> >>
+> >> I'm not sure either.
+> >> My intuition tells me that the chances of hitting the data loss bug
+> >> given a power failure are not slim, but the chances of users knowing
+> >> about the data loss are slim.
+> >
+> > The chances of hitting it are slim. Power-fail vs fsync data
+> > integrity testing is something we do actually run as part of QE and
+> > have for many years.  We've been running such testing for years and
+> > never tripped over this problem, so I think the likelihood that a
+> > user will hit it is extremely small.
 > 
-> This is what happens:
+> This sentence make me unease.
+> Who is We and what QE testing are you referring to?
+> Are those tests in xfstests or any other public repository?
+> My first reaction to the corruption was "no way, I need to check the test"
+> Second reaction after checking the test was "this must very very hard to hit"
+
+/me prefers to think that we've simply gotten lucky all these years and
+nobody actually managed to die before another flush would take care of
+the dirty data.
+
+But then I did just spend a week in Las Vegas. :P
+
+> But from closer inspection, it looks like it doesn't take more than running
+> a couple of fsync in parallel to get to the "at risk" state, which may persist
+> for seconds.
+> Of course the chances of users being that unlucky to also get a power
+> failure during "at risk" state are low, but I am puzzled how power fail tests
+> you claim that exists, didn't catch this sooner.
 > 
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> data fork in regular inode 134 claims CoW block 376
-> correcting nextents for inode 134
-> bad data fork in inode 134
-> would have cleared inode 134
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
-> unknown block state, ag 0, block 376
-> unknown block state, ag 1, block 16
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
-> entry "testfile2" in shortform directory 128 references free inode 134
->         - agno = 3
-> would have junked entry "testfile2" in directory inode 128
-> imap claims in-use inode 134 is free, would correct imap
-> Missing reverse-mapping record for (0/376) len 1 owner 134 off 19
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
+> Anyway, not sure there is much more to discuss, just wanted to see
+> if there is a post mortem lesson to be learned from this, beyond the fact that
+> dm-log-writes is a valuable testing tool.
 
-Hmm.
-
-# xfs_db bugs.img
-xfs_db> inode 134
-xfs_db> bmap
-data offset 0 startblock 24 (0/24) count 19 flag 0
-data offset 19 startblock 376 (0/376) count 1 flag 0
-data offset 25 startblock 8388624 (1/16) count 4 flag 1
-data offset 29 startblock 53 (0/53) count 35 flag 0
-
-Ok, so inode 134 thinks it owns block 376.
-
-xfs_db> agf 0
-xfs_db> addr refcntroot
-xfs_db> p
-...
-recs[1-22] = [startblock,blockcount,refcount,cowflag] 
-1:[24,1,11,0] 
-...
-22:[87,1,6,0]
-xfs_db>
-
-Ok, so the refcountbt doesn't know about block 376, so it's neither
-shared nor a cow staging extent.
-
-xfs_db> agf 0 
-xfs_db> addr rmaproot
-xfs_db> p
-...
-recs[1-38] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock] 
-1:[0,1,-3,0,0,0,0] 
-...
-38:[376,1,-9,0,0,0,0]
-xfs_db> 
-
-So it seems that the rmapbt is behind the times, since record 38 should
-be [376,1,134,19,0,0,0].  Either that's because there's something wrong
-with the regular deferred ops mechanism, or log recovery of deferred ops.
-Let's have a look at the log...
-
-# xfs_logprint bugs.img | grep x178 -B3
-Oper (426): tid: 5c75a3f  len: 48  clientid: TRANS  flags: none
-CUI:  #regs: 1  num_extents: 2  id: 0xffff8f0e842f74b8
-(s: 0x2b, l: 1, f: 0x2) 
-(s: 0x178, l: 1, f: 0x4) 
-
-...ok, so we XFS_REFCOUNT_FREE_COW block 376, which removes it from from
-the refcountbt...
-
-----------------------------------------------------------------------------
-Oper (427): tid: 5c75a3f  len: 48  clientid: TRANS  flags: none
-BUI:  #regs: 1  num_extents: 1  id: 0xffff8f0e81f39000
-(s: 0x178, l: 1, own: 134, off: 19, f: 0x1) 
-
-...now we map block 376 into the data fork of inode 134 at offset 19...
-
---
-----------------------------------------------------------------------------
-Oper (447): tid: 5c75a3f  len: 48  clientid: TRANS  flags: none
-RUI:  #regs: 1  num_extents: 1  id: 0xffff8f0e48254000
-(s: 0x178, l: 1, own: -9, off: 0, f: 0x8) 
-
-...now we XFS_RMAP_EXTENT_FREE the CoW extent @ block 376 from the rmap,
-which ought to remove the record...
-
---
-----------------------------------------------------------------------------
-Oper (453): tid: e0ecea6a  len: 48  clientid: TRANS  flags: none
-RUI:  #regs: 1  num_extents: 1  id: 0xffff8f0e48254530
-(s: 0x178, l: 1, own: 134, off: 19, f: 0x2) 
-
-...and XFS_RMAP_EXTENT_MAP_SHARED a new rmapping for block 376, which
-should add the [376,1,134,19,0,0,0] that we'd expect to be there...
-
---
-----------------------------------------------------------------------------
-Oper (13): tid: 17c5790c  len: 48  clientid: TRANS  flags: none
-RUI:  #regs: 1  num_extents: 1  id: 0xffff925955341f20
-(s: 0x178, l: 1, own: 134, off: 19, f: 0x2) 
-
-...strange, another rmap add?  Did the RUIs fail to complete?
-
-# xfs_logprint bugs.img | egrep '(0xffff8f0e48254530|0xffff925955341f20)'
-RUI:  #regs: 1  num_extents: 1  id: 0xffff8f0e48254530
-RUD:  #regs: 1                   id: 0xffff8f0e48254530
-RUI:  #regs: 1  num_extents: 1  id: 0xffff925955341f20
-RUD:  #regs: 1                   id: 0xffff925955341f20
-
-...the first RUI is logged as operation 453 in tid e0ecea6a, and it has
-an RUD at 460.  However, I don't see a COMMIT, so I gather that log
-recovery tried to replay the RUI as operation 13 in tid 17c5790c.
-
-----------------------------------------------------------------------------
-Oper (13): tid: 17c5790c  len: 48  clientid: TRANS  flags: none
-RUI:  #regs: 1  num_extents: 1  id: 0xffff925955341f20
-(s: 0x178, l: 1, own: 134, off: 19, f: 0x2) 
-----------------------------------------------------------------------------
-Oper (14): tid: 17c5790c  len: 16  clientid: TRANS  flags: none
-RUD:  #regs: 1                   id: 0xffff925955341f20
-----------------------------------------------------------------------------
-Oper (15): tid: 17c5790c  len: 16  clientid: TRANS  flags: none
-RUD:  #regs: 1                   id: 0xffff8f0e48254000
-----------------------------------------------------------------------------
-Oper (16): tid: 17c5790c  len: 24  clientid: TRANS  flags: none
-BUF:  #regs: 3   start blkno: 40 (0x28)  len: 8  bmap size: 1  flags: 0x2000
-Oper (17): tid: 17c5790c  len: 128  clientid: TRANS  flags: none
-BUF DATA
- 0 33424d52 31000000 ffffffff ffffffff        0 28000000  1000000 38000000 
- 8 3674196c 564cfddf 7798e496 591b6410        0 42249385        0  1000000 
-10 ffffffff fdffffff        0        0  1000000  2000000 ffffffff fbffffff 
-18        0        0  3000000  2000000 ffffffff faffffff        0        0 
-
-Oper (18): tid: 17c5790c  len: 128  clientid: TRANS  flags: none
-BUF DATA
- 0        0        0 4d010000  9000000        0 8a000000        0 2a000000 
- 8 56010000  d000000 ffffffff f7ffffff        0        0 65010000 6b000000 
-10 ffffffff f7ffffff        0        0 78010000  1000000        0 86000000 
-18        0 13000000        0        0        0        0        0        0 
-
-----------------------------------------------------------------------------
-Oper (19): tid: 17c5790c  len: 0  clientid: TRANS  flags: COMMIT 
-
-Ok, so those last two lines in operation 16 show that we've indeed added the
-new record to the rmapbt... <shrug> <confused> <tired>??
-
-Are we sure that the log recovery actions actually get checkpointed
-correctly?  And just to check my own sanity, we generate a snapshot and
-then recover it and run xfs_repair, right?
+Agreed. :)
 
 --D
 
 > 
-> >
-> > (Normally I'd say send a metadump too for us mere mortals to work with,
-> > though I'm about to plunge into weddingland so I likely won't be able to
-> > do much until the 18th.)
-> >
-> 
-> Attached (used xfs_metadump -ao)
-> Soon we will all be gods with powers to replay history ;)
-> 
-> > ((Eric: If this doesn't turn out to be a totally garbage patch, feel
-> > free to add it to xfsprogs.))
-> >
-> > --D
-> >
-
-
+> Cheers,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
