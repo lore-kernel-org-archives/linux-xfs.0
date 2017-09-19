@@ -1,94 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44796 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750713AbdISIUM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Sep 2017 04:20:12 -0400
-Date: Tue, 19 Sep 2017 10:20:09 +0200
-From: Lukas Czerner <lczerner@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:33381 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751237AbdISPzf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 11:55:35 -0400
+Date: Tue, 19 Sep 2017 08:55:28 -0700
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 4/7] xfs: Implement fallocate query support mode
-Message-ID: <20170919082009.jdxnxzeosqhutajc@rh_laptop>
+Message-ID: <20170919155528.GA8907@infradead.org>
 References: <1505749947-26360-1-git-send-email-lczerner@redhat.com>
  <1505749947-26360-5-git-send-email-lczerner@redhat.com>
  <20170918204838.GW6540@magnolia>
+ <7B6B7C4C-7FEB-401F-B4EE-6E11E95FB246@dilger.ca>
+ <20170919145520.c4y4w32lmsnqhhxp@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170918204838.GW6540@magnolia>
+In-Reply-To: <20170919145520.c4y4w32lmsnqhhxp@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Andreas Dilger <adilger@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, Lukas Czerner <lczerner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 01:48:38PM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 18, 2017 at 05:52:24PM +0200, Lukas Czerner wrote:
-> > Return all fallcoate modes supported by xfs file system.
-> > 
-> > Cc: linux-xfs@vger.kernel.org
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_file.c | 6 +++++-
-> >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index ebdd0bd..85e06c6 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -746,7 +746,8 @@ xfs_file_write_iter(
-> >  #define	XFS_FALLOC_FL_SUPPORTED						\
-> >  		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
-> >  		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
-> > -		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE)
-> > +		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE |	\
-> > +		 FALLOC_FL_QUERY_SUPPORT | FALLOC_FL_PREALLOC_RANGE)
-> >  
-> >  STATIC long
-> >  xfs_file_fallocate(
-> > @@ -768,6 +769,9 @@ xfs_file_fallocate(
-> >  	if (mode & ~XFS_FALLOC_FL_SUPPORTED)
-> >  		return -EOPNOTSUPP;
-> >  
-> > +	if (mode & FALLOC_FL_QUERY_SUPPORT)
-> > +		return XFS_FALLOC_FL_SUPPORTED;
-> 
-> Urk, manpage update describing the goals of the query interface and how
-> this is supposed to work is needed.
+On Tue, Sep 19, 2017 at 10:55:20AM -0400, Theodore Ts'o wrote:
+> Maybe the right answer is we should define a new pathconfat(2) system
+> call which can be used as part of a C library's implementation of
+> pathconf() and fpathconf()?  glibc probably won't use it for years, of
+> course.  But we can at least provide the information via an interface
+> which we can control, and which is capable of returning correct
+> results?
 
-See linux-fsdevel for entire patch set. It's RFC, manpage update will
-come later.
-https://www.spinics.net/lists/linux-fsdevel/msg115740.html
-
-> 
-> Are we required to return only the mode flags that would reasonably be
-> expected to work on this file, or the fs in general?  Do we return zero
-
-Yes, as mentioned in cover letter it's supposed to return flags that
-would be expected to work on this file.
-
-> if the file is immutable (I guess the fd has to be O_RDONLY?) or if the
-> fs is readonly?
-
-It's going through the same path as any fallocate call.
-
-> 
-> And like hch said, why not {f,}pathconf?
-
-I do not think fpathconf is suitable for this use case, see my reply to hch
-and reply form Andreas.
-
--Lukas
-
-> 
-> --D
-> 
-> > +
-> >  	xfs_ilock(ip, iolock);
-> >  	error = xfs_break_layouts(inode, &iolock);
-> >  	if (error)
-> > -- 
-> > 2.7.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+glibc is very fast at picking up new kernel interface these days
+as long as they aren't too controversial.  Implementing a syscall
+that backs a function they implement should not be in the controversial
+category I think.
