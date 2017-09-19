@@ -1,124 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39090 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756750AbdIHSCQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Sep 2017 14:02:16 -0400
-Subject: Re: [PATCH v2 2/2] mkfs: pass a custom cowextsize into the created
- filesystem
-References: <20170901164035.GF3775@magnolia> <20170904174535.GI4671@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0da45d14-7c4a-9cb9-4c0c-6abc309c5001@sandeen.net>
-Date: Fri, 8 Sep 2017 13:02:15 -0500
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:51286 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751263AbdISDwk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 23:52:40 -0400
+Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8J3oBeQ019987
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 20:52:39 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2d2ud202md-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 20:52:39 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v4 1/3] xfs: Show realtime device stats on statfs calls if inherit flag set
+Date: Mon, 18 Sep 2017 20:52:36 -0700
+Message-ID: <20170919035238.3976871-2-rwareing@fb.com>
+In-Reply-To: <20170919035238.3976871-1-rwareing@fb.com>
+References: <20170919035238.3976871-1-rwareing@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <20170904174535.GI4671@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-On 9/4/17 12:45 PM, Darrick J. Wong wrote:
-> Create a -d option to mkfs.xfs that enables administrators to set
-> the CoW extent size hint on the created files.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: port flags2diflags from the kernel
+- Reports realtime device free blocks in statfs calls if inheritance
+  bit is set on the inode of directory.  This is a bit more intuitive,
+  especially for use-cases which are using a much larger device for
+  the realtime device.
+- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
+  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
+  option.
 
-hm, I wonder if we need a libxfs/util.c in the kernel for stuff like
-this so libxfs diff will keep such things in sync in the future.
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v3:
+* Fixed accounting bug, we are not required to substract m_alloc_set_aside
+  as this is a data device only requirement.
+* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
+  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
+  for the inode.
 
-a project for another day I guess.  One question below.
+Changes since v2:
+* Style updated per Christoph Hellwig's comment
+* Fixed bug: statp->f_bavail = statp->f_bfree
 
-> ---
->  libxfs/util.c       |   64 +++++++++++++++++++++++++++++++++++++++++++++++++--
->  man/man8/mkfs.xfs.8 |    7 ++++++
->  mkfs/xfs_mkfs.c     |   20 ++++++++++++++++
->  3 files changed, 89 insertions(+), 2 deletions(-)
-> 
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 0e2f29e..b600594 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -175,6 +175,64 @@ libxfs_trans_ichgtime(
->  	}
->  }
->  
-> +STATIC uint16_t
-> +xfs_flags2diflags(
-> +	struct xfs_inode	*ip,
-> +	unsigned int		xflags)
-> +{
-> +	/* can't set PREALLOC this way, just preserve it */
-> +	uint16_t		di_flags =
-> +		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-> +
-> +	if (xflags & FS_XFLAG_IMMUTABLE)
-> +		di_flags |= XFS_DIFLAG_IMMUTABLE;
-> +	if (xflags & FS_XFLAG_APPEND)
-> +		di_flags |= XFS_DIFLAG_APPEND;
-> +	if (xflags & FS_XFLAG_SYNC)
-> +		di_flags |= XFS_DIFLAG_SYNC;
-> +	if (xflags & FS_XFLAG_NOATIME)
-> +		di_flags |= XFS_DIFLAG_NOATIME;
-> +	if (xflags & FS_XFLAG_NODUMP)
-> +		di_flags |= XFS_DIFLAG_NODUMP;
-> +	if (xflags & FS_XFLAG_NODEFRAG)
-> +		di_flags |= XFS_DIFLAG_NODEFRAG;
-> +	if (xflags & FS_XFLAG_FILESTREAM)
-> +		di_flags |= XFS_DIFLAG_FILESTREAM;
-> +	if (S_ISDIR(VFS_I(ip)->i_mode)) {
-> +		if (xflags & FS_XFLAG_RTINHERIT)
-> +			di_flags |= XFS_DIFLAG_RTINHERIT;
-> +		if (xflags & FS_XFLAG_NOSYMLINKS)
-> +			di_flags |= XFS_DIFLAG_NOSYMLINKS;
-> +		if (xflags & FS_XFLAG_EXTSZINHERIT)
-> +			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-> +		if (xflags & FS_XFLAG_PROJINHERIT)
-> +			di_flags |= XFS_DIFLAG_PROJINHERIT;
-> +	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
-> +		if (xflags & FS_XFLAG_REALTIME)
-> +			di_flags |= XFS_DIFLAG_REALTIME;
-> +		if (xflags & FS_XFLAG_EXTSIZE)
-> +			di_flags |= XFS_DIFLAG_EXTSIZE;
-> +	}
-> +
-> +	return di_flags;
-> +}
-> +
-> +STATIC uint64_t
-> +xfs_flags2diflags2(
-> +	struct xfs_inode	*ip,
-> +	unsigned int		xflags)
-> +{
-> +	uint64_t		di_flags2 =
-> +		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
-> +
-> +	if (xflags & FS_XFLAG_DAX)
-> +		di_flags2 |= XFS_DIFLAG2_DAX;
-> +	if (xflags & FS_XFLAG_COWEXTSIZE)
-> +		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-> +
-> +	return di_flags2;
-> +}
-> +
->  /*
->   * Allocate an inode on disk and return a copy of its in-core version.
->   * Set mode, nlink, and rdev appropriately within the inode.
-> @@ -254,15 +312,17 @@ libxfs_ialloc(
->  	ip->i_d.di_extsize = pip ? 0 : fsx->fsx_extsize;
->  	ip->i_d.di_dmevmask = 0;
->  	ip->i_d.di_dmstate = 0;
-> -	ip->i_d.di_flags = pip ? 0 : fsx->fsx_xflags;
-> +	ip->i_d.di_flags = pip ? 0 : xfs_flags2diflags(ip, fsx->fsx_xflags);
+ fs/xfs/xfs_linux.h | 2 ++
+ fs/xfs/xfs_super.c | 8 ++++++++
+ 2 files changed, 10 insertions(+)
 
-is this a bugfix?
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e..fe46e71 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -280,8 +280,10 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+ 
+ #ifdef CONFIG_XFS_RT
+ #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
++#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
+ #else
+ #define XFS_IS_REALTIME_INODE(ip) (0)
++#define XFS_IS_REALTIME_MOUNT(mp) (0)
+ #endif
+ 
+ #endif /* __XFS_LINUX__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 455a575..6d33a5e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1136,6 +1136,14 @@ xfs_fs_statfs(
+ 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+ 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+ 		xfs_qm_statvfs(ip, statp);
++
++	if (XFS_IS_REALTIME_MOUNT(mp) &&
++	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
++		statp->f_blocks = sbp->sb_rblocks;
++		statp->f_bavail = statp->f_bfree =
++			sbp->sb_frextents * sbp->sb_rextsize;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+2.9.5
 
-The rest seems ok, just wondering if the above should be hidden in here -
-at least a mention of the change in the changelog seems needed, but most
-likely thjis is a separate change, no?  Or am I missing something?
-
--Eric
