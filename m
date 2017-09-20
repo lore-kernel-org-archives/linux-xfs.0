@@ -1,28 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45472 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbdITVlV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 17:41:21 -0400
-Date: Wed, 20 Sep 2017 14:41:17 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:28145 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751378AbdITVmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 17:42:43 -0400
+Date: Wed, 20 Sep 2017 14:42:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/19] xfs: use the state defines in
- xfs_bmap_del_extent_real
-Message-ID: <20170920214117.GO7112@magnolia>
+Subject: Re: [PATCH 09/19] xfs: refactor xfs_del_extent_real
+Message-ID: <20170920214237.GP7112@magnolia>
 References: <20170918152422.24345-1-hch@lst.de>
- <20170918152422.24345-9-hch@lst.de>
+ <20170918152422.24345-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170918152422.24345-9-hch@lst.de>
+In-Reply-To: <20170918152422.24345-10-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 08:24:11AM -0700, Christoph Hellwig wrote:
-> Use the same defines as the other extent add and delete helpers, which
-> both improves code readability and trace point output.
+On Mon, Sep 18, 2017 at 08:24:12AM -0700, Christoph Hellwig wrote:
+> Use xfs_iext_update_extent to update entries in the in-core extent list.
+> This isolates the function from the detailed layout of the extent list,
+> and generally makes the code a lot more readable.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
@@ -30,62 +30,154 @@ On Mon, Sep 18, 2017 at 08:24:11AM -0700, Christoph Hellwig wrote:
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 21 +++++++++------------
->  1 file changed, 9 insertions(+), 12 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 60 ++++++++++++++++++++++++------------------------
+>  1 file changed, 30 insertions(+), 30 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index aa4af31750d3..037efc97499f 100644
+> index 037efc97499f..bd00f4d135af 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5162,13 +5162,13 @@ xfs_bmap_del_extent_real(
->  		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  	}
+> @@ -5078,10 +5078,9 @@ xfs_bmap_del_extent_real(
+>  	xfs_fsblock_t		del_endblock=0;	/* first block past del */
+>  	xfs_fileoff_t		del_endoff;	/* first offset past del */
+>  	int			do_fx;	/* free extent at end of routine */
+> -	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
+>  	int			error;	/* error return value */
+>  	int			flags = 0;/* inode logging flags */
+> -	xfs_bmbt_irec_t		got;	/* current extent entry */
+> +	struct xfs_bmbt_irec	got;	/* current extent entry */
+>  	xfs_fileoff_t		got_endoff;	/* first offset past got */
+>  	int			i;	/* temp state */
+>  	xfs_ifork_t		*ifp;	/* inode fork pointer */
+> @@ -5090,9 +5089,8 @@ xfs_bmap_del_extent_real(
+>  	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+>  	/* REFERENCED */
+>  	uint			qfield;	/* quota field to update */
+> -	xfs_filblks_t		temp;	/* for indirect length calculations */
+> -	xfs_filblks_t		temp2;	/* for indirect length calculations */
+>  	int			state = 0;
+> +	struct xfs_bmbt_irec	old;
 >  
-> -	/*
-> -	 * Set flag value to use in switch statement.
-> -	 * Left-contig is 2, right-contig is 1.
-> -	 */
-> -	switch (((got.br_startoff == del->br_startoff) << 1) |
-> -		(got_endoff == del_endoff)) {
-> -	case 3:
-> +	if (got.br_startoff == del->br_startoff)
-> +		state |= BMAP_LEFT_FILLING;
-> +	if (got_endoff == del_endoff)
-> +		state |= BMAP_RIGHT_FILLING;
-> +
-> +	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
-> +	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
->  		/*
->  		 * Matches the whole extent.  Delete the entry.
->  		 */
-> @@ -5188,8 +5188,7 @@ xfs_bmap_del_extent_real(
->  			goto done;
->  		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
->  		break;
-> -
-> -	case 2:
-> +	case BMAP_LEFT_FILLING:
->  		/*
+>  	mp = ip->i_mount;
+>  	XFS_STATS_INC(mp, xs_del_exlist);
+> @@ -5105,8 +5103,7 @@ xfs_bmap_del_extent_real(
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
+>  	ASSERT(del->br_blockcount > 0);
+> -	ep = xfs_iext_get_ext(ifp, *idx);
+> -	xfs_bmbt_get_all(ep, &got);
+> +	xfs_iext_get_extent(ifp, *idx, &got);
+>  	ASSERT(got.br_startoff <= del->br_startoff);
+>  	del_endoff = del->br_startoff + del->br_blockcount;
+>  	got_endoff = got.br_startoff + got.br_blockcount;
+> @@ -5193,54 +5190,56 @@ xfs_bmap_del_extent_real(
 >  		 * Deleting the first part of the extent.
 >  		 */
-> @@ -5208,8 +5207,7 @@ xfs_bmap_del_extent_real(
->  				got.br_state)))
+>  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> -		xfs_bmbt_set_startoff(ep, del_endoff);
+> -		temp = got.br_blockcount - del->br_blockcount;
+> -		xfs_bmbt_set_blockcount(ep, temp);
+> -		xfs_bmbt_set_startblock(ep, del_endblock);
+> +		got.br_startoff = del_endoff;
+> +		got.br_startblock = del_endblock;
+> +		got.br_blockcount -= del->br_blockcount;
+> +		xfs_iext_update_extent(ifp, *idx, &got);
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  		if (!cur) {
+>  			flags |= xfs_ilog_fext(whichfork);
+>  			break;
+>  		}
+> -		if ((error = xfs_bmbt_update(cur, del_endoff, del_endblock,
+> -				got.br_blockcount - del->br_blockcount,
+> -				got.br_state)))
+> +		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
+> +				got.br_blockcount, got.br_state);
+> +		if (error)
 >  			goto done;
 >  		break;
-> -
-> -	case 1:
-> +	case BMAP_RIGHT_FILLING:
+>  	case BMAP_RIGHT_FILLING:
 >  		/*
 >  		 * Deleting the last part of the extent.
 >  		 */
-> @@ -5227,7 +5225,6 @@ xfs_bmap_del_extent_real(
->  				got.br_state)))
+> -		temp = got.br_blockcount - del->br_blockcount;
+>  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> -		xfs_bmbt_set_blockcount(ep, temp);
+> +		got.br_blockcount -= del->br_blockcount;
+> +		xfs_iext_update_extent(ifp, *idx, &got);
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  		if (!cur) {
+>  			flags |= xfs_ilog_fext(whichfork);
+>  			break;
+>  		}
+> -		if ((error = xfs_bmbt_update(cur, got.br_startoff,
+> -				got.br_startblock,
+> -				got.br_blockcount - del->br_blockcount,
+> -				got.br_state)))
+> +		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
+> +				got.br_blockcount, got.br_state);
+> +		if (error)
 >  			goto done;
 >  		break;
-> -
 >  	case 0:
 >  		/*
 >  		 * Deleting the middle of the extent.
+>  		 */
+> -		temp = del->br_startoff - got.br_startoff;
+>  		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> -		xfs_bmbt_set_blockcount(ep, temp);
+> +
+> +		old = got;
+> +		got.br_blockcount = del->br_startoff - got.br_startoff;
+> +		xfs_iext_update_extent(ifp, *idx, &got);
+> +
+>  		new.br_startoff = del_endoff;
+> -		temp2 = got_endoff - del_endoff;
+> -		new.br_blockcount = temp2;
+> +		new.br_blockcount = got_endoff - del_endoff;
+>  		new.br_state = got.br_state;
+>  		new.br_startblock = del_endblock;
+> +
+>  		flags |= XFS_ILOG_CORE;
+>  		if (cur) {
+>  			error = xfs_bmbt_update(cur, got.br_startoff,
+> -					got.br_startblock, temp,
+> +					got.br_startblock, got.br_blockcount,
+>  					got.br_state);
+>  			if (error)
+>  				goto done;
+> @@ -5262,7 +5261,8 @@ xfs_bmap_del_extent_real(
+>  				 * insert operation.
+>  				 */
+>  				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> -						got.br_startblock, temp, &i);
+> +						got.br_startblock,
+> +						got.br_blockcount, &i);
+>  				if (error)
+>  					goto done;
+>  				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> @@ -5270,17 +5270,17 @@ xfs_bmap_del_extent_real(
+>  				 * Update the btree record back
+>  				 * to the original value.
+>  				 */
+> -				error = xfs_bmbt_update(cur, got.br_startoff,
+> -						got.br_startblock,
+> -						got.br_blockcount,
+> -						got.br_state);
+> +				error = xfs_bmbt_update(cur, old.br_startoff,
+> +						old.br_startblock,
+> +						old.br_blockcount,
+> +						old.br_state);
+>  				if (error)
+>  					goto done;
+>  				/*
+>  				 * Reset the extent record back
+>  				 * to the original value.
+>  				 */
+> -				xfs_bmbt_set_blockcount(ep, got.br_blockcount);
+> +				xfs_iext_update_extent(ifp, *idx, &old);
+>  				flags = 0;
+>  				error = -ENOSPC;
+>  				goto done;
 > -- 
 > 2.14.1
 > 
