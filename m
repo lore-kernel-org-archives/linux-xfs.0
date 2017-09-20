@@ -1,162 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:46688 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751488AbdITAqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 20:46:52 -0400
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8K0h9go006732
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:46:52 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 2d39sj996e-2
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:46:52 -0700
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v3] xfs: Add test for CVE-2017-14340
-Date: Tue, 19 Sep 2017 17:46:50 -0700
-Message-ID: <20170920004650.36174-1-rwareing@fb.com>
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:43367 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751463AbdITGR3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 02:17:29 -0400
+Received: by mail-wr0-f179.google.com with SMTP id a43so1223095wrc.0
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 23:17:29 -0700 (PDT)
+Subject: Re: io_submit() blocks for writes for substantial amount of time
+References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+ <20170919122704.GA3487@bfoster.bfoster>
+ <20170919145827.GA21523@infradead.org>
+ <04cb3ee7-e7d5-6bba-6adb-8ac1c28e68dc@scylladb.com>
+ <20170919173955.GB8139@dhcp-41-131.bos.redhat.com>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <ba7a108e-733e-419d-9839-545bc04e0caf@scylladb.com>
+Date: Wed, 20 Sep 2017 09:17:25 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170919173955.GB8139@dhcp-41-131.bos.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Tomasz Grabiec <tgrabiec@scylladb.com>, linux-xfs@vger.kernel.org
 
-Verify kernel doesn't panic when user attempts to set realtime flags
-on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
-kernels will panic during this test.  Kernels not compiled with
-CONFIG_XFS_RT should pass test.
+On 09/19/2017 08:39 PM, Brian Foster wrote:
+> On Tue, Sep 19, 2017 at 07:31:04PM +0300, Avi Kivity wrote:
+>>
+>> On 09/19/2017 05:58 PM, Christoph Hellwig wrote:
+>>> On Tue, Sep 19, 2017 at 08:27:05AM -0400, Brian Foster wrote:
+>>>>> Please advise, is this a known bug? When can it happen? Is there a way
+>>>>> to work it around to avoid blocking?
+>>>>>
+>>>> I'm not sure how either could be considered a bug based on the stack
+>>>> trace information alone. Allocations may require reading metadata and
+>>>> reads are synchronous. This all seems like pretty basic filesystem
+>>>> behavior.
+>>>>
+>>>> I suppose performance may be a separate question. For the latter issue,
+>>>> I'd be curious whether leaving more free space available in the
+>>>> filesystem would help avoid running into busy extents. Perhaps having
+>>>> more memory and thus a larger buffer cache for btree blocks could help
+>>>> mitigate the former issue..? The deterministic workaround for both is to
+>>>> preallocate the associated file. If the file would be too large, another
+>>>> option may be to set an extent size hint to allocate the file in larger
+>>>> chunks and amortize the cost of the allocations over multiple writes.
+>>> Note that Linux 4.13 and later support a RWF_NOWAIT flag, that will
+>>> return -EAGAIN from io_submit for these conditions so they can be
+>>> handled by a thread pool.
+>>>
+>>> Note that until a few years ago we performed all allocations from
+>>> a workqueue, this was changed by:
+>>>
+>>> commit cf11da9c5d374962913ca5ba0ce0886b58286224
+>>> Author: Dave Chinner <dchinner@redhat.com>
+>>> Date:   Tue Jul 15 07:08:24 2014 +1000
+>>>
+>>>       xfs: refine the allocation stack switch
+>>>
+>>> to only defer btree splits to a workqueue.  With that previous scheme
+>>> there might have been an option to defer AIO allocations to a workqueue,
+>>> but the main issue with that is that the worker thread which is then
+>>> going to do the actual data transfer would have to "borrow" the
+>>> mm_struct from the submitter.  That's the primary reason why something
+>>> like that was never implemented in mainline Linux.
+>> For DIO, does it really need the mm_struct? It can just pin the pages and
+>> pass them to the workqueue function.
+>>
+> I'm not sure what difference it makes regardless. We still have to wait
+> for an allocation to complete before we can issue an I/O.
 
-This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
-on the main kernel tree.
+If io_submit() returns immediately rather than blocking, it makes a huge 
+difference. Waiting in the workqueue can be done in parallel to other 
+I/O and in parallel to cpu work in the caller thread. Blocking means no 
+further I/O is issued and no cpu work is done.
 
-Signed-off-by: Richard Wareing <rwareing@fb.com>
----
-Changes since v2:
-* Added to dangerous group
+>   IIRC, the old
+> defer allocs to a wq thing was more about saving stack space than
+> providing async behavior.
 
-Changes since v1:
-* Corrected copyright text
-
- tests/xfs/431     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/431.out |  3 ++
- tests/xfs/group   |  1 +
- 3 files changed, 92 insertions(+)
- create mode 100755 tests/xfs/431
- create mode 100644 tests/xfs/431.out
-
-diff --git a/tests/xfs/431 b/tests/xfs/431
-new file mode 100755
-index 0000000..eea0878
---- /dev/null
-+++ b/tests/xfs/431
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test 431
-+#
-+# Verify kernel doesn't panic when user attempts to set realtime flags
-+# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched 
-+# kernels will panic during this test.  Kernels not compiled with 
-+# CONFIG_XFS_RT should pass test.
-+#
-+# See CVE-2017-14340 for more information.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Facebook, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_xfs_io_command "chattr"
-+_require_xfs_io_command "fsync"
-+_require_xfs_io_command "pwrite"
-+_require_scratch
-+_require_test
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# Set realtime inherit flag on scratch mount, suppress output
-+# as this may simply error out on future kernels, we will check
-+# exit code instead.
-+$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
-+chattr_ret=$?
-+
-+# Erroring out here is fine, this would be desired behavior for
-+# FSes without realtime devices present.
-+if (( chattr_ret == 0)); then
-+  # Attempt to write/fsync data to file
-+  $XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile | 
-+    tee -a $seqres.full | common_line_filter | _filter_xfs_io
-+
-+  # Remove the rt inherit flag after we are done or xfs_repair
-+  # will fail.
-+  $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
-+fi
-+
-+
-+rm -f $SCRATCH_MNT/testfile
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/431.out b/tests/xfs/431.out
-new file mode 100644
-index 0000000..8c14f11
---- /dev/null
-+++ b/tests/xfs/431.out
-@@ -0,0 +1,3 @@
-+QA output created by 431
-+wrote 1048576/1048576 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 0a449b9..476fe66 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -427,3 +427,4 @@
- 428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 429 dangerous_fuzzers dangerous_scrub dangerous_repair
- 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+431 quick dangerous
--- 
-2.9.5
+Perhaps, but IMO the async behavior is a major feature of the aio system 
+calls. It is very hard to use them if they block.
 
