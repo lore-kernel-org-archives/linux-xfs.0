@@ -1,19 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:36157 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751348AbdITAa5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 20:30:57 -0400
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-        by m0089730.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v8K0T4l2029497
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:30:56 -0700
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:46688 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751488AbdITAqw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 20:46:52 -0400
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8K0h9go006732
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:46:52 -0700
 Received: from mail.thefacebook.com ([199.201.64.23])
-        by m0089730.ppops.net with ESMTP id 2d38t8hnsk-1
+        by mx0a-00082601.pphosted.com with ESMTP id 2d39sj996e-2
         (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:30:56 -0700
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:46:52 -0700
 From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH] xfs: Add test for CVE-2017-14340
-Date: Tue, 19 Sep 2017 17:30:54 -0700
-Message-ID: <20170920003054.4171675-1-rwareing@fb.com>
+Subject: [PATCH v3] xfs: Add test for CVE-2017-14340
+Date: Tue, 19 Sep 2017 17:46:50 -0700
+Message-ID: <20170920004650.36174-1-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
@@ -32,19 +32,25 @@ on the main kernel tree.
 
 Signed-off-by: Richard Wareing <rwareing@fb.com>
 ---
- tests/xfs/431     | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Changes since v2:
+* Added to dangerous group
+
+Changes since v1:
+* Corrected copyright text
+
+ tests/xfs/431     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
  tests/xfs/431.out |  3 ++
  tests/xfs/group   |  1 +
- 3 files changed, 90 insertions(+)
+ 3 files changed, 92 insertions(+)
  create mode 100755 tests/xfs/431
  create mode 100644 tests/xfs/431.out
 
 diff --git a/tests/xfs/431 b/tests/xfs/431
 new file mode 100755
-index 0000000..f928abc
+index 0000000..eea0878
 --- /dev/null
 +++ b/tests/xfs/431
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,88 @@
 +#! /bin/bash
 +# FS QA Test 431
 +#
@@ -53,8 +59,10 @@ index 0000000..f928abc
 +# kernels will panic during this test.  Kernels not compiled with 
 +# CONFIG_XFS_RT should pass test.
 +#
++# See CVE-2017-14340 for more information.
++#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2017 YOUR NAME HERE.  All Rights Reserved.
++# Copyright (c) 2017 Facebook, Inc.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -141,14 +149,14 @@ index 0000000..8c14f11
 +wrote 1048576/1048576 bytes at offset 0
 +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 0a449b9..3f97f02 100644
+index 0a449b9..476fe66 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
 @@ -427,3 +427,4 @@
  428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
  429 dangerous_fuzzers dangerous_scrub dangerous_repair
  430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+431 quick
++431 quick dangerous
 -- 
 2.9.5
 
