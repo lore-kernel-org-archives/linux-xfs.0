@@ -1,92 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:13924 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750711AbdIRVY5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 17:24:57 -0400
-Date: Tue, 19 Sep 2017 07:24:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Message-ID: <20170918212453.GI10621@dastard>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
- <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
- <20170918171144.GD6540@magnolia>
- <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45532 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751561AbdITKuY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Sep 2017 06:50:24 -0400
+Date: Wed, 20 Sep 2017 06:50:22 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: io_submit() blocks for writes for substantial amount of time
+Message-ID: <20170920105021.GA16036@bfoster.bfoster>
+References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+ <20170919122704.GA3487@bfoster.bfoster>
+ <20170919145827.GA21523@infradead.org>
+ <04cb3ee7-e7d5-6bba-6adb-8ac1c28e68dc@scylladb.com>
+ <20170919173955.GB8139@dhcp-41-131.bos.redhat.com>
+ <ba7a108e-733e-419d-9839-545bc04e0caf@scylladb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
+In-Reply-To: <ba7a108e-733e-419d-9839-545bc04e0caf@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Greg KH <greg@kroah.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: Avi Kivity <avi@scylladb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Tomasz Grabiec <tgrabiec@scylladb.com>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 09:00:30PM +0300, Amir Goldstein wrote:
-> On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
-> >> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
-> >> if possible data loss bug should also be disclosed in some distros forum?
-> >> I bet some users would care more about the latter than the former.
-> >> Coincidentally, both data loss and security bugs fix the same commit..
-> >
-> > Yes the the patch ought to get sent on to stable w/ fixes tag.  One
-> > would hope that the distros will pick up the stable fixes from there.
-
-Yup, that's the normal process for data integrity/fs corruption
-bugs.
-
-> > That said, it's been in the kernel for 12 years without widespread
-> > complaints about corruption, so I'm not sure this warrants public
-> > disclosure via CVE/Phoronix vs. just fixing it.
-> >
+On Wed, Sep 20, 2017 at 09:17:25AM +0300, Avi Kivity wrote:
+> On 09/19/2017 08:39 PM, Brian Foster wrote:
+> > On Tue, Sep 19, 2017 at 07:31:04PM +0300, Avi Kivity wrote:
+> > > 
+> > > On 09/19/2017 05:58 PM, Christoph Hellwig wrote:
+> > > > On Tue, Sep 19, 2017 at 08:27:05AM -0400, Brian Foster wrote:
+> > > > > > Please advise, is this a known bug? When can it happen? Is there a way
+> > > > > > to work it around to avoid blocking?
+> > > > > > 
+> > > > > I'm not sure how either could be considered a bug based on the stack
+> > > > > trace information alone. Allocations may require reading metadata and
+> > > > > reads are synchronous. This all seems like pretty basic filesystem
+> > > > > behavior.
+> > > > > 
+> > > > > I suppose performance may be a separate question. For the latter issue,
+> > > > > I'd be curious whether leaving more free space available in the
+> > > > > filesystem would help avoid running into busy extents. Perhaps having
+> > > > > more memory and thus a larger buffer cache for btree blocks could help
+> > > > > mitigate the former issue..? The deterministic workaround for both is to
+> > > > > preallocate the associated file. If the file would be too large, another
+> > > > > option may be to set an extent size hint to allocate the file in larger
+> > > > > chunks and amortize the cost of the allocations over multiple writes.
+> > > > Note that Linux 4.13 and later support a RWF_NOWAIT flag, that will
+> > > > return -EAGAIN from io_submit for these conditions so they can be
+> > > > handled by a thread pool.
+> > > > 
+> > > > Note that until a few years ago we performed all allocations from
+> > > > a workqueue, this was changed by:
+> > > > 
+> > > > commit cf11da9c5d374962913ca5ba0ce0886b58286224
+> > > > Author: Dave Chinner <dchinner@redhat.com>
+> > > > Date:   Tue Jul 15 07:08:24 2014 +1000
+> > > > 
+> > > >       xfs: refine the allocation stack switch
+> > > > 
+> > > > to only defer btree splits to a workqueue.  With that previous scheme
+> > > > there might have been an option to defer AIO allocations to a workqueue,
+> > > > but the main issue with that is that the worker thread which is then
+> > > > going to do the actual data transfer would have to "borrow" the
+> > > > mm_struct from the submitter.  That's the primary reason why something
+> > > > like that was never implemented in mainline Linux.
+> > > For DIO, does it really need the mm_struct? It can just pin the pages and
+> > > pass them to the workqueue function.
+> > > 
+> > I'm not sure what difference it makes regardless. We still have to wait
+> > for an allocation to complete before we can issue an I/O.
 > 
-> I'm not sure either.
-> My intuition tells me that the chances of hitting the data loss bug
-> given a power failure are not slim, but the chances of users knowing
-> about the data loss are slim.
+> If io_submit() returns immediately rather than blocking, it makes a huge
+> difference. Waiting in the workqueue can be done in parallel to other I/O
+> and in parallel to cpu work in the caller thread. Blocking means no further
+> I/O is issued and no cpu work is done.
+> 
 
-The chances of hitting it are slim. Power-fail vs fsync data
-integrity testing is something we do actually run as part of QE and
-have for many years.  We've been running such testing for years and
-never tripped over this problem, so I think the likelihood that a
-user will hit it is extremely small. Compare that to the bug we
-issued the CVE for - it's in code we /don't test/, the bug affects
-everyone with that support compiled in (potentially millions of
-systems) and it is a guaranteed local user triggered denial of
-service. There's a big difference in scope and impact between these
-two cases.
+Sure. I'm just saying that seems orthogonal to how/why we deferred block
+allocations to a wq. Even if we went back to that behavior, io_submit()
+will still potentially block as it does today. It sounds like what you
+want is something higher level that defers the entire aio submission to
+a wq (which still may have to use another wq for btree splits, for
+different reasons). Apparently we had something like that in the past as
+Christoph referred to in his last mail, but I'm not really familiar with
+that.
 
-Further, we have to consider precedence, developer resources and
-impact when deciding what we issue disclosures for. e.g. Verifying
-the problem, categorising it, finding out what systems it affected,
-working out the best fix for backporting, testing the fix, working
-through all the disclosure processes, etc took three long days of me
-doing nothing else but working on this issue.
+FWIW, this is not exactly the same, but I think Dave prototyped
+something in the past to wire up aio_fsync() to a basic wq
+implementation and managed to show really good scalability improvements.
+Given that, I suppose it wouldn't be that surprising to get similar
+results for I/O submission if there is some way around the page issue.
 
-If we start issuing disclosures for all data integrity and/or
-corruption fixes, then we're going to have no time for anything
-else. That is, a significant number of bugs we fix every release are
-for corruption and/or data integrity issues. The process we use for
-getting them back to stable and distro kernels is to tag them for
-stable kernels. Adding some heavyweight disclosure process on top of
-that isn't going to provide any extra value to distros or users. All
-it does is add significant extra workload to the upstream
-development process.
+Brian
 
-> Meaning, the chances of users complaining:
-> "I swear, I did fsync, lost power, and after boot data was not there" are slim
-> and the chances of developers believing the report on hear say are
-> even slimmer.
-
-A disclosure is not going to change that. All it will do is result
-in users seeing ghosts (suggestion bias) and reporting things that
-aren't actually filesystem data loss. e.g. "filesystem lost data on
-crash" when in reality the problem is that the app doesn't use
-fsync...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> >   IIRC, the old
+> > defer allocs to a wq thing was more about saving stack space than
+> > providing async behavior.
+> 
+> Perhaps, but IMO the async behavior is a major feature of the aio system
+> calls. It is very hard to use them if they block.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
