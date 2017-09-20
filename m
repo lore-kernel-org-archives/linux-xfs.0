@@ -1,138 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:48594 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751457AbdISRxx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 13:53:53 -0400
-Received: by mail-it0-f45.google.com with SMTP id d123so352811ith.3
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 10:53:53 -0700 (PDT)
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:36157 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751348AbdITAa5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 20:30:57 -0400
+Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
+        by m0089730.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v8K0T4l2029497
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:30:56 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by m0089730.ppops.net with ESMTP id 2d38t8hnsk-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:30:56 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH] xfs: Add test for CVE-2017-14340
+Date: Tue, 19 Sep 2017 17:30:54 -0700
+Message-ID: <20170920003054.4171675-1-rwareing@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <20170919173850.GA8139@dhcp-41-131.bos.redhat.com>
-References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
- <20170919122704.GA3487@bfoster.bfoster> <22a2db70-50e2-7a37-97f5-1751eafc3f7c@scylladb.com>
- <20170919173850.GA8139@dhcp-41-131.bos.redhat.com>
-From: Tomasz Grabiec <tgrabiec@scylladb.com>
-Date: Tue, 19 Sep 2017 19:53:52 +0200
-Message-ID: <CAO2XSW5st7MpEAm=XEWHr_e0JHsn0yRk_q+qnj14N=GuTR0hJg@mail.gmail.com>
-Subject: Re: io_submit() blocks for writes for substantial amount of time
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Avi Kivity <avi@scylladb.com>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2017 at 7:38 PM, Brian Foster <bfoster@redhat.com> wrote:
-> On Tue, Sep 19, 2017 at 07:29:18PM +0300, Avi Kivity wrote:
->>
->>
->> On 09/19/2017 03:27 PM, Brian Foster wrote:
->> > On Tue, Sep 19, 2017 at 10:50:51AM +0200, Tomasz Grabiec wrote:
->> > > Hi,
->> > >
->> > > On some systems we are seeing one of our tests to trigger io_submit()
->> > > calls to block when submitting writes for an order of 100ms [1]. This
->> > > is problematic, because we heavily rely on io_submit() being async.
->> > >
->> > > Workload: open, (ftruncate, append*)*, close.
->> > >
->> > > Kernel version: 4.12.9-300.fc26.x86_64
->> > > mount: /dev/nvme0n1p3 on / type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
->> > >
->> > > The blocking happens in the following places:
->> > >
->> > > (1)
->> > >
->> > >              7fff9287472f __schedule ([kernel.kallsyms])
->> > >              7fff92874d16 schedule ([kernel.kallsyms])
->> > >              7fff92878d42 schedule_timeout ([kernel.kallsyms])
->> > >              7fff92876478 wait_for_completion ([kernel.kallsyms])
->> > >              7fffc05bf231 xfs_buf_submit_wait ([kernel.kallsyms])
->> > >              7fffc05bf3d3 _xfs_buf_read ([kernel.kallsyms])
->> > >              7fffc05bf4e4 xfs_buf_read_map ([kernel.kallsyms])
->> > >              7fffc05f53ca xfs_trans_read_buf_map ([kernel.kallsyms])
->> > >              7fffc058b432 xfs_btree_read_buf_block.constprop.34
->> > > ([kernel.kallsyms])
->> > >              7fffc058b504 xfs_btree_lookup_get_block ([kernel.kallsyms])
->> > >              7fffc058f6ad xfs_btree_lookup ([kernel.kallsyms])
->> > >              7fffc0570919 xfs_alloc_lookup_eq ([kernel.kallsyms])
->> > >              7fffc0570c59 xfs_alloc_fixup_trees ([kernel.kallsyms])
->> > >              7fffc0573a2d xfs_alloc_ag_vextent_near ([kernel.kallsyms])
->> > >              7fffc0573db1 xfs_alloc_ag_vextent ([kernel.kallsyms])
->> > >              7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
->> > >              7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
->> > >              7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
->> > >              7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
->> > >              7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
->> > >              7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
->> > >              7fff922d46ca iomap_apply ([kernel.kallsyms])
->> > >              7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
->> > >              7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
->> > >              7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
->> > >              7fff922bc5d3 aio_write ([kernel.kallsyms])
->> > >              7fff922bcec1 do_io_submit ([kernel.kallsyms])
->> > >              7fff922bdd40 sys_io_submit ([kernel.kallsyms])
->> > >              7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
->> > >                       687 io_submit (/usr/lib64/libaio.so.1.0.1)
->> > >                    112373 seastar::reactor::flush_pending_aio
->> > > (/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
->> > So you have a direct I/O write that requires block allocation. Block
->> > allocation requires reading free space btree blocks to identify and fix
->> > up remaining free extent records based on the allocation.
->>
->> Will an fallocate() call before the write in another thread help?
->>
->
-> Preallocating the file (or largish ranges) should help. I'm not sure
-> preallocating the range of each and every write will have the behavior
-> you want.
->
->> Will a write to a previously fallocate()d extent get blocked while
->> fallocate()ing a new extent?
->>
->
-> Any dio can most likely block behind an fallocate call due to locking
-> (just like any write that requires allocation can block behind another
-> such write).
->
->> >
->> > > (2)
->> > >
->> > >    7fff9287472f __schedule ([kernel.kallsyms])
->> > >              7fff92874d16 schedule ([kernel.kallsyms])
->> > >              7fffc05e6265 _xfs_log_force ([kernel.kallsyms])
->> > >              7fffc05c2518 xfs_extent_busy_flush ([kernel.kallsyms])
->> > >              7fffc0572ccd xfs_alloc_ag_vextent_size ([kernel.kallsyms])
->> > >              7fffc0573d91 xfs_alloc_ag_vextent ([kernel.kallsyms])
->> > >              7fffc05749cb xfs_alloc_vextent ([kernel.kallsyms])
->> > >              7fffc0585ba8 xfs_bmap_btalloc ([kernel.kallsyms])
->> > >              7fffc058605e xfs_bmap_alloc ([kernel.kallsyms])
->> > >              7fffc0586d6d xfs_bmapi_write ([kernel.kallsyms])
->> > >              7fffc05cedd1 xfs_iomap_write_direct ([kernel.kallsyms])
->> > >              7fffc05cf0ec xfs_file_iomap_begin ([kernel.kallsyms])
->> > >              7fff922d46ca iomap_apply ([kernel.kallsyms])
->> > >              7fff922d4dfb iomap_dio_rw ([kernel.kallsyms])
->> > >              7fffc05c4091 xfs_file_dio_aio_write ([kernel.kallsyms])
->> > >              7fffc05c456d xfs_file_write_iter ([kernel.kallsyms])
->> > >              7fff922bc5d3 aio_write ([kernel.kallsyms])
->> > >              7fff922bcec1 do_io_submit ([kernel.kallsyms])
->> > >              7fff922bdd40 sys_io_submit ([kernel.kallsyms])
->> > >              7fff9287a6b7 entry_SYSCALL_64_fastpath ([kernel.kallsyms])
->> > >                       687 io_submit (/usr/lib64/libaio.so.1.0.1)
->> > >                    112373 seastar::reactor::flush_pending_aio
->> > > (/home/tgrabiec/src/scylla/build/release/tests/perf/perf_fast_forward_g)
->> > >
->> > Another dio write that requires allocation. The allocation finds a busy
->> > extent, which means the extent was recently freed but the associated
->> > freeing transaction has not yet made it to the on-disk log. As such it
->> > cannot be safely reused, so the allocator flushes the log and retries to
->> > try and clear the busy state and find an extent.
->>
->> Is that because the disk is nearly full and there are no known flushed
->> extents, or because the allocator doesn't prioritize known-flushed extents?
->> From your comments below I gather you may not know for sure.
->>
->
-> I'm not sure without digging further into it. Hence the question around
-> free space availability.
+Verify kernel doesn't panic when user attempts to set realtime flags
+on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+kernels will panic during this test.  Kernels not compiled with
+CONFIG_XFS_RT should pass test.
 
-The file system was utilized between 90% and 95% out of 165GB during the test.
+This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
+on the main kernel tree.
+
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+ tests/xfs/431     | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/431.out |  3 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 90 insertions(+)
+ create mode 100755 tests/xfs/431
+ create mode 100644 tests/xfs/431.out
+
+diff --git a/tests/xfs/431 b/tests/xfs/431
+new file mode 100755
+index 0000000..f928abc
+--- /dev/null
++++ b/tests/xfs/431
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FS QA Test 431
++#
++# Verify kernel doesn't panic when user attempts to set realtime flags
++# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched 
++# kernels will panic during this test.  Kernels not compiled with 
++# CONFIG_XFS_RT should pass test.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 YOUR NAME HERE.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_io_command "chattr"
++_require_xfs_io_command "fsync"
++_require_xfs_io_command "pwrite"
++_require_scratch
++_require_test
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# Set realtime inherit flag on scratch mount, suppress output
++# as this may simply error out on future kernels, we will check
++# exit code instead.
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
++chattr_ret=$?
++
++# Erroring out here is fine, this would be desired behavior for
++# FSes without realtime devices present.
++if (( chattr_ret == 0)); then
++  # Attempt to write/fsync data to file
++  $XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile | 
++    tee -a $seqres.full | common_line_filter | _filter_xfs_io
++
++  # Remove the rt inherit flag after we are done or xfs_repair
++  # will fail.
++  $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
++fi
++
++
++rm -f $SCRATCH_MNT/testfile
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+new file mode 100644
+index 0000000..8c14f11
+--- /dev/null
++++ b/tests/xfs/431.out
+@@ -0,0 +1,3 @@
++QA output created by 431
++wrote 1048576/1048576 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 0a449b9..3f97f02 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -427,3 +427,4 @@
+ 428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 429 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++431 quick
+-- 
+2.9.5
+
