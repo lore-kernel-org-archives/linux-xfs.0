@@ -1,66 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:7465 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751488AbdITAqm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 20:46:42 -0400
-Date: Wed, 20 Sep 2017 10:46:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: Uninitialized memory read at xlog_write
-Message-ID: <20170920004639.GO10621@dastard>
-References: <20170911150157.GA13400@bfoster.bfoster>
- <201709131614.FAG69217.MSHFFVOFLJtQOO@I-love.SAKURA.ne.jp>
- <20170913094335.GV17782@dastard>
- <201709131859.AHB43227.SOFFOHJVMLFtOQ@I-love.SAKURA.ne.jp>
- <20170913214028.GX17782@dastard>
- <201709141915.HAD04123.FQOSHJtVOLFMFO@I-love.SAKURA.ne.jp>
- <20170914224431.GA10621@dastard>
- <20170918182121.GI6540@magnolia>
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:45155 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751779AbdITGOS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 02:14:18 -0400
+Received: by mail-wr0-f177.google.com with SMTP id m18so1212255wrm.2
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 23:14:17 -0700 (PDT)
+Subject: Re: io_submit() blocks for writes for substantial amount of time
+References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+ <20170919122704.GA3487@bfoster.bfoster>
+ <20170919145827.GA21523@infradead.org>
+ <04cb3ee7-e7d5-6bba-6adb-8ac1c28e68dc@scylladb.com>
+ <20170919203403.GA731@infradead.org>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <89e89ce9-0182-0fdf-2872-8860054acfaa@scylladb.com>
+Date: Wed, 20 Sep 2017 09:14:13 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170918182121.GI6540@magnolia>
+In-Reply-To: <20170919203403.GA731@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, bfoster@redhat.com, sandeen@redhat.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, Tomasz Grabiec <tgrabiec@scylladb.com>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 11:21:21AM -0700, Darrick J. Wong wrote:
-> On Fri, Sep 15, 2017 at 08:44:31AM +1000, Dave Chinner wrote:
-> > xfs: Don't log uninitialised fields in inode structures
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Prevent kmemcheck from throwing warnings about reading uninitialised
-> > memory when formatting inodes into the incore log buffer. There are
-> > several issues here - we don't always log all the fields in the
-> > inode log format item, and we never log the inode the
-> > di_next_unlinked field.
-> > 
-> > In the case of the inode log format item, this is aused b cerbated
-> 
-> "is aused b cerbated" ?
+On 09/19/2017 11:34 PM, Christoph Hellwig wrote:
+> On Tue, Sep 19, 2017 at 07:31:04PM +0300, Avi Kivity wrote:
+>> For DIO, does it really need the mm_struct? It can just pin the pages and
+>> pass them to the workqueue function.
+> We can't pin all the pages for a huge I/O at the same time.
 
-vi fail when replacing the word "used" with "exacerbated". :)
-
-> > by the old xfs_inode_log_format structure padding issue. Hence make
-> > the padded, 64 bit aligned version of the structure the one we always
-> > use for formatting the log and get rid of the 64 bit variant. This
-> > means we'll always log the 64-bit version and so recovery only needs
-> > to convert from the unpadded 32 bit version from older 32 bit
-> > kernels.
-> 
-> And those old 32-bit kernels can read the xfs_inode_log_format{,_64}
-> structures, right?
-
-Yes. With the in-memory format now being the same as the old
-xfs_inode_log_format_64 structure in the log, we only need a
-conversion from "32 bit in log to 64 bit in memory" on all
-platforms.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Is it not legal to perform a short write?
