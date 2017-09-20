@@ -1,65 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:29493 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750822AbdIRVbr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 17:31:47 -0400
-Date: Tue, 19 Sep 2017 07:31:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [linux-next][XFS][trinity] WARNING: CPU: 32 PID: 31369 at
- fs/iomap.c:993
-Message-ID: <20170918213143.GJ10621@dastard>
-References: <1505746565.6990.18.camel@abdul.in.ibm.com>
- <20170918152706.GA11482@lst.de>
- <8abed401-1634-760f-6543-4652fa495315@kernel.dk>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:47692 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751457AbdITAiR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 20:38:17 -0400
+Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
+        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8K0aZMQ005487
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:38:17 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0b-00082601.pphosted.com with ESMTP id 2d2wry4skx-2
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2017 17:38:17 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v2] xfs: Add test for CVE-2017-14340
+Date: Tue, 19 Sep 2017 17:38:15 -0700
+Message-ID: <20170920003815.4050-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8abed401-1634-760f-6543-4652fa495315@kernel.dk>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Abdul Haleem <abdhalee@linux.vnet.ibm.com>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, chandan <chandan@linux.vnet.ibm.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 09:28:55AM -0600, Jens Axboe wrote:
-> On 09/18/2017 09:27 AM, Christoph Hellwig wrote:
-> > On Mon, Sep 18, 2017 at 08:26:05PM +0530, Abdul Haleem wrote:
-> >> Hi,
-> >>
-> >> A warning is triggered from:
-> >>
-> >> file fs/iomap.c in function iomap_dio_rw
-> >>
-> >>     if (ret)
-> >>         goto out_free_dio;
-> >>
-> >>     ret = invalidate_inode_pages2_range(mapping,
-> >>             start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> >>>>  WARN_ON_ONCE(ret);
-> >>     ret = 0;
-> >>
-> >>     inode_dio_begin(inode);
-> > 
-> > This is expected and an indication of a problematic workload - which
-> > may be triggered by a fuzzer.
-> 
-> If it's expected, why don't we kill the WARN_ON_ONCE()? I get it all
-> the time running xfstests as well.
+Verify kernel doesn't panic when user attempts to set realtime flags
+on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+kernels will panic during this test.  Kernels not compiled with
+CONFIG_XFS_RT should pass test.
 
-Because when a user reports a data corruption, the only evidence we
-have that they are running an app that does something stupid is this
-warning in their syslogs.  Tracepoints are not useful for replacing
-warnings about data corruption vectors being triggered.
+This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
+on the main kernel tree.
 
-It needs to be on by default, bu tI'm sure we can wrap it with
-something like an xfs_alert_tag() type of construct so the tag can
-be set in /proc/fs/xfs/panic_mask to suppress it if testers so
-desire.
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v1:
+* Corrected copyright text
 
-Cheers,
+ tests/xfs/431     | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/431.out |  3 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 90 insertions(+)
+ create mode 100755 tests/xfs/431
+ create mode 100644 tests/xfs/431.out
 
-Dave.
-
+diff --git a/tests/xfs/431 b/tests/xfs/431
+new file mode 100755
+index 0000000..836b0c7
+--- /dev/null
++++ b/tests/xfs/431
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FS QA Test 431
++#
++# Verify kernel doesn't panic when user attempts to set realtime flags
++# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched 
++# kernels will panic during this test.  Kernels not compiled with 
++# CONFIG_XFS_RT should pass test.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Facebook, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_io_command "chattr"
++_require_xfs_io_command "fsync"
++_require_xfs_io_command "pwrite"
++_require_scratch
++_require_test
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# Set realtime inherit flag on scratch mount, suppress output
++# as this may simply error out on future kernels, we will check
++# exit code instead.
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
++chattr_ret=$?
++
++# Erroring out here is fine, this would be desired behavior for
++# FSes without realtime devices present.
++if (( chattr_ret == 0)); then
++  # Attempt to write/fsync data to file
++  $XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile | 
++    tee -a $seqres.full | common_line_filter | _filter_xfs_io
++
++  # Remove the rt inherit flag after we are done or xfs_repair
++  # will fail.
++  $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
++fi
++
++
++rm -f $SCRATCH_MNT/testfile
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+new file mode 100644
+index 0000000..8c14f11
+--- /dev/null
++++ b/tests/xfs/431.out
+@@ -0,0 +1,3 @@
++QA output created by 431
++wrote 1048576/1048576 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 0a449b9..3f97f02 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -427,3 +427,4 @@
+ 428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 429 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++431 quick
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
+
