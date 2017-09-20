@@ -1,62 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:49910 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751781AbdIUPkC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:40:02 -0400
-Received: by mail-it0-f47.google.com with SMTP id c195so1017577itb.4
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 08:40:02 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:23080 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751734AbdITVaE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 17:30:04 -0400
+Date: Wed, 20 Sep 2017 14:29:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/19] xfs: don't set XFS_BTCUR_BPRV_WASDEL in xfs_bunmapi
+Message-ID: <20170920212958.GK7112@magnolia>
+References: <20170918152422.24345-1-hch@lst.de>
+ <20170918152422.24345-4-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1709211024120.14427@nuc-kabylake>
-References: <1505940337-79069-1-git-send-email-keescook@chromium.org>
- <1505940337-79069-4-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1709211024120.14427@nuc-kabylake>
-From: Kees Cook <keescook@chromium.org>
-Date: Thu, 21 Sep 2017 08:40:00 -0700
-Message-ID: <CAGXu5j+X6dWCGocG=P7pszTY-5OZ6Jmp-RsnDKox75M5rmVe4g@mail.gmail.com>
-Subject: Re: [kernel-hardening] Re: [PATCH v3 03/31] usercopy: Mark kmalloc
- caches as usercopy caches
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170918152422.24345-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 21, 2017 at 8:27 AM, Christopher Lameter <cl@linux.com> wrote:
-> On Wed, 20 Sep 2017, Kees Cook wrote:
->
->> --- a/mm/slab.c
->> +++ b/mm/slab.c
->> @@ -1291,7 +1291,8 @@ void __init kmem_cache_init(void)
->>        */
->>       kmalloc_caches[INDEX_NODE] = create_kmalloc_cache(
->>                               kmalloc_info[INDEX_NODE].name,
->> -                             kmalloc_size(INDEX_NODE), ARCH_KMALLOC_FLAGS);
->> +                             kmalloc_size(INDEX_NODE), ARCH_KMALLOC_FLAGS,
->> +                             0, kmalloc_size(INDEX_NODE));
->>       slab_state = PARTIAL_NODE;
->>       setup_kmalloc_cache_index_table();
->
-> Ok this presumes that at some point we will be able to restrict the number
-> of bytes writeable and thus set the offset and size field to different
-> values. Is that realistic?
->
-> We already whitelist all kmalloc caches (see first patch).
->
-> So what is the point of this patch?
+On Mon, Sep 18, 2017 at 08:24:06AM -0700, Christoph Hellwig wrote:
+> The XFS_BTCUR_BPRV_WASDEL flag is supposed to indicate that we are
+> converting a delayed allocation to a real one, which isn't the case
+> in xfs_bunmapi.  Setting it could theoretically lead to misaccounting
+> here, but it's unlikely that we ever hit it in practice.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-The DMA kmalloc caches are not whitelisted:
+I think we need a better comment on #define explaining that the flag is
+for making sure that delayed_blks gets updated when performing delalloc
+-> real conversion.  I had trace the usage of the flag since
+"/* was delayed */" didn't convince me that this patch made sense.
 
->>                         kmalloc_dma_caches[i] = create_kmalloc_cache(n,
->> -                               size, SLAB_CACHE_DMA | flags);
->> +                               size, SLAB_CACHE_DMA | flags, 0, 0);
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-So this is creating the distinction between the kmallocs that go to
-userspace and those that don't. The expectation is that future work
-can start to distinguish between "for userspace" and "only kernel"
-kmalloc allocations, as is already done here for DMA.
-
--Kees
-
--- 
-Kees Cook
-Pixel Security
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 555ff198e28c..ef30b52c32af 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5725,11 +5725,7 @@ __xfs_bunmapi(
+>  					XFS_QMOPT_RES_REGBLKS);
+>  			}
+>  			ip->i_delayed_blks -= del.br_blockcount;
+> -			if (cur)
+> -				cur->bc_private.b.flags |=
+> -					XFS_BTCUR_BPRV_WASDEL;
+> -		} else if (cur)
+> -			cur->bc_private.b.flags &= ~XFS_BTCUR_BPRV_WASDEL;
+> +		}
+>  
+>  		error = xfs_bmap_del_extent(ip, tp, &lastx, dfops, cur, &del,
+>  				&tmp_logflags, whichfork, flags);
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
