@@ -1,69 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56636 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751095AbdITNXY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Sep 2017 09:23:24 -0400
-Date: Wed, 20 Sep 2017 09:23:22 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: perag initialization should only touch
- m_ag_max_usable for AG 0
-Message-ID: <20170920132322.GC16481@bfoster.bfoster>
-References: <20170919181041.GC7112@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:43677 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751782AbdITOth (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 10:49:37 -0400
+Date: Wed, 20 Sep 2017 07:49:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: io_submit() blocks for writes for substantial amount of time
+Message-ID: <20170920144936.GA12638@infradead.org>
+References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
+ <20170919122704.GA3487@bfoster.bfoster>
+ <20170919145827.GA21523@infradead.org>
+ <04cb3ee7-e7d5-6bba-6adb-8ac1c28e68dc@scylladb.com>
+ <20170919173955.GB8139@dhcp-41-131.bos.redhat.com>
+ <ba7a108e-733e-419d-9839-545bc04e0caf@scylladb.com>
+ <20170920105021.GA16036@bfoster.bfoster>
+ <8b7b0822-9d57-4fc9-d55f-b0f94d8a5cbd@scylladb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20170919181041.GC7112@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8b7b0822-9d57-4fc9-d55f-b0f94d8a5cbd@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Avi Kivity <avi@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@infradead.org>, Tomasz Grabiec <tgrabiec@scylladb.com>, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-aio@kvack.org
 
-On Tue, Sep 19, 2017 at 11:10:41AM -0700, Darrick J. Wong wrote:
-> We call __xfs_ag_resv_init to make a per-AG reservation for each AG.
-> This makes the reservation per-AG, not per-filesystem.  Therefore, it
-> is incorrect to adjust m_ag_max_usable for each AG.  Adjust it only
-> when we're reserving AG 0's blocks so that we only do it once per fs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+On Wed, Sep 20, 2017 at 02:11:49PM +0300, Avi Kivity wrote:
+> I think it's still preferable to avoid a workqueue and its non-deterministic
+> latencies and context switches if we can prove that a particular iocb will
+> not require a synchronous operation. If that can be done then 4.13 nowait
+> aio also works - the user provides the workqueue equivalent. The only
+> problem is if we can't prove in advance that an iocb will require blocking.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The code is generally pessimistic and bails out rather too often.
+The only issue not solved is memory allocation, at the moment we could
+still block on them so this will need some more work.  For XFS direct
+I/O the only memory allocations in that path should be the bios.
 
->  fs/xfs/libxfs/xfs_ag_resv.c |   12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index b008ff3..df3e600 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -156,7 +156,8 @@ __xfs_ag_resv_free(
->  	trace_xfs_ag_resv_free(pag, type, 0);
->  
->  	resv = xfs_perag_resv(pag, type);
-> -	pag->pag_mount->m_ag_max_usable += resv->ar_asked;
-> +	if (pag->pag_agno == 0)
-> +		pag->pag_mount->m_ag_max_usable += resv->ar_asked;
->  	/*
->  	 * AGFL blocks are always considered "free", so whatever
->  	 * was reserved at mount time must be given back at umount.
-> @@ -216,7 +217,14 @@ __xfs_ag_resv_init(
->  		return error;
->  	}
->  
-> -	mp->m_ag_max_usable -= ask;
-> +	/*
-> +	 * Reduce the maximum per-AG allocation length by however much we're
-> +	 * trying to reserve for an AG.  Since this is a filesystem-wide
-> +	 * counter, we only make the adjustment for AG 0.  This assumes that
-> +	 * there aren't any AGs hungrier for per-AG reservation than AG 0.
-> +	 */
-> +	if (pag->pag_agno == 0)
-> +		mp->m_ag_max_usable -= ask;
->  
->  	resv = xfs_perag_resv(pag, type);
->  	resv->ar_asked = ask;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  1. Short writes - just ignore the tail of a too-large iovec. May cause
+> buggy applications to fail, so probably not a good idea.
+
+We could still do it the same way we did RWF_NOWAIT - require an
+explicit opt-in for what should be the defalt behavior because we
+change the historic behavior.
+
+>  3. Borrow the mm, and pin from the wq - I gather it was considered and
+> rejected, but maybe it can be reconsidered.
+
+It was done before in vendor kernels, and I think we also had code
+for it in a driver implementing aio.  I'd need to look up the whole
+history as I don't remember it.
