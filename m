@@ -1,106 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751561AbdITKuY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Sep 2017 06:50:24 -0400
-Date: Wed, 20 Sep 2017 06:50:22 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: io_submit() blocks for writes for substantial amount of time
-Message-ID: <20170920105021.GA16036@bfoster.bfoster>
-References: <CAO2XSW6cctUGx18AdQQ29zHpjPiJ2vVJ-MHxrGcmoeMxzMvbbA@mail.gmail.com>
- <20170919122704.GA3487@bfoster.bfoster>
- <20170919145827.GA21523@infradead.org>
- <04cb3ee7-e7d5-6bba-6adb-8ac1c28e68dc@scylladb.com>
- <20170919173955.GB8139@dhcp-41-131.bos.redhat.com>
- <ba7a108e-733e-419d-9839-545bc04e0caf@scylladb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ba7a108e-733e-419d-9839-545bc04e0caf@scylladb.com>
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:53734 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751799AbdITUqB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 16:46:01 -0400
+Received: by mail-pf0-f169.google.com with SMTP id x78so2102135pff.10
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2017 13:46:01 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH v3 02/31] usercopy: Enforce slab cache usercopy region boundaries
+Date: Wed, 20 Sep 2017 13:45:08 -0700
+Message-Id: <1505940337-79069-3-git-send-email-keescook@chromium.org>
+In-Reply-To: <1505940337-79069-1-git-send-email-keescook@chromium.org>
+References: <1505940337-79069-1-git-send-email-keescook@chromium.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Tomasz Grabiec <tgrabiec@scylladb.com>, linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Laura Abbott <labbott@redhat.com>, Ingo Molnar <mingo@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-On Wed, Sep 20, 2017 at 09:17:25AM +0300, Avi Kivity wrote:
-> On 09/19/2017 08:39 PM, Brian Foster wrote:
-> > On Tue, Sep 19, 2017 at 07:31:04PM +0300, Avi Kivity wrote:
-> > > 
-> > > On 09/19/2017 05:58 PM, Christoph Hellwig wrote:
-> > > > On Tue, Sep 19, 2017 at 08:27:05AM -0400, Brian Foster wrote:
-> > > > > > Please advise, is this a known bug? When can it happen? Is there a way
-> > > > > > to work it around to avoid blocking?
-> > > > > > 
-> > > > > I'm not sure how either could be considered a bug based on the stack
-> > > > > trace information alone. Allocations may require reading metadata and
-> > > > > reads are synchronous. This all seems like pretty basic filesystem
-> > > > > behavior.
-> > > > > 
-> > > > > I suppose performance may be a separate question. For the latter issue,
-> > > > > I'd be curious whether leaving more free space available in the
-> > > > > filesystem would help avoid running into busy extents. Perhaps having
-> > > > > more memory and thus a larger buffer cache for btree blocks could help
-> > > > > mitigate the former issue..? The deterministic workaround for both is to
-> > > > > preallocate the associated file. If the file would be too large, another
-> > > > > option may be to set an extent size hint to allocate the file in larger
-> > > > > chunks and amortize the cost of the allocations over multiple writes.
-> > > > Note that Linux 4.13 and later support a RWF_NOWAIT flag, that will
-> > > > return -EAGAIN from io_submit for these conditions so they can be
-> > > > handled by a thread pool.
-> > > > 
-> > > > Note that until a few years ago we performed all allocations from
-> > > > a workqueue, this was changed by:
-> > > > 
-> > > > commit cf11da9c5d374962913ca5ba0ce0886b58286224
-> > > > Author: Dave Chinner <dchinner@redhat.com>
-> > > > Date:   Tue Jul 15 07:08:24 2014 +1000
-> > > > 
-> > > >       xfs: refine the allocation stack switch
-> > > > 
-> > > > to only defer btree splits to a workqueue.  With that previous scheme
-> > > > there might have been an option to defer AIO allocations to a workqueue,
-> > > > but the main issue with that is that the worker thread which is then
-> > > > going to do the actual data transfer would have to "borrow" the
-> > > > mm_struct from the submitter.  That's the primary reason why something
-> > > > like that was never implemented in mainline Linux.
-> > > For DIO, does it really need the mm_struct? It can just pin the pages and
-> > > pass them to the workqueue function.
-> > > 
-> > I'm not sure what difference it makes regardless. We still have to wait
-> > for an allocation to complete before we can issue an I/O.
-> 
-> If io_submit() returns immediately rather than blocking, it makes a huge
-> difference. Waiting in the workqueue can be done in parallel to other I/O
-> and in parallel to cpu work in the caller thread. Blocking means no further
-> I/O is issued and no cpu work is done.
-> 
+From: David Windsor <dave@nullcore.net>
 
-Sure. I'm just saying that seems orthogonal to how/why we deferred block
-allocations to a wq. Even if we went back to that behavior, io_submit()
-will still potentially block as it does today. It sounds like what you
-want is something higher level that defers the entire aio submission to
-a wq (which still may have to use another wq for btree splits, for
-different reasons). Apparently we had something like that in the past as
-Christoph referred to in his last mail, but I'm not really familiar with
-that.
+This patch adds the enforcement component of usercopy cache whitelisting,
+and is modified from Brad Spengler/PaX Team's PAX_USERCOPY whitelisting
+code in the last public patch of grsecurity/PaX based on my understanding
+of the code. Changes or omissions from the original code are mine and
+don't reflect the original grsecurity/PaX code.
 
-FWIW, this is not exactly the same, but I think Dave prototyped
-something in the past to wire up aio_fsync() to a basic wq
-implementation and managed to show really good scalability improvements.
-Given that, I suppose it wouldn't be that surprising to get similar
-results for I/O submission if there is some way around the page issue.
+The SLAB and SLUB allocators are modified to deny all copy operations
+in which the kernel heap memory being modified falls outside of the cache's
+defined usercopy region.
 
-Brian
+Signed-off-by: David Windsor <dave@nullcore.net>
+[kees: adjust commit log and comments]
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Laura Abbott <labbott@redhat.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ mm/slab.c     | 16 +++++++++++-----
+ mm/slub.c     | 18 +++++++++++-------
+ mm/usercopy.c | 12 ++++++++++++
+ 3 files changed, 34 insertions(+), 12 deletions(-)
 
-> >   IIRC, the old
-> > defer allocs to a wq thing was more about saving stack space than
-> > providing async behavior.
-> 
-> Perhaps, but IMO the async behavior is a major feature of the aio system
-> calls. It is very hard to use them if they block.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/mm/slab.c b/mm/slab.c
+index 87b6e5e0cdaf..df268999cf02 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -4408,7 +4408,9 @@ module_init(slab_proc_init);
+ 
+ #ifdef CONFIG_HARDENED_USERCOPY
+ /*
+- * Rejects objects that are incorrectly sized.
++ * Rejects incorrectly sized objects and objects that are to be copied
++ * to/from userspace but do not fall entirely within the containing slab
++ * cache's usercopy region.
+  *
+  * Returns NULL if check passes, otherwise const char * to name of cache
+  * to indicate an error.
+@@ -4428,11 +4430,15 @@ const char *__check_heap_object(const void *ptr, unsigned long n,
+ 	/* Find offset within object. */
+ 	offset = ptr - index_to_obj(cachep, page, objnr) - obj_offset(cachep);
+ 
+-	/* Allow address range falling entirely within object size. */
+-	if (offset <= cachep->object_size && n <= cachep->object_size - offset)
+-		return NULL;
++	/* Make sure object falls entirely within cache's usercopy region. */
++	if (offset < cachep->useroffset)
++		return cachep->name;
++	if (offset - cachep->useroffset > cachep->usersize)
++		return cachep->name;
++	if (n > cachep->useroffset - offset + cachep->usersize)
++		return cachep->name;
+ 
+-	return cachep->name;
++	return NULL;
+ }
+ #endif /* CONFIG_HARDENED_USERCOPY */
+ 
+diff --git a/mm/slub.c b/mm/slub.c
+index fae637726c44..bbf73024be3a 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3833,7 +3833,9 @@ EXPORT_SYMBOL(__kmalloc_node);
+ 
+ #ifdef CONFIG_HARDENED_USERCOPY
+ /*
+- * Rejects objects that are incorrectly sized.
++ * Rejects incorrectly sized objects and objects that are to be copied
++ * to/from userspace but do not fall entirely within the containing slab
++ * cache's usercopy region.
+  *
+  * Returns NULL if check passes, otherwise const char * to name of cache
+  * to indicate an error.
+@@ -3843,11 +3845,9 @@ const char *__check_heap_object(const void *ptr, unsigned long n,
+ {
+ 	struct kmem_cache *s;
+ 	unsigned long offset;
+-	size_t object_size;
+ 
+ 	/* Find object and usable object size. */
+ 	s = page->slab_cache;
+-	object_size = slab_ksize(s);
+ 
+ 	/* Reject impossible pointers. */
+ 	if (ptr < page_address(page))
+@@ -3863,11 +3863,15 @@ const char *__check_heap_object(const void *ptr, unsigned long n,
+ 		offset -= s->red_left_pad;
+ 	}
+ 
+-	/* Allow address range falling entirely within object size. */
+-	if (offset <= object_size && n <= object_size - offset)
+-		return NULL;
++	/* Make sure object falls entirely within cache's usercopy region. */
++	if (offset < s->useroffset)
++		return s->name;
++	if (offset - s->useroffset > s->usersize)
++		return s->name;
++	if (n > s->useroffset - offset + s->usersize)
++		return s->name;
+ 
+-	return s->name;
++	return NULL;
+ }
+ #endif /* CONFIG_HARDENED_USERCOPY */
+ 
+diff --git a/mm/usercopy.c b/mm/usercopy.c
+index a9852b24715d..cbffde670c49 100644
+--- a/mm/usercopy.c
++++ b/mm/usercopy.c
+@@ -58,6 +58,18 @@ static noinline int check_stack_object(const void *obj, unsigned long len)
+ 	return GOOD_STACK;
+ }
+ 
++/*
++ * If this function is reached, then CONFIG_HARDENED_USERCOPY has found an
++ * unexpected state during a copy_from_user() or copy_to_user() call.
++ * There are several checks being performed on the buffer by the
++ * __check_object_size() function. Normal stack buffer usage should never
++ * trip the checks, and kernel text addressing will always trip the check.
++ * For cache objects, it is checking that only the whitelisted range of
++ * bytes for a given cache is being accessed (via the cache's usersize and
++ * useroffset fields). To adjust a cache whitelist, use the usercopy-aware
++ * kmem_cache_create_usercopy() function to create the cache (and
++ * carefully audit the whitelist range).
++ */
+ static void report_usercopy(const void *ptr, unsigned long len,
+ 			    bool to_user, const char *type)
+ {
+-- 
+2.7.4
+
