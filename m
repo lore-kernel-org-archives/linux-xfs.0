@@ -1,183 +1,444 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:38884 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751524AbdITWXA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 18:23:00 -0400
-Date: Thu, 21 Sep 2017 08:22:56 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: shared/298 lockdep splat?
-Message-ID: <20170920222256.GR18948@dastard>
-References: <20170920211042.GH7112@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43986 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751408AbdITWYP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 18:24:15 -0400
+Date: Wed, 20 Sep 2017 15:24:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 15/19] xfs: pass a struct xfs_bmbt_irec to xfs_bmbt_update
+Message-ID: <20170920222411.GW7112@magnolia>
+References: <20170918152422.24345-1-hch@lst.de>
+ <20170918152422.24345-16-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170920211042.GH7112@magnolia>
+In-Reply-To: <20170918152422.24345-16-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Byungchul Park <byungchul.park@lge.com>, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-[cc lkml, PeterZ and Byungchul]
-
-On Wed, Sep 20, 2017 at 02:10:42PM -0700, Darrick J. Wong wrote:
-> Hello list,
+On Mon, Sep 18, 2017 at 08:24:18AM -0700, Christoph Hellwig wrote:
+> Now that we've massaged the callers into the right form we can always
+> pass the actual extent record instead of the individual fields.
 > 
-> Yesterday I tried setting up qemu 2.10 with some (fake) nvdimms backed
-> by an on-disk file.  Midway through a -g auto xfstests run, shared/298
-> produced the attached dmesg spew.  I'll try to have a look later, but
-> in the meantime I'm doing the 'complain to list, see if anyone bites'
-> thing. :)
+> With that xfs_bmbt_disk_set_allf can go away, and xfs_bmbt_disk_set_all
+> can be merged into the former implementation of xfs_bmbt_disk_set_allf.
 > 
-> The kernel is 4.14-rc1 without any patches applied.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-tl;dr: it's a false positive because it's conflating the independent
-locking/completion contexts of upper and lower filesystems when
-the loop device is in use.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I've mangled the report in replying - Darrick posted it here, too:
-
-https://pastebin.com/GshLpH7x
-
-> ======================================================
-> WARNING: possible circular locking dependency detected
-> 4.14.0-rc1-fixes #1 Tainted: G        W      
-> ------------------------------------------------------
-> loop0/31693 is trying to acquire lock:
->  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c       | 114 +++++++++++------------------------------
+>  fs/xfs/libxfs/xfs_bmap_btree.c |  42 +++++----------
+>  fs/xfs/libxfs/xfs_bmap_btree.h |   4 +-
+>  3 files changed, 44 insertions(+), 116 deletions(-)
 > 
-> but now in release context of a crosslock acquired at the following:
->  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 2631cba5d2ac..5b1ea5ab62ed 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -161,21 +161,17 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>  }
+>  
+>  /*
+> - * Update the record referred to by cur to the value given
+> - * by [off, bno, len, state].
+> + * Update the record referred to by cur to the value given by irec
+>   * This either works (return 0) or gets an EFSCORRUPTED error.
+>   */
+>  STATIC int
+>  xfs_bmbt_update(
+>  	struct xfs_btree_cur	*cur,
+> -	xfs_fileoff_t		off,
+> -	xfs_fsblock_t		bno,
+> -	xfs_filblks_t		len,
+> -	xfs_exntst_t		state)
+> +	struct xfs_bmbt_irec	*irec)
+>  {
+>  	union xfs_btree_rec	rec;
+>  
+> -	xfs_bmbt_disk_set_allf(&rec.bmbt, off, bno, len, state);
+> +	xfs_bmbt_disk_set_all(&rec.bmbt, irec);
+>  	return xfs_btree_update(cur, &rec);
+>  }
+>  
+> @@ -1728,9 +1724,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
+> -					LEFT.br_startblock,
+> -					LEFT.br_blockcount, LEFT.br_state);
+> +			error = xfs_bmbt_update(bma->cur, &LEFT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -1760,9 +1754,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
+> -					LEFT.br_startblock,
+> -					LEFT.br_blockcount, LEFT.br_state);
+> +			error = xfs_bmbt_update(bma->cur, &LEFT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -1790,9 +1782,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, PREV.br_startoff,
+> -					PREV.br_startblock,
+> -					PREV.br_blockcount, PREV.br_state);
+> +			error = xfs_bmbt_update(bma->cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -1861,9 +1851,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
+> -					LEFT.br_startblock, LEFT.br_blockcount,
+> -					LEFT.br_state);
+> +			error = xfs_bmbt_update(bma->cur, &LEFT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -1941,9 +1929,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, RIGHT.br_startoff,
+> -					RIGHT.br_startblock, RIGHT.br_blockcount,
+> -					RIGHT.br_state);
+> +			error = xfs_bmbt_update(bma->cur, &RIGHT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2289,9 +2275,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if ((error = xfs_btree_decrement(cur, 0, &i)))
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, LEFT.br_startoff,
+> -					LEFT.br_startblock, LEFT.br_blockcount,
+> -					LEFT.br_state);
+> +			error = xfs_bmbt_update(cur, &LEFT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2327,9 +2311,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if ((error = xfs_btree_decrement(cur, 0, &i)))
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, LEFT.br_startoff,
+> -					LEFT.br_startblock, LEFT.br_blockcount,
+> -					LEFT.br_state);
+> +			error = xfs_bmbt_update(cur, &LEFT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2364,9 +2346,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if ((error = xfs_btree_decrement(cur, 0, &i)))
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, PREV.br_startoff,
+> -					PREV.br_startblock, PREV.br_blockcount,
+> -					PREV.br_state);
+> +			error = xfs_bmbt_update(cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2392,9 +2372,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  					&i)))
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, PREV.br_startoff,
+> -					PREV.br_startblock, PREV.br_blockcount,
+> -					PREV.br_state);
+> +			error = xfs_bmbt_update(cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2430,17 +2408,13 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, PREV.br_startoff,
+> -					PREV.br_startblock, PREV.br_blockcount,
+> -					PREV.br_state);
+> +			error = xfs_bmbt_update(cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  			error = xfs_btree_decrement(cur, 0, &i);
+>  			if (error)
+>  				goto done;
+> -			error = xfs_bmbt_update(cur, LEFT.br_startoff,
+> -					LEFT.br_startblock, LEFT.br_blockcount,
+> -					LEFT.br_state);
+> +			error = xfs_bmbt_update(cur, &LEFT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2472,9 +2446,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, PREV.br_startoff,
+> -					PREV.br_startblock, PREV.br_blockcount,
+> -					PREV.br_state);
+> +			error = xfs_bmbt_update(cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  			cur->bc_rec.b = *new;
+> @@ -2514,17 +2486,13 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, PREV.br_startoff,
+> -					PREV.br_startblock, PREV.br_blockcount,
+> -					PREV.br_state);
+> +			error = xfs_bmbt_update(cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  			error = xfs_btree_increment(cur, 0, &i);
+>  			if (error)
+>  				goto done;
+> -			error = xfs_bmbt_update(cur, RIGHT.br_startoff,
+> -					RIGHT.br_startblock,
+> -					RIGHT.br_blockcount, RIGHT.br_state);
+> +			error = xfs_bmbt_update(cur, &RIGHT);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2556,9 +2524,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, PREV.br_startoff,
+> -					PREV.br_startblock, PREV.br_blockcount,
+> -					PREV.br_state);
+> +			error = xfs_bmbt_update(cur, &PREV);
+>  			if (error)
+>  				goto done;
+>  			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
+> @@ -2608,9 +2574,8 @@ xfs_bmap_add_extent_unwritten_real(
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+>  			/* new right extent - oldext */
+> -			if ((error = xfs_bmbt_update(cur, r[1].br_startoff,
+> -				r[1].br_startblock, r[1].br_blockcount,
+> -				r[1].br_state)))
+> +			error = xfs_bmbt_update(cur, &r[1]);
+> +			if (error)
+>  				goto done;
+>  			/* new left extent - oldext */
+>  			cur->bc_rec.b = PREV;
+> @@ -2951,9 +2916,7 @@ xfs_bmap_add_extent_hole_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, left.br_startoff,
+> -					left.br_startblock,
+> -					left.br_blockcount, left.br_state);
+> +			error = xfs_bmbt_update(cur, &left);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -2982,9 +2945,7 @@ xfs_bmap_add_extent_hole_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, left.br_startoff,
+> -					left.br_startblock,
+> -					left.br_blockcount, left.br_state);
+> +			error = xfs_bmbt_update(cur, &left);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -3014,9 +2975,7 @@ xfs_bmap_add_extent_hole_real(
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(cur, right.br_startoff,
+> -					right.br_startblock,
+> -					right.br_blockcount, right.br_state);
+> +			error = xfs_bmbt_update(cur, &right);
+>  			if (error)
+>  				goto done;
+>  		}
+> @@ -5189,8 +5148,7 @@ xfs_bmap_del_extent_real(
+>  			flags |= xfs_ilog_fext(whichfork);
+>  			break;
+>  		}
+> -		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
+> -				got.br_blockcount, got.br_state);
+> +		error = xfs_bmbt_update(cur, &got);
+>  		if (error)
+>  			goto done;
+>  		break;
+> @@ -5206,8 +5164,7 @@ xfs_bmap_del_extent_real(
+>  			flags |= xfs_ilog_fext(whichfork);
+>  			break;
+>  		}
+> -		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
+> -				got.br_blockcount, got.br_state);
+> +		error = xfs_bmbt_update(cur, &got);
+>  		if (error)
+>  			goto done;
+>  		break;
+> @@ -5228,9 +5185,7 @@ xfs_bmap_del_extent_real(
+>  
+>  		flags |= XFS_ILOG_CORE;
+>  		if (cur) {
+> -			error = xfs_bmbt_update(cur, got.br_startoff,
+> -					got.br_startblock, got.br_blockcount,
+> -					got.br_state);
+> +			error = xfs_bmbt_update(cur, &got);
+>  			if (error)
+>  				goto done;
+>  			error = xfs_btree_increment(cur, 0, &i);
+> @@ -5260,10 +5215,7 @@ xfs_bmap_del_extent_real(
+>  				 * Update the btree record back
+>  				 * to the original value.
+>  				 */
+> -				error = xfs_bmbt_update(cur, old.br_startoff,
+> -						old.br_startblock,
+> -						old.br_blockcount,
+> -						old.br_state);
+> +				error = xfs_bmbt_update(cur, &old);
+>  				if (error)
+>  					goto done;
+>  				/*
+> @@ -5801,8 +5753,7 @@ xfs_bmse_merge(
+>  		return error;
+>  	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+>  
+> -	error = xfs_bmbt_update(cur, new.br_startoff, new.br_startblock,
+> -			        new.br_blockcount, new.br_state);
+> +	error = xfs_bmbt_update(cur, &new);
+>  	if (error)
+>  		return error;
+>  
+> @@ -5919,9 +5870,7 @@ xfs_bmse_shift_one(
+>  			return error;
+>  		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+>  
+> -		error = xfs_bmbt_update(cur, new.br_startoff,
+> -				new.br_startblock, new.br_blockcount,
+> -				new.br_state);
+> +		error = xfs_bmbt_update(cur, &new);
+>  		if (error)
+>  			return error;
+>  	} else {
+> @@ -6182,10 +6131,7 @@ xfs_bmap_split_extent_at(
+>  
+>  	logflags = XFS_ILOG_CORE;
+>  	if (cur) {
+> -		error = xfs_bmbt_update(cur, got.br_startoff,
+> -				got.br_startblock,
+> -				got.br_blockcount,
+> -				got.br_state);
+> +		error = xfs_bmbt_update(cur, &got);
+>  		if (error)
+>  			goto del_cursor;
+>  	} else
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index a6331ffa51e3..7e2d981626ef 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -228,47 +228,31 @@ xfs_bmbt_set_all(
+>  			     s->br_blockcount, s->br_state);
+>  }
+>  
+> -
+>  /*
+> - * Set all the fields in a disk format bmap extent record from the arguments.
+> + * Set all the fields in a bmap extent record from the uncompressed form.
+>   */
+>  void
+> -xfs_bmbt_disk_set_allf(
+> -	xfs_bmbt_rec_t		*r,
+> -	xfs_fileoff_t		startoff,
+> -	xfs_fsblock_t		startblock,
+> -	xfs_filblks_t		blockcount,
+> -	xfs_exntst_t		state)
+> +xfs_bmbt_disk_set_all(
+> +	struct xfs_bmbt_rec	*r,
+> +	struct xfs_bmbt_irec	*s)
+>  {
+> -	int			extent_flag = (state == XFS_EXT_NORM) ? 0 : 1;
+> +	int			extent_flag = (s->br_state != XFS_EXT_NORM);
+>  
+> -	ASSERT(state == XFS_EXT_NORM || state == XFS_EXT_UNWRITTEN);
+> -	ASSERT((startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)) == 0);
+> -	ASSERT((blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0);
+> -	ASSERT((startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)) == 0);
+> +	ASSERT(s->br_state == XFS_EXT_NORM || s->br_state == XFS_EXT_UNWRITTEN);
+> +	ASSERT(!(s->br_startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)));
+> +	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
+> +	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
+>  
+>  	r->l0 = cpu_to_be64(
+>  		((xfs_bmbt_rec_base_t)extent_flag << 63) |
+> -		 ((xfs_bmbt_rec_base_t)startoff << 9) |
+> -		 ((xfs_bmbt_rec_base_t)startblock >> 43));
+> +		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
+> +		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43));
+>  	r->l1 = cpu_to_be64(
+> -		((xfs_bmbt_rec_base_t)startblock << 21) |
+> -		 ((xfs_bmbt_rec_base_t)blockcount &
+> +		((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
+> +		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
+>  		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
+>  }
+>  
+> -/*
+> - * Set all the fields in a bmap extent record from the uncompressed form.
+> - */
+> -STATIC void
+> -xfs_bmbt_disk_set_all(
+> -	xfs_bmbt_rec_t	*r,
+> -	xfs_bmbt_irec_t *s)
+> -{
+> -	xfs_bmbt_disk_set_allf(r, s->br_startoff, s->br_startblock,
+> -				  s->br_blockcount, s->br_state);
+> -}
+> -
+>  /*
+>   * Set the blockcount field in a bmap extent record.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+> index 9da5a8d4f184..bd3c56f1cd03 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+> @@ -104,6 +104,7 @@ extern xfs_fsblock_t xfs_bmbt_get_startblock(xfs_bmbt_rec_host_t *r);
+>  extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
+>  extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
+>  
+> +void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
+>  extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
+>  extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
+>  
+> @@ -115,9 +116,6 @@ extern void xfs_bmbt_set_startblock(xfs_bmbt_rec_host_t *r, xfs_fsblock_t v);
+>  extern void xfs_bmbt_set_startoff(xfs_bmbt_rec_host_t *r, xfs_fileoff_t v);
+>  extern void xfs_bmbt_set_state(xfs_bmbt_rec_host_t *r, xfs_exntst_t v);
+>  
+> -extern void xfs_bmbt_disk_set_allf(xfs_bmbt_rec_t *r, xfs_fileoff_t o,
+> -			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
+> -
+>  extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
+>  			xfs_bmdr_block_t *, int);
+>  
+> -- 
+> 2.14.1
 > 
-> which lock already depends on the new lock.
-> 
-> 
-> the existing dependency chain (in reverse order) is:
-> 
-> -> #2 ((complete)&ret.event){+.+.}:
->        lock_acquire+0xab/0x200
->        wait_for_completion_io+0x4e/0x1a0
->        submit_bio_wait+0x7f/0xb0
->        blkdev_issue_zeroout+0x71/0xa0
->        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
->        xfs_bmapi_write+0x374/0x11f0 [xfs]
->        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
->        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
->        iomap_apply+0x43/0xe0
->        dax_iomap_rw+0x89/0xf0
->        xfs_file_dax_write+0xcc/0x220 [xfs]
->        xfs_file_write_iter+0xf0/0x130 [xfs]
->        __vfs_write+0xd9/0x150
->        vfs_write+0xc8/0x1c0
->        SyS_write+0x45/0xa0
->        entry_SYSCALL_64_fastpath+0x1f/0xbe
-
-This is on the lower filesystem - it's a write() syscall on a DAX
-enable filesystem. Locking in this case is:
-
-Context			function		lock
-Lower filesystem	xfs_file_dax_write	XFS_IOLOCK_EXCL
-Lower filesystem	xfs_file_iomap_begin	XFS_ILOCK_EXCL
-Lower filesystem/
-   lower blkdev		submit_bio_wait		wait for dax block
-						device IO completion
-
-Which gives: IOLOCK -> &xfs_nondir_ilock_class -> IO completion
-
-In the lower filesystem.
-
-> -> #1 (&xfs_nondir_ilock_class){++++}:
->        lock_acquire+0xab/0x200
->        down_write_nested+0x4a/0xb0
->        xfs_ilock+0x263/0x330 [xfs]
->        xfs_setattr_size+0x152/0x370 [xfs]
->        xfs_vn_setattr+0x6b/0x90 [xfs]
->        notify_change+0x27d/0x3f0
->        do_truncate+0x5b/0x90
->        path_openat+0x237/0xa90
->        do_filp_open+0x8a/0xf0
->        do_sys_open+0x11c/0x1f0
->        entry_SYSCALL_64_fastpath+0x1f/0xbe
-
-Context			function		lock
-Lower filesystem	xfs_vn_setattr		XFS_IOLOCK_EXCL
-Lower filesystem	xfs_vn_setattr		XFS_MMAPLOCK_EXCL
-Lower filesystem	xfs_setattr_size	XFS_ILOCK_EXCL
-
-Which gives: IOLOCK -> MMAPLOCK -> &xfs_nondir_ilock_class
-
-i.e.: IOLOCK -> MMAPLOCK -> &xfs_nondir_ilock_class -> IO completion
-
-In the lower filesystem.
-
-> 
-> -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
->        up_write+0x1c/0x40
->        xfs_iunlock+0x1d0/0x310 [xfs]
->        xfs_file_fallocate+0x8a/0x310 [xfs]
->        loop_queue_work+0xb7/0x8d0
->        kthread_worker_fn+0xb9/0x1f0
-
-Context			function		lock
-Lower filesystem	xfs_file_fallocate	XFS_IOLOCK_EXCL
-Lower filesystem	xfs_file_fallocate	XFS_MMAPLOCK_EXCL
-[Lower filesystem	whatever falloc calls	XFS_ILOCK_EXCL]
-Upper filesystem/
-   Upper blkd		loop_queue_work		blk_mq_complete_request
-
-This is clearer when the reported stack is looked at:
-
-> lock_commit_crosslock+0x3e9/0x5c0
-> complete+0x24/0x60
-> blk_update_request+0xc2/0x3e0
-> blk_mq_end_request+0x18/0x80
-> __blk_mq_complete_request+0x9f/0x170
-> loop_queue_work+0x51/0x8d0
-> kthread_worker_fn+0xb9/0x1f0
-> kthread+0x148/0x180
-> ret_from_fork+0x2a/0x40
-
-So this is reporting as:
-
-> Chain exists of:
->   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
->
->  Possible unsafe locking scenario by crosslock:
->
->        CPU0                    CPU1
->        ----                    ----
->   lock(&xfs_nondir_ilock_class);
->   lock((complete)&ret.event);
->                                lock(&(&ip->i_mmaplock)->mr_lock);
->                                unlock((complete)&ret.event);
->
->                *** DEADLOCK ***
-
-Which effectively means:
-
-	IO completion -> XFS_MMAPLOCK_EXCL .....
-
-The thing is, this IO completion has nothing to do with the lower
-filesystem - it's the IO completion for the filesystem on the loop
-device (the upper filesystem) and is not in any way related to the
-IO completion from the dax device the lower filesystem is waiting
-on.
-
-IOWs, this is a false positive.
-
-Peter, this is the sort of false positive I mentioned were likely to
-occur without some serious work to annotate the IO stack to prevent
-them.  We can nest multiple layers of IO completions and locking in
-the IO stack via things like loop and RAID devices.  They can be
-nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
-dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
-checking is going to be a source of false positives until there is
-an effective (and simple!) way of providing context based completion
-annotations to avoid them...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
