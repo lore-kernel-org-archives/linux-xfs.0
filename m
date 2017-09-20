@@ -1,110 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24288 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbdIRUWy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 16:22:54 -0400
-Date: Mon, 18 Sep 2017 13:22:49 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:27679 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751729AbdITRDJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 13:03:09 -0400
+Date: Wed, 20 Sep 2017 10:03:01 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/12] xfs: move inode fork verifiers to xfs_dinode_verify
-Message-ID: <20170918202249.GS6540@magnolia>
-References: <150394418979.24826.12970283067445908653.stgit@magnolia>
- <150394422787.24826.14809466383851827337.stgit@magnolia>
- <20170906164406.GF55280@bfoster.bfoster>
+Subject: Re: [PATCH 1/2] xfs: rewrite getbmap using the xfs_iext_* helpers
+Message-ID: <20170920170301.GF7112@magnolia>
+References: <20170918152630.24592-1-hch@lst.de>
+ <20170918152630.24592-2-hch@lst.de>
+ <20170920132318.GB16481@bfoster.bfoster>
+ <20170920144130.GA3610@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170906164406.GF55280@bfoster.bfoster>
+In-Reply-To: <20170920144130.GA3610@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Wed, Sep 06, 2017 at 12:44:07PM -0400, Brian Foster wrote:
-> On Mon, Aug 28, 2017 at 11:17:07AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Consolidate the fork size and format verifiers to xfs_dinode_verify so
-> > that we can reject bad inodes earlier and in a single place.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_inode_buf.c  |   68 ++++++++++++++++++++++++++-
-> >  fs/xfs/libxfs/xfs_inode_fork.c |   99 ----------------------------------------
-> >  2 files changed, 65 insertions(+), 102 deletions(-)
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> > index 0e80f34..bba45f1 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> > @@ -61,70 +61,11 @@ xfs_iformat_fork(
-> ...
-> > -	if (unlikely(xfs_is_reflink_inode(ip) &&
-> > -	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
-> > -		xfs_warn(ip->i_mount,
-> > -			"corrupt dinode %llu, wrong file type for reflink.",
-> > -			ip->i_ino);
-> > -		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
-> > -				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
-> > -		return -EFSCORRUPTED;
-> > -	}
-
-Oops, this wasn't supposed to be dropped.
-
-> > -
-> > -	if (unlikely(xfs_is_reflink_inode(ip) &&
-> > -	    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
-> > -		xfs_warn(ip->i_mount,
-> > -			"corrupt dinode %llu, has reflink+realtime flag set.",
-> > -			ip->i_ino);
-> > -		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
-> > -				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
-> > -		return -EFSCORRUPTED;
-> > -	}
+On Wed, Sep 20, 2017 at 04:41:30PM +0200, Christoph Hellwig wrote:
+> On Wed, Sep 20, 2017 at 09:23:18AM -0400, Brian Foster wrote:
+> > I couldn't quite tell from your previous response, so just to be sure...
+> > is the expectation to set BMV_OF_LAST on the last real extent of the
+> > file, even though we might report a hole entry just below the file ends
+> > with a hole? If so, this seems fine:
 > 
-> It looks like a couple of these reflink inode checks have disappeared.
-> Intentional?
+> Yes.  That's what the old code does.  Note that there isn't anything
+> in xfsprogs or xfstests that ever looks at BMV_OF_LAST to start with.
 
-xfs_dinode_verify already checked this.
+FWIW xfs_scrub tool has a phase that reads all the file data blocks
+(having sorted them in disk order) to look for read errors, and uses
+nftw+bmap to map bad blocks back to (file path, offset).  So long as
+there are never any real extents returned after the BMV_OF_LAST record,
+this semantic is fine...
 
-> ...
-> > @@ -209,18 +122,6 @@ xfs_iformat_fork(
-> >  		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
-> >  		size = be16_to_cpu(atp->hdr.totsize);
-> >  
-> > -		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
-> > -			xfs_warn(ip->i_mount,
-> > -				"corrupt inode %Lu (bad attr fork size %Ld).",
-> > -				(unsigned long long) ip->i_ino,
-> > -				(long long) size);
-> > -			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
-> > -					     XFS_ERRLEVEL_LOW,
-> > -					     ip->i_mount, dip);
-> > -			error = -EFSCORRUPTED;
-> > -			break;
-> > -		}
-> > -
-> 
-> Same question here..?
-
-This check is included in the next patch that creates inline attr fork
-verifiers, but you're right that this chunk doesn't belong here.
+(Will try to review this series and the one before it today.)
 
 --D
 
-> 
-> Brian
-> 
-> >  		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
-> >  		break;
-> >  	case XFS_DINODE_FMT_EXTENTS:
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
