@@ -1,60 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from resqmta-po-09v.sys.comcast.net ([96.114.154.168]:52954 "EHLO
-        resqmta-po-09v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751686AbdIUP2d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:28:33 -0400
-Date: Thu, 21 Sep 2017 10:23:45 -0500 (CDT)
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: [PATCH v3 02/31] usercopy: Enforce slab cache usercopy region
- boundaries
-In-Reply-To: <1505940337-79069-3-git-send-email-keescook@chromium.org>
-Message-ID: <alpine.DEB.2.20.1709211022550.14427@nuc-kabylake>
-References: <1505940337-79069-1-git-send-email-keescook@chromium.org> <1505940337-79069-3-git-send-email-keescook@chromium.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50478 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751681AbdIUPer (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:34:47 -0400
+Date: Thu, 21 Sep 2017 08:34:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 16/19] xfs: pass a struct xfs_bmbt_irec to
+ xfs_bmbt_lookup_eq
+Message-ID: <20170921153417.GE7112@magnolia>
+References: <20170918152422.24345-1-hch@lst.de>
+ <20170918152422.24345-17-hch@lst.de>
+ <20170920222700.GX7112@magnolia>
+ <20170921132315.GA20148@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170921132315.GA20148@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Laura Abbott <labbott@redhat.com>, Ingo Molnar <mingo@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Wed, 20 Sep 2017, Kees Cook wrote:
+On Thu, Sep 21, 2017 at 06:23:15AM -0700, Christoph Hellwig wrote:
+> On Wed, Sep 20, 2017 at 03:27:00PM -0700, Darrick J. Wong wrote:
+> > Hope all the structure copies throughout this series don't get us into
+> > trouble on sparc (I think they're fine), but otherwise...
+> 
+> I didn't know sparc had any problems with struct copies.  But I haven't
+> had a sparc machine since 2002, so..
 
-> diff --git a/mm/slab.c b/mm/slab.c
-> index 87b6e5e0cdaf..df268999cf02 100644
-> --- a/mm/slab.c
-> +++ b/mm/slab.c
-> @@ -4408,7 +4408,9 @@ module_init(slab_proc_init);
->
->  #ifdef CONFIG_HARDENED_USERCOPY
->  /*
-> - * Rejects objects that are incorrectly sized.
-> + * Rejects incorrectly sized objects and objects that are to be copied
-> + * to/from userspace but do not fall entirely within the containing slab
-> + * cache's usercopy region.
->   *
->   * Returns NULL if check passes, otherwise const char * to name of cache
->   * to indicate an error.
-> @@ -4428,11 +4430,15 @@ const char *__check_heap_object(const void *ptr, unsigned long n,
->  	/* Find offset within object. */
->  	offset = ptr - index_to_obj(cachep, page, objnr) - obj_offset(cachep);
->
-> -	/* Allow address range falling entirely within object size. */
-> -	if (offset <= cachep->object_size && n <= cachep->object_size - offset)
-> -		return NULL;
-> +	/* Make sure object falls entirely within cache's usercopy region. */
-> +	if (offset < cachep->useroffset)
-> +		return cachep->name;
-> +	if (offset - cachep->useroffset > cachep->usersize)
-> +		return cachep->name;
-> +	if (n > cachep->useroffset - offset + cachep->usersize)
-> +		return cachep->name;
->
-> -	return cachep->name;
-> +	return NULL;
->  }
->  #endif /* CONFIG_HARDENED_USERCOPY */
+It only has trouble when either of the structs doesn't satisfy the
+memory alignment requirements.  I /think/ this is mostly an issue
+dealing with packed on-disk metadata arrays (like btree blocks).  Every
+now and then I get bug reports from the sparc people about kernel oopses
+that happen on sparc and not x64, and they usually turn out to be memory
+access problems.
 
-Looks like this is almost the same for all allocators. Can we put this
-into mm/slab_common.c?
+(AFAICT it's not a problem copying from one stack struct to another as
+you do in these patches, but something I have to keep an eye on...)
 
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
