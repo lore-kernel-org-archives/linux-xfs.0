@@ -1,108 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from resqmta-po-05v.sys.comcast.net ([96.114.154.164]:54138 "EHLO
-        resqmta-po-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751709AbdIUP31 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:29:27 -0400
-Date: Thu, 21 Sep 2017 10:21:16 -0500 (CDT)
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: [PATCH v3 01/31] usercopy: Prepare for usercopy whitelisting
-In-Reply-To: <1505940337-79069-2-git-send-email-keescook@chromium.org>
-Message-ID: <alpine.DEB.2.20.1709211009400.14427@nuc-kabylake>
-References: <1505940337-79069-1-git-send-email-keescook@chromium.org> <1505940337-79069-2-git-send-email-keescook@chromium.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34122 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751686AbdIUPfJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:35:09 -0400
+Date: Thu, 21 Sep 2017 08:35:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: rewrite getbmap using the xfs_iext_* helpers
+Message-ID: <20170921153505.GF7112@magnolia>
+References: <20170918152630.24592-1-hch@lst.de>
+ <20170918152630.24592-2-hch@lst.de>
+ <20170920230036.GB7112@magnolia>
+ <20170920230824.GC7112@magnolia>
+ <20170921133610.GD13541@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170921133610.GD13541@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, 20 Sep 2017, Kees Cook wrote:
+On Thu, Sep 21, 2017 at 03:36:10PM +0200, Christoph Hellwig wrote:
+> On Wed, Sep 20, 2017 at 04:08:24PM -0700, Darrick J. Wong wrote:
+> > > I'm still wondering why we allocate a potentially large getbmapx buffer,
+> > > fill it out, and only then format the results to userspace?  I think
+> > > getbmap (the ioctl) is now the only user of these functions, so can't
+> > > we just call the formatter directly from _getbmap_report_one and
+> > > _getbmap_report_hole, like what getfsmap does?
+> > > 
+> > > (I also feel like I've asked this before, so apologies if I'm merely
+> > > forgetting the answer.)
+> > 
+> > Oh right, it's because we have the inode locked, and copying things to
+> > userspace could incur a page fault, which we can't risk with the inode
+> > locked because some malicious person could create a fragmented file with
+> > a bmap request header at the start of the file, mmap the file, and call
+> > bmap on the fragmented file with the pointer being the mmap region.
+> 
+> Yes.
+> 
+> Can I get a Reviewed-by: tag now? :)
 
-> diff --git a/include/linux/stddef.h b/include/linux/stddef.h
-> index 9c61c7cda936..f00355086fb2 100644
-> --- a/include/linux/stddef.h
-> +++ b/include/linux/stddef.h
-> @@ -18,6 +18,8 @@ enum {
->  #define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
->  #endif
->
-> +#define sizeof_field(structure, field) sizeof((((structure *)0)->field))
-> +
->  /**
->   * offsetofend(TYPE, MEMBER)
->   *
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmmm.. Is that really necessary? Code knows the type of field and can
-use sizeof type.
-
-Also this is a non slab change hidden in the patchset.
-
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 904a83be82de..36408f5f2a34 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -272,6 +272,9 @@ int slab_unmergeable(struct kmem_cache *s)
->  	if (s->ctor)
->  		return 1;
->
-> +	if (s->usersize)
-> +		return 1;
-> +
->  	/*
->  	 * We may have set a slab to be unmergeable during bootstrap.
->  	 */
-
-This will ultimately make all slabs unmergeable at the end of your
-patchset? Lots of space will be wasted. Is there any way to make this
-feature optional?
-
-#ifdef CONFIG_HARDENED around this?
-
-
-> @@ -491,6 +509,15 @@ kmem_cache_create(const char *name, size_t size, size_t align,
->  	}
->  	return s;
->  }
-> +EXPORT_SYMBOL(kmem_cache_create_usercopy);
-> +
-> +struct kmem_cache *
-> +kmem_cache_create(const char *name, size_t size, size_t align,
-> +		unsigned long flags, void (*ctor)(void *))
-> +{
-> +	return kmem_cache_create_usercopy(name, size, align, flags, 0, size,
-> +					  ctor);
-> +}
->  EXPORT_SYMBOL(kmem_cache_create);
-
-Well this makes the slab created unmergeable.
-
-> @@ -897,7 +927,7 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,
->  	if (!s)
->  		panic("Out of memory when creating slab %s\n", name);
->
-> -	create_boot_cache(s, name, size, flags);
-> +	create_boot_cache(s, name, size, flags, 0, size);
-
-Ok this makes the kmalloc array unmergeable.
-
-> @@ -5081,6 +5081,12 @@ static ssize_t cache_dma_show(struct kmem_cache *s, char *buf)
->  SLAB_ATTR_RO(cache_dma);
->  #endif
->
-> +static ssize_t usersize_show(struct kmem_cache *s, char *buf)
-> +{
-> +	return sprintf(buf, "%zu\n", s->usersize);
-> +}
-> +SLAB_ATTR_RO(usersize);
-> +
->  static ssize_t destroy_by_rcu_show(struct kmem_cache *s, char *buf)
->  {
->  	return sprintf(buf, "%d\n", !!(s->flags & SLAB_TYPESAFE_BY_RCU));
-> @@ -5455,6 +5461,7 @@ static struct attribute *slab_attrs[] = {
->  #ifdef CONFIG_FAILSLAB
->  	&failslab_attr.attr,
->  #endif
-> +	&usersize_attr.attr,
-
-So useroffset is not exposed?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
