@@ -1,195 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:53854 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751387AbdIUGEc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 02:04:32 -0400
-Date: Thu, 21 Sep 2017 16:04:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/27] xfs: test the scrub ioctl
-Message-ID: <20170921060416.GS18948@dastard>
-References: <150595305131.18473.16572195821331601191.stgit@magnolia>
- <150595308840.18473.7997837811162843403.stgit@magnolia>
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:54401 "EHLO
+        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751898AbdIUGnm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 02:43:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150595308840.18473.7997837811162843403.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 21 Sep 2017 09:43:41 +0300
+Message-ID: <CAOQ4uxixLMRU2YT-3csTr_684vNUZ=2CazKKD-ojO68fC4f6tA@mail.gmail.com>
+Subject: Re: false positive lockdep splat with loop device
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Byungchul Park <byungchul.park@lge.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Wed, Sep 20, 2017 at 05:18:08PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create a test scrubber with id 0.  This will be used by xfs_scrub to
-> probe the kernel's abilities to scrub (and repair) the metadata.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Makefile        |    1 +
->  fs/xfs/libxfs/xfs_fs.h |    3 ++
->  fs/xfs/scrub/common.c  |   60 ++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/common.h  |   44 +++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/scrub.c   |   33 ++++++++++++++++++++++++++
->  fs/xfs/scrub/scrub.h   |    1 +
->  fs/xfs/scrub/trace.c   |    1 +
->  7 files changed, 142 insertions(+), 1 deletion(-)
->  create mode 100644 fs/xfs/scrub/common.c
->  create mode 100644 fs/xfs/scrub/common.h
-> 
-> 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index f4312bc..ca14595 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -146,6 +146,7 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
->  
->  xfs-y				+= $(addprefix scrub/, \
->  				   trace.o \
-> +				   common.o \
->  				   scrub.o \
->  				   )
->  endif
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index a4b4c8c..5105bad 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -483,9 +483,10 @@ struct xfs_scrub_metadata {
->   */
->  
->  /* Scrub subcommands. */
-> +#define XFS_SCRUB_TYPE_TEST	0	/* presence test ioctl */
+On Thu, Sep 21, 2017 at 1:22 AM, Dave Chinner <david@fromorbit.com> wrote:
+> [cc lkml, PeterZ and Byungchul]
+...
+> The thing is, this IO completion has nothing to do with the lower
+> filesystem - it's the IO completion for the filesystem on the loop
+> device (the upper filesystem) and is not in any way related to the
+> IO completion from the dax device the lower filesystem is waiting
+> on.
+>
+> IOWs, this is a false positive.
+>
+> Peter, this is the sort of false positive I mentioned were likely to
+> occur without some serious work to annotate the IO stack to prevent
+> them.  We can nest multiple layers of IO completions and locking in
+> the IO stack via things like loop and RAID devices.  They can be
+> nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
+> dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
+> checking is going to be a source of false positives until there is
+> an effective (and simple!) way of providing context based completion
+> annotations to avoid them...
+>
 
-Shouldn't we call this a "probe" - as in "probe for support" so it
-doesn't get confused with "use this to test whether scrub works"
+IMO, the way to handle this is to add 'nesting_depth' information
+on blockdev (or bdi?). 'nesting' in the sense of blockdev->fs->blockdev->fs.
+AFAIK, the only blockdev drivers that need to bump nesting_depth
+are loop and nbd??
+Not sure if the kernel should limit loop blockdev nesting depth??
+One problem that lack of loop blockdev nesting information causes is
+incorrect emergency remount dependencies:
+https://patchwork.kernel.org/patch/6266791/
 
->  /* Number of scrub subcommands. */
-> -#define XFS_SCRUB_TYPE_NR	0
-> +#define XFS_SCRUB_TYPE_NR	1
->  
->  /* i: Repair this metadata. */
->  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> new file mode 100644
-> index 0000000..13ccb36
-> --- /dev/null
-> +++ b/fs/xfs/scrub/common.c
-> @@ -0,0 +1,60 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_btree.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_alloc.h"
-> +#include "xfs_alloc_btree.h"
-> +#include "xfs_bmap.h"
-> +#include "xfs_bmap_btree.h"
-> +#include "xfs_ialloc.h"
-> +#include "xfs_ialloc_btree.h"
-> +#include "xfs_refcount.h"
-> +#include "xfs_refcount_btree.h"
-> +#include "xfs_rmap.h"
-> +#include "xfs_rmap_btree.h"
-> +#include "scrub/xfs_scrub.h"
-> +#include "scrub/scrub.h"
-> +#include "scrub/common.h"
-> +#include "scrub/trace.h"
-> +
-> +/* Common code for the metadata scrubbers. */
-> +
-> +/* Per-scrubber setup functions */
-> +
-> +/* Set us up with a transaction and an empty context. */
-> +int
-> +xfs_scrub_setup_fs(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	return xfs_scrub_trans_alloc(sc->sm, sc->mp,
-> +			&M_RES(sc->mp)->tr_itruncate, 0, 0, 0, &sc->tp);
-> +}
-
-Using the truncate transaction reservation really needs explaining
-here....
-
-.....
->  
-> +/*
-> + * Test scrubber -- userspace uses this to probe if we're willing to
-> + * scrub or repair a given mountpoint.
-> + */
-
-Yup, definitely should be called xfs_scrub_probe()....
-
-> +int
-> +xfs_scrub_tester(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	if (sc->sm->sm_ino || sc->sm->sm_agno)
-> +		return -EINVAL;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_CORRUPT)
-> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_PREEN)
-> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_XFAIL)
-> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_XCORRUPT)
-> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_INCOMPLETE)
-> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_INCOMPLETE;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_WARNING)
-> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
-> +	if (sc->sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
-> +		return -ENOENT;
-
-Shouldn't this check should be first? If not, comment to explain?
-
-Also, I find that really hard to parse because it's so dense and
-so much is repeated over and over again (makes my pattern matching
-brain cells scream). It's copying the exact same flags from
-sc->sm->sm_gen to sc->sm->sm_flags, so why not somethign like:
-
-
-	struct xfs_scrub_m...	*sm = sc->sm;
-
-	if (sm->sm_ino || sm->sm_agno)
-		return -EINVAL;
-
-	sm->flags = sm->sm_gen & XFS_SCRUB_FLAGS_OUT;
-	if (sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
-		return -ENOENT;
+When blockdev carries the nesting_depth information it should be
+trivial to annotate "nested fs" inode locks, the same way we handled
+"stackable fs"  inode locks in overlayfs:
+https://patchwork.kernel.org/patch/9460919/
 
 Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Amir.
