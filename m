@@ -1,53 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20741 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750940AbdIKGwi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2017 02:52:38 -0400
-Date: Mon, 11 Sep 2017 16:52:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Support for data CRC
-Message-ID: <20170911065217.GQ17782@dastard>
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
- <20170821230232.GS10621@dastard>
- <20170822055136.GA2697@infradead.org>
- <20170822111322.jt66qlzvalsiju6n@breakpoint.cc>
- <20170823061931.GA30488@infradead.org>
- <20170910195026.7ftxcgmwyri5a5fz@breakpoint.cc>
- <20170911063729.GA10489@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43164 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751782AbdIUARd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:17:33 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0HWLs015444
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:17:32 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0HWwW012526
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:17:32 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8L0HWPo000627
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:17:32 GMT
+Subject: [PATCH v10 00/27] xfs: online scrub support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 20 Sep 2017 17:17:31 -0700
+Message-ID: <150595305131.18473.16572195821331601191.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170911063729.GA10489@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Sep 10, 2017 at 11:37:29PM -0700, Christoph Hellwig wrote:
-> On Sun, Sep 10, 2017 at 09:50:27PM +0200, Sebastian Andrzej Siewior wrote:
-> > On 2017-08-22 23:19:31 [-0700], Christoph Hellwig wrote:
-> > > as part of the reflink feature.  These out of place writes are
-> > > a requirement to implement data checksums, as otherwise your data
-> > > and checksum can not be updated atomically.  Everything else is
-> > > beyond that at this point is vapourware.  We'd have to decided
-> > So using the journal for atomic updates doesn't work then. Which means
-> > fragmentation unavoidable.
-> 
-> Well, in theory you could also do data journalling - but in the end
-> out of place writes are probably going to be more efficient, and at
-> least for XFS also area already implemented.
+Hi all,
 
->From a quick look at the dm-integrity code, it looks like it is just
-a journalling block device. i.e. it logs both the data and the
-calculated CRC in it's internal journal before writing the data and
-CRC to their separate destinations so it can avoid inconsistent
-data/CRCs if a crash occurs.
+This is the ninth revision of a patchset that adds to XFS kernel support
+for online metadata scrubbing and repair.  There aren't any on-disk
+format changes.  Changes since v9 include minor bug fixes and rebasing
+to 4.14.  I have been performing daily online scrubs of my XFS
+filesystems for several months now, with surprisingly few problems.
 
-Cheers,
+Online scrub/repair support consists of four major pieces -- first, an
+ioctl that maps physical extents to their owners (GETFSMAP; already in
+4.12); second, various in-kernel metadata scrubbing ioctls to examine
+metadata records and cross-reference them with other filesystem
+metadata; third, an in-kernel mechanism for rebuilding damaged metadata
+objects and btrees; and fourth, a userspace component to coordinate
+scrubbing and repair operations.
 
-Dave.
+This new utility, xfs_scrub, is separate from the existing offline
+xfs_repair tool.  The program uses various XFS ioctls to iterate all XFS
+metadata and asks the kernel to check the metadata and repair it if
+necessary.
 
--- 
-Dave Chinner
-david@fromorbit.com
+While I understand that reviewer bandwidth is limited, I would like to
+get this series prepped for 4.15, if possible.  I have isolated the
+scrub code such that it can be compiled out entirely, in the hopes that
+we can stabilize the code while not exposing regular users to riskier
+code.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.14-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
