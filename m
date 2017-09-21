@@ -1,128 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54286 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751629AbdIUPk3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Sep 2017 11:40:29 -0400
-Date: Thu, 21 Sep 2017 23:40:27 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs: update i_size after unwritten conversion in dio
- completion
-Message-ID: <20170921154027.GZ8034@eguan.usersys.redhat.com>
-References: <20170921103828.18690-1-eguan@redhat.com>
- <20170921143308.GA18945@infradead.org>
+Received: from mail-it0-f47.google.com ([209.85.214.47]:49910 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751781AbdIUPkC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:40:02 -0400
+Received: by mail-it0-f47.google.com with SMTP id c195so1017577itb.4
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 08:40:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170921143308.GA18945@infradead.org>
+In-Reply-To: <alpine.DEB.2.20.1709211024120.14427@nuc-kabylake>
+References: <1505940337-79069-1-git-send-email-keescook@chromium.org>
+ <1505940337-79069-4-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1709211024120.14427@nuc-kabylake>
+From: Kees Cook <keescook@chromium.org>
+Date: Thu, 21 Sep 2017 08:40:00 -0700
+Message-ID: <CAGXu5j+X6dWCGocG=P7pszTY-5OZ6Jmp-RsnDKox75M5rmVe4g@mail.gmail.com>
+Subject: Re: [kernel-hardening] Re: [PATCH v3 03/31] usercopy: Mark kmalloc
+ caches as usercopy caches
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Christopher Lameter <cl@linux.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
 
-On Thu, Sep 21, 2017 at 07:33:08AM -0700, Christoph Hellwig wrote:
-> On Thu, Sep 21, 2017 at 06:38:28PM +0800, Eryu Guan wrote:
-> > Since commit d531d91d6990 ("xfs: always use unwritten extents for
-> > direct I/O writes"), we start allocating unwritten extents for all
-> > direct writes to allow appending aio in XFS.
-> > 
-> > But for dio writes that could extend file size we update the in-core
-> > inode size first, then convert the unwritten extents to real
-> > allocations at dio completion time in xfs_dio_write_end_io(). Thus a
-> > racing direct read could see the new i_size and find the unwritten
-> > extents first and read zeros instead of actual data, if the direct
-> > writer also takes a shared iolock.
-> > 
-> > Fix it by updating the in-core inode size after the unwritten extent
-> > conversion. To do this, introduce a new boolean argument to
-> > xfs_iomap_write_unwritten() to tell if we want to update in-core
-> > i_size or not.
-> > 
-> > Suggested-by: Brian Foster <bfoster@redhat.com>
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> > 
-> > Patch passed the test posted by Eric[1] and a locally modified aio
-> > version of the test.
-> > 
-> > I also ran fstests with config xfs_4k_crc, xfs_2k_reflink, xfs_1k_rmap
-> > and xfs_512, and aio-dio tests from ltp, I don't see any new failures
-> > introduced.
-> > 
-> > [1] http://www.spinics.net/lists/fstests/msg06978.html
-> > 
-> >  fs/xfs/xfs_aops.c  |  9 ++++++++-
-> >  fs/xfs/xfs_file.c  | 34 ++++++++++++++++++++--------------
-> >  fs/xfs/xfs_iomap.c |  7 ++++++-
-> >  fs/xfs/xfs_iomap.h |  2 +-
-> >  fs/xfs/xfs_pnfs.c  |  2 +-
-> >  5 files changed, 36 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 29172609f2a3..f937968e9515 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -343,7 +343,14 @@ xfs_end_io(
-> >  		error = xfs_reflink_end_cow(ip, offset, size);
-> >  		break;
-> >  	case XFS_IO_UNWRITTEN:
-> > -		error = xfs_iomap_write_unwritten(ip, offset, size);
-> > +		/*
-> > +		 * The correct in-core inode size should have been updated by
-> > +		 * generic_write_end, and the 'size' here is buffer head
-> > +		 * granularity size of the ioend, which could be larger than
-> > +		 * the actual bytes written. So skip in-core i_size update in
-> > +		 * xfs_iomap_write_unwritten()
-> > +		 */
-> > +		error = xfs_iomap_write_unwritten(ip, offset, size, false);
-> >  		break;
-> >  	default:
-> >  		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index 350b6d43ba23..d4796c5a88fe 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -434,7 +434,6 @@ xfs_dio_write_end_io(
-> >  	struct inode		*inode = file_inode(iocb->ki_filp);
-> >  	struct xfs_inode	*ip = XFS_I(inode);
-> >  	loff_t			offset = iocb->ki_pos;
-> > -	bool			update_size = false;
-> >  	int			error = 0;
-> >  
-> >  	trace_xfs_end_io_direct_write(ip, offset, size);
-> > @@ -445,6 +444,22 @@ xfs_dio_write_end_io(
-> >  	if (size <= 0)
-> >  		return size;
-> >  
-> > +	if (flags & IOMAP_DIO_COW) {
-> > +		error = xfs_reflink_end_cow(ip, offset, size);
-> > +		if (error)
-> > +			return error;
-> > +	}
-> 
-> So this should be ok, but without digging in the details I wonder
-> if we have proper tests for COWing the last block.
-> 
-> e.g. something like
-> 
-> write data from bytes 0 to 4000 to file a
-> clone file a to file b
-> write bytes 4000 to 4008 on file b
+On Thu, Sep 21, 2017 at 8:27 AM, Christopher Lameter <cl@linux.com> wrote:
+> On Wed, 20 Sep 2017, Kees Cook wrote:
+>
+>> --- a/mm/slab.c
+>> +++ b/mm/slab.c
+>> @@ -1291,7 +1291,8 @@ void __init kmem_cache_init(void)
+>>        */
+>>       kmalloc_caches[INDEX_NODE] = create_kmalloc_cache(
+>>                               kmalloc_info[INDEX_NODE].name,
+>> -                             kmalloc_size(INDEX_NODE), ARCH_KMALLOC_FLAGS);
+>> +                             kmalloc_size(INDEX_NODE), ARCH_KMALLOC_FLAGS,
+>> +                             0, kmalloc_size(INDEX_NODE));
+>>       slab_state = PARTIAL_NODE;
+>>       setup_kmalloc_cache_index_table();
+>
+> Ok this presumes that at some point we will be able to restrict the number
+> of bytes writeable and thus set the offset and size field to different
+> values. Is that realistic?
+>
+> We already whitelist all kmalloc caches (see first patch).
+>
+> So what is the point of this patch?
 
-I took a rough look at generic tests in 'clone' group, it seems that
-generic/134 and generic/20[23] could cover this scenario.
+The DMA kmalloc caches are not whitelisted:
 
-> 
-> > @@ -900,6 +902,9 @@ xfs_iomap_write_unwritten(
-> >  		if (i_size > offset + count)
-> >  			i_size = offset + count;
-> >  
-> > +		if (update_isize && (i_size > i_size_read(inode)))
-> 
-> no need for the inner braces here.
+>>                         kmalloc_dma_caches[i] = create_kmalloc_cache(n,
+>> -                               size, SLAB_CACHE_DMA | flags);
+>> +                               size, SLAB_CACHE_DMA | flags, 0, 0);
 
-OK, will fix in v2.
+So this is creating the distinction between the kmallocs that go to
+userspace and those that don't. The expectation is that future work
+can start to distinguish between "for userspace" and "only kernel"
+kmalloc allocations, as is already done here for DMA.
 
-Thanks for reviewing!
+-Kees
 
-Eryu
+-- 
+Kees Cook
+Pixel Security
