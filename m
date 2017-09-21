@@ -1,93 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47213 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752244AbdIVN7w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:52 -0400
-Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dvOUi-0001Br-Jh
-        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/19] xfs: refactor delalloc accounting in xfs_bmap_add_extent_delay_real
-Date: Fri, 22 Sep 2017 06:59:39 -0700
-Message-Id: <20170922135945.31574-14-hch@lst.de>
-In-Reply-To: <20170922135945.31574-1-hch@lst.de>
-References: <20170922135945.31574-1-hch@lst.de>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37856 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751550AbdIUJv4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 05:51:56 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8L9oXIJ081495
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 05:51:56 -0400
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2d462fegv7-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 05:51:55 -0400
+Received: from localhost
+        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 21 Sep 2017 03:51:55 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH] iomap_dio_rw: Allocate AIO completion queue before submitting dio
+Date: Thu, 21 Sep 2017 15:22:34 +0530
+Message-Id: <20170921095234.12401-1-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, hch@infradead.org, eguan@redhat.com, linux-fsdevel@vger.kernel.org
 
-Account for all changes to the delalloc reservation in da_new, and use a
-single call xfs_mod_fdblocks to reserve/free blocks, including always
-checking for an error.
+Executing xfs/104 test in a loop on Linux-v4.13 kernel on a ppc64
+machine can cause the following NULL pointer dereference,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Unable to handle kernel paging request for data at address 0x00000100
+Faulting instruction address: 0xc0000000000fece8
+Oops: Kernel access of bad area, sig: 11 [#1]
+SMP NR_CPUS=2048
+DEBUG_PAGEALLOC
+NUMA
+pSeries
+Modules linked in:
+CPU: 2 PID: 0 Comm: swapper/2 Not tainted 4.13.0 #1
+task: c00000063849c200 task.stack: c0000006384f0000
+NIP: c0000000000fece8 LR: c0000000000ff2cc CTR: c000000000383380
+REGS: c00000063ffdb400 TRAP: 0300   Not tainted  (4.13.0)
+MSR: 8000000000009032 <SF,EE,ME,IR,DR,RI>
+  CR: 28002222  XER: 20000000
+CFAR: c0000000000227a4 DAR: 0000000000000100 DSISR: 40000000 SOFTE: 0
+GPR00: c0000000000ff2cc c00000063ffdb680 c000000001252e00 0000000000000800
+GPR04: 0000000000000000 c0000006387b8730 c000000633d5db70 0000000fffffffe1
+GPR08: c0000003aa89ed68 0000000000000000 0000000000000000 c000000633d5db70
+GPR12: 0000000028002422 c00000000fd80a00 c0000006384f3f90 c00000063ffd8000
+GPR16: 0000000000000000 c0000006387b8730 c0000000012475e0 c0000000012475e0
+GPR20: 0000000000000002 0000000000000000 0000000000000001 0000000000000002
+GPR24: 0000000000000010 c00000063e155800 0000000000000800 0000000000000800
+GPR28: 0000000000000000 c000000633d5db00 0000000000000000 0000000000000000
+NIP [c0000000000fece8] .__queue_work+0x68/0x600
+LR [c0000000000ff2cc] .queue_work_on+0x4c/0x80
+Call Trace:
+[c00000063ffdb680] [c00000063ffdb720] 0xc00000063ffdb720 (unreliable)
+[c00000063ffdb770] [c0000000000ff2cc] .queue_work_on+0x4c/0x80
+[c00000063ffdb7f0] [c00000000038343c] .iomap_dio_bio_end_io+0xbc/0x1f0
+[c00000063ffdb880] [c0000000006cdc18] .bio_endio+0x118/0x1f0
+[c00000063ffdb910] [c0000000006d9e30] .blk_update_request+0xd0/0x470
+[c00000063ffdb9b0] [c0000000006e8284] .blk_mq_end_request+0x24/0xc0
+[c00000063ffdba30] [c00000000082ba50] .lo_complete_rq+0x40/0xe0
+[c00000063ffdbab0] [c0000000006e5e48] .__blk_mq_complete_request_remote+0x28/0x40
+[c00000063ffdbb20] [c00000000018e674] .flush_smp_call_function_queue+0xc4/0x1e0
+[c00000063ffdbbb0] [c00000000003f94c] .smp_ipi_demux_relaxed+0x8c/0x100
+[c00000063ffdbc40] [c000000000081054] .icp_hv_ipi_action+0x54/0xa0
+[c00000063ffdbcc0] [c0000000001505a4] .__handle_irq_event_percpu+0x84/0x2c0
+[c00000063ffdbd90] [c000000000150808] .handle_irq_event_percpu+0x28/0x80
+[c00000063ffdbe20] [c000000000156858] .handle_percpu_irq+0x78/0xc0
+[c00000063ffdbea0] [c00000000014ee70] .generic_handle_irq+0x40/0x70
+[c00000063ffdbf10] [c000000000015a88] .__do_irq+0x88/0x200
+[c00000063ffdbf90] [c000000000027a70] .call_do_irq+0x14/0x24
+[c0000006384f3810] [c000000000015c84] .do_IRQ+0x84/0x130
+
+This occurs due to the following sequence of events,
+
+1. Allocate dio for Direct I/O write.
+2. Invoke iomap_apply() until iov_iter_count() bytes have been submitted.
+   - Assume that we have submitted atleast one bio. Hence iomap_dio->ref value
+     will be >= 2.
+   - If during the second iteration, iomap_apply() ends up returning -ENOSPC, we would
+     break out of the loop and since the 'ret' value is a negative number we
+     end up not allocating memory for super_block->s_dio_done_wq.
+3. Meanwhile, iomap_dio_bio_end_io() is invoked for bios that have been
+   submitted and here the code ends up dereferencing the NULL pointer stored
+   at super_block->s_dio_done_wq.
+
+This commit fixes the bug by allocating memory for
+super_block->s_dio_done_wq before iomap_apply() is invoked.
+
+Reported-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+
 ---
- fs/xfs/libxfs/xfs_bmap.c | 32 +++++++++-----------------------
- 1 file changed, 9 insertions(+), 23 deletions(-)
+ fs/iomap.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index e74e2d74cd36..b187d5f28e27 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1587,7 +1587,6 @@ xfs_bmap_add_extent_delay_real(
- 	int			whichfork)
- {
- 	struct xfs_bmbt_irec	*new = &bma->got;
--	int			diff;	/* temp value */
- 	int			error;	/* error return value */
- 	int			i;	/* temp state */
- 	xfs_ifork_t		*ifp;	/* inode fork pointer */
-@@ -2085,17 +2084,6 @@ xfs_bmap_add_extent_delay_real(
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 59cc98a..c91abc1 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -993,6 +993,13 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	WARN_ON_ONCE(ret);
+ 	ret = 0;
  
- 		da_new = startblockval(PREV.br_startblock) +
- 			 startblockval(RIGHT.br_startblock);
--		diff = da_new - startblockval(old.br_startblock);
--		if (bma->cur)
--			diff += bma->cur->bc_private.b.allocated;
--		if (diff > 0) {
--			error = xfs_mod_fdblocks(bma->ip->i_mount,
--						 -((int64_t)diff), false);
--			ASSERT(!error);
--			if (error)
--				goto done;
--		}
--
- 		bma->idx++;
- 		break;
- 
-@@ -2130,19 +2118,17 @@ xfs_bmap_add_extent_delay_real(
- 			goto done;
- 	}
- 
--	/* adjust for changes in reserved delayed indirect blocks */
--	if (da_old || da_new) {
--		temp = da_new;
--		if (bma->cur)
--			temp += bma->cur->bc_private.b.allocated;
--		if (temp < da_old)
--			xfs_mod_fdblocks(bma->ip->i_mount,
--					(int64_t)(da_old - temp), false);
-+	if (bma->cur) {
-+		da_new += bma->cur->bc_private.b.allocated;
-+		bma->cur->bc_private.b.allocated = 0;
- 	}
- 
--	/* clear out the allocated field, done with it now in any case. */
--	if (bma->cur)
--		bma->cur->bc_private.b.allocated = 0;
-+	/* adjust for changes in reserved delayed indirect blocks */
-+	if (da_new != da_old) {
-+		ASSERT(state == 0 || da_new < da_old);
-+		error = xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new),
-+				false);
++	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
++		!inode->i_sb->s_dio_done_wq) {
++		ret = sb_init_dio_done_wq(inode->i_sb);
++		if (ret < 0)
++			goto out_free_dio;
 +	}
++
+ 	inode_dio_begin(inode);
  
- 	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
- done:
+ 	blk_start_plug(&plug);
+@@ -1015,13 +1022,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret < 0)
+ 		iomap_dio_set_error(dio, ret);
+ 
+-	if (ret >= 0 && iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
+-			!inode->i_sb->s_dio_done_wq) {
+-		ret = sb_init_dio_done_wq(inode->i_sb);
+-		if (ret < 0)
+-			iomap_dio_set_error(dio, ret);
+-	}
+-
+ 	if (!atomic_dec_and_test(&dio->ref)) {
+ 		if (!is_sync_kiocb(iocb))
+ 			return -EIOCBQUEUED;
 -- 
-2.14.1
+2.9.5
 
