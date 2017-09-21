@@ -1,197 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36898 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751687AbdIUOgd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:36:33 -0400
-Date: Thu, 21 Sep 2017 10:36:31 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/27] xfs: query the per-AG reservation counters
-Message-ID: <20170921143630.GD58956@bfoster.bfoster>
-References: <150595305131.18473.16572195821331601191.stgit@magnolia>
- <150595306363.18473.9101441147554650927.stgit@magnolia>
+Received: from resqmta-po-09v.sys.comcast.net ([96.114.154.168]:52954 "EHLO
+        resqmta-po-09v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751686AbdIUP2d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:28:33 -0400
+Date: Thu, 21 Sep 2017 10:23:45 -0500 (CDT)
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [PATCH v3 02/31] usercopy: Enforce slab cache usercopy region
+ boundaries
+In-Reply-To: <1505940337-79069-3-git-send-email-keescook@chromium.org>
+Message-ID: <alpine.DEB.2.20.1709211022550.14427@nuc-kabylake>
+References: <1505940337-79069-1-git-send-email-keescook@chromium.org> <1505940337-79069-3-git-send-email-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150595306363.18473.9101441147554650927.stgit@magnolia>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Laura Abbott <labbott@redhat.com>, Ingo Molnar <mingo@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-On Wed, Sep 20, 2017 at 05:17:43PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Establish an ioctl for userspace to query the original and current
-> per-AG reservation counts.  This will be used by xfs_scrub to
-> check that the vfs counters are at least somewhat sane.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+On Wed, 20 Sep 2017, Kees Cook wrote:
 
-The code seems fine, but I'm wondering how much of this would remain as
-is based on Dave's potential switch of the perag res stuff to be a
-hidden reservation. That itself still needs to be posted/reviewed/etc.,
-so might it be smarter to defer defining an interface to export this
-stuff until the core mechanism is worked out?
-
-That aside, I'm also wondering how/what userspace scrub does with the
-overall total values as opposed to individual AG reservation values. Are
-the current "ask" values expected to be uniform across each AG..? For
-example, what happens if one AG has a bogus "current" value for whatever
-reason (perhaps this is more relevant for both values if we do actually
-end up with on-disk reservations)?
-
-Brian
-
->  fs/xfs/libxfs/xfs_fs.h |   12 ++++++++++++
->  fs/xfs/xfs_fsops.c     |   26 ++++++++++++++++++++++++++
->  fs/xfs/xfs_fsops.h     |    2 ++
->  fs/xfs/xfs_ioctl.c     |   24 ++++++++++++++++++++++++
->  fs/xfs/xfs_ioctl32.c   |    1 +
->  5 files changed, 65 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 8c61f21..2c26c38 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -469,6 +469,17 @@ typedef struct xfs_swapext
->  #define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
->  
+> diff --git a/mm/slab.c b/mm/slab.c
+> index 87b6e5e0cdaf..df268999cf02 100644
+> --- a/mm/slab.c
+> +++ b/mm/slab.c
+> @@ -4408,7 +4408,9 @@ module_init(slab_proc_init);
+>
+>  #ifdef CONFIG_HARDENED_USERCOPY
 >  /*
-> + * AG reserved block counters
-> + */
-> +struct xfs_fsop_ag_resblks {
-> +	__u32 ar_flags;			/* output flags, none defined now */
-> +	__u32 ar_reserved;		/* zero */
-> +	__u64 ar_current_resv;		/* blocks reserved now */
-> +	__u64 ar_mount_resv;		/* blocks reserved at mount time */
-> +	__u64 ar_reserved2[5];		/* zero */
-> +};
-> +
-> +/*
->   * ioctl limits
->   */
->  #ifdef XATTR_LIST_MAX
-> @@ -543,6 +554,7 @@ typedef struct xfs_swapext
->  #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
->  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
->  #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
-> +#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
->  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
->  
->  
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 8f22fc5..50fb3a2 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -44,6 +44,7 @@
->  #include "xfs_filestream.h"
->  #include "xfs_rmap.h"
->  #include "xfs_ag_resv.h"
-> +#include "xfs_fs.h"
->  
->  /*
->   * File system operations
-> @@ -1046,3 +1047,28 @@ xfs_fs_unreserve_ag_blocks(
->  
->  	return error;
+> - * Rejects objects that are incorrectly sized.
+> + * Rejects incorrectly sized objects and objects that are to be copied
+> + * to/from userspace but do not fall entirely within the containing slab
+> + * cache's usercopy region.
+>   *
+>   * Returns NULL if check passes, otherwise const char * to name of cache
+>   * to indicate an error.
+> @@ -4428,11 +4430,15 @@ const char *__check_heap_object(const void *ptr, unsigned long n,
+>  	/* Find offset within object. */
+>  	offset = ptr - index_to_obj(cachep, page, objnr) - obj_offset(cachep);
+>
+> -	/* Allow address range falling entirely within object size. */
+> -	if (offset <= cachep->object_size && n <= cachep->object_size - offset)
+> -		return NULL;
+> +	/* Make sure object falls entirely within cache's usercopy region. */
+> +	if (offset < cachep->useroffset)
+> +		return cachep->name;
+> +	if (offset - cachep->useroffset > cachep->usersize)
+> +		return cachep->name;
+> +	if (n > cachep->useroffset - offset + cachep->usersize)
+> +		return cachep->name;
+>
+> -	return cachep->name;
+> +	return NULL;
 >  }
-> +
-> +/* Query the per-AG reservations to see how many blocks we have reserved. */
-> +int
-> +xfs_fs_get_ag_reserve_blocks(
-> +	struct xfs_mount		*mp,
-> +	struct xfs_fsop_ag_resblks	*out)
-> +{
-> +	struct xfs_ag_resv		*r;
-> +	struct xfs_perag		*pag;
-> +	xfs_agnumber_t			agno;
-> +
-> +	memset(out, 0, sizeof(struct xfs_fsop_ag_resblks));
-> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> +		pag = xfs_perag_get(mp, agno);
-> +		r = xfs_perag_resv(pag, XFS_AG_RESV_METADATA);
-> +		out->ar_current_resv += r->ar_reserved;
-> +		out->ar_mount_resv += r->ar_asked;
-> +		r = xfs_perag_resv(pag, XFS_AG_RESV_AGFL);
-> +		out->ar_current_resv += r->ar_reserved;
-> +		out->ar_mount_resv += r->ar_asked;
-> +		xfs_perag_put(pag);
-> +	}
-> +
-> +	return 0;
-> +}
-> diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-> index 2954c13..c8f5e26 100644
-> --- a/fs/xfs/xfs_fsops.h
-> +++ b/fs/xfs/xfs_fsops.h
-> @@ -25,6 +25,8 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
->  extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
->  				xfs_fsop_resblks_t *outval);
->  extern int xfs_fs_goingdown(xfs_mount_t *mp, uint32_t inflags);
-> +extern int xfs_fs_get_ag_reserve_blocks(struct xfs_mount *mp,
-> +		struct xfs_fsop_ag_resblks *out);
->  
->  extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
->  extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 5049e8a..44dc178 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1782,6 +1782,27 @@ xfs_ioc_swapext(
->  	return error;
->  }
->  
-> +static int
-> +xfs_ioc_get_ag_reserve_blocks(
-> +	struct xfs_mount		*mp,
-> +	void __user			*arg)
-> +{
-> +	struct xfs_fsop_ag_resblks	out;
-> +	int				error;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
-> +
-> +	error = xfs_fs_get_ag_reserve_blocks(mp, &out);
-> +	if (error)
-> +		return error;
-> +
-> +	if (copy_to_user(arg, &out, sizeof(out)))
-> +		return -EFAULT;
-> +
-> +	return 0;
-> +}
-> +
->  /*
->   * Note: some of the ioctl's return positive numbers as a
->   * byte count indicating success, such as readlink_by_handle.
-> @@ -1987,6 +2008,9 @@ xfs_file_ioctl(
->  		return 0;
->  	}
->  
-> +	case XFS_IOC_GET_AG_RESBLKS:
-> +		return xfs_ioc_get_ag_reserve_blocks(mp, arg);
-> +
->  	case XFS_IOC_FSGROWFSDATA: {
->  		xfs_growfs_data_t in;
->  
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index fa0bc4d..e8b4de3 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -556,6 +556,7 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_ERROR_INJECTION:
->  	case XFS_IOC_ERROR_CLEARALL:
->  	case FS_IOC_GETFSMAP:
-> +	case XFS_IOC_GET_AG_RESBLKS:
->  		return xfs_file_ioctl(filp, cmd, p);
->  #ifndef BROKEN_X86_ALIGNMENT
->  	/* These are handled fine if no alignment issues */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  #endif /* CONFIG_HARDENED_USERCOPY */
+
+Looks like this is almost the same for all allocators. Can we put this
+into mm/slab_common.c?
+
