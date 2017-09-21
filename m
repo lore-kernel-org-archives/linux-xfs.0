@@ -1,175 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:44782 "EHLO
-        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbdIUIrY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 04:47:24 -0400
-Date: Thu, 21 Sep 2017 17:47:14 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: shared/298 lockdep splat?
-Message-ID: <20170921084714.GI5994@X58A-UD3R>
-References: <20170920211042.GH7112@magnolia>
- <20170920222256.GR18948@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:52428 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751387AbdIUKJt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Sep 2017 06:09:49 -0400
+Date: Thu, 21 Sep 2017 18:09:44 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] test race when checking i_size on direct i/o read
+Message-ID: <20170921100944.GX8034@eguan.usersys.redhat.com>
+References: <799f63d9-de03-eab3-1e6e-cd747aa04c36@redhat.com>
+ <20170919073616.GP8034@eguan.usersys.redhat.com>
+ <20170919141351.GB3487@bfoster.bfoster>
+ <20170919143406.GA7437@infradead.org>
+ <20170920110504.GU8034@eguan.usersys.redhat.com>
+ <20170920125529.GA16481@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170920222256.GR18948@dastard>
+In-Reply-To: <20170920125529.GA16481@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, kernel-team@lge.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, Zheng Liu <wenqing.lz@taobao.com>, linux-xfs@vger.kernel.org
 
-On Thu, Sep 21, 2017 at 08:22:56AM +1000, Dave Chinner wrote:
-> > ======================================================
-> > WARNING: possible circular locking dependency detected
-> > 4.14.0-rc1-fixes #1 Tainted: G        W      
-> > ------------------------------------------------------
-> > loop0/31693 is trying to acquire lock:
-> >  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
+On Wed, Sep 20, 2017 at 08:55:30AM -0400, Brian Foster wrote:
+> On Wed, Sep 20, 2017 at 07:05:04PM +0800, Eryu Guan wrote:
+> > On Tue, Sep 19, 2017 at 07:34:06AM -0700, Christoph Hellwig wrote:
+> > > On Tue, Sep 19, 2017 at 10:13:52AM -0400, Brian Foster wrote:
+> > > > Can we pass a boolean or flag to xfs_iomap_write_unwritten() to have it
+> > > > update the incore i_size after unwritten extent conversion? Then move
+> > > > (or remove) the associated update from xfs_dio_write_end_io().
+> > > 
+> > > I don't think we even need a flag - all three callers of
+> > > xfs_iomap_write_unwritten want to update the file size.
 > > 
-> > but now in release context of a crosslock acquired at the following:
-> >  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
+> > I tried this approach, but seems there's some problem in the buffered
+> > aio path, generic/112 (aio fsx) failed quickly. But I haven't digged
+> > into the reason (maybe I screwed it up, not the method is wrong..).
 > > 
-> > which lock already depends on the new lock.
+> 
+> From the generic/112 results:
+> 
+> Size error: expected 0x3785b stat 0x38000 seek 0x38000
+> 
+> I suspect the problem is that the offset+size from buffered I/O
+> completion is not based on the inode size. Rather, it is buffer head
+> granularity size of the ioend. Given that, it probably does make sense
+> to skip the update from this path.
+
+Yeah, you're right.
+
+xfs_io -fc "falloc -k 0 4k" -c "pwrite 0 2k" -c fsync /mnt/xfs/testfile
+
+This results in 4k file size (block size is also 4k).
+
+> 
+> > Then I tried Brian's suggestion, pass a boolean to
+> > xfs_iomap_write_unwritten() to tell if we want it to update in-core
+> > isize after unwritten extent conversion, and skip the in-core isize
+> > update in xfs_dio_write_end_io() accordingly. This approach seems to
+> > work, it passed the test Eric posted here, and fstests 'aio' group
+> > tests, a run of 'quick' group didn't find any new failure as well.
 > > 
-> > 
-> > the existing dependency chain (in reverse order) is:
-> > 
-> > -> #2 ((complete)&ret.event){+.+.}:
-> >        lock_acquire+0xab/0x200
-> >        wait_for_completion_io+0x4e/0x1a0
-> >        submit_bio_wait+0x7f/0xb0
-> >        blkdev_issue_zeroout+0x71/0xa0
-> >        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
-> >        xfs_bmapi_write+0x374/0x11f0 [xfs]
-> >        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
-> >        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
-> >        iomap_apply+0x43/0xe0
-> >        dax_iomap_rw+0x89/0xf0
-> >        xfs_file_dax_write+0xcc/0x220 [xfs]
-> >        xfs_file_write_iter+0xf0/0x130 [xfs]
-> >        __vfs_write+0xd9/0x150
-> >        vfs_write+0xc8/0x1c0
-> >        SyS_write+0x45/0xa0
-> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
-> 
-> This is on the lower filesystem - it's a write() syscall on a DAX
-> enable filesystem. Locking in this case is:
-> 
-> Context			function		lock
-> Lower filesystem	xfs_file_dax_write	XFS_IOLOCK_EXCL
-> Lower filesystem	xfs_file_iomap_begin	XFS_ILOCK_EXCL
-> Lower filesystem/
->    lower blkdev		submit_bio_wait		wait for dax block
-> 						device IO completion
-> 
-> Which gives: IOLOCK -> &xfs_nondir_ilock_class -> IO completion
-> 
-> In the lower filesystem.
-> 
-> > -> #1 (&xfs_nondir_ilock_class){++++}:
-> >        lock_acquire+0xab/0x200
-> >        down_write_nested+0x4a/0xb0
-> >        xfs_ilock+0x263/0x330 [xfs]
-> >        xfs_setattr_size+0x152/0x370 [xfs]
-> >        xfs_vn_setattr+0x6b/0x90 [xfs]
-> >        notify_change+0x27d/0x3f0
-> >        do_truncate+0x5b/0x90
-> >        path_openat+0x237/0xa90
-> >        do_filp_open+0x8a/0xf0
-> >        do_sys_open+0x11c/0x1f0
-> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
-> 
-> Context			function		lock
-> Lower filesystem	xfs_vn_setattr		XFS_IOLOCK_EXCL
-> Lower filesystem	xfs_vn_setattr		XFS_MMAPLOCK_EXCL
-> Lower filesystem	xfs_setattr_size	XFS_ILOCK_EXCL
-> 
-> Which gives: IOLOCK -> MMAPLOCK -> &xfs_nondir_ilock_class
-> 
-> i.e.: IOLOCK -> MMAPLOCK -> &xfs_nondir_ilock_class -> IO completion
-> 
-> In the lower filesystem.
-> 
-> > 
-> > -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
-> >        up_write+0x1c/0x40
-> >        xfs_iunlock+0x1d0/0x310 [xfs]
-> >        xfs_file_fallocate+0x8a/0x310 [xfs]
-> >        loop_queue_work+0xb7/0x8d0
-> >        kthread_worker_fn+0xb9/0x1f0
-> 
-> Context			function		lock
-> Lower filesystem	xfs_file_fallocate	XFS_IOLOCK_EXCL
-> Lower filesystem	xfs_file_fallocate	XFS_MMAPLOCK_EXCL
-> [Lower filesystem	whatever falloc calls	XFS_ILOCK_EXCL]
-> Upper filesystem/
->    Upper blkd		loop_queue_work		blk_mq_complete_request
-> 
-> This is clearer when the reported stack is looked at:
-> 
-> > lock_commit_crosslock+0x3e9/0x5c0
-> > complete+0x24/0x60
-> > blk_update_request+0xc2/0x3e0
-> > blk_mq_end_request+0x18/0x80
-> > __blk_mq_complete_request+0x9f/0x170
-> > loop_queue_work+0x51/0x8d0
-> > kthread_worker_fn+0xb9/0x1f0
-> > kthread+0x148/0x180
-> > ret_from_fork+0x2a/0x40
-> 
-> So this is reporting as:
-> 
-> > Chain exists of:
-> >   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
+> > I attached the WIP patch (without proper comments) I was testing, if
+> > this looks fine I can format a formal patch and do more testings.
 > >
-> >  Possible unsafe locking scenario by crosslock:
-> >
-> >        CPU0                    CPU1
-> >        ----                    ----
-> >   lock(&xfs_nondir_ilock_class);
-> >   lock((complete)&ret.event);
-> >                                lock(&(&ip->i_mmaplock)->mr_lock);
-> >                                unlock((complete)&ret.event);
-> >
-> >                *** DEADLOCK ***
 > 
-> Which effectively means:
+> Thanks. This mostly looks reasonable to me...
+>  
+> > Thanks,
+> > Eryu
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 29172609f2a3..288da47e9ac5 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -343,7 +343,7 @@ xfs_end_io(
+> >  		error = xfs_reflink_end_cow(ip, offset, size);
+> >  		break;
+> >  	case XFS_IO_UNWRITTEN:
+> > -		error = xfs_iomap_write_unwritten(ip, offset, size);
+> > +		error = xfs_iomap_write_unwritten(ip, offset, size, false);
 > 
-> 	IO completion -> XFS_MMAPLOCK_EXCL .....
-> 
-> The thing is, this IO completion has nothing to do with the lower
-> filesystem - it's the IO completion for the filesystem on the loop
-> device (the upper filesystem) and is not in any way related to the
-> IO completion from the dax device the lower filesystem is waiting
-> on.
-> 
-> IOWs, this is a false positive.
-> 
-> Peter, this is the sort of false positive I mentioned were likely to
-> occur without some serious work to annotate the IO stack to prevent
-> them.  We can nest multiple layers of IO completions and locking in
-> the IO stack via things like loop and RAID devices.  They can be
-> nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
-> dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
-> checking is going to be a source of false positives until there is
-> an effective (and simple!) way of providing context based completion
-> annotations to avoid them...
+> Maybe add a single line comment here wrt to the above (why we don't
+> update isize).
 
-Hello,
+Will do.
 
-It looks caused by that &ret.event in submit_bio_wait() is initialized
-with the same class for all layers. I mean that completion variables in
-different layers should be initialized with different classes, as you do
-for typical locks in xfs.
-
-I am not sure if I understand how xfs works correctly. Right? If yes,
-how can we distinguish between independent 'bio's in submit_bio_wait()?
-You or I can make it work with the answer. No?
-
-> Cheers,
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> >  		break;
+> >  	default:
+> >  		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 350b6d43ba23..f3ad024573e7 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -435,6 +435,7 @@ xfs_dio_write_end_io(
+> >  	struct xfs_inode	*ip = XFS_I(inode);
+> >  	loff_t			offset = iocb->ki_pos;
+> >  	bool			update_size = false;
+> > +	bool			write_unwritten = (flags & IOMAP_DIO_UNWRITTEN);
+> >  	int			error = 0;
+> >  
+> >  	trace_xfs_end_io_direct_write(ip, offset, size);
+> > @@ -458,7 +459,8 @@ xfs_dio_write_end_io(
+> >  	 */
+> >  	spin_lock(&ip->i_flags_lock);
+> >  	if (offset + size > i_size_read(inode)) {
+> > -		i_size_write(inode, offset + size);
+> > +		if (!write_unwritten)
+> > +			i_size_write(inode, offset + size);
+> >  		update_size = true;
+> 
+> I find the logic a little confusing here. For !write_unwritten,
+> update_size means to update the on-disk size. Otherwise, it instructs
+> iomap_write_unwritten() to also update the in-core size. The latter also
+> checks for appends, however, so it might as well always be true from
+> here. It seems that for such a small function, we should be able to make
+> this a bit easier to follow. ;P
+
+Agreed, it looks confusing when update_size serves as indicators of both
+in-core and on-disk size update. And we can pass 'true' unconditionally
+to xfs_iomap_write_unwritten() in this case.
+
+> 
+> Should we ever see an isize update at all on a IOMAP_DIO_COW completion
+> (wouldn't reflinked blocks have to be within eof)? If not, then we can
+> presumably rule out isize updates in that case. I think that just leaves
+> the case where a dio write occurs on a pre-existing block. Hmm, could we
+> just move this whole hunk down to after the iomap_write_unwritten() call
+> and eliminate the need for the flag entirely? E.g., something like:
+> 
+> 	...
+> 	if (IOMAP_DIO_COW) {
+> 		...
+> 	}
+> 
+> 	/* unwritten conversion updates isize */
+> 	if (IOMAP_DIO_UNWRITTEN)
+> 		return xfs_iomap_write_unwritten(ip, offset, size, true);
+> 
+> 	if (offset + size > i_size_read(inode)) {
+> 		i_size_write(inode, offset + size);
+> 		error = xfs_setfilesize(...);
+> 	}
+> 
+> 	return error;
+
+This seems fine, tests in 'clone' group all passed without new failures,
+I'll update patch as you suggested. I thought about something like this
+too, but I'm not familiar with the CoW path, so I decided to keep the
+original logic as much as possible.
+
+Thanks for your review and suggestions!
+
+Eryu
+
+> 
+> >  	}
+> >  	spin_unlock(&ip->i_flags_lock);
+> > @@ -469,8 +471,8 @@ xfs_dio_write_end_io(
+> >  			return error;
+> >  	}
+> >  
+> > -	if (flags & IOMAP_DIO_UNWRITTEN)
+> > -		error = xfs_iomap_write_unwritten(ip, offset, size);
+> > +	if (write_unwritten)
+> > +		error = xfs_iomap_write_unwritten(ip, offset, size, update_size);
+> >  	else if (update_size)
+> >  		error = xfs_setfilesize(ip, offset, size);
+> >  
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index a1909bc064e9..0a088586371e 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -829,7 +829,8 @@ int
+> >  xfs_iomap_write_unwritten(
+> >  	xfs_inode_t	*ip,
+> >  	xfs_off_t	offset,
+> > -	xfs_off_t	count)
+> > +	xfs_off_t	count,
+> > +	bool		update_size)
+> >  {
+> >  	xfs_mount_t	*mp = ip->i_mount;
+> >  	xfs_fileoff_t	offset_fsb;
+> > @@ -840,6 +841,7 @@ xfs_iomap_write_unwritten(
+> >  	xfs_trans_t	*tp;
+> >  	xfs_bmbt_irec_t imap;
+> >  	struct xfs_defer_ops dfops;
+> > +	struct inode	*inode = VFS_I(ip);
+> >  	xfs_fsize_t	i_size;
+> >  	uint		resblks;
+> >  	int		error;
+> > @@ -900,6 +902,13 @@ xfs_iomap_write_unwritten(
+> >  		if (i_size > offset + count)
+> >  			i_size = offset + count;
+> >  
+> > +		if (update_size) {
+> > +			spin_lock(&ip->i_flags_lock);
+> > +			if (i_size > i_size_read(inode))
+> > +				i_size_write(inode, i_size);
+> > +			spin_unlock(&ip->i_flags_lock);
+> 
+> We have XFS_ILOCK_EXCL here so I don't think the spinlocks are
+> necessary any longer. That means this could probably be condensed to
+> something like
+> 
+> 		if (update_size && i_size > i_size_read(inode))
+> 			i_size_write(inode, i_size)
+> 
+> > +		}
+> > +
+> >  		i_size = xfs_new_eof(ip, i_size);
+> >  		if (i_size) {
+> >  			ip->i_d.di_size = i_size;
+> > diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> > index 00db3ecea084..ee535065c5d0 100644
+> > --- a/fs/xfs/xfs_iomap.h
+> > +++ b/fs/xfs/xfs_iomap.h
+> > @@ -27,7 +27,7 @@ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+> >  			struct xfs_bmbt_irec *, int);
+> >  int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
+> >  			struct xfs_bmbt_irec *);
+> > -int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
+> > +int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
+> >  
+> >  void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+> >  		struct xfs_bmbt_irec *);
+> > diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> > index 2f2dc3c09ad0..4246876df7b7 100644
+> > --- a/fs/xfs/xfs_pnfs.c
+> > +++ b/fs/xfs/xfs_pnfs.c
+> > @@ -274,7 +274,7 @@ xfs_fs_commit_blocks(
+> >  					(end - 1) >> PAGE_SHIFT);
+> >  		WARN_ON_ONCE(error);
+> >  
+> > -		error = xfs_iomap_write_unwritten(ip, start, length);
+> > +		error = xfs_iomap_write_unwritten(ip, start, length, false);
+> 
+> Note that this path does update isize. It runs another transaction to
+> get around the fact that write_unwritten() wouldn't log a new on disk
+> size. There is some validation thing here though, so we might need to
+> check whether it is Ok to run that earlier and whether it should
+> continue to return an error on failure. Christoph?
+> 
+> That said, maybe a follow on patch would be better since this one might
+> be stable fodder.
+> 
+> Brian
+> 
+> >  		if (error)
+> >  			goto out_drop_iolock;
+> >  	}
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
