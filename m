@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25956 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbdIUATR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:19:17 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0JGla006079
+Received: from aserp1040.oracle.com ([141.146.126.69]:43672 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751680AbdIUATX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:19:23 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0JM9q016946
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:19:16 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0JFkA008099
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:19:22 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0JMv7017082
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:19:15 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8L0JFvk019509
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:19:15 GMT
-Subject: [PATCH 16/27] xfs: scrub rmap btrees
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:19:22 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0JLT8032484
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:19:22 GMT
+Subject: [PATCH 17/27] xfs: scrub refcount btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Sep 2017 17:19:15 -0700
-Message-ID: <150595315540.18473.11950808311947063386.stgit@magnolia>
+Date: Wed, 20 Sep 2017 17:19:21 -0700
+Message-ID: <150595316146.18473.17500732132791785306.stgit@magnolia>
 In-Reply-To: <150595305131.18473.16572195821331601191.stgit@magnolia>
 References: <150595305131.18473.16572195821331601191.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,68 +31,69 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Check the reverse mapping records to make sure that the contents
-make sense.
+Plumb in the pieces necessary to check the refcount btree.  If rmap is
+available, check the reference count by performing an interval query
+against the rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    3 +
- fs/xfs/scrub/common.h  |    2 +
- fs/xfs/scrub/rmap.c    |  130 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.c   |    5 ++
- fs/xfs/scrub/scrub.h   |    1 
- 6 files changed, 141 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/rmap.c
+ fs/xfs/Makefile         |    1 
+ fs/xfs/libxfs/xfs_fs.h  |    3 +
+ fs/xfs/scrub/common.h   |    2 +
+ fs/xfs/scrub/refcount.c |   99 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c    |    5 ++
+ fs/xfs/scrub/scrub.h    |    1 
+ 6 files changed, 110 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/scrub/refcount.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 82326b7..5a64f8d 100644
+index 5a64f8d..a7c5752 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
 @@ -151,6 +151,7 @@ xfs-y				+= $(addprefix scrub/, \
  				   btree.o \
  				   common.o \
  				   ialloc.o \
-+				   rmap.o \
++				   refcount.o \
+ 				   rmap.o \
  				   scrub.o \
  				   )
- endif
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index c8e6d89..74aa021 100644
+index 74aa021..450a692 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -492,9 +492,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_CNTBT	6	/* freesp by length btree */
+@@ -493,9 +493,10 @@ struct xfs_scrub_metadata {
  #define XFS_SCRUB_TYPE_INOBT	7	/* inode btree */
  #define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
-+#define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
+ #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
++#define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
  
  /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	9
-+#define XFS_SCRUB_TYPE_NR	10
+-#define XFS_SCRUB_TYPE_NR	10
++#define XFS_SCRUB_TYPE_NR	11
  
  /* i: Repair this metadata. */
  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 8fc0619..9075a5c 100644
+index 9075a5c..e50368d 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -98,6 +98,8 @@ int xfs_scrub_setup_ag_allocbt(struct xfs_scrub_context *sc,
- 			       struct xfs_inode *ip);
- int xfs_scrub_setup_ag_iallocbt(struct xfs_scrub_context *sc,
+@@ -100,6 +100,8 @@ int xfs_scrub_setup_ag_iallocbt(struct xfs_scrub_context *sc,
  				struct xfs_inode *ip);
-+int xfs_scrub_setup_ag_rmapbt(struct xfs_scrub_context *sc,
-+			      struct xfs_inode *ip);
+ int xfs_scrub_setup_ag_rmapbt(struct xfs_scrub_context *sc,
+ 			      struct xfs_inode *ip);
++int xfs_scrub_setup_ag_refcountbt(struct xfs_scrub_context *sc,
++				  struct xfs_inode *ip);
  
  
  void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
 new file mode 100644
-index 0000000..7331ecf
+index 0000000..86e6759
 --- /dev/null
-+++ b/fs/xfs/scrub/rmap.c
-@@ -0,0 +1,130 @@
++++ b/fs/xfs/scrub/refcount.c
+@@ -0,0 +1,99 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -132,122 +133,91 @@ index 0000000..7331ecf
 +#include "scrub/trace.h"
 +
 +/*
-+ * Set us up to scrub reverse mapping btrees.
++ * Set us up to scrub reference count btrees.
 + */
 +int
-+xfs_scrub_setup_ag_rmapbt(
++xfs_scrub_setup_ag_refcountbt(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip)
 +{
 +	return xfs_scrub_setup_ag_btree(sc, ip, false);
 +}
 +
-+/* Reverse-mapping scrubber. */
++/* Reference count btree scrubber. */
 +
-+/* Scrub an rmapbt record. */
++/* Scrub a refcountbt record. */
 +STATIC int
-+xfs_scrub_rmapbt_helper(
++xfs_scrub_refcountbt_helper(
 +	struct xfs_scrub_btree		*bs,
 +	union xfs_btree_rec		*rec)
 +{
 +	struct xfs_mount		*mp = bs->cur->bc_mp;
 +	struct xfs_agf			*agf;
-+	struct xfs_rmap_irec		irec;
++	struct xfs_refcount_irec	irec;
 +	unsigned long long		rec_end;
 +	xfs_agblock_t			eoag;
-+	bool				non_inode;
-+	bool				is_unwritten;
-+	bool				is_bmbt;
-+	bool				is_attr;
-+	int				error;
++	bool				has_cowflag;
++	int				error = 0;
 +
-+	error = xfs_rmap_btrec_to_irec(rec, &irec);
-+	if (!xfs_scrub_btree_op_ok(bs->sc, bs->cur, 0, &error))
-+		goto out;
-+
-+	/* Check extent. */
++	irec.rc_startblock = be32_to_cpu(rec->refc.rc_startblock);
++	irec.rc_blockcount = be32_to_cpu(rec->refc.rc_blockcount);
++	irec.rc_refcount = be32_to_cpu(rec->refc.rc_refcount);
 +	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
 +	eoag = be32_to_cpu(agf->agf_length);
-+	rec_end = (unsigned long long)irec.rm_startblock + irec.rm_blockcount;
 +
++	has_cowflag = !!(irec.rc_startblock & XFS_REFC_COW_START);
 +	xfs_scrub_btree_check_ok(bs->sc, bs->cur, 0,
-+			irec.rm_startblock < mp->m_sb.sb_agblocks &&
-+			irec.rm_startblock < eoag &&
-+			irec.rm_blockcount != 0 &&
++			(irec.rc_refcount == 1 && has_cowflag) ||
++			(irec.rc_refcount != 1 && !has_cowflag));
++	irec.rc_startblock &= ~XFS_REFC_COW_START;
++	rec_end = (unsigned long long)irec.rc_startblock + irec.rc_blockcount;
++	xfs_scrub_btree_check_ok(bs->sc, bs->cur, 0,
++			irec.rc_startblock < mp->m_sb.sb_agblocks &&
++			irec.rc_startblock < eoag &&
++			irec.rc_blockcount != 0 &&
 +			rec_end <= mp->m_sb.sb_agblocks &&
-+			rec_end <= eoag);
++			rec_end <= eoag &&
++			irec.rc_refcount >= 1);
 +
-+	/* Check flags. */
-+	non_inode = XFS_RMAP_NON_INODE_OWNER(irec.rm_owner);
-+	is_bmbt = irec.rm_flags & XFS_RMAP_BMBT_BLOCK;
-+	is_attr = irec.rm_flags & XFS_RMAP_ATTR_FORK;
-+	is_unwritten = irec.rm_flags & XFS_RMAP_UNWRITTEN;
-+
-+	xfs_scrub_btree_check_ok(bs->sc, bs->cur, 0,
-+			(!is_bmbt || irec.rm_offset == 0) &&
-+			(!non_inode || irec.rm_offset == 0) &&
-+			(!is_unwritten || !(is_bmbt || non_inode || is_attr)) &&
-+			(!non_inode || !(is_bmbt || is_unwritten || is_attr)));
-+
-+	/* Owner inode within an AG? */
-+	xfs_scrub_btree_check_ok(bs->sc, bs->cur, 0, non_inode ||
-+			(XFS_INO_TO_AGNO(mp, irec.rm_owner) <
-+							mp->m_sb.sb_agcount &&
-+			 XFS_AGINO_TO_AGBNO(mp,
-+				XFS_INO_TO_AGINO(mp, irec.rm_owner)) <
-+							mp->m_sb.sb_agblocks));
-+	/* Owner inode within the FS? */
-+	xfs_scrub_btree_check_ok(bs->sc, bs->cur, 0, non_inode ||
-+			XFS_AGB_TO_DADDR(mp,
-+				XFS_INO_TO_AGNO(mp, irec.rm_owner),
-+				XFS_AGINO_TO_AGBNO(mp,
-+					XFS_INO_TO_AGINO(mp, irec.rm_owner))) <
-+			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
-+
-+	/* Non-inode owner within the magic values? */
-+	xfs_scrub_btree_check_ok(bs->sc, bs->cur, 0, !non_inode ||
-+			(irec.rm_owner > XFS_RMAP_OWN_MIN &&
-+			 irec.rm_owner <= XFS_RMAP_OWN_FS));
-+out:
 +	return error;
 +}
 +
-+/* Scrub the rmap btree for some AG. */
++/* Scrub the refcount btree for some AG. */
 +int
-+xfs_scrub_rmapbt(
++xfs_scrub_refcountbt(
 +	struct xfs_scrub_context	*sc)
 +{
 +	struct xfs_owner_info		oinfo;
 +
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-+	return xfs_scrub_btree(sc, sc->sa.rmap_cur, xfs_scrub_rmapbt_helper,
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
++	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_helper,
 +			&oinfo, NULL);
 +}
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 9304bb3..a418269 100644
+index a418269..4af2096 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -195,6 +195,11 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.scrub	= xfs_scrub_finobt,
- 		.has	= xfs_sb_version_hasfinobt,
+@@ -200,6 +200,11 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.scrub	= xfs_scrub_rmapbt,
+ 		.has	= xfs_sb_version_hasrmapbt,
  	},
-+	{ /* rmapbt */
-+		.setup	= xfs_scrub_setup_ag_rmapbt,
-+		.scrub	= xfs_scrub_rmapbt,
-+		.has	= xfs_sb_version_hasrmapbt,
++	{ /* refcountbt */
++		.setup	= xfs_scrub_setup_ag_refcountbt,
++		.scrub	= xfs_scrub_refcountbt,
++		.has	= xfs_sb_version_hasreflink,
 +	},
  };
  
  /* Dispatch metadata scrubbing. */
 diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 55c9dde..f602ded 100644
+index f602ded..4cc4b84 100644
 --- a/fs/xfs/scrub/scrub.h
 +++ b/fs/xfs/scrub/scrub.h
-@@ -70,5 +70,6 @@ int xfs_scrub_bnobt(struct xfs_scrub_context *sc);
- int xfs_scrub_cntbt(struct xfs_scrub_context *sc);
+@@ -71,5 +71,6 @@ int xfs_scrub_cntbt(struct xfs_scrub_context *sc);
  int xfs_scrub_inobt(struct xfs_scrub_context *sc);
  int xfs_scrub_finobt(struct xfs_scrub_context *sc);
-+int xfs_scrub_rmapbt(struct xfs_scrub_context *sc);
+ int xfs_scrub_rmapbt(struct xfs_scrub_context *sc);
++int xfs_scrub_refcountbt(struct xfs_scrub_context *sc);
  
  #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
