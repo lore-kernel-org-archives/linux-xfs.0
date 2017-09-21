@@ -1,337 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49270 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751852AbdIVTHu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 15:07:50 -0400
-Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
-MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH v4 2/3] xfs: Set realtime flag based on initial allocation
- size
-From: Richard Wareing <rwareing@fb.com>
-In-Reply-To: <20170922055434.GD10955@dastard>
-Date: Fri, 22 Sep 2017 12:06:07 -0700
-Content-Transfer-Encoding: 7bit
-Message-ID: <F815D515-8676-439B-A551-6E6A6F25E992@fb.com>
-References: <20170919035238.3976871-1-rwareing@fb.com>
- <20170919035238.3976871-3-rwareing@fb.com> <20170922055434.GD10955@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:46172 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750912AbdIUF47 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Sep 2017 01:56:59 -0400
+Date: Thu, 21 Sep 2017 13:56:56 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs: Add test for CVE-2017-14340
+Message-ID: <20170921055656.GW8034@eguan.usersys.redhat.com>
+References: <20170920003054.4171675-1-rwareing@fb.com>
+ <20170920004125.GD7112@magnolia>
+ <BA0F6FA4-4C58-4263-BF66-32C20DCA090E@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <BA0F6FA4-4C58-4263-BF66-32C20DCA090E@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
+To: Richard Wareing <rwareing@fb.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-Dave Chinner <david@fromorbit.com> wrote:
+On Wed, Sep 20, 2017 at 03:40:06AM +0000, Richard Wareing wrote:
+> Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> 
+> > On Tue, Sep 19, 2017 at 05:30:54PM -0700, Richard Wareing wrote:
+> >> Verify kernel doesn't panic when user attempts to set realtime flags
+> >> on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+> >> kernels will panic during this test.  Kernels not compiled with
+> >> CONFIG_XFS_RT should pass test.
+> >>
+> >> This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
+> >
+> > Oooh, a commit id, nice! :)
+> >
+> >> on the main kernel tree.
+> >>
+> >> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> >> ---
+> >>  tests/xfs/431     | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >>  tests/xfs/431.out |  3 ++
+> >>  tests/xfs/group   |  1 +
+> >>  3 files changed, 90 insertions(+)
+> >>  create mode 100755 tests/xfs/431
+> >>  create mode 100644 tests/xfs/431.out
+> >>
+> >> diff --git a/tests/xfs/431 b/tests/xfs/431
+> >> new file mode 100755
+> >> index 0000000..f928abc
+> >> --- /dev/null
+> >> +++ b/tests/xfs/431
+> >> @@ -0,0 +1,86 @@
+> >> +#! /bin/bash
+> >> +# FS QA Test 431
+> >> +#
+> >> +# Verify kernel doesn't panic when user attempts to set realtime flags
+> >> +# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.   
+> >> Unpatched
+> >> +# kernels will panic during this test.  Kernels not compiled with
+> >> +# CONFIG_XFS_RT should pass test.
+> >> +#
+> >> +#-----------------------------------------------------------------------
+> >> +# Copyright (c) 2017 YOUR NAME HERE.  All Rights Reserved.
+> >
+> > Mr. HERE, please update this line! :)
+> >
+> 
+> Fixed in v2.
+> 
+> >> +#
+> >> +# This program is free software; you can redistribute it and/or
+> >> +# modify it under the terms of the GNU General Public License as
+> >> +# published by the Free Software Foundation.
+> >> +#
+> >> +# This program is distributed in the hope that it would be useful,
+> >> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> >> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> >> +# GNU General Public License for more details.
+> >> +#
+> >> +# You should have received a copy of the GNU General Public License
+> >> +# along with this program; if not, write the Free Software Foundation,
+> >> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> >> +#-----------------------------------------------------------------------
+> >> +#
+> >> +
+> >> +seq=`basename $0`
+> >> +seqres=$RESULT_DIR/$seq
+> >> +echo "QA output created by $seq"
+> >> +
+> >> +here=`pwd`
+> >> +tmp=/tmp/$$
+> >> +status=1	# failure is the default!
+> >> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> >> +
+> >> +_cleanup()
+> >> +{
+> >> +	cd /
+> >> +	rm -f $tmp.*
+> >> +}
+> >> +
+> >> +# get standard environment, filters and checks
+> >> +. ./common/rc
+> >> +. ./common/filter
+> >> +
+> >> +# remove previous $seqres.full before test
+> >> +rm -f $seqres.full
+> >> +
+> >> +# real QA test starts here
+> >> +
+> >> +# Modify as appropriate.
+> >> +_supported_fs xfs
+> >> +_supported_os Linux
+> >> +_require_xfs_io_command "chattr"
+> >> +_require_xfs_io_command "fsync"
+> >> +_require_xfs_io_command "pwrite"
+> >> +_require_scratch
+> >> +_require_test
+> >> +
+> >
+> > Shouldn't we unset USE_EXTERNAL/SCRATCH_RTDEV here since the bug only
+> > affects non-rt xfses?
+> >
+> 
+> I tried playing around with this, but wasn't able to get it to
+> work.  The best I think to do is create a "_require_no_realtime"
+> and skip the test if it's being run under a realtime test run.
 
-> On Mon, Sep 18, 2017 at 08:52:37PM -0700, Richard Wareing wrote:
->> - The rt_alloc_min sysfs option automatically selects the device (data
->>   device, or realtime) based on the size of the initial allocation of the
->>   file.
->> - This option can be used to route the storage of small files (and the
->>   inefficient workloads associated with them) to a suitable storage
->>   device such a SSD, while larger allocations are sent to a traditional
->>   HDD.
->> - Supports writes via O_DIRECT, buffered (i.e. page cache), and
->>   pre-allocations (i.e. fallocate)
->> - Available only when kernel is compiled w/ CONFIG_XFS_RT option.
->>
->> Signed-off-by: Richard Wareing <rwareing@fb.com>
->> ---
->> Changes since v3:
->> * Now functions via initial allocation regardless of O_DIRECT, buffered or
->>   pre-allocation code paths.  Provides a consistent user-experience.
->> * I Did do some experiments putting this in the xfs_bmapi_write code path
->>   however pre-allocation accounting unfortunately prevents this cleaner
->>   approach.  As such, this proved to be the cleanest and functional approach.
->> * No longer a mount option, now a sysfs tunable
->>
->> Changes since v2:
->> * None
->>
->>  fs/xfs/xfs_bmap_util.c |  3 +++
->>  fs/xfs/xfs_inode.c     | 18 ++++++++++++------
->>  fs/xfs/xfs_iomap.c     |  8 ++++++++
->>  fs/xfs/xfs_mount.h     |  1 +
->>  fs/xfs/xfs_rtalloc.c   | 26 ++++++++++++++++++++++++++
->>  fs/xfs/xfs_rtalloc.h   |  4 ++++
->>  fs/xfs/xfs_sysfs.c     | 41 +++++++++++++++++++++++++++++++++++++++++
->>  7 files changed, 95 insertions(+), 6 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
->> index 9e3cc21..2d253fb 100644
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -1026,6 +1026,9 @@ xfs_alloc_file_space(
->>  	if (len <= 0)
->>  		return -EINVAL;
->>
->> +	if (XFS_IS_REALTIME_MOUNT(mp))
->> +		xfs_rt_alloc_min(ip, len);
->
-> I'd put the XFS_IS_REALTIME_MOUNT() check inside xfs_rt_alloc_min().
-> That way we can compile the code out completely when
-> CONFIG_XFS_RT=n.
->
+Hmm, I don't think we need to exclude test with rtdev, it's true that
+the bug only affects non-rt XFS but there's no harm to do such a
+'sanity' test with rtdev present.
 
-I was wondering about this, but elected to model the
-XFS_IS_REALTIME_INODE code structure.  I'm partial to putting
-this in the function as well, as it reads cleaner too.
+> 
+> 
+> >> +_scratch_mkfs >/dev/null 2>&1
+> >> +_scratch_mount
+> >> +
+> >> +# Set realtime inherit flag on scratch mount, suppress output
+> >> +# as this may simply error out on future kernels, we will check
+> >> +# exit code instead.
+> >> +$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
+> >> +chattr_ret=$?
 
->> rt = XFS_IS_REALTIME_INODE(ip);
->>  	extsz = xfs_get_extsz_hint(ip);
->>
->> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->> index ec9826c..f9e2deb 100644
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -1620,12 +1620,18 @@ xfs_itruncate_extents(
->>  	if (error)
->>  		goto out;
->>
->> -	/*
->> -	 * Clear the reflink flag if we truncated everything.
->> -	 */
->> -	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
->> -		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
->> -		xfs_inode_clear_cowblocks_tag(ip);
->> +	if (ip->i_d.di_nblocks == 0) {
->> +		/*
->> +		 * Clear the reflink flag if we truncated everything.
->> +		 */
->> +		if (xfs_is_reflink_inode(ip)) {
->> +			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
->> +			xfs_inode_clear_cowblocks_tag(ip);
->> +		}
->> +		/* Clear realtime flag if m_rt_alloc_min policy is in place */
->> +		if (XFS_IS_REALTIME_MOUNT(mp) && mp->m_rt_alloc_min) {
->
-> Won't m_rt_alloc_min always be zero on non-rt filesystems?
->
+It seems that xfs_io always returns 0 even the command fails, e.g.
 
-Yes, but was trying to be defensive, in case some future me or other
-developer screwed something up in the future :).
+[root@bootp-73-5-205 xfstests]# xfs_io -c "pwrite 0 4k" /
+pwrite: Bad file descriptor
+[root@bootp-73-5-205 xfstests]# echo $?
+0
 
->> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
->> +		}
->>  	}
->>
->>  	/*
->> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
->> index 94e5bdf..11f1c95 100644
->> --- a/fs/xfs/xfs_iomap.c
->> +++ b/fs/xfs/xfs_iomap.c
->> @@ -40,6 +40,7 @@
->>  #include "xfs_dquot_item.h"
->>  #include "xfs_dquot.h"
->>  #include "xfs_reflink.h"
->> +#include "xfs_rtalloc.h"
->>
->>
->>  #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
->> @@ -174,6 +175,10 @@ xfs_iomap_write_direct(
->>  	int		bmapi_flags = XFS_BMAPI_PREALLOC;
->>  	uint		tflags = 0;
->>
->> +
->> +	if (XFS_IS_REALTIME_MOUNT(mp))
->> +		xfs_rt_alloc_min(ip, count);
->
-> Reading this makes me wonder what we are allocating here :/
-> A better name might be in order - something that indicates we're
-> selecting the target device rather allocating something. e.g.
-> xfs_inode_select_target()?
+So we should not depend on xfs_io's return value. And I think doing the
+'pwrite' & 'fsync' test unconditionally should be fine, e.g.
 
-I like your function name better than mine, changing this.
+$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT >>$seqres.full 2>&1
+$XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync ..
+$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT...
 
->
->> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
->> index 9fa312a..067be3b 100644
->> --- a/fs/xfs/xfs_mount.h
->> +++ b/fs/xfs/xfs_mount.h
->> @@ -197,6 +197,7 @@ typedef struct xfs_mount {
->>  	__uint32_t		m_generation;
->>
->>  	bool			m_fail_unmount;
->> +        uint                    m_rt_alloc_min; /* Min RT allocation */
->
-> WHitespace problem - looks like spaces instead of tabs....
->
+I tested on 4.14-rc1 kernels with and without CONFIG_XFS_RT, and with
+and without rtdev present when CONFIG_XFS_RT=y, all tests passed.
 
-Fixing.
+> >> +
+> >> +# Erroring out here is fine, this would be desired behavior for
+> >> +# FSes without realtime devices present.
+> >> +if (( chattr_ret == 0)); then
+> >> +  # Attempt to write/fsync data to file
+> >> +  $XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile |
+> >> +    tee -a $seqres.full | common_line_filter | _filter_xfs_io
 
->> #ifdef DEBUG
->>  	/*
->>  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
->> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
->> index c57aa7f..e51cb25 100644
->> --- a/fs/xfs/xfs_rtalloc.c
->> +++ b/fs/xfs/xfs_rtalloc.c
->> @@ -1284,3 +1284,29 @@ xfs_rtpick_extent(
->>  	*pick = b;
->>  	return 0;
->>  }
->> +
->> +/*
->> + * Automatically set real-time flag if initial write to inode is >  
->> m_rt_alloc_min
->> + *
->> + * Also valid on truncations.
->> + *
->> + */
->> +void xfs_rt_alloc_min(
->> +	struct xfs_inode	*ip,
->> +	xfs_off_t       	len)
->> +{
->> +	struct xfs_mount    *mp = ip->i_mount;
->> +
->> +	if (!mp->m_rt_alloc_min || ip->i_d.di_size)
->> +		return;
->
-> I kinda prefer stacking single checks like
->
-> 	/*
-> 	 * m_rt_alloc_min controls the target selection. It is
-> 	 * inactive if it is not set.
-> 	 */
-> 	if (!mp->m_rt_alloc_min)
-> 		return;
->
-> 	/*
-> 	 * Can't select a different target if we've already
-> 	 * allocated blocks (e.g. fallocate() beyond EOF) or has
-> 	 * data in it already.
-> 	 */
-> 	if (!ip->i_nextents)
-> 		return;
-> 	if (!ip->i_d.di_size)
-> 		return;
->
+(common_line_filter | _filter_xfs_io) == _filter_xfs_io_unique
 
-Fixing.
+But I think a bare _filter_xfs_io should just work, there's no common
+lines to be filtered anyway.
 
->> +	if (XFS_IS_REALTIME_INODE(ip)) {
->> +		if (len < mp->m_rt_alloc_min) {
->> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
->> +		}
->> +	} else {
->> +		if (len >= mp->m_rt_alloc_min) {
->> +			ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
->> +		}
->> +	}
->
-> Checking for XFS_IS_REALTIME_INODE() is redundant here. This does
-> the same thing:
->
-> 	/*
-> 	 * if the allocation length is less than the threshold,
-> 	 * always select the data device. Otherwise we should
-> 	 * select the realtime device.
-> 	 */
-> 	if (len < mp->m_rt_alloc_min)
-> 		ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
-> 	else
-> 		ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
->
+> >> +
+> >> +  # Remove the rt inherit flag after we are done or xfs_repair
+> >> +  # will fail.
+> >> +  $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
 
-Fixing.
+And please use real tab as indention :)
 
+> >> +fi
+> >> +
+> >> +
+> >> +rm -f $SCRATCH_MNT/testfile
+> >> +
+> >> +# success, all done
+> >> +status=0
+> >> +exit
+> >> diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+> >> new file mode 100644
+> >> index 0000000..8c14f11
+> >> --- /dev/null
+> >> +++ b/tests/xfs/431.out
+> >> @@ -0,0 +1,3 @@
+> >> +QA output created by 431
+> >> +wrote 1048576/1048576 bytes at offset 0
+> >> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> >> diff --git a/tests/xfs/group b/tests/xfs/group
+> >> index 0a449b9..3f97f02 100644
+> >> --- a/tests/xfs/group
+> >> +++ b/tests/xfs/group
+> >> @@ -427,3 +427,4 @@
+> >>  428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+> >>  429 dangerous_fuzzers dangerous_scrub dangerous_repair
+> >>  430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+> >> +431 quick
+> >
+> > This ought to have 'dangerous' too, so that everyone knows that it can
+> > crash an unpatched kernel.
+> >
+> > (After stable/distros have had a few weeks to fix this you could add it
+> > to the 'auto' group as well so that everyone will run it.)
 
->> +}
->> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
->> index f13133e..12939d9 100644
->> --- a/fs/xfs/xfs_rtalloc.h
->> +++ b/fs/xfs/xfs_rtalloc.h
->> @@ -136,6 +136,9 @@ int xfs_rtalloc_query_range(struct xfs_trans *tp,
->>  int xfs_rtalloc_query_all(struct xfs_trans *tp,
->>  			  xfs_rtalloc_query_range_fn fn,
->>  			  void *priv);
->> +void xfs_rt_alloc_min(struct xfs_inode *ip, xfs_off_t len);
->> +
->> +
->>  #else
->>  # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
->>  # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
->> @@ -155,6 +158,7 @@ xfs_rtmount_init(
->>  }
->>  # define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
->>  # define xfs_rtunmount_inodes(m)
->> +# define xfs_rt_alloc_min(i,l)                          (ENOSYS)
->>  #endif	/* CONFIG_XFS_RT */
->>
->>  #endif	/* __XFS_RTALLOC_H__ */
->> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
->> index 80ac15f..3c8dedb 100644
->> --- a/fs/xfs/xfs_sysfs.c
->> +++ b/fs/xfs/xfs_sysfs.c
->> @@ -129,10 +129,51 @@ XFS_SYSFS_ATTR_RW(drop_writes);
->>
->>  #endif /* DEBUG */
->>
->> +#ifdef CONFIG_XFS_RT
->> +STATIC ssize_t
->> +rt_alloc_min_store(
->> +	struct kobject			*kobject,
->> +	const char				*buf,
->> +	size_t					count)
->> +{
->> +	struct xfs_mount		*mp = to_mp(kobject);
->> +	int						ret;
->> +	int						val;
->> +
->> +	ret = kstrtoint(buf, 0, &val);
->> +	if (ret)
->> +		return ret;
->> +
->> +	/* Only valid if using a real-time device */
->> +	if (XFS_IS_REALTIME_MOUNT(mp) && val > 0)
->> +		mp->m_rt_alloc_min = val;
->> +	else if (val <= 0)
->> +		mp->m_rt_alloc_min = 0;
->> +	else
->> +		return -EINVAL;
->
-> Seems inconsistent. This will allow a value <= 0 for a non-realtime
-> mount, but will return EINVAL for values > 0. Perhaps it would be
-> more consistent to return EINVAL for a non-realtime mount or
-> any value < 0?
+'quick' is just a subset of 'auto', all 'quick' tests should be in
+'auto' group too, the only difference is 'quick' is quick :) usually run
+time is less than 30s. If you want to exclude tests in 'dangerous' group
+you can run check with '-x dangerous' option.
 
-Fair observation, fixing.
+Thanks,
+Eryu
 
->
->> +
->> +	return count;
->> +}
->> +
->> +STATIC ssize_t
->> +rt_alloc_min_show(
->> +	struct kobject          *kobject,
->> +	char                    *buf)
->> +{
->> +	struct xfs_mount        *mp = to_mp(kobject);
->> +
->> +	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_alloc_min);
->> +}
->> +XFS_SYSFS_ATTR_RW(rt_alloc_min);
->> +#endif /* CONFIG_XFS_RT */
->> +
->>  static struct attribute *xfs_mp_attrs[] = {
->>  #ifdef DEBUG
->>  	ATTR_LIST(drop_writes),
->>  #endif
->> +#ifdef CONFIG_XFS_RT
->> +	ATTR_LIST(rt_alloc_min),
->> +#endif
->
-> This is userspace visible - shouldn't we always compile this in,
-> even if all it does it return EINVAL to attempts to change it when
-> CONFIG_XFS_RT=n?
->
-
-I'm fine with changing this, my thinking here was to simply not
-show options which aren't tunable without a realtime device.  But
-I'm fine with throwing EINVAL too.
-
-
-Richard
-
-
-
+> >
+> 
+> Fixed in v3.
+> 
+> > --D
+> >
+> >> -- 
+> >> 2.9.5
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
