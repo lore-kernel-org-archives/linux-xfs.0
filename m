@@ -1,24 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43342 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751663AbdIUASQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:18:16 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0IFho016041
+Received: from userp1040.oracle.com ([156.151.31.81]:25732 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751686AbdIUASW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:18:22 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0ILpp005305
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:18:16 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0IFT2014670
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:18:21 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0ILN9015917
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:18:15 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0IFhq032055
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:18:15 GMT
-Subject: [PATCH 06/27] xfs: create helpers to record and deal with scrub
- problems
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:18:21 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8L0ILLS000963
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:18:21 GMT
+Subject: [PATCH 07/27] xfs: create helpers to scrub a metadata btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Sep 2017 17:18:14 -0700
-Message-ID: <150595309448.18473.17367425546613617113.stgit@magnolia>
+Date: Wed, 20 Sep 2017 17:18:20 -0700
+Message-ID: <150595310060.18473.12973800380739754286.stgit@magnolia>
 In-Reply-To: <150595305131.18473.16572195821331601191.stgit@magnolia>
 References: <150595305131.18473.16572195821331601191.stgit@magnolia>
 MIME-Version: 1.0
@@ -32,36 +31,91 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create helper functions to record crc and corruption problems, and
-deal with any other runtime errors that arise.
+Create helper functions and tracepoints to deal with errors while
+scrubbing a metadata btree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/common.c |  243 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h |   39 ++++++++
- fs/xfs/scrub/trace.h  |  193 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 475 insertions(+)
+ fs/xfs/Makefile      |    1 
+ fs/xfs/scrub/btree.c |  114 +++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/btree.h |   57 ++++++++++++++++++
+ fs/xfs/scrub/trace.c |   14 ++++
+ fs/xfs/scrub/trace.h |  162 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 348 insertions(+)
+ create mode 100644 fs/xfs/scrub/btree.c
+ create mode 100644 fs/xfs/scrub/btree.h
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 13ccb36..cf3f1365 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -47,6 +47,249 @@
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index ca14595..5888b9f 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -146,6 +146,7 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
  
- /* Common code for the metadata scrubbers. */
- 
-+/* Check for operational errors. */
+ xfs-y				+= $(addprefix scrub/, \
+ 				   trace.o \
++				   btree.o \
+ 				   common.o \
+ 				   scrub.o \
+ 				   )
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+new file mode 100644
+index 0000000..adf5d09
+--- /dev/null
++++ b/fs/xfs/scrub/btree.c
+@@ -0,0 +1,114 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_alloc.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/btree.h"
++#include "scrub/trace.h"
++
++/* btree scrubbing */
++
++/* Check for btree operation errors . */
 +bool
-+xfs_scrub_op_ok(
++xfs_scrub_btree_op_ok(
 +	struct xfs_scrub_context	*sc,
-+	xfs_agnumber_t			agno,
-+	xfs_agblock_t			bno,
++	struct xfs_btree_cur		*cur,
++	int				level,
 +	int				*error)
 +{
-+	switch (*error) {
-+	case 0:
++	if (*error == 0)
 +		return true;
++
++	switch (*error) {
 +	case -EDEADLOCK:
 +		/* Used to restart an op with deadlock avoidance. */
 +		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
@@ -73,482 +127,320 @@ index 13ccb36..cf3f1365 100644
 +		*error = 0;
 +		/* fall through */
 +	default:
-+		trace_xfs_scrub_op_error(sc, agno, bno, *error,
-+				__return_address);
++		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
++			trace_xfs_scrub_ifork_btree_op_error(sc, cur, level,
++					*error, __return_address);
++		else
++			trace_xfs_scrub_btree_op_error(sc, cur, level,
++					*error, __return_address);
 +		break;
 +	}
 +	return false;
 +}
 +
-+/* Check for operational errors for a file offset. */
++/* Check for btree corruption. */
 +bool
-+xfs_scrub_fblock_op_ok(
++xfs_scrub_btree_check_ok(
 +	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	int				*error)
++	struct xfs_btree_cur		*cur,
++	int				level,
++	bool				fs_ok)
 +{
-+	switch (*error) {
-+	case 0:
-+		return true;
-+	case -EDEADLOCK:
-+		/* Used to restart an op with deadlock avoidance. */
-+		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
-+		break;
-+	case -EFSBADCRC:
-+	case -EFSCORRUPTED:
-+		/* Note the badness but don't abort. */
-+		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		*error = 0;
-+		/* fall through */
-+	default:
-+		trace_xfs_scrub_file_op_error(sc, whichfork, offset, *error,
++	if (fs_ok)
++		return fs_ok;
++
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++
++	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
++		trace_xfs_scrub_ifork_btree_error(sc, cur, level,
 +				__return_address);
-+		break;
-+	}
-+	return false;
-+}
-+
-+/* Check for metadata block optimization possibilities. */
-+bool
-+xfs_scrub_block_preen_ok(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	bool				fs_ok)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	xfs_fsblock_t			fsbno;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			bno;
-+
-+	if (fs_ok)
-+		return fs_ok;
-+
-+	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
-+	trace_xfs_scrub_block_preen(sc, agno, bno, __return_address);
++	else
++		trace_xfs_scrub_btree_error(sc, cur, level,
++				__return_address);
 +	return fs_ok;
 +}
 +
-+/* Check for inode metadata optimization possibilities. */
-+bool
-+xfs_scrub_ino_preen_ok(
++/*
++ * Visit all nodes and leaves of a btree.  Check that all pointers and
++ * records are in order, that the keys reflect the records, and use a callback
++ * so that the caller can verify individual records.  The callback is the same
++ * as the one for xfs_btree_query_range, so therefore this function also
++ * returns XFS_BTREE_QUERY_RANGE_ABORT, zero, or a negative error code.
++ */
++int
++xfs_scrub_btree(
 +	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	bool				fs_ok)
++	struct xfs_btree_cur		*cur,
++	xfs_scrub_btree_rec_fn		scrub_fn,
++	struct xfs_owner_info		*oinfo,
++	void				*private)
 +{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_mount		*mp = sc->mp;
-+	xfs_fsblock_t			fsbno;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			bno;
-+
-+	if (fs_ok)
-+		return fs_ok;
-+
-+	if (bp) {
-+		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-+		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	} else {
-+		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
-+	}
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
-+	trace_xfs_scrub_ino_preen(sc, ip->i_ino, agno, bno, __return_address);
-+	return fs_ok;
++	xfs_scrub_btree_op_ok(sc, cur, 0, false);
++	return -EOPNOTSUPP;
 +}
+diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
+new file mode 100644
+index 0000000..133e33d
+--- /dev/null
++++ b/fs/xfs/scrub/btree.h
+@@ -0,0 +1,57 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_SCRUB_BTREE_H__
++#define __XFS_SCRUB_BTREE_H__
 +
-+/* Check for metadata block corruption. */
-+bool
-+xfs_scrub_block_check_ok(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	bool				fs_ok)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	xfs_fsblock_t			fsbno;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			bno;
++/* btree scrub */
 +
-+	if (fs_ok)
-+		return fs_ok;
++/* Check for btree operation errors. */
++bool xfs_scrub_btree_op_ok(struct xfs_scrub_context *sc,
++			   struct xfs_btree_cur *cur, int level, int *error);
 +
-+	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
++/* Check for btree corruption. */
++bool xfs_scrub_btree_check_ok(struct xfs_scrub_context *sc,
++			      struct xfs_btree_cur *cur, int level, bool fs_ok);
 +
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	trace_xfs_scrub_block_error(sc, agno, bno, __return_address);
-+	return fs_ok;
-+}
++struct xfs_scrub_btree;
++typedef int (*xfs_scrub_btree_rec_fn)(
++	struct xfs_scrub_btree	*bs,
++	union xfs_btree_rec	*rec);
 +
-+/* Check for inode metadata corruption. */
-+bool
-+xfs_scrub_ino_check_ok(
-+	struct xfs_scrub_context	*sc,
-+	xfs_ino_t			ino,
-+	struct xfs_buf			*bp,
-+	bool				fs_ok)
-+{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_mount		*mp = sc->mp;
-+	xfs_fsblock_t			fsbno;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			bno;
++struct xfs_scrub_btree {
++	/* caller-provided scrub state */
++	struct xfs_scrub_context	*sc;
++	struct xfs_btree_cur		*cur;
++	xfs_scrub_btree_rec_fn		scrub_rec;
++	struct xfs_owner_info		*oinfo;
++	void				*private;
 +
-+	if (fs_ok)
-+		return fs_ok;
++	/* internal scrub state */
++	union xfs_btree_rec		lastrec;
++	bool				firstrec;
++	union xfs_btree_key		lastkey[XFS_BTREE_MAXLEVELS];
++	bool				firstkey[XFS_BTREE_MAXLEVELS];
++	struct list_head		to_check;
++};
++int xfs_scrub_btree(struct xfs_scrub_context *sc, struct xfs_btree_cur *cur,
++		    xfs_scrub_btree_rec_fn scrub_fn,
++		    struct xfs_owner_info *oinfo, void *private);
 +
-+	if (bp) {
-+		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-+		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	} else {
-+		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
-+	}
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	trace_xfs_scrub_ino_error(sc, ino, agno, bno, __return_address);
-+	return fs_ok;
-+}
-+
-+/* Check for file fork block corruption. */
-+bool
-+xfs_scrub_fblock_check_ok(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	bool				fs_ok)
-+{
-+	if (fs_ok)
-+		return fs_ok;
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
-+	return fs_ok;
-+}
-+
-+/* Check for inode metadata non-corruption problems. */
-+bool
-+xfs_scrub_ino_warn_ok(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	bool				fs_ok)
-+{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_mount		*mp = sc->mp;
-+	xfs_fsblock_t			fsbno;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			bno;
-+
-+	if (fs_ok)
-+		return fs_ok;
-+
-+	if (bp) {
-+		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-+		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	} else {
-+		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
-+	}
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
-+	trace_xfs_scrub_ino_warning(sc, ip->i_ino, agno, bno, __return_address);
-+	return fs_ok;
-+}
-+
-+/* Check for file fork block non-corruption problems. */
-+bool
-+xfs_scrub_fblock_warn_ok(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	bool				fs_ok)
-+{
-+	if (fs_ok)
-+		return fs_ok;
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
-+	trace_xfs_scrub_fblock_warning(sc, whichfork, offset, __return_address);
-+	return fs_ok;
-+}
-+
-+/* Signal an incomplete scrub. */
-+bool
-+xfs_scrub_check_thoroughness(
-+	struct xfs_scrub_context	*sc,
-+	bool				fs_ok)
-+{
-+	if (fs_ok)
-+		return fs_ok;
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_INCOMPLETE;
-+	trace_xfs_scrub_incomplete(sc, __return_address);
-+	return fs_ok;
-+}
-+
- /* Per-scrubber setup functions */
++#endif /* __XFS_SCRUB_BTREE_H__ */
+diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
+index 88b5ccb..ee00115 100644
+--- a/fs/xfs/scrub/trace.c
++++ b/fs/xfs/scrub/trace.c
+@@ -30,10 +30,24 @@
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+ #include "xfs_trans.h"
++#include "xfs_bit.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
  
- /* Set us up with a transaction and an empty context. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index b97df8c..e1bb14b 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -38,6 +38,45 @@ xfs_scrub_trans_alloc(
- 	return xfs_trans_alloc_empty(mp, tpp);
- }
- 
-+/* Check for operational errors for a block check. */
-+bool xfs_scrub_op_ok(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-+		     xfs_agblock_t bno, int *error);
++/* Figure out which block the btree cursor was pointing to. */
++static inline xfs_fsblock_t
++xfs_scrub_btree_cur_fsbno(
++	struct xfs_btree_cur		*cur,
++	int				level)
++{
++	if (level < cur->bc_nlevels && cur->bc_bufs[level])
++		return XFS_DADDR_TO_FSB(cur->bc_mp, cur->bc_bufs[level]->b_bn);
++	else if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
++		return XFS_INO_TO_FSB(cur->bc_mp, cur->bc_private.b.ip->i_ino);
++	return XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno, 0);
++}
 +
-+/* Check for operational errors for a file offset check. */
-+bool xfs_scrub_fblock_op_ok(struct xfs_scrub_context *sc, int whichfork,
-+			  xfs_fileoff_t offset, int *error);
-+
-+/* Check for metadata block optimization possibilities. */
-+bool xfs_scrub_block_preen_ok(struct xfs_scrub_context *sc, struct xfs_buf *bp,
-+			      bool fs_ok);
-+
-+/* Check for inode metadata optimization possibilities. */
-+bool xfs_scrub_ino_preen_ok(struct xfs_scrub_context *sc, struct xfs_buf *bp,
-+			    bool fs_ok);
-+
-+/* Check for metadata block corruption. */
-+bool xfs_scrub_block_check_ok(struct xfs_scrub_context *sc, struct xfs_buf *bp,
-+			      bool fs_ok);
-+
-+/* Check for inode metadata corruption. */
-+bool xfs_scrub_ino_check_ok(struct xfs_scrub_context *sc, xfs_ino_t ino,
-+			    struct xfs_buf *bp, bool fs_ok);
-+
-+/* Check for file fork block corruption. */
-+bool xfs_scrub_fblock_check_ok(struct xfs_scrub_context *sc, int whichfork,
-+			       xfs_fileoff_t offset, bool fs_ok);
-+
-+/* Check for inode metadata non-corruption weirdness problems. */
-+bool xfs_scrub_ino_warn_ok(struct xfs_scrub_context *sc, struct xfs_buf *bp,
-+			   bool fs_ok);
-+
-+/* Check for file data block non-corruption weirdness problems. */
-+bool xfs_scrub_fblock_warn_ok(struct xfs_scrub_context *sc, int whichfork,
-+			      xfs_fileoff_t offset, bool fs_ok);
-+
-+/* Signal an incomplete scrub. */
-+bool xfs_scrub_check_thoroughness(struct xfs_scrub_context *sc, bool fs_ok);
-+
- /* Setup functions */
- int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
- 
+ /*
+  * We include this last to have the helpers above available for the trace
+  * event implementations.
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 688517e..8d67a85 100644
+index 8d67a85..78f96b0 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -67,6 +67,199 @@ DEFINE_EVENT(xfs_scrub_class, name, \
+@@ -261,6 +261,168 @@ TRACE_EVENT(xfs_scrub_incomplete,
+ 		  __entry->ret_ip)
+ );
  
- DEFINE_SCRUB_EVENT(xfs_scrub_start);
- DEFINE_SCRUB_EVENT(xfs_scrub_done);
-+DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
-+
-+TRACE_EVENT(xfs_scrub_op_error,
-+	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-+		 xfs_agblock_t bno, int error, void *ret_ip),
-+	TP_ARGS(sc, agno, bno, error, ret_ip),
++TRACE_EVENT(xfs_scrub_btree_op_error,
++	TP_PROTO(struct xfs_scrub_context *sc, struct xfs_btree_cur *cur,
++		 int level, int error, void *ret_ip),
++	TP_ARGS(sc, cur, level, error, ret_ip),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
 +		__field(unsigned int, type)
++		__field(xfs_btnum_t, btnum)
++		__field(int, level)
 +		__field(xfs_agnumber_t, agno)
 +		__field(xfs_agblock_t, bno)
++		__field(int, ptr);
 +		__field(int, error)
 +		__field(void *, ret_ip)
 +	),
 +	TP_fast_assign(
++		xfs_fsblock_t fsbno = xfs_scrub_btree_cur_fsbno(cur, level);
 +		__entry->dev = sc->mp->m_super->s_dev;
 +		__entry->type = sc->sm->sm_type;
-+		__entry->agno = agno;
-+		__entry->bno = bno;
++		__entry->btnum = cur->bc_btnum;
++		__entry->level = level;
++		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
++		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
++		__entry->ptr = cur->bc_ptrs[level];
 +		__entry->error = error;
 +		__entry->ret_ip = ret_ip;
 +	),
-+	TP_printk("dev %d:%d type %u agno %u agbno %u error %d ret_ip %pF",
++	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pF",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->type,
++		  __entry->btnum,
++		  __entry->level,
++		  __entry->ptr,
 +		  __entry->agno,
 +		  __entry->bno,
 +		  __entry->error,
 +		  __entry->ret_ip)
 +);
 +
-+TRACE_EVENT(xfs_scrub_file_op_error,
-+	TP_PROTO(struct xfs_scrub_context *sc, int whichfork,
-+		 xfs_fileoff_t offset, int error, void *ret_ip),
-+	TP_ARGS(sc, whichfork, offset, error, ret_ip),
++TRACE_EVENT(xfs_scrub_ifork_btree_op_error,
++	TP_PROTO(struct xfs_scrub_context *sc, struct xfs_btree_cur *cur,
++		 int level, int error, void *ret_ip),
++	TP_ARGS(sc, cur, level, error, ret_ip),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
 +		__field(xfs_ino_t, ino)
 +		__field(int, whichfork)
 +		__field(unsigned int, type)
-+		__field(xfs_fileoff_t, offset)
++		__field(xfs_btnum_t, btnum)
++		__field(int, level)
++		__field(int, ptr)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
 +		__field(int, error)
 +		__field(void *, ret_ip)
 +	),
 +	TP_fast_assign(
-+		__entry->dev = sc->ip->i_mount->m_super->s_dev;
++		xfs_fsblock_t fsbno = xfs_scrub_btree_cur_fsbno(cur, level);
++		__entry->dev = sc->mp->m_super->s_dev;
 +		__entry->ino = sc->ip->i_ino;
-+		__entry->whichfork = whichfork;
++		__entry->whichfork = cur->bc_private.b.whichfork;
 +		__entry->type = sc->sm->sm_type;
-+		__entry->offset = offset;
++		__entry->btnum = cur->bc_btnum;
++		__entry->level = level;
++		__entry->ptr = cur->bc_ptrs[level];
++		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
++		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
 +		__entry->error = error;
 +		__entry->ret_ip = ret_ip;
 +	),
-+	TP_printk("dev %d:%d ino %llu fork %d type %u offset %llu error %d ret_ip %pF",
++	TP_printk("dev %d:%d ino %llu fork %d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pF",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->ino,
 +		  __entry->whichfork,
 +		  __entry->type,
-+		  __entry->offset,
++		  __entry->btnum,
++		  __entry->level,
++		  __entry->ptr,
++		  __entry->agno,
++		  __entry->bno,
 +		  __entry->error,
 +		  __entry->ret_ip)
 +);
 +
-+DECLARE_EVENT_CLASS(xfs_scrub_block_error_class,
-+	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-+		 xfs_agblock_t bno, void *ret_ip),
-+	TP_ARGS(sc, agno, bno, ret_ip),
++TRACE_EVENT(xfs_scrub_btree_error,
++	TP_PROTO(struct xfs_scrub_context *sc, struct xfs_btree_cur *cur,
++		 int level, void *ret_ip),
++	TP_ARGS(sc, cur, level, ret_ip),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
 +		__field(unsigned int, type)
++		__field(xfs_btnum_t, btnum)
++		__field(int, level)
 +		__field(xfs_agnumber_t, agno)
 +		__field(xfs_agblock_t, bno)
++		__field(int, ptr);
 +		__field(void *, ret_ip)
 +	),
 +	TP_fast_assign(
++		xfs_fsblock_t fsbno = xfs_scrub_btree_cur_fsbno(cur, level);
 +		__entry->dev = sc->mp->m_super->s_dev;
 +		__entry->type = sc->sm->sm_type;
-+		__entry->agno = agno;
-+		__entry->bno = bno;
++		__entry->btnum = cur->bc_btnum;
++		__entry->level = level;
++		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
++		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
++		__entry->ptr = cur->bc_ptrs[level];
 +		__entry->ret_ip = ret_ip;
 +	),
-+	TP_printk("dev %d:%d type %u agno %u agbno %u ret_ip %pF",
++	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pF",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->type,
++		  __entry->btnum,
++		  __entry->level,
++		  __entry->ptr,
 +		  __entry->agno,
 +		  __entry->bno,
 +		  __entry->ret_ip)
-+)
++);
 +
-+#define DEFINE_SCRUB_BLOCK_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_block_error_class, name, \
-+	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno, \
-+		 xfs_agblock_t bno, void *ret_ip), \
-+	TP_ARGS(sc, agno, bno, ret_ip))
-+
-+DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_error);
-+DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_preen);
-+
-+DECLARE_EVENT_CLASS(xfs_scrub_ino_error_class,
-+	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino,
-+		 xfs_agnumber_t agno, xfs_agblock_t bno, void *ret_ip),
-+	TP_ARGS(sc, ino, agno, bno, ret_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(unsigned int, type)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__field(void *, ret_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->ino = ino;
-+		__entry->type = sc->sm->sm_type;
-+		__entry->agno = agno;
-+		__entry->bno = bno;
-+		__entry->ret_ip = ret_ip;
-+	),
-+	TP_printk("dev %d:%d ino %llu type %u agno %u agbno %u ret_ip %pF",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->type,
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __entry->ret_ip)
-+)
-+
-+#define DEFINE_SCRUB_INO_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_ino_error_class, name, \
-+	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, \
-+		 xfs_agnumber_t agno, xfs_agblock_t bno, void *ret_ip), \
-+	TP_ARGS(sc, ino, agno, bno, ret_ip))
-+
-+DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_error);
-+DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_preen);
-+DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_warning);
-+
-+DECLARE_EVENT_CLASS(xfs_scrub_fblock_error_class,
-+	TP_PROTO(struct xfs_scrub_context *sc, int whichfork,
-+		 xfs_fileoff_t offset, void *ret_ip),
-+	TP_ARGS(sc, whichfork, offset, ret_ip),
++TRACE_EVENT(xfs_scrub_ifork_btree_error,
++	TP_PROTO(struct xfs_scrub_context *sc, struct xfs_btree_cur *cur,
++		 int level, void *ret_ip),
++	TP_ARGS(sc, cur, level, ret_ip),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
 +		__field(xfs_ino_t, ino)
 +		__field(int, whichfork)
 +		__field(unsigned int, type)
-+		__field(xfs_fileoff_t, offset)
++		__field(xfs_btnum_t, btnum)
++		__field(int, level)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__field(int, ptr);
 +		__field(void *, ret_ip)
 +	),
 +	TP_fast_assign(
-+		__entry->dev = sc->ip->i_mount->m_super->s_dev;
++		xfs_fsblock_t fsbno = xfs_scrub_btree_cur_fsbno(cur, level);
++		__entry->dev = sc->mp->m_super->s_dev;
 +		__entry->ino = sc->ip->i_ino;
-+		__entry->whichfork = whichfork;
++		__entry->whichfork = cur->bc_private.b.whichfork;
 +		__entry->type = sc->sm->sm_type;
-+		__entry->offset = offset;
++		__entry->btnum = cur->bc_btnum;
++		__entry->level = level;
++		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
++		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
++		__entry->ptr = cur->bc_ptrs[level];
 +		__entry->ret_ip = ret_ip;
 +	),
-+	TP_printk("dev %d:%d ino %llu fork %d type %u offset %llu ret_ip %pF",
++	TP_printk("dev %d:%d ino %llu fork %d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pF",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->ino,
 +		  __entry->whichfork,
 +		  __entry->type,
-+		  __entry->offset,
++		  __entry->btnum,
++		  __entry->level,
++		  __entry->ptr,
++		  __entry->agno,
++		  __entry->bno,
 +		  __entry->ret_ip)
 +);
 +
-+#define DEFINE_SCRUB_FBLOCK_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_fblock_error_class, name, \
-+	TP_PROTO(struct xfs_scrub_context *sc, int whichfork, \
-+		 xfs_fileoff_t offset, void *ret_ip), \
-+	TP_ARGS(sc, whichfork, offset, ret_ip))
-+
-+DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_error);
-+DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_warning);
-+
-+TRACE_EVENT(xfs_scrub_incomplete,
-+	TP_PROTO(struct xfs_scrub_context *sc, void *ret_ip),
-+	TP_ARGS(sc, ret_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(unsigned int, type)
-+		__field(void *, ret_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->type = sc->sm->sm_type;
-+		__entry->ret_ip = ret_ip;
-+	),
-+	TP_printk("dev %d:%d type %u ret_ip %pF",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->type,
-+		  __entry->ret_ip)
-+);
- 
  #endif /* _TRACE_XFS_SCRUB_TRACE_H */
  
+ #undef TRACE_INCLUDE_PATH
 
