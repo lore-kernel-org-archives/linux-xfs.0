@@ -1,186 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45315 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751547AbdITW14 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 18:27:56 -0400
-Date: Wed, 20 Sep 2017 15:27:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 18/19] xfs: remove all xfs_bmbt_set_* helpers except for
- xfs_bmbt_set_all
-Message-ID: <20170920222752.GZ7112@magnolia>
-References: <20170918152422.24345-1-hch@lst.de>
- <20170918152422.24345-19-hch@lst.de>
+Received: from LGEAMRELO12.lge.com ([156.147.23.52]:44782 "EHLO
+        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbdIUIrY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 04:47:24 -0400
+Date: Thu, 21 Sep 2017 17:47:14 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: shared/298 lockdep splat?
+Message-ID: <20170921084714.GI5994@X58A-UD3R>
+References: <20170920211042.GH7112@magnolia>
+ <20170920222256.GR18948@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170918152422.24345-19-hch@lst.de>
+In-Reply-To: <20170920222256.GR18948@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, kernel-team@lge.com
 
-On Mon, Sep 18, 2017 at 08:24:21AM -0700, Christoph Hellwig wrote:
-> Unused after the big bmap refactor.
+On Thu, Sep 21, 2017 at 08:22:56AM +1000, Dave Chinner wrote:
+> > ======================================================
+> > WARNING: possible circular locking dependency detected
+> > 4.14.0-rc1-fixes #1 Tainted: G        W      
+> > ------------------------------------------------------
+> > loop0/31693 is trying to acquire lock:
+> >  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
+> > 
+> > but now in release context of a crosslock acquired at the following:
+> >  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
+> > 
+> > which lock already depends on the new lock.
+> > 
+> > 
+> > the existing dependency chain (in reverse order) is:
+> > 
+> > -> #2 ((complete)&ret.event){+.+.}:
+> >        lock_acquire+0xab/0x200
+> >        wait_for_completion_io+0x4e/0x1a0
+> >        submit_bio_wait+0x7f/0xb0
+> >        blkdev_issue_zeroout+0x71/0xa0
+> >        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
+> >        xfs_bmapi_write+0x374/0x11f0 [xfs]
+> >        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
+> >        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
+> >        iomap_apply+0x43/0xe0
+> >        dax_iomap_rw+0x89/0xf0
+> >        xfs_file_dax_write+0xcc/0x220 [xfs]
+> >        xfs_file_write_iter+0xf0/0x130 [xfs]
+> >        __vfs_write+0xd9/0x150
+> >        vfs_write+0xc8/0x1c0
+> >        SyS_write+0x45/0xa0
+> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-> ---
->  fs/xfs/libxfs/xfs_bmap_btree.c | 102 ++++++-----------------------------------
->  fs/xfs/libxfs/xfs_bmap_btree.h |   6 ---
->  2 files changed, 14 insertions(+), 94 deletions(-)
+> This is on the lower filesystem - it's a write() syscall on a DAX
+> enable filesystem. Locking in this case is:
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index 7e2d981626ef..e66ebd982cfb 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -188,44 +188,27 @@ xfs_bmbt_disk_get_startoff(
->  		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
->  }
->  
-> -
->  /*
-> - * Set all the fields in a bmap extent record from the arguments.
-> + * Set all the fields in a bmap extent record from the uncompressed form.
->   */
->  void
-> -xfs_bmbt_set_allf(
-> -	xfs_bmbt_rec_host_t	*r,
-> -	xfs_fileoff_t		startoff,
-> -	xfs_fsblock_t		startblock,
-> -	xfs_filblks_t		blockcount,
-> -	xfs_exntst_t		state)
-> +xfs_bmbt_set_all(
-> +	struct xfs_bmbt_rec_host *r,
-> +	struct xfs_bmbt_irec	*s)
->  {
-> -	int		extent_flag = (state == XFS_EXT_NORM) ? 0 : 1;
-> -
-> -	ASSERT(state == XFS_EXT_NORM || state == XFS_EXT_UNWRITTEN);
-> -	ASSERT((startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)) == 0);
-> -	ASSERT((blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0);
-> +	int			extent_flag = (s->br_state != XFS_EXT_NORM);
->  
-> -	ASSERT((startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)) == 0);
-> +	ASSERT(s->br_state == XFS_EXT_NORM || s->br_state == XFS_EXT_UNWRITTEN);
-> +	ASSERT(!(s->br_startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)));
-> +	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
-> +	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
->  
->  	r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
-> -		((xfs_bmbt_rec_base_t)startoff << 9) |
-> -		((xfs_bmbt_rec_base_t)startblock >> 43);
-> -	r->l1 = ((xfs_bmbt_rec_base_t)startblock << 21) |
-> -		((xfs_bmbt_rec_base_t)blockcount &
-> -		(xfs_bmbt_rec_base_t)xfs_mask64lo(21));
-> -}
-> -
-> -/*
-> - * Set all the fields in a bmap extent record from the uncompressed form.
-> - */
-> -void
-> -xfs_bmbt_set_all(
-> -	xfs_bmbt_rec_host_t *r,
-> -	xfs_bmbt_irec_t	*s)
-> -{
-> -	xfs_bmbt_set_allf(r, s->br_startoff, s->br_startblock,
-> -			     s->br_blockcount, s->br_state);
-> +		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
-> +		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43);
-> +	r->l1 = ((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
-> +		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
-> +		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
->  }
->  
->  /*
-> @@ -253,63 +236,6 @@ xfs_bmbt_disk_set_all(
->  		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
->  }
->  
-> -/*
-> - * Set the blockcount field in a bmap extent record.
-> - */
-> -void
-> -xfs_bmbt_set_blockcount(
-> -	xfs_bmbt_rec_host_t *r,
-> -	xfs_filblks_t	v)
-> -{
-> -	ASSERT((v & xfs_mask64hi(43)) == 0);
-> -	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64hi(43)) |
-> -		  (xfs_bmbt_rec_base_t)(v & xfs_mask64lo(21));
-> -}
-> -
-> -/*
-> - * Set the startblock field in a bmap extent record.
-> - */
-> -void
-> -xfs_bmbt_set_startblock(
-> -	xfs_bmbt_rec_host_t *r,
-> -	xfs_fsblock_t	v)
-> -{
-> -	ASSERT((v & xfs_mask64hi(12)) == 0);
-> -	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64hi(55)) |
-> -		  (xfs_bmbt_rec_base_t)(v >> 43);
-> -	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64lo(21)) |
-> -		  (xfs_bmbt_rec_base_t)(v << 21);
-> -}
-> -
-> -/*
-> - * Set the startoff field in a bmap extent record.
-> - */
-> -void
-> -xfs_bmbt_set_startoff(
-> -	xfs_bmbt_rec_host_t *r,
-> -	xfs_fileoff_t	v)
-> -{
-> -	ASSERT((v & xfs_mask64hi(9)) == 0);
-> -	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t) xfs_mask64hi(1)) |
-> -		((xfs_bmbt_rec_base_t)v << 9) |
-> -		  (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64lo(9));
-> -}
-> -
-> -/*
-> - * Set the extent state field in a bmap extent record.
-> - */
-> -void
-> -xfs_bmbt_set_state(
-> -	xfs_bmbt_rec_host_t *r,
-> -	xfs_exntst_t	v)
-> -{
-> -	ASSERT(v == XFS_EXT_NORM || v == XFS_EXT_UNWRITTEN);
-> -	if (v == XFS_EXT_NORM)
-> -		r->l0 &= xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN);
-> -	else
-> -		r->l0 |= xfs_mask64hi(BMBT_EXNTFLAG_BITLEN);
-> -}
-> -
->  /*
->   * Convert in-memory form of btree root to on-disk form.
->   */
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> index bd3c56f1cd03..93f95bcee915 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> @@ -109,12 +109,6 @@ extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
->  extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
->  
->  extern void xfs_bmbt_set_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
-> -extern void xfs_bmbt_set_allf(xfs_bmbt_rec_host_t *r, xfs_fileoff_t o,
-> -			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
-> -extern void xfs_bmbt_set_blockcount(xfs_bmbt_rec_host_t *r, xfs_filblks_t v);
-> -extern void xfs_bmbt_set_startblock(xfs_bmbt_rec_host_t *r, xfs_fsblock_t v);
-> -extern void xfs_bmbt_set_startoff(xfs_bmbt_rec_host_t *r, xfs_fileoff_t v);
-> -extern void xfs_bmbt_set_state(xfs_bmbt_rec_host_t *r, xfs_exntst_t v);
->  
->  extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
->  			xfs_bmdr_block_t *, int);
+> Context			function		lock
+> Lower filesystem	xfs_file_dax_write	XFS_IOLOCK_EXCL
+> Lower filesystem	xfs_file_iomap_begin	XFS_ILOCK_EXCL
+> Lower filesystem/
+>    lower blkdev		submit_bio_wait		wait for dax block
+> 						device IO completion
+> 
+> Which gives: IOLOCK -> &xfs_nondir_ilock_class -> IO completion
+> 
+> In the lower filesystem.
+> 
+> > -> #1 (&xfs_nondir_ilock_class){++++}:
+> >        lock_acquire+0xab/0x200
+> >        down_write_nested+0x4a/0xb0
+> >        xfs_ilock+0x263/0x330 [xfs]
+> >        xfs_setattr_size+0x152/0x370 [xfs]
+> >        xfs_vn_setattr+0x6b/0x90 [xfs]
+> >        notify_change+0x27d/0x3f0
+> >        do_truncate+0x5b/0x90
+> >        path_openat+0x237/0xa90
+> >        do_filp_open+0x8a/0xf0
+> >        do_sys_open+0x11c/0x1f0
+> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
+> 
+> Context			function		lock
+> Lower filesystem	xfs_vn_setattr		XFS_IOLOCK_EXCL
+> Lower filesystem	xfs_vn_setattr		XFS_MMAPLOCK_EXCL
+> Lower filesystem	xfs_setattr_size	XFS_ILOCK_EXCL
+> 
+> Which gives: IOLOCK -> MMAPLOCK -> &xfs_nondir_ilock_class
+> 
+> i.e.: IOLOCK -> MMAPLOCK -> &xfs_nondir_ilock_class -> IO completion
+> 
+> In the lower filesystem.
+> 
+> > 
+> > -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
+> >        up_write+0x1c/0x40
+> >        xfs_iunlock+0x1d0/0x310 [xfs]
+> >        xfs_file_fallocate+0x8a/0x310 [xfs]
+> >        loop_queue_work+0xb7/0x8d0
+> >        kthread_worker_fn+0xb9/0x1f0
+> 
+> Context			function		lock
+> Lower filesystem	xfs_file_fallocate	XFS_IOLOCK_EXCL
+> Lower filesystem	xfs_file_fallocate	XFS_MMAPLOCK_EXCL
+> [Lower filesystem	whatever falloc calls	XFS_ILOCK_EXCL]
+> Upper filesystem/
+>    Upper blkd		loop_queue_work		blk_mq_complete_request
+> 
+> This is clearer when the reported stack is looked at:
+> 
+> > lock_commit_crosslock+0x3e9/0x5c0
+> > complete+0x24/0x60
+> > blk_update_request+0xc2/0x3e0
+> > blk_mq_end_request+0x18/0x80
+> > __blk_mq_complete_request+0x9f/0x170
+> > loop_queue_work+0x51/0x8d0
+> > kthread_worker_fn+0xb9/0x1f0
+> > kthread+0x148/0x180
+> > ret_from_fork+0x2a/0x40
+> 
+> So this is reporting as:
+> 
+> > Chain exists of:
+> >   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
+> >
+> >  Possible unsafe locking scenario by crosslock:
+> >
+> >        CPU0                    CPU1
+> >        ----                    ----
+> >   lock(&xfs_nondir_ilock_class);
+> >   lock((complete)&ret.event);
+> >                                lock(&(&ip->i_mmaplock)->mr_lock);
+> >                                unlock((complete)&ret.event);
+> >
+> >                *** DEADLOCK ***
+> 
+> Which effectively means:
+> 
+> 	IO completion -> XFS_MMAPLOCK_EXCL .....
+> 
+> The thing is, this IO completion has nothing to do with the lower
+> filesystem - it's the IO completion for the filesystem on the loop
+> device (the upper filesystem) and is not in any way related to the
+> IO completion from the dax device the lower filesystem is waiting
+> on.
+> 
+> IOWs, this is a false positive.
+> 
+> Peter, this is the sort of false positive I mentioned were likely to
+> occur without some serious work to annotate the IO stack to prevent
+> them.  We can nest multiple layers of IO completions and locking in
+> the IO stack via things like loop and RAID devices.  They can be
+> nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
+> dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
+> checking is going to be a source of false positives until there is
+> an effective (and simple!) way of providing context based completion
+> annotations to avoid them...
+
+Hello,
+
+It looks caused by that &ret.event in submit_bio_wait() is initialized
+with the same class for all layers. I mean that completion variables in
+different layers should be initialized with different classes, as you do
+for typical locks in xfs.
+
+I am not sure if I understand how xfs works correctly. Right? If yes,
+how can we distinguish between independent 'bio's in submit_bio_wait()?
+You or I can make it work with the answer. No?
+
+> Cheers,
+> 
+> Dave.
 > -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dave Chinner
+> david@fromorbit.com
