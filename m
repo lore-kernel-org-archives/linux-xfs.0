@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26140 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbdIUAUH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:20:07 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0K5Hj006794
+Received: from aserp1040.oracle.com ([141.146.126.69]:43875 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751680AbdIUAUT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:20:19 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0KHC4017627
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:20:06 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0K5ps010203
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:20:18 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0KHwO019982
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:20:05 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0K5LG000337
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:20:05 GMT
-Subject: [PATCH 23/27] xfs: scrub extended attributes
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:20:17 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8L0KHfY020047
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:20:17 GMT
+Subject: [PATCH 25/27] xfs: scrub parent pointers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Sep 2017 17:20:04 -0700
-Message-ID: <150595320455.18473.14921916198641945192.stgit@magnolia>
+Date: Wed, 20 Sep 2017 17:20:16 -0700
+Message-ID: <150595321671.18473.16597139674468931267.stgit@magnolia>
 In-Reply-To: <150595305131.18473.16572195821331601191.stgit@magnolia>
 References: <150595305131.18473.16572195821331601191.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,56 +31,69 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scrub the hash tree, keys, and values in an extended attribute structure.
-Refactor the attribute code to use the transaction if the caller supplied
-one to avoid buffer deadocks.
+Scrub parent pointers, sort of.  For directories, we can ride the
+'..' entry up to the parent to confirm that there's at most one
+dentry that points back to this directory.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  fs/xfs/Makefile        |    1 
  fs/xfs/libxfs/xfs_fs.h |    3 -
- fs/xfs/scrub/attr.c    |  210 ++++++++++++++++++++++++++++++++++++++++++++++++
  fs/xfs/scrub/common.h  |    2 
- fs/xfs/scrub/scrub.c   |    8 ++
- fs/xfs/scrub/scrub.h   |    2 
- 6 files changed, 225 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/attr.c
+ fs/xfs/scrub/parent.c  |  262 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c   |    4 +
+ fs/xfs/scrub/scrub.h   |    1 
+ 6 files changed, 272 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/scrub/parent.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 69aa88e..4d46399 100644
+index 28637a6..2193a54 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -148,6 +148,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   trace.o \
- 				   agheader.o \
- 				   alloc.o \
-+				   attr.o \
- 				   bmap.o \
- 				   btree.o \
- 				   common.o \
+@@ -156,6 +156,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   dir.o \
+ 				   ialloc.o \
+ 				   inode.o \
++				   parent.o \
+ 				   refcount.o \
+ 				   rmap.o \
+ 				   scrub.o \
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 8d2bea5..d31d743 100644
+index 955eea7..e3d10b4 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -499,9 +499,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
- #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
+@@ -501,9 +501,10 @@ struct xfs_scrub_metadata {
  #define XFS_SCRUB_TYPE_DIR	15	/* directory */
-+#define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
+ #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
+ #define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
++#define XFS_SCRUB_TYPE_PARENT	18	/* parent pointers */
  
  /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	16
-+#define XFS_SCRUB_TYPE_NR	17
+-#define XFS_SCRUB_TYPE_NR	18
++#define XFS_SCRUB_TYPE_NR	19
  
  /* i: Repair this metadata. */
  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index eeb6bc4..29c3c29 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -114,6 +114,8 @@ int xfs_scrub_setup_xattr(struct xfs_scrub_context *sc,
+ 			  struct xfs_inode *ip);
+ int xfs_scrub_setup_symlink(struct xfs_scrub_context *sc,
+ 			    struct xfs_inode *ip);
++int xfs_scrub_setup_parent(struct xfs_scrub_context *sc,
++			   struct xfs_inode *ip);
+ 
+ void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
 new file mode 100644
-index 0000000..4c31e10
+index 0000000..ec99ebc
 --- /dev/null
-+++ b/fs/xfs/scrub/attr.c
-@@ -0,0 +1,210 @@
++++ b/fs/xfs/scrub/parent.c
+@@ -0,0 +1,262 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -113,240 +126,260 @@ index 0000000..4c31e10
 +#include "xfs_trans.h"
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
++#include "xfs_icache.h"
 +#include "xfs_dir2.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_leaf.h"
++#include "xfs_dir2_priv.h"
 +#include "scrub/xfs_scrub.h"
 +#include "scrub/scrub.h"
 +#include "scrub/common.h"
-+#include "scrub/dabtree.h"
 +#include "scrub/trace.h"
 +
-+#include <linux/posix_acl_xattr.h>
-+#include <linux/xattr.h>
-+
-+/* Set us up to scrub an inode's extended attributes. */
++/* Set us up to scrub parents. */
 +int
-+xfs_scrub_setup_xattr(
++xfs_scrub_setup_parent(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip)
 +{
-+	/* Allocate the buffer without the inode lock held. */
-+	sc->buf = kmem_zalloc_large(XATTR_SIZE_MAX, KM_SLEEP);
-+	if (!sc->buf)
-+		return -ENOMEM;
-+
 +	return xfs_scrub_setup_inode_contents(sc, ip, 0);
 +}
 +
-+/* Extended Attributes */
++/* Parent pointers */
 +
-+struct xfs_scrub_xattr {
-+	struct xfs_attr_list_context	context;
-+	struct xfs_scrub_context	*sc;
++/* Look for an entry in a parent pointing to this inode. */
++
++struct xfs_scrub_parent_ctx {
++	struct dir_context		dc;
++	xfs_ino_t			ino;
++	xfs_nlink_t			nr;
 +};
 +
-+/* Check that an extended attribute key can be looked up by hash. */
-+static void
-+xfs_scrub_xattr_listent(
-+	struct xfs_attr_list_context	*context,
-+	int				flags,
-+	unsigned char			*name,
++/* Look for a single entry in a directory pointing to an inode. */
++STATIC int
++xfs_scrub_parent_actor(
++	struct dir_context		*dc,
++	const char			*name,
 +	int				namelen,
-+	int				valuelen)
++	loff_t				pos,
++	u64				ino,
++	unsigned			type)
 +{
-+	struct xfs_scrub_xattr		*sx;
-+	struct xfs_da_args		args = {0};
-+	int				error = 0;
++	struct xfs_scrub_parent_ctx	*spc;
 +
-+	sx = container_of(context, struct xfs_scrub_xattr, context);
-+
-+	args.flags = ATTR_KERNOTIME;
-+	if (flags & XFS_ATTR_ROOT)
-+		args.flags |= ATTR_ROOT;
-+	else if (flags & XFS_ATTR_SECURE)
-+		args.flags |= ATTR_SECURE;
-+	args.geo = context->dp->i_mount->m_attr_geo;
-+	args.whichfork = XFS_ATTR_FORK;
-+	args.dp = context->dp;
-+	args.name = name;
-+	args.namelen = namelen;
-+	args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	args.trans = context->tp;
-+	args.value = sx->sc->buf;
-+	args.valuelen = XATTR_SIZE_MAX;
-+
-+	error = xfs_attr_get_ilocked(context->dp, &args);
-+	if (error == -EEXIST)
-+		error = 0;
-+	if (!xfs_scrub_fblock_op_ok(sx->sc, XFS_ATTR_FORK, args.blkno, &error))
-+		goto fail_xref;
-+	xfs_scrub_fblock_check_ok(sx->sc, XFS_ATTR_FORK, args.blkno,
-+			args.valuelen == valuelen);
-+
-+fail_xref:
-+	return;
++	spc = container_of(dc, struct xfs_scrub_parent_ctx, dc);
++	if (spc->ino == ino)
++		spc->nr++;
++	return 0;
 +}
 +
-+/* Scrub a attribute btree record. */
++/* Count the number of dentries in the parent dir that point to this inode. */
 +STATIC int
-+xfs_scrub_xattr_rec(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	void				*rec)
++xfs_scrub_parent_count_parent_dentries(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*parent,
++	xfs_nlink_t			*nr)
 +{
-+	struct xfs_mount		*mp = ds->state->mp;
-+	struct xfs_attr_leaf_entry	*ent = rec;
-+	struct xfs_da_state_blk		*blk;
-+	struct xfs_attr_leaf_name_local	*lentry;
-+	struct xfs_attr_leaf_name_remote	*rentry;
-+	struct xfs_buf			*bp;
-+	xfs_dahash_t			calc_hash;
-+	xfs_dahash_t			hash;
-+	int				nameidx;
-+	int				hdrsize;
-+	unsigned int			badflags;
++	struct xfs_scrub_parent_ctx	spc = {
++		.dc.actor = xfs_scrub_parent_actor,
++		.dc.pos = 0,
++		.ino = sc->ip->i_ino,
++		.nr = 0,
++	};
++	struct xfs_ifork		*ifp;
++	size_t				bufsize;
++	loff_t				oldpos;
++	uint				lock_mode;
 +	int				error;
 +
-+	blk = &ds->state->path.blk[level];
-+
-+	/* Check the hash of the entry. */
-+	error = xfs_scrub_da_btree_hash(ds, level, &ent->hashval);
-+	if (error)
-+		goto out;
-+
-+	/* Find the attr entry's location. */
-+	bp = blk->bp;
-+	hdrsize = xfs_attr3_leaf_hdr_size(bp->b_addr);
-+	nameidx = be16_to_cpu(ent->nameidx);
-+	if (!xfs_scrub_da_check_ok(ds, level, nameidx >= hdrsize &&
-+			nameidx < mp->m_attr_geo->blksize))
-+		goto out;
-+
-+	/* Retrieve the entry and check it. */
-+	hash = be32_to_cpu(ent->hashval);
-+	badflags = ~(XFS_ATTR_LOCAL | XFS_ATTR_ROOT | XFS_ATTR_SECURE |
-+			XFS_ATTR_INCOMPLETE);
-+	xfs_scrub_da_check_ok(ds, level, (ent->flags & badflags) == 0);
-+	if (ent->flags & XFS_ATTR_LOCAL) {
-+		lentry = (struct xfs_attr_leaf_name_local *)
-+				(((char *)bp->b_addr) + nameidx);
-+		if (!xfs_scrub_da_check_ok(ds, level, lentry->namelen > 0))
-+			goto out;
-+		calc_hash = xfs_da_hashname(lentry->nameval, lentry->namelen);
-+	} else {
-+		rentry = (struct xfs_attr_leaf_name_remote *)
-+				(((char *)bp->b_addr) + nameidx);
-+		if (!xfs_scrub_da_check_ok(ds, level, rentry->namelen > 0))
-+			goto out;
-+		calc_hash = xfs_da_hashname(rentry->name, rentry->namelen);
++	/*
++	 * Load the parent directory's extent map.  A regular directory
++	 * open would start readahead (and thus load the extent map)
++	 * before we even got to a readdir call, but this isn't
++	 * guaranteed here.
++	 */
++	lock_mode = xfs_ilock_data_map_shared(parent);
++	ifp = XFS_IFORK_PTR(parent, XFS_DATA_FORK);
++	if (XFS_IFORK_FORMAT(parent, XFS_DATA_FORK) == XFS_DINODE_FMT_BTREE &&
++	    !(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(sc->tp, parent, XFS_DATA_FORK);
++		if (error) {
++			xfs_iunlock(parent, lock_mode);
++			return error;
++		}
 +	}
-+	xfs_scrub_da_check_ok(ds, level, calc_hash == hash);
-+
-+out:
-+	return error;
-+}
-+
-+/* Scrub the extended attribute metadata. */
-+int
-+xfs_scrub_xattr(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_scrub_xattr		sx = { 0 };
-+	struct attrlist_cursor_kern	cursor = { 0 };
-+	int				error = 0;
-+
-+	if (!xfs_inode_hasattr(sc->ip))
-+		return -ENOENT;
-+
-+	memset(&sx, 0, sizeof(sx));
-+	/* Check attribute tree structure */
-+	error = xfs_scrub_da_btree(sc, XFS_ATTR_FORK, xfs_scrub_xattr_rec);
-+	if (error)
-+		goto out;
-+
-+	/* Check that every attr key can also be looked up by hash. */
-+	sx.context.dp = sc->ip;
-+	sx.context.cursor = &cursor;
-+	sx.context.resynch = 1;
-+	sx.context.put_listent = xfs_scrub_xattr_listent;
-+	sx.context.tp = sc->tp;
-+	sx.sc = sc;
++	xfs_iunlock(parent, lock_mode);
 +
 +	/*
-+	 * Look up every xattr in this file by name.
-+	 *
-+	 * The VFS only locks i_rwsem when modifying attrs, so keep all
-+	 * three locks held because that's the only way to ensure we're
-+	 * the only thread poking into the da btree.  We traverse the da
-+	 * btree while holding a leaf buffer locked for the xattr name
-+	 * iteration, which doesn't really follow the usual buffer
-+	 * locking order.
++	 * Iterate the parent dir to confirm that there is
++	 * exactly one entry pointing back to the inode being
++	 * scanned.
 +	 */
-+	error = xfs_attr_list_int_ilocked(&sx.context);
-+	if (!xfs_scrub_fblock_op_ok(sc, XFS_ATTR_FORK, 0, &error))
-+		goto out;
++	bufsize = (size_t)min_t(loff_t, 32768, parent->i_d.di_size);
++	oldpos = 0;
++	while (true) {
++		error = xfs_readdir(sc->tp, parent, &spc.dc, bufsize);
++		if (error)
++			goto out;
++		if (oldpos == spc.dc.pos)
++			break;
++		oldpos = spc.dc.pos;
++	}
++	*nr = spc.nr;
 +out:
 +	return error;
 +}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 82b8056..f0a33b3 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -110,6 +110,8 @@ int xfs_scrub_setup_inode_bmap_data(struct xfs_scrub_context *sc,
- 				    struct xfs_inode *ip);
- int xfs_scrub_setup_directory(struct xfs_scrub_context *sc,
- 			      struct xfs_inode *ip);
-+int xfs_scrub_setup_xattr(struct xfs_scrub_context *sc,
-+			  struct xfs_inode *ip);
- 
- void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++
++/* Scrub a parent pointer. */
++int
++xfs_scrub_parent(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_inode		*dp = NULL;
++	xfs_ino_t			dnum;
++	xfs_nlink_t			expected_nr;
++	xfs_nlink_t			nr;
++	int				tries = 0;
++	int				error;
++
++	/*
++	 * If we're a directory, check that the '..' link points up to
++	 * a directory that has one entry pointing to us.
++	 */
++	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
++		return -ENOENT;
++
++	/*
++	 * If we're an unlinked directory, the parent /won't/ have a link
++	 * to us.  Otherwise, it should have one link.
++	 */
++	expected_nr = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
++
++	/*
++	 * The VFS grabs a read or write lock via i_rwsem before it reads
++	 * or writes to a directory.  If we've gotten this far we've
++	 * already obtained IOLOCK_EXCL, which (since 4.10) is the same as
++	 * getting a write lock on i_rwsem.  Therefore, it is safe for us
++	 * to drop the ILOCK here in order to do directory lookups.
++	 */
++	sc->ilock_flags &= ~(XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
++	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
++
++	/* Look up '..' */
++	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
++	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
++		goto out;
++
++	/* Is this the root dir?  Then '..' must point to itself. */
++	if (sc->ip == mp->m_rootip) {
++		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
++				sc->ip->i_ino == mp->m_sb.sb_rootino &&
++				dnum == sc->ip->i_ino);
++		return 0;
++	}
++
++try_again:
++	/* Otherwise, '..' must not point to ourselves. */
++	if (!xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
++			sc->ip->i_ino != dnum))
++		goto out;
++
++	error = xfs_iget(mp, sc->tp, dnum, 0, 0, &dp);
++	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
++		goto out;
++	if (!xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
++			dp != sc->ip))
++		goto out_rele;
++
++	/*
++	 * We prefer to keep the inode locked while we lock and search
++	 * its alleged parent for a forward reference.  However, this
++	 * child -> parent scheme can deadlock with the parent -> child
++	 * scheme that is normally used.  Therefore, if we can lock the
++	 * parent, just validate the references and get out.
++	 */
++	if (xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
++		error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nr);
++		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
++			goto out_unlock;
++		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
++				nr == expected_nr);
++		goto out_unlock;
++	}
++
++	/*
++	 * The game changes if we get here.  We failed to lock the parent,
++	 * so we're going to try to verify both pointers while only holding
++	 * one lock so as to avoid deadlocking with something that's actually
++	 * trying to traverse down the directory tree.
++	 */
++	xfs_iunlock(sc->ip, sc->ilock_flags);
++	sc->ilock_flags = 0;
++	xfs_ilock(dp, XFS_IOLOCK_SHARED);
++
++	/* Go looking for our dentry. */
++	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nr);
++	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
++		goto out_unlock;
++
++	/* Drop the parent lock, relock this inode. */
++	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
++	sc->ilock_flags = XFS_IOLOCK_EXCL;
++	xfs_ilock(sc->ip, sc->ilock_flags);
++
++	/* Look up '..' to see if the inode changed. */
++	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
++	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
++		goto out_rele;
++
++	/* Drat, parent changed.  Try again! */
++	if (dnum != dp->i_ino) {
++		iput(VFS_I(dp));
++		tries++;
++		if (tries < 20)
++			goto try_again;
++		xfs_scrub_check_thoroughness(sc, false);
++		goto out;
++	}
++	iput(VFS_I(dp));
++
++	/*
++	 * '..' didn't change, so check that there was only one entry
++	 * for us in the parent.
++	 */
++	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0, nr == expected_nr);
++	goto out;
++
++out_unlock:
++	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
++out_rele:
++	iput(VFS_I(dp));
++out:
++	return error;
++}
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 760492a..046b3e5 100644
+index 0185a61..6dae908 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -161,6 +161,10 @@ xfs_scrub_teardown(
- 			iput(VFS_I(sc->ip));
- 		sc->ip = NULL;
- 	}
-+	if (sc->buf) {
-+		kmem_free(sc->buf);
-+		sc->buf = NULL;
-+	}
- 	return error;
- }
- 
-@@ -234,6 +238,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.setup	= xfs_scrub_setup_directory,
- 		.scrub	= xfs_scrub_directory,
+@@ -246,6 +246,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xfs_scrub_setup_symlink,
+ 		.scrub	= xfs_scrub_symlink,
  	},
-+	{ /* extended attributes */
-+		.setup	= xfs_scrub_setup_xattr,
-+		.scrub	= xfs_scrub_xattr,
++	{ /* parent pointers */
++		.setup	= xfs_scrub_setup_parent,
++		.scrub	= xfs_scrub_parent,
 +	},
  };
  
  /* Dispatch metadata scrubbing. */
 diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 4c348e8..b440e26 100644
+index 89dfb66..3363df9 100644
 --- a/fs/xfs/scrub/scrub.h
 +++ b/fs/xfs/scrub/scrub.h
-@@ -54,6 +54,7 @@ struct xfs_scrub_context {
- 	const struct xfs_scrub_meta_ops	*ops;
- 	struct xfs_trans		*tp;
- 	struct xfs_inode		*ip;
-+	void				*buf;
- 	uint				ilock_flags;
- 	bool				try_harder;
- 
-@@ -78,5 +79,6 @@ int xfs_scrub_bmap_data(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
+@@ -81,5 +81,6 @@ int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
  int xfs_scrub_directory(struct xfs_scrub_context *sc);
-+int xfs_scrub_xattr(struct xfs_scrub_context *sc);
+ int xfs_scrub_xattr(struct xfs_scrub_context *sc);
+ int xfs_scrub_symlink(struct xfs_scrub_context *sc);
++int xfs_scrub_parent(struct xfs_scrub_context *sc);
  
  #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
