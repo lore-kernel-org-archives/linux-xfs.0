@@ -1,22 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:52282 "EHLO
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:53279 "EHLO
         mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751729AbdIUTmo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 15:42:44 -0400
-From: Richard Wareing <rwareing@fb.com>
+        by vger.kernel.org with ESMTP id S1751706AbdIUTtJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 15:49:09 -0400
+Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
+MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
 Subject: Re: [PATCH] xfs: Add test for CVE-2017-14340
-Date: Thu, 21 Sep 2017 19:42:36 +0000
-Message-ID: <2A79519D-4F1B-4304-B5A8-0418DDF629C5@fb.com>
+From: Richard Wareing <rwareing@fb.com>
+In-Reply-To: <20170921055656.GW8034@eguan.usersys.redhat.com>
+Date: Thu, 21 Sep 2017 12:48:59 -0700
+Content-Transfer-Encoding: 7bit
+Message-ID: <E73EB1AF-072A-4EF7-8E0C-5ED4724A01E0@fb.com>
 References: <20170920003054.4171675-1-rwareing@fb.com>
  <20170920004125.GD7112@magnolia>
  <BA0F6FA4-4C58-4263-BF66-32C20DCA090E@fb.com>
  <20170921055656.GW8034@eguan.usersys.redhat.com>
-In-Reply-To: <20170921055656.GW8034@eguan.usersys.redhat.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <C38345267317D849BEF0310B40818A23@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -30,8 +28,7 @@ Eryu Guan <eguan@redhat.com> wrote:
 >>
 >>> On Tue, Sep 19, 2017 at 05:30:54PM -0700, Richard Wareing wrote:
 >>>> Verify kernel doesn't panic when user attempts to set realtime flags
->>>> on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatch=
-ed
+>>>> on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
 >>>> kernels will panic during this test.  Kernels not compiled with
 >>>> CONFIG_XFS_RT should pass test.
 >>>>
@@ -43,8 +40,7 @@ ed
 >>>>
 >>>> Signed-off-by: Richard Wareing <rwareing@fb.com>
 >>>> ---
->>>>  tests/xfs/431     | 86 ++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++++
+>>>>  tests/xfs/431     | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 >>>>  tests/xfs/431.out |  3 ++
 >>>>  tests/xfs/group   |  1 +
 >>>>  3 files changed, 90 insertions(+)
@@ -60,15 +56,13 @@ ed
 >>>> +#! /bin/bash
 >>>> +# FS QA Test 431
 >>>> +#
->>>> +# Verify kernel doesn't panic when user attempts to set realtime flag=
-s
+>>>> +# Verify kernel doesn't panic when user attempts to set realtime flags
 >>>> +# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.
 >>>> Unpatched
 >>>> +# kernels will panic during this test.  Kernels not compiled with
 >>>> +# CONFIG_XFS_RT should pass test.
 >>>> +#
->>>> +#--------------------------------------------------------------------=
----
+>>>> +#-----------------------------------------------------------------------
 >>>> +# Copyright (c) 2017 YOUR NAME HERE.  All Rights Reserved.
 >>>
 >>> Mr. HERE, please update this line! :)
@@ -86,20 +80,18 @@ s
 >>>> +# GNU General Public License for more details.
 >>>> +#
 >>>> +# You should have received a copy of the GNU General Public License
->>>> +# along with this program; if not, write the Free Software Foundation=
-,
+>>>> +# along with this program; if not, write the Free Software Foundation,
 >>>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->>>> +#--------------------------------------------------------------------=
----
+>>>> +#-----------------------------------------------------------------------
 >>>> +#
 >>>> +
->>>> +seq=3D`basename $0`
->>>> +seqres=3D$RESULT_DIR/$seq
+>>>> +seq=`basename $0`
+>>>> +seqres=$RESULT_DIR/$seq
 >>>> +echo "QA output created by $seq"
 >>>> +
->>>> +here=3D`pwd`
->>>> +tmp=3D/tmp/$$
->>>> +status=3D1	# failure is the default!
+>>>> +here=`pwd`
+>>>> +tmp=/tmp/$$
+>>>> +status=1	# failure is the default!
 >>>> +trap "_cleanup; exit \$status" 0 1 2 3 15
 >>>> +
 >>>> +_cleanup()
@@ -149,7 +141,7 @@ with a realtime device.  If it did, there's something horribly wrong.
 >>>> +# as this may simply error out on future kernels, we will check
 >>>> +# exit code instead.
 >>>> +$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
->>>> +chattr_ret=3D$?
+>>>> +chattr_ret=$?
 >
 > It seems that xfs_io always returns 0 even the command fails, e.g.
 >
@@ -173,7 +165,7 @@ FS without an rtdev configured, so I'd rather handle this case now then
 fix it later (or worse, forget to fix it).
 
 > I tested on 4.14-rc1 kernels with and without CONFIG_XFS_RT, and with
-> and without rtdev present when CONFIG_XFS_RT=3Dy, all tests passed.
+> and without rtdev present when CONFIG_XFS_RT=y, all tests passed.
 >
 
 This kernel passes as it has commit
@@ -184,12 +176,12 @@ indication the kernel is fixed.
 >>>> +
 >>>> +# Erroring out here is fine, this would be desired behavior for
 >>>> +# FSes without realtime devices present.
->>>> +if (( chattr_ret =3D=3D 0)); then
+>>>> +if (( chattr_ret == 0)); then
 >>>> +  # Attempt to write/fsync data to file
 >>>> +  $XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile |
 >>>> +    tee -a $seqres.full | common_line_filter | _filter_xfs_io
 >
-> (common_line_filter | _filter_xfs_io) =3D=3D _filter_xfs_io_unique
+> (common_line_filter | _filter_xfs_io) == _filter_xfs_io_unique
 >
 > But I think a bare _filter_xfs_io should just work, there's no common
 > lines to be filtered anyway.
@@ -214,7 +206,7 @@ it straight depending on the repo I'm in.  I'll fix this.
 >>>> +rm -f $SCRATCH_MNT/testfile
 >>>> +
 >>>> +# success, all done
->>>> +status=3D0
+>>>> +status=0
 >>>> +exit
 >>>> diff --git a/tests/xfs/431.out b/tests/xfs/431.out
 >>>> new file mode 100644
@@ -256,12 +248,11 @@ Fixing.
 >>
 >>> --D
 >>>
->>>> --=20
+>>>> -- 
 >>>> 2.9.5
 >>>>
 >>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" i=
-n
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 >>>> the body of a message to majordomo@vger.kernel.org
 >>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>
