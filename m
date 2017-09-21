@@ -1,66 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:49165 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751605AbdIUS0p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 14:26:45 -0400
-Received: by mail-io0-f178.google.com with SMTP id 21so12898901iof.6
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 11:26:45 -0700 (PDT)
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:52870 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751741AbdIUTfB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 15:35:01 -0400
+Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
+        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8LJQl3X016932
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 12:35:00 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0b-00082601.pphosted.com with ESMTP id 2d4b142637-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 12:35:00 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v4] xfs: Add test for CVE-2017-14340
+Date: Thu, 21 Sep 2017 12:34:58 -0700
+Message-ID: <20170921193458.694078-1-rwareing@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1709211102320.14742@nuc-kabylake>
-References: <1505940337-79069-1-git-send-email-keescook@chromium.org>
- <1505940337-79069-4-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1709211024120.14427@nuc-kabylake>
- <CAGXu5j+X6dWCGocG=P7pszTY-5OZ6Jmp-RsnDKox75M5rmVe4g@mail.gmail.com> <alpine.DEB.2.20.1709211102320.14742@nuc-kabylake>
-From: Kees Cook <keescook@chromium.org>
-Date: Thu, 21 Sep 2017 11:26:43 -0700
-Message-ID: <CAGXu5jKqWShVMqm6-moqgO7JUaJuFxw-9mMKak+WG1HgNJqc1Q@mail.gmail.com>
-Subject: Re: [kernel-hardening] Re: [PATCH v3 03/31] usercopy: Mark kmalloc
- caches as usercopy caches
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 21, 2017 at 9:04 AM, Christopher Lameter <cl@linux.com> wrote:
-> On Thu, 21 Sep 2017, Kees Cook wrote:
->
->> > So what is the point of this patch?
->>
->> The DMA kmalloc caches are not whitelisted:
->
-> The DMA kmalloc caches are pretty obsolete and mostly there for obscure
-> drivers.
->
-> ??
+Verify kernel doesn't panic when user attempts to set realtime flags
+on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+kernels will panic during this test.  Kernels not compiled with
+CONFIG_XFS_RT should pass test.
 
-They may be obsolete, but they're still in the kernel, and they aren't
-copied to userspace, so we can mark them.
+This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
+on the main kernel tree.
 
->> >>                         kmalloc_dma_caches[i] = create_kmalloc_cache(n,
->> >> -                               size, SLAB_CACHE_DMA | flags);
->> >> +                               size, SLAB_CACHE_DMA | flags, 0, 0);
->>
->> So this is creating the distinction between the kmallocs that go to
->> userspace and those that don't. The expectation is that future work
->> can start to distinguish between "for userspace" and "only kernel"
->> kmalloc allocations, as is already done here for DMA.
->
-> The creation of the kmalloc caches in earlier patches already setup the
-> "whitelisting". Why do it twice?
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v3:
+* Tabs not spaces
+* Test added to auto group
+* _filter_xfs_io filter only
+* Removed _require_test
 
-Patch 1 is to allow for things to mark their whitelists. Patch 30
-disables the full whitelisting, since then we've defined them all, so
-the kmalloc caches need to mark themselves as whitelisted.
+Changes since v2:
+* Added to dangerous group
 
-Patch 1 leaves unmarked things whitelisted so we can progressively
-tighten the restriction and have a bisectable series. (i.e. if there
-is something wrong with one of the whitelists in the series, it will
-bisect to that one, not the one that removes the global whitelist from
-patch 1.)
+Changes since v1:
+* Corrected copyright text
 
--Kees
+tests/xfs/431     | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/431.out |  3 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 87 insertions(+)
+ create mode 100755 tests/xfs/431
+ create mode 100644 tests/xfs/431.out
 
+diff --git a/tests/xfs/431 b/tests/xfs/431
+new file mode 100755
+index 0000000..1d8df1c
+--- /dev/null
++++ b/tests/xfs/431
+@@ -0,0 +1,83 @@
++#! /bin/bash
++# FS QA Test 431
++#
++# Verify kernel doesn't panic when user attempts to set realtime flags
++# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched 
++# kernels will panic during this test.  Kernels not compiled with 
++# CONFIG_XFS_RT should pass test.
++#
++# See CVE-2017-14340 for more information.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Facebook, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_io_command "chattr"
++_require_xfs_io_command "fsync"
++_require_xfs_io_command "pwrite"
++_require_scratch
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# Set realtime inherit flag on scratch mount, suppress output
++# as this may simply error out on future kernels, we will check
++# exit code instead.
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
++
++# Erroring out here is fine, this would be desired behavior for
++# FSes without realtime devices present.
++if [ $? -eq 0 ]; then
++	# Attempt to write/fsync data to file
++	$XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile | 
++		tee -a $seqres.full | _filter_xfs_io
++
++	# Remove the rt inherit flag after we are done or xfs_repair
++	# will fail.
++	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
++fi
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+new file mode 100644
+index 0000000..8c14f11
+--- /dev/null
++++ b/tests/xfs/431.out
+@@ -0,0 +1,3 @@
++QA output created by 431
++wrote 1048576/1048576 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 0a449b9..1765559 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -427,3 +427,4 @@
+ 428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 429 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++431 auto quick dangerous
 -- 
-Kees Cook
-Pixel Security
+2.9.5
+
