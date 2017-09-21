@@ -1,62 +1,195 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36421 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750938AbdITTiY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 15:38:24 -0400
-Date: Wed, 20 Sep 2017 12:37:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: slab corruption in generic/388
-Message-ID: <20170920193754.GG7112@magnolia>
-References: <20170920145740.GA9685@infradead.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:53854 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751387AbdIUGEc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 02:04:32 -0400
+Date: Thu, 21 Sep 2017 16:04:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/27] xfs: test the scrub ioctl
+Message-ID: <20170921060416.GS18948@dastard>
+References: <150595305131.18473.16572195821331601191.stgit@magnolia>
+ <150595308840.18473.7997837811162843403.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170920145740.GA9685@infradead.org>
+In-Reply-To: <150595308840.18473.7997837811162843403.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 20, 2017 at 07:57:40AM -0700, Christoph Hellwig wrote:
-> Recently I've a few of these warnings in generic/388 with a 4k
-> filesystem on x86_64, v5 file system with reflink and rmap
-> enabled but otherwise defaults.  If someones got and idea where
-> this might be from I'm curious, otherwise I'll add it to my TODO list.
+On Wed, Sep 20, 2017 at 05:18:08PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> [ 5062.894006] XFS (sdb): xfs_do_force_shutdown(0x1) called from line 236 of file fs/xfs/libxfs/xfs_defer.c.  Return address = 0xffffffff8156cb46
-> [ 5062.908923] XFS (sdb): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
-> [ 5062.986682] XFS (sdb): Unmounting Filesystem
-> [ 5063.008740] XFS (sdb): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-> [ 5063.010063] XFS (sdb): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-> [ 5063.011543] XFS (sdb): Mounting V5 Filesystem
-> [ 5063.299537] XFS (sdb): Starting recovery (logdev: internal)
-> [ 5063.305221] XFS (sdb): Ending recovery (logdev: internal)
-> [ 5063.355721] Slab corruption (Tainted: G        W      ): xfs_rui_item start=ffff88003908f708, len=672
-> [ 5063.357058] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-> [ 5063.357842] Last user: [<ffffffff815dfa2c>](xfs_rui_item_free+0x1c/0x30)
-> [ 5063.358712] 080: 6a 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  jkkkkkkkkkkkkkkk
-
-Assuming this trace is from 4.14, something decremented rui_refcount
-after the xfs_rui_log_item got freed.
-
---D
-
-> [ 5063.359813] Single bit error detected. Probably bad RAM.
-> [ 5063.360512] Run memtest86+ or a similar memory test tool.
-> [ 5063.361216] Prev obj: start=ffff88003908f450, len=672
-> [ 5063.361876] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-> [ 5063.362836] Last user: [<ffffffff815dfa2c>](xfs_rui_item_free+0x1c/0x30)
-> [ 5063.363704] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
-> [ 5063.364708] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
-> [ 5063.365729] Next obj: start=ffff88003908f9c0, len=672
-> [ 5063.366397] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-> [ 5063.367101] Last user: [<ffffffff815dfa2c>](xfs_rui_item_free+0x1c/0x30)
-> [ 5063.367846] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
-> [ 5063.368637] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
-> [ 5065.460847] XFS (sdb): Unmounting Filesystem
+> Create a test scrubber with id 0.  This will be used by xfs_scrub to
+> probe the kernel's abilities to scrub (and repair) the metadata.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile        |    1 +
+>  fs/xfs/libxfs/xfs_fs.h |    3 ++
+>  fs/xfs/scrub/common.c  |   60 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/common.h  |   44 +++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/scrub.c   |   33 ++++++++++++++++++++++++++
+>  fs/xfs/scrub/scrub.h   |    1 +
+>  fs/xfs/scrub/trace.c   |    1 +
+>  7 files changed, 142 insertions(+), 1 deletion(-)
+>  create mode 100644 fs/xfs/scrub/common.c
+>  create mode 100644 fs/xfs/scrub/common.h
+> 
+> 
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index f4312bc..ca14595 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -146,6 +146,7 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+>  
+>  xfs-y				+= $(addprefix scrub/, \
+>  				   trace.o \
+> +				   common.o \
+>  				   scrub.o \
+>  				   )
+>  endif
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index a4b4c8c..5105bad 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -483,9 +483,10 @@ struct xfs_scrub_metadata {
+>   */
+>  
+>  /* Scrub subcommands. */
+> +#define XFS_SCRUB_TYPE_TEST	0	/* presence test ioctl */
+
+Shouldn't we call this a "probe" - as in "probe for support" so it
+doesn't get confused with "use this to test whether scrub works"
+
+>  /* Number of scrub subcommands. */
+> -#define XFS_SCRUB_TYPE_NR	0
+> +#define XFS_SCRUB_TYPE_NR	1
+>  
+>  /* i: Repair this metadata. */
+>  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> new file mode 100644
+> index 0000000..13ccb36
+> --- /dev/null
+> +++ b/fs/xfs/scrub/common.c
+> @@ -0,0 +1,60 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_alloc_btree.h"
+> +#include "xfs_bmap.h"
+> +#include "xfs_bmap_btree.h"
+> +#include "xfs_ialloc.h"
+> +#include "xfs_ialloc_btree.h"
+> +#include "xfs_refcount.h"
+> +#include "xfs_refcount_btree.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+> +#include "scrub/xfs_scrub.h"
+> +#include "scrub/scrub.h"
+> +#include "scrub/common.h"
+> +#include "scrub/trace.h"
+> +
+> +/* Common code for the metadata scrubbers. */
+> +
+> +/* Per-scrubber setup functions */
+> +
+> +/* Set us up with a transaction and an empty context. */
+> +int
+> +xfs_scrub_setup_fs(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	return xfs_scrub_trans_alloc(sc->sm, sc->mp,
+> +			&M_RES(sc->mp)->tr_itruncate, 0, 0, 0, &sc->tp);
+> +}
+
+Using the truncate transaction reservation really needs explaining
+here....
+
+.....
+>  
+> +/*
+> + * Test scrubber -- userspace uses this to probe if we're willing to
+> + * scrub or repair a given mountpoint.
+> + */
+
+Yup, definitely should be called xfs_scrub_probe()....
+
+> +int
+> +xfs_scrub_tester(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	if (sc->sm->sm_ino || sc->sm->sm_agno)
+> +		return -EINVAL;
+> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_CORRUPT)
+> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_PREEN)
+> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
+> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_XFAIL)
+> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
+> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_XCORRUPT)
+> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
+> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_INCOMPLETE)
+> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_INCOMPLETE;
+> +	if (sc->sm->sm_gen & XFS_SCRUB_OFLAG_WARNING)
+> +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
+> +	if (sc->sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
+> +		return -ENOENT;
+
+Shouldn't this check should be first? If not, comment to explain?
+
+Also, I find that really hard to parse because it's so dense and
+so much is repeated over and over again (makes my pattern matching
+brain cells scream). It's copying the exact same flags from
+sc->sm->sm_gen to sc->sm->sm_flags, so why not somethign like:
+
+
+	struct xfs_scrub_m...	*sm = sc->sm;
+
+	if (sm->sm_ino || sm->sm_agno)
+		return -EINVAL;
+
+	sm->flags = sm->sm_gen & XFS_SCRUB_FLAGS_OUT;
+	if (sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
+		return -ENOENT;
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
