@@ -1,60 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38220 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751629AbdIUQBX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 12:01:23 -0400
-Date: Thu, 21 Sep 2017 09:01:17 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/19] xfs: refactor xfs_bmap_add_extent_delay_real
-Message-ID: <20170921160117.GH7112@magnolia>
-References: <20170918152422.24345-1-hch@lst.de>
- <20170918152422.24345-13-hch@lst.de>
- <20170920220314.GT7112@magnolia>
- <20170921132826.GB13541@lst.de>
+Received: from resqmta-ch2-10v.sys.comcast.net ([69.252.207.42]:52474 "EHLO
+        resqmta-ch2-10v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750790AbdIUQEi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 12:04:38 -0400
+Date: Thu, 21 Sep 2017 11:04:35 -0500 (CDT)
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [kernel-hardening] Re: [PATCH v3 03/31] usercopy: Mark kmalloc
+ caches as usercopy caches
+In-Reply-To: <CAGXu5j+X6dWCGocG=P7pszTY-5OZ6Jmp-RsnDKox75M5rmVe4g@mail.gmail.com>
+Message-ID: <alpine.DEB.2.20.1709211102320.14742@nuc-kabylake>
+References: <1505940337-79069-1-git-send-email-keescook@chromium.org> <1505940337-79069-4-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1709211024120.14427@nuc-kabylake> <CAGXu5j+X6dWCGocG=P7pszTY-5OZ6Jmp-RsnDKox75M5rmVe4g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170921132826.GB13541@lst.de>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
 
-On Thu, Sep 21, 2017 at 03:28:26PM +0200, Christoph Hellwig wrote:
-> [fullquote of a fullquote removed, sigh..]
-> 
-> > > +		temp = PREV.br_blockcount - new->br_blockcount;
-> > > +		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
-> > > +			startblockval(PREV.br_startblock));
-> > 
-> > Needs another indent?
-> 
-> 
-> What for?
+On Thu, 21 Sep 2017, Kees Cook wrote:
 
-I thought the second line of a continued statement was indented ether
-twice more or up to the paren, e.g.:
+> > So what is the point of this patch?
+>
+> The DMA kmalloc caches are not whitelisted:
 
-	da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
-			startblockval(PREV.br_startblock));
+The DMA kmalloc caches are pretty obsolete and mostly there for obscure
+drivers.
 
-or:
+??
 
-	da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
-				 startblockval(PREV.br_startblock));
+> >>                         kmalloc_dma_caches[i] = create_kmalloc_cache(n,
+> >> -                               size, SLAB_CACHE_DMA | flags);
+> >> +                               size, SLAB_CACHE_DMA | flags, 0, 0);
+>
+> So this is creating the distinction between the kmallocs that go to
+> userspace and those that don't. The expectation is that future work
+> can start to distinguish between "for userspace" and "only kernel"
+> kmalloc allocations, as is already done here for DMA.
 
-but never a single tab:
+The creation of the kmalloc caches in earlier patches already setup the
+"whitelisting". Why do it twice?
 
-	da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
-		startblockval(PREV.br_startblock));
-
-The 'startblockval' line only has one more tab indent than the
-'da_new =' line.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
