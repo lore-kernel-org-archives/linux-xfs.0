@@ -1,136 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27254 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751876AbdIVPOV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 11:14:21 -0400
-Date: Fri, 22 Sep 2017 08:14:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: check kthread_should_stop() after the setting of
- task state
-Message-ID: <20170922151403.GE5728@magnolia>
-References: <1505205930-2445-1-git-send-email-houtao1@huawei.com>
- <20170918185200.GM6540@magnolia>
- <436ef067-8608-1da6-ee2f-184314761761@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55492 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751436AbdIUNRv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Sep 2017 09:17:51 -0400
+Date: Thu, 21 Sep 2017 15:17:46 +0200
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: pathconf syscall for linux
+Message-ID: <20170921131746.ewi7fwiegufa77mn@rh_laptop>
+References: <1505749947-26360-1-git-send-email-lczerner@redhat.com>
+ <1505749947-26360-5-git-send-email-lczerner@redhat.com>
+ <20170918204838.GW6540@magnolia>
+ <7B6B7C4C-7FEB-401F-B4EE-6E11E95FB246@dilger.ca>
+ <20170919145520.c4y4w32lmsnqhhxp@thunk.org>
+ <20170919155528.GA8907@infradead.org>
+ <563513ad-afb5-4c76-9f38-4b2e79e7af8a@redhat.com>
+ <20170919203719.GD731@infradead.org>
+ <20170919231716.tmdiz3vnzretwrks@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <436ef067-8608-1da6-ee2f-184314761761@huawei.com>
+In-Reply-To: <20170919231716.tmdiz3vnzretwrks@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, Florian Weimer <fweimer@redhat.com>, Andreas Dilger <adilger@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Sep 22, 2017 at 06:57:00PM +0800, Hou Tao wrote:
-> Hi Darrick,
-> 
-> On 2017/9/19 2:52, Darrick J. Wong wrote:
-> > On Tue, Sep 12, 2017 at 04:45:30PM +0800, Hou Tao wrote:
-> >> A umount hang is possible when a race occurs between the umount
-> >> process and the xfsaild kthread. The following sequences outline
-> >> the race:
-> >>
-> >>     xfsaild: kthread_should_stop()
-> >> 	     => return false, so xfsaild continue
-> >>
-> >>     umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags)
-> >> 	    => by kthread_stop()
-> >>     umount: wake_up_process()
-> >> 	    => because xfsaild is still running, so 0 is returned
-> >>
-> >>     xfsaild: __set_current_state(TASK_INTERRUPTIBLE)
-> >>     xfsaild: schedule()
-> >> 	    => now, xfsaild will wait indefinitely
-> >>
-> >>     umount: wait_for_completion()
-> >> 	    => and umount will hang
-> >>
-> >> To fix that, we need to check kthread_should_stop() after we set
-> >> the task state, so the xfsaild will either see the stop bit and
-> >> exit or the task state is reset to runnable by wake_up_process()
-> >> such that it isn't scheduled out indefinitely and detects the stop
-> >> bit at the next iteration.
-> >>
-> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> >> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> >> Signed-off-by: Hou Tao <houtao1@huawei.com>
+On Tue, Sep 19, 2017 at 07:17:16PM -0400, Theodore Ts'o wrote:
+> On Tue, Sep 19, 2017 at 01:37:19PM -0700, Christoph Hellwig wrote:
+> > On Tue, Sep 19, 2017 at 09:17:28PM +0200, Florian Weimer wrote:
+> > > We have a significant backlog, but I don't expect opposition to patches
+> > > implementing syscall wrappers which are just slightly generic (and
+> > > pathconfat should really be fine).
+> > > 
+> > > Technically, pathconfat might be tricky to maintain if it's expected to be a
+> > > variadic dispatcher function, and the accompanying UAPI header isn't very
+> > > clean.
 > > 
-> > Looks ok, I guess, but just to reiterate what I said in another email
-> > 15 minutes ago, can this be turned into a regression test?
-> It's difficult to create an always-happened test for the race, and
-> I had test the patch by adding artificial delays (as suggested by Brian Foster) in
-> kernel source code. I also have tried to reproduce the problem by lifting up the
-> schedule class/priority of the umount process and lifting down the schedule
-> class/priorityof the xfsaild kthread, but still can not reproduce the problem,
-> so any ideas or suggestions ?
+> > (f)pathconf is defined as:
+> > 
+> >        long fpathconf(int fd, int name);
+> >        long pathconf(const char *path, int name);
+> > 
+> > so there really shouldn't be any issue.
+> 
+> There might be some tricky bits will be if glibc feels it needs to
+> override the values returned by the kernel (if it believes it may
+> impose some limitations due to its implementation).  Also, not all
+> file systems will implement some or all pathconf parameters initially
+> (or perhaps ever).  So should the VFS be responsible for returning
+> some intelligent defaults, or glibc?
+> 
+> Also, will application programs want to know whether they are getting
+> kernel values versus glibc's best guess (which may be depedent on the
+> kernel version, modulo distributions / handset/tablet vendors who
+> might decide to backport the syscall to their kernels)?
+> 
+> It might be a good idea to come to a rough agreement (between the
+> kernel and glibc devs) about how to handle some of these practical
+> issues up front.
+> 
+> Cheers,
+> 
+> 					- Ted
 
-Do the artificial delays make it so that the race happens reliably?
-If so, we could just add a debug knob to inject delays, which you could
-then call from a xfstest script.
+Hi,
 
---D
+I think that it's reasonable to expect that we will implement the
+following basic set of options. If I am not mistaken this is the basic
+set that must be implemented by pathconf/fpathconf and it's also the
+set of options that currently has linux specific implementation (or just
+value definition) in glibc.
 
-> 
-> Regard
-> 
-> 
-> > --D
-> > 
-> >> ---
-> >> v2:
-> >> 	* comment updates suggested by Brain Foster
-> >> v1:
-> >> 	* http://www.spinics.net/lists/linux-xfs/msg10285.html
-> >> ---
-> >>  fs/xfs/xfs_trans_ail.c | 21 ++++++++++++++++++---
-> >>  1 file changed, 18 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> >> index 9056c0f..2d77d9c 100644
-> >> --- a/fs/xfs/xfs_trans_ail.c
-> >> +++ b/fs/xfs/xfs_trans_ail.c
-> >> @@ -499,11 +499,26 @@ xfsaild(
-> >>  	current->flags |= PF_MEMALLOC;
-> >>  	set_freezable();
-> >>  
-> >> -	while (!kthread_should_stop()) {
-> >> +	while (1) {
-> >>  		if (tout && tout <= 20)
-> >> -			__set_current_state(TASK_KILLABLE);
-> >> +			set_current_state(TASK_KILLABLE);
-> >>  		else
-> >> -			__set_current_state(TASK_INTERRUPTIBLE);
-> >> +			set_current_state(TASK_INTERRUPTIBLE);
-> >> +
-> >> +		/*
-> >> +		 * Check kthread_should_stop() after we set the task state
-> >> +		 * to guarantee that we either see the stop bit and exit or
-> >> +		 * the task state is reset to runnable such that it's not
-> >> +		 * scheduled out indefinitely and detects the stop bit at
-> >> +		 * next iteration.
-> >> +		 *
-> >> +		 * A memory barrier is included in above task state set to
-> >> +		 * serialize again kthread_stop().
-> >> +		 */
-> >> +		if (kthread_should_stop()) {
-> >> +			__set_current_state(TASK_RUNNING);
-> >> +			break;
-> >> +		}
-> >>  
-> >>  		spin_lock(&ailp->xa_lock);
-> >>  
-> >> -- 
-> >> 2.5.0
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > .
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I think that most of those can be implemented directly in the vfs with
+some exceptions, where we'll need to ask the file system. However this
+should not be problem to implement right away when we introduce
+pathconf.
+
+Here is the list, although I am still not sure about some of those. Any
+clarification on these would help.
+
+_PC_LINK_MAX		include/uapi/linux/limits.h (linux limits)
+_PC_MAX_CANON		include/uapi/linux/limits.h (linux limits)
+_PC_MAX_INPUT		linux limits
+_PC_NAME_MAX		linux limits
+_PC_PATH_MAX		linux limits
+_PC_PIPE_BUF		linux limits
+_PC_CHOWN_RESTRICTED	currently yes
+_PC_NO_TRUNC		specified per fs (at least affs set at mount)
+_PC_VDISABLE		include/linux/tty.h __DISABLED_CHAR
+_PC_SYNC_IO		we support O_SYNC, the question is how is it
+			honored ? Currently my system returns undefined
+_PC_ASYNC_IO		Not sure what exctly is ment by async here ?
+			We always do asynchronous IO unless O_SYNC
+			My system returns undefined
+_PC_PRIO_IO		no support
+_PC_SOCK_MAXBUF		?
+_PC_FILESIZEBITS	per fs (s_maxbytes)
+_PC_REC_INCR_XFER_SIZE 	?
+_PC_REC_MAX_XFER_SIZE	?
+_PC_REC_MIN_XFER_SIZE	? block size ?
+_PC_REC_XFER_ALIGN	per fs (block size)
+_PC_ALLOC_SIZE_MIN	per fs (block size)
+_PC_SYMLINK_MAX		per fs (but we do not have limit AFACT)
+_PC_2_SYMLINKS		per fs (do we have fs that don't have symlinks ?
+
+
+As for the cases where glibc want's to override the value returned by
+the kernel - I am not sure in what scenarios will they need to do it,
+but if they do, it's just a matter of changing it...Not sure that I
+understand you concern.
+
+Also, at the moment we do not even know if it's a guess or a value returned
+by kernel, so I'd say it does not matter. It can only get better from here.
+
+Adding libc-alpha so they can share some of their wisdom. It'd be very
+appreciated.
+
+Thanks!
+-Lukas
