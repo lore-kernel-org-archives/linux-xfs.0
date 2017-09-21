@@ -1,324 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40454 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751629AbdIUOhD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:37:03 -0400
-Date: Thu, 21 Sep 2017 10:37:02 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/27] xfs: dispatch metadata scrub subcommands
-Message-ID: <20170921143701.GF58956@bfoster.bfoster>
-References: <150595305131.18473.16572195821331601191.stgit@magnolia>
- <150595308233.18473.14684248657858896342.stgit@magnolia>
+Received: from resqmta-po-05v.sys.comcast.net ([96.114.154.164]:54138 "EHLO
+        resqmta-po-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751709AbdIUP31 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 11:29:27 -0400
+Date: Thu, 21 Sep 2017 10:21:16 -0500 (CDT)
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [PATCH v3 01/31] usercopy: Prepare for usercopy whitelisting
+In-Reply-To: <1505940337-79069-2-git-send-email-keescook@chromium.org>
+Message-ID: <alpine.DEB.2.20.1709211009400.14427@nuc-kabylake>
+References: <1505940337-79069-1-git-send-email-keescook@chromium.org> <1505940337-79069-2-git-send-email-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150595308233.18473.14684248657858896342.stgit@magnolia>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-On Wed, Sep 20, 2017 at 05:18:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create structures needed to hold scrubbing context and dispatch incoming
-> commands to the individual scrubbers.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/scrub.c |  172 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/scrub.h |   19 ++++++
->  fs/xfs/scrub/trace.h |   43 +++++++++++++
->  3 files changed, 233 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 5db2a6f..7cf518e 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -44,11 +44,181 @@
->  #include "scrub/scrub.h"
->  #include "scrub/trace.h"
->  
-> +/*
-> + * Online Scrub and Repair
-> + *
-> + * Traditionally, XFS (the kernel driver) did not know how to check or
-> + * repair on-disk data structures.  That task was left to the xfs_check
-> + * and xfs_repair tools, both of which require taking the filesystem
-> + * offline for a thorough but time consuming examination.  Online
-> + * scrub & repair, on the other hand, enables us to check the metadata
-> + * for obvious errors while carefully stepping around the filesystem's
-> + * ongoing operations, locking rules, etc.
-> + *
-> + * Given that most XFS metadata consist of records stored in a btree,
-> + * most of the checking functions iterate the btree blocks themselves
-> + * looking for irregularities.  When a record block is encountered, each
-> + * record can be checked for obviously bad values.  Record values can
-> + * also be cross-referenced against other btrees to look for potential
-> + * misunderstandings between pieces of metadata.
-> + *
-> + * It is expected that the checkers responsible for per-AG metadata
-> + * structures will lock the AG headers (AGI, AGF, AGFL), iterate the
-> + * metadata structure, and perform any relevant cross-referencing before
-> + * unlocking the AG and returning the results to userspace.  These
-> + * scrubbers must not keep an AG locked for too long to avoid tying up
-> + * the block and inode allocators.
-> + *
-> + * Block maps and b-trees rooted in an inode present a special challenge
-> + * because they can involve extents from any AG.  The general scrubber
-> + * structure of lock -> check -> xref -> unlock still holds, but AG
-> + * locking order rules /must/ be obeyed to avoid deadlocks.  The
-> + * ordering rule, of course, is that we must lock in increasing AG
-> + * order.  Helper functions are provided to track which AG headers we've
-> + * already locked.  If we detect an imminent locking order violation, we
-> + * can signal a potential deadlock, in which case the scrubber can jump
-> + * out to the top level, lock all the AGs in order, and retry the scrub.
-> + *
-> + * For file data (directories, extended attributes, symlinks) scrub, we
-> + * can simply lock the inode and walk the data.  For btree data
-> + * (directories and attributes) we follow the same btree-scrubbing
-> + * strategy outlined previously to check the records.
-> + *
-> + * We use a bit of trickery with transactions to avoid buffer deadlocks
-> + * if there is a cycle in the metadata.  The basic problem is that
-> + * travelling down a btree involves locking the current buffer at each
-> + * tree level.  If a pointer should somehow point back to a buffer that
-> + * we've already examined, we will deadlock due to the second buffer
-> + * locking attempt.  Note however that grabbing a buffer in transaction
-> + * context links the locked buffer to the transaction.  If we try to
-> + * re-grab the buffer in the context of the same transaction, we avoid
-> + * the second lock attempt and continue.  Between the verifier and the
-> + * scrubber, something will notice that something is amiss and report
-> + * the corruption.  Therefore, each scrubber will allocate an empty
-> + * transaction, attach buffers to it, and cancel the transaction at the
-> + * end of the scrub run.  Cancelling a non-dirty transaction simply
-> + * unlocks the buffers.
-> + *
-> + * There are four pieces of data that scrub can communicate to
-> + * userspace.  The first is the error code (errno), which can be used to
-> + * communicate operational errors in performing the scrub.  There are
-> + * also three flags that can be set in the scrub context.  If the data
-> + * structure itself is corrupt, the CORRUPT flag will be set.  If
-> + * the metadata is correct but otherwise suboptimal, the PREEN flag
-> + * will be set.
+On Wed, 20 Sep 2017, Kees Cook wrote:
 
-Did you mean to describe other flags here?
+> diff --git a/include/linux/stddef.h b/include/linux/stddef.h
+> index 9c61c7cda936..f00355086fb2 100644
+> --- a/include/linux/stddef.h
+> +++ b/include/linux/stddef.h
+> @@ -18,6 +18,8 @@ enum {
+>  #define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
+>  #endif
+>
+> +#define sizeof_field(structure, field) sizeof((((structure *)0)->field))
+> +
+>  /**
+>   * offsetofend(TYPE, MEMBER)
+>   *
 
-> + */
-> +
-> +/* Scrub setup and teardown */
-> +
-> +/* Free all the resources and finish the transactions. */
-> +STATIC int
-> +xfs_scrub_teardown(
-> +	struct xfs_scrub_context	*sc,
-> +	int				error)
+Hmmm.. Is that really necessary? Code knows the type of field and can
+use sizeof type.
 
-What's the purpose of passing error just to return it?
+Also this is a non slab change hidden in the patchset.
 
-> +{
-> +	if (sc->tp) {
-> +		xfs_trans_cancel(sc->tp);
-> +		sc->tp = NULL;
-> +	}
-> +	return error;
-> +}
+> diff --git a/mm/slab_common.c b/mm/slab_common.c
+> index 904a83be82de..36408f5f2a34 100644
+> --- a/mm/slab_common.c
+> +++ b/mm/slab_common.c
+> @@ -272,6 +272,9 @@ int slab_unmergeable(struct kmem_cache *s)
+>  	if (s->ctor)
+>  		return 1;
+>
+> +	if (s->usersize)
+> +		return 1;
 > +
-> +/* Scrubbing dispatch. */
-> +
-> +static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
-> +};
-> +
->  /* Dispatch metadata scrubbing. */
->  int
->  xfs_scrub_metadata(
->  	struct xfs_inode		*ip,
->  	struct xfs_scrub_metadata	*sm)
->  {
-> -	return -EOPNOTSUPP;
-> +	struct xfs_scrub_context	sc;
-> +	struct xfs_mount		*mp = ip->i_mount;
-> +	const struct xfs_scrub_meta_ops	*ops;
-> +	bool				try_harder = false;
-> +	int				error = 0;
-> +
-> +	trace_xfs_scrub_start(ip, sm, error);
-> +
-> +	/* Forbidden if we are shut down or mounted norecovery. */
-> +	error = -ESHUTDOWN;
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		goto out;
-> +	error = -ENOTRECOVERABLE;
-> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +		goto out;
-> +
-> +	/* Check our inputs. */
-> +	error = -EINVAL;
-> +	sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-> +	if (sm->sm_flags & ~XFS_SCRUB_FLAGS_IN)
-> +		goto out;
-> +	if (memchr_inv(sm->sm_reserved, 0, sizeof(sm->sm_reserved)))
-> +		goto out;
-> +
-> +	/* Do we know about this type of metadata? */
-> +	error = -ENOENT;
-> +	if (sm->sm_type >= XFS_SCRUB_TYPE_NR)
-> +		goto out;
-> +	ops = &meta_scrub_ops[sm->sm_type];
-> +	if (ops->scrub == NULL)
-> +		goto out;
-> +
-> +	/* Does this fs even support this type of metadata? */
-> +	if (ops->has && !ops->has(&mp->m_sb))
-> +		goto out;
-> +
-> +	/* We don't know how to repair anything yet. */
-> +	error = -EOPNOTSUPP;
-> +	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-> +		goto out;
-> +
-> +	/* This isn't a stable feature.  Use with care. */
-> +	{
-> +		static bool warned;
-> +
-> +		if (!warned)
-> +			xfs_alert(mp,
-> +	"EXPERIMENTAL online scrub feature in use. Use at your own risk!");
-> +		warned = true;
-> +	}
-> +
-> +retry_op:
-> +	/* Set up for the operation. */
-> +	memset(&sc, 0, sizeof(sc));
-> +	sc.mp = ip->i_mount;
-> +	sc.sm = sm;
-> +	sc.ops = ops;
-> +	sc.try_harder = try_harder;
-> +	error = sc.ops->setup(&sc, ip);
-> +	if (error)
-> +		goto out_teardown;
-> +
-> +	/* Scrub for errors. */
-> +	error = sc.ops->scrub(&sc);
-> +	if (!try_harder && error == -EDEADLOCK) {
-> +		/*
-> +		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
-> +		 * Tear down everything we hold, then set up again with
-> +		 * preparation for worst-case scenarios.
-> +		 */
-> +		error = xfs_scrub_teardown(&sc, 0);
-> +		if (error)
-> +			goto out;
-> +		try_harder = true;
-> +		goto retry_op;
-> +	} else if (error)
-> +		goto out_teardown;
-> +
-> +	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> +			       XFS_SCRUB_OFLAG_XCORRUPT))
-> +		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
-> +
-> +out_teardown:
-> +	error = xfs_scrub_teardown(&sc, error);
-> +out:
-> +	trace_xfs_scrub_done(ip, sm, error);
-> +	return error;
+>  	/*
+>  	 * We may have set a slab to be unmergeable during bootstrap.
+>  	 */
+
+This will ultimately make all slabs unmergeable at the end of your
+patchset? Lots of space will be wasted. Is there any way to make this
+feature optional?
+
+#ifdef CONFIG_HARDENED around this?
+
+
+> @@ -491,6 +509,15 @@ kmem_cache_create(const char *name, size_t size, size_t align,
+>  	}
+>  	return s;
 >  }
-> diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-> index eb1cd9d..b271b2a 100644
-> --- a/fs/xfs/scrub/scrub.h
-> +++ b/fs/xfs/scrub/scrub.h
-> @@ -20,6 +20,25 @@
->  #ifndef __XFS_SCRUB_SCRUB_H__
->  #define __XFS_SCRUB_SCRUB_H__
->  
-> +struct xfs_scrub_context;
+> +EXPORT_SYMBOL(kmem_cache_create_usercopy);
 > +
-> +struct xfs_scrub_meta_ops {
-> +	int		(*setup)(struct xfs_scrub_context *,
-> +				 struct xfs_inode *);
-> +	int		(*scrub)(struct xfs_scrub_context *);
-> +	bool		(*has)(struct xfs_sb *);
+> +struct kmem_cache *
+> +kmem_cache_create(const char *name, size_t size, size_t align,
+> +		unsigned long flags, void (*ctor)(void *))
+> +{
+> +	return kmem_cache_create_usercopy(name, size, align, flags, 0, size,
+> +					  ctor);
+> +}
+>  EXPORT_SYMBOL(kmem_cache_create);
 
-I assume 'has' is to identify whether a particular mount supports a
-particular feature. I suppose a better name would be nice here, or
-perhaps just a comment to outline the purpose of each callout.
+Well this makes the slab created unmergeable.
 
-Brian
+> @@ -897,7 +927,7 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,
+>  	if (!s)
+>  		panic("Out of memory when creating slab %s\n", name);
+>
+> -	create_boot_cache(s, name, size, flags);
+> +	create_boot_cache(s, name, size, flags, 0, size);
 
-> +};
+Ok this makes the kmalloc array unmergeable.
+
+> @@ -5081,6 +5081,12 @@ static ssize_t cache_dma_show(struct kmem_cache *s, char *buf)
+>  SLAB_ATTR_RO(cache_dma);
+>  #endif
+>
+> +static ssize_t usersize_show(struct kmem_cache *s, char *buf)
+> +{
+> +	return sprintf(buf, "%zu\n", s->usersize);
+> +}
+> +SLAB_ATTR_RO(usersize);
 > +
-> +struct xfs_scrub_context {
-> +	/* General scrub state. */
-> +	struct xfs_mount		*mp;
-> +	struct xfs_scrub_metadata	*sm;
-> +	const struct xfs_scrub_meta_ops	*ops;
-> +	struct xfs_trans		*tp;
-> +	struct xfs_inode		*ip;
-> +	bool				try_harder;
-> +};
-> +
->  /* Metadata scrubbers */
->  
->  #endif	/* __XFS_SCRUB_SCRUB_H__ */
-> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> index a95a7c8..688517e 100644
-> --- a/fs/xfs/scrub/trace.h
-> +++ b/fs/xfs/scrub/trace.h
-> @@ -25,6 +25,49 @@
->  
->  #include <linux/tracepoint.h>
->  
-> +DECLARE_EVENT_CLASS(xfs_scrub_class,
-> +	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
-> +		 int error),
-> +	TP_ARGS(ip, sm, error),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_ino_t, ino)
-> +		__field(unsigned int, type)
-> +		__field(xfs_agnumber_t, agno)
-> +		__field(xfs_ino_t, inum)
-> +		__field(unsigned int, gen)
-> +		__field(unsigned int, flags)
-> +		__field(int, error)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = ip->i_mount->m_super->s_dev;
-> +		__entry->ino = ip->i_ino;
-> +		__entry->type = sm->sm_type;
-> +		__entry->agno = sm->sm_agno;
-> +		__entry->inum = sm->sm_ino;
-> +		__entry->gen = sm->sm_gen;
-> +		__entry->flags = sm->sm_flags;
-> +		__entry->error = error;
-> +	),
-> +	TP_printk("dev %d:%d ino %llu type %u agno %u inum %llu gen %u flags 0x%x error %d",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->ino,
-> +		  __entry->type,
-> +		  __entry->agno,
-> +		  __entry->inum,
-> +		  __entry->gen,
-> +		  __entry->flags,
-> +		  __entry->error)
-> +)
-> +#define DEFINE_SCRUB_EVENT(name) \
-> +DEFINE_EVENT(xfs_scrub_class, name, \
-> +	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm, \
-> +		 int error), \
-> +	TP_ARGS(ip, sm, error))
-> +
-> +DEFINE_SCRUB_EVENT(xfs_scrub_start);
-> +DEFINE_SCRUB_EVENT(xfs_scrub_done);
-> +
->  #endif /* _TRACE_XFS_SCRUB_TRACE_H */
->  
->  #undef TRACE_INCLUDE_PATH
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  static ssize_t destroy_by_rcu_show(struct kmem_cache *s, char *buf)
+>  {
+>  	return sprintf(buf, "%d\n", !!(s->flags & SLAB_TYPESAFE_BY_RCU));
+> @@ -5455,6 +5461,7 @@ static struct attribute *slab_attrs[] = {
+>  #ifdef CONFIG_FAILSLAB
+>  	&failslab_attr.attr,
+>  #endif
+> +	&usersize_attr.attr,
+
+So useroffset is not exposed?
