@@ -1,410 +1,347 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57173 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752097AbdIVN7w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:52 -0400
-Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dvOUi-0001Bb-4Y
-        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/19] xfs: refactor xfs_bmap_add_extent_delay_real
-Date: Fri, 22 Sep 2017 06:59:38 -0700
-Message-Id: <20170922135945.31574-13-hch@lst.de>
-In-Reply-To: <20170922135945.31574-1-hch@lst.de>
-References: <20170922135945.31574-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46454 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751788AbdIVD1h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 23:27:37 -0400
+Date: Thu, 21 Sep 2017 20:27:31 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] man: describe the metadata scrubbing ioctl
+Message-ID: <20170922032731.GC5728@magnolia>
+References: <150595305131.18473.16572195821331601191.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150595305131.18473.16572195821331601191.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-Use xfs_iext_get_extent to find, and xfs_iext_update_extent to update
-entries in the in-core extent list.  This isolates the function from
-the detailed layout of the extent list, and generally makes the code
-a lot more readable.
+Document the XFS-specific metadata scrub/repair ioctl's behavior,
+arguments, and side effects.  Dump this in xfsprogs for lack of a
+better destination.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 181 +++++++++++++++++++++++++----------------------
- 1 file changed, 95 insertions(+), 86 deletions(-)
+ man/Makefile                        |    2 
+ man/man2/ioctl_xfs_scrub_metadata.2 |  298 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 299 insertions(+), 1 deletion(-)
+ create mode 100644 man/man2/ioctl_xfs_scrub_metadata.2
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 4fb73c0aca05..e74e2d74cd36 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1588,7 +1588,6 @@ xfs_bmap_add_extent_delay_real(
- {
- 	struct xfs_bmbt_irec	*new = &bma->got;
- 	int			diff;	/* temp value */
--	xfs_bmbt_rec_host_t	*ep;	/* extent entry for idx */
- 	int			error;	/* error return value */
- 	int			i;	/* temp state */
- 	xfs_ifork_t		*ifp;	/* inode fork pointer */
-@@ -1600,10 +1599,10 @@ xfs_bmap_add_extent_delay_real(
- 	xfs_filblks_t		da_new; /* new count del alloc blocks used */
- 	xfs_filblks_t		da_old; /* old count del alloc blocks used */
- 	xfs_filblks_t		temp=0;	/* value for da_new calculations */
--	xfs_filblks_t		temp2=0;/* value for da_new calculations */
- 	int			tmp_rval;	/* partial logging flags */
- 	struct xfs_mount	*mp;
- 	xfs_extnum_t		*nextents;
-+	struct xfs_bmbt_irec	old;
+diff --git a/man/Makefile b/man/Makefile
+index 863284c..cae891f 100644
+--- a/man/Makefile
++++ b/man/Makefile
+@@ -5,7 +5,7 @@
+ TOPDIR = ..
+ include $(TOPDIR)/include/builddefs
  
- 	mp = bma->ip->i_mount;
- 	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
-@@ -1629,9 +1628,9 @@ xfs_bmap_add_extent_delay_real(
- 	/*
- 	 * Set up a bunch of variables to make the tests simpler.
- 	 */
--	ep = xfs_iext_get_ext(ifp, bma->idx);
--	xfs_bmbt_get_all(ep, &PREV);
-+	xfs_iext_get_extent(ifp, bma->idx, &PREV);
- 	new_endoff = new->br_startoff + new->br_blockcount;
-+	ASSERT(isnullstartblock(PREV.br_startblock));
- 	ASSERT(PREV.br_startoff <= new->br_startoff);
- 	ASSERT(PREV.br_startoff + PREV.br_blockcount >= new_endoff);
+-SUBDIRS = man3 man5 man8
++SUBDIRS = man2 man3 man5 man8
  
-@@ -1706,9 +1705,8 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		bma->idx--;
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
--			LEFT.br_blockcount + PREV.br_blockcount +
--			RIGHT.br_blockcount);
-+		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
-+		xfs_iext_update_extent(ifp, bma->idx, &LEFT);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+ default : $(SUBDIRS)
  
- 		xfs_iext_remove(bma->ip, bma->idx + 1, 2, state);
-@@ -1733,9 +1731,7 @@ xfs_bmap_add_extent_delay_real(
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
- 					LEFT.br_startblock,
--					LEFT.br_blockcount +
--					PREV.br_blockcount +
--					RIGHT.br_blockcount, LEFT.br_state);
-+					LEFT.br_blockcount, LEFT.br_state);
- 			if (error)
- 				goto done;
- 		}
-@@ -1748,9 +1744,10 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		bma->idx--;
- 
-+		old = LEFT;
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
--			LEFT.br_blockcount + PREV.br_blockcount);
-+		LEFT.br_blockcount += PREV.br_blockcount;
-+		xfs_iext_update_extent(ifp, bma->idx, &LEFT);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
-@@ -1758,16 +1755,15 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, LEFT.br_startoff,
--					LEFT.br_startblock, LEFT.br_blockcount,
-+			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
- 					&i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
- 					LEFT.br_startblock,
--					LEFT.br_blockcount +
--					PREV.br_blockcount, LEFT.br_state);
-+					LEFT.br_blockcount, LEFT.br_state);
- 			if (error)
- 				goto done;
- 		}
-@@ -1779,9 +1775,9 @@ xfs_bmap_add_extent_delay_real(
- 		 * The right neighbor is contiguous, the left is not.
- 		 */
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_startblock(ep, new->br_startblock);
--		xfs_bmbt_set_blockcount(ep,
--			PREV.br_blockcount + RIGHT.br_blockcount);
-+		PREV.br_startblock = new->br_startblock;
-+		PREV.br_blockcount += RIGHT.br_blockcount;
-+		xfs_iext_update_extent(ifp, bma->idx, &PREV);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
-@@ -1796,9 +1792,8 @@ xfs_bmap_add_extent_delay_real(
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, PREV.br_startoff,
--					new->br_startblock,
--					PREV.br_blockcount +
--					RIGHT.br_blockcount, PREV.br_state);
-+					PREV.br_startblock,
-+					PREV.br_blockcount, PREV.br_state);
- 			if (error)
- 				goto done;
- 		}
-@@ -1811,8 +1806,9 @@ xfs_bmap_add_extent_delay_real(
- 		 * the new one.
- 		 */
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_startblock(ep, new->br_startblock);
--		xfs_bmbt_set_state(ep, new->br_state);
-+		PREV.br_startblock = new->br_startblock;
-+		PREV.br_state = new->br_state;
-+		xfs_iext_update_extent(ifp, bma->idx, &PREV);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		(*nextents)++;
-@@ -1839,38 +1835,39 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the first part of a previous delayed allocation.
- 		 * The left neighbor is contiguous.
- 		 */
-+		old = LEFT;
-+		temp = PREV.br_blockcount - new->br_blockcount;
-+		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
-+				startblockval(PREV.br_startblock));
+diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
+new file mode 100644
+index 0000000..fa1c56d
+--- /dev/null
++++ b/man/man2/ioctl_xfs_scrub_metadata.2
+@@ -0,0 +1,298 @@
++.\" Copyright (c) 2017, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" This is free documentation; you can redistribute it and/or
++.\" modify it under the terms of the GNU General Public License as
++.\" published by the Free Software Foundation; either version 2 of
++.\" the License, or (at your option) any later version.
++.\"
++.\" The GNU General Public License's references to "object code"
++.\" and "executables" are to be interpreted as the output of any
++.\" document formatting or typesetting system, including
++.\" intermediate and printed output.
++.\"
++.\" This manual is distributed in the hope that it will be useful,
++.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
++.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++.\" GNU General Public License for more details.
++.\"
++.\" You should have received a copy of the GNU General Public
++.\" License along with this manual; if not, see
++.\" <http://www.gnu.org/licenses/>.
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-SCRUB-METADATA 2 2017-09-21 "Linux" "Linux Programmer's Manual"
++.SH NAME
++ioctl_xfs_scrub_metadata \- check XFS filesystem metadata
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " dest_fd ", XFS_IOC_SCRUB_METADATA, struct xfs_scrub_metadata *" arg );
++.SH DESCRIPTION
++This XFS ioctl asks the kernel driver to examine a piece of metadata for
++errors or suboptimal metadata.
++Examination includes running the metadata verifiers, checking records
++for obviously incorrect or impossible values, and cross-referencing each
++record with any other available metadata in the filesystem.
++This ioctl can also try to repair or optimize metadata, though this may
++tie up the filesystem for a long period of time.
++The type and location of the metadata is conveyed in a structure of the
++following form:
++.PP
++.in +4n
++.EX
++struct xfs_scrub_metadata {
++	__u32 sm_type;
++	__u32 sm_flags;
++	__u64 sm_ino;
++	__u32 sm_gen;
++	__u32 sm_agno;
++	__u64 sm_reserved[5];
++};
++.EE
++.in
++.PP
++The field
++.I sm_reserved
++must be zero.
++.PP
++The field
++.I sm_type
++indicates the type of metadata to check:
++.RS 0.4i
++.TP
++.B XFS_SCRUB_TYPE_PROBE
++Probe the kernel to see if it is willing to try to check or repair this
++filesystem.
++If any
++.B sm_flags
++output flags are set in
++.BR sm_gen ", "
++they will be copied to
++.B sm_flags
++before the call returns.
 +
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx - 1, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx - 1),
--			LEFT.br_blockcount + new->br_blockcount);
--		xfs_bmbt_set_startoff(ep,
--			PREV.br_startoff + new->br_blockcount);
-+		LEFT.br_blockcount += new->br_blockcount;
-+		xfs_iext_update_extent(ifp, bma->idx - 1, &LEFT);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx - 1, state, _THIS_IP_);
- 
--		temp = PREV.br_blockcount - new->br_blockcount;
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
-+		PREV.br_blockcount = temp = PREV.br_blockcount - new->br_blockcount;
-+		PREV.br_startoff += new->br_blockcount;
-+		PREV.br_startblock = nullstartblock(da_new);
-+		xfs_iext_update_extent(ifp, bma->idx, &PREV);
-+		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
++.PD 0
++.PP
++.nf
++.B XFS_SCRUB_TYPE_SB
++.B XFS_SCRUB_TYPE_AGF
++.B XFS_SCRUB_TYPE_AGFL
++.fi
++.TP
++.B XFS_SCRUB_TYPE_AGI
++Examine a given allocation group's superblock, free space header, free
++block list, or inode header, respectively.
++Headers are checked for obviously incorrect values and cross-referenced
++against the allocation group's metadata btrees, if possible.
++The allocation group number must be given in
++.BR sm_agno "."
 +
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, LEFT.br_startoff,
--					LEFT.br_startblock, LEFT.br_blockcount,
-+			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
- 					&i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
--					LEFT.br_startblock,
--					LEFT.br_blockcount +
--					new->br_blockcount,
-+					LEFT.br_startblock, LEFT.br_blockcount,
- 					LEFT.br_state);
- 			if (error)
- 				goto done;
- 		}
--		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
--			startblockval(PREV.br_startblock));
--		xfs_bmbt_set_startblock(ep, nullstartblock(da_new));
--		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		bma->idx--;
- 		break;
-@@ -1880,10 +1877,6 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the first part of a previous delayed allocation.
- 		 * The left neighbor is not contiguous.
- 		 */
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_startoff(ep, new_endoff);
--		temp = PREV.br_blockcount - new->br_blockcount;
--		xfs_bmbt_set_blockcount(ep, temp);
- 		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
- 		(*nextents)++;
- 		if (bma->cur == NULL)
-@@ -1911,12 +1904,19 @@ xfs_bmap_add_extent_delay_real(
- 			if (error)
- 				goto done;
- 		}
++.PP
++.nf
++.B XFS_SCRUB_TYPE_BNOBT
++.B XFS_SCRUB_TYPE_CNTBT
++.B XFS_SCRUB_TYPE_INOBT
++.B XFS_SCRUB_TYPE_FINOBT
++.B XFS_SCRUB_TYPE_RMAPBT
++.fi
++.TP
++.B XFS_SCRUB_TYPE_REFCNTBT
++Examine a given allocation group's free space btrees, inode btress, reverse
++mapping btrees, or reference count btrees, respectively.
++against the allocation group's metadata btrees, if possible.
++Space extent records are checked for obviously incorrect values and
++cross-referenced with the other space extent metadata to ensure that
++there are no conflicts.
++The allocation group number must be given in
++.BR sm_agno "."
 +
-+		temp = PREV.br_blockcount - new->br_blockcount;
- 		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
- 			startblockval(PREV.br_startblock) -
- 			(bma->cur ? bma->cur->bc_private.b.allocated : 0));
--		ep = xfs_iext_get_ext(ifp, bma->idx + 1);
--		xfs_bmbt_set_startblock(ep, nullstartblock(da_new));
++.TP
++.B XFS_SCRUB_TYPE_INODE
++Examine a given inode's inode record for obviously incorrect values and
++discrepancies with the rest of filesystem metadata.
++Parent pointers are checked for impossible inode values and are then
++followed up to the parent directory to ensure that the linkage makes
++sense.
++The inode to examine can be specified either through
++.B sm_ino
++and
++.BR sm_gen "; "
++if not specified, then the file described by
++.B dest_fd
++will be examined.
 +
-+		trace_xfs_bmap_pre_update(bma->ip, bma->idx + 1, state, _THIS_IP_);
-+		PREV.br_startoff = new_endoff;
-+		PREV.br_blockcount = temp;
-+		PREV.br_startblock = nullstartblock(da_new);
-+		xfs_iext_update_extent(ifp, bma->idx + 1, &PREV);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx + 1, state, _THIS_IP_);
++.PP
++.nf
++.B XFS_SCRUB_TYPE_BMBTD
++.B XFS_SCRUB_TYPE_BMBTA
++.fi
++.TP
++.B XFS_SCRUB_TYPE_BMBTC
++Examine a given inode's data block map, extended attribute block map,
++copy on write block map, or parent inode pointer.
++Inode records are examined for obviously incorrect values and
++discrepancies with the three block map types.
++The block maps are checked for obviously wrong values and
++cross-referenced with the allocation group space extent metadata for
++discrepancies.
++The inode to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
 +
- 		break;
- 
- 	case BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
-@@ -1924,37 +1924,39 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the last part of a previous delayed allocation.
- 		 * The right neighbor is contiguous with the new allocation.
- 		 */
--		temp = PREV.br_blockcount - new->br_blockcount;
-+		old = RIGHT;
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx + 1, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
--		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, bma->idx + 1),
--			new->br_startoff, new->br_startblock,
--			new->br_blockcount + RIGHT.br_blockcount,
--			RIGHT.br_state);
-+		RIGHT.br_startoff = new->br_startoff;
-+		RIGHT.br_startblock = new->br_startblock;
-+		RIGHT.br_blockcount += new->br_blockcount;
-+		xfs_iext_update_extent(ifp, bma->idx + 1, &RIGHT);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx + 1, state, _THIS_IP_);
++.TP
++.B XFS_SCRUB_TYPE_XATTR
++Examine the extended attribute records and indices of a given inode for
++incorrect pointers and other signs of damage.
++The inode to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
 +
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
--					RIGHT.br_startblock,
--					RIGHT.br_blockcount, &i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
-+					old.br_startblock,
-+					old.br_blockcount, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			error = xfs_bmbt_update(bma->cur, new->br_startoff,
--					new->br_startblock,
--					new->br_blockcount +
--					RIGHT.br_blockcount,
-+			error = xfs_bmbt_update(bma->cur, RIGHT.br_startoff,
-+					RIGHT.br_startblock, RIGHT.br_blockcount,
- 					RIGHT.br_state);
- 			if (error)
- 				goto done;
- 		}
- 
-+		temp = PREV.br_blockcount - new->br_blockcount;
- 		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
- 			startblockval(PREV.br_startblock));
++.TP
++.B XFS_SCRUB_TYPE_DIR
++Examine the entries in a given directory for invalid data or dangling pointers.
++The directory to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
 +
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_startblock(ep, nullstartblock(da_new));
-+		PREV.br_blockcount = temp;
-+		PREV.br_startblock = nullstartblock(da_new);
-+		xfs_iext_update_extent(ifp, bma->idx, &PREV);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		bma->idx++;
-@@ -1965,9 +1967,6 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the last part of a previous delayed allocation.
- 		 * The right neighbor is not contiguous.
- 		 */
--		temp = PREV.br_blockcount - new->br_blockcount;
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
- 		xfs_iext_insert(bma->ip, bma->idx + 1, 1, new, state);
- 		(*nextents)++;
- 		if (bma->cur == NULL)
-@@ -1995,11 +1994,16 @@ xfs_bmap_add_extent_delay_real(
- 			if (error)
- 				goto done;
- 		}
++.TP
++.B XFS_SCRUB_TYPE_SYMLINK
++Examine the target of a symbolic link for obvious pathname problems.
++The link to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
 +
-+		temp = PREV.br_blockcount - new->br_blockcount;
- 		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
- 			startblockval(PREV.br_startblock) -
- 			(bma->cur ? bma->cur->bc_private.b.allocated : 0));
--		ep = xfs_iext_get_ext(ifp, bma->idx);
--		xfs_bmbt_set_startblock(ep, nullstartblock(da_new));
++.PP
++.nf
++.B XFS_SCRUB_TYPE_RTBITMAP
++.fi
++.TP
++.B XFS_SCRUB_TYPE_RTSUM
++Examine the realtime block bitmap and realtime summary inodes for
++corruption.
 +
-+		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
-+		PREV.br_startblock = nullstartblock(da_new);
-+		PREV.br_blockcount = temp;
-+		xfs_iext_update_extent(ifp, bma->idx, &PREV);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		bma->idx++;
-@@ -2026,19 +2030,33 @@ xfs_bmap_add_extent_delay_real(
- 		 *  PREV @ idx          LEFT              RIGHT
- 		 *                      inserted at idx + 1
- 		 */
--		temp = new->br_startoff - PREV.br_startoff;
--		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx, 0, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);	/* truncate PREV */
-+		old = PREV;
++.PP
++.nf
++.B XFS_SCRUB_TYPE_UQUOTA
++.B XFS_SCRUB_TYPE_GQUOTA
++.fi
++.TP
++.B XFS_SCRUB_TYPE_PQUOTA
++Examine all user, group, or project quota records for corruption.
++.RE
 +
-+		/* LEFT is the new middle */
- 		LEFT = *new;
-+
-+		/* RIGHT is the new right */
- 		RIGHT.br_state = PREV.br_state;
--		RIGHT.br_startblock = nullstartblock(
--				(int)xfs_bmap_worst_indlen(bma->ip, temp2));
- 		RIGHT.br_startoff = new_endoff;
--		RIGHT.br_blockcount = temp2;
-+		RIGHT.br_blockcount =
-+			PREV.br_startoff + PREV.br_blockcount - new_endoff;
-+		RIGHT.br_startblock =
-+			nullstartblock(xfs_bmap_worst_indlen(bma->ip,
-+					RIGHT.br_blockcount));
-+
-+		/* truncate PREV */
-+		trace_xfs_bmap_pre_update(bma->ip, bma->idx, 0, _THIS_IP_);
-+		PREV.br_blockcount = new->br_startoff - PREV.br_startoff;
-+		PREV.br_startblock =
-+			nullstartblock(xfs_bmap_worst_indlen(bma->ip,
-+					PREV.br_blockcount));
-+		xfs_iext_update_extent(ifp, bma->idx, &PREV);
-+		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-+
- 		/* insert LEFT (r[0]) and RIGHT (r[1]) at the same time */
- 		xfs_iext_insert(bma->ip, bma->idx + 1, 2, &LEFT, state);
- 		(*nextents)++;
-+
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2064,12 +2082,12 @@ xfs_bmap_add_extent_delay_real(
- 			if (error)
- 				goto done;
- 		}
--		temp = xfs_bmap_worst_indlen(bma->ip, temp);
--		temp2 = xfs_bmap_worst_indlen(bma->ip, temp2);
--		diff = (int)(temp + temp2 -
--			     (startblockval(PREV.br_startblock) -
--			      (bma->cur ?
--			       bma->cur->bc_private.b.allocated : 0)));
-+
-+		da_new = startblockval(PREV.br_startblock) +
-+			 startblockval(RIGHT.br_startblock);
-+		diff = da_new - startblockval(old.br_startblock);
-+		if (bma->cur)
-+			diff += bma->cur->bc_private.b.allocated;
- 		if (diff > 0) {
- 			error = xfs_mod_fdblocks(bma->ip->i_mount,
- 						 -((int64_t)diff), false);
-@@ -2078,16 +2096,7 @@ xfs_bmap_add_extent_delay_real(
- 				goto done;
- 		}
- 
--		ep = xfs_iext_get_ext(ifp, bma->idx);
--		xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
--		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx + 2, state, _THIS_IP_);
--		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, bma->idx + 2),
--			nullstartblock((int)temp2));
--		trace_xfs_bmap_post_update(bma->ip, bma->idx + 2, state, _THIS_IP_);
--
- 		bma->idx++;
--		da_new = temp + temp2;
- 		break;
- 
- 	case BMAP_LEFT_FILLING | BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
--- 
-2.14.1
-
++.PD 1
++.PP
++The field
++.I sm_flags
++control the behavior of the scrub operation and provide more information
++about the outcome of the operation.
++If none of the
++.B XFS_SCRUB_OFLAG_*
++flags are set upon return, the metadata is clean.
++.RS 0.4i
++.TP
++.B XFS_SCRUB_IFLAG_REPAIR
++If the caller sets this flag, the checker will examine the metadata and
++try to fix any problems or suboptimal metadata that it finds.
++If no errors occur during the repair operation, the check is performed a
++second time to determine if the repair succeeded.
++If errors do occur, the call returns an error status immediately.
++.TP
++.B XFS_SCRUB_OFLAG_CORRUPT
++The metadata was corrupt when the call returned.
++If
++.B XFS_SCRUB_IFLAG_REPAIR
++was specified, then an attempted repair failed to fix the problem.
++Unmount the filesystem and run
++.B xfs_repair
++to fix the filesystem.
++.TP
++.B XFS_SCRUB_OFLAG_PREEN
++The metadata is ok, but some aspect of the metadata could be optimized
++to increase performance.
++.TP
++.B XFS_SCRUB_OFLAG_XFAIL
++Filesystem errors were encountered when accessing other metadata to
++cross-reference the records attached to this metadata object.
++.TP
++.B XFS_SCRUB_OFLAG_XCORRUPT
++Discrepancies were found when cross-referencing the records attached to
++this metadata object against all other available metadata in the system.
++.TP
++.B XFS_SCRUB_OFLAG_INCOMPLETE
++The checker was unable to complete its check of all records.
++.TP
++.B XFS_SCRUB_OFLAG_WARNING
++The checker encountered a metadata object with potentially problematic
++records.
++However, the records were not obviously corrupt.
++.RE
++.PP
++For metadata checkers that operate on inodes or inode metadata, the fields
++.IR sm_ino " and " sm_gen
++are the inode number and generation number of the inode to check.
++If the inode number is zero, the inode represented by
++.I dest_fd
++is used instead.
++.PP
++For metadata checkers that operate on allocation group metadata, the field
++.I sm_agno
++indicates the allocation group in which to find the metadata.
++.PP
++For metadata checkers that operate on filesystem-wide metadata, no
++further arguments are required.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EBUSY
++The filesystem object is busy; the repair will have to be tried again.
++.TP
++.B EFSCORRUPTED
++Severe filesystem corruption was detected and could not be repaired.
++Unmount the filesystem and run
++.B xfs_repair
++to fix the filesystem.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B ENOENT
++The specified metadata object does not exist.
++For example, this error code is returned for a
++.B XFS_SCRUB_TYPE_REFCNTBT
++request on a filesystem that does not support reflink.
++.TP
++.B ENOMEM
++There was not sufficient memory to perform the scrub or repair operation.
++Some operations (most notably reference count checking) require a lot of
++memory.
++.TP
++.B ENOSPC
++There is not enough free disk space to attempt a repair.
++.TP
++.B ENOTRECOVERABLE
++Filesystem was mounted in
++.B norecovery
++mode and therefore has an unclean log.
++.TP
++.B ENOTTY
++Online scrubbing or repair were not enabled.
++.TP
++.B EOPNOTSUPP
++Repairs of the requested metadata object are not supported.
++.TP
++.B EROFS
++Filesystem is read-only and a repair was requested.
++.TP
++.B ESHUTDOWN;
++Filesystem is shut down due to previous errors.
++.SH CONFORMING TO
++This API is specific to XFS on Linux.
++.SH NOTES
++These operations may tie up the filesystem for a long time.
++A calling process can be stop the operation by being sent a fatal
++signal, but non-fatal signals are blocked.
++.SH SEE ALSO
++.BR ioctl (2)
