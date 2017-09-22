@@ -1,197 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33430 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751675AbdIUKib (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Sep 2017 06:38:31 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1853981E01
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 10:38:31 +0000 (UTC)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfs: update i_size after unwritten conversion in dio completion
-Date: Thu, 21 Sep 2017 18:38:28 +0800
-Message-Id: <20170921103828.18690-1-eguan@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:27254 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751876AbdIVPOV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 11:14:21 -0400
+Date: Fri, 22 Sep 2017 08:14:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: check kthread_should_stop() after the setting of
+ task state
+Message-ID: <20170922151403.GE5728@magnolia>
+References: <1505205930-2445-1-git-send-email-houtao1@huawei.com>
+ <20170918185200.GM6540@magnolia>
+ <436ef067-8608-1da6-ee2f-184314761761@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <436ef067-8608-1da6-ee2f-184314761761@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, Eryu Guan <eguan@redhat.com>
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org
 
-Since commit d531d91d6990 ("xfs: always use unwritten extents for
-direct I/O writes"), we start allocating unwritten extents for all
-direct writes to allow appending aio in XFS.
+On Fri, Sep 22, 2017 at 06:57:00PM +0800, Hou Tao wrote:
+> Hi Darrick,
+> 
+> On 2017/9/19 2:52, Darrick J. Wong wrote:
+> > On Tue, Sep 12, 2017 at 04:45:30PM +0800, Hou Tao wrote:
+> >> A umount hang is possible when a race occurs between the umount
+> >> process and the xfsaild kthread. The following sequences outline
+> >> the race:
+> >>
+> >>     xfsaild: kthread_should_stop()
+> >> 	     => return false, so xfsaild continue
+> >>
+> >>     umount: set_bit(KTHREAD_SHOULD_STOP, &kthread->flags)
+> >> 	    => by kthread_stop()
+> >>     umount: wake_up_process()
+> >> 	    => because xfsaild is still running, so 0 is returned
+> >>
+> >>     xfsaild: __set_current_state(TASK_INTERRUPTIBLE)
+> >>     xfsaild: schedule()
+> >> 	    => now, xfsaild will wait indefinitely
+> >>
+> >>     umount: wait_for_completion()
+> >> 	    => and umount will hang
+> >>
+> >> To fix that, we need to check kthread_should_stop() after we set
+> >> the task state, so the xfsaild will either see the stop bit and
+> >> exit or the task state is reset to runnable by wake_up_process()
+> >> such that it isn't scheduled out indefinitely and detects the stop
+> >> bit at the next iteration.
+> >>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> >> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> > 
+> > Looks ok, I guess, but just to reiterate what I said in another email
+> > 15 minutes ago, can this be turned into a regression test?
+> It's difficult to create an always-happened test for the race, and
+> I had test the patch by adding artificial delays (as suggested by Brian Foster) in
+> kernel source code. I also have tried to reproduce the problem by lifting up the
+> schedule class/priority of the umount process and lifting down the schedule
+> class/priorityof the xfsaild kthread, but still can not reproduce the problem,
+> so any ideas or suggestions ?
 
-But for dio writes that could extend file size we update the in-core
-inode size first, then convert the unwritten extents to real
-allocations at dio completion time in xfs_dio_write_end_io(). Thus a
-racing direct read could see the new i_size and find the unwritten
-extents first and read zeros instead of actual data, if the direct
-writer also takes a shared iolock.
+Do the artificial delays make it so that the race happens reliably?
+If so, we could just add a debug knob to inject delays, which you could
+then call from a xfstest script.
 
-Fix it by updating the in-core inode size after the unwritten extent
-conversion. To do this, introduce a new boolean argument to
-xfs_iomap_write_unwritten() to tell if we want to update in-core
-i_size or not.
+--D
 
-Suggested-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-
-Patch passed the test posted by Eric[1] and a locally modified aio
-version of the test.
-
-I also ran fstests with config xfs_4k_crc, xfs_2k_reflink, xfs_1k_rmap
-and xfs_512, and aio-dio tests from ltp, I don't see any new failures
-introduced.
-
-[1] http://www.spinics.net/lists/fstests/msg06978.html
-
- fs/xfs/xfs_aops.c  |  9 ++++++++-
- fs/xfs/xfs_file.c  | 34 ++++++++++++++++++++--------------
- fs/xfs/xfs_iomap.c |  7 ++++++-
- fs/xfs/xfs_iomap.h |  2 +-
- fs/xfs/xfs_pnfs.c  |  2 +-
- 5 files changed, 36 insertions(+), 18 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 29172609f2a3..f937968e9515 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -343,7 +343,14 @@ xfs_end_io(
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 		break;
- 	case XFS_IO_UNWRITTEN:
--		error = xfs_iomap_write_unwritten(ip, offset, size);
-+		/*
-+		 * The correct in-core inode size should have been updated by
-+		 * generic_write_end, and the 'size' here is buffer head
-+		 * granularity size of the ioend, which could be larger than
-+		 * the actual bytes written. So skip in-core i_size update in
-+		 * xfs_iomap_write_unwritten()
-+		 */
-+		error = xfs_iomap_write_unwritten(ip, offset, size, false);
- 		break;
- 	default:
- 		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 350b6d43ba23..d4796c5a88fe 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -434,7 +434,6 @@ xfs_dio_write_end_io(
- 	struct inode		*inode = file_inode(iocb->ki_filp);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	loff_t			offset = iocb->ki_pos;
--	bool			update_size = false;
- 	int			error = 0;
- 
- 	trace_xfs_end_io_direct_write(ip, offset, size);
-@@ -445,6 +444,22 @@ xfs_dio_write_end_io(
- 	if (size <= 0)
- 		return size;
- 
-+	if (flags & IOMAP_DIO_COW) {
-+		error = xfs_reflink_end_cow(ip, offset, size);
-+		if (error)
-+			return error;
-+	}
-+
-+	 /*
-+	 * Deal with IOMAP_DIO_UNWRITTEN case before check & update in-core
-+	 * inode size, we do it only after converting the unwritten extents to
-+	 * real allocations in xfs_iomap_write_write_unwritten() (by passing
-+	 * 'true' as the last argument to it), otherwise a racing direct read
-+	 * could see the new size thus read zeros because of unwritten extents.
-+	 */
-+	if (flags & IOMAP_DIO_UNWRITTEN)
-+		return xfs_iomap_write_unwritten(ip, offset, size, true);
-+
- 	/*
- 	 * We need to update the in-core inode size here so that we don't end up
- 	 * with the on-disk inode size being outside the in-core inode size. We
-@@ -459,20 +474,11 @@ xfs_dio_write_end_io(
- 	spin_lock(&ip->i_flags_lock);
- 	if (offset + size > i_size_read(inode)) {
- 		i_size_write(inode, offset + size);
--		update_size = true;
--	}
--	spin_unlock(&ip->i_flags_lock);
--
--	if (flags & IOMAP_DIO_COW) {
--		error = xfs_reflink_end_cow(ip, offset, size);
--		if (error)
--			return error;
--	}
--
--	if (flags & IOMAP_DIO_UNWRITTEN)
--		error = xfs_iomap_write_unwritten(ip, offset, size);
--	else if (update_size)
-+		spin_unlock(&ip->i_flags_lock);
- 		error = xfs_setfilesize(ip, offset, size);
-+	} else {
-+		spin_unlock(&ip->i_flags_lock);
-+	}
- 
- 	return error;
- }
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a1909bc064e9..90dc551a8621 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -829,7 +829,8 @@ int
- xfs_iomap_write_unwritten(
- 	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
--	xfs_off_t	count)
-+	xfs_off_t	count,
-+	bool		update_isize)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
- 	xfs_fileoff_t	offset_fsb;
-@@ -840,6 +841,7 @@ xfs_iomap_write_unwritten(
- 	xfs_trans_t	*tp;
- 	xfs_bmbt_irec_t imap;
- 	struct xfs_defer_ops dfops;
-+	struct inode	*inode = VFS_I(ip);
- 	xfs_fsize_t	i_size;
- 	uint		resblks;
- 	int		error;
-@@ -900,6 +902,9 @@ xfs_iomap_write_unwritten(
- 		if (i_size > offset + count)
- 			i_size = offset + count;
- 
-+		if (update_isize && (i_size > i_size_read(inode)))
-+			i_size_write(inode, i_size);
-+
- 		i_size = xfs_new_eof(ip, i_size);
- 		if (i_size) {
- 			ip->i_d.di_size = i_size;
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 00db3ecea084..ee535065c5d0 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -27,7 +27,7 @@ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
- 			struct xfs_bmbt_irec *, int);
- int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
- 			struct xfs_bmbt_irec *);
--int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
-+int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
- 
- void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
- 		struct xfs_bmbt_irec *);
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 2f2dc3c09ad0..4246876df7b7 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -274,7 +274,7 @@ xfs_fs_commit_blocks(
- 					(end - 1) >> PAGE_SHIFT);
- 		WARN_ON_ONCE(error);
- 
--		error = xfs_iomap_write_unwritten(ip, start, length);
-+		error = xfs_iomap_write_unwritten(ip, start, length, false);
- 		if (error)
- 			goto out_drop_iolock;
- 	}
--- 
-2.13.5
-
+> 
+> Regard
+> 
+> 
+> > --D
+> > 
+> >> ---
+> >> v2:
+> >> 	* comment updates suggested by Brain Foster
+> >> v1:
+> >> 	* http://www.spinics.net/lists/linux-xfs/msg10285.html
+> >> ---
+> >>  fs/xfs/xfs_trans_ail.c | 21 ++++++++++++++++++---
+> >>  1 file changed, 18 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> >> index 9056c0f..2d77d9c 100644
+> >> --- a/fs/xfs/xfs_trans_ail.c
+> >> +++ b/fs/xfs/xfs_trans_ail.c
+> >> @@ -499,11 +499,26 @@ xfsaild(
+> >>  	current->flags |= PF_MEMALLOC;
+> >>  	set_freezable();
+> >>  
+> >> -	while (!kthread_should_stop()) {
+> >> +	while (1) {
+> >>  		if (tout && tout <= 20)
+> >> -			__set_current_state(TASK_KILLABLE);
+> >> +			set_current_state(TASK_KILLABLE);
+> >>  		else
+> >> -			__set_current_state(TASK_INTERRUPTIBLE);
+> >> +			set_current_state(TASK_INTERRUPTIBLE);
+> >> +
+> >> +		/*
+> >> +		 * Check kthread_should_stop() after we set the task state
+> >> +		 * to guarantee that we either see the stop bit and exit or
+> >> +		 * the task state is reset to runnable such that it's not
+> >> +		 * scheduled out indefinitely and detects the stop bit at
+> >> +		 * next iteration.
+> >> +		 *
+> >> +		 * A memory barrier is included in above task state set to
+> >> +		 * serialize again kthread_stop().
+> >> +		 */
+> >> +		if (kthread_should_stop()) {
+> >> +			__set_current_state(TASK_RUNNING);
+> >> +			break;
+> >> +		}
+> >>  
+> >>  		spin_lock(&ailp->xa_lock);
+> >>  
+> >> -- 
+> >> 2.5.0
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > .
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
