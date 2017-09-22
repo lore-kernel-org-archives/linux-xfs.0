@@ -1,75 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32840 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750913AbdIWHMK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Sep 2017 03:12:10 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8N7C9XX021115
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Sep 2017 07:12:10 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v8N7C9ES009782
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Sep 2017 07:12:09 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v8N7C9Jw009406
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Sep 2017 07:12:09 GMT
-Date: Sat, 23 Sep 2017 00:12:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: always swap the cow forks when swapping extents
-Message-ID: <20170923071208.GN5728@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from bombadil.infradead.org ([65.50.211.133]:56045 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751980AbdIVN7r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:47 -0400
+Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dvOUc-00019E-QX
+        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:46 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/19] xfs: fix incorrect extent state in xfs_bmap_add_extent_unwritten_real
+Date: Fri, 22 Sep 2017 06:59:27 -0700
+Message-Id: <20170922135945.31574-2-hch@lst.de>
+In-Reply-To: <20170922135945.31574-1-hch@lst.de>
+References: <20170922135945.31574-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Since the CoW fork exists as a secondary data structure to the data
-fork, we must always swap cow forks during swapext.  We also need to
-swap the extent counts and reset the cowblocks tags.
+There was one spot in xfs_bmap_add_extent_unwritten_real that didn't use the
+passed in new extent state but always converted to normal, leading to wrong
+behavior when converting from normal to unwritten.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Only found by code inspection, it seems like this code path to move partial
+extent from written to unwritten while merging it with the next extent is
+rarely exercised.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |   24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index bc6c6e1..e9db7fc 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -2122,11 +2122,31 @@ xfs_swap_extents(
- 		ip->i_d.di_flags2 |= tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
- 		tip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
- 		tip->i_d.di_flags2 |= f & XFS_DIFLAG2_REFLINK;
-+	}
-+
-+	/* Swap the cow forks. */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		xfs_extnum_t	extnum;
-+
-+		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-+		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-+
-+		extnum = ip->i_cnextents;
-+		ip->i_cnextents = tip->i_cnextents;
-+		tip->i_cnextents = extnum;
-+
- 		cowfp = ip->i_cowfp;
- 		ip->i_cowfp = tip->i_cowfp;
- 		tip->i_cowfp = cowfp;
--		xfs_inode_set_cowblocks_tag(ip);
--		xfs_inode_set_cowblocks_tag(tip);
-+
-+		if (ip->i_cowfp && ip->i_cnextents)
-+			xfs_inode_set_cowblocks_tag(ip);
-+		else
-+			xfs_inode_clear_cowblocks_tag(ip);
-+		if (tip->i_cowfp && tip->i_cnextents)
-+			xfs_inode_set_cowblocks_tag(tip);
-+		else
-+			xfs_inode_clear_cowblocks_tag(tip);
- 	}
- 
- 	xfs_trans_log_inode(tp, ip,  src_log_flags);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 459f4b4f08fe..f2f5bdb9e092 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2573,7 +2573,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 					&i)))
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
+-			cur->bc_rec.b.br_state = XFS_EXT_NORM;
++			cur->bc_rec.b.br_state = new->br_state;
+ 			if ((error = xfs_btree_insert(cur, &i)))
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-- 
+2.14.1
+
