@@ -1,187 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41998 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58814 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751763AbdIUPx5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Sep 2017 11:53:57 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 89160267C8
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 15:53:57 +0000 (UTC)
+        id S1751726AbdIVDyK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Sep 2017 23:54:10 -0400
+Date: Fri, 22 Sep 2017 11:54:07 +0800
 From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v2] xfs: update i_size after unwritten conversion in dio completion
-Date: Thu, 21 Sep 2017 23:52:46 +0800
-Message-Id: <20170921155246.4352-1-eguan@redhat.com>
+Subject: Re: [PATCH v5] xfs: Add test for CVE-2017-14340
+Message-ID: <20170922035407.GB8034@eguan.usersys.redhat.com>
+References: <20170922023446.2616054-1-rwareing@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170922023446.2616054-1-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>
+To: Richard Wareing <rwareing@fb.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Since commit d531d91d6990 ("xfs: always use unwritten extents for
-direct I/O writes"), we start allocating unwritten extents for all
-direct writes to allow appending aio in XFS.
+On Thu, Sep 21, 2017 at 07:34:46PM -0700, Richard Wareing wrote:
+> Verify kernel doesn't panic when user attempts to set realtime flags
+> on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+> kernels will panic during this test.  Kernels not compiled with
+> CONFIG_XFS_RT should pass test.
+> 
+> This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
+> on the main kernel tree.
+> 
+> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> ---
+> Changes since v4:
+> * Check inherit flag on scratch mount via lsattr + grep
+> 
+> Changes since v3:
+> * Tabs not spaces
+> * Test added to auto group
+> * _filter_xfs_io filter only
+> * Removed _require_test
+> 
+> Changes since v2:
+> * Added to dangerous group
+> 
+> Changes since v1:
+> * Corrected copyright text
+> 
+>  tests/xfs/431     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/431.out |  3 ++
+>  tests/xfs/group   |  1 +
+>  3 files changed, 88 insertions(+)
+>  create mode 100755 tests/xfs/431
+>  create mode 100644 tests/xfs/431.out
+> 
+> diff --git a/tests/xfs/431 b/tests/xfs/431
+> new file mode 100755
+> index 0000000..414ec46
+> --- /dev/null
+> +++ b/tests/xfs/431
+> @@ -0,0 +1,84 @@
+> +#! /bin/bash
+> +# FS QA Test 431
+> +#
+> +# Verify kernel doesn't panic when user attempts to set realtime flags
+> +# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+> +# kernels will panic during this test.  Kernels not compiled with
+> +# CONFIG_XFS_RT should pass test.
+> +#
+> +# See CVE-2017-14340 for more information.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Facebook, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_xfs_io_command "chattr"
+> +_require_xfs_io_command "fsync"
+> +_require_xfs_io_command "pwrite"
+> +_require_scratch
+> +
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +# Set realtime inherit flag on scratch mount, suppress output
+> +# as this may simply error out on future kernels, we will check
+> +# exit code instead.
+> +$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
+> +
+> +# Erroring out here is fine, this would be desired behavior for
+> +# FSes without realtime devices present.
+> +if $XFS_IO_PROG -c 'lsattr' $SCRATCH_MNT |
+> +	grep '^[[:graph:]]\{7\}t[[:graph:]]\{8\}' &> /dev/null; then
 
-But for dio writes that could extend file size we update the in-core
-inode size first, then convert the unwritten extents to real
-allocations at dio completion time in xfs_dio_write_end_io(). Thus a
-racing direct read could see the new i_size and find the unwritten
-extents first and read zeros instead of actual data, if the direct
-writer also takes a shared iolock.
+This looks better to me. Though I don't think assuming the fixed
+position of 't' is a good idea. We may add new attr flags so the
+position could change. Why not just grep for 't'? We don't have multiple
+'t's anyway :)
 
-Fix it by updating the in-core inode size after the unwritten extent
-conversion. To do this, introduce a new boolean argument to
-xfs_iomap_write_unwritten() to tell if we want to update in-core
-i_size or not.
+if $XFS_IO_PROG -c 'lsattr' $SCRATCH_MNT | grep -q 't'; then
+...
 
-Suggested-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v2:
-- fix comments by copying Brian's words :)
-- fix code style, remove unnecessary blank lines and braces
+I can do this update at commit time if this looks fine to you.
 
-v1: https://marc.info/?l=linux-xfs&m=150599032124565&w=2
+Thanks,
+Eryu
 
- fs/xfs/xfs_aops.c  |  3 ++-
- fs/xfs/xfs_file.c  | 33 +++++++++++++++++++--------------
- fs/xfs/xfs_iomap.c |  7 +++++--
- fs/xfs/xfs_iomap.h |  2 +-
- fs/xfs/xfs_pnfs.c  |  2 +-
- 5 files changed, 28 insertions(+), 19 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 29172609f2a3..f18e5932aec4 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -343,7 +343,8 @@ xfs_end_io(
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 		break;
- 	case XFS_IO_UNWRITTEN:
--		error = xfs_iomap_write_unwritten(ip, offset, size);
-+		/* writeback should never update isize */
-+		error = xfs_iomap_write_unwritten(ip, offset, size, false);
- 		break;
- 	default:
- 		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 350b6d43ba23..309e26c9dddb 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -434,7 +434,6 @@ xfs_dio_write_end_io(
- 	struct inode		*inode = file_inode(iocb->ki_filp);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	loff_t			offset = iocb->ki_pos;
--	bool			update_size = false;
- 	int			error = 0;
- 
- 	trace_xfs_end_io_direct_write(ip, offset, size);
-@@ -445,6 +444,21 @@ xfs_dio_write_end_io(
- 	if (size <= 0)
- 		return size;
- 
-+	if (flags & IOMAP_DIO_COW) {
-+		error = xfs_reflink_end_cow(ip, offset, size);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * Unwritten conversion updates the in-core isize after extent
-+	 * conversion but before updating the on-disk size. Updating isize any
-+	 * earlier allows a racing dio read to find unwritten extents before
-+	 * they are converted.
-+	 */
-+	if (flags & IOMAP_DIO_UNWRITTEN)
-+		return xfs_iomap_write_unwritten(ip, offset, size, true);
-+
- 	/*
- 	 * We need to update the in-core inode size here so that we don't end up
- 	 * with the on-disk inode size being outside the in-core inode size. We
-@@ -459,20 +473,11 @@ xfs_dio_write_end_io(
- 	spin_lock(&ip->i_flags_lock);
- 	if (offset + size > i_size_read(inode)) {
- 		i_size_write(inode, offset + size);
--		update_size = true;
--	}
--	spin_unlock(&ip->i_flags_lock);
--
--	if (flags & IOMAP_DIO_COW) {
--		error = xfs_reflink_end_cow(ip, offset, size);
--		if (error)
--			return error;
--	}
--
--	if (flags & IOMAP_DIO_UNWRITTEN)
--		error = xfs_iomap_write_unwritten(ip, offset, size);
--	else if (update_size)
-+		spin_unlock(&ip->i_flags_lock);
- 		error = xfs_setfilesize(ip, offset, size);
-+	} else {
-+		spin_unlock(&ip->i_flags_lock);
-+	}
- 
- 	return error;
- }
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a1909bc064e9..f179bdf1644d 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -829,7 +829,8 @@ int
- xfs_iomap_write_unwritten(
- 	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
--	xfs_off_t	count)
-+	xfs_off_t	count,
-+	bool		update_isize)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
- 	xfs_fileoff_t	offset_fsb;
-@@ -840,6 +841,7 @@ xfs_iomap_write_unwritten(
- 	xfs_trans_t	*tp;
- 	xfs_bmbt_irec_t imap;
- 	struct xfs_defer_ops dfops;
-+	struct inode	*inode = VFS_I(ip);
- 	xfs_fsize_t	i_size;
- 	uint		resblks;
- 	int		error;
-@@ -899,7 +901,8 @@ xfs_iomap_write_unwritten(
- 		i_size = XFS_FSB_TO_B(mp, offset_fsb + count_fsb);
- 		if (i_size > offset + count)
- 			i_size = offset + count;
--
-+		if (update_isize && i_size > i_size_read(inode))
-+			i_size_write(inode, i_size);
- 		i_size = xfs_new_eof(ip, i_size);
- 		if (i_size) {
- 			ip->i_d.di_size = i_size;
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 00db3ecea084..ee535065c5d0 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -27,7 +27,7 @@ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
- 			struct xfs_bmbt_irec *, int);
- int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
- 			struct xfs_bmbt_irec *);
--int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
-+int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
- 
- void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
- 		struct xfs_bmbt_irec *);
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 2f2dc3c09ad0..4246876df7b7 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -274,7 +274,7 @@ xfs_fs_commit_blocks(
- 					(end - 1) >> PAGE_SHIFT);
- 		WARN_ON_ONCE(error);
- 
--		error = xfs_iomap_write_unwritten(ip, start, length);
-+		error = xfs_iomap_write_unwritten(ip, start, length, false);
- 		if (error)
- 			goto out_drop_iolock;
- 	}
--- 
-2.13.5
-
+> +	# Attempt to write/fsync data to file
+> +	$XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile |
+> +		tee -a $seqres.full | _filter_xfs_io
+> +
+> +	# Remove the rt inherit flag after we are done or xfs_repair
+> +	# will fail.
+> +	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+> new file mode 100644
+> index 0000000..8c14f11
+> --- /dev/null
+> +++ b/tests/xfs/431.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 431
+> +wrote 1048576/1048576 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 0a449b9..1765559 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -427,3 +427,4 @@
+>  428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+>  429 dangerous_fuzzers dangerous_scrub dangerous_repair
+>  430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+> +431 auto quick dangerous
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
