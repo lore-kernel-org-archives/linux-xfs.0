@@ -1,305 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:44490 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751637AbdIVFyi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 01:54:38 -0400
-Date: Fri, 22 Sep 2017 15:54:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 2/3] xfs: Set realtime flag based on initial
- allocation size
-Message-ID: <20170922055434.GD10955@dastard>
-References: <20170919035238.3976871-1-rwareing@fb.com>
- <20170919035238.3976871-3-rwareing@fb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170919035238.3976871-3-rwareing@fb.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45344 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751637AbdIVGcz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 02:32:55 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8M6WnDP016830
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Sep 2017 02:32:55 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2d4pnnv9dh-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Sep 2017 02:32:55 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Fri, 22 Sep 2017 02:32:52 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V2] iomap_dio_rw: Allocate AIO completion queue before submitting dio
+Date: Fri, 22 Sep 2017 12:03:33 +0530
+In-Reply-To: <20170921095234.12401-1-chandan@linux.vnet.ibm.com>
+References: <20170921095234.12401-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20170922063333.7923-1-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
+To: linux-xfs@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, hch@infradead.org, eguan@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 08:52:37PM -0700, Richard Wareing wrote:
-> - The rt_alloc_min sysfs option automatically selects the device (data
->   device, or realtime) based on the size of the initial allocation of the
->   file.
-> - This option can be used to route the storage of small files (and the
->   inefficient workloads associated with them) to a suitable storage
->   device such a SSD, while larger allocations are sent to a traditional
->   HDD.
-> - Supports writes via O_DIRECT, buffered (i.e. page cache), and
->   pre-allocations (i.e. fallocate)
-> - Available only when kernel is compiled w/ CONFIG_XFS_RT option.
-> 
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
-> ---
-> Changes since v3:
-> * Now functions via initial allocation regardless of O_DIRECT, buffered or
->   pre-allocation code paths.  Provides a consistent user-experience.
-> * I Did do some experiments putting this in the xfs_bmapi_write code path
->   however pre-allocation accounting unfortunately prevents this cleaner
->   approach.  As such, this proved to be the cleanest and functional approach.
-> * No longer a mount option, now a sysfs tunable
-> 
-> Changes since v2:
-> * None
-> 
->  fs/xfs/xfs_bmap_util.c |  3 +++
->  fs/xfs/xfs_inode.c     | 18 ++++++++++++------
->  fs/xfs/xfs_iomap.c     |  8 ++++++++
->  fs/xfs/xfs_mount.h     |  1 +
->  fs/xfs/xfs_rtalloc.c   | 26 ++++++++++++++++++++++++++
->  fs/xfs/xfs_rtalloc.h   |  4 ++++
->  fs/xfs/xfs_sysfs.c     | 41 +++++++++++++++++++++++++++++++++++++++++
->  7 files changed, 95 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 9e3cc21..2d253fb 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1026,6 +1026,9 @@ xfs_alloc_file_space(
->  	if (len <= 0)
->  		return -EINVAL;
->  
-> +	if (XFS_IS_REALTIME_MOUNT(mp))
-> +		xfs_rt_alloc_min(ip, len);
+Executing xfs/104 test in a loop on Linux-v4.13 kernel on a ppc64
+machine can cause the following NULL pointer dereference,
 
-I'd put the XFS_IS_REALTIME_MOUNT() check inside xfs_rt_alloc_min().
-That way we can compile the code out completely when
-CONFIG_XFS_RT=n.
+Unable to handle kernel paging request for data at address 0x00000100
+Faulting instruction address: 0xc0000000000fece8
+Oops: Kernel access of bad area, sig: 11 [#1]
+SMP NR_CPUS=2048
+DEBUG_PAGEALLOC
+NUMA
+pSeries
+Modules linked in:
+CPU: 2 PID: 0 Comm: swapper/2 Not tainted 4.13.0 #1
+task: c00000063849c200 task.stack: c0000006384f0000
+NIP: c0000000000fece8 LR: c0000000000ff2cc CTR: c000000000383380
+REGS: c00000063ffdb400 TRAP: 0300   Not tainted  (4.13.0)
+MSR: 8000000000009032 <SF,EE,ME,IR,DR,RI>
+  CR: 28002222  XER: 20000000
+CFAR: c0000000000227a4 DAR: 0000000000000100 DSISR: 40000000 SOFTE: 0
+GPR00: c0000000000ff2cc c00000063ffdb680 c000000001252e00 0000000000000800
+GPR04: 0000000000000000 c0000006387b8730 c000000633d5db70 0000000fffffffe1
+GPR08: c0000003aa89ed68 0000000000000000 0000000000000000 c000000633d5db70
+GPR12: 0000000028002422 c00000000fd80a00 c0000006384f3f90 c00000063ffd8000
+GPR16: 0000000000000000 c0000006387b8730 c0000000012475e0 c0000000012475e0
+GPR20: 0000000000000002 0000000000000000 0000000000000001 0000000000000002
+GPR24: 0000000000000010 c00000063e155800 0000000000000800 0000000000000800
+GPR28: 0000000000000000 c000000633d5db00 0000000000000000 0000000000000000
+NIP [c0000000000fece8] .__queue_work+0x68/0x600
+LR [c0000000000ff2cc] .queue_work_on+0x4c/0x80
+Call Trace:
+[c00000063ffdb680] [c00000063ffdb720] 0xc00000063ffdb720 (unreliable)
+[c00000063ffdb770] [c0000000000ff2cc] .queue_work_on+0x4c/0x80
+[c00000063ffdb7f0] [c00000000038343c] .iomap_dio_bio_end_io+0xbc/0x1f0
+[c00000063ffdb880] [c0000000006cdc18] .bio_endio+0x118/0x1f0
+[c00000063ffdb910] [c0000000006d9e30] .blk_update_request+0xd0/0x470
+[c00000063ffdb9b0] [c0000000006e8284] .blk_mq_end_request+0x24/0xc0
+[c00000063ffdba30] [c00000000082ba50] .lo_complete_rq+0x40/0xe0
+[c00000063ffdbab0] [c0000000006e5e48] .__blk_mq_complete_request_remote+0x28/0x40
+[c00000063ffdbb20] [c00000000018e674] .flush_smp_call_function_queue+0xc4/0x1e0
+[c00000063ffdbbb0] [c00000000003f94c] .smp_ipi_demux_relaxed+0x8c/0x100
+[c00000063ffdbc40] [c000000000081054] .icp_hv_ipi_action+0x54/0xa0
+[c00000063ffdbcc0] [c0000000001505a4] .__handle_irq_event_percpu+0x84/0x2c0
+[c00000063ffdbd90] [c000000000150808] .handle_irq_event_percpu+0x28/0x80
+[c00000063ffdbe20] [c000000000156858] .handle_percpu_irq+0x78/0xc0
+[c00000063ffdbea0] [c00000000014ee70] .generic_handle_irq+0x40/0x70
+[c00000063ffdbf10] [c000000000015a88] .__do_irq+0x88/0x200
+[c00000063ffdbf90] [c000000000027a70] .call_do_irq+0x14/0x24
+[c0000006384f3810] [c000000000015c84] .do_IRQ+0x84/0x130
 
->  	rt = XFS_IS_REALTIME_INODE(ip);
->  	extsz = xfs_get_extsz_hint(ip);
->  
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index ec9826c..f9e2deb 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1620,12 +1620,18 @@ xfs_itruncate_extents(
->  	if (error)
->  		goto out;
->  
-> -	/*
-> -	 * Clear the reflink flag if we truncated everything.
-> -	 */
-> -	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
-> -		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-> -		xfs_inode_clear_cowblocks_tag(ip);
-> +	if (ip->i_d.di_nblocks == 0) {
-> +		/*
-> +		 * Clear the reflink flag if we truncated everything.
-> +		 */
-> +		if (xfs_is_reflink_inode(ip)) {
-> +			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-> +			xfs_inode_clear_cowblocks_tag(ip);
-> +		}
-> +		/* Clear realtime flag if m_rt_alloc_min policy is in place */
-> +		if (XFS_IS_REALTIME_MOUNT(mp) && mp->m_rt_alloc_min) {
+This occurs due to the following sequence of events,
 
-Won't m_rt_alloc_min always be zero on non-rt filesystems?
+1. Allocate dio for Direct I/O write.
+2. Invoke iomap_apply() until iov_iter_count() bytes have been submitted.
+   - Assume that we have submitted atleast one bio. Hence iomap_dio->ref value
+     will be >= 2.
+   - If during the second iteration, iomap_apply() ends up returning -ENOSPC, we would
+     break out of the loop and since the 'ret' value is a negative number we
+     end up not allocating memory for super_block->s_dio_done_wq.
+3. Meanwhile, iomap_dio_bio_end_io() is invoked for bios that have been
+   submitted and here the code ends up dereferencing the NULL pointer stored
+   at super_block->s_dio_done_wq.
 
-> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
-> +		}
->  	}
->  
->  	/*
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 94e5bdf..11f1c95 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -40,6 +40,7 @@
->  #include "xfs_dquot_item.h"
->  #include "xfs_dquot.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_rtalloc.h"
->  
->  
->  #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
-> @@ -174,6 +175,10 @@ xfs_iomap_write_direct(
->  	int		bmapi_flags = XFS_BMAPI_PREALLOC;
->  	uint		tflags = 0;
->  
-> +
-> +	if (XFS_IS_REALTIME_MOUNT(mp))
-> +		xfs_rt_alloc_min(ip, count);
+This commit fixes the bug by allocating memory for
+super_block->s_dio_done_wq before iomap_apply() is invoked.
 
-Reading this makes me wonder what we are allocating here :/
-A better name might be in order - something that indicates we're
-selecting the target device rather allocating something. e.g.
-xfs_inode_select_target()?
+Reported-by: Eryu Guan <eguan@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 9fa312a..067be3b 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -197,6 +197,7 @@ typedef struct xfs_mount {
->  	__uint32_t		m_generation;
->  
->  	bool			m_fail_unmount;
-> +        uint                    m_rt_alloc_min; /* Min RT allocation */
+Changelog:
+v1->v2:
+1. Fix indentation for the continuation of the if conditional.
 
-WHitespace problem - looks like spaces instead of tabs....
+ fs/iomap.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
->  #ifdef DEBUG
->  	/*
->  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index c57aa7f..e51cb25 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1284,3 +1284,29 @@ xfs_rtpick_extent(
->  	*pick = b;
->  	return 0;
->  }
-> +
-> +/*
-> + * Automatically set real-time flag if initial write to inode is > m_rt_alloc_min
-> + *
-> + * Also valid on truncations.
-> + *
-> + */
-> +void xfs_rt_alloc_min(
-> +	struct xfs_inode	*ip,
-> +	xfs_off_t       	len)
-> +{
-> +	struct xfs_mount    *mp = ip->i_mount;
-> +
-> +	if (!mp->m_rt_alloc_min || ip->i_d.di_size)
-> +		return;
-
-I kinda prefer stacking single checks like
-
-	/*
-	 * m_rt_alloc_min controls the target selection. It is
-	 * inactive if it is not set.
-	 */
-	if (!mp->m_rt_alloc_min)
-		return;
-
-	/*
-	 * Can't select a different target if we've already
-	 * allocated blocks (e.g. fallocate() beyond EOF) or has
-	 * data in it already.
-	 */
-	if (!ip->i_nextents)
-		return;
-	if (!ip->i_d.di_size)
-		return;
-
-> +	if (XFS_IS_REALTIME_INODE(ip)) {
-> +		if (len < mp->m_rt_alloc_min) {
-> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
-> +		}
-> +	} else {
-> +		if (len >= mp->m_rt_alloc_min) {
-> +			ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
-> +		}
-> +	}
-
-Checking for XFS_IS_REALTIME_INODE() is redundant here. This does
-the same thing:
-
-	/*
-	 * if the allocation length is less than the threshold,
-	 * always select the data device. Otherwise we should
-	 * select the realtime device.
-	 */
-	if (len < mp->m_rt_alloc_min)
-		ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
-	else
-		ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
-
-> +}
-> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-> index f13133e..12939d9 100644
-> --- a/fs/xfs/xfs_rtalloc.h
-> +++ b/fs/xfs/xfs_rtalloc.h
-> @@ -136,6 +136,9 @@ int xfs_rtalloc_query_range(struct xfs_trans *tp,
->  int xfs_rtalloc_query_all(struct xfs_trans *tp,
->  			  xfs_rtalloc_query_range_fn fn,
->  			  void *priv);
-> +void xfs_rt_alloc_min(struct xfs_inode *ip, xfs_off_t len);
-> +
-> +
->  #else
->  # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
->  # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
-> @@ -155,6 +158,7 @@ xfs_rtmount_init(
->  }
->  # define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
->  # define xfs_rtunmount_inodes(m)
-> +# define xfs_rt_alloc_min(i,l)                          (ENOSYS)
->  #endif	/* CONFIG_XFS_RT */
->  
->  #endif	/* __XFS_RTALLOC_H__ */
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 80ac15f..3c8dedb 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -129,10 +129,51 @@ XFS_SYSFS_ATTR_RW(drop_writes);
->  
->  #endif /* DEBUG */
->  
-> +#ifdef CONFIG_XFS_RT
-> +STATIC ssize_t
-> +rt_alloc_min_store(
-> +	struct kobject			*kobject,
-> +	const char				*buf,
-> +	size_t					count)
-> +{
-> +	struct xfs_mount		*mp = to_mp(kobject);
-> +	int						ret;
-> +	int						val;
-> +
-> +	ret = kstrtoint(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Only valid if using a real-time device */
-> +	if (XFS_IS_REALTIME_MOUNT(mp) && val > 0)
-> +		mp->m_rt_alloc_min = val;
-> +	else if (val <= 0)
-> +		mp->m_rt_alloc_min = 0;
-> +	else
-> +		return -EINVAL;
-
-Seems inconsistent. This will allow a value <= 0 for a non-realtime
-mount, but will return EINVAL for values > 0. Perhaps it would be
-more consistent to return EINVAL for a non-realtime mount or
-any value < 0?
-
-> +
-> +	return count;
-> +}
-> +
-> +STATIC ssize_t
-> +rt_alloc_min_show(
-> +	struct kobject          *kobject,
-> +	char                    *buf)
-> +{
-> +	struct xfs_mount        *mp = to_mp(kobject);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_alloc_min);
-> +}
-> +XFS_SYSFS_ATTR_RW(rt_alloc_min);
-> +#endif /* CONFIG_XFS_RT */
-> +
->  static struct attribute *xfs_mp_attrs[] = {
->  #ifdef DEBUG
->  	ATTR_LIST(drop_writes),
->  #endif
-> +#ifdef CONFIG_XFS_RT
-> +	ATTR_LIST(rt_alloc_min),
-> +#endif
-
-This is userspace visible - shouldn't we always compile this in,
-even if all it does it return EINVAL to attempts to change it when
-CONFIG_XFS_RT=n?
-
-Cheers,
-
-Dave.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 269b24a..d4f526a 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -993,6 +993,13 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	WARN_ON_ONCE(ret);
+ 	ret = 0;
+ 
++	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
++	    !inode->i_sb->s_dio_done_wq) {
++		ret = sb_init_dio_done_wq(inode->i_sb);
++		if (ret < 0)
++			goto out_free_dio;
++	}
++
+ 	inode_dio_begin(inode);
+ 
+ 	blk_start_plug(&plug);
+@@ -1015,13 +1022,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret < 0)
+ 		iomap_dio_set_error(dio, ret);
+ 
+-	if (ret >= 0 && iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
+-			!inode->i_sb->s_dio_done_wq) {
+-		ret = sb_init_dio_done_wq(inode->i_sb);
+-		if (ret < 0)
+-			iomap_dio_set_error(dio, ret);
+-	}
+-
+ 	if (!atomic_dec_and_test(&dio->ref)) {
+ 		if (!is_sync_kiocb(iocb))
+ 			return -EIOCBQUEUED;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
+
