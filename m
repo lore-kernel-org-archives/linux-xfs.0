@@ -1,226 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42186 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752348AbdIVPWf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Sep 2017 11:22:35 -0400
-Date: Fri, 22 Sep 2017 11:22:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/27] xfs: scrub the shape of a metadata btree
-Message-ID: <20170922152233.GA63820@bfoster.bfoster>
-References: <150595305131.18473.16572195821331601191.stgit@magnolia>
- <150595310675.18473.3213689888370264086.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150595310675.18473.3213689888370264086.stgit@magnolia>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:37824 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751980AbdIVSVZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 14:21:25 -0400
+Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
+MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v5] xfs: Add test for CVE-2017-14340
+From: Richard Wareing <rwareing@fb.com>
+In-Reply-To: <20170922035407.GB8034@eguan.usersys.redhat.com>
+Date: Fri, 22 Sep 2017 11:21:14 -0700
+Content-Transfer-Encoding: 7bit
+Message-ID: <0EB93BF3-EC60-4508-9A30-389BBC9DBF19@fb.com>
+References: <20170922023446.2616054-1-rwareing@fb.com>
+ <20170922035407.GB8034@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Sep 20, 2017 at 05:18:26PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create a function that can check the shape of a btree -- each block
-> passes basic inspection and all the pointers look ok.  In the next patch
-> we'll add the ability to check the actual keys and records stored within
-> the btree.  Add some helper functions so that we report detailed scrub
-> errors in a uniform manner in dmesg.  These are helper functions for
-> subsequent patches.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_btree.c |   16 +++
->  fs/xfs/libxfs/xfs_btree.h |    7 +
->  fs/xfs/scrub/btree.c      |  236 +++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/common.h     |   13 ++
->  4 files changed, 268 insertions(+), 4 deletions(-)
-> 
-> 
-...
-> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-> index adf5d09..a9c2bf3 100644
-> --- a/fs/xfs/scrub/btree.c
-> +++ b/fs/xfs/scrub/btree.c
-...
-> @@ -109,6 +255,92 @@ xfs_scrub_btree(
->  	struct xfs_owner_info		*oinfo,
->  	void				*private)
->  {
-> -	xfs_scrub_btree_op_ok(sc, cur, 0, false);
-> -	return -EOPNOTSUPP;
-> +	struct xfs_scrub_btree		bs = {0};
-> +	union xfs_btree_ptr		ptr;
-> +	union xfs_btree_ptr		*pp;
-> +	struct xfs_btree_block		*block;
-> +	int				level;
-> +	struct xfs_buf			*bp;
-> +	int				i;
-> +	int				error = 0;
-> +
-> +	/* Initialize scrub state */
-> +	bs.cur = cur;
-> +	bs.scrub_rec = scrub_fn;
-> +	bs.oinfo = oinfo;
-> +	bs.firstrec = true;
-> +	bs.private = private;
-> +	bs.sc = sc;
-> +	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
-> +		bs.firstkey[i] = true;
-> +	INIT_LIST_HEAD(&bs.to_check);
-> +
-> +	/* Don't try to check a tree with a height we can't handle. */
-> +	if (!xfs_scrub_btree_check_ok(sc, cur, 0, cur->bc_nlevels > 0 &&
-> +			cur->bc_nlevels <= XFS_BTREE_MAXLEVELS))
-> +		goto out;
-> +
-> +	/* Make sure the root isn't in the superblock. */
-> +	if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)) {
-> +		cur->bc_ops->init_ptr_from_cur(cur, &ptr);
-> +		error = xfs_scrub_btree_ptr(&bs, cur->bc_nlevels, &ptr);
-> +		if (!xfs_scrub_btree_op_ok(sc, cur, cur->bc_nlevels - 1, &error))
-> +			goto out;
-> +	}
-> +
+Eryu Guan <eguan@redhat.com> wrote:
 
-This is kind of in line with Dave's comments on the previous patch that
-introduce some of these helpers. I just glanced over them for now
-because I didn't have enough context to grok the error processing.
+> On Thu, Sep 21, 2017 at 07:34:46PM -0700, Richard Wareing wrote:
+>> Verify kernel doesn't panic when user attempts to set realtime flags
+>> on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.  Unpatched
+>> kernels will panic during this test.  Kernels not compiled with
+>> CONFIG_XFS_RT should pass test.
+>>
+>> This bug was fixed via commit b31ff3cdf540110da4572e3e29bd172087af65cc
+>> on the main kernel tree.
+>>
+>> Signed-off-by: Richard Wareing <rwareing@fb.com>
+>> ---
+>> Changes since v4:
+>> * Check inherit flag on scratch mount via lsattr + grep
+>>
+>> Changes since v3:
+>> * Tabs not spaces
+>> * Test added to auto group
+>> * _filter_xfs_io filter only
+>> * Removed _require_test
+>>
+>> Changes since v2:
+>> * Added to dangerous group
+>>
+>> Changes since v1:
+>> * Corrected copyright text
+>>
+>>  tests/xfs/431     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/431.out |  3 ++
+>>  tests/xfs/group   |  1 +
+>>  3 files changed, 88 insertions(+)
+>>  create mode 100755 tests/xfs/431
+>>  create mode 100644 tests/xfs/431.out
+>>
+>> diff --git a/tests/xfs/431 b/tests/xfs/431
+>> new file mode 100755
+>> index 0000000..414ec46
+>> --- /dev/null
+>> +++ b/tests/xfs/431
+>> @@ -0,0 +1,84 @@
+>> +#! /bin/bash
+>> +# FS QA Test 431
+>> +#
+>> +# Verify kernel doesn't panic when user attempts to set realtime flags
+>> +# on non-realtime FS, using kernel compiled with CONFIG_XFS_RT.   
+>> Unpatched
+>> +# kernels will panic during this test.  Kernels not compiled with
+>> +# CONFIG_XFS_RT should pass test.
+>> +#
+>> +# See CVE-2017-14340 for more information.
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (c) 2017 Facebook, Inc.  All Rights Reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +
+>> +# remove previous $seqres.full before test
+>> +rm -f $seqres.full
+>> +
+>> +# real QA test starts here
+>> +
+>> +# Modify as appropriate.
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +_require_xfs_io_command "chattr"
+>> +_require_xfs_io_command "fsync"
+>> +_require_xfs_io_command "pwrite"
+>> +_require_scratch
+>> +
+>> +_scratch_mkfs >/dev/null 2>&1
+>> +_scratch_mount
+>> +
+>> +# Set realtime inherit flag on scratch mount, suppress output
+>> +# as this may simply error out on future kernels, we will check
+>> +# exit code instead.
+>> +$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
+>> +
+>> +# Erroring out here is fine, this would be desired behavior for
+>> +# FSes without realtime devices present.
+>> +if $XFS_IO_PROG -c 'lsattr' $SCRATCH_MNT |
+>> +	grep '^[[:graph:]]\{7\}t[[:graph:]]\{8\}' &> /dev/null; then
+>
+> This looks better to me. Though I don't think assuming the fixed
+> position of 't' is a good idea. We may add new attr flags so the
+> position could change. Why not just grep for 't'? We don't have multiple
+> 't's anyway :)
+>
+> if $XFS_IO_PROG -c 'lsattr' $SCRATCH_MNT | grep -q 't'; then
+> ...
+>
+> I can do this update at commit time if this looks fine to you.
+>
 
-FWIW, the btree_op_ok()/btree_check_ok() stuff kind of makes my eyes
-cross a bit because I can't easily see the logic checks or distinguish
-between those and error code checks. This is also a bit confusing
-because it looks like we overload return codes for various things. E.g.,
-we generate -EFSCORRUPTED in some cases just so the caller can set the
-state on the context and clear it, but then we still use the fact that
-an error _was_ set to control the flow of the task via the op_ok()
-return value. This makes some of the code flow/decision making logic
-hard to follow, particularly since some of that state looks like it can
-be lost.
+At commit time is fine, I was just erring on the side of caution.
 
-Case in point.. what happens if say xfs_btree_increment() returns
--EFSCORRUPTED back to xfs_scrub_btree_block_check_sibling()? It looks to
-me that the latter calls btree_op_ok() to set the corrupt state, clears
-the error code and skips out appropriately.
-xfs_scrub_btree_block_check_sibling() now returns zero, which
-potentially bubbles up to xfs_scrub_btree() where we check the error
-code again. Is it expected that error == 0 here? What is supposed to
-happen here?
+Thanks!
 
-I'm wondering if this could all be made more clear by trying to
-explicitly separate out operational errors, scrub failures and whatever
-we want to call the logic that clears an -EFSCORRUPTED/-EFSBADCRC error
-code but still indicates something happened. :P
-
-For starters, rather than wrap every logic check with btree_op_check(),
-could we use explicit logic and let each function update the context
-based on problems it found? For example, something like the following is
-much more easy to read for me than the associated logic above:
-
-	/* Don't try to check a tree with a height we can't handle. */
-	if (!(cur->bc_nlevels > 0 &&
-	      cur->bc_nlevels <= XFS_BTREE_MAXLEVELS)) {
-		xfs_scrub_sc_corrupt(...);
-		goto out;
-	}
-
-And of course the context update calls could be factored into an
-out_corrupt label or something where appropriate.
-
-Beyond that, where we need to identify a bit of metadata is busted to
-perhaps do something like skip it but not abort (as we may have filtered
-out an -EFSCORRUPTED) return code, could we pass a flag down a
-particular callchain (i.e., think 'bool *bad' or 'int *stat' a la the
-core btree code)? Then we can still transfer that state back up the
-chain and the caller(s) can distinguish operational errors from "this
-thing is corrupted, act accordingly," regardless of how the corruption
-was detected.
-
-Brian
-
-> +	/* Load the root of the btree. */
-> +	level = cur->bc_nlevels - 1;
-> +	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
-> +	error = xfs_scrub_btree_block(&bs, level, &ptr, &block, &bp);
-> +	if (!xfs_scrub_btree_op_ok(sc, cur, cur->bc_nlevels - 1, &error))
-> +		goto out;
-> +
-> +	cur->bc_ptrs[level] = 1;
-> +
-> +	while (level < cur->bc_nlevels) {
-> +		block = xfs_btree_get_block(cur, level, &bp);
-> +
-> +		if (level == 0) {
-> +			/* End of leaf, pop back towards the root. */
-> +			if (cur->bc_ptrs[level] >
-> +			    be16_to_cpu(block->bb_numrecs)) {
-> +				if (level < cur->bc_nlevels - 1)
-> +					cur->bc_ptrs[level + 1]++;
-> +				level++;
-> +				continue;
-> +			}
-> +
-> +			if (xfs_scrub_should_terminate(&error))
-> +				break;
-> +
-> +			cur->bc_ptrs[level]++;
-> +			continue;
-> +		}
-> +
-> +		/* End of node, pop back towards the root. */
-> +		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-> +			if (level < cur->bc_nlevels - 1)
-> +				cur->bc_ptrs[level + 1]++;
-> +			level++;
-> +			continue;
-> +		}
-> +
-> +		/* Drill another level deeper. */
-> +		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
-> +		error = xfs_scrub_btree_ptr(&bs, level, pp);
-> +		if (error) {
-> +			error = 0;
-> +			cur->bc_ptrs[level]++;
-> +			continue;
-> +		}
-> +		level--;
-> +		error = xfs_scrub_btree_block(&bs, level, pp, &block, &bp);
-> +		if (!xfs_scrub_btree_op_ok(sc, cur, level, &error))
-> +			goto out;
-> +
-> +		cur->bc_ptrs[level] = 1;
-> +	}
-> +
-> +out:
-> +	return error;
->  }
-> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> index e1bb14b..9920488 100644
-> --- a/fs/xfs/scrub/common.h
-> +++ b/fs/xfs/scrub/common.h
-> @@ -20,6 +20,19 @@
->  #ifndef __XFS_SCRUB_COMMON_H__
->  #define __XFS_SCRUB_COMMON_H__
->  
-> +/* Should we end the scrub early? */
-> +static inline bool
-> +xfs_scrub_should_terminate(
-> +	int		*error)
-> +{
-> +	if (fatal_signal_pending(current)) {
-> +		if (*error == 0)
-> +			*error = -EAGAIN;
-> +		return true;
-> +	}
-> +	return false;
-> +}
-> +
->  /*
->   * Grab a transaction.  If we're going to repair something, we need to
->   * ensure there's enough reservation to make all the changes.  If not,
-> 
+> Thanks,
+> Eryu
+>
+>> +	# Attempt to write/fsync data to file
+>> +	$XFS_IO_PROG -fc 'pwrite 0 1m' -c fsync $SCRATCH_MNT/testfile |
+>> +		tee -a $seqres.full | _filter_xfs_io
+>> +
+>> +	# Remove the rt inherit flag after we are done or xfs_repair
+>> +	# will fail.
+>> +	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
+>> +fi
+>> +
+>> +# success, all done
+>> +status=0
+>> +exit
+>> diff --git a/tests/xfs/431.out b/tests/xfs/431.out
+>> new file mode 100644
+>> index 0000000..8c14f11
+>> --- /dev/null
+>> +++ b/tests/xfs/431.out
+>> @@ -0,0 +1,3 @@
+>> +QA output created by 431
+>> +wrote 1048576/1048576 bytes at offset 0
+>> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>> diff --git a/tests/xfs/group b/tests/xfs/group
+>> index 0a449b9..1765559 100644
+>> --- a/tests/xfs/group
+>> +++ b/tests/xfs/group
+>> @@ -427,3 +427,4 @@
+>>  428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+>>  429 dangerous_fuzzers dangerous_scrub dangerous_repair
+>>  430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+>> +431 auto quick dangerous
+>> -- 
+>> 2.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
