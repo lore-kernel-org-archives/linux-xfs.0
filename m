@@ -1,164 +1,337 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17579 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752314AbdIVQoa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 12:44:30 -0400
-Date: Fri, 22 Sep 2017 09:44:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/27] xfs: create helpers to record and deal with scrub
- problems
-Message-ID: <20170922164418.GG5728@magnolia>
-References: <150595305131.18473.16572195821331601191.stgit@magnolia>
- <150595309448.18473.17367425546613617113.stgit@magnolia>
- <20170922071608.GG10955@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170922071608.GG10955@dastard>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49270 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751852AbdIVTHu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 15:07:50 -0400
+Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
+MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v4 2/3] xfs: Set realtime flag based on initial allocation
+ size
+From: Richard Wareing <rwareing@fb.com>
+In-Reply-To: <20170922055434.GD10955@dastard>
+Date: Fri, 22 Sep 2017 12:06:07 -0700
+Content-Transfer-Encoding: 7bit
+Message-ID: <F815D515-8676-439B-A551-6E6A6F25E992@fb.com>
+References: <20170919035238.3976871-1-rwareing@fb.com>
+ <20170919035238.3976871-3-rwareing@fb.com> <20170922055434.GD10955@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
 
-On Fri, Sep 22, 2017 at 05:16:08PM +1000, Dave Chinner wrote:
-> On Wed, Sep 20, 2017 at 05:18:14PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Create helper functions to record crc and corruption problems, and
-> > deal with any other runtime errors that arise.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/common.c |  243 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/common.h |   39 ++++++++
-> >  fs/xfs/scrub/trace.h  |  193 +++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 475 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> > index 13ccb36..cf3f1365 100644
-> > --- a/fs/xfs/scrub/common.c
-> > +++ b/fs/xfs/scrub/common.c
-> > @@ -47,6 +47,249 @@
-> >  
-> >  /* Common code for the metadata scrubbers. */
-> >  
-> > +/* Check for operational errors. */
-> > +bool
-> > +xfs_scrub_op_ok(
-> > +	struct xfs_scrub_context	*sc,
-> > +	xfs_agnumber_t			agno,
-> > +	xfs_agblock_t			bno,
-> > +	int				*error)
-> > +{
-> > +	switch (*error) {
-> > +	case 0:
-> > +		return true;
-> > +	case -EDEADLOCK:
-> > +		/* Used to restart an op with deadlock avoidance. */
-> > +		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
-> > +		break;
-> > +	case -EFSBADCRC:
-> > +	case -EFSCORRUPTED:
-> > +		/* Note the badness but don't abort. */
-> > +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> > +		*error = 0;
-> > +		/* fall through */
-> > +	default:
-> > +		trace_xfs_scrub_op_error(sc, agno, bno, *error,
-> > +				__return_address);
-> > +		break;
-> > +	}
-> > +	return false;
-> > +}
-> 
-> What are the semantics here w.r.t. *error? on some errors it's
-> cleared before we return, on others it's ignored. It's as clear as
-> mud what we should expect from these functions...
+Dave Chinner <david@fromorbit.com> wrote:
 
-If there's no error, we return true to tell the caller that it's ok to
-move on to the next check in its list.
+> On Mon, Sep 18, 2017 at 08:52:37PM -0700, Richard Wareing wrote:
+>> - The rt_alloc_min sysfs option automatically selects the device (data
+>>   device, or realtime) based on the size of the initial allocation of the
+>>   file.
+>> - This option can be used to route the storage of small files (and the
+>>   inefficient workloads associated with them) to a suitable storage
+>>   device such a SSD, while larger allocations are sent to a traditional
+>>   HDD.
+>> - Supports writes via O_DIRECT, buffered (i.e. page cache), and
+>>   pre-allocations (i.e. fallocate)
+>> - Available only when kernel is compiled w/ CONFIG_XFS_RT option.
+>>
+>> Signed-off-by: Richard Wareing <rwareing@fb.com>
+>> ---
+>> Changes since v3:
+>> * Now functions via initial allocation regardless of O_DIRECT, buffered or
+>>   pre-allocation code paths.  Provides a consistent user-experience.
+>> * I Did do some experiments putting this in the xfs_bmapi_write code path
+>>   however pre-allocation accounting unfortunately prevents this cleaner
+>>   approach.  As such, this proved to be the cleanest and functional approach.
+>> * No longer a mount option, now a sysfs tunable
+>>
+>> Changes since v2:
+>> * None
+>>
+>>  fs/xfs/xfs_bmap_util.c |  3 +++
+>>  fs/xfs/xfs_inode.c     | 18 ++++++++++++------
+>>  fs/xfs/xfs_iomap.c     |  8 ++++++++
+>>  fs/xfs/xfs_mount.h     |  1 +
+>>  fs/xfs/xfs_rtalloc.c   | 26 ++++++++++++++++++++++++++
+>>  fs/xfs/xfs_rtalloc.h   |  4 ++++
+>>  fs/xfs/xfs_sysfs.c     | 41 +++++++++++++++++++++++++++++++++++++++++
+>>  7 files changed, 95 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index 9e3cc21..2d253fb 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -1026,6 +1026,9 @@ xfs_alloc_file_space(
+>>  	if (len <= 0)
+>>  		return -EINVAL;
+>>
+>> +	if (XFS_IS_REALTIME_MOUNT(mp))
+>> +		xfs_rt_alloc_min(ip, len);
+>
+> I'd put the XFS_IS_REALTIME_MOUNT() check inside xfs_rt_alloc_min().
+> That way we can compile the code out completely when
+> CONFIG_XFS_RT=n.
+>
 
-For non-verifier errors (e.g. ENOMEM) we return false to tell the caller
-that there's no point in it continuing, and we preserve *error so that
-the caller can return the *error up the stack.  Checking stops
-immediately and the error is handed to userspace.
+I was wondering about this, but elected to model the
+XFS_IS_REALTIME_INODE code structure.  I'm partial to putting
+this in the function as well, as it reads cleaner too.
 
-Verifier errors (EFSBADCRC/EFSCORRUPTED) are recorded in sm_flags and
-the *error is cleared.  We return false to tell the caller that there's
-point in it continuing with this record.  The caller returns zero to its
-caller, which means that checking continues, having skipped whatever
-block failed the verifier.
+>> rt = XFS_IS_REALTIME_INODE(ip);
+>>  	extsz = xfs_get_extsz_hint(ip);
+>>
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index ec9826c..f9e2deb 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -1620,12 +1620,18 @@ xfs_itruncate_extents(
+>>  	if (error)
+>>  		goto out;
+>>
+>> -	/*
+>> -	 * Clear the reflink flag if we truncated everything.
+>> -	 */
+>> -	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
+>> -		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>> -		xfs_inode_clear_cowblocks_tag(ip);
+>> +	if (ip->i_d.di_nblocks == 0) {
+>> +		/*
+>> +		 * Clear the reflink flag if we truncated everything.
+>> +		 */
+>> +		if (xfs_is_reflink_inode(ip)) {
+>> +			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>> +			xfs_inode_clear_cowblocks_tag(ip);
+>> +		}
+>> +		/* Clear realtime flag if m_rt_alloc_min policy is in place */
+>> +		if (XFS_IS_REALTIME_MOUNT(mp) && mp->m_rt_alloc_min) {
+>
+> Won't m_rt_alloc_min always be zero on non-rt filesystems?
+>
 
-> > +/* Check for metadata block optimization possibilities. */
-> > +bool
-> > +xfs_scrub_block_preen_ok(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_buf			*bp,
-> > +	bool				fs_ok)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	xfs_fsblock_t			fsbno;
-> > +	xfs_agnumber_t			agno;
-> > +	xfs_agblock_t			bno;
-> > +
-> > +	if (fs_ok)
-> > +		return fs_ok;
-> > +
-> > +	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-> > +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-> > +	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
-> > +
-> > +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
-> > +	trace_xfs_scrub_block_preen(sc, agno, bno, __return_address);
-> > +	return fs_ok;
-> > +}
-> 
-> Again, I'm not sure what the return value semantics of the functioon
-> are? Why does the fs_ok return shortcut exist?
+Yes, but was trying to be defensive, in case some future me or other
+developer screwed something up in the future :).
 
-The fs_ok functions are wrappers around an if test; the results of the
-if test are passed in as fs_ok.
+>> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
+>> +		}
+>>  	}
+>>
+>>  	/*
+>> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+>> index 94e5bdf..11f1c95 100644
+>> --- a/fs/xfs/xfs_iomap.c
+>> +++ b/fs/xfs/xfs_iomap.c
+>> @@ -40,6 +40,7 @@
+>>  #include "xfs_dquot_item.h"
+>>  #include "xfs_dquot.h"
+>>  #include "xfs_reflink.h"
+>> +#include "xfs_rtalloc.h"
+>>
+>>
+>>  #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
+>> @@ -174,6 +175,10 @@ xfs_iomap_write_direct(
+>>  	int		bmapi_flags = XFS_BMAPI_PREALLOC;
+>>  	uint		tflags = 0;
+>>
+>> +
+>> +	if (XFS_IS_REALTIME_MOUNT(mp))
+>> +		xfs_rt_alloc_min(ip, count);
+>
+> Reading this makes me wonder what we are allocating here :/
+> A better name might be in order - something that indicates we're
+> selecting the target device rather allocating something. e.g.
+> xfs_inode_select_target()?
 
-Therefore, if fs_ok then things are fine and we just skip out.
+I like your function name better than mine, changing this.
 
-Otherwise, we found something and we should set sm_flags and jump out.
+>
+>> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+>> index 9fa312a..067be3b 100644
+>> --- a/fs/xfs/xfs_mount.h
+>> +++ b/fs/xfs/xfs_mount.h
+>> @@ -197,6 +197,7 @@ typedef struct xfs_mount {
+>>  	__uint32_t		m_generation;
+>>
+>>  	bool			m_fail_unmount;
+>> +        uint                    m_rt_alloc_min; /* Min RT allocation */
+>
+> WHitespace problem - looks like spaces instead of tabs....
+>
 
-> Same for all the other functions...
-> 
-> > +
-> > +/* Check for inode metadata non-corruption problems. */
-> > +bool
-> > +xfs_scrub_ino_warn_ok(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_buf			*bp,
-> > +	bool				fs_ok)
-> 
-> Confusing. What's the difference between a corruption problem and a
-> "non-corruption problem" that requires a warning?
+Fixing.
 
-Anything that's less severe than "your fs is corrupt" but otherwise
-requires administrator review.  The inode scrubber sets this for inodes
-with a -1 uid/gid.  XFS seems fine with it, but the VFS treats -1ULL as
-a magic "doesn't exist" value, and then userspace can't change it.
-The quota code sets warnings if it detects quota usage exceeding the
-hard limit, or if the limits are larger than the fs, etc.
+>> #ifdef DEBUG
+>>  	/*
+>>  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+>> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+>> index c57aa7f..e51cb25 100644
+>> --- a/fs/xfs/xfs_rtalloc.c
+>> +++ b/fs/xfs/xfs_rtalloc.c
+>> @@ -1284,3 +1284,29 @@ xfs_rtpick_extent(
+>>  	*pick = b;
+>>  	return 0;
+>>  }
+>> +
+>> +/*
+>> + * Automatically set real-time flag if initial write to inode is >  
+>> m_rt_alloc_min
+>> + *
+>> + * Also valid on truncations.
+>> + *
+>> + */
+>> +void xfs_rt_alloc_min(
+>> +	struct xfs_inode	*ip,
+>> +	xfs_off_t       	len)
+>> +{
+>> +	struct xfs_mount    *mp = ip->i_mount;
+>> +
+>> +	if (!mp->m_rt_alloc_min || ip->i_d.di_size)
+>> +		return;
+>
+> I kinda prefer stacking single checks like
+>
+> 	/*
+> 	 * m_rt_alloc_min controls the target selection. It is
+> 	 * inactive if it is not set.
+> 	 */
+> 	if (!mp->m_rt_alloc_min)
+> 		return;
+>
+> 	/*
+> 	 * Can't select a different target if we've already
+> 	 * allocated blocks (e.g. fallocate() beyond EOF) or has
+> 	 * data in it already.
+> 	 */
+> 	if (!ip->i_nextents)
+> 		return;
+> 	if (!ip->i_d.di_size)
+> 		return;
+>
 
-In these cases I'd want the administrator to have a look and/or take
-corrective action, but XFS doesn't flag those situations as fs
-corruption nor does xfs_repair complain about them as corruption.
+Fixing.
 
---D
+>> +	if (XFS_IS_REALTIME_INODE(ip)) {
+>> +		if (len < mp->m_rt_alloc_min) {
+>> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
+>> +		}
+>> +	} else {
+>> +		if (len >= mp->m_rt_alloc_min) {
+>> +			ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
+>> +		}
+>> +	}
+>
+> Checking for XFS_IS_REALTIME_INODE() is redundant here. This does
+> the same thing:
+>
+> 	/*
+> 	 * if the allocation length is less than the threshold,
+> 	 * always select the data device. Otherwise we should
+> 	 * select the realtime device.
+> 	 */
+> 	if (len < mp->m_rt_alloc_min)
+> 		ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
+> 	else
+> 		ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
+>
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fixing.
+
+
+>> +}
+>> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+>> index f13133e..12939d9 100644
+>> --- a/fs/xfs/xfs_rtalloc.h
+>> +++ b/fs/xfs/xfs_rtalloc.h
+>> @@ -136,6 +136,9 @@ int xfs_rtalloc_query_range(struct xfs_trans *tp,
+>>  int xfs_rtalloc_query_all(struct xfs_trans *tp,
+>>  			  xfs_rtalloc_query_range_fn fn,
+>>  			  void *priv);
+>> +void xfs_rt_alloc_min(struct xfs_inode *ip, xfs_off_t len);
+>> +
+>> +
+>>  #else
+>>  # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
+>>  # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+>> @@ -155,6 +158,7 @@ xfs_rtmount_init(
+>>  }
+>>  # define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+>>  # define xfs_rtunmount_inodes(m)
+>> +# define xfs_rt_alloc_min(i,l)                          (ENOSYS)
+>>  #endif	/* CONFIG_XFS_RT */
+>>
+>>  #endif	/* __XFS_RTALLOC_H__ */
+>> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+>> index 80ac15f..3c8dedb 100644
+>> --- a/fs/xfs/xfs_sysfs.c
+>> +++ b/fs/xfs/xfs_sysfs.c
+>> @@ -129,10 +129,51 @@ XFS_SYSFS_ATTR_RW(drop_writes);
+>>
+>>  #endif /* DEBUG */
+>>
+>> +#ifdef CONFIG_XFS_RT
+>> +STATIC ssize_t
+>> +rt_alloc_min_store(
+>> +	struct kobject			*kobject,
+>> +	const char				*buf,
+>> +	size_t					count)
+>> +{
+>> +	struct xfs_mount		*mp = to_mp(kobject);
+>> +	int						ret;
+>> +	int						val;
+>> +
+>> +	ret = kstrtoint(buf, 0, &val);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	/* Only valid if using a real-time device */
+>> +	if (XFS_IS_REALTIME_MOUNT(mp) && val > 0)
+>> +		mp->m_rt_alloc_min = val;
+>> +	else if (val <= 0)
+>> +		mp->m_rt_alloc_min = 0;
+>> +	else
+>> +		return -EINVAL;
+>
+> Seems inconsistent. This will allow a value <= 0 for a non-realtime
+> mount, but will return EINVAL for values > 0. Perhaps it would be
+> more consistent to return EINVAL for a non-realtime mount or
+> any value < 0?
+
+Fair observation, fixing.
+
+>
+>> +
+>> +	return count;
+>> +}
+>> +
+>> +STATIC ssize_t
+>> +rt_alloc_min_show(
+>> +	struct kobject          *kobject,
+>> +	char                    *buf)
+>> +{
+>> +	struct xfs_mount        *mp = to_mp(kobject);
+>> +
+>> +	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_alloc_min);
+>> +}
+>> +XFS_SYSFS_ATTR_RW(rt_alloc_min);
+>> +#endif /* CONFIG_XFS_RT */
+>> +
+>>  static struct attribute *xfs_mp_attrs[] = {
+>>  #ifdef DEBUG
+>>  	ATTR_LIST(drop_writes),
+>>  #endif
+>> +#ifdef CONFIG_XFS_RT
+>> +	ATTR_LIST(rt_alloc_min),
+>> +#endif
+>
+> This is userspace visible - shouldn't we always compile this in,
+> even if all it does it return EINVAL to attempts to change it when
+> CONFIG_XFS_RT=n?
+>
+
+I'm fine with changing this, my thinking here was to simply not
+show options which aren't tunable without a realtime device.  But
+I'm fine with throwing EINVAL too.
+
+
+Richard
+
+
+
