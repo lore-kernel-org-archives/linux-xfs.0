@@ -1,49 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51468 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751792AbdIVIkn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Sep 2017 04:40:43 -0400
-Date: Fri, 22 Sep 2017 10:40:39 +0200
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH 4/7] xfs: Implement fallocate query support mode
-Message-ID: <20170922084039.b4szu6mvqlyejd5g@rh_laptop>
-References: <1505749947-26360-1-git-send-email-lczerner@redhat.com>
- <1505749947-26360-5-git-send-email-lczerner@redhat.com>
- <20170918204838.GW6540@magnolia>
- <7B6B7C4C-7FEB-401F-B4EE-6E11E95FB246@dilger.ca>
- <20170919145520.c4y4w32lmsnqhhxp@thunk.org>
- <20170919155528.GA8907@infradead.org>
- <563513ad-afb5-4c76-9f38-4b2e79e7af8a@redhat.com>
- <20170919203719.GD731@infradead.org>
- <20170919231716.tmdiz3vnzretwrks@thunk.org>
- <9b2ffed5-6bef-977e-14d5-13e078c4734f@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9b2ffed5-6bef-977e-14d5-13e078c4734f@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:33738 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751979AbdIVN7r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:47 -0400
+Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dvOUd-00019S-9e
+        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:47 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/19] xfs: use xfs_iext_get_extent instead of open coding it
+Date: Fri, 22 Sep 2017 06:59:28 -0700
+Message-Id: <20170922135945.31574-3-hch@lst.de>
+In-Reply-To: <20170922135945.31574-1-hch@lst.de>
+References: <20170922135945.31574-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Florian Weimer <fweimer@redhat.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Sep 21, 2017 at 03:54:01PM +0200, Florian Weimer wrote:
-> On 09/20/2017 01:17 AM, Theodore Ts'o wrote:
-> > There might be some tricky bits will be if glibc feels it needs to
-> > override the values returned by the kernel (if it believes it may
-> > impose some limitations due to its implementation).  Also, not all
-> > file systems will implement some or all pathconf parameters initially
-> > (or perhaps ever).  So should the VFS be responsible for returning
-> > some intelligent defaults, or glibc?
-> 
-> I'd prefer if we could export pathconfat directly on the glibc side, without
-> any emulation, and have the application deal with ENOSYS.
-> 
-> We would use it to implement parts of pathconf/fpathconf if available, but I
-> don't think we should copy the existing emulation for pathconfat because
-> every time we add such emulation, it comes back to haunt us.
+This avoids exposure to details of the extent list implementation.
 
-Fair enough, I'll get back with some kernel code.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 36 ++++++++++++++++--------------------
+ fs/xfs/xfs_trace.h       |  2 +-
+ 2 files changed, 17 insertions(+), 21 deletions(-)
 
-Thanks!
--Lukas
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f2f5bdb9e092..555ff198e28c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1467,7 +1467,7 @@ xfs_bmap_last_extent(
+ 		return 0;
+ 	}
+ 
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, nextents - 1), rec);
++	xfs_iext_get_extent(ifp, nextents - 1, rec);
+ 	*is_empty = 0;
+ 	return 0;
+ }
+@@ -1553,7 +1553,6 @@ xfs_bmap_one_block(
+ 	xfs_inode_t	*ip,		/* incore inode */
+ 	int		whichfork)	/* data or attr fork */
+ {
+-	xfs_bmbt_rec_host_t *ep;	/* ptr to fork's extent */
+ 	xfs_ifork_t	*ifp;		/* inode fork pointer */
+ 	int		rval;		/* return value */
+ 	xfs_bmbt_irec_t	s;		/* internal version of extent */
+@@ -1568,8 +1567,7 @@ xfs_bmap_one_block(
+ 		return 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+-	ep = xfs_iext_get_ext(ifp, 0);
+-	xfs_bmbt_get_all(ep, &s);
++	xfs_iext_get_extent(ifp, 0, &s);
+ 	rval = s.br_startoff == 0 && s.br_blockcount == 1;
+ 	if (rval && whichfork == XFS_DATA_FORK)
+ 		ASSERT(XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize);
+@@ -1655,7 +1653,7 @@ xfs_bmap_add_extent_delay_real(
+ 	 */
+ 	if (bma->idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &LEFT);
++		xfs_iext_get_extent(ifp, bma->idx - 1, &LEFT);
+ 
+ 		if (isnullstartblock(LEFT.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+@@ -1675,7 +1673,7 @@ xfs_bmap_add_extent_delay_real(
+ 	 */
+ 	if (bma->idx < xfs_iext_count(ifp) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx + 1), &RIGHT);
++		xfs_iext_get_extent(ifp, bma->idx + 1, &RIGHT);
+ 
+ 		if (isnullstartblock(RIGHT.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+@@ -2222,7 +2220,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	 */
+ 	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &LEFT);
++		xfs_iext_get_extent(ifp, *idx - 1, &LEFT);
+ 
+ 		if (isnullstartblock(LEFT.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+@@ -2242,7 +2240,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	 */
+ 	if (*idx < xfs_iext_count(ifp) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
++		xfs_iext_get_extent(ifp, *idx + 1, &RIGHT);
+ 		if (isnullstartblock(RIGHT.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+ 	}
+@@ -2716,7 +2714,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
++		xfs_iext_get_extent(ifp, *idx - 1, &left);
+ 
+ 		if (isnullstartblock(left.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+@@ -2728,7 +2726,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if (*idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
++		xfs_iext_get_extent(ifp, *idx, &right);
+ 
+ 		if (isnullstartblock(right.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+@@ -2880,7 +2878,7 @@ xfs_bmap_add_extent_hole_real(
+ 	 */
+ 	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
++		xfs_iext_get_extent(ifp, *idx - 1, &left);
+ 		if (isnullstartblock(left.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+ 	}
+@@ -2891,7 +2889,7 @@ xfs_bmap_add_extent_hole_real(
+ 	 */
+ 	if (*idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
++		xfs_iext_get_extent(ifp, *idx, &right);
+ 		if (isnullstartblock(right.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+ 	}
+@@ -4209,10 +4207,8 @@ xfs_bmapi_allocate(
+ 	if (bma->wasdel) {
+ 		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
+ 		bma->offset = bma->got.br_startoff;
+-		if (bma->idx) {
+-			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1),
+-					 &bma->prev);
+-		}
++		if (bma->idx)
++			xfs_iext_get_extent(ifp, bma->idx - 1, &bma->prev);
+ 	} else {
+ 		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
+ 		if (!bma->eof)
+@@ -4309,7 +4305,7 @@ xfs_bmapi_allocate(
+ 	 * or xfs_bmap_add_extent_hole_real might have merged it into one of
+ 	 * the neighbouring ones.
+ 	 */
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &bma->got);
++	xfs_iext_get_extent(ifp, bma->idx, &bma->got);
+ 
+ 	ASSERT(bma->got.br_startoff <= bma->offset);
+ 	ASSERT(bma->got.br_startoff + bma->got.br_blockcount >=
+@@ -4390,7 +4386,7 @@ xfs_bmapi_convert_unwritten(
+ 	 * xfs_bmap_add_extent_unwritten_real might have merged it into one
+ 	 * of the neighbouring ones.
+ 	 */
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &bma->got);
++	xfs_iext_get_extent(ifp, bma->idx, &bma->got);
+ 
+ 	/*
+ 	 * We may have combined previously unwritten space with written space,
+@@ -5589,8 +5585,8 @@ __xfs_bunmapi(
+ 					del.br_blockcount : mod;
+ 				if (bno < got.br_startoff) {
+ 					if (--lastx >= 0)
+-						xfs_bmbt_get_all(xfs_iext_get_ext(
+-							ifp, lastx), &got);
++						xfs_iext_get_extent(ifp, lastx,
++								&got);
+ 				}
+ 				continue;
+ 			}
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bb5514688d47..0a8999a310b9 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -277,7 +277,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+ 		struct xfs_bmbt_irec	r;
+ 
+ 		ifp = xfs_iext_state_to_fork(ip, state);
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &r);
++		xfs_iext_get_extent(ifp, idx, &r);
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->idx = idx;
+-- 
+2.14.1
+
