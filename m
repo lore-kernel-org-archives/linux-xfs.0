@@ -1,21 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:52548 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751788AbdIVCCm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 22:02:42 -0400
-Received: from pps.filterd (m0044008.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8M1we5D030529
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 19:02:42 -0700
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:36981 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751790AbdIVCCn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2017 22:02:43 -0400
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v8M22DPB028524
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 19:02:43 -0700
 Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 2d4s2x023k-2
+        by m0001303.ppops.net with ESMTP id 2d4s5601uq-2
         (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 19:02:42 -0700
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 19:02:43 -0700
 From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH 1/3] xfs/realtime: Add require_no_realtime function
-Date: Thu, 21 Sep 2017 19:02:38 -0700
-Message-ID: <20170922020240.2503987-2-rwareing@fb.com>
-In-Reply-To: <20170922020240.2503987-1-rwareing@fb.com>
-References: <20170922020240.2503987-1-rwareing@fb.com>
+Subject: [PATCH 0/3] Fix/harden "quick" tests for realtime subvolumes
+Date: Thu, 21 Sep 2017 19:02:37 -0700
+Message-ID: <20170922020240.2503987-1-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
@@ -24,139 +22,56 @@ List-Id: xfs
 To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
 
-Some tests do not play well with realtime devices, in an effort to
-produce a stable set of test which exercise the realtime code paths
-we introduce a _require_no_realtime function to allow tests to opt
-out of realtime subvolume test runs.
+Some tests have issues when being run with realtime subvolumes.  This patch
+set aims to harden fs tests so we can get reliable/reproducible test runs
+with fstests for realtime subvolumes.
 
-Signed-off-by: Richard Wareing <rwareing@fb.com>
----
- common/rc                      | 8 ++++++++
- tests/generic/409              | 1 +
- tests/generic/410              | 1 +
- tests/generic/411              | 1 +
- tests/xfs/077                  | 1 +
- tests/xfs/189                  | 1 +
- tests/xfs/191-input-validation | 1 +
- tests/xfs/202                  | 1 +
- tests/xfs/284                  | 1 +
- 9 files changed, 16 insertions(+)
+Two new _require functions are introduced along with a new flag to
+automatically set the rtinherit=1 option upon mkfs'ing.
 
-diff --git a/common/rc b/common/rc
-index cd53a37..c65b4b3 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1829,6 +1829,14 @@ _require_realtime()
- 	_notrun "Realtime device required, skipped this test"
- }
- 
-+# This test requires that a realtime subvolume is not in use
-+#
-+_require_no_realtime()
-+{
-+    [ -n "$SCRATCH_RTDEV" ] && \
-+	_notrun "Test not compatible with realtime subvolumes, skipped this test"
-+}
-+
- # this test requires that a specified command (executable) exists
- # $1 - command, $2 - name for error message
- #
-diff --git a/tests/generic/409 b/tests/generic/409
-index 3ad65c9..8ed3e4e 100755
---- a/tests/generic/409
-+++ b/tests/generic/409
-@@ -65,6 +65,7 @@ _supported_os Linux
- _require_test
- _require_scratch
- _require_local_device $SCRATCH_DEV
-+_require_no_realtime
- 
- fs_stress()
- {
-diff --git a/tests/generic/410 b/tests/generic/410
-index 63ab716..1bbaff8 100755
---- a/tests/generic/410
-+++ b/tests/generic/410
-@@ -73,6 +73,7 @@ _supported_os Linux
- _require_test
- _require_scratch
- _require_local_device $SCRATCH_DEV
-+_require_no_realtime
- 
- fs_stress()
- {
-diff --git a/tests/generic/411 b/tests/generic/411
-index 83f6d26..ea718fc 100755
---- a/tests/generic/411
-+++ b/tests/generic/411
-@@ -54,6 +54,7 @@ _supported_os Linux
- _require_test
- _require_scratch
- _require_local_device $SCRATCH_DEV
-+_require_no_realtime
- 
- fs_stress()
- {
-diff --git a/tests/xfs/077 b/tests/xfs/077
-index eba4f08..d202fa4 100755
---- a/tests/xfs/077
-+++ b/tests/xfs/077
-@@ -50,6 +50,7 @@ _cleanup()
- 
- _supported_fs xfs
- _supported_os Linux
-+_require_no_realtime
- _require_scratch
- _require_xfs_crc
- _require_meta_uuid
-diff --git a/tests/xfs/189 b/tests/xfs/189
-index 636f6f0..699eb3c 100755
---- a/tests/xfs/189
-+++ b/tests/xfs/189
-@@ -236,6 +236,7 @@ _putback_scratch_fstab()
- _supported_fs xfs
- _supported_os Linux
- 
-+_require_no_realtime
- _require_scratch
- _require_noattr2
- 
-diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
-index cff3efa..764ac9b 100755
---- a/tests/xfs/191-input-validation
-+++ b/tests/xfs/191-input-validation
-@@ -47,6 +47,7 @@ _cleanup()
- # Modify as appropriate.
- _supported_fs xfs
- _supported_os Linux
-+_require_no_realtime
- _require_scratch
- _require_xfs_mkfs_validation
- 
-diff --git a/tests/xfs/202 b/tests/xfs/202
-index b9827a7..f887873 100755
---- a/tests/xfs/202
-+++ b/tests/xfs/202
-@@ -38,6 +38,7 @@ status=1	# failure is the default!
- _supported_fs xfs
- _supported_os Linux
- 
-+_require_no_realtime
- # single AG will cause default xfs_repair to fail. This test is actually
- # testing the special corner case option needed to repair a single AG fs.
- _require_scratch_nocheck
-diff --git a/tests/xfs/284 b/tests/xfs/284
-index e3625fe..fa5dac8 100755
---- a/tests/xfs/284
-+++ b/tests/xfs/284
-@@ -49,6 +49,7 @@ rm -f $seqres.full
- # real QA test starts here
- _supported_fs xfs
- _supported_os Linux
-+_require_no_realtime
- _require_test
- _require_scratch
- 
+The problems I found were usually one of:
+1. Snapshot + subsequent test being performed without regard to the realtime
+subvolume.
+2. Use of functions which are not supported by realtime devices.  Not setting
+rtinherit on scratch devices for these cases fixes these tests.  Non-scratch
+cases are more tricky since we don't control what goes into the MKFS_OPTIONS
+variable.
+3. xfs_repair being used directly without checking for RT devices.
+
+After fixing these cases, you get 86 good "quick: xfs tests & 180 good "quick"
+generic tests with the bulk are not run due to the lack of reflink and/or quota
+support on realtime scratch targets.
+
+P.S. I haven't forgotten about the non-"quick" tests, but I had to start
+somewhere, and break this up a bit into a more manageable problem.
+
+
+Richard Wareing (3):
+  xfs/realtime: Add require_no_realtime function
+  xfs/realtime: Default rtinherit=1, add _require_no_rtinherit function
+  xfs/realtime: Fix direct invocations of xfs_repair
+
+ common/rc                      | 32 +++++++++++++++++++++++++++++++-
+ tests/generic/250              |  1 +
+ tests/generic/252              |  1 +
+ tests/generic/409              |  1 +
+ tests/generic/410              |  1 +
+ tests/generic/411              |  1 +
+ tests/generic/427              |  1 +
+ tests/generic/441              |  1 +
+ tests/xfs/019                  |  1 +
+ tests/xfs/031                  |  1 +
+ tests/xfs/070                  |  4 ++--
+ tests/xfs/077                  |  1 +
+ tests/xfs/170                  |  1 +
+ tests/xfs/187                  |  1 +
+ tests/xfs/189                  |  1 +
+ tests/xfs/191-input-validation |  1 +
+ tests/xfs/202                  |  1 +
+ tests/xfs/284                  |  1 +
+ tests/xfs/291                  |  3 ++-
+ 19 files changed, 51 insertions(+), 4 deletions(-)
+
 -- 
 2.9.5
 
