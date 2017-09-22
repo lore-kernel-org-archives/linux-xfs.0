@@ -1,121 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53343 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750974AbdISGco (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2017 02:32:44 -0400
-Date: Tue, 19 Sep 2017 08:32:56 +0200
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Message-ID: <20170919063256.GF5430@kroah.com>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
- <CAOQ4uxi4Zf8WJQ6zotVF_K6BxuQJ9EsfGL4uY1TaBLMiLP-JHw@mail.gmail.com>
- <20170918171144.GD6540@magnolia>
- <CAOQ4uxjiB9PHxzdz5rHv8h+b-pC0BjPKf+zvLeETU7BPKeoNww@mail.gmail.com>
- <20170918183549.GA32669@kroah.com>
- <CAOQ4uxjf+-iaJwmnt8r7d=tPWJr1BdbjU4PSSwk+Nbb340oEgg@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47986 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751653AbdIVDoW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Sep 2017 23:44:22 -0400
+Date: Fri, 22 Sep 2017 11:44:20 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] iomap_dio_rw: Allocate AIO completion queue before
+ submitting dio
+Message-ID: <20170922034420.GA8034@eguan.usersys.redhat.com>
+References: <20170921095234.12401-1-chandan@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjf+-iaJwmnt8r7d=tPWJr1BdbjU4PSSwk+Nbb340oEgg@mail.gmail.com>
+In-Reply-To: <20170921095234.12401-1-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 10:29:25PM +0300, Amir Goldstein wrote:
-> On Mon, Sep 18, 2017 at 9:35 PM, Greg KH <greg@kroah.com> wrote:
-> > On Mon, Sep 18, 2017 at 09:00:30PM +0300, Amir Goldstein wrote:
-> >> On Mon, Sep 18, 2017 at 8:11 PM, Darrick J. Wong
-> >> <darrick.wong@oracle.com> wrote:
-> >> > On Fri, Sep 15, 2017 at 03:40:24PM +0300, Amir Goldstein wrote:
-> >> >> On Wed, Aug 30, 2017 at 4:38 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> >> >> > When calling into _xfs_log_force{,_lsn}() with a pointer
-> >> >> > to log_flushed variable, log_flushed will be set to 1 if:
-> >> >> > 1. xlog_sync() is called to flush the active log buffer
-> >> >> > AND/OR
-> >> >> > 2. xlog_wait() is called to wait on a syncing log buffers
-> >> >> >
-> >> >> > xfs_file_fsync() checks the value of log_flushed after
-> >> >> > _xfs_log_force_lsn() call to optimize away an explicit
-> >> >> > PREFLUSH request to the data block device after writing
-> >> >> > out all the file's pages to disk.
-> >> >> >
-> >> >> > This optimization is incorrect in the following sequence of events:
-> >> >> >
-> >> >> >  Task A                    Task B
-> >> >> >  -------------------------------------------------------
-> >> >> >  xfs_file_fsync()
-> >> >> >    _xfs_log_force_lsn()
-> >> >> >      xlog_sync()
-> >> >> >         [submit PREFLUSH]
-> >> >> >                            xfs_file_fsync()
-> >> >> >                              file_write_and_wait_range()
-> >> >> >                                [submit WRITE X]
-> >> >> >                                [endio  WRITE X]
-> >> >> >                              _xfs_log_force_lsn()
-> >> >> >                                xlog_wait()
-> >> >> >         [endio  PREFLUSH]
-> >> >> >
-> >> >> > The write X is not guarantied to be on persistent storage
-> >> >> > when PREFLUSH request in completed, because write A was submitted
-> >> >> > after the PREFLUSH request, but xfs_file_fsync() of task A will
-> >> >> > be notified of log_flushed=1 and will skip explicit flush.
-> >> >> >
-> >> >> > If the system crashes after fsync of task A, write X may not be
-> >> >> > present on disk after reboot.
-> >> >> >
-> >> >> > This bug was discovered and demonstrated using Josef Bacik's
-> >> >> > dm-log-writes target, which can be used to record block io operations
-> >> >> > and then replay a subset of these operations onto the target device.
-> >> >> > The test goes something like this:
-> >> >> > - Use fsx to execute ops of a file and record ops on log device
-> >> >> > - Every now and then fsync the file, store md5 of file and mark
-> >> >> >   the location in the log
-> >> >> > - Then replay log onto device for each mark, mount fs and compare
-> >> >> >   md5 of file to stored value
-> >> >> >
-> >> >> > Cc: Christoph Hellwig <hch@lst.de>
-> >> >> > Cc: Josef Bacik <jbacik@fb.com>
-> >> >> > Cc: <stable@vger.kernel.org>
-> >> >> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> >> >> > ---
-> >> >> >
-> >> >> > Christoph, Dave,
-> >> >> >
-> >> >> > It's hard to believe, but I think the reported bug has been around
-> >> >> > since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
-> >> >> > not try to test old kernels.
-> >> >>
-> >> >> Forgot to tag commit message with:
-> >> >> Fixes: f538d4da8d52 ("[XFS] write barrier support")
-> >> >>
-> >> >> Maybe the tag could be added when applying to recent stables,
-> >> >> so distros and older downstream stables can see the tag.
-> >> >>
-> >> >> The disclosure of the security bug fix (commit b31ff3cdf5) made me wonder
-> >> >> if possible data loss bug should also be disclosed in some distros forum?
-> >> >> I bet some users would care more about the latter than the former.
-> >> >> Coincidentally, both data loss and security bugs fix the same commit..
-> >> >
-> >> > Yes the the patch ought to get sent on to stable w/ fixes tag.  One
-> >> > would hope that the distros will pick up the stable fixes from there.
-> >>
-> >>
-> >> Greg, for your consideration, please add
-> >>  Fixes: f538d4da8d52 ("[XFS] write barrier support")
-> >> If not pushed yet.
-> >
-> > Add it to what?
+On Thu, Sep 21, 2017 at 03:22:34PM +0530, Chandan Rajendra wrote:
+> Executing xfs/104 test in a loop on Linux-v4.13 kernel on a ppc64
+> machine can cause the following NULL pointer dereference,
 > 
-> Sorry, add that tag when applying commit 47c7d0b1950258312
-> to stable trees, since I missed adding the tag before it was merged
-> to master.
+> Unable to handle kernel paging request for data at address 0x00000100
+> Faulting instruction address: 0xc0000000000fece8
+> Oops: Kernel access of bad area, sig: 11 [#1]
+> SMP NR_CPUS=2048
+> DEBUG_PAGEALLOC
+> NUMA
+> pSeries
+> Modules linked in:
+> CPU: 2 PID: 0 Comm: swapper/2 Not tainted 4.13.0 #1
+> task: c00000063849c200 task.stack: c0000006384f0000
+> NIP: c0000000000fece8 LR: c0000000000ff2cc CTR: c000000000383380
+> REGS: c00000063ffdb400 TRAP: 0300   Not tainted  (4.13.0)
+> MSR: 8000000000009032 <SF,EE,ME,IR,DR,RI>
+>   CR: 28002222  XER: 20000000
+> CFAR: c0000000000227a4 DAR: 0000000000000100 DSISR: 40000000 SOFTE: 0
+> GPR00: c0000000000ff2cc c00000063ffdb680 c000000001252e00 0000000000000800
+> GPR04: 0000000000000000 c0000006387b8730 c000000633d5db70 0000000fffffffe1
+> GPR08: c0000003aa89ed68 0000000000000000 0000000000000000 c000000633d5db70
+> GPR12: 0000000028002422 c00000000fd80a00 c0000006384f3f90 c00000063ffd8000
+> GPR16: 0000000000000000 c0000006387b8730 c0000000012475e0 c0000000012475e0
+> GPR20: 0000000000000002 0000000000000000 0000000000000001 0000000000000002
+> GPR24: 0000000000000010 c00000063e155800 0000000000000800 0000000000000800
+> GPR28: 0000000000000000 c000000633d5db00 0000000000000000 0000000000000000
+> NIP [c0000000000fece8] .__queue_work+0x68/0x600
+> LR [c0000000000ff2cc] .queue_work_on+0x4c/0x80
+> Call Trace:
+> [c00000063ffdb680] [c00000063ffdb720] 0xc00000063ffdb720 (unreliable)
+> [c00000063ffdb770] [c0000000000ff2cc] .queue_work_on+0x4c/0x80
+> [c00000063ffdb7f0] [c00000000038343c] .iomap_dio_bio_end_io+0xbc/0x1f0
+> [c00000063ffdb880] [c0000000006cdc18] .bio_endio+0x118/0x1f0
+> [c00000063ffdb910] [c0000000006d9e30] .blk_update_request+0xd0/0x470
+> [c00000063ffdb9b0] [c0000000006e8284] .blk_mq_end_request+0x24/0xc0
+> [c00000063ffdba30] [c00000000082ba50] .lo_complete_rq+0x40/0xe0
+> [c00000063ffdbab0] [c0000000006e5e48] .__blk_mq_complete_request_remote+0x28/0x40
+> [c00000063ffdbb20] [c00000000018e674] .flush_smp_call_function_queue+0xc4/0x1e0
+> [c00000063ffdbbb0] [c00000000003f94c] .smp_ipi_demux_relaxed+0x8c/0x100
+> [c00000063ffdbc40] [c000000000081054] .icp_hv_ipi_action+0x54/0xa0
+> [c00000063ffdbcc0] [c0000000001505a4] .__handle_irq_event_percpu+0x84/0x2c0
+> [c00000063ffdbd90] [c000000000150808] .handle_irq_event_percpu+0x28/0x80
+> [c00000063ffdbe20] [c000000000156858] .handle_percpu_irq+0x78/0xc0
+> [c00000063ffdbea0] [c00000000014ee70] .generic_handle_irq+0x40/0x70
+> [c00000063ffdbf10] [c000000000015a88] .__do_irq+0x88/0x200
+> [c00000063ffdbf90] [c000000000027a70] .call_do_irq+0x14/0x24
+> [c0000006384f3810] [c000000000015c84] .do_IRQ+0x84/0x130
+> 
+> This occurs due to the following sequence of events,
+> 
+> 1. Allocate dio for Direct I/O write.
+> 2. Invoke iomap_apply() until iov_iter_count() bytes have been submitted.
+>    - Assume that we have submitted atleast one bio. Hence iomap_dio->ref value
+>      will be >= 2.
+>    - If during the second iteration, iomap_apply() ends up returning -ENOSPC, we would
+>      break out of the loop and since the 'ret' value is a negative number we
+>      end up not allocating memory for super_block->s_dio_done_wq.
+> 3. Meanwhile, iomap_dio_bio_end_io() is invoked for bios that have been
+>    submitted and here the code ends up dereferencing the NULL pointer stored
+>    at super_block->s_dio_done_wq.
+> 
+> This commit fixes the bug by allocating memory for
+> super_block->s_dio_done_wq before iomap_apply() is invoked.
+> 
+> Reported-by: Eryu Guan <eguan@redhat.com>
+> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-Nah, as the tag is just needed to let me know where to backport stuff
-to, I don't think it matters when I add it to the stable tree itself, so
-I'll leave it as-is.
+I tested this patch on x86_64 host. Without the patch, I could crash the
+host by running xfs/104 within 50 iterations, and host survived 500
+iterations of xfs/104 run with this patch applied. So
 
-thanks,
+Tested-by: Eryu Guan <eguan@redhat.com>
 
-greg k-h
+Thanks!
+Eryu
