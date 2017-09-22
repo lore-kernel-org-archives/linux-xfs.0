@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33738 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34679 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751979AbdIVN7r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:47 -0400
+        with ESMTP id S1751980AbdIVN7t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:49 -0400
 Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dvOUd-00019S-9e
-        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:47 +0000
+        id 1dvOUf-0001AO-62
+        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:49 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/19] xfs: use xfs_iext_get_extent instead of open coding it
-Date: Fri, 22 Sep 2017 06:59:28 -0700
-Message-Id: <20170922135945.31574-3-hch@lst.de>
+Subject: [PATCH 06/19] xfs: move some more code into xfs_bmap_del_extent_real
+Date: Fri, 22 Sep 2017 06:59:32 -0700
+Message-Id: <20170922135945.31574-7-hch@lst.de>
 In-Reply-To: <20170922135945.31574-1-hch@lst.de>
 References: <20170922135945.31574-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,174 +18,82 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This avoids exposure to details of the extent list implementation.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 36 ++++++++++++++++--------------------
- fs/xfs/xfs_trace.h       |  2 +-
- 2 files changed, 17 insertions(+), 21 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++------------------------
+ 1 file changed, 17 insertions(+), 24 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f2f5bdb9e092..555ff198e28c 100644
+index 4e6c4cc4168f..06f1bd9e144e 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1467,7 +1467,7 @@ xfs_bmap_last_extent(
- 		return 0;
- 	}
+@@ -5080,7 +5080,7 @@ xfs_bmap_del_extent_real(
+ 	int			do_fx;	/* free extent at end of routine */
+ 	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
+ 	int			error;	/* error return value */
+-	int			flags;	/* inode logging flags */
++	int			flags = 0;/* inode logging flags */
+ 	xfs_bmbt_irec_t		got;	/* current extent entry */
+ 	xfs_fileoff_t		got_endoff;	/* first offset past got */
+ 	int			i;	/* temp state */
+@@ -5112,10 +5112,25 @@ xfs_bmap_del_extent_real(
+ 	got_endoff = got.br_startoff + got.br_blockcount;
+ 	ASSERT(got_endoff >= del_endoff);
+ 	ASSERT(!isnullstartblock(got.br_startblock));
+-	flags = XFS_ILOG_CORE;
+ 	qfield = 0;
+ 	error = 0;
  
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, nextents - 1), rec);
-+	xfs_iext_get_extent(ifp, nextents - 1, rec);
- 	*is_empty = 0;
- 	return 0;
- }
-@@ -1553,7 +1553,6 @@ xfs_bmap_one_block(
- 	xfs_inode_t	*ip,		/* incore inode */
- 	int		whichfork)	/* data or attr fork */
- {
--	xfs_bmbt_rec_host_t *ep;	/* ptr to fork's extent */
- 	xfs_ifork_t	*ifp;		/* inode fork pointer */
- 	int		rval;		/* return value */
- 	xfs_bmbt_irec_t	s;		/* internal version of extent */
-@@ -1568,8 +1567,7 @@ xfs_bmap_one_block(
- 		return 0;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
--	ep = xfs_iext_get_ext(ifp, 0);
--	xfs_bmbt_get_all(ep, &s);
-+	xfs_iext_get_extent(ifp, 0, &s);
- 	rval = s.br_startoff == 0 && s.br_blockcount == 1;
- 	if (rval && whichfork == XFS_DATA_FORK)
- 		ASSERT(XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize);
-@@ -1655,7 +1653,7 @@ xfs_bmap_add_extent_delay_real(
- 	 */
- 	if (bma->idx > 0) {
- 		state |= BMAP_LEFT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &LEFT);
-+		xfs_iext_get_extent(ifp, bma->idx - 1, &LEFT);
- 
- 		if (isnullstartblock(LEFT.br_startblock))
- 			state |= BMAP_LEFT_DELAY;
-@@ -1675,7 +1673,7 @@ xfs_bmap_add_extent_delay_real(
- 	 */
- 	if (bma->idx < xfs_iext_count(ifp) - 1) {
- 		state |= BMAP_RIGHT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx + 1), &RIGHT);
-+		xfs_iext_get_extent(ifp, bma->idx + 1, &RIGHT);
- 
- 		if (isnullstartblock(RIGHT.br_startblock))
- 			state |= BMAP_RIGHT_DELAY;
-@@ -2222,7 +2220,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	 */
- 	if (*idx > 0) {
- 		state |= BMAP_LEFT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &LEFT);
-+		xfs_iext_get_extent(ifp, *idx - 1, &LEFT);
- 
- 		if (isnullstartblock(LEFT.br_startblock))
- 			state |= BMAP_LEFT_DELAY;
-@@ -2242,7 +2240,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	 */
- 	if (*idx < xfs_iext_count(ifp) - 1) {
- 		state |= BMAP_RIGHT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
-+		xfs_iext_get_extent(ifp, *idx + 1, &RIGHT);
- 		if (isnullstartblock(RIGHT.br_startblock))
- 			state |= BMAP_RIGHT_DELAY;
- 	}
-@@ -2716,7 +2714,7 @@ xfs_bmap_add_extent_hole_delay(
- 	 */
- 	if (*idx > 0) {
- 		state |= BMAP_LEFT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
-+		xfs_iext_get_extent(ifp, *idx - 1, &left);
- 
- 		if (isnullstartblock(left.br_startblock))
- 			state |= BMAP_LEFT_DELAY;
-@@ -2728,7 +2726,7 @@ xfs_bmap_add_extent_hole_delay(
- 	 */
- 	if (*idx < xfs_iext_count(ifp)) {
- 		state |= BMAP_RIGHT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
-+		xfs_iext_get_extent(ifp, *idx, &right);
- 
- 		if (isnullstartblock(right.br_startblock))
- 			state |= BMAP_RIGHT_DELAY;
-@@ -2880,7 +2878,7 @@ xfs_bmap_add_extent_hole_real(
- 	 */
- 	if (*idx > 0) {
- 		state |= BMAP_LEFT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
-+		xfs_iext_get_extent(ifp, *idx - 1, &left);
- 		if (isnullstartblock(left.br_startblock))
- 			state |= BMAP_LEFT_DELAY;
- 	}
-@@ -2891,7 +2889,7 @@ xfs_bmap_add_extent_hole_real(
- 	 */
- 	if (*idx < xfs_iext_count(ifp)) {
- 		state |= BMAP_RIGHT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
-+		xfs_iext_get_extent(ifp, *idx, &right);
- 		if (isnullstartblock(right.br_startblock))
- 			state |= BMAP_RIGHT_DELAY;
- 	}
-@@ -4209,10 +4207,8 @@ xfs_bmapi_allocate(
- 	if (bma->wasdel) {
- 		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
- 		bma->offset = bma->got.br_startoff;
--		if (bma->idx) {
--			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1),
--					 &bma->prev);
--		}
-+		if (bma->idx)
-+			xfs_iext_get_extent(ifp, bma->idx - 1, &bma->prev);
- 	} else {
- 		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
- 		if (!bma->eof)
-@@ -4309,7 +4305,7 @@ xfs_bmapi_allocate(
- 	 * or xfs_bmap_add_extent_hole_real might have merged it into one of
- 	 * the neighbouring ones.
- 	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &bma->got);
-+	xfs_iext_get_extent(ifp, bma->idx, &bma->got);
- 
- 	ASSERT(bma->got.br_startoff <= bma->offset);
- 	ASSERT(bma->got.br_startoff + bma->got.br_blockcount >=
-@@ -4390,7 +4386,7 @@ xfs_bmapi_convert_unwritten(
- 	 * xfs_bmap_add_extent_unwritten_real might have merged it into one
- 	 * of the neighbouring ones.
- 	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &bma->got);
-+	xfs_iext_get_extent(ifp, bma->idx, &bma->got);
- 
- 	/*
- 	 * We may have combined previously unwritten space with written space,
-@@ -5589,8 +5585,8 @@ __xfs_bunmapi(
- 					del.br_blockcount : mod;
- 				if (bno < got.br_startoff) {
- 					if (--lastx >= 0)
--						xfs_bmbt_get_all(xfs_iext_get_ext(
--							ifp, lastx), &got);
-+						xfs_iext_get_extent(ifp, lastx,
-+								&got);
- 				}
- 				continue;
- 			}
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bb5514688d47..0a8999a310b9 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -277,7 +277,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
- 		struct xfs_bmbt_irec	r;
- 
- 		ifp = xfs_iext_state_to_fork(ip, state);
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &r);
-+		xfs_iext_get_extent(ifp, idx, &r);
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
- 		__entry->idx = idx;
++	/*
++	 * If it's the case where the directory code is running with no block
++	 * reservation, and the deleted block is in the middle of its extent,
++	 * and the resulting insert of an extent would cause transformation to
++	 * btree format, then reject it.  The calling code will then swap blocks
++	 * around instead.  We have to do this now, rather than waiting for the
++	 * conversion to btree format, since the transaction will be dirty then.
++	 */
++	if (tp->t_blk_res == 0 &&
++	    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(ip, whichfork) >=
++			XFS_IFORK_MAXEXT(ip, whichfork) &&
++	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
++		return -ENOSPC;
++
++	flags = XFS_ILOG_CORE;
+ 	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+ 		xfs_fsblock_t	bno;
+ 		xfs_filblks_t	len;
+@@ -5601,28 +5616,6 @@ __xfs_bunmapi(
+ 			error = xfs_bmap_del_extent_delay(ip, whichfork, &lastx,
+ 					&got, &del);
+ 		} else {
+-			/*
+-			 * If it's the case where the directory code is running
+-			 * with no block reservation, and the deleted block is
+-			 * in the middle of its extent, and the resulting insert
+-			 * of an extent would cause transformation to btree
+-			 * format, then reject it.  The calling code will then
+-			 * swap blocks around instead.  We have to do this now,
+-			 * rather than waiting for the conversion to btree
+-			 * format, since the transaction will be dirty.
+-			 */
+-			if (tp->t_blk_res == 0 &&
+-			    XFS_IFORK_FORMAT(ip, whichfork) ==
+-					XFS_DINODE_FMT_EXTENTS &&
+-			    XFS_IFORK_NEXTENTS(ip, whichfork) >=
+-					XFS_IFORK_MAXEXT(ip, whichfork) &&
+-			    del.br_startoff > got.br_startoff &&
+-			    del.br_startoff + del.br_blockcount <
+-			    got.br_startoff + got.br_blockcount) {
+-				error = -ENOSPC;
+-				goto error0;
+-			}
+-
+ 			error = xfs_bmap_del_extent_real(ip, tp, &lastx, dfops,
+ 					cur, &del, &tmp_logflags, whichfork,
+ 					flags);
 -- 
 2.14.1
 
