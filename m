@@ -1,35 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53752 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47213 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751979AbdIVN7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:46 -0400
+        with ESMTP id S1752244AbdIVN7w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:52 -0400
 Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dvOUc-000196-CS
-        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:46 +0000
+        id 1dvOUi-0001Br-Jh
+        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:52 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: refactor extent manipulation V4
-Date: Fri, 22 Sep 2017 06:59:26 -0700
-Message-Id: <20170922135945.31574-1-hch@lst.de>
+Subject: [PATCH 13/19] xfs: refactor delalloc accounting in xfs_bmap_add_extent_delay_real
+Date: Fri, 22 Sep 2017 06:59:39 -0700
+Message-Id: <20170922135945.31574-14-hch@lst.de>
+In-Reply-To: <20170922135945.31574-1-hch@lst.de>
+References: <20170922135945.31574-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+Account for all changes to the delalloc reservation in da_new, and use a
+single call xfs_mod_fdblocks to reserve/free blocks, including always
+checking for an error.
 
-this series refactor the extent manipulation routines so that they are
-isolated from the nitty gritty details of the extent list implementation.
-It is the first step towards a more scalable extent list data structure.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 32 +++++++++-----------------------
+ 1 file changed, 9 insertions(+), 23 deletions(-)
 
-Changes since V3:
- - fix xfs_bmap_add_extent_delay_real once again
- - trivial indentation fixup
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index e74e2d74cd36..b187d5f28e27 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1587,7 +1587,6 @@ xfs_bmap_add_extent_delay_real(
+ 	int			whichfork)
+ {
+ 	struct xfs_bmbt_irec	*new = &bma->got;
+-	int			diff;	/* temp value */
+ 	int			error;	/* error return value */
+ 	int			i;	/* temp state */
+ 	xfs_ifork_t		*ifp;	/* inode fork pointer */
+@@ -2085,17 +2084,6 @@ xfs_bmap_add_extent_delay_real(
+ 
+ 		da_new = startblockval(PREV.br_startblock) +
+ 			 startblockval(RIGHT.br_startblock);
+-		diff = da_new - startblockval(old.br_startblock);
+-		if (bma->cur)
+-			diff += bma->cur->bc_private.b.allocated;
+-		if (diff > 0) {
+-			error = xfs_mod_fdblocks(bma->ip->i_mount,
+-						 -((int64_t)diff), false);
+-			ASSERT(!error);
+-			if (error)
+-				goto done;
+-		}
+-
+ 		bma->idx++;
+ 		break;
+ 
+@@ -2130,19 +2118,17 @@ xfs_bmap_add_extent_delay_real(
+ 			goto done;
+ 	}
+ 
+-	/* adjust for changes in reserved delayed indirect blocks */
+-	if (da_old || da_new) {
+-		temp = da_new;
+-		if (bma->cur)
+-			temp += bma->cur->bc_private.b.allocated;
+-		if (temp < da_old)
+-			xfs_mod_fdblocks(bma->ip->i_mount,
+-					(int64_t)(da_old - temp), false);
++	if (bma->cur) {
++		da_new += bma->cur->bc_private.b.allocated;
++		bma->cur->bc_private.b.allocated = 0;
+ 	}
+ 
+-	/* clear out the allocated field, done with it now in any case. */
+-	if (bma->cur)
+-		bma->cur->bc_private.b.allocated = 0;
++	/* adjust for changes in reserved delayed indirect blocks */
++	if (da_new != da_old) {
++		ASSERT(state == 0 || da_new < da_old);
++		error = xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new),
++				false);
++	}
+ 
+ 	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
+ done:
+-- 
+2.14.1
 
-Changes since V2:
- - fix xfs_bmap_add_extent_delay_real again
- - new patch to refactor delalloc accouting in xfs_bmap_add_extent_delay_real
-
-Changes since V1:
- - use better fitting XFS_BMAP_* constant in xfs_bmap_del_extent_*
- - various fixes and cleanups in xfs_bmap_add_extent_delay_real
