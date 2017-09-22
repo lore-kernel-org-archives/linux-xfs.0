@@ -1,59 +1,226 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55990 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:42186 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751898AbdIVOkA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Sep 2017 10:40:00 -0400
-Subject: Re: [PATCH] xfs: Capture state of the right inode in xfs_iflush_done
-References: <20170922113555.17711-1-cmaiolino@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e7c35561-3961-d0ec-ac8c-7430934e4cf6@sandeen.net>
-Date: Fri, 22 Sep 2017 09:39:59 -0500
+        id S1752348AbdIVPWf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Sep 2017 11:22:35 -0400
+Date: Fri, 22 Sep 2017 11:22:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 08/27] xfs: scrub the shape of a metadata btree
+Message-ID: <20170922152233.GA63820@bfoster.bfoster>
+References: <150595305131.18473.16572195821331601191.stgit@magnolia>
+ <150595310675.18473.3213689888370264086.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170922113555.17711-1-cmaiolino@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150595310675.18473.3213689888370264086.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 9/22/17 6:35 AM, Carlos Maiolino wrote:
-> My previous patch: d3a304b6292168b83b45d624784f973fdc1ca674 check for
-> XFS_LI_FAILED flag xfs_iflush done, so the failed item can be properly
-> resubmitted.
+On Wed, Sep 20, 2017 at 05:18:26PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In the loop scanning other inodes being completed, it should check the
-> current item for the XFS_LI_FAILED, and not the initial one.
+> Create a function that can check the shape of a btree -- each block
+> passes basic inspection and all the pointers look ok.  In the next patch
+> we'll add the ability to check the actual keys and records stored within
+> the btree.  Add some helper functions so that we report detailed scrub
+> errors in a uniform manner in dmesg.  These are helper functions for
+> subsequent patches.
 > 
-> The state of the initial inode is checked after the loop ends
-> 
-> Kudos to Eric for catching this.
-
-Coverity, actually, I'm just the messenger.
-
-Fixes-coverity-id: 1417838
-
--Eric
-
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_inode_item.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_btree.c |   16 +++
+>  fs/xfs/libxfs/xfs_btree.h |    7 +
+>  fs/xfs/scrub/btree.c      |  236 +++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/common.h     |   13 ++
+>  4 files changed, 268 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 6d0f74ec31e8..015e8ee793a3 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -745,7 +745,7 @@ xfs_iflush_done(
->  		 */
->  		iip = INODE_ITEM(blip);
->  		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-> -		    lip->li_flags & XFS_LI_FAILED)
-> +		    blip->li_flags & XFS_LI_FAILED)
->  			need_ail++;
+> 
+...
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index adf5d09..a9c2bf3 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+...
+> @@ -109,6 +255,92 @@ xfs_scrub_btree(
+>  	struct xfs_owner_info		*oinfo,
+>  	void				*private)
+>  {
+> -	xfs_scrub_btree_op_ok(sc, cur, 0, false);
+> -	return -EOPNOTSUPP;
+> +	struct xfs_scrub_btree		bs = {0};
+> +	union xfs_btree_ptr		ptr;
+> +	union xfs_btree_ptr		*pp;
+> +	struct xfs_btree_block		*block;
+> +	int				level;
+> +	struct xfs_buf			*bp;
+> +	int				i;
+> +	int				error = 0;
+> +
+> +	/* Initialize scrub state */
+> +	bs.cur = cur;
+> +	bs.scrub_rec = scrub_fn;
+> +	bs.oinfo = oinfo;
+> +	bs.firstrec = true;
+> +	bs.private = private;
+> +	bs.sc = sc;
+> +	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
+> +		bs.firstkey[i] = true;
+> +	INIT_LIST_HEAD(&bs.to_check);
+> +
+> +	/* Don't try to check a tree with a height we can't handle. */
+> +	if (!xfs_scrub_btree_check_ok(sc, cur, 0, cur->bc_nlevels > 0 &&
+> +			cur->bc_nlevels <= XFS_BTREE_MAXLEVELS))
+> +		goto out;
+> +
+> +	/* Make sure the root isn't in the superblock. */
+> +	if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)) {
+> +		cur->bc_ops->init_ptr_from_cur(cur, &ptr);
+> +		error = xfs_scrub_btree_ptr(&bs, cur->bc_nlevels, &ptr);
+> +		if (!xfs_scrub_btree_op_ok(sc, cur, cur->bc_nlevels - 1, &error))
+> +			goto out;
+> +	}
+> +
+
+This is kind of in line with Dave's comments on the previous patch that
+introduce some of these helpers. I just glanced over them for now
+because I didn't have enough context to grok the error processing.
+
+FWIW, the btree_op_ok()/btree_check_ok() stuff kind of makes my eyes
+cross a bit because I can't easily see the logic checks or distinguish
+between those and error code checks. This is also a bit confusing
+because it looks like we overload return codes for various things. E.g.,
+we generate -EFSCORRUPTED in some cases just so the caller can set the
+state on the context and clear it, but then we still use the fact that
+an error _was_ set to control the flow of the task via the op_ok()
+return value. This makes some of the code flow/decision making logic
+hard to follow, particularly since some of that state looks like it can
+be lost.
+
+Case in point.. what happens if say xfs_btree_increment() returns
+-EFSCORRUPTED back to xfs_scrub_btree_block_check_sibling()? It looks to
+me that the latter calls btree_op_ok() to set the corrupt state, clears
+the error code and skips out appropriately.
+xfs_scrub_btree_block_check_sibling() now returns zero, which
+potentially bubbles up to xfs_scrub_btree() where we check the error
+code again. Is it expected that error == 0 here? What is supposed to
+happen here?
+
+I'm wondering if this could all be made more clear by trying to
+explicitly separate out operational errors, scrub failures and whatever
+we want to call the logic that clears an -EFSCORRUPTED/-EFSBADCRC error
+code but still indicates something happened. :P
+
+For starters, rather than wrap every logic check with btree_op_check(),
+could we use explicit logic and let each function update the context
+based on problems it found? For example, something like the following is
+much more easy to read for me than the associated logic above:
+
+	/* Don't try to check a tree with a height we can't handle. */
+	if (!(cur->bc_nlevels > 0 &&
+	      cur->bc_nlevels <= XFS_BTREE_MAXLEVELS)) {
+		xfs_scrub_sc_corrupt(...);
+		goto out;
+	}
+
+And of course the context update calls could be factored into an
+out_corrupt label or something where appropriate.
+
+Beyond that, where we need to identify a bit of metadata is busted to
+perhaps do something like skip it but not abort (as we may have filtered
+out an -EFSCORRUPTED) return code, could we pass a flag down a
+particular callchain (i.e., think 'bool *bad' or 'int *stat' a la the
+core btree code)? Then we can still transfer that state back up the
+chain and the caller(s) can distinguish operational errors from "this
+thing is corrupted, act accordingly," regardless of how the corruption
+was detected.
+
+Brian
+
+> +	/* Load the root of the btree. */
+> +	level = cur->bc_nlevels - 1;
+> +	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
+> +	error = xfs_scrub_btree_block(&bs, level, &ptr, &block, &bp);
+> +	if (!xfs_scrub_btree_op_ok(sc, cur, cur->bc_nlevels - 1, &error))
+> +		goto out;
+> +
+> +	cur->bc_ptrs[level] = 1;
+> +
+> +	while (level < cur->bc_nlevels) {
+> +		block = xfs_btree_get_block(cur, level, &bp);
+> +
+> +		if (level == 0) {
+> +			/* End of leaf, pop back towards the root. */
+> +			if (cur->bc_ptrs[level] >
+> +			    be16_to_cpu(block->bb_numrecs)) {
+> +				if (level < cur->bc_nlevels - 1)
+> +					cur->bc_ptrs[level + 1]++;
+> +				level++;
+> +				continue;
+> +			}
+> +
+> +			if (xfs_scrub_should_terminate(&error))
+> +				break;
+> +
+> +			cur->bc_ptrs[level]++;
+> +			continue;
+> +		}
+> +
+> +		/* End of node, pop back towards the root. */
+> +		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
+> +			if (level < cur->bc_nlevels - 1)
+> +				cur->bc_ptrs[level + 1]++;
+> +			level++;
+> +			continue;
+> +		}
+> +
+> +		/* Drill another level deeper. */
+> +		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
+> +		error = xfs_scrub_btree_ptr(&bs, level, pp);
+> +		if (error) {
+> +			error = 0;
+> +			cur->bc_ptrs[level]++;
+> +			continue;
+> +		}
+> +		level--;
+> +		error = xfs_scrub_btree_block(&bs, level, pp, &block, &bp);
+> +		if (!xfs_scrub_btree_op_ok(sc, cur, level, &error))
+> +			goto out;
+> +
+> +		cur->bc_ptrs[level] = 1;
+> +	}
+> +
+> +out:
+> +	return error;
+>  }
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index e1bb14b..9920488 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -20,6 +20,19 @@
+>  #ifndef __XFS_SCRUB_COMMON_H__
+>  #define __XFS_SCRUB_COMMON_H__
 >  
->  		blip = next;
+> +/* Should we end the scrub early? */
+> +static inline bool
+> +xfs_scrub_should_terminate(
+> +	int		*error)
+> +{
+> +	if (fatal_signal_pending(current)) {
+> +		if (*error == 0)
+> +			*error = -EAGAIN;
+> +		return true;
+> +	}
+> +	return false;
+> +}
+> +
+>  /*
+>   * Grab a transaction.  If we're going to repair something, we need to
+>   * ensure there's enough reservation to make all the changes.  If not,
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
