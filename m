@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43518 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60051 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdIVN7s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:48 -0400
+        with ESMTP id S1752043AbdIVN7u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 09:59:50 -0400
 Received: from ip-64-134-232-11.public.wayport.net ([64.134.232.11] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dvOUd-00019b-PW
-        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:47 +0000
+        id 1dvOUg-0001At-4y
+        for linux-xfs@vger.kernel.org; Fri, 22 Sep 2017 13:59:50 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/19] xfs: don't set XFS_BTCUR_BPRV_WASDEL in xfs_bunmapi
-Date: Fri, 22 Sep 2017 06:59:29 -0700
-Message-Id: <20170922135945.31574-4-hch@lst.de>
+Subject: [PATCH 08/19] xfs: use the state defines in xfs_bmap_del_extent_real
+Date: Fri, 22 Sep 2017 06:59:34 -0700
+Message-Id: <20170922135945.31574-9-hch@lst.de>
 In-Reply-To: <20170922135945.31574-1-hch@lst.de>
 References: <20170922135945.31574-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,35 +18,69 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The XFS_BTCUR_BPRV_WASDEL flag is supposed to indicate that we are
-converting a delayed allocation to a real one, which isn't the case
-in xfs_bunmapi.  Setting it could theoretically lead to misaccounting
-here, but it's unlikely that we ever hit it in practice.
+Use the same defines as the other extent add and delete helpers, which
+both improves code readability and trace point output.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 555ff198e28c..ef30b52c32af 100644
+index aa4af31750d3..037efc97499f 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5725,11 +5725,7 @@ __xfs_bunmapi(
- 					XFS_QMOPT_RES_REGBLKS);
- 			}
- 			ip->i_delayed_blks -= del.br_blockcount;
--			if (cur)
--				cur->bc_private.b.flags |=
--					XFS_BTCUR_BPRV_WASDEL;
--		} else if (cur)
--			cur->bc_private.b.flags &= ~XFS_BTCUR_BPRV_WASDEL;
-+		}
+@@ -5162,13 +5162,13 @@ xfs_bmap_del_extent_real(
+ 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 	}
  
- 		error = xfs_bmap_del_extent(ip, tp, &lastx, dfops, cur, &del,
- 				&tmp_logflags, whichfork, flags);
+-	/*
+-	 * Set flag value to use in switch statement.
+-	 * Left-contig is 2, right-contig is 1.
+-	 */
+-	switch (((got.br_startoff == del->br_startoff) << 1) |
+-		(got_endoff == del_endoff)) {
+-	case 3:
++	if (got.br_startoff == del->br_startoff)
++		state |= BMAP_LEFT_FILLING;
++	if (got_endoff == del_endoff)
++		state |= BMAP_RIGHT_FILLING;
++
++	switch (state & (BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING)) {
++	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+@@ -5188,8 +5188,7 @@ xfs_bmap_del_extent_real(
+ 			goto done;
+ 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		break;
+-
+-	case 2:
++	case BMAP_LEFT_FILLING:
+ 		/*
+ 		 * Deleting the first part of the extent.
+ 		 */
+@@ -5208,8 +5207,7 @@ xfs_bmap_del_extent_real(
+ 				got.br_state)))
+ 			goto done;
+ 		break;
+-
+-	case 1:
++	case BMAP_RIGHT_FILLING:
+ 		/*
+ 		 * Deleting the last part of the extent.
+ 		 */
+@@ -5227,7 +5225,6 @@ xfs_bmap_del_extent_real(
+ 				got.br_state)))
+ 			goto done;
+ 		break;
+-
+ 	case 0:
+ 		/*
+ 		 * Deleting the middle of the extent.
 -- 
 2.14.1
 
