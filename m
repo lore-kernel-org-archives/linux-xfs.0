@@ -1,210 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:19523 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751795AbdIVHFA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2017 03:05:00 -0400
-Date: Fri, 22 Sep 2017 17:04:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 3/3] xfs: Add realtime fallback if data device full
-Message-ID: <20170922070423.GE10955@dastard>
-References: <20170919035238.3976871-1-rwareing@fb.com>
- <20170919035238.3976871-4-rwareing@fb.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:49912 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750762AbdIWHYI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Sep 2017 03:24:08 -0400
+Date: Sat, 23 Sep 2017 00:24:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/27] xfs: create helpers to record and deal with scrub
+ problems
+Message-ID: <20170923072403.GO5728@magnolia>
+References: <150595305131.18473.16572195821331601191.stgit@magnolia>
+ <150595309448.18473.17367425546613617113.stgit@magnolia>
+ <20170922071608.GG10955@dastard>
+ <20170922164418.GG5728@magnolia>
+ <20170923072228.GI10955@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170919035238.3976871-4-rwareing@fb.com>
+In-Reply-To: <20170923072228.GI10955@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 08:52:38PM -0700, Richard Wareing wrote:
-> - Adds tunable option to fallback to realtime device if configured
->   when data device is full.
-> - Useful for realtime device users to help prevent ENOSPC errors when
->   selectively storing some files (e.g. small files) on data device, while
->   others are stored on realtime block device.
-> - Set via the "rt_fallback_pct" sysfs value which is available if
->   the kernel is compiled with CONFIG_XFS_RT.
+On Sat, Sep 23, 2017 at 05:22:28PM +1000, Dave Chinner wrote:
+> Darrick,
 > 
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
-> ---
-> Changes since v3:
-> * None, new patch to patch set
+> Excuse the nasty top post, but can you wrap all this up in comments
+> in the code? It all makes sense now you explain it, but I'm not
+> going to remember all that in a couple of months time...
+
+Already done.
+
+(FWIW top-posting doesn't bother me...)
+
+--D
+
 > 
->  fs/xfs/xfs_bmap_util.c |  4 +++-
->  fs/xfs/xfs_fsops.c     |  4 ++++
->  fs/xfs/xfs_iomap.c     |  8 ++++++--
->  fs/xfs/xfs_mount.c     | 27 ++++++++++++++++++++++++++-
->  fs/xfs/xfs_mount.h     |  7 ++++++-
->  fs/xfs/xfs_rtalloc.c   | 14 ++++++++++++++
->  fs/xfs/xfs_rtalloc.h   |  3 ++-
->  fs/xfs/xfs_sysfs.c     | 39 +++++++++++++++++++++++++++++++++++++++
->  8 files changed, 100 insertions(+), 6 deletions(-)
+> -Dave.
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 2d253fb..9797c69 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1026,8 +1026,10 @@ xfs_alloc_file_space(
->  	if (len <= 0)
->  		return -EINVAL;
->  
-> -	if (XFS_IS_REALTIME_MOUNT(mp))
-> +	if (XFS_IS_REALTIME_MOUNT(mp)) {
->  		xfs_rt_alloc_min(ip, len);
-> +		xfs_rt_fallback(ip, mp);
-> +	}
-
-This should really go inside xfs_inode_select_target() as space
-availability is just another selection criteria....
-
->  	rt = XFS_IS_REALTIME_INODE(ip);
->  	extsz = xfs_get_extsz_hint(ip);
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 6ccaae9..c15e906 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -610,6 +610,10 @@ xfs_growfs_data_private(
->  	xfs_set_low_space_thresholds(mp);
->  	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
->  
-> +	if (XFS_IS_REALTIME_MOUNT(mp)) {
-> +		xfs_set_rt_min_fdblocks(mp);
-> +	}
-
-Normal way to do this is something like:
-
-	mp->m_rt_min_fdblocks = xfs_calc_min_free_rtblocks(mp);
-
-and check XFS_IS_REALTIME_MOUNT() inside that function.
-
-And now, reading on, I find I've completely misunderstood what
-those variable and function names mean, so they need renaming
-to be clearer.
-
-> +
-> +/*
-> + * precalculate minimum of data blocks required, if we fall
-> + * below this value, we will fallback to the real-time device.
-> + *
-> + * m_rt_fallback_pct can only be non-zero if a real-time device
-> + * is configured.
-> + */
-> +void
-> +xfs_set_rt_min_fdblocks(
-> +	struct xfs_mount	*mp)
-> +{
-> +	if (mp->m_rt_fallback_pct) {
-> +		xfs_sb_t		*sbp = &mp->m_sb;
-> +		xfs_extlen_t 	lsize;
-> +		__uint64_t 		min_blocks;
-
-Stray whitespace. If you use vim, add this macro to your
-.vimrc so that it highlights stray whitespace for you:
-
-" highlight whitespace damage
-highlight RedundantSpaces ctermbg=red guibg=red
-match RedundantSpaces /\s\+$\| \+\ze\t/
-
-> +
-> +		lsize = sbp->sb_logstart ? sbp->sb_logblocks : 0;
-> +		min_blocks = (mp->m_sb.sb_dblocks - lsize) * mp->m_rt_fallback_pct;
-> +		do_div(min_blocks, 100);
-
-Why bother with the log size?
-
-> +		/* Pre-compute minimum data blocks required before
-> +		 * falling back to RT device for allocations
-> +		 */
-
-Comment format.
-
-> +		mp->m_rt_min_fdblocks = min_blocks;
-
-Hmmm - I wonder if it would be better to tie this into the existing
-data device low space threshold code?
-
-> +	}
-
-Also, indenting.
-
-	if (!XFS_IS_REALTIME_MOUNT(mp))
-		return 0;
-	if (!mp->m_rt_fallback_pct)
-		return 0;
-	....
-
-
-
-> +}
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 067be3b..36676c4 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -197,7 +197,11 @@ typedef struct xfs_mount {
->  	__uint32_t		m_generation;
->  
->  	bool			m_fail_unmount;
-> -        uint                    m_rt_alloc_min; /* Min RT allocation */
-> +	uint			m_rt_alloc_min; /* Min RT allocation */
-> +	__uint8_t		m_rt_fallback_pct; /* Fall back to realtime device if
-
-uint32_t is fine. We're moving away from the __[u]int types, so
-we shouldn't really add any new ones.
-
-> +void xfs_rt_fallback(
-> +    struct xfs_inode    *ip,
-> +    struct xfs_mount    *mp)
-
-Mount first, then inode.
-
-> +{
-> +    if (!XFS_IS_REALTIME_INODE(ip)) {
-> +        __uint64_t      free;
-> +        free = percpu_counter_sum(&mp->m_fdblocks) -
-> +            mp->m_alloc_set_aside;
-> +        if (free < mp->m_rt_min_fdblocks) {
-> +            ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
-> +        }
-> +    }
-> +}
-
-Indenting, but should really move to the target selection function.
-
-> +STATIC ssize_t
-> +rt_fallback_pct_store(
-> +	struct kobject			*kobject,
-> +	const char				*buf,
-> +	size_t					count)
-> +{
-> +	struct xfs_mount		*mp = to_mp(kobject);
-> +	int						ret;
-> +	int						val;
-> +
-> +	ret = kstrtoint(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Only valid if using a real-time device */
-> +	if (XFS_IS_REALTIME_MOUNT(mp) && ((val > 0) && (val <=100))) {
-> +		mp->m_rt_fallback_pct = val;
-> +		xfs_set_rt_min_fdblocks(mp);
-> +	} else if (val <= 0) {
-> +		mp->m_rt_fallback_pct = 0;
-> +		mp->m_rt_min_fdblocks = 0;
-> +	} else
-> +		return -EINVAL;
-
-Same issue as last patch.
-
-Also, just set then threshold percentage, and if there is no error,
-then call xfs_set_rt_min_fdblocks() rather than zeroing it directly.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> On Fri, Sep 22, 2017 at 09:44:18AM -0700, Darrick J. Wong wrote:
+> > On Fri, Sep 22, 2017 at 05:16:08PM +1000, Dave Chinner wrote:
+> > > On Wed, Sep 20, 2017 at 05:18:14PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Create helper functions to record crc and corruption problems, and
+> > > > deal with any other runtime errors that arise.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/scrub/common.c |  243 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/scrub/common.h |   39 ++++++++
+> > > >  fs/xfs/scrub/trace.h  |  193 +++++++++++++++++++++++++++++++++++++++
+> > > >  3 files changed, 475 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> > > > index 13ccb36..cf3f1365 100644
+> > > > --- a/fs/xfs/scrub/common.c
+> > > > +++ b/fs/xfs/scrub/common.c
+> > > > @@ -47,6 +47,249 @@
+> > > >  
+> > > >  /* Common code for the metadata scrubbers. */
+> > > >  
+> > > > +/* Check for operational errors. */
+> > > > +bool
+> > > > +xfs_scrub_op_ok(
+> > > > +	struct xfs_scrub_context	*sc,
+> > > > +	xfs_agnumber_t			agno,
+> > > > +	xfs_agblock_t			bno,
+> > > > +	int				*error)
+> > > > +{
+> > > > +	switch (*error) {
+> > > > +	case 0:
+> > > > +		return true;
+> > > > +	case -EDEADLOCK:
+> > > > +		/* Used to restart an op with deadlock avoidance. */
+> > > > +		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
+> > > > +		break;
+> > > > +	case -EFSBADCRC:
+> > > > +	case -EFSCORRUPTED:
+> > > > +		/* Note the badness but don't abort. */
+> > > > +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> > > > +		*error = 0;
+> > > > +		/* fall through */
+> > > > +	default:
+> > > > +		trace_xfs_scrub_op_error(sc, agno, bno, *error,
+> > > > +				__return_address);
+> > > > +		break;
+> > > > +	}
+> > > > +	return false;
+> > > > +}
+> > > 
+> > > What are the semantics here w.r.t. *error? on some errors it's
+> > > cleared before we return, on others it's ignored. It's as clear as
+> > > mud what we should expect from these functions...
+> > 
+> > If there's no error, we return true to tell the caller that it's ok to
+> > move on to the next check in its list.
+> > 
+> > For non-verifier errors (e.g. ENOMEM) we return false to tell the caller
+> > that there's no point in it continuing, and we preserve *error so that
+> > the caller can return the *error up the stack.  Checking stops
+> > immediately and the error is handed to userspace.
+> > 
+> > Verifier errors (EFSBADCRC/EFSCORRUPTED) are recorded in sm_flags and
+> > the *error is cleared.  We return false to tell the caller that there's
+> > point in it continuing with this record.  The caller returns zero to its
+> > caller, which means that checking continues, having skipped whatever
+> > block failed the verifier.
+> > 
+> > > > +/* Check for metadata block optimization possibilities. */
+> > > > +bool
+> > > > +xfs_scrub_block_preen_ok(
+> > > > +	struct xfs_scrub_context	*sc,
+> > > > +	struct xfs_buf			*bp,
+> > > > +	bool				fs_ok)
+> > > > +{
+> > > > +	struct xfs_mount		*mp = sc->mp;
+> > > > +	xfs_fsblock_t			fsbno;
+> > > > +	xfs_agnumber_t			agno;
+> > > > +	xfs_agblock_t			bno;
+> > > > +
+> > > > +	if (fs_ok)
+> > > > +		return fs_ok;
+> > > > +
+> > > > +	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
+> > > > +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> > > > +	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> > > > +
+> > > > +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
+> > > > +	trace_xfs_scrub_block_preen(sc, agno, bno, __return_address);
+> > > > +	return fs_ok;
+> > > > +}
+> > > 
+> > > Again, I'm not sure what the return value semantics of the functioon
+> > > are? Why does the fs_ok return shortcut exist?
+> > 
+> > The fs_ok functions are wrappers around an if test; the results of the
+> > if test are passed in as fs_ok.
+> > 
+> > Therefore, if fs_ok then things are fine and we just skip out.
+> > 
+> > Otherwise, we found something and we should set sm_flags and jump out.
+> > 
+> > > Same for all the other functions...
+> > > 
+> > > > +
+> > > > +/* Check for inode metadata non-corruption problems. */
+> > > > +bool
+> > > > +xfs_scrub_ino_warn_ok(
+> > > > +	struct xfs_scrub_context	*sc,
+> > > > +	struct xfs_buf			*bp,
+> > > > +	bool				fs_ok)
+> > > 
+> > > Confusing. What's the difference between a corruption problem and a
+> > > "non-corruption problem" that requires a warning?
+> > 
+> > Anything that's less severe than "your fs is corrupt" but otherwise
+> > requires administrator review.  The inode scrubber sets this for inodes
+> > with a -1 uid/gid.  XFS seems fine with it, but the VFS treats -1ULL as
+> > a magic "doesn't exist" value, and then userspace can't change it.
+> > The quota code sets warnings if it detects quota usage exceeding the
+> > hard limit, or if the limits are larger than the fs, etc.
+> > 
+> > In these cases I'd want the administrator to have a look and/or take
+> > corrective action, but XFS doesn't flag those situations as fs
+> > corruption nor does xfs_repair complain about them as corruption.
+> > 
+> > --D
+> > 
+> > > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
