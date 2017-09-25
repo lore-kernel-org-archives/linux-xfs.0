@@ -1,75 +1,282 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56960 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751879AbdIYLdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Sep 2017 07:33:22 -0400
-Date: Mon, 25 Sep 2017 07:33:21 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: always swap the cow forks when swapping extents
-Message-ID: <20170925113321.GB12869@bfoster.bfoster>
-References: <20170923071208.GN5728@magnolia>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:45731 "EHLO
+        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934608AbdIYToV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 15:44:21 -0400
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8PJiL1w011201
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 12:44:21 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2d785r00bw-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 12:44:21 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v5 2/3] xfs: Set realtime flag based on initial allocation size
+Date: Mon, 25 Sep 2017 12:44:17 -0700
+Message-ID: <20170925194418.720146-3-rwareing@fb.com>
+In-Reply-To: <20170925194418.720146-1-rwareing@fb.com>
+References: <20170925194418.720146-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170923071208.GN5728@magnolia>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-On Sat, Sep 23, 2017 at 12:12:08AM -0700, Darrick J. Wong wrote:
-> Since the CoW fork exists as a secondary data structure to the data
-> fork, we must always swap cow forks during swapext.  We also need to
-> swap the extent counts and reset the cowblocks tags.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+- The rt_alloc_min sysfs option automatically selects the device (data
+  device, or realtime) based on the size of the initial allocation of the
+  file.
+- This option can be used to route the storage of small files (and the
+  inefficient workloads associated with them) to a suitable storage
+  device such a SSD, while larger allocations are sent to a traditional
+  HDD.
+- Supports writes via O_DIRECT, buffered (i.e. page cache), and
+  pre-allocations (i.e. fallocate)
+- Available only when kernel is compiled w/ CONFIG_XFS_RT option.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v4:
+* Added xfs_inode_select_target function to hold target selection
+  code
+* XFS_IS_REALTIME_MOUNT check now moved inside xfs_inode_select_target
+  function for better gating
+* Improved consistency in the sysfs set behavior
+* Style fixes
 
->  fs/xfs/xfs_bmap_util.c |   24 ++++++++++++++++++++++--
->  1 file changed, 22 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index bc6c6e1..e9db7fc 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -2122,11 +2122,31 @@ xfs_swap_extents(
->  		ip->i_d.di_flags2 |= tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
->  		tip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
->  		tip->i_d.di_flags2 |= f & XFS_DIFLAG2_REFLINK;
-> +	}
-> +
-> +	/* Swap the cow forks. */
-> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-> +		xfs_extnum_t	extnum;
-> +
-> +		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-> +		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-> +
-> +		extnum = ip->i_cnextents;
-> +		ip->i_cnextents = tip->i_cnextents;
-> +		tip->i_cnextents = extnum;
-> +
->  		cowfp = ip->i_cowfp;
->  		ip->i_cowfp = tip->i_cowfp;
->  		tip->i_cowfp = cowfp;
-> -		xfs_inode_set_cowblocks_tag(ip);
-> -		xfs_inode_set_cowblocks_tag(tip);
-> +
-> +		if (ip->i_cowfp && ip->i_cnextents)
-> +			xfs_inode_set_cowblocks_tag(ip);
-> +		else
-> +			xfs_inode_clear_cowblocks_tag(ip);
-> +		if (tip->i_cowfp && tip->i_cnextents)
-> +			xfs_inode_set_cowblocks_tag(tip);
-> +		else
-> +			xfs_inode_clear_cowblocks_tag(tip);
->  	}
->  
->  	xfs_trans_log_inode(tp, ip,  src_log_flags);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes since v3:
+* Now functions via initial allocation regardless of O_DIRECT, buffered or
+  pre-allocation code paths.  Provides a consistent user-experience.
+* I Did do some experiments putting this in the xfs_bmapi_write code path
+  however pre-allocation accounting unfortunately prevents this cleaner
+  approach.  As such, this proved to be the cleanest and functional approach.
+* No longer a mount option, now a sysfs tunable
+
+ fs/xfs/xfs_bmap_util.c |  2 ++
+ fs/xfs/xfs_inode.c     | 18 ++++++++++++------
+ fs/xfs/xfs_iomap.c     |  5 +++++
+ fs/xfs/xfs_mount.h     |  1 +
+ fs/xfs/xfs_rtalloc.c   | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.h   |  2 ++
+ fs/xfs/xfs_sysfs.c     | 38 ++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 110 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 9e3cc21..8205669d 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1026,6 +1026,8 @@ xfs_alloc_file_space(
+ 	if (len <= 0)
+ 		return -EINVAL;
+ 
++	xfs_inode_select_target(ip, len);
++
+ 	rt = XFS_IS_REALTIME_INODE(ip);
+ 	extsz = xfs_get_extsz_hint(ip);
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ec9826c..f9e2deb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1620,12 +1620,18 @@ xfs_itruncate_extents(
+ 	if (error)
+ 		goto out;
+ 
+-	/*
+-	 * Clear the reflink flag if we truncated everything.
+-	 */
+-	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
+-		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+-		xfs_inode_clear_cowblocks_tag(ip);
++	if (ip->i_d.di_nblocks == 0) {
++		/*
++		 * Clear the reflink flag if we truncated everything.
++		 */
++		if (xfs_is_reflink_inode(ip)) {
++			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++			xfs_inode_clear_cowblocks_tag(ip);
++		}
++		/* Clear realtime flag if m_rt_alloc_min policy is in place */
++		if (XFS_IS_REALTIME_MOUNT(mp) && mp->m_rt_alloc_min) {
++			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
++		}
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 94e5bdf..b3c3b9b 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -40,6 +40,7 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
++#include "xfs_rtalloc.h"
+ 
+ 
+ #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
+@@ -174,6 +175,8 @@ xfs_iomap_write_direct(
+ 	int		bmapi_flags = XFS_BMAPI_PREALLOC;
+ 	uint		tflags = 0;
+ 
++	xfs_inode_select_target(ip, count);
++
+ 	rt = XFS_IS_REALTIME_INODE(ip);
+ 	extsz = xfs_get_extsz_hint(ip);
+ 	lockmode = XFS_ILOCK_SHARED;	/* locked by caller */
+@@ -981,6 +984,8 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
++	xfs_inode_select_target(ip, length);
++
+ 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+ 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 9fa312a..2adc701 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -197,6 +197,7 @@ typedef struct xfs_mount {
+ 	__uint32_t		m_generation;
+ 
+ 	bool			m_fail_unmount;
++	uint			m_rt_alloc_min; /* Min RT allocation */
+ #ifdef DEBUG
+ 	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index c57aa7f..421f860 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1284,3 +1284,53 @@ xfs_rtpick_extent(
+ 	*pick = b;
+ 	return 0;
+ }
++
++/*
++ * If allocation length is less than rt_alloc_min threshold select the
++ * data device.   Otherwise, select the realtime device.
++ */
++void xfs_rt_alloc_min(
++	struct xfs_mount	*mp,
++	struct xfs_inode	*ip,
++	xfs_off_t			len)
++{
++	if (!mp->m_rt_alloc_min)
++		return;
++
++	if (len < mp->m_rt_alloc_min) {
++		ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
++	} else {
++		ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
++	}
++}
++
++/*
++* Select the target device for the inode based on either the size of the
++* initial allocation, or the amount of space available on the data device.
++*
++*/
++void xfs_inode_select_target(
++	struct xfs_inode	*ip,
++	xfs_off_t			len)
++{
++	struct xfs_mount    *mp = ip->i_mount;
++
++	/* If the mount does not have a realtime device configured, there's
++	 * nothing to do here.
++	 */
++	if (!XFS_IS_REALTIME_MOUNT(mp))
++		return;
++
++	/* You cannot select a new device target once blocks have been allocated
++	 * (e.g. fallocate() beyond EOF), or if data has been written already.
++	 */
++	if (ip->i_d.di_nextents)
++		return;
++	if (ip->i_d.di_size)
++		return;
++
++	/* m_rt_alloc_min controls target selection.  Target selection code is
++	 * not valid if not set.
++	 */
++	xfs_rt_alloc_min(mp, ip, len);
++}
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index f13133e..eaf7ed3 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -136,6 +136,7 @@ int xfs_rtalloc_query_range(struct xfs_trans *tp,
+ int xfs_rtalloc_query_all(struct xfs_trans *tp,
+ 			  xfs_rtalloc_query_range_fn fn,
+ 			  void *priv);
++void xfs_inode_select_target(struct xfs_inode *ip, xfs_off_t len);
+ #else
+ # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
+ # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+@@ -155,6 +156,7 @@ xfs_rtmount_init(
+ }
+ # define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+ # define xfs_rtunmount_inodes(m)
++# define xfs_inode_select_target(i,l)
+ #endif	/* CONFIG_XFS_RT */
+ 
+ #endif	/* __XFS_RTALLOC_H__ */
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 80ac15f..1e202a1 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -129,10 +129,48 @@ XFS_SYSFS_ATTR_RW(drop_writes);
+ 
+ #endif /* DEBUG */
+ 
++STATIC ssize_t
++rt_alloc_min_store(
++	struct kobject			*kobject,
++	const char				*buf,
++	size_t					count)
++{
++	struct xfs_mount		*mp = to_mp(kobject);
++	int						ret;
++	int						val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	/* Only valid if using a real-time device */
++	if(!XFS_IS_REALTIME_MOUNT(mp))
++		return -EINVAL;
++
++	if (val >= 0)
++		mp->m_rt_alloc_min = val;
++	else
++		return -EINVAL;
++
++	return count;
++}
++
++STATIC ssize_t
++rt_alloc_min_show(
++	struct kobject          *kobject,
++	char                    *buf)
++{
++	struct xfs_mount        *mp = to_mp(kobject);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_alloc_min);
++}
++XFS_SYSFS_ATTR_RW(rt_alloc_min);
++
+ static struct attribute *xfs_mp_attrs[] = {
+ #ifdef DEBUG
+ 	ATTR_LIST(drop_writes),
+ #endif
++	ATTR_LIST(rt_alloc_min),
+ 	NULL,
+ };
+ 
+-- 
+2.9.5
+
