@@ -1,80 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32806 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:25113 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750848AbdIWHMB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Sep 2017 03:12:01 -0400
-Date: Sat, 23 Sep 2017 00:11:42 -0700
+        with ESMTP id S935113AbdIYWzp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 18:55:45 -0400
+Date: Mon, 25 Sep 2017 15:55:17 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: revert "xfs: factor rmap btree size into the indlen
- calculations"
-Message-ID: <20170923071142.GM5728@magnolia>
+Subject: Re: [PATCH v5 1/3] xfs: Show realtime device stats on statfs calls
+ if inherit flag set
+Message-ID: <20170925225517.GF5020@magnolia>
+References: <20170925194418.720146-1-rwareing@fb.com>
+ <20170925194418.720146-2-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170925194418.720146-2-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: eguan@redhat.com
+To: Richard Wareing <rwareing@fb.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
 
-In commit fd26a88093ba we added a worst case estimate for rmapbt blocks
-needed to satisfy the block mapping request.  Since then, we added the
-ability to reserve enough space in each AG such that we should never run
-out of blocks to grow the rmapbt, which makes this calculation
-unnecessary.  Revert the commit because it makes the extra delalloc
-indlen accounting unnecessary and incorrect.
+On Mon, Sep 25, 2017 at 12:44:16PM -0700, Richard Wareing wrote:
+> - Reports realtime device free blocks in statfs calls if inheritance
+>   bit is set on the inode of directory.  This is a bit more intuitive,
+>   especially for use-cases which are using a much larger device for
+>   the realtime device.
+> - Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
+>   realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
+>   option.
+> 
+> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+> Changes since v4:
+> * None
+> 
+> Changes since v3:
+> * Fixed accounting bug, we are not required to substract m_alloc_set_aside
+>   as this is a data device only requirement.
+> * Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
+>   now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
+>   for the inode.
+> 
+> Changes since v2:
+> * Style updated per Christoph Hellwig's comment
+> * Fixed bug: statp->f_bavail = statp->f_bfree
+> 
+>  fs/xfs/xfs_linux.h | 2 ++
+>  fs/xfs/xfs_super.c | 8 ++++++++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index 044fb0e..fe46e71 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -280,8 +280,10 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+>  
+>  #ifdef CONFIG_XFS_RT
+>  #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
+> +#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
 
-Reported-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |   17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+(I kind of dislike these macros but I tried turning them into static inline
+functions once and it turned into a nightmare.)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 459f4b4f0..044a363 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -49,7 +49,6 @@
- #include "xfs_rmap.h"
- #include "xfs_ag_resv.h"
- #include "xfs_refcount.h"
--#include "xfs_rmap_btree.h"
- #include "xfs_icache.h"
- 
- 
-@@ -192,12 +191,8 @@ xfs_bmap_worst_indlen(
- 	int		maxrecs;	/* maximum record count at this level */
- 	xfs_mount_t	*mp;		/* mount structure */
- 	xfs_filblks_t	rval;		/* return value */
--	xfs_filblks_t   orig_len;
- 
- 	mp = ip->i_mount;
--
--	/* Calculate the worst-case size of the bmbt. */
--	orig_len = len;
- 	maxrecs = mp->m_bmap_dmxr[0];
- 	for (level = 0, rval = 0;
- 	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-@@ -205,20 +200,12 @@ xfs_bmap_worst_indlen(
- 		len += maxrecs - 1;
- 		do_div(len, maxrecs);
- 		rval += len;
--		if (len == 1) {
--			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-+		if (len == 1)
-+			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
- 				level - 1;
--			break;
--		}
- 		if (level == 0)
- 			maxrecs = mp->m_bmap_dmxr[1];
- 	}
--
--	/* Calculate the worst-case size of the rmapbt. */
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
--		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
--				mp->m_rmap_maxlevels;
--
- 	return rval;
- }
- 
+>  #else
+>  #define XFS_IS_REALTIME_INODE(ip) (0)
+> +#define XFS_IS_REALTIME_MOUNT(mp) (0)
+>  #endif
+>  
+>  #endif /* __XFS_LINUX__ */
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 455a575..6d33a5e 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1136,6 +1136,14 @@ xfs_fs_statfs(
+>  	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+>  			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+>  		xfs_qm_statvfs(ip, statp);
+> +
+> +	if (XFS_IS_REALTIME_MOUNT(mp) &&
+> +	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
+
+Why don't we do this for any inode with REALTIME or RTINHERIT set?
+
+--D
+
+> +		statp->f_blocks = sbp->sb_rblocks;
+> +		statp->f_bavail = statp->f_bfree =
+> +			sbp->sb_frextents * sbp->sb_rextsize;
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
