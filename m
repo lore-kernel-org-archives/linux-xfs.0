@@ -1,120 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:54983 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964984AbdIZTTX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 15:19:23 -0400
-Received: by mail-oi0-f43.google.com with SMTP id u130so13028560oib.11
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2017 12:19:22 -0700 (PDT)
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:53508 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S936113AbdIYT42 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 15:56:28 -0400
+Received: from pps.filterd (m0044008.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8PJrtfO002743
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 12:56:27 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2d763m0ndk-3
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 12:56:27 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v2 1/3] xfs/realtime: Add require_no_realtime function
+Date: Mon, 25 Sep 2017 12:56:23 -0700
+Message-ID: <20170925195625.756877-1-rwareing@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <20170926185751.GB31146@linux.intel.com>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
- <20170925231404.32723-7-ross.zwisler@linux.intel.com> <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
- <20170926185751.GB31146@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 26 Sep 2017 12:19:21 -0700
-Message-ID: <CAPcyv4iVc9y8PE24ZvkiBYdp4Die0Q-K5S6QexW_6YQ_M0F4QA@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Tue, Sep 26, 2017 at 11:57 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> On Mon, Sep 25, 2017 at 04:38:45PM -0700, Dan Williams wrote:
->> On Mon, Sep 25, 2017 at 4:14 PM, Ross Zwisler
->> <ross.zwisler@linux.intel.com> wrote:
->> > When mappings are created the vma->vm_flags that they use vary based on
->> > whether the inode being mapped is using DAX or not.  This setup happens in
->> > XFS via mmap_region()=>call_mmap()=>xfs_file_mmap().
->> >
->> > For us to be able to safely use the DAX per-inode flag we need to prevent
->> > S_DAX transitions when any mappings are present, and we will do that by
->> > looking at the address_space->i_mmap tree and returning -EBUSY if any
->> > mappings are present.
->> >
->> > Unfortunately at the time that the filesystem's file_operations->mmap()
->> > entry point is called the mapping has not yet been added to the
->> > address_space->i_mmap tree.  This means that at that point in time we
->> > cannot determine whether or not the mapping will be set up to support DAX.
->> >
->> > Fix this by adding a new file_operations entry called post_mmap() which is
->> > called after the mapping has been added to the address_space->i_mmap tree.
->> > This post_mmap() op now happens at a time when we can be sure whether the
->> > mapping will use DAX or not, and we can set up the vma->vm_flags
->> > appropriately.
->> >
->> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
->> > ---
->> >  fs/xfs/xfs_file.c  | 15 ++++++++++++++-
->> >  include/linux/fs.h |  1 +
->> >  mm/mmap.c          |  2 ++
->> >  3 files changed, 17 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> > index 2816858..9d66aaa 100644
->> > --- a/fs/xfs/xfs_file.c
->> > +++ b/fs/xfs/xfs_file.c
->> > @@ -1087,9 +1087,21 @@ xfs_file_mmap(
->> >  {
->> >         file_accessed(filp);
->> >         vma->vm_ops = &xfs_file_vm_ops;
->> > +       return 0;
->> > +}
->> > +
->> > +/* This call happens during mmap(), after the vma has been inserted into the
->> > + * inode->i_mapping->i_mmap tree.  At this point the decision on whether or
->> > + * not to use DAX for this mapping has been set and will not change for the
->> > + * duration of the mapping.
->> > + */
->> > +STATIC void
->> > +xfs_file_post_mmap(
->> > +       struct file     *filp,
->> > +       struct vm_area_struct *vma)
->> > +{
->> >         if (IS_DAX(file_inode(filp)))
->> >                 vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
->>
->> It's not clear to me what this is actually protecting? vma_is_dax()
->> returns true regardless of the vm_flags state , so what is the benefit
->> to delaying the vm_flags setting to ->post_mmap()?
->
-> Right, but the point is that until the vma has been inserted into the
-> inode->i_mapping->i_mmap tree, the results of IS_DAX() don't matter because it
-> can still change.  Until this insertion happens we cannot know whether or not
-> we should set up the vma->vm_flags to support DAX mappings (i.e. have
-> VM_MIXEDMAP and VM_HUGEPAGE set).
+Some tests do not play well with realtime devices, in an effort to
+produce a stable set of test which exercise the realtime code paths
+we introduce a _require_no_realtime function to allow tests to opt
+out of realtime subvolume test runs.
 
-Those flags are not DAX flags. The side effect of these being set on
-non-DAX mappings is that we effectively auto madvise(MADV_HUGEPAGE)
-and enable some page-less insertion paths. Both of those are
-effectively no-ops for normal mappings since normal mappings always
-have an associated struct page and the THP policy these days is
-usually "always".
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v1:
+* None
 
-> This decision can only be made (in this
-> proposed scheme) *after* the inode->i_mapping->i_mmap  tree has been
-> populated, which means we need another call into the filesystem after this
-> insertion has happened.
+ common/rc                      | 8 ++++++++
+ tests/generic/409              | 1 +
+ tests/generic/410              | 1 +
+ tests/generic/411              | 1 +
+ tests/xfs/077                  | 1 +
+ tests/xfs/189                  | 1 +
+ tests/xfs/191-input-validation | 1 +
+ tests/xfs/202                  | 1 +
+ tests/xfs/284                  | 1 +
+ 9 files changed, 16 insertions(+)
 
-I get that, but it seems over-engineered and something that can also
-be safely cleaned up after the fact by the code path that is disabling
-DAX.
+diff --git a/common/rc b/common/rc
+index 53bbb11..a0081f1 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1835,6 +1835,14 @@ _require_realtime()
+ 	_notrun "Realtime device required, skipped this test"
+ }
+ 
++# This test requires that a realtime subvolume is not in use
++#
++_require_no_realtime()
++{
++    [ -n "$SCRATCH_RTDEV" ] && \
++	_notrun "Test not compatible with realtime subvolumes, skipped this test"
++}
++
+ # this test requires that a specified command (executable) exists
+ # $1 - command, $2 - name for error message
+ #
+diff --git a/tests/generic/409 b/tests/generic/409
+index 3ad65c9..8ed3e4e 100755
+--- a/tests/generic/409
++++ b/tests/generic/409
+@@ -65,6 +65,7 @@ _supported_os Linux
+ _require_test
+ _require_scratch
+ _require_local_device $SCRATCH_DEV
++_require_no_realtime
+ 
+ fs_stress()
+ {
+diff --git a/tests/generic/410 b/tests/generic/410
+index 63ab716..1bbaff8 100755
+--- a/tests/generic/410
++++ b/tests/generic/410
+@@ -73,6 +73,7 @@ _supported_os Linux
+ _require_test
+ _require_scratch
+ _require_local_device $SCRATCH_DEV
++_require_no_realtime
+ 
+ fs_stress()
+ {
+diff --git a/tests/generic/411 b/tests/generic/411
+index 83f6d26..ea718fc 100755
+--- a/tests/generic/411
++++ b/tests/generic/411
+@@ -54,6 +54,7 @@ _supported_os Linux
+ _require_test
+ _require_scratch
+ _require_local_device $SCRATCH_DEV
++_require_no_realtime
+ 
+ fs_stress()
+ {
+diff --git a/tests/xfs/077 b/tests/xfs/077
+index eba4f08..d202fa4 100755
+--- a/tests/xfs/077
++++ b/tests/xfs/077
+@@ -50,6 +50,7 @@ _cleanup()
+ 
+ _supported_fs xfs
+ _supported_os Linux
++_require_no_realtime
+ _require_scratch
+ _require_xfs_crc
+ _require_meta_uuid
+diff --git a/tests/xfs/189 b/tests/xfs/189
+index 636f6f0..699eb3c 100755
+--- a/tests/xfs/189
++++ b/tests/xfs/189
+@@ -236,6 +236,7 @@ _putback_scratch_fstab()
+ _supported_fs xfs
+ _supported_os Linux
+ 
++_require_no_realtime
+ _require_scratch
+ _require_noattr2
+ 
+diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
+index cff3efa..764ac9b 100755
+--- a/tests/xfs/191-input-validation
++++ b/tests/xfs/191-input-validation
+@@ -47,6 +47,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs xfs
+ _supported_os Linux
++_require_no_realtime
+ _require_scratch
+ _require_xfs_mkfs_validation
+ 
+diff --git a/tests/xfs/202 b/tests/xfs/202
+index b9827a7..f887873 100755
+--- a/tests/xfs/202
++++ b/tests/xfs/202
+@@ -38,6 +38,7 @@ status=1	# failure is the default!
+ _supported_fs xfs
+ _supported_os Linux
+ 
++_require_no_realtime
+ # single AG will cause default xfs_repair to fail. This test is actually
+ # testing the special corner case option needed to repair a single AG fs.
+ _require_scratch_nocheck
+diff --git a/tests/xfs/284 b/tests/xfs/284
+index e3625fe..fa5dac8 100755
+--- a/tests/xfs/284
++++ b/tests/xfs/284
+@@ -49,6 +49,7 @@ rm -f $seqres.full
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_no_realtime
+ _require_test
+ _require_scratch
+ 
+-- 
+2.9.5
 
-> We don't want to mess with the existing file_operations->mmap() call because
-> in many filesystems that does sanity checking and setup that you really want
-> to have happen *before* the mapping is completed and inserted into the
-> inode->i_mapping->i_mmap tree.
->
->> Also, why is this a file_operation and not a vm_operation?
->
-> Because ->mmap() is also a file_operation, and this is an analogous call from
-> the mmap code that needs to happen at a different time.  Or are you suggesting
-> that file_operations->mmap() should be moved to be a vm_operation?  If not,
-> why would one be in one operations table and one in another?
-
-Growing something as widely used as file_operations for this one-off
-fixup feels like overkill. vm_operations is not much better, but it at
-least constrains the data structure growth to something closer to the
-problem space.
