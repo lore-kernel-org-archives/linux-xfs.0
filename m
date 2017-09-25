@@ -1,44 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58908 "EHLO newverein.lst.de"
+Received: from mga07.intel.com ([134.134.136.100]:31168 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967445AbdIZOhp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Sep 2017 10:37:45 -0400
-Date: Tue, 26 Sep 2017 16:37:43 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/7] xfs: always use DAX if mount option is used
-Message-ID: <20170926143743.GB18758@lst.de>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com> <20170925231404.32723-2-ross.zwisler@linux.intel.com> <20170925233812.GM10955@dastard> <20170926093548.GB13627@quack2.suse.cz> <20170926110957.GR10955@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170926110957.GR10955@dastard>
+        id S965662AbdIYXO0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Sep 2017 19:14:26 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 2/7] xfs: validate bdev support for DAX inode flag
+Date: Mon, 25 Sep 2017 17:13:59 -0600
+Message-Id: <20170925231404.32723-3-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2017 at 09:09:57PM +1000, Dave Chinner wrote:
-> Well, quite frankly, I never wanted the mount option for XFS. It was
-> supposed to be for initial testing only, then we'd /always/ use the
-> the inode flags. For a filesystem to default to using DAX, we
-> set the DAX flag on the root inode at mkfs time, and then everything
-> inode flag based just works.
+Currently only the blocksize is checked, but we should really be calling
+bdev_dax_supported() which also tests to make sure we can get a
+struct dax_device and that the dax_direct_access() path is working.
 
-And I deeply fundamentally disagree.  The mount option is a nice
-enough big hammer to try a mode without encoding nitty gritty details
-into the application ABI.
+This is the same check that we do for the "-o dax" mount option in
+xfs_fs_fill_super().
 
-The per-inode persistent flag is the biggest nightmare ever, as we see
-in all these discussions about it.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_ioctl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-What does it even mean?  Right now it forces direct addressing as long
-as the underlying media supports that.  But what about media that
-you directly access but you really don't want to because it's really slow?
-Or media that is so god damn fast that you never want to buffer?  Or
-media where you want to buffer for writes (or at least some of them)
-but not for reads?
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 26faeb9..0433aef 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1088,6 +1088,7 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	int			*join_flags)
+ {
+ 	struct inode		*inode = VFS_I(ip);
++	struct super_block	*sb = inode->i_sb;
+ 	int			error;
+ 
+ 	*join_flags = 0;
+@@ -1100,7 +1101,7 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+ 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+ 			return -EINVAL;
+-		if (ip->i_mount->m_sb.sb_blocksize != PAGE_SIZE)
++		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
+ 			return -EINVAL;
+ 	}
+ 
+-- 
+2.9.5
 
-It encodes a very specific mechanism for an early direct access
-implementation into the ABI.  What we really need is for applications
-to declare an intent, not specify a particular mechanism.
