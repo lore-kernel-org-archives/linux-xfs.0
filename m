@@ -1,59 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23271 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966562AbdIZR57 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 13:57:59 -0400
-Date: Tue, 26 Sep 2017 10:57:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/7] xfs: validate bdev support for DAX inode flag
-Message-ID: <20170926175734.GH5020@magnolia>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
- <20170925231404.32723-3-ross.zwisler@linux.intel.com>
- <20170926063650.GE6870@lst.de>
- <20170926171638.GA20159@linux.intel.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:45728 "EHLO
+        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934449AbdIYToV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 15:44:21 -0400
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8PJiKuH011198
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 12:44:20 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2d785r00bv-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 12:44:20 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v5 0/3] XFS realtime device tweaks
+Date: Mon, 25 Sep 2017 12:44:15 -0700
+Message-ID: <20170925194418.720146-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170926171638.GA20159@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "J. Bruce Fields" <bfields@fieldses.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-On Tue, Sep 26, 2017 at 11:16:38AM -0600, Ross Zwisler wrote:
-> On Tue, Sep 26, 2017 at 08:36:50AM +0200, Christoph Hellwig wrote:
-> > On Mon, Sep 25, 2017 at 05:13:59PM -0600, Ross Zwisler wrote:
-> > > Currently only the blocksize is checked, but we should really be calling
-> > > bdev_dax_supported() which also tests to make sure we can get a
-> > > struct dax_device and that the dax_direct_access() path is working.
-> > > 
-> > > This is the same check that we do for the "-o dax" mount option in
-> > > xfs_fs_fill_super().
-> > > 
-> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > I think we just want to pick this up ASAP.  And between my vague
-> > memoried and that reviewed-by tag it already was part of a different
-> > series, wasn't it?
-> 
-> Yep, the first 2 patches were part of this series:
-> 
-> https://lkml.org/lkml/2017/9/7/552
-> 
-> which you reviewed.  I included them in this series because the later patches
-> needed to build on them.  It looks like they are now in Darrick's
-> xfs-4.14-fixes branch, but haven't yet made it upstream.
+The patch set has been updated per reviewer suggestions, all changes are
+noted in the change log for each patch.  The most notable change is the
+addition of xfs_inode_select_target and the refactoring which took place
+as a result of this.
 
-I'm pulling that first patch from -fixes because Dave & Christoph
-started discussing it again in this new thread after I'd pushed the
-patch from September 7th to korg.
+This cleaned things up as the policy code could be contained in this function
+nicely.  I still kept the two functions for the alloc_min and fallback_pct
+tunables in their own functions, as I didn't want to clutter up this function
+with the policy logic (however little).
 
-The second patch looks fine, it'll stay.
+Patch set based off Linux 4.12 (commit
+6f7da290413ba713f0cdd9ff1a2a9bb129ef4f6c) located @
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git; I also have a clean
+patch set for Linus' tree (@ 4.14-rc2) if that's preferred.
 
---D
+Richard Wareing (3):
+  xfs: Show realtime device stats on statfs calls if inherit flag set
+  xfs: Set realtime flag based on initial allocation size
+  xfs: Add realtime fallback if data device full
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ fs/xfs/xfs_bmap_util.c |  2 ++
+ fs/xfs/xfs_fsops.c     |  2 ++
+ fs/xfs/xfs_inode.c     | 18 +++++++----
+ fs/xfs/xfs_iomap.c     |  5 +++
+ fs/xfs/xfs_linux.h     |  2 ++
+ fs/xfs/xfs_mount.c     | 24 +++++++++++++++
+ fs/xfs/xfs_mount.h     |  9 ++++++
+ fs/xfs/xfs_rtalloc.c   | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.h   |  2 ++
+ fs/xfs/xfs_super.c     |  8 +++++
+ fs/xfs/xfs_sysfs.c     | 76 ++++++++++++++++++++++++++++++++++++++++++++++
+ 11 files changed, 224 insertions(+), 6 deletions(-)
+
+-- 
+2.9.5
+
