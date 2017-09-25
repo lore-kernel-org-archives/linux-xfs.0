@@ -1,166 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31405 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967091AbdI0BDw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 21:03:52 -0400
-Date: Tue, 26 Sep 2017 18:03:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: test increased overlong directory extent discard
- threshold
-Message-ID: <20170927010348.GK5020@magnolia>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:59629 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934930AbdIYXgi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 19:36:38 -0400
+Date: Tue, 26 Sep 2017 09:16:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 3/3] xfs: Add realtime fallback if data device full
+Message-ID: <20170925231658.GJ10955@dastard>
+References: <20170919035238.3976871-1-rwareing@fb.com>
+ <20170919035238.3976871-4-rwareing@fb.com>
+ <20170922070423.GE10955@dastard>
+ <768B086C-A345-40AD-A1DD-6C175E768B63@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <768B086C-A345-40AD-A1DD-6C175E768B63@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Richard Wareing <rwareing@fb.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
 
-As of 2007, metadump has an interesting "feature" where it discards
-directory extents that are longer than 1000 (originally 20) blocks.
-This ostensibly was to protect metadump from corrupt bmbt records, but
-it also has the effect of omitting from the metadump valid long extents.
-The end result is that we create incomplete metadumps, which is
-exacerbated by the lack of warning unless -w is passed.
+On Mon, Sep 25, 2017 at 11:37:02AM -0700, Richard Wareing wrote:
+> Dave Chinner <david@fromorbit.com> wrote:
+> >On Mon, Sep 18, 2017 at 08:52:38PM -0700, Richard Wareing wrote:
+> >>+		/* Pre-compute minimum data blocks required before
+> >>+		 * falling back to RT device for allocations
+> >>+		 */
+> >
+> >Comment format.
+> >
+> >>+		mp->m_rt_min_fdblocks = min_blocks;
+> >
+> >Hmmm - I wonder if it would be better to tie this into the existing
+> >data device low space threshold code?
+> >
+> 
+> Not sure what you mean here?
 
-So now that we've fixed the default threshold to MAXEXTLEN, check that
-the installed metadump no longer exhibits this behavior.
+The lowspace threshold code is just an array of thresholds at which
+we do trigger different behaviour. e.g. we trim maximum speculative
+delalloc space based one where free space falls in that table.  If
+we add another entry in the table for the "switch to RT device at
+this low space" threshold, we don't need a specific variable in the
+struct xfs_mount....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/707     |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/707.out |    6 +++
- tests/xfs/group   |    1 +
- 3 files changed, 108 insertions(+)
- create mode 100755 tests/xfs/707
- create mode 100644 tests/xfs/707.out
+> 
+> >>+void xfs_rt_fallback(
+> >>+    struct xfs_inode    *ip,
+> >>+    struct xfs_mount    *mp)
+> >
+> >Mount first, then inode.
+> >
+> 
+> Just for my own knowledge, is this a convention?
 
-diff --git a/tests/xfs/707 b/tests/xfs/707
-new file mode 100755
-index 0000000..f97d029
---- /dev/null
-+++ b/tests/xfs/707
-@@ -0,0 +1,101 @@
-+#! /bin/bash
-+# FS QA Test No. 707
-+#
-+# Ensure that metadump copies large directory extents
-+#
-+# Metadump helpfully discards directory (and xattr) extents that are
-+# longer than 1000 blocks.  This is a little silly since a hardlink farm
-+# can easily create such a monster.
-+#
-+# Now that we've upped metadump's default too-long-extent discard
-+# threshold to 2^21 blocks, make sure we never do that again.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf "$tmp".* $metadump_file $metadump_img
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+_scratch_mkfs -b size=1k -n size=64k > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+metadump_file="$TEST_DIR/meta-$seq"
-+metadump_img="$TEST_DIR/img-$seq"
-+rm -rf $metadump_file $metadump_img
-+testdir="$SCRATCH_MNT/test-$seq"
-+max_fname_len=255
-+blksz=$(_get_block_size $SCRATCH_MNT)
-+
-+# Try to create a directory w/ extents
-+blocks=1050
-+names=$((blocks * (blksz / max_fname_len)))
-+echo "Create huge dir"
-+mkdir -p $testdir
-+touch $SCRATCH_MNT/a
-+seq 0 $names | while read f; do
-+	name="$testdir/$(printf "%0${max_fname_len}d" $f)"
-+	ln $SCRATCH_MNT/a $name
-+done
-+dir_inum=$(stat -c %i $testdir)
-+
-+echo "Check for > 1000 block extent?"
-+_scratch_unmount
-+check_for_long_extent() {
-+	inum=$1
-+
-+	_scratch_xfs_db -x -c "inode $dir_inum" -c bmap | \
-+		sed -e 's/^.*count \([0-9]*\) flag.*$/\1/g' | \
-+		awk '{if ($1 > 1000) { printf("yes, %d\n", $1); } }'
-+}
-+extlen="$(check_for_long_extent $dir_inum)"
-+echo "qualifying extent: $extlen blocks" >> $seqres.full
-+test -n "$extlen" || _fail "could not create dir extent > 1000 blocks"
-+
-+echo "Try to metadump"
-+_scratch_metadump $metadump_file -w
-+xfs_mdrestore $metadump_file $metadump_img
-+
-+echo "Check restored metadump image"
-+$XFS_REPAIR_PROG -n $metadump_img >> $seqres.full 2>&1
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/707.out b/tests/xfs/707.out
-new file mode 100644
-index 0000000..0d2a222
---- /dev/null
-+++ b/tests/xfs/707.out
-@@ -0,0 +1,6 @@
-+QA output created by 707
-+Format and mount
-+Create huge dir
-+Check for > 1000 block extent?
-+Try to metadump
-+Check restored metadump image
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 7353b9c..a70c884 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -432,3 +432,4 @@
- 703 auto quick clone fsr
- 704 auto quick clone
- 705 auto quick clone fsr
-+707 auto quick dir metadata
+Convention. I also missed that the return type goes on a separate
+line. i.e.
+
+void
+xfs_rt_fallback(
+	struct xfs_mount	*mp,
+	struct xfs_inode	*ip)
+
+It's different to the standard linux convention for a couple of
+reasons. Firstly, it's the historic format inherited from Irix but
+we kept it because it makes using grep to find a function
+declaration really easy (i.e. "^xfs_rt_fallback" finds the function
+declaration instead of all the callers) and there are functions with
+lots of parameters and the "run them all together in as few lines as
+possible" is hard on the eyes and requires reformatting of the
+entire function definition when one changes.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
