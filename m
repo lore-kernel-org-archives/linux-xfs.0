@@ -1,207 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29482 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751850AbdIYVeC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 17:34:02 -0400
-Date: Mon, 25 Sep 2017 14:33:58 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:42639 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935678AbdIYVec (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 17:34:32 -0400
+Date: Mon, 25 Sep 2017 14:34:28 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-Message-ID: <20170925213358.GA5020@magnolia>
+Subject: Re: [PATCH v2 3/3] xfs/realtime: Fix direct invocations of xfs_repair
+Message-ID: <20170925213428.GB5020@magnolia>
 References: <20170925195625.756877-1-rwareing@fb.com>
- <20170925195625.756877-2-rwareing@fb.com>
+ <20170925195625.756877-3-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170925195625.756877-2-rwareing@fb.com>
+In-Reply-To: <20170925195625.756877-3-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Richard Wareing <rwareing@fb.com>
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2017 at 12:56:24PM -0700, Richard Wareing wrote:
-> To better exercise the data path code of realtime subvolumes, we will
-> set rtinherit=1 during mkfs calls.  For tests which this is not desired
-> we introduce a _require_no_rtinherit function to opt out of this
-> behavior.
+On Mon, Sep 25, 2017 at 12:56:25PM -0700, Richard Wareing wrote:
+> Fixes direct invocations of xfs_repair to add in -r option if required.
 > 
 > Signed-off-by: Richard Wareing <rwareing@fb.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
 > ---
 > Changes since v1:
-> * None
+> * Fixed kill -9 in test xfs/070
 > 
->  common/rc         | 24 +++++++++++++++++++++++-
->  tests/generic/250 |  1 +
->  tests/generic/252 |  1 +
->  tests/generic/427 |  1 +
->  tests/generic/441 |  1 +
->  tests/xfs/019     |  1 +
->  tests/xfs/031     |  1 +
->  tests/xfs/170     |  1 +
->  tests/xfs/187     |  1 +
->  9 files changed, 31 insertions(+), 1 deletion(-)
+>  tests/xfs/070 | 3 ++-
+>  tests/xfs/291 | 3 ++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/common/rc b/common/rc
-> index a0081f1..feed17f 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -33,6 +33,16 @@ BC=$(which bc 2> /dev/null) || BC=
->  VALID_TEST_ID="[0-9]\{3\}"
->  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
->  
-> +# When running tests with a realtime device configured, the realtime inherit
-> +# flag will be set during mkfs via -d rtinherit=1 option.  For some tests
-> +# this may render the test invalid (i.e. it uses a function which is not
-> +# supported by the realtime subvolume); to prevent failure these tests may
-> +# disable this behavior by calling _require_no_rtinherit .
-> +_require_no_rtinherit()
-> +{
-> +	RT_INHERIT=false
-> +}
-> +
->  _require_math()
+> diff --git a/tests/xfs/070 b/tests/xfs/070
+> index 0ae6eff..a06e998 100755
+> --- a/tests/xfs/070
+> +++ b/tests/xfs/070
+> @@ -56,7 +56,8 @@ _cleanup()
+>  _xfs_repair_noscan()
 >  {
->  	if [ -z "$BC" ]; then
-> @@ -562,6 +572,13 @@ _scratch_do_mkfs()
->  	local mkfs_status
->  	local tmp=`mktemp -u`
+>  	# invoke repair directly so we can kill the process if need be
+> -	$XFS_REPAIR_PROG $SCRATCH_DEV 2>&1 | tee -a $seqres.full > $tmp.repair &
+> +	[ -n "$SCRATCH_RTDEV" ] && rt_repair_opts="-r $SCRATCH_RTDEV"
+> +	$XFS_REPAIR_PROG $rt_repair_opts $SCRATCH_DEV 2>&1 | tee -a $seqres.full > $tmp.repair &
+>  	repair_pid=$!
 >  
-> +	# Add rtinherit=1 to mkfs so we exercise realtime subvolume during
-> +	# our tests.  Tests can opts out of this behavior by calling
-> +	# _require_no_rtinherit.
-> +	if $RT_INHERIT && echo "$mkfs_cmd" | grep rtdev &> /dev/null; then
-
-Doesn't this if test fail if RT_INHERIT isn't defined, and isn't
-RT_INHERIT undefined unless _reuqire_no_rtinherit?
-
-Also, what happens if I forget the syntax and run 'RT_INHERIT=1 ./check'?
-Deosn't that just spit out errors everywhere because '1' isn't a
-command?
-
-IOWs I was expecting some kind of string test, like
-
-if [ "${RT_INHERIT}" != "false" ] && echo "${mkfs_cmd}" | grep -q rtdev;
-then
-
---D
-
-> +		extra_mkfs_options="$extra_mkfs_options -d rtinherit=1"
-> +	fi
-> +
->  	# save mkfs output in case conflict means we need to run again.
->  	# only the output for the mkfs that applies should be shown
->  	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
-> @@ -760,7 +777,12 @@ _mkfs_dev()
->  	;;
+>  	# monitor progress for as long as it is running
+> diff --git a/tests/xfs/291 b/tests/xfs/291
+> index 3f5295c..140fa33 100755
+> --- a/tests/xfs/291
+> +++ b/tests/xfs/291
+> @@ -122,7 +122,8 @@ _xfs_check $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_check failed"
+>  # Can xfs_metadump cope with this monster?
+>  _scratch_metadump $tmp.metadump || _fail "xfs_metadump failed"
+>  xfs_mdrestore $tmp.metadump $tmp.img || _fail "xfs_mdrestore failed"
+> -xfs_repair -f $tmp.img >> $seqres.full 2>&1 || _fail "xfs_repair of metadump failed"
+> +[ -n "$SCRATCH_RTDEV" ] && rt_repair_opts="-r $SCRATCH_RTDEV"
+> +xfs_repair $rt_repair_opts -f $tmp.img >> $seqres.full 2>&1 || _fail "xfs_repair of metadump failed"
 >  
->      *)
-> -	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $* \
-> +	local extra_mkfs_options="$*"
-> +	# Similar behavior to the scratch variant of this
-> +	if $RT_INHERIT && echo $extra_mkfs_options | grep rtdev &> /dev/null; then
-> +		extra_mkfs_options="$extra_mkfs_options -d rtinherit=1"
-> +	fi
-> +	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $extra_mkfs_options \
->  		2>$tmp.mkfserr 1>$tmp.mkfsstd
->  	;;
->      esac
-> diff --git a/tests/generic/250 b/tests/generic/250
-> index 3c4fe6d..9f4e364 100755
-> --- a/tests/generic/250
-> +++ b/tests/generic/250
-> @@ -48,6 +48,7 @@ _require_scratch
->  _require_dm_target error
->  _require_xfs_io_command "falloc"
->  _require_odirect
-> +_require_no_rtinherit
->  
->  rm -f $seqres.full
->  
-> diff --git a/tests/generic/252 b/tests/generic/252
-> index ffedd56..1156902 100755
-> --- a/tests/generic/252
-> +++ b/tests/generic/252
-> @@ -47,6 +47,7 @@ _supported_os Linux
->  _require_scratch
->  _require_dm_target error
->  _require_xfs_io_command "falloc"
-> +_require_no_rtinherit
->  _require_aiodio "aiocp"
->  AIO_TEST="src/aio-dio-regress/aiocp"
->  
-> diff --git a/tests/generic/427 b/tests/generic/427
-> index 9cde5f5..18f8476 100755
-> --- a/tests/generic/427
-> +++ b/tests/generic/427
-> @@ -53,6 +53,7 @@ _supported_os Linux
->  _require_scratch
->  _require_test_program "feature"
->  _require_aiodio aio-dio-eof-race
-> +_require_no_rtinherit
->  
->  # limit the filesystem size, to save the time of filling filesystem
->  _scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
-> diff --git a/tests/generic/441 b/tests/generic/441
-> index 075d877..589069a 100755
-> --- a/tests/generic/441
-> +++ b/tests/generic/441
-> @@ -47,6 +47,7 @@ _cleanup()
->  # real QA test starts here
->  _supported_os Linux
->  _require_scratch
-> +_require_no_rtinherit
->  
->  # Generally, we want to avoid journal errors on the extended testcase. Only
->  # unset the -s flag if we have a logdev
-> diff --git a/tests/xfs/019 b/tests/xfs/019
-> index 3e4f169..1ab8991 100755
-> --- a/tests/xfs/019
-> +++ b/tests/xfs/019
-> @@ -66,6 +66,7 @@ _supported_fs xfs
->  _supported_os Linux
->  
->  _require_scratch
-> +_require_no_rtinherit
->  
->  protofile=$tmp.proto
->  tempfile=$tmp.file
-> diff --git a/tests/xfs/031 b/tests/xfs/031
-> index b05f28b..321f67a 100755
-> --- a/tests/xfs/031
-> +++ b/tests/xfs/031
-> @@ -96,6 +96,7 @@ _supported_os Linux
->  
->  _require_scratch
->  _require_no_large_scratch_dev
-> +_require_no_rtinherit
->  
->  # sanity test - default + one root directory entry
->  # Note: must do this proto/mkfs now for later inode size calcs
-> diff --git a/tests/xfs/170 b/tests/xfs/170
-> index c5ae8e4..6deef1b 100755
-> --- a/tests/xfs/170
-> +++ b/tests/xfs/170
-> @@ -50,6 +50,7 @@ _supported_fs xfs
->  _supported_os Linux
->  
->  _require_scratch
-> +_require_no_rtinherit
->  
->  _check_filestreams_support || _notrun "filestreams not available"
->  
-> diff --git a/tests/xfs/187 b/tests/xfs/187
-> index 07ef3ae..89e7b11 100755
-> --- a/tests/xfs/187
-> +++ b/tests/xfs/187
-> @@ -56,6 +56,7 @@ _filter_version()
->  _supported_fs xfs
->  _supported_os Linux
->  
-> +_require_no_rtinherit
->  _require_scratch
->  _require_attrs
->  _require_attr_v1
+>  # Yes it can; success, all done
+>  status=0
 > -- 
 > 2.9.5
 > 
