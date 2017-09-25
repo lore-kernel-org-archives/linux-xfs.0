@@ -1,80 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:59629 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934930AbdIYXgi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 19:36:38 -0400
-Date: Tue, 26 Sep 2017 09:16:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 3/3] xfs: Add realtime fallback if data device full
-Message-ID: <20170925231658.GJ10955@dastard>
-References: <20170919035238.3976871-1-rwareing@fb.com>
- <20170919035238.3976871-4-rwareing@fb.com>
- <20170922070423.GE10955@dastard>
- <768B086C-A345-40AD-A1DD-6C175E768B63@fb.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45938 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751879AbdIYLdN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Sep 2017 07:33:13 -0400
+Date: Mon, 25 Sep 2017 07:33:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: revert "xfs: factor rmap btree size into the indlen
+ calculations"
+Message-ID: <20170925113309.GA12869@bfoster.bfoster>
+References: <20170923071142.GM5728@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <768B086C-A345-40AD-A1DD-6C175E768B63@fb.com>
+In-Reply-To: <20170923071142.GM5728@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, eguan@redhat.com
 
-On Mon, Sep 25, 2017 at 11:37:02AM -0700, Richard Wareing wrote:
-> Dave Chinner <david@fromorbit.com> wrote:
-> >On Mon, Sep 18, 2017 at 08:52:38PM -0700, Richard Wareing wrote:
-> >>+		/* Pre-compute minimum data blocks required before
-> >>+		 * falling back to RT device for allocations
-> >>+		 */
-> >
-> >Comment format.
-> >
-> >>+		mp->m_rt_min_fdblocks = min_blocks;
-> >
-> >Hmmm - I wonder if it would be better to tie this into the existing
-> >data device low space threshold code?
-> >
+On Sat, Sep 23, 2017 at 12:11:42AM -0700, Darrick J. Wong wrote:
+> In commit fd26a88093ba we added a worst case estimate for rmapbt blocks
+> needed to satisfy the block mapping request.  Since then, we added the
+> ability to reserve enough space in each AG such that we should never run
+> out of blocks to grow the rmapbt, which makes this calculation
+> unnecessary.  Revert the commit because it makes the extra delalloc
+> indlen accounting unnecessary and incorrect.
 > 
-> Not sure what you mean here?
+> Reported-by: Eryu Guan <eguan@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-The lowspace threshold code is just an array of thresholds at which
-we do trigger different behaviour. e.g. we trim maximum speculative
-delalloc space based one where free space falls in that table.  If
-we add another entry in the table for the "switch to RT device at
-this low space" threshold, we don't need a specific variable in the
-struct xfs_mount....
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
+>  fs/xfs/libxfs/xfs_bmap.c |   17 ++---------------
+>  1 file changed, 2 insertions(+), 15 deletions(-)
 > 
-> >>+void xfs_rt_fallback(
-> >>+    struct xfs_inode    *ip,
-> >>+    struct xfs_mount    *mp)
-> >
-> >Mount first, then inode.
-> >
-> 
-> Just for my own knowledge, is this a convention?
-
-Convention. I also missed that the return type goes on a separate
-line. i.e.
-
-void
-xfs_rt_fallback(
-	struct xfs_mount	*mp,
-	struct xfs_inode	*ip)
-
-It's different to the standard linux convention for a couple of
-reasons. Firstly, it's the historic format inherited from Irix but
-we kept it because it makes using grep to find a function
-declaration really easy (i.e. "^xfs_rt_fallback" finds the function
-declaration instead of all the callers) and there are functions with
-lots of parameters and the "run them all together in as few lines as
-possible" is hard on the eyes and requires reformatting of the
-entire function definition when one changes.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 459f4b4f0..044a363 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -49,7 +49,6 @@
+>  #include "xfs_rmap.h"
+>  #include "xfs_ag_resv.h"
+>  #include "xfs_refcount.h"
+> -#include "xfs_rmap_btree.h"
+>  #include "xfs_icache.h"
+>  
+>  
+> @@ -192,12 +191,8 @@ xfs_bmap_worst_indlen(
+>  	int		maxrecs;	/* maximum record count at this level */
+>  	xfs_mount_t	*mp;		/* mount structure */
+>  	xfs_filblks_t	rval;		/* return value */
+> -	xfs_filblks_t   orig_len;
+>  
+>  	mp = ip->i_mount;
+> -
+> -	/* Calculate the worst-case size of the bmbt. */
+> -	orig_len = len;
+>  	maxrecs = mp->m_bmap_dmxr[0];
+>  	for (level = 0, rval = 0;
+>  	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
+> @@ -205,20 +200,12 @@ xfs_bmap_worst_indlen(
+>  		len += maxrecs - 1;
+>  		do_div(len, maxrecs);
+>  		rval += len;
+> -		if (len == 1) {
+> -			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+> +		if (len == 1)
+> +			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+>  				level - 1;
+> -			break;
+> -		}
+>  		if (level == 0)
+>  			maxrecs = mp->m_bmap_dmxr[1];
+>  	}
+> -
+> -	/* Calculate the worst-case size of the rmapbt. */
+> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> -		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
+> -				mp->m_rmap_maxlevels;
+> -
+>  	return rval;
+>  }
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
