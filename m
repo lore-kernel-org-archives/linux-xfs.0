@@ -1,54 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:49527 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S966079AbdIZAJB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 20:09:01 -0400
-Date: Tue, 26 Sep 2017 09:29:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/7] xfs: protect S_DAX transitions in XFS write path
-Message-ID: <20170925232945.GL10955@dastard>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
- <20170925231404.32723-5-ross.zwisler@linux.intel.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:45540 "EHLO
+        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966405AbdIYXiq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 19:38:46 -0400
+Received: by mail-oi0-f52.google.com with SMTP id z73so9467896oia.2
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 16:38:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170925231404.32723-5-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170925231404.32723-7-ross.zwisler@linux.intel.com>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com> <20170925231404.32723-7-ross.zwisler@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 25 Sep 2017 16:38:45 -0700
+Message-ID: <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
+Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2017 at 05:14:01PM -0600, Ross Zwisler wrote:
-> In the current XFS write I/O path we check IS_DAX() in
-> xfs_file_write_iter() to decide whether to do DAX I/O, direct I/O or
-> buffered I/O.  This check is done without holding the XFS_IOLOCK, though,
-> which means that if we allow S_DAX to be manipulated via the inode flag we
-> can run into this race:
-> 
-> CPU 0                           CPU 1
-> -----                           -----
-> xfs_file_write_iter()
->   IS_DAX() << returns false
-> 			    xfs_ioctl_setattr()
-> 			      xfs_ioctl_setattr_dax_invalidate()
-> 			       xfs_ilock(XFS_MMAPLOCK|XFS_IOLOCK)
-> 			      sets S_DAX
-> 			      releases XFS_MMAPLOCK and XFS_IOLOCK
->   xfs_file_buffered_aio_write()
->   does buffered I/O to DAX inode, death
-> 
-> Fix this by ensuring that we only check S_DAX when we hold the XFS_IOLOCK
-> in the write path.
+On Mon, Sep 25, 2017 at 4:14 PM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> When mappings are created the vma->vm_flags that they use vary based on
+> whether the inode being mapped is using DAX or not.  This setup happens in
+> XFS via mmap_region()=>call_mmap()=>xfs_file_mmap().
+>
+> For us to be able to safely use the DAX per-inode flag we need to prevent
+> S_DAX transitions when any mappings are present, and we will do that by
+> looking at the address_space->i_mmap tree and returning -EBUSY if any
+> mappings are present.
+>
+> Unfortunately at the time that the filesystem's file_operations->mmap()
+> entry point is called the mapping has not yet been added to the
+> address_space->i_mmap tree.  This means that at that point in time we
+> cannot determine whether or not the mapping will be set up to support DAX.
+>
+> Fix this by adding a new file_operations entry called post_mmap() which is
+> called after the mapping has been added to the address_space->i_mmap tree.
+> This post_mmap() op now happens at a time when we can be sure whether the
+> mapping will use DAX or not, and we can set up the vma->vm_flags
+> appropriately.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  fs/xfs/xfs_file.c  | 15 ++++++++++++++-
+>  include/linux/fs.h |  1 +
+>  mm/mmap.c          |  2 ++
+>  3 files changed, 17 insertions(+), 1 deletion(-)
+>
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 2816858..9d66aaa 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1087,9 +1087,21 @@ xfs_file_mmap(
+>  {
+>         file_accessed(filp);
+>         vma->vm_ops = &xfs_file_vm_ops;
+> +       return 0;
+> +}
+> +
+> +/* This call happens during mmap(), after the vma has been inserted into the
+> + * inode->i_mapping->i_mmap tree.  At this point the decision on whether or
+> + * not to use DAX for this mapping has been set and will not change for the
+> + * duration of the mapping.
+> + */
+> +STATIC void
+> +xfs_file_post_mmap(
+> +       struct file     *filp,
+> +       struct vm_area_struct *vma)
+> +{
+>         if (IS_DAX(file_inode(filp)))
+>                 vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
 
-NACK. This breaks concurrent direct IO write semantics. We must not
-take XFS_IOLOCK_EXCL on direct IO writes unless it is absolutely
-necessary - there are lots of applications out there that rely on
-these semantics for performance.
+It's not clear to me what this is actually protecting? vma_is_dax()
+returns true regardless of the vm_flags state , so what is the benefit
+to delaying the vm_flags setting to ->post_mmap()?
 
-CHeers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Also, why is this a file_operation and not a vm_operation?
