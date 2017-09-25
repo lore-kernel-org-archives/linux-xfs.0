@@ -1,106 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38174 "EHLO sandeen.net"
+Received: from mga07.intel.com ([134.134.136.100]:31168 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933306AbdIYWxo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Sep 2017 18:53:44 -0400
-Subject: Re: [PATCH v5 1/3] xfs: Show realtime device stats on statfs calls if
- inherit flag set
-References: <20170925194418.720146-1-rwareing@fb.com>
- <20170925194418.720146-2-rwareing@fb.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2ccf2df8-d99b-c8c3-2a70-97946a38fb1c@sandeen.net>
-Date: Mon, 25 Sep 2017 17:53:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170925194418.720146-2-rwareing@fb.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S965652AbdIYXOZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Sep 2017 19:14:25 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 1/7] xfs: always use DAX if mount option is used
+Date: Mon, 25 Sep 2017 17:13:58 -0600
+Message-Id: <20170925231404.32723-2-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>, linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On 9/25/17 2:44 PM, Richard Wareing wrote:
-> - Reports realtime device free blocks in statfs calls if inheritance
->   bit is set on the inode of directory.  This is a bit more intuitive,
->   especially for use-cases which are using a much larger device for
->   the realtime device.
-> - Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
->   realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
->   option.
+Before support for the per-inode DAX flag was disabled the XFS the code had
+an issue where the user couldn't reliably tell whether or not DAX was being
+used to service page faults and I/O when the DAX mount option was used.  In
+this case each inode within the mounted filesystem started with S_DAX set
+due to the mount option, but it could be cleared if someone touched the
+individual inode flag.
 
-Sorry for chiming in late.
+For example (v4.13 and before):
 
-So, this is a major change in behavior of statfs on xfs.  How will the
-user know this, where is it documented?
+  # mount | grep dax
+  /dev/pmem0 on /mnt type xfs
+  (rw,relatime,seclabel,attr2,dax,inode64,sunit=4096,swidth=4096,noquota)
+
+  # touch /mnt/a /mnt/b   # both files currently use DAX
+
+  # xfs_io -c "lsattr" /mnt/*  # neither has the DAX inode option set
+  ----------e----- /mnt/a
+  ----------e----- /mnt/b
+
+  # xfs_io -c "chattr -x" /mnt/a  # this clears S_DAX for /mnt/a
+
+  # xfs_io -c "lsattr" /mnt/*
+  ----------e----- /mnt/a
+  ----------e----- /mnt/b
+
+We end up with both /mnt/a and /mnt/b looking identical from the point of
+view of the mount option and from lsattr, but one is using DAX and the
+other is not.
+
+Fix this by always doing DAX I/O when either the mount option is set or
+when the DAX inode flag is set.  This means that DAX will always be used
+for all inodes on a filesystem mounted with -o dax, making the usage
+reliable and detectable.
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_ioctl.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 5049e8a..26faeb9 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1013,7 +1013,7 @@ xfs_diflags_to_linux(
+ 	else
+ 		inode->i_flags &= ~S_NOATIME;
+ #if 0	/* disabled until the flag switching races are sorted out */
+-	if (xflags & FS_XFLAG_DAX)
++	if ((xflags & FS_XFLAG_DAX) || (ip->i_mount->m_flags & XFS_MOUNT_DAX))
+ 		inode->i_flags |= S_DAX;
+ 	else
+ 		inode->i_flags &= ~S_DAX;
+@@ -1104,7 +1104,14 @@ xfs_ioctl_setattr_dax_invalidate(
+ 			return -EINVAL;
+ 	}
  
-Also, if I read this right, does that mean that you get the magical
-new statfs results if you stat a /directory/ with XFS_DIFLAG_RTINHERIT
-set, but not if you stat a /file/ with XFS_DIFLAG_REALTIME set?
+-	/* If the DAX state is not changing, we have nothing to do here. */
++	/*
++	 * If the DAX state is not changing, we have nothing to do here.  If
++	 * the DAX mount option was used we will update the DAX inode flag as
++	 * the user requested but we will continue to use DAX for I/O and page
++	 * faults regardless of how the inode flag is set.
++	 */
++	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
++		return 0;
+ 	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
+ 		return 0;
+ 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
+-- 
+2.9.5
 
-That seems quite confusing, but maybe I'm missing something obvious.
-
-As for which filesystem is getting reported, would it be totally 
-bonkers to have an xfs-realtime f_type to make it 100% clear what's
-being reported?
-
--Eric
-
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
-> Changes since v4:
-> * None
-> 
-> Changes since v3:
-> * Fixed accounting bug, we are not required to substract m_alloc_set_aside
->   as this is a data device only requirement.
-> * Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
->   now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
->   for the inode.
-> 
-> Changes since v2:
-> * Style updated per Christoph Hellwig's comment
-> * Fixed bug: statp->f_bavail = statp->f_bfree
-> 
->  fs/xfs/xfs_linux.h | 2 ++
->  fs/xfs/xfs_super.c | 8 ++++++++
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 044fb0e..fe46e71 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -280,8 +280,10 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
->  
->  #ifdef CONFIG_XFS_RT
->  #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
-> +#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
->  #else
->  #define XFS_IS_REALTIME_INODE(ip) (0)
-> +#define XFS_IS_REALTIME_MOUNT(mp) (0)
->  #endif
->  
->  #endif /* __XFS_LINUX__ */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 455a575..6d33a5e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1136,6 +1136,14 @@ xfs_fs_statfs(
->  	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
->  			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
->  		xfs_qm_statvfs(ip, statp);
-> +
-> +	if (XFS_IS_REALTIME_MOUNT(mp) &&
-> +	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
-> +		statp->f_blocks = sbp->sb_rblocks;
-> +		statp->f_bavail = statp->f_bfree =
-> +			sbp->sb_frextents * sbp->sb_rextsize;
-> +	}
-> +
->  	return 0;
->  }
->  
-> 
