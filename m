@@ -1,399 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46192 "EHLO mx1.redhat.com"
+Received: from mga04.intel.com ([192.55.52.120]:27215 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932909AbdIYKUJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:20:09 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] generic: test race when checking i_size on direct i/o read
-Date: Mon, 25 Sep 2017 18:18:47 +0800
-Message-Id: <20170925101847.29539-1-eguan@redhat.com>
+        id S933917AbdIZS5x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Sep 2017 14:57:53 -0400
+Date: Tue, 26 Sep 2017 12:57:51 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
+Message-ID: <20170926185751.GB31146@linux.intel.com>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-7-ross.zwisler@linux.intel.com>
+ <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, Eric Sandeen <sandeen@redhat.com>, Eryu Guan <eguan@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
 
-From: Zheng Liu <wenqing.lz@taobao.com>
+On Mon, Sep 25, 2017 at 04:38:45PM -0700, Dan Williams wrote:
+> On Mon, Sep 25, 2017 at 4:14 PM, Ross Zwisler
+> <ross.zwisler@linux.intel.com> wrote:
+> > When mappings are created the vma->vm_flags that they use vary based on
+> > whether the inode being mapped is using DAX or not.  This setup happens in
+> > XFS via mmap_region()=>call_mmap()=>xfs_file_mmap().
+> >
+> > For us to be able to safely use the DAX per-inode flag we need to prevent
+> > S_DAX transitions when any mappings are present, and we will do that by
+> > looking at the address_space->i_mmap tree and returning -EBUSY if any
+> > mappings are present.
+> >
+> > Unfortunately at the time that the filesystem's file_operations->mmap()
+> > entry point is called the mapping has not yet been added to the
+> > address_space->i_mmap tree.  This means that at that point in time we
+> > cannot determine whether or not the mapping will be set up to support DAX.
+> >
+> > Fix this by adding a new file_operations entry called post_mmap() which is
+> > called after the mapping has been added to the address_space->i_mmap tree.
+> > This post_mmap() op now happens at a time when we can be sure whether the
+> > mapping will use DAX or not, and we can set up the vma->vm_flags
+> > appropriately.
+> >
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > ---
+> >  fs/xfs/xfs_file.c  | 15 ++++++++++++++-
+> >  include/linux/fs.h |  1 +
+> >  mm/mmap.c          |  2 ++
+> >  3 files changed, 17 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 2816858..9d66aaa 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -1087,9 +1087,21 @@ xfs_file_mmap(
+> >  {
+> >         file_accessed(filp);
+> >         vma->vm_ops = &xfs_file_vm_ops;
+> > +       return 0;
+> > +}
+> > +
+> > +/* This call happens during mmap(), after the vma has been inserted into the
+> > + * inode->i_mapping->i_mmap tree.  At this point the decision on whether or
+> > + * not to use DAX for this mapping has been set and will not change for the
+> > + * duration of the mapping.
+> > + */
+> > +STATIC void
+> > +xfs_file_post_mmap(
+> > +       struct file     *filp,
+> > +       struct vm_area_struct *vma)
+> > +{
+> >         if (IS_DAX(file_inode(filp)))
+> >                 vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+> 
+> It's not clear to me what this is actually protecting? vma_is_dax()
+> returns true regardless of the vm_flags state , so what is the benefit
+> to delaying the vm_flags setting to ->post_mmap()?
 
-In this commit a new test case is added to test that i_size races
-don't occur under dio reads/writes.  We add a program in /src dir,
-which has a writer to issue some append dio writes.  Meanwhile it
-has a reader in this test to do some dio reads.  As we expect,
-reader should read nothing or data with 'a'. But it might read some
-data with '0'.
+Right, but the point is that until the vma has been inserted into the
+inode->i_mapping->i_mmap tree, the results of IS_DAX() don't matter because it
+can still change.  Until this insertion happens we cannot know whether or not
+we should set up the vma->vm_flags to support DAX mappings (i.e. have
+VM_MIXEDMAP and VM_HUGEPAGE set).  This decision can only be made (in this
+proposed scheme) *after* the inode->i_mapping->i_mmap  tree has been
+populated, which means we need another call into the filesystem after this
+insertion has happened.
 
-The bug can be reproduced by this test case [1].
+We don't want to mess with the existing file_operations->mmap() call because
+in many filesystems that does sanity checking and setup that you really want
+to have happen *before* the mapping is completed and inserted into the
+inode->i_mapping->i_mmap tree.
 
-1.  http://patchwork.ozlabs.org/patch/311761/
+> Also, why is this a file_operation and not a vm_operation?
 
-This ostensibly tests commit:
-9fe55eea7 Fix race when checking i_size on direct i/o read
-
-Update by Eric Sandeen:
-- update to recent xfstests
-- update commit log
-
-Update by Eryu Guan:
-- add aio-dio support to the test and add 'aio' group
-- add ability to test different alignments
-- move test from src/ to src/aio-dio-regress/
-- add .gitignore entry
-- rebase against latest xfstests with various minor fixes & cleanups
-- update commit log
-
-Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-This test fails on XFS, the following patch fixed the XFS failure
-https://www.spinics.net/lists/linux-xfs/msg10865.html
-
-btrfs also fails when io alignment is not 4k, perhaps a btrfs bug?
-
-Eric's original post
-http://www.spinics.net/lists/fstests/msg06978.html
-
- .gitignore                                         |   1 +
- .../aio-dio-append-write-read-race.c               | 214 +++++++++++++++++++++
- tests/generic/462                                  |  75 ++++++++
- tests/generic/462.out                              |   3 +
- tests/generic/group                                |   1 +
- 5 files changed, 294 insertions(+)
- create mode 100644 src/aio-dio-regress/aio-dio-append-write-read-race.c
- create mode 100755 tests/generic/462
- create mode 100644 tests/generic/462.out
-
-diff --git a/.gitignore b/.gitignore
-index 63928b481e7f..71c1eb5c7675 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -133,6 +133,7 @@
- /src/writemod
- /src/writev_on_pagefault
- /src/xfsctl
-+/src/aio-dio-regress/aio-dio-append-write-read-race
- /src/aio-dio-regress/aio-dio-cycle-write
- /src/aio-dio-regress/aio-dio-extend-stat
- /src/aio-dio-regress/aio-dio-fcntl-race
-diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
-new file mode 100644
-index 000000000000..dce2ab743f11
---- /dev/null
-+++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
-@@ -0,0 +1,214 @@
-+/*
-+ * Copyright (c) 2013 Alibaba Group.
-+ * Copyright (c) 2017 Red Hat Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+/*
-+ * This is a normal case that we do some append dio writes and meanwhile
-+ * we do some dio reads.  Currently in vfs we don't ensure that i_size
-+ * is updated properly.  Hence the reader will read some data with '0'.
-+ * But we expect that the reader should read nothing or data with 'a'.
-+ */
-+
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#include <errno.h>
-+
-+#include <libaio.h>
-+#include <pthread.h>
-+
-+struct writer_data {
-+	int fd;
-+	size_t blksize;
-+	off_t offset;
-+	char *buf;
-+};
-+
-+static void usage(const char *prog)
-+{
-+	fprintf(stderr, "usage: %s [-a] <file>\n", prog);
-+	fprintf(stderr, "\t-a\tuse aio-dio\n");
-+	exit(EXIT_FAILURE);
-+}
-+
-+static void *dio_writer(void *arg)
-+{
-+	struct writer_data *data = (struct writer_data *)arg;
-+	int ret;
-+
-+	ret = pwrite(data->fd, data->buf, data->blksize, data->offset);
-+	if (ret < 0)
-+		perror("write file failed");
-+
-+	return NULL;
-+}
-+
-+static void *aio_writer(void *arg)
-+{
-+	struct writer_data *data = (struct writer_data *)arg;
-+	struct io_context *ctx = NULL;
-+	struct io_event evs[1];
-+	struct iocb iocb;
-+	struct iocb *iocbs[] = { &iocb };
-+	int err;
-+
-+	err = io_setup(1, &ctx);
-+	if (err) {
-+		fprintf(stderr, "error %s during io_setup\n",
-+		        strerror(err));
-+		return NULL;
-+	}
-+	io_prep_pwrite(&iocb, data->fd, data->buf, data->blksize, data->offset);
-+	err = io_submit(ctx, 1, iocbs);
-+	if (err != 1) {
-+		fprintf(stderr, "error %s during io_submit\n",
-+			strerror(err));
-+		return NULL;
-+	}
-+	err = io_getevents(ctx, 1, 1, evs, NULL);
-+	if (err != 1) {
-+		fprintf(stderr, "error %s during io_getevents\n",
-+			strerror(err));
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	pthread_t tid;
-+	struct writer_data wdata;
-+	size_t max_blocks = 128;		/* 128 */
-+	size_t blksize = 1 * 1024 * 1024;	/* 1M */
-+	char *rbuf = NULL, *wbuf = NULL;
-+	int rfd = 0, wfd = 0;
-+	int i, j, c;
-+	int use_aio = 1;
-+	int ret = 0;
-+	int io_align = 4096;
-+	char *prog;
-+	char *testfile;
-+
-+
-+	prog = basename(argv[0]);
-+
-+	while ((c = getopt(argc, argv, "a:d")) != -1) {
-+		switch (c) {
-+		case 'a':
-+			io_align = strtol(optarg, NULL, 0);
-+			break;
-+		case 'd':
-+			use_aio = 0;
-+			break;
-+		default:
-+			usage(prog);
-+		}
-+	}
-+	if (optind != argc - 1)
-+		usage(prog);
-+	testfile = argv[optind];
-+
-+	wfd = open(testfile, O_CREAT|O_DIRECT|O_WRONLY|O_TRUNC, 0644);
-+	if (wfd < 0) {
-+		perror("open for write");
-+		exit(1);
-+	}
-+
-+	rfd = open(testfile, O_DIRECT|O_RDONLY, 0644);
-+	if (rfd < 0) {
-+		perror("open for read");
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	ret = posix_memalign((void **)&wbuf, io_align, blksize);
-+	if (ret) {
-+		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	ret = posix_memalign((void **)&rbuf, io_align, blksize);
-+	if (ret) {
-+		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	memset(wbuf, 'a', blksize);
-+	wdata.fd = wfd;
-+	wdata.blksize = blksize;
-+	wdata.buf = wbuf;
-+
-+	for (i = 0; i < max_blocks; i++) {
-+		wdata.offset = i * blksize;
-+		if (use_aio)
-+			ret = pthread_create(&tid, NULL, aio_writer, &wdata);
-+		else
-+			ret = pthread_create(&tid, NULL, dio_writer, &wdata);
-+		if (ret) {
-+			fprintf(stderr, "create thread failed: %s\n",
-+				strerror(ret));
-+			ret = 1;
-+			goto err;
-+		}
-+
-+		memset(rbuf, 'b', blksize);
-+		do {
-+			ret = pread(rfd, rbuf, blksize, i * blksize);
-+			if (ret < 0)
-+				perror("read file");
-+		} while (ret <= 0);
-+
-+		ret = pthread_join(tid, NULL);
-+		if (ret) {
-+			fprintf(stderr, "pthread join failed: %s\n",
-+				strerror(ret));
-+			ret = 1;
-+			goto err;
-+		}
-+
-+		for (j = 0; j < blksize; j++) {
-+			if (rbuf[j] != 'a') {
-+				fprintf(stderr, "encounter an error: "
-+					"block %d offset %d, content %x\n",
-+					i, j, rbuf[j]);
-+				ret = 1;
-+				goto err;
-+			}
-+		}
-+	}
-+
-+err:
-+	if (rfd)
-+		close(rfd);
-+	if (wfd)
-+		close(wfd);
-+	if (rbuf)
-+		free(rbuf);
-+	if (wbuf)
-+		free(wbuf);
-+
-+	exit(ret);
-+}
-diff --git a/tests/generic/462 b/tests/generic/462
-new file mode 100755
-index 000000000000..7abadcb11921
---- /dev/null
-+++ b/tests/generic/462
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# FS QA Test No. 462
-+#
-+# Test i_size is updated properly under dio read/write
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
-+# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.* $testfile.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_aiodio aio-dio-append-write-read-race
-+_require_test_program "feature"
-+
-+testfile=$TEST_DIR/$seq.$$
-+min_dio_align=`_min_dio_alignment $TEST_DEV`
-+page_size=`$here/src/feature -s`
-+
-+rm -f $seqres.full
-+
-+echo "non-aio dio test"
-+align=$min_dio_align
-+while [ $align -le $page_size ]; do
-+	echo "$AIO_TEST -a $align -d $testfile.$align" >> $seqres.full
-+	$AIO_TEST -a $align -d $testfile.$align 2>&1 | tee -a $seqres.full
-+	align=$((align * 2))
-+done
-+
-+echo "aio-dio test"
-+align=$min_dio_align
-+while [ $align -le $page_size ]; do
-+	echo "$AIO_TEST -a $align $testfile.$align" >> $seqres.full
-+	$AIO_TEST -a $align $testfile.$align 2>&1 | tee -a $seqres.full
-+	align=$((align * 2))
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/462.out b/tests/generic/462.out
-new file mode 100644
-index 000000000000..9a368005af49
---- /dev/null
-+++ b/tests/generic/462.out
-@@ -0,0 +1,3 @@
-+QA output created by 462
-+non-aio dio test
-+aio-dio test
-diff --git a/tests/generic/group b/tests/generic/group
-index dfa86edc4a93..c65058976f1e 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -464,3 +464,4 @@
- 459 auto dangerous
- 460 auto quick rw
- 461 auto rw
-+462 auto rw quick aio
--- 
-2.13.5
-
+Because ->mmap() is also a file_operation, and this is an analogous call from
+the mmap code that needs to happen at a different time.  Or are you suggesting
+that file_operations->mmap() should be moved to be a vm_operation?  If not,
+why would one be in one operations table and one in another?
