@@ -1,67 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:49237 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966259AbdIZHEg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 03:04:36 -0400
-Date: Tue, 26 Sep 2017 16:04:21 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: shared/298 lockdep splat?
-Message-ID: <20170926070421.GP5994@X58A-UD3R>
-References: <20170920211042.GH7112@magnolia>
- <20170920222256.GR18948@dastard>
- <20170921084714.GI5994@X58A-UD3R>
- <20170926035149.GO10955@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:47057 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965142AbdIZJfx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Sep 2017 05:35:53 -0400
+Date: Tue, 26 Sep 2017 11:35:48 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/7] xfs: always use DAX if mount option is used
+Message-ID: <20170926093548.GB13627@quack2.suse.cz>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-2-ross.zwisler@linux.intel.com>
+ <20170925233812.GM10955@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170926035149.GO10955@dastard>
+In-Reply-To: <20170925233812.GM10955@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, kernel-team@lge.com
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2017 at 01:51:49PM +1000, Dave Chinner wrote:
-> On Thu, Sep 21, 2017 at 05:47:14PM +0900, Byungchul Park wrote:
-> > On Thu, Sep 21, 2017 at 08:22:56AM +1000, Dave Chinner wrote:
-> > > Peter, this is the sort of false positive I mentioned were likely to
-> > > occur without some serious work to annotate the IO stack to prevent
-> > > them.  We can nest multiple layers of IO completions and locking in
-> > > the IO stack via things like loop and RAID devices.  They can be
-> > > nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
-> > > dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
-> > > checking is going to be a source of false positives until there is
-> > > an effective (and simple!) way of providing context based completion
-> > > annotations to avoid them...
+On Tue 26-09-17 09:38:12, Dave Chinner wrote:
+> On Mon, Sep 25, 2017 at 05:13:58PM -0600, Ross Zwisler wrote:
+> > Before support for the per-inode DAX flag was disabled the XFS the code had
+> > an issue where the user couldn't reliably tell whether or not DAX was being
+> > used to service page faults and I/O when the DAX mount option was used.  In
+> > this case each inode within the mounted filesystem started with S_DAX set
+> > due to the mount option, but it could be cleared if someone touched the
+> > individual inode flag.
 > > 
-> > Hello,
+> > For example (v4.13 and before):
 > > 
-> > It looks caused by that &ret.event in submit_bio_wait() is initialized
-> > with the same class for all layers. I mean that completion variables in
-> > different layers should be initialized with different classes, as you do
-> > for typical locks in xfs.
+> >   # mount | grep dax
+> >   /dev/pmem0 on /mnt type xfs
+> >   (rw,relatime,seclabel,attr2,dax,inode64,sunit=4096,swidth=4096,noquota)
+> > 
+> >   # touch /mnt/a /mnt/b   # both files currently use DAX
+> > 
+> >   # xfs_io -c "lsattr" /mnt/*  # neither has the DAX inode option set
+> >   ----------e----- /mnt/a
+> >   ----------e----- /mnt/b
+> > 
+> >   # xfs_io -c "chattr -x" /mnt/a  # this clears S_DAX for /mnt/a
+> > 
+> >   # xfs_io -c "lsattr" /mnt/*
+> >   ----------e----- /mnt/a
+> >   ----------e----- /mnt/b
 > 
-> Except that submit_bio_wait() is generic block layer functionality
-> and can be used by anyone. Whatever solution you decide on, it has
-> to be generic. And keep in mind that any code that submits a bio
-> themselves and waits on a completion event from the bio is going to
-> have to do their own annotations, which makes this a real PITA.
-
-Right. Agree. Let me think it more. As you said, it should be generic.
-
-> > I am not sure if I understand how xfs works correctly. Right? If yes,
-> > how can we distinguish between independent 'bio's in submit_bio_wait()?
-> > You or I can make it work with the answer. No?
+> That's really a bug in the lsattr code, yes? If we've cleared the
+> S_DAX flag for the inode, then why is it being reported in lsattr?
+> Or if we failed to clear the S_DAX flag in the 'chattr -x' call,
+> then isn't that the bug that needs fixing?
 > 
-> Has nothing to do with XFS - it has no clue where it sits in the
-> block device stack and has no business screwing with bio internals
-> and stack layering to handle issues with stacked block devices....
+> Remember, the whole point of the dax inode flag was to be able to
+> override the mount option setting so that admins could turn off/on
+> dax for the things that didn't/did work with DAX correctly so they
+> didn't need multiple filesystems on pmem to segregate the apps that
+> did/didn't work with DAX...
 
-Ok. Thank you for replying.
+So I think there is some confusion that is created by the fact that whether
+DAX is used or not is controlled by both a mount option and an inode flag.
+We could define that "Inode flag always wins" which is what you seem to
+suggest above but then mount option has no practical effect since on-disk
+S_DAX flag will always overrule it.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Ross suggests that DAX should be used if "Inode flag or mount option is
+set". Which is similar to how e.g. noatime inode flag works but does not
+allow to selectively disable DAX.
+
+So if we wanted both mount option to work and selective disabling of DAX,
+we would need three states of inode setting - force DAX, disable DAX,
+inherit from mount option.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
