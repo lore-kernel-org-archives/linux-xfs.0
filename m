@@ -1,28 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:59739 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S935258AbdIZGL4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 02:11:56 -0400
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49378 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S936050AbdIZFRw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 01:17:52 -0400
 Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
 MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
 Subject: Re: [PATCH v5 2/3] xfs: Set realtime flag based on initial allocation
  size
 From: Richard Wareing <rwareing@fb.com>
-In-Reply-To: <20170925224738.GD5020@magnolia>
-Date: Mon, 25 Sep 2017 23:11:16 -0700
+In-Reply-To: <039ba853-ff85-61d9-3d4d-e933f137f499@sandeen.net>
+Date: Mon, 25 Sep 2017 22:17:05 -0700
 Content-Transfer-Encoding: 7bit
-Message-ID: <A5D2C0C4-C387-4056-B06B-50376CB76339@fb.com>
+Message-ID: <6ABEC31B-4BEC-4D1D-ABA7-A09B84A9AE84@fb.com>
 References: <20170925194418.720146-1-rwareing@fb.com>
- <20170925194418.720146-3-rwareing@fb.com> <20170925224738.GD5020@magnolia>
+ <20170925194418.720146-3-rwareing@fb.com>
+ <039ba853-ff85-61d9-3d4d-e933f137f499@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-Darrick J. Wong <darrick.wong@oracle.com> wrote:
+Eric Sandeen <sandeen@sandeen.net> wrote:
 
-> On Mon, Sep 25, 2017 at 12:44:17PM -0700, Richard Wareing wrote:
+> On 9/25/17 2:44 PM, Richard Wareing wrote:
 >> - The rt_alloc_min sysfs option automatically selects the device (data
 >>   device, or realtime) based on the size of the initial allocation of the
 >>   file.
@@ -33,7 +34,14 @@ Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >> - Supports writes via O_DIRECT, buffered (i.e. page cache), and
 >>   pre-allocations (i.e. fallocate)
 >> - Available only when kernel is compiled w/ CONFIG_XFS_RT option.
->>
+>
+> This needs documentation in Documentation/filesystems/xfs.txt
+> along with all the other sysctls.  We can't just add magical tunables
+> with no explanation of behavior.  ;)
+>
+
+I'll write it up tomorrow, not a problem.
+
 >> Signed-off-by: Richard Wareing <rwareing@fb.com>
 >> ---
 >> Changes since v4:
@@ -51,75 +59,7 @@ Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >>   however pre-allocation accounting unfortunately prevents this cleaner
 >>   approach.  As such, this proved to be the cleanest and functional approach.
 >> * No longer a mount option, now a sysfs tunable
->
-> I'm still struggling with the last two patches in this series.
-> Currently the decision to set or clear a file's RT flag rests with
-> whoever has write access to the file; and whatever they set stays that
-> way throughout the life of the file.
->
-> These patches add new behaviors to the filesystem, namely that initial
-> allocations and certain truncate operations can set or clear the
-> realtime flag, and that this happens without any particular notification
-> for whatever might've set that flag.  I imagine that programs that set
-> the realtime flag might be a little surprised when it doesn't stay set,
-> since we never used to do that.
->
-
-I'll add documentation to explain the knobs and how they should be used.
-The whole idea here is that programs should should not have to be written
-to set these knobs as you can use a FS level policy mechanism  instead.
-If you would rather more granular control, that's fine turn the policies
-off and set the flags manually.
-
-Nothing should come as a surprise as the knobs are all disabled by default.
-
-> At least the new behaviors are hidden behind a sysfs knob, but a big
-> thing missing from this series is a document for admins explaining that
-> we've added these various knobs to facilitate automatic tiering of files
-> on an XFS filesystem, what the knobs do, and which operations can change
-> a file's tier.  I also worry that we have no means to distinguish a file
-> that has had the rt flag set by the user from a file with automatic rt
-> flag management.
->
-
-I don't worry as much, I think folks will choose to either use system-wide
-policies or set the flags manually.  Are there specific use-cases you have
-in mind where this might be a concern?  I only know of our use-case and
-perhaps some PVR usage out there.
-
-> I think I may have mislead you a bit on the v1 patches when I objected
-> to the new fallocate behaviors -- my biggest concern back then (and now)
-> is the behavioral changes and how to help our existing users fit that
-> into their mental models of how XFS works.  Is the size of the first
-> non-fallocate write to a file sufficient to decide the rtflag?
->
-
-Without knowing the future write pattern of the file, it's I think the
-best I can do.  In a perfect world, I'd love to have XFS automagically
-"promote" a file to the realtime device should it grow in size.  For
-now, my plan is to update xfs_fsr to migrate files which grow beyond the
-policy limit.
-
-
-> TLDR: Is this how we (XFS community) want to present tiered XFS to users?
->
-
-IMHO, I think one can't answer this question until there are some more
-use-cases around which can help inform how things should look.  My hope is
-we can spark some interest and additional use-cases by making some modest
-improvements (making realtime more accessible/intuitive) and then iterate.
-
-I'll also be sure to share our experience/learnings running this at scale.
-
-
-> (Off in the crazy space that is my head we could just upload BPF
-> programs into XFS that would set and manage all the hints that can be
-> attached to an inode, along with either an "automanaged inode" flag that
-> locks out manual control or some kind of note that a particular setting
-> overrides the automated control.)
->
-> There are several mechanical problems too, which I'll cover below.
->
+>>
 >>  fs/xfs/xfs_bmap_util.c |  2 ++
 >>  fs/xfs/xfs_inode.c     | 18 ++++++++++++------
 >>  fs/xfs/xfs_iomap.c     |  5 +++++
@@ -156,10 +96,6 @@ I'll also be sure to share our experience/learnings running this at scale.
 >> -	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
 >> -		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
 >> -		xfs_inode_clear_cowblocks_tag(ip);
->
-> FYI this chunk is going to change when some of the patches I have queued
-> up for -rc3 go upstream.
->
 >> +	if (ip->i_d.di_nblocks == 0) {
 >> +		/*
 >> +		 * Clear the reflink flag if we truncated everything.
@@ -171,35 +107,27 @@ I'll also be sure to share our experience/learnings running this at scale.
 >> +		/* Clear realtime flag if m_rt_alloc_min policy is in place */
 >> +		if (XFS_IS_REALTIME_MOUNT(mp) && mp->m_rt_alloc_min) {
 >> +			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
->
-> Why clear the rt flag from the file if we truncate the file and no
-> blocks are left, but not if (say) we punch out every block in the file?
->
-> Say we set rt_alloc_min = 64k and then pwrite 1mb at 10mb so that the rt
-> flag is automatically set.  Then we truncate the file to 9mb.  The file
-> size is 9MB, it has no blocks, and we auto-clear the rt flag?
->
-> Yet below I see that the auto-set function bails out if the /size/ is
-> greater than zero.
->
-> This seems inconsistent to me, why don't we also require the size to be
-> zero to clear the rt flag?  What if I set the rt flag myself and later
-> it gets cleared out automatically?  That's a new behavior that quietly
-> happens behind my back.
->
-
-A fair point.  I think the original rationale here was that because the
-placement is based on the size of the first allocation to the file or
-first after truncation.  I don't really consider it happening behind
-anyone's back, as the behavior can only occur if an administrator set
-the option in the first place :).
-
-I'm fine with requiring the size of the file be 0 as well on this, this
-is probably a bit more intuitive.
-
-
 >> +		}
->>  	}
+>
+> This behavior needs documentation as well.  So now truncation will
+> clear the realtime flag but only if some /other/ tunable is set?
+>
+> it used to be that if you set the realtime flag it would stay until
+> specifically cleared.  now there's magic to clear it if your policy
+> is in place.  I wonder what the reasoning behind this is?  Apologies
+> if I missed it in other discussions ...
+>
+
+
+The reasoning here is that if you are using policy driven realtime
+allocation, then you really want these policies deciding where data
+should live, and for the policies to work consistently we need to
+clear the flag upon truncation.  For those who want to manually decide
+where data lives, the behavior will be what they know and love if they
+do not enable these features.
+
+
+>> }
 >>
 >>  	/*
 >> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
@@ -219,6 +147,23 @@ is probably a bit more intuitive.
 >>  	uint		tflags = 0;
 >>
 >> +	xfs_inode_select_target(ip, count);
+>
+> I think you're changing on-disk inodes here with no locking
+> and no transaction ... ?
+>
+
+You are correct, after chatting with Dave tonight I should be able
+to fix this up.  You'll have to bear with me a bit as I'm still learning
+this code base :).
+
+The plan is to create/set the XFS_BMAPI_ and then update the inode flag
+within a transaction later on (in xfs_bmapi* functions).  The
+xfs_bmapi_reserve_delalloc function has to be special cased as there's no
+transaction context in there.
+
+I'll update/re-work things tomorrow.
+
+
 >> +
 >>  	rt = XFS_IS_REALTIME_INODE(ip);
 >>  	extsz = xfs_get_extsz_hint(ip);
@@ -228,14 +173,6 @@ is probably a bit more intuitive.
 >>  		return -EIO;
 >>
 >> +	xfs_inode_select_target(ip, length);
->
-> iomap_begin can get called for more than just file writes.
-> Don't change the rt flag because someone FIEMAP'd a zero-length file.
->
-
-You'll have to help me out here, what is appropriate signal/flag to check
-that the call is for a file write here?
-
 >> +
 >>  	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
 >>  			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
@@ -250,12 +187,6 @@ that the call is for a file write here?
 >>  	bool			m_fail_unmount;
 >> +	uint			m_rt_alloc_min; /* Min RT allocation */
 >
-> Bytes?  Do we need xfs_off_t here?
->
-
-I can do this, but other fields in this structs don't appear to be using
-xfs_off_t; though perhaps this is a legacy thing?
-
 >> #ifdef DEBUG
 >>  	/*
 >>  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
@@ -277,22 +208,6 @@ xfs_off_t; though perhaps this is a legacy thing?
 >> +	struct xfs_inode	*ip,
 >> +	xfs_off_t			len)
 >> +{
->
-> Indenting...
->
-
-Fixed...hopefully for good now that I have the Linux kernel style vim
-plugin.
-
-> void
-> xfs_rt_alloc_min(
-> 	struct xfs_mount	*mp,
-> 	struct xfs_inode	*ip,
-> 	xfs_off_t		len)
-> {
-> 	...
-> }
->
 >> +	if (!mp->m_rt_alloc_min)
 >> +		return;
 >> +
@@ -301,15 +216,16 @@ plugin.
 >> +	} else {
 >> +		ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
 >> +	}
->
-> Wait, xfs_rt_alloc_min updates inode flags??  Don't we need a
-> transaction and a xfs_trans_log_inode for this?  Since this is a
-> helper for the next function, the same question applies to it.
->
-
-You totally correct, fixing per Eric as well.
-
 >> +}
+>
+> This has only one caller, over in another file.  Why not put it inline in
+> xfs_inode_select_target?
+>
+
+Well rational here was to try to keep as much of the realtime code living
+close together.  If this is already a lost cause I can stick it in the same
+file.
+
 >> +
 >> +/*
 >> +* Select the target device for the inode based on either the size of the
@@ -320,18 +236,17 @@ You totally correct, fixing per Eric as well.
 >> +void xfs_inode_select_target(
 >> +	struct xfs_inode	*ip,
 >> +	xfs_off_t			len)
->
-> Indenting again, and ... this is an inode function, shouldn't it go in
-> xfs_inode.c ?
->
-> And no, you can't just change the incore inode flags without a
-> transaction and without the ilock.
->
-
-Yup, bear with me as I learn :).
-
 >> +{
 >> +	struct xfs_mount    *mp = ip->i_mount;
+>
+> Pls line up these variables on a consistent minimum tab stop, unless it's  
+> some
+> email artifact that has thrown me off :)
+
+Hmmm, looks good on my vim editor, though I just grabbed the vim plugin from
+https://github.com/vivien/vim-linux-coding-style and now I see it.  Fixing...
+
+>
 >> +
 >> +	/* If the mount does not have a realtime device configured, there's
 >> +	 * nothing to do here.
@@ -351,14 +266,6 @@ Yup, bear with me as I learn :).
 >> +	 * not valid if not set.
 >> +	 */
 >> +	xfs_rt_alloc_min(mp, ip, len);
->
-> If the helper functions are only going to be a few lines long and used
-> once, just put them directly in the function here.
->
-
-<retracted> ... ya the reason for this becomes clear in the next commit
-as you found out.
-
 >> +}
 >> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
 >> index f13133e..eaf7ed3 100644
@@ -389,14 +296,30 @@ as you found out.
 >>  #endif /* DEBUG */
 >>
 >> +STATIC ssize_t
->> +rt_alloc_min_store(
->> +	struct kobject			*kobject,
+>> +rt_alloc_min_store(> +	struct kobject			*kobject,
 >> +	const char				*buf,
 >> +	size_t					count)
 >> +{
 >> +	struct xfs_mount		*mp = to_mp(kobject);
 >> +	int						ret;
 >> +	int						val;
+>
+> ditto on the lining up sanely:
+>
+> +rt_alloc_min_store(
+> +	struct kobject		*kobject,
+> +	const char		*buf,
+> +	size_t			count)
+> +{
+> +	struct xfs_mount	*mp = to_mp(kobject);
+> +	int			ret;
+> +	int			val;
+>
+
+Fixed, hoping with the Linux kernel style vim plugin I won't have these
+problems any longer.
+
+
 >> +
 >> +	ret = kstrtoint(buf, 0, &val);
 >> +	if (ret)
@@ -424,6 +347,16 @@ as you found out.
 >> +	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_alloc_min);
 >> +}
 >> +XFS_SYSFS_ATTR_RW(rt_alloc_min);
+>
+> Is this sysctl presented even if CONFIG_XFS_RT is turned off?
+> Seems like that shouldn't show up if it doesn't do anything...
+>
+
+Agreed, I originally had it as such, but Dave suggested given it's
+user facing it should remain visible.  I just pinged him on IRC and
+he's fine changing it back.  I don't have strong feelings either way,
+though I lean towards your thinking (hence my original choice).
+
 >> +
 >>  static struct attribute *xfs_mp_attrs[] = {
 >>  #ifdef DEBUG
@@ -432,20 +365,7 @@ as you found out.
 >> +	ATTR_LIST(rt_alloc_min),
 >>  	NULL,
 >>  };
->>
->> -- 
->> 2.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-As always, thanks for the feedback!
-
-Richard
-
-
-
+Richard...
 
