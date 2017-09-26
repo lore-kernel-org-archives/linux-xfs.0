@@ -1,41 +1,224 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17128 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966178AbdIZQC1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 12:02:27 -0400
-Date: Tue, 26 Sep 2017 09:01:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: always swap the cow forks when swapping extents
-Message-ID: <20170926160158.GG5020@magnolia>
-References: <20170923071208.GN5728@magnolia>
- <20170926144421.GB9530@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170926144421.GB9530@infradead.org>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:36460 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935257AbdIZByd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 21:54:33 -0400
+Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
+MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v2 2/3] xfs/realtime: Default rtinherit=1, add
+ _require_no_rtinherit function
+From: Richard Wareing <rwareing@fb.com>
+In-Reply-To: <20170925213358.GA5020@magnolia>
+Date: Mon, 25 Sep 2017 18:54:04 -0700
+Content-Transfer-Encoding: 7bit
+Message-ID: <46ABE012-8C4A-48CA-9F91-C6F6DF59D683@fb.com>
+References: <20170925195625.756877-1-rwareing@fb.com>
+ <20170925195625.756877-2-rwareing@fb.com> <20170925213358.GA5020@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2017 at 07:44:21AM -0700, Christoph Hellwig wrote:
-> On Sat, Sep 23, 2017 at 12:12:08AM -0700, Darrick J. Wong wrote:
-> > Since the CoW fork exists as a secondary data structure to the data
-> > fork, we must always swap cow forks during swapext.  We also need to
-> > swap the extent counts and reset the cowblocks tags.
-> 
-> Do you have a test that triggers a problem without this? :)
+Darrick J. Wong <darrick.wong@oracle.com> wrote:
 
-Yes, but it doesn't trigger it reliably, so I've not yet sent it.
+> On Mon, Sep 25, 2017 at 12:56:24PM -0700, Richard Wareing wrote:
+>> To better exercise the data path code of realtime subvolumes, we will
+>> set rtinherit=1 during mkfs calls.  For tests which this is not desired
+>> we introduce a _require_no_rtinherit function to opt out of this
+>> behavior.
+>>
+>> Signed-off-by: Richard Wareing <rwareing@fb.com>
+>> ---
+>> Changes since v1:
+>> * None
+>>
+>>  common/rc         | 24 +++++++++++++++++++++++-
+>>  tests/generic/250 |  1 +
+>>  tests/generic/252 |  1 +
+>>  tests/generic/427 |  1 +
+>>  tests/generic/441 |  1 +
+>>  tests/xfs/019     |  1 +
+>>  tests/xfs/031     |  1 +
+>>  tests/xfs/170     |  1 +
+>>  tests/xfs/187     |  1 +
+>>  9 files changed, 31 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/common/rc b/common/rc
+>> index a0081f1..feed17f 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -33,6 +33,16 @@ BC=$(which bc 2> /dev/null) || BC=
+>>  VALID_TEST_ID="[0-9]\{3\}"
+>>  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
+>>
+>> +# When running tests with a realtime device configured, the realtime  
+>> inherit
+>> +# flag will be set during mkfs via -d rtinherit=1 option.  For some tests
+>> +# this may render the test invalid (i.e. it uses a function which is not
+>> +# supported by the realtime subvolume); to prevent failure these tests  
+>> may
+>> +# disable this behavior by calling _require_no_rtinherit .
+>> +_require_no_rtinherit()
+>> +{
+>> +	RT_INHERIT=false
+>> +}
+>> +
+>>  _require_math()
+>>  {
+>>  	if [ -z "$BC" ]; then
+>> @@ -562,6 +572,13 @@ _scratch_do_mkfs()
+>>  	local mkfs_status
+>>  	local tmp=`mktemp -u`
+>>
+>> +	# Add rtinherit=1 to mkfs so we exercise realtime subvolume during
+>> +	# our tests.  Tests can opts out of this behavior by calling
+>> +	# _require_no_rtinherit.
+>> +	if $RT_INHERIT && echo "$mkfs_cmd" | grep rtdev &> /dev/null; then
+>
+> Doesn't this if test fail if RT_INHERIT isn't defined, and isn't
+> RT_INHERIT undefined unless _reuqire_no_rtinherit?
+>
 
---D
+My bad on this, I have RT_INHERIT defined in my config.local, which explains
+why it works so nicely for me :).   So yes this will have to be changed to
+default to something sane or a test.
 
-> 
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> Also, what happens if I forget the syntax and run 'RT_INHERIT=1 ./check'?
+> Deosn't that just spit out errors everywhere because '1' isn't a
+> command?
+>
+> IOWs I was expecting some kind of string test, like
+>
+> if [ "${RT_INHERIT}" != "false" ] && echo "${mkfs_cmd}" | grep -q rtdev;
+> then
+>
+> --D
+>
+>> +		extra_mkfs_options="$extra_mkfs_options -d rtinherit=1"
+>> +	fi
+>> +
+>>  	# save mkfs output in case conflict means we need to run again.
+>>  	# only the output for the mkfs that applies should be shown
+>>  	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
+>> @@ -760,7 +777,12 @@ _mkfs_dev()
+>>  	;;
+>>
+>>      *)
+>> -	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $* \
+>> +	local extra_mkfs_options="$*"
+>> +	# Similar behavior to the scratch variant of this
+>> +	if $RT_INHERIT && echo $extra_mkfs_options | grep rtdev &>  
+>> /dev/null; then
+>> +		extra_mkfs_options="$extra_mkfs_options -d rtinherit=1"
+>> +	fi
+>> +	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $extra_mkfs_options \
+>>  		2>$tmp.mkfserr 1>$tmp.mkfsstd
+>>  	;;
+>>      esac
+>> diff --git a/tests/generic/250 b/tests/generic/250
+>> index 3c4fe6d..9f4e364 100755
+>> --- a/tests/generic/250
+>> +++ b/tests/generic/250
+>> @@ -48,6 +48,7 @@ _require_scratch
+>>  _require_dm_target error
+>>  _require_xfs_io_command "falloc"
+>>  _require_odirect
+>> +_require_no_rtinherit
+>>
+>>  rm -f $seqres.full
+>>
+>> diff --git a/tests/generic/252 b/tests/generic/252
+>> index ffedd56..1156902 100755
+>> --- a/tests/generic/252
+>> +++ b/tests/generic/252
+>> @@ -47,6 +47,7 @@ _supported_os Linux
+>>  _require_scratch
+>>  _require_dm_target error
+>>  _require_xfs_io_command "falloc"
+>> +_require_no_rtinherit
+>>  _require_aiodio "aiocp"
+>>  AIO_TEST="src/aio-dio-regress/aiocp"
+>>
+>> diff --git a/tests/generic/427 b/tests/generic/427
+>> index 9cde5f5..18f8476 100755
+>> --- a/tests/generic/427
+>> +++ b/tests/generic/427
+>> @@ -53,6 +53,7 @@ _supported_os Linux
+>>  _require_scratch
+>>  _require_test_program "feature"
+>>  _require_aiodio aio-dio-eof-race
+>> +_require_no_rtinherit
+>>
+>>  # limit the filesystem size, to save the time of filling filesystem
+>>  _scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
+>> diff --git a/tests/generic/441 b/tests/generic/441
+>> index 075d877..589069a 100755
+>> --- a/tests/generic/441
+>> +++ b/tests/generic/441
+>> @@ -47,6 +47,7 @@ _cleanup()
+>>  # real QA test starts here
+>>  _supported_os Linux
+>>  _require_scratch
+>> +_require_no_rtinherit
+>>
+>>  # Generally, we want to avoid journal errors on the extended testcase. Only
+>>  # unset the -s flag if we have a logdev
+>> diff --git a/tests/xfs/019 b/tests/xfs/019
+>> index 3e4f169..1ab8991 100755
+>> --- a/tests/xfs/019
+>> +++ b/tests/xfs/019
+>> @@ -66,6 +66,7 @@ _supported_fs xfs
+>>  _supported_os Linux
+>>
+>>  _require_scratch
+>> +_require_no_rtinherit
+>>
+>>  protofile=$tmp.proto
+>>  tempfile=$tmp.file
+>> diff --git a/tests/xfs/031 b/tests/xfs/031
+>> index b05f28b..321f67a 100755
+>> --- a/tests/xfs/031
+>> +++ b/tests/xfs/031
+>> @@ -96,6 +96,7 @@ _supported_os Linux
+>>
+>>  _require_scratch
+>>  _require_no_large_scratch_dev
+>> +_require_no_rtinherit
+>>
+>>  # sanity test - default + one root directory entry
+>>  # Note: must do this proto/mkfs now for later inode size calcs
+>> diff --git a/tests/xfs/170 b/tests/xfs/170
+>> index c5ae8e4..6deef1b 100755
+>> --- a/tests/xfs/170
+>> +++ b/tests/xfs/170
+>> @@ -50,6 +50,7 @@ _supported_fs xfs
+>>  _supported_os Linux
+>>
+>>  _require_scratch
+>> +_require_no_rtinherit
+>>
+>>  _check_filestreams_support || _notrun "filestreams not available"
+>>
+>> diff --git a/tests/xfs/187 b/tests/xfs/187
+>> index 07ef3ae..89e7b11 100755
+>> --- a/tests/xfs/187
+>> +++ b/tests/xfs/187
+>> @@ -56,6 +56,7 @@ _filter_version()
+>>  _supported_fs xfs
+>>  _supported_os Linux
+>>
+>> +_require_no_rtinherit
+>>  _require_scratch
+>>  _require_attrs
+>>  _require_attr_v1
+>> -- 
+>> 2.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
