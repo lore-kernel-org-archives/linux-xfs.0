@@ -1,61 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:39976 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967646AbdIZDy4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 23:54:56 -0400
-Date: Tue, 26 Sep 2017 13:51:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: shared/298 lockdep splat?
-Message-ID: <20170926035149.GO10955@dastard>
-References: <20170920211042.GH7112@magnolia>
- <20170920222256.GR18948@dastard>
- <20170921084714.GI5994@X58A-UD3R>
+Received: from mx1.redhat.com ([209.132.183.28]:39482 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934183AbdIZKuT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Sep 2017 06:50:19 -0400
+Date: Tue, 26 Sep 2017 18:50:16 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 2/3] xfs/realtime: Default rtinherit=1, add
+ _require_no_rtinherit function
+Message-ID: <20170926105016.GK8034@eguan.usersys.redhat.com>
+References: <20170925195625.756877-1-rwareing@fb.com>
+ <20170925195625.756877-2-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170921084714.GI5994@X58A-UD3R>
+In-Reply-To: <20170925195625.756877-2-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, kernel-team@lge.com
+To: Richard Wareing <rwareing@fb.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Sep 21, 2017 at 05:47:14PM +0900, Byungchul Park wrote:
-> On Thu, Sep 21, 2017 at 08:22:56AM +1000, Dave Chinner wrote:
-> > Peter, this is the sort of false positive I mentioned were likely to
-> > occur without some serious work to annotate the IO stack to prevent
-> > them.  We can nest multiple layers of IO completions and locking in
-> > the IO stack via things like loop and RAID devices.  They can be
-> > nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
-> > dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
-> > checking is going to be a source of false positives until there is
-> > an effective (and simple!) way of providing context based completion
-> > annotations to avoid them...
+On Mon, Sep 25, 2017 at 12:56:24PM -0700, Richard Wareing wrote:
+> To better exercise the data path code of realtime subvolumes, we will
+> set rtinherit=1 during mkfs calls.  For tests which this is not desired
+> we introduce a _require_no_rtinherit function to opt out of this
+> behavior.
 > 
-> Hello,
+> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> ---
+> Changes since v1:
+> * None
 > 
-> It looks caused by that &ret.event in submit_bio_wait() is initialized
-> with the same class for all layers. I mean that completion variables in
-> different layers should be initialized with different classes, as you do
-> for typical locks in xfs.
+>  common/rc         | 24 +++++++++++++++++++++++-
+>  tests/generic/250 |  1 +
+>  tests/generic/252 |  1 +
+>  tests/generic/427 |  1 +
+>  tests/generic/441 |  1 +
+>  tests/xfs/019     |  1 +
+>  tests/xfs/031     |  1 +
+>  tests/xfs/170     |  1 +
+>  tests/xfs/187     |  1 +
+>  9 files changed, 31 insertions(+), 1 deletion(-)
 
-Except that submit_bio_wait() is generic block layer functionality
-and can be used by anyone. Whatever solution you decide on, it has
-to be generic. And keep in mind that any code that submits a bio
-themselves and waits on a completion event from the bio is going to
-have to do their own annotations, which makes this a real PITA.
+I don't think we need an extra RT_INHERT flag, this is just one of the
+normal test configurations and can be easily tested by setting correct
+MKFS_OPTIONS, e.g.
 
-> I am not sure if I understand how xfs works correctly. Right? If yes,
-> how can we distinguish between independent 'bio's in submit_bio_wait()?
-> You or I can make it work with the answer. No?
+MKFS_OPTIONS="-d rtinherit=1" ./check ...
 
-Has nothing to do with XFS - it has no clue where it sits in the
-block device stack and has no business screwing with bio internals
-and stack layering to handle issues with stacked block devices....
+Then we can check if MKFS_OPTIONS has rtinherit defined in
+_require_no_rtinherit(), e.g.
 
-Cheers,
+_require_no_rtinherit()
+{
+	echo "$MKFS_OPTIONS" | egrep -q "rtinherit([^=]|=1)" && \
+		_notrun "<notrun message here>"
+}
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Unfortunately, mkfs.xfs doesn't print rtinherit status at mkfs time,
+otherwise we could check mkfs.xfs output directly.
+
+And xfs/019 xfs/031 passed even with "-d rtinherit=1", and xfs/187
+already _notrun with proper message, so seems they don't need
+_require_no_rtinherit rule.
+
+generic/427 fails because xfs_io prints out its write log, after
+redirecting stdout of xfs_io to /dev/null, generic/427 passed for me
+too, the xfs_io write is meant to write a special pattern to the disk
+anyway.
+
+For other tests that do need _require_no_rtinherit, a comment to explain
+why this rule is needed would be good.
+
+Thanks,
+Eryu
