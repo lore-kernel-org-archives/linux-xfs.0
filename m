@@ -1,79 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:45540 "EHLO
-        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966405AbdIYXiq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 19:38:46 -0400
-Received: by mail-oi0-f52.google.com with SMTP id z73so9467896oia.2
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2017 16:38:46 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:17128 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966178AbdIZQC1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 12:02:27 -0400
+Date: Tue, 26 Sep 2017 09:01:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: always swap the cow forks when swapping extents
+Message-ID: <20170926160158.GG5020@magnolia>
+References: <20170923071208.GN5728@magnolia>
+ <20170926144421.GB9530@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20170925231404.32723-7-ross.zwisler@linux.intel.com>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com> <20170925231404.32723-7-ross.zwisler@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 25 Sep 2017 16:38:45 -0700
-Message-ID: <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170926144421.GB9530@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 4:14 PM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> When mappings are created the vma->vm_flags that they use vary based on
-> whether the inode being mapped is using DAX or not.  This setup happens in
-> XFS via mmap_region()=>call_mmap()=>xfs_file_mmap().
->
-> For us to be able to safely use the DAX per-inode flag we need to prevent
-> S_DAX transitions when any mappings are present, and we will do that by
-> looking at the address_space->i_mmap tree and returning -EBUSY if any
-> mappings are present.
->
-> Unfortunately at the time that the filesystem's file_operations->mmap()
-> entry point is called the mapping has not yet been added to the
-> address_space->i_mmap tree.  This means that at that point in time we
-> cannot determine whether or not the mapping will be set up to support DAX.
->
-> Fix this by adding a new file_operations entry called post_mmap() which is
-> called after the mapping has been added to the address_space->i_mmap tree.
-> This post_mmap() op now happens at a time when we can be sure whether the
-> mapping will use DAX or not, and we can set up the vma->vm_flags
-> appropriately.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  fs/xfs/xfs_file.c  | 15 ++++++++++++++-
->  include/linux/fs.h |  1 +
->  mm/mmap.c          |  2 ++
->  3 files changed, 17 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 2816858..9d66aaa 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1087,9 +1087,21 @@ xfs_file_mmap(
->  {
->         file_accessed(filp);
->         vma->vm_ops = &xfs_file_vm_ops;
-> +       return 0;
-> +}
-> +
-> +/* This call happens during mmap(), after the vma has been inserted into the
-> + * inode->i_mapping->i_mmap tree.  At this point the decision on whether or
-> + * not to use DAX for this mapping has been set and will not change for the
-> + * duration of the mapping.
-> + */
-> +STATIC void
-> +xfs_file_post_mmap(
-> +       struct file     *filp,
-> +       struct vm_area_struct *vma)
-> +{
->         if (IS_DAX(file_inode(filp)))
->                 vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+On Tue, Sep 26, 2017 at 07:44:21AM -0700, Christoph Hellwig wrote:
+> On Sat, Sep 23, 2017 at 12:12:08AM -0700, Darrick J. Wong wrote:
+> > Since the CoW fork exists as a secondary data structure to the data
+> > fork, we must always swap cow forks during swapext.  We also need to
+> > swap the extent counts and reset the cowblocks tags.
+> 
+> Do you have a test that triggers a problem without this? :)
 
-It's not clear to me what this is actually protecting? vma_is_dax()
-returns true regardless of the vm_flags state , so what is the benefit
-to delaying the vm_flags setting to ->post_mmap()?
+Yes, but it doesn't trigger it reliably, so I've not yet sent it.
 
-Also, why is this a file_operation and not a vm_operation?
+--D
+
+> 
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
