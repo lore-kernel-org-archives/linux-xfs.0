@@ -1,43 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55893 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750829AbdIZGeE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Sep 2017 02:34:04 -0400
-Date: Tue, 26 Sep 2017 08:34:02 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
-Message-ID: <20170926063402.GC6870@lst.de>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com> <20170925231404.32723-7-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23271 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966562AbdIZR57 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 13:57:59 -0400
+Date: Tue, 26 Sep 2017 10:57:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/7] xfs: validate bdev support for DAX inode flag
+Message-ID: <20170926175734.GH5020@magnolia>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-3-ross.zwisler@linux.intel.com>
+ <20170926063650.GE6870@lst.de>
+ <20170926171638.GA20159@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170925231404.32723-7-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170926171638.GA20159@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "J. Bruce Fields" <bfields@fieldses.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2017 at 05:14:03PM -0600, Ross Zwisler wrote:
-> When mappings are created the vma->vm_flags that they use vary based on
-> whether the inode being mapped is using DAX or not.  This setup happens in
-> XFS via mmap_region()=>call_mmap()=>xfs_file_mmap().
+On Tue, Sep 26, 2017 at 11:16:38AM -0600, Ross Zwisler wrote:
+> On Tue, Sep 26, 2017 at 08:36:50AM +0200, Christoph Hellwig wrote:
+> > On Mon, Sep 25, 2017 at 05:13:59PM -0600, Ross Zwisler wrote:
+> > > Currently only the blocksize is checked, but we should really be calling
+> > > bdev_dax_supported() which also tests to make sure we can get a
+> > > struct dax_device and that the dax_direct_access() path is working.
+> > > 
+> > > This is the same check that we do for the "-o dax" mount option in
+> > > xfs_fs_fill_super().
+> > > 
+> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > I think we just want to pick this up ASAP.  And between my vague
+> > memoried and that reviewed-by tag it already was part of a different
+> > series, wasn't it?
 > 
-> For us to be able to safely use the DAX per-inode flag we need to prevent
-> S_DAX transitions when any mappings are present, and we will do that by
-> looking at the address_space->i_mmap tree and returning -EBUSY if any
-> mappings are present.
+> Yep, the first 2 patches were part of this series:
 > 
-> Unfortunately at the time that the filesystem's file_operations->mmap()
-> entry point is called the mapping has not yet been added to the
-> address_space->i_mmap tree.  This means that at that point in time we
-> cannot determine whether or not the mapping will be set up to support DAX.
+> https://lkml.org/lkml/2017/9/7/552
 > 
-> Fix this by adding a new file_operations entry called post_mmap() which is
-> called after the mapping has been added to the address_space->i_mmap tree.
-> This post_mmap() op now happens at a time when we can be sure whether the
-> mapping will use DAX or not, and we can set up the vma->vm_flags
-> appropriately.
+> which you reviewed.  I included them in this series because the later patches
+> needed to build on them.  It looks like they are now in Darrick's
+> xfs-4.14-fixes branch, but haven't yet made it upstream.
 
-Just like in the read/write path we'll need a flag that is passed down
-from the VM based on checking IS_DAX once and exactly once instead.
+I'm pulling that first patch from -fixes because Dave & Christoph
+started discussing it again in this new thread after I'd pushed the
+patch from September 7th to korg.
+
+The second patch looks fine, it'll stay.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
