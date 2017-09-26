@@ -1,54 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:31168 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965662AbdIYXO0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Sep 2017 19:14:26 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 2/7] xfs: validate bdev support for DAX inode flag
-Date: Mon, 25 Sep 2017 17:13:59 -0600
-Message-Id: <20170925231404.32723-3-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:43337 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030505AbdIZVly (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 17:41:54 -0400
+Received: by mail-oi0-f45.google.com with SMTP id r20so14027250oie.0
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2017 14:41:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170926210645.GA7798@linux.intel.com>
 References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-7-ross.zwisler@linux.intel.com> <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
+ <20170926185751.GB31146@linux.intel.com> <CAPcyv4iVc9y8PE24ZvkiBYdp4Die0Q-K5S6QexW_6YQ_M0F4QA@mail.gmail.com>
+ <20170926210645.GA7798@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 26 Sep 2017 14:41:53 -0700
+Message-ID: <CAPcyv4iDTNteQAt1bBHCGijwsk45rJWHfdr+e_rOwK39jpC2Og@mail.gmail.com>
+Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
 
-Currently only the blocksize is checked, but we should really be calling
-bdev_dax_supported() which also tests to make sure we can get a
-struct dax_device and that the dax_direct_access() path is working.
+On Tue, Sep 26, 2017 at 2:06 PM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> On Tue, Sep 26, 2017 at 12:19:21PM -0700, Dan Williams wrote:
+>> On Tue, Sep 26, 2017 at 11:57 AM, Ross Zwisler
+> <>
+>> > This decision can only be made (in this
+>> > proposed scheme) *after* the inode->i_mapping->i_mmap  tree has been
+>> > populated, which means we need another call into the filesystem after this
+>> > insertion has happened.
+>>
+>> I get that, but it seems over-engineered and something that can also
+>> be safely cleaned up after the fact by the code path that is disabling
+>> DAX.
+>
+> I don't think you can safely clean it up after the fact because some thread
+> might have already called ->mmap() to set up the vma->vm_flags for their new
+> mapping, but they haven't added it to inode->i_mapping->i_mmap.
 
-This is the same check that we do for the "-o dax" mount option in
-xfs_fs_fill_super().
+If madvise(MADV_NOHUGEPAGE) can dynamically change vm_flags, then the
+DAX disable path can as well. VM_MIXEDMAP looks to be a nop for normal
+memory mappings.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_ioctl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> The inode->i_mapping->i_mmap tree is the only way (that I know of at least)
+> that the filesystem has any idea about about the mapping.  This is the method
+> by which we would try and clean up mapping flags, if we were to do so, and
+> it's the only way that the filesystem can know whether or not mappings exist.
+>
+> The only way that I could think of to make this safely work is to have the
+> insertion into the inode->i_mapping->i_mmap tree be our sync point.  After
+> that the filesystem and the mapping code can communicate on the state of DAX,
+> but before that I think it's basically indeterminate.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 26faeb9..0433aef 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1088,6 +1088,7 @@ xfs_ioctl_setattr_dax_invalidate(
- 	int			*join_flags)
- {
- 	struct inode		*inode = VFS_I(ip);
-+	struct super_block	*sb = inode->i_sb;
- 	int			error;
- 
- 	*join_flags = 0;
-@@ -1100,7 +1101,7 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
- 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
- 			return -EINVAL;
--		if (ip->i_mount->m_sb.sb_blocksize != PAGE_SIZE)
-+		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
- 			return -EINVAL;
- 	}
- 
--- 
-2.9.5
-
+If we lose the race and leak VM_HUGEPAGE to a non-DAX mapping what
+breaks? I'd rather be in favor of not setting VM_HUGEPAGE at all in
+the ->mmap() handler and let the default THP policy take over. In
+fact, see transparent_hugepage_enabled() we already auto-enable huge
+page support for dax mappings regardless of VM_HUGEPAGE.
