@@ -1,32 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37334 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968369AbdIZOni (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 10:43:38 -0400
-Date: Tue, 26 Sep 2017 07:43:38 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: revert "xfs: factor rmap btree size into the indlen
- calculations"
-Message-ID: <20170926144338.GA9530@infradead.org>
-References: <20170923071142.GM5728@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:58908 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967445AbdIZOhp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Sep 2017 10:37:45 -0400
+Date: Tue, 26 Sep 2017 16:37:43 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/7] xfs: always use DAX if mount option is used
+Message-ID: <20170926143743.GB18758@lst.de>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com> <20170925231404.32723-2-ross.zwisler@linux.intel.com> <20170925233812.GM10955@dastard> <20170926093548.GB13627@quack2.suse.cz> <20170926110957.GR10955@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170923071142.GM5728@magnolia>
+In-Reply-To: <20170926110957.GR10955@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, eguan@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Sat, Sep 23, 2017 at 12:11:42AM -0700, Darrick J. Wong wrote:
-> In commit fd26a88093ba we added a worst case estimate for rmapbt blocks
-> needed to satisfy the block mapping request.  Since then, we added the
-> ability to reserve enough space in each AG such that we should never run
-> out of blocks to grow the rmapbt, which makes this calculation
-> unnecessary.  Revert the commit because it makes the extra delalloc
-> indlen accounting unnecessary and incorrect.
+On Tue, Sep 26, 2017 at 09:09:57PM +1000, Dave Chinner wrote:
+> Well, quite frankly, I never wanted the mount option for XFS. It was
+> supposed to be for initial testing only, then we'd /always/ use the
+> the inode flags. For a filesystem to default to using DAX, we
+> set the DAX flag on the root inode at mkfs time, and then everything
+> inode flag based just works.
 
-Looks good,
+And I deeply fundamentally disagree.  The mount option is a nice
+enough big hammer to try a mode without encoding nitty gritty details
+into the application ABI.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The per-inode persistent flag is the biggest nightmare ever, as we see
+in all these discussions about it.
+
+What does it even mean?  Right now it forces direct addressing as long
+as the underlying media supports that.  But what about media that
+you directly access but you really don't want to because it's really slow?
+Or media that is so god damn fast that you never want to buffer?  Or
+media where you want to buffer for writes (or at least some of them)
+but not for reads?
+
+It encodes a very specific mechanism for an early direct access
+implementation into the ABI.  What we really need is for applications
+to declare an intent, not specify a particular mechanism.
