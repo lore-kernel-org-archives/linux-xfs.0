@@ -1,69 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:34504 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935351AbdIZEbF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 00:31:05 -0400
-Date: Tue, 26 Sep 2017 14:24:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: false positive lockdep splat with loop device
-Message-ID: <20170926042421.GP10955@dastard>
-References: <CAOQ4uxixLMRU2YT-3csTr_684vNUZ=2CazKKD-ojO68fC4f6tA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60804 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754374AbdIZLCj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Sep 2017 07:02:39 -0400
+Date: Tue, 26 Sep 2017 19:02:37 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 3/3] xfs/realtime: Fix direct invocations of xfs_repair
+Message-ID: <20170926110237.GL8034@eguan.usersys.redhat.com>
+References: <20170925195625.756877-1-rwareing@fb.com>
+ <20170925195625.756877-3-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxixLMRU2YT-3csTr_684vNUZ=2CazKKD-ojO68fC4f6tA@mail.gmail.com>
+In-Reply-To: <20170925195625.756877-3-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Byungchul Park <byungchul.park@lge.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Richard Wareing <rwareing@fb.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Sep 21, 2017 at 09:43:41AM +0300, Amir Goldstein wrote:
-> On Thu, Sep 21, 2017 at 1:22 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > [cc lkml, PeterZ and Byungchul]
-> ...
-> > The thing is, this IO completion has nothing to do with the lower
-> > filesystem - it's the IO completion for the filesystem on the loop
-> > device (the upper filesystem) and is not in any way related to the
-> > IO completion from the dax device the lower filesystem is waiting
-> > on.
-> >
-> > IOWs, this is a false positive.
-> >
-> > Peter, this is the sort of false positive I mentioned were likely to
-> > occur without some serious work to annotate the IO stack to prevent
-> > them.  We can nest multiple layers of IO completions and locking in
-> > the IO stack via things like loop and RAID devices.  They can be
-> > nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
-> > dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
-> > checking is going to be a source of false positives until there is
-> > an effective (and simple!) way of providing context based completion
-> > annotations to avoid them...
-> >
+On Mon, Sep 25, 2017 at 12:56:25PM -0700, Richard Wareing wrote:
+> Fixes direct invocations of xfs_repair to add in -r option if required.
 > 
-> IMO, the way to handle this is to add 'nesting_depth' information
-> on blockdev (or bdi?). 'nesting' in the sense of blockdev->fs->blockdev->fs.
-> AFAIK, the only blockdev drivers that need to bump nesting_depth
-> are loop and nbd??
+> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> ---
+> Changes since v1:
+> * Fixed kill -9 in test xfs/070
+> 
+>  tests/xfs/070 | 3 ++-
+>  tests/xfs/291 | 3 ++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/xfs/070 b/tests/xfs/070
+> index 0ae6eff..a06e998 100755
+> --- a/tests/xfs/070
+> +++ b/tests/xfs/070
+> @@ -56,7 +56,8 @@ _cleanup()
+>  _xfs_repair_noscan()
+>  {
+>  	# invoke repair directly so we can kill the process if need be
+> -	$XFS_REPAIR_PROG $SCRATCH_DEV 2>&1 | tee -a $seqres.full > $tmp.repair &
+> +	[ -n "$SCRATCH_RTDEV" ] && rt_repair_opts="-r $SCRATCH_RTDEV"
+> +	$XFS_REPAIR_PROG $rt_repair_opts $SCRATCH_DEV 2>&1 | tee -a $seqres.full > $tmp.repair &
 
-You're assumming that this sort of "completion inversion" can only
-happen with bdev->fs->bdev, and that submit_bio_wait() is the only
-place where completions are used in stackable block devices.
+Need to check $USE_EXTERNAL too.
 
-AFAICT, this could happen on with any block device that can be
-stacked multiple times that uses completions. e.g. MD has a function
-sync_page_io() that calls submit_bio_wait(), and that is called from
-places in the raid 5, raid 10, raid 1 and bitmap layers (plus others
-in DM). These can get stacked anywhere - even on top of loop devices
-- and so I think the issue has a much wider scope than just loop and
-nbd devices.
+>  	repair_pid=$!
+>  
+>  	# monitor progress for as long as it is running
+> diff --git a/tests/xfs/291 b/tests/xfs/291
+> index 3f5295c..140fa33 100755
+> --- a/tests/xfs/291
+> +++ b/tests/xfs/291
+> @@ -122,7 +122,8 @@ _xfs_check $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_check failed"
+>  # Can xfs_metadump cope with this monster?
+>  _scratch_metadump $tmp.metadump || _fail "xfs_metadump failed"
+>  xfs_mdrestore $tmp.metadump $tmp.img || _fail "xfs_mdrestore failed"
+> -xfs_repair -f $tmp.img >> $seqres.full 2>&1 || _fail "xfs_repair of metadump failed"
+> +[ -n "$SCRATCH_RTDEV" ] && rt_repair_opts="-r $SCRATCH_RTDEV"
+> +xfs_repair $rt_repair_opts -f $tmp.img >> $seqres.full 2>&1 || _fail "xfs_repair of metadump failed"
 
-> Not sure if the kernel should limit loop blockdev nesting depth??
+Same here. And replace xfs_repair with $XFS_REPAIR_PROG too?
 
-There's no way we should do that just because new lockdep
-functionality is unable to express such constructs.
+Thanks,
+Eryu
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  
+>  # Yes it can; success, all done
+>  status=0
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
