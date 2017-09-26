@@ -1,34 +1,141 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58878 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936827AbdIZOd7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Sep 2017 10:33:59 -0400
-Date: Tue, 26 Sep 2017 16:33:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/7] xfs: protect S_DAX transitions in XFS read path
-Message-ID: <20170926143357.GA18758@lst.de>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com> <20170925231404.32723-4-ross.zwisler@linux.intel.com> <20170926063234.GA6870@lst.de> <CAPcyv4hKb1PshbjLxyWz2fdj=dK2fi2qgJLFaT9pVnmaOoWV6g@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:39816 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965319AbdIZPAa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 11:00:30 -0400
+Date: Tue, 26 Sep 2017 08:00:29 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: update i_size after unwritten conversion in dio
+ completion
+Message-ID: <20170926150029.GC9530@infradead.org>
+References: <20170921155246.4352-1-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4hKb1PshbjLxyWz2fdj=dK2fi2qgJLFaT9pVnmaOoWV6g@mail.gmail.com>
+In-Reply-To: <20170921155246.4352-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2017 at 06:59:37AM -0700, Dan Williams wrote:
-> > I think you probably want an IOCB_DAX flag to check IS_DAX once and
-> > then stick to it, similar to what we do for direct I/O.
+On Thu, Sep 21, 2017 at 11:52:46PM +0800, Eryu Guan wrote:
+> Since commit d531d91d6990 ("xfs: always use unwritten extents for
+> direct I/O writes"), we start allocating unwritten extents for all
+> direct writes to allow appending aio in XFS.
 > 
-> I wonder if this works better with a reference count mechanism
-> per-file so that we don't need a hold a lock over the whole
-> transition. Similar to request_queue reference counting, when DAX is
-> being turned off we block new references and drain the in-flight ones.
+> But for dio writes that could extend file size we update the in-core
+> inode size first, then convert the unwritten extents to real
+> allocations at dio completion time in xfs_dio_write_end_io(). Thus a
+> racing direct read could see the new i_size and find the unwritten
+> extents first and read zeros instead of actual data, if the direct
+> writer also takes a shared iolock.
+> 
+> Fix it by updating the in-core inode size after the unwritten extent
+> conversion. To do this, introduce a new boolean argument to
+> xfs_iomap_write_unwritten() to tell if we want to update in-core
+> i_size or not.
+> 
+> Suggested-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+> v2:
+> - fix comments by copying Brian's words :)
+> - fix code style, remove unnecessary blank lines and braces
+> 
+> v1: https://marc.info/?l=linux-xfs&m=150599032124565&w=2
+> 
+>  fs/xfs/xfs_aops.c  |  3 ++-
+>  fs/xfs/xfs_file.c  | 33 +++++++++++++++++++--------------
+>  fs/xfs/xfs_iomap.c |  7 +++++--
+>  fs/xfs/xfs_iomap.h |  2 +-
+>  fs/xfs/xfs_pnfs.c  |  2 +-
+>  5 files changed, 28 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 29172609f2a3..f18e5932aec4 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -343,7 +343,8 @@ xfs_end_io(
+>  		error = xfs_reflink_end_cow(ip, offset, size);
+>  		break;
+>  	case XFS_IO_UNWRITTEN:
+> -		error = xfs_iomap_write_unwritten(ip, offset, size);
+> +		/* writeback should never update isize */
+> +		error = xfs_iomap_write_unwritten(ip, offset, size, false);
 
-Maybe.  But that assumes we want to be stuck in a perpetual binary
-DAX on/off state on a given file.  Which makes not only for an awkward
-interface (inode or mount flag), but also might be fundamentally the
-wrong thing to do for some media where you'd happily read directly
-from it but rather buffer writes in DRAM.
+Can we expand this to
+
+	/* writeback should never update the in-core inode size */
+
+> @@ -459,20 +473,11 @@ xfs_dio_write_end_io(
+>  	spin_lock(&ip->i_flags_lock);
+>  	if (offset + size > i_size_read(inode)) {
+>  		i_size_write(inode, offset + size);
+> +		spin_unlock(&ip->i_flags_lock);
+>  		error = xfs_setfilesize(ip, offset, size);
+> +	} else {
+> +		spin_unlock(&ip->i_flags_lock);
+> +	}
+
+I find the old update_isize scheme a little easier to read, but it
+shouldn't matter in the end:
+
+  	spin_lock(&ip->i_flags_lock);
+  	if (offset + size > i_size_read(inode)) {
+  		i_size_write(inode, offset + size);
+		update_isize = true;
+	}
+	spin_unlock(&ip->i_flags_lock);
+
+	if (!update_isize)
+		return 0;
+	return xfs_setfilesize(ip, offset, size);
+
+>  	xfs_bmbt_irec_t imap;
+>  	struct xfs_defer_ops dfops;
+> +	struct inode	*inode = VFS_I(ip);
+>  	xfs_fsize_t	i_size;
+>  	uint		resblks;
+>  	int		error;
+> @@ -899,7 +901,8 @@ xfs_iomap_write_unwritten(
+>  		i_size = XFS_FSB_TO_B(mp, offset_fsb + count_fsb);
+>  		if (i_size > offset + count)
+>  			i_size = offset + count;
+> -
+> +		if (update_isize && i_size > i_size_read(inode))
+> +			i_size_write(inode, i_size);
+>  		i_size = xfs_new_eof(ip, i_size);
+>  		if (i_size) {
+>  			ip->i_d.di_size = i_size;
+
+I wonder if this might be cleaner if we expand xfs_new_eof for
+the update_isize case.  Something like the untested helper below:
+
+static bool
+xfs_alloc_update_isize(
+	struct xfs_inode	*ip,
+	xfs_fileoff_t		offset_fsb,
+	xfs_filblks_t		count_fsb,
+	bool			update_incore_isize)
+{
+	xfs_fsize_t		i_size;
+
+	i_size = XFS_FSB_TO_B(ip->i_mount, offset_fsb + count_fsb);
+	if (i_size > offset + count)
+		i_size = offset + count;
+
+	if (update_isize) {
+		if (i_size <= i_size_read(inode))
+			return;
+		i_size_write(inode, i_size);
+	} else {
+		i_size = xfs_new_eof(ip, i_size);
+		if (!i_size)
+			return;
+	}
+
+	ip->i_d.di_size = i_size;
+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+}
