@@ -1,224 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:36460 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935257AbdIZByd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 21:54:33 -0400
-Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
-MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH v2 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-From: Richard Wareing <rwareing@fb.com>
-In-Reply-To: <20170925213358.GA5020@magnolia>
-Date: Mon, 25 Sep 2017 18:54:04 -0700
-Content-Transfer-Encoding: 7bit
-Message-ID: <46ABE012-8C4A-48CA-9F91-C6F6DF59D683@fb.com>
-References: <20170925195625.756877-1-rwareing@fb.com>
- <20170925195625.756877-2-rwareing@fb.com> <20170925213358.GA5020@magnolia>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:34504 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935351AbdIZEbF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 00:31:05 -0400
+Date: Tue, 26 Sep 2017 14:24:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: false positive lockdep splat with loop device
+Message-ID: <20170926042421.GP10955@dastard>
+References: <CAOQ4uxixLMRU2YT-3csTr_684vNUZ=2CazKKD-ojO68fC4f6tA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxixLMRU2YT-3csTr_684vNUZ=2CazKKD-ojO68fC4f6tA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Byungchul Park <byungchul.park@lge.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Thu, Sep 21, 2017 at 09:43:41AM +0300, Amir Goldstein wrote:
+> On Thu, Sep 21, 2017 at 1:22 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > [cc lkml, PeterZ and Byungchul]
+> ...
+> > The thing is, this IO completion has nothing to do with the lower
+> > filesystem - it's the IO completion for the filesystem on the loop
+> > device (the upper filesystem) and is not in any way related to the
+> > IO completion from the dax device the lower filesystem is waiting
+> > on.
+> >
+> > IOWs, this is a false positive.
+> >
+> > Peter, this is the sort of false positive I mentioned were likely to
+> > occur without some serious work to annotate the IO stack to prevent
+> > them.  We can nest multiple layers of IO completions and locking in
+> > the IO stack via things like loop and RAID devices.  They can be
+> > nested to arbitrary depths, too (e.g. loop on fs on loop on fs on
+> > dm-raid on n * (loop on fs) on bdev) so this new completion lockdep
+> > checking is going to be a source of false positives until there is
+> > an effective (and simple!) way of providing context based completion
+> > annotations to avoid them...
+> >
+> 
+> IMO, the way to handle this is to add 'nesting_depth' information
+> on blockdev (or bdi?). 'nesting' in the sense of blockdev->fs->blockdev->fs.
+> AFAIK, the only blockdev drivers that need to bump nesting_depth
+> are loop and nbd??
 
-> On Mon, Sep 25, 2017 at 12:56:24PM -0700, Richard Wareing wrote:
->> To better exercise the data path code of realtime subvolumes, we will
->> set rtinherit=1 during mkfs calls.  For tests which this is not desired
->> we introduce a _require_no_rtinherit function to opt out of this
->> behavior.
->>
->> Signed-off-by: Richard Wareing <rwareing@fb.com>
->> ---
->> Changes since v1:
->> * None
->>
->>  common/rc         | 24 +++++++++++++++++++++++-
->>  tests/generic/250 |  1 +
->>  tests/generic/252 |  1 +
->>  tests/generic/427 |  1 +
->>  tests/generic/441 |  1 +
->>  tests/xfs/019     |  1 +
->>  tests/xfs/031     |  1 +
->>  tests/xfs/170     |  1 +
->>  tests/xfs/187     |  1 +
->>  9 files changed, 31 insertions(+), 1 deletion(-)
->>
->> diff --git a/common/rc b/common/rc
->> index a0081f1..feed17f 100644
->> --- a/common/rc
->> +++ b/common/rc
->> @@ -33,6 +33,16 @@ BC=$(which bc 2> /dev/null) || BC=
->>  VALID_TEST_ID="[0-9]\{3\}"
->>  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
->>
->> +# When running tests with a realtime device configured, the realtime  
->> inherit
->> +# flag will be set during mkfs via -d rtinherit=1 option.  For some tests
->> +# this may render the test invalid (i.e. it uses a function which is not
->> +# supported by the realtime subvolume); to prevent failure these tests  
->> may
->> +# disable this behavior by calling _require_no_rtinherit .
->> +_require_no_rtinherit()
->> +{
->> +	RT_INHERIT=false
->> +}
->> +
->>  _require_math()
->>  {
->>  	if [ -z "$BC" ]; then
->> @@ -562,6 +572,13 @@ _scratch_do_mkfs()
->>  	local mkfs_status
->>  	local tmp=`mktemp -u`
->>
->> +	# Add rtinherit=1 to mkfs so we exercise realtime subvolume during
->> +	# our tests.  Tests can opts out of this behavior by calling
->> +	# _require_no_rtinherit.
->> +	if $RT_INHERIT && echo "$mkfs_cmd" | grep rtdev &> /dev/null; then
->
-> Doesn't this if test fail if RT_INHERIT isn't defined, and isn't
-> RT_INHERIT undefined unless _reuqire_no_rtinherit?
->
+You're assumming that this sort of "completion inversion" can only
+happen with bdev->fs->bdev, and that submit_bio_wait() is the only
+place where completions are used in stackable block devices.
 
-My bad on this, I have RT_INHERIT defined in my config.local, which explains
-why it works so nicely for me :).   So yes this will have to be changed to
-default to something sane or a test.
+AFAICT, this could happen on with any block device that can be
+stacked multiple times that uses completions. e.g. MD has a function
+sync_page_io() that calls submit_bio_wait(), and that is called from
+places in the raid 5, raid 10, raid 1 and bitmap layers (plus others
+in DM). These can get stacked anywhere - even on top of loop devices
+- and so I think the issue has a much wider scope than just loop and
+nbd devices.
 
+> Not sure if the kernel should limit loop blockdev nesting depth??
 
-> Also, what happens if I forget the syntax and run 'RT_INHERIT=1 ./check'?
-> Deosn't that just spit out errors everywhere because '1' isn't a
-> command?
->
-> IOWs I was expecting some kind of string test, like
->
-> if [ "${RT_INHERIT}" != "false" ] && echo "${mkfs_cmd}" | grep -q rtdev;
-> then
->
-> --D
->
->> +		extra_mkfs_options="$extra_mkfs_options -d rtinherit=1"
->> +	fi
->> +
->>  	# save mkfs output in case conflict means we need to run again.
->>  	# only the output for the mkfs that applies should be shown
->>  	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
->> @@ -760,7 +777,12 @@ _mkfs_dev()
->>  	;;
->>
->>      *)
->> -	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $* \
->> +	local extra_mkfs_options="$*"
->> +	# Similar behavior to the scratch variant of this
->> +	if $RT_INHERIT && echo $extra_mkfs_options | grep rtdev &>  
->> /dev/null; then
->> +		extra_mkfs_options="$extra_mkfs_options -d rtinherit=1"
->> +	fi
->> +	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $extra_mkfs_options \
->>  		2>$tmp.mkfserr 1>$tmp.mkfsstd
->>  	;;
->>      esac
->> diff --git a/tests/generic/250 b/tests/generic/250
->> index 3c4fe6d..9f4e364 100755
->> --- a/tests/generic/250
->> +++ b/tests/generic/250
->> @@ -48,6 +48,7 @@ _require_scratch
->>  _require_dm_target error
->>  _require_xfs_io_command "falloc"
->>  _require_odirect
->> +_require_no_rtinherit
->>
->>  rm -f $seqres.full
->>
->> diff --git a/tests/generic/252 b/tests/generic/252
->> index ffedd56..1156902 100755
->> --- a/tests/generic/252
->> +++ b/tests/generic/252
->> @@ -47,6 +47,7 @@ _supported_os Linux
->>  _require_scratch
->>  _require_dm_target error
->>  _require_xfs_io_command "falloc"
->> +_require_no_rtinherit
->>  _require_aiodio "aiocp"
->>  AIO_TEST="src/aio-dio-regress/aiocp"
->>
->> diff --git a/tests/generic/427 b/tests/generic/427
->> index 9cde5f5..18f8476 100755
->> --- a/tests/generic/427
->> +++ b/tests/generic/427
->> @@ -53,6 +53,7 @@ _supported_os Linux
->>  _require_scratch
->>  _require_test_program "feature"
->>  _require_aiodio aio-dio-eof-race
->> +_require_no_rtinherit
->>
->>  # limit the filesystem size, to save the time of filling filesystem
->>  _scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
->> diff --git a/tests/generic/441 b/tests/generic/441
->> index 075d877..589069a 100755
->> --- a/tests/generic/441
->> +++ b/tests/generic/441
->> @@ -47,6 +47,7 @@ _cleanup()
->>  # real QA test starts here
->>  _supported_os Linux
->>  _require_scratch
->> +_require_no_rtinherit
->>
->>  # Generally, we want to avoid journal errors on the extended testcase. Only
->>  # unset the -s flag if we have a logdev
->> diff --git a/tests/xfs/019 b/tests/xfs/019
->> index 3e4f169..1ab8991 100755
->> --- a/tests/xfs/019
->> +++ b/tests/xfs/019
->> @@ -66,6 +66,7 @@ _supported_fs xfs
->>  _supported_os Linux
->>
->>  _require_scratch
->> +_require_no_rtinherit
->>
->>  protofile=$tmp.proto
->>  tempfile=$tmp.file
->> diff --git a/tests/xfs/031 b/tests/xfs/031
->> index b05f28b..321f67a 100755
->> --- a/tests/xfs/031
->> +++ b/tests/xfs/031
->> @@ -96,6 +96,7 @@ _supported_os Linux
->>
->>  _require_scratch
->>  _require_no_large_scratch_dev
->> +_require_no_rtinherit
->>
->>  # sanity test - default + one root directory entry
->>  # Note: must do this proto/mkfs now for later inode size calcs
->> diff --git a/tests/xfs/170 b/tests/xfs/170
->> index c5ae8e4..6deef1b 100755
->> --- a/tests/xfs/170
->> +++ b/tests/xfs/170
->> @@ -50,6 +50,7 @@ _supported_fs xfs
->>  _supported_os Linux
->>
->>  _require_scratch
->> +_require_no_rtinherit
->>
->>  _check_filestreams_support || _notrun "filestreams not available"
->>
->> diff --git a/tests/xfs/187 b/tests/xfs/187
->> index 07ef3ae..89e7b11 100755
->> --- a/tests/xfs/187
->> +++ b/tests/xfs/187
->> @@ -56,6 +56,7 @@ _filter_version()
->>  _supported_fs xfs
->>  _supported_os Linux
->>
->> +_require_no_rtinherit
->>  _require_scratch
->>  _require_attrs
->>  _require_attr_v1
->> -- 
->> 2.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There's no way we should do that just because new lockdep
+functionality is unable to express such constructs.
 
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
