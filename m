@@ -1,179 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44295 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934892AbdIYVit (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 17:38:49 -0400
-Date: Mon, 25 Sep 2017 14:38:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/3] xfs/realtime: Add require_no_realtime function
-Message-ID: <20170925213845.GC5020@magnolia>
-References: <20170925195625.756877-1-rwareing@fb.com>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:59700
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934198AbdIZAbS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 20:31:18 -0400
+Date: Tue, 26 Sep 2017 10:31:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 7/7] xfs: re-enable XFS per-inode DAX
+Message-ID: <20170926003114.GN10955@dastard>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-8-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170925195625.756877-1-rwareing@fb.com>
+In-Reply-To: <20170925231404.32723-8-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2017 at 12:56:23PM -0700, Richard Wareing wrote:
-> Some tests do not play well with realtime devices, in an effort to
-> produce a stable set of test which exercise the realtime code paths
-> we introduce a _require_no_realtime function to allow tests to opt
-> out of realtime subvolume test runs.
+On Mon, Sep 25, 2017 at 05:14:04PM -0600, Ross Zwisler wrote:
+> Re-enable the XFS per-inode DAX flag, preventing S_DAX from changing when
+> any mappings are present.
 > 
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 > ---
-> Changes since v1:
-> * None
+>  fs/xfs/xfs_ioctl.c | 17 +++++++++++++++--
+>  1 file changed, 15 insertions(+), 2 deletions(-)
 > 
->  common/rc                      | 8 ++++++++
->  tests/generic/409              | 1 +
->  tests/generic/410              | 1 +
-
-Why don't shared subtree tests work w/ rt?
-
->  tests/generic/411              | 1 +
-
-Some sort of mount regression?
-
->  tests/xfs/077                  | 1 +
->  tests/xfs/189                  | 1 +
->  tests/xfs/191-input-validation | 1 +
->  tests/xfs/202                  | 1 +
->  tests/xfs/284                  | 1 +
-
-This test checks that xfsprogs don't run on a mounted fs.  Why would
-that be excluded from rt testing?
-
-Since there's only 8 tests on your list, I'm curious why each of them
-gets disabled for rt filesystems?
-
---D
-
->  9 files changed, 16 insertions(+)
-> 
-> diff --git a/common/rc b/common/rc
-> index 53bbb11..a0081f1 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1835,6 +1835,14 @@ _require_realtime()
->  	_notrun "Realtime device required, skipped this test"
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 386b437..7a24dd5 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1012,12 +1012,10 @@ xfs_diflags_to_linux(
+>  		inode->i_flags |= S_NOATIME;
+>  	else
+>  		inode->i_flags &= ~S_NOATIME;
+> -#if 0	/* disabled until the flag switching races are sorted out */
+>  	if ((xflags & FS_XFLAG_DAX) || (ip->i_mount->m_flags & XFS_MOUNT_DAX))
+>  		inode->i_flags |= S_DAX;
+>  	else
+>  		inode->i_flags &= ~S_DAX;
+> -#endif
 >  }
 >  
-> +# This test requires that a realtime subvolume is not in use
-> +#
-> +_require_no_realtime()
-> +{
-> +    [ -n "$SCRATCH_RTDEV" ] && \
-> +	_notrun "Test not compatible with realtime subvolumes, skipped this test"
-> +}
+>  static bool
+> @@ -1049,6 +1047,8 @@ xfs_ioctl_setattr_xflags(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	uint64_t		di_flags2;
+> +	struct address_space	*mapping = VFS_I(ip)->i_mapping;
+> +	bool			dax_changing;
+>  
+>  	/* Can't change realtime flag if any extents are allocated. */
+>  	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+> @@ -1084,10 +1084,23 @@ xfs_ioctl_setattr_xflags(
+>  	if (di_flags2 && ip->i_d.di_version < 3)
+>  		return -EINVAL;
+>  
+> +	dax_changing = xfs_is_dax_state_changing(fa->fsx_xflags, ip);
+> +	if (dax_changing) {
+> +		i_mmap_lock_read(mapping);
+> +		if (mapping_mapped(mapping)) {
+> +			i_mmap_unlock_read(mapping);
+> +			return -EBUSY;
+> +		}
+> +	}
 > +
->  # this test requires that a specified command (executable) exists
->  # $1 - command, $2 - name for error message
->  #
-> diff --git a/tests/generic/409 b/tests/generic/409
-> index 3ad65c9..8ed3e4e 100755
-> --- a/tests/generic/409
-> +++ b/tests/generic/409
-> @@ -65,6 +65,7 @@ _supported_os Linux
->  _require_test
->  _require_scratch
->  _require_local_device $SCRATCH_DEV
-> +_require_no_realtime
+>  	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
+>  	ip->i_d.di_flags2 = di_flags2;
 >  
->  fs_stress()
->  {
-> diff --git a/tests/generic/410 b/tests/generic/410
-> index 63ab716..1bbaff8 100755
-> --- a/tests/generic/410
-> +++ b/tests/generic/410
-> @@ -73,6 +73,7 @@ _supported_os Linux
->  _require_test
->  _require_scratch
->  _require_local_device $SCRATCH_DEV
-> +_require_no_realtime
->  
->  fs_stress()
->  {
-> diff --git a/tests/generic/411 b/tests/generic/411
-> index 83f6d26..ea718fc 100755
-> --- a/tests/generic/411
-> +++ b/tests/generic/411
-> @@ -54,6 +54,7 @@ _supported_os Linux
->  _require_test
->  _require_scratch
->  _require_local_device $SCRATCH_DEV
-> +_require_no_realtime
->  
->  fs_stress()
->  {
-> diff --git a/tests/xfs/077 b/tests/xfs/077
-> index eba4f08..d202fa4 100755
-> --- a/tests/xfs/077
-> +++ b/tests/xfs/077
-> @@ -50,6 +50,7 @@ _cleanup()
->  
->  _supported_fs xfs
->  _supported_os Linux
-> +_require_no_realtime
->  _require_scratch
->  _require_xfs_crc
->  _require_meta_uuid
-> diff --git a/tests/xfs/189 b/tests/xfs/189
-> index 636f6f0..699eb3c 100755
-> --- a/tests/xfs/189
-> +++ b/tests/xfs/189
-> @@ -236,6 +236,7 @@ _putback_scratch_fstab()
->  _supported_fs xfs
->  _supported_os Linux
->  
-> +_require_no_realtime
->  _require_scratch
->  _require_noattr2
->  
-> diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
-> index cff3efa..764ac9b 100755
-> --- a/tests/xfs/191-input-validation
-> +++ b/tests/xfs/191-input-validation
-> @@ -47,6 +47,7 @@ _cleanup()
->  # Modify as appropriate.
->  _supported_fs xfs
->  _supported_os Linux
-> +_require_no_realtime
->  _require_scratch
->  _require_xfs_mkfs_validation
->  
-> diff --git a/tests/xfs/202 b/tests/xfs/202
-> index b9827a7..f887873 100755
-> --- a/tests/xfs/202
-> +++ b/tests/xfs/202
-> @@ -38,6 +38,7 @@ status=1	# failure is the default!
->  _supported_fs xfs
->  _supported_os Linux
->  
-> +_require_no_realtime
->  # single AG will cause default xfs_repair to fail. This test is actually
->  # testing the special corner case option needed to repair a single AG fs.
->  _require_scratch_nocheck
-> diff --git a/tests/xfs/284 b/tests/xfs/284
-> index e3625fe..fa5dac8 100755
-> --- a/tests/xfs/284
-> +++ b/tests/xfs/284
-> @@ -49,6 +49,7 @@ rm -f $seqres.full
->  # real QA test starts here
->  _supported_fs xfs
->  _supported_os Linux
-> +_require_no_realtime
->  _require_test
->  _require_scratch
->  
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	xfs_diflags_to_linux(ip);
+> +
+> +	if (dax_changing)
+> +		i_mmap_unlock_read(mapping);
+
+Is this safe to be taking here under the ILOCK_EXCL? i.e. this is
+the lock order here:
+
+IOLOCK_EXCL -> MMAPLOCK_EXCL -> ILOCK_EXCL -> i_mmap_rwsem
+
+The truncate path must run outside the ILOCK
+context, and it does this order via unmap_mapping_range:
+
+IOLOCK_EXCL -> MMAPLOCK_EXCL -> i_mmap_rwsem
+
+On a page fault, we do:
+
+	mmap_sem -> MMAPLOCK_EXCL -> page lock -> ILOCK_EXCL
+
+Which gives the order
+
+IOLOCK_EXCL
+  -> mmap_sem
+     -> MMAPLOCK_EXCL
+	-> page lock
+	   -> ILOCK_EXCL
+	      -> i_mmap_rwsem
+
+What I'm not clear on is what the orders between page locks and
+pte locks and i_mapping_tree_lock and i_mmap_rwsem. If there's any
+locks that the filesystem can take above the ILOCK that are also
+taken under the i_mmap_rwsem, then we have a deadlock vector.
+
+Historically we've avoided any mm/ level interactions under the
+ILOCK_EXCL because of it's location in the page fault path locking
+order (e.g. lockdep will go nuts if we take a page fault with the
+ILOCK held). Hence I'm extremely wary of putting any other mm/ level
+locks under the ILOCK like this without a clear explanation of the
+locking orders and why it won't deadlock....
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
