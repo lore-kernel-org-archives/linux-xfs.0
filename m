@@ -1,77 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47208 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752016AbdI0JmG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Sep 2017 05:42:06 -0400
-Date: Wed, 27 Sep 2017 11:33:15 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: generic/232 test failures on 4.14-rc1
-Message-ID: <20170927093315.GA25746@quack2.suse.cz>
-References: <20170921154846.re5vcyn3bugdbie5@localhost.localdomain>
- <20170925135946.GB8004@quack2.suse.cz>
- <20170926125831.GC13627@quack2.suse.cz>
- <20170927011929.GA5010@magnolia>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:47291 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751787AbdI0KDe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2017 06:03:34 -0400
+Received: by mail-wm0-f51.google.com with SMTP id r136so16284932wmf.2
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2017 03:03:33 -0700 (PDT)
+Date: Wed, 27 Sep 2017 12:03:30 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2] db: increase metadump's default overly long extent
+ discard threshold
+Message-ID: <20170927100330.7sz7gkwwq4lsl534@hades.localdomain>
+References: <20170927023410.GO5020@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170927011929.GA5010@magnolia>
+In-Reply-To: <20170927023410.GO5020@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, Eric Whitney <enwlinux@gmail.com>, linux-ext4@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-Hi Darrick!
-
-On Tue 26-09-17 18:19:29, Darrick J. Wong wrote:
-> On Tue, Sep 26, 2017 at 02:58:31PM +0200, Jan Kara wrote:
-> > On Mon 25-09-17 15:59:46, Jan Kara wrote:
-> > > On Thu 21-09-17 11:48:46, Eric Whitney wrote:
-> > > > I'm seeing generic/232 fail from time to time when running a 4.14-rc1 kernel
-> > > > on xfstest-bld's most recent kvm-xfstests test appliance.  In one set of
-> > > > trials, it failed in the same manner 4 out of 10 times when running the 4k test
-> > > > configuration for ext4.
-> > > > 
-> > > > The failure bisects to "quota: Do not acquire dqio_sem for dquot overwrites in
-> > > > v2 format" (ab2b86360f6e).  When this patch was reverted in a 4.14-rc1 kernel,
-> > > > the failure did not reoccur in a series of 20 trials.
-> > > 
-> > > Thanks for debugging this! I'd just note that the commit hash of that
-> > > change is different for me - d2faa415166b2883428efa92f451774ef44373ac.
-> > > 
-> > > > Example output from the failed test:
-> > > > 
-> > > > QA output created by 232
-> > > > 
-> > > > Testing fsstress
-> > > > 
-> > > > seed = S
-> > > > Comparing user usage
-> > > > 218a219
-> > > > > #3740     --       4       0       0              1     0     0       
-> > > > 245a247
-> > > > > #45       --       0       0       0              1     0     0     
-> > > > 
-> > > > Note:  I'm also seeing a similar failure for generic/233, but the patch
-> > > > containing the root cause likely comes somewhere after ab2b86360f6e.  I'll post
-> > > > another bug report once I locate it.
-> > > 
-> > > I'll try to debug this further. Thanks for report!
-> > 
-> > Attached patch fixes the problem for me. I'll merge it through my tree.
+On Wed, Sep 27, 2017 at 02:34:10AM +0000, Darrick J. Wong wrote:
+> Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
+> metadump grew the ability to ignore a directory extent if it was longer
+> than 20 blocks.  Presumably this was to protect metadump from dumping
+> absurdly long extents resulting from bmbt corruption, but it's certainly
+> possible to create a directory with an extent longer than 20 blocks.
+> Hilariously, the discards happen with no warning unless the caller
+> explicitly set -w.
 > 
-> Ever since 4.14-rc1, I've noticed the same problem (intermittent
-> failures of generic/{232,233,270}) that Eric Whitney was complaining
-> about when running xfstests against XFS.  I'll try a proper bisect
-> tomorrow, but given the big locking rework I wonder if that rings any
-> bells for you?
 
-Hum, no idea. XFS uses its own thing for quotas so my changes don't
-influence it at all. I don't know much about XFS internal quota
-implementation so I don't have a good guess what could have caused the
-breakage you see. I'm sorry.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-								Honza
+> This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
+> extent size for xfs_metadump when copying..."), but it's still possible
+> to create a directory with an extent longer than 1000 blocks.
+> 
+> Increase the threshold to MAXEXTLEN blocks because it's totally valid
+> for the filesystem to create extents up to that length.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: update manpage
+> ---
+>  db/metadump.c           |    2 +-
+>  man/man8/xfs_metadump.8 |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 6dd06c3..8ffb90f 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -32,7 +32,7 @@
+>  #include "field.h"
+>  #include "dir2.h"
+>  
+> -#define DEFAULT_MAX_EXT_SIZE	1000
+> +#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
+>  
+>  /*
+>   * It's possible that multiple files in a directory (or attributes
+> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+> index 3731d6a..b6af4b6 100644
+> --- a/man/man8/xfs_metadump.8
+> +++ b/man/man8/xfs_metadump.8
+> @@ -114,7 +114,7 @@ copied.
+>  .B \-m
+>  Set the maximum size of an allowed metadata extent.  Extremely large metadata
+>  extents are likely to be corrupt, and will be skipped if they exceed
+> -this value.  The default size is 1000 blocks.
+> +this value.  The default size is 2097151 blocks.
+>  .TP
+>  .B \-o
+>  Disables obfuscation of file names and extended attributes.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
