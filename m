@@ -1,107 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:31168 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965741AbdIYXOb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Sep 2017 19:14:31 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
-Date: Mon, 25 Sep 2017 17:14:03 -0600
-Message-Id: <20170925231404.32723-7-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35516 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965519AbdI0BTj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 21:19:39 -0400
+Date: Tue, 26 Sep 2017 18:19:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: generic/232 test failures on 4.14-rc1
+Message-ID: <20170927011929.GA5010@magnolia>
+References: <20170921154846.re5vcyn3bugdbie5@localhost.localdomain>
+ <20170925135946.GB8004@quack2.suse.cz>
+ <20170926125831.GC13627@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170926125831.GC13627@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Eric Whitney <enwlinux@gmail.com>, linux-ext4@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
 
-When mappings are created the vma->vm_flags that they use vary based on
-whether the inode being mapped is using DAX or not.  This setup happens in
-XFS via mmap_region()=>call_mmap()=>xfs_file_mmap().
+[cc xfs list]
 
-For us to be able to safely use the DAX per-inode flag we need to prevent
-S_DAX transitions when any mappings are present, and we will do that by
-looking at the address_space->i_mmap tree and returning -EBUSY if any
-mappings are present.
+On Tue, Sep 26, 2017 at 02:58:31PM +0200, Jan Kara wrote:
+> On Mon 25-09-17 15:59:46, Jan Kara wrote:
+> > On Thu 21-09-17 11:48:46, Eric Whitney wrote:
+> > > I'm seeing generic/232 fail from time to time when running a 4.14-rc1 kernel
+> > > on xfstest-bld's most recent kvm-xfstests test appliance.  In one set of
+> > > trials, it failed in the same manner 4 out of 10 times when running the 4k test
+> > > configuration for ext4.
+> > > 
+> > > The failure bisects to "quota: Do not acquire dqio_sem for dquot overwrites in
+> > > v2 format" (ab2b86360f6e).  When this patch was reverted in a 4.14-rc1 kernel,
+> > > the failure did not reoccur in a series of 20 trials.
+> > 
+> > Thanks for debugging this! I'd just note that the commit hash of that
+> > change is different for me - d2faa415166b2883428efa92f451774ef44373ac.
+> > 
+> > > Example output from the failed test:
+> > > 
+> > > QA output created by 232
+> > > 
+> > > Testing fsstress
+> > > 
+> > > seed = S
+> > > Comparing user usage
+> > > 218a219
+> > > > #3740     --       4       0       0              1     0     0       
+> > > 245a247
+> > > > #45       --       0       0       0              1     0     0     
+> > > 
+> > > Note:  I'm also seeing a similar failure for generic/233, but the patch
+> > > containing the root cause likely comes somewhere after ab2b86360f6e.  I'll post
+> > > another bug report once I locate it.
+> > 
+> > I'll try to debug this further. Thanks for report!
+> 
+> Attached patch fixes the problem for me. I'll merge it through my tree.
 
-Unfortunately at the time that the filesystem's file_operations->mmap()
-entry point is called the mapping has not yet been added to the
-address_space->i_mmap tree.  This means that at that point in time we
-cannot determine whether or not the mapping will be set up to support DAX.
+Hi Jan,
 
-Fix this by adding a new file_operations entry called post_mmap() which is
-called after the mapping has been added to the address_space->i_mmap tree.
-This post_mmap() op now happens at a time when we can be sure whether the
-mapping will use DAX or not, and we can set up the vma->vm_flags
-appropriately.
+Ever since 4.14-rc1, I've noticed the same problem (intermittent
+failures of generic/{232,233,270}) that Eric Whitney was complaining
+about when running xfstests against XFS.  I'll try a proper bisect
+tomorrow, but given the big locking rework I wonder if that rings any
+bells for you?
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/xfs/xfs_file.c  | 15 ++++++++++++++-
- include/linux/fs.h |  1 +
- mm/mmap.c          |  2 ++
- 3 files changed, 17 insertions(+), 1 deletion(-)
+--D
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 2816858..9d66aaa 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1087,9 +1087,21 @@ xfs_file_mmap(
- {
- 	file_accessed(filp);
- 	vma->vm_ops = &xfs_file_vm_ops;
-+	return 0;
-+}
-+
-+/* This call happens during mmap(), after the vma has been inserted into the
-+ * inode->i_mapping->i_mmap tree.  At this point the decision on whether or
-+ * not to use DAX for this mapping has been set and will not change for the
-+ * duration of the mapping.
-+ */
-+STATIC void
-+xfs_file_post_mmap(
-+	struct file	*filp,
-+	struct vm_area_struct *vma)
-+{
- 	if (IS_DAX(file_inode(filp)))
- 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
--	return 0;
- }
- 
- const struct file_operations xfs_file_operations = {
-@@ -1103,6 +1115,7 @@ const struct file_operations xfs_file_operations = {
- 	.compat_ioctl	= xfs_file_compat_ioctl,
- #endif
- 	.mmap		= xfs_file_mmap,
-+	.post_mmap	= xfs_file_post_mmap,
- 	.open		= xfs_file_open,
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 339e737..7c06838 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1701,6 +1701,7 @@ struct file_operations {
- 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
- 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
- 	int (*mmap) (struct file *, struct vm_area_struct *);
-+	void (*post_mmap) (struct file *, struct vm_area_struct *);
- 	int (*open) (struct inode *, struct file *);
- 	int (*flush) (struct file *, fl_owner_t id);
- 	int (*release) (struct inode *, struct file *);
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 680506f..ee7458a 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1711,6 +1711,8 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
- 	vma_link(mm, vma, prev, rb_link, rb_parent);
- 	/* Once vma denies write, undo our temporary denial count */
- 	if (file) {
-+		if (file->f_op->post_mmap)
-+			file->f_op->post_mmap(file, vma);
- 		if (vm_flags & VM_SHARED)
- 			mapping_unmap_writable(file->f_mapping);
- 		if (vm_flags & VM_DENYWRITE)
--- 
-2.9.5
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+
+> From a0ae41c2a9c204374eafd24a928e4352841bd905 Mon Sep 17 00:00:00 2001
+> From: Jan Kara <jack@suse.cz>
+> Date: Tue, 26 Sep 2017 10:36:05 +0200
+> Subject: [PATCH] quota: Fix quota corruption with generic/232 test
+> 
+> Eric has reported that since commit d2faa415166b "quota: Do not acquire
+> dqio_sem for dquot overwrites in v2 format" test generic/232
+> occasionally fails due to quota information being incorrect. Indeed that
+> commit was too eager to remove dqio_sem completely from the path that
+> just overwrites quota structure with updated information. Although that
+> is innocent on its own, another process that inserts new quota structure
+> to the same block can perform read-modify-write cycle of that block thus
+> effectively discarding quota information update if they race in a wrong
+> way.
+> 
+> Fix the problem by acquiring dqio_sem for reading for overwrites of
+> quota structure. Note that it *is* possible to completely avoid taking
+> dqio_sem in the overwrite path however that will require modifying path
+> inserting / deleting quota structures to avoid RMW cycles of the full
+> block and for now it is not clear whether it is worth the hassle.
+> 
+> Fixes: d2faa415166b2883428efa92f451774ef44373ac
+> Reported-by: Eric Whitney <enwlinux@gmail.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/quota/quota_v2.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/quota/quota_v2.c b/fs/quota/quota_v2.c
+> index c0187cda2c1e..a73e5b34db41 100644
+> --- a/fs/quota/quota_v2.c
+> +++ b/fs/quota/quota_v2.c
+> @@ -328,12 +328,16 @@ static int v2_write_dquot(struct dquot *dquot)
+>  	if (!dquot->dq_off) {
+>  		alloc = true;
+>  		down_write(&dqopt->dqio_sem);
+> +	} else {
+> +		down_read(&dqopt->dqio_sem);
+>  	}
+>  	ret = qtree_write_dquot(
+>  			sb_dqinfo(dquot->dq_sb, dquot->dq_id.type)->dqi_priv,
+>  			dquot);
+>  	if (alloc)
+>  		up_write(&dqopt->dqio_sem);
+> +	else
+> +		up_read(&dqopt->dqio_sem);
+>  	return ret;
+>  }
+>  
+> -- 
+> 2.12.3
+> 
 
