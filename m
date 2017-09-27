@@ -1,184 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35570 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751917AbdI1Izn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Sep 2017 04:55:43 -0400
-Date: Thu, 28 Sep 2017 16:55:38 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs: test increased overlong directory extent discard
- threshold
-Message-ID: <20170928085538.GU8034@eguan.usersys.redhat.com>
-References: <20170927010348.GK5020@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31575 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965486AbdI0EdM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2017 00:33:12 -0400
+Date: Wed, 27 Sep 2017 14:33:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Rationale for hardware RAID 10 su, sw values in FAQ
+Message-ID: <20170927043308.GC3666@dastard>
+References: <b8c45869-849f-5124-f74f-68da0f9f34d7@mcneill.gen.nz>
+ <20170927004302.GB3666@dastard>
+ <db821c38-1307-0681-ffc2-4400ffd8d27a@mcneill.gen.nz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170927010348.GK5020@magnolia>
+In-Reply-To: <db821c38-1307-0681-ffc2-4400ffd8d27a@mcneill.gen.nz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Ewen McNeill <xfs@ewen.mcneill.gen.nz>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2017 at 06:03:48PM -0700, Darrick J. Wong wrote:
-> As of 2007, metadump has an interesting "feature" where it discards
-> directory extents that are longer than 1000 (originally 20) blocks.
-> This ostensibly was to protect metadump from corrupt bmbt records, but
-> it also has the effect of omitting from the metadump valid long extents.
-> The end result is that we create incomplete metadumps, which is
-> exacerbated by the lack of warning unless -w is passed.
+On Wed, Sep 27, 2017 at 02:56:16PM +1300, Ewen McNeill wrote:
+> Hi Dave,
 > 
-> So now that we've fixed the default threshold to MAXEXTLEN, check that
-> the installed metadump no longer exhibits this behavior.
+> On 27/09/17 13:43, Dave Chinner wrote:
+> >RAID-1 does not affect the performance of the underlying volume -
+> >the behaviour and performance of RAID-1 is identical to a single
+> >drive, so layout can not be optimised to improve performance on
+> >RAID-1 volumes. RAID-0, OTOH, can give dramatically better
+> >performance if we tell the filesystem about it because we can do
+> >things like allocate more carefully to prevent hotspots....
+> >[...]
+> >> [why not sw=1]
+> >Nope, because then you have no idea about how many disks you have
+> >to spread the data over. e.g. if we have 8 disks and a sw=1, then
+> >how do you optimise allocation to hit every disk just once for
+> >a (su * number of disks) sized write? i.e. the sw config allows
+> >allocation and IO sizes to be optimised to load all disks in the
+> >RAID-0 stripe equally.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/707     |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/707.out |    6 +++
->  tests/xfs/group   |    1 +
->  3 files changed, 108 insertions(+)
->  create mode 100755 tests/xfs/707
->  create mode 100644 tests/xfs/707.out
+> Thanks for the detailed answer.  I'd been assuming that the su/sw
+> values were to align with "rewritable chunks" (which clearly is
+> important in the RAID 5 / 6 case), and ignoring the benefit in
+> letting the file system choose allocation locations in RAID 0 to
+> best maximise distribution across the individual RAID 0 elements to
+> avoid hot spots.
+
+RAID 5/6 need the same optimisations as RAID-0. In that case,
+optimal RAID performance occurs when writing stripe width aligned
+and sized IOs so there is no need for RMW cycles to calculate
+parity. For large files being written sequentially, it really
+doesn't matter that much if the head and/or tail are not exactly
+stripe width aligned as things like the stripe cache in MD or the
+BBWC in hardware RAID take care of delaying the data IO long enough
+to do full stripe writes....
+
+> >[hot spot work in late 1990s]  Out of
+> >that came things like mkfs placing static metadata across all stripe
+> >units instead of just the first in a stripe width, better selection
+> >of initial alignment, etc.
 > 
-> diff --git a/tests/xfs/707 b/tests/xfs/707
-> new file mode 100755
-> index 0000000..f97d029
-> --- /dev/null
-> +++ b/tests/xfs/707
-> @@ -0,0 +1,101 @@
-> +#! /bin/bash
-> +# FS QA Test No. 707
-> +#
-> +# Ensure that metadump copies large directory extents
-> +#
-> +# Metadump helpfully discards directory (and xattr) extents that are
-> +# longer than 1000 blocks.  This is a little silly since a hardlink farm
-> +# can easily create such a monster.
-> +#
-> +# Now that we've upped metadump's default too-long-extent discard
-> +# threshold to 2^21 blocks, make sure we never do that again.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +
-> +seq=`basename "$0"`
-> +seqres="$RESULT_DIR/$seq"
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -rf "$tmp".* $metadump_file $metadump_img
+> It's good to hear that XFS work already anticipated the side effect
+> that I was concerned about (accidentally aligning everything on
+> "start of stripe * width boundary, and thus one disk).
+> 
+> I did end up creating the file system with su=512k,sw=6 (RAID 10 on
+> 12 disks) anyway, so I'm glad to hear this is supported by earlier
+> performance tuning work.
+> 
+> As a suggestion the FAQ section (http://xfs.org/index.php/XFS_FAQ#Q:_How_to_calculate_the_correct_sunit.2Cswidth_values_for_optimal_performance)
+> could hint at this reasoning with, eg:
+> 
+> -=- cut here -=-
+> A RAID stripe size of 256KB with a RAID-10 over 16 disks should use
+> 
+>  su = 256k
+>  sw = 8 (RAID-10 of 16 disks has 8 data disks)
+> 
+> because in RAID-10 the RAID-0 behaviour dominates performance, and this
+> allows XFS to spread the workload evenly across all pairs of disks.
+> --= cut here -=-
 
-'rm -f' to be safe :)
+This assumes the reader understands exaclty how RAID works and how
+the different types of RAID affect IO performance. The FAQ simply
+tries to convey how to get it right without going into the
+complicated reasons for doing it that way. Most users don't care
+about the implementation or reasons, they just want to know how to
+set it up correctly and quickly :P
 
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs xfs
-> +_require_scratch
-> +
-> +rm -f "$seqres.full"
-> +
-> +echo "Format and mount"
-> +_scratch_mkfs -b size=1k -n size=64k > "$seqres.full" 2>&1
+> and/or that FAQ entry could also talk about RAID-0 sw/su tuning
+> values which would provide a hint towards the "spread workload over
+> all disks" rationale.
 
-Add some comments about the non-default mkfs options?
+The FAQ is not the place to explain how the filesystem optimises
+allocation for different types of storage. The moment we add that
+for RAID-0, we;ve got to do it for RAID 5, then raid 6, then
+someone will ask about raid 50, etc and suddenly the typical reader
+no longer understands the answer to the question....
 
-> +_scratch_mount >> "$seqres.full" 2>&1
-> +
-> +metadump_file="$TEST_DIR/meta-$seq"
-> +metadump_img="$TEST_DIR/img-$seq"
-> +rm -rf $metadump_file $metadump_img
+If you look at the admin doc that is sitting a git repo:
 
-Same here, 'rm -f'
+https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/tree/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc
 
-> +testdir="$SCRATCH_MNT/test-$seq"
-> +max_fname_len=255
-> +blksz=$(_get_block_size $SCRATCH_MNT)
-> +
-> +# Try to create a directory w/ extents
-> +blocks=1050
-> +names=$((blocks * (blksz / max_fname_len)))
-> +echo "Create huge dir"
-> +mkdir -p $testdir
-> +touch $SCRATCH_MNT/a
-> +seq 0 $names | while read f; do
-> +	name="$testdir/$(printf "%0${max_fname_len}d" $f)"
-> +	ln $SCRATCH_MNT/a $name
-> +done
-> +dir_inum=$(stat -c %i $testdir)
-> +
-> +echo "Check for > 1000 block extent?"
-> +_scratch_unmount
-> +check_for_long_extent() {
-> +	inum=$1
-> +
-> +	_scratch_xfs_db -x -c "inode $dir_inum" -c bmap | \
-> +		sed -e 's/^.*count \([0-9]*\) flag.*$/\1/g' | \
-> +		awk '{if ($1 > 1000) { printf("yes, %d\n", $1); } }'
-> +}
-> +extlen="$(check_for_long_extent $dir_inum)"
-> +echo "qualifying extent: $extlen blocks" >> $seqres.full
-> +test -n "$extlen" || _fail "could not create dir extent > 1000 blocks"
+You'll see the section about all this reads:
 
-Is this really a failure? IMHO, _notrun makes more sense here.
+	==== Alignment to storage geometry
 
-Thanks,
-Eryu
+	TODO: This is extremely complex and requires an entire chapter to itself.
 
-> +
-> +echo "Try to metadump"
-> +_scratch_metadump $metadump_file -w
-> +xfs_mdrestore $metadump_file $metadump_img
-> +
-> +echo "Check restored metadump image"
-> +$XFS_REPAIR_PROG -n $metadump_img >> $seqres.full 2>&1
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/707.out b/tests/xfs/707.out
-> new file mode 100644
-> index 0000000..0d2a222
-> --- /dev/null
-> +++ b/tests/xfs/707.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 707
-> +Format and mount
-> +Create huge dir
-> +Check for > 1000 block extent?
-> +Try to metadump
-> +Check restored metadump image
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 7353b9c..a70c884 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -432,3 +432,4 @@
->  703 auto quick clone fsr
->  704 auto quick clone
->  705 auto quick clone fsr
-> +707 auto quick dir metadata
+because nobody (well, me, really) has had the time to write
+everything down that is needed to cover this topic sufficiently...
+
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
