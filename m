@@ -1,81 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33498 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751131AbdINNOd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Sep 2017 09:14:33 -0400
-Date: Thu, 14 Sep 2017 15:14:31 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v2 4/4] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
-Message-ID: <20170914131431.GA26021@quack2.suse.cz>
-References: <20170914095047.23935-1-agruenba@redhat.com>
- <20170914095047.23935-5-agruenba@redhat.com>
- <20170914120229.GA22886@quack2.suse.cz>
- <CAHpGcMJY2PZJYLzUS5ejcnfSVkeO-GKL7z1fRONs1AUdyiaULg@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18666 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966379AbdI0CeP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 22:34:15 -0400
+Date: Tue, 26 Sep 2017 19:34:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] db: increase metadump's default overly long extent
+ discard threshold
+Message-ID: <20170927023410.GO5020@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHpGcMJY2PZJYLzUS5ejcnfSVkeO-GKL7z1fRONs1AUdyiaULg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas =?iso-8859-1?Q?Gr=FCnbacher?= <andreas.gruenbacher@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, Andreas Gruenbacher <agruenba@redhat.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu 14-09-17 14:47:28, Andreas Grünbacher wrote:
-> 2017-09-14 14:02 GMT+02:00 Jan Kara <jack@suse.cz>:
-> > On Thu 14-09-17 11:50:47, Andreas Gruenbacher wrote:
-> >> @@ -3422,9 +3422,38 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
-> >>       map.m_lblk = first_block;
-> >>       map.m_len = last_block - first_block + 1;
-> >>
-> >> -     if (!(flags & IOMAP_WRITE)) {
-> >> +     if (flags & IOMAP_REPORT) {
-> >>               ret = ext4_map_blocks(NULL, inode, &map, 0);
-> >> -     } else {
-> >> +             if (ret < 0)
-> >> +                     return ret;
-> >> +
-> >> +             if (ret == 0) {
-> >> +                     ext4_lblk_t end = map.m_lblk + map.m_len - 1;
-> >> +                     struct extent_status es;
-> >> +
-> >> +                     ext4_es_find_delayed_extent_range(inode, map.m_lblk, end, &es);
-> >> +
-> >> +                     if (!es.es_len || es.es_lblk > end) {
-> >> +                             /* entire range is a hole */
-> >> +                     } else if (es.es_lblk > map.m_lblk) {
-> >> +                             /* range starts with a hole */
-> >> +                             map.m_len = es.es_lblk - map.m_lblk;
-> >> +                     } else {
-> >> +                             ext4_lblk_t offs = 0;
-> >> +
-> >> +                             if (es.es_lblk < map.m_lblk)
-> >> +                                     offs = map.m_lblk - es.es_lblk;
-> >> +                             map.m_lblk = es.es_lblk + offs;
-> >> +                             map.m_pblk = ext4_es_pblock(&es) + offs;
-> >> +                             map.m_len = es.es_len - offs;
-> >> +                             if (ext4_es_is_unwritten(&es))
-> >> +                                     map.m_flags |= EXT4_MAP_UNWRITTEN;
-> >
-> > This is not possible. If there is unwritten extent at map->m_lblk, then
-> > ext4_map_blocks() could not have possibly returned 0. So just delete this
-> > condition and set map.m_pblk to 0 since delalloc extent has no physical
-> > position.
-> >
-> >> +                             if (ext4_es_is_delayed(&es))
-> >> +                                     delalloc = true;
-> >
-> > Also ext4_es_is_delayed(&es) is guaranteed to be true since you've looked
-> > it up by ext4_es_find_delayed_extent_range(). So just set delalloc = true
-> > unconditionally.
-> 
-> Since map.m_pblk is never used in the delalloc case, we can leave it
-> undefined above as well.
+Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
+metadump grew the ability to ignore a directory extent if it was longer
+than 20 blocks.  Presumably this was to protect metadump from dumping
+absurdly long extents resulting from bmbt corruption, but it's certainly
+possible to create a directory with an extent longer than 20 blocks.
+Hilariously, the discards happen with no warning unless the caller
+explicitly set -w.
 
-Yeah, that's fine by me as well.
+This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
+extent size for xfs_metadump when copying..."), but it's still possible
+to create a directory with an extent longer than 1000 blocks.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Increase the threshold to MAXEXTLEN blocks because it's totally valid
+for the filesystem to create extents up to that length.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: update manpage
+---
+ db/metadump.c           |    2 +-
+ man/man8/xfs_metadump.8 |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db/metadump.c b/db/metadump.c
+index 6dd06c3..8ffb90f 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -32,7 +32,7 @@
+ #include "field.h"
+ #include "dir2.h"
+ 
+-#define DEFAULT_MAX_EXT_SIZE	1000
++#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
+ 
+ /*
+  * It's possible that multiple files in a directory (or attributes
+diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+index 3731d6a..b6af4b6 100644
+--- a/man/man8/xfs_metadump.8
++++ b/man/man8/xfs_metadump.8
+@@ -114,7 +114,7 @@ copied.
+ .B \-m
+ Set the maximum size of an allowed metadata extent.  Extremely large metadata
+ extents are likely to be corrupt, and will be skipped if they exceed
+-this value.  The default size is 1000 blocks.
++this value.  The default size is 2097151 blocks.
+ .TP
+ .B \-o
+ Disables obfuscation of file names and extended attributes.
