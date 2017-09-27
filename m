@@ -1,80 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30518 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966379AbdI0CbO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 22:31:14 -0400
-Date: Tue, 26 Sep 2017 19:31:10 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] db: increase metadump's default overly long extent
- discard threshold
-Message-ID: <20170927023110.GN5020@magnolia>
-References: <20170927010234.GJ5020@magnolia>
- <aa933d89-e20b-f437-53ad-b17af47e3df3@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:53264 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750817AbdI0GkI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2017 02:40:08 -0400
+Date: Tue, 26 Sep 2017 23:40:01 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/7] xfs: always use DAX if mount option is used
+Message-ID: <20170927064001.GA27601@infradead.org>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-2-ross.zwisler@linux.intel.com>
+ <20170925233812.GM10955@dastard>
+ <20170926093548.GB13627@quack2.suse.cz>
+ <20170926110957.GR10955@dastard>
+ <20170926143743.GB18758@lst.de>
+ <20170926173057.GB20159@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aa933d89-e20b-f437-53ad-b17af47e3df3@redhat.com>
+In-Reply-To: <20170926173057.GB20159@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Dan Williams <dan.j.williams@intel.com>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2017 at 09:21:37PM -0500, Eric Sandeen wrote:
-> On 9/26/17 8:02 PM, Darrick J. Wong wrote:
-> > Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
-> > metadump grew the ability to ignore a directory extent if it was longer
-> > than 20 blocks.  Presumably this was to protect metadump from dumping
-> > absurdly long extents resulting from bmbt corruption, but it's certainly
-> > possible to create a directory with an extent longer than 20 blocks.
-> > Hilariously, the discards happen with no warning unless the caller
-> > explicitly set -w.
-> > 
-> > This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
-> > extent size for xfs_metadump when copying..."), but it's still possible
-> > to create a directory with an extent longer than 1000 blocks.
-> > 
-> > Increase the threshold to MAXEXTLEN blocks because it's totally valid
-> > for the filesystem to create extents up to that length.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> This is documented in the manpage as being 1000, so that needs an update
-> as well.  
+On Tue, Sep 26, 2017 at 11:30:57AM -0600, Ross Zwisler wrote:
+> I agree that Christoph's idea about having the system intelligently adjust to
+> use DAX based on performance information it gathers about the underlying
+> persistent memory (probably via the HMAT on x86_64 systems) is interesting,
+> but I think we're still a ways away from that.
 
-Ok.
+So what are the missing blockers for a getting started?
 
-> And should the warning be made unconditional, if that's what burned
-> you?
+> FWIW, as my patches suggest and Jan observed I think that we should allow
+> users to turn on DAX by treating the inode flag and the mount flag as an 'or'
+> operation.  i.e. you get DAX if either the mount option is specified or if the
+> inode flag is set, and you can continue to manipulate the per-inode flag as
+> you want regardless of the mount option.  I think this provides maximum
+> flexibility of the mechanism to select DAX without enforcing policy.
 
-Nah, since most of the other warnings in metadump are about things that
-look like bad metadata.
+IFF we stick to the dax flag that's the only workable way.  The only
+major issue I still see with that is that this allows unprivilegued
+users to enable DAX on a any file they own / have write access to.
+So there isn't really any way to effectively disable the DAX path
+by the sysadmin.
 
---D
+> Does it make sense at this point to just start a "dax" man page that can
+> contain info about the mount options, inode flags, kernel config options, how
+> to get PMDs, etc?  Or does this documentation need to be sprinkled around more
+> in existing man pages?
 
-> 
-> -Eric
-> 
-> > ---
-> >  db/metadump.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/db/metadump.c b/db/metadump.c
-> > index c179480..c8eb8f0 100644
-> > --- a/db/metadump.c
-> > +++ b/db/metadump.c
-> > @@ -32,7 +32,7 @@
-> >  #include "field.h"
-> >  #include "dir2.h"
-> >  
-> > -#define DEFAULT_MAX_EXT_SIZE	1000
-> > +#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
-> >  
-> >  /*
-> >   * It's possible that multiple files in a directory (or attributes
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+A dax manpage would be good.
