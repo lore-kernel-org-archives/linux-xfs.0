@@ -1,90 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45938 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751879AbdIYLdN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Sep 2017 07:33:13 -0400
-Date: Mon, 25 Sep 2017 07:33:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: revert "xfs: factor rmap btree size into the indlen
- calculations"
-Message-ID: <20170925113309.GA12869@bfoster.bfoster>
-References: <20170923071142.GM5728@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:43195 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935589AbdI0BCi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 21:02:38 -0400
+Date: Tue, 26 Sep 2017 18:02:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] db: increase metadump's default overly long extent discard
+ threshold
+Message-ID: <20170927010234.GJ5020@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170923071142.GM5728@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, eguan@redhat.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Sep 23, 2017 at 12:11:42AM -0700, Darrick J. Wong wrote:
-> In commit fd26a88093ba we added a worst case estimate for rmapbt blocks
-> needed to satisfy the block mapping request.  Since then, we added the
-> ability to reserve enough space in each AG such that we should never run
-> out of blocks to grow the rmapbt, which makes this calculation
-> unnecessary.  Revert the commit because it makes the extra delalloc
-> indlen accounting unnecessary and incorrect.
-> 
-> Reported-by: Eryu Guan <eguan@redhat.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
+metadump grew the ability to ignore a directory extent if it was longer
+than 20 blocks.  Presumably this was to protect metadump from dumping
+absurdly long extents resulting from bmbt corruption, but it's certainly
+possible to create a directory with an extent longer than 20 blocks.
+Hilariously, the discards happen with no warning unless the caller
+explicitly set -w.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
+extent size for xfs_metadump when copying..."), but it's still possible
+to create a directory with an extent longer than 1000 blocks.
 
->  fs/xfs/libxfs/xfs_bmap.c |   17 ++---------------
->  1 file changed, 2 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 459f4b4f0..044a363 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -49,7 +49,6 @@
->  #include "xfs_rmap.h"
->  #include "xfs_ag_resv.h"
->  #include "xfs_refcount.h"
-> -#include "xfs_rmap_btree.h"
->  #include "xfs_icache.h"
->  
->  
-> @@ -192,12 +191,8 @@ xfs_bmap_worst_indlen(
->  	int		maxrecs;	/* maximum record count at this level */
->  	xfs_mount_t	*mp;		/* mount structure */
->  	xfs_filblks_t	rval;		/* return value */
-> -	xfs_filblks_t   orig_len;
->  
->  	mp = ip->i_mount;
-> -
-> -	/* Calculate the worst-case size of the bmbt. */
-> -	orig_len = len;
->  	maxrecs = mp->m_bmap_dmxr[0];
->  	for (level = 0, rval = 0;
->  	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-> @@ -205,20 +200,12 @@ xfs_bmap_worst_indlen(
->  		len += maxrecs - 1;
->  		do_div(len, maxrecs);
->  		rval += len;
-> -		if (len == 1) {
-> -			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-> +		if (len == 1)
-> +			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
->  				level - 1;
-> -			break;
-> -		}
->  		if (level == 0)
->  			maxrecs = mp->m_bmap_dmxr[1];
->  	}
-> -
-> -	/* Calculate the worst-case size of the rmapbt. */
-> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> -		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
-> -				mp->m_rmap_maxlevels;
-> -
->  	return rval;
->  }
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Increase the threshold to MAXEXTLEN blocks because it's totally valid
+for the filesystem to create extents up to that length.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/metadump.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db/metadump.c b/db/metadump.c
+index c179480..c8eb8f0 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -32,7 +32,7 @@
+ #include "field.h"
+ #include "dir2.h"
+ 
+-#define DEFAULT_MAX_EXT_SIZE	1000
++#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
+ 
+ /*
+  * It's possible that multiple files in a directory (or attributes
