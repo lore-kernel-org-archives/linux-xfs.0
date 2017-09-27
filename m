@@ -1,83 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:47291 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751787AbdI0KDe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2017 06:03:34 -0400
-Received: by mail-wm0-f51.google.com with SMTP id r136so16284932wmf.2
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2017 03:03:33 -0700 (PDT)
-Date: Wed, 27 Sep 2017 12:03:30 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v2] db: increase metadump's default overly long extent
- discard threshold
-Message-ID: <20170927100330.7sz7gkwwq4lsl534@hades.localdomain>
-References: <20170927023410.GO5020@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:56954 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751521AbdI0Lfa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Sep 2017 07:35:30 -0400
+Date: Wed, 27 Sep 2017 13:35:27 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
+Message-ID: <20170927113527.GD25746@quack2.suse.cz>
+References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
+ <20170925231404.32723-7-ross.zwisler@linux.intel.com>
+ <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
+ <20170926185751.GB31146@linux.intel.com>
+ <CAPcyv4iVc9y8PE24ZvkiBYdp4Die0Q-K5S6QexW_6YQ_M0F4QA@mail.gmail.com>
+ <20170926210645.GA7798@linux.intel.com>
+ <CAPcyv4iDTNteQAt1bBHCGijwsk45rJWHfdr+e_rOwK39jpC2Og@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170927023410.GO5020@magnolia>
+In-Reply-To: <CAPcyv4iDTNteQAt1bBHCGijwsk45rJWHfdr+e_rOwK39jpC2Og@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
 
-On Wed, Sep 27, 2017 at 02:34:10AM +0000, Darrick J. Wong wrote:
-> Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
-> metadump grew the ability to ignore a directory extent if it was longer
-> than 20 blocks.  Presumably this was to protect metadump from dumping
-> absurdly long extents resulting from bmbt corruption, but it's certainly
-> possible to create a directory with an extent longer than 20 blocks.
-> Hilariously, the discards happen with no warning unless the caller
-> explicitly set -w.
+On Tue 26-09-17 14:41:53, Dan Williams wrote:
+> On Tue, Sep 26, 2017 at 2:06 PM, Ross Zwisler
+> <ross.zwisler@linux.intel.com> wrote:
+> > On Tue, Sep 26, 2017 at 12:19:21PM -0700, Dan Williams wrote:
+> >> On Tue, Sep 26, 2017 at 11:57 AM, Ross Zwisler
+> > <>
+> >> > This decision can only be made (in this
+> >> > proposed scheme) *after* the inode->i_mapping->i_mmap  tree has been
+> >> > populated, which means we need another call into the filesystem after this
+> >> > insertion has happened.
+> >>
+> >> I get that, but it seems over-engineered and something that can also
+> >> be safely cleaned up after the fact by the code path that is disabling
+> >> DAX.
+> >
+> > I don't think you can safely clean it up after the fact because some thread
+> > might have already called ->mmap() to set up the vma->vm_flags for their new
+> > mapping, but they haven't added it to inode->i_mapping->i_mmap.
 > 
+> If madvise(MADV_NOHUGEPAGE) can dynamically change vm_flags, then the
+> DAX disable path can as well. VM_MIXEDMAP looks to be a nop for normal
+> memory mappings.
+> 
+> > The inode->i_mapping->i_mmap tree is the only way (that I know of at least)
+> > that the filesystem has any idea about about the mapping.  This is the method
+> > by which we would try and clean up mapping flags, if we were to do so, and
+> > it's the only way that the filesystem can know whether or not mappings exist.
+> >
+> > The only way that I could think of to make this safely work is to have the
+> > insertion into the inode->i_mapping->i_mmap tree be our sync point.  After
+> > that the filesystem and the mapping code can communicate on the state of DAX,
+> > but before that I think it's basically indeterminate.
+> 
+> If we lose the race and leak VM_HUGEPAGE to a non-DAX mapping what
+> breaks? I'd rather be in favor of not setting VM_HUGEPAGE at all in
+> the ->mmap() handler and let the default THP policy take over. In
+> fact, see transparent_hugepage_enabled() we already auto-enable huge
+> page support for dax mappings regardless of VM_HUGEPAGE.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hum, this is an interesting option. So do you suggest that filesystems
+supporting DAX would always setup mappings with VM_MIXEDMAP and without
+VM_HUGEPAGE and thus we'd get rid of dependency on S_DAX flag in ->mmap?
+That could actually work. The only possible issue I can see is that
+VM_MIXEDMAP is still slightly different from normal page mappings and it
+could have some performance implications - e.g. copy_page_range() does more
+work on VM_MIXEDMAP mappings but not on normal page mappings.
 
-> This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
-> extent size for xfs_metadump when copying..."), but it's still possible
-> to create a directory with an extent longer than 1000 blocks.
-> 
-> Increase the threshold to MAXEXTLEN blocks because it's totally valid
-> for the filesystem to create extents up to that length.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: update manpage
-> ---
->  db/metadump.c           |    2 +-
->  man/man8/xfs_metadump.8 |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 6dd06c3..8ffb90f 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -32,7 +32,7 @@
->  #include "field.h"
->  #include "dir2.h"
->  
-> -#define DEFAULT_MAX_EXT_SIZE	1000
-> +#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
->  
->  /*
->   * It's possible that multiple files in a directory (or attributes
-> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
-> index 3731d6a..b6af4b6 100644
-> --- a/man/man8/xfs_metadump.8
-> +++ b/man/man8/xfs_metadump.8
-> @@ -114,7 +114,7 @@ copied.
->  .B \-m
->  Set the maximum size of an allowed metadata extent.  Extremely large metadata
->  extents are likely to be corrupt, and will be skipped if they exceed
-> -this value.  The default size is 1000 blocks.
-> +this value.  The default size is 2097151 blocks.
->  .TP
->  .B \-o
->  Disables obfuscation of file names and extended attributes.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+								Honza
 -- 
-Carlos
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
