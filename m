@@ -1,44 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:43167 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752494AbdI0PzB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2017 11:55:01 -0400
-Received: by mail-oi0-f41.google.com with SMTP id r20so17373243oie.0
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2017 08:55:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170927153918.GA24314@linux.intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:34593 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750852AbdI0QPk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Sep 2017 12:15:40 -0400
+Date: Wed, 27 Sep 2017 10:15:10 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 1/7] xfs: always use DAX if mount option is used
+Message-ID: <20170927161510.GB24314@linux.intel.com>
 References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
- <20170925231404.32723-7-ross.zwisler@linux.intel.com> <CAPcyv4jtO028KeZK7SdkOUsgMLGqgttLzBCYgH0M+RP3eAXf4A@mail.gmail.com>
- <20170926185751.GB31146@linux.intel.com> <CAPcyv4iVc9y8PE24ZvkiBYdp4Die0Q-K5S6QexW_6YQ_M0F4QA@mail.gmail.com>
- <20170926210645.GA7798@linux.intel.com> <CAPcyv4iDTNteQAt1bBHCGijwsk45rJWHfdr+e_rOwK39jpC2Og@mail.gmail.com>
- <20170927113527.GD25746@quack2.suse.cz> <20170927153918.GA24314@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 27 Sep 2017 08:54:59 -0700
-Message-ID: <CAPcyv4gXt673Jz2__t7LwvaFrRGxa5czgoB-b8kdjAfOETAH9Q@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mm, fs: introduce file_operations->post_mmap()
-Content-Type: text/plain; charset="UTF-8"
+ <20170925231404.32723-2-ross.zwisler@linux.intel.com>
+ <20170925233812.GM10955@dastard>
+ <20170926093548.GB13627@quack2.suse.cz>
+ <20170926110957.GR10955@dastard>
+ <20170926143743.GB18758@lst.de>
+ <20170926173057.GB20159@linux.intel.com>
+ <20170927064001.GA27601@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170927064001.GA27601@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Dan Williams <dan.j.williams@intel.com>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Wed, Sep 27, 2017 at 8:39 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> On Wed, Sep 27, 2017 at 01:35:27PM +0200, Jan Kara wrote:
-[..]
->> Hum, this is an interesting option. So do you suggest that filesystems
->> supporting DAX would always setup mappings with VM_MIXEDMAP and without
->> VM_HUGEPAGE and thus we'd get rid of dependency on S_DAX flag in ->mmap?
->> That could actually work. The only possible issue I can see is that
->> VM_MIXEDMAP is still slightly different from normal page mappings and it
->> could have some performance implications - e.g. copy_page_range() does more
->> work on VM_MIXEDMAP mappings but not on normal page mappings.
->
-> It looks like having VM_MIXEDMAP always set for filesystems that support DAX
-> might affect their memory's NUMA migration in the non-DAX case?
->
-> 8e76d4e sched, numa: do not hint for NUMA balancing on VM_MIXEDMAP mappings
+On Tue, Sep 26, 2017 at 11:40:01PM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 26, 2017 at 11:30:57AM -0600, Ross Zwisler wrote:
+> > I agree that Christoph's idea about having the system intelligently adjust to
+> > use DAX based on performance information it gathers about the underlying
+> > persistent memory (probably via the HMAT on x86_64 systems) is interesting,
+> > but I think we're still a ways away from that.
+> 
+> So what are the missing blockers for a getting started?
 
-Addressed separately here:
+Well, I don't know if platforms that support HMAT + PMEM are widely available,
+but we have all the details in the ACPI spec, so we could begin to code it up
+and things will "just work" when platforms arrive.
 
-c1ef8e2c0235 mm: disable numa migration faults for dax vmas
+> > FWIW, as my patches suggest and Jan observed I think that we should allow
+> > users to turn on DAX by treating the inode flag and the mount flag as an 'or'
+> > operation.  i.e. you get DAX if either the mount option is specified or if the
+> > inode flag is set, and you can continue to manipulate the per-inode flag as
+> > you want regardless of the mount option.  I think this provides maximum
+> > flexibility of the mechanism to select DAX without enforcing policy.
+> 
+> IFF we stick to the dax flag that's the only workable way.  The only
+> major issue I still see with that is that this allows unprivilegued
+> users to enable DAX on a any file they own / have write access to.
+> So there isn't really any way to effectively disable the DAX path
+> by the sysadmin.
+
+Hum, I wonder if maybe we need/want three different mount modes?  What about:
+
+autodax (the default): the filesystem is free to use DAX or not, as it sees
+fit and thinks is optimal.  For the time being we can make this mean "don't
+use DAX", and phase in DAX usage as we add support for the HMAT, etc.
+
+Users can manually turn on DAX for a given inode by setting the DAX inode
+flag, but there is no way for the user to *prevent* DAX for an inode - the
+kernel can always choose to turn it on.
+
+MAP_DIRECT and MAP_SYNC work.
+
+nodax: Don't use DAX.  The kernel won't choose to use DAX, and any DAX inode
+flags will be ignored.  This gives the sysadmin the override that I think
+you're looking for.  The user can still manipulate the inode flags as they see
+fit.
+
+MAP_DIRECT and MAP_SYNC both fail.
+
+dax: Use DAX for all inodes in the filesystem.  Again the inode flags are
+essentially ignored, but the user can manipulate the inode flags as they see
+fit.  This is basically unchanged from how it works today, modulo the bug
+where DAX can get turned off if you unset the inode flag where it wasn't even
+set (patch 1 in my series).
+
+MAP_DIRECT and MAP_SYNC work.
+
+> > Does it make sense at this point to just start a "dax" man page that can
+> > contain info about the mount options, inode flags, kernel config options, how
+> > to get PMDs, etc?  Or does this documentation need to be sprinkled around more
+> > in existing man pages?
+> 
+> A dax manpage would be good.
+
+Okay, I'll start with a manpage, and once we agree on whats in there we can
+start working on code again. :)
