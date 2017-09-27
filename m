@@ -1,76 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39482 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:52474 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934183AbdIZKuT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Sep 2017 06:50:19 -0400
-Date: Tue, 26 Sep 2017 18:50:16 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-Message-ID: <20170926105016.GK8034@eguan.usersys.redhat.com>
-References: <20170925195625.756877-1-rwareing@fb.com>
- <20170925195625.756877-2-rwareing@fb.com>
+        id S934797AbdI0COH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Sep 2017 22:14:07 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 35D4274D070
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2017 21:13:50 -0500 (CDT)
+Subject: [ANNOUNCE] xfsprogs v4.13.1 released!
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <9a968cc5-4dcf-400c-4132-9b2b4f24a1d8@sandeen.net>
+Message-ID: <08149044-1056-3bd3-629b-22a54aba1882@sandeen.net>
+Date: Tue, 26 Sep 2017 21:14:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170925195625.756877-2-rwareing@fb.com>
+In-Reply-To: <9a968cc5-4dcf-400c-4132-9b2b4f24a1d8@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="OVxLd4EA6GIEuht7PrBR8iwoghHVkXt3i"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 12:56:24PM -0700, Richard Wareing wrote:
-> To better exercise the data path code of realtime subvolumes, we will
-> set rtinherit=1 during mkfs calls.  For tests which this is not desired
-> we introduce a _require_no_rtinherit function to opt out of this
-> behavior.
-> 
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
-> ---
-> Changes since v1:
-> * None
-> 
->  common/rc         | 24 +++++++++++++++++++++++-
->  tests/generic/250 |  1 +
->  tests/generic/252 |  1 +
->  tests/generic/427 |  1 +
->  tests/generic/441 |  1 +
->  tests/xfs/019     |  1 +
->  tests/xfs/031     |  1 +
->  tests/xfs/170     |  1 +
->  tests/xfs/187     |  1 +
->  9 files changed, 31 insertions(+), 1 deletion(-)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--OVxLd4EA6GIEuht7PrBR8iwoghHVkXt3i
+Content-Type: multipart/mixed; boundary="wcDstWhhaHWSLpnAPaiwWURawEMU6iCSW";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <08149044-1056-3bd3-629b-22a54aba1882@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v4.13.1 released!
+References: <9a968cc5-4dcf-400c-4132-9b2b4f24a1d8@sandeen.net>
+In-Reply-To: <9a968cc5-4dcf-400c-4132-9b2b4f24a1d8@sandeen.net>
 
-I don't think we need an extra RT_INHERT flag, this is just one of the
-normal test configurations and can be easily tested by setting correct
-MKFS_OPTIONS, e.g.
+--wcDstWhhaHWSLpnAPaiwWURawEMU6iCSW
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-MKFS_OPTIONS="-d rtinherit=1" ./check ...
+Hi folks,
 
-Then we can check if MKFS_OPTIONS has rtinherit defined in
-_require_no_rtinherit(), e.g.
+The xfsprogs repository at:
 
-_require_no_rtinherit()
-{
-	echo "$MKFS_OPTIONS" | egrep -q "rtinherit([^=]|=1)" && \
-		_notrun "<notrun message here>"
-}
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-Unfortunately, mkfs.xfs doesn't print rtinherit status at mkfs time,
-otherwise we could check mkfs.xfs output directly.
+has just been updated to v4.13.1, "Special Brown Paper Bag Edition!"
 
-And xfs/019 xfs/031 passed even with "-d rtinherit=1", and xfs/187
-already _notrun with proper message, so seems they don't need
-_require_no_rtinherit rule.
+This fixes an array overrun in mkfs that I inexplicably missed
+in the gcc warning, but dchinner didn't - thanks Dave.
 
-generic/427 fails because xfs_io prints out its write log, after
-redirecting stdout of xfs_io to /dev/null, generic/427 passed for me
-too, the xfs_io write is meant to write a special pattern to the disk
-anyway.
+The new head of the master branch is commit:
 
-For other tests that do need _require_no_rtinherit, a comment to explain
-why this rule is needed would be good.
+d4a3633 xfsprogs: Release v4.13.1
 
-Thanks,
-Eryu
+New Commits:
+
+Darrick J. Wong (1):
+      [efe5121] mkfs: don't overflow the subopts array
+
+Eric Sandeen (1):
+      [d4a3633] xfsprogs: Release v4.13.1
+
+
+Code Diffstat:
+
+ VERSION          |  2 +-
+ configure.ac     |  2 +-
+ debian/changelog | 10 ++++++++--
+ doc/CHANGES      |  3 +++
+ mkfs/xfs_mkfs.c  |  2 +-
+ 5 files changed, 14 insertions(+), 5 deletions(-)
+
+
+--wcDstWhhaHWSLpnAPaiwWURawEMU6iCSW--
+
+--OVxLd4EA6GIEuht7PrBR8iwoghHVkXt3i
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJZywluAAoJECCuFpLhPd7gwbUQAI7fPcY8FGifP6kbrat3PEh/
+SeD6ElctsPJW2oMkHcYP1/7yPUjS17R7NzST4C3EsBDdA9QNE9f+OaDc879SG0cs
+fhn/yegbDS/SkPgjhRtJ1To4Bi8mGmXY3B2E5xrqitye7ZAcw4RjWL/3BiESGTHP
+zdsZpiCUlxxWzwJkdpiZun8SVdunmCT6JqUw+AG5CR3QaR+X4bocm4NgTFyHHIGe
+ZVpUPsdU1RcYi11eOTq+MCRqVWec48OedD2n184lR7nCzP/9VEGzfSAtoBScEbx2
+UXeXZdzUM0dvJ8+0zu1NPrSZ+2fJVV8YhmXBE2eAVejuniaM5vHcP+gCqs0WqfR5
+Cgbjxlg0SRy4Ia85pGwhjzXgUKVK0SpHUaePKbAqPgnN1rOxHy74flC43s0y/w89
+noFhL3cHi1gtPFmMb3O22328bzxDJJZt+6PLKhaW4HsHj5JMqOS+JmsVloyEdBez
+XJ0lvroAfMrBO5HqjHchFXDOkoakru+SLUUSukPPsGrZpTjLxoIx+3YT9r+KtI05
++AXmmqBOPoK/DjuL9hBYeMC5TzZOMJBGxx4XiH5siQlCXk60m6YP9LPwe7WFUCu4
+QVUx8Fg812S7FHSrH/xRFR1ruxnCeG8Vw/ikVVFTzsdRHubqXupLMfcX62rhmpFi
+VkeI0BOyZzV+W24huZQz
+=fIul
+-----END PGP SIGNATURE-----
+
+--OVxLd4EA6GIEuht7PrBR8iwoghHVkXt3i--
