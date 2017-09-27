@@ -1,233 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:56350 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967186AbdIZCZ6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2017 22:25:58 -0400
-Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
-MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH v2 1/3] xfs/realtime: Add require_no_realtime function
-From: Richard Wareing <rwareing@fb.com>
-In-Reply-To: <20170925213845.GC5020@magnolia>
-Date: Mon, 25 Sep 2017 19:25:27 -0700
-Content-Transfer-Encoding: 7bit
-Message-ID: <EF76A1C7-91D1-488E-A81F-E628F0965B1B@fb.com>
-References: <20170925195625.756877-1-rwareing@fb.com>
- <20170925213845.GC5020@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:32344 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935589AbdI0A4I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2017 20:56:08 -0400
+Date: Wed, 27 Sep 2017 10:43:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Rationale for hardware RAID 10 su, sw values in FAQ
+Message-ID: <20170927004302.GB3666@dastard>
+References: <b8c45869-849f-5124-f74f-68da0f9f34d7@mcneill.gen.nz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b8c45869-849f-5124-f74f-68da0f9f34d7@mcneill.gen.nz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Ewen McNeill <xfs@ewen.mcneill.gen.nz>
+Cc: linux-xfs@vger.kernel.org
 
-Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Tue, Sep 26, 2017 at 09:54:28PM +1300, Ewen McNeill wrote:
+> The FAQ:
+> 
+> http://xfs.org/index.php/XFS_FAQ#Q:_How_to_calculate_the_correct_sunit.2Cswidth_values_for_optimal_performance
+> 
+> suggests using:
+> 
+> su = hardware RAID stripe size on single disk
+> 
+> sw = (disks in RAID-10 / 2)
+> 
+> on hardware RAID 10 volumes, but doesn't provide a reason for that
+> "sw" value (other than that "(disks in RAID-10 / 2)" are the
+> effective data disks).
 
-> On Mon, Sep 25, 2017 at 12:56:23PM -0700, Richard Wareing wrote:
->> Some tests do not play well with realtime devices, in an effort to
->> produce a stable set of test which exercise the realtime code paths
->> we introduce a _require_no_realtime function to allow tests to opt
->> out of realtime subvolume test runs.
->>
->> Signed-off-by: Richard Wareing <rwareing@fb.com>
->> ---
->> Changes since v1:
->> * None
->>
->>  common/rc                      | 8 ++++++++
->>  tests/generic/409              | 1 +
->>  tests/generic/410              | 1 +
->
-> Why don't shared subtree tests work w/ rt?
->
+Because the RAID-0 portion of the RAID-10 volume is half the number
+of disks.
 
-409, 410 decide to mount without the -o rtdev, option.  The fix
-here could be trivial, or more involved I'm not really sure.
+RAID-1 does not affect the performance of the underlying volume -
+the behaviour and performance of RAID-1 is identical to a single
+drive, so layout can not be optimised to improve performance on
+RAID-1 volumes. RAID-0, OTOH, can give dramatically better
+performance if we tell the filesystem about it because we can do
+things like allocate more carefully to prevent hotspots....
 
+> In the RAID 5 / RAID 6 case, obviously you want (su * sw) to cover
+> the user data that you can write across the whole array in a single
+> stripe, since that is the "writeable unit" on the array on which
+> read/modify/write will need to be done -- so you do not want to have
+> a data structure spanning the boundary between two writeable units
+> (as that means two blocks will need to be read / modify / written).
 
+Yes, it's more complex than that, especially when striping RAID5/6
+luns together (e.g. RAID50), but the concept is correct - su/sw tell
+the filesystem what the most efficient write sizes and alignment
+are.
 
->> tests/generic/411              | 1 +
->
-> Some sort of mount regression?
->
+> In the RAID 10 case it is clearly preferable to avoid spanning
+> across the boundary of a _single_ disk's (pair's) stripe size (su *
+> 1), as then _two_ pairs of disks in the RAID 10 need to get involved
+> in the write (so you potentially have two seek penalties, etc).
+> 
+> But in the RAID 10 case the each physical disk is just paired with
+> one other disk, and that pair can be written independently of the
+> rest -- since there's no parity information as such, there's
+> normally no need for a read / modify / write cycle of any block
+> larger than, eg, a physical sector or SSD erase block.
 
-Same as 409/410.
+Which is exactly the same as RAID 0.
 
->> tests/xfs/077                  | 1 +
+> So why is "sw" in the RAID 10 case given as "(disks in RAID-10 / 2)"
+> rather than "1"?  Wouldn't
+> 
+> su = hardware RAID stripe size on single disk
+> 
+> sw = 1
+> 
+> make more sense for RAID 10?
 
-Uses xfs_copy which does not have realtime support.
+Nope, because then you have no idea about how many disks you have
+to spread the data over. e.g. if we have 8 disks and a sw=1, then
+how do you optimise allocation to hit every disk just once for
+a (su * number of disks) sized write? i.e. the sw config allows
+allocation and IO sizes to be optimised to load all disks in the
+RAID-0 stripe equally.
 
->>  tests/xfs/189                  | 1 +
+> In the RAID 10 case, spanning across the whole data disk set seems
+> likely to align data structures (more frequently) on the first disk
+> pair in the RAID set (especially with larger single-disk stripe
+> sizes), potentially making that the "metadata disk pair" -- and thus
+> both potentially having more metadata activity on it, and also being
+> more at risk if one disk in that pair is lost or that pair is
+> rebuilding.
 
-Bails with "noattr2 mount option not supported on /dev/loop32".
-Possibly a trivial fix?
+Nope, the filesystem does not do that. Allocation is complex, and
+the filesystem may choose to pack the data (small files) so there is
+no alignment, it may align to /any/ stripe unit for allocations of
+stripe unit size of larger, or for really large allocations it may
+attempt to align and round out to stripe width.
 
->>  tests/xfs/191-input-validation | 1 +
+It does all this to prevent hot spots on disk in the RAID - that's
+the problem you're trying to describe, I think. There was lots of
+analysis and optimisation work done back at SGI around 1999/2000 to
+sort out all the hot-spot problems in really large arrays. Out of
+that came things like mkfs placing static metadata across all stripe
+units instead of just the first in a stripe width, better selection
+of initial alignment, etc.
 
-Fails with:
-  QA output created by 191-input-validation
-  silence is golden
-+pass -b size=512 -l sectsize=1024 /dev/loop32
-+fail -d size=4294967296 /dev/loop32
-+fail -d agsize=1g /dev/loop32
-+fail -l size=419430400 -d size=4294967296 /dev/loop32
-+pass -n ftype=0 /dev/loop32
+For the vast majority of users, hot spot problems went away and we
+really haven't seen such problems in the 15+ years since these
+problems were addressed...
 
-This test makes my eyes bleed, hoping somebody with more context on
-this test can point me in the right direction here.
+> (The same "align to start of disk set" would seem to
+> happen with RAID 5 / RAID 6 too, but is unavoidable due to the
+> "large smallest physically modifiable block" issue.)
 
+RAID5/6 have different issues, and the way you have to think about
+RAID5/6 luns changes depending on how you are aggregating them into
+a larger single unit (e.g. optimising for RAID-0 stripes of RAID5/6
+luns is highly complex).
 
->>  tests/xfs/202                  | 1 +
+> What am I missing that leads to the FAQ suggesting "sw = (disks in
+> RAID-10 / 2)"?  Perhaps this additional rationale could be added to
+> that FAQ question?  (Or if "sw = 1" actually does make sense on RAID
+> 10, the FAQ could be updated to suggest that as an option.)
 
-Upon further inspection, this fails because it assumes your
-scratch device is >1GB.  Though it should probably throw a nice
-error indicating your scratch device isn't large enough.
+That RAID-10 is optimised for the dominant RAID-0 layout and IO
+characteristics, not the RAID-1 characteristics which have no impact
+on performance and hence don't require any optimisations.
 
->>  tests/xfs/284                  | 1 +
+Cheers,
 
-Uses xfs_copy which does not support realtime.
-
->
-> This test checks that xfsprogs don't run on a mounted fs.  Why would
-> that be excluded from rt testing?
->
-> Since there's only 8 tests on your list, I'm curious why each of them
-> gets disabled for rt filesystems?
->
-
-Aside from the tests using xfs_copy, I can probably add RT support
-to most of these tests, but I figured the first step was to first
-get to a  stable set of working tests for realtime.
-
-Richard
-
-
-
-> --D
->
->> 9 files changed, 16 insertions(+)
->>
->> diff --git a/common/rc b/common/rc
->> index 53bbb11..a0081f1 100644
->> --- a/common/rc
->> +++ b/common/rc
->> @@ -1835,6 +1835,14 @@ _require_realtime()
->>  	_notrun "Realtime device required, skipped this test"
->>  }
->>
->> +# This test requires that a realtime subvolume is not in use
->> +#
->> +_require_no_realtime()
->> +{
->> +    [ -n "$SCRATCH_RTDEV" ] && \
->> +	_notrun "Test not compatible with realtime subvolumes, skipped this  
->> test"
->> +}
->> +
->>  # this test requires that a specified command (executable) exists
->>  # $1 - command, $2 - name for error message
->>  #
->> diff --git a/tests/generic/409 b/tests/generic/409
->> index 3ad65c9..8ed3e4e 100755
->> --- a/tests/generic/409
->> +++ b/tests/generic/409
->> @@ -65,6 +65,7 @@ _supported_os Linux
->>  _require_test
->>  _require_scratch
->>  _require_local_device $SCRATCH_DEV
->> +_require_no_realtime
->>
->>  fs_stress()
->>  {
->> diff --git a/tests/generic/410 b/tests/generic/410
->> index 63ab716..1bbaff8 100755
->> --- a/tests/generic/410
->> +++ b/tests/generic/410
->> @@ -73,6 +73,7 @@ _supported_os Linux
->>  _require_test
->>  _require_scratch
->>  _require_local_device $SCRATCH_DEV
->> +_require_no_realtime
->>
->>  fs_stress()
->>  {
->> diff --git a/tests/generic/411 b/tests/generic/411
->> index 83f6d26..ea718fc 100755
->> --- a/tests/generic/411
->> +++ b/tests/generic/411
->> @@ -54,6 +54,7 @@ _supported_os Linux
->>  _require_test
->>  _require_scratch
->>  _require_local_device $SCRATCH_DEV
->> +_require_no_realtime
->>
->>  fs_stress()
->>  {
->> diff --git a/tests/xfs/077 b/tests/xfs/077
->> index eba4f08..d202fa4 100755
->> --- a/tests/xfs/077
->> +++ b/tests/xfs/077
->> @@ -50,6 +50,7 @@ _cleanup()
->>
->>  _supported_fs xfs
->>  _supported_os Linux
->> +_require_no_realtime
->>  _require_scratch
->>  _require_xfs_crc
->>  _require_meta_uuid
->> diff --git a/tests/xfs/189 b/tests/xfs/189
->> index 636f6f0..699eb3c 100755
->> --- a/tests/xfs/189
->> +++ b/tests/xfs/189
->> @@ -236,6 +236,7 @@ _putback_scratch_fstab()
->>  _supported_fs xfs
->>  _supported_os Linux
->>
->> +_require_no_realtime
->>  _require_scratch
->>  _require_noattr2
->>
->> diff --git a/tests/xfs/191-input-validation  
->> b/tests/xfs/191-input-validation
->> index cff3efa..764ac9b 100755
->> --- a/tests/xfs/191-input-validation
->> +++ b/tests/xfs/191-input-validation
->> @@ -47,6 +47,7 @@ _cleanup()
->>  # Modify as appropriate.
->>  _supported_fs xfs
->>  _supported_os Linux
->> +_require_no_realtime
->>  _require_scratch
->>  _require_xfs_mkfs_validation
->>
->> diff --git a/tests/xfs/202 b/tests/xfs/202
->> index b9827a7..f887873 100755
->> --- a/tests/xfs/202
->> +++ b/tests/xfs/202
->> @@ -38,6 +38,7 @@ status=1	# failure is the default!
->>  _supported_fs xfs
->>  _supported_os Linux
->>
->> +_require_no_realtime
->>  # single AG will cause default xfs_repair to fail. This test is actually
->>  # testing the special corner case option needed to repair a single AG fs.
->>  _require_scratch_nocheck
->> diff --git a/tests/xfs/284 b/tests/xfs/284
->> index e3625fe..fa5dac8 100755
->> --- a/tests/xfs/284
->> +++ b/tests/xfs/284
->> @@ -49,6 +49,7 @@ rm -f $seqres.full
->>  # real QA test starts here
->>  _supported_fs xfs
->>  _supported_os Linux
->> +_require_no_realtime
->>  _require_test
->>  _require_scratch
->>
->> -- 
->> 2.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
