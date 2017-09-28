@@ -1,89 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34593 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35570 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750852AbdI0QPk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Sep 2017 12:15:40 -0400
-Date: Wed, 27 Sep 2017 10:15:10 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 1/7] xfs: always use DAX if mount option is used
-Message-ID: <20170927161510.GB24314@linux.intel.com>
-References: <20170925231404.32723-1-ross.zwisler@linux.intel.com>
- <20170925231404.32723-2-ross.zwisler@linux.intel.com>
- <20170925233812.GM10955@dastard>
- <20170926093548.GB13627@quack2.suse.cz>
- <20170926110957.GR10955@dastard>
- <20170926143743.GB18758@lst.de>
- <20170926173057.GB20159@linux.intel.com>
- <20170927064001.GA27601@infradead.org>
+        id S1751917AbdI1Izn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Sep 2017 04:55:43 -0400
+Date: Thu, 28 Sep 2017 16:55:38 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs: test increased overlong directory extent discard
+ threshold
+Message-ID: <20170928085538.GU8034@eguan.usersys.redhat.com>
+References: <20170927010348.GK5020@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170927064001.GA27601@infradead.org>
+In-Reply-To: <20170927010348.GK5020@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Dan Williams <dan.j.williams@intel.com>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 11:40:01PM -0700, Christoph Hellwig wrote:
-> On Tue, Sep 26, 2017 at 11:30:57AM -0600, Ross Zwisler wrote:
-> > I agree that Christoph's idea about having the system intelligently adjust to
-> > use DAX based on performance information it gathers about the underlying
-> > persistent memory (probably via the HMAT on x86_64 systems) is interesting,
-> > but I think we're still a ways away from that.
+On Tue, Sep 26, 2017 at 06:03:48PM -0700, Darrick J. Wong wrote:
+> As of 2007, metadump has an interesting "feature" where it discards
+> directory extents that are longer than 1000 (originally 20) blocks.
+> This ostensibly was to protect metadump from corrupt bmbt records, but
+> it also has the effect of omitting from the metadump valid long extents.
+> The end result is that we create incomplete metadumps, which is
+> exacerbated by the lack of warning unless -w is passed.
 > 
-> So what are the missing blockers for a getting started?
-
-Well, I don't know if platforms that support HMAT + PMEM are widely available,
-but we have all the details in the ACPI spec, so we could begin to code it up
-and things will "just work" when platforms arrive.
-
-> > FWIW, as my patches suggest and Jan observed I think that we should allow
-> > users to turn on DAX by treating the inode flag and the mount flag as an 'or'
-> > operation.  i.e. you get DAX if either the mount option is specified or if the
-> > inode flag is set, and you can continue to manipulate the per-inode flag as
-> > you want regardless of the mount option.  I think this provides maximum
-> > flexibility of the mechanism to select DAX without enforcing policy.
+> So now that we've fixed the default threshold to MAXEXTLEN, check that
+> the installed metadump no longer exhibits this behavior.
 > 
-> IFF we stick to the dax flag that's the only workable way.  The only
-> major issue I still see with that is that this allows unprivilegued
-> users to enable DAX on a any file they own / have write access to.
-> So there isn't really any way to effectively disable the DAX path
-> by the sysadmin.
-
-Hum, I wonder if maybe we need/want three different mount modes?  What about:
-
-autodax (the default): the filesystem is free to use DAX or not, as it sees
-fit and thinks is optimal.  For the time being we can make this mean "don't
-use DAX", and phase in DAX usage as we add support for the HMAT, etc.
-
-Users can manually turn on DAX for a given inode by setting the DAX inode
-flag, but there is no way for the user to *prevent* DAX for an inode - the
-kernel can always choose to turn it on.
-
-MAP_DIRECT and MAP_SYNC work.
-
-nodax: Don't use DAX.  The kernel won't choose to use DAX, and any DAX inode
-flags will be ignored.  This gives the sysadmin the override that I think
-you're looking for.  The user can still manipulate the inode flags as they see
-fit.
-
-MAP_DIRECT and MAP_SYNC both fail.
-
-dax: Use DAX for all inodes in the filesystem.  Again the inode flags are
-essentially ignored, but the user can manipulate the inode flags as they see
-fit.  This is basically unchanged from how it works today, modulo the bug
-where DAX can get turned off if you unset the inode flag where it wasn't even
-set (patch 1 in my series).
-
-MAP_DIRECT and MAP_SYNC work.
-
-> > Does it make sense at this point to just start a "dax" man page that can
-> > contain info about the mount options, inode flags, kernel config options, how
-> > to get PMDs, etc?  Or does this documentation need to be sprinkled around more
-> > in existing man pages?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/707     |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/707.out |    6 +++
+>  tests/xfs/group   |    1 +
+>  3 files changed, 108 insertions(+)
+>  create mode 100755 tests/xfs/707
+>  create mode 100644 tests/xfs/707.out
 > 
-> A dax manpage would be good.
+> diff --git a/tests/xfs/707 b/tests/xfs/707
+> new file mode 100755
+> index 0000000..f97d029
+> --- /dev/null
+> +++ b/tests/xfs/707
+> @@ -0,0 +1,101 @@
+> +#! /bin/bash
+> +# FS QA Test No. 707
+> +#
+> +# Ensure that metadump copies large directory extents
+> +#
+> +# Metadump helpfully discards directory (and xattr) extents that are
+> +# longer than 1000 blocks.  This is a little silly since a hardlink farm
+> +# can easily create such a monster.
+> +#
+> +# Now that we've upped metadump's default too-long-extent discard
+> +# threshold to 2^21 blocks, make sure we never do that again.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename "$0"`
+> +seqres="$RESULT_DIR/$seq"
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -rf "$tmp".* $metadump_file $metadump_img
 
-Okay, I'll start with a manpage, and once we agree on whats in there we can
-start working on code again. :)
+'rm -f' to be safe :)
+
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_scratch
+> +
+> +rm -f "$seqres.full"
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs -b size=1k -n size=64k > "$seqres.full" 2>&1
+
+Add some comments about the non-default mkfs options?
+
+> +_scratch_mount >> "$seqres.full" 2>&1
+> +
+> +metadump_file="$TEST_DIR/meta-$seq"
+> +metadump_img="$TEST_DIR/img-$seq"
+> +rm -rf $metadump_file $metadump_img
+
+Same here, 'rm -f'
+
+> +testdir="$SCRATCH_MNT/test-$seq"
+> +max_fname_len=255
+> +blksz=$(_get_block_size $SCRATCH_MNT)
+> +
+> +# Try to create a directory w/ extents
+> +blocks=1050
+> +names=$((blocks * (blksz / max_fname_len)))
+> +echo "Create huge dir"
+> +mkdir -p $testdir
+> +touch $SCRATCH_MNT/a
+> +seq 0 $names | while read f; do
+> +	name="$testdir/$(printf "%0${max_fname_len}d" $f)"
+> +	ln $SCRATCH_MNT/a $name
+> +done
+> +dir_inum=$(stat -c %i $testdir)
+> +
+> +echo "Check for > 1000 block extent?"
+> +_scratch_unmount
+> +check_for_long_extent() {
+> +	inum=$1
+> +
+> +	_scratch_xfs_db -x -c "inode $dir_inum" -c bmap | \
+> +		sed -e 's/^.*count \([0-9]*\) flag.*$/\1/g' | \
+> +		awk '{if ($1 > 1000) { printf("yes, %d\n", $1); } }'
+> +}
+> +extlen="$(check_for_long_extent $dir_inum)"
+> +echo "qualifying extent: $extlen blocks" >> $seqres.full
+> +test -n "$extlen" || _fail "could not create dir extent > 1000 blocks"
+
+Is this really a failure? IMHO, _notrun makes more sense here.
+
+Thanks,
+Eryu
+
+> +
+> +echo "Try to metadump"
+> +_scratch_metadump $metadump_file -w
+> +xfs_mdrestore $metadump_file $metadump_img
+> +
+> +echo "Check restored metadump image"
+> +$XFS_REPAIR_PROG -n $metadump_img >> $seqres.full 2>&1
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/707.out b/tests/xfs/707.out
+> new file mode 100644
+> index 0000000..0d2a222
+> --- /dev/null
+> +++ b/tests/xfs/707.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 707
+> +Format and mount
+> +Create huge dir
+> +Check for > 1000 block extent?
+> +Try to metadump
+> +Check restored metadump image
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 7353b9c..a70c884 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -432,3 +432,4 @@
+>  703 auto quick clone fsr
+>  704 auto quick clone
+>  705 auto quick clone fsr
+> +707 auto quick dir metadata
