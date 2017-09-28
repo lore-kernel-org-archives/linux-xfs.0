@@ -1,69 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43164 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751782AbdIUARd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2017 20:17:33 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8L0HWLs015444
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:17:32 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8L0HWwW012526
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:17:32 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8L0HWPo000627
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2017 00:17:32 GMT
-Subject: [PATCH v10 00/27] xfs: online scrub support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Sep 2017 17:17:31 -0700
-Message-ID: <150595305131.18473.16572195821331601191.stgit@magnolia>
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:9505 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751591AbdI1LHq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2017 07:07:46 -0400
+Date: Thu, 28 Sep 2017 21:07:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Rationale for hardware RAID 10 su, sw values in FAQ
+Message-ID: <20170928110719.GJ10621@dastard>
+References: <b8c45869-849f-5124-f74f-68da0f9f34d7@mcneill.gen.nz>
+ <20170927004302.GB3666@dastard>
+ <db821c38-1307-0681-ffc2-4400ffd8d27a@mcneill.gen.nz>
+ <20170927043308.GC3666@dastard>
+ <c7ade829-9385-c517-581b-8dc73def5693@mcneill.gen.nz>
+ <20170928125310.5687097e@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170928125310.5687097e@harpe.intellique.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Ewen McNeill <xfs@ewen.mcneill.gen.nz>, linux-xfs@vger.kernel.org
 
-Hi all,
+On Thu, Sep 28, 2017 at 12:53:10PM +0200, Emmanuel Florac wrote:
+> Le Thu, 28 Sep 2017 12:36:39 +1300
+> Ewen McNeill <xfs@ewen.mcneill.gen.nz> écrivait:
+> 
+> > I'm obviously not an expert in filesystem layout optimisation.  But I 
+> > have many years sysadmin experience dealing with lots of types of 
+> > storage, and can write a couple of pages of text on the "background" 
+> > bits next time I have a free moment.  The more advanced tunables
+> > could remain "todo" until there's time for the perfect version...
+> > 
+> 
+> As you're at it, please mention the potential problems with 512e (512
+> bytes blocks emulated) disks, which are the vast majority of shipped
+> disks nowadays. Doing RAID with these can lead to all sort of trouble
+> by worsening the read/modify/write problem.
 
-This is the ninth revision of a patchset that adds to XFS kernel support
-for online metadata scrubbing and repair.  There aren't any on-disk
-format changes.  Changes since v9 include minor bug fixes and rebasing
-to 4.14.  I have been performing daily online scrubs of my XFS
-filesystems for several months now, with surprisingly few problems.
+That's not a filesystem problem, though. Answering questions like
+"what is the optimal device sector size for RAID on some random
+storage hardware" is quite a long way outside the scope the
+filesystem configuration guidelines....
 
-Online scrub/repair support consists of four major pieces -- first, an
-ioctl that maps physical extents to their owners (GETFSMAP; already in
-4.12); second, various in-kernel metadata scrubbing ioctls to examine
-metadata records and cross-reference them with other filesystem
-metadata; third, an in-kernel mechanism for rebuilding damaged metadata
-objects and btrees; and fourth, a userspace component to coordinate
-scrubbing and repair operations.
+Cheers,
 
-This new utility, xfs_scrub, is separate from the existing offline
-xfs_repair tool.  The program uses various XFS ioctls to iterate all XFS
-metadata and asks the kernel to check the metadata and repair it if
-necessary.
-
-While I understand that reviewer bandwidth is limited, I would like to
-get this series prepped for 4.15, if possible.  I have isolated the
-scrub code such that it can be compiled out entirely, in the hopes that
-we can stabilize the code while not exposing regular users to riskier
-code.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.14-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to eat your data.  Enjoy! 
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
