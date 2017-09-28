@@ -1,123 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53011 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750775AbdI1Syg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Sep 2017 14:54:36 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 3/3] Allow partial writes
-Date: Thu, 28 Sep 2017 13:54:26 -0500
-Message-Id: <20170928185426.9070-3-rgoldwyn@suse.de>
-In-Reply-To: <20170928185426.9070-1-rgoldwyn@suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:31621 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750759AbdI1T1i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2017 15:27:38 -0400
+Date: Thu, 28 Sep 2017 12:26:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] Add support for pwritev2()
+Message-ID: <20170928192658.GP5020@magnolia>
 References: <20170928185426.9070-1-rgoldwyn@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170928185426.9070-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Thu, Sep 28, 2017 at 01:54:24PM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  io/Makefile |  2 +-
+>  io/pwrite.c | 36 +++++++++++++++++++++++-------------
+>  2 files changed, 24 insertions(+), 14 deletions(-)
+> 
+> diff --git a/io/Makefile b/io/Makefile
+> index 62bc03b8..87649dc6 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -87,7 +87,7 @@ endif
+>  
+>  # Also implies PWRITEV
+>  ifeq ($(HAVE_PREADV),yes)
+> -LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+> +LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV -DHAVE_PWRITEV2
 
-Partial writes are performed when there is an error midway
-while performing the I/O. Perform the write exactly once and
-return the number of bytes written.
+Uh..... preadv doesn't imply pwritev2.  Separate configure test, please.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- io/io.h           |  1 +
- io/pwrite.c       | 25 ++++++++++++++++++++++++-
- man/man8/xfs_io.8 |  3 +++
- 3 files changed, 28 insertions(+), 1 deletion(-)
+>  endif
+>  
+>  ifeq ($(HAVE_READDIR),yes)
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index 67631ce5..82eaf827 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -62,7 +62,8 @@ do_pwritev(
+>  	int		fd,
+>  	off64_t		offset,
+>  	ssize_t		count,
+> -	ssize_t		buffer_size)
+> +	ssize_t		buffer_size,
+> +	int 		pwritev2_flags)
+>  {
+>  	int vecs = 0;
+>  	ssize_t oldlen = 0;
+> @@ -81,7 +82,11 @@ do_pwritev(
+>  	} else {
+>  		vecs = vectors;
+>  	}
+> +#ifdef HAVE_PWRITEV2
+> +	bytes = pwritev2(fd, iov, vectors, offset, pwritev2_flags);
 
-diff --git a/io/io.h b/io/io.h
-index 2bc7ac4a..5875e85a 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -24,6 +24,7 @@
- #define IO_RANDOM	( 0)
- #define IO_FORWARD	( 1)
- #define IO_BACKWARD	(-1)
-+#define IO_PARTIAL	(2)
- 
- /*
-  * File descriptor options
-diff --git a/io/pwrite.c b/io/pwrite.c
-index 8289c3ee..40f537b3 100644
---- a/io/pwrite.c
-+++ b/io/pwrite.c
-@@ -47,6 +47,7 @@ pwrite_help(void)
- " -W   -- call fsync(2) at the end (included in timing results)\n"
- " -B   -- write backwards through the range from offset (backwards N bytes)\n"
- " -F   -- write forwards through the range of bytes from offset (default)\n"
-+" -P   -- return Partial writes, perform one call and return bytes written\n"
- " -R   -- write at random offsets in the specified range of bytes\n"
- " -Z N -- zeed the random number generator (used when writing randomly)\n"
- "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
-@@ -255,6 +256,22 @@ write_buffer(
- 	return ops;
- }
- 
-+static int
-+write_partial(
-+	off64_t		offset,
-+	long long	count,
-+	long long	*total,
-+	int		pwritev2_flags)
-+{
-+	size_t bytes;
-+	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
-+	if (bytes < 0)
-+		return -1;
-+	*total = bytes;
-+	return 1;
-+}
-+
-+
- static int
- pwrite_f(
- 	int		argc,
-@@ -276,7 +293,7 @@ pwrite_f(
- 	init_cvtnum(&fsblocksize, &fssectsize);
- 	bsize = fsblocksize;
- 
--	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
-+	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:PS:uV:wWZ:")) != EOF) {
- 		switch (c) {
- 		case 'b':
- 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-@@ -298,6 +315,9 @@ pwrite_f(
- 		case 'R':
- 			direction = IO_RANDOM;
- 			break;
-+		case 'P':
-+			direction = IO_PARTIAL;
-+			break;
- 		case 'd':
- 			dflag = 1;
- 			break;
-@@ -389,6 +409,9 @@ pwrite_f(
- 	case IO_BACKWARD:
- 		c = write_backward(offset, &count, &total, pwritev2_flags);
- 		break;
-+	case IO_PARTIAL:
-+		c = write_partial(offset, count, &total, pwritev2_flags);
-+		break;
- 	default:
- 		total = 0;
- 		ASSERT(0);
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index f410ce9a..b21a8145 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -229,6 +229,9 @@ write the buffers in a reserve sequential direction.
- .B \-R
- write the buffers in the give range in a random order.
- .TP
-+.B \-P
-+return Partial writes, perform one call and return the bytes written.
-+.TP
- .B \-Z seed
- specify the random number seed used for random write
- .TP
--- 
-2.14.1
+If HAVE_PWRITEV2 is defined on the system that built xfs_io but the
+system that runs xfs_io doesn't support this syscall, why do we not fall
+back to pwritev if !pwritev2_flags?
 
+--D
+
+> +#else
+>  	bytes = pwritev(fd, iov, vectors, offset);
+> +#endif
+>  
+>  	/* restore trimmed iov */
+>  	if (oldlen)
+> @@ -98,12 +103,13 @@ do_pwrite(
+>  	int		fd,
+>  	off64_t		offset,
+>  	ssize_t		count,
+> -	ssize_t		buffer_size)
+> +	ssize_t		buffer_size,
+> +	int 		pwritev2_flags)
+>  {
+>  	if (!vectors)
+>  		return pwrite64(fd, buffer, min(count, buffer_size), offset);
+>  
+> -	return do_pwritev(fd, offset, count, buffer_size);
+> +	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
+>  }
+>  
+>  static int
+> @@ -111,7 +117,8 @@ write_random(
+>  	off64_t		offset,
+>  	long long	count,
+>  	unsigned int	seed,
+> -	long long	*total)
+> +	long long	*total,
+> +	int 		pwritev2_flags)
+>  {
+>  	off64_t		off, range;
+>  	ssize_t		bytes;
+> @@ -133,7 +140,7 @@ write_random(
+>  				buffersize;
+>  		else
+>  			off = offset;
+> -		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
+> +		bytes = do_pwrite(file->fd, off, buffersize, buffersize, pwritev2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -153,7 +160,8 @@ static int
+>  write_backward(
+>  	off64_t		offset,
+>  	long long	*count,
+> -	long long	*total)
+> +	long long	*total,
+> +	int		pwritev2_flags)
+>  {
+>  	off64_t		end, off = offset;
+>  	ssize_t		bytes = 0, bytes_requested;
+> @@ -171,7 +179,7 @@ write_backward(
+>  	if ((bytes_requested = (off % buffersize))) {
+>  		bytes_requested = min(cnt, bytes_requested);
+>  		off -= bytes_requested;
+> -		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
+> +		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize, pwritev2_flags);
+>  		if (bytes == 0)
+>  			return ops;
+>  		if (bytes < 0) {
+> @@ -189,7 +197,7 @@ write_backward(
+>  	while (cnt > end) {
+>  		bytes_requested = min(cnt, buffersize);
+>  		off -= bytes_requested;
+> -		bytes = do_pwrite(file->fd, off, cnt, buffersize);
+> +		bytes = do_pwrite(file->fd, off, cnt, buffersize, pwritev2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -212,7 +220,8 @@ write_buffer(
+>  	size_t		bs,
+>  	int		fd,
+>  	off64_t		skip,
+> -	long long	*total)
+> +	long long	*total,
+> +	int		pwritev2_flags)
+>  {
+>  	ssize_t		bytes;
+>  	long long	bar = min(bs, count);
+> @@ -224,7 +233,7 @@ write_buffer(
+>  			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
+>  				break;
+>  		}
+> -		bytes = do_pwrite(file->fd, offset, count, bar);
+> +		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -258,6 +267,7 @@ pwrite_f(
+>  	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
+>  	int		direction = IO_FORWARD;
+>  	int		c, fd = -1;
+> +	int		pwritev2_flags = 0;
+>  
+>  	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+> @@ -365,13 +375,13 @@ pwrite_f(
+>  	case IO_RANDOM:
+>  		if (!zeed)	/* srandom seed */
+>  			zeed = time(NULL);
+> -		c = write_random(offset, count, zeed, &total);
+> +		c = write_random(offset, count, zeed, &total, pwritev2_flags);
+>  		break;
+>  	case IO_FORWARD:
+> -		c = write_buffer(offset, count, bsize, fd, skip, &total);
+> +		c = write_buffer(offset, count, bsize, fd, skip, &total, pwritev2_flags);
+>  		break;
+>  	case IO_BACKWARD:
+> -		c = write_backward(offset, &count, &total);
+> +		c = write_backward(offset, &count, &total, pwritev2_flags);
+>  		break;
+>  	default:
+>  		total = 0;
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
