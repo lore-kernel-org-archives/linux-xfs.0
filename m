@@ -1,192 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31621 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750759AbdI1T1i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2017 15:27:38 -0400
-Date: Thu, 28 Sep 2017 12:26:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] Add support for pwritev2()
-Message-ID: <20170928192658.GP5020@magnolia>
-References: <20170928185426.9070-1-rgoldwyn@suse.de>
+Received: from mail.kernel.org ([198.145.29.99]:38532 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751345AbdI1UUA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Sep 2017 16:20:00 -0400
+Date: Thu, 28 Sep 2017 13:19:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.14-rc3
+Message-ID: <20170928201957.GS5020@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170928185426.9070-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <djwong@kernel.org>
 
-On Thu, Sep 28, 2017 at 01:54:24PM -0500, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> ---
->  io/Makefile |  2 +-
->  io/pwrite.c | 36 +++++++++++++++++++++++-------------
->  2 files changed, 24 insertions(+), 14 deletions(-)
-> 
-> diff --git a/io/Makefile b/io/Makefile
-> index 62bc03b8..87649dc6 100644
-> --- a/io/Makefile
-> +++ b/io/Makefile
-> @@ -87,7 +87,7 @@ endif
->  
->  # Also implies PWRITEV
->  ifeq ($(HAVE_PREADV),yes)
-> -LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
-> +LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV -DHAVE_PWRITEV2
+Hi Linus,
 
-Uh..... preadv doesn't imply pwritev2.  Separate configure test, please.
-
->  endif
->  
->  ifeq ($(HAVE_READDIR),yes)
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 67631ce5..82eaf827 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -62,7 +62,8 @@ do_pwritev(
->  	int		fd,
->  	off64_t		offset,
->  	ssize_t		count,
-> -	ssize_t		buffer_size)
-> +	ssize_t		buffer_size,
-> +	int 		pwritev2_flags)
->  {
->  	int vecs = 0;
->  	ssize_t oldlen = 0;
-> @@ -81,7 +82,11 @@ do_pwritev(
->  	} else {
->  		vecs = vectors;
->  	}
-> +#ifdef HAVE_PWRITEV2
-> +	bytes = pwritev2(fd, iov, vectors, offset, pwritev2_flags);
-
-If HAVE_PWRITEV2 is defined on the system that built xfs_io but the
-system that runs xfs_io doesn't support this syscall, why do we not fall
-back to pwritev if !pwritev2_flags?
+Here's the first round of bug fixes for 4.14.
 
 --D
 
-> +#else
->  	bytes = pwritev(fd, iov, vectors, offset);
-> +#endif
->  
->  	/* restore trimmed iov */
->  	if (oldlen)
-> @@ -98,12 +103,13 @@ do_pwrite(
->  	int		fd,
->  	off64_t		offset,
->  	ssize_t		count,
-> -	ssize_t		buffer_size)
-> +	ssize_t		buffer_size,
-> +	int 		pwritev2_flags)
->  {
->  	if (!vectors)
->  		return pwrite64(fd, buffer, min(count, buffer_size), offset);
->  
-> -	return do_pwritev(fd, offset, count, buffer_size);
-> +	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
->  }
->  
->  static int
-> @@ -111,7 +117,8 @@ write_random(
->  	off64_t		offset,
->  	long long	count,
->  	unsigned int	seed,
-> -	long long	*total)
-> +	long long	*total,
-> +	int 		pwritev2_flags)
->  {
->  	off64_t		off, range;
->  	ssize_t		bytes;
-> @@ -133,7 +140,7 @@ write_random(
->  				buffersize;
->  		else
->  			off = offset;
-> -		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
-> +		bytes = do_pwrite(file->fd, off, buffersize, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -153,7 +160,8 @@ static int
->  write_backward(
->  	off64_t		offset,
->  	long long	*count,
-> -	long long	*total)
-> +	long long	*total,
-> +	int		pwritev2_flags)
->  {
->  	off64_t		end, off = offset;
->  	ssize_t		bytes = 0, bytes_requested;
-> @@ -171,7 +179,7 @@ write_backward(
->  	if ((bytes_requested = (off % buffersize))) {
->  		bytes_requested = min(cnt, bytes_requested);
->  		off -= bytes_requested;
-> -		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
-> +		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			return ops;
->  		if (bytes < 0) {
-> @@ -189,7 +197,7 @@ write_backward(
->  	while (cnt > end) {
->  		bytes_requested = min(cnt, buffersize);
->  		off -= bytes_requested;
-> -		bytes = do_pwrite(file->fd, off, cnt, buffersize);
-> +		bytes = do_pwrite(file->fd, off, cnt, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -212,7 +220,8 @@ write_buffer(
->  	size_t		bs,
->  	int		fd,
->  	off64_t		skip,
-> -	long long	*total)
-> +	long long	*total,
-> +	int		pwritev2_flags)
->  {
->  	ssize_t		bytes;
->  	long long	bar = min(bs, count);
-> @@ -224,7 +233,7 @@ write_buffer(
->  			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
->  				break;
->  		}
-> -		bytes = do_pwrite(file->fd, offset, count, bar);
-> +		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -258,6 +267,7 @@ pwrite_f(
->  	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
->  	int		direction = IO_FORWARD;
->  	int		c, fd = -1;
-> +	int		pwritev2_flags = 0;
->  
->  	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
->  	init_cvtnum(&fsblocksize, &fssectsize);
-> @@ -365,13 +375,13 @@ pwrite_f(
->  	case IO_RANDOM:
->  		if (!zeed)	/* srandom seed */
->  			zeed = time(NULL);
-> -		c = write_random(offset, count, zeed, &total);
-> +		c = write_random(offset, count, zeed, &total, pwritev2_flags);
->  		break;
->  	case IO_FORWARD:
-> -		c = write_buffer(offset, count, bsize, fd, skip, &total);
-> +		c = write_buffer(offset, count, bsize, fd, skip, &total, pwritev2_flags);
->  		break;
->  	case IO_BACKWARD:
-> -		c = write_backward(offset, &count, &total);
-> +		c = write_backward(offset, &count, &total, pwritev2_flags);
->  		break;
->  	default:
->  		total = 0;
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following changes since commit 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e:
+
+  Linux 4.14-rc1 (2017-09-16 15:47:51 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.14-fixes-2
+
+for you to fetch changes up to 5e5c943c1f257c2b3424fc3f8a7b18570152dab3:
+
+  xfs: revert "xfs: factor rmap btree size into the indlen calculations" (2017-09-26 10:55:20 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- fix various problems with the copy-on-write extent maps getting freed
+  at the wrong time
+- fix printk format specifier problems
+- report zeroing operation outcomes instead of dropping them on the
+  floor
+- fix some crashes when dio operations partially fail
+- fix a race condition between unwritten extent conversion & dio read
+- fix some incorrect tests in the inode log item processing
+- correct the delayed allocation space reservations on rmap filesystems
+- fix some problems checking for dax support
+
+----------------------------------------------------------------
+Carlos Maiolino (1):
+      xfs: Capture state of the right inode in xfs_iflush_done
+
+Chandan Rajendra (1):
+      iomap_dio_rw: Allocate AIO completion queue before submitting dio
+
+Colin Ian King (1):
+      xfs: remove redundant re-initialization of total_nr_pages
+
+Darrick J. Wong (4):
+      xfs: don't unconditionally clear the reflink flag on zero-block files
+      xfs: evict CoW fork extents when performing finsert/fcollapse
+      xfs: perag initialization should only touch m_ag_max_usable for AG 0
+      xfs: revert "xfs: factor rmap btree size into the indlen calculations"
+
+Eryu Guan (3):
+      xfs: kill meaningless variable 'zero'
+      xfs: report zeroed or not correctly in xfs_zero_range()
+      xfs: update i_size after unwritten conversion in dio completion
+
+Helge Deller (1):
+      fs/xfs: Use %pS printk format for direct addresses
+
+Kenjiro Nakayama (1):
+      xfs: Output warning message when discard option was enabled even though the device does not support discard
+
+Ross Zwisler (1):
+      xfs: validate bdev support for DAX inode flag
+
+ fs/iomap.c                  | 14 +++++++-------
+ fs/xfs/libxfs/xfs_ag_resv.c | 12 ++++++++++--
+ fs/xfs/libxfs/xfs_bmap.c    | 17 ++---------------
+ fs/xfs/xfs_aops.c           |  3 ++-
+ fs/xfs/xfs_bmap_util.c      | 14 +++++++++++++-
+ fs/xfs/xfs_buf.c            |  2 --
+ fs/xfs/xfs_error.c          |  2 +-
+ fs/xfs/xfs_file.c           | 39 +++++++++++++++++++++------------------
+ fs/xfs/xfs_inode.c          |  8 +++++---
+ fs/xfs/xfs_inode_item.c     |  2 +-
+ fs/xfs/xfs_ioctl.c          |  3 ++-
+ fs/xfs/xfs_iomap.c          |  7 +++++--
+ fs/xfs/xfs_iomap.h          |  2 +-
+ fs/xfs/xfs_pnfs.c           |  2 +-
+ fs/xfs/xfs_super.c          | 10 ++++++++++
+ 15 files changed, 81 insertions(+), 56 deletions(-)
