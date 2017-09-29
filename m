@@ -1,186 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43871 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750996AbdI2Fhn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2017 01:37:43 -0400
-Date: Thu, 28 Sep 2017 22:37:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: test increased overlong directory extent discard
- threshold
-Message-ID: <20170929053739.GW5020@magnolia>
-References: <20170927010348.GK5020@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170927010348.GK5020@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:42459 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752404AbdI2NAn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Sep 2017 09:00:43 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+Date: Fri, 29 Sep 2017 08:00:34 -0500
+Message-Id: <20170929130035.24760-2-rgoldwyn@suse.de>
+In-Reply-To: <20170929130035.24760-1-rgoldwyn@suse.de>
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-As of 2007, metadump has an interesting "feature" where it discards
-directory extents that are longer than 1000 (originally 20) blocks.
-This ostensibly was to protect metadump from corrupt bmbt records, but
-it also has the effect of omitting from the metadump valid long extents.
-The end result is that we create incomplete metadumps, which is
-exacerbated by the lack of warning unless -w is passed.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-So now that we've fixed the default threshold to MAXEXTLEN, check that
-the installed metadump no longer exhibits this behavior.
+This allows to make pwritev2() calls with RWF_NOWAIT,
+which would fail in case the call blocks.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
-v2: work out the maths to capture why we're using mkfs options
----
- tests/xfs/707     |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/707.out |    6 +++
- tests/xfs/group   |    1 
- 3 files changed, 124 insertions(+)
- create mode 100755 tests/xfs/707
- create mode 100644 tests/xfs/707.out
+ io/pwrite.c       | 8 +++++++-
+ man/man8/xfs_io.8 | 6 ++++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/tests/xfs/707 b/tests/xfs/707
-new file mode 100755
-index 0000000..f7a90d0
---- /dev/null
-+++ b/tests/xfs/707
-@@ -0,0 +1,117 @@
-+#! /bin/bash
-+# FS QA Test No. 707
-+#
-+# Ensure that metadump copies large directory extents
-+#
-+# Metadump helpfully discards directory (and xattr) extents that are
-+# longer than 1000 blocks.  This is a little silly since a hardlink farm
-+# can easily create such a monster.
-+#
-+# Now that we've upped metadump's default too-long-extent discard
-+# threshold to 2^21 blocks, make sure we never do that again.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f "$tmp".* $metadump_file $metadump_img
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+# We need to create a directory with a huuuge extent record.  Normally
-+# a rapidly expanding directory gets its blocks allocated in lockstep --
-+# physically we end up writing (a couple of dir data blocks) followed by
-+# (a da btree block) over and over.
-+#
-+# Therefore, we crank the directory block size up to maximum and the
-+# filesystem down to minimum so that we have to allocate 64 blocks at
-+# a time, trying to end up with the result that we have > 1000 blocks
-+# allocated in a single extent.
-+#
-+# In theory the math works out here -- ~65500 bytes for a da leaf block /
-+# 8 bytes per da leaf entry == ~8187 hash entries for a da node.  65500
-+# bytes for a dir data block / 264 bytes per dirent == ~248 dirents per
-+# block.  8187 hashes/dablk / 248 dirents/dirblock = ~33 dirblocks per
-+# dablock.  33 dirblocks * 64k mean that we can expand a directory by
-+# 2112k before we have to allocate another da btree block.
-+_scratch_mkfs -b size=1k -n size=64k > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+metadump_file="$TEST_DIR/meta-$seq"
-+metadump_img="$TEST_DIR/img-$seq"
-+rm -f $metadump_file $metadump_img
-+testdir="$SCRATCH_MNT/test-$seq"
-+max_fname_len=255
-+blksz=$(_get_block_size $SCRATCH_MNT)
-+
-+# Try to create a directory w/ extents
-+blocks=1050
-+names=$((blocks * (blksz / max_fname_len)))
-+echo "Create huge dir"
-+mkdir -p $testdir
-+touch $SCRATCH_MNT/a
-+seq 0 $names | while read f; do
-+	name="$testdir/$(printf "%0${max_fname_len}d" $f)"
-+	ln $SCRATCH_MNT/a $name
-+done
-+dir_inum=$(stat -c %i $testdir)
-+
-+echo "Check for > 1000 block extent?"
-+_scratch_unmount
-+check_for_long_extent() {
-+	inum=$1
-+
-+	_scratch_xfs_db -x -c "inode $dir_inum" -c bmap | \
-+		sed -e 's/^.*count \([0-9]*\) flag.*$/\1/g' | \
-+		awk '{if ($1 > 1000) { printf("yes, %d\n", $1); } }'
-+}
-+extlen="$(check_for_long_extent $dir_inum)"
-+echo "qualifying extent: $extlen blocks" >> $seqres.full
-+test -n "$extlen" || _notrun "could not create dir extent > 1000 blocks"
-+
-+echo "Try to metadump"
-+_scratch_metadump $metadump_file -w
-+xfs_mdrestore $metadump_file $metadump_img
-+
-+echo "Check restored metadump image"
-+$XFS_REPAIR_PROG -n $metadump_img >> $seqres.full 2>&1
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/707.out b/tests/xfs/707.out
-new file mode 100644
-index 0000000..0d2a222
---- /dev/null
-+++ b/tests/xfs/707.out
-@@ -0,0 +1,6 @@
-+QA output created by 707
-+Format and mount
-+Create huge dir
-+Check for > 1000 block extent?
-+Try to metadump
-+Check restored metadump image
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 7353b9c..a70c884 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -432,3 +432,4 @@
- 703 auto quick clone fsr
- 704 auto quick clone
- 705 auto quick clone fsr
-+707 auto quick dir metadata
+diff --git a/io/pwrite.c b/io/pwrite.c
+index e7d411bb..2b85a528 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -52,6 +52,9 @@ pwrite_help(void)
+ "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+ #ifdef HAVE_PWRITEV
+ " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
++#ifdef HAVE_PWRITEV2
++" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
++#endif
+ #endif
+ "\n"));
+ }
+@@ -276,7 +279,7 @@ pwrite_f(
+ 	init_cvtnum(&fsblocksize, &fssectsize);
+ 	bsize = fsblocksize;
+ 
+-	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
++	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+ 		switch (c) {
+ 		case 'b':
+ 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+@@ -305,6 +308,9 @@ pwrite_f(
+ 		case 'i':
+ 			infile = optarg;
+ 			break;
++		case 'N':
++			pwritev2_flags |= RWF_NOWAIT;
++			break;
+ 		case 's':
+ 			skip = cvtnum(fsblocksize, fssectsize, optarg);
+ 			if (skip < 0) {
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 0fd9b951..9c58914f 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -282,6 +282,12 @@ Use the vectored IO write syscall
+ with a number of blocksize length iovecs. The number of iovecs is set by the
+ .I vectors
+ parameter.
++.TP
++.B \-N
++Perform the
++.BR pwritev2 (2)
++call with
++.I RWF_NOWAIT.
+ .RE
+ .PD
+ .TP
+-- 
+2.14.1
+
