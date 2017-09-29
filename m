@@ -1,95 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38532 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751345AbdI1UUA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Sep 2017 16:20:00 -0400
-Date: Thu, 28 Sep 2017 13:19:57 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: fixes for 4.14-rc3
-Message-ID: <20170928201957.GS5020@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mx2.suse.de ([195.135.220.15]:42470 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752436AbdI2NAp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Sep 2017 09:00:45 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH v2 3/3] xfs_io: Allow partial writes
+Date: Fri, 29 Sep 2017 08:00:35 -0500
+Message-Id: <20170929130035.24760-3-rgoldwyn@suse.de>
+In-Reply-To: <20170929130035.24760-1-rgoldwyn@suse.de>
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <djwong@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Hi Linus,
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Here's the first round of bug fixes for 4.14.
+Partial writes are performed when there is an error midway
+while performing the I/O. Perform the write exactly once and
+return the number of bytes written so far, until the error.
 
---D
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ io/io.h           |  1 +
+ io/pwrite.c       | 25 ++++++++++++++++++++++++-
+ man/man8/xfs_io.8 |  3 +++
+ 3 files changed, 28 insertions(+), 1 deletion(-)
 
-The following changes since commit 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e:
+diff --git a/io/io.h b/io/io.h
+index 6a0fe657..3862985f 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -25,6 +25,7 @@
+ #define IO_RANDOM	( 0)
+ #define IO_FORWARD	( 1)
+ #define IO_BACKWARD	(-1)
++#define IO_ONCE		( 2)
+ 
+ /*
+  * File descriptor options
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 2b85a528..dcf130d6 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -47,6 +47,7 @@ pwrite_help(void)
+ " -W   -- call fsync(2) at the end (included in timing results)\n"
+ " -B   -- write backwards through the range from offset (backwards N bytes)\n"
+ " -F   -- write forwards through the range of bytes from offset (default)\n"
++" -O   -- perform pwrite call once and return (maybe partial) bytes written\n"
+ " -R   -- write at random offsets in the specified range of bytes\n"
+ " -Z N -- zeed the random number generator (used when writing randomly)\n"
+ "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+@@ -258,6 +259,22 @@ write_buffer(
+ 	return ops;
+ }
+ 
++static int
++write_once(
++	off64_t		offset,
++	long long	count,
++	long long	*total,
++	int		pwritev2_flags)
++{
++	size_t bytes;
++	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
++	if (bytes < 0)
++		return -1;
++	*total = bytes;
++	return 1;
++}
++
++
+ static int
+ pwrite_f(
+ 	int		argc,
+@@ -279,7 +296,7 @@ pwrite_f(
+ 	init_cvtnum(&fsblocksize, &fssectsize);
+ 	bsize = fsblocksize;
+ 
+-	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
++	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
+ 		switch (c) {
+ 		case 'b':
+ 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+@@ -301,6 +318,9 @@ pwrite_f(
+ 		case 'R':
+ 			direction = IO_RANDOM;
+ 			break;
++		case 'O':
++			direction = IO_ONCE;
++			break;
+ 		case 'd':
+ 			dflag = 1;
+ 			break;
+@@ -392,6 +412,9 @@ pwrite_f(
+ 	case IO_BACKWARD:
+ 		c = write_backward(offset, &count, &total, pwritev2_flags);
+ 		break;
++	case IO_ONCE:
++		c = write_once(offset, count, &total, pwritev2_flags);
++		break;
+ 	default:
+ 		total = 0;
+ 		ASSERT(0);
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 9c58914f..b7c0f099 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -263,6 +263,9 @@ write the buffers in a reserve sequential direction.
+ .B \-R
+ write the buffers in the give range in a random order.
+ .TP
++.B \-O
++perform pwrite once and return the (maybe partial) bytes written.
++.TP
+ .B \-Z seed
+ specify the random number seed used for random write
+ .TP
+-- 
+2.14.1
 
-  Linux 4.14-rc1 (2017-09-16 15:47:51 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.14-fixes-2
-
-for you to fetch changes up to 5e5c943c1f257c2b3424fc3f8a7b18570152dab3:
-
-  xfs: revert "xfs: factor rmap btree size into the indlen calculations" (2017-09-26 10:55:20 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- fix various problems with the copy-on-write extent maps getting freed
-  at the wrong time
-- fix printk format specifier problems
-- report zeroing operation outcomes instead of dropping them on the
-  floor
-- fix some crashes when dio operations partially fail
-- fix a race condition between unwritten extent conversion & dio read
-- fix some incorrect tests in the inode log item processing
-- correct the delayed allocation space reservations on rmap filesystems
-- fix some problems checking for dax support
-
-----------------------------------------------------------------
-Carlos Maiolino (1):
-      xfs: Capture state of the right inode in xfs_iflush_done
-
-Chandan Rajendra (1):
-      iomap_dio_rw: Allocate AIO completion queue before submitting dio
-
-Colin Ian King (1):
-      xfs: remove redundant re-initialization of total_nr_pages
-
-Darrick J. Wong (4):
-      xfs: don't unconditionally clear the reflink flag on zero-block files
-      xfs: evict CoW fork extents when performing finsert/fcollapse
-      xfs: perag initialization should only touch m_ag_max_usable for AG 0
-      xfs: revert "xfs: factor rmap btree size into the indlen calculations"
-
-Eryu Guan (3):
-      xfs: kill meaningless variable 'zero'
-      xfs: report zeroed or not correctly in xfs_zero_range()
-      xfs: update i_size after unwritten conversion in dio completion
-
-Helge Deller (1):
-      fs/xfs: Use %pS printk format for direct addresses
-
-Kenjiro Nakayama (1):
-      xfs: Output warning message when discard option was enabled even though the device does not support discard
-
-Ross Zwisler (1):
-      xfs: validate bdev support for DAX inode flag
-
- fs/iomap.c                  | 14 +++++++-------
- fs/xfs/libxfs/xfs_ag_resv.c | 12 ++++++++++--
- fs/xfs/libxfs/xfs_bmap.c    | 17 ++---------------
- fs/xfs/xfs_aops.c           |  3 ++-
- fs/xfs/xfs_bmap_util.c      | 14 +++++++++++++-
- fs/xfs/xfs_buf.c            |  2 --
- fs/xfs/xfs_error.c          |  2 +-
- fs/xfs/xfs_file.c           | 39 +++++++++++++++++++++------------------
- fs/xfs/xfs_inode.c          |  8 +++++---
- fs/xfs/xfs_inode_item.c     |  2 +-
- fs/xfs/xfs_ioctl.c          |  3 ++-
- fs/xfs/xfs_iomap.c          |  7 +++++--
- fs/xfs/xfs_iomap.h          |  2 +-
- fs/xfs/xfs_pnfs.c           |  2 +-
- fs/xfs/xfs_super.c          | 10 ++++++++++
- 15 files changed, 81 insertions(+), 56 deletions(-)
