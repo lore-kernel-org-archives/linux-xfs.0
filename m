@@ -1,44 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19954 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750805AbdI1WNt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2017 18:13:49 -0400
-Date: Thu, 28 Sep 2017 15:13:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_io: add new error injection knobs to inject command
-Message-ID: <20170928221343.GT5020@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:57984 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750748AbdI2EN6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Sep 2017 00:13:58 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] common/xfs: add iomap_dio_complete() to the dmesg filter
+Date: Fri, 29 Sep 2017 12:13:27 +0800
+Message-Id: <20170929041327.1346-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-Bring xfs_io's inject command up to date with the newest knobs.
+Kernel commit 332391a9935d ("fs: Fix page cache inconsistency when mixing
+buffered and AIO DIO") moved the WARN_ON_ONCE() into iomap_dio_complete(),
+along with the page cache invalidation. Let's add iomap_dio_complete() to the
+filter whitelist too, so this expected warning when mixing direct I/O with
+buffered I/O won't fail tests.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- io/inject.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ common/xfs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/io/inject.c b/io/inject.c
-index 25c7021..964ebfe 100644
---- a/io/inject.c
-+++ b/io/inject.c
-@@ -86,7 +86,13 @@ error_tag(char *name)
- 		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
- #define XFS_ERRTAG_AG_RESV_CRITICAL			27
- 		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
--#define XFS_ERRTAG_MAX                                  28
-+#define XFS_ERRTAG_DROP_WRITES				28
-+		{ XFS_ERRTAG_DROP_WRITES,		"drop_writes" },
-+#define XFS_ERRTAG_LOG_BAD_CRC				29
-+		{ XFS_ERRTAG_LOG_BAD_CRC,		"log_bad_crc" },
-+#define XFS_ERRTAG_LOG_ITEM_PIN				30
-+		{ XFS_ERRTAG_LOG_ITEM_PIN,		"log_item_pin" },
-+#define XFS_ERRTAG_MAX                                  31
- 		{ XFS_ERRTAG_MAX,			NULL }
- 	};
- 	int	count;
+diff --git a/common/xfs b/common/xfs
+index def28bfc7309..c869aaca4512 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -610,11 +610,13 @@ _filter_xfs_dmesg()
+ 	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+ 	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+ 	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
++	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+ 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+ 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+ 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+ 	    -e "s#$warn4#Intentional warnings in xfs_file_aio_read#" \
+ 	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#" \
+ 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+-	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#"
++	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
++	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#"
+ }
+-- 
+2.13.6
+
