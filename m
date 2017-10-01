@@ -1,78 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37468 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751484AbdJFUHm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Oct 2017 16:07:42 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D5BF22C977C
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2017 20:07:41 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B9EC760F86
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2017 20:07:41 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
-Date: Fri,  6 Oct 2017 16:07:40 -0400
-Message-Id: <20171006200740.7140-1-bfoster@redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:26530 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751092AbdJAW6w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2017 18:58:52 -0400
+Date: Mon, 2 Oct 2017 09:58:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
+Message-ID: <20171001225849.GH3666@dastard>
+References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
-associated blocks. xfs_attr3_node_inactive() recursively descends
-from internal blocks to leaf blocks, caching block address values
-along the way to revisit parent blocks, locate the next entry and
-descend down that branch of the tree.
+On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
+> Hi,
+> 
+> I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
+> (with xfsprogs 4.13.1), and I can reproduce it on the same machine
+> twice. But I can't reproduce it on another machine.
+> 
+> Maybe there're some hardware specific requirement to trigger this panic. I
+> tested on normal disk partition, but the disk is multi stripes RAID device.
+> I didn't get the mkfs output of g/085, bug I found the default mkfs output
+> (mkfs.xfs -f /dev/sda3) is:
+> 
+> meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+> data     =                       bsize=1024   blocks=15720448, imaxpct=25
+>          =                       sunit=512    swidth=1024 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal log           bsize=1024   blocks=10240, version=2
+>          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-The code that attempts to reread the parent block is unsafe because
-it assumes that the local xfs_da_node_entry pointer remains valid
-after an xfs_trans_brelse() and re-read of the parent buffer. Under
-heavy memory pressure, it is possible that the buffer has been
-reclaimed and reallocated by the time the parent block is reread.
-This means that 'btree' can point to an invalid memory address, lead
-to a random/garbage value for child_fsb and cause the subsequent
-read of the attr fork to go off the rails and return a NULL buffer
-for an attr fork offset that is most likely not allocated.
+FWIW, I've come across a few of these log recovery crashes recently
+when reworking mkfs.xfs. The cause of them has always been either a
+log being too small or a mismatch between log size and log stripe
+unit configuration. The typical sign of that was either a
+negative buffer length like this one (XFS (dm-0): Invalid block
+length (0xfffffed8) for buffer) or the head/tail block initially
+being calculated before/after the actual log and so the log offset
+was negative.
 
-Note that this problem can be manufactured by setting
-XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
-creating a file with a multi-level attr fork and removing it to
-trigger inactivation.
+I'm guessing the recent log validity checking we've added isn't as
+robust as it should be, but I haven't had time to dig into it yet.
+I've debugged the issues far enough to point to mkfs being wrong
+with xfs_logprint - it runs the same head/tail recovery code as the
+kernel so typically crashes on the same problems as the kernel. It's
+much easier to debug in userspace with gdb, though.....
 
-To address this problem, reinit the node/btree pointers to the
-parent buffer after it has been re-read. This ensures btree points
-to a valid record and allows the walk to proceed.
+Cheers,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-I suspect this is the cause of the NULL buf problem down in
-xfs_attr_inactive(). I can manufacture an instance of that problem as
-noted above. We have a customer who's hitting that problem and will
-attempt to validate this fix, but there is no confirmation as of yet.
-I'm posting this for review in the meantime because this seems like a
-legit fix regardless of whether they are hitting this or something else.
-
-Brian
-
- fs/xfs/xfs_attr_inactive.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index ebd66b1..e3a950e 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -302,6 +302,8 @@ xfs_attr3_node_inactive(
- 						 &bp, XFS_ATTR_FORK);
- 			if (error)
- 				return error;
-+			node = bp->b_addr;
-+			btree = dp->d_ops->node_tree_p(node);
- 			child_fsb = be32_to_cpu(btree[i + 1].before);
- 			xfs_trans_brelse(*trans, bp);
- 		}
+Dave.
 -- 
-2.9.5
-
+Dave Chinner
+david@fromorbit.com
