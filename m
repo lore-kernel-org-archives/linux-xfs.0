@@ -1,119 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:49456 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751410AbdJPBNU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Oct 2017 21:13:20 -0400
-Date: Sun, 15 Oct 2017 21:13:01 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20171016011301.dcam44qylno7rm6a@thunk.org>
-References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
- <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
- <20171009000529.GY3666@dastard>
- <20171009183129.GE11645@wotan.suse.de>
- <87wp442lgm.fsf@xmission.com>
- <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
- <20171015130625.o5k6tk5uflm3rx65@thunk.org>
- <87efq4qcry.fsf@xmission.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39802 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750949AbdJBWPF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Oct 2017 18:15:05 -0400
+Date: Mon, 2 Oct 2017 15:15:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
+Message-ID: <20171002221500.GA6503@magnolia>
+References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
+ <20171001225849.GH3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87efq4qcry.fsf@xmission.com>
+In-Reply-To: <20171001225849.GH3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Aleksa Sarai <asarai@suse.de>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
 
-On Sun, Oct 15, 2017 at 05:14:41PM -0500, Eric W. Biederman wrote:
+On Mon, Oct 02, 2017 at 09:58:49AM +1100, Dave Chinner wrote:
+> On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
+> > Hi,
+> > 
+> > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
+> > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
+> > twice. But I can't reproduce it on another machine.
+> > 
+> > Maybe there're some hardware specific requirement to trigger this panic. I
+> > tested on normal disk partition, but the disk is multi stripes RAID device.
+> > I didn't get the mkfs output of g/085, bug I found the default mkfs output
+> > (mkfs.xfs -f /dev/sda3) is:
+> > 
+> > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
+> >          =                       sectsz=512   attr=2, projid32bit=1
+> >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+> > data     =                       bsize=1024   blocks=15720448, imaxpct=25
+> >          =                       sunit=512    swidth=1024 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> > log      =internal log           bsize=1024   blocks=10240, version=2
+> >          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> Looking at the code it appears ext4, f2fs, and xfs shutdown path
-> implements revoking a bdev from a filesystem.  Further if the ext4
-> implementation is anything to go by it looks like something we could
-> generalize into the vfs.
+> FWIW, I've come across a few of these log recovery crashes recently
+> when reworking mkfs.xfs. The cause of them has always been either a
+> log being too small or a mismatch between log size and log stripe
+> unit configuration. The typical sign of that was either a
+> negative buffer length like this one (XFS (dm-0): Invalid block
+> length (0xfffffed8) for buffer) or the head/tail block initially
+> being calculated before/after the actual log and so the log offset
+> was negative.
+> 
+> I'm guessing the recent log validity checking we've added isn't as
+> robust as it should be, but I haven't had time to dig into it yet.
+> I've debugged the issues far enough to point to mkfs being wrong
+> with xfs_logprint - it runs the same head/tail recovery code as the
+> kernel so typically crashes on the same problems as the kernel. It's
+> much easier to debug in userspace with gdb, though.....
 
-There are two things which the current file system shutdown paths do.
-The first is that they prevent the file system from attempting to
-write to the bdev.  That's all very file system specific, and can't be
-generalized into the VFS.
+Just to pile on with everyone else: I've noticed that fuzzing logsunit
+to -1 causes the mount process to spit out a bunch of recovery-related
+io errors.  Shortly thereafter the kernel crashes too.
 
-The second thing they do is they cause system calls which might modify
-the file system to return an error.  Currently operations that might
-result in _reads_ are not shutdown, so it's not a true revoke(2)
-functionality ala *BSD.  I assume that's what you are talking about
-generalizing into the VFS.  Personally, I would prefer to see us
-generalize something like vhangup() but which works on a file
-descriptor, not just a TTY.  That it is, it disconnects the file
-descriptor entirely from the hardware / file system so in the case of
-the tty, it can be used by other login session, and in the case of the
-file descriptor belonging to a file system, it stops the file system
-from being unmounted.
+--D
 
-The reason why I want to see something which actually does disconnect
-the file descriptor and replaces the CWD for processes is because the
-shutdown path is inherently a fairly violent procedure.  It forcibly
-disconnects the file system from the block device, which means we
-can't do a clean unmount.  If the block device has disappeared, we
-don't have a choice, and that's the only thing we can do.
-
-But if the USB thumb drive hasn't been yanked out yet, it would be
-nice to simply disconnect everything at the file descriptor level,
-then do a normal umount in all of the namespaces.  This will allow the
-file system to be cleanly unmounted, which means it will work for
-those file systems which don't have journals.  (The ext4/btrfs/xfs
-shutdown paths rely on the file system's journalling capability
-because it causes the block device to look like the system had been
-powered off, and so you have to replay the journal when file system is
-remounted.  That's fine, but it's not going to work on file systems
-like VFAT, or worse, on NTFS, where we don't correctly support the
-native file system's logging capability, so power-fail or a forced
-shutdown may end up corrupting the file system enough that you have
-boot into Windows to run CHKDSK.EXE in order clean it up.)
-
-> I won't call this a security regression with user namespaces, or a mount
-> namespace specific issue as it appears any process that can open a file
-> has always been able to trigger this.  That said it does appear this has
-> gone from a theoretical issue to an actuall problem so it is most
-> definitely time to address and fix this.
-
-The reason why this has started become a really painful issue is that
-mount namespaces are extremely painful to debug.  You can't iterate
-over all of the possible namespaces, without having to iterate over
-every process and every thread's /proc/*/mounts.  So if there are 10
-mount namespaces, but 10,000 threads, that's 10,000 /proc/*/mounts
-file that you have to examine individually, just to *find* that needle
-in the haystack which is keeping the mount pinned.
-
-And there is at least one system daemon where when it starts, it opens
-a new mount namespace.  Which means if you happen to have a USB
-thumbdrive mounted when you restart that system daemon, it is not at
-all obvious what you need to do to unmount the USB thumb drive.  And
-yes, any process can open a file, but people at least knew how to find
-it by using lsof.  So perhaps this could be solved partially by better
-tooling, but I would argue that having userspace do a brute force
-search through all of /proc/*/fd/* actually wasn't particularly clean,
-either.  We've lived with it, true.  But perhaps it's time to do
-something better?
-
-And in the case where the system daemon only accidentally captured the
-USB thumb drive by forking a mount namespace, it would be *definitely*
-nice if we could simply make the mount disappear, instead of what we
-have to today, which is kill the system daemon, unmount the USB thumb
-drive, and then restart the system daemon.  (Once, that is, you have
-figured what is going on first.  Often, you end up reporting an ext4
-bug to the ext4 maintainer first, because you think it's an ext4 bug
-that ext4 is refusing to unmount the file system.  After all, you are
-an experienced system administrator, so you *know* that *nothing*
-could *possibly* be keeping the file system busy.  lsof said so.  :-)
-
-> Ted, Aleksa would either of you be interested in generalizing what ext4,
-> f2fs, and xfs does now and working to put a good interface on it?  I can
-> help especially with review but for the short term I am rather booked.
-
-Unfortunately, I have way too much travel coming up in the short term,
-so I probably won't have to take on a new project until at least
-mid-to-late-November at the earliest.  Aleska, do you have time?  I
-can consult on a design, but I have zero coding time for the next
-couple of weeks.
-
-	     	    	       	       	  - Ted
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
