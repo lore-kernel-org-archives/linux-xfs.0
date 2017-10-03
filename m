@@ -1,115 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:35752 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750806AbdJBXOX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Oct 2017 19:14:23 -0400
-Date: Tue, 3 Oct 2017 10:14:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Suggested XFS setup/options for 10TB file system w/ 18-20M files.
-Message-ID: <20171002231420.GI3666@dastard>
-References: <65736D53-5B93-46DD-95D2-02496B59D09C@gmail.com>
-MIME-Version: 1.0
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:43662 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750983AbdJCSLA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 14:11:00 -0400
+Received: by mail-qk0-f181.google.com with SMTP id w134so9134608qkb.0
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Oct 2017 11:10:59 -0700 (PDT)
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <65736D53-5B93-46DD-95D2-02496B59D09C@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: Suggested XFS setup/options for 10TB file system w/ 18-20M files.
+From: "R. Jason Adams" <rjasonadams@gmail.com>
+In-Reply-To: <20171002231420.GI3666@dastard>
+Date: Tue, 3 Oct 2017 14:10:57 -0400
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <2F69CA38-6029-4D9B-BA3C-FD793E613693@gmail.com>
+References: <65736D53-5B93-46DD-95D2-02496B59D09C@gmail.com>
+ <20171002231420.GI3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "R. Jason Adams" <rjasonadams@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 02, 2017 at 09:14:07AM -0400, R. Jason Adams wrote:
-> Hello,
-> 
-> I have a use case where I'm writing ~500Kb (avg size) files to a
-> 10TB XFS file systems. Each of system has 36 of these 10TB drives.
-> 
-> The application opens the file, writes the data (single call), and
-> closes the file. In addition there are a few lines added to the
-> extended attributes. The filesystem ends up with 18 to 20 million
-> files when the drive is full. The files are currently spread over
-> 128x128 directories using a hash of the filename.
+>=20
+> With 4k directory block size and your write heavy workload, you
+> could get away with just 10 directories. However, it'd probably be
+> better to use a single level 100-directory wide hash to bring to
+> down to less than 200k files per directory=E2=80=A6.
 
-Eric already mentioned it, but hashing directories in userspace is
-only necessary to generate sufficient parallelism for the
-application's file create/unlink needs.
 
-You're using 10TB drives, so they'll have 10AGs, so each filesystem
-can be running 10 concurrent file create/unlinks. Hence having
-128x128 = 16384 directories and so ~1000 files per directory is
-splitting things way to fine.
+Moved over to single level with 100 directories.=20
 
-Read the "Directory block size" section here:
 
-https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/tree/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc
+> Small files should be a single extent, so there's heaps of room for
+> a 200 byte xattr in the inode. using 512 byte inodes will half
+> memory demand for caching inode buffers=E2=80=A6.
 
-Summary:
+Moved to 512 byte inodes.
 
-.Recommended maximum number of directory entries for directory block
-sizes
-[header]
-|=====
-| Directory block size  | Max. entries (read-heavy)     | Max.  entries (write-heavy)
-| 4 KB                  | 100000-200000                 | 1000000-2000000
-| 16 KB                 | 100000-1000000                | 1000000-10000000
-| 64 KB                 | >1000000                      | >10000000
-|=====
+> In general, use the defaults and don't add anything extra unless you
+> know it solves a specific problem you've witnessed in testing=E2=80=A6
 
-With 4k directory block size and your write heavy workload, you
-could get away with just 10 directories. However, it'd probably be
-better to use a single level 100-directory wide hash to bring to
-down to less than 200k files per directory....
+Moved to the defaults.
 
-> The format command I'm using:
-> 
-> mkfs.xfs -f -i size=1024 ${DRIVE}
+>=20
+> Most likely going to be metadata writeback of inode buffers
+> requiring RMW based on experience with gluster and ceph having
+> exactly the same problems.  Use blktrace to identify what the reads
+> are, and see if those same blocks are written later on. An io marked
+> a "M" is a metadata IO. Post the blktrace output of the bits you
+> find relevant.
 
-Small files should be a single extent, so there's heaps of room for
-a 200 byte xattr in the inode. using 512 byte inodes will half
-memory demand for caching inode buffers....
+Reformated the drive and it's refilling. With the changes suggested (100 =
+dir, 512 nodes, defaults) it already seems better. We=E2=80=99re =
+currently at 6% full and the reads are quite a bit less than they were =
+before at similar fullness. One thing I=E2=80=99m noticing in Grafana, =
+the read request/s seem to keep increasing (up to ~8/s) for around an 15 =
+minutes, then they drop down 1/s for 10-15 minutes.. then over the next =
+15 minutes they build back up.. etc
 
-> Mount options:
-> 
-> rw,noatime,attr2,inode64,allocsize=2048k,logbufs=8,logbsize=256k,noquota
+> FWIW, how much RAM do you have in the system, and what does 'echo
+> 200 > /proc/sys/fs/xfs/xfssyncd_centisecs' do to the behaviour?
 
-You probably don't need the allocsize mount option. It turns off the
-delalloc autosizing code and prevents tight packing of small
-write-once files.
+System has 24G of ram. I=E2=80=99m guessing a move to 96 or 192G would =
+help a lot.. in the end the system will have 36 of these 10TB drives.
 
-In general, use the defaults and don't add anything extra unless you
-know it solves a specific problem you've witnessed in testing...
+I want to thank you and Eric for the time you=E2=80=99ve taken to help. =
+Feels good to make some progress on this issue.
 
-> As the drive is filling, the first few % of the drive seems fine.
-> Using iostat the avgrq-sz is close to the average file size. What
-> I'm noticing is as the drive starts to fill (say around 5-10%) the
-> reads start increasing (r/s in iostat). In addition, the avgrq-sz
-> starts to decrease. Pretty soon the r/s can be 1/3 to 1/2 as many
-> as our w/s.
+-R. Jason Adams
 
-Most likely going to be metadata writeback of inode buffers
-requiring RMW based on experience with gluster and ceph having
-exactly the same problems.  Use blktrace to identify what the reads
-are, and see if those same blocks are written later on. An io marked
-a "M" is a metadata IO. Post the blktrace output of the bits you
-find relevant.
-
-FWIW, how much RAM do you have in the system, and what does 'echo
-200 > /proc/sys/fs/xfs/xfssyncd_centisecs' do to the behaviour?
-
-> At first we thought this was related to using extended
-> attributes, but disabling that didn’t make a difference at
-> all.
-> 
-> Considering I know the app isn’t making any read request,
-> I’m guessing this is related to updating metadata etc.
-
-Not necessarily. The page cache could be doing RMW cycles if the
-write sizes are not page aligned...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
