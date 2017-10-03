@@ -1,35 +1,546 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:38444 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbdJCUlE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:41:04 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:38929 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdJCUlR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:41:17 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v93KfGVQ024105
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:17 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v93KfG0t009434
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:16 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v93KfFTH001144
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:16 GMT
+Subject: [PATCH 04/25] xfs: create helpers to record and deal with scrub
+ problems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 03 Oct 2017 13:41:14 -0700
+Message-ID: <150706327465.19351.16599589169408373396.stgit@magnolia>
+In-Reply-To: <150706324963.19351.17715069858921948692.stgit@magnolia>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <nycvar.YFH.7.76.1710032230450.17517@jbgna.fhfr.qr>
-References: <20171003185313.1017-1-mcgrof@kernel.org> <20171003185313.1017-6-mcgrof@kernel.org>
- <20171003201204.GA23521@amd> <nycvar.YFH.7.76.1710032213430.17517@jbgna.fhfr.qr>
- <20171003202121.GB23521@amd> <nycvar.YFH.7.76.1710032230450.17517@jbgna.fhfr.qr>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 3 Oct 2017 22:41:02 +0200
-Message-ID: <CAJZ5v0gSqZAKXHD0DBCv2967LddgNtpC5NTs6UvO8C=q5p2VKw@mail.gmail.com>
-Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jiri Kosina <jikos@kernel.org>
-Cc: Pavel Machek <pavel@ucw.cz>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, bart.vanassche@wdc.com, ming.lei@redhat.com, Ted Ts'o <tytso@mit.edu>, darrick.wong@oracle.com, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, linux-fsdevel@vger.kernel.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>, Todd Brandt <todd.e.brandt@linux.intel.com>, nborisov@suse.com, Jan Kara <jack@suse.cz>, martin.petersen@oracle.com, Oliver Neukum <ONeukum@suse.com>, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, Linux PM <linux-pm@vger.kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 3, 2017 at 10:38 PM, Jiri Kosina <jikos@kernel.org> wrote:
-> On Tue, 3 Oct 2017, Pavel Machek wrote:
->
->> > This point I don't understand. What exactly do you mean?
->>
->> Hibernation:
->>
->> We freeze, do system snapshot, unfreeze, and write image to
->> disk.
->
-> Where/why do you unfreeze between creating the snapshot and writing it
-> out?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We do not unfreeze then.
+Create helper functions to record crc and corruption problems, and
+deal with any other runtime errors that arise.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/common.c |  251 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.h |   23 ++++
+ fs/xfs/scrub/trace.h  |  193 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 467 insertions(+)
+
+
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index d2c8f94..a84ba19 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -47,6 +47,257 @@
+ 
+ /* Common code for the metadata scrubbers. */
+ 
++/*
++ * Handling operational errors.
++ *
++ * The *_op_ok() family of functions are used to process error return
++ * codes from functions called as part of a scrub operation.
++ *
++ * If there's no error, we return true to tell the caller that it's ok
++ * to move on to the next check in its list.
++ *
++ * For non-verifier errors (e.g. ENOMEM) we return false to tell the
++ * caller that something bad happened, and we preserve *error so that
++ * the caller can return the *error up the stack to userspace.
++ *
++ * Verifier errors (EFSBADCRC/EFSCORRUPTED) are recorded by setting
++ * OFLAG_CORRUPT in sm_flags and the *error is cleared.  In other words,
++ * we track verifier errors (and failed scrub checks) via OFLAG_CORRUPT,
++ * not via return codes.  We return false to tell the caller that
++ * something bad happened.  Since the error has been cleared, the caller
++ * will (presumably) return that zero and scrubbing will move on to
++ * whatever's next.
++ *
++ * ftrace can be used to record the precise metadata location and the
++ * approximate code location of the failed operation.
++ */
++
++/* Check for operational errors. */
++bool
++xfs_scrub_op_ok(
++	struct xfs_scrub_context	*sc,
++	xfs_agnumber_t			agno,
++	xfs_agblock_t			bno,
++	int				*error)
++{
++	switch (*error) {
++	case 0:
++		return true;
++	case -EDEADLOCK:
++		/* Used to restart an op with deadlock avoidance. */
++		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
++		break;
++	case -EFSBADCRC:
++	case -EFSCORRUPTED:
++		/* Note the badness but don't abort. */
++		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++		*error = 0;
++		/* fall through */
++	default:
++		trace_xfs_scrub_op_error(sc, agno, bno, *error,
++				__return_address);
++		break;
++	}
++	return false;
++}
++
++/* Check for operational errors for a file offset. */
++bool
++xfs_scrub_fblock_op_ok(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_fileoff_t			offset,
++	int				*error)
++{
++	switch (*error) {
++	case 0:
++		return true;
++	case -EDEADLOCK:
++		/* Used to restart an op with deadlock avoidance. */
++		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
++		break;
++	case -EFSBADCRC:
++	case -EFSCORRUPTED:
++		/* Note the badness but don't abort. */
++		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++		*error = 0;
++		/* fall through */
++	default:
++		trace_xfs_scrub_file_op_error(sc, whichfork, offset, *error,
++				__return_address);
++		break;
++	}
++	return false;
++}
++
++/*
++ * Handling scrub corruption/optimization/warning checks.
++ *
++ * The *_set_{corrupt,preen,warning}() family of functions are used to
++ * record the presence of metadata that is incorrect (corrupt), could be
++ * optimized somehow (preen), or should be flagged for administrative
++ * review but is not incorrect (warn).
++ *
++ * ftrace can be used to record the precise metadata location and
++ * approximate code location of the failed check.
++ */
++
++/* Record a block which could be optimized. */
++void
++xfs_scrub_block_set_preen(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*bp)
++{
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++
++	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
++	agno = XFS_FSB_TO_AGNO(mp, fsbno);
++	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
++
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
++	trace_xfs_scrub_block_preen(sc, agno, bno, __return_address);
++}
++
++/*
++ * Record an inode which could be optimized.  The trace data will
++ * include the block given by bp if bp is given; otherwise it will use
++ * the block location of the inode record itself.
++ */
++void
++xfs_scrub_ino_set_preen(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*bp)
++{
++	struct xfs_inode		*ip = sc->ip;
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++
++	if (bp) {
++		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
++		agno = XFS_FSB_TO_AGNO(mp, fsbno);
++		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
++	} else {
++		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
++		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	}
++
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
++	trace_xfs_scrub_ino_preen(sc, ip->i_ino, agno, bno, __return_address);
++}
++
++/* Record a corrupt block. */
++void
++xfs_scrub_block_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*bp)
++{
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++
++	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
++	agno = XFS_FSB_TO_AGNO(mp, fsbno);
++	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
++
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	trace_xfs_scrub_block_error(sc, agno, bno, __return_address);
++}
++
++/*
++ * Record a corrupt inode.  The trace data will include the block given
++ * by bp if bp is given; otherwise it will use the block location of the
++ * inode record itself.
++ */
++void
++xfs_scrub_ino_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	xfs_ino_t			ino,
++	struct xfs_buf			*bp)
++{
++	struct xfs_inode		*ip = sc->ip;
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++
++	if (bp) {
++		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
++		agno = XFS_FSB_TO_AGNO(mp, fsbno);
++		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
++	} else {
++		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
++		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	}
++
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	trace_xfs_scrub_ino_error(sc, ino, agno, bno, __return_address);
++}
++
++/* Record corruption in a block indexed by a file fork. */
++void
++xfs_scrub_fblock_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_fileoff_t			offset)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
++}
++
++/*
++ * Warn about inodes that need administrative review but is not
++ * incorrect.
++ */
++void
++xfs_scrub_ino_set_warning(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*bp)
++{
++	struct xfs_inode		*ip = sc->ip;
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++
++	if (bp) {
++		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
++		agno = XFS_FSB_TO_AGNO(mp, fsbno);
++		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
++	} else {
++		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
++		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	}
++
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
++	trace_xfs_scrub_ino_warning(sc, ip->i_ino, agno, bno, __return_address);
++}
++
++/* Warn about a block indexed by a file fork that needs review. */
++void
++xfs_scrub_fblock_set_warning(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_fileoff_t			offset)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
++	trace_xfs_scrub_fblock_warning(sc, whichfork, offset, __return_address);
++}
++
++/* Signal an incomplete scrub. */
++void
++xfs_scrub_set_incomplete(
++	struct xfs_scrub_context	*sc)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_INCOMPLETE;
++	trace_xfs_scrub_incomplete(sc, __return_address);
++}
++
+ /* Per-scrubber setup functions */
+ 
+ /* Set us up with a transaction and an empty context. */
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index f3d5865..e396aa6 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -33,6 +33,29 @@ xfs_scrub_trans_alloc(
+ 	return xfs_trans_alloc_empty(mp, tpp);
+ }
+ 
++bool xfs_scrub_op_ok(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++		xfs_agblock_t bno, int *error);
++bool xfs_scrub_fblock_op_ok(struct xfs_scrub_context *sc, int whichfork,
++		xfs_fileoff_t offset, int *error);
++
++void xfs_scrub_block_set_preen(struct xfs_scrub_context *sc,
++		struct xfs_buf *bp);
++void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, struct xfs_buf *bp);
++
++void xfs_scrub_block_set_corrupt(struct xfs_scrub_context *sc,
++		struct xfs_buf *bp);
++void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
++		struct xfs_buf *bp);
++void xfs_scrub_fblock_set_corrupt(struct xfs_scrub_context *sc, int whichfork,
++		xfs_fileoff_t offset);
++
++void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc,
++		struct xfs_buf *bp);
++void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
++		xfs_fileoff_t offset);
++
++void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
++
+ /* Setup functions */
+ int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
+ 
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 688517e..8d67a85 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -67,6 +67,199 @@ DEFINE_EVENT(xfs_scrub_class, name, \
+ 
+ DEFINE_SCRUB_EVENT(xfs_scrub_start);
+ DEFINE_SCRUB_EVENT(xfs_scrub_done);
++DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
++
++TRACE_EVENT(xfs_scrub_op_error,
++	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++		 xfs_agblock_t bno, int error, void *ret_ip),
++	TP_ARGS(sc, agno, bno, error, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned int, type)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__field(int, error)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->mp->m_super->s_dev;
++		__entry->type = sc->sm->sm_type;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__entry->error = error;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d type %u agno %u agbno %u error %d ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->type,
++		  __entry->agno,
++		  __entry->bno,
++		  __entry->error,
++		  __entry->ret_ip)
++);
++
++TRACE_EVENT(xfs_scrub_file_op_error,
++	TP_PROTO(struct xfs_scrub_context *sc, int whichfork,
++		 xfs_fileoff_t offset, int error, void *ret_ip),
++	TP_ARGS(sc, whichfork, offset, error, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(unsigned int, type)
++		__field(xfs_fileoff_t, offset)
++		__field(int, error)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->ip->i_mount->m_super->s_dev;
++		__entry->ino = sc->ip->i_ino;
++		__entry->whichfork = whichfork;
++		__entry->type = sc->sm->sm_type;
++		__entry->offset = offset;
++		__entry->error = error;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d ino %llu fork %d type %u offset %llu error %d ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->whichfork,
++		  __entry->type,
++		  __entry->offset,
++		  __entry->error,
++		  __entry->ret_ip)
++);
++
++DECLARE_EVENT_CLASS(xfs_scrub_block_error_class,
++	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++		 xfs_agblock_t bno, void *ret_ip),
++	TP_ARGS(sc, agno, bno, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned int, type)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->mp->m_super->s_dev;
++		__entry->type = sc->sm->sm_type;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d type %u agno %u agbno %u ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->type,
++		  __entry->agno,
++		  __entry->bno,
++		  __entry->ret_ip)
++)
++
++#define DEFINE_SCRUB_BLOCK_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_block_error_class, name, \
++	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno, \
++		 xfs_agblock_t bno, void *ret_ip), \
++	TP_ARGS(sc, agno, bno, ret_ip))
++
++DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_error);
++DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_preen);
++
++DECLARE_EVENT_CLASS(xfs_scrub_ino_error_class,
++	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino,
++		 xfs_agnumber_t agno, xfs_agblock_t bno, void *ret_ip),
++	TP_ARGS(sc, ino, agno, bno, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(unsigned int, type)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->mp->m_super->s_dev;
++		__entry->ino = ino;
++		__entry->type = sc->sm->sm_type;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d ino %llu type %u agno %u agbno %u ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->type,
++		  __entry->agno,
++		  __entry->bno,
++		  __entry->ret_ip)
++)
++
++#define DEFINE_SCRUB_INO_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_ino_error_class, name, \
++	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, \
++		 xfs_agnumber_t agno, xfs_agblock_t bno, void *ret_ip), \
++	TP_ARGS(sc, ino, agno, bno, ret_ip))
++
++DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_error);
++DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_preen);
++DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_warning);
++
++DECLARE_EVENT_CLASS(xfs_scrub_fblock_error_class,
++	TP_PROTO(struct xfs_scrub_context *sc, int whichfork,
++		 xfs_fileoff_t offset, void *ret_ip),
++	TP_ARGS(sc, whichfork, offset, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(unsigned int, type)
++		__field(xfs_fileoff_t, offset)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->ip->i_mount->m_super->s_dev;
++		__entry->ino = sc->ip->i_ino;
++		__entry->whichfork = whichfork;
++		__entry->type = sc->sm->sm_type;
++		__entry->offset = offset;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d ino %llu fork %d type %u offset %llu ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->whichfork,
++		  __entry->type,
++		  __entry->offset,
++		  __entry->ret_ip)
++);
++
++#define DEFINE_SCRUB_FBLOCK_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_fblock_error_class, name, \
++	TP_PROTO(struct xfs_scrub_context *sc, int whichfork, \
++		 xfs_fileoff_t offset, void *ret_ip), \
++	TP_ARGS(sc, whichfork, offset, ret_ip))
++
++DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_error);
++DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_warning);
++
++TRACE_EVENT(xfs_scrub_incomplete,
++	TP_PROTO(struct xfs_scrub_context *sc, void *ret_ip),
++	TP_ARGS(sc, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned int, type)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->mp->m_super->s_dev;
++		__entry->type = sc->sm->sm_type;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d type %u ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->type,
++		  __entry->ret_ip)
++);
+ 
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+ 
+
