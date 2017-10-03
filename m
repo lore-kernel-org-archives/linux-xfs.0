@@ -1,59 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41186 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750961AbdJCUGR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Oct 2017 16:06:17 -0400
-Date: Tue, 3 Oct 2017 22:06:14 +0200 (CEST)
-From: Jiri Kosina <jikos@kernel.org>
-Subject: Re: [RFC 2/5] fs: freeze on suspend and thaw on resume
-In-Reply-To: <20171003185313.1017-3-mcgrof@kernel.org>
-Message-ID: <nycvar.YFH.7.76.1710032203580.17517@jbgna.fhfr.qr>
-References: <20171003185313.1017-1-mcgrof@kernel.org> <20171003185313.1017-3-mcgrof@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from bombadil.infradead.org ([65.50.211.133]:33537 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdJCOeU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 10:34:20 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dzOH5-00076r-PF
+        for linux-xfs@vger.kernel.org; Tue, 03 Oct 2017 14:34:20 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH]  xfs: handle racy AIO in xfs_reflink_end_cow
+Date: Tue,  3 Oct 2017 16:34:16 +0200
+Message-Id: <20171003143416.12188-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, 3 Oct 2017, Luis R. Rodriguez wrote:
+If we got two AIO writes into a COW area the second one might not have any
+COW extents left to convert.  Handle that case gracefully instead of
+triggering an assert or accessing beyond the bounds of the extent list.
 
-> This uses the existing filesystem freeze and thaw callbacks to
-> freeze each filesystem on suspend/hibernation and thaw upon resume.
-> 
-> This is needed so that we properly really stop IO in flight without
-> races after userspace has been frozen. Without this we rely on
-> kthread freezing and its semantics are loose and error prone.
-> For instance, even though a kthread may use try_to_freeze() and end
-> up being frozen we have no way of being sure that everything that
-> has been spawned asynchronously from it (such as timers) have also
-> been stopped as well.
-> 
-> A long term advantage of also adding filesystem freeze / thawing
-> supporting durign suspend / hibernation is that long term we may
-> be able to eventually drop the kernel's thread freezing completely
-> as it was originally added to stop disk IO in flight as we hibernate
-> or suspend.
-> 
-> This also implies that many kthread users exist which have been
-> adding freezer semantics onto its kthreads without need. These also
-> will need to be reviewed later.
-> 
-> This is based on prior work originally by Rafael Wysocki and later by
-> Jiri Kosina.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_reflink.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Thanks a lot for picking this up; I never found time to actually finalize 
-it.
-
-	Acked-by: Jiri Kosina <jkosina@suse.cz>
-
-for patches 2 and 5 (the fs agnostic code), which were in the core of my 
-original work.
-
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 3246815c24d6..37e603bf1591 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -736,7 +736,13 @@ xfs_reflink_end_cow(
+ 	/* If there is a hole at end_fsb - 1 go to the previous extent */
+ 	if (!xfs_iext_lookup_extent(ip, ifp, end_fsb - 1, &idx, &got) ||
+ 	    got.br_startoff > end_fsb) {
+-		ASSERT(idx > 0);
++		/*
++		 * In case of racing, overlapping AIO writes no COW extents
++		 * might be left by the time I/O completes for the loser of
++		 * the race.  In that case we are done.
++		 */
++		if (idx <= 0)
++			goto out_cancel;
+ 		xfs_iext_get_extent(ifp, --idx, &got);
+ 	}
+ 
+@@ -809,6 +815,7 @@ xfs_reflink_end_cow(
+ 
+ out_defer:
+ 	xfs_defer_cancel(&dfops);
++out_cancel:
+ 	xfs_trans_cancel(tp);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out:
 -- 
-Jiri Kosina
-SUSE Labs
+2.14.1
 
