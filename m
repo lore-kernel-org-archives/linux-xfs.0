@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38823 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbdJCUlE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:41:04 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:41358 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdJCUlM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:41:12 -0400
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v93Kf3JY023932
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v93KfAH6001707
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:04 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v93Kf3DM032743
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:11 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v93Kf9ct000501
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:03 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v93Kf3Ei003652
-        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:03 GMT
-Subject: [PATCH 02/25] xfs: dispatch metadata scrub subcommands
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:10 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v93Kf94J001103
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:09 GMT
+Subject: [PATCH 03/25] xfs: probe the scrub ioctl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 03 Oct 2017 13:41:02 -0700
-Message-ID: <150706326240.19351.5195584361798357627.stgit@magnolia>
+Date: Tue, 03 Oct 2017 13:41:08 -0700
+Message-ID: <150706326848.19351.10670988265979551239.stgit@magnolia>
 In-Reply-To: <150706324963.19351.17715069858921948692.stgit@magnolia>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,297 +31,231 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create structures needed to hold scrubbing context and dispatch incoming
-commands to the individual scrubbers.
+Create a probe scrubber with id 0.  This will be used by xfs_scrub to
+probe the kernel's abilities to scrub (and repair) the metadata.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/scrub.c |  178 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.h |   24 +++++++
- fs/xfs/scrub/trace.h |   43 ++++++++++++
- 3 files changed, 244 insertions(+), 1 deletion(-)
+ fs/xfs/Makefile        |    1 +
+ fs/xfs/libxfs/xfs_fs.h |    3 ++
+ fs/xfs/scrub/common.c  |   59 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.h  |   39 ++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c   |   24 ++++++++++++++++++++
+ fs/xfs/scrub/scrub.h   |    1 +
+ fs/xfs/scrub/trace.c   |    1 +
+ 7 files changed, 127 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/scrub/common.c
+ create mode 100644 fs/xfs/scrub/common.h
 
 
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index f4312bc..ca14595 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -146,6 +146,7 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+ 
+ xfs-y				+= $(addprefix scrub/, \
+ 				   trace.o \
++				   common.o \
+ 				   scrub.o \
+ 				   )
+ endif
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 3b4a36e..765f91e 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -483,9 +483,10 @@ struct xfs_scrub_metadata {
+  */
+ 
+ /* Scrub subcommands. */
++#define XFS_SCRUB_TYPE_PROBE	0	/* presence test ioctl */
+ 
+ /* Number of scrub subcommands. */
+-#define XFS_SCRUB_TYPE_NR	0
++#define XFS_SCRUB_TYPE_NR	1
+ 
+ /* i: Repair this metadata. */
+ #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+new file mode 100644
+index 0000000..d2c8f94
+--- /dev/null
++++ b/fs/xfs/scrub/common.c
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_refcount.h"
++#include "xfs_refcount_btree.h"
++#include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++
++/* Common code for the metadata scrubbers. */
++
++/* Per-scrubber setup functions */
++
++/* Set us up with a transaction and an empty context. */
++int
++xfs_scrub_setup_fs(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*ip)
++{
++	return xfs_scrub_trans_alloc(sc->sm, sc->mp, &sc->tp);
++}
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+new file mode 100644
+index 0000000..f3d5865
+--- /dev/null
++++ b/fs/xfs/scrub/common.h
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_SCRUB_COMMON_H__
++#define __XFS_SCRUB_COMMON_H__
++
++/*
++ * Grab an empty transaction so that we can re-grab locked buffers if
++ * one of our btrees turns out to be cyclic.
++ */
++static inline int
++xfs_scrub_trans_alloc(
++	struct xfs_scrub_metadata	*sm,
++	struct xfs_mount		*mp,
++	struct xfs_trans		**tpp)
++{
++	return xfs_trans_alloc_empty(mp, tpp);
++}
++
++/* Setup functions */
++int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
++
++#endif	/* __XFS_SCRUB_COMMON_H__ */
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 5db2a6f..1f0ab15 100644
+index 1f0ab15..d51354d 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -44,11 +44,187 @@
+@@ -42,6 +42,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
++#include "scrub/common.h"
  #include "scrub/trace.h"
  
+ /*
+@@ -108,6 +109,25 @@
+  * will be set.
+  */
+ 
 +/*
-+ * Online Scrub and Repair
-+ *
-+ * Traditionally, XFS (the kernel driver) did not know how to check or
-+ * repair on-disk data structures.  That task was left to the xfs_check
-+ * and xfs_repair tools, both of which require taking the filesystem
-+ * offline for a thorough but time consuming examination.  Online
-+ * scrub & repair, on the other hand, enables us to check the metadata
-+ * for obvious errors while carefully stepping around the filesystem's
-+ * ongoing operations, locking rules, etc.
-+ *
-+ * Given that most XFS metadata consist of records stored in a btree,
-+ * most of the checking functions iterate the btree blocks themselves
-+ * looking for irregularities.  When a record block is encountered, each
-+ * record can be checked for obviously bad values.  Record values can
-+ * also be cross-referenced against other btrees to look for potential
-+ * misunderstandings between pieces of metadata.
-+ *
-+ * It is expected that the checkers responsible for per-AG metadata
-+ * structures will lock the AG headers (AGI, AGF, AGFL), iterate the
-+ * metadata structure, and perform any relevant cross-referencing before
-+ * unlocking the AG and returning the results to userspace.  These
-+ * scrubbers must not keep an AG locked for too long to avoid tying up
-+ * the block and inode allocators.
-+ *
-+ * Block maps and b-trees rooted in an inode present a special challenge
-+ * because they can involve extents from any AG.  The general scrubber
-+ * structure of lock -> check -> xref -> unlock still holds, but AG
-+ * locking order rules /must/ be obeyed to avoid deadlocks.  The
-+ * ordering rule, of course, is that we must lock in increasing AG
-+ * order.  Helper functions are provided to track which AG headers we've
-+ * already locked.  If we detect an imminent locking order violation, we
-+ * can signal a potential deadlock, in which case the scrubber can jump
-+ * out to the top level, lock all the AGs in order, and retry the scrub.
-+ *
-+ * For file data (directories, extended attributes, symlinks) scrub, we
-+ * can simply lock the inode and walk the data.  For btree data
-+ * (directories and attributes) we follow the same btree-scrubbing
-+ * strategy outlined previously to check the records.
-+ *
-+ * We use a bit of trickery with transactions to avoid buffer deadlocks
-+ * if there is a cycle in the metadata.  The basic problem is that
-+ * travelling down a btree involves locking the current buffer at each
-+ * tree level.  If a pointer should somehow point back to a buffer that
-+ * we've already examined, we will deadlock due to the second buffer
-+ * locking attempt.  Note however that grabbing a buffer in transaction
-+ * context links the locked buffer to the transaction.  If we try to
-+ * re-grab the buffer in the context of the same transaction, we avoid
-+ * the second lock attempt and continue.  Between the verifier and the
-+ * scrubber, something will notice that something is amiss and report
-+ * the corruption.  Therefore, each scrubber will allocate an empty
-+ * transaction, attach buffers to it, and cancel the transaction at the
-+ * end of the scrub run.  Cancelling a non-dirty transaction simply
-+ * unlocks the buffers.
-+ *
-+ * There are four pieces of data that scrub can communicate to
-+ * userspace.  The first is the error code (errno), which can be used to
-+ * communicate operational errors in performing the scrub.  There are
-+ * also three flags that can be set in the scrub context.  If the data
-+ * structure itself is corrupt, the CORRUPT flag will be set.  If
-+ * the metadata is correct but otherwise suboptimal, the PREEN flag
-+ * will be set.
++ * Scrub probe -- userspace uses this to probe if we're willing to
++ * scrub or repair a given mountpoint.
 + */
-+
-+/* Scrub setup and teardown */
-+
-+/* Free all the resources and finish the transactions. */
-+STATIC int
-+xfs_scrub_teardown(
-+	struct xfs_scrub_context	*sc,
-+	int				error)
++int
++xfs_scrub_probe(
++	struct xfs_scrub_context	*sc)
 +{
-+	if (sc->tp) {
-+		xfs_trans_cancel(sc->tp);
-+		sc->tp = NULL;
-+	}
-+	return error;
++	if (sc->sm->sm_ino || sc->sm->sm_agno)
++		return -EINVAL;
++	if (sc->sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
++		return -ENOENT;
++
++	/* Echo parameters back to userspace to prove that we exist. */
++	sc->sm->sm_flags |= (sc->sm->sm_gen & XFS_SCRUB_FLAGS_OUT);
++
++	return 0;
 +}
 +
-+/* Scrubbing dispatch. */
-+
-+static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
-+};
-+
-+/* This isn't a stable feature, warn once per day. */
-+static inline void
-+xfs_scrub_experimental_warning(
-+	struct xfs_mount	*mp)
-+{
-+	static struct ratelimit_state scrub_warning = RATELIMIT_STATE_INIT(
-+			"xfs_scrub_warning", 86400 * HZ, 1);
-+	ratelimit_set_flags(&scrub_warning, RATELIMIT_MSG_ON_RELEASE);
-+
-+	if (__ratelimit(&scrub_warning))
-+		xfs_alert(mp,
-+"EXPERIMENTAL online scrub feature in use. Use at your own risk!");
-+}
-+
- /* Dispatch metadata scrubbing. */
- int
- xfs_scrub_metadata(
- 	struct xfs_inode		*ip,
- 	struct xfs_scrub_metadata	*sm)
- {
--	return -EOPNOTSUPP;
-+	struct xfs_scrub_context	sc;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	const struct xfs_scrub_meta_ops	*ops;
-+	bool				try_harder = false;
-+	int				error = 0;
-+
-+	trace_xfs_scrub_start(ip, sm, error);
-+
-+	/* Forbidden if we are shut down or mounted norecovery. */
-+	error = -ESHUTDOWN;
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		goto out;
-+	error = -ENOTRECOVERABLE;
-+	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-+		goto out;
-+
-+	/* Check our inputs. */
-+	error = -EINVAL;
-+	sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	if (sm->sm_flags & ~XFS_SCRUB_FLAGS_IN)
-+		goto out;
-+	if (memchr_inv(sm->sm_reserved, 0, sizeof(sm->sm_reserved)))
-+		goto out;
-+
-+	/* Do we know about this type of metadata? */
-+	error = -ENOENT;
-+	if (sm->sm_type >= XFS_SCRUB_TYPE_NR)
-+		goto out;
-+	ops = &meta_scrub_ops[sm->sm_type];
-+	if (ops->scrub == NULL)
-+		goto out;
-+
-+	/* Does this fs even support this type of metadata? */
-+	if (ops->has && !ops->has(&mp->m_sb))
-+		goto out;
-+
-+	/* We don't know how to repair anything yet. */
-+	error = -EOPNOTSUPP;
-+	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-+		goto out;
-+
-+	xfs_scrub_experimental_warning(mp);
-+
-+retry_op:
-+	/* Set up for the operation. */
-+	memset(&sc, 0, sizeof(sc));
-+	sc.mp = ip->i_mount;
-+	sc.sm = sm;
-+	sc.ops = ops;
-+	sc.try_harder = try_harder;
-+	error = sc.ops->setup(&sc, ip);
-+	if (error)
-+		goto out_teardown;
-+
-+	/* Scrub for errors. */
-+	error = sc.ops->scrub(&sc);
-+	if (!try_harder && error == -EDEADLOCK) {
-+		/*
-+		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
-+		 * Tear down everything we hold, then set up again with
-+		 * preparation for worst-case scenarios.
-+		 */
-+		error = xfs_scrub_teardown(&sc, 0);
-+		if (error)
-+			goto out;
-+		try_harder = true;
-+		goto retry_op;
-+	} else if (error)
-+		goto out_teardown;
-+
-+	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			       XFS_SCRUB_OFLAG_XCORRUPT))
-+		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
-+
-+out_teardown:
-+	error = xfs_scrub_teardown(&sc, error);
-+out:
-+	trace_xfs_scrub_done(ip, sm, error);
-+	return error;
- }
+ /* Scrub setup and teardown */
+ 
+ /* Free all the resources and finish the transactions. */
+@@ -126,6 +146,10 @@ xfs_scrub_teardown(
+ /* Scrubbing dispatch. */
+ 
+ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
++	{ /* ioctl presence test */
++		.setup	= xfs_scrub_setup_fs,
++		.scrub	= xfs_scrub_probe,
++	},
+ };
+ 
+ /* This isn't a stable feature, warn once per day. */
 diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index eb1cd9d..ef7b50e 100644
+index ef7b50e..b7b9422 100644
 --- a/fs/xfs/scrub/scrub.h
 +++ b/fs/xfs/scrub/scrub.h
-@@ -20,6 +20,30 @@
- #ifndef __XFS_SCRUB_SCRUB_H__
- #define __XFS_SCRUB_SCRUB_H__
+@@ -45,5 +45,6 @@ struct xfs_scrub_context {
+ };
  
-+struct xfs_scrub_context;
-+
-+struct xfs_scrub_meta_ops {
-+	/* Acquire whatever resources are needed for the operation. */
-+	int		(*setup)(struct xfs_scrub_context *,
-+				 struct xfs_inode *);
-+
-+	/* Examine metadata for errors. */
-+	int		(*scrub)(struct xfs_scrub_context *);
-+
-+	/* Decide if we even have this piece of metadata. */
-+	bool		(*has)(struct xfs_sb *);
-+};
-+
-+struct xfs_scrub_context {
-+	/* General scrub state. */
-+	struct xfs_mount		*mp;
-+	struct xfs_scrub_metadata	*sm;
-+	const struct xfs_scrub_meta_ops	*ops;
-+	struct xfs_trans		*tp;
-+	struct xfs_inode		*ip;
-+	bool				try_harder;
-+};
-+
  /* Metadata scrubbers */
++int xfs_scrub_tester(struct xfs_scrub_context *sc);
  
  #endif	/* __XFS_SCRUB_SCRUB_H__ */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index a95a7c8..688517e 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -25,6 +25,49 @@
+diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
+index c59fd41..88b5ccb 100644
+--- a/fs/xfs/scrub/trace.c
++++ b/fs/xfs/scrub/trace.c
+@@ -32,6 +32,7 @@
+ #include "xfs_trans.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
++#include "scrub/common.h"
  
- #include <linux/tracepoint.h>
- 
-+DECLARE_EVENT_CLASS(xfs_scrub_class,
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
-+		 int error),
-+	TP_ARGS(ip, sm, error),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(unsigned int, type)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_ino_t, inum)
-+		__field(unsigned int, gen)
-+		__field(unsigned int, flags)
-+		__field(int, error)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->type = sm->sm_type;
-+		__entry->agno = sm->sm_agno;
-+		__entry->inum = sm->sm_ino;
-+		__entry->gen = sm->sm_gen;
-+		__entry->flags = sm->sm_flags;
-+		__entry->error = error;
-+	),
-+	TP_printk("dev %d:%d ino %llu type %u agno %u inum %llu gen %u flags 0x%x error %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->type,
-+		  __entry->agno,
-+		  __entry->inum,
-+		  __entry->gen,
-+		  __entry->flags,
-+		  __entry->error)
-+)
-+#define DEFINE_SCRUB_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm, \
-+		 int error), \
-+	TP_ARGS(ip, sm, error))
-+
-+DEFINE_SCRUB_EVENT(xfs_scrub_start);
-+DEFINE_SCRUB_EVENT(xfs_scrub_done);
-+
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
- 
- #undef TRACE_INCLUDE_PATH
+ /*
+  * We include this last to have the helpers above available for the trace
 
