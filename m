@@ -1,145 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:26251 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751522AbdJCU6q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:58:46 -0400
-Date: Wed, 4 Oct 2017 07:58:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC 2/5] fs: freeze on suspend and thaw on resume
-Message-ID: <20171003205841.GN3666@dastard>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:47219 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750820AbdJCU7b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:59:31 -0400
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [RFC 0/5] fs: replace kthread freezing with filesystem
+ freeze/thaw
+Date: Tue, 3 Oct 2017 20:59:26 +0000
+Message-ID: <1507064365.2567.36.camel@wdc.com>
 References: <20171003185313.1017-1-mcgrof@kernel.org>
- <20171003185313.1017-3-mcgrof@kernel.org>
+         <20171003193300.GD5362@ming.t460p> <20171003200511.GD2294@wotan.suse.de>
+         <20171003204755.GB8848@bombadil.infradead.org>
+In-Reply-To: <20171003204755.GB8848@bombadil.infradead.org>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <4B44B2AFF4B5EA498A900C8C99DEA270@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171003185313.1017-3-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "willy@infradead.org" <willy@infradead.org>, "mcgrof@kernel.org" <mcgrof@kernel.org>
+Cc: "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "jgross@suse.com" <jgross@suse.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.cz" <jack@suse.cz>
 
-On Tue, Oct 03, 2017 at 11:53:10AM -0700, Luis R. Rodriguez wrote:
-> This uses the existing filesystem freeze and thaw callbacks to
-> freeze each filesystem on suspend/hibernation and thaw upon resume.
-> 
-> This is needed so that we properly really stop IO in flight without
-> races after userspace has been frozen. Without this we rely on
-> kthread freezing and its semantics are loose and error prone.
-> For instance, even though a kthread may use try_to_freeze() and end
-> up being frozen we have no way of being sure that everything that
-> has been spawned asynchronously from it (such as timers) have also
-> been stopped as well.
-> 
-> A long term advantage of also adding filesystem freeze / thawing
-> supporting durign suspend / hibernation is that long term we may
-> be able to eventually drop the kernel's thread freezing completely
-> as it was originally added to stop disk IO in flight as we hibernate
-> or suspend.
-> 
-> This also implies that many kthread users exist which have been
-> adding freezer semantics onto its kthreads without need. These also
-> will need to be reviewed later.
-> 
-> This is based on prior work originally by Rafael Wysocki and later by
-> Jiri Kosina.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  fs/super.c             | 79 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/fs.h     | 13 +++++++++
->  kernel/power/process.c | 14 ++++++++-
->  3 files changed, 105 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/super.c b/fs/super.c
-> index d45e92d9a38f..ce8da8b187b1 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -1572,3 +1572,82 @@ int thaw_super(struct super_block *sb)
->  	return 0;
->  }
->  EXPORT_SYMBOL(thaw_super);
-> +
-> +#ifdef CONFIG_PM_SLEEP
-> +static bool super_allows_freeze(struct super_block *sb)
-> +{
-> +	return !!(sb->s_type->fs_flags & FS_FREEZE_ON_SUSPEND);
-> +}
-
-That's a completely misleading function name. All superblocks can be
-frozen - freeze_super() is filesystem independent. And given that, I
-don't see why these super_should_freeze() hoops need to be jumped
-through...
-
-> +
-> +static bool super_should_freeze(struct super_block *sb)
-> +{
-> +	if (!sb->s_root)
-> +		return false;
-> +	if (!(sb->s_flags & MS_BORN))
-> +		return false;
-> +	/*
-> +	 * We don't freeze virtual filesystems, we skip those filesystems with
-> +	 * no backing device.
-> +	 */
-> +	if (sb->s_bdi == &noop_backing_dev_info)
-> +		return false;
-> +	/* No need to freeze read-only filesystems */
-> +	if (sb->s_flags & MS_RDONLY)
-> +		return false;
-> +	if (!super_allows_freeze(sb))
-> +		return false;
-> +
-> +	return true;
-> +}
-
-> +
-> +int fs_suspend_freeze_sb(struct super_block *sb, void *priv)
-> +{
-> +	int error = 0;
-> +
-> +	spin_lock(&sb_lock);
-> +	if (!super_should_freeze(sb))
-> +		goto out;
-> +
-> +	up_read(&sb->s_umount);
-> +	pr_info("%s (%s): freezing\n", sb->s_type->name, sb->s_id);
-> +	error = freeze_super(sb);
-> +	down_read(&sb->s_umount);
-> +out:
-> +	if (error && error != -EBUSY)
-> +		pr_notice("%s (%s): Unable to freeze, error=%d",
-> +			  sb->s_type->name, sb->s_id, error);
-> +	spin_unlock(&sb_lock);
-> +	return error;
-> +}
-
-I don't think this was ever tested.  Calling freeze_super() with a
-spinlock held with through "sleeping in atomic" errors all over the
-place.
-
-Also, the s_umount lock juggling is nasty. Your new copy+pasted
-iterate_supers_reverse() takes the lock in read mode, yet all the
-freeze/thaw callers here want to take it in write mode. So, really,
-iterate_supers_reverse() needs to be iterate_supers_reverse_excl()
-and take the write lock, and freeze_super/thaw_super need to be
-factored into locked and unlocked versions.
-
-In which case, we end up with:
-
-int fs_suspend_freeze_sb(struct super_block *sb, void *priv)
-{
-	return freeze_locked_super(sb);
-}
-
-int fs_suspend_thaw_sb(struct super_block *sb, void *priv)
-{
-	return thaw_locked_super(sb);
-}
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+T24gVHVlLCAyMDE3LTEwLTAzIGF0IDEzOjQ3IC0wNzAwLCBNYXR0aGV3IFdpbGNveCB3cm90ZToN
+Cj4gVGhlIFNDU0kgbGF5ZXIgY2FuIHNlbmQgU0NTSSBjb21tYW5kczsgdGhleSBhcmVuJ3QgSS9P
+cyBpbiB0aGUgc2Vuc2UgdGhhdA0KPiB0aGV5IGRvIHJlYWRzIGFuZCB3cml0ZXMgdG8gbWVkaWEs
+IGJ1dCB0aGV5IGFyZSBibG9jayByZXF1ZXN0cy4gIE1heWJlIHRob3NlDQo+IHNob3VsZCBiZSBh
+bGxvd2VkIGV2ZW4gdG8gZnJvemVuIGRldmljZXM/DQoNCkhlbGxvIE1hdHRoZXcsDQoNCkkgdGhp
+bmsgb25seSBSUUZfUE0gcmVxdWVzdHMgc2hvdWxkIGJlIHByb2Nlc3NlZCBmb3IgZnJvemVuIFND
+U0kgZGV2aWNlcw0KYW5kIG5vIG90aGVyIHJlcXVlc3RzLg0KDQpCYXJ0Lg==
