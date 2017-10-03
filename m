@@ -1,42 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46097 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46289 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751477AbdJCUtp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Oct 2017 16:49:45 -0400
-Date: Tue, 3 Oct 2017 22:49:40 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+        id S1750841AbdJCUvx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Oct 2017 16:51:53 -0400
+Date: Tue, 3 Oct 2017 22:51:50 +0200 (CEST)
+From: Jiri Kosina <jikos@kernel.org>
 Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
-Message-ID: <20171003204940.GA5659@wotan.suse.de>
-References: <20171003185313.1017-1-mcgrof@kernel.org>
- <20171003185313.1017-6-mcgrof@kernel.org>
- <20171003201204.GA23521@amd>
+In-Reply-To: <nycvar.YFH.7.76.1710032215140.17517@jbgna.fhfr.qr>
+Message-ID: <nycvar.YFH.7.76.1710032248470.17517@jbgna.fhfr.qr>
+References: <20171003185313.1017-1-mcgrof@kernel.org>  <20171003185313.1017-6-mcgrof@kernel.org> <1507061605.2567.13.camel@wdc.com> <nycvar.YFH.7.76.1710032215140.17517@jbgna.fhfr.qr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171003201204.GA23521@amd>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pavel Machek <pavel@ucw.cz>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "jgross@suse.com" <jgross@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "jack@suse.cz" <jack@suse.cz>
 
-On Tue, Oct 03, 2017 at 10:12:04PM +0200, Pavel Machek wrote:
-> On Tue 2017-10-03 11:53:13, Luis R. Rodriguez wrote:
-> > Now that all filesystems which used to rely on kthread
-> > freezing have been converted to filesystem freeze/thawing
-> > we can remove the kernel kthread freezer.
+On Tue, 3 Oct 2017, Jiri Kosina wrote:
+
+> > What about the many drivers outside filesystems that use the 
+> > set_freezable() / try_to_freeze() / wait_event_freezable() API?
 > 
-> Are you surely-sure? You mentioned other in kernel sources of writes;
-> what about those?
+> Many/most of them are just completely bogus and pointless. 
 
-You perhaps did not read the cover letter, it describes this patch will very
-likely take time to *ever* apply. We must cover tons of grounds first, to
-address precisely what you say.
+More specifically -- they don't really care at all whether they get 
+scheduled out exactly at the try_to_freeze() point; they are perfectly 
+happy being scheduled out at any other scheduling point, and land on 
+runqueue after the resume has been completed.
 
-In fact other than kthreads that generate IO we may have now even crazy stupid
-kthreads using the freezer API which *do not generate IO* which are totally
-bogus but now acts as "features". We'll need to carefully carve out all freezer 
-API uses on all kthreads. This should be done atomically to avoid regressions
-and ensure bisectability.
+Sure, certain drivers need to take action when system is undergoing 
+hibernation/suspend. But that's what PM callbacks are for, not kthread 
+hibernation.
 
-  Luis
+-- 
+Jiri Kosina
+SUSE Labs
+
