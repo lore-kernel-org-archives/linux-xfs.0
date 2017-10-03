@@ -1,152 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36964 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754619AbdJIOYs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 10:24:48 -0400
-Date: Mon, 9 Oct 2017 10:24:46 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
-Message-ID: <20171009142445.GE18663@bfoster.bfoster>
-References: <20171008235414.13866-1-david@fromorbit.com>
- <20171008235414.13866-5-david@fromorbit.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:33961 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751156AbdJCUIk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:08:40 -0400
+Date: Wed, 4 Oct 2017 07:07:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [GIT PULL] xfsprogs: mkfs refactor
+Message-ID: <20171003200726.GK3666@dastard>
+References: <20171003080607.GM15067@dastard>
+ <20171003171604.GC6503@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171008235414.13866-5-david@fromorbit.com>
+In-Reply-To: <20171003171604.GC6503@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Oct 03, 2017 at 10:16:04AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 03, 2017 at 07:06:07PM +1100, Dave Chinner wrote:
+> > Hi Eric,
+> > 
+> > I've put the latest mkfs refactor code that I have up in place
+> > you can pull it from. I've rebased it against the current for-next
+> > tree (4.13.1 release) and fixed all the problems that xfstests
+> > exposes. The only thing I haven't fixed is xfs/191 that does mkfs
+> > command line behaviour verification because the refactored version
+> > fixes several problems that the old mkfs didn't handle correctly
+> > (e.g. being able to specify certain things like agsize in blocks or
+> > sectors).
+> > 
+> > There's a small filter patch needed for xfstests that I'll post in
+> > a reply to this pull request that will filter out the new "defaults
+> > sourced from ..." output and so prevent spurious xfstests failures.
+> > 
+> > If you want I can tag the branch with a signed tag for you to pull
+> > from (same process as Linus prefers) rather than just a branch in a
+> > tree. If you'd prefer that I post this as patches instead, then let
+> > me know and I'll bomb the list instead.
 > 
-> Recently we've had warnings arise from the vm handing us pages
-> without bufferheads attached to them. This should not ever occur
-> in XFS, but we don't defend against it properly if it does. The only
-> place where we remove bufferheads from a page is in
-> xfs_vm_releasepage(), but we can't tell the difference here between
-> "page is dirty so don't release" and "page is dirty but is being
-> invalidated so release it".
+> I had a look at mkfs-refactor.  It looks ok to me (I defer to Eric on
+> the question of pull req. vs. patchbomb) though I have one question:
 > 
-
-Ok, so we changed ->releasepage() in 99579ccec4 ("xfs: skip dirty pages
-in ->releasepage()") to deal with the fact that the mm can send
-legitimately dirty pages to ->releasepage(). That was apparently too
-aggressive a change because truncated pages would also end up skipped
-because the dirty bit is not cleared by the time the release occurs.
-Commit 0a417b8dc1 ("xfs: Timely free truncated dirty pages") modified
-->releasepage() again to not skip all dirty pages and only warn for
-delalloc/unwritten blocks on clean pages.
-
-That was apparently insufficient because we have some codepaths where
-not skipping dirty pages can allow us to strip the buffers from a page
-incorrectly...
-
-> In some places that are invalidating pages ask for pages to be
-> released and follow up afterward calling ->releasepage by checking
-> whether the page was dirty and then aborting the invalidation. This
-> is a possible vector for releasing buffers from a page but then
-> leaving it in the mapping, so we really do need to avoid dirty pages
-> in xfs_vm_releasepage().
+> calculate_log_size calls max_trans_res, and max_trans_res assembles a
+> fake struct xfs_mount in order to call libxfs_log_calc_minimum_size.
+> I've fixed a few mkfs bugs over the past couple of years that all stem
+> from us forgetting to propagate superblock settings from the
+> configuration we're building in main() into the fake xfs_mount->m_sb
+> that we use to calculate the minimum log size, which results in a
+> disagreement between the kernel and mkfs as to what is the minimum log
+> size for a given fs configuration.  This disagreement pops up in the
+> form of a freshly mkfs'd 500MB filesystem immediately failing to mount.
 > 
+> With this branch applied it looks like we've nearly finished filling out
+> the real xfs_mount->m_sb when we call calculate_log_size, so could we
+> refactor setup_superblock to set all the non-log superblock fields in
+> the real m_sb and then pass that directly into max_trans_res so that we
+> can memcpy the real superblock settings into the fake struct xfs_mount?
 
-... but I'm having a hard time parsing that first sentence to understand
-how that is. Can you elaborate on and/or give a specific reference to
-this problematic invalidation abort sequence?
+Yes, I plan on making further cleanups like that. There are a few
+others, like the remaining uses of the global block size and sector
+size variables because the parameter structures are not fed into
+number conversion functions that use them.
 
-Also, it looks like truncate_complete_page() eventually and
-unconditionally clears the page dirty bit, it just happens after the
-invalidate -> release attempt sequence that occurs down through
-do_invalidatepage(). IIUC, this was the problem fixed by Jan's patch
-mentioned above. Is there any reason we can't do the dirty cancel a
-little earlier there? Would that also address this problem?
+> Doing that will eliminate a whole class of "we forgot that we have to
+> set sb_newfield in setup_superblock /and/ in max_trans_res and now mkfs
+> creates broken filesystems" bugs.  Even now there are small
+> discrepancies between (for example) tr_itruncate.tr_logres in the kernel
+> and in mkfs, which make me nervous.  AFAICT the discrepancies result in
+> mkfs using a minimum log size that is larger than what the kernel
+> calculates, so there's no user-visible badness.
 
-Brian
+Getting rid of the max_trans_res problem will be good, but it won't
+completely fix the problem up.  Other nasties in this area that need
+further cleanup is the units that stripe configuration are passed
+around in, when we store the log stripe unit into the superblock,
+documenting what the values in the sb variable are supposed to be,
+how sector size and blocksize affects LSU, etc. These were all
+things I tripped over that led to similar "why doesn't this
+filesystem mount/crash log recovery?" issues.
 
-> To differentiate between invalidated pages and normal pages, we need
-> to clear the page dirty flag when invalidating the pages. This can
-> be done through xfs_vm_invalidatepage(), and will result
-> xfs_vm_releasepage() seeing the page as clean which matches the
-> bufferhead state on the page after calling block_invalidatepage().
-> 
-> Hence we can re-add the page dirty check in xfs_vm_releasepage to
-> catch the case where we might be releasing a page that is actually
-> dirty and so should not have the bufferheads on it removed. This
-> will remove one possible vector of "dirty page with no bufferheads"
-> and so help narrow down the search for the root cause of that
-> problem.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
+Cheers,
 
->  fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
->  1 file changed, 22 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index f18e5932aec4..067284d84d9e 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -735,6 +735,14 @@ xfs_vm_invalidatepage(
->  {
->  	trace_xfs_invalidatepage(page->mapping->host, page, offset,
->  				 length);
-> +
-> +	/*
-> +	 * If we are invalidating the entire page, clear the dirty state from it
-> +	 * so that we can check for attempts to release dirty cached pages in
-> +	 * xfs_vm_releasepage().
-> +	 */
-> +	if (offset == 0 && length >= PAGE_SIZE)
-> +		cancel_dirty_page(page);
->  	block_invalidatepage(page, offset, length);
->  }
->  
-> @@ -1190,25 +1198,27 @@ xfs_vm_releasepage(
->  	 * mm accommodates an old ext3 case where clean pages might not have had
->  	 * the dirty bit cleared. Thus, it can send actual dirty pages to
->  	 * ->releasepage() via shrink_active_list(). Conversely,
-> -	 * block_invalidatepage() can send pages that are still marked dirty
-> -	 * but otherwise have invalidated buffers.
-> +	 * block_invalidatepage() can send pages that are still marked dirty but
-> +	 * otherwise have invalidated buffers.
->  	 *
->  	 * We want to release the latter to avoid unnecessary buildup of the
-> -	 * LRU, skip the former and warn if we've left any lingering
-> -	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
-> -	 * or unwritten buffers and warn if the page is not dirty. Otherwise
-> -	 * try to release the buffers.
-> +	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
-> +	 * that are entirely invalidated and need to be released.  Hence the
-> +	 * only time we should get dirty pages here is through
-> +	 * shrink_active_list() and so we can simply skip those now.
-> +	 *
-> +	 * warn if we've left any lingering delalloc/unwritten buffers on clean
-> +	 * or invalidated pages we are about to release.
->  	 */
-> +	if (PageDirty(page))
-> +		return 0;
-> +
->  	xfs_count_page_state(page, &delalloc, &unwritten);
->  
-> -	if (delalloc) {
-> -		WARN_ON_ONCE(!PageDirty(page));
-> +	if (WARN_ON_ONCE(delalloc))
->  		return 0;
-> -	}
-> -	if (unwritten) {
-> -		WARN_ON_ONCE(!PageDirty(page));
-> +	if (WARN_ON_ONCE(unwritten))
->  		return 0;
-> -	}
->  
->  	return try_to_free_buffers(page);
->  }
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
