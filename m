@@ -1,226 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47773 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750951AbdJDGQR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Oct 2017 02:16:17 -0400
-Date: Wed, 4 Oct 2017 08:16:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: add a new test for racing AIO COW writes V2
-Message-ID: <20171004061616.GA20222@lst.de>
-References: <20171003143802.GA3964@lst.de>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:15676 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751609AbdJCUNa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:13:30 -0400
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
+Date: Tue, 3 Oct 2017 20:13:26 +0000
+Message-ID: <1507061605.2567.13.camel@wdc.com>
+References: <20171003185313.1017-1-mcgrof@kernel.org>
+         <20171003185313.1017-6-mcgrof@kernel.org>
+In-Reply-To: <20171003185313.1017-6-mcgrof@kernel.org>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <DCBE2C891CB2F44BB4FA0C8A21B6438E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171003143802.GA3964@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>
+Cc: "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "jgross@suse.com" <jgross@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "jack@suse.cz" <jack@suse.cz>
 
-This can be used to trigger an assert in the current XFS code because it
-can't handle the case where there are COW extents on a file, but none
-at or below the range converted by the AIO completion handler.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-diff --git a/src/aio-dio-regress/aio-dio-cow-race.c b/src/aio-dio-regress/aio-dio-cow-race.c
-new file mode 100755
-index 0000000..c7f8e89
---- /dev/null
-+++ b/src/aio-dio-regress/aio-dio-cow-race.c
-@@ -0,0 +1,119 @@
-+/*
-+ * Copyright (c) Christoph Hellwig.  All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include <sys/stat.h>
-+#include <sys/types.h>
-+#include <errno.h>
-+#include <libgen.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <ctype.h>
-+#include <sys/ioctl.h>
-+#include <linux/fs.h>
-+
-+#include <libaio.h>
-+
-+#ifndef FICLONE
-+#define FICLONE		_IOW(0x94, 9, int)
-+#endif
-+
-+#define IO_PATTERN	0xab
-+
-+int main(int argc, char *argv[])
-+{
-+	struct io_context *ctx = NULL;
-+	struct io_event evs[4];
-+	struct iocb iocb1, iocb2, iocb3, iocb4;
-+	struct iocb *iocbs[] = { &iocb1, &iocb2, &iocb3, &iocb4 };
-+	void *buf;
-+	int fd, clone, err = 0;
-+	unsigned long buf_size = getpagesize() * 2;
-+	char *filename, *clonename;
-+
-+	if (argc != 3) {
-+		fprintf(stderr, "usage: %s filename clonename\n", argv[0]);
-+		exit(1);
-+	}
-+
-+	err = posix_memalign(&buf, getpagesize(), buf_size);
-+	if (err) {
-+		fprintf(stderr, "error %s during %s\n",
-+			strerror(err), "posix_memalign");
-+		return 1;
-+	}
-+	memset(buf, IO_PATTERN, buf_size);
-+
-+	filename = argv[1];
-+	fd = open(filename, O_DIRECT | O_CREAT | O_TRUNC | O_RDWR, 0600);
-+	if (fd == -1) {
-+		perror("open");
-+		return 1;
-+	}
-+
-+	if (write(fd, buf, buf_size) != buf_size) {
-+		perror("write");
-+		return 1;
-+	}
-+
-+	clonename = argv[2];
-+	clone = open(clonename, O_DIRECT | O_CREAT | O_TRUNC | O_RDWR, 0600);
-+	if (clone == -1) {
-+		perror("open clone");
-+		return 1;
-+	}
-+
-+	if (ioctl(clone, FICLONE, fd)) {
-+		perror("FICLONE");
-+		return 1;
-+	}
-+
-+	err = io_setup(4, &ctx);
-+	if (err) {
-+		fprintf(stderr, "error %s during %s\n",
-+			strerror(err),
-+			"io_setup");
-+		return 1;
-+	}
-+
-+	/*
-+	 * Test overlapping aio writes, where an earlier one clears the whole
-+	 * range of a later aio, thus leaving nothing to do for the I/O
-+	 * completion to do.  To make things harder also make sure there is
-+	 * other outstanding COW I/O.
-+	 */
-+	io_prep_pwrite(&iocb1, fd, buf, buf_size, 0);
-+	io_prep_pwrite(&iocb2, fd, buf, buf_size / 2, 0);
-+	io_prep_pwrite(&iocb3, fd, buf, buf_size / 2, buf_size);
-+	io_prep_pwrite(&iocb4, fd, buf, buf_size, 0);
-+
-+	err = io_submit(ctx, 4, iocbs);
-+	if (err != 4) {
-+		fprintf(stderr, "error %s during %s\n",
-+			strerror(err), "io_submit");
-+		return 1;
-+	}
-+
-+	err = io_getevents(ctx, 4, 4, evs, NULL);
-+	if (err != 4) {
-+		fprintf(stderr, "error %s during %s\n",
-+			strerror(err), "io_getevents");
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-diff --git a/tests/generic/463 b/tests/generic/463
-new file mode 100755
-index 0000000..b3afbb0
---- /dev/null
-+++ b/tests/generic/463
-@@ -0,0 +1,60 @@
-+#! /bin/bash
-+# FS QA Test 463
-+#
-+# Test racy COW AIO write completions.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Christoph Hellwig.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	rm -f $TEST_DIR/file $TEST_DIR/clone
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_test
-+_require_test_reflink
-+_require_aio
-+_require_odirect
-+
-+$here/src/aio-dio-regress/aio-dio-cow-race $TEST_DIR/file $TEST_DIR/clone
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/generic/group b/tests/generic/group
-index f2a6cda..014d6ea 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -465,3 +465,4 @@
- 460 auto quick rw
- 461 auto shutdown stress
- 462 auto quick dax
-+463 auto quick clone dangerous
+T24gVHVlLCAyMDE3LTEwLTAzIGF0IDExOjUzIC0wNzAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
+ZToNCj4gTm93IHRoYXQgYWxsIGZpbGVzeXN0ZW1zIHdoaWNoIHVzZWQgdG8gcmVseSBvbiBrdGhy
+ZWFkDQo+IGZyZWV6aW5nIGhhdmUgYmVlbiBjb252ZXJ0ZWQgdG8gZmlsZXN5c3RlbSBmcmVlemUv
+dGhhd2luZw0KPiB3ZSBjYW4gcmVtb3ZlIHRoZSBrZXJuZWwga3RocmVhZCBmcmVlemVyLg0KDQpN
+YW55IHN1YnN5c3RlbXMgdXNlIHN5c3RlbV9mcmVlemFibGVfd3EgYW5kL29yDQpzeXN0ZW1fZnJl
+ZXphYmxlX3Bvd2VyX2VmZmljaWVudF93cSB0byBxdWV1ZSB3b3JrIHRoYXQgc2hvdWxkIG5vdCBy
+dW4gd2hpbGUNCnByb2Nlc3NlcyBhcmUgZnJvemVuLiBTaG91bGQgaXQgYmUgbWVudGlvbmVkIGlu
+IHRoZSBwYXRjaCBkZXNjcmlwdGlvbiB0aGF0DQp0aGlzIHBhdGNoIGRvZXMgbm90IGFmZmVjdCB3
+b3JrcXVldWVzIGZvciB3aGljaCBXUV9GUkVFWkFCTEUgaGFzIGJlZW4gc2V0Pw0KDQpXaGF0IGFi
+b3V0IHRoZSBtYW55IGRyaXZlcnMgb3V0c2lkZSBmaWxlc3lzdGVtcyB0aGF0IHVzZSB0aGUgc2V0
+X2ZyZWV6YWJsZSgpIC8NCnRyeV90b19mcmVlemUoKSAvIHdhaXRfZXZlbnRfZnJlZXphYmxlKCkg
+QVBJPw0KDQpUaGFua3MsDQoNCkJhcnQu
