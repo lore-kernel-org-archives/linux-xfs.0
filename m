@@ -1,130 +1,226 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:9729 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751773AbdJAWtH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2017 18:49:07 -0400
-Date: Mon, 2 Oct 2017 09:49:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS AIL lockup
-Message-ID: <20171001224904.GG3666@dastard>
-References: <CAMp4zn_YQy+Naggwfu5-aKigyx6rJJ27F7fdL=tRponn8Kug=A@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:44340 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751238AbdJCOiE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Oct 2017 10:38:04 -0400
+Date: Tue, 3 Oct 2017 16:38:02 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: add a new test for racing AIO COW writes
+Message-ID: <20171003143802.GA3964@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAMp4zn_YQy+Naggwfu5-aKigyx6rJJ27F7fdL=tRponn8Kug=A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sargun Dhillon <sargun@sargun.me>
+To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, Oct 01, 2017 at 03:10:03PM -0700, Sargun Dhillon wrote:
-> I'm running into an issue where xfs aild is locking up. This is on
-> kernel version 4.9.34. It's an SMP system with 32 cores, and ~250G of
-> RAM (AWS R4.8XL) and an XFS filesystem with 1 SSD with project ID
-> quotas in use. It's the only XFS filesystem on the host. The root
-> partition is running EXT4, and isn't involved in this.
-> 
-> There are containers that use overlayfs atop this filesystem. It looks
-> like one of the processes (10090, or 11504) has gotten into a state
-> where it's holding a lock on a xfs_buf, and they're trying to lock
-> xfs_buf's which are currently on the xfs ail list.
-> 
-> xfs_info:
-> (root) ~ # xfs_info /mnt
-> meta-data=/dev/xvdb              isize=512    agcount=4, agsize=33554432 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=134217728, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal               bsize=4096   blocks=65536, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> The stacks of the locked up processes are as follows:
-> (root) ~ # cat /proc/10090/stack
-> [<ffffffffad2d0981>] down+0x41/0x50
-> [<ffffffffc164051c>] xfs_buf_lock+0x3c/0xf0 [xfs]
-> [<ffffffffc1640735>] _xfs_buf_find+0x165/0x340 [xfs]
-> [<ffffffffc164093a>] xfs_buf_get_map+0x2a/0x280 [xfs]
-> [<ffffffffc16415bd>] xfs_buf_read_map+0x2d/0x180 [xfs]
-> [<ffffffffc1675f75>] xfs_trans_read_buf_map+0xf5/0x330 [xfs]
-> [<ffffffffc1625659>] xfs_read_agi+0x99/0x130 [xfs]
-> [<ffffffffc16530b2>] xfs_iunlink_remove+0x62/0x370 [xfs]
-> [<ffffffffc16571dc>] xfs_rename+0x7cc/0xb90 [xfs]
-> [<ffffffffc1651096>] xfs_vn_rename+0xd6/0x150 [xfs]
-> [<ffffffffad444268>] vfs_rename+0x758/0x980
-> [<ffffffffc01a8e17>] ovl_do_rename+0x37/0xa0 [overlay]
-> [<ffffffffc01a9e8b>] ovl_rename2+0x65b/0x720 [overlay]
-> [<ffffffffad444268>] vfs_rename+0x758/0x980
-> [<ffffffffad4487ef>] SyS_rename+0x39f/0x3c0
-> [<ffffffffad203b8b>] do_syscall_64+0x5b/0xc0
-> [<ffffffffada091ef>] entry_SYSCALL64_slow_path+0x25/0x25
-> [<ffffffffffffffff>] 0xffffffffffffffff
+This can be used to trigger an assert in the current XFS code because it
+can't handle the case where there are COW extents on a file, but none
+at or below the range converted by the AIO completion handler.
 
-Ok, this is a RENAME_WHITEOUT case, and that points to the issue.
-The whiteout inode is allocated as a temporary inode, which means
-it remains on the unlinked list so that if we crash part way through
-the update log recovery will free it again.
+Note that it doesn't trigger the assert 100% but fairly reliably.
+    
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Once all the dirent updates and other rename work is done, we remove
-the whiteout inode from the unlinked list, and that requires
-grabbing the AGI lock. That's what we are stuck on here.
-
-> (root) ~ # cat /proc/1107/stack
-> [<ffffffffc1674894>] xfsaild+0xe4/0x730 [xfs]
-> [<ffffffffad2a5886>] kthread+0xe6/0x100
-> [<ffffffffada093b5>] ret_from_fork+0x25/0x30
-> [<ffffffffffffffff>] 0xffffffffffffffff
-
-The AIL and it's behaviour is irrelevant here.
-
-> (root) ~ # cat /proc/11504/stack
-> [<ffffffffad2d0981>] down+0x41/0x50
-> [<ffffffffc164051c>] xfs_buf_lock+0x3c/0xf0 [xfs]
-> [<ffffffffc1640735>] _xfs_buf_find+0x165/0x340 [xfs]
-> [<ffffffffc164093a>] xfs_buf_get_map+0x2a/0x280 [xfs]
-> [<ffffffffc16415bd>] xfs_buf_read_map+0x2d/0x180 [xfs]
-> [<ffffffffc1675f75>] xfs_trans_read_buf_map+0xf5/0x330 [xfs]
-> [<ffffffffc15f1a36>] xfs_read_agf+0x96/0x120 [xfs]
-> [<ffffffffc15f1b09>] xfs_alloc_read_agf+0x49/0x140 [xfs]
-> [<ffffffffc15f1f5d>] xfs_alloc_fix_freelist+0x35d/0x3b0 [xfs]
-> [<ffffffffc15f22f4>] xfs_alloc_vextent+0x2e4/0x640 [xfs]
-> [<ffffffffc16243a8>] xfs_ialloc_ag_alloc+0x1a8/0x760 [xfs]
-> [<ffffffffc1626173>] xfs_dialloc+0x173/0x260 [xfs]
-> [<ffffffffc1652951>] xfs_ialloc+0x71/0x580 [xfs]
-> [<ffffffffc1654e53>] xfs_dir_ialloc+0x73/0x200 [xfs]
-> [<ffffffffc1655459>] xfs_create+0x479/0x720 [xfs]
-> [<ffffffffc16524b7>] xfs_generic_create+0x217/0x2f0 [xfs]
-> [<ffffffffc16525c4>] xfs_vn_mknod+0x14/0x20 [xfs]
-> [<ffffffffc1652603>] xfs_vn_create+0x13/0x20 [xfs]
-> [<ffffffffad442727>] vfs_create+0x127/0x190
-> [<ffffffffc01a932d>] ovl_create_real+0xad/0x230 [overlay]
-> [<ffffffffc01aa539>] ovl_create_or_link.part.5+0x119/0x6f0 [overlay]
-> [<ffffffffc01aac0a>] ovl_create_object+0xfa/0x110 [overlay]
-> [<ffffffffc01aacd3>] ovl_create+0x23/0x30 [overlay]
-> [<ffffffffad445808>] path_openat+0x1378/0x1440
-> [<ffffffffad446b91>] do_filp_open+0x91/0x100
-> [<ffffffffad433d74>] do_sys_open+0x124/0x210
-> [<ffffffffad433e7e>] SyS_open+0x1e/0x20
-> [<ffffffffad203b8b>] do_syscall_64+0x5b/0xc0
-> [<ffffffffada091ef>] entry_SYSCALL64_slow_path+0x25/0x25
-> [<ffffffffffffffff>] 0xffffffffffffffff
-
-Because this is the deadlock - we're trying to lock the AGF with an
-AGI already locked. That means the above RENAME_WHITEOUT has either
-allocated or freed extents in manipulating the dirents during
-rename, and so holds an AGF locked. It's a classic ABBA deadlock.
-
-That's the problem, not sure what the solution is yet - there's no
-obvious or simple way around this RENAME_WHITEOUT behaviour (which
-only affects overlay, fwiw). I'll have a think about it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/src/aio-dio-regress/aio-dio-cow-race.c b/src/aio-dio-regress/aio-dio-cow-race.c
+new file mode 100755
+index 0000000..c7f8e89
+--- /dev/null
++++ b/src/aio-dio-regress/aio-dio-cow-race.c
+@@ -0,0 +1,119 @@
++/*
++ * Copyright (c) Christoph Hellwig.  All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <errno.h>
++#include <libgen.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <ctype.h>
++#include <sys/ioctl.h>
++#include <linux/fs.h>
++
++#include <libaio.h>
++
++#ifndef FICLONE
++#define FICLONE		_IOW(0x94, 9, int)
++#endif
++
++#define IO_PATTERN	0xab
++
++int main(int argc, char *argv[])
++{
++	struct io_context *ctx = NULL;
++	struct io_event evs[4];
++	struct iocb iocb1, iocb2, iocb3, iocb4;
++	struct iocb *iocbs[] = { &iocb1, &iocb2, &iocb3, &iocb4 };
++	void *buf;
++	int fd, clone, err = 0;
++	unsigned long buf_size = getpagesize() * 2;
++	char *filename, *clonename;
++
++	if (argc != 3) {
++		fprintf(stderr, "usage: %s filename clonename\n", argv[0]);
++		exit(1);
++	}
++
++	err = posix_memalign(&buf, getpagesize(), buf_size);
++	if (err) {
++		fprintf(stderr, "error %s during %s\n",
++			strerror(err), "posix_memalign");
++		return 1;
++	}
++	memset(buf, IO_PATTERN, buf_size);
++
++	filename = argv[1];
++	fd = open(filename, O_DIRECT | O_CREAT | O_TRUNC | O_RDWR, 0600);
++	if (fd == -1) {
++		perror("open");
++		return 1;
++	}
++
++	if (write(fd, buf, buf_size) != buf_size) {
++		perror("write");
++		return 1;
++	}
++
++	clonename = argv[2];
++	clone = open(clonename, O_DIRECT | O_CREAT | O_TRUNC | O_RDWR, 0600);
++	if (clone == -1) {
++		perror("open clone");
++		return 1;
++	}
++
++	if (ioctl(clone, FICLONE, fd)) {
++		perror("FICLONE");
++		return 1;
++	}
++
++	err = io_setup(4, &ctx);
++	if (err) {
++		fprintf(stderr, "error %s during %s\n",
++			strerror(err),
++			"io_setup");
++		return 1;
++	}
++
++	/*
++	 * Test overlapping aio writes, where an earlier one clears the whole
++	 * range of a later aio, thus leaving nothing to do for the I/O
++	 * completion to do.  To make things harder also make sure there is
++	 * other outstanding COW I/O.
++	 */
++	io_prep_pwrite(&iocb1, fd, buf, buf_size, 0);
++	io_prep_pwrite(&iocb2, fd, buf, buf_size / 2, 0);
++	io_prep_pwrite(&iocb3, fd, buf, buf_size / 2, buf_size);
++	io_prep_pwrite(&iocb4, fd, buf, buf_size, 0);
++
++	err = io_submit(ctx, 4, iocbs);
++	if (err != 4) {
++		fprintf(stderr, "error %s during %s\n",
++			strerror(err), "io_submit");
++		return 1;
++	}
++
++	err = io_getevents(ctx, 4, 4, evs, NULL);
++	if (err != 4) {
++		fprintf(stderr, "error %s during %s\n",
++			strerror(err), "io_getevents");
++		return 1;
++	}
++
++	return 0;
++}
+diff --git a/tests/generic/463 b/tests/generic/463
+new file mode 100755
+index 0000000..b3afbb0
+--- /dev/null
++++ b/tests/generic/463
+@@ -0,0 +1,60 @@
++#! /bin/bash
++# FS QA Test 463
++#
++# Test racy COW AIO write completions.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Christoph Hellwig.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	rm -f $TEST_DIR/file $TEST_DIR/clone
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++_supported_fs generic
++_supported_os Linux
++
++_require_test
++_require_test_reflink
++_require_aio
++_require_odirect
++
++$here/src/aio-dio-regress/aio-dio-cow-race $TEST_DIR/file $TEST_DIR/clone
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/group b/tests/generic/group
+index f2a6cda..014d6ea 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -465,3 +465,4 @@
+ 460 auto quick rw
+ 461 auto shutdown stress
+ 462 auto quick dax
++463 auto quick reflink dangerous
