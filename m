@@ -1,262 +1,303 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59992 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751318AbdJCSxY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Oct 2017 14:53:24 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC 5/5] pm: remove kernel thread freezing
-Date: Tue,  3 Oct 2017 11:53:13 -0700
-Message-Id: <20171003185313.1017-6-mcgrof@kernel.org>
-In-Reply-To: <20171003185313.1017-1-mcgrof@kernel.org>
-References: <20171003185313.1017-1-mcgrof@kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30091 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750812AbdJCTUX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 15:20:23 -0400
+Date: Tue, 3 Oct 2017 12:20:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfsprogs: explicitly cast troublesome types to match printf
+ format specifiers
+Message-ID: <20171003192017.GE6503@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org
-Cc: boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Now that all filesystems which used to rely on kthread
-freezing have been converted to filesystem freeze/thawing
-we can remove the kernel kthread freezer.
+Certain system-defined types (__u64, __s64, __nlink_t, __ino64_t,
+__off64_t, __blkcnt64_t) don't have a consistent definition across
+different architectures, so wherever we use a printf format specifier on
+such a variable, we have to typecast the variable or else the compiler
+will complain.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+IOWs this fixes build warnings on ppc64le.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- Documentation/power/freezing-of-tasks.txt |  9 ------
- drivers/xen/manage.c                      |  6 ----
- include/linux/freezer.h                   |  4 ---
- kernel/power/hibernate.c                  | 10 ++-----
- kernel/power/power.h                      | 20 +------------
- kernel/power/process.c                    | 47 -------------------------------
- kernel/power/user.c                       |  9 ------
- tools/power/pm-graph/analyze_suspend.py   |  1 -
- 8 files changed, 3 insertions(+), 103 deletions(-)
+ io/fiemap.c          |   37 +++++++++++++++++++++----------------
+ io/open.c            |    4 ++--
+ io/stat.c            |   26 +++++++++++++-------------
+ repair/attr_repair.c |    6 ++++--
+ repair/dinode.c      |    3 ++-
+ repair/phase6.c      |    4 ++--
+ repair/scan.c        |   15 ++++++++++-----
+ 7 files changed, 54 insertions(+), 41 deletions(-)
 
-diff --git a/Documentation/power/freezing-of-tasks.txt b/Documentation/power/freezing-of-tasks.txt
-index af005770e767..477559f57c95 100644
---- a/Documentation/power/freezing-of-tasks.txt
-+++ b/Documentation/power/freezing-of-tasks.txt
-@@ -71,15 +71,6 @@ Rationale behind the functions dealing with freezing and thawing of tasks:
- freeze_processes():
-   - freezes only userspace tasks
+diff --git a/io/fiemap.c b/io/fiemap.c
+index e6fd66d..bdcfacd 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -67,16 +67,18 @@ print_hole(
  
--freeze_kernel_threads():
--  - freezes all tasks (including kernel threads) because we can't freeze
--    kernel threads without freezing userspace tasks
--
--thaw_kernel_threads():
--  - thaws only kernel threads; this is particularly useful if we need to do
--    anything special in between thawing of kernel threads and thawing of
--    userspace tasks, or if we want to postpone the thawing of userspace tasks
--
- thaw_processes():
-   - thaws all tasks (including kernel threads) because we can't thaw userspace
-     tasks without thawing kernel threads
-diff --git a/drivers/xen/manage.c b/drivers/xen/manage.c
-index c425d03d37d2..8ca0e0c9a7d5 100644
---- a/drivers/xen/manage.c
-+++ b/drivers/xen/manage.c
-@@ -109,12 +109,6 @@ static void do_suspend(void)
- 		goto out;
+ 	   if (plain) {
+ 		printf("\t%d: [%llu..%llu]: hole", cur_extent,
+-		       llast, lstart - 1ULL);
++		       (unsigned long long)llast, lstart - 1ULL);
+ 		if (lflag)
+-			printf(_(" %llu blocks\n"), lstart - llast);
++			printf(_(" %llu blocks\n"),
++			       (unsigned long long)lstart - llast);
+ 		else
+ 			printf("\n");
+ 	   } else {
+-		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
+-			 lstart - 1ULL);
++		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
++			 (unsigned long long)llast, lstart - 1ULL);
+ 		printf("%4d: %-*s %-*s %*llu\n", cur_extent, foff_w, lbuf,
+-		       boff_w, _("hole"), tot_w, lstart - llast);
++		       boff_w, _("hole"), tot_w,
++		       (unsigned long long)lstart - llast);
+ 	   }
+ 
+ 
+@@ -125,12 +127,13 @@ print_verbose(
+ 	if (cur_extent == max_extents)
+ 		return 1;
+ 
+-	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+-		 lstart + len - 1ULL);
+-	snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block, block + len - 1ULL);
++	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
++		 (unsigned long long)lstart, lstart + len - 1ULL);
++	snprintf(bbuf, sizeof(bbuf), "%llu..%llu",
++		 (unsigned long long)block, block + len - 1ULL);
+ 	snprintf(flgbuf, sizeof(flgbuf), "0x%x", extent->fe_flags);
+ 	printf("%4d: %-*s %-*s %*llu %*s\n", cur_extent, foff_w, lbuf,
+-	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
++	       boff_w, bbuf, tot_w, (unsigned long long)len, flg_w, flgbuf);
+ 
+ 	return 2;
+ }
+@@ -161,11 +164,11 @@ print_plain(
+ 		return 1;
+ 
+ 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+-	       lstart, lstart + len - 1ULL, block,
+-	       block + len - 1ULL);
++	       (unsigned long long)lstart, lstart + len - 1ULL,
++	       (unsigned long long)block, block + len - 1ULL);
+ 
+ 	if (lflag)
+-		printf(_(" %llu blocks\n"), len);
++		printf(_(" %llu blocks\n"), (unsigned long long)len);
+ 	else
+ 		printf("\n");
+ 	return 2;
+@@ -198,10 +201,12 @@ calc_print_format(
+ 		len = BTOBBT(extent->fe_length);
+ 		block = BTOBBT(extent->fe_physical);
+ 
+-		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
+-			 logical + len - 1);
+-		snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
+-			 block + len - 1);
++		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]",
++			 (unsigned long long)logical,
++			 (unsigned long long)logical + len - 1);
++		snprintf(bbuf, sizeof(bbuf), "%llu..%llu",
++			 (unsigned long long)block,
++			 (unsigned long long)block + len - 1);
+ 		*foff_w = max(*foff_w, strlen(lbuf));
+ 		*boff_w = max(*boff_w, strlen(bbuf));
+ 		*tot_w = max(*tot_w, numlen(len, 10));
+diff --git a/io/open.c b/io/open.c
+index f2ea7c3..2cce045 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -762,14 +762,14 @@ inode_f(
+ 
+ 	if (verbose && result_ino) {
+ 		/* Requested verbose and we have an answer */
+-		printf("%llu:%d\n", result_ino,
++		printf("%llu:%d\n", (unsigned long long)result_ino,
+ 			result_ino > XFS_MAXINUMBER_32 ? 64 : 32);
+ 	} else if (userino == NULLFSINO) {
+ 		/* Just checking 32 or 64 bit presence, non-verbose */
+ 		printf("%d\n", result_ino > XFS_MAXINUMBER_32 ? 1 : 0);
+ 	} else {
+ 		/* We asked about a specific inode, non-verbose */
+-		printf("%llu\n", result_ino);
++		printf("%llu\n", (unsigned long long)result_ino);
  	}
  
--	err = freeze_kernel_threads();
--	if (err) {
--		pr_err("%s: freeze kernel threads failed %d\n", __func__, err);
--		goto out_thaw;
--	}
--
- 	err = dpm_suspend_start(PMSG_FREEZE);
- 	if (err) {
- 		pr_err("%s: dpm_suspend_start %d\n", __func__, err);
-diff --git a/include/linux/freezer.h b/include/linux/freezer.h
-index dd03e837ebb7..037ef3f16173 100644
---- a/include/linux/freezer.h
-+++ b/include/linux/freezer.h
-@@ -43,9 +43,7 @@ extern void __thaw_task(struct task_struct *t);
- 
- extern bool __refrigerator(bool check_kthr_stop);
- extern int freeze_processes(void);
--extern int freeze_kernel_threads(void);
- extern void thaw_processes(void);
--extern void thaw_kernel_threads(void);
- 
- /*
-  * DO NOT ADD ANY NEW CALLERS OF THIS FUNCTION
-@@ -263,9 +261,7 @@ static inline void __thaw_task(struct task_struct *t) {}
- 
- static inline bool __refrigerator(bool check_kthr_stop) { return false; }
- static inline int freeze_processes(void) { return -ENOSYS; }
--static inline int freeze_kernel_threads(void) { return -ENOSYS; }
- static inline void thaw_processes(void) {}
--static inline void thaw_kernel_threads(void) {}
- 
- static inline bool try_to_freeze_nowarn(void) { return false; }
- static inline bool try_to_freeze(void) { return false; }
-diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index a5c36e9c56a6..7c3af084b10a 100644
---- a/kernel/power/hibernate.c
-+++ b/kernel/power/hibernate.c
-@@ -352,10 +352,6 @@ int hibernation_snapshot(int platform_mode)
- 	if (error)
- 		goto Close;
- 
--	error = freeze_kernel_threads();
--	if (error)
--		goto Cleanup;
--
- 	if (hibernation_test(TEST_FREEZER)) {
- 
- 		/*
-@@ -363,13 +359,13 @@ int hibernation_snapshot(int platform_mode)
- 		 * successful freezer test.
- 		 */
- 		freezer_test_done = true;
--		goto Thaw;
-+		goto Cleanup;
- 	}
- 
- 	error = dpm_prepare(PMSG_FREEZE);
- 	if (error) {
- 		dpm_complete(PMSG_RECOVER);
--		goto Thaw;
-+		goto Cleanup;
- 	}
- 
- 	suspend_console();
-@@ -405,8 +401,6 @@ int hibernation_snapshot(int platform_mode)
- 	platform_end(platform_mode);
- 	return error;
- 
-- Thaw:
--	thaw_kernel_threads();
-  Cleanup:
- 	swsusp_free();
- 	goto Close;
-diff --git a/kernel/power/power.h b/kernel/power/power.h
-index 1d2d761e3c25..333bde062e42 100644
---- a/kernel/power/power.h
-+++ b/kernel/power/power.h
-@@ -253,25 +253,7 @@ extern int pm_test_level;
- #ifdef CONFIG_SUSPEND_FREEZER
- static inline int suspend_freeze_processes(void)
+ 	return 0;
+diff --git a/io/stat.c b/io/stat.c
+index 060ff83..b97cced 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -69,14 +69,14 @@ filetype(mode_t mode)
+ static int
+ dump_raw_stat(struct stat *st)
  {
--	int error;
--
--	error = freeze_processes();
--	/*
--	 * freeze_processes() automatically thaws every task if freezing
--	 * fails. So we need not do anything extra upon error.
--	 */
--	if (error)
--		return error;
--
--	error = freeze_kernel_threads();
--	/*
--	 * freeze_kernel_threads() thaws only kernel threads upon freezing
--	 * failure. So we have to thaw the userspace tasks ourselves.
--	 */
--	if (error)
--		thaw_processes();
--
--	return error;
-+	return freeze_processes();
- }
- 
- static inline void suspend_thaw_processes(void)
-diff --git a/kernel/power/process.c b/kernel/power/process.c
-index 9d1277768312..2e223555b764 100644
---- a/kernel/power/process.c
-+++ b/kernel/power/process.c
-@@ -169,33 +169,6 @@ int freeze_processes(void)
- 	return error;
- }
- 
--/**
-- * freeze_kernel_threads - Make freezable kernel threads go to the refrigerator.
-- *
-- * On success, returns 0.  On failure, -errno and only the kernel threads are
-- * thawed, so as to give a chance to the caller to do additional cleanups
-- * (if any) before thawing the userspace tasks. So, it is the responsibility
-- * of the caller to thaw the userspace tasks, when the time is right.
-- */
--int freeze_kernel_threads(void)
--{
--	int error;
--
--	pr_info("Freezing remaining freezable tasks ... ");
--
--	pm_nosig_freezing = true;
--	error = try_to_freeze_tasks(false);
--	if (!error)
--		pr_cont("done.");
--
--	pr_cont("\n");
--	BUG_ON(in_atomic());
--
--	if (error)
--		thaw_kernel_threads();
--	return error;
--}
--
- void thaw_processes(void)
+-	printf("stat.blksize = %lu\n", st->st_blksize);
+-	printf("stat.nlink = %lu\n", st->st_nlink);
++	printf("stat.blksize = %lu\n", (unsigned long)st->st_blksize);
++	printf("stat.nlink = %lu\n", (unsigned long)st->st_nlink);
+ 	printf("stat.uid = %u\n", st->st_uid);
+ 	printf("stat.gid = %u\n", st->st_gid);
+ 	printf("stat.mode: 0%o\n", st->st_mode);
+-	printf("stat.ino = %lu\n", st->st_ino);
+-	printf("stat.size = %lu\n", st->st_size);
+-	printf("stat.blocks = %lu\n", st->st_blocks);
++	printf("stat.ino = %llu\n", (unsigned long long)st->st_ino);
++	printf("stat.size = %lld\n", (long long)st->st_size);
++	printf("stat.blocks = %lld\n", (long long)st->st_blocks);
+ 	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
+ 	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
+ 	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
+@@ -273,21 +273,21 @@ dump_raw_statx(struct statx *stx)
  {
- 	struct task_struct *g, *p;
-@@ -234,23 +207,3 @@ void thaw_processes(void)
- 	pr_cont("done.\n");
- 	trace_suspend_resume(TPS("thaw_processes"), 0, false);
- }
--
--void thaw_kernel_threads(void)
--{
--	struct task_struct *g, *p;
--
--	pm_nosig_freezing = false;
--	pr_info("Restarting kernel threads ... ");
--
--	thaw_workqueues();
--
--	read_lock(&tasklist_lock);
--	for_each_process_thread(g, p) {
--		if (p->flags & (PF_KTHREAD | PF_WQ_WORKER))
--			__thaw_task(p);
--	}
--	read_unlock(&tasklist_lock);
--
--	schedule();
--	pr_cont("done.\n");
--}
-diff --git a/kernel/power/user.c b/kernel/power/user.c
-index 22df9f7ff672..ebb2e6a8ddc8 100644
---- a/kernel/power/user.c
-+++ b/kernel/power/user.c
-@@ -277,15 +277,6 @@ static long snapshot_ioctl(struct file *filp, unsigned int cmd,
- 		swsusp_free();
- 		memset(&data->handle, 0, sizeof(struct snapshot_handle));
- 		data->ready = false;
--		/*
--		 * It is necessary to thaw kernel threads here, because
--		 * SNAPSHOT_CREATE_IMAGE may be invoked directly after
--		 * SNAPSHOT_FREE.  In that case, if kernel threads were not
--		 * thawed, the preallocation of memory carried out by
--		 * hibernation_snapshot() might run into problems (i.e. it
--		 * might fail or even deadlock).
--		 */
--		thaw_kernel_threads();
- 		break;
- 
- 	case SNAPSHOT_PREF_IMAGE_SIZE:
-diff --git a/tools/power/pm-graph/analyze_suspend.py b/tools/power/pm-graph/analyze_suspend.py
-index 1b60fe203741..545a5e2eafbe 100755
---- a/tools/power/pm-graph/analyze_suspend.py
-+++ b/tools/power/pm-graph/analyze_suspend.py
-@@ -138,7 +138,6 @@ class SystemValues:
- 		'pm_prepare_console': dict(),
- 		'pm_notifier_call_chain': dict(),
- 		'freeze_processes': dict(),
--		'freeze_kernel_threads': dict(),
- 		'pm_restrict_gfp_mask': dict(),
- 		'acpi_suspend_begin': dict(),
- 		'suspend_console': dict(),
--- 
-2.14.0
-
+ 	printf("stat.mask = 0x%x\n", stx->stx_mask);
+ 	printf("stat.blksize = %u\n", stx->stx_blksize);
+-	printf("stat.attributes = 0x%llx\n", stx->stx_attributes);
++	printf("stat.attributes = 0x%llx\n", (unsigned long long)stx->stx_attributes);
+ 	printf("stat.nlink = %u\n", stx->stx_nlink);
+ 	printf("stat.uid = %u\n", stx->stx_uid);
+ 	printf("stat.gid = %u\n", stx->stx_gid);
+ 	printf("stat.mode: 0%o\n", stx->stx_mode);
+-	printf("stat.ino = %llu\n", stx->stx_ino);
+-	printf("stat.size = %llu\n", stx->stx_size);
+-	printf("stat.blocks = %llu\n", stx->stx_blocks);
+-	printf("stat.atime.tv_sec = %lld\n", stx->stx_atime.tv_sec);
++	printf("stat.ino = %llu\n", (unsigned long long)stx->stx_ino);
++	printf("stat.size = %llu\n", (unsigned long long)stx->stx_size);
++	printf("stat.blocks = %llu\n", (unsigned long long)stx->stx_blocks);
++	printf("stat.atime.tv_sec = %lld\n", (long long)stx->stx_atime.tv_sec);
+ 	printf("stat.atime.tv_nsec = %d\n", stx->stx_atime.tv_nsec);
+-	printf("stat.btime.tv_sec = %lld\n", stx->stx_btime.tv_sec);
++	printf("stat.btime.tv_sec = %lld\n", (long long)stx->stx_btime.tv_sec);
+ 	printf("stat.btime.tv_nsec = %d\n", stx->stx_btime.tv_nsec);
+-	printf("stat.ctime.tv_sec = %lld\n", stx->stx_ctime.tv_sec);
++	printf("stat.ctime.tv_sec = %lld\n", (long long)stx->stx_ctime.tv_sec);
+ 	printf("stat.ctime.tv_nsec = %d\n", stx->stx_ctime.tv_nsec);
+-	printf("stat.mtime.tv_sec = %lld\n", stx->stx_mtime.tv_sec);
++	printf("stat.mtime.tv_sec = %lld\n", (long long)stx->stx_mtime.tv_sec);
+ 	printf("stat.mtime.tv_nsec = %d\n", stx->stx_mtime.tv_nsec);
+ 	printf("stat.rdev_major = %u\n", stx->stx_rdev_major);
+ 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 9ec2231..8b1b8a7 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -943,14 +943,16 @@ __check_attr_header(
+ 	if (be64_to_cpu(info->owner) != ino) {
+ 		do_warn(
+ _("expected owner inode %" PRIu64 ", got %llu, attr block %" PRIu64 "\n"),
+-			ino, be64_to_cpu(info->owner), bp->b_bn);
++			ino, (unsigned long long)be64_to_cpu(info->owner),
++			bp->b_bn);
+ 		return 1;
+ 	}
+ 	/* verify block number */
+ 	if (be64_to_cpu(info->blkno) != bp->b_bn) {
+ 		do_warn(
+ _("expected block %" PRIu64 ", got %llu, inode %" PRIu64 "attr block\n"),
+-			bp->b_bn, be64_to_cpu(info->blkno), ino);
++			bp->b_bn, (unsigned long long)be64_to_cpu(info->blkno),
++			ino);
+ 		return 1;
+ 	}
+ 	/* verify uuid */
+diff --git a/repair/dinode.c b/repair/dinode.c
+index b35a523..a2c632c 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2592,7 +2592,8 @@ process_dinode_int(
+ 			if (!uncertain)
+ 				do_warn(
+ _("inode identifier %llu mismatch on inode %" PRIu64 "\n"),
+-					be64_to_cpu(dino->di_ino), lino);
++					(unsigned long long)be64_to_cpu(dino->di_ino),
++					lino);
+ 			if (verify_mode)
+ 				return 1;
+ 			goto clear_bad_out;
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 8fdf8e5..54944a9 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1964,14 +1964,14 @@ __check_dir3_header(
+ 	if (be64_to_cpu(owner) != ino) {
+ 		do_warn(
+ _("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
+-			ino, be64_to_cpu(owner), bp->b_bn);
++			ino, (unsigned long long)be64_to_cpu(owner), bp->b_bn);
+ 		return 1;
+ 	}
+ 	/* verify block number */
+ 	if (be64_to_cpu(blkno) != bp->b_bn) {
+ 		do_warn(
+ _("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
+-			bp->b_bn, be64_to_cpu(blkno), ino);
++			bp->b_bn, (unsigned long long)be64_to_cpu(blkno), ino);
+ 		return 1;
+ 	}
+ 	/* verify uuid */
+diff --git a/repair/scan.c b/repair/scan.c
+index ccf60a6..b3ba3ef 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -230,7 +230,9 @@ _("expected level %d got %d in inode %" PRIu64 ", (%s fork) bmbt block %" PRIu64
+ 		if (be64_to_cpu(block->bb_u.l.bb_owner) != ino) {
+ 			do_warn(
+ _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
+-				ino, be64_to_cpu(block->bb_u.l.bb_owner), bno);
++				ino,
++				(unsigned long long)be64_to_cpu(block->bb_u.l.bb_owner),
++				bno);
+ 			return 1;
+ 		}
+ 		/* verify block number */
+@@ -239,7 +241,8 @@ _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
+ 			do_warn(
+ _("expected block %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
+ 				XFS_FSB_TO_DADDR(mp, bno),
+-				be64_to_cpu(block->bb_u.l.bb_blkno), bno);
++				(unsigned long long)be64_to_cpu(block->bb_u.l.bb_blkno),
++				bno);
+ 			return 1;
+ 		}
+ 		/* verify uuid */
+@@ -1389,7 +1392,8 @@ _("expected level %d got %d in inode %" PRIu64 ", %s block %" PRIu64 "\n"),
+ 	if (be64_to_cpu(block->bb_u.l.bb_owner) != ino) {
+ 		do_warn(
+ _("expected owner inode %" PRIu64 ", got %llu, %s block %" PRIu64 "\n"),
+-			ino, be64_to_cpu(block->bb_u.l.bb_owner), name, fsbno);
++			ino, (unsigned long long)be64_to_cpu(block->bb_u.l.bb_owner),
++			name, fsbno);
+ 		return 1;
+ 	}
+ 	/* verify block number */
+@@ -1398,7 +1402,8 @@ _("expected owner inode %" PRIu64 ", got %llu, %s block %" PRIu64 "\n"),
+ 		do_warn(
+ _("expected block %" PRIu64 ", got %llu, %s block %" PRIu64 "\n"),
+ 			XFS_FSB_TO_DADDR(mp, fsbno),
+-			be64_to_cpu(block->bb_u.l.bb_blkno), name, fsbno);
++			(unsigned long long)be64_to_cpu(block->bb_u.l.bb_blkno),
++			name, fsbno);
+ 		return 1;
+ 	}
+ 	/* verify uuid */
+@@ -1965,7 +1970,7 @@ import_single_ino_chunk(
+ _("ir_holemask/ir_free mismatch, %s chunk %d/%u, holemask 0x%x free 0x%llx\n"),
+ 					inobt_name, agno, ino,
+ 					be16_to_cpu(rp->ir_u.sp.ir_holemask),
+-					be64_to_cpu(rp->ir_free));
++					(unsigned long long)be64_to_cpu(rp->ir_free));
+ 				suspect++;
+ 			}
+ 			if (!suspect && ino_rec)
