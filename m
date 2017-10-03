@@ -1,157 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:15516 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751133AbdJDGA0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 02:00:26 -0400
-Date: Wed, 4 Oct 2017 16:59:56 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51484 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750865AbdJCXow (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 19:44:52 -0400
+Date: Wed, 4 Oct 2017 10:44:49 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/25] xfs: create helpers to scan an allocation group
-Message-ID: <20171004055956.GA3666@dastard>
+Subject: Re: [PATCH 04/25] xfs: create helpers to record and deal with scrub
+ problems
+Message-ID: <20171003234449.GR3666@dastard>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706330006.19351.11655503679984316123.stgit@magnolia>
- <20171004004603.GU3666@dastard>
- <20171004035853.GL6503@magnolia>
+ <150706327465.19351.16599589169408373396.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171004035853.GL6503@magnolia>
+In-Reply-To: <150706327465.19351.16599589169408373396.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 08:58:53PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 04, 2017 at 11:46:03AM +1100, Dave Chinner wrote:
-> > On Tue, Oct 03, 2017 at 01:41:40PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add some helpers to enable us to lock an AG's headers, create btree
-> > > cursors for all btrees in that allocation group, and clean up
-> > > afterwards.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/scrub/common.c |  173 +++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/scrub/common.h |   10 +++
-> > >  fs/xfs/scrub/scrub.c  |    4 +
-> > >  fs/xfs/scrub/scrub.h  |   21 ++++++
-> > >  4 files changed, 208 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> > > index a84ba19..b056c9d 100644
-> > > --- a/fs/xfs/scrub/common.c
-> > > +++ b/fs/xfs/scrub/common.c
-> > > @@ -44,6 +44,7 @@
-> > >  #include "scrub/scrub.h"
-> > >  #include "scrub/common.h"
-> > >  #include "scrub/trace.h"
-> > > +#include "scrub/btree.h"
-> > >  
-> > >  /* Common code for the metadata scrubbers. */
-> > >  
-> > > @@ -298,6 +299,178 @@ xfs_scrub_set_incomplete(
-> > >  	trace_xfs_scrub_incomplete(sc, __return_address);
-> > >  }
-> > >  
-> > > +/*
-> > > + * AG scrubbing
-> > > + *
-> > > + * These helpers facilitate locking an allocation group's header
-> > > + * buffers, setting up cursors for all btrees that are present, and
-> > > + * cleaning everything up once we're through.
-> > > + */
-> > > +
-> > > +/* Grab all the headers for an AG. */
-> > > +int
-> > > +xfs_scrub_ag_read_headers(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	xfs_agnumber_t			agno,
-> > > +	struct xfs_buf			**agi,
-> > > +	struct xfs_buf			**agf,
-> > > +	struct xfs_buf			**agfl)
-> > > +{
-> > > +	struct xfs_mount		*mp = sc->mp;
-> > > +	int				error;
-> > > +
-> > > +	error = xfs_ialloc_read_agi(mp, sc->tp, agno, agi);
-> > > +	if (error)
-> > > +		goto out;
-> > > +
-> > > +	error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, agf);
-> > > +	if (error)
-> > > +		goto out;
-> > > +	if (!*agf) {
-> > > +		error = -ENOMEM;
-> > > +		goto out;
-> > > +	}
-> > > +
-> > > +	error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
-> > > +	if (error)
-> > > +		goto out;
-> > > +
-> > > +out:
-> > > +	return error;
-> > > +}
-> > 
-> > It's not immediately obvious what releases the buffers on error.
-> > Maybe add a comment to say cleanup/release on error is unconditional
-> > through xfs_scrub_ag_free()?
-> > 
-> > Hmmm - now there's a question - is the reference we get here freed
-> > through cancelling the fake transaction, or via the manual
-> > xfs_trans_brelse() call in the free function? which one happens
-> > first? add that to the comment?
+On Tue, Oct 03, 2017 at 01:41:14PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The AG headers /should/ always be released by the xfs_trans_brelse calls
-> in the ag_free function, with a failsafe that the trans_cancel will dump
-> anything else that we came across during our check, just in case all
-> heck broke loose while we were checking.
-
-Ok, comments. :P
-
+> Create helper functions to record crc and corruption problems, and
+> deal with any other runtime errors that arise.
 > 
-> > And given this locks out the AG from allocation for an arbitrary
-> > length of time, I'm wondering if we should add a flag into the pag
-> > somewhere to say "being scrubbed" so the extent and inode allocation
-> > code can skip over this AG and no block trying to lock it...
-> 
-> That might be a good idea for a end-of-series enhancement.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+....
+> +/*
+> + * Handling scrub corruption/optimization/warning checks.
+> + *
+> + * The *_set_{corrupt,preen,warning}() family of functions are used to
+> + * record the presence of metadata that is incorrect (corrupt), could be
+> + * optimized somehow (preen), or should be flagged for administrative
+> + * review but is not incorrect (warn).
+> + *
+> + * ftrace can be used to record the precise metadata location and
+> + * approximate code location of the failed check.
+> + */
+> +
+> +/* Record a block which could be optimized. */
+> +void
+> +xfs_scrub_block_set_preen(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_buf			*bp)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fsblock_t			fsbno;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			bno;
+> +
+> +	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
+> +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +
+> +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
+> +	trace_xfs_scrub_block_preen(sc, agno, bno, __return_address);
 
-*nod*
+Is agno/agbno used here only for the trace point? if
+so, the tracepoint call could simply be:
 
-> 
-> Though it could use a little more engineering thought -- what about
-> a more general ability to mark an AG offline?  ISTR we discussed growing
-> the ability to shut down an AG (rather than the whole FS) if scrub finds
-> problems, and/or being able to control that from spaceman.  The patch
-> was "spaceman: AG state control".
+	trace_xfs_scrub_block_preen(sc, bp->b_bn, __return_address);
 
-Well, only a small part of making an AG offline is preventing
-allocation from blocking in it.  What I suggested above is
-completely internal functionality that users would never even know
-about, so if we later want to add offline AG controls we can rework
-the implementation scrub uses to fit into that model....
+and the tracepoint internal implementation can split that into
+agno/agbno.
 
-> xfs_scrub has an -e option that allows the admin to specify what happens
-> on an error.  Right now it'll just shut down the filesystem, but
-> presumably it could react to a per-ag metadata problem by shutting down
-> the AG.
 
-Not that simple, I'm afraid. Think about modifying a directory that
-has blocks that span multiple AGs. If we mark an AG as offline, then
-what do we do with an attempt to modify that directory block? Even
-if we can read it, do we allow the modification to proceed? How do
-we even know ahead of time that a directory has blocks in an offline
-AG?  And if the AG is shut down, then the attempt to read the
-directory block will get EIO, which will cause a dirty transaction
-cancellation, which will cause a filesystem wide shutdown...
+> +}
+> +
+> +/*
+> + * Record an inode which could be optimized.  The trace data will
+> + * include the block given by bp if bp is given; otherwise it will use
+> + * the block location of the inode record itself.
+> + */
+> +void
+> +xfs_scrub_ino_set_preen(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_buf			*bp)
+> +{
+> +	struct xfs_inode		*ip = sc->ip;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fsblock_t			fsbno;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			bno;
+> +
+> +	if (bp) {
+> +		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
+> +		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +	} else {
+> +		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+> +		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
 
-Let's not complicate a simple optimisation specific to scrub by
-trying to make it work wth blue-sky functionality that requires us
-to solve a bunch of "OMFG HARD!" problems we haven't even thought
-about yet, let alone have answers for....
+That's not a block number. Going to be mighty confusing because the
+trace output isn't going to tell you whether bno is an agbno or an
+agino....
+
+> +	}
+> +
+> +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
+> +	trace_xfs_scrub_ino_preen(sc, ip->i_ino, agno, bno, __return_address);
+> +}
+> +
+> +/* Record a corrupt block. */
+> +void
+> +xfs_scrub_block_set_corrupt(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_buf			*bp)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fsblock_t			fsbno;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			bno;
+> +
+> +	fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
+> +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +
+> +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> +	trace_xfs_scrub_block_error(sc, agno, bno, __return_address);
+> +}
+> +
+> +/*
+> + * Record a corrupt inode.  The trace data will include the block given
+> + * by bp if bp is given; otherwise it will use the block location of the
+> + * inode record itself.
+> + */
+> +void
+> +xfs_scrub_ino_set_corrupt(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_ino_t			ino,
+> +	struct xfs_buf			*bp)
+> +{
+> +	struct xfs_inode		*ip = sc->ip;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fsblock_t			fsbno;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			bno;
+> +
+> +	if (bp) {
+> +		fsbno = XFS_DADDR_TO_FSB(mp, bp->b_bn);
+> +		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +		bno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +	} else {
+> +		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+> +		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
+> +	}
+> +
+> +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> +	trace_xfs_scrub_ino_error(sc, ino, agno, bno, __return_address);
+
+Pattern seems to be repeated...
+
+>  DEFINE_SCRUB_EVENT(xfs_scrub_start);
+>  DEFINE_SCRUB_EVENT(xfs_scrub_done);
+> +DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
+> +
+> +TRACE_EVENT(xfs_scrub_op_error,
+> +	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+> +		 xfs_agblock_t bno, int error, void *ret_ip),
+> +	TP_ARGS(sc, agno, bno, error, ret_ip),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(unsigned int, type)
+> +		__field(xfs_agnumber_t, agno)
+> +		__field(xfs_agblock_t, bno)
+> +		__field(int, error)
+> +		__field(void *, ret_ip)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = sc->mp->m_super->s_dev;
+> +		__entry->type = sc->sm->sm_type;
+> +		__entry->agno = agno;
+> +		__entry->bno = bno;
+> +		__entry->error = error;
+> +		__entry->ret_ip = ret_ip;
+
+i.e. we can put the decoding in here, which makes it all conditional
+on the tracepoint being enabled....
 
 Cheers,
 
