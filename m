@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39155 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdJCUls (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:41:48 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v93Kflf0024520
+Received: from userp1040.oracle.com ([156.151.31.81]:41731 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdJCUlz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 16:41:55 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v93KfsFM002385
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:47 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v93Kflo8002633
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:55 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v93KfsW3011554
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:47 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v93Kflbd007591
-        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:47 GMT
-Subject: [PATCH 09/25] xfs: scrub the backup superblocks
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:54 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v93KfsN5004197
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Oct 2017 20:41:54 GMT
+Subject: [PATCH 10/25] xfs: scrub AGF and AGFL
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 03 Oct 2017 13:41:46 -0700
-Message-ID: <150706330624.19351.11752175372525617518.stgit@magnolia>
+Date: Tue, 03 Oct 2017 13:41:52 -0700
+Message-ID: <150706331250.19351.3004733994525860282.stgit@magnolia>
 In-Reply-To: <150706324963.19351.17715069858921948692.stgit@magnolia>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,410 +31,388 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ensure that the geometry presented in the backup superblocks matches
-the primary superblock so that repair can recover the filesystem if
-that primary gets corrupted.
+Check the block references in the AGF and AGFL headers to make sure
+they make sense.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile         |    1 
- fs/xfs/libxfs/xfs_fs.h  |    3 
- fs/xfs/scrub/agheader.c |  317 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h   |    2 
- fs/xfs/scrub/scrub.c    |    4 +
- fs/xfs/scrub/scrub.h    |    1 
- 6 files changed, 327 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/agheader.c
+ fs/xfs/libxfs/xfs_fs.h  |    4 +
+ fs/xfs/scrub/agheader.c |  220 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.c   |   60 +++++++++++++
+ fs/xfs/scrub/common.h   |    6 +
+ fs/xfs/scrub/scrub.c    |    8 ++
+ fs/xfs/scrub/scrub.h    |    2 
+ 6 files changed, 299 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 5888b9f..e92d04d 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -146,6 +146,7 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
- 
- xfs-y				+= $(addprefix scrub/, \
- 				   trace.o \
-+				   agheader.o \
- 				   btree.o \
- 				   common.o \
- 				   scrub.o \
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 765f91e..8543cbb 100644
+index 8543cbb..aeb2a66 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -484,9 +484,10 @@ struct xfs_scrub_metadata {
- 
+@@ -485,9 +485,11 @@ struct xfs_scrub_metadata {
  /* Scrub subcommands. */
  #define XFS_SCRUB_TYPE_PROBE	0	/* presence test ioctl */
-+#define XFS_SCRUB_TYPE_SB	1	/* superblock */
+ #define XFS_SCRUB_TYPE_SB	1	/* superblock */
++#define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
++#define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
  
  /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	1
-+#define XFS_SCRUB_TYPE_NR	2
+-#define XFS_SCRUB_TYPE_NR	2
++#define XFS_SCRUB_TYPE_NR	4
  
  /* i: Repair this metadata. */
  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
 diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-new file mode 100644
-index 0000000..487c4f4
---- /dev/null
+index 487c4f4..7fe6630 100644
+--- a/fs/xfs/scrub/agheader.c
 +++ b/fs/xfs/scrub/agheader.c
-@@ -0,0 +1,317 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+
-+/* Set us up to check an AG header. */
-+int
-+xfs_scrub_setup_ag_header(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
+@@ -49,6 +49,72 @@ xfs_scrub_setup_ag_header(
+ 	return xfs_scrub_setup_fs(sc, ip);
+ }
+ 
++/* Find the size of the AG, in blocks. */
++static inline xfs_agblock_t
++xfs_scrub_ag_blocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
 +{
-+	struct xfs_mount		*mp = sc->mp;
++	ASSERT(agno < mp->m_sb.sb_agcount);
 +
-+	if (sc->sm->sm_agno >= mp->m_sb.sb_agcount ||
-+	    sc->sm->sm_ino || sc->sm->sm_gen)
-+		return -EINVAL;
-+	return xfs_scrub_setup_fs(sc, ip);
++	if (agno < mp->m_sb.sb_agcount - 1)
++		return mp->m_sb.sb_agblocks;
++	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
 +}
 +
-+/* Superblock */
-+
-+/* Scrub the filesystem superblock. */
++/* Walk all the blocks in the AGFL. */
 +int
-+xfs_scrub_superblock(
++xfs_scrub_walk_agfl(
++	struct xfs_scrub_context	*sc,
++	int				(*fn)(struct xfs_scrub_context *,
++					      xfs_agblock_t bno, void *),
++	void				*priv)
++{
++	struct xfs_agf			*agf;
++	__be32				*agfl_bno;
++	struct xfs_mount		*mp = sc->mp;
++	unsigned int			flfirst;
++	unsigned int			fllast;
++	int				i;
++	int				error;
++
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, sc->sa.agfl_bp);
++	flfirst = be32_to_cpu(agf->agf_flfirst);
++	fllast = be32_to_cpu(agf->agf_fllast);
++
++	/* Skip an empty AGFL. */
++	if (agf->agf_flcount == cpu_to_be32(0))
++		return 0;
++
++	/* first to last is a consecutive list. */
++	if (fllast >= flfirst) {
++		for (i = flfirst; i <= fllast; i++) {
++			error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
++			if (error)
++				return error;
++		}
++
++		return 0;
++	}
++
++	/* first to the end */
++	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
++		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
++		if (error)
++			return error;
++	}
++
++	/* the start to last. */
++	for (i = 0; i <= fllast; i++) {
++		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
+ /* Superblock */
+ 
+ /* Scrub the filesystem superblock. */
+@@ -315,3 +381,157 @@ xfs_scrub_superblock(
+ 
+ 	return error;
+ }
++
++/* AGF */
++
++/* Scrub the AGF. */
++int
++xfs_scrub_agf(
 +	struct xfs_scrub_context	*sc)
 +{
 +	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*bp;
-+	struct xfs_dsb			*sb;
++	struct xfs_agf			*agf;
++	xfs_daddr_t			daddr;
++	xfs_daddr_t			eofs;
 +	xfs_agnumber_t			agno;
-+	uint32_t			v2_ok;
-+	__be32				features_mask;
-+	int				error;
-+	__be16				vernum_mask;
++	xfs_agblock_t			agbno;
++	xfs_agblock_t			eoag;
++	xfs_agblock_t			agfl_first;
++	xfs_agblock_t			agfl_last;
++	xfs_agblock_t			agfl_count;
++	xfs_agblock_t			fl_count;
++	int				level;
++	int				error = 0;
 +
 +	agno = sc->sm->sm_agno;
-+	if (agno == 0)
-+		return 0;
++	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGF);
++	if (!xfs_scrub_op_ok(sc, agno, XFS_AGF_BLOCK(sc->mp), &error))
++		goto out;
 +
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-+	if (!xfs_scrub_op_ok(sc, agno, XFS_SB_BLOCK(mp), &error))
-+		return error;
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
 +
-+	sb = XFS_BUF_TO_SBP(bp);
++	/* Check the AG length */
++	eoag = be32_to_cpu(agf->agf_length);
++	if (eoag != xfs_scrub_ag_blocks(mp, agno))
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	/*
-+	 * Verify the geometries match.  Fields that are permanently
-+	 * set by mkfs are checked; fields that can be updated later
-+	 * (and are not propagated to backup superblocks) are preen
-+	 * checked.
-+	 */
-+	if (sb->sb_blocksize != cpu_to_be32(mp->m_sb.sb_blocksize))
-+		xfs_scrub_block_set_corrupt(sc, bp);
++	/* Check the AGF btree roots and levels */
++	agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]);
++	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++	if (agbno <= XFS_AGI_BLOCK(mp) || agbno >= mp->m_sb.sb_agblocks ||
++	    agbno >= eoag || daddr >= eofs)
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	if (sb->sb_dblocks != cpu_to_be64(mp->m_sb.sb_dblocks))
-+		xfs_scrub_block_set_corrupt(sc, bp);
++	agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]);
++	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++	if (agbno <= XFS_AGI_BLOCK(mp) || agbno >= mp->m_sb.sb_agblocks ||
++	    agbno >= eoag || daddr >= eofs)
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	if (sb->sb_rblocks != cpu_to_be64(mp->m_sb.sb_rblocks))
-+		xfs_scrub_block_set_corrupt(sc, bp);
++	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
++	if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	if (sb->sb_rextents != cpu_to_be64(mp->m_sb.sb_rextents))
-+		xfs_scrub_block_set_corrupt(sc, bp);
++	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
++	if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	if (!uuid_equal(&sb->sb_uuid, &mp->m_sb.sb_uuid))
-+		xfs_scrub_block_set_preen(sc, bp);
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_RMAP]);
++		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++		if (agbno <= XFS_AGI_BLOCK(mp) ||
++		    agbno >= mp->m_sb.sb_agblocks ||
++		    agbno >= eoag ||
++		    daddr >= eofs)
++			xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	if (sb->sb_logstart != cpu_to_be64(mp->m_sb.sb_logstart))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_rootino != cpu_to_be64(mp->m_sb.sb_rootino))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_rextsize != cpu_to_be32(mp->m_sb.sb_rextsize))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_agblocks != cpu_to_be32(mp->m_sb.sb_agblocks))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_agcount != cpu_to_be32(mp->m_sb.sb_agcount))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_rbmblocks != cpu_to_be32(mp->m_sb.sb_rbmblocks))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_logblocks != cpu_to_be32(mp->m_sb.sb_logblocks))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	/* Check sb_versionnum bits that are set at mkfs time. */
-+	vernum_mask = cpu_to_be16(~XFS_SB_VERSION_OKBITS |
-+				  XFS_SB_VERSION_NUMBITS |
-+				  XFS_SB_VERSION_ALIGNBIT |
-+				  XFS_SB_VERSION_DALIGNBIT |
-+				  XFS_SB_VERSION_SHAREDBIT |
-+				  XFS_SB_VERSION_LOGV2BIT |
-+				  XFS_SB_VERSION_SECTORBIT |
-+				  XFS_SB_VERSION_EXTFLGBIT |
-+				  XFS_SB_VERSION_DIRV2BIT);
-+	if ((sb->sb_versionnum & vernum_mask) !=
-+	    (cpu_to_be16(mp->m_sb.sb_versionnum) & vernum_mask))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	/* Check sb_versionnum bits that can be set after mkfs time. */
-+	vernum_mask = cpu_to_be16(XFS_SB_VERSION_ATTRBIT |
-+				  XFS_SB_VERSION_NLINKBIT |
-+				  XFS_SB_VERSION_QUOTABIT);
-+	if ((sb->sb_versionnum & vernum_mask) !=
-+	    (cpu_to_be16(mp->m_sb.sb_versionnum) & vernum_mask))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_sectsize != cpu_to_be16(mp->m_sb.sb_sectsize))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_inodesize != cpu_to_be16(mp->m_sb.sb_inodesize))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_inopblock != cpu_to_be16(mp->m_sb.sb_inopblock))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (memcmp(sb->sb_fname, mp->m_sb.sb_fname, sizeof(sb->sb_fname)))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_blocklog != mp->m_sb.sb_blocklog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_sectlog != mp->m_sb.sb_sectlog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_inodelog != mp->m_sb.sb_inodelog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_inopblog != mp->m_sb.sb_inopblog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_agblklog != mp->m_sb.sb_agblklog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_rextslog != mp->m_sb.sb_rextslog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_imax_pct != mp->m_sb.sb_imax_pct)
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	/*
-+	 * Skip the summary counters since we track them in memory anyway.
-+	 * sb_icount, sb_ifree, sb_fdblocks, sb_frexents
-+	 */
-+
-+	if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	/*
-+	 * Skip the quota flags since repair will force quotacheck.
-+	 * sb_qflags
-+	 */
-+
-+	if (sb->sb_flags != mp->m_sb.sb_flags)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_shared_vn != mp->m_sb.sb_shared_vn)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_inoalignmt != cpu_to_be32(mp->m_sb.sb_inoalignmt))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_unit != cpu_to_be32(mp->m_sb.sb_unit))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_width != cpu_to_be32(mp->m_sb.sb_width))
-+		xfs_scrub_block_set_preen(sc, bp);
-+
-+	if (sb->sb_dirblklog != mp->m_sb.sb_dirblklog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_logsectlog != mp->m_sb.sb_logsectlog)
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_logsectsize != cpu_to_be16(mp->m_sb.sb_logsectsize))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (sb->sb_logsunit != cpu_to_be32(mp->m_sb.sb_logsunit))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	/* Do we see any invalid bits in sb_features2? */
-+	if (!xfs_sb_version_hasmorebits(&mp->m_sb)) {
-+		if (sb->sb_features2 != 0)
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+	} else {
-+		v2_ok = XFS_SB_VERSION2_OKBITS;
-+		if (XFS_SB_VERSION_NUM(&mp->m_sb) >= XFS_SB_VERSION_5)
-+			v2_ok |= XFS_SB_VERSION2_CRCBIT;
-+
-+		if (!!(sb->sb_features2 & cpu_to_be32(~v2_ok)))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+
-+		if (sb->sb_features2 != sb->sb_bad_features2)
-+			xfs_scrub_block_set_preen(sc, bp);
++		level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
++		if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
++			xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +	}
 +
-+	/* Check sb_features2 flags that are set at mkfs time. */
-+	features_mask = cpu_to_be32(XFS_SB_VERSION2_LAZYSBCOUNTBIT |
-+				    XFS_SB_VERSION2_PROJID32BIT |
-+				    XFS_SB_VERSION2_CRCBIT |
-+				    XFS_SB_VERSION2_FTYPE);
-+	if ((sb->sb_features2 & features_mask) !=
-+	    (cpu_to_be32(mp->m_sb.sb_features2) & features_mask))
-+		xfs_scrub_block_set_corrupt(sc, bp);
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		agbno = be32_to_cpu(agf->agf_refcount_root);
++		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++		if (agbno <= XFS_AGI_BLOCK(mp) ||
++		    agbno >= mp->m_sb.sb_agblocks ||
++		    agbno >= eoag ||
++		    daddr >= eofs)
++			xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	/* Check sb_features2 flags that can be set after mkfs time. */
-+	features_mask = cpu_to_be32(XFS_SB_VERSION2_ATTR2BIT);
-+	if ((sb->sb_features2 & features_mask) !=
-+	    (cpu_to_be32(mp->m_sb.sb_features2) & features_mask))
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		/* all v5 fields must be zero */
-+		if (memchr_inv(&sb->sb_features_compat, 0,
-+				sizeof(struct xfs_dsb) -
-+				offsetof(struct xfs_dsb, sb_features_compat)))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+	} else {
-+		/* Check compat flags; all are set at mkfs time. */
-+		features_mask = cpu_to_be32(XFS_SB_FEAT_COMPAT_UNKNOWN);
-+		if ((sb->sb_features_compat & features_mask) !=
-+		    (cpu_to_be32(mp->m_sb.sb_features_compat) & features_mask))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+
-+		/* Check ro compat flags; all are set at mkfs time. */
-+		features_mask = cpu_to_be32(XFS_SB_FEAT_RO_COMPAT_UNKNOWN |
-+					    XFS_SB_FEAT_RO_COMPAT_FINOBT |
-+					    XFS_SB_FEAT_RO_COMPAT_RMAPBT |
-+					    XFS_SB_FEAT_RO_COMPAT_REFLINK);
-+		if ((sb->sb_features_ro_compat & features_mask) !=
-+		    (cpu_to_be32(mp->m_sb.sb_features_ro_compat) & features_mask))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+
-+		/* Check incompat flags; all are set at mkfs time. */
-+		features_mask = cpu_to_be32(XFS_SB_FEAT_INCOMPAT_UNKNOWN |
-+					    XFS_SB_FEAT_INCOMPAT_FTYPE |
-+					    XFS_SB_FEAT_INCOMPAT_SPINODES |
-+					    XFS_SB_FEAT_INCOMPAT_META_UUID);
-+		if ((sb->sb_features_incompat & features_mask) !=
-+		    (cpu_to_be32(mp->m_sb.sb_features_incompat) & features_mask))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+
-+		/* Check log incompat flags; all are set at mkfs time. */
-+		features_mask = cpu_to_be32(XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN);
-+		if ((sb->sb_features_log_incompat & features_mask) !=
-+		    (cpu_to_be32(mp->m_sb.sb_features_log_incompat) & features_mask))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+
-+		/* Don't care about sb_crc */
-+
-+		if (sb->sb_spino_align != cpu_to_be32(mp->m_sb.sb_spino_align))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+
-+		if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
-+			xfs_scrub_block_set_preen(sc, bp);
-+
-+		/* Don't care about sb_lsn */
++		level = be32_to_cpu(agf->agf_refcount_level);
++		if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
++			xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +	}
 +
-+	if (xfs_sb_version_hasmetauuid(&mp->m_sb)) {
-+		/* The metadata UUID must be the same for all supers */
-+		if (!uuid_equal(&sb->sb_meta_uuid, &mp->m_sb.sb_meta_uuid))
-+			xfs_scrub_block_set_corrupt(sc, bp);
-+	}
++	/* Check the AGFL counters */
++	agfl_first = be32_to_cpu(agf->agf_flfirst);
++	agfl_last = be32_to_cpu(agf->agf_fllast);
++	agfl_count = be32_to_cpu(agf->agf_flcount);
++	if (agfl_last > agfl_first)
++		fl_count = agfl_last - agfl_first + 1;
++	else
++		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
++	if (agfl_count != 0 && fl_count != agfl_count)
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
 +
-+	/* Everything else must be zero. */
-+	if (memchr_inv(sb + 1, 0,
-+			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
-+		xfs_scrub_block_set_corrupt(sc, bp);
++out:
++	return error;
++}
++
++/* AGFL */
++
++struct xfs_scrub_agfl {
++	xfs_agblock_t			eoag;
++	xfs_daddr_t			eofs;
++};
++
++/* Scrub an AGFL block. */
++STATIC int
++xfs_scrub_agfl_block(
++	struct xfs_scrub_context	*sc,
++	xfs_agblock_t			agbno,
++	void				*priv)
++{
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agnumber_t			agno = sc->sa.agno;
++	struct xfs_scrub_agfl		*sagfl = priv;
++	int				error = 0;
++
++	if (agbno <= XFS_AGI_BLOCK(mp) ||
++	    agbno >= mp->m_sb.sb_agblocks ||
++	    agbno >= sagfl->eoag ||
++	    XFS_AGB_TO_DADDR(mp, agno, agbno) >= sagfl->eofs)
++		xfs_scrub_block_set_corrupt(sc, sc->sa.agfl_bp);
 +
 +	return error;
 +}
++
++/* Scrub the AGFL. */
++int
++xfs_scrub_agfl(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_scrub_agfl		sagfl;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_agf			*agf;
++	xfs_agnumber_t			agno;
++	int				error;
++
++	agno = sc->sm->sm_agno;
++	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGFL);
++	if (!xfs_scrub_op_ok(sc, agno, XFS_AGFL_BLOCK(sc->mp), &error))
++		goto out;
++	if (!sc->sa.agf_bp)
++		return -EFSCORRUPTED;
++
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	sagfl.eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++	sagfl.eoag = be32_to_cpu(agf->agf_length);
++
++	/* Check the blocks in the AGFL. */
++	return xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sagfl);
++out:
++	return error;
++}
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index b056c9d..ee8e7be 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -471,6 +471,66 @@ xfs_scrub_ag_init(
+ 	return xfs_scrub_ag_btcur_init(sc, sa);
+ }
+ 
++/*
++ * Load and verify an AG header for further AG header examination.
++ * If this header is not the target of the examination, don't return
++ * the buffer if a runtime or verifier error occurs.
++ */
++STATIC int
++xfs_scrub_load_ag_header(
++	struct xfs_scrub_context	*sc,
++	xfs_daddr_t			daddr,
++	struct xfs_buf			**bpp,
++	const struct xfs_buf_ops	*ops,
++	bool				is_target)
++{
++	struct xfs_mount		*mp = sc->mp;
++	int				error;
++
++	*bpp = NULL;
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, sc->sa.agno, daddr),
++			XFS_FSS_TO_BB(mp, 1), 0, bpp, ops);
++	return is_target ? error : 0;
++}
++
++/*
++ * Load as many of the AG headers and btree cursors as we can for an
++ * examination and cross-reference of an AG header.
++ */
++int
++xfs_scrub_load_ag_headers(
++	struct xfs_scrub_context	*sc,
++	xfs_agnumber_t			agno,
++	unsigned int			type)
++{
++	struct xfs_mount		*mp = sc->mp;
++	int				error;
++
++	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
++	memset(&sc->sa, 0, sizeof(sc->sa));
++	sc->sa.agno = agno;
++
++	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
++			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
++	if (error)
++		return error;
++
++	error = xfs_scrub_load_ag_header(sc, XFS_AGF_DADDR(mp),
++			&sc->sa.agf_bp, &xfs_agf_buf_ops,
++			type == XFS_SCRUB_TYPE_AGF);
++	if (error)
++		return error;
++
++	error = xfs_scrub_load_ag_header(sc, XFS_AGFL_DADDR(mp),
++			&sc->sa.agfl_bp, &xfs_agfl_buf_ops,
++			type == XFS_SCRUB_TYPE_AGFL);
++	if (error)
++		return error;
++
++	return 0;
++}
++
+ /* Per-scrubber setup functions */
+ 
+ /* Set us up with a transaction and an empty context. */
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 979ad89..390f772 100644
+index 390f772..4d8bb72 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -76,6 +76,8 @@ void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
+@@ -88,5 +88,11 @@ int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ void xfs_scrub_ag_btcur_free(struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
+ 			    struct xfs_scrub_ag *sa);
++int xfs_scrub_load_ag_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++			      unsigned int type);
++int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
++			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
++				  void *),
++			void *priv);
  
- /* Setup functions */
- int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
-+int xfs_scrub_setup_ag_header(struct xfs_scrub_context *sc,
-+			      struct xfs_inode *ip);
- 
- void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index ae577d7..7f6f997 100644
+index 7f6f997..6f3c4f0 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -153,6 +153,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_probe,
+@@ -157,6 +157,14 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xfs_scrub_setup_ag_header,
+ 		.scrub	= xfs_scrub_superblock,
  	},
-+	{ /* superblock */
++	{ /* agf */
 +		.setup	= xfs_scrub_setup_ag_header,
-+		.scrub	= xfs_scrub_superblock,
++		.scrub	= xfs_scrub_agf,
++	},
++	{ /* agfl */
++		.setup	= xfs_scrub_setup_ag_header,
++		.scrub	= xfs_scrub_agfl,
 +	},
  };
  
  /* This isn't a stable feature, warn once per day. */
 diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 1385295..13e3f9b 100644
+index 13e3f9b..50f8641 100644
 --- a/fs/xfs/scrub/scrub.h
 +++ b/fs/xfs/scrub/scrub.h
-@@ -67,5 +67,6 @@ struct xfs_scrub_context {
- 
+@@ -68,5 +68,7 @@ struct xfs_scrub_context {
  /* Metadata scrubbers */
  int xfs_scrub_tester(struct xfs_scrub_context *sc);
-+int xfs_scrub_superblock(struct xfs_scrub_context *sc);
+ int xfs_scrub_superblock(struct xfs_scrub_context *sc);
++int xfs_scrub_agf(struct xfs_scrub_context *sc);
++int xfs_scrub_agfl(struct xfs_scrub_context *sc);
  
  #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
