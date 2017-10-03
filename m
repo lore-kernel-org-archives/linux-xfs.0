@@ -1,40 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:32214 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751117AbdJDBD7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 21:03:59 -0400
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
-Date: Wed, 4 Oct 2017 01:03:54 +0000
-Message-ID: <1507079033.3075.3.camel@wdc.com>
-References: <20171003185313.1017-1-mcgrof@kernel.org>
-         <20171003185313.1017-6-mcgrof@kernel.org>
-         <1862632.MOTT9GD8nq@aspire.rjw.lan> <29004244.0jnB6Wc1z6@aspire.rjw.lan>
-         <20171004004756.GN2294@wotan.suse.de>
-In-Reply-To: <20171004004756.GN2294@wotan.suse.de>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <D1582BCFB2ECA54AA1DDB3045308F668@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Received: from mx2.suse.de ([195.135.220.15]:41186 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750961AbdJCUGR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Oct 2017 16:06:17 -0400
+Date: Tue, 3 Oct 2017 22:06:14 +0200 (CEST)
+From: Jiri Kosina <jikos@kernel.org>
+Subject: Re: [RFC 2/5] fs: freeze on suspend and thaw on resume
+In-Reply-To: <20171003185313.1017-3-mcgrof@kernel.org>
+Message-ID: <nycvar.YFH.7.76.1710032203580.17517@jbgna.fhfr.qr>
+References: <20171003185313.1017-1-mcgrof@kernel.org> <20171003185313.1017-3-mcgrof@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>
-Cc: "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "jgross@suse.com" <jgross@suse.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.cz" <jack@suse.cz>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTEwLTA0IGF0IDAyOjQ3ICswMjAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
-ZToNCj4gICAzKSBMb29rdXAgZm9yIGt0aHJlYWRzIHdoaWNoIHNlZW0gdG8gZ2VuZXJhdGUgSU8g
-LS0gYWRkcmVzcyAvIHJldmlldyBpZg0KPiAgICAgIHJlbW92YWwgb2YgdGhlIGZyZWV6ZXIgQVBJ
-IGNhbiBiZSBkb25lIHNvbWVob3cgd2l0aCBhIHF1ZXNjaW5nLiBUaGlzDQo+ICAgICAgaXMgY3Vy
-cmVudGx5IGZvciBleGFtcGxlIGJlaW5nIGRvbmUgb24gU0NTSSAvIG1kLg0KPiAgNCkgT25seSBh
-ZnRlciBhbGwgdGhlIGFib3ZlIGlzIGRvbmUgc2hvdWxkIHdlIGNvbnNpZGVyIHRoaXMgcGF0Y2gg
-b3Igc29tZQ0KPiAgICAgZm9ybSBvZiBpdC4NCg0KQWZ0ZXIgaGF2aW5nIGdpdmVuIHRoaXMgbW9y
-ZSB0aG91Z2h0LCBJIHRoaW5rIHdlIHNob3VsZCBvbWl0IHRoZXNlIGxhc3QgdHdvDQpzdGVwcy4g
-TW9kaWZ5aW5nIHRoZSBtZCBkcml2ZXIgc3VjaCB0aGF0IGl0IGRvZXMgbm90IHN1Ym1pdCBJL08g
-cmVxdWVzdHMgd2hpbGUNCnByb2Nlc3NlcyBhcmUgZnJvemVuIHJlcXVpcmVzIGVpdGhlciB0byB1
-c2UgdGhlIGZyZWV6ZXIgQVBJIG9yIHRvIG9wZW4tY29kZSBpdC4NCkkgdGhpbmsgdGhlcmUgaXMg
-Z2VuZXJhbCBhZ3JlZW1lbnQgaW4gdGhlIGtlcm5lbCBjb21tdW5pdHkgdGhhdCBvcGVuLWNvZGlu
-ZyBhDQpzaW5nbGUgbWVjaGFuaXNtIGluIG11bHRpcGxlIGRyaXZlcnMgaXMgd3JvbmcuIERvZXMg
-dGhpcyBtZWFuIHRoYXQgaW5zdGVhZCBvZg0KcmVtb3ZpbmcgdGhlIGZyZWV6ZXIgQVBJIHdlIHNo
-b3VsZCBrZWVwIGl0IGFuZCByZXZpZXcgYWxsIGl0cyB1c2VycyBpbnN0ZWFkPw0KDQpCYXJ0Lg0K
+On Tue, 3 Oct 2017, Luis R. Rodriguez wrote:
+
+> This uses the existing filesystem freeze and thaw callbacks to
+> freeze each filesystem on suspend/hibernation and thaw upon resume.
+> 
+> This is needed so that we properly really stop IO in flight without
+> races after userspace has been frozen. Without this we rely on
+> kthread freezing and its semantics are loose and error prone.
+> For instance, even though a kthread may use try_to_freeze() and end
+> up being frozen we have no way of being sure that everything that
+> has been spawned asynchronously from it (such as timers) have also
+> been stopped as well.
+> 
+> A long term advantage of also adding filesystem freeze / thawing
+> supporting durign suspend / hibernation is that long term we may
+> be able to eventually drop the kernel's thread freezing completely
+> as it was originally added to stop disk IO in flight as we hibernate
+> or suspend.
+> 
+> This also implies that many kthread users exist which have been
+> adding freezer semantics onto its kthreads without need. These also
+> will need to be reviewed later.
+> 
+> This is based on prior work originally by Rafael Wysocki and later by
+> Jiri Kosina.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+
+Thanks a lot for picking this up; I never found time to actually finalize 
+it.
+
+	Acked-by: Jiri Kosina <jkosina@suse.cz>
+
+for patches 2 and 5 (the fs agnostic code), which were in the core of my 
+original work.
+
+-- 
+Jiri Kosina
+SUSE Labs
+
