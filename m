@@ -1,106 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:56017 "EHLO
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:3482 "EHLO
         ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750866AbdJDG3B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 02:29:01 -0400
-Date: Wed, 4 Oct 2017 17:28:40 +1100
+        by vger.kernel.org with ESMTP id S1750871AbdJDGnr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 02:43:47 -0400
+Date: Wed, 4 Oct 2017 17:43:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/25] xfs: scrub AGF and AGFL
-Message-ID: <20171004062840.GC3666@dastard>
+Subject: Re: [PATCH 11/25] xfs: scrub the AGI
+Message-ID: <20171004064333.GD3666@dastard>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706331250.19351.3004733994525860282.stgit@magnolia>
- <20171004013148.GW3666@dastard>
- <20171004042140.GN6503@magnolia>
+ <150706331918.19351.1010060377239825093.stgit@magnolia>
+ <20171004014347.GX3666@dastard>
+ <20171004042501.GO6503@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171004042140.GN6503@magnolia>
+In-Reply-To: <20171004042501.GO6503@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 09:21:40PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 04, 2017 at 12:31:48PM +1100, Dave Chinner wrote:
-> > On Tue, Oct 03, 2017 at 01:41:52PM -0700, Darrick J. Wong wrote:
-> > > +/*
-> > > + * Load as many of the AG headers and btree cursors as we can for an
-> > > + * examination and cross-reference of an AG header.
-> > > + */
+On Tue, Oct 03, 2017 at 09:25:01PM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 04, 2017 at 12:43:47PM +1100, Dave Chinner wrote:
+> > On Tue, Oct 03, 2017 at 01:41:59PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Add a forgotten check to the AGI verifier, then wire up the scrub
+> > > infrastructure to check the AGI contents.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_fs.h  |    3 +-
+> > >  fs/xfs/scrub/agheader.c |   88 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/scrub/common.c   |    6 ++-
+> > >  fs/xfs/scrub/scrub.c    |    4 ++
+> > >  fs/xfs/scrub/scrub.h    |    1 +
+> > >  5 files changed, 99 insertions(+), 3 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > > index aeb2a66..1e326dd 100644
+> > > --- a/fs/xfs/libxfs/xfs_fs.h
+> > > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > > @@ -487,9 +487,10 @@ struct xfs_scrub_metadata {
+> > >  #define XFS_SCRUB_TYPE_SB	1	/* superblock */
+> > >  #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
+> > >  #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
+> > > +#define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
+> > >  
+> > >  /* Number of scrub subcommands. */
+> > > -#define XFS_SCRUB_TYPE_NR	4
+> > > +#define XFS_SCRUB_TYPE_NR	5
+> > >  
+> > >  /* i: Repair this metadata. */
+> > >  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
+> > > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> > > index 7fe6630..3d269c2 100644
+> > > --- a/fs/xfs/scrub/agheader.c
+> > > +++ b/fs/xfs/scrub/agheader.c
+> > > @@ -535,3 +535,91 @@ xfs_scrub_agfl(
+> > >  out:
+> > >  	return error;
+> > >  }
+> > > +
+> > > +/* AGI */
+> > > +
+> > > +/* Scrub the AGI. */
 > > > +int
-> > > +xfs_scrub_load_ag_headers(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	xfs_agnumber_t			agno,
-> > > +	unsigned int			type)
+> > > +xfs_scrub_agi(
+> > > +	struct xfs_scrub_context	*sc)
 > > > +{
 > > > +	struct xfs_mount		*mp = sc->mp;
-> > > +	int				error;
+> > > +	struct xfs_agi			*agi;
+> > > +	xfs_daddr_t			daddr;
+> > > +	xfs_daddr_t			eofs;
+> > > +	xfs_agnumber_t			agno;
+> > > +	xfs_agblock_t			agbno;
+> > > +	xfs_agblock_t			eoag;
+> > > +	xfs_agino_t			agino;
+> > > +	xfs_agino_t			first_agino;
+> > > +	xfs_agino_t			last_agino;
+> > > +	int				i;
+> > > +	int				level;
+> > > +	int				error = 0;
 > > > +
-> > > +	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
-> > > +	memset(&sc->sa, 0, sizeof(sc->sa));
-> > > +	sc->sa.agno = agno;
+> > > +	agno = sc->sm->sm_agno;
+> > > +	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
+> > > +	if (!xfs_scrub_op_ok(sc, agno, XFS_AGI_BLOCK(sc->mp), &error))
+> > > +		goto out;
 > > > +
-> > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
-> > > +			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
-> > > +	if (error)
-> > > +		return error;
+> > > +	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
+> > > +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
 > > > +
-> > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGF_DADDR(mp),
-> > > +			&sc->sa.agf_bp, &xfs_agf_buf_ops,
-> > > +			type == XFS_SCRUB_TYPE_AGF);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGFL_DADDR(mp),
-> > > +			&sc->sa.agfl_bp, &xfs_agfl_buf_ops,
-> > > +			type == XFS_SCRUB_TYPE_AGFL);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	return 0;
-> > > +}
+> > > +	/* Check the AG length */
+> > > +	eoag = be32_to_cpu(agi->agi_length);
+> > > +	if (eoag != xfs_scrub_ag_blocks(mp, agno))
+> > > +		xfs_scrub_block_set_corrupt(sc, sc->sa.agi_bp);
 > > 
-> > This should probably be combined with xfs_scrub_ag_read_headers().
-> > They essentially do the same thing, the only difference is the
-> > "target" error reporting.
+> > Should we be cross checking that the AGI and AGF both have
+> > the same length here?
 > 
-> It's quite different -- this function ignores verifier errors for
-> the two headers that don't match 'type'  In other words, if we're
-> checking the AGF (for example) we'll try to grab the AGI and the AGFL.
-> Verifier errors on the AGI/AGFL don't matter, but we /do/ want to hear
-> the results if the AGF verifier fails.
+> Isn't that what this does?  Albeit indirectly?
 
-What they do is quite different. The implementation is /almost/
-identical. type is just an error masking variable and ....
+I was kinda thinking of explicit checks, but you are right, it's
+indirectly verified....
 
-> xfs_scrub_ag_read_headers on the other hand will fail if /any/ of the
-> three verifiers fail. 
+> xfs_scrub_ag_blocks returns sb_agcount for every AG except the last one.
+> For the last AG it returns (sb_dblocks - (all blocks in the other AGs))
+> which should be the same as agf->agf_length, right?
 
-.... if no type is set, then we don't mask any errors at all and
-we bail if any of the three verifiers fail. i.e.:
+... which assumes we've validated sb_agblocks and sb_dblocks in some
+way, which we haven't really done in the superblock scrubber.
 
-	error = xfs_ialloc_read_agi(mp, sc->tp, agno, agi);
-	if (error && (!type || type == XFS_SCRUB_TYPE_AGI)
-		return error;
+It seems to me that we're using the superblock 0 values as the
+golden master because it's a mounted filesystem, and then comparing
+everything else against it. Maybe we should at least check a couple
+of secondary superblocks to see that they match the primary
+superblock - that way we'll have some confidence that at least
+things like agcount, agblocks, dblocks, etc are valid before we go
+any further...
 
-        error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, agf);
-	if (error && (!type || type == XFS_SCRUB_TYPE_AGF)
-                return error;
-
-        error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
-	if (error && (!type || type == XFS_SCRUB_TYPE_AGFL)
-                return error;
-
-It's also much simpler to understand because we are using the proper
-functions for reading these headers....
-
-> The two functions /could/ be combined, though the 'type' test becomes
-> trickier.  Maybe it'd be better just to enhance the comments for the two
-> header loader functions to spell out how they differ in usage.
-
-Again, I'd much prefer similar functionality is combined into
-common helpers if it's simple enough to do...
+BUt maybe all we need is comment in the overall scrub description -
+that we're pretty much assuming that sb 0 is intact because we write
+what is in memory back to it and so we can simply validate
+everything else against the primary superblock contents...
 
 Cheers,
 
