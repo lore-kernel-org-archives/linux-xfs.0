@@ -1,148 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31729 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752339AbdJFWIr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:47 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v96M8kpW009283
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8k5I015245
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:46 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v96M8jIu028256
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:46 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 16/17] Add parent pointers to rename
-Date: Fri,  6 Oct 2017 15:05:47 -0700
-Message-Id: <1507327548-3221-17-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46183 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbdJDR5Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 13:57:24 -0400
+Date: Wed, 4 Oct 2017 10:57:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/25] xfs: scrub AGF and AGFL
+Message-ID: <20171004175721.GT6503@magnolia>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706331250.19351.3004733994525860282.stgit@magnolia>
+ <20171004013148.GW3666@dastard>
+ <20171004042140.GN6503@magnolia>
+ <20171004062840.GC3666@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171004062840.GC3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 486f808... 35667fd... M	fs/xfs/libxfs/xfs_dir2.c
-:100644 100644 7718481... fe0cb9f... M	fs/xfs/xfs_inode.c
- fs/xfs/libxfs/xfs_dir2.c |  6 ++++--
- fs/xfs/xfs_inode.c       | 26 ++++++++++++++++++++------
- 2 files changed, 24 insertions(+), 8 deletions(-)
+On Wed, Oct 04, 2017 at 05:28:40PM +1100, Dave Chinner wrote:
+> On Tue, Oct 03, 2017 at 09:21:40PM -0700, Darrick J. Wong wrote:
+> > On Wed, Oct 04, 2017 at 12:31:48PM +1100, Dave Chinner wrote:
+> > > On Tue, Oct 03, 2017 at 01:41:52PM -0700, Darrick J. Wong wrote:
+> > > > +/*
+> > > > + * Load as many of the AG headers and btree cursors as we can for an
+> > > > + * examination and cross-reference of an AG header.
+> > > > + */
+> > > > +int
+> > > > +xfs_scrub_load_ag_headers(
+> > > > +	struct xfs_scrub_context	*sc,
+> > > > +	xfs_agnumber_t			agno,
+> > > > +	unsigned int			type)
+> > > > +{
+> > > > +	struct xfs_mount		*mp = sc->mp;
+> > > > +	int				error;
+> > > > +
+> > > > +	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
+> > > > +	memset(&sc->sa, 0, sizeof(sc->sa));
+> > > > +	sc->sa.agno = agno;
+> > > > +
+> > > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
+> > > > +			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
+> > > > +	if (error)
+> > > > +		return error;
+> > > > +
+> > > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGF_DADDR(mp),
+> > > > +			&sc->sa.agf_bp, &xfs_agf_buf_ops,
+> > > > +			type == XFS_SCRUB_TYPE_AGF);
+> > > > +	if (error)
+> > > > +		return error;
+> > > > +
+> > > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGFL_DADDR(mp),
+> > > > +			&sc->sa.agfl_bp, &xfs_agfl_buf_ops,
+> > > > +			type == XFS_SCRUB_TYPE_AGFL);
+> > > > +	if (error)
+> > > > +		return error;
+> > > > +
+> > > > +	return 0;
+> > > > +}
+> > > 
+> > > This should probably be combined with xfs_scrub_ag_read_headers().
+> > > They essentially do the same thing, the only difference is the
+> > > "target" error reporting.
+> > 
+> > It's quite different -- this function ignores verifier errors for
+> > the two headers that don't match 'type'  In other words, if we're
+> > checking the AGF (for example) we'll try to grab the AGI and the AGFL.
+> > Verifier errors on the AGI/AGFL don't matter, but we /do/ want to hear
+> > the results if the AGF verifier fails.
+> 
+> What they do is quite different. The implementation is /almost/
+> identical. type is just an error masking variable and ....
+> 
+> > xfs_scrub_ag_read_headers on the other hand will fail if /any/ of the
+> > three verifiers fail. 
+> 
+> .... if no type is set, then we don't mask any errors at all and
+> we bail if any of the three verifiers fail. i.e.:
+> 
+> 	error = xfs_ialloc_read_agi(mp, sc->tp, agno, agi);
+> 	if (error && (!type || type == XFS_SCRUB_TYPE_AGI)
+> 		return error;
+> 
+>         error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, agf);
+> 	if (error && (!type || type == XFS_SCRUB_TYPE_AGF)
+>                 return error;
+> 
+>         error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
+> 	if (error && (!type || type == XFS_SCRUB_TYPE_AGFL)
+>                 return error;
+> 
+> It's also much simpler to understand because we are using the proper
+> functions for reading these headers....
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 486f808..35667fd 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -324,10 +324,11 @@ xfs_dir_createname(
- 	else
- 		rval = xfs_dir2_node_addname(args);
- 
-+out_free:
- 	/* return the location that this entry was place in the parent inode */
- 	if (offset)
- 		*offset = args->offset;
--out_free:
-+
- 	kmem_free(args);
- 	return rval;
- }
-@@ -496,9 +497,10 @@ xfs_dir_removename(
- 		rval = xfs_dir2_leaf_removename(args);
- 	else
- 		rval = xfs_dir2_node_removename(args);
-+out_free:
- 	if (offset)
- 		*offset = args->offset;
--out_free:
-+
- 	kmem_free(args);
- 	return rval;
- }
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7718481..fe0cb9f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2989,6 +2989,8 @@ xfs_rename(
- 	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
- 	int			spaceres;
- 	int			error;
-+	xfs_dir2_dataptr_t	new_diroffset;
-+	xfs_dir2_dataptr_t	old_diroffset;
- 
- 	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
- 
-@@ -3091,13 +3093,12 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
- 					   src_ip->i_ino, &first_block, &dfops,
--					   spaceres, NULL);
-+					   spaceres, &new_diroffset);
- 		if (error)
- 			goto out_bmap_cancel;
- 
- 		xfs_trans_ichgtime(tp, target_dp,
- 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
- 		if (new_parent && src_is_directory) {
- 			error = xfs_bumplink(tp, target_dp);
- 			if (error)
-@@ -3131,7 +3132,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
- 					src_ip->i_ino, &first_block, &dfops,
--					spaceres, NULL);
-+					spaceres, &new_diroffset);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -3166,7 +3167,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
- 					target_dp->i_ino, &first_block, &dfops,
--					spaceres, NULL);
-+					spaceres, &new_diroffset);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_bmap_cancel;
-@@ -3205,11 +3206,12 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					&first_block, &dfops, spaceres, NULL);
-+					&first_block, &dfops, spaceres,
-+					&old_diroffset);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   &first_block, &dfops, spaceres,
--					   NULL);
-+					   &old_diroffset);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -3239,6 +3241,18 @@ xfs_rename(
- 		VFS_I(wip)->i_state &= ~I_LINKABLE;
- 	}
- 
-+	if (new_parent && xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_add(tp, target_dp, src_ip, target_name,
-+				       new_diroffset, &dfops, &first_block);
-+		if (error)
-+			goto out_bmap_cancel;
-+
-+		error = xfs_parent_remove(tp, src_dp, src_ip,
-+					  old_diroffset, &dfops, &first_block);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
- 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
--- 
-2.7.4
+Ok, sounds good to me.
 
+> > The two functions /could/ be combined, though the 'type' test becomes
+> > trickier.  Maybe it'd be better just to enhance the comments for the two
+> > header loader functions to spell out how they differ in usage.
+> 
+> Again, I'd much prefer similar functionality is combined into
+> common helpers if it's simple enough to do...
+
+<nod>
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
