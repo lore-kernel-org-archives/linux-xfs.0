@@ -1,62 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:6219 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750865AbdJCXtb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 19:49:31 -0400
-Date: Wed, 4 Oct 2017 10:49:13 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/25] xfs: create helpers to scrub a metadata btree
-Message-ID: <20171003234913.GS3666@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:50254 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750865AbdJDACS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 20:02:18 -0400
+Date: Tue, 3 Oct 2017 17:02:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/25] xfs: probe the scrub ioctl
+Message-ID: <20171004000209.GG6503@magnolia>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706328091.19351.8950704471769189971.stgit@magnolia>
+ <150706326848.19351.10670988265979551239.stgit@magnolia>
+ <20171003233247.GQ3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150706328091.19351.8950704471769189971.stgit@magnolia>
+In-Reply-To: <20171003233247.GQ3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 01:41:20PM -0700, Darrick J. Wong wrote:
-> +/* btree scrubbing */
-> +
-> +/*
-> + * Check for btree operation errors.  See the section about handling
-> + * operational errors in common.c.
-> + */
-> +bool
-> +xfs_scrub_btree_op_ok(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_btree_cur		*cur,
-> +	int				level,
-> +	int				*error)
-> +{
-......
-> +
-> +/*
-> + * Visit all nodes and leaves of a btree.  Check that all pointers and
-> + * records are in order, that the keys reflect the records, and use a callback
-> + * so that the caller can verify individual records.  The callback is the same
-> + * as the one for xfs_btree_query_range, so therefore this function also
-> + * returns XFS_BTREE_QUERY_RANGE_ABORT, zero, or a negative error code.
-> + */
-> +int
-> +xfs_scrub_btree(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_btree_cur		*cur,
-> +	xfs_scrub_btree_rec_fn		scrub_fn,
-> +	struct xfs_owner_info		*oinfo,
-> +	void				*private)
-> +{
-> +	xfs_scrub_btree_op_ok(sc, cur, 0, false);
+On Wed, Oct 04, 2017 at 10:32:47AM +1100, Dave Chinner wrote:
+> On Tue, Oct 03, 2017 at 01:41:08PM -0700, Darrick J. Wong wrote:
+> > +/*
+> > + * Scrub probe -- userspace uses this to probe if we're willing to
+> > + * scrub or repair a given mountpoint.
+> > + */
+> > +int
+> > +xfs_scrub_probe(
+> > +	struct xfs_scrub_context	*sc)
+> > +{
+> > +	if (sc->sm->sm_ino || sc->sm->sm_agno)
+> > +		return -EINVAL;
+> > +	if (sc->sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
+> 
+> sm_flags?
 
-Looks like this patch won't compile - it's passing a bool to an int
-*. I know it's just a stub and probably gets fixed later, but
-better not to leave a bisect landmine...
+sm_gen is correct because in xfs_scrub_probe we reflect back to
+userspace any valid scrub outflags that were passed in via sm_gen.
+Therefore we have to check sm_gen for unknown output flags so that we
+can error out on any invalid inputs from userland.
 
--Dave
--- 
-Dave Chinner
-david@fromorbit.com
+xfs_scrub_metadata() unconditionally clears all the out flags from
+sm_flags on its way in, prior to any of the scrub handlers being called.
+
+(It's possible I'm misunderstanding your question.)
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
