@@ -1,113 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:11426 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751250AbdJDAxV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 20:53:21 -0400
-Date: Wed, 4 Oct 2017 11:46:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/25] xfs: create helpers to scan an allocation group
-Message-ID: <20171004004603.GU3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706330006.19351.11655503679984316123.stgit@magnolia>
+Received: from imap.thunk.org ([74.207.234.97]:32778 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751384AbdJDBmX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Oct 2017 21:42:23 -0400
+Date: Tue, 3 Oct 2017 21:42:04 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [RFC 4/5] ext4: add fs freezing support on suspend/hibernation
+Message-ID: <20171004014204.mztkdnm7wb7r6sl2@thunk.org>
+References: <20171003185313.1017-1-mcgrof@kernel.org>
+ <20171003185313.1017-5-mcgrof@kernel.org>
+ <20171003195930.ivgaccdabxczar62@thunk.org>
+ <20171003201321.GE2294@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150706330006.19351.11655503679984316123.stgit@magnolia>
+In-Reply-To: <20171003201321.GE2294@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 01:41:40PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Oct 03, 2017 at 10:13:21PM +0200, Luis R. Rodriguez wrote:
+> > After we remove add the NEEDS_RECOVERY flag, we need to make sure
+> > recovery flag is pushed out to disk before any other changes are
+> > allowed to be pushed out to disk.  That's why we originally did the
+> > update synchronously.
 > 
-> Add some helpers to enable us to lock an AG's headers, create btree
-> cursors for all btrees in that allocation group, and clean up
-> afterwards.
+> I see. I had to try to dig through linux-history to see why this was done, and
+> I actually could not find an exact commit which explained what you just did.
+> Thanks!
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/common.c |  173 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/common.h |   10 +++
->  fs/xfs/scrub/scrub.c  |    4 +
->  fs/xfs/scrub/scrub.h  |   21 ++++++
->  4 files changed, 208 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index a84ba19..b056c9d 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -44,6 +44,7 @@
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
->  #include "scrub/trace.h"
-> +#include "scrub/btree.h"
->  
->  /* Common code for the metadata scrubbers. */
->  
-> @@ -298,6 +299,178 @@ xfs_scrub_set_incomplete(
->  	trace_xfs_scrub_incomplete(sc, __return_address);
->  }
->  
-> +/*
-> + * AG scrubbing
-> + *
-> + * These helpers facilitate locking an allocation group's header
-> + * buffers, setting up cursors for all btrees that are present, and
-> + * cleaning everything up once we're through.
-> + */
-> +
-> +/* Grab all the headers for an AG. */
-> +int
-> +xfs_scrub_ag_read_headers(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_agnumber_t			agno,
-> +	struct xfs_buf			**agi,
-> +	struct xfs_buf			**agf,
-> +	struct xfs_buf			**agfl)
-> +{
-> +	struct xfs_mount		*mp = sc->mp;
-> +	int				error;
-> +
-> +	error = xfs_ialloc_read_agi(mp, sc->tp, agno, agi);
-> +	if (error)
-> +		goto out;
-> +
-> +	error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, agf);
-> +	if (error)
-> +		goto out;
-> +	if (!*agf) {
-> +		error = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
-> +	if (error)
-> +		goto out;
-> +
-> +out:
-> +	return error;
-> +}
+> Hrm, so on freeze we issue the same commit as well, so is a sync *really* needed
+> on thaw?
 
-It's not immediately obvious what releases the buffers on error.
-Maybe add a comment to say cleanup/release on error is unconditional
-through xfs_scrub_ag_free()?
+So let me explain what's going on.  When we do a freeze, we make sure
+all of the blocks that are written to the journal are writen to the
+final location on disk, and the journal is is truncated.  (This is
+called a "journal checkpoint".)  Then we clear the NEEDS RECOVERY
+feature flag and set the EXT4_VALID_FS flags in the superblock.  In
+the no journal case, we flush out all metadata writes, and we set the
+EXT4_VALID_FS flag.  In both cases, we call ext4_commit_super(sb, 1)
+to make sure the flags update is pushed out to disk.  This puts the
+file system into a "quiscent" state; in fact, it looks like the file
+system has been unmounted, so that it becomes safe to run
+dump/restore, run fsck -n on the file system, etc.
 
-Hmmm - now there's a question - is the reference we get here freed
-through cancelling the fake transaction, or via the manual
-xfs_trans_brelse() call in the free function? which one happens
-first? add that to the comment?
+The problem on the thaw side is that we need to make sure that
+EXT4_VALID_FS flag is removed (and if journaling is enabled, the NEEDS
+RECOVERY feature flag is set) and the superblock is flushed out to the
+storage device before any other writes are persisted on the disk.  In
+the case where we have journalling enabled, we could wait until the
+first journal commit to write out the superblock, since in journal
+mode all metadata updates to the disk are suppressed until the journal
+commit.  We don't do that today, but it is a change we could make.
 
-And given this locks out the AG from allocation for an arbitrary
-length of time, I'm wondering if we should add a flag into the pag
-somewhere to say "being scrubbed" so the extent and inode allocation
-code can skip over this AG and no block trying to lock it...
+However, in the no journal node we need to make sure the EXT4_VALID_FS
+flag is cleared on disk before any other metadata operations can take
+place, and calling ext4_commit_super(sb, 1) is the only real way to do
+that.
 
-Cheers,
+> No, it was am empirical evaluation done at testing, I observed bio_submit()
+> stalls, we never get completion from the device. Even if we call thaw at the
+> very end of resume, after the devices should be up, we still end up in the same
+> situation. Given how I order freezing filesystems after freezing userspace I do
+> believe we should thaw filesystems prior unfreezing userspace, its why I placed
+> the call where it is now.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+So when we call ext4_commit_super(sb, 1), we issue the bio, and then
+we block waiting for the I/O to complete.  That's a blocking call.  Is
+the thaw context one which allows blocking?  If userspace is still
+frozen, does that imply that the scheduler isn't allow to run?  If
+that's the case, then that's probably the problem.
+
+More generally, if the thawing code needs to allocate memory, or do
+any number of things that could potentially block, this could
+potentially be an issue.  Or if we have a network block device, or
+something else in the storage stack that needs to run a kernel thread
+context (or a workqueue, etc.) --- is the fact that userspace is
+frozen mean the scheduler is going to refuse to schedule()?
+
+I know at one point we made a distinction between freezing userspace
+threads and kernel threads, but were there people who didn't like this
+because of unnecessary complexity.  It sounds to me like on the thaw
+side, we might also need to unfreeze kernel threads first, and then
+allow userspace threads to run.  Do we do that today, or in the new
+freeze/thaw code?  It's been quite a while since I've looked at that
+part of the kernel.
+
+					- Ted
+					
