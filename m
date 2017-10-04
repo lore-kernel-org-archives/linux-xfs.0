@@ -1,15 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44340 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:47773 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751238AbdJCOiE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Oct 2017 10:38:04 -0400
-Date: Tue, 3 Oct 2017 16:38:02 +0200
+        id S1750951AbdJDGQR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Oct 2017 02:16:17 -0400
+Date: Wed, 4 Oct 2017 08:16:16 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: add a new test for racing AIO COW writes
-Message-ID: <20171003143802.GA3964@lst.de>
+Subject: add a new test for racing AIO COW writes V2
+Message-ID: <20171004061616.GA20222@lst.de>
+References: <20171003143802.GA3964@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171003143802.GA3964@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -20,8 +22,6 @@ This can be used to trigger an assert in the current XFS code because it
 can't handle the case where there are COW extents on a file, but none
 at or below the range converted by the AIO completion handler.
 
-Note that it doesn't trigger the assert 100% but fairly reliably.
-    
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 diff --git a/src/aio-dio-regress/aio-dio-cow-race.c b/src/aio-dio-regress/aio-dio-cow-race.c
@@ -223,4 +223,4 @@ index f2a6cda..014d6ea 100644
  460 auto quick rw
  461 auto shutdown stress
  462 auto quick dax
-+463 auto quick reflink dangerous
++463 auto quick clone dangerous
