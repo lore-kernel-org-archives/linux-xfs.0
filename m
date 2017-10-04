@@ -1,105 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:29028 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:44348 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751117AbdJCVoF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 17:44:05 -0400
-Date: Wed, 4 Oct 2017 08:44:01 +1100
+        by vger.kernel.org with ESMTP id S1750865AbdJDAcg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 20:32:36 -0400
+Date: Wed, 4 Oct 2017 11:15:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Something like ZFS Channel Programs for BTRFS & probably XFS or
- even VFS?
-Message-ID: <20171003214401.GP3666@dastard>
-References: <1799362.XC3pUdehxN@merkaba>
- <20171003201035.GL3666@dastard>
- <20171003204051.GA8848@bombadil.infradead.org>
+Subject: Re: [PATCH 06/25] xfs: scrub the shape of a metadata btree
+Message-ID: <20171004001535.GT3666@dastard>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706328772.19351.6405488670699092537.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171003204051.GA8848@bombadil.infradead.org>
+In-Reply-To: <150706328772.19351.6405488670699092537.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Martin Steigerwald <martin@lichtvoll.de>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 01:40:51PM -0700, Matthew Wilcox wrote:
-> On Wed, Oct 04, 2017 at 07:10:35AM +1100, Dave Chinner wrote:
-> > On Tue, Oct 03, 2017 at 03:19:18PM +0200, Martin Steigerwald wrote:
-> > > [repost. I didn´t notice autocompletion gave me wrong address for fsdevel, 
-> > > blacklisted now]
-> > > 
-> > > Hello.
-> > > 
-> > > What do you think of
-> > > 
-> > > http://open-zfs.org/wiki/Projects/ZFS_Channel_Programs
-> > 
-> > Domain not found.
+On Tue, Oct 03, 2017 at 01:41:27PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Must be an Australian problem ...
+> Create a function that can check the shape of a btree -- each block
+> passes basic inspection and all the pointers look ok.  In the next patch
+> we'll add the ability to check the actual keys and records stored within
+> the btree.  Add some helper functions so that we report detailed scrub
+> errors in a uniform manner in dmesg.  These are helper functions for
+> subsequent patches.
+.....
+>  
+> +/* Check a btree pointer.  Returns true if it's ok to use this pointer. */
+> +static bool
+> +xfs_scrub_btree_ptr_ok(
+> +	struct xfs_scrub_btree		*bs,
+> +	int				level,
+> +	union xfs_btree_ptr		*ptr)
+> +{
+> +	struct xfs_btree_cur		*cur = bs->cur;
+> +	xfs_daddr_t			daddr;
+> +	xfs_daddr_t			eofs;
+> +
+> +	if (xfs_btree_ptr_is_null(cur, ptr)) {
+> +		xfs_scrub_btree_set_corrupt(bs->sc, cur, level);
+> +		return false;
+> +	}
+> +	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+> +		daddr = XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
+> +	} else {
+> +		ASSERT(cur->bc_private.a.agno != NULLAGNUMBER);
+> +		daddr = XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno,
+> +				be32_to_cpu(ptr->s));
+> +	}
+> +	eofs = XFS_FSB_TO_BB(cur->bc_mp, cur->bc_mp->m_sb.sb_dblocks);
+> +	if (daddr == 0 || daddr >= eofs) {
+> +		xfs_scrub_btree_set_corrupt(bs->sc, cur, level);
+> +		return false;
+> +	}
+> +
+> +	return true;
+> +}
 
-Probably, I forgot to stand on my head so everything must have been
-sent to the server upside down....
+There seems to be quite a bit of overlap here with
+xfs_btree_check_ptr(). Indeed, for the short pointers the above code
+fails to check it is within the bounds of the AG size. I'd suggest
+both of these should use the same validity checking functions....
 
-Though it is a curious failure - it failed until I went to
-"openzfs.org" and that redirected to "open-zfs.org" and now it all
-works. Somewhat bizarre.
+....
+> +/*
+> + * Grab and scrub a btree block given a btree pointer.  Returns block
+> + * and buffer pointers (if applicable) if they're ok to use.
+> + */
+> +STATIC int
+> +xfs_scrub_btree_get_block(
+> +	struct xfs_scrub_btree		*bs,
+> +	int				level,
+> +	union xfs_btree_ptr		*pp,
+> +	struct xfs_btree_block		**pblock,
+> +	struct xfs_buf			**pbp)
+> +{
+> +	int				error;
+> +
+> +	error = xfs_btree_lookup_get_block(bs->cur, level, pp, pblock);
+> +	if (!xfs_scrub_btree_op_ok(bs->sc, bs->cur, level, &error) || !pblock)
+> +		return error;
+> +
+> +	xfs_btree_get_block(bs->cur, level, pbp);
+> +	error = xfs_btree_check_block(bs->cur, *pblock, level, *pbp);
+> +	if (!xfs_scrub_btree_op_ok(bs->sc, bs->cur, level, &error))
+> +		return error;
 
-> A ZFS channel program (ZCP) is a small script written in a domain specific
-> language that manipulate ZFS internals in a single, atomically-visible
-> operation.  For instance, to delete all snapshots of a filesystem a ZCP
-> could be written which 1) generates the list of snapshots, 2) traverses
-> that list, and 3) destroys each snapshot unconditionally. Because
-> each of these statements would be evaluated from within the kernel,
-> ZCPs can guarantee safety from interference with other concurrent ZFS
-> modifications. Executing from inside the kernel allows us to guarantee
-> atomic visibility of these operations (correctness) and allows them to
-> be performed in a single transaction group (performance).
->
-> A successful implementation of ZCP will:
-> 
-> 1. Support equivalent functionality for all of the current ZFS commands
-> with improved performance and correctness from the point of view of the
-> user of ZFS.
-> 
-> 2. Facilitate the quick addition of new and useful commands as
-> ZCP enables the implementation of more powerful operations which
-> previously would have been unsafe to implement in user programs, or
-> would require modifications to the kernel for correctness. Since the
-> ZCP layer guarantees the atomicity of each ZCP, we only need to write
-> new sync_tasks for individual simple operations, then can use ZCPs to
-> chain those simple operations together into more complicated operations.
-> 
-> 3. Allow ZFS users to safely implement their own ZFS operations without
-> performing operations they don’t have the privileges for.
-> 
-> 4. Improve the performance and correctness of existing applications
-> built on ZFS operations.
+xfs_btree_check_block() will throw error reports to dmesg for each
+corrupt block that is found. Do we want scrub to do this, or should
+it just report the corrupt block to userspace?
 
-/me goes and looks at the slides....
+> +
+> +	/*
+> +	 * Check the block's siblings; this function absorbs error codes
+> +	 * for us.
+> +	 */
+> +	return xfs_scrub_btree_block_check_siblings(bs, *pblock);
+> +}
+> +
+>  /*
+>   * Visit all nodes and leaves of a btree.  Check that all pointers and
+>   * records are in order, that the keys reflect the records, and use a callback
+> @@ -107,6 +253,93 @@ xfs_scrub_btree(
+>  	struct xfs_owner_info		*oinfo,
+>  	void				*private)
+>  {
+> -	xfs_scrub_btree_op_ok(sc, cur, 0, false);
+> -	return -EOPNOTSUPP;
+> +	struct xfs_scrub_btree		bs = {0};
+> +	union xfs_btree_ptr		ptr;
+> +	union xfs_btree_ptr		*pp;
+> +	struct xfs_btree_block		*block;
+> +	int				level;
+> +	struct xfs_buf			*bp;
+> +	int				i;
+> +	int				error = 0;
+> +
+> +	/* Initialize scrub state */
+> +	bs.cur = cur;
+> +	bs.scrub_rec = scrub_fn;
+> +	bs.oinfo = oinfo;
+> +	bs.firstrec = true;
+> +	bs.private = private;
+> +	bs.sc = sc;
+> +	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
+> +		bs.firstkey[i] = true;
+> +	INIT_LIST_HEAD(&bs.to_check);
+> +
+> +	/* Don't try to check a tree with a height we can't handle. */
+> +	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS) {
+> +		xfs_scrub_btree_set_corrupt(sc, cur, 0);
+> +		goto out;
+> +	}
+> +
+> +	/* Make sure the root isn't in the superblock. */
+> +	if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)) {
+> +		cur->bc_ops->init_ptr_from_cur(cur, &ptr);
+> +		if (!xfs_scrub_btree_ptr_ok(&bs, cur->bc_nlevels - 1, &ptr))
+> +			goto out;
 
-Seems like they are trying to solve a problem of their own making,
-in that admin operations are run by the kernel from a separate task
-that is really, really slow. So this scripting is a method of aggregating
-multiple "sync tasks" into a single operation so there isn't delays
-between tasks.
+Set corrupt if the init ptr is bad? And why do this check before
+the code below that has another init_ptr_from_cur() call?
 
-/me chokes on slide 8/8
+> +	}
+> +
+> +	/*
+> +	 * Load the root of the btree.  The helper function absorbs
+> +	 * error codes for us.
+> +	 */
+> +	level = cur->bc_nlevels - 1;
+> +	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
 
-"Add a Lua interpreter to the kernel, implement ZFS intrinsics (...)
-as extensions to the Lua language...."
+i.e.
 
-Somehow, I don't see that happening in Linux.
+	level = cur->bc_nlevels - 1;
+	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
+	if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
+	    !xfs_scrub_btree_ptr_ok(&bs, level, &ptr)) {
+		xfs_scrub_btree_set_corrupt(sc, cur, 0);
+		goto out;
+	}
 
-Yes, I can see us potentially adding some custom functionality in
-filesystems with eBPF (e.g. custom allocation policies), but I think
-admin operations need to be done from userspace through a clear,
-stable interface that supports all the necessary primitives to
-customise admin operations for different needs.
+Which makes me ask the question - why aren't we validating the
+initial pointer when the root is in an inode?
 
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
