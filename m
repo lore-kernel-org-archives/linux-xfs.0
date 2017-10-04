@@ -1,60 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mondschein.lichtvoll.de ([194.150.191.11]:33531 "EHLO
-        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752137AbdJCNTU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 09:19:20 -0400
-From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: Something like ZFS Channel Programs for BTRFS & probably XFS or even VFS?
-Date: Tue, 03 Oct 2017 15:19:18 +0200
-Message-ID: <1799362.XC3pUdehxN@merkaba>
+Received: from mx2.suse.de ([195.135.220.15]:43166 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750865AbdJDAsA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Oct 2017 20:48:00 -0400
+Date: Wed, 4 Oct 2017 02:47:56 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
+Message-ID: <20171004004756.GN2294@wotan.suse.de>
+References: <20171003185313.1017-1-mcgrof@kernel.org>
+ <20171003185313.1017-6-mcgrof@kernel.org>
+ <1862632.MOTT9GD8nq@aspire.rjw.lan>
+ <29004244.0jnB6Wc1z6@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <29004244.0jnB6Wc1z6@aspire.rjw.lan>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-btrfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-[repost. I didn´t notice autocompletion gave me wrong address for fsdevel, 
-blacklisted now]
+On Tue, Oct 03, 2017 at 11:15:07PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, October 3, 2017 8:59:00 PM CEST Rafael J. Wysocki wrote:
+> > On Tuesday, October 3, 2017 8:53:13 PM CEST Luis R. Rodriguez wrote:
+> > > Now that all filesystems which used to rely on kthread
+> > > freezing have been converted to filesystem freeze/thawing
+> > > we can remove the kernel kthread freezer.
+> > > 
+> > > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > 
+> > I like this one. :-)
+> 
+> However, suspend_freeze/thaw_processes() require some more work.
+> 
+> In particular, the freezing of workqueues is being removed here
+> without a replacement.
 
-Hello.
+Hrm, where do you see that? freeze_workqueues_busy() is still called on
+try_to_freeze_tasks(). Likewise thaw_processes() also calls thaw_workqueues().
+I did forget to nuke pm_nosig_freezing though.
 
-What do you think of
+Also as I have noted a few times now we have yet to determine if we can remove
+all freezer calls on kthreads without causing a regression. Granted I'm being
+overly careful here, I still would not be surprised to learn about a stupid use
+case where this will be hard to remove now.
 
-http://open-zfs.org/wiki/Projects/ZFS_Channel_Programs
+Only once this is done should this patch be considered. This will take time. So
+I'd like more general consensus on long term approach:
 
-?
+  1) first address each fs to use its freezer calls on susend/hibernate / and thaw
+     on resume. While at it, remove freezer API calls on their respective
+     kthreads.
+  2) In parallel address removing freezer API calls on non-IO kthreads, these
+     should be trivial, but who knows what surprises lurk here
+  3) Lookup for kthreads which seem to generate IO -- address / review if
+     removal of the freezer API can be done somehow with a quescing. This
+     is currently for example being done on SCSI / md.
+  4) Only after all the above is done should we consider this patch or some
+     form of it.
 
-There are quite some BTRFS maintenance programs like the deduplication stuff. 
-Also regular scrubs… and in certain circumstances probably balances can make 
-sense.
-
-In addition to this XFS got scrub functionality as well.
-
-Now putting the foundation for such a functionality in the kernel I think 
-would only be reasonable if it cannot be done purely within user space, so I 
-wonder about the safety from other concurrent ZFS modification and atomicity 
-that are mentioned on the wiki page. The second set of slides, those the 
-OpenZFS Developer Commit 2014, which are linked to on the wiki page explain 
-this more. (I didn´t look the first ones, as I am no fan of slideshare.net and 
-prefer a simple PDF to download and view locally anytime, not for privacy 
-reasons alone, but also to avoid a using a crappy webpage over a wonderfully 
-functional PDF viewer fat client like Okular)
-
-Also I wonder about putting a lua interpreter into the kernel, but it seems at 
-least NetBSD developers added one to their kernel with version 7.0¹.
-
-I also ask this cause I wondered about a kind of fsmaintd or volmaintd for 
-quite a while, and thought… it would be nice to do this in a generic way, as 
-BTRFS is not the only filesystem which supports maintenance operations. However 
-if it can all just nicely be done in userspace, I am all for it.
-
-[1] http://www.netbsd.org/releases/formal-7/NetBSD-7.0.html
-(tons of presentation PDFs on their site as well)
-
-Thanks,
--- 
-Martin
-
+  Luis
