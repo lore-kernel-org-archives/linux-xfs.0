@@ -1,130 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:3482 "EHLO
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:34775 "EHLO
         ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750871AbdJDGnr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 02:43:47 -0400
-Date: Wed, 4 Oct 2017 17:43:33 +1100
+        by vger.kernel.org with ESMTP id S1750945AbdJDHLH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 03:11:07 -0400
+Date: Wed, 4 Oct 2017 18:05:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/25] xfs: scrub the AGI
-Message-ID: <20171004064333.GD3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706331918.19351.1010060377239825093.stgit@magnolia>
- <20171004014347.GX3666@dastard>
- <20171004042501.GO6503@magnolia>
+Subject: Re: [RFC 4/5] ext4: add fs freezing support on suspend/hibernation
+Message-ID: <20171004070523.GE3666@dastard>
+References: <20171003185313.1017-1-mcgrof@kernel.org>
+ <20171003185313.1017-5-mcgrof@kernel.org>
+ <20171003195930.ivgaccdabxczar62@thunk.org>
+ <20171003201321.GE2294@wotan.suse.de>
+ <20171004014204.mztkdnm7wb7r6sl2@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171004042501.GO6503@magnolia>
+In-Reply-To: <20171004014204.mztkdnm7wb7r6sl2@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>, "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 09:25:01PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 04, 2017 at 12:43:47PM +1100, Dave Chinner wrote:
-> > On Tue, Oct 03, 2017 at 01:41:59PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add a forgotten check to the AGI verifier, then wire up the scrub
-> > > infrastructure to check the AGI contents.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_fs.h  |    3 +-
-> > >  fs/xfs/scrub/agheader.c |   88 +++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/scrub/common.c   |    6 ++-
-> > >  fs/xfs/scrub/scrub.c    |    4 ++
-> > >  fs/xfs/scrub/scrub.h    |    1 +
-> > >  5 files changed, 99 insertions(+), 3 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > > index aeb2a66..1e326dd 100644
-> > > --- a/fs/xfs/libxfs/xfs_fs.h
-> > > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > > @@ -487,9 +487,10 @@ struct xfs_scrub_metadata {
-> > >  #define XFS_SCRUB_TYPE_SB	1	/* superblock */
-> > >  #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
-> > >  #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
-> > > +#define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
-> > >  
-> > >  /* Number of scrub subcommands. */
-> > > -#define XFS_SCRUB_TYPE_NR	4
-> > > +#define XFS_SCRUB_TYPE_NR	5
-> > >  
-> > >  /* i: Repair this metadata. */
-> > >  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-> > > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> > > index 7fe6630..3d269c2 100644
-> > > --- a/fs/xfs/scrub/agheader.c
-> > > +++ b/fs/xfs/scrub/agheader.c
-> > > @@ -535,3 +535,91 @@ xfs_scrub_agfl(
-> > >  out:
-> > >  	return error;
-> > >  }
-> > > +
-> > > +/* AGI */
-> > > +
-> > > +/* Scrub the AGI. */
-> > > +int
-> > > +xfs_scrub_agi(
-> > > +	struct xfs_scrub_context	*sc)
-> > > +{
-> > > +	struct xfs_mount		*mp = sc->mp;
-> > > +	struct xfs_agi			*agi;
-> > > +	xfs_daddr_t			daddr;
-> > > +	xfs_daddr_t			eofs;
-> > > +	xfs_agnumber_t			agno;
-> > > +	xfs_agblock_t			agbno;
-> > > +	xfs_agblock_t			eoag;
-> > > +	xfs_agino_t			agino;
-> > > +	xfs_agino_t			first_agino;
-> > > +	xfs_agino_t			last_agino;
-> > > +	int				i;
-> > > +	int				level;
-> > > +	int				error = 0;
-> > > +
-> > > +	agno = sc->sm->sm_agno;
-> > > +	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
-> > > +	if (!xfs_scrub_op_ok(sc, agno, XFS_AGI_BLOCK(sc->mp), &error))
-> > > +		goto out;
-> > > +
-> > > +	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
-> > > +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-> > > +
-> > > +	/* Check the AG length */
-> > > +	eoag = be32_to_cpu(agi->agi_length);
-> > > +	if (eoag != xfs_scrub_ag_blocks(mp, agno))
-> > > +		xfs_scrub_block_set_corrupt(sc, sc->sa.agi_bp);
+On Tue, Oct 03, 2017 at 09:42:04PM -0400, Theodore Ts'o wrote:
+> On Tue, Oct 03, 2017 at 10:13:21PM +0200, Luis R. Rodriguez wrote:
+> > > After we remove add the NEEDS_RECOVERY flag, we need to make sure
+> > > recovery flag is pushed out to disk before any other changes are
+> > > allowed to be pushed out to disk.  That's why we originally did the
+> > > update synchronously.
 > > 
-> > Should we be cross checking that the AGI and AGF both have
-> > the same length here?
+> > I see. I had to try to dig through linux-history to see why this was done, and
+> > I actually could not find an exact commit which explained what you just did.
+> > Thanks!
+> > 
+> > Hrm, so on freeze we issue the same commit as well, so is a sync *really* needed
+> > on thaw?
 > 
-> Isn't that what this does?  Albeit indirectly?
+> So let me explain what's going on.  When we do a freeze, we make sure
+> all of the blocks that are written to the journal are writen to the
+> final location on disk, and the journal is is truncated.  (This is
+> called a "journal checkpoint".)  Then we clear the NEEDS RECOVERY
+> feature flag and set the EXT4_VALID_FS flags in the superblock.  In
+> the no journal case, we flush out all metadata writes, and we set the
+> EXT4_VALID_FS flag.  In both cases, we call ext4_commit_super(sb, 1)
+> to make sure the flags update is pushed out to disk.  This puts the
+> file system into a "quiscent" state; in fact, it looks like the file
+> system has been unmounted, so that it becomes safe to run
+> dump/restore, run fsck -n on the file system, etc.
+> 
+> The problem on the thaw side is that we need to make sure that
+> EXT4_VALID_FS flag is removed (and if journaling is enabled, the NEEDS
+> RECOVERY feature flag is set) and the superblock is flushed out to the
+> storage device before any other writes are persisted on the disk.  In
+> the case where we have journalling enabled, we could wait until the
+> first journal commit to write out the superblock, since in journal
+> mode all metadata updates to the disk are suppressed until the journal
+> commit.  We don't do that today, but it is a change we could make.
+> 
+> However, in the no journal node we need to make sure the EXT4_VALID_FS
+> flag is cleared on disk before any other metadata operations can take
+> place, and calling ext4_commit_super(sb, 1) is the only real way to do
+> that.
+> 
+> > No, it was am empirical evaluation done at testing, I observed bio_submit()
+> > stalls, we never get completion from the device. Even if we call thaw at the
+> > very end of resume, after the devices should be up, we still end up in the same
+> > situation. Given how I order freezing filesystems after freezing userspace I do
+> > believe we should thaw filesystems prior unfreezing userspace, its why I placed
+> > the call where it is now.
+> 
+> So when we call ext4_commit_super(sb, 1), we issue the bio, and then
+> we block waiting for the I/O to complete.  That's a blocking call.  Is
+> the thaw context one which allows blocking?
 
-I was kinda thinking of explicit checks, but you are right, it's
-indirectly verified....
+thaw_super() does down_write(), so it *must* be able to sleep.
 
-> xfs_scrub_ag_blocks returns sb_agcount for every AG except the last one.
-> For the last AG it returns (sb_dblocks - (all blocks in the other AGs))
-> which should be the same as agf->agf_length, right?
+> If userspace is still
+> frozen, does that imply that the scheduler isn't allow to run?  If
+> that's the case, then that's probably the problem.
+> 
+> More generally, if the thawing code needs to allocate memory, or do
 
-... which assumes we've validated sb_agblocks and sb_dblocks in some
-way, which we haven't really done in the superblock scrubber.
+Which is does. xfs_fs_unfreeze() queues work to a workqueue, so
+there's memory allocation there.
 
-It seems to me that we're using the superblock 0 values as the
-golden master because it's a mounted filesystem, and then comparing
-everything else against it. Maybe we should at least check a couple
-of secondary superblocks to see that they match the primary
-superblock - that way we'll have some confidence that at least
-things like agcount, agblocks, dblocks, etc are valid before we go
-any further...
+> any number of things that could potentially block, this could
+> potentially be an issue.
 
-BUt maybe all we need is comment in the overall scrub description -
-that we're pretty much assuming that sb 0 is intact because we write
-what is in memory back to it and so we can simply validate
-everything else against the primary superblock contents...
+yup, gfs2_unfreeze does even more stuff - it releases glocks which
+may end up queuing work, waking other threads and freeing stuff via
+call_rcu()...
+
+Basically, before thawing filesystems the rest of the kernel
+infrastructure needs to have been restarted. i.e. the order
+needs to be:
+
+freeze userspace
+freeze filesystems
+freeze kernel threads
+freeze workqueues
+
+thaw workqueues
+thaw kernel threads
+thaw filesystems
+thaw userspace
+
+and it should end up that way.
+
+> Or if we have a network block device, or
+> something else in the storage stack that needs to run a kernel thread
+> context (or a workqueue, etc.) --- is the fact that userspace is
+> frozen mean the scheduler is going to refuse to schedule()?
+
+No.
 
 Cheers,
 
