@@ -1,157 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19928 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751050AbdJDSCI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 14:02:08 -0400
-Date: Wed, 4 Oct 2017 11:02:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/25] xfs: scrub the AGI
-Message-ID: <20171004180204.GU6503@magnolia>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706331918.19351.1010060377239825093.stgit@magnolia>
- <20171004014347.GX3666@dastard>
- <20171004042501.GO6503@magnolia>
- <20171004064333.GD3666@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:12850 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751083AbdJEXjP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 19:39:15 -0400
+Date: Fri, 6 Oct 2017 10:36:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Circular locking dependency with pblk
+Message-ID: <20171005233609.GP3666@dastard>
+References: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20171004064333.GD3666@dastard>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Javier =?iso-8859-1?Q?Gonz=E1lez?= <jg@lightnvm.io>
+Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, darrick.wong@oracle.com, Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <peterz@infradead.org>
 
-On Wed, Oct 04, 2017 at 05:43:33PM +1100, Dave Chinner wrote:
-> On Tue, Oct 03, 2017 at 09:25:01PM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 04, 2017 at 12:43:47PM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 03, 2017 at 01:41:59PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Add a forgotten check to the AGI verifier, then wire up the scrub
-> > > > infrastructure to check the AGI contents.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_fs.h  |    3 +-
-> > > >  fs/xfs/scrub/agheader.c |   88 +++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  fs/xfs/scrub/common.c   |    6 ++-
-> > > >  fs/xfs/scrub/scrub.c    |    4 ++
-> > > >  fs/xfs/scrub/scrub.h    |    1 +
-> > > >  5 files changed, 99 insertions(+), 3 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > > > index aeb2a66..1e326dd 100644
-> > > > --- a/fs/xfs/libxfs/xfs_fs.h
-> > > > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > > > @@ -487,9 +487,10 @@ struct xfs_scrub_metadata {
-> > > >  #define XFS_SCRUB_TYPE_SB	1	/* superblock */
-> > > >  #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
-> > > >  #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
-> > > > +#define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
-> > > >  
-> > > >  /* Number of scrub subcommands. */
-> > > > -#define XFS_SCRUB_TYPE_NR	4
-> > > > +#define XFS_SCRUB_TYPE_NR	5
-> > > >  
-> > > >  /* i: Repair this metadata. */
-> > > >  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-> > > > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> > > > index 7fe6630..3d269c2 100644
-> > > > --- a/fs/xfs/scrub/agheader.c
-> > > > +++ b/fs/xfs/scrub/agheader.c
-> > > > @@ -535,3 +535,91 @@ xfs_scrub_agfl(
-> > > >  out:
-> > > >  	return error;
-> > > >  }
-> > > > +
-> > > > +/* AGI */
-> > > > +
-> > > > +/* Scrub the AGI. */
-> > > > +int
-> > > > +xfs_scrub_agi(
-> > > > +	struct xfs_scrub_context	*sc)
-> > > > +{
-> > > > +	struct xfs_mount		*mp = sc->mp;
-> > > > +	struct xfs_agi			*agi;
-> > > > +	xfs_daddr_t			daddr;
-> > > > +	xfs_daddr_t			eofs;
-> > > > +	xfs_agnumber_t			agno;
-> > > > +	xfs_agblock_t			agbno;
-> > > > +	xfs_agblock_t			eoag;
-> > > > +	xfs_agino_t			agino;
-> > > > +	xfs_agino_t			first_agino;
-> > > > +	xfs_agino_t			last_agino;
-> > > > +	int				i;
-> > > > +	int				level;
-> > > > +	int				error = 0;
-> > > > +
-> > > > +	agno = sc->sm->sm_agno;
-> > > > +	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
-> > > > +	if (!xfs_scrub_op_ok(sc, agno, XFS_AGI_BLOCK(sc->mp), &error))
-> > > > +		goto out;
-> > > > +
-> > > > +	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
-> > > > +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-> > > > +
-> > > > +	/* Check the AG length */
-> > > > +	eoag = be32_to_cpu(agi->agi_length);
-> > > > +	if (eoag != xfs_scrub_ag_blocks(mp, agno))
-> > > > +		xfs_scrub_block_set_corrupt(sc, sc->sa.agi_bp);
-> > > 
-> > > Should we be cross checking that the AGI and AGF both have
-> > > the same length here?
-> > 
-> > Isn't that what this does?  Albeit indirectly?
+On Thu, Oct 05, 2017 at 12:53:50PM +0200, Javier González wrote:
+> Hi,
 > 
-> I was kinda thinking of explicit checks, but you are right, it's
-> indirectly verified....
+> lockdep is reporting a circular dependency when using XFS and pblk,
+> which I am a bit confused about.
 > 
-> > xfs_scrub_ag_blocks returns sb_agcount for every AG except the last one.
-> > For the last AG it returns (sb_dblocks - (all blocks in the other AGs))
-> > which should be the same as agf->agf_length, right?
+> This happens when XFS sends a number of nested reads and (at least) one
+> of them hits partially pblk's cache. In this case, pblk will retrieve
+> the cached lbas and form a new bio, which is submitted _synchronously_
+> to the media using struct completion. The original bio is then populated
+> with the read data.
 > 
-> ... which assumes we've validated sb_agblocks and sb_dblocks in some
-> way, which we haven't really done in the superblock scrubber.
-
-Yes.
-
-> It seems to me that we're using the superblock 0 values as the
-> golden master because it's a mounted filesystem, and then comparing
-> everything else against it. Maybe we should at least check a couple
-> of secondary superblocks to see that they match the primary
-> superblock - that way we'll have some confidence that at least
-> things like agcount, agblocks, dblocks, etc are valid before we go
-> any further...
-
-xfs_scrub_superblock does check the secondary superblock geometry
-against whatever's in mp->m_sb, which came from sb 0.
-
-> BUt maybe all we need is comment in the overall scrub description -
-> that we're pretty much assuming that sb 0 is intact because we write
-> what is in memory back to it and so we can simply validate
-> everything else against the primary superblock contents...
-
-Correct.  Since scrub is run against a mounted live filesystem we assume
-that the mount code fully validated sb 0 and therefore we can rely on it
-not being wrong.
-
-If OTOH sb 0 *is* wrong then the admin is better off running xfs_repair
-because there's too much whirring machinery to go changing fundamental
-geometry.
-
-Ok more comments are coming.
-
---D
-
-> Cheers,
+> What lockdep complains about, is that the unlocking operation in
+> complete() has a circular dependency with ionode->i_rwsem when they both
+> happen on the same core, which is different from the core that issued
+> wait_for_completion_io_timeout() and is waiting for the partial read.
+> However, AFAIU complete() happens in interrupt context, so this should
+> not be a problem.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The only thing I can think of is that XFS is making an assumption when
+> submitting direct I/O that there will be no synchronous I/O coming from
+> anybody underneath.
+> 
+> Any thoughts?
+
+The new lockdep completion tracking that was included in 4.14 can
+throw false positives because it doesn't (yet) have the capability
+to understand the multiply layered completion contexts we have in
+the storage stack.
+
+Peter, here's another for you to ponder....
+
+> TRACE:
+> [ 8557.938336] ======================================================
+> [ 8557.944513] WARNING: possible circular locking dependency detected
+> [ 8557.950688] 4.14.0-rc2--509811f1f2df #726 Not tainted
+> [ 8557.955739] ------------------------------------------------------
+> [ 8557.961919] rocksdb:bg11/19129 is trying to acquire lock:
+> [ 8557.967319]  (&inode->i_rwsem){++++}, at: [<ffffffffad5648d1>] xfs_ilock+0x1a1/0x230
+> [ 8557.975063]
+>                but now in release context of a crosslock acquired at the following:
+> [ 8557.983921]  ((complete)&wait#5){+.+.}, at: [<ffffffffad933d0a>] pblk_fill_partial_read_bio+0x22a/0x520
+> [ 8557.993318]
+>                which lock already depends on the new lock.
+> 
+> [ 8558.001490]
+>                the existing dependency chain (in reverse order) is:
+> [ 8558.008966]
+>                -> #1 ((complete)&wait#5){+.+.}:
+> [ 8558.014715]        __lock_acquire+0x1186/0x11d0
+> [ 8558.019245]        lock_acquire+0xed/0x1e0
+> [ 8558.023337]        wait_for_completion_io_timeout+0x65/0x180
+> [ 8558.028989]        pblk_fill_partial_read_bio+0x22a/0x520
+> [ 8558.034375]        pblk_submit_read+0x158/0x3a0
+> [ 8558.038900]        pblk_make_rq+0xc1/0x110
+> [ 8558.042992]        generic_make_request+0x11d/0x3c0
+> [ 8558.047862]        submit_bio+0x73/0x140
+> [ 8558.051781]        iomap_dio_actor+0x1f8/0x3a0
+> [ 8558.056216]        iomap_apply+0xa1/0x110
+> [ 8558.060220]        iomap_dio_rw+0x26f/0x3c0
+> [ 8558.064398]        xfs_file_dio_aio_read+0x88/0x1c0
+> [ 8558.069269]        xfs_file_read_iter+0xab/0xc0
+> [ 8558.073794]        __vfs_read+0xef/0x160
+> [ 8558.077709]        vfs_read+0xa8/0x150
+> [ 8558.081454]        SyS_pread64+0x98/0xc0
+> [ 8558.085372]        entry_SYSCALL_64_fastpath+0x23/0xc2
+
+This is completely normal, blocked on a bio completion with a
+filesystem lock held. More commonly we see this sort of thing
+through through submit_bio_wait().
+
+> [ 8558.125636]  Possible unsafe locking scenario by crosslock:
+> 
+> [ 8558.132672]        CPU0                    CPU1
+> [ 8558.137196]        ----                    ----
+> [ 8558.141720]   lock(&inode->i_rwsem);
+> [ 8558.145291]   lock((complete)&wait#5);
+> [ 8558.149035]                                lock(&inode->i_rwsem);
+> [ 8558.155118]                                unlock((complete)&wait#5);
+> [ 8558.161550]
+>                 *** DEADLOCK ***
+> 
+> [ 8558.167461] 4 locks held by rocksdb:bg11/19129:
+> [ 8558.171984]  #0:  (&inode->i_rwsem){++++}, at: [<ffffffffad5648d1>] xfs_ilock+0x1a1/0x230
+> [ 8558.180148]  #1:  (rcu_read_lock){....}, at: [<ffffffffad72b8cc>] __blk_mq_run_hw_queue+0xec/0x1d0
+> [ 8558.189091]  #2:  (&(&nvmeq->q_lock)->rlock){-.-.}, at: [<ffffffffad9d438c>] nvme_queue_rq+0x14c/0x9a0
+> [ 8558.198384]  #3:  (&x->wait#17){-.-.}, at: [<ffffffffad16444d>] complete+0x1d/0x60
+> [ 8558.205948]
+>                stack backtrace:
+> [ 8558.210300] CPU: 6 PID: 19129 Comm: rocksdb:bg11 Not tainted 4.14.0-rc2--509811f1f2df #726
+> [ 8558.218550] Hardware name: Supermicro X10SRA-F/X10SRA-F, BIOS 2.0a 06/23/2016
+> [ 8558.225675] Call Trace:
+> [ 8558.228123]  dump_stack+0x85/0xc7
+> [ 8558.231438]  print_circular_bug+0x226/0x330
+> [ 8558.235616]  ? print_bfs_bug+0x40/0x40
+> [ 8558.239358]  check_prev_add+0x432/0x840
+> [ 8558.243190]  ? __lock_acquire+0x736/0x11d0
+> [ 8558.247282]  lock_commit_crosslock+0x3d3/0x5d0
+> [ 8558.251718]  ? lock_commit_crosslock+0x3d3/0x5d0
+> [ 8558.256328]  complete+0x29/0x60
+> [ 8558.259469]  pblk_end_io_sync+0x12/0x20
+> [ 8558.263297]  nvm_end_io+0x2b/0x30
+> [ 8558.266607]  nvme_nvm_end_io+0x2e/0x50
+
+And this is where lockdep gets confused. Up until this point, it's
+only ever seen the bio completion come from /outside/ the XFS
+i_rwsem context (i.e. async completion form interupts). With a
+synchronous completion like this, the completion has now been done
+from inside the i_rwsem context and that is what triggers lockdep.
+
+This is safe to do because even if we have a bio blocked on a
+completion queue, we've got all we way down to this complete() call
+from a *different bio context* inside a read locked i_rwsem. Hence
+there's no way this can be a deadlock even if the two processes are
+holding the same i_rwsem.
+
+Therefore: false positive.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
