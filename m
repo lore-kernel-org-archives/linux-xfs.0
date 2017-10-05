@@ -1,339 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19280 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750835AbdJEFrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 01:47:19 -0400
-Date: Wed, 4 Oct 2017 22:47:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 13/25] xfs: scrub inode btrees
-Message-ID: <20171005054714.GF7122@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:47026 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751208AbdJEHOp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 03:14:45 -0400
+Date: Thu, 5 Oct 2017 18:13:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 16/25] xfs: scrub inodes
+Message-ID: <20171005071339.GN3666@dastard>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706333138.19351.1481631767118687082.stgit@magnolia>
- <20171005020810.GJ3666@dastard>
+ <150706335008.19351.13005092237576865356.stgit@magnolia>
+ <20171005040452.GM3666@dastard>
+ <20171005052219.GE7122@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171005020810.GJ3666@dastard>
+In-Reply-To: <20171005052219.GE7122@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 05, 2017 at 01:08:10PM +1100, Dave Chinner wrote:
-> On Tue, Oct 03, 2017 at 01:42:11PM -0700, Darrick J. Wong wrote:
-> > +/*
-> > + * Set us up to scrub inode btrees.
-> > + * If we detect a discrepancy between the inobt and the inode,
-> > + * try again after forcing logged inode cores out to disk.
-> > + */
-> > +int
-> > +xfs_scrub_setup_ag_iallocbt(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	return xfs_scrub_setup_ag_btree(sc, ip, sc->try_harder);
-> > +}
-> > +
-> > +/* Inode btree scrubber. */
-> > +
-> > +/* Is this chunk worth checking? */
-> > +STATIC bool
-> > +xfs_scrub_iallocbt_chunk(
-> > +	struct xfs_scrub_btree		*bs,
-> > +	struct xfs_inobt_rec_incore	*irec,
-> > +	xfs_agino_t			agino,
-> > +	xfs_extlen_t			len)
-> > +{
-> > +	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > +	struct xfs_agf			*agf;
-> > +	unsigned long long		rec_end;
-> > +	xfs_agblock_t			eoag;
-> > +	xfs_agblock_t			bno;
-> > +
-> > +	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
-> > +	eoag = be32_to_cpu(agf->agf_length);
-
-<nod>
-
-> Probably should use the AGI for this.
+On Wed, Oct 04, 2017 at 10:22:19PM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 05, 2017 at 03:04:52PM +1100, Dave Chinner wrote:
+> > On Tue, Oct 03, 2017 at 01:42:30PM -0700, Darrick J. Wong wrote:
+> > > +	error = xfs_iget(mp, NULL, sc->sm->sm_ino, XFS_IGET_UNTRUSTED,
+> > > +			0, &ips);
+> > 
+> > I think we also want XFS_IGET_DONTCACHE here, so we don't trash the
+> > inode cache with inodes that we use once for scrub and never touch
+> > again.
 > 
-> > +	bno = XFS_AGINO_TO_AGBNO(mp, agino);
-> > +	rec_end = (unsigned long long)bno + len;
-> > +
-> > +	if (bno >= mp->m_sb.sb_agblocks || bno >= eoag ||
-> > +	    rec_end > mp->m_sb.sb_agblocks || rec_end > eoag) {
+> I thought about adding this, but if we let the inodes fall out of the
+> cache now then we'll just have to load them back in for the bmap checks,
+> right?
+
+Well, I'm looking at ensuring that we don't blow out the memory
+side of things. We've still got the inode buffer in the buffer
+cache, so I don't see why we should double cache these things
+and then leave both cached copied hanging around after we've
+finished with them. Leave the buffer around because we do a fair few
+checks with it, but don't use excessive icache memory and trash the
+working set if we can avoid it...
+
+> > > +xfs_scrub_checkpoint_log(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	int			error;
+> > > +
+> > > +	error = _xfs_log_force(mp, XFS_LOG_SYNC, NULL);
+> > > +	if (error)
+> > > +		return error;
+> > > +	xfs_ail_push_all_sync(mp->m_ail);
+> > > +	return 0;
+> > > +}
+> > 
+> > Oooo, that's a nasty thing to do on busy systems with large dirty
+> > logs. I hope this is a "last resort" kind of thing....
 > 
-> Same comment as last patch.
+> It is; we only do this if the inobt says there's an inode there and the
+> inode verifiers fail.
 
-Yup yup.
+Ok, so why would pushing the log and the AIL make the verifier then
+succeed? how likely is this to occur on a busy system?
 
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +		return false;
-> > +	}
-> > +
-> > +	return true;
-> > +}
+> > > +/* Set us up with an inode. */
+> > 
+> > What state are we trying to get the inode into here? We grab all the
+> > various locks, but we can still have data changing via mmap pages
+> > that are already faulted in and delalloc extents in the incore
+> > extent list that aren't reflected on disk...
+> > 
+> > A comment explaining what we expect here would be nice.
 > 
-> I note there is no check on the length passed in for the inode
-> chunk - should that be verified?
+> /* 
+>  * Grab total control of the inode metadata.  It doesn't matter here if
+>  * the file data is still changing, we just want exclusive access to the
+>  * metadata.
+>  */
 
-len is computed from constants, so in theory it should be safe since
-if the geometry is all messed up then we likely wouldn't have been
-able to mount.
+*nod*
 
-OTOH it's pretty cheap to put in, so sure.
-
-> > +
-> > +/* Count the number of free inodes. */
-> > +static unsigned int
-> > +xfs_scrub_iallocbt_freecount(
-> > +	xfs_inofree_t			freemask)
-> > +{
-> > +	int				bits = XFS_INODES_PER_CHUNK;
-> > +	unsigned int			ret = 0;
-> > +
-> > +	while (bits--) {
-> > +		if (freemask & 1)
-> > +			ret++;
-> > +		freemask >>= 1;
-> > +	}
+> > > +	/* Got the inode, lock it and we're ready to go. */
+> > > +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> > > +	xfs_ilock(sc->ip, sc->ilock_flags);
+> > > +	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
+> > > +	if (error)
+> > > +		goto out_unlock;
+> > > +	sc->ilock_flags |= XFS_ILOCK_EXCL;
+> > > +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
+> > 
+> > Should the inode be joined to the transaction so that cancelling the
+> > transaction unlocks the inode? Then the need for the ilock_flags
+> > variable goes away....
 > 
+> This is the confluence of two semi-icky things: first, some of the
+> scrubbers (particularly the dir and parent pointer scrubbers) will need
+> to drop the ILOCK for short periods of time; later on, repair will want
+> to keep the inode locked across all the repair transactions, so it makes
+> more sense to control the lock and unlock directly.
+
+Ok, I'll pass on this for now, see how the rest of the code falls
+out.
+
+> > > +	/* di_size */
+> > > +	isize = be64_to_cpu(dip->di_size);
+> > > +	if (isize & (1ULL << 63))
+> > > +		xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > 
+> > Should we be checking against the on disk format size, or the
+> > mounted filesystem maximum size (i.e. mp->m_super->s_maxbytes)?
+> > 32 or 64 bit systems are going to have different maximum valid file
+> > sizes..
 > 
-> Seems a little cumbersome. Perhaps a loop using xfs_next_bit()
-> might be a bit faster, something like:
+> It's perfectly valid to 'truncate -s $((2 ** 60) foofile' so the only
+
+Ugh. We can't do IO past 16TB on 32 bit systems, so I'm kinda
+surprised truncate doesn't have the same s_maxbytes restriction...
+
+> thing we can really check for here is that the upper bit isn't set
+> (because the VFS does not check, but barfs on, files with that large of
+> a size).
+
+xfs_max_file_offset() sets the max file offset to 2^63 - 1, so it
+looks like the lack of checking in truncate is the problem here,
+not the IO path.
+
+> > Directories have a maximum bound size, too - the data space, leaf
+> > space and freespace space, each of which are 32GB in size, IIRC.
+> > 
+> > And symlinks have a different maximum size, too.
 > 
-> 	nextbit = xfs_next_bit(&freemask, 1, 0); 
-> 	while (nextbit != -1) {
-> 		ret++;
-> 		nextbit = xfs_next_bit(&freemask, 1, nextbit + 1);
-> 	}
+> Fair enough, I'll expand the i_size checks, though ISTR the verifiers
+> now check that for us.
 
-<nod>  A pity there's no popcnt()...
+If they do, then just drop a comment in there to say what is checked
+by the verifier.
 
-> > +/* Check a particular inode with ir_free. */
-> > +STATIC int
-> > +xfs_scrub_iallocbt_check_cluster_freemask(
-> > +	struct xfs_scrub_btree		*bs,
-> > +	xfs_ino_t			fsino,
-> > +	xfs_agino_t			chunkino,
-> > +	xfs_agino_t			clusterino,
-> > +	struct xfs_inobt_rec_incore	*irec,
-> > +	struct xfs_buf			*bp)
-> > +{
-> > +	struct xfs_dinode		*dip;
-> > +	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > +	bool				freemask_ok;
-> > +	bool				inuse;
-> > +	int				error;
-> > +
-> > +	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
-> > +	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC ||
-> > +	    (dip->di_version >= 3 &&
-> > +	     be64_to_cpu(dip->di_ino) != fsino + clusterino)) {
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +		goto out;
-> > +	}
-> > +
-> > +	freemask_ok = !!(irec->ir_free & XFS_INOBT_MASK(chunkino + clusterino));
+> > > +	if (!S_ISDIR(mode) && !S_ISREG(mode) && !S_ISLNK(mode) && isize != 0)
+> > > +		xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > 
+> > > +
+> > > +	/* di_nblocks */
+> > > +	if (flags2 & XFS_DIFLAG2_REFLINK) {
+> > > +		; /* nblocks can exceed dblocks */
+> > > +	} else if (flags & XFS_DIFLAG_REALTIME) {
+> > > +		if (be64_to_cpu(dip->di_nblocks) >=
+> > > +		    mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > 
+> > That doesn't seem right. the file can be on either the data or the
+> > rt device, so the maximum file blocks is the size of one device or
+> > the other, not both combined.
 > 
-> No need for !!(...) for a bool type - the compiler will squash it
-> down to 0/1 autmoatically.
+> di_nblocks is the sum of (data blocks + bmbt blocks + attr blocks),
+> right?
 
-<nod>
+Yeah, forgot it was more than just data extents.
 
-> > +	error = xfs_icache_inode_is_allocated(mp, bs->cur->bc_tp,
-> > +			fsino + clusterino, &inuse);
-> > +	if (error == -ENODATA) {
-> > +		/* Not cached, just read the disk buffer */
+> So in theory if you had a rt file with 1000 data blocks, 10 bmbt
+> blocks to map the data blocks, and 100 attr blocks then di_nblocks has
+> to be 1110.
+
+Yup, but the additional metadata on the data device is not going to
+be anywhere near the size of the data device.
+
+/me shrugs
+
+I can't think of an easy way to get a maximum block count, so I
+guess that'll have to do...
+
+> > > +		if (nextents > fork_recs)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > > +		break;
+> > > +	case XFS_DINODE_FMT_BTREE:
+> > > +		if (nextents <= fork_recs)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > > +		break;
+> > > +	case XFS_DINODE_FMT_LOCAL:
+> > > +	case XFS_DINODE_FMT_DEV:
+> > > +	case XFS_DINODE_FMT_UUID:
+> > > +	default:
+> > > +		if (nextents != 0)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > > +		break;
+> > > +	}
+> > > +
+> > > +	/* di_anextents */
+> > > +	nextents = be16_to_cpu(dip->di_anextents);
+> > > +	fork_recs =  XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec);
+> > > +	switch (dip->di_aformat) {
+> > > +	case XFS_DINODE_FMT_EXTENTS:
+> > > +		if (nextents > fork_recs)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > > +		break;
+> > > +	case XFS_DINODE_FMT_BTREE:
+> > > +		if (nextents <= fork_recs)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > > +		break;
+> > > +	case XFS_DINODE_FMT_LOCAL:
+> > > +	case XFS_DINODE_FMT_DEV:
+> > > +	case XFS_DINODE_FMT_UUID:
+> > > +	default:
+> > > +		if (nextents != 0)
+> > > +			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > > +		break;
+> > > +	}
+> > 
+> > Don't we need a check here first to see whether an attribute fork
+> > exists or not?
 > 
-> I think that is wrong. xfs_icache_inode_is_allocated() returns
-> -ENOENT if the inode is not in cache....
+> Do you mean the xfs_inode_fork, or something else?
 
-I changed it to ENODATA so that we can tell the difference between
-inode not in cache (ENODATA) and inode racing with unlink (ENOENT).
+SOmething else. :P
 
-(Patch was sent to the ML a while ago and I omitted it from this posting...)
+> XFS_DFORK_ASIZE returns zero if !XFS_DFORK_Q which in turn is based on
+> di_forkoff so we're really only checking that di_aformat makes sense
+> given the number of extents and the size of the attr fork area.
 
-> > +		freemask_ok ^= !!(dip->di_mode);
-> > +		if (!bs->sc->try_harder && !freemask_ok)
-> > +			return -EDEADLOCK;
-> > +	} else if (error < 0) {
-> > +		/* Inode is only half assembled, don't bother. */
-> > +		freemask_ok = true;
-> 
-> Or we had an IO error looking it up. i.e. -EAGAIN is the "half
-> assembled" state (i.e. in the XFS_INEW state) or the half
-> *disasembled* state (i.e. XFS_IRECLAIMABLE), anything
-> else is an error...
+Right, but if XFS_DFORK_ASIZE == 0, the dip->di_aformat *must* be
+XFS_DINODE_FMT_EXTENTS. That's the only valid configuration when
+there is no attribute fork present.
 
-<nod>
+If there is an attribute fork present, then it can be XFS_DINODE_FMT_LOCAL,
+EXTENT or BTREE, and then the extent count needs checking.
+XFS_DINODE_FMT_DEV and XFS_DINODE_FMT_UUID are both invalid for the
+attribute fork.
 
-> > +	} else {
-> > +		/* Inode is all there. */
-> > +		freemask_ok ^= inuse;
-> 
-> So inuse is returned from a mode check after iget succeeds. The mode
-> isn't zeroed until  /after/ XFS_IRECLAIMABLE is set, but it's also
-> set before XFS_INEW is cleared.  IOWs, how can
-> xfs_icache_inode_is_allocated() report anything
-> other than inuse == true here? If that's the case, what's the point
-> of the mode check inside xfs_icache_inode_is_allocated()?
+Cheers,
 
-I think you're right about this, I'll have a look in the morning.
-
-> > +	}
-> > +	if (!freemask_ok)
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +out:
-> > +	return 0;
-> > +}
-> > +
-> > +/* Make sure the free mask is consistent with what the inodes think. */
-> > +STATIC int
-> > +xfs_scrub_iallocbt_check_freemask(
-> > +	struct xfs_scrub_btree		*bs,
-> > +	struct xfs_inobt_rec_incore	*irec)
-> > +{
-> > +	struct xfs_owner_info		oinfo;
-> > +	struct xfs_imap			imap;
-> > +	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > +	struct xfs_dinode		*dip;
-> > +	struct xfs_buf			*bp;
-> > +	xfs_ino_t			fsino;
-> > +	xfs_agino_t			nr_inodes;
-> > +	xfs_agino_t			agino;
-> > +	xfs_agino_t			chunkino;
-> > +	xfs_agino_t			clusterino;
-> > +	xfs_agblock_t			agbno;
-> > +	int				blks_per_cluster;
-> > +	uint16_t			holemask;
-> > +	uint16_t			ir_holemask;
-> > +	int				error = 0;
-> > +
-> > +	/* Make sure the freemask matches the inode records. */
-> > +	blks_per_cluster = xfs_icluster_size_fsb(mp);
-> > +	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-> 
-> Does this setup and loop work for the case where we have 64k
-> filesystem blocks and so two or more inode chunks per filesystem
-> block (i.e. ppc64)? 
-
-I think the answer is yes, at worst case we end up processing a block's
-worth of inodes at a time.  The last time I ran scrub on ppc64 (last
-week) it worked fine.
-
-> > +/* Scrub an inobt/finobt record. */
-> > +STATIC int
-> > +xfs_scrub_iallocbt_helper(
-> > +	struct xfs_scrub_btree		*bs,
-> > +	union xfs_btree_rec		*rec)
-> > +{
-> > +	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > +	struct xfs_agi			*agi;
-> > +	struct xfs_inobt_rec_incore	irec;
-> > +	uint64_t			holes;
-> > +	xfs_agino_t			agino;
-> > +	xfs_agblock_t			agbno;
-> > +	xfs_extlen_t			len;
-> > +	int				holecount;
-> > +	int				i;
-> > +	int				error = 0;
-> > +	unsigned int			real_freecount;
-> > +	uint16_t			holemask;
-> > +
-> > +	xfs_inobt_btrec_to_irec(mp, rec, &irec);
-> > +
-> > +	if (irec.ir_count > XFS_INODES_PER_CHUNK ||
-> > +	    irec.ir_freecount > XFS_INODES_PER_CHUNK)
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +
-> > +	real_freecount = irec.ir_freecount +
-> > +			(XFS_INODES_PER_CHUNK - irec.ir_count);
-> > +	if (real_freecount != xfs_scrub_iallocbt_freecount(irec.ir_free))
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +
-> > +	agi = XFS_BUF_TO_AGI(bs->sc->sa.agi_bp);
-> > +	agino = irec.ir_startino;
-> > +	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
-> > +	if (agbno >= be32_to_cpu(agi->agi_length)) {
-> 
-> Validate as per every other agbno?
-
-<nod>
-
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +		goto out;
-> > +	}
-> > +
-> > +	if ((agbno & (xfs_ialloc_cluster_alignment(mp) - 1)) ||
-> > +	    (agbno & (xfs_icluster_size_fsb(mp) - 1)))
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> 
-> What's the magic masking checks being done here? (comment?)
-
-/* Make sure this record is aligned to cluster and inoalignmnt size. */
-
-> > +	/* Handle non-sparse inodes */
-> > +	if (!xfs_inobt_issparse(irec.ir_holemask)) {
-> > +		len = XFS_B_TO_FSB(mp,
-> > +				XFS_INODES_PER_CHUNK * mp->m_sb.sb_inodesize);
-> > +		if (irec.ir_count != XFS_INODES_PER_CHUNK)
-> > +			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +
-> > +		if (!xfs_scrub_iallocbt_chunk(bs, &irec, agino, len))
-> > +			goto out;
-> > +		goto check_freemask;
-> > +	}
-> > +
-> > +	/* Check each chunk of a sparse inode cluster. */
-> > +	holemask = irec.ir_holemask;
-> > +	holecount = 0;
-> > +	len = XFS_B_TO_FSB(mp,
-> > +			XFS_INODES_PER_HOLEMASK_BIT * mp->m_sb.sb_inodesize);
-> > +	holes = ~xfs_inobt_irec_to_allocmask(&irec);
-> > +	if ((holes & irec.ir_free) != holes ||
-> > +	    irec.ir_freecount > irec.ir_count)
-> > +		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +
-> > +	for (i = 0; i < XFS_INOBT_HOLEMASK_BITS; holemask >>= 1,
-> > +			i++, agino += XFS_INODES_PER_HOLEMASK_BIT) {
-> 
-> Urk. THat's a bit hard to read.
-> 
-> > +		if (holemask & 1) {
-> > +			holecount += XFS_INODES_PER_HOLEMASK_BIT;
-> > +			continue;
-> > +		}
-> > +
-> > +		if (!xfs_scrub_iallocbt_chunk(bs, &irec, agino, len))
-> > +			break;
-> > +	}
-> 
-> How about
-> 
-> 	for (i = 0; i < XFS_INOBT_HOLEMASK_BITS; i++) {
-> 		if (holemask & 1) {
-> 			holecount += XFS_INODES_PER_HOLEMASK_BIT;
-> 		} else if (!xfs_scrub_iallocbt_chunk(bs, &irec, agino, len))
-> 			break;
-> 
-> 		holemask >>= 1;
-> 		agino += XFS_INODES_PER_HOLEMASK_BIT;
-> 	}
-
-Looks better than mine. :)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
