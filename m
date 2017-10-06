@@ -1,108 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from relayout02-q02.e.movistar.es ([86.109.101.152]:48429 "EHLO
-        relayout02-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754986AbdJIPPG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 11:15:06 -0400
-Received: from relayout02-redir.e.movistar.es (unknown [86.109.101.202])
-        by relayout02-out.e.movistar.es (Postfix) with ESMTP id 3y9kBt6KYlzhYJm
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2017 17:08:06 +0200 (CEST)
-Received: from Telcontar.valinor (25.red-79-147-98.dynamicip.rima-tde.net [79.147.98.25])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2@telefonica.net)
-        by relayout02.e.movistar.es (Postfix) with ESMTPSA id 3y9kBt3sBzzdbFy
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2017 17:08:06 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 09EA532060E
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2017 17:08:06 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-        by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id YVqMBwyxNCnR for <linux-xfs@vger.kernel.org>;
-        Mon,  9 Oct 2017 17:08:05 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id DE44032060D
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2017 17:08:05 +0200 (CEST)
-Subject: Re: Questions about backups with XFS
-References: <20171007114343.3bd42f98@lubh.lubhome>
- <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <ec2fb542-c178-f17d-648e-4d9c4b34f280@telefonica.net>
-Date: Mon, 9 Oct 2017 17:08:05 +0200
+Received: from mga09.intel.com ([134.134.136.24]:56762 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752964AbdJFWmb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Oct 2017 18:42:31 -0400
+Subject: [PATCH v7 09/12] xfs: wire up ->lease_direct()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 06 Oct 2017 15:36:06 -0700
+Message-ID: <150732936625.22363.7638037715540836828.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="tblM6tO6dPg5ErUvN66nDcsRC6CiGlN72"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org
+Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---tblM6tO6dPg5ErUvN66nDcsRC6CiGlN72
-Content-Type: multipart/mixed; boundary="7rtdP9JF8BmjlhAC5jgHQfla5Odl4iB47";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <ec2fb542-c178-f17d-648e-4d9c4b34f280@telefonica.net>
-Subject: Re: Questions about backups with XFS
-References: <20171007114343.3bd42f98@lubh.lubhome>
- <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
-In-Reply-To: <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
+A 'lease_direct' lease requires that the vma have a valid MAP_DIRECT
+mapping established. For xfs we establish a new lease and then check if
+the MAP_DIRECT mapping has been broken. We want to be sure that the
+process will receive notification that the MAP_DIRECT mapping is being
+torn down so it knows why other code paths are throwing failures.
 
---7rtdP9JF8BmjlhAC5jgHQfla5Odl4iB47
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: quoted-printable
+For example in the RDMA/ibverbs case we want ibv_reg_mr() to fail if the
+MAP_DIRECT mapping is invalid or in the process of being invalidated.
 
-On 2017-10-09 10:44, Carlos Maiolino wrote:
-> Hi.
->=20
->=20
-> On Sat, Oct 07, 2017 at 02:43:43PM +0000, Luciano ES wrote:
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jeff Layton <jlayton@poochiereds.net>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/xfs_file.c |   28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-=2E..
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e35518600e28..823b65f17429 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1166,6 +1166,33 @@ xfs_filemap_direct_close(
+ 	put_map_direct_vma(vma->vm_private_data);
+ }
+ 
++static struct lease_direct *
++xfs_filemap_direct_lease(
++	struct vm_area_struct	*vma,
++	void			(*break_fn)(void *),
++	void			*owner)
++{
++	struct lease_direct	*ld;
++
++	ld = map_direct_lease(vma, break_fn, owner);
++
++	if (IS_ERR(ld))
++		return ld;
++
++	/*
++	 * We now have an established lease while the base MAP_DIRECT
++	 * lease was not broken. So, we know that the "lease holder" will
++	 * receive a SIGIO notification when the lease is broken and
++	 * take any necessary cleanup actions.
++	 */
++	if (!is_map_direct_broken(vma->vm_private_data))
++		return ld;
++
++	map_direct_lease_destroy(ld);
++
++	return ERR_PTR(-ENXIO);
++}
++
+ static const struct vm_operations_struct xfs_file_vm_direct_ops = {
+ 	.fault		= xfs_filemap_fault,
+ 	.huge_fault	= xfs_filemap_huge_fault,
+@@ -1175,6 +1202,7 @@ static const struct vm_operations_struct xfs_file_vm_direct_ops = {
+ 
+ 	.open		= xfs_filemap_direct_open,
+ 	.close		= xfs_filemap_direct_close,
++	.lease_direct	= xfs_filemap_direct_lease,
+ };
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops = {
 
-> Regarding the "restore everything and expect the system to boot", I thi=
-nk you
-> are forgetting a few things here:
->=20
-> 	1 - xfsdump will backup the filesystem, not the device, so, MBR for
-> 	    example is not backed up
-
-The MBR is outside of the device holding the XFS filesystem, if by
-device you mean something like /dev/sdXY. Another question would be the B=
-R.
-
-> 	2 - Is a bad idea to try to backup /dev for several reasons, like devi=
-ce
-> 	    names can change.
-
-On some distros /dev is populated dynamically. For instance, on
-openSUSE, it is a tmpfs, so there is no purpose on backing it. It
-actually does not exist on the root disk, so the xfs tools will not see
-it either, only the mount point.
-
---=20
-Cheers / Saludos,
-
-		Carlos E. R.
-		(from 42.2 x86_64 "Malachite" at Telcontar)
-
-
---7rtdP9JF8BmjlhAC5jgHQfla5Odl4iB47--
-
---tblM6tO6dPg5ErUvN66nDcsRC6CiGlN72
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlnbkNUACgkQtTMYHG2NR9X2YgCggfcc2h7/b05IQInMLiFr/v4H
-41cAn0nhwavG2eWxhlH/gnzqA9BLL0bw
-=ObEm
------END PGP SIGNATURE-----
-
---tblM6tO6dPg5ErUvN66nDcsRC6CiGlN72--
