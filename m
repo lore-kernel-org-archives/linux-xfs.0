@@ -1,96 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:49680 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751025AbdJFHJG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 03:09:06 -0400
-Date: Fri, 6 Oct 2017 18:07:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 19/25] xfs: scrub directory metadata
-Message-ID: <20171006070714.GS3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706336897.19351.7541168310430592724.stgit@magnolia>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:51422 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751913AbdJFMHP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 08:07:15 -0400
+Date: Fri, 6 Oct 2017 14:07:13 +0200
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
+Message-ID: <20171006120713.GG9497@amd>
+References: <20171003185313.1017-1-mcgrof@kernel.org>
+ <20171003185313.1017-6-mcgrof@kernel.org>
+ <20171003201204.GA23521@amd>
+ <20171003204940.GA5659@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="/i8j2F0k9BYX4qLc"
 Content-Disposition: inline
-In-Reply-To: <150706336897.19351.7541168310430592724.stgit@magnolia>
+In-Reply-To: <20171003204940.GA5659@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 01:42:49PM -0700, Darrick J. Wong wrote:
-> +
-> +/* Set us up to scrub a file's contents. */
-> +int
-> +xfs_scrub_setup_inode_contents(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip,
-> +	unsigned int			resblks)
-> +{
-> +	struct xfs_mount		*mp = sc->mp;
-> +	int				error;
-> +
-> +	error = xfs_scrub_get_inode(sc, ip);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Got the inode, lock it and we're ready to go. */
-> +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-> +	xfs_ilock(sc->ip, sc->ilock_flags);
-> +	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-> +	if (error)
-> +		goto out_unlock;
-> +	sc->ilock_flags |= XFS_ILOCK_EXCL;
-> +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-> +
-> +	return 0;
-> +out_unlock:
-> +	xfs_iunlock(sc->ip, sc->ilock_flags);
-> +	if (sc->ip != ip)
-> +		iput(VFS_I(sc->ip));
-> +	sc->ip = NULL;
-> +	return error;
-> +}
 
-I've seen this get/lock/alloc code many times now - seems like scope
-for factoring?
+--/i8j2F0k9BYX4qLc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> +/* Scrub a directory entry. */
-> +
-> +struct xfs_scrub_dir_ctx {
-> +	struct dir_context		dc;
-> +	struct xfs_scrub_context	*sc;
-> +};
+On Tue 2017-10-03 22:49:40, Luis R. Rodriguez wrote:
+> On Tue, Oct 03, 2017 at 10:12:04PM +0200, Pavel Machek wrote:
+> > On Tue 2017-10-03 11:53:13, Luis R. Rodriguez wrote:
+> > > Now that all filesystems which used to rely on kthread
+> > > freezing have been converted to filesystem freeze/thawing
+> > > we can remove the kernel kthread freezer.
+> >=20
+> > Are you surely-sure? You mentioned other in kernel sources of writes;
+> > what about those?
+>=20
+> You perhaps did not read the cover letter, it describes this patch will v=
+ery
+> likely take time to *ever* apply. We must cover tons of grounds first, to
+> address precisely what you say.
 
-These two character variable names make the code really hard to
-understand, especially when....
+Yeah, I was not careful enough reading cover letter. Having series
+where 1-4/5 are ready to go, and 5/5 not-good-idea for years to come
+is quite confusing.
 
-> +
-> +/* Check that an inode's mode matches a given DT_ type. */
-> +STATIC int
-> +xfs_scrub_dir_check_ftype(
-> +	struct xfs_scrub_dir_ctx	*sdc,
+Really relevant parts of cover letter should be moved to 5/5 and it
+should be clearly marked as "not for application".
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
 
-... we now have sc, dc, and sdc all intertwined. Especially as some
-of these functions seem to invert the calling convention of the rest
-of the scrub code in that the scrub context is the primary object
-that is passed around and everything is attached to the sc....
+--/i8j2F0k9BYX4qLc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Brain hurts trying to keep all this straight here...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-/me keeps blundering around until it becomes apparent that
-dir_context has nothing to do with scrub, but is a VFS filldir
-callback structure triggered through readdir.
+iEYEARECAAYFAlnXcfEACgkQMOfwapXb+vLNWQCfeztojjeyGl/Ilk8j4RodDnvU
+wC4An0ClhXGuYA8yIiWg3oyNvdf11oOo
+=lg5+
+-----END PGP SIGNATURE-----
 
-Darrick, can you add some comments explaining how the dirent
-scrubbing works?  It'd make it so much easier to understand if I
-didn't have to reverse engineer the intent and design from the
-patch. I'm going to skip this one for now...
-
-CHeers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--/i8j2F0k9BYX4qLc--
