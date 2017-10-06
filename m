@@ -1,37 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:48631 "EHLO
-        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751418AbdJSB5S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 21:57:18 -0400
-Date: Thu, 19 Oct 2017 10:57:06 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: Fix false positive by LOCKDEP_CROSSRELEASE
-Message-ID: <20171019015705.GD32368@X58A-UD3R>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
- <1508336995.2923.2.camel@wdc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1508336995.2923.2.camel@wdc.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37468 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751484AbdJFUHm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Oct 2017 16:07:42 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D5BF22C977C
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2017 20:07:41 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B9EC760F86
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2017 20:07:41 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
+Date: Fri,  6 Oct 2017 16:07:40 -0400
+Message-Id: <20171006200740.7140-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 18, 2017 at 02:29:56PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-10-18 at 18:38 +0900, Byungchul Park wrote:
-> > Several false positives were reported, so I tried to fix them.
-> > 
-> > It would be appreciated if you tell me if it works as expected, or let
-> > me know your opinion.
-> 
-> What I have been wondering about is whether the crosslock checking makes
-> sense from a conceptual point of view. I tried to find documentation for the
-> crosslock checking in Documentation/locking/lockdep-design.txt but
-> couldn't find a description of the crosslock checking. Shouldn't it be
-> documented somewhere what the crosslock checks do and what the theory is
-> behind these checks?
+xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
+associated blocks. xfs_attr3_node_inactive() recursively descends
+from internal blocks to leaf blocks, caching block address values
+along the way to revisit parent blocks, locate the next entry and
+descend down that branch of the tree.
 
-Documentation/locking/crossrelease.txt would be helpful.
+The code that attempts to reread the parent block is unsafe because
+it assumes that the local xfs_da_node_entry pointer remains valid
+after an xfs_trans_brelse() and re-read of the parent buffer. Under
+heavy memory pressure, it is possible that the buffer has been
+reclaimed and reallocated by the time the parent block is reread.
+This means that 'btree' can point to an invalid memory address, lead
+to a random/garbage value for child_fsb and cause the subsequent
+read of the attr fork to go off the rails and return a NULL buffer
+for an attr fork offset that is most likely not allocated.
+
+Note that this problem can be manufactured by setting
+XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
+creating a file with a multi-level attr fork and removing it to
+trigger inactivation.
+
+To address this problem, reinit the node/btree pointers to the
+parent buffer after it has been re-read. This ensures btree points
+to a valid record and allows the walk to proceed.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+I suspect this is the cause of the NULL buf problem down in
+xfs_attr_inactive(). I can manufacture an instance of that problem as
+noted above. We have a customer who's hitting that problem and will
+attempt to validate this fix, but there is no confirmation as of yet.
+I'm posting this for review in the meantime because this seems like a
+legit fix regardless of whether they are hitting this or something else.
+
+Brian
+
+ fs/xfs/xfs_attr_inactive.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index ebd66b1..e3a950e 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -302,6 +302,8 @@ xfs_attr3_node_inactive(
+ 						 &bp, XFS_ATTR_FORK);
+ 			if (error)
+ 				return error;
++			node = bp->b_addr;
++			btree = dp->d_ops->node_tree_p(node);
+ 			child_fsb = be32_to_cpu(btree[i + 1].before);
+ 			xfs_trans_brelse(*trans, bp);
+ 		}
+-- 
+2.9.5
 
