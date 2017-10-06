@@ -1,96 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:42799 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751357AbdJEHWs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 03:22:48 -0400
-Date: Thu, 5 Oct 2017 18:22:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 13/25] xfs: scrub inode btrees
-Message-ID: <20171005072245.GO3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706333138.19351.1481631767118687082.stgit@magnolia>
- <20171005020810.GJ3666@dastard>
- <20171005054714.GF7122@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171005054714.GF7122@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30560 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdJFWIi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:38 -0400
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 05/17] xfs: get directory offset when adding directory name
+Date: Fri,  6 Oct 2017 15:05:36 -0700
+Message-Id: <1507327548-3221-6-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-On Wed, Oct 04, 2017 at 10:47:14PM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 05, 2017 at 01:08:10PM +1100, Dave Chinner wrote:
-> > On Tue, Oct 03, 2017 at 01:42:11PM -0700, Darrick J. Wong wrote:
-> > > +/* Count the number of free inodes. */
-> > > +static unsigned int
-> > > +xfs_scrub_iallocbt_freecount(
-> > > +	xfs_inofree_t			freemask)
-> > > +{
-> > > +	int				bits = XFS_INODES_PER_CHUNK;
-> > > +	unsigned int			ret = 0;
-> > > +
-> > > +	while (bits--) {
-> > > +		if (freemask & 1)
-> > > +			ret++;
-> > > +		freemask >>= 1;
-> > > +	}
-> > 
-> > 
-> > Seems a little cumbersome. Perhaps a loop using xfs_next_bit()
-> > might be a bit faster, something like:
-> > 
-> > 	nextbit = xfs_next_bit(&freemask, 1, 0); 
-> > 	while (nextbit != -1) {
-> > 		ret++;
-> > 		nextbit = xfs_next_bit(&freemask, 1, nextbit + 1);
-> > 	}
-> 
-> <nod>  A pity there's no popcnt()...
+From: Mark Tinguely <tinguely@sgi.com>
 
-Oh, hweight64().
+Return the directory offset information when adding an entry to the
+directory.
 
-> > > +	error = xfs_icache_inode_is_allocated(mp, bs->cur->bc_tp,
-> > > +			fsino + clusterino, &inuse);
-> > > +	if (error == -ENODATA) {
-> > > +		/* Not cached, just read the disk buffer */
-> > 
-> > I think that is wrong. xfs_icache_inode_is_allocated() returns
-> > -ENOENT if the inode is not in cache....
-> 
-> I changed it to ENODATA so that we can tell the difference between
-> inode not in cache (ENODATA) and inode racing with unlink (ENOENT).
-> 
-> (Patch was sent to the ML a while ago and I omitted it from this posting...)
+This offset will be used as the parent pointer offset in xfs_create,
+xfs_symlink, xfs_link and xfs_rename.
 
-Ah, if it's not committed upstream yet, include it in the next
-posting, please :)
+[dchinner: forward ported and cleaned up]
+[dchinner: no s-o-b from Mark]
+[bfoster: rebased, use args->geo in dir code]
+[achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
 
-> > > +	/* Make sure the freemask matches the inode records. */
-> > > +	blks_per_cluster = xfs_icluster_size_fsb(mp);
-> > > +	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-> > 
-> > Does this setup and loop work for the case where we have 64k
-> > filesystem blocks and so two or more inode chunks per filesystem
-> > block (i.e. ppc64)? 
-> 
-> I think the answer is yes, at worst case we end up processing a block's
-> worth of inodes at a time.  The last time I ran scrub on ppc64 (last
-> week) it worked fine.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+:100644 100644 ae6de17... bce96d6... M	fs/xfs/libxfs/xfs_da_btree.h
+:100644 100644 ccf9783... a1ca460... M	fs/xfs/libxfs/xfs_dir2.c
+:100644 100644 21c8f8b... e349900... M	fs/xfs/libxfs/xfs_dir2.h
+:100644 100644 915fa42... bcf3438... M	fs/xfs/libxfs/xfs_dir2_block.c
+:100644 100644 bdc9068... c7c2d4d... M	fs/xfs/libxfs/xfs_dir2_leaf.c
+:100644 100644 3c5de67... 44d10ee... M	fs/xfs/libxfs/xfs_dir2_node.c
+:100644 100644 b4d31cb... e33fd12... M	fs/xfs/libxfs/xfs_dir2_sf.c
+:100644 100644 16ee225... 8e02180... M	fs/xfs/xfs_inode.c
+:100644 100644 68d3ca2... fc803ae... M	fs/xfs/xfs_symlink.c
+ fs/xfs/libxfs/xfs_da_btree.h   | 1 +
+ fs/xfs/libxfs/xfs_dir2.c       | 8 ++++++--
+ fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
+ fs/xfs/libxfs/xfs_dir2_block.c | 1 +
+ fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
+ fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
+ fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
+ fs/xfs/xfs_inode.c             | 9 +++++----
+ fs/xfs/xfs_symlink.c           | 2 +-
+ 9 files changed, 22 insertions(+), 8 deletions(-)
 
-Hmmm - there's nothing to count how many inodes are scrubbed, is
-there? Perhaps it would be good to gcount as we go so we know if
-we've scrubbed all the inodes?
-
-Hmmm - I might have missed it, but is there anywhere in this code
-where we check the inode number in the inode that we have read
-actually matches the agino we are attempting to validate?
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index ae6de17..bce96d6 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -86,6 +86,7 @@ typedef struct xfs_da_args {
+ 	int		rmtvaluelen2;	/* remote attr value length in bytes */
+ 	int		op_flags;	/* operation flags */
+ 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
++	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
+ } xfs_da_args_t;
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index ccf9783..a1ca460 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -268,7 +268,8 @@ xfs_dir_createname(
+ 	xfs_ino_t		inum,		/* new entry inode number */
+ 	xfs_fsblock_t		*first,		/* bmap's firstblock */
+ 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+-	xfs_extlen_t		total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
+ {
+ 	struct xfs_da_args	*args;
+ 	int			rval;
+@@ -323,6 +324,9 @@ xfs_dir_createname(
+ 	else
+ 		rval = xfs_dir2_node_addname(args);
+ 
++	/* return the location that this entry was place in the parent inode */
++	if (offset)
++		*offset = args->offset;
+ out_free:
+ 	kmem_free(args);
+ 	return rval;
+@@ -570,7 +574,7 @@ xfs_dir_canenter(
+ 	xfs_inode_t	*dp,
+ 	struct xfs_name	*name)		/* name of entry to add */
+ {
+-	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
++	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0, NULL);
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 21c8f8b..e349900 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -131,7 +131,8 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_fsblock_t *first,
+-				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
++				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
++				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t *inum,
+ 				struct xfs_name *ci_name);
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 915fa42..bcf3438 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -554,6 +554,7 @@ xfs_dir2_block_addname(
+ 	dp->d_ops->data_put_ftype(dep, args->filetype);
+ 	tagp = dp->d_ops->data_entry_tag_p(dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
++	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
+ 	/*
+ 	 * Clean up the bestfree array and log the header, tail, and entry.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index bdc9068..c7c2d4d 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -882,6 +882,8 @@ xfs_dir2_leaf_addname(
+ 	dp->d_ops->data_put_ftype(dep, args->filetype);
+ 	tagp = dp->d_ops->data_entry_tag_p(dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
++	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
++						(char *)dep - (char *)hdr);
+ 	/*
+ 	 * Need to scan fix up the bestfree table.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 3c5de67..44d10ee 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -2027,6 +2027,8 @@ xfs_dir2_node_addname_int(
+ 	dp->d_ops->data_put_ftype(dep, args->filetype);
+ 	tagp = dp->d_ops->data_entry_tag_p(dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
++	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
++						  (char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(args, dbp, dep);
+ 	/*
+ 	 * Rescan the block for bestfree if needed.
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index b4d31cb..e33fd12 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -407,6 +407,7 @@ xfs_dir2_sf_addname_easy(
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+ 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
++	args->offset = xfs_dir2_byte_to_dataptr(offset);
+ 
+ 	/*
+ 	 * Update the header and inode.
+@@ -498,6 +499,7 @@ xfs_dir2_sf_addname_hard(
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+ 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
++	args->offset = xfs_dir2_byte_to_dataptr(offset);
+ 	sfp->count++;
+ 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
+ 		sfp->i8count++;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 16ee225..8e02180 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1252,7 +1252,8 @@ xfs_create(
+ 
+ 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+ 					&first_block, &dfops, resblks ?
+-					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
++					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
++					NULL);
+ 	if (error) {
+ 		ASSERT(error != -ENOSPC);
+ 		goto out_trans_cancel;
+@@ -1495,7 +1496,7 @@ xfs_link(
+ 	}
+ 
+ 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+-					&first_block, &dfops, resblks);
++				   &first_block, &dfops, resblks, NULL);
+ 	if (error)
+ 		goto error_return;
+ 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+@@ -3031,8 +3032,8 @@ xfs_rename(
+ 		 * to account for the ".." reference from the new entry.
+ 		 */
+ 		error = xfs_dir_createname(tp, target_dp, target_name,
+-						src_ip->i_ino, &first_block,
+-						&dfops, spaceres);
++					   src_ip->i_ino, &first_block, &dfops,
++					   spaceres, NULL);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 68d3ca2..fc803ae 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -363,7 +363,7 @@ xfs_symlink(
+ 	 * Create the directory entry for the symlink.
+ 	 */
+ 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+-					&first_block, &dfops, resblks);
++				   &first_block, &dfops, resblks, NULL);
+ 	if (error)
+ 		goto out_bmap_cancel;
+ 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
