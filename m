@@ -1,145 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:12850 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751083AbdJEXjP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 19:39:15 -0400
-Date: Fri, 6 Oct 2017 10:36:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Circular locking dependency with pblk
-Message-ID: <20171005233609.GP3666@dastard>
-References: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
+Received: from userp1040.oracle.com ([156.151.31.81]:16646 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752343AbdJFTpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 15:45:43 -0400
+Date: Fri, 6 Oct 2017 12:45:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 19/25] xfs: scrub directory metadata
+Message-ID: <20171006194539.GL7122@magnolia>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706336897.19351.7541168310430592724.stgit@magnolia>
+ <20171006070714.GS3666@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
+In-Reply-To: <20171006070714.GS3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Javier =?iso-8859-1?Q?Gonz=E1lez?= <jg@lightnvm.io>
-Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, darrick.wong@oracle.com, Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <peterz@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 05, 2017 at 12:53:50PM +0200, Javier González wrote:
-> Hi,
+On Fri, Oct 06, 2017 at 06:07:14PM +1100, Dave Chinner wrote:
+> On Tue, Oct 03, 2017 at 01:42:49PM -0700, Darrick J. Wong wrote:
+> > +
+> > +/* Set us up to scrub a file's contents. */
+> > +int
+> > +xfs_scrub_setup_inode_contents(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_inode		*ip,
+> > +	unsigned int			resblks)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	int				error;
+> > +
+> > +	error = xfs_scrub_get_inode(sc, ip);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* Got the inode, lock it and we're ready to go. */
+> > +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> > +	xfs_ilock(sc->ip, sc->ilock_flags);
+> > +	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
+> > +	if (error)
+> > +		goto out_unlock;
+> > +	sc->ilock_flags |= XFS_ILOCK_EXCL;
+> > +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
+> > +
+> > +	return 0;
+> > +out_unlock:
+> > +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> > +	if (sc->ip != ip)
+> > +		iput(VFS_I(sc->ip));
+> > +	sc->ip = NULL;
+> > +	return error;
+> > +}
 > 
-> lockdep is reporting a circular dependency when using XFS and pblk,
-> which I am a bit confused about.
+> I've seen this get/lock/alloc code many times now - seems like scope
+> for factoring?
+
+(Yeah, they're all gone now.)
+
+> > +/* Scrub a directory entry. */
+> > +
+> > +struct xfs_scrub_dir_ctx {
+> > +	struct dir_context		dc;
+> > +	struct xfs_scrub_context	*sc;
+> > +};
 > 
-> This happens when XFS sends a number of nested reads and (at least) one
-> of them hits partially pblk's cache. In this case, pblk will retrieve
-> the cached lbas and form a new bio, which is submitted _synchronously_
-> to the media using struct completion. The original bio is then populated
-> with the read data.
+> These two character variable names make the code really hard to
+> understand, especially when....
 > 
-> What lockdep complains about, is that the unlocking operation in
-> complete() has a circular dependency with ionode->i_rwsem when they both
-> happen on the same core, which is different from the core that issued
-> wait_for_completion_io_timeout() and is waiting for the partial read.
-> However, AFAIU complete() happens in interrupt context, so this should
-> not be a problem.
+> > +
+> > +/* Check that an inode's mode matches a given DT_ type. */
+> > +STATIC int
+> > +xfs_scrub_dir_check_ftype(
+> > +	struct xfs_scrub_dir_ctx	*sdc,
 > 
-> The only thing I can think of is that XFS is making an assumption when
-> submitting direct I/O that there will be no synchronous I/O coming from
-> anybody underneath.
+> ... we now have sc, dc, and sdc all intertwined. Especially as some
+> of these functions seem to invert the calling convention of the rest
+> of the scrub code in that the scrub context is the primary object
+> that is passed around and everything is attached to the sc....
+
+The change in calling conventions is due to the fact that we're using
+the VFS filldir iterator, which doesn't have a facility for passing
+through a (void *).  To reuse that code,  we therefore must use this
+annoying xfs_scrub_dir_ctx wrapper so that we can pass our own context
+through to the _actor function.
+
+Now, I /could/ make it a little clearer simply by doing this instead:
+
+/*
+ * Scrub a single directory entry.
+ *
+ * We use the VFS directory iterator (i.e. readdir) to call this
+ * function for every directory entry in a directory.  Once we're here,
+ * we check the inode number to make sure it's sane, then we check that
+ * we can look up this filename.  Finally, we check the ftype.
+ */
+STATIC inline int
+xfs_scrub_dir_entry(
+	struct xfs_scrub_context	*sc,
+	const char			*name,
+	int				namelen,
+	loff_t				pos,
+	u64				ino,
+	unsigned			type)
+{
+	/* do actual dirent scrubbing here */
+}
+
+/* Adapter for VFS filldir iterator function. */
+STATIC int
+xfs_scrub_readdir_actor(
+	struct dir_context		*dir_iter,
+	const char			*name,
+	int				namelen,
+	loff_t				pos,
+	u64				ino,
+	unsigned			type)
+{
+	struct xfs_scrub_dir_ctx	*sdc;
+
+	sdc = container_of(dir_iter, struct xfs_scrub_dir_ctx, dir_iter);
+	return xfs_scrub_dir_entry(sdc->sc, name, namelen, pos, ino, type);
+}
+
+At least that would contain the xfs_scrub_dir_ctx nastiness to a smaller
+part of the code.  Better?
+
+> Brain hurts trying to keep all this straight here...
 > 
-> Any thoughts?
+> /me keeps blundering around until it becomes apparent that
+> dir_context has nothing to do with scrub, but is a VFS filldir
+> callback structure triggered through readdir.
 
-The new lockdep completion tracking that was included in 4.14 can
-throw false positives because it doesn't (yet) have the capability
-to understand the multiply layered completion contexts we have in
-the storage stack.
+Correct.
 
-Peter, here's another for you to ponder....
+> Darrick, can you add some comments explaining how the dirent
+> scrubbing works?  It'd make it so much easier to understand if I
+> didn't have to reverse engineer the intent and design from the
+> patch. I'm going to skip this one for now...
 
-> TRACE:
-> [ 8557.938336] ======================================================
-> [ 8557.944513] WARNING: possible circular locking dependency detected
-> [ 8557.950688] 4.14.0-rc2--509811f1f2df #726 Not tainted
-> [ 8557.955739] ------------------------------------------------------
-> [ 8557.961919] rocksdb:bg11/19129 is trying to acquire lock:
-> [ 8557.967319]  (&inode->i_rwsem){++++}, at: [<ffffffffad5648d1>] xfs_ilock+0x1a1/0x230
-> [ 8557.975063]
->                but now in release context of a crosslock acquired at the following:
-> [ 8557.983921]  ((complete)&wait#5){+.+.}, at: [<ffffffffad933d0a>] pblk_fill_partial_read_bio+0x22a/0x520
-> [ 8557.993318]
->                which lock already depends on the new lock.
+Ok.  Down by the xfs_readdir call I will have:
+
+/*
+ * Look up every name in this directory by hash.
+ *
+ * Use the xfs_readdir function to call xfs_scrub_dir_actor on every
+ * directory entry in this directory.  In _actor, we check the name,
+ * inode number, and ftype (if applicable) of the entry.  xfs_readdir
+ * uses the VFS filldir functions to provide iteration context.
+ *
+ * The VFS grabs a read or write lock via i_rwsem before it reads or
+ * writes to a directory.  If we've gotten this far we've already
+ * obtained IOLOCK_EXCL, which (since 4.10) is the same as getting a
+ * write lock on i_rwsem.  Therefore, it is safe for us to drop the
+ * ILOCK here in order to reuse the _readdir and _dir_lookup routines,
+ * which do their own ILOCK locking.
+ */
+
+--D
+
 > 
-> [ 8558.001490]
->                the existing dependency chain (in reverse order) is:
-> [ 8558.008966]
->                -> #1 ((complete)&wait#5){+.+.}:
-> [ 8558.014715]        __lock_acquire+0x1186/0x11d0
-> [ 8558.019245]        lock_acquire+0xed/0x1e0
-> [ 8558.023337]        wait_for_completion_io_timeout+0x65/0x180
-> [ 8558.028989]        pblk_fill_partial_read_bio+0x22a/0x520
-> [ 8558.034375]        pblk_submit_read+0x158/0x3a0
-> [ 8558.038900]        pblk_make_rq+0xc1/0x110
-> [ 8558.042992]        generic_make_request+0x11d/0x3c0
-> [ 8558.047862]        submit_bio+0x73/0x140
-> [ 8558.051781]        iomap_dio_actor+0x1f8/0x3a0
-> [ 8558.056216]        iomap_apply+0xa1/0x110
-> [ 8558.060220]        iomap_dio_rw+0x26f/0x3c0
-> [ 8558.064398]        xfs_file_dio_aio_read+0x88/0x1c0
-> [ 8558.069269]        xfs_file_read_iter+0xab/0xc0
-> [ 8558.073794]        __vfs_read+0xef/0x160
-> [ 8558.077709]        vfs_read+0xa8/0x150
-> [ 8558.081454]        SyS_pread64+0x98/0xc0
-> [ 8558.085372]        entry_SYSCALL_64_fastpath+0x23/0xc2
-
-This is completely normal, blocked on a bio completion with a
-filesystem lock held. More commonly we see this sort of thing
-through through submit_bio_wait().
-
-> [ 8558.125636]  Possible unsafe locking scenario by crosslock:
+> CHeers,
 > 
-> [ 8558.132672]        CPU0                    CPU1
-> [ 8558.137196]        ----                    ----
-> [ 8558.141720]   lock(&inode->i_rwsem);
-> [ 8558.145291]   lock((complete)&wait#5);
-> [ 8558.149035]                                lock(&inode->i_rwsem);
-> [ 8558.155118]                                unlock((complete)&wait#5);
-> [ 8558.161550]
->                 *** DEADLOCK ***
-> 
-> [ 8558.167461] 4 locks held by rocksdb:bg11/19129:
-> [ 8558.171984]  #0:  (&inode->i_rwsem){++++}, at: [<ffffffffad5648d1>] xfs_ilock+0x1a1/0x230
-> [ 8558.180148]  #1:  (rcu_read_lock){....}, at: [<ffffffffad72b8cc>] __blk_mq_run_hw_queue+0xec/0x1d0
-> [ 8558.189091]  #2:  (&(&nvmeq->q_lock)->rlock){-.-.}, at: [<ffffffffad9d438c>] nvme_queue_rq+0x14c/0x9a0
-> [ 8558.198384]  #3:  (&x->wait#17){-.-.}, at: [<ffffffffad16444d>] complete+0x1d/0x60
-> [ 8558.205948]
->                stack backtrace:
-> [ 8558.210300] CPU: 6 PID: 19129 Comm: rocksdb:bg11 Not tainted 4.14.0-rc2--509811f1f2df #726
-> [ 8558.218550] Hardware name: Supermicro X10SRA-F/X10SRA-F, BIOS 2.0a 06/23/2016
-> [ 8558.225675] Call Trace:
-> [ 8558.228123]  dump_stack+0x85/0xc7
-> [ 8558.231438]  print_circular_bug+0x226/0x330
-> [ 8558.235616]  ? print_bfs_bug+0x40/0x40
-> [ 8558.239358]  check_prev_add+0x432/0x840
-> [ 8558.243190]  ? __lock_acquire+0x736/0x11d0
-> [ 8558.247282]  lock_commit_crosslock+0x3d3/0x5d0
-> [ 8558.251718]  ? lock_commit_crosslock+0x3d3/0x5d0
-> [ 8558.256328]  complete+0x29/0x60
-> [ 8558.259469]  pblk_end_io_sync+0x12/0x20
-> [ 8558.263297]  nvm_end_io+0x2b/0x30
-> [ 8558.266607]  nvme_nvm_end_io+0x2e/0x50
-
-And this is where lockdep gets confused. Up until this point, it's
-only ever seen the bio completion come from /outside/ the XFS
-i_rwsem context (i.e. async completion form interupts). With a
-synchronous completion like this, the completion has now been done
-from inside the i_rwsem context and that is what triggers lockdep.
-
-This is safe to do because even if we have a bio blocked on a
-completion queue, we've got all we way down to this complete() call
-from a *different bio context* inside a read locked i_rwsem. Hence
-there's no way this can be a deadlock even if the two processes are
-holding the same i_rwsem.
-
-Therefore: false positive.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
