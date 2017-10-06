@@ -1,122 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46183 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbdJDR5Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2017 13:57:24 -0400
-Date: Wed, 4 Oct 2017 10:57:21 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/25] xfs: scrub AGF and AGFL
-Message-ID: <20171004175721.GT6503@magnolia>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706331250.19351.3004733994525860282.stgit@magnolia>
- <20171004013148.GW3666@dastard>
- <20171004042140.GN6503@magnolia>
- <20171004062840.GC3666@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171004062840.GC3666@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:31732 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752358AbdJFWIs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:48 -0400
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 15/17] xfs_bmap_add_attrfork(): re-add error handling from set_attrforkoff() call
+Date: Fri,  6 Oct 2017 15:05:46 -0700
+Message-Id: <1507327548-3221-16-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-On Wed, Oct 04, 2017 at 05:28:40PM +1100, Dave Chinner wrote:
-> On Tue, Oct 03, 2017 at 09:21:40PM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 04, 2017 at 12:31:48PM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 03, 2017 at 01:41:52PM -0700, Darrick J. Wong wrote:
-> > > > +/*
-> > > > + * Load as many of the AG headers and btree cursors as we can for an
-> > > > + * examination and cross-reference of an AG header.
-> > > > + */
-> > > > +int
-> > > > +xfs_scrub_load_ag_headers(
-> > > > +	struct xfs_scrub_context	*sc,
-> > > > +	xfs_agnumber_t			agno,
-> > > > +	unsigned int			type)
-> > > > +{
-> > > > +	struct xfs_mount		*mp = sc->mp;
-> > > > +	int				error;
-> > > > +
-> > > > +	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
-> > > > +	memset(&sc->sa, 0, sizeof(sc->sa));
-> > > > +	sc->sa.agno = agno;
-> > > > +
-> > > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
-> > > > +			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
-> > > > +	if (error)
-> > > > +		return error;
-> > > > +
-> > > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGF_DADDR(mp),
-> > > > +			&sc->sa.agf_bp, &xfs_agf_buf_ops,
-> > > > +			type == XFS_SCRUB_TYPE_AGF);
-> > > > +	if (error)
-> > > > +		return error;
-> > > > +
-> > > > +	error = xfs_scrub_load_ag_header(sc, XFS_AGFL_DADDR(mp),
-> > > > +			&sc->sa.agfl_bp, &xfs_agfl_buf_ops,
-> > > > +			type == XFS_SCRUB_TYPE_AGFL);
-> > > > +	if (error)
-> > > > +		return error;
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > 
-> > > This should probably be combined with xfs_scrub_ag_read_headers().
-> > > They essentially do the same thing, the only difference is the
-> > > "target" error reporting.
-> > 
-> > It's quite different -- this function ignores verifier errors for
-> > the two headers that don't match 'type'  In other words, if we're
-> > checking the AGF (for example) we'll try to grab the AGI and the AGFL.
-> > Verifier errors on the AGI/AGFL don't matter, but we /do/ want to hear
-> > the results if the AGF verifier fails.
-> 
-> What they do is quite different. The implementation is /almost/
-> identical. type is just an error masking variable and ....
-> 
-> > xfs_scrub_ag_read_headers on the other hand will fail if /any/ of the
-> > three verifiers fail. 
-> 
-> .... if no type is set, then we don't mask any errors at all and
-> we bail if any of the three verifiers fail. i.e.:
-> 
-> 	error = xfs_ialloc_read_agi(mp, sc->tp, agno, agi);
-> 	if (error && (!type || type == XFS_SCRUB_TYPE_AGI)
-> 		return error;
-> 
->         error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, agf);
-> 	if (error && (!type || type == XFS_SCRUB_TYPE_AGF)
->                 return error;
-> 
->         error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
-> 	if (error && (!type || type == XFS_SCRUB_TYPE_AGFL)
->                 return error;
-> 
-> It's also much simpler to understand because we are using the proper
-> functions for reading these headers....
+From: Brian Foster <bfoster@redhat.com>
 
-Ok, sounds good to me.
+- fix for "xfs: parent pointer attribute creation"
 
-> > The two functions /could/ be combined, though the 'type' test becomes
-> > trickier.  Maybe it'd be better just to enhance the comments for the two
-> > header loader functions to spell out how they differ in usage.
-> 
-> Again, I'd much prefer similar functionality is combined into
-> common helpers if it's simple enough to do...
+[achender: rebased]
 
-<nod>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+:100644 100644 8866242... 63a979c... M	fs/xfs/libxfs/xfs_bmap.c
+ fs/xfs/libxfs/xfs_bmap.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 8866242..63a979c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1149,7 +1149,9 @@ xfs_bmap_add_attrfork(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-	xfs_bmap_set_attrforkoff(ip, size, &version);
++	error = xfs_bmap_set_attrforkoff(ip, size, &version);
++	if (error)
++		goto trans_cancel;
+ 
+ 	ASSERT(ip->i_afp == NULL);
+ 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+-- 
+2.7.4
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
