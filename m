@@ -1,119 +1,1213 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:59616 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751418AbdJFWlj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Oct 2017 18:41:39 -0400
-Subject: [PATCH v7 00/12] MAP_DIRECT for DAX RDMA and userspace flush
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 06 Oct 2017 15:35:13 -0700
-Message-ID: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:30503 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdJFWIa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:30 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v96M8Tg6024398
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:29 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8STJ013151
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:29 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v96M8SM4012729
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:28 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 02/17] Set up infastructure for deferred attribute operations
+Date: Fri,  6 Oct 2017 15:05:33 -0700
+Message-Id: <1507327548-3221-3-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Marek Szyprowski <m.szyprowski@samsung.com>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, Doug Ledford <dledford@redhat.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Robin Murphy <robin.murphy@arm.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, David Woodhouse <dwmw2@infradead.org>
+To: linux-xfs@vger.kernel.org
+Cc: Allison Henderson <allison.henderson@oracle.com>
 
-Changes since v6 [1]:
-* Abandon the concept of immutable files and rework the implementation
-  to reuse same FL_LAYOUT file lease mechanism that coordinates pnfsd
-  layouts vs local filesystem changes. This establishes an interface where
-  the kernel is always in control of the block-map and is free to
-  invalidate MAP_DIRECT mappings when a lease breaker arrives. (Christoph)
-
-* Introduce a new ->mmap_validate() file operation since we need both
-  the original @flags and @fd passed to mmap(2) to setup a MAP_DIRECT
-  mapping.
-
-* Introduce a ->lease_direct() vm operation to allow the RDMA core to
-  safely register memory against DAX and tear down the mapping when the
-  lease is broken. This can be reused by any sub-system that follows a
-  memory registration semantic.
-
-[1]: https://lkml.org/lkml/2017/8/23/754
-
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
+:100644 100644 b3edd66... 8d2c152... M	fs/xfs/Makefile
+:100644 100644 b00ec1f... 5325ec2... M	fs/xfs/libxfs/xfs_attr.c
+:100644 100644 2ea26b1... 38ae64a... M	fs/xfs/libxfs/xfs_attr_leaf.c
+:100644 100644 d4f046d... ef0f8bf... M	fs/xfs/libxfs/xfs_defer.h
+:100644 100644 8372e9b... 3778c8e... M	fs/xfs/libxfs/xfs_log_format.h
+:100644 100644 0220159... 5372063... M	fs/xfs/libxfs/xfs_types.h
+:100644 100644 8542606... 06c4081... M	fs/xfs/xfs_attr.h
+:000000 100644 0000000... 419f90a... A	fs/xfs/xfs_attr_item.c
+:000000 100644 0000000... aec854f... A	fs/xfs/xfs_attr_item.h
+:100644 100644 d9a3a55... a206d51... M	fs/xfs/xfs_super.c
+:100644 100644 815b53d2.. 66c3c5f... M	fs/xfs/xfs_trans.h
+:000000 100644 0000000... 183c841... A	fs/xfs/xfs_trans_attr.c
+ fs/xfs/Makefile                |   2 +
+ fs/xfs/libxfs/xfs_attr.c       |   2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c  |   1 +
+ fs/xfs/libxfs/xfs_defer.h      |   1 +
+ fs/xfs/libxfs/xfs_log_format.h |  54 ++++-
+ fs/xfs/libxfs/xfs_types.h      |   1 +
+ fs/xfs/xfs_attr.h              |  23 +-
+ fs/xfs/xfs_attr_item.c         | 476 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h         | 104 +++++++++
+ fs/xfs/xfs_super.c             |   1 +
+ fs/xfs/xfs_trans.h             |  13 ++
+ fs/xfs/xfs_trans_attr.c        | 293 +++++++++++++++++++++++++
+ 12 files changed, 967 insertions(+), 4 deletions(-)
 
-MAP_DIRECT is a mechanism that allows an application to establish a
-mapping where the kernel will not change the block-map, or otherwise
-dirty the block-map metadata of a file without notification. It supports
-a "flush from userspace" model where persistent memory applications can
-bypass the overhead of ongoing coordination of writes with the
-filesystem, and it provides safety to RDMA operations involving DAX
-mappings.
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index b3edd66..8d2c152 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -106,6 +106,7 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_bmap_item.o \
+ 				   xfs_buf_item.o \
+ 				   xfs_extfree_item.o \
++				   xfs_attr_item.o \
+ 				   xfs_icreate_item.o \
+ 				   xfs_inode_item.o \
+ 				   xfs_refcount_item.o \
+@@ -115,6 +116,7 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_trans_bmap.o \
+ 				   xfs_trans_buf.o \
+ 				   xfs_trans_extfree.o \
++				   xfs_trans_attr.o \
+ 				   xfs_trans_inode.o \
+ 				   xfs_trans_refcount.o \
+ 				   xfs_trans_rmap.o \
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index b00ec1f..5325ec2 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -74,7 +74,7 @@ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+ STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+ 
+ 
+-STATIC int
++int
+ xfs_attr_args_init(
+ 	struct xfs_da_args	*args,
+ 	struct xfs_inode	*dp,
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2ea26b1..38ae64a 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -579,6 +579,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+ 	memcpy(&sfe->nameval[args->namelen], args->value, args->valuelen);
+ 	sf->hdr.count++;
+ 	be16_add_cpu(&sf->hdr.totsize, size);
++
+ 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_ADATA);
+ 
+ 	xfs_sbversion_add_attr2(mp, args->trans);
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index d4f046d..ef0f8bf 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -55,6 +55,7 @@ enum xfs_defer_ops_type {
+ 	XFS_DEFER_OPS_TYPE_REFCOUNT,
+ 	XFS_DEFER_OPS_TYPE_RMAP,
+ 	XFS_DEFER_OPS_TYPE_FREE,
++	XFS_DEFER_OPS_TYPE_ATTR,
+ 	XFS_DEFER_OPS_TYPE_MAX,
+ };
+ 
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 8372e9b..3778c8e 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -18,6 +18,8 @@
+ #ifndef	__XFS_LOG_FORMAT_H__
+ #define __XFS_LOG_FORMAT_H__
+ 
++#include "xfs_attr.h"
++
+ struct xfs_mount;
+ struct xfs_trans_res;
+ 
+@@ -116,7 +118,10 @@ static inline uint xlog_get_cycle(char *ptr)
+ #define XLOG_REG_TYPE_CUD_FORMAT	24
+ #define XLOG_REG_TYPE_BUI_FORMAT	25
+ #define XLOG_REG_TYPE_BUD_FORMAT	26
+-#define XLOG_REG_TYPE_MAX		26
++#define XLOG_REG_TYPE_ATTRI_FORMAT	27
++#define XLOG_REG_TYPE_ATTRD_FORMAT	28
++#define XLOG_REG_TYPE_MAX		29
++
+ 
+ /*
+  * Flags to log operation header
+@@ -239,6 +244,8 @@ typedef struct xfs_trans_header {
+ #define	XFS_LI_CUD		0x1243
+ #define	XFS_LI_BUI		0x1244	/* bmbt update intent */
+ #define	XFS_LI_BUD		0x1245
++#define	XFS_LI_ATTRI		0x1246
++#define	XFS_LI_ATTRD		0x1247
+ 
+ #define XFS_LI_TYPE_DESC \
+ 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
+@@ -254,7 +261,9 @@ typedef struct xfs_trans_header {
+ 	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
+ 	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
+ 	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
+-	{ XFS_LI_BUD,		"XFS_LI_BUD" }
++	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
++	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
++	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
+ 
+ /*
+  * Inode Log Item Format definitions.
+@@ -863,4 +872,45 @@ struct xfs_icreate_log {
+ 	__be32		icl_gen;	/* inode generation number to use */
+ };
+ 
++/* Flags for defered attribute operations */
++#define ATTR_OP_FLAGS_SET	0x01	/* Set the attribute */
++#define ATTR_OP_FLAGS_REMOVE	0x02	/* Remove the attribute */
++#define ATTR_OP_FLAGS_MAX	0x02	/* Max flags */
++
++/*
++ * ATTRI/ATTRD log format definitions
++ */
++struct xfs_attr {
++	xfs_ino_t	attr_ino;
++	uint32_t	attr_op_flags;
++	uint32_t	attr_nameval_len;
++	uint32_t	attr_name_len;
++	uint32_t        attr_flags;
++	uint8_t		attr_nameval[MAX_NAMEVAL_LEN];
++};
++
++/*
++ * This is the structure used to lay out an attri log item in the
++ * log.  The attri_attrs field is a variable size array whose
++ * size is given by attri_nattrs.
++ */
++struct xfs_attri_log_format {
++	uint16_t		attri_type;	/* attri log item type */
++	uint16_t		attri_size;	/* size of this item */
++	uint64_t		attri_id;	/* attri identifier */
++	struct xfs_attr		attri_attr;	/* attribute */
++};
++
++/*
++ * This is the structure used to lay out an attrd log item in the
++ * log.  The attrd_attrs array is a variable size array whose
++ * size is given by attrd_nattrs;
++ */
++struct xfs_attrd_log_format {
++	uint16_t		attrd_type;	/* attrd log item type */
++	uint16_t		attrd_size;	/* size of this item */
++	uint64_t		attrd_attri_id;	/* id of corresponding attri */
++	struct xfs_attr		attrd_attr;	/* attribute */
++};
++
+ #endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 0220159..5372063 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -23,6 +23,7 @@ typedef uint32_t	prid_t;		/* project ID */
+ typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+ typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+ typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
++typedef uint32_t	xfs_attrlen_t;	/* attr length */
+ typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
+ typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
+ typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index 8542606..06c4081 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -18,6 +18,8 @@
+ #ifndef __XFS_ATTR_H__
+ #define	__XFS_ATTR_H__
+ 
++#include "libxfs/xfs_defer.h"
++
+ struct xfs_inode;
+ struct xfs_da_args;
+ struct xfs_attr_list_context;
+@@ -65,6 +67,10 @@ struct xfs_attr_list_context;
+  */
+ #define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
+ 
++/* Max name length in the xfs_attr_item */
++#define MAX_NAME_LEN		255
++#define MAX_NAMEVAL_LEN (MAX_NAME_LEN + ATTR_MAX_VALUELEN)
++
+ /*
+  * Define how lists of attribute names are returned to the user from
+  * the attr_list() call.  A large, 32bit aligned, buffer is passed in
+@@ -87,6 +93,19 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+ } attrlist_ent_t;
+ 
+ /*
++ * List of attrs to commit later.
++ */
++struct xfs_attr_item {
++	xfs_ino_t	  xattri_ino;
++	uint32_t	  xattri_op_flags;
++	uint32_t	  xattri_nameval_len; /* length of name and val */
++	uint32_t	  xattri_name_len;    /* length of name */
++	uint32_t	  xattri_flags;       /* attr flags */
++	char		  xattri_nameval[MAX_NAMEVAL_LEN];
++	struct list_head  xattri_list;
++};
++
++/*
+  * Given a pointer to the (char*) buffer containing the attr_list() result,
+  * and an index, return a pointer to the indicated attribute in the buffer.
+  */
+@@ -154,6 +173,8 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_remove_args(struct xfs_da_args *args, int flags);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+-
++int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
++		       const unsigned char *name, int flags);
++int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ 
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+new file mode 100644
+index 0000000..419f90a
+--- /dev/null
++++ b/fs/xfs/xfs_attr_item.c
+@@ -0,0 +1,476 @@
++/*
++ * Copyright (c) 2017 Oracle, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation Inc.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_mount.h"
++#include "xfs_trans.h"
++#include "xfs_trans_priv.h"
++#include "xfs_buf_item.h"
++#include "xfs_attr_item.h"
++#include "xfs_log.h"
++#include "xfs_btree.h"
++#include "xfs_rmap.h"
++
++
++static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
++{
++	return container_of(lip, struct xfs_attri_log_item, attri_item);
++}
++
++void
++xfs_attri_item_free(
++	struct xfs_attri_log_item	*attrip)
++{
++	kmem_free(attrip->attri_item.li_lv_shadow);
++	kmem_free(attrip);
++}
++
++/*
++ * This returns the number of iovecs needed to log the given attri item.
++ * We only need 1 iovec for an attri item.  It just logs the attri_log_format
++ * structure.
++ */
++static inline int
++xfs_attri_item_sizeof(
++	struct xfs_attri_log_item *attrip)
++{
++	return sizeof(struct xfs_attri_log_format);
++}
++
++STATIC void
++xfs_attri_item_size(
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
++{
++	*nvecs += 1;
++	*nbytes += xfs_attri_item_sizeof(ATTRI_ITEM(lip));
++}
++
++/*
++ * This is called to fill in the vector of log iovecs for the
++ * given attri log item. We use only 1 iovec, and we point that
++ * at the attri_log_format structure embedded in the attri item.
++ * It is at this point that we assert that all of the attr
++ * slots in the attri item have been filled.
++ */
++STATIC void
++xfs_attri_item_format(
++	struct xfs_log_item	*lip,
++	struct xfs_log_vec	*lv)
++{
++	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
++
++	attrip->attri_format.attri_type = XFS_LI_ATTRI;
++	attrip->attri_format.attri_size = 1;
++
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRI_FORMAT,
++			&attrip->attri_format,
++			xfs_attri_item_sizeof(attrip));
++}
++
++
++/*
++ * Pinning has no meaning for an attri item, so just return.
++ */
++STATIC void
++xfs_attri_item_pin(
++	struct xfs_log_item	*lip)
++{
++}
++
++/*
++ * The unpin operation is the last place an ATTRI is manipulated in the log. It
++ * is either inserted in the AIL or aborted in the event of a log I/O error. In
++ * either case, the EFI transaction has been successfully committed to make it
++ * this far. Therefore, we expect whoever committed the ATTRI to either
++ * construct and commit the ATTRD or drop the ATTRD's reference in the event of
++ * error. Simply drop the log's ATTRI reference now that the log is done with
++ * it.
++ */
++STATIC void
++xfs_attri_item_unpin(
++	struct xfs_log_item	*lip,
++	int			remove)
++{
++	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
++
++	xfs_attri_release(attrip);
++}
++
++/*
++ * attri items have no locking or pushing.  However, since ATTRIs are pulled
++ * from the AIL when their corresponding ATTRDs are committed to disk, their
++ * situation is very similar to being pinned.  Return XFS_ITEM_PINNED so that
++ * the caller will eventually flush the log.  This should help in getting the
++ * ATTRI out of the AIL.
++ */
++STATIC uint
++xfs_attri_item_push(
++	struct xfs_log_item	*lip,
++	struct list_head	*buffer_list)
++{
++	return XFS_ITEM_PINNED;
++}
++
++/*
++ * The ATTRI has been either committed or aborted if the transaction has been
++ * cancelled. If the transaction was cancelled, an ATTRD isn't going to be
++ * constructed and thus we free the ATTRI here directly.
++ */
++STATIC void
++xfs_attri_item_unlock(
++	struct xfs_log_item	*lip)
++{
++	if (lip->li_flags & XFS_LI_ABORTED)
++		xfs_attri_item_free(ATTRI_ITEM(lip));
++}
++
++/*
++ * The ATTRI is logged only once and cannot be moved in the log, so simply
++ * return the lsn at which it's been logged.
++ */
++STATIC xfs_lsn_t
++xfs_attri_item_committed(
++	struct xfs_log_item	*lip,
++	xfs_lsn_t		lsn)
++{
++	return lsn;
++}
++
++STATIC void
++xfs_attri_item_committing(
++	struct xfs_log_item	*lip,
++	xfs_lsn_t		lsn)
++{
++}
++
++/*
++ * This is the ops vector shared by all attri log items.
++ */
++static const struct xfs_item_ops xfs_attri_item_ops = {
++	.iop_size	= xfs_attri_item_size,
++	.iop_format	= xfs_attri_item_format,
++	.iop_pin	= xfs_attri_item_pin,
++	.iop_unpin	= xfs_attri_item_unpin,
++	.iop_unlock	= xfs_attri_item_unlock,
++	.iop_committed	= xfs_attri_item_committed,
++	.iop_push	= xfs_attri_item_push,
++	.iop_committing = xfs_attri_item_committing
++};
++
++
++/*
++ * Allocate and initialize an attri item
++ */
++struct xfs_attri_log_item *
++xfs_attri_init(
++	struct xfs_mount	*mp)
++
++{
++	struct xfs_attri_log_item	*attrip;
++	uint			size;
++
++	size = (uint)(sizeof(struct xfs_attri_log_item));
++	attrip = kmem_zalloc(size, KM_SLEEP);
++
++	xfs_log_item_init(mp, &(attrip->attri_item), XFS_LI_ATTRI,
++			  &xfs_attri_item_ops);
++	attrip->attri_format.attri_id = (uintptr_t)(void *)attrip;
++	atomic_set(&attrip->attri_next_attr, 0);
++	atomic_set(&attrip->attri_refcount, 2);
++
++	return attrip;
++}
++
++/*
++ * Copy an ATTRI format buffer from the given buf, and into the destination
++ * ATTRI format structure.
++ * The given buffer can be in 32 bit or 64 bit form (which has different
++ * padding), one of which will be the native format for this kernel.
++ * It will handle the conversion of formats if necessary.
++ */
++int
++xfs_attri_copy_format(struct xfs_log_iovec *buf,
++		      struct xfs_attri_log_format *dst_attri_fmt)
++{
++	struct xfs_attri_log_format *src_attri_fmt = buf->i_addr;
++	uint len = sizeof(struct xfs_attri_log_format);
++
++	if (buf->i_len == len) {
++		memcpy((char *)dst_attri_fmt, (char *)src_attri_fmt, len);
++		return 0;
++	}
++	return -EFSCORRUPTED;
++}
++
++/*
++ * Freeing the attri requires that we remove it from the AIL if it has already
++ * been placed there. However, the ATTRI may not yet have been placed in the
++ * AIL when called by xfs_attri_release() from ATTRD processing due to the
++ * ordering of committed vs unpin operations in bulk insert operations. Hence
++ * the reference count to ensure only the last caller frees the ATTRI.
++ */
++void
++xfs_attri_release(
++	struct xfs_attri_log_item	*attrip)
++{
++	ASSERT(atomic_read(&attrip->attri_refcount) > 0);
++	if (atomic_dec_and_test(&attrip->attri_refcount)) {
++		xfs_trans_ail_remove(&attrip->attri_item,
++				     SHUTDOWN_LOG_IO_ERROR);
++		xfs_attri_item_free(attrip);
++	}
++}
++
++static inline struct xfs_attrd_log_item *ATTRD_ITEM(struct xfs_log_item *lip)
++{
++	return container_of(lip, struct xfs_attrd_log_item, attrd_item);
++}
++
++STATIC void
++xfs_attrd_item_free(struct xfs_attrd_log_item *attrdp)
++{
++	kmem_free(attrdp->attrd_item.li_lv_shadow);
++	kmem_free(attrdp);
++}
++
++/*
++ * This returns the number of iovecs needed to log the given attrd item.
++ * We only need 1 iovec for an attrd item.  It just logs the attrd_log_format
++ * structure.
++ */
++static inline int
++xfs_attrd_item_sizeof(
++	struct xfs_attrd_log_item *attrdp)
++{
++	return sizeof(struct xfs_attrd_log_format);
++}
++
++STATIC void
++xfs_attrd_item_size(
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
++{
++	*nvecs += 1;
++	*nbytes += xfs_attrd_item_sizeof(ATTRD_ITEM(lip));
++}
++
++/*
++ * This is called to fill in the vector of log iovecs for the
++ * given attrd log item. We use only 1 iovec, and we point that
++ * at the attrd_log_format structure embedded in the attrd item.
++ * It is at this point that we assert that all of the attr
++ * slots in the attrd item have been filled.
++ */
++STATIC void
++xfs_attrd_item_format(
++	struct xfs_log_item	*lip,
++	struct xfs_log_vec	*lv)
++{
++	struct xfs_attrd_log_item	*attrdp = ATTRD_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
++
++	attrdp->attrd_format.attrd_type = XFS_LI_ATTRD;
++	attrdp->attrd_format.attrd_size = 1;
++
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRD_FORMAT,
++			&attrdp->attrd_format,
++			xfs_attrd_item_sizeof(attrdp));
++}
++
++/*
++ * Pinning has no meaning for an attrd item, so just return.
++ */
++STATIC void
++xfs_attrd_item_pin(
++	struct xfs_log_item	*lip)
++{
++}
++
++/*
++ * Since pinning has no meaning for an attrd item, unpinning does
++ * not either.
++ */
++STATIC void
++xfs_attrd_item_unpin(
++	struct xfs_log_item	*lip,
++	int			remove)
++{
++}
++
++/*
++ * There isn't much you can do to push on an attrd item.  It is simply stuck
++ * waiting for the log to be flushed to disk.
++ */
++STATIC uint
++xfs_attrd_item_push(
++	struct xfs_log_item	*lip,
++	struct list_head	*buffer_list)
++{
++	return XFS_ITEM_PINNED;
++}
++
++/*
++ * The ATTRD is either committed or aborted if the transaction is cancelled. If
++ * the transaction is cancelled, drop our reference to the ATTRI and free the
++ * ATTRD.
++ */
++STATIC void
++xfs_attrd_item_unlock(
++	struct xfs_log_item	*lip)
++{
++	struct xfs_attrd_log_item	*attrdp = ATTRD_ITEM(lip);
++
++	if (lip->li_flags & XFS_LI_ABORTED) {
++		xfs_attri_release(attrdp->attrd_attrip);
++		xfs_attrd_item_free(attrdp);
++	}
++}
++
++/*
++ * When the attrd item is committed to disk, all we need to do is delete our
++ * reference to our partner attri item and then free ourselves. Since we're
++ * freeing ourselves we must return -1 to keep the transaction code from
++ * further referencing this item.
++ */
++STATIC xfs_lsn_t
++xfs_attrd_item_committed(
++	struct xfs_log_item	*lip,
++	xfs_lsn_t		lsn)
++{
++	struct xfs_attrd_log_item	*attrdp = ATTRD_ITEM(lip);
++
++	/*
++	 * Drop the ATTRI reference regardless of whether the ATTRD has been
++	 * aborted. Once the ATTRD transaction is constructed, it is the sole
++	 * responsibility of the ATTRD to release the ATTRI (even if the ATTRI
++	 * is aborted due to log I/O error).
++	 */
++	xfs_attri_release(attrdp->attrd_attrip);
++	xfs_attrd_item_free(attrdp);
++
++	return (xfs_lsn_t)-1;
++}
++
++STATIC void
++xfs_attrd_item_committing(
++	struct xfs_log_item	*lip,
++	xfs_lsn_t		lsn)
++{
++}
++
++/*
++ * This is the ops vector shared by all attrd log items.
++ */
++static const struct xfs_item_ops xfs_attrd_item_ops = {
++	.iop_size	= xfs_attrd_item_size,
++	.iop_format	= xfs_attrd_item_format,
++	.iop_pin	= xfs_attrd_item_pin,
++	.iop_unpin	= xfs_attrd_item_unpin,
++	.iop_unlock	= xfs_attrd_item_unlock,
++	.iop_committed	= xfs_attrd_item_committed,
++	.iop_push	= xfs_attrd_item_push,
++	.iop_committing = xfs_attrd_item_committing
++};
++
++/*
++ * Allocate and initialize an attrd item
++ */
++struct xfs_attrd_log_item *
++xfs_attrd_init(
++	struct xfs_mount	*mp,
++	struct xfs_attri_log_item	*attrip)
++
++{
++	struct xfs_attrd_log_item	*attrdp;
++	uint			size;
++
++	size = (uint)(sizeof(struct xfs_attrd_log_item));
++	attrdp = kmem_zalloc(size, KM_SLEEP);
++
++	xfs_log_item_init(mp, &attrdp->attrd_item, XFS_LI_ATTRD,
++			  &xfs_attrd_item_ops);
++	attrdp->attrd_attrip = attrip;
++	attrdp->attrd_format.attrd_attri_id = attrip->attri_format.attri_id;
++
++	return attrdp;
++}
++
++/*
++ * Process an attr intent item that was recovered from
++ * the log.  We need to delete the attr that it describes.
++ */
++int
++xfs_attri_recover(
++	struct xfs_mount	*mp,
++	struct xfs_attri_log_item	*attrip)
++{
++	struct xfs_attrd_log_item	*attrdp;
++	struct xfs_trans	*tp;
++	int			error = 0;
++	struct xfs_attr		*attrp;
++
++	ASSERT(!test_bit(XFS_ATTRI_RECOVERED, &attrip->attri_flags));
++
++	/*
++	 * First check the validity of the attr described by the
++	 * ATTRI.  If any are bad, then assume that all are bad and
++	 * just toss the ATTRI.
++	 */
++	attrp = &attrip->attri_format.attri_attr;
++	if (attrp->attr_nameval_len == 0 ||
++	    attrp->attr_name_len == 0 ||
++	    attrp->attr_op_flags > ATTR_OP_FLAGS_MAX) {
++		/*
++		 * This will pull the ATTRI from the AIL and
++		 * free the memory associated with it.
++		 */
++		set_bit(XFS_ATTRI_RECOVERED, &attrip->attri_flags);
++		xfs_attri_release(attrip);
++		return -EIO;
++	}
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
++	if (error)
++		return error;
++	attrdp = xfs_trans_get_attrd(tp, attrip);
++	attrp = &attrip->attri_format.attri_attr;
++
++	error = xfs_trans_attr(tp, attrdp, attrp->attr_ino,
++				attrp->attr_op_flags,
++				attrp->attr_nameval_len,
++				attrp->attr_name_len, attrp->attr_flags,
++				attrp->attr_nameval);
++	if (error)
++		goto abort_error;
++
++
++	set_bit(XFS_ATTRI_RECOVERED, &attrip->attri_flags);
++	error = xfs_trans_commit(tp);
++	return error;
++
++abort_error:
++	xfs_trans_cancel(tp);
++	return error;
++}
+diff --git a/fs/xfs/xfs_attr_item.h b/fs/xfs/xfs_attr_item.h
+new file mode 100644
+index 0000000..aec854f
+--- /dev/null
++++ b/fs/xfs/xfs_attr_item.h
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (c) 2017 Oracle, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation Inc.
++ */
++#ifndef	__XFS_ATTR_ITEM_H__
++#define	__XFS_ATTR_ITEM_H__
++
++/* kernel only ATTRI/ATTRD definitions */
++
++struct xfs_mount;
++struct kmem_zone;
++
++/*
++ * Max number of attrs in fast allocation path.
++ */
++#define XFS_ATTRI_MAX_FAST_ATTRS        16
++
++
++/*
++ * Define ATTR flag bits. Manipulated by set/clear/test_bit operators.
++ */
++#define	XFS_ATTRI_RECOVERED	1
++
++/*
++ * This is the "attr intention" log item.  It is used to log the fact
++ * that some attrs need to be processed.  It is used in conjunction with the
++ * "attr done" log item described below.
++ *
++ * The ATTRI is reference counted so that it is not freed prior to both the
++ * ATTRI and ATTRD being committed and unpinned. This ensures the ATTRI is
++ * inserted into the AIL even in the event of out of order ATTRI/ATTRD
++ * processing. In other words, an ATTRI is born with two references:
++ *
++ *      1.) an ATTRI held reference to track ATTRI AIL insertion
++ *      2.) an ATTRD held reference to track ATTRD commit
++ *
++ * On allocation, both references are the responsibility of the caller. Once
++ * the ATTRI is added to and dirtied in a transaction, ownership of reference
++ * one transfers to the transaction. The reference is dropped once the ATTRI is
++ * inserted to the AIL or in the event of failure along the way (e.g., commit
++ * failure, log I/O error, etc.). Note that the caller remains responsible for
++ * the ATTRD reference under all circumstances to this point. The caller has no
++ * means to detect failure once the transaction is committed, however.
++ * Therefore, an ATTRD is required after this point, even in the event of
++ * unrelated failure.
++ *
++ * Once an ATTRD is allocated and dirtied in a transaction, reference two
++ * transfers to the transaction. The ATTRD reference is dropped once it reaches
++ * the unpin handler. Similar to the ATTRI, the reference also drops in the
++ *event of commit failure or log I/O errors. Note that the ATTRD is not
++ * inserted in the AIL, so at this point both the ATTI and ATTRD are freed.
++ */
++struct xfs_attri_log_item {
++	xfs_log_item_t			attri_item;
++	atomic_t			attri_refcount;
++	atomic_t			attri_next_attr;
++	unsigned long			attri_flags;	/* misc flags */
++	struct xfs_attri_log_format	attri_format;
++};
++
++/*
++ * This is the "attr done" log item.  It is used to log
++ * the fact that some attrs earlier mentioned in an attri item
++ * have been freed.
++ */
++struct xfs_attrd_log_item {
++	struct xfs_log_item		attrd_item;
++	struct xfs_attri_log_item	*attrd_attrip;
++	uint				attrd_next_attr;
++	struct xfs_attrd_log_format	attrd_format;
++};
++
++/*
++ * Max number of attrs in fast allocation path.
++ */
++#define	XFS_ATTRD_MAX_FAST_ATTRS	16
++
++extern struct kmem_zone	*xfs_attri_zone;
++extern struct kmem_zone	*xfs_attrd_zone;
++
++struct xfs_attri_log_item	*xfs_attri_init(struct xfs_mount *mp);
++struct xfs_attrd_log_item	*xfs_attrd_init(struct xfs_mount *mp,
++					struct xfs_attri_log_item *attrip);
++int xfs_attri_copy_format(struct xfs_log_iovec *buf,
++			  struct xfs_attri_log_format *dst_attri_fmt);
++void			xfs_attri_item_free(struct xfs_attri_log_item *attrip);
++void			xfs_attri_release(struct xfs_attri_log_item *attrip);
++
++int			xfs_attri_recover(struct xfs_mount *mp,
++					struct xfs_attri_log_item *attrip);
++
++#endif	/* __XFS_ATTR_ITEM_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d9a3a55..a206d51 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2051,6 +2051,7 @@ init_xfs_fs(void)
+ 	xfs_rmap_update_init_defer_op();
+ 	xfs_refcount_update_init_defer_op();
+ 	xfs_bmap_update_init_defer_op();
++	xfs_attr_init_defer_op();
+ 
+ 	xfs_dir_startup();
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 815b53d2..66c3c5f 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -40,6 +40,9 @@ struct xfs_cud_log_item;
+ struct xfs_defer_ops;
+ struct xfs_bui_log_item;
+ struct xfs_bud_log_item;
++struct xfs_attrd_log_item;
++struct xfs_attri_log_item;
++
+ 
+ typedef struct xfs_log_item {
+ 	struct list_head		li_ail;		/* AIL pointers */
+@@ -223,12 +226,22 @@ void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ 
+ void		xfs_extent_free_init_defer_op(void);
++void            xfs_attr_init_defer_op(void);
++
+ struct xfs_efd_log_item	*xfs_trans_get_efd(struct xfs_trans *,
+ 				  struct xfs_efi_log_item *,
+ 				  uint);
+ int		xfs_trans_free_extent(struct xfs_trans *,
+ 				      struct xfs_efd_log_item *, xfs_fsblock_t,
+ 				      xfs_extlen_t, struct xfs_owner_info *);
++struct xfs_attrd_log_item *
++xfs_trans_get_attrd(struct xfs_trans *tp,
++		    struct xfs_attri_log_item *attrip);
++int xfs_trans_attr(struct xfs_trans *tp, struct xfs_attrd_log_item *attrdp,
++			xfs_ino_t ino, uint32_t attr_op_flags,
++			uint32_t nameval_len, uint32_t name_len,
++			uint32_t flags, char *nameval);
++
+ int		xfs_trans_commit(struct xfs_trans *);
+ int		xfs_trans_roll(struct xfs_trans **);
+ int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+new file mode 100644
+index 0000000..183c841
+--- /dev/null
++++ b/fs/xfs/xfs_trans_attr.c
+@@ -0,0 +1,293 @@
++/*
++ * Copyright (c) 2017, Oracle Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation Inc.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_trans.h"
++#include "xfs_trans_priv.h"
++#include "xfs_attr_item.h"
++#include "xfs_alloc.h"
++#include "xfs_bmap.h"
++#include "xfs_trace.h"
++#include "libxfs/xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr.h"
++#include "xfs_inode.h"
++#include "xfs_icache.h"
++
++/*
++ * This routine is called to allocate an "extent free done"
++ * log item that will hold nextents worth of extents.  The
++ * caller must use all nextents extents, because we are not
++ * flexible about this at all.
++ */
++struct xfs_attrd_log_item *
++xfs_trans_get_attrd(struct xfs_trans		*tp,
++		  struct xfs_attri_log_item	*attrip)
++{
++	struct xfs_attrd_log_item			*attrdp;
++
++	ASSERT(tp != NULL);
++
++	attrdp = xfs_attrd_init(tp->t_mountp, attrip);
++	ASSERT(attrdp != NULL);
++
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &attrdp->attrd_item);
++	return attrdp;
++}
++
++/*
++ * Delete an attr and log it to the ATTRD. Note that the transaction is marked
++ * dirty regardless of whether the attr delete succeeds or fails to support the
++ * ATTRI/ATTRD lifecycle rules.
++ */
++int
++xfs_trans_attr(
++	struct xfs_trans	*tp,
++	struct xfs_attrd_log_item	*attrdp,
++	xfs_ino_t		ino,
++	uint32_t		op_flags,
++	uint32_t		nameval_len,
++	uint32_t		name_len,
++	uint32_t                flags,
++	char			*nameval)
++{
++	uint			next_attr;
++	struct xfs_attr	*attrp;
++	int			error;
++	int                     local;
++	int			val_len = nameval_len - name_len;
++	char			name[name_len + 1];
++	char			value[val_len + 1];
++	struct xfs_da_args      args;
++	struct xfs_inode	*dp;
++	struct xfs_defer_ops    dfops;
++	xfs_fsblock_t		firstblock = NULLFSBLOCK;
++	struct xfs_mount	*mp = tp->t_mountp;
++
++	error = xfs_iget(mp, tp, ino, flags, 0, &dp);
++	if (error)
++		return error;
++
++	memcpy(name, nameval, name_len);
++	name[name_len] = 0;
++
++	memcpy(value, &nameval[name_len], val_len);
++	value[val_len] = 0;
++
++	ASSERT(XFS_IFORK_Q((dp)));
++	tp->t_flags |= XFS_TRANS_RESERVE;
++
++	error = xfs_attr_args_init(&args, dp, name, flags);
++	if (error)
++		return error;
++
++	args.name = (char *)name;
++	args.namelen = name_len;
++	args.hashval = xfs_da_hashname(args.name, args.namelen);
++	args.value = (char *)value;
++	args.valuelen = val_len;
++	args.dfops = &dfops;
++	args.firstblock = &firstblock;
++	args.op_flags = XFS_DA_OP_OKNOENT;
++	args.total = xfs_attr_calc_size(&args, &local);
++	args.trans = tp;
++	ASSERT(local);
++
++	xfs_ilock(dp, XFS_ILOCK_EXCL);
++	xfs_defer_init(args.dfops, args.firstblock);
++
++	if (op_flags & ATTR_OP_FLAGS_SET) {
++		args.op_flags |= XFS_DA_OP_ADDNAME;
++		error = xfs_attr_set_args(&args, flags, false);
++	} else if (op_flags & ATTR_OP_FLAGS_REMOVE) {
++		error = xfs_attr_remove_args(&args, flags);
++	} else {
++		ASSERT(0);
++	}
++
++	if (error)
++		xfs_defer_cancel(&dfops);
++
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the ATTRI and frees the ATTRD
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	attrdp->attrd_item.li_desc->lid_flags |= XFS_LID_DIRTY;
++
++	next_attr = attrdp->attrd_next_attr;
++	attrp = &(attrdp->attrd_format.attrd_attr);
++	attrp->attr_ino = ino;
++	attrp->attr_op_flags = op_flags;
++	attrp->attr_nameval_len = nameval_len;
++	attrp->attr_name_len = name_len;
++	attrp->attr_flags = flags;
++	memcpy(attrp->attr_nameval, nameval, nameval_len);
++	attrdp->attrd_next_attr++;
++
++	return error;
++}
++
++static int
++xfs_attr_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	return 0;
++}
++
++/* Get an ATTRI. */
++STATIC void *
++xfs_attr_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	struct xfs_attri_log_item		*attrip;
++
++	ASSERT(tp != NULL);
++	ASSERT(count > 0);
++
++	attrip = xfs_attri_init(tp->t_mountp);
++	ASSERT(attrip != NULL);
++
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &attrip->attri_item);
++	return attrip;
++}
++
++/* Log an attr to the intent item. */
++STATIC void
++xfs_attr_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++	struct xfs_attri_log_item		*attrip = intent;
++	struct xfs_attr_item	*free;
++	uint				next_attr;
++	struct xfs_attr		*attrp;
++
++	free = container_of(item, struct xfs_attr_item, xattri_list);
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	attrip->attri_item.li_desc->lid_flags |= XFS_LID_DIRTY;
++
++	/*
++	 * atomic_inc_return gives us the value after the increment;
++	 * we want to use it as an array index so we need to subtract 1 from
++	 * it.
++	 */
++	next_attr = atomic_inc_return(&attrip->attri_next_attr) - 1;
++	attrp = &attrip->attri_format.attri_attr;
++	attrp->attr_ino = free->xattri_ino;
++	attrp->attr_op_flags = free->xattri_op_flags;
++	attrp->attr_nameval_len = free->xattri_nameval_len;
++	attrp->attr_name_len = free->xattri_name_len;
++	attrp->attr_flags = free->xattri_flags;
++	memcpy(attrp->attr_nameval, free->xattri_nameval,
++	       free->xattri_nameval_len);
++}
++
++/* Get an ATTRD so we can process all the attrs. */
++STATIC void *
++xfs_attr_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return xfs_trans_get_attrd(tp, intent);
++}
++
++/* Process an attr. */
++STATIC int
++xfs_attr_finish_item(
++	struct xfs_trans		*tp,
++	struct xfs_defer_ops		*dop,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_attr_item	*free;
++	int				error;
++
++	free = container_of(item, struct xfs_attr_item, xattri_list);
++	error = xfs_trans_attr(tp, done_item,
++			free->xattri_ino,
++			free->xattri_op_flags,
++			free->xattri_nameval_len,
++			free->xattri_name_len,
++			free->xattri_flags,
++			free->xattri_nameval);
++	kmem_free(free);
++	return error;
++}
++
++/* Abort all pending EFIs. */
++STATIC void
++xfs_attr_abort_intent(
++	void				*intent)
++{
++	xfs_attri_release(intent);
++}
++
++/* Cancel an attr */
++STATIC void
++xfs_attr_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_attr_item	*free;
++
++	free = container_of(item, struct xfs_attr_item, xattri_list);
++	kmem_free(free);
++}
++
++static const struct xfs_defer_op_type xfs_attr_defer_type = {
++	.type		= XFS_DEFER_OPS_TYPE_ATTR,
++	.max_items	= XFS_ATTRI_MAX_FAST_ATTRS,
++	.diff_items	= xfs_attr_diff_items,
++	.create_intent	= xfs_attr_create_intent,
++	.abort_intent	= xfs_attr_abort_intent,
++	.log_item	= xfs_attr_log_item,
++	.create_done	= xfs_attr_create_done,
++	.finish_item	= xfs_attr_finish_item,
++	.cancel_item	= xfs_attr_cancel_item,
++};
++
++/* Register the deferred op type. */
++void
++xfs_attr_init_defer_op(void)
++{
++	xfs_defer_init_op_type(&xfs_attr_defer_type);
++}
+-- 
+2.7.4
 
-The kernel always has the ability to revoke access and convert the file
-back to normal operation after performing a "lease break". Similar to
-fcntl leases, there is no way for userspace to to cancel the lease break
-process once it has started, it can only delay it via the
-/proc/sys/fs/lease-break-time setting.
-
-MAP_DIRECT enables XFS to supplant the device-dax interface for
-mmap-write access to persistent memory with no ongoing coordination with
-the filesystem via fsync/msync syscalls.
-
----
-
-Dan Williams (12):
-      mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap flags
-      fs, mm: pass fd to ->mmap_validate()
-      fs: introduce i_mapdcount
-      fs: MAP_DIRECT core
-      xfs: prepare xfs_break_layouts() for reuse with MAP_DIRECT
-      xfs: wire up MAP_DIRECT
-      dma-mapping: introduce dma_has_iommu()
-      fs, mapdirect: introduce ->lease_direct()
-      xfs: wire up ->lease_direct()
-      device-dax: wire up ->lease_direct()
-      IB/core: use MAP_DIRECT to fix / enable RDMA to DAX mappings
-      tools/testing/nvdimm: enable rdma unit tests
-
-
- arch/alpha/include/uapi/asm/mman.h           |    1 
- arch/mips/include/uapi/asm/mman.h            |    1 
- arch/mips/kernel/vdso.c                      |    2 
- arch/parisc/include/uapi/asm/mman.h          |    1 
- arch/tile/mm/elf.c                           |    3 
- arch/x86/mm/mpx.c                            |    3 
- arch/xtensa/include/uapi/asm/mman.h          |    1 
- drivers/base/dma-mapping.c                   |   10 +
- drivers/dax/device.c                         |    4 
- drivers/infiniband/core/umem.c               |   90 ++++++-
- drivers/iommu/amd_iommu.c                    |    6 
- drivers/iommu/intel-iommu.c                  |    6 
- fs/Kconfig                                   |    4 
- fs/Makefile                                  |    1 
- fs/aio.c                                     |    2 
- fs/mapdirect.c                               |  349 ++++++++++++++++++++++++++
- fs/xfs/Kconfig                               |    4 
- fs/xfs/Makefile                              |    1 
- fs/xfs/xfs_file.c                            |  130 ++++++++++
- fs/xfs/xfs_iomap.c                           |    9 +
- fs/xfs/xfs_layout.c                          |   42 +++
- fs/xfs/xfs_layout.h                          |   13 +
- fs/xfs/xfs_pnfs.c                            |   30 --
- fs/xfs/xfs_pnfs.h                            |   10 -
- include/linux/dma-mapping.h                  |    3 
- include/linux/fs.h                           |   33 ++
- include/linux/mapdirect.h                    |   68 +++++
- include/linux/mm.h                           |   15 +
- include/linux/mman.h                         |   42 +++
- include/rdma/ib_umem.h                       |    8 +
- include/uapi/asm-generic/mman-common.h       |    1 
- include/uapi/asm-generic/mman.h              |    1 
- ipc/shm.c                                    |    3 
- mm/internal.h                                |    2 
- mm/mmap.c                                    |   28 ++
- mm/nommu.c                                   |    5 
- mm/util.c                                    |    7 -
- tools/include/uapi/asm-generic/mman-common.h |    1 
- tools/testing/nvdimm/Kbuild                  |   31 ++
- tools/testing/nvdimm/config_check.c          |    2 
- tools/testing/nvdimm/test/iomap.c            |    6 
- 41 files changed, 906 insertions(+), 73 deletions(-)
- create mode 100644 fs/mapdirect.c
- create mode 100644 fs/xfs/xfs_layout.c
- create mode 100644 fs/xfs/xfs_layout.h
- create mode 100644 include/linux/mapdirect.h
