@@ -1,110 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31697 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752169AbdJFWIm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:42 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 08/17] xfs: add parent pointer support to attribute code
-Date: Fri,  6 Oct 2017 15:05:39 -0700
-Message-Id: <1507327548-3221-9-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:52402 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752927AbdJFWUe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:20:34 -0400
+Date: Sat, 7 Oct 2017 09:20:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+Message-ID: <20171006222031.GU3666@dastard>
+References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
+ <20171006153803.GI7122@magnolia>
+ <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
-From: Mark Tinguely <tinguely@sgi.com>
+On Fri, Oct 06, 2017 at 11:18:39AM -0500, Eric Sandeen wrote:
+> On 10/6/17 10:38 AM, Darrick J. Wong wrote:
+> > On Fri, Oct 06, 2017 at 10:46:20AM +0200, Gandalf Corvotempesta wrote:
+> > Semirelated question: for a solid state disk on a machine with high CPU
+> > counts do we prefer agcount == cpucount to take advantage of the
+> > high(er) iops and lack of seek time to increase parallelism?
+> > 
+> > (Not that I've studied that in depth.)
+> 
+> Interesting question.  :)  Maybe harder to answer for SSD black boxes?
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+Easy: switch to multidisk mode if /sys/block/<dev>/queue/rotational
+is zero after doing all the other checks. Then SSDs will get larger
+AG counts automatically.
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased]
+Cheers,
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 dce033a... ee9382a... M	fs/xfs/libxfs/xfs_attr.c
-:100644 100644 3771edc... 5f94c84... M	fs/xfs/libxfs/xfs_da_format.h
-:100644 100644 9031152... 687648a... M	fs/xfs/xfs_attr.h
- fs/xfs/libxfs/xfs_attr.c      |  2 +-
- fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
- fs/xfs/xfs_attr.h             |  2 ++
- 3 files changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index dce033a..ee9382a 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -397,7 +397,7 @@ xfs_attr_set(
- 	struct xfs_da_args	args;
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		firstblock;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	bool			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
- 	int			error, local;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 3771edc..5f94c84 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -758,24 +758,28 @@ struct xfs_attr3_icleaf_hdr {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
- 
- /*
-  * Conversion macros for converting namespace bits from argument flags
-  * to ondisk flags.
-  */
--#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
- #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
- #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
- #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
--					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-+					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-+					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
- #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
--					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-+					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-+					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
- 
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 9031152..687648a 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -46,6 +46,7 @@ struct xfs_attr_list_context;
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
- 
- #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
- #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-@@ -57,6 +58,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_PARENT,		"PARENT" }, \
- 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
- 	{ ATTR_KERNOVAL,	"KERNOVAL" }
- 
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
