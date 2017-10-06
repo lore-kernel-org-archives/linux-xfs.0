@@ -1,113 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:8821 "EHLO mga04.intel.com"
+Received: from sandeen.net ([63.231.237.45]:48890 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752460AbdJFWl6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Oct 2017 18:41:58 -0400
-Subject: [PATCH v7 03/12] fs: introduce i_mapdcount
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 06 Oct 2017 15:35:32 -0700
-Message-ID: <150732933283.22363.570426117546397495.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1751423AbdJFQSk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Oct 2017 12:18:40 -0400
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
+ <20171006153803.GI7122@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
+Date: Fri, 6 Oct 2017 11:18:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20171006153803.GI7122@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-When ->iomap_begin() sees this count being non-zero and determines that
-the block map of the file needs to be modified to satisfy the I/O
-request it will instead return an error. This is needed for MAP_DIRECT
-where, due to locking constraints, we can't rely on xfs_break_layouts()
-to protect against allocating write-faults either from the process that
-setup the MAP_DIRECT mapping nor other processes that have the file
-mapped.  xfs_break_layouts() requires XFS_IOLOCK which is problematic to
-mix with the XFS_MMAPLOCK in the fault path.
+On 10/6/17 10:38 AM, Darrick J. Wong wrote:
+> On Fri, Oct 06, 2017 at 10:46:20AM +0200, Gandalf Corvotempesta wrote:
+>> Hi to all,
+>> i'm new to XFS.
+>>
+>> Which is the proper agcount for 2TB, 4TB and 8TB drives (not part of any RAID) ?
+>>
+>> mkfs.xfs automatically choosen 4 AGs. Isn't this too low ?
+> 
+> No.  Have a look at calc_default_ag_geometry in libxcmd/topology.c for
+> how we calculate the default AG count / size.  4TB single-disks and
+> smaller get 4 AGs; larger than that get 1AG per TB.  RAID arrays are
+> different.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jeff Layton <jlayton@poochiereds.net>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/xfs_iomap.c |    9 +++++++++
- include/linux/fs.h |   31 +++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
+Right; max AG size is 1T (for a default mkfs):
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a1909bc064e9..6816f8ebbdcf 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1053,6 +1053,15 @@ xfs_file_iomap_begin(
- 			goto out_unlock;
- 		}
- 		/*
-+		 * If a file has MAP_DIRECT mappings disable block map
-+		 * updates. This should only effect mmap write faults as
-+		 * other paths are protected by an FL_LAYOUT lease.
-+		 */
-+		if (i_mapdcount_read(inode)) {
-+			error = -ETXTBSY;
-+			goto out_unlock;
-+		}
-+		/*
- 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
- 		 * pages to keep the chunks of work done where somewhat symmetric
- 		 * with the work writeback does. This is a completely arbitrary
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c2b9bf3dc4e9..f83871b188ff 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -642,6 +642,9 @@ struct inode {
- 	atomic_t		i_count;
- 	atomic_t		i_dio_count;
- 	atomic_t		i_writecount;
-+#ifdef CONFIG_FS_DAX
-+	atomic_t		i_mapdcount;	/* count of MAP_DIRECT vmas */
-+#endif
- #ifdef CONFIG_IMA
- 	atomic_t		i_readcount; /* struct files open RO */
- #endif
-@@ -2784,6 +2787,34 @@ static inline void i_readcount_inc(struct inode *inode)
- 	return;
- }
- #endif
-+
-+#ifdef CONFIG_FS_DAX
-+static inline void i_mapdcount_dec(struct inode *inode)
-+{
-+	BUG_ON(!atomic_read(&inode->i_mapdcount));
-+	atomic_dec(&inode->i_mapdcount);
-+}
-+static inline void i_mapdcount_inc(struct inode *inode)
-+{
-+	atomic_inc(&inode->i_mapdcount);
-+}
-+static inline int i_mapdcount_read(struct inode *inode)
-+{
-+	return atomic_read(&inode->i_mapdcount);
-+}
-+#else
-+static inline void i_mapdcount_dec(struct inode *inode)
-+{
-+}
-+static inline void i_mapdcount_inc(struct inode *inode)
-+{
-+}
-+static inline int i_mapdcount_read(struct inode *inode)
-+{
-+	return 0;
-+}
-+#endif
-+
- extern int do_pipe_flags(int *, int);
- 
- #define __kernel_read_file_id(id) \
+        /*
+         * For a single underlying storage device over 4TB in size
+         * use the maximum AG size.  Between 128MB and 4TB, just use
+         * 4 AGs and scale up smoothly between min/max AG sizes.
+         */
 
+But if there is a stripe unit, it goes into multi-disk mode, assumes
+you have more parallelism than a single spindle, and makes more AGs.
+
+        /*
+         * For the multidisk configs we choose an AG count based on the number
+         * of data blocks available, trying to keep the number of AGs higher
+         * than the single disk configurations. This makes the assumption that
+         * larger filesystems have more parallelism available to them.
+         */
+
+If you have a single 8T disk with only a handful of heads, you won't
+benefit from more AGs.
+
+> Semirelated question: for a solid state disk on a machine with high CPU
+> counts do we prefer agcount == cpucount to take advantage of the
+> high(er) iops and lack of seek time to increase parallelism?
+> 
+> (Not that I've studied that in depth.)
+
+Interesting question.  :)  Maybe harder to answer for SSD black boxes?
+
+-Eric
