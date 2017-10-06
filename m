@@ -1,303 +1,207 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:31679 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751083AbdJFCv1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 22:51:27 -0400
-Date: Fri, 6 Oct 2017 13:51:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/25] xfs: scrub inode block mappings
-Message-ID: <20171006025123.GQ3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706335646.19351.8363960454156993724.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150706335646.19351.8363960454156993724.stgit@magnolia>
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:56532 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750813AbdJFGwd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 02:52:33 -0400
+Received: by mail-wm0-f45.google.com with SMTP id l68so5932761wmd.5
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Oct 2017 23:52:32 -0700 (PDT)
+From: =?utf-8?Q?Javier_Gonz=C3=A1lez?= <jg@lightnvm.io>
+Message-Id: <231B3089-7B11-4491-ABE6-97AC00862DDE@lightnvm.io>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_B5987310-BEDF-46C2-A380-7DE5AC0BF175";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: Circular locking dependency with pblk
+Date: Fri, 6 Oct 2017 08:52:28 +0200
+In-Reply-To: <20171005233609.GP3666@dastard>
+References: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
+ <20171005233609.GP3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-
-On Tue, Oct 03, 2017 at 01:42:36PM -0700, Darrick J. Wong wrote:
-> +/* Set us up with an inode's bmap. */
-> +STATIC int
-> +__xfs_scrub_setup_inode_bmap(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip,
-> +	bool				flush_data)
-> +{
-> +	struct xfs_mount		*mp = sc->mp;
-> +	int				error;
-> +
-> +	error = xfs_scrub_get_inode(sc, ip);
-> +	if (error)
-> +		return error;
-> +
-> +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-> +	xfs_ilock(sc->ip, sc->ilock_flags);
-> +
-> +	/*
-> +	 * We don't want any ephemeral data fork updates sitting around
-> +	 * while we inspect block mappings, so wait for directio to finish
-> +	 * and flush dirty data if we have delalloc reservations.
-> +	 */
-> +	if (S_ISREG(VFS_I(sc->ip)->i_mode) && flush_data) {
-> +		inode_dio_wait(VFS_I(sc->ip));
-> +		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
-> +		if (error)
-> +			goto out_unlock;
-> +		error = invalidate_inode_pages2(VFS_I(sc->ip)->i_mapping);
-> +		if (error)
-> +			goto out_unlock;
-> +	}
-
-The same flush and invalidate is done in xfs_fs_map_blocks and
-xfs_ioctl_setattr_dax_invalidate. we used to have helper functions
-to do this, but we got rid of them because we removed all the
-cases where such behaviour was necessary. Now we're adding them
-back, perhaps we should have a helper for this again?
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, darrick.wong@oracle.com, Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <peterz@infradead.org>
 
 
-> +	/* Got the inode, lock it and we're ready to go. */
-> +	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-> +	if (error)
-> +		goto out_unlock;
-> +	sc->ilock_flags |= XFS_ILOCK_EXCL;
-> +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-> +
-> +	return 0;
-> +out_unlock:
-> +	xfs_iunlock(sc->ip, sc->ilock_flags);
-> +	if (sc->ip != ip)
-> +		iput(VFS_I(sc->ip));
-> +	sc->ip = NULL;
+--Apple-Mail=_B5987310-BEDF-46C2-A380-7DE5AC0BF175
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
 
-Slightly tricky - how many places do we end up having to do this?
-If its more than one, perhaps we need a xfs_scrub_irele(sc, ip)
-helper?
+> On 6 Oct 2017, at 01.36, Dave Chinner <david@fromorbit.com> wrote:
+>=20
+> On Thu, Oct 05, 2017 at 12:53:50PM +0200, Javier Gonz=C3=A1lez wrote:
+>> Hi,
+>>=20
+>> lockdep is reporting a circular dependency when using XFS and pblk,
+>> which I am a bit confused about.
+>>=20
+>> This happens when XFS sends a number of nested reads and (at least) =
+one
+>> of them hits partially pblk's cache. In this case, pblk will retrieve
+>> the cached lbas and form a new bio, which is submitted =
+_synchronously_
+>> to the media using struct completion. The original bio is then =
+populated
+>> with the read data.
+>>=20
+>> What lockdep complains about, is that the unlocking operation in
+>> complete() has a circular dependency with ionode->i_rwsem when they =
+both
+>> happen on the same core, which is different from the core that issued
+>> wait_for_completion_io_timeout() and is waiting for the partial read.
+>> However, AFAIU complete() happens in interrupt context, so this =
+should
+>> not be a problem.
+>>=20
+>> The only thing I can think of is that XFS is making an assumption =
+when
+>> submitting direct I/O that there will be no synchronous I/O coming =
+from
+>> anybody underneath.
+>>=20
+>> Any thoughts?
+>=20
+> The new lockdep completion tracking that was included in 4.14 can
+> throw false positives because it doesn't (yet) have the capability
+> to understand the multiply layered completion contexts we have in
+> the storage stack.
+>=20
+> Peter, here's another for you to ponder....
+>=20
+>> TRACE:
+>> [ 8557.938336] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> [ 8557.944513] WARNING: possible circular locking dependency detected
+>> [ 8557.950688] 4.14.0-rc2--509811f1f2df #726 Not tainted
+>> [ 8557.955739] ------------------------------------------------------
+>> [ 8557.961919] rocksdb:bg11/19129 is trying to acquire lock:
+>> [ 8557.967319]  (&inode->i_rwsem){++++}, at: [<ffffffffad5648d1>] =
+xfs_ilock+0x1a1/0x230
+>> [ 8557.975063]
+>>               but now in release context of a crosslock acquired at =
+the following:
+>> [ 8557.983921]  ((complete)&wait#5){+.+.}, at: [<ffffffffad933d0a>] =
+pblk_fill_partial_read_bio+0x22a/0x520
+>> [ 8557.993318]
+>>               which lock already depends on the new lock.
+>>=20
+>> [ 8558.001490]
+>>               the existing dependency chain (in reverse order) is:
+>> [ 8558.008966]
+>>               -> #1 ((complete)&wait#5){+.+.}:
+>> [ 8558.014715]        __lock_acquire+0x1186/0x11d0
+>> [ 8558.019245]        lock_acquire+0xed/0x1e0
+>> [ 8558.023337]        wait_for_completion_io_timeout+0x65/0x180
+>> [ 8558.028989]        pblk_fill_partial_read_bio+0x22a/0x520
+>> [ 8558.034375]        pblk_submit_read+0x158/0x3a0
+>> [ 8558.038900]        pblk_make_rq+0xc1/0x110
+>> [ 8558.042992]        generic_make_request+0x11d/0x3c0
+>> [ 8558.047862]        submit_bio+0x73/0x140
+>> [ 8558.051781]        iomap_dio_actor+0x1f8/0x3a0
+>> [ 8558.056216]        iomap_apply+0xa1/0x110
+>> [ 8558.060220]        iomap_dio_rw+0x26f/0x3c0
+>> [ 8558.064398]        xfs_file_dio_aio_read+0x88/0x1c0
+>> [ 8558.069269]        xfs_file_read_iter+0xab/0xc0
+>> [ 8558.073794]        __vfs_read+0xef/0x160
+>> [ 8558.077709]        vfs_read+0xa8/0x150
+>> [ 8558.081454]        SyS_pread64+0x98/0xc0
+>> [ 8558.085372]        entry_SYSCALL_64_fastpath+0x23/0xc2
+>=20
+> This is completely normal, blocked on a bio completion with a
+> filesystem lock held. More commonly we see this sort of thing
+> through through submit_bio_wait().
 
-> +/*
-> + * Inode fork block mapping (BMBT) scrubber.
-> + * More complex than the others because we have to scrub
-> + * all the extents regardless of whether or not the fork
-> + * is in btree format.
-> + */
-> +
-> +struct xfs_scrub_bmap_info {
-> +	struct xfs_scrub_context	*sc;
-> +	xfs_daddr_t			eofs;
-> +	xfs_fileoff_t			lastoff;
-> +	bool				is_rt;
-> +	bool				is_shared;
-> +	int				whichfork;
-> +};
-> +
-> +/* Scrub a single extent record. */
-> +STATIC int
-> +xfs_scrub_bmap_extent(
-> +	struct xfs_inode		*ip,
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_scrub_bmap_info	*info,
-> +	struct xfs_bmbt_irec		*irec)
-> +{
-> +	struct xfs_scrub_ag		sa = { 0 };
-> +	struct xfs_mount		*mp = info->sc->mp;
-> +	struct xfs_buf			*bp = NULL;
-> +	xfs_daddr_t			daddr;
-> +	xfs_daddr_t			dlen;
-> +	xfs_fsblock_t			bno;
-> +	xfs_agnumber_t			agno;
-> +	int				error = 0;
-> +
-> +	if (cur)
-> +		xfs_btree_get_block(cur, 0, &bp);
-> +
-> +	if (irec->br_startoff < info->lastoff ||
-> +	    irec->br_startblock == HOLESTARTBLOCK ||
-> +	    isnullstartblock(irec->br_startblock))
-> +		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-> +				irec->br_startoff);
+Yes. We do the same construct in pblk.
 
-What are we checking here? that it's ordered correctly and not a
-hole/delalloc record? If it is bad, shouldn't we just jump out here
-because the following checks are likely to throw silly errors on
-hole/delalloc mappings?
+>=20
+>> [ 8558.125636]  Possible unsafe locking scenario by crosslock:
+>>=20
+>> [ 8558.132672]        CPU0                    CPU1
+>> [ 8558.137196]        ----                    ----
+>> [ 8558.141720]   lock(&inode->i_rwsem);
+>> [ 8558.145291]   lock((complete)&wait#5);
+>> [ 8558.149035]                                lock(&inode->i_rwsem);
+>> [ 8558.155118]                                =
+unlock((complete)&wait#5);
+>> [ 8558.161550]
+>>                *** DEADLOCK ***
+>>=20
+>> [ 8558.167461] 4 locks held by rocksdb:bg11/19129:
+>> [ 8558.171984]  #0:  (&inode->i_rwsem){++++}, at: =
+[<ffffffffad5648d1>] xfs_ilock+0x1a1/0x230
+>> [ 8558.180148]  #1:  (rcu_read_lock){....}, at: [<ffffffffad72b8cc>] =
+__blk_mq_run_hw_queue+0xec/0x1d0
+>> [ 8558.189091]  #2:  (&(&nvmeq->q_lock)->rlock){-.-.}, at: =
+[<ffffffffad9d438c>] nvme_queue_rq+0x14c/0x9a0
+>> [ 8558.198384]  #3:  (&x->wait#17){-.-.}, at: [<ffffffffad16444d>] =
+complete+0x1d/0x60
+>> [ 8558.205948]
+>>               stack backtrace:
+>> [ 8558.210300] CPU: 6 PID: 19129 Comm: rocksdb:bg11 Not tainted =
+4.14.0-rc2--509811f1f2df #726
+>> [ 8558.218550] Hardware name: Supermicro X10SRA-F/X10SRA-F, BIOS 2.0a =
+06/23/2016
+>> [ 8558.225675] Call Trace:
+>> [ 8558.228123]  dump_stack+0x85/0xc7
+>> [ 8558.231438]  print_circular_bug+0x226/0x330
+>> [ 8558.235616]  ? print_bfs_bug+0x40/0x40
+>> [ 8558.239358]  check_prev_add+0x432/0x840
+>> [ 8558.243190]  ? __lock_acquire+0x736/0x11d0
+>> [ 8558.247282]  lock_commit_crosslock+0x3d3/0x5d0
+>> [ 8558.251718]  ? lock_commit_crosslock+0x3d3/0x5d0
+>> [ 8558.256328]  complete+0x29/0x60
+>> [ 8558.259469]  pblk_end_io_sync+0x12/0x20
+>> [ 8558.263297]  nvm_end_io+0x2b/0x30
+>> [ 8558.266607]  nvme_nvm_end_io+0x2e/0x50
+>=20
+> And this is where lockdep gets confused. Up until this point, it's
+> only ever seen the bio completion come from /outside/ the XFS
+> i_rwsem context (i.e. async completion form interupts). With a
+> synchronous completion like this, the completion has now been done
+> from inside the i_rwsem context and that is what triggers lockdep.
+>=20
+> This is safe to do because even if we have a bio blocked on a
+> completion queue, we've got all we way down to this complete() call
+> from a *different bio context* inside a read locked i_rwsem. Hence
+> there's no way this can be a deadlock even if the two processes are
+> holding the same i_rwsem.
+>=20
+> Therefore: false positive.
 
-> +	/* Actual mapping, so check the block ranges. */
-> +	if (info->is_rt) {
-> +		daddr = XFS_FSB_TO_BB(mp, irec->br_startblock);
-> +		agno = NULLAGNUMBER;
-> +		bno = irec->br_startblock;
-> +	} else {
-> +		daddr = XFS_FSB_TO_DADDR(mp, irec->br_startblock);
-> +		agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
-> +		if (agno >= mp->m_sb.sb_agcount) {
-> +			xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-> +				irec->br_startoff);
-> +			goto out;
-> +		}
-> +		bno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
-> +		if (bno >= mp->m_sb.sb_agblocks)
-> +			xfs_scrub_fblock_set_corrupt(info->sc,
-> +						     info->whichfork,
-> +						     irec->br_startoff);
+Thanks for the explanation Dave. I could not see how waiting for a
+struct complete under generic_make_request could in anyway interleave
+with a FS lock, but it is good to have it confirmed.
 
-more verify_agbno()/verify_fsbno stuff.
-
-> +	}
-> +	dlen = XFS_FSB_TO_BB(mp, irec->br_blockcount);
-> +	if (irec->br_blockcount <= 0 ||
-> +	    irec->br_blockcount > MAXEXTLEN ||
-
-irec->br_blockcount is unsigned (uint64_t).
-
-Also needs to be checked against AG size.
-
-> +	    daddr >= info->eofs ||
-> +	    daddr + dlen > info->eofs)
-> +		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-> +				irec->br_startoff);
-> +
-> +	if (irec->br_state == XFS_EXT_UNWRITTEN &&
-> +	    !xfs_sb_version_hasextflgbit(&mp->m_sb))
-
-Superblock scrubber should reject any filesystem without the
-extflgbit as corrupt - it's always set by mkfs - so I'm not sure we
-need to check this here.
-
-> +/* Scrub an inode fork's block mappings. */
-> +STATIC int
-> +xfs_scrub_bmap(
-> +	struct xfs_scrub_context	*sc,
-> +	int				whichfork)
-> +{
-> +	struct xfs_bmbt_irec		irec;
-> +	struct xfs_scrub_bmap_info	info = {0};
-> +	struct xfs_owner_info		oinfo;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_inode		*ip = sc->ip;
-> +	struct xfs_ifork		*ifp;
-> +	struct xfs_btree_cur		*cur;
-> +	xfs_fileoff_t			endoff;
-> +	xfs_extnum_t			idx;
-> +	bool				found;
-> +	int				error = 0;
-> +
-> +	ifp = XFS_IFORK_PTR(ip, whichfork);
-> +
-> +	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
-> +	info.eofs = XFS_FSB_TO_BB(mp, info.is_rt ? mp->m_sb.sb_rblocks :
-> +					      mp->m_sb.sb_dblocks);
-> +	info.whichfork = whichfork;
-> +	info.is_shared = whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip);
-> +	info.sc = sc;
-> +
-> +	switch (whichfork) {
-> +	case XFS_COW_FORK:
-> +		/* Non-existent CoW forks are ignorable. */
-> +		if (!ifp)
-> +			goto out_unlock;
-> +		/* No CoW forks on non-reflink inodes/filesystems. */
-> +		if (!xfs_is_reflink_inode(ip)) {
-> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-> +			goto out_unlock;
-> +		}
-> +		break;
-> +	case XFS_ATTR_FORK:
-> +		if (!ifp)
-> +			goto out_unlock;
-> +		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
-> +		    !xfs_sb_version_hasattr2(&mp->m_sb))
-> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-> +		break;
-> +	}
-> +
-> +	/* Check the fork values */
-> +	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
-> +	case XFS_DINODE_FMT_UUID:
-> +	case XFS_DINODE_FMT_DEV:
-> +	case XFS_DINODE_FMT_LOCAL:
-> +		/* No mappings to check. */
-> +		goto out_unlock;
-> +	case XFS_DINODE_FMT_EXTENTS:
-> +		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> +			xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
-> +			goto out_unlock;
-> +		}
-> +		break;
-> +	case XFS_DINODE_FMT_BTREE:
-> +		ASSERT(whichfork != XFS_COW_FORK);
-
-Corruption check, jump to out?
-
-> +
-> +		/* Scan the btree records. */
-> +		cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
-> +		xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
-> +		error = xfs_scrub_btree(sc, cur, xfs_scrub_bmapbt_helper,
-> +				&oinfo, &info);
-> +		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-> +						  XFS_BTREE_NOERROR);
-
-FYI, I missed that the on-disk bmbt was scanned here the first time
-I went through this code - i had to go back and work out why the
-code only appeared to scrub the incore extent list. Can you wrap
-this whole chunk of code into a helper named xfs_scrub_bmbt()
-so it stands out that this is where the on disk btree is scrubbed?
+Javier.
 
 
-> +		if (error == -EDEADLOCK)
-> +			return error;
 
-Ok, why don't we go to out_unlock here?
 
-> +		else if (error)
-> +			goto out_unlock;
+--Apple-Mail=_B5987310-BEDF-46C2-A380-7DE5AC0BF175
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
 
-But do for all other errors....
+-----BEGIN PGP SIGNATURE-----
 
-> +		break;
-> +	default:
-> +		xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
-> +		goto out_unlock;
-> +	}
-> +
-> +	/* Extent data is in memory, so scrub that. */
-> +
-> +	/* Find the offset of the last extent in the mapping. */
-> +	error = xfs_bmap_last_offset(ip, &endoff, whichfork);
-> +	if (!xfs_scrub_fblock_op_ok(sc, whichfork, 0, &error))
-> +		goto out_unlock;
-> +
-> +	/* Scrub extent records. */
-> +	info.lastoff = 0;
-> +	ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	for (found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &irec);
-> +	     found != 0;
-> +	     found = xfs_iext_get_extent(ifp, ++idx, &irec)) {
-> +		if (xfs_scrub_should_terminate(sc, &error))
-> +			break;
-> +		if (isnullstartblock(irec.br_startblock))
-> +			continue;
-> +		if (irec.br_startoff >= endoff) {
-> +			xfs_scrub_fblock_set_corrupt(sc, whichfork,
-> +					irec.br_startoff);
-> +			goto out_unlock;
-> +		}
-> +		error = xfs_scrub_bmap_extent(ip, NULL, &info, &irec);
-> +		if (error == -EDEADLOCK)
-> +			return error;
-> +	}
-> +
-> +out_unlock:
-> +	return error;
+iQIzBAEBCgAdFiEEm1mT7zen+vs9+T8kYx8FO3WZGMoFAlnXKCwACgkQYx8FO3WZ
+GMrvDhAA5ZLqOu0b28yvCPf6K7Z7hISWcMBRIJc/HegbEjHBvB1jGUMbw+ceKcj4
+7rfppcp7AuCcLeeJ1QawQxRVaSdXVgKr2KoYAJguIjXBdy9ynVgoMWkFH0PdL/0/
+wrkoFYo5iPW20es3IwJM64oxAX5+i9+/uq8zS5YZ2AVf97ZBzlcUlCATWtZ1trBe
+tN/LChgt+ipcQNeoEOjuk9iPRiijo2E7NxPyUuPq3VehsoZDC9j8TcL4JrGxd1jl
+Uud2sXQlZ7tRlKg6S8om+Xa41Yl7QH/C88elt73AHItcwW0WJkdjcjLMYacQC01f
+Ub3O/wub18XbGzKMPqv3du6jFA9QN19zhKKqed30jWa84LOVbelGe6GM8T7REvCy
+UNobz/dRHaGmeoxBkMDQfpB+pZUVEXEXsz4sLQGxepXqaWzdCENTBOjpIPFcuD4y
+afiBlv9HMYE0peVxZCnsFL5YRwrXixFRcrCCuRxWHOxevRpPIyypUXTy/FoWw5a/
+Cbb5/UW62fz64FC8oRx8qTxOWuiVm4DdcxAnS6DCitkm1TKxjClffOPVqZB4niMr
+OizeGkXGLxxfZuEULxkenN45Io56dlUzawsRxJkpfH6EulcVLMWDQXybtRiosT+N
+BCLWMykhOcDnntqyS0P8H19gGSKYrEJvsCM0Xo4ytImCOQoEi1o=
+=Ksk+
+-----END PGP SIGNATURE-----
 
-Hmmm - out_unlock doesn't unlock anything?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Apple-Mail=_B5987310-BEDF-46C2-A380-7DE5AC0BF175--
