@@ -1,76 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:56607 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751144AbdJEQYa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 12:24:30 -0400
-Received: by mail-pf0-f180.google.com with SMTP id g65so8162889pfe.13
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Oct 2017 09:24:30 -0700 (PDT)
-Subject: Re: Circular locking dependency with pblk
-References: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <daf6d403-1199-b5d8-2e35-59f361ed1360@kernel.dk>
-Date: Thu, 5 Oct 2017 10:24:27 -0600
-MIME-Version: 1.0
-In-Reply-To: <84EF6A42-AE7A-40B5-AB00-5E4A1617C41E@lightnvm.io>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:30565 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752122AbdJFWIj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:39 -0400
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 06/17] xfs: get directory offset when removing directory name
+Date: Fri,  6 Oct 2017 15:05:37 -0700
+Message-Id: <1507327548-3221-7-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <jg@lightnvm.io>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: darrick.wong@oracle.com, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
+Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-On 10/05/2017 04:53 AM, Javier González wrote:
-> Hi,
-> 
-> lockdep is reporting a circular dependency when using XFS and pblk,
-> which I am a bit confused about.
-> 
-> This happens when XFS sends a number of nested reads and (at least) one
-> of them hits partially pblk's cache. In this case, pblk will retrieve
-> the cached lbas and form a new bio, which is submitted _synchronously_
-> to the media using struct completion. The original bio is then populated
-> with the read data.
-> 
-> What lockdep complains about, is that the unlocking operation in
-> complete() has a circular dependency with ionode->i_rwsem when they both
-> happen on the same core, which is different from the core that issued
-> wait_for_completion_io_timeout() and is waiting for the partial read.
-> However, AFAIU complete() happens in interrupt context, so this should
-> not be a problem.
+From: Mark Tinguely <tinguely@sgi.com>
 
-But the very trace you are posting shows the completion being down
-inline, since we catch it at submission time:
+Return the directory offset information when removing an entry to the
+directory.
 
-> [ 8558.256328]  complete+0x29/0x60
-> [ 8558.259469]  pblk_end_io_sync+0x12/0x20
-> [ 8558.263297]  nvm_end_io+0x2b/0x30
-> [ 8558.266607]  nvme_nvm_end_io+0x2e/0x50
-> [ 8558.270351]  blk_mq_end_request+0x3e/0x70
-> [ 8558.274360]  nvme_complete_rq+0x1c/0xd0
-> [ 8558.278194]  nvme_pci_complete_rq+0x7b/0x130
-> [ 8558.282459]  __blk_mq_complete_request+0xa3/0x160
-> [ 8558.287156]  blk_mq_complete_request+0x16/0x20
-> [ 8558.291592]  nvme_process_cq+0xf8/0x1e0
-> [ 8558.295424]  nvme_queue_rq+0x16e/0x9a0
-> [ 8558.299172]  blk_mq_dispatch_rq_list+0x19e/0x330
-> [ 8558.303787]  ? blk_mq_flush_busy_ctxs+0x91/0x130
-> [ 8558.308400]  blk_mq_sched_dispatch_requests+0x19d/0x1d0
-> [ 8558.313617]  __blk_mq_run_hw_queue+0x12e/0x1d0
-> [ 8558.318053]  __blk_mq_delay_run_hw_queue+0xb9/0xd0
-> [ 8558.322837]  blk_mq_run_hw_queue+0x14/0x20
-> [ 8558.326928]  blk_mq_sched_insert_request+0xa4/0x180
-> [ 8558.331797]  blk_execute_rq_nowait+0x72/0xf0
-> [ 8558.336061]  nvme_nvm_submit_io+0xd9/0x130
-> [ 8558.340151]  nvm_submit_io+0x3c/0x70
-> [ 8558.343723]  pblk_submit_io+0x1b/0x20> [ 8558.347379]  pblk_submit_read+0x1ec/0x3a0
+This offset will be used as the parent pointer offset in xfs_remove.
 
-[snip]
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
 
-This happens since we call nvme_process_cq() after submitting IO,
-just in case there's something we can complete.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+v2: Changed typedefs to raw struct types
 
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+:100644 100644 a1ca460... 0511eb9... M	fs/xfs/libxfs/xfs_dir2.c
+:100644 100644 e349900... e1bd05d... M	fs/xfs/libxfs/xfs_dir2.h
+:100644 100644 bcf3438... b897026... M	fs/xfs/libxfs/xfs_dir2_block.c
+:100644 100644 c7c2d4d... d4d278a... M	fs/xfs/libxfs/xfs_dir2_leaf.c
+:100644 100644 44d10ee... 1dbca21... M	fs/xfs/libxfs/xfs_dir2_node.c
+:100644 100644 e33fd12... 1d577b2... M	fs/xfs/libxfs/xfs_dir2_sf.c
+:100644 100644 8e02180... b34c59e... M	fs/xfs/xfs_inode.c
+ fs/xfs/libxfs/xfs_dir2.c       | 15 +++++++++------
+ fs/xfs/libxfs/xfs_dir2.h       |  4 +++-
+ fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |  5 +++--
+ fs/xfs/libxfs/xfs_dir2_node.c  |  5 +++--
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+ fs/xfs/xfs_inode.c             |  7 ++++---
+ 7 files changed, 26 insertions(+), 16 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index a1ca460..0511eb9 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -443,13 +443,14 @@ xfs_dir_lookup(
+  */
+ int
+ xfs_dir_removename(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*dp,
+-	struct xfs_name	*name,
+-	xfs_ino_t	ino,
+-	xfs_fsblock_t	*first,		/* bmap's firstblock */
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	struct xfs_name		*name,
++	xfs_ino_t		ino,
++	xfs_fsblock_t	*first,			/* bmap's firstblock */
+ 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+-	xfs_extlen_t	total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+ {
+ 	struct xfs_da_args *args;
+ 	int		rval;
+@@ -495,6 +496,8 @@ xfs_dir_removename(
+ 		rval = xfs_dir2_leaf_removename(args);
+ 	else
+ 		rval = xfs_dir2_node_removename(args);
++	if (offset)
++		*offset = args->offset;
+ out_free:
+ 	kmem_free(args);
+ 	return rval;
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index e349900..e1bd05d 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -139,7 +139,9 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t ino,
+ 				xfs_fsblock_t *first,
+-				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
++				struct xfs_defer_ops *dfops,
++				xfs_extlen_t tot,
++				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_fsblock_t *first,
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index bcf3438..b897026 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -793,9 +793,9 @@ xfs_dir2_block_removename(
+ 	/*
+ 	 * Point to the data entry using the leaf entry.
+ 	 */
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	/*
+ 	 * Mark the data entry's space free.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index c7c2d4d..d4d278a 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1402,9 +1402,10 @@ xfs_dir2_leaf_removename(
+ 	 * Point to the leaf entry, use that to point to the data entry.
+ 	 */
+ 	lep = &ents[index];
+-	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
++	args->offset = be32_to_cpu(lep->address);
++	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-		xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
++		xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	needscan = needlog = 0;
+ 	oldbest = be16_to_cpu(bf[0].length);
+ 	ltp = xfs_dir2_leaf_tail_p(args->geo, leaf);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 44d10ee..1dbca21 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -1243,9 +1243,10 @@ xfs_dir2_leafn_remove(
+ 	/*
+ 	 * Extract the data block and offset from the entry.
+ 	 */
+-	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
++	args->offset = be32_to_cpu(lep->address);
++	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+ 	ASSERT(dblk->blkno == db);
+-	off = xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address));
++	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
+ 	ASSERT(dblk->index == off);
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index e33fd12..1d577b2 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -919,6 +919,8 @@ xfs_dir2_sf_removename(
+ 								XFS_CMP_EXACT) {
+ 			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
+ 			       args->inumber);
++			args->offset = xfs_dir2_byte_to_dataptr(
++						xfs_dir2_sf_get_offset(sfep));
+ 			break;
+ 		}
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 8e02180..b34c59e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2639,8 +2639,8 @@ xfs_remove(
+ 		goto out_trans_cancel;
+ 
+ 	xfs_defer_init(&dfops, &first_block);
+-	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
+-					&first_block, &dfops, resblks);
++	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
++				   &dfops, resblks, NULL);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_bmap_cancel;
+@@ -3150,7 +3150,8 @@ xfs_rename(
+ 					&first_block, &dfops, spaceres);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+-					   &first_block, &dfops, spaceres);
++					   &first_block, &dfops, spaceres,
++					   NULL);
+ 	if (error)
+ 		goto out_bmap_cancel;
+ 
 -- 
-Jens Axboe
+2.7.4
 
