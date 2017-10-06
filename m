@@ -1,378 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24970 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750732AbdJFFHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 01:07:38 -0400
-Date: Fri, 6 Oct 2017 16:07:34 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:49680 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751025AbdJFHJG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 03:09:06 -0400
+Date: Fri, 6 Oct 2017 18:07:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 18/25] xfs: scrub directory/attribute btrees
-Message-ID: <20171006050734.GR3666@dastard>
+Subject: Re: [PATCH 19/25] xfs: scrub directory metadata
+Message-ID: <20171006070714.GS3666@dastard>
 References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706336266.19351.1168091901339738103.stgit@magnolia>
+ <150706336897.19351.7541168310430592724.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150706336266.19351.1168091901339738103.stgit@magnolia>
+In-Reply-To: <150706336897.19351.7541168310430592724.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 01:42:42PM -0700, Darrick J. Wong wrote:
-> +/* Find an entry at a certain level in a da btree. */
-> +STATIC void *
-> +xfs_scrub_da_btree_entry(
-> +	struct xfs_scrub_da_btree	*ds,
-> +	int				level,
-> +	int				rec)
-> +{
-> +	char				*ents;
-> +	void				*(*fn)(void *);
-> +	size_t				sz;
-> +	struct xfs_da_state_blk		*blk;
+On Tue, Oct 03, 2017 at 01:42:49PM -0700, Darrick J. Wong wrote:
 > +
-> +	/* Dispatch the entry finding function. */
-> +	blk = &ds->state->path.blk[level];
-> +	switch (blk->magic) {
-> +	case XFS_ATTR_LEAF_MAGIC:
-> +	case XFS_ATTR3_LEAF_MAGIC:
-> +		fn = (xfs_da_leaf_ents_fn)xfs_attr3_leaf_entryp;
-> +		sz = sizeof(struct xfs_attr_leaf_entry);
-> +		break;
-> +	case XFS_DIR2_LEAFN_MAGIC:
-> +	case XFS_DIR3_LEAFN_MAGIC:
-> +		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
-> +		sz = sizeof(struct xfs_dir2_leaf_entry);
-> +		break;
-> +	case XFS_DIR2_LEAF1_MAGIC:
-> +	case XFS_DIR3_LEAF1_MAGIC:
-> +		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
-> +		sz = sizeof(struct xfs_dir2_leaf_entry);
-> +		break;
-> +	case XFS_DA_NODE_MAGIC:
-> +	case XFS_DA3_NODE_MAGIC:
-> +		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->node_tree_p;
-> +		sz = sizeof(struct xfs_da_node_entry);
-> +		break;
-> +	default:
-> +		return NULL;
-> +	}
-> +
-> +	ents = fn(blk->bp->b_addr);
-> +	return ents + (sz * rec);
-> +}
-
-This looks kinda unnecesarily abstracted.
-
-	case XFS_ATTR_LEAF_MAGIC:
-	case XFS_ATTR3_LEAF_MAGIC:
-		ents = xfs_attr3_leaf_entryp(blk->bp->b_addr);
-		return ents + (rec * sizeof(struct xfs_attr_leaf_entry));
-
-	case XFS_DIR2_LEAF1_MAGIC:
-	case XFS_DIR3_LEAF1_MAGIC:
-	case XFS_DIR2_LEAFN_MAGIC:
-	case XFS_DIR3_LEAFN_MAGIC:
-		ents = ds->dargs.dp->d_ops->leaf_ents_p(blk->bp->b_addr);
-		return ents + (rec * sizeof(struct xfs_dir2_leaf_entry));
-
-	case XFS_DA_NODE_MAGIC:
-	case XFS_DA3_NODE_MAGIC:
-		ents = ds->dargs.dp->d_ops->node_tree_p(blk->bp->b_addr)
-		return ents + (rec * sizeof(struct xfs_da_node_entry));
-
-
-> +
-> +/* Scrub a da btree hash (key). */
+> +/* Set us up to scrub a file's contents. */
 > +int
-> +xfs_scrub_da_btree_hash(
-> +	struct xfs_scrub_da_btree	*ds,
-> +	int				level,
-> +	__be32				*hashp)
+> +xfs_scrub_setup_inode_contents(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip,
+> +	unsigned int			resblks)
 > +{
-> +	struct xfs_da_state_blk		*blks;
-> +	struct xfs_da_node_entry	*btree;
-
-*entry?
-
-> +	xfs_dahash_t			hash;
-> +	xfs_dahash_t			parent_hash;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	int				error;
 > +
-> +	/* Is this hash in order? */
-> +	hash = be32_to_cpu(*hashp);
-> +	if (hash < ds->hashes[level])
-> +		xfs_scrub_da_set_corrupt(ds, level);
-> +	ds->hashes[level] = hash;
+> +	error = xfs_scrub_get_inode(sc, ip);
+> +	if (error)
+> +		return error;
 > +
-> +	if (level == 0)
-> +		return 0;
-> +
-> +	/* Is this hash no larger than the parent hash? */
-> +	blks = ds->state->path.blk;
-> +	btree = xfs_scrub_da_btree_entry(ds, level - 1, blks[level - 1].index);
-
-entry = ?
-
-> +	parent_hash = be32_to_cpu(btree->hashval);
-> +	if (parent_hash < hash)
-> +		xfs_scrub_da_set_corrupt(ds, level);
+> +	/* Got the inode, lock it and we're ready to go. */
+> +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> +	xfs_ilock(sc->ip, sc->ilock_flags);
+> +	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
+> +	if (error)
+> +		goto out_unlock;
+> +	sc->ilock_flags |= XFS_ILOCK_EXCL;
+> +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
 > +
 > +	return 0;
-> +}
-> +
-> +/*
-> + * Check a da btree pointer.  Returns true if it's ok to use this
-> + * pointer.
-> + */
-> +STATIC bool
-> +xfs_scrub_da_btree_ptr_ok(
-> +	struct xfs_scrub_da_btree	*ds,
-> +	int				level,
-> +	xfs_dablk_t			blkno)
-> +{
-> +	if (blkno < ds->lowest || (ds->highest != 0 && blkno >= ds->highest)) {
-> +		xfs_scrub_da_set_corrupt(ds, level);
-> +		return false;
-> +	}
-
-Not sure what lowest and highest are here - the structure definition
-is not commented. I /think/ it's the offset within the dierctory
-address space for the leaf pointers (i.e. XFS_DIR2_LEAF_OFFSET ->
-XFS_DIR2_FREE_OFFSET for directories), but I'm mostly guessing from
-context here...
-
-> +
-> +	return true;
-> +}
-> +
-> +/*
-> + * The da btree scrubber can handle leaf1 blocks as a degenerate
-> + * form of da btree.  Since the regular da code doesn't handle
-
-degenerate form of LEAFN blocks?
-
-> +
-> +/* Check a block's sibling. */
-> +STATIC int
-> +xfs_scrub_da_btree_block_check_sibling(
-> +	struct xfs_scrub_da_btree	*ds,
-> +	int				level,
-> +	int				direction,
-> +	xfs_dablk_t			sibling)
-> +{
-> +	int				retval;
-> +	int				error;
-> +
-> +	if (!sibling)
-> +		return 0;
-> +
-> +	/* Move the alternate cursor back one block. */
-
-Move the alternate cursor one block in the direction specified?
-
-> +	memcpy(&ds->state->altpath, &ds->state->path,
-> +			sizeof(ds->state->altpath));
-> +	error = xfs_da3_path_shift(ds->state, &ds->state->altpath,
-> +			direction, false, &retval);
-> +	if (!xfs_scrub_da_op_ok(ds, level, &error))
-> +		return error;
-> +	if (retval) {
-> +		xfs_scrub_da_set_corrupt(ds, level);
-> +		return error;
-> +	}
-> +
-> +	if (ds->state->altpath.blk[level].blkno != sibling)
-> +		xfs_scrub_da_set_corrupt(ds, level);
-> +	xfs_trans_brelse(ds->dargs.trans, ds->state->altpath.blk[level].bp);
+> +out_unlock:
+> +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> +	if (sc->ip != ip)
+> +		iput(VFS_I(sc->ip));
+> +	sc->ip = NULL;
 > +	return error;
 > +}
+
+I've seen this get/lock/alloc code many times now - seems like scope
+for factoring?
+
+> +/* Scrub a directory entry. */
 > +
-> +/* Check a block's sibling pointers. */
+> +struct xfs_scrub_dir_ctx {
+> +	struct dir_context		dc;
+> +	struct xfs_scrub_context	*sc;
+> +};
+
+These two character variable names make the code really hard to
+understand, especially when....
+
+> +
+> +/* Check that an inode's mode matches a given DT_ type. */
 > +STATIC int
-> +xfs_scrub_da_btree_block_check_siblings(
-> +	struct xfs_scrub_da_btree	*ds,
-> +	int				level,
-> +	struct xfs_da_blkinfo		*hdr)
-> +{
-> +	xfs_dablk_t			forw;
-> +	xfs_dablk_t			back;
-> +	int				error = 0;
-> +
-> +	forw = be32_to_cpu(hdr->forw);
-> +	back = be32_to_cpu(hdr->back);
-> +
-> +	/* Top level blocks should not have sibling pointers. */
-> +	if (level == 0) {
-> +		if (forw != 0 || back != 0)
-> +			xfs_scrub_da_set_corrupt(ds, level);
-> +		return error;
+> +xfs_scrub_dir_check_ftype(
+> +	struct xfs_scrub_dir_ctx	*sdc,
 
-Error is always zero here?
+... we now have sc, dc, and sdc all intertwined. Especially as some
+of these functions seem to invert the calling convention of the rest
+of the scrub code in that the scrub context is the primary object
+that is passed around and everything is attached to the sc....
 
-> +	}
-> +
-> +	/*
-> +	 * Check back (left) and forw (right) pointers.  These functions
-> +	 * absorb error codes for us.
-> +	 */
-> +	error = xfs_scrub_da_btree_block_check_sibling(ds, level, 0, back);
-> +	if (error)
-> +		goto out;
-> +	error = xfs_scrub_da_btree_block_check_sibling(ds, level, 1, forw);
-> +
-> +out:
-> +	memset(&ds->state->altpath, 0, sizeof(ds->state->altpath));
-> +	return error;
-> +}
-> +
-> +/* Load a dir/attribute block from a btree. */
-> +STATIC int
-> +xfs_scrub_da_btree_block(
-> +	struct xfs_scrub_da_btree	*ds,
-> +	int				level,
-> +	xfs_dablk_t			blkno)
-> +{
-> +	struct xfs_da_state_blk		*blk;
-> +	struct xfs_da_intnode		*node;
-> +	struct xfs_da_node_entry	*btree;
-> +	struct xfs_da3_blkinfo		*hdr3;
-> +	struct xfs_da_args		*dargs = &ds->dargs;
-> +	struct xfs_inode		*ip = ds->dargs.dp;
-> +	xfs_ino_t			owner;
-> +	int				*pmaxrecs;
-> +	struct xfs_da3_icnode_hdr	nodehdr;
-> +	int				error;
-> +
-> +	blk = &ds->state->path.blk[level];
-> +	ds->state->path.active = level + 1;
-> +
-> +	/* Release old block. */
-> +	if (blk->bp) {
-> +		xfs_trans_brelse(dargs->trans, blk->bp);
-> +		blk->bp = NULL;
-> +	}
-> +
-> +	/* Check the pointer. */
-> +	blk->blkno = blkno;
-> +	if (!xfs_scrub_da_btree_ptr_ok(ds, level, blkno))
-> +		goto out_nobuf;
-> +
-> +	/* Read the buffer. */
-> +	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
-> +			&blk->bp, dargs->whichfork,
-> +			&xfs_scrub_da_btree_buf_ops);
+Brain hurts trying to keep all this straight here...
 
-Hmmm - this verifier only special cases LEAF1 blocks, no comments as
-to why it treats everything else as a with the node verifier. DOn't
-we have to special case the attr leaf blocks here as well?
+/me keeps blundering around until it becomes apparent that
+dir_context has nothing to do with scrub, but is a VFS filldir
+callback structure triggered through readdir.
 
-> +	if (!xfs_scrub_da_op_ok(ds, level, &error))
-> +		goto out_nobuf;
-> +
-> +	/* It's ok for a directory not to have a da btree in it. */
-> +	if (ds->dargs.whichfork == XFS_DATA_FORK && level == 0 &&
-> +			blk->bp == NULL)
-> +		goto out_nobuf;
+Darrick, can you add some comments explaining how the dirent
+scrubbing works?  It'd make it so much easier to understand if I
+didn't have to reverse engineer the intent and design from the
+patch. I'm going to skip this one for now...
 
-What case is that? single block form? Need a magic number check
-here if that's the case?
-
-> +/* Visit all nodes and leaves of a da btree. */
-> +int
-> +xfs_scrub_da_btree(
-> +	struct xfs_scrub_context	*sc,
-> +	int				whichfork,
-> +	xfs_scrub_da_btree_rec_fn	scrub_fn)
-> +{
-> +	struct xfs_scrub_da_btree	ds;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_da_state_blk		*blks;
-> +	struct xfs_da_node_entry	*key;
-> +	void				*rec;
-> +	xfs_dablk_t			blkno;
-> +	bool				is_attr;
-> +	int				level;
-> +	int				error;
-> +
-> +	memset(&ds, 0, sizeof(ds));
-
-I almost missed this - had to go looking later for why the
-ds.maxrecs[] started off at zero. Can we change this to be
-initialised to zero at declaration like so:
-
-	struct xfs_scrub_da_btree	ds = {};
-
-> +	/* Skip short format data structures; no btree to scan. */
-> +	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-> +	    XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE)
-> +		return 0;
-> +
-> +	/* Set up initial da state. */
-> +	is_attr = whichfork == XFS_ATTR_FORK;
-> +	ds.dargs.geo = is_attr ? mp->m_attr_geo : mp->m_dir_geo;
-> +	ds.dargs.dp = sc->ip;
-> +	ds.dargs.whichfork = whichfork;
-> +	ds.dargs.trans = sc->tp;
-> +	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
-> +	ds.state = xfs_da_state_alloc();
-> +	ds.state->args = &ds.dargs;
-> +	ds.state->mp = mp;
-> +	ds.sc = sc;
-> +	blkno = ds.lowest = is_attr ? 0 : ds.dargs.geo->leafblk;
-> +	ds.highest = is_attr ? 0 : ds.dargs.geo->freeblk;
-> +	level = 0;
-
-bit hard to read with all the ?: constructs. Can we make this:
-
-	if (whichfork == XFS_ATTR_FORK) {
-		ds.dargs.geo = ...
-		ds.lowest = ..
-		ds.highest = ...
-	} else {
-		....
-	}
-	......
-
-	blkno = ds.lowest;
-
-> +
-> +	/* Find the root of the da tree, if present. */
-> +	blks = ds.state->path.blk;
-> +	error = xfs_scrub_da_btree_block(&ds, level, blkno);
-> +	if (error)
-> +		goto out_state;
-> +	if (blks[level].bp == NULL)
-> +		goto out_state;
-
-So for a single block directory, we'll jump out here because it's
-at block zero and there's nothing at mp->m_dir_geo.leafblk.
-That means the loop will only ever handle LEAF1/LEAFN format
-directory structures. Correct? (comment?)
-
-> +	blks[level].index = 0;
-> +	while (level >= 0 && level < XFS_DA_NODE_MAXDEPTH) {
-> +		/* Handle leaf block. */
-> +		if (blks[level].magic != XFS_DA_NODE_MAGIC) {
-> +			/* End of leaf, pop back towards the root. */
-> +			if (blks[level].index >= ds.maxrecs[level]) {
-> +				if (level > 0)
-> +					blks[level - 1].index++;
-> +				ds.tree_level++;
-> +				level--;
-> +				continue;
-> +			}
-> +
-> +			/* Dispatch record scrubbing. */
-> +			rec = xfs_scrub_da_btree_entry(&ds, level,
-> +					blks[level].index);
-> +			error = scrub_fn(&ds, level, rec);
-> +			if (error < 0 ||
-> +			    error == XFS_BTREE_QUERY_RANGE_ABORT)
-
-When would we get a XFS_BTREE_QUERY_RANGE_ABORT error?
-
-Cheers,
+CHeers,
 
 Dave.
 -- 
