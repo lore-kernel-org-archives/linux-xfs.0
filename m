@@ -1,68 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:45532 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdJFVJ7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 17:09:59 -0400
-Received: by mail-qk0-f180.google.com with SMTP id f199so5981937qke.2
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2017 14:09:59 -0700 (PDT)
-Date: Fri, 6 Oct 2017 17:09:57 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: [ANNOUNCE] fsperf: a simple fs/block performance testing framework
-Message-ID: <20171006210956.vf326sydjiphsefo@destiny>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from userp1040.oracle.com ([156.151.31.81]:31646 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdJFWIc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:32 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v96M8UQm009077
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:31 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8UsD014797
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:30 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8UU0014775
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:30 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 03/17] Add xfs_attr_set_defered and xfs_attr_remove_defered
+Date: Fri,  6 Oct 2017 15:05:34 -0700
+Message-Id: <1507327548-3221-4-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Allison Henderson <allison.henderson@oracle.com>
 
-Hello,
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+:100644 100644 5325ec2... 5c9b604... M	fs/xfs/libxfs/xfs_attr.c
+:100644 100644 06c4081... 67b0fbf... M	fs/xfs/xfs_attr.h
+ fs/xfs/libxfs/xfs_attr.c | 58 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr.h        |  5 +++++
+ 2 files changed, 63 insertions(+)
 
-One thing that comes up a lot every LSF is the fact that we have no general way
-that we do performance testing.  Every fs developer has a set of scripts or
-things that they run with varying degrees of consistency, but nothing central
-that we all use.  I for one am getting tired of finding regressions when we are
-deploying new kernels internally, so I wired this thing up to try and address
-this need.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 5325ec2..5c9b604 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -458,6 +458,37 @@ xfs_attr_set(
+ 	return error;
+ }
+ 
++int
++xfs_attr_set_defered(
++	struct xfs_inode	*dp,
++	struct xfs_defer_ops    *dfops,
++	const unsigned char	*name,
++	int			namelen,
++	unsigned char		*value,
++	int			valuelen,
++	int			flags)
++{
++
++	struct xfs_attr_item     *new;
++
++	ASSERT(name != NULL);
++	ASSERT(value != NULL);
++
++	new = kmem_alloc(sizeof(struct xfs_attr_item), KM_SLEEP);
++	memset(new, 0, sizeof(struct xfs_attr_item));
++	new->xattri_ino = dp->i_ino;
++	new->xattri_op_flags = ATTR_OP_FLAGS_SET;
++	new->xattri_name_len = namelen;
++	new->xattri_nameval_len = namelen + valuelen;
++	new->xattri_flags = flags;
++	memcpy(new->xattri_nameval, name, namelen);
++	memcpy(&new->xattri_nameval[namelen], value, valuelen);
++
++	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
++}
++
+ /*
+  * Generic handler routine to remove a name from an attribute list.
+  * Transitions attribute list from Btree to shortform as necessary.
+@@ -531,6 +562,33 @@ xfs_attr_remove(
+ 	return error;
+ }
+ 
++int
++xfs_attr_remove_defered(
++	struct xfs_inode        *dp,
++	struct xfs_defer_ops    *dfops,
++	const unsigned char     *name,
++	int			namelen,
++	int                     flags)
++{
++
++	struct xfs_attr_item     *new;
++
++	ASSERT(name != NULL);
++
++	new = kmem_alloc(sizeof(struct xfs_attr_item), KM_SLEEP);
++	memset(new, 0, sizeof(struct xfs_attr_item));
++	new->xattri_ino = dp->i_ino;
++	new->xattri_op_flags = ATTR_OP_FLAGS_REMOVE;
++	new->xattri_name_len = namelen;
++	new->xattri_nameval_len = namelen;
++	new->xattri_flags = flags;
++	memcpy(new->xattri_nameval, name, namelen);
++
++	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
++}
++
+ /*========================================================================
+  * External routines when attribute list is inside the inode
+  *========================================================================*/
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index 06c4081..67b0fbf 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -176,5 +176,10 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+ 		       const unsigned char *name, int flags);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
++int xfs_attr_set_defered(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
++			 const unsigned char *name, int name_len,
++			 unsigned char *value, int valuelen, int flags);
++int xfs_attr_remove_defered(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
++			    const unsigned char *name, int namelen, int flags);
+ 
+ #endif	/* __XFS_ATTR_H__ */
+-- 
+2.7.4
 
-We all hate convoluted setups, the more brain power we have to put in to setting
-something up the less likely we are to use it, so I took the xfstests approach
-of making it relatively simple to get running and relatively easy to add new
-tests.  For right now the only thing this framework does is run fio scripts.  I
-chose fio because it already gathers loads of performance data about it's runs.
-We have everything we need there, latency, bandwidth, cpu time, and all broken
-down by reads, writes, and trims.  I figure most of us are familiar enough with
-fio and how it works to make it relatively easy to add new tests to the
-framework.
-
-I've posted my code up on github, you can get it here
-
-https://github.com/josefbacik/fsperf
-
-All (well most) of the results from fio are stored in a local sqlite database.
-Right now the comparison stuff is very crude, it simply checks against the
-previous run and it only checks a few of the keys by default.  You can check
-latency if you want, but while writing this stuff up it seemed that latency was
-too variable from run to run to be useful in a "did my thing regress or improve"
-sort of way.
-
-The configuration is brain dead simple, the README has examples.  All you need
-to do is make your local.cfg, run ./setup and then run ./fsperf and you are good
-to go.
-
-The plan is to add lots of workloads as we discover regressions and such.  We
-don't want anything that takes too long to run otherwise people won't run this,
-so the existing tests don't take much longer than a few minutes each.  I will be
-adding some more comparison options so you can compare against averages of all
-previous runs and such.
-
-Another future goal is to parse the sqlite database and generate graphs of all
-runs for the tests so we can visualize changes over time.  This is where the
-latency measurements will be more useful so we can spot patterns rather than
-worrying about test to test variances.
-
-Please let me know if you have any feedback.  I'll take github pull requests for
-people who like that workflow, but email'ed patches work as well.  Thanks,
-
-Josef
