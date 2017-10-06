@@ -1,95 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30628 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752358AbdJFWIv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:51 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 17/17] Add the parent pointer support to the superblock version 5.
-Date: Fri,  6 Oct 2017 15:05:48 -0700
-Message-Id: <1507327548-3221-18-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:35185 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752037AbdJFM3C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 08:29:02 -0400
+Received: by mail-qt0-f195.google.com with SMTP id p15so4630470qtp.2
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2017 05:29:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20171001224904.GG3666@dastard>
+References: <CAMp4zn_YQy+Naggwfu5-aKigyx6rJJ27F7fdL=tRponn8Kug=A@mail.gmail.com>
+ <20171001224904.GG3666@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 6 Oct 2017 15:29:01 +0300
+Message-ID: <CAOQ4uxgqjhnn8FOfkZAruigQcewNFewhGZ_jnj24RG4mNu5MZQ@mail.gmail.com>
+Subject: Re: XFS AIL lockup
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Sargun Dhillon <sargun@sargun.me>, linux-xfs <linux-xfs@vger.kernel.org>
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased and added parent pointer attribute to
-           compatible attributes mask]
+On Mon, Oct 2, 2017 at 1:49 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Oct 01, 2017 at 03:10:03PM -0700, Sargun Dhillon wrote:
+>> I'm running into an issue where xfs aild is locking up. This is on
+>> kernel version 4.9.34. It's an SMP system with 32 cores, and ~250G of
+>> RAM (AWS R4.8XL) and an XFS filesystem with 1 SSD with project ID
+>> quotas in use. It's the only XFS filesystem on the host. The root
+>> partition is running EXT4, and isn't involved in this.
+>>
+>> There are containers that use overlayfs atop this filesystem. It looks
+>> like one of the processes (10090, or 11504) has gotten into a state
+>> where it's holding a lock on a xfs_buf, and they're trying to lock
+>> xfs_buf's which are currently on the xfs ail list.
+>>
+...
+> Ok, this is a RENAME_WHITEOUT case, and that points to the issue.
+> The whiteout inode is allocated as a temporary inode, which means
+> it remains on the unlinked list so that if we crash part way through
+> the update log recovery will free it again.
+>
+> Once all the dirent updates and other rename work is done, we remove
+> the whiteout inode from the unlinked list, and that requires
+> grabbing the AGI lock. That's what we are stuck on here.
+>
+...
+>
+> Because this is the deadlock - we're trying to lock the AGF with an
+> AGI already locked. That means the above RENAME_WHITEOUT has either
+> allocated or freed extents in manipulating the dirents during
+> rename, and so holds an AGF locked. It's a classic ABBA deadlock.
+>
+> That's the problem, not sure what the solution is yet - there's no
+> obvious or simple way around this RENAME_WHITEOUT behaviour (which
+> only affects overlay, fwiw). I'll have a think about it.
+>
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-v2: remove unrelated type clean up in xfs_format.h
+Dave,
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 ccac625... 0e91ecf... M	fs/xfs/libxfs/xfs_format.h
-:100644 100644 b9092410.. f5c2f70... M	fs/xfs/libxfs/xfs_fs.h
-:100644 100644 8f22fc5... 9a0ce52... M	fs/xfs/xfs_fsops.c
- fs/xfs/libxfs/xfs_format.h | 7 +++++--
- fs/xfs/libxfs/xfs_fs.h     | 1 +
- fs/xfs/xfs_fsops.c         | 4 +++-
- 3 files changed, 9 insertions(+), 3 deletions(-)
+Could you explain why the RENAME_WHITEOUT case is different locking
+order wise from linking an O_TEMPFILE?
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index ccac625..0e91ecf 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -464,10 +464,12 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-+#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_PARENT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-@@ -563,7 +565,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 
- static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
- {
--	return false; /* We'll enable this at the end of the set */
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b9092410..f5c2f70 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8f22fc5..9a0ce52 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -111,7 +111,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
- 			(xfs_sb_version_hasreflink(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-+				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
-+			(xfs_sb_version_hasparent(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
--- 
-2.7.4
+Is it because xfs_iunlink_remove() is called before xfs_dir_createname()
+in xfs_link()?
 
+Also, in xfs_rename(), before removing whiteout inode from unlinked list,
+the comment says: "If we fail here after bumping the link
+         * count, we're shutting down the filesystem so we'll never see the
+         * intermediate state on disk.",
+but I am not actually seeing where that shutdown takes place, or maybe
+I don't know what to look for.
+
+Thanks,
+Amir.
