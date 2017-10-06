@@ -1,180 +1,303 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31736 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbdJFWIs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:48 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 14/17] xfs: remove parent pointers in unlink
-Date: Fri,  6 Oct 2017 15:05:45 -0700
-Message-Id: <1507327548-3221-15-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:31679 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751083AbdJFCv1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2017 22:51:27 -0400
+Date: Fri, 6 Oct 2017 13:51:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 17/25] xfs: scrub inode block mappings
+Message-ID: <20171006025123.GQ3666@dastard>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706335646.19351.8363960454156993724.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150706335646.19351.8363960454156993724.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Oct 03, 2017 at 01:42:36PM -0700, Darrick J. Wong wrote:
+> +/* Set us up with an inode's bmap. */
+> +STATIC int
+> +__xfs_scrub_setup_inode_bmap(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip,
+> +	bool				flush_data)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	int				error;
+> +
+> +	error = xfs_scrub_get_inode(sc, ip);
+> +	if (error)
+> +		return error;
+> +
+> +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> +	xfs_ilock(sc->ip, sc->ilock_flags);
+> +
+> +	/*
+> +	 * We don't want any ephemeral data fork updates sitting around
+> +	 * while we inspect block mappings, so wait for directio to finish
+> +	 * and flush dirty data if we have delalloc reservations.
+> +	 */
+> +	if (S_ISREG(VFS_I(sc->ip)->i_mode) && flush_data) {
+> +		inode_dio_wait(VFS_I(sc->ip));
+> +		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
+> +		if (error)
+> +			goto out_unlock;
+> +		error = invalidate_inode_pages2(VFS_I(sc->ip)->i_mapping);
+> +		if (error)
+> +			goto out_unlock;
+> +	}
 
-[bfoster: rebase, use VFS inode generation]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
-	   implemented xfs_attr_remove_parent]
+The same flush and invalidate is done in xfs_fs_map_blocks and
+xfs_ioctl_setattr_dax_invalidate. we used to have helper functions
+to do this, but we got rid of them because we removed all the
+cases where such behaviour was necessary. Now we're adding them
+back, perhaps we should have a helper for this again?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 b489efb... 75f22c0... M	fs/xfs/libxfs/xfs_attr.c
-:100644 100644 0707336... ca695c4... M	fs/xfs/libxfs/xfs_parent.c
-:100644 100644 07abcff... baaca90... M	fs/xfs/xfs_attr.h
-:100644 100644 46a4d3b... 7718481... M	fs/xfs/xfs_inode.c
-:100644 100644 010a13a... a047f0f... M	fs/xfs/xfs_qm.c
-:100644 100644 2975a82... 9976369... M	fs/xfs/xfs_qm.h
- fs/xfs/libxfs/xfs_attr.c   | 15 +++++++++++++++
- fs/xfs/libxfs/xfs_parent.c | 22 ++++++++++++++++++++++
- fs/xfs/xfs_attr.h          |  7 +++++++
- fs/xfs/xfs_inode.c         | 10 +++++++++-
- fs/xfs/xfs_qm.c            |  2 +-
- fs/xfs/xfs_qm.h            |  1 +
- 6 files changed, 55 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index b489efb..75f22c0 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -42,6 +42,7 @@
- #include "xfs_quota.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
-+#include "xfs_qm.h"
- 
- /*
-  * xfs_attr.c
-@@ -571,6 +572,20 @@ xfs_attr_set_defered(
- 	return 0;
- }
- 
-+int
-+xfs_attr_remove_parent(
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		*dp,
-+	struct xfs_parent_name_rec	*rec,
-+	int				reclen,
-+	struct xfs_defer_ops		*dfops,
-+	xfs_fsblock_t			*firstblock)
-+{
-+	int flags = ATTR_PARENT;
-+
-+	return xfs_attr_remove_defered(dp, dfops, (char *) rec, reclen, flags);
-+}
-+
- /*
-  * Generic handler routine to remove a name from an attribute list.
-  * Transitions attribute list from Btree to shortform as necessary.
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index 0707336..ca695c4 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -139,3 +139,25 @@ xfs_parent_add(
- 
- 	return xfs_parent_add_nrec(tp, child, &nrec, dfops, firstblock);
- }
-+
-+/*
-+ * Remove a parent record from a child inode.
-+ */
-+int
-+xfs_parent_remove(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*parent,
-+	struct xfs_inode	*child,
-+	xfs_dir2_dataptr_t	diroffset,
-+	struct xfs_defer_ops	*dfops,
-+	xfs_fsblock_t		*firstblock)
-+{
-+	struct xfs_parent_name_rec rec;
-+
-+	rec.p_ino = cpu_to_be64(parent->i_ino);
-+	rec.p_gen = cpu_to_be32(VFS_I(parent)->i_generation);
-+	rec.p_diroffset = cpu_to_be32(diroffset);
-+
-+	return xfs_attr_remove_parent(tp, child, &rec, sizeof(rec),
-+				      dfops, firstblock);
-+}
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 07abcff..baaca90 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -208,4 +208,11 @@ int xfs_attr_set_parent(struct xfs_trans *tp, struct xfs_inode *ip,
- 			const char *value, int valuelen,
- 			struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
- 
-+int xfs_parent_remove(struct xfs_trans *tp, struct xfs_inode *parent,
-+		      struct xfs_inode *child, xfs_dir2_dataptr_t diroffset,
-+		      struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
-+int xfs_attr_remove_parent(struct xfs_trans *tp, struct xfs_inode *ip,
-+			struct xfs_parent_name_rec *rec, int reclen,
-+			struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
-+
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 46a4d3b..7718481 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2612,6 +2612,7 @@ xfs_remove(
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t           first_block;
- 	uint			resblks;
-+	uint32_t		dir_offset;
- 
- 	trace_xfs_remove(dp, name);
- 
-@@ -2692,12 +2693,19 @@ xfs_remove(
- 
- 	xfs_defer_init(&dfops, &first_block);
- 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
--				   &dfops, resblks, NULL);
-+				   &dfops, resblks, &dir_offset);
- 	if (error) {
- 		ASSERT(error != -ENOENT);
- 		goto out_bmap_cancel;
- 	}
- 
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_remove(tp, dp, ip, dir_offset, &dfops,
-+					  &first_block);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
- 	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * remove transaction goes to disk before returning to
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 010a13a..a047f0f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -307,7 +307,7 @@ xfs_qm_dqattach_one(
- 	return 0;
- }
- 
--static bool
-+bool
- xfs_qm_need_dqattach(
- 	struct xfs_inode	*ip)
- {
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 2975a82..9976369 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -176,6 +176,7 @@ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
- 					struct qc_dqblk *);
- extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
- extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
-+extern bool		xfs_qm_need_dqattach(struct xfs_inode *ip);
- 
- static inline struct xfs_def_quota *
- xfs_get_defquota(struct xfs_dquot *dqp, struct xfs_quotainfo *qi)
+> +	/* Got the inode, lock it and we're ready to go. */
+> +	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
+> +	if (error)
+> +		goto out_unlock;
+> +	sc->ilock_flags |= XFS_ILOCK_EXCL;
+> +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
+> +
+> +	return 0;
+> +out_unlock:
+> +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> +	if (sc->ip != ip)
+> +		iput(VFS_I(sc->ip));
+> +	sc->ip = NULL;
+
+Slightly tricky - how many places do we end up having to do this?
+If its more than one, perhaps we need a xfs_scrub_irele(sc, ip)
+helper?
+
+> +/*
+> + * Inode fork block mapping (BMBT) scrubber.
+> + * More complex than the others because we have to scrub
+> + * all the extents regardless of whether or not the fork
+> + * is in btree format.
+> + */
+> +
+> +struct xfs_scrub_bmap_info {
+> +	struct xfs_scrub_context	*sc;
+> +	xfs_daddr_t			eofs;
+> +	xfs_fileoff_t			lastoff;
+> +	bool				is_rt;
+> +	bool				is_shared;
+> +	int				whichfork;
+> +};
+> +
+> +/* Scrub a single extent record. */
+> +STATIC int
+> +xfs_scrub_bmap_extent(
+> +	struct xfs_inode		*ip,
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_scrub_bmap_info	*info,
+> +	struct xfs_bmbt_irec		*irec)
+> +{
+> +	struct xfs_scrub_ag		sa = { 0 };
+> +	struct xfs_mount		*mp = info->sc->mp;
+> +	struct xfs_buf			*bp = NULL;
+> +	xfs_daddr_t			daddr;
+> +	xfs_daddr_t			dlen;
+> +	xfs_fsblock_t			bno;
+> +	xfs_agnumber_t			agno;
+> +	int				error = 0;
+> +
+> +	if (cur)
+> +		xfs_btree_get_block(cur, 0, &bp);
+> +
+> +	if (irec->br_startoff < info->lastoff ||
+> +	    irec->br_startblock == HOLESTARTBLOCK ||
+> +	    isnullstartblock(irec->br_startblock))
+> +		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+> +				irec->br_startoff);
+
+What are we checking here? that it's ordered correctly and not a
+hole/delalloc record? If it is bad, shouldn't we just jump out here
+because the following checks are likely to throw silly errors on
+hole/delalloc mappings?
+
+> +	/* Actual mapping, so check the block ranges. */
+> +	if (info->is_rt) {
+> +		daddr = XFS_FSB_TO_BB(mp, irec->br_startblock);
+> +		agno = NULLAGNUMBER;
+> +		bno = irec->br_startblock;
+> +	} else {
+> +		daddr = XFS_FSB_TO_DADDR(mp, irec->br_startblock);
+> +		agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
+> +		if (agno >= mp->m_sb.sb_agcount) {
+> +			xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+> +				irec->br_startoff);
+> +			goto out;
+> +		}
+> +		bno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
+> +		if (bno >= mp->m_sb.sb_agblocks)
+> +			xfs_scrub_fblock_set_corrupt(info->sc,
+> +						     info->whichfork,
+> +						     irec->br_startoff);
+
+more verify_agbno()/verify_fsbno stuff.
+
+> +	}
+> +	dlen = XFS_FSB_TO_BB(mp, irec->br_blockcount);
+> +	if (irec->br_blockcount <= 0 ||
+> +	    irec->br_blockcount > MAXEXTLEN ||
+
+irec->br_blockcount is unsigned (uint64_t).
+
+Also needs to be checked against AG size.
+
+> +	    daddr >= info->eofs ||
+> +	    daddr + dlen > info->eofs)
+> +		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+> +				irec->br_startoff);
+> +
+> +	if (irec->br_state == XFS_EXT_UNWRITTEN &&
+> +	    !xfs_sb_version_hasextflgbit(&mp->m_sb))
+
+Superblock scrubber should reject any filesystem without the
+extflgbit as corrupt - it's always set by mkfs - so I'm not sure we
+need to check this here.
+
+> +/* Scrub an inode fork's block mappings. */
+> +STATIC int
+> +xfs_scrub_bmap(
+> +	struct xfs_scrub_context	*sc,
+> +	int				whichfork)
+> +{
+> +	struct xfs_bmbt_irec		irec;
+> +	struct xfs_scrub_bmap_info	info = {0};
+> +	struct xfs_owner_info		oinfo;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_inode		*ip = sc->ip;
+> +	struct xfs_ifork		*ifp;
+> +	struct xfs_btree_cur		*cur;
+> +	xfs_fileoff_t			endoff;
+> +	xfs_extnum_t			idx;
+> +	bool				found;
+> +	int				error = 0;
+> +
+> +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> +
+> +	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
+> +	info.eofs = XFS_FSB_TO_BB(mp, info.is_rt ? mp->m_sb.sb_rblocks :
+> +					      mp->m_sb.sb_dblocks);
+> +	info.whichfork = whichfork;
+> +	info.is_shared = whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip);
+> +	info.sc = sc;
+> +
+> +	switch (whichfork) {
+> +	case XFS_COW_FORK:
+> +		/* Non-existent CoW forks are ignorable. */
+> +		if (!ifp)
+> +			goto out_unlock;
+> +		/* No CoW forks on non-reflink inodes/filesystems. */
+> +		if (!xfs_is_reflink_inode(ip)) {
+> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
+> +			goto out_unlock;
+> +		}
+> +		break;
+> +	case XFS_ATTR_FORK:
+> +		if (!ifp)
+> +			goto out_unlock;
+> +		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
+> +		    !xfs_sb_version_hasattr2(&mp->m_sb))
+> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
+> +		break;
+> +	}
+> +
+> +	/* Check the fork values */
+> +	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+> +	case XFS_DINODE_FMT_UUID:
+> +	case XFS_DINODE_FMT_DEV:
+> +	case XFS_DINODE_FMT_LOCAL:
+> +		/* No mappings to check. */
+> +		goto out_unlock;
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +			xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
+> +			goto out_unlock;
+> +		}
+> +		break;
+> +	case XFS_DINODE_FMT_BTREE:
+> +		ASSERT(whichfork != XFS_COW_FORK);
+
+Corruption check, jump to out?
+
+> +
+> +		/* Scan the btree records. */
+> +		cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
+> +		xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
+> +		error = xfs_scrub_btree(sc, cur, xfs_scrub_bmapbt_helper,
+> +				&oinfo, &info);
+> +		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
+> +						  XFS_BTREE_NOERROR);
+
+FYI, I missed that the on-disk bmbt was scanned here the first time
+I went through this code - i had to go back and work out why the
+code only appeared to scrub the incore extent list. Can you wrap
+this whole chunk of code into a helper named xfs_scrub_bmbt()
+so it stands out that this is where the on disk btree is scrubbed?
+
+
+> +		if (error == -EDEADLOCK)
+> +			return error;
+
+Ok, why don't we go to out_unlock here?
+
+> +		else if (error)
+> +			goto out_unlock;
+
+But do for all other errors....
+
+> +		break;
+> +	default:
+> +		xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
+> +		goto out_unlock;
+> +	}
+> +
+> +	/* Extent data is in memory, so scrub that. */
+> +
+> +	/* Find the offset of the last extent in the mapping. */
+> +	error = xfs_bmap_last_offset(ip, &endoff, whichfork);
+> +	if (!xfs_scrub_fblock_op_ok(sc, whichfork, 0, &error))
+> +		goto out_unlock;
+> +
+> +	/* Scrub extent records. */
+> +	info.lastoff = 0;
+> +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	for (found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &irec);
+> +	     found != 0;
+> +	     found = xfs_iext_get_extent(ifp, ++idx, &irec)) {
+> +		if (xfs_scrub_should_terminate(sc, &error))
+> +			break;
+> +		if (isnullstartblock(irec.br_startblock))
+> +			continue;
+> +		if (irec.br_startoff >= endoff) {
+> +			xfs_scrub_fblock_set_corrupt(sc, whichfork,
+> +					irec.br_startoff);
+> +			goto out_unlock;
+> +		}
+> +		error = xfs_scrub_bmap_extent(ip, NULL, &info, &irec);
+> +		if (error == -EDEADLOCK)
+> +			return error;
+> +	}
+> +
+> +out_unlock:
+> +	return error;
+
+Hmmm - out_unlock doesn't unlock anything?
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
