@@ -1,450 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30485 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:30574 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751418AbdJFWI2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:28 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v96M8Q3K024378
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:27 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8QZa012990
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:26 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v96M8QkO028146
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:26 GMT
+        with ESMTP id S1752122AbdJFWIl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:41 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 01/17] Add helper functions xfs_attr_set_args and xfs_attr_remove_args
-Date: Fri,  6 Oct 2017 15:05:32 -0700
-Message-Id: <1507327548-3221-2-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 09/17] xfs: define parent pointer xattr format
+Date: Fri,  6 Oct 2017 15:05:40 -0700
+Message-Id: <1507327548-3221-10-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-These sub-routines set or remove the attributes specified in
-@args. We will use this later for setting parent pointers as a
-deferred attribute operation.
+From: Dave Chinner <dchinner@redhat.com>
+
+We need to define the parent pointer attribute format before we
+start adding support for it into all the code that needs to use it.
+The EA format we will use encodes the following information:
+
+	name={parent inode #, parent inode generation, dirent offset}
+	value={dirent filename}
+
+The inode/gen gives all the information we need to reliably identify
+the parent without requiring child->parent lock ordering, and allows
+userspace to do pathname component level reconstruction without the
+kernel ever needing to verify the parent itself as part of ioctl
+calls.
+
+By using the dirent offset in the EA name, we have a method of
+knowing the exact parent pointer EA we need to modify/remove in
+rename/unlink without an unbound EA name search.
+
+By keeping the dirent name in the value, we have enough information
+to be able to validate and reconstruct damaged directory trees.
+While the diroffset of a filename alone is not unique enough to
+identify the child, the {diroffset,filename,child_inode} tuple is
+sufficient. That is, if the diroffset gets reused and points to a
+different filename, we can detect that from the contents of EA. If a
+link of the same name is created, then we can check whether it
+points at the same inode as the parent EA we current have.
+
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+v2: changed p_ino to xfs_ino_t and p_namelen to uint8_t
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
-:100644 100644 6249c92... b00ec1f... M	fs/xfs/libxfs/xfs_attr.c
-:100644 100644 5d5a5e2... 8542606... M	fs/xfs/xfs_attr.h
- fs/xfs/libxfs/xfs_attr.c | 322 +++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_attr.h        |   2 +
- 2 files changed, 189 insertions(+), 135 deletions(-)
+:100644 100644 d4d9bef... a887f21... M	fs/xfs/libxfs/xfs_format.h
+ fs/xfs/libxfs/xfs_format.h | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 6249c92..b00ec1f 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -203,6 +203,185 @@ xfs_attr_calc_size(
- 	return nblks;
- }
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index d4d9bef..a887f21 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -18,6 +18,8 @@
+ #ifndef __XFS_FORMAT_H__
+ #define __XFS_FORMAT_H__
+ 
++#include "xfs_da_format.h"
++
+ /*
+  * XFS On Disk Format Definitions
+  *
+@@ -1721,4 +1723,29 @@ struct xfs_acl {
+ #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+ #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
  
 +/*
-+ * set the attribute specified in @args. In the case of the parent attribute
-+ * being set, we do not want to roll the transaction on shortform-to-leaf
-+ * conversion, as the attribute must be added in the same transaction as the
-+ * parent directory modifications. Hence @roll_trans needs to be set
-+ * appropriately to control whether the transaction is committed during this
-+ * function.
++ * Parent pointer attribute format definition
++ *
++ * EA name encodes the parent inode number, generation and the offset of
++ * the dirent that points to the child inode. The EA value contains the
++ * same name as the dirent in the parent directory.
 + */
-+int
-+xfs_attr_set_args(
-+	struct xfs_da_args	*args,
-+	int			flags,
-+	bool			roll_trans)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount        *mp = dp->i_mount;
-+	struct xfs_trans_res    tres;
-+	int			rsvd = 0;
-+	int			error = 0;
-+
-+	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-+			 M_RES(mp)->tr_attrsetrt.tr_logres * args->total;
-+	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-+	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-+
-+	/*
-+	 * Root fork attributes can use reserved data blocks for this
-+	 * operation if necessary
-+	 */
-+	error = xfs_trans_alloc(mp, &tres, args->total, 0,
-+				rsvd ? XFS_TRANS_RESERVE : 0, &args->trans);
-+	if (error)
-+		goto out;
-+
-+	error = xfs_trans_reserve_quota_nblks(args->trans, dp, args->total, 0,
-+					      rsvd ? XFS_QMOPT_RES_REGBLKS |
-+						     XFS_QMOPT_FORCE_RES :
-+						     XFS_QMOPT_RES_REGBLKS);
-+	if (error)
-+		goto out;
-+
-+	xfs_trans_ijoin(args->trans, dp, 0);
-+	/*
-+	 * If the attribute list is non-existent or a shortform list,
-+	 * upgrade it to a single-leaf-block attribute list.
-+	 */
-+	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
-+	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
-+	     dp->i_d.di_anextents == 0)) {
-+
-+		/*
-+		 * Build initial attribute list (if required).
-+		 */
-+		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
-+			xfs_attr_shortform_create(args);
-+
-+		/*
-+		 * Try to add the attr to the attribute list in the inode.
-+		 */
-+		error = xfs_attr_shortform_addname(args);
-+		if (error != -ENOSPC) {
-+			ASSERT(args->trans);
-+			if (!error && (flags & ATTR_KERNOTIME) == 0)
-+				xfs_trans_ichgtime(args->trans, dp,
-+						   XFS_ICHGTIME_CHG);
-+			goto out;
-+		}
-+
-+		/*
-+		 * It won't fit in the shortform, transform to a leaf block.
-+		 * GROT: another possible req'mt for a double-split btree op.
-+		 */
-+		error = xfs_attr_shortform_to_leaf(args);
-+		if (error)
-+			goto out;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans, args->dfops);
-+			if (error) {
-+				args->trans = NULL;
-+				goto out;
-+			}
-+
-+			/*
-+			 * Commit the leaf transformation.  We'll need another
-+			 * (linked) transaction to add the new attribute to the
-+			 * leaf.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, dp);
-+			if (error)
-+				goto out;
-+		}
-+	}
-+
-+	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-+		error = xfs_attr_leaf_addname(args);
-+	else
-+		error = xfs_attr_node_addname(args);
-+	if (error)
-+		goto out;
-+
-+	if ((flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-+
-+	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
-+out:
-+	return error;
-+}
++struct xfs_parent_name_rec {
++	__be64	p_ino;
++	__be32	p_gen;
++	__be32	p_diroffset;
++};
 +
 +/*
-+ * Remove the attribute specified in @args.
++ * incore version of the above, also contains name pointers so callers
++ * can pass/obtain all the parent pointer information in a single structure
 + */
-+int
-+xfs_attr_remove_args(
-+	struct xfs_da_args      *args,
-+	int			flags)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error;
-+	int                     rsvd = 0;
++struct xfs_parent_name_irec {
++	xfs_ino_t		p_ino;
++	uint32_t		p_gen;
++	xfs_dir2_dataptr_t	p_diroffset;
++	const char		*p_name;
++	uint8_t			p_namelen;
++};
 +
-+	error = xfs_qm_dqattach_locked(dp, 0);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Root fork attributes can use reserved data blocks for this
-+	 * operation if necessary
-+	 */
-+	if (flags & ATTR_ROOT)
-+		rsvd = XFS_TRANS_RESERVE;
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrrm,
-+		XFS_ATTRRM_SPACE_RES(mp), 0, rsvd, &args->trans);
-+
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * No need to make quota reservations here. We expect to release some
-+	 * blocks not allocate in the common case.
-+	 */
-+	xfs_trans_ijoin(args->trans, dp, 0);
-+
-+	if (!xfs_inode_hasattr(dp)) {
-+		error = -ENOATTR;
-+	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-+		error = xfs_attr_shortform_remove(args);
-+	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-+		error = xfs_attr_leaf_removename(args);
-+	} else {
-+		error = xfs_attr_node_removename(args);
-+	}
-+
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * If this is a synchronous mount, make sure that the
-+	 * transaction goes to disk before returning to the user.
-+	 */
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(args->trans);
-+
-+	if ((flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-+
-+	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
-+
-+	return error;
-+
-+out:
-+	if (args->trans)
-+		xfs_trans_cancel(args->trans);
-+
-+	return error;
-+}
-+
- int
- xfs_attr_set(
- 	struct xfs_inode	*dp,
-@@ -214,10 +393,9 @@ xfs_attr_set(
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_da_args	args;
- 	struct xfs_defer_ops	dfops;
--	struct xfs_trans_res	tres;
- 	xfs_fsblock_t		firstblock;
- 	int			rsvd = (flags & ATTR_ROOT) != 0;
--	int			error, err2, local;
-+	int			error, local;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
- 
-@@ -252,106 +430,11 @@ xfs_attr_set(
- 			return error;
- 	}
- 
--	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
--			 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
--	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
--	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
--
--	/*
--	 * Root fork attributes can use reserved data blocks for this
--	 * operation if necessary
--	 */
--	error = xfs_trans_alloc(mp, &tres, args.total, 0,
--			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
--	if (error)
--		return error;
--
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
--	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
--				rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
--				       XFS_QMOPT_RES_REGBLKS);
--	if (error) {
--		xfs_iunlock(dp, XFS_ILOCK_EXCL);
--		xfs_trans_cancel(args.trans);
--		return error;
--	}
--
--	xfs_trans_ijoin(args.trans, dp, 0);
--
--	/*
--	 * If the attribute list is non-existent or a shortform list,
--	 * upgrade it to a single-leaf-block attribute list.
--	 */
--	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
--
--		/*
--		 * Build initial attribute list (if required).
--		 */
--		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
--			xfs_attr_shortform_create(&args);
--
--		/*
--		 * Try to add the attr to the attribute list in
--		 * the inode.
--		 */
--		error = xfs_attr_shortform_addname(&args);
--		if (error != -ENOSPC) {
--			/*
--			 * Commit the shortform mods, and we're done.
--			 * NOTE: this is also the error path (EEXIST, etc).
--			 */
--			ASSERT(args.trans != NULL);
--
--			/*
--			 * If this is a synchronous mount, make sure that
--			 * the transaction goes to disk before returning
--			 * to the user.
--			 */
--			if (mp->m_flags & XFS_MOUNT_WSYNC)
--				xfs_trans_set_sync(args.trans);
--
--			if (!error && (flags & ATTR_KERNOTIME) == 0) {
--				xfs_trans_ichgtime(args.trans, dp,
--							XFS_ICHGTIME_CHG);
--			}
--			err2 = xfs_trans_commit(args.trans);
--			xfs_iunlock(dp, XFS_ILOCK_EXCL);
--
--			return error ? error : err2;
--		}
--
--		/*
--		 * It won't fit in the shortform, transform to a leaf block.
--		 * GROT: another possible req'mt for a double-split btree op.
--		 */
--		xfs_defer_init(args.dfops, args.firstblock);
--		error = xfs_attr_shortform_to_leaf(&args);
--		if (error)
--			goto out_defer_cancel;
--		xfs_defer_ijoin(args.dfops, dp);
--		error = xfs_defer_finish(&args.trans, args.dfops);
--		if (error)
--			goto out_defer_cancel;
--
--		/*
--		 * Commit the leaf transformation.  We'll need another (linked)
--		 * transaction to add the new attribute to the leaf.
--		 */
--
--		error = xfs_trans_roll_inode(&args.trans, dp);
--		if (error)
--			goto out;
--
--	}
--
--	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
--		error = xfs_attr_leaf_addname(&args);
--	else
--		error = xfs_attr_node_addname(&args);
-+	xfs_defer_init(args.dfops, args.firstblock);
-+	error = xfs_attr_set_args(&args, flags, true);
- 	if (error)
--		goto out;
-+		goto out_defer_cancel;
- 
- 	/*
- 	 * If this is a synchronous mount, make sure that the
-@@ -360,9 +443,6 @@ xfs_attr_set(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args.trans);
- 
--	if ((flags & ATTR_KERNOTIME) == 0)
--		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
--
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
-@@ -374,10 +454,6 @@ xfs_attr_set(
- 
- out_defer_cancel:
- 	xfs_defer_cancel(&dfops);
--	args.trans = NULL;
--out:
--	if (args.trans)
--		xfs_trans_cancel(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 	return error;
- }
-@@ -417,38 +493,15 @@ xfs_attr_remove(
- 	 */
- 	args.op_flags = XFS_DA_OP_OKNOENT;
- 
--	error = xfs_qm_dqattach(dp, 0);
--	if (error)
--		return error;
--
--	/*
--	 * Root fork attributes can use reserved data blocks for this
--	 * operation if necessary
--	 */
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrrm,
--			XFS_ATTRRM_SPACE_RES(mp), 0,
--			(flags & ATTR_ROOT) ? XFS_TRANS_RESERVE : 0,
--			&args.trans);
--	if (error)
--		return error;
--
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
- 	/*
- 	 * No need to make quota reservations here. We expect to release some
- 	 * blocks not allocate in the common case.
- 	 */
- 	xfs_trans_ijoin(args.trans, dp, 0);
-+	xfs_defer_init(args.dfops, args.firstblock);
- 
--	if (!xfs_inode_hasattr(dp)) {
--		error = -ENOATTR;
--	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
--		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
--		error = xfs_attr_shortform_remove(&args);
--	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
--		error = xfs_attr_leaf_removename(&args);
--	} else {
--		error = xfs_attr_node_removename(&args);
--	}
-+	error = xfs_attr_remove_args(&args, flags);
- 
- 	if (error)
- 		goto out;
-@@ -460,9 +513,6 @@ xfs_attr_remove(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args.trans);
- 
--	if ((flags & ATTR_KERNOTIME) == 0)
--		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
--
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
-@@ -473,6 +523,8 @@ xfs_attr_remove(
- 	return error;
- 
- out:
-+	xfs_defer_cancel(&dfops);
-+
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 5d5a5e2..8542606 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -149,7 +149,9 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
- 		 unsigned char *value, int *valuelenp, int flags);
- int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- 		 unsigned char *value, int valuelen, int flags);
-+int xfs_attr_set_args(struct xfs_da_args *args, int flags, bool roll_trans);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-+int xfs_attr_remove_args(struct xfs_da_args *args, int flags);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
- 
+ #endif /* __XFS_FORMAT_H__ */
 -- 
 2.7.4
 
