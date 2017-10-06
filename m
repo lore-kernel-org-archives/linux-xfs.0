@@ -1,105 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:64768 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751062AbdJCIGK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 04:06:10 -0400
-Date: Tue, 3 Oct 2017 19:06:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfsprogs: mkfs refactor
-Message-ID: <20171003080607.GM15067@dastard>
+Received: from sandeen.net ([63.231.237.45]:56468 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752085AbdJFSBk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Oct 2017 14:01:40 -0400
+Subject: Re: [GIT PULL] xfsprogs: mkfs refactor
+References: <20171003080607.GM15067@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <eca367b2-03de-517d-9ef5-5400e8a4739e@sandeen.net>
+Date: Fri, 6 Oct 2017 13:01:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20171003080607.GM15067@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-Hi Eric,
+On 10/3/17 3:06 AM, Dave Chinner wrote:
+> Hi Eric,
+> 
+> I've put the latest mkfs refactor code that I have up in place
+> you can pull it from. I've rebased it against the current for-next
+> tree (4.13.1 release) and fixed all the problems that xfstests
+> exposes. The only thing I haven't fixed is xfs/191 that does mkfs
+> command line behaviour verification because the refactored version
+> fixes several problems that the old mkfs didn't handle correctly
+> (e.g. being able to specify certain things like agsize in blocks or
+> sectors).
+> 
+> There's a small filter patch needed for xfstests that I'll post in
+> a reply to this pull request that will filter out the new "defaults
+> sourced from ..." output and so prevent spurious xfstests failures.
+> 
+> If you want I can tag the branch with a signed tag for you to pull
+> from (same process as Linus prefers) rather than just a branch in a
+> tree. If you'd prefer that I post this as patches instead, then let
+> me know and I'll bomb the list instead.
 
-I've put the latest mkfs refactor code that I have up in place
-you can pull it from. I've rebased it against the current for-next
-tree (4.13.1 release) and fixed all the problems that xfstests
-exposes. The only thing I haven't fixed is xfs/191 that does mkfs
-command line behaviour verification because the refactored version
-fixes several problems that the old mkfs didn't handle correctly
-(e.g. being able to specify certain things like agsize in blocks or
-sectors).
+Thanks Dave.  Trying to un-swamp from other things.
 
-There's a small filter patch needed for xfstests that I'll post in
-a reply to this pull request that will filter out the new "defaults
-sourced from ..." output and so prevent spurious xfstests failures.
+Only advantage to patchbombing is having a permanent record of discussions,
+but maybe it can happen in reference to patches as follows.... mostly
+minor nits.
 
-If you want I can tag the branch with a signed tag for you to pull
-from (same process as Linus prefers) rather than just a branch in a
-tree. If you'd prefer that I post this as patches instead, then let
-me know and I'll bomb the list instead.
+> mkfs: can't specify sector size of internal log
 
-Cheers,
+commit log is a bit vague/misleading; I think you mean that
+it should be /disallowed/ because it must match the filesystem's
+/sector/ size when it's internal?  It's not actually clear to me why
+an external log can have a "mismatched" sector size but internal can't.
 
-Dave.
+> mkfs: introduce a structure to hold CLI options
 
-The following changes since commit d4a36331dc383c7c7747e244b3ae20155ae92c98:
+"between th einput"  (the input)
 
-  xfsprogs: Release v4.13.1 (2017-09-26 20:45:05 -0500)
+Comment mentions initialization to -1 or 0 but I don't see that this
+gets done, at least not in this patch? (Am I missing it?)  I took
+this to mean that before anything happens this would be initialized
+so we know what was and was not specified after everything was parsed...
 
-are available in the git repository at:
+> mkfs: introduce a structure to hold CLI options
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsprogs-dev mkfs-refactor
++/* quick way of checking is a parameter was set on the CLI */
+                         "if"
 
-for you to fetch changes up to a4bc6d3c7bb5babc51f7341039dafcff5fcc6c7e:
+> mkfs: factor naming subopts parser
 
-  mkfs: tidy up definitions (2017-09-29 08:44:30 +1000)
+no "nvflag" in "temp don't break" code?  Oh, nice - write-only var.  Ok.
+do we still test it for respec, or care?  Will check later.
 
-----------------------------------------------------------------
-Dave Chinner (42):
-      mkfs: can't specify sector size of internal log
-      mkfs: make subopt table const
-      mkfs: introduce a structure to hold CLI options
-      mkfs: add generic subopt parsing table
-      mkfs: factor block subopts parser
-      mkfs: factor data subopts parser
-      mkfs: factor inode subopts parser
-      mkfs: factor log subopts parser
-      mkfs: factor meta subopts parser
-      mkfs: factor naming subopts parser
-      mkfs: factor rt subopts parser
-      mkfs: factor sector subopts parser
-      mkfs: Introduce mkfs configuration structure
-      mkfs: factor printing of mkfs config
-      mkfs: factor in memory superblock setup
-      mkfs: factor out device preparation
-      mkfs: factor writing AG headers
-      mkfs: factor secondary superblock updates
-      mkfs: introduce default configuration structure
-      mkfs: rename top level CLI parameters
-      mkfs: factor sectorsize validation
-      mkfs: factor blocksize validation
-      mkfs: factor log sector size validation
-      mkfs: factor superblock feature validation
-      mkfs: factor directory blocksize validation
-      mkfs: factor inode size validation
-      mkfs: factor out device size calculations
-      mkfs: fix hidden parameter in DTOBT()
-      mkfs: factor rtdev extent size validation
-      mkfs: rework stripe calculations
-      mkfs: factor device opening
-      mkfs: factor data device validation
-      mkfs: factor log device validation
-      mkfs: factor rt device validation
-      mkfs: factor AG geometry calculations
-      mkfs: factor AG alignment
-      mkfs: rework imaxpct calculation
-      mkfs: factor initial mount setup
-      mkfs: factor log size calculations
-      mkfs: cleanup redundant temporary code
-      mkfs: move error functions
-      mkfs: tidy up definitions
+> mkfs: Introduce mkfs configuration structure
 
- include/libxfs.h |    2 +-
- mkfs/xfs_mkfs.c  | 4645 ++++++++++++++++++++++++++++++------------------------
- 2 files changed, 2602 insertions(+), 2045 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
+would be nice to proofread commit log a bit ;)
+
+> mkfs: Introduce mkfs configuration structure
+
+s/teh/the/
+
+<ok stopping here for now, will send more later>
+
