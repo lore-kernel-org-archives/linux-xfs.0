@@ -1,191 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30565 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752122AbdJFWIj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:39 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 06/17] xfs: get directory offset when removing directory name
-Date: Fri,  6 Oct 2017 15:05:37 -0700
-Message-Id: <1507327548-3221-7-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:38033 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751782AbdJFW1Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:27:24 -0400
+Date: Sat, 7 Oct 2017 09:27:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsdocs: move dir-attr btree sections to a separate
+ chapter
+Message-ID: <20171006222721.GV3666@dastard>
+References: <20171006214904.GO7122@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171006214904.GO7122@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Mark Tinguely <tinguely@sgi.com>
+On Fri, Oct 06, 2017 at 02:49:04PM -0700, Darrick J. Wong wrote:
+> Instead of scattering dabtree documentation across two sections underneath
+> the directory chapter, just give them a separate chapter.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Return the directory offset information when removing an entry to the
-directory.
+Splendid idea. Make it so :)
 
-This offset will be used as the parent pointer offset in xfs_remove.
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-v2: Changed typedefs to raw struct types
-
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 a1ca460... 0511eb9... M	fs/xfs/libxfs/xfs_dir2.c
-:100644 100644 e349900... e1bd05d... M	fs/xfs/libxfs/xfs_dir2.h
-:100644 100644 bcf3438... b897026... M	fs/xfs/libxfs/xfs_dir2_block.c
-:100644 100644 c7c2d4d... d4d278a... M	fs/xfs/libxfs/xfs_dir2_leaf.c
-:100644 100644 44d10ee... 1dbca21... M	fs/xfs/libxfs/xfs_dir2_node.c
-:100644 100644 e33fd12... 1d577b2... M	fs/xfs/libxfs/xfs_dir2_sf.c
-:100644 100644 8e02180... b34c59e... M	fs/xfs/xfs_inode.c
- fs/xfs/libxfs/xfs_dir2.c       | 15 +++++++++------
- fs/xfs/libxfs/xfs_dir2.h       |  4 +++-
- fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
- fs/xfs/libxfs/xfs_dir2_leaf.c  |  5 +++--
- fs/xfs/libxfs/xfs_dir2_node.c  |  5 +++--
- fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
- fs/xfs/xfs_inode.c             |  7 ++++---
- 7 files changed, 26 insertions(+), 16 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index a1ca460..0511eb9 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -443,13 +443,14 @@ xfs_dir_lookup(
-  */
- int
- xfs_dir_removename(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*dp,
--	struct xfs_name	*name,
--	xfs_ino_t	ino,
--	xfs_fsblock_t	*first,		/* bmap's firstblock */
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_name		*name,
-+	xfs_ino_t		ino,
-+	xfs_fsblock_t	*first,			/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t	total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
- {
- 	struct xfs_da_args *args;
- 	int		rval;
-@@ -495,6 +496,8 @@ xfs_dir_removename(
- 		rval = xfs_dir2_leaf_removename(args);
- 	else
- 		rval = xfs_dir2_node_removename(args);
-+	if (offset)
-+		*offset = args->offset;
- out_free:
- 	kmem_free(args);
- 	return rval;
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index e349900..e1bd05d 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -139,7 +139,9 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t ino,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops,
-+				xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index bcf3438..b897026 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -793,9 +793,9 @@ xfs_dir2_block_removename(
- 	/*
- 	 * Point to the data entry using the leaf entry.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--			xfs_dir2_dataptr_to_off(args->geo,
--						be32_to_cpu(blp[ent].address)));
-+			xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	/*
- 	 * Mark the data entry's space free.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index c7c2d4d..d4d278a 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -1402,9 +1402,10 @@ xfs_dir2_leaf_removename(
- 	 * Point to the leaf entry, use that to point to the data entry.
- 	 */
- 	lep = &ents[index];
--	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
-+	args->offset = be32_to_cpu(lep->address);
-+	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--		xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-+		xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	needscan = needlog = 0;
- 	oldbest = be16_to_cpu(bf[0].length);
- 	ltp = xfs_dir2_leaf_tail_p(args->geo, leaf);
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 44d10ee..1dbca21 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -1243,9 +1243,10 @@ xfs_dir2_leafn_remove(
- 	/*
- 	 * Extract the data block and offset from the entry.
- 	 */
--	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
-+	args->offset = be32_to_cpu(lep->address);
-+	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
- 	ASSERT(dblk->blkno == db);
--	off = xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address));
-+	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
- 	ASSERT(dblk->index == off);
- 
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index e33fd12..1d577b2 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -919,6 +919,8 @@ xfs_dir2_sf_removename(
- 								XFS_CMP_EXACT) {
- 			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
- 			       args->inumber);
-+			args->offset = xfs_dir2_byte_to_dataptr(
-+						xfs_dir2_sf_get_offset(sfep));
- 			break;
- 		}
- 	}
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8e02180..b34c59e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2639,8 +2639,8 @@ xfs_remove(
- 		goto out_trans_cancel;
- 
- 	xfs_defer_init(&dfops, &first_block);
--	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
--					&first_block, &dfops, resblks);
-+	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
-+				   &dfops, resblks, NULL);
- 	if (error) {
- 		ASSERT(error != -ENOENT);
- 		goto out_bmap_cancel;
-@@ -3150,7 +3150,8 @@ xfs_rename(
- 					&first_block, &dfops, spaceres);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
--					   &first_block, &dfops, spaceres);
-+					   &first_block, &dfops, spaceres,
-+					   NULL);
- 	if (error)
- 		goto out_bmap_cancel;
- 
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
