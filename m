@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30574 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752122AbdJFWIl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:41 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:31736 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752426AbdJFWIs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:48 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 09/17] xfs: define parent pointer xattr format
-Date: Fri,  6 Oct 2017 15:05:40 -0700
-Message-Id: <1507327548-3221-10-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 14/17] xfs: remove parent pointers in unlink
+Date: Fri,  6 Oct 2017 15:05:45 -0700
+Message-Id: <1507327548-3221-15-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,88 +17,164 @@ Cc: Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@ora
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We need to define the parent pointer attribute format before we
-start adding support for it into all the code that needs to use it.
-The EA format we will use encodes the following information:
-
-	name={parent inode #, parent inode generation, dirent offset}
-	value={dirent filename}
-
-The inode/gen gives all the information we need to reliably identify
-the parent without requiring child->parent lock ordering, and allows
-userspace to do pathname component level reconstruction without the
-kernel ever needing to verify the parent itself as part of ioctl
-calls.
-
-By using the dirent offset in the EA name, we have a method of
-knowing the exact parent pointer EA we need to modify/remove in
-rename/unlink without an unbound EA name search.
-
-By keeping the dirent name in the value, we have enough information
-to be able to validate and reconstruct damaged directory trees.
-While the diroffset of a filename alone is not unique enough to
-identify the child, the {diroffset,filename,child_inode} tuple is
-sufficient. That is, if the diroffset gets reused and points to a
-different filename, we can detect that from the contents of EA. If a
-link of the same name is created, then we can check whether it
-points at the same inode as the parent EA we current have.
-
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
+[bfoster: rebase, use VFS inode generation]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+	   implemented xfs_attr_remove_parent]
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
-v2: changed p_ino to xfs_ino_t and p_namelen to uint8_t
+:100644 100644 b489efb... 75f22c0... M	fs/xfs/libxfs/xfs_attr.c
+:100644 100644 0707336... ca695c4... M	fs/xfs/libxfs/xfs_parent.c
+:100644 100644 07abcff... baaca90... M	fs/xfs/xfs_attr.h
+:100644 100644 46a4d3b... 7718481... M	fs/xfs/xfs_inode.c
+:100644 100644 010a13a... a047f0f... M	fs/xfs/xfs_qm.c
+:100644 100644 2975a82... 9976369... M	fs/xfs/xfs_qm.h
+ fs/xfs/libxfs/xfs_attr.c   | 15 +++++++++++++++
+ fs/xfs/libxfs/xfs_parent.c | 22 ++++++++++++++++++++++
+ fs/xfs/xfs_attr.h          |  7 +++++++
+ fs/xfs/xfs_inode.c         | 10 +++++++++-
+ fs/xfs/xfs_qm.c            |  2 +-
+ fs/xfs/xfs_qm.h            |  1 +
+ 6 files changed, 55 insertions(+), 2 deletions(-)
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 d4d9bef... a887f21... M	fs/xfs/libxfs/xfs_format.h
- fs/xfs/libxfs/xfs_format.h | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index d4d9bef..a887f21 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -18,6 +18,8 @@
- #ifndef __XFS_FORMAT_H__
- #define __XFS_FORMAT_H__
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index b489efb..75f22c0 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -42,6 +42,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_trace.h"
++#include "xfs_qm.h"
  
-+#include "xfs_da_format.h"
+ /*
+  * xfs_attr.c
+@@ -571,6 +572,20 @@ xfs_attr_set_defered(
+ 	return 0;
+ }
+ 
++int
++xfs_attr_remove_parent(
++	struct xfs_trans		*tp,
++	struct xfs_inode		*dp,
++	struct xfs_parent_name_rec	*rec,
++	int				reclen,
++	struct xfs_defer_ops		*dfops,
++	xfs_fsblock_t			*firstblock)
++{
++	int flags = ATTR_PARENT;
++
++	return xfs_attr_remove_defered(dp, dfops, (char *) rec, reclen, flags);
++}
 +
  /*
-  * XFS On Disk Format Definitions
-  *
-@@ -1721,4 +1723,29 @@ struct xfs_acl {
- #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
- #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+  * Generic handler routine to remove a name from an attribute list.
+  * Transitions attribute list from Btree to shortform as necessary.
+diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+index 0707336..ca695c4 100644
+--- a/fs/xfs/libxfs/xfs_parent.c
++++ b/fs/xfs/libxfs/xfs_parent.c
+@@ -139,3 +139,25 @@ xfs_parent_add(
  
-+/*
-+ * Parent pointer attribute format definition
-+ *
-+ * EA name encodes the parent inode number, generation and the offset of
-+ * the dirent that points to the child inode. The EA value contains the
-+ * same name as the dirent in the parent directory.
-+ */
-+struct xfs_parent_name_rec {
-+	__be64	p_ino;
-+	__be32	p_gen;
-+	__be32	p_diroffset;
-+};
+ 	return xfs_parent_add_nrec(tp, child, &nrec, dfops, firstblock);
+ }
 +
 +/*
-+ * incore version of the above, also contains name pointers so callers
-+ * can pass/obtain all the parent pointer information in a single structure
++ * Remove a parent record from a child inode.
 + */
-+struct xfs_parent_name_irec {
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+	const char		*p_name;
-+	uint8_t			p_namelen;
-+};
++int
++xfs_parent_remove(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*parent,
++	struct xfs_inode	*child,
++	xfs_dir2_dataptr_t	diroffset,
++	struct xfs_defer_ops	*dfops,
++	xfs_fsblock_t		*firstblock)
++{
++	struct xfs_parent_name_rec rec;
 +
- #endif /* __XFS_FORMAT_H__ */
++	rec.p_ino = cpu_to_be64(parent->i_ino);
++	rec.p_gen = cpu_to_be32(VFS_I(parent)->i_generation);
++	rec.p_diroffset = cpu_to_be32(diroffset);
++
++	return xfs_attr_remove_parent(tp, child, &rec, sizeof(rec),
++				      dfops, firstblock);
++}
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index 07abcff..baaca90 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -208,4 +208,11 @@ int xfs_attr_set_parent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 			const char *value, int valuelen,
+ 			struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
+ 
++int xfs_parent_remove(struct xfs_trans *tp, struct xfs_inode *parent,
++		      struct xfs_inode *child, xfs_dir2_dataptr_t diroffset,
++		      struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
++int xfs_attr_remove_parent(struct xfs_trans *tp, struct xfs_inode *ip,
++			struct xfs_parent_name_rec *rec, int reclen,
++			struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
++
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 46a4d3b..7718481 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2612,6 +2612,7 @@ xfs_remove(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t           first_block;
+ 	uint			resblks;
++	uint32_t		dir_offset;
+ 
+ 	trace_xfs_remove(dp, name);
+ 
+@@ -2692,12 +2693,19 @@ xfs_remove(
+ 
+ 	xfs_defer_init(&dfops, &first_block);
+ 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+-				   &dfops, resblks, NULL);
++				   &dfops, resblks, &dir_offset);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_bmap_cancel;
+ 	}
+ 
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_remove(tp, dp, ip, dir_offset, &dfops,
++					  &first_block);
++		if (error)
++			goto out_bmap_cancel;
++	}
++
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * remove transaction goes to disk before returning to
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 010a13a..a047f0f 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -307,7 +307,7 @@ xfs_qm_dqattach_one(
+ 	return 0;
+ }
+ 
+-static bool
++bool
+ xfs_qm_need_dqattach(
+ 	struct xfs_inode	*ip)
+ {
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2975a82..9976369 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -176,6 +176,7 @@ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
+ 					struct qc_dqblk *);
+ extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
+ extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
++extern bool		xfs_qm_need_dqattach(struct xfs_inode *ip);
+ 
+ static inline struct xfs_def_quota *
+ xfs_get_defquota(struct xfs_dquot *dqp, struct xfs_quotainfo *qi)
 -- 
 2.7.4
 
