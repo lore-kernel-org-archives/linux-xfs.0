@@ -1,408 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31716 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752424AbdJFWIp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:45 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 12/17] xfs: parent pointer attribute creation
-Date: Fri,  6 Oct 2017 15:05:43 -0700
-Message-Id: <1507327548-3221-13-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from mga01.intel.com ([192.55.52.88]:58926 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752944AbdJFWm0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Oct 2017 18:42:26 -0400
+Subject: [PATCH v7 08/12] fs, mapdirect: introduce ->lease_direct()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 06 Oct 2017 15:36:00 -0700
+Message-ID: <150732936063.22363.4533598271967882402.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+To: linux-nvdimm@lists.01.org
+Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+Provide a vma operation that registers a lease that is broken by
+break_layout(). This is motivated by a need to stop in-progress RDMA
+when the block-map of a DAX-file changes. I.e. since DAX gives
+direct-access to filesystem blocks we can not allow those blocks to move
+or change state while they are under active RDMA. So, if the filesystem
+determines it needs to move blocks it can revoke device access before
+proceeding.
 
-[bfoster: rebase, use VFS inode generation]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   fixed some null pointer bugs]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jeff Layton <jlayton@poochiereds.net>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
-v2: remove unnecessary ENOSPC handling in xfs_attr_set_first_parent
+ fs/mapdirect.c            |  117 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/mapdirect.h |   23 +++++++++
+ include/linux/mm.h        |    6 ++
+ 3 files changed, 146 insertions(+)
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 8d2c152... f03552a... M	fs/xfs/Makefile
-:100644 100644 ee9382a... 6c3bc32... M	fs/xfs/libxfs/xfs_attr.c
-:100644 100644 f3a3360... 8866242... M	fs/xfs/libxfs/xfs_bmap.c
-:100644 100644 d6cb130... 2fce863... M	fs/xfs/libxfs/xfs_bmap.h
-:000000 100644 0000000... 88f7edc... A	fs/xfs/libxfs/xfs_parent.c
-:100644 100644 687648a... ceeea45... M	fs/xfs/xfs_attr.h
-:100644 100644 e837a84... 45d3981... M	fs/xfs/xfs_inode.c
- fs/xfs/Makefile            |  1 +
- fs/xfs/libxfs/xfs_attr.c   | 71 ++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_bmap.c   | 51 ++++++++++++++----------
- fs/xfs/libxfs/xfs_bmap.h   |  1 +
- fs/xfs/libxfs/xfs_parent.c | 98 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_attr.h          | 15 ++++++-
- fs/xfs/xfs_inode.c         | 16 +++++++-
- 7 files changed, 225 insertions(+), 28 deletions(-)
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 8d2c152..f03552a 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -52,6 +52,7 @@ xfs-y				+= $(addprefix libxfs/, \
- 				   xfs_inode_fork.o \
- 				   xfs_inode_buf.o \
- 				   xfs_log_rlimit.o \
-+				   xfs_parent.o \
- 				   xfs_ag_resv.o \
- 				   xfs_rmap.o \
- 				   xfs_rmap_btree.o \
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index ee9382a..6c3bc32 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -91,12 +91,14 @@ xfs_attr_args_init(
- 	args->whichfork = XFS_ATTR_FORK;
- 	args->dp = dp;
- 	args->flags = flags;
--	args->name = name;
--	args->namelen = namelen;
--	if (args->namelen >= MAXNAMELEN)
--		return -EFAULT;		/* match IRIX behaviour */
-+	if (name) {
-+		args->name = name;
-+		args->namelen = namelen;
-+		if (args->namelen >= MAXNAMELEN)
-+			return -EFAULT;		/* match IRIX behaviour */
+diff --git a/fs/mapdirect.c b/fs/mapdirect.c
+index 9ac7c1d946a2..338cbe055fc7 100644
+--- a/fs/mapdirect.c
++++ b/fs/mapdirect.c
+@@ -16,6 +16,7 @@
+ #include <linux/mutex.h>
+ #include <linux/sched.h>
+ #include <linux/slab.h>
++#include <linux/file.h>
+ #include <linux/fs.h>
+ #include <linux/mm.h>
  
--	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+		args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	}
- 	return 0;
+@@ -32,12 +33,26 @@ struct map_direct_state {
+ 	struct vm_area_struct *mds_vma;
+ };
+ 
++struct lease_direct_state {
++	void *lds_owner;
++	struct file *lds_file;
++	unsigned long lds_state;
++	void (*lds_break_fn)(void *lds_owner);
++	struct work_struct lds_work;
++};
++
+ bool is_map_direct_valid(struct map_direct_state *mds)
+ {
+ 	return test_bit(MAPDIRECT_VALID, &mds->mds_state);
  }
+ EXPORT_SYMBOL_GPL(is_map_direct_valid);
  
-@@ -206,6 +208,65 @@ xfs_attr_calc_size(
- }
- 
- /*
-+ * Add the initial parent pointer attribute.
-+ *
-+ * Inode must be locked and completely empty as we are adding the attribute
-+ * fork to the inode. This open codes bits of xfs_bmap_add_attrfork() and
-+ * xfs_attr_set() because we know the inode is completely empty at this point
-+ * and so don't need to handle all the different combinations of fork
-+ * configurations here.
-+ */
-+int
-+xfs_attr_set_first_parent(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	struct xfs_parent_name_rec *rec,
-+	int			reclen,
-+	const char		*value,
-+	int			valuelen,
-+	struct xfs_defer_ops	*dfops,
-+	xfs_fsblock_t		*firstblock)
++bool is_map_direct_broken(struct map_direct_state *mds)
 +{
-+	struct xfs_da_args	args;
-+	int			flags = ATTR_PARENT;
-+	int			local;
-+	int			sf_size;
-+	int			error;
++	return test_bit(MAPDIRECT_BREAK, &mds->mds_state);
++}
++EXPORT_SYMBOL_GPL(is_map_direct_broken);
 +
-+	tp->t_flags |= XFS_TRANS_RESERVE;
+ static void put_map_direct(struct map_direct_state *mds)
+ {
+ 	if (!atomic_dec_and_test(&mds->mds_ref))
+@@ -162,6 +177,108 @@ static const struct lock_manager_operations map_direct_lm_ops = {
+ 	.lm_setup = map_direct_lm_setup,
+ };
+ 
++static void lease_direct_invalidate(struct work_struct *work)
++{
++	struct lease_direct_state *lds;
++	void *owner;
 +
-+	error = xfs_attr_args_init(&args, ip, (char *)rec, reclen, flags);
-+	if (error)
-+		return error;
-+
-+	args.name = (char *)rec;
-+	args.namelen = reclen;
-+	args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	args.value = (char *)value;
-+	args.valuelen = valuelen;
-+	args.firstblock = firstblock;
-+	args.dfops = dfops;
-+	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+	args.total = xfs_attr_calc_size(&args, &local);
-+	args.trans = tp;
-+	ASSERT(local);
-+
-+	/* set the attribute fork appropriately */
-+	sf_size = sizeof(struct xfs_attr_sf_hdr) +
-+			XFS_ATTR_SF_ENTSIZE_BYNAME(reclen, valuelen);
-+	xfs_bmap_set_attrforkoff(ip, sf_size, NULL);
-+	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
-+	ip->i_afp->if_flags = XFS_IFEXTENTS;
-+
-+
-+	/* Try to add the attr to the attribute list in the inode. */
-+	xfs_attr_shortform_create(&args);
-+	error = xfs_attr_shortform_addname(&args);
-+
-+	return error;
++	lds = container_of(work, typeof(*lds), lds_work);
++	owner = lds;
++	lds->lds_break_fn(lds->lds_owner);
++	vfs_setlease(lds->lds_file, F_UNLCK, NULL, &owner);
 +}
 +
-+/*
-  * set the attribute specified in @args. In the case of the parent attribute
-  * being set, we do not want to roll the transaction on shortform-to-leaf
-  * conversion, as the attribute must be added in the same transaction as the
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f3a3360..8866242 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1066,6 +1066,35 @@ xfs_bmap_add_attrfork_local(
- 	return -EFSCORRUPTED;
- }
- 
-+int
-+xfs_bmap_set_attrforkoff(
-+	struct xfs_inode	*ip,
-+	int			size,
-+	int			*version)
++static bool lease_direct_lm_break(struct file_lock *fl)
 +{
-+	switch (ip->i_d.di_format) {
-+	case XFS_DINODE_FMT_DEV:
-+		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
-+		break;
-+	case XFS_DINODE_FMT_UUID:
-+		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:
-+	case XFS_DINODE_FMT_EXTENTS:
-+	case XFS_DINODE_FMT_BTREE:
-+		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
-+		if (!ip->i_d.di_forkoff)
-+			ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
-+		else if ((ip->i_mount->m_flags & XFS_MOUNT_ATTR2) && version)
-+			*version = 2;
-+		break;
-+	default:
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+	return 0;
++	struct lease_direct_state *lds = fl->fl_owner;
++
++	if (!test_and_set_bit(MAPDIRECT_BREAK, &lds->lds_state))
++		schedule_work(&lds->lds_work);
++	return false;
 +}
 +
- /*
-  * Convert inode from non-attributed to attributed.
-  * Must not be in a transaction, ip must not be locked.
-@@ -1120,27 +1149,7 @@ xfs_bmap_add_attrfork(
- 	xfs_trans_ijoin(tp, ip, 0);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
--	switch (ip->i_d.di_format) {
--	case XFS_DINODE_FMT_DEV:
--		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
--		break;
--	case XFS_DINODE_FMT_UUID:
--		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
--		break;
--	case XFS_DINODE_FMT_LOCAL:
--	case XFS_DINODE_FMT_EXTENTS:
--	case XFS_DINODE_FMT_BTREE:
--		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
--		if (!ip->i_d.di_forkoff)
--			ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
--		else if (mp->m_flags & XFS_MOUNT_ATTR2)
--			version = 2;
--		break;
--	default:
--		ASSERT(0);
--		error = -EINVAL;
--		goto trans_cancel;
--	}
-+	xfs_bmap_set_attrforkoff(ip, size, &version);
- 
- 	ASSERT(ip->i_afp == NULL);
- 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index d6cb130..2fce863 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -213,6 +213,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
-+int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
- 			  xfs_fsblock_t bno, xfs_filblks_t len,
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-new file mode 100644
-index 0000000..88f7edc
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -0,0 +1,98 @@
-+/*
-+ * Copyright (c) 2015 Red Hat, Inc.
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_shared.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_trans.h"
-+#include "xfs_attr.h"
-+
-+/*
-+ * Parent pointer attribute handling.
-+ *
-+ * Because the attribute value is a filename component, it will never be longer
-+ * than 255 bytes. This means the attribute will always be a local format
-+ * attribute as it is xfs_attr_leaf_entsize_local_max() for v5 filesystems will
-+ * always be larger than this (max is 75% of block size).
-+ *
-+ * Creating a new parent attribute will always create a new attribute - there
-+ * should never, ever be an existing attribute in the tree for a new inode.
-+ * ENOSPC behaviour is problematic - creating the inode without the parent
-+ * pointer is effectively a corruption, so we allow parent attribute creation
-+ * to dip into the reserve block pool to avoid unexpected ENOSPC errors from
-+ * occurring.
-+ */
-+
-+/*
-+ * Create the initial parent attribute.
-+ *
-+ * The initial attribute creation also needs to be atomic w.r.t the parent
-+ * directory modification. Hence it needs to run in the same transaction and the
-+ * transaction committed by the caller.  Because the attribute created is
-+ * guaranteed to be a local attribute and is always going to be the first
-+ * attribute in the attribute fork, we can do this safely in the single
-+ * transaction context as it is impossible for an overwrite to occur and hence
-+ * we'll never have a rolling overwrite transaction occurring here. Hence we
-+ * can short-cut a lot of the normal xfs_attr_set() code paths that are needed
-+ * to handle the generic cases.
-+ */
-+static int
-+xfs_parent_create_nrec(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*child,
-+	struct xfs_parent_name_irec *nrec,
-+	struct xfs_defer_ops	*dfops,
-+	xfs_fsblock_t		*firstblock)
++static int lease_direct_lm_change(struct file_lock *fl, int arg,
++		struct list_head *dispose)
 +{
-+	struct xfs_parent_name_rec rec;
-+
-+	rec.p_ino = cpu_to_be64(nrec->p_ino);
-+	rec.p_gen = cpu_to_be32(nrec->p_gen);
-+	rec.p_diroffset = cpu_to_be32(nrec->p_diroffset);
-+
-+	return xfs_attr_set_first_parent(tp, child, &rec, sizeof(rec),
-+				   nrec->p_name, nrec->p_namelen,
-+				   dfops, firstblock);
++	WARN_ON(!(arg & F_UNLCK));
++	return lease_modify(fl, arg, dispose);
 +}
 +
-+int
-+xfs_parent_create(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*parent,
-+	struct xfs_inode	*child,
-+	struct xfs_name		*child_name,
-+	xfs_dir2_dataptr_t	diroffset,
-+	struct xfs_defer_ops	*dfops,
-+	xfs_fsblock_t		*firstblock)
++static const struct lock_manager_operations lease_direct_lm_ops = {
++	.lm_break = lease_direct_lm_break,
++	.lm_change = lease_direct_lm_change,
++};
++
++struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
++		void (*lds_break_fn)(void *), void *lds_owner)
 +{
-+	struct xfs_parent_name_irec nrec;
++	struct file *file = vma->vm_file;
++	struct lease_direct_state *lds;
++	struct lease_direct *ld;
++	struct file_lock *fl;
++	int rc = -ENOMEM;
++	void *owner;
 +
-+	nrec.p_ino = parent->i_ino;
-+	nrec.p_gen = VFS_I(parent)->i_generation;
-+	nrec.p_diroffset = diroffset;
-+	nrec.p_name = child_name->name;
-+	nrec.p_namelen = child_name->len;
++	ld = kzalloc(sizeof(*ld) + sizeof(*lds), GFP_KERNEL);
++	if (!ld)
++		return ERR_PTR(-ENOMEM);
++	INIT_LIST_HEAD(&ld->list);
++	lds = (struct lease_direct_state *)(ld + 1);
++	owner = lds;
++	ld->lds = lds;
++	lds->lds_break_fn = lds_break_fn;
++	lds->lds_owner = lds_owner;
++	INIT_WORK(&lds->lds_work, lease_direct_invalidate);
++	lds->lds_file = get_file(file);
 +
-+	return xfs_parent_create_nrec(tp, child, &nrec, dfops, firstblock);
-+}
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 687648a..ceeea45 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -19,6 +19,8 @@
- #define	__XFS_ATTR_H__
- 
- #include "libxfs/xfs_defer.h"
-+#include "libxfs/xfs_da_format.h"
-+#include "libxfs/xfs_format.h"
- 
- struct xfs_inode;
- struct xfs_da_args;
-@@ -184,5 +186,16 @@ int xfs_attr_set_defered(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
- 			 unsigned char *value, int valuelen, int flags);
- int xfs_attr_remove_defered(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
- 			    const unsigned char *name, int namelen, int flags);
--
-+/*
-+ * Parent pointer attribute prototypes
-+ */
-+int xfs_parent_create(struct xfs_trans *tp, struct xfs_inode *parent,
-+		      struct xfs_inode *child, struct xfs_name *child_name,
-+		      xfs_dir2_dataptr_t diroffset, struct xfs_defer_ops *dfops,
-+		      xfs_fsblock_t *firstblock);
-+int xfs_attr_set_first_parent(struct xfs_trans *tp, struct xfs_inode *ip,
-+			      struct xfs_parent_name_rec *rec, int reclen,
-+			      const char *value, int valuelen,
-+			      struct xfs_defer_ops *dfops,
-+			      xfs_fsblock_t *firstblock);
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e837a84..45d3981 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1164,6 +1164,7 @@ xfs_create(
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_trans_res	*tres;
- 	uint			resblks;
-+	xfs_dir2_dataptr_t	diroffset;
- 
- 	trace_xfs_create(dp, name);
- 
-@@ -1253,7 +1254,7 @@ xfs_create(
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 					&first_block, &dfops, resblks ?
- 					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
--					NULL);
-+					&diroffset);
- 	if (error) {
- 		ASSERT(error != -ENOSPC);
- 		goto out_trans_cancel;
-@@ -1272,6 +1273,19 @@ xfs_create(
- 	}
- 
- 	/*
-+	 * If we have parent pointers, we need to add the attribute containing
-+	 * the parent information now. This must be done within the same
-+	 * transaction the directory entry is created, while the new inode
-+	 * contains nothing in the inode literal area.
-+	 */
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_create(tp, dp, ip, name, diroffset,
-+					  &dfops, &first_block);
-+		if (error)
-+			goto out_bmap_cancel;
++	fl = locks_alloc_lock();
++	if (!fl)
++		goto err_lock_alloc;
++
++	locks_init_lock(fl);
++	fl->fl_lmops = &lease_direct_lm_ops;
++	fl->fl_flags = FL_LAYOUT;
++	fl->fl_type = F_RDLCK;
++	fl->fl_end = OFFSET_MAX;
++	fl->fl_owner = lds;
++	fl->fl_pid = current->tgid;
++	fl->fl_file = file;
++
++	rc = vfs_setlease(file, fl->fl_type, &fl, &owner);
++	if (rc)
++		goto err_setlease;
++	if (fl) {
++		WARN_ON(1);
++		owner = lds;
++		vfs_setlease(file, F_UNLCK, NULL, &owner);
++		owner = NULL;
++		rc = -ENXIO;
++		goto err_setlease;
 +	}
 +
++	return ld;
++err_setlease:
++	locks_free_lock(fl);
++err_lock_alloc:
++	kfree(lds);
++	return ERR_PTR(rc);
++}
++EXPORT_SYMBOL_GPL(map_direct_lease);
++
++void map_direct_lease_destroy(struct lease_direct *ld)
++{
++	struct lease_direct_state *lds = ld->lds;
++	struct file *file = lds->lds_file;
++	void *owner = lds;
++
++	vfs_setlease(file, F_UNLCK, NULL, &owner);
++	flush_work(&lds->lds_work);
++	fput(file);
++	WARN_ON(!list_empty(&ld->list));
++	kfree(ld);
++}
++EXPORT_SYMBOL_GPL(map_direct_lease_destroy);
++
+ struct map_direct_state *map_direct_register(int fd, struct vm_area_struct *vma)
+ {
+ 	struct map_direct_state *mds = kzalloc(sizeof(*mds), GFP_KERNEL);
+diff --git a/include/linux/mapdirect.h b/include/linux/mapdirect.h
+index 724e27d8615e..dc4d4ba677d0 100644
+--- a/include/linux/mapdirect.h
++++ b/include/linux/mapdirect.h
+@@ -13,17 +13,28 @@
+ #ifndef __MAPDIRECT_H__
+ #define __MAPDIRECT_H__
+ #include <linux/err.h>
++#include <linux/list.h>
+ 
+ struct inode;
+ struct work_struct;
+ struct vm_area_struct;
+ struct map_direct_state;
++struct list_direct_state;
++
++struct lease_direct {
++	struct list_head list;
++	struct lease_direct_state *lds;
++};
+ 
+ #if IS_ENABLED(CONFIG_FS_DAX)
+ struct map_direct_state *map_direct_register(int fd, struct vm_area_struct *vma);
+ int put_map_direct_vma(struct map_direct_state *mds);
+ void get_map_direct_vma(struct map_direct_state *mds);
+ bool is_map_direct_valid(struct map_direct_state *mds);
++bool is_map_direct_broken(struct map_direct_state *mds);
++struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
++		void (*ld_break_fn)(void *), void *ld_owner);
++void map_direct_lease_destroy(struct lease_direct *ld);
+ #else
+ static inline struct map_direct_state *map_direct_register(int fd,
+ 		struct vm_area_struct *vma)
+@@ -41,5 +52,17 @@ bool is_map_direct_valid(struct map_direct_state *mds)
+ {
+ 	return false;
+ }
++bool is_map_direct_broken(struct map_direct_state *mds)
++{
++	return false;
++}
++struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
++		void (*ld_break_fn)(void *), void *ld_owner)
++{
++	return ERR_PTR(-EOPNOTSUPP);
++}
++void map_direct_lease_destroy(struct lease_direct *ld)
++{
++}
+ #endif
+ #endif /* __MAPDIRECT_H__ */
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 0afa19feb755..d03953f91ce8 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -420,6 +420,12 @@ struct vm_operations_struct {
+ 	 */
+ 	struct page *(*find_special_page)(struct vm_area_struct *vma,
+ 					  unsigned long addr);
 +	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * create transaction goes to disk before returning to
- 	 * the user.
--- 
-2.7.4
++	 * Called by rdma memory registration to subscribe for "break"
++	 * events that require any ongoing rdma accesses to quiesce.
++	 */
++	struct lease_direct *(*lease_direct)(struct vm_area_struct *vma,
++			void (*break_fn)(void *), void *owner);
+ };
+ 
+ struct mmu_gather;
 
