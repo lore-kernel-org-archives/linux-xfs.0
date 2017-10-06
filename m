@@ -1,234 +1,464 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30575 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:25268 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752155AbdJFWIl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:41 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 07/17] xfs: get directory offset when replacing a directory name
-Date: Fri,  6 Oct 2017 15:05:38 -0700
-Message-Id: <1507327548-3221-8-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+        with ESMTP id S1750816AbdJFVtH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 17:49:07 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v96Ln66Y009059
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 21:49:07 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v96Ln6oP028493
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 21:49:06 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v96Ln5El005223
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 21:49:06 GMT
+Date: Fri, 6 Oct 2017 14:49:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfsdocs: move dir-attr btree sections to a separate chapter
+Message-ID: <20171006214904.GO7122@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+To: xfs <linux-xfs@vger.kernel.org>
 
-From: Mark Tinguely <tinguely@sgi.com>
+Instead of scattering dabtree documentation across two sections underneath
+the directory chapter, just give them a separate chapter.
 
-Return the directory offset information when replacing an entry to the
-directory.
-
-This offset will be used as the parent pointer offset in xfs_rename.
-
-[dchinner: forward ported and cleaned up]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: Changed typedefs to raw struct types
+ design/XFS_Filesystem_Structure/btrees.asciidoc    |    2 
+ design/XFS_Filesystem_Structure/dabtrees.asciidoc  |  219 ++++++++++++++++++++
+ .../XFS_Filesystem_Structure/directories.asciidoc  |  157 --------------
+ .../xfs_filesystem_structure.asciidoc              |    2 
+ 4 files changed, 223 insertions(+), 157 deletions(-)
+ create mode 100644 design/XFS_Filesystem_Structure/dabtrees.asciidoc
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 0511eb9... 486f808... M	fs/xfs/libxfs/xfs_dir2.c
-:100644 100644 e1bd05d... 5cc0b3f... M	fs/xfs/libxfs/xfs_dir2.h
-:100644 100644 b897026... abd365b... M	fs/xfs/libxfs/xfs_dir2_block.c
-:100644 100644 d4d278a... ea3d021... M	fs/xfs/libxfs/xfs_dir2_leaf.c
-:100644 100644 1dbca21... 7be9587... M	fs/xfs/libxfs/xfs_dir2_node.c
-:100644 100644 1d577b2... a197973b.. M	fs/xfs/libxfs/xfs_dir2_sf.c
-:100644 100644 b34c59e... e837a84... M	fs/xfs/xfs_inode.c
- fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
- fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
- fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
- fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
- fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
- 7 files changed, 31 insertions(+), 24 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 0511eb9..486f808 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -508,13 +508,14 @@ xfs_dir_removename(
-  */
- int
- xfs_dir_replace(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*dp,
--	struct xfs_name	*name,		/* name of entry to replace */
--	xfs_ino_t	inum,		/* new inode number */
--	xfs_fsblock_t	*first,		/* bmap's firstblock */
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_name		*name,		/* name of entry to replace */
-+	xfs_ino_t		inum,		/* new inode number */
-+	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t	total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
- {
- 	struct xfs_da_args *args;
- 	int		rval;
-@@ -563,6 +564,9 @@ xfs_dir_replace(
- 		rval = xfs_dir2_leaf_replace(args);
- 	else
- 		rval = xfs_dir2_node_replace(args);
+diff --git a/design/XFS_Filesystem_Structure/btrees.asciidoc b/design/XFS_Filesystem_Structure/btrees.asciidoc
+index 306e061..91a53c4 100644
+--- a/design/XFS_Filesystem_Structure/btrees.asciidoc
++++ b/design/XFS_Filesystem_Structure/btrees.asciidoc
+@@ -1,4 +1,4 @@
+-= B+trees
++= Fixed Length Record B+trees
+ 
+ XFS uses b+trees to index all metadata records.  This well known data structure
+ is used to provide efficient random and sequential access to metadata records
+diff --git a/design/XFS_Filesystem_Structure/dabtrees.asciidoc b/design/XFS_Filesystem_Structure/dabtrees.asciidoc
+new file mode 100644
+index 0000000..18247ca
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/dabtrees.asciidoc
+@@ -0,0 +1,219 @@
++[[Directory_Attribute_Btree]]
++= Variable Length Record B+trees
 +
-+	if (offset)
-+		*offset = args->offset;
- out_free:
- 	kmem_free(args);
- 	return rval;
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index e1bd05d..5cc0b3f 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name);
++Directories and extended attributes are implemented as a simple
++key-value record store inside the blocks pointed to by the data or
++attribute fork of a file.  Blocks referenced by either data structure
++are block offsets of an inode fork, not physical blocks.
++
++Directory and attribute data are stored as a linear array of
++variable-length records in the low blocks of a fork.  Both data types
++share the property that record keys and record values are both arbitrary
++and unique sequences of bytes.  See the respective sections about
++xref:Directories[directories] or xref:Extended_Attributes[attributes]
++for more information about the exact record formats.
++
++The dir/attr b+tree (or "dabtree"), if present, computes a hash of the
++record key to produce the b+tree key, and b+tree keys are used to index
++the fork block in which the record may be found.  Unlike the
++fixed-length b+trees, the variable length b+trees can index the same key
++multiple times.  B+tree keypointers and records both take this format:
++
++----
+++---------+--------------+
++| hashval | before_block |
+++---------+--------------+
++----
++
++The "before block" is the block offset in the inode fork of the block in
++which we can find the record whose hashed key is "hashval".  The hash
++function is as follows:
++
++[source, c]
++----
++#define rol32(x,y)             (((x) << (y)) | ((x) >> (32 - (y))))
++
++xfs_dahash_t
++xfs_da_hashname(const uint8_t *name, int namelen)
++{
++	xfs_dahash_t hash;
++
++	/*
++	 * Do four characters at a time as long as we can.
++	 */
++	for (hash = 0; namelen >= 4; namelen -= 4, name += 4)
++		hash = (name[0] << 21) ^ (name[1] << 14) ^ (name[2] << 7) ^
++		       (name[3] << 0) ^ rol32(hash, 7 * 4);
++
++	/*
++	 * Now do the rest of the characters.
++	 */
++	switch (namelen) {
++	case 3:
++		return (name[0] << 14) ^ (name[1] << 7) ^ (name[2] << 0) ^
++		       rol32(hash, 7 * 3);
++	case 2:
++		return (name[0] << 7) ^ (name[1] << 0) ^ rol32(hash, 7 * 2);
++	case 1:
++		return (name[0] << 0) ^ rol32(hash, 7 * 1);
++	default: /* case 0: */
++		return hash;
++	}
++}
++----
++
++[[Directory_Attribute_Block_Header]]
++== Block Headers
++
++* Tree nodes, leaf and node xref:Directories[directories], and leaf and
++node xref:Extended_Attributes[extended attributes] use the
+++xfs_da_blkinfo_t+ filesystem block header.  The structure appears as
++follows:
++
++[source, c]
++----
++typedef struct xfs_da_blkinfo {
++     __be32                     forw;
++     __be32                     back;
++     __be16                     magic;
++     __be16                     pad;
++} xfs_da_blkinfo_t;
++----
++
++*forw*::
++Logical block offset of the previous B+tree block at this level.
++
++*back*::
++Logical block offset of the next B+tree block at this level.
++
++*magic*::
++Magic number for this directory/attribute block.
++
++*pad*::
++Padding to maintain alignment.
++
++// split lists
++
++* On a v5 filesystem, the leaves use the +struct xfs_da3_blkinfo_t+ filesystem
++block header. This header is used in the same place as +xfs_da_blkinfo_t+:
++
++[source, c]
++----
++struct xfs_da3_blkinfo {
++     /* these values are inside xfs_da_blkinfo */
++     __be32                     forw;
++     __be32                     back;
++     __be16                     magic;
++     __be16                     pad;
++
++     __be32                     crc;
++     __be64                     blkno;
++     __be64                     lsn;
++     uuid_t                     uuid;
++     __be64                     owner;
++};
++----
++
++*forw*::
++Logical block offset of the previous B+tree block at this level.
++
++*back*::
++Logical block offset of the next B+tree block at this level.
++
++*magic*::
++Magic number for this directory/attribute block.
++
++*pad*::
++Padding to maintain alignment.
++
++*crc*::
++Checksum of the directory/attribute block.
++
++*blkno*::
++Block number of this directory/attribute block.
++
++*lsn*::
++Log sequence number of the last write to this block.
++
++*uuid*::
++The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
++depending on which features are set.
++
++*owner*::
++The inode number that this directory/attribute block belongs to.
++
++[[Directory_Attribute_Internal_Node]]
++== Internal Nodes
++
++The nodes of a dabtree have the following format:
++
++[source, c]
++----
++typedef struct xfs_da_intnode {
++     struct xfs_da_node_hdr {
++           xfs_da_blkinfo_t     info;
++           __uint16_t           count;
++           __uint16_t           level;
++     } hdr;
++     struct xfs_da_node_entry {
++           xfs_dahash_t         hashval;
++           xfs_dablk_t          before;
++     } btree[1];
++} xfs_da_intnode_t;
++----
++
++*info*::
++Directory/attribute block info.  The magic number is +XFS_DA_NODE_MAGIC+
++(0xfebe).
++
++*count*::
++Number of node entries in this block.
++
++*level*::
++The level of this block in the B+tree.
++
++*hashval*::
++The hash value of a particular record.
++
++*before*::
++The directory/attribute logical block containing all entries up to the
++corresponding hash value.
++
++* On a v5 filesystem, the directory/attribute node blocks have the following
++structure:
++
++[source, c]
++----
++struct xfs_da3_intnode {
++     struct xfs_da3_node_hdr {
++           struct xfs_da3_blkinfo    info;
++           __uint16_t                count;
++           __uint16_t                level;
++           __uint32_t                pad32;
++     } hdr;
++     struct xfs_da_node_entry {
++           xfs_dahash_t              hashval;
++           xfs_dablk_t               before;
++     } btree[1];
++};
++----
++
++*info*::
++Directory/attribute block info.  The magic number is +XFS_DA3_NODE_MAGIC+
++(0x3ebe).
++
++*count*::
++Number of node entries in this block.
++
++*level*::
++The level of this block in the B+tree.
++
++*pad32*::
++Padding to maintain alignment.
++
++*hashval*::
++The hash value of a particular record.
++
++*before*::
++The directory/attribute logical block containing all entries up to the
++corresponding hash value.
+diff --git a/design/XFS_Filesystem_Structure/directories.asciidoc b/design/XFS_Filesystem_Structure/directories.asciidoc
+index 9bb50bd..06d682e 100644
+--- a/design/XFS_Filesystem_Structure/directories.asciidoc
++++ b/design/XFS_Filesystem_Structure/directories.asciidoc
+@@ -915,85 +915,6 @@ typedef struct xfs_dir2_leaf_tail {
+ *bestcount*::
+ Number of best free entries.
  
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index b897026..abd365b 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -867,9 +867,9 @@ xfs_dir2_block_replace(
- 	/*
- 	 * Point to the data entry we need to change.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--			xfs_dir2_dataptr_to_off(args->geo,
--						be32_to_cpu(blp[ent].address)));
-+			xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
- 	/*
- 	 * Change the inode number to the new value.
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index d4d278a..ea3d021 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -1537,6 +1537,7 @@ xfs_dir2_leaf_replace(
- 	/*
- 	 * Point to the data entry.
- 	 */
-+	args->offset = be32_to_cpu(lep->address);
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)dbp->b_addr +
- 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 1dbca21..7be9587 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2242,6 +2242,7 @@ xfs_dir2_node_replace(
- 		hdr = state->extrablk.bp->b_addr;
- 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
- 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+		args->offset = be32_to_cpu(lep->address);
- 		dep = (xfs_dir2_data_entry_t *)
- 		      ((char *)hdr +
- 		       xfs_dir2_dataptr_to_off(args->geo,
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 1d577b2..a197973b 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -1045,6 +1045,8 @@ xfs_dir2_sf_replace(
- 				ASSERT(args->inumber != ino);
- 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+				args->offset = xfs_dir2_byte_to_dataptr(
-+						  xfs_dir2_sf_get_offset(sfep));
- 				break;
- 			}
- 		}
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b34c59e..e837a84 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2774,16 +2774,14 @@ xfs_cross_rename(
- 	int		dp2_flags = 0;
+-[[Directory_Attribute_Block_Header]]
+-=== Directory and Attribute Block Headers
+-
+-* Leaf nodes in directories and xref:Extended_Attributes[extended attributes]
+-use the +xfs_da_blkinfo_t+ filesystem block header.  The structure appears as
+-follows:
+-
+-[source, c]
+-----
+-typedef struct xfs_da_blkinfo {
+-     __be32                     forw;
+-     __be32                     back;
+-     __be16                     magic;
+-     __be16                     pad;
+-} xfs_da_blkinfo_t;
+-----
+-
+-*forw*::
+-Logical block offset of the previous B+tree block at this level.
+-
+-*back*::
+-Logical block offset of the next B+tree block at this level.
+-
+-*magic*::
+-Magic number for this directory/attribute block.
+-
+-*pad*::
+-Padding to maintain alignment.
+-
+-// split lists
+-
+-* On a v5 filesystem, the leaves use the +struct xfs_da3_blkinfo_t+ filesystem
+-block header. This header is used in the same place as +xfs_da_blkinfo_t+:
+-
+-[source, c]
+-----
+-struct xfs_da3_blkinfo {
+-     /* these values are inside xfs_da_blkinfo */
+-     __be32                     forw;
+-     __be32                     back;
+-     __be16                     magic;
+-     __be16                     pad;
+-
+-     __be32                     crc;
+-     __be64                     blkno;
+-     __be64                     lsn;
+-     uuid_t                     uuid;
+-     __be64                     owner;
+-};
+-----
+-
+-*forw*::
+-Logical block offset of the previous B+tree block at this level.
+-
+-*back*::
+-Logical block offset of the next B+tree block at this level.
+-
+-*magic*::
+-Magic number for this directory/attribute block.
+-
+-*pad*::
+-Padding to maintain alignment.
+-
+-*crc*::
+-Checksum of the directory/attribute block.
+-
+-*blkno*::
+-Block number of this directory/attribute block.
+-
+-*lsn*::
+-Log sequence number of the last write to this block.
+-
+-*uuid*::
+-The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
+-depending on which features are set.
+-
+-*owner*::
+-The inode number that this directory/attribute block belongs to.
+-
+ // split lists
  
- 	/* Swap inode number for dirent in first parent */
--	error = xfs_dir_replace(tp, dp1, name1,
--				ip2->i_ino,
--				first_block, dfops, spaceres);
-+	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block, dfops,
-+				spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
+ * The magic number of the leaf block is +XFS_DIR2_LEAF1_MAGIC+ (0xd2f1); on a
+@@ -1371,84 +1292,8 @@ you read the node's +btree+ array and first +hashval+ in the array that exceeds
+ the given hash and it can then be found in the block pointed to by the +before+
+ value. 
  
- 	/* Swap inode number for dirent in second parent */
--	error = xfs_dir_replace(tp, dp2, name2,
--				ip1->i_ino,
--				first_block, dfops, spaceres);
-+	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block, dfops,
-+				spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
+-[[Directory_Attribute_Internal_Node]]
+-=== Directory and Attribute Internal Nodes
+-
+-The hashing B+tree of a directory or an extended attribute fork uses nodes with
+-the following format:
+-
+-[source, c]
+-----
+-typedef struct xfs_da_intnode {
+-     struct xfs_da_node_hdr {
+-           xfs_da_blkinfo_t     info;
+-           __uint16_t           count;
+-           __uint16_t           level;
+-     } hdr;
+-     struct xfs_da_node_entry {
+-           xfs_dahash_t         hashval;
+-           xfs_dablk_t          before;
+-     } btree[1];
+-} xfs_da_intnode_t;
+-----
+-
+-*info*::
+-Directory/attribute block info.  The magic number is +XFS_DA_NODE_MAGIC+
+-(0xfebe).
+-
+-*count*::
+-Number of node entries in this block.
+-
+-*level*::
+-The level of this block in the B+tree.
+-
+-*hashval*::
+-The hash value of a particular record.
+-
+-*before*::
+-The directory/attribute logical block containing all entries up to the
+-corresponding hash value.
+-
+-* On a v5 filesystem, the directory/attribute node blocks have the following
+-structure:
+-
+-[source, c]
+-----
+-struct xfs_da3_intnode {
+-     struct xfs_da3_node_hdr {
+-           struct xfs_da3_blkinfo    info;
+-           __uint16_t                count;
+-           __uint16_t                level;
+-           __uint32_t                pad32;
+-     } hdr;
+-     struct xfs_da_node_entry {
+-           xfs_dahash_t              hashval;
+-           xfs_dablk_t               before;
+-     } btree[1];
+-};
+-----
+-
+-*info*::
+-Directory/attribute block info.  The magic number is +XFS_DA3_NODE_MAGIC+
+-(0x3ebe).
+-
+-*count*::
+-Number of node entries in this block.
+-
+-*level*::
+-The level of this block in the B+tree.
+-
+-*pad32*::
+-Padding to maintain alignment.
+-
+-*hashval*::
+-The hash value of a particular record.
+-
+-*before*::
+-The directory/attribute logical block containing all entries up to the
+-corresponding hash value.
++// split lists
  
-@@ -2797,8 +2795,8 @@ xfs_cross_rename(
+-//
+ * The freeindex's +bests+ array starts from the end of the block and grows to the
+ start of the block.
  
- 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
--						dp1->i_ino, first_block,
--						dfops, spaceres);
-+						dp1->i_ino, first_block, dfops,
-+						spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 4b0a054..5dba1c7 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -68,6 +68,8 @@ Global Structures
  
-@@ -2824,8 +2822,8 @@ xfs_cross_rename(
+ include::btrees.asciidoc[]
  
- 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
--						dp2->i_ino, first_block,
--						dfops, spaceres);
-+						dp2->i_ino, first_block, dfops,
-+						spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
++include::dabtrees.asciidoc[]
++
+ include::allocation_groups.asciidoc[]
  
-@@ -3072,8 +3070,8 @@ xfs_rename(
- 		 * name at the destination directory, remove it first.
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
--					src_ip->i_ino,
--					&first_block, &dfops, spaceres);
-+					src_ip->i_ino, &first_block, &dfops,
-+					spaceres, NULL);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -3107,8 +3105,8 @@ xfs_rename(
- 		 * directory.
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
--					target_dp->i_ino,
--					&first_block, &dfops, spaceres);
-+					target_dp->i_ino, &first_block, &dfops,
-+					spaceres, NULL);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_bmap_cancel;
-@@ -3147,7 +3145,7 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					&first_block, &dfops, spaceres);
-+					&first_block, &dfops, spaceres, NULL);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   &first_block, &dfops, spaceres,
--- 
-2.7.4
-
+ include::rmapbt.asciidoc[]
