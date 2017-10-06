@@ -1,82 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30579 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752155AbdJFWIm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 18:08:42 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v96M8fut024586
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:42 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8fgQ015170
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:41 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v96M8fKO030465
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Oct 2017 22:08:41 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 11/17] Add the extra space requirements for parent pointer attributes when calculating the minimum log size during mkfs
-Date: Fri,  6 Oct 2017 15:05:42 -0700
-Message-Id: <1507327548-3221-12-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+Received: from mail.kernel.org ([198.145.29.99]:42098 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751412AbdJFVqP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Oct 2017 17:46:15 -0400
+Date: Fri, 6 Oct 2017 14:46:11 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.14-rc4
+Message-ID: <20171006214611.GN7122@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 c105979... beec9bf... M	fs/xfs/libxfs/xfs_log_rlimit.c
- fs/xfs/libxfs/xfs_log_rlimit.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+Hi Linus,
 
-diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-index c105979..beec9bf 100644
---- a/fs/xfs/libxfs/xfs_log_rlimit.c
-+++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-@@ -39,6 +39,40 @@ xfs_log_calc_max_attrsetm_res(
- {
- 	int			size;
- 	int			nblks;
-+	struct xfs_trans_resv   *resp = M_RES(mp);
-+
-+	/* Calculate extra space needed for parent pointer attributes */
-+	if (!xfs_sb_version_hasparent(&mp->m_sb)) {
-+
-+		/* rename can add/remove/modify 2 parent attributes */
-+		resp->tr_rename.tr_logres +=
-+			2 * max(resp->tr_attrsetm.tr_logres,
-+				resp->tr_attrrm.tr_logres);
-+		resp->tr_rename.tr_logcount +=
-+			2 * max(resp->tr_attrsetm.tr_logcount,
-+				resp->tr_attrrm.tr_logcount);
-+
-+		/* create will add 1 parent attribute */
-+		resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
-+		resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+		/* mkdir will add 1 parent attribute */
-+		resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
-+		resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+		/* link will add 1 parent attribute */
-+		resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
-+		resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+		/* symlink will add 1 parent attribute */
-+		resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
-+		resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+		/* remove will remove 1 parent attribute */
-+		resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
-+		resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
-+	}
-+
- 
- 	size = xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize) -
- 	       MAXNAMELEN - 1;
--- 
-2.7.4
+Here's the second round of bug fixes for 4.14.
 
+--D
+
+The following changes since commit 5e5c943c1f257c2b3424fc3f8a7b18570152dab3:
+
+  xfs: revert "xfs: factor rmap btree size into the indlen calculations" (2017-09-26 10:55:20 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-4.14-fixes-4
+
+for you to fetch changes up to e12199f85d0ad1b04ce6c425ad93cd847fe930bb:
+
+   xfs: handle racy AIO in xfs_reflink_end_cow (2017-10-03 21:27:55 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- fix a race between overlapping copy on write aio
+- fix cow fork swapping when we defragment reflinked files
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: handle racy AIO in xfs_reflink_end_cow
+
+Darrick J. Wong (1):
+      xfs: always swap the cow forks when swapping extents
+
+ fs/xfs/xfs_bmap_util.c | 24 ++++++++++++++++++++++--
+ fs/xfs/xfs_reflink.c   |  9 ++++++++-
+ 2 files changed, 30 insertions(+), 3 deletions(-)
