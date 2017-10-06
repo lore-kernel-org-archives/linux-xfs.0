@@ -1,285 +1,380 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16639 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751515AbdJFWlw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Oct 2017 18:41:52 -0400
-Subject: [PATCH v7 02/12] fs, mm: pass fd to ->mmap_validate()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 06 Oct 2017 15:35:27 -0700
-Message-ID: <150732932763.22363.2605808989118835376.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24970 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750732AbdJFFHi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 01:07:38 -0400
+Date: Fri, 6 Oct 2017 16:07:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 18/25] xfs: scrub directory/attribute btrees
+Message-ID: <20171006050734.GR3666@dastard>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706336266.19351.1168091901339738103.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150706336266.19351.1168091901339738103.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
 
-The MAP_DIRECT mechanism for mmap intends to use a file lease to prevent
-block map changes while the file is mapped. It requires the fd to setup
-an fasync_struct for signalling lease break events to the lease holder.
+On Tue, Oct 03, 2017 at 01:42:42PM -0700, Darrick J. Wong wrote:
+> +/* Find an entry at a certain level in a da btree. */
+> +STATIC void *
+> +xfs_scrub_da_btree_entry(
+> +	struct xfs_scrub_da_btree	*ds,
+> +	int				level,
+> +	int				rec)
+> +{
+> +	char				*ents;
+> +	void				*(*fn)(void *);
+> +	size_t				sz;
+> +	struct xfs_da_state_blk		*blk;
+> +
+> +	/* Dispatch the entry finding function. */
+> +	blk = &ds->state->path.blk[level];
+> +	switch (blk->magic) {
+> +	case XFS_ATTR_LEAF_MAGIC:
+> +	case XFS_ATTR3_LEAF_MAGIC:
+> +		fn = (xfs_da_leaf_ents_fn)xfs_attr3_leaf_entryp;
+> +		sz = sizeof(struct xfs_attr_leaf_entry);
+> +		break;
+> +	case XFS_DIR2_LEAFN_MAGIC:
+> +	case XFS_DIR3_LEAFN_MAGIC:
+> +		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
+> +		sz = sizeof(struct xfs_dir2_leaf_entry);
+> +		break;
+> +	case XFS_DIR2_LEAF1_MAGIC:
+> +	case XFS_DIR3_LEAF1_MAGIC:
+> +		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
+> +		sz = sizeof(struct xfs_dir2_leaf_entry);
+> +		break;
+> +	case XFS_DA_NODE_MAGIC:
+> +	case XFS_DA3_NODE_MAGIC:
+> +		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->node_tree_p;
+> +		sz = sizeof(struct xfs_da_node_entry);
+> +		break;
+> +	default:
+> +		return NULL;
+> +	}
+> +
+> +	ents = fn(blk->bp->b_addr);
+> +	return ents + (sz * rec);
+> +}
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- arch/mips/kernel/vdso.c |    2 +-
- arch/tile/mm/elf.c      |    2 +-
- arch/x86/mm/mpx.c       |    3 ++-
- fs/aio.c                |    2 +-
- include/linux/fs.h      |    2 +-
- include/linux/mm.h      |    9 +++++----
- ipc/shm.c               |    3 ++-
- mm/internal.h           |    2 +-
- mm/mmap.c               |   13 +++++++------
- mm/nommu.c              |    5 +++--
- mm/util.c               |    7 ++++---
- 11 files changed, 28 insertions(+), 22 deletions(-)
+This looks kinda unnecesarily abstracted.
 
-diff --git a/arch/mips/kernel/vdso.c b/arch/mips/kernel/vdso.c
-index cf10654477a9..ab26c7ac0316 100644
---- a/arch/mips/kernel/vdso.c
-+++ b/arch/mips/kernel/vdso.c
-@@ -110,7 +110,7 @@ int arch_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
- 	base = mmap_region(NULL, STACK_TOP, PAGE_SIZE,
- 			   VM_READ|VM_WRITE|VM_EXEC|
- 			   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC,
--			   0, NULL, 0);
-+			   0, NULL, 0, -1);
- 	if (IS_ERR_VALUE(base)) {
- 		ret = base;
- 		goto out;
-diff --git a/arch/tile/mm/elf.c b/arch/tile/mm/elf.c
-index 5ffcbe76aef9..61a9588e141a 100644
---- a/arch/tile/mm/elf.c
-+++ b/arch/tile/mm/elf.c
-@@ -144,7 +144,7 @@ int arch_setup_additional_pages(struct linux_binprm *bprm,
- 		addr = mmap_region(NULL, addr, INTRPT_SIZE,
- 				   VM_READ|VM_EXEC|
- 				   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC, 0,
--				   NULL, 0);
-+				   NULL, 0, -1);
- 		if (addr > (unsigned long) -PAGE_SIZE)
- 			retval = (int) addr;
- 	}
-diff --git a/arch/x86/mm/mpx.c b/arch/x86/mm/mpx.c
-index 9ceaa955d2ba..a8baa94a496b 100644
---- a/arch/x86/mm/mpx.c
-+++ b/arch/x86/mm/mpx.c
-@@ -52,7 +52,8 @@ static unsigned long mpx_mmap(unsigned long len)
- 
- 	down_write(&mm->mmap_sem);
- 	addr = do_mmap(NULL, 0, len, PROT_READ | PROT_WRITE,
--		       MAP_ANONYMOUS | MAP_PRIVATE, VM_MPX, 0, &populate, NULL);
-+			MAP_ANONYMOUS | MAP_PRIVATE, VM_MPX, 0, &populate,
-+			NULL, -1);
- 	up_write(&mm->mmap_sem);
- 	if (populate)
- 		mm_populate(addr, populate);
-diff --git a/fs/aio.c b/fs/aio.c
-index 5a2487217072..d10ca6db2ee6 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -519,7 +519,7 @@ static int aio_setup_ring(struct kioctx *ctx, unsigned int nr_events)
- 
- 	ctx->mmap_base = do_mmap_pgoff(ctx->aio_ring_file, 0, ctx->mmap_size,
- 				       PROT_READ | PROT_WRITE,
--				       MAP_SHARED, 0, &unused, NULL);
-+				       MAP_SHARED, 0, &unused, NULL, -1);
- 	up_write(&mm->mmap_sem);
- 	if (IS_ERR((void *)ctx->mmap_base)) {
- 		ctx->mmap_size = 0;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 51538958f7f5..c2b9bf3dc4e9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1702,7 +1702,7 @@ struct file_operations {
- 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
- 	int (*mmap) (struct file *, struct vm_area_struct *);
- 	int (*mmap_validate) (struct file *, struct vm_area_struct *,
--			unsigned long);
-+			unsigned long, int);
- 	int (*open) (struct inode *, struct file *);
- 	int (*flush) (struct file *, fl_owner_t id);
- 	int (*release) (struct inode *, struct file *);
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 5c4c98e4adc9..0afa19feb755 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2133,11 +2133,11 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
- 
- extern unsigned long mmap_region(struct file *file, unsigned long addr,
- 	unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
--	struct list_head *uf, unsigned long map_flags);
-+	struct list_head *uf, unsigned long map_flags, int fd);
- extern unsigned long do_mmap(struct file *file, unsigned long addr,
- 	unsigned long len, unsigned long prot, unsigned long flags,
- 	vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
--	struct list_head *uf);
-+	struct list_head *uf, int fd);
- extern int do_munmap(struct mm_struct *, unsigned long, size_t,
- 		     struct list_head *uf);
- 
-@@ -2145,9 +2145,10 @@ static inline unsigned long
- do_mmap_pgoff(struct file *file, unsigned long addr,
- 	unsigned long len, unsigned long prot, unsigned long flags,
- 	unsigned long pgoff, unsigned long *populate,
--	struct list_head *uf)
-+	struct list_head *uf, int fd)
- {
--	return do_mmap(file, addr, len, prot, flags, 0, pgoff, populate, uf);
-+	return do_mmap(file, addr, len, prot, flags, 0, pgoff, populate,
-+			uf, fd);
- }
- 
- #ifdef CONFIG_MMU
-diff --git a/ipc/shm.c b/ipc/shm.c
-index 1e2b1692ba2c..585e05eef40a 100644
---- a/ipc/shm.c
-+++ b/ipc/shm.c
-@@ -1399,7 +1399,8 @@ long do_shmat(int shmid, char __user *shmaddr, int shmflg,
- 			goto invalid;
- 	}
- 
--	addr = do_mmap_pgoff(file, addr, size, prot, flags, 0, &populate, NULL);
-+	addr = do_mmap_pgoff(file, addr, size, prot, flags, 0, &populate,
-+			NULL, -1);
- 	*raddr = addr;
- 	err = 0;
- 	if (IS_ERR_VALUE(addr))
-diff --git a/mm/internal.h b/mm/internal.h
-index 1df011f62480..70ed7b06dd85 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -466,7 +466,7 @@ extern u32 hwpoison_filter_enable;
- 
- extern unsigned long  __must_check vm_mmap_pgoff(struct file *, unsigned long,
-         unsigned long, unsigned long,
--        unsigned long, unsigned long);
-+        unsigned long, unsigned long, int);
- 
- extern void set_pageblock_order(void);
- unsigned long reclaim_clean_pages_from_list(struct zone *zone,
-diff --git a/mm/mmap.c b/mm/mmap.c
-index a1bcaa9eff42..c2cb6334a7a9 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1322,7 +1322,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 			unsigned long len, unsigned long prot,
- 			unsigned long flags, vm_flags_t vm_flags,
- 			unsigned long pgoff, unsigned long *populate,
--			struct list_head *uf)
-+			struct list_head *uf, int fd)
- {
- 	struct mm_struct *mm = current->mm;
- 	int pkey = 0;
-@@ -1477,7 +1477,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 			vm_flags |= VM_NORESERVE;
- 	}
- 
--	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf, flags);
-+	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf, flags, fd);
- 	if (!IS_ERR_VALUE(addr) &&
- 	    ((vm_flags & VM_LOCKED) ||
- 	     (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
-@@ -1527,7 +1527,7 @@ SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
- 
- 	flags &= ~(MAP_EXECUTABLE | MAP_DENYWRITE);
- 
--	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff);
-+	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff, fd);
- out_fput:
- 	if (file)
- 		fput(file);
-@@ -1614,7 +1614,7 @@ static inline int accountable_mapping(struct file *file, vm_flags_t vm_flags)
- 
- unsigned long mmap_region(struct file *file, unsigned long addr,
- 		unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
--		struct list_head *uf, unsigned long map_flags)
-+		struct list_head *uf, unsigned long map_flags, int fd)
- {
- 	struct mm_struct *mm = current->mm;
- 	struct vm_area_struct *vma, *prev;
-@@ -1700,7 +1700,8 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
- 		 */
- 		vma->vm_file = get_file(file);
- 		if ((map_flags & MAP_TYPE) == MAP_SHARED_VALIDATE)
--			error = file->f_op->mmap_validate(file, vma, map_flags);
-+			error = file->f_op->mmap_validate(file, vma,
-+					map_flags, fd);
- 		else
- 			error = call_mmap(file, vma);
- 		if (error)
-@@ -2842,7 +2843,7 @@ SYSCALL_DEFINE5(remap_file_pages, unsigned long, start, unsigned long, size,
- 
- 	file = get_file(vma->vm_file);
- 	ret = do_mmap_pgoff(vma->vm_file, start, size,
--			prot, flags, pgoff, &populate, NULL);
-+			prot, flags, pgoff, &populate, NULL, -1);
- 	fput(file);
- out:
- 	up_write(&mm->mmap_sem);
-diff --git a/mm/nommu.c b/mm/nommu.c
-index 17c00d93de2e..952d205d3b66 100644
---- a/mm/nommu.c
-+++ b/mm/nommu.c
-@@ -1206,7 +1206,8 @@ unsigned long do_mmap(struct file *file,
- 			vm_flags_t vm_flags,
- 			unsigned long pgoff,
- 			unsigned long *populate,
--			struct list_head *uf)
-+			struct list_head *uf,
-+			int fd)
- {
- 	struct vm_area_struct *vma;
- 	struct vm_region *region;
-@@ -1439,7 +1440,7 @@ SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
- 
- 	flags &= ~(MAP_EXECUTABLE | MAP_DENYWRITE);
- 
--	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff);
-+	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff, fd);
- 
- 	if (file)
- 		fput(file);
-diff --git a/mm/util.c b/mm/util.c
-index 34e57fae959d..dcf48d929185 100644
---- a/mm/util.c
-+++ b/mm/util.c
-@@ -319,7 +319,7 @@ EXPORT_SYMBOL_GPL(get_user_pages_fast);
- 
- unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
- 	unsigned long len, unsigned long prot,
--	unsigned long flag, unsigned long pgoff)
-+	unsigned long flag, unsigned long pgoff, int fd)
- {
- 	unsigned long ret;
- 	struct mm_struct *mm = current->mm;
-@@ -331,7 +331,7 @@ unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
- 		if (down_write_killable(&mm->mmap_sem))
- 			return -EINTR;
- 		ret = do_mmap_pgoff(file, addr, len, prot, flag, pgoff,
--				    &populate, &uf);
-+				    &populate, &uf, fd);
- 		up_write(&mm->mmap_sem);
- 		userfaultfd_unmap_complete(mm, &uf);
- 		if (populate)
-@@ -349,7 +349,8 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
- 	if (unlikely(offset_in_page(offset)))
- 		return -EINVAL;
- 
--	return vm_mmap_pgoff(file, addr, len, prot, flag, offset >> PAGE_SHIFT);
-+	return vm_mmap_pgoff(file, addr, len, prot, flag,
-+			offset >> PAGE_SHIFT, -1);
- }
- EXPORT_SYMBOL(vm_mmap);
- 
+	case XFS_ATTR_LEAF_MAGIC:
+	case XFS_ATTR3_LEAF_MAGIC:
+		ents = xfs_attr3_leaf_entryp(blk->bp->b_addr);
+		return ents + (rec * sizeof(struct xfs_attr_leaf_entry));
 
+	case XFS_DIR2_LEAF1_MAGIC:
+	case XFS_DIR3_LEAF1_MAGIC:
+	case XFS_DIR2_LEAFN_MAGIC:
+	case XFS_DIR3_LEAFN_MAGIC:
+		ents = ds->dargs.dp->d_ops->leaf_ents_p(blk->bp->b_addr);
+		return ents + (rec * sizeof(struct xfs_dir2_leaf_entry));
+
+	case XFS_DA_NODE_MAGIC:
+	case XFS_DA3_NODE_MAGIC:
+		ents = ds->dargs.dp->d_ops->node_tree_p(blk->bp->b_addr)
+		return ents + (rec * sizeof(struct xfs_da_node_entry));
+
+
+> +
+> +/* Scrub a da btree hash (key). */
+> +int
+> +xfs_scrub_da_btree_hash(
+> +	struct xfs_scrub_da_btree	*ds,
+> +	int				level,
+> +	__be32				*hashp)
+> +{
+> +	struct xfs_da_state_blk		*blks;
+> +	struct xfs_da_node_entry	*btree;
+
+*entry?
+
+> +	xfs_dahash_t			hash;
+> +	xfs_dahash_t			parent_hash;
+> +
+> +	/* Is this hash in order? */
+> +	hash = be32_to_cpu(*hashp);
+> +	if (hash < ds->hashes[level])
+> +		xfs_scrub_da_set_corrupt(ds, level);
+> +	ds->hashes[level] = hash;
+> +
+> +	if (level == 0)
+> +		return 0;
+> +
+> +	/* Is this hash no larger than the parent hash? */
+> +	blks = ds->state->path.blk;
+> +	btree = xfs_scrub_da_btree_entry(ds, level - 1, blks[level - 1].index);
+
+entry = ?
+
+> +	parent_hash = be32_to_cpu(btree->hashval);
+> +	if (parent_hash < hash)
+> +		xfs_scrub_da_set_corrupt(ds, level);
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Check a da btree pointer.  Returns true if it's ok to use this
+> + * pointer.
+> + */
+> +STATIC bool
+> +xfs_scrub_da_btree_ptr_ok(
+> +	struct xfs_scrub_da_btree	*ds,
+> +	int				level,
+> +	xfs_dablk_t			blkno)
+> +{
+> +	if (blkno < ds->lowest || (ds->highest != 0 && blkno >= ds->highest)) {
+> +		xfs_scrub_da_set_corrupt(ds, level);
+> +		return false;
+> +	}
+
+Not sure what lowest and highest are here - the structure definition
+is not commented. I /think/ it's the offset within the dierctory
+address space for the leaf pointers (i.e. XFS_DIR2_LEAF_OFFSET ->
+XFS_DIR2_FREE_OFFSET for directories), but I'm mostly guessing from
+context here...
+
+> +
+> +	return true;
+> +}
+> +
+> +/*
+> + * The da btree scrubber can handle leaf1 blocks as a degenerate
+> + * form of da btree.  Since the regular da code doesn't handle
+
+degenerate form of LEAFN blocks?
+
+> +
+> +/* Check a block's sibling. */
+> +STATIC int
+> +xfs_scrub_da_btree_block_check_sibling(
+> +	struct xfs_scrub_da_btree	*ds,
+> +	int				level,
+> +	int				direction,
+> +	xfs_dablk_t			sibling)
+> +{
+> +	int				retval;
+> +	int				error;
+> +
+> +	if (!sibling)
+> +		return 0;
+> +
+> +	/* Move the alternate cursor back one block. */
+
+Move the alternate cursor one block in the direction specified?
+
+> +	memcpy(&ds->state->altpath, &ds->state->path,
+> +			sizeof(ds->state->altpath));
+> +	error = xfs_da3_path_shift(ds->state, &ds->state->altpath,
+> +			direction, false, &retval);
+> +	if (!xfs_scrub_da_op_ok(ds, level, &error))
+> +		return error;
+> +	if (retval) {
+> +		xfs_scrub_da_set_corrupt(ds, level);
+> +		return error;
+> +	}
+> +
+> +	if (ds->state->altpath.blk[level].blkno != sibling)
+> +		xfs_scrub_da_set_corrupt(ds, level);
+> +	xfs_trans_brelse(ds->dargs.trans, ds->state->altpath.blk[level].bp);
+> +	return error;
+> +}
+> +
+> +/* Check a block's sibling pointers. */
+> +STATIC int
+> +xfs_scrub_da_btree_block_check_siblings(
+> +	struct xfs_scrub_da_btree	*ds,
+> +	int				level,
+> +	struct xfs_da_blkinfo		*hdr)
+> +{
+> +	xfs_dablk_t			forw;
+> +	xfs_dablk_t			back;
+> +	int				error = 0;
+> +
+> +	forw = be32_to_cpu(hdr->forw);
+> +	back = be32_to_cpu(hdr->back);
+> +
+> +	/* Top level blocks should not have sibling pointers. */
+> +	if (level == 0) {
+> +		if (forw != 0 || back != 0)
+> +			xfs_scrub_da_set_corrupt(ds, level);
+> +		return error;
+
+Error is always zero here?
+
+> +	}
+> +
+> +	/*
+> +	 * Check back (left) and forw (right) pointers.  These functions
+> +	 * absorb error codes for us.
+> +	 */
+> +	error = xfs_scrub_da_btree_block_check_sibling(ds, level, 0, back);
+> +	if (error)
+> +		goto out;
+> +	error = xfs_scrub_da_btree_block_check_sibling(ds, level, 1, forw);
+> +
+> +out:
+> +	memset(&ds->state->altpath, 0, sizeof(ds->state->altpath));
+> +	return error;
+> +}
+> +
+> +/* Load a dir/attribute block from a btree. */
+> +STATIC int
+> +xfs_scrub_da_btree_block(
+> +	struct xfs_scrub_da_btree	*ds,
+> +	int				level,
+> +	xfs_dablk_t			blkno)
+> +{
+> +	struct xfs_da_state_blk		*blk;
+> +	struct xfs_da_intnode		*node;
+> +	struct xfs_da_node_entry	*btree;
+> +	struct xfs_da3_blkinfo		*hdr3;
+> +	struct xfs_da_args		*dargs = &ds->dargs;
+> +	struct xfs_inode		*ip = ds->dargs.dp;
+> +	xfs_ino_t			owner;
+> +	int				*pmaxrecs;
+> +	struct xfs_da3_icnode_hdr	nodehdr;
+> +	int				error;
+> +
+> +	blk = &ds->state->path.blk[level];
+> +	ds->state->path.active = level + 1;
+> +
+> +	/* Release old block. */
+> +	if (blk->bp) {
+> +		xfs_trans_brelse(dargs->trans, blk->bp);
+> +		blk->bp = NULL;
+> +	}
+> +
+> +	/* Check the pointer. */
+> +	blk->blkno = blkno;
+> +	if (!xfs_scrub_da_btree_ptr_ok(ds, level, blkno))
+> +		goto out_nobuf;
+> +
+> +	/* Read the buffer. */
+> +	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
+> +			&blk->bp, dargs->whichfork,
+> +			&xfs_scrub_da_btree_buf_ops);
+
+Hmmm - this verifier only special cases LEAF1 blocks, no comments as
+to why it treats everything else as a with the node verifier. DOn't
+we have to special case the attr leaf blocks here as well?
+
+> +	if (!xfs_scrub_da_op_ok(ds, level, &error))
+> +		goto out_nobuf;
+> +
+> +	/* It's ok for a directory not to have a da btree in it. */
+> +	if (ds->dargs.whichfork == XFS_DATA_FORK && level == 0 &&
+> +			blk->bp == NULL)
+> +		goto out_nobuf;
+
+What case is that? single block form? Need a magic number check
+here if that's the case?
+
+> +/* Visit all nodes and leaves of a da btree. */
+> +int
+> +xfs_scrub_da_btree(
+> +	struct xfs_scrub_context	*sc,
+> +	int				whichfork,
+> +	xfs_scrub_da_btree_rec_fn	scrub_fn)
+> +{
+> +	struct xfs_scrub_da_btree	ds;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_da_state_blk		*blks;
+> +	struct xfs_da_node_entry	*key;
+> +	void				*rec;
+> +	xfs_dablk_t			blkno;
+> +	bool				is_attr;
+> +	int				level;
+> +	int				error;
+> +
+> +	memset(&ds, 0, sizeof(ds));
+
+I almost missed this - had to go looking later for why the
+ds.maxrecs[] started off at zero. Can we change this to be
+initialised to zero at declaration like so:
+
+	struct xfs_scrub_da_btree	ds = {};
+
+> +	/* Skip short format data structures; no btree to scan. */
+> +	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> +	    XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE)
+> +		return 0;
+> +
+> +	/* Set up initial da state. */
+> +	is_attr = whichfork == XFS_ATTR_FORK;
+> +	ds.dargs.geo = is_attr ? mp->m_attr_geo : mp->m_dir_geo;
+> +	ds.dargs.dp = sc->ip;
+> +	ds.dargs.whichfork = whichfork;
+> +	ds.dargs.trans = sc->tp;
+> +	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
+> +	ds.state = xfs_da_state_alloc();
+> +	ds.state->args = &ds.dargs;
+> +	ds.state->mp = mp;
+> +	ds.sc = sc;
+> +	blkno = ds.lowest = is_attr ? 0 : ds.dargs.geo->leafblk;
+> +	ds.highest = is_attr ? 0 : ds.dargs.geo->freeblk;
+> +	level = 0;
+
+bit hard to read with all the ?: constructs. Can we make this:
+
+	if (whichfork == XFS_ATTR_FORK) {
+		ds.dargs.geo = ...
+		ds.lowest = ..
+		ds.highest = ...
+	} else {
+		....
+	}
+	......
+
+	blkno = ds.lowest;
+
+> +
+> +	/* Find the root of the da tree, if present. */
+> +	blks = ds.state->path.blk;
+> +	error = xfs_scrub_da_btree_block(&ds, level, blkno);
+> +	if (error)
+> +		goto out_state;
+> +	if (blks[level].bp == NULL)
+> +		goto out_state;
+
+So for a single block directory, we'll jump out here because it's
+at block zero and there's nothing at mp->m_dir_geo.leafblk.
+That means the loop will only ever handle LEAF1/LEAFN format
+directory structures. Correct? (comment?)
+
+> +	blks[level].index = 0;
+> +	while (level >= 0 && level < XFS_DA_NODE_MAXDEPTH) {
+> +		/* Handle leaf block. */
+> +		if (blks[level].magic != XFS_DA_NODE_MAGIC) {
+> +			/* End of leaf, pop back towards the root. */
+> +			if (blks[level].index >= ds.maxrecs[level]) {
+> +				if (level > 0)
+> +					blks[level - 1].index++;
+> +				ds.tree_level++;
+> +				level--;
+> +				continue;
+> +			}
+> +
+> +			/* Dispatch record scrubbing. */
+> +			rec = xfs_scrub_da_btree_entry(&ds, level,
+> +					blks[level].index);
+> +			error = scrub_fn(&ds, level, rec);
+> +			if (error < 0 ||
+> +			    error == XFS_BTREE_QUERY_RANGE_ABORT)
+
+When would we get a XFS_BTREE_QUERY_RANGE_ABORT error?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
