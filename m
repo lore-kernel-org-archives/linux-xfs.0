@@ -1,94 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39432 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdJFUr5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 16:47:57 -0400
-Date: Fri, 6 Oct 2017 13:47:51 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
-Message-ID: <20171006204751.GM7122@magnolia>
-References: <20171006200740.7140-1-bfoster@redhat.com>
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:45532 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751980AbdJFVJ7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 17:09:59 -0400
+Received: by mail-qk0-f180.google.com with SMTP id f199so5981937qke.2
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2017 14:09:59 -0700 (PDT)
+Date: Fri, 6 Oct 2017 17:09:57 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: [ANNOUNCE] fsperf: a simple fs/block performance testing framework
+Message-ID: <20171006210956.vf326sydjiphsefo@destiny>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171006200740.7140-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Oct 06, 2017 at 04:07:40PM -0400, Brian Foster wrote:
-> xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
-> associated blocks. xfs_attr3_node_inactive() recursively descends
-> from internal blocks to leaf blocks, caching block address values
-> along the way to revisit parent blocks, locate the next entry and
-> descend down that branch of the tree.
-> 
-> The code that attempts to reread the parent block is unsafe because
-> it assumes that the local xfs_da_node_entry pointer remains valid
-> after an xfs_trans_brelse() and re-read of the parent buffer. Under
-> heavy memory pressure, it is possible that the buffer has been
-> reclaimed and reallocated by the time the parent block is reread.
-> This means that 'btree' can point to an invalid memory address, lead
-> to a random/garbage value for child_fsb and cause the subsequent
-> read of the attr fork to go off the rails and return a NULL buffer
-> for an attr fork offset that is most likely not allocated.
-> 
-> Note that this problem can be manufactured by setting
-> XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
-> creating a file with a multi-level attr fork and removing it to
-> trigger inactivation.
-> 
-> To address this problem, reinit the node/btree pointers to the
-> parent buffer after it has been re-read. This ensures btree points
-> to a valid record and allows the walk to proceed.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Hello,
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+One thing that comes up a lot every LSF is the fact that we have no general way
+that we do performance testing.  Every fs developer has a set of scripts or
+things that they run with varying degrees of consistency, but nothing central
+that we all use.  I for one am getting tired of finding regressions when we are
+deploying new kernels internally, so I wired this thing up to try and address
+this need.
 
-/me wonders if this is a good enough reason to introduce a new errortag
-that turns xfs_buf_set_ref into a no-op and fills bp->b_addr with
-garbage prior to releasing the memory to weed out any other dangling
-pointers?
+We all hate convoluted setups, the more brain power we have to put in to setting
+something up the less likely we are to use it, so I took the xfstests approach
+of making it relatively simple to get running and relatively easy to add new
+tests.  For right now the only thing this framework does is run fio scripts.  I
+chose fio because it already gathers loads of performance data about it's runs.
+We have everything we need there, latency, bandwidth, cpu time, and all broken
+down by reads, writes, and trims.  I figure most of us are familiar enough with
+fio and how it works to make it relatively easy to add new tests to the
+framework.
 
-> ---
-> 
-> I suspect this is the cause of the NULL buf problem down in
-> xfs_attr_inactive(). I can manufacture an instance of that problem as
-> noted above. We have a customer who's hitting that problem and will
-> attempt to validate this fix, but there is no confirmation as of yet.
-> I'm posting this for review in the meantime because this seems like a
-> legit fix regardless of whether they are hitting this or something else.
+I've posted my code up on github, you can get it here
 
-Let me know what they report back.
+https://github.com/josefbacik/fsperf
 
---D
+All (well most) of the results from fio are stored in a local sqlite database.
+Right now the comparison stuff is very crude, it simply checks against the
+previous run and it only checks a few of the keys by default.  You can check
+latency if you want, but while writing this stuff up it seemed that latency was
+too variable from run to run to be useful in a "did my thing regress or improve"
+sort of way.
 
-> Brian
-> 
->  fs/xfs/xfs_attr_inactive.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index ebd66b1..e3a950e 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -302,6 +302,8 @@ xfs_attr3_node_inactive(
->  						 &bp, XFS_ATTR_FORK);
->  			if (error)
->  				return error;
-> +			node = bp->b_addr;
-> +			btree = dp->d_ops->node_tree_p(node);
->  			child_fsb = be32_to_cpu(btree[i + 1].before);
->  			xfs_trans_brelse(*trans, bp);
->  		}
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The configuration is brain dead simple, the README has examples.  All you need
+to do is make your local.cfg, run ./setup and then run ./fsperf and you are good
+to go.
+
+The plan is to add lots of workloads as we discover regressions and such.  We
+don't want anything that takes too long to run otherwise people won't run this,
+so the existing tests don't take much longer than a few minutes each.  I will be
+adding some more comparison options so you can compare against averages of all
+previous runs and such.
+
+Another future goal is to parse the sqlite database and generate graphs of all
+runs for the tests so we can visualize changes over time.  This is where the
+latency measurements will be more useful so we can spot patterns rather than
+worrying about test to test variances.
+
+Please let me know if you have any feedback.  I'll take github pull requests for
+people who like that workflow, but email'ed patches work as well.  Thanks,
+
+Josef
