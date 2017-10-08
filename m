@@ -1,96 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42855 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753187AbdJHDyv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Oct 2017 23:54:51 -0400
-Date: Sat, 7 Oct 2017 20:54:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 17/25] xfs: scrub inode block mappings
-Message-ID: <20171008035447.GP7122@magnolia>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706335646.19351.8363960454156993724.stgit@magnolia>
- <20171006025123.GQ3666@dastard>
- <20171006170044.GJ7122@magnolia>
- <20171007231055.GX3666@dastard>
+Received: from mga11.intel.com ([192.55.52.93]:40294 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750733AbdJHEJK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Oct 2017 00:09:10 -0400
+Subject: [PATCH v8 1/2] iommu: up-level sg_num_pages() from amd-iommu
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sat, 07 Oct 2017 21:02:45 -0700
+Message-ID: <150743535284.13602.15352862726070248486.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150732937720.22363.1037155753760964267.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150732937720.22363.1037155753760964267.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171007231055.GX3666@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org
 
-On Sun, Oct 08, 2017 at 10:10:55AM +1100, Dave Chinner wrote:
-> On Fri, Oct 06, 2017 at 10:00:44AM -0700, Darrick J. Wong wrote:
-> > On Fri, Oct 06, 2017 at 01:51:23PM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 03, 2017 at 01:42:36PM -0700, Darrick J. Wong wrote:
-> > > > +	    daddr >= info->eofs ||
-> > > > +	    daddr + dlen > info->eofs)
-> > > > +		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-> > > > +				irec->br_startoff);
-> > > > +
-> > > > +	if (irec->br_state == XFS_EXT_UNWRITTEN &&
-> > > > +	    !xfs_sb_version_hasextflgbit(&mp->m_sb))
-> > > 
-> > > Superblock scrubber should reject any filesystem without the
-> > > extflgbit as corrupt - it's always set by mkfs - so I'm not sure we
-> > > need to check this here.
-> > 
-> > What happens if scrub encounters a v4 filesystem without EXTFLGBIT?
-> 
-> We don't support such filesystems (user level stale data exposure
-> security risk), but we have allowed them to continue to mount
-> because such filesystems did exist in the past (*cough* SGI DMF
-> database partitions *cough*). I'd suggest scrub should say
-> filesystems without the flag are bad are too old to be scrubbed
-> correctly.
+iommu_sg_num_pages() is a helper that walks a scattlerlist and counts
+pages taking segment boundaries and iommu_num_pages() into account.
+Up-level it for determining the IOVA range that dma_map_ops established
+at dma_map_sg() time. The intent is to iommu_unmap() the IOVA range in
+advance of freeing IOVA range.
 
-Ok, works for me.
+Cc: Joerg Roedel <joro@8bytes.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+New patch in v8.
 
-> > The superblock scrubber only checks that the secondary superblocks are
-> > consistent (geometry-wise) with sb 0, and mount doesn't prohibit
-> > !EXTFLGBIT filesystems from mounting.  fallocate and friends even work,
-> > albeit slower because we actually write zeroes to the disk in lieu of
-> > setting the unwritten flag, apparently.
-> 
-> Unwritten extents were enabled by default in 2003, and the mkfs flag
-> was dropped completely in 2007. So no filesystem made in the past
-> ten years should have this set.
-> 
-> > But, seeing as mkfs always sets EXTFLGBIT and v5 implies the feature
-> > even if the bit isn't set; and there's no way to turn off the feature
-> > bit (except unsupported things like xfs_db -x), are you suggesting that
-> > we should simply end support for mounting !EXTFLGBIT v4 filesystems?
-> 
-> I wasn't suggesting that, but perhaps we should.
+ drivers/iommu/amd_iommu.c |   30 ++----------------------------
+ drivers/iommu/iommu.c     |   27 +++++++++++++++++++++++++++
+ include/linux/iommu.h     |    2 ++
+ 3 files changed, 31 insertions(+), 28 deletions(-)
 
-Anyone want to send a patch to get people out of the woodwork?
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index c8e1a45af182..4795b0823469 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -2459,32 +2459,6 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+ 	__unmap_single(dma_dom, dma_addr, size, dir);
+ }
+ 
+-static int sg_num_pages(struct device *dev,
+-			struct scatterlist *sglist,
+-			int nelems)
+-{
+-	unsigned long mask, boundary_size;
+-	struct scatterlist *s;
+-	int i, npages = 0;
+-
+-	mask          = dma_get_seg_boundary(dev);
+-	boundary_size = mask + 1 ? ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT :
+-				   1UL << (BITS_PER_LONG - PAGE_SHIFT);
+-
+-	for_each_sg(sglist, s, nelems, i) {
+-		int p, n;
+-
+-		s->dma_address = npages << PAGE_SHIFT;
+-		p = npages % boundary_size;
+-		n = iommu_num_pages(sg_phys(s), s->length, PAGE_SIZE);
+-		if (p + n > boundary_size)
+-			npages += boundary_size - p;
+-		npages += n;
+-	}
+-
+-	return npages;
+-}
+-
+ /*
+  * The exported map_sg function for dma_ops (handles scatter-gather
+  * lists).
+@@ -2507,7 +2481,7 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
+ 	dma_dom  = to_dma_ops_domain(domain);
+ 	dma_mask = *dev->dma_mask;
+ 
+-	npages = sg_num_pages(dev, sglist, nelems);
++	npages = iommu_sg_num_pages(dev, sglist, nelems);
+ 
+ 	address = dma_ops_alloc_iova(dev, dma_dom, npages, dma_mask);
+ 	if (address == AMD_IOMMU_MAPPING_ERROR)
+@@ -2585,7 +2559,7 @@ static void unmap_sg(struct device *dev, struct scatterlist *sglist,
+ 
+ 	startaddr = sg_dma_address(sglist) & PAGE_MASK;
+ 	dma_dom   = to_dma_ops_domain(domain);
+-	npages    = sg_num_pages(dev, sglist, nelems);
++	npages    = iommu_sg_num_pages(dev, sglist, nelems);
+ 
+ 	__unmap_single(dma_dom, startaddr, npages << PAGE_SHIFT, dir);
+ }
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 3de5c0bcb5cc..cfe6eeea3578 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -33,6 +33,7 @@
+ #include <linux/bitops.h>
+ #include <linux/property.h>
+ #include <trace/events/iommu.h>
++#include <linux/iommu-helper.h>
+ 
+ static struct kset *iommu_group_kset;
+ static DEFINE_IDA(iommu_group_ida);
+@@ -1631,6 +1632,32 @@ size_t iommu_unmap_fast(struct iommu_domain *domain,
+ }
+ EXPORT_SYMBOL_GPL(iommu_unmap_fast);
+ 
++int iommu_sg_num_pages(struct device *dev, struct scatterlist *sglist,
++		int nelems)
++{
++	unsigned long mask, boundary_size;
++	struct scatterlist *s;
++	int i, npages = 0;
++
++	mask = dma_get_seg_boundary(dev);
++	boundary_size = mask + 1 ? ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT
++		: 1UL << (BITS_PER_LONG - PAGE_SHIFT);
++
++	for_each_sg(sglist, s, nelems, i) {
++		int p, n;
++
++		s->dma_address = npages << PAGE_SHIFT;
++		p = npages % boundary_size;
++		n = iommu_num_pages(sg_phys(s), s->length, PAGE_SIZE);
++		if (p + n > boundary_size)
++			npages += boundary_size - p;
++		npages += n;
++	}
++
++	return npages;
++}
++EXPORT_SYMBOL_GPL(iommu_sg_num_pages);
++
+ size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
+ 			 struct scatterlist *sg, unsigned int nents, int prot)
+ {
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index a7f2ac689d29..5b2d20e1475a 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -303,6 +303,8 @@ extern size_t iommu_unmap(struct iommu_domain *domain, unsigned long iova,
+ 			  size_t size);
+ extern size_t iommu_unmap_fast(struct iommu_domain *domain,
+ 			       unsigned long iova, size_t size);
++extern int iommu_sg_num_pages(struct device *dev, struct scatterlist *sglist,
++		int nelems);
+ extern size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
+ 				struct scatterlist *sg,unsigned int nents,
+ 				int prot);
 
-:)
-
-> > > > +
-> > > > +out_unlock:
-> > > > +	return error;
-> > > 
-> > > Hmmm - out_unlock doesn't unlock anything?
-> > 
-> > Heh, it never does.  Baaaaaaaaad label.
-
-(Fixed.)
-
---D
-
-> :P
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
