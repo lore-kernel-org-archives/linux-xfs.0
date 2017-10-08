@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:26750 "EHLO
         ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753592AbdJHXyV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 19:54:21 -0400
+        by vger.kernel.org with ESMTP id S1753592AbdJHXyW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 19:54:22 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1e1LOk-0002Ej-2J
+        id 1e1LOk-0002Ek-3F
         for linux-xfs@vger.kernel.org; Mon, 09 Oct 2017 10:54:18 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1e1LOk-0003dY-1D
+        id 1e1LOk-0003db-22
         for linux-xfs@vger.kernel.org; Mon, 09 Oct 2017 10:54:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/4] xfs: don't change inode mode if ACL update fails
-Date: Mon,  9 Oct 2017 10:54:13 +1100
-Message-Id: <20171008235414.13866-4-david@fromorbit.com>
+Subject: [PATCH 4/4] xfs: cancel dirty pages on invalidation
+Date: Mon,  9 Oct 2017 10:54:14 +1100
+Message-Id: <20171008235414.13866-5-david@fromorbit.com>
 In-Reply-To: <20171008235414.13866-1-david@fromorbit.com>
 References: <20171008235414.13866-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,65 +25,97 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If we get ENOSPC half way through setting the ACL, the inode mode
-can still be changed even though the ACL does not exist. Reorder the
-operation to only change the mode of the inode if the ACL is set
-correctly.
+Recently we've had warnings arise from the vm handing us pages
+without bufferheads attached to them. This should not ever occur
+in XFS, but we don't defend against it properly if it does. The only
+place where we remove bufferheads from a page is in
+xfs_vm_releasepage(), but we can't tell the difference here between
+"page is dirty so don't release" and "page is dirty but is being
+invalidated so release it".
 
-Whilst this does not fix the problem with crash consistency (that requires
-attribute addition to be a deferred op) it does prevent ENOSPC and other
-non-fatal errors setting an xattr to be handled sanely.
+In some places that are invalidating pages ask for pages to be
+released and follow up afterward calling ->releasepage by checking
+whether the page was dirty and then aborting the invalidation. This
+is a possible vector for releasing buffers from a page but then
+leaving it in the mapping, so we really do need to avoid dirty pages
+in xfs_vm_releasepage().
 
-This fixes xfstests generic/449.
+To differentiate between invalidated pages and normal pages, we need
+to clear the page dirty flag when invalidating the pages. This can
+be done through xfs_vm_invalidatepage(), and will result
+xfs_vm_releasepage() seeing the page as clean which matches the
+bufferhead state on the page after calling block_invalidatepage().
+
+Hence we can re-add the page dirty check in xfs_vm_releasepage to
+catch the case where we might be releasing a page that is actually
+dirty and so should not have the bufferheads on it removed. This
+will remove one possible vector of "dirty page with no bufferheads"
+and so help narrow down the search for the root cause of that
+problem.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_acl.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
+ 1 file changed, 22 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 7034e17535de..3354140de07e 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -247,6 +247,8 @@ xfs_set_mode(struct inode *inode, umode_t mode)
- int
- xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f18e5932aec4..067284d84d9e 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -735,6 +735,14 @@ xfs_vm_invalidatepage(
  {
-+	umode_t mode;
-+	bool set_mode = false;
- 	int error = 0;
- 
- 	if (!acl)
-@@ -257,16 +259,24 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 		return error;
- 
- 	if (type == ACL_TYPE_ACCESS) {
--		umode_t mode;
--
- 		error = posix_acl_update_mode(inode, &mode, &acl);
- 		if (error)
- 			return error;
--		error = xfs_set_mode(inode, mode);
--		if (error)
--			return error;
-+		set_mode = true;
- 	}
- 
-  set_acl:
--	return __xfs_set_acl(inode, acl, type);
-+	error =  __xfs_set_acl(inode, acl, type);
-+	if (error)
-+		return error;
+ 	trace_xfs_invalidatepage(page->mapping->host, page, offset,
+ 				 length);
 +
 +	/*
-+	 * We set the mode after successfully updating the ACL xattr because the
-+	 * xattr update can fail at ENOSPC and we don't want to change the mode
-+	 * if the ACL update hasn't been applied.
++	 * If we are invalidating the entire page, clear the dirty state from it
++	 * so that we can check for attempts to release dirty cached pages in
++	 * xfs_vm_releasepage().
 +	 */
-+	if (set_mode)
-+		error = xfs_set_mode(inode, mode);
++	if (offset == 0 && length >= PAGE_SIZE)
++		cancel_dirty_page(page);
+ 	block_invalidatepage(page, offset, length);
+ }
+ 
+@@ -1190,25 +1198,27 @@ xfs_vm_releasepage(
+ 	 * mm accommodates an old ext3 case where clean pages might not have had
+ 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
+ 	 * ->releasepage() via shrink_active_list(). Conversely,
+-	 * block_invalidatepage() can send pages that are still marked dirty
+-	 * but otherwise have invalidated buffers.
++	 * block_invalidatepage() can send pages that are still marked dirty but
++	 * otherwise have invalidated buffers.
+ 	 *
+ 	 * We want to release the latter to avoid unnecessary buildup of the
+-	 * LRU, skip the former and warn if we've left any lingering
+-	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
+-	 * or unwritten buffers and warn if the page is not dirty. Otherwise
+-	 * try to release the buffers.
++	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
++	 * that are entirely invalidated and need to be released.  Hence the
++	 * only time we should get dirty pages here is through
++	 * shrink_active_list() and so we can simply skip those now.
++	 *
++	 * warn if we've left any lingering delalloc/unwritten buffers on clean
++	 * or invalidated pages we are about to release.
+ 	 */
++	if (PageDirty(page))
++		return 0;
 +
-+	return error;
+ 	xfs_count_page_state(page, &delalloc, &unwritten);
+ 
+-	if (delalloc) {
+-		WARN_ON_ONCE(!PageDirty(page));
++	if (WARN_ON_ONCE(delalloc))
+ 		return 0;
+-	}
+-	if (unwritten) {
+-		WARN_ON_ONCE(!PageDirty(page));
++	if (WARN_ON_ONCE(unwritten))
+ 		return 0;
+-	}
+ 
+ 	return try_to_free_buffers(page);
  }
 -- 
 2.14.2
