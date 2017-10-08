@@ -1,157 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:6139 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753187AbdJHDvZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 7 Oct 2017 23:51:25 -0400
-Subject: [PATCH v8] dma-mapping: introduce dma_get_iommu_domain()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 07 Oct 2017 20:45:00 -0700
-Message-ID: <150743420333.12880.6968831423519457797.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42855 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753187AbdJHDyv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Oct 2017 23:54:51 -0400
+Date: Sat, 7 Oct 2017 20:54:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 17/25] xfs: scrub inode block mappings
+Message-ID: <20171008035447.GP7122@magnolia>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706335646.19351.8363960454156993724.stgit@magnolia>
+ <20171006025123.GQ3666@dastard>
+ <20171006170044.GJ7122@magnolia>
+ <20171007231055.GX3666@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171007231055.GX3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Add a dma-mapping api helper to retrieve the generic iommu_domain for a device.
-The motivation for this interface is making RDMA transfers to DAX mappings
-safe. If the DAX file's block map changes we need to be to reliably stop
-accesses to blocks that have been freed or re-assigned to a new file. With the
-iommu_domain and a callback from the DAX filesystem the kernel can safely
-revoke access to a DMA device. The process that performed the RDMA memory
-registration is also notified of this revocation event, but the kernel can not
-otherwise be in the position of waiting for userspace to quiesce the device.
+On Sun, Oct 08, 2017 at 10:10:55AM +1100, Dave Chinner wrote:
+> On Fri, Oct 06, 2017 at 10:00:44AM -0700, Darrick J. Wong wrote:
+> > On Fri, Oct 06, 2017 at 01:51:23PM +1100, Dave Chinner wrote:
+> > > On Tue, Oct 03, 2017 at 01:42:36PM -0700, Darrick J. Wong wrote:
+> > > > +	    daddr >= info->eofs ||
+> > > > +	    daddr + dlen > info->eofs)
+> > > > +		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+> > > > +				irec->br_startoff);
+> > > > +
+> > > > +	if (irec->br_state == XFS_EXT_UNWRITTEN &&
+> > > > +	    !xfs_sb_version_hasextflgbit(&mp->m_sb))
+> > > 
+> > > Superblock scrubber should reject any filesystem without the
+> > > extflgbit as corrupt - it's always set by mkfs - so I'm not sure we
+> > > need to check this here.
+> > 
+> > What happens if scrub encounters a v4 filesystem without EXTFLGBIT?
+> 
+> We don't support such filesystems (user level stale data exposure
+> security risk), but we have allowed them to continue to mount
+> because such filesystems did exist in the past (*cough* SGI DMF
+> database partitions *cough*). I'd suggest scrub should say
+> filesystems without the flag are bad are too old to be scrubbed
+> correctly.
 
-Since PMEM+DAX is currently only enabled for x86, we only update the x86
-iommu drivers.
+Ok, works for me.
 
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-Changes since v7:
-* retrieve the iommu_domain so that we can later pass the results of
-  dma_map_* to iommu_unmap() in advance of the actual dma_unmap_*.
+> > The superblock scrubber only checks that the secondary superblocks are
+> > consistent (geometry-wise) with sb 0, and mount doesn't prohibit
+> > !EXTFLGBIT filesystems from mounting.  fallocate and friends even work,
+> > albeit slower because we actually write zeroes to the disk in lieu of
+> > setting the unwritten flag, apparently.
+> 
+> Unwritten extents were enabled by default in 2003, and the mkfs flag
+> was dropped completely in 2007. So no filesystem made in the past
+> ten years should have this set.
+> 
+> > But, seeing as mkfs always sets EXTFLGBIT and v5 implies the feature
+> > even if the bit isn't set; and there's no way to turn off the feature
+> > bit (except unsupported things like xfs_db -x), are you suggesting that
+> > we should simply end support for mounting !EXTFLGBIT v4 filesystems?
+> 
+> I wasn't suggesting that, but perhaps we should.
 
- drivers/base/dma-mapping.c  |   10 ++++++++++
- drivers/iommu/amd_iommu.c   |   10 ++++++++++
- drivers/iommu/intel-iommu.c |   15 +++++++++++++++
- include/linux/dma-mapping.h |    3 +++
- 4 files changed, 38 insertions(+)
+Anyone want to send a patch to get people out of the woodwork?
 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index e584eddef0a7..fdb9764f95a4 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -369,3 +369,13 @@ void dma_deconfigure(struct device *dev)
- 	of_dma_deconfigure(dev);
- 	acpi_dma_deconfigure(dev);
- }
-+
-+struct iommu_domain *dma_get_iommu_domain(struct device *dev)
-+{
-+	const struct dma_map_ops *ops = get_dma_ops(dev);
-+
-+	if (ops && ops->get_iommu)
-+		return ops->get_iommu(dev);
-+	return NULL;
-+}
-+EXPORT_SYMBOL(dma_get_iommu_domain);
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 51f8215877f5..c8e1a45af182 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2271,6 +2271,15 @@ static struct protection_domain *get_domain(struct device *dev)
- 	return domain;
- }
- 
-+static struct iommu_domain *amd_dma_get_iommu(struct device *dev)
-+{
-+	struct protection_domain *domain = get_domain(dev);
-+
-+	if (IS_ERR(domain))
-+		return NULL;
-+	return &domain->domain;
-+}
-+
- static void update_device_table(struct protection_domain *domain)
- {
- 	struct iommu_dev_data *dev_data;
-@@ -2689,6 +2698,7 @@ static const struct dma_map_ops amd_iommu_dma_ops = {
- 	.unmap_sg	= unmap_sg,
- 	.dma_supported	= amd_iommu_dma_supported,
- 	.mapping_error	= amd_iommu_mapping_error,
-+	.get_iommu	= amd_dma_get_iommu,
- };
- 
- static int init_reserved_iova_ranges(void)
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6784a05dd6b2..f3f4939cebad 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3578,6 +3578,20 @@ static int iommu_no_mapping(struct device *dev)
- 	return 0;
- }
- 
-+static struct iommu_domain *intel_dma_get_iommu(struct device *dev)
-+{
-+	struct dmar_domain *domain;
-+
-+	if (iommu_no_mapping(dev))
-+		return NULL;
-+
-+	domain = get_valid_domain_for_dev(dev);
-+	if (!domain)
-+		return NULL;
-+
-+	return &domain->domain;
-+}
-+
- static dma_addr_t __intel_map_single(struct device *dev, phys_addr_t paddr,
- 				     size_t size, int dir, u64 dma_mask)
- {
-@@ -3872,6 +3886,7 @@ const struct dma_map_ops intel_dma_ops = {
- 	.map_page = intel_map_page,
- 	.unmap_page = intel_unmap_page,
- 	.mapping_error = intel_mapping_error,
-+	.get_iommu = intel_dma_get_iommu,
- #ifdef CONFIG_X86
- 	.dma_supported = x86_dma_supported,
- #endif
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 29ce9815da87..aa62df1d0d72 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -128,6 +128,7 @@ struct dma_map_ops {
- 				   enum dma_data_direction dir);
- 	int (*mapping_error)(struct device *dev, dma_addr_t dma_addr);
- 	int (*dma_supported)(struct device *dev, u64 mask);
-+	struct iommu_domain *(*get_iommu)(struct device *dev);
- #ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
- 	u64 (*get_required_mask)(struct device *dev);
- #endif
-@@ -221,6 +222,8 @@ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
- }
- #endif
- 
-+extern struct iommu_domain *dma_get_iommu_domain(struct device *dev);
-+
- static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
- 					      size_t size,
- 					      enum dma_data_direction dir,
+:)
 
+> > > > +
+> > > > +out_unlock:
+> > > > +	return error;
+> > > 
+> > > Hmmm - out_unlock doesn't unlock anything?
+> > 
+> > Heh, it never does.  Baaaaaaaaad label.
+
+(Fixed.)
+
+--D
+
+> :P
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
