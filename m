@@ -1,105 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:11089 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755084AbdJIUsV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 16:48:21 -0400
-Date: Tue, 10 Oct 2017 07:48:16 +1100
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:29032 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754098AbdJIVJ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 17:09:26 -0400
+Date: Tue, 10 Oct 2017 08:09:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
-Message-ID: <20171009204816.GN3666@dastard>
-References: <20171008235414.13866-1-david@fromorbit.com>
- <20171008235414.13866-5-david@fromorbit.com>
- <20171009142445.GE18663@bfoster.bfoster>
+Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
+ framework
+Message-ID: <20171009210920.GO3666@dastard>
+References: <20171006210956.vf326sydjiphsefo@destiny>
+ <20171009005137.GA3666@dastard>
+ <20171009022509.rz6goq3sec5ppxrr@destiny>
+ <20171009051731.GK3666@dastard>
+ <20171009130050.ufnmdhslc53bwpgc@destiny>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171009142445.GE18663@bfoster.bfoster>
+In-Reply-To: <20171009130050.ufnmdhslc53bwpgc@destiny>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 10:24:46AM -0400, Brian Foster wrote:
-> On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Mon, Oct 09, 2017 at 09:00:51AM -0400, Josef Bacik wrote:
+> On Mon, Oct 09, 2017 at 04:17:31PM +1100, Dave Chinner wrote:
+> > On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
+> > > > Integrating into fstests means it will be immediately available to
+> > > > all fs developers, it'll run on everything that everyone already has
+> > > > setup for filesystem testing, and it will have familiar mkfs/mount
+> > > > option setup behaviour so there's no new hoops for everyone to jump
+> > > > through to run it...
+> > > > 
+> > > 
+> > > TBF I specifically made it as easy as possible because I know we all hate trying
+> > > to learn new shit.
 > > 
-> > Recently we've had warnings arise from the vm handing us pages
-> > without bufferheads attached to them. This should not ever occur
-> > in XFS, but we don't defend against it properly if it does. The only
-> > place where we remove bufferheads from a page is in
-> > xfs_vm_releasepage(), but we can't tell the difference here between
-> > "page is dirty so don't release" and "page is dirty but is being
-> > invalidated so release it".
-> > 
-> 
-> Ok, so we changed ->releasepage() in 99579ccec4 ("xfs: skip dirty pages
-> in ->releasepage()") to deal with the fact that the mm can send
-> legitimately dirty pages to ->releasepage(). That was apparently too
-> aggressive a change because truncated pages would also end up skipped
-> because the dirty bit is not cleared by the time the release occurs.
-> Commit 0a417b8dc1 ("xfs: Timely free truncated dirty pages") modified
-> ->releasepage() again to not skip all dirty pages and only warn for
-> delalloc/unwritten blocks on clean pages.
-> 
-> That was apparently insufficient because we have some codepaths where
-> not skipping dirty pages can allow us to strip the buffers from a page
-> incorrectly...
-
-Right, Jan's patch fixed the truncate problem but re-opened the
-memory reclaim hole. It effectively reverted the original patch.
-
-> > In some places that are invalidating pages ask for pages to be
-> > released and follow up afterward calling ->releasepage by checking
-> > whether the page was dirty and then aborting the invalidation. This
-> > is a possible vector for releasing buffers from a page but then
-> > leaving it in the mapping, so we really do need to avoid dirty pages
-> > in xfs_vm_releasepage().
+> > Yeah, it's also hard to get people to change their workflows to add
+> > a whole new test harness into them. It's easy if it's just a new
+> > command to an existing workflow :P
 > > 
 > 
-> ... but I'm having a hard time parsing that first sentence to understand
-> how that is. Can you elaborate on and/or give a specific reference to
-> this problematic invalidation abort sequence?
+> Agreed, so if you probably won't run this outside of fstests then I'll add it to
+> xfstests.  I envision this tool as being run by maintainers to verify their pull
+> requests haven't regressed since the last set of patches, as well as by anybody
+> trying to fix performance problems.  So it's way more important to me that you,
+> Ted, and all the various btrfs maintainers will run it than anybody else.
+> 
+> > > I figured this was different enough to warrant a separate
+> > > project, especially since I'm going to add block device jobs so Jens can test
+> > > block layer things.  If we all agree we'd rather see this in fstests then I'm
+> > > happy to do that too.  Thanks,
+> > 
+> > I'm not fussed either way - it's a good discussion to have, though.
+> > 
+> > If I want to add tests (e.g. my time-honoured fsmark tests), where
+> > should I send patches?
+> > 
+> 
+> I beat you to that!  I wanted to avoid adding fs_mark to the suite because it
+> means parsing another different set of outputs, so I added a new ioengine to fio
+> for this
+> 
+> http://www.spinics.net/lists/fio/msg06367.html
+> 
+> and added a fio job to do 500k files
+> 
+> https://github.com/josefbacik/fsperf/blob/master/tests/500kemptyfiles.fio
+> 
+> The test is disabled by default for now because obviously the fio support hasn't
+> landed yet.
 
-e.g. invalidate_complete_page2():
+That seems .... misguided. fio is good, but it's not a universal
+solution.
 
-/*                                                                               
- * This is for invalidate_mapping_pages().  That function can be called at       
- * any time, and is not supposed to throw away dirty pages.  But pages can       
-.....
-       if (page_has_private(page) && !try_to_release_page(page, GFP_KERNEL))
-                return 0;
+> I'd _like_ to expand fio for cases we come up with that aren't possible, as
+> there's already a ton of measurements that are taken, especially around
+> latencies.
 
-        spin_lock_irqsave(&mapping->tree_lock, flags);
-        if (PageDirty(page))
-                goto failed;
-....
+To be properly useful it needs to support more than just fio to run
+tests. Indeed, it's largely useless to me if that's all it can do or
+it's a major pain to add support for different tools like fsmark.
 
-It's not supposed to throw away dirty pages. But
-try_to_release_page() on a dirty page in XFS will currently do just
-that.
+e.g.  my typical perf regression test that you see the concurrnet
+fsmark create workload is actually a lot more. It does:
 
-> Also, it looks like truncate_complete_page() eventually and
-> unconditionally clears the page dirty bit, it just happens after the
-> invalidate -> release attempt sequence that occurs down through
-> do_invalidatepage().
+	fsmark to create 50m zero length files
+	umount,
+	run parallel xfs_repair (excellent mmap_sem/page fault punisher)
+	mount
+	run parallel find -ctime (readdir + lookup traversal)
+	unmount, mount
+	run parallel ls -R (readdir + dtype traversal)
+	unmount, mount
+	parallel rm -rf of 50m files
 
-Right, we just need to do it earlier, but.....
+I have variants that use small 4k files or large files rather than
+empty files, taht use different fsync patterns to stress the
+log, use grep -R to traverse the data as well as
+the directory/inode structure instead of find, etc.
 
-> IIUC, this was the problem fixed by Jan's patch
-> mentioned above.  Is there any reason we can't do the dirty cancel a
-> little earlier there? Would that also address this problem?
+> That said I'm not opposed to throwing new stuff in there, it just
+> means we have to add stuff to parse the output and store it in the database in a
+> consistent way, which seems like more of a pain than just making fio do what we
+> need it to.  Thanks,
 
-.... we can't do that in generic code because ext3.
-
-Essentially, there are ext3 specific behaviours encoded into the generic
-code. We can't fix the generic code because then we break ext3,
-and nobody is going to redesign the ext3 journalling code to fix
-the bogosities it has that require the generic invalidation/release
-paths to work the way they do.
-
-That leaves us with having to work around the filesystem specific
-code in the generic paths in the filesystem specific code...
+fio is not going to be able to replace the sort of perf tests I run
+from week to week. If that's all it's going to do then it's not
+directly useful to me...
 
 Cheers,
 
