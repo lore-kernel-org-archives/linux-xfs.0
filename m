@@ -1,315 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58950 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932183AbdJJOzo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:55:44 -0400
-Subject: [PATCH v8 01/14] mm: introduce MAP_SHARED_VALIDATE,
- a mechanism to safely define new mmap flags
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:49:01 -0700
-Message-ID: <150764694114.16882.5128952296874418457.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:60169 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755612AbdJIXmR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 19:42:17 -0400
+Date: Tue, 10 Oct 2017 10:27:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/17] Set up infastructure for deferred attribute
+ operations
+Message-ID: <20171009232701.GU3666@dastard>
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+ <1507327548-3221-3-git-send-email-allison.henderson@oracle.com>
+ <20171009042026.GJ3666@dastard>
+ <acc1732a-7c7a-5a11-ace3-e052134b1590@oracle.com>
+ <8dafd7c1-fd4e-6ec4-28dd-72d4eeff602c@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8dafd7c1-fd4e-6ec4-28dd-72d4eeff602c@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, Andy Lutomirski <luto@kernel.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-The mmap(2) syscall suffers from the ABI anti-pattern of not validating
-unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
-mechanism to define new behavior that is known to fail on older kernels
-without the support. Define a new MAP_SHARED_VALIDATE flag pattern that
-is guaranteed to fail on all legacy mmap implementations.
+On Mon, Oct 09, 2017 at 03:51:42PM -0700, Allison Henderson wrote:
+> On 10/09/2017 02:25 PM, Allison Henderson wrote:
+> >On 10/8/2017 9:20 PM, Dave Chinner wrote:
+> >>On Fri, Oct 06, 2017 at 03:05:33PM -0700, Allison Henderson wrote:
+> >>>Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> >>>    /*
+> >>>   * Inode Log Item Format definitions.
+> >>>@@ -863,4 +872,45 @@ struct xfs_icreate_log {
+> >>>      __be32        icl_gen;    /* inode generation number to use */
+> >>>  };
+> >>>  +/* Flags for defered attribute operations */
+> >>>+#define ATTR_OP_FLAGS_SET    0x01    /* Set the attribute */
+> >>>+#define ATTR_OP_FLAGS_REMOVE    0x02    /* Remove the attribute */
+> >>>+#define ATTR_OP_FLAGS_MAX    0x02    /* Max flags */
+> >>>+
+> >>>+/*
+> >>>+ * ATTRI/ATTRD log format definitions
+> >>>+ */
+> >>>+struct xfs_attr {
+> >>>+    xfs_ino_t    attr_ino;
+> >>>+    uint32_t    attr_op_flags;
+> >>>+    uint32_t    attr_nameval_len;
+> >>>+    uint32_t    attr_name_len;
+> >>>+    uint32_t        attr_flags;
+> >>>+    uint8_t        attr_nameval[MAX_NAMEVAL_LEN];
+> >>>+};
+> >>
+> >>"struct xfs_attr" is very generic. This ends up in the log on disk,
+> >>right? So it's a log format structure? struct xfs_attr_log_format?
+> >>
+> >>This also needs padding to ensure it's size is 64bit aligned.
+> >>
+> Hmm, if this structure is meant to be stored on disk, is it really a
+> good idea to put pointers in here as you mentioned in your
+> conclusion below?  If we get remounted or rebooted and loose the
+> pointer that may not work.  Or am I not understanding what you
+> meant?
 
-It is worth noting that the original proposal was for a standalone
-MAP_VALIDATE flag. However, when that  could not be supported by all
-archs Linus observed:
+The log format structure on disk needs to be encoded correctly - it
+will contain data, not pointers. The in-memory log item will contain
+the pointers to the xattr name/value buffers. i.e.
 
-    I see why you *think* you want a bitmap. You think you want
-    a bitmap because you want to make MAP_VALIDATE be part of MAP_SYNC
-    etc, so that people can do
+struct xfs_attr_log_item {
+	struct xfs_log_item	item;
+	....
+	int			namelen;
+	void			*name_buf;
+	int			valuelen;
+	void			*value_buf;
+	struct xfs_attr_log_format alf;
+};
 
-    ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED
-		    | MAP_SYNC, fd, 0);
+And the log format structure looks like:
 
-    and "know" that MAP_SYNC actually takes.
+struct xfs_attr_log_format {
+	be64		ino;
+	be32		gen;
+	be32		intent_id;
+	be32		op_flags;
+	be32		attr_flags;
+	be32		namelen;
+	be32		valuelen;
+	/* name gets copied here into first trailing log iovec */
+	/* value gets copied here into second trailing log iovec */
+};
 
-    And I'm saying that whole wish is bogus. You're fundamentally
-    depending on special semantics, just make it explicit. It's already
-    not portable, so don't try to make it so.
+note that the intent id is used by recovery to make the intent item
+to the done item - that's probably what the "id" variable in the
+original structure you had was supposed to be used for. :P
 
-    Rename that MAP_VALIDATE as MAP_SHARED_VALIDATE, make it have a value
-    of 0x3, and make people do
+So essentially the ->item_size code does:
 
-    ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE
-		    | MAP_SYNC, fd, 0);
+	/* log format header */
+	nvecs++;
+	nbytes += sizeof(struct xfs_attr_log_format);
+	if (opflags == remove ||
+	    opflags == flipflags)
+		return;
 
-    and then the kernel side is easier too (none of that random garbage
-    playing games with looking at the "MAP_VALIDATE bit", but just another
-    case statement in that map type thing.
+	/* add/set */
+	nvecs += 2;
+	nbytes += namelen;
+	nbytes += valuelen;
+	return;
 
-    Boom. Done.
+And the ->item_format code does something like:
 
-Similar to ->fallocate() we also want the ability to validate the
-support for new flags on a per ->mmap() 'struct file_operations'
-instance basis.  Towards that end arrange for flags to be generically
-validated against a mmap_supported_mask exported by 'struct
-file_operations'. By default all existing flags are implicitly
-supported, but new flags require MAP_SHARED_VALIDATE and
-per-instance-opt-in.
+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_FORMAT,
+	                &alip->alf, sizeof(struct xfs_attr_log_format));
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Andy Lutomirski <luto@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- arch/alpha/include/uapi/asm/mman.h           |    1 +
- arch/mips/include/uapi/asm/mman.h            |    1 +
- arch/mips/kernel/vdso.c                      |    2 +
- arch/parisc/include/uapi/asm/mman.h          |    1 +
- arch/tile/mm/elf.c                           |    3 +-
- arch/xtensa/include/uapi/asm/mman.h          |    1 +
- include/linux/fs.h                           |    2 +
- include/linux/mm.h                           |    2 +
- include/linux/mman.h                         |   39 ++++++++++++++++++++++++++
- include/uapi/asm-generic/mman-common.h       |    1 +
- mm/mmap.c                                    |   21 ++++++++++++--
- tools/include/uapi/asm-generic/mman-common.h |    1 +
- 12 files changed, 69 insertions(+), 6 deletions(-)
+	if (opflags == remove ||
+	    opflags == flipflags)
+		return;
 
-diff --git a/arch/alpha/include/uapi/asm/mman.h b/arch/alpha/include/uapi/asm/mman.h
-index 3b26cc62dadb..92823f24890b 100644
---- a/arch/alpha/include/uapi/asm/mman.h
-+++ b/arch/alpha/include/uapi/asm/mman.h
-@@ -14,6 +14,7 @@
- #define MAP_TYPE	0x0f		/* Mask for type of mapping (OSF/1 is _wrong_) */
- #define MAP_FIXED	0x100		/* Interpret addr exactly */
- #define MAP_ANONYMOUS	0x10		/* don't use a file */
-+#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
- 
- /* not used by linux, but here to make sure we don't clash with OSF/1 defines */
- #define _MAP_HASSEMAPHORE 0x0200
-diff --git a/arch/mips/include/uapi/asm/mman.h b/arch/mips/include/uapi/asm/mman.h
-index da3216007fe0..c77689076577 100644
---- a/arch/mips/include/uapi/asm/mman.h
-+++ b/arch/mips/include/uapi/asm/mman.h
-@@ -30,6 +30,7 @@
- #define MAP_PRIVATE	0x002		/* Changes are private */
- #define MAP_TYPE	0x00f		/* Mask for type of mapping */
- #define MAP_FIXED	0x010		/* Interpret addr exactly */
-+#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
- 
- /* not used by linux, but here to make sure we don't clash with ABI defines */
- #define MAP_RENAME	0x020		/* Assign page to file */
-diff --git a/arch/mips/kernel/vdso.c b/arch/mips/kernel/vdso.c
-index 019035d7225c..cf10654477a9 100644
---- a/arch/mips/kernel/vdso.c
-+++ b/arch/mips/kernel/vdso.c
-@@ -110,7 +110,7 @@ int arch_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
- 	base = mmap_region(NULL, STACK_TOP, PAGE_SIZE,
- 			   VM_READ|VM_WRITE|VM_EXEC|
- 			   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC,
--			   0, NULL);
-+			   0, NULL, 0);
- 	if (IS_ERR_VALUE(base)) {
- 		ret = base;
- 		goto out;
-diff --git a/arch/parisc/include/uapi/asm/mman.h b/arch/parisc/include/uapi/asm/mman.h
-index 775b5d5e41a1..36b688d52de3 100644
---- a/arch/parisc/include/uapi/asm/mman.h
-+++ b/arch/parisc/include/uapi/asm/mman.h
-@@ -14,6 +14,7 @@
- #define MAP_TYPE	0x03		/* Mask for type of mapping */
- #define MAP_FIXED	0x04		/* Interpret addr exactly */
- #define MAP_ANONYMOUS	0x10		/* don't use a file */
-+#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
- 
- #define MAP_DENYWRITE	0x0800		/* ETXTBSY */
- #define MAP_EXECUTABLE	0x1000		/* mark it as an executable */
-diff --git a/arch/tile/mm/elf.c b/arch/tile/mm/elf.c
-index 889901824400..5ffcbe76aef9 100644
---- a/arch/tile/mm/elf.c
-+++ b/arch/tile/mm/elf.c
-@@ -143,7 +143,8 @@ int arch_setup_additional_pages(struct linux_binprm *bprm,
- 		unsigned long addr = MEM_USER_INTRPT;
- 		addr = mmap_region(NULL, addr, INTRPT_SIZE,
- 				   VM_READ|VM_EXEC|
--				   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC, 0, NULL);
-+				   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC, 0,
-+				   NULL, 0);
- 		if (addr > (unsigned long) -PAGE_SIZE)
- 			retval = (int) addr;
- 	}
-diff --git a/arch/xtensa/include/uapi/asm/mman.h b/arch/xtensa/include/uapi/asm/mman.h
-index b15b278aa314..ec597900eec7 100644
---- a/arch/xtensa/include/uapi/asm/mman.h
-+++ b/arch/xtensa/include/uapi/asm/mman.h
-@@ -37,6 +37,7 @@
- #define MAP_PRIVATE	0x002		/* Changes are private */
- #define MAP_TYPE	0x00f		/* Mask for type of mapping */
- #define MAP_FIXED	0x010		/* Interpret addr exactly */
-+#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
- 
- /* not used by linux, but here to make sure we don't clash with ABI defines */
- #define MAP_RENAME	0x020		/* Assign page to file */
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 339e73742e73..51538958f7f5 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1701,6 +1701,8 @@ struct file_operations {
- 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
- 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
- 	int (*mmap) (struct file *, struct vm_area_struct *);
-+	int (*mmap_validate) (struct file *, struct vm_area_struct *,
-+			unsigned long);
- 	int (*open) (struct inode *, struct file *);
- 	int (*flush) (struct file *, fl_owner_t id);
- 	int (*release) (struct inode *, struct file *);
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index f8c10d336e42..5c4c98e4adc9 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2133,7 +2133,7 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
- 
- extern unsigned long mmap_region(struct file *file, unsigned long addr,
- 	unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
--	struct list_head *uf);
-+	struct list_head *uf, unsigned long map_flags);
- extern unsigned long do_mmap(struct file *file, unsigned long addr,
- 	unsigned long len, unsigned long prot, unsigned long flags,
- 	vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index c8367041fafd..94b63b4d71ff 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -7,6 +7,45 @@
- #include <linux/atomic.h>
- #include <uapi/linux/mman.h>
- 
-+/*
-+ * Arrange for legacy / undefined architecture specific flags to be
-+ * ignored by default in LEGACY_MAP_MASK.
-+ */
-+#ifndef MAP_32BIT
-+#define MAP_32BIT 0
-+#endif
-+#ifndef MAP_HUGE_2MB
-+#define MAP_HUGE_2MB 0
-+#endif
-+#ifndef MAP_HUGE_1GB
-+#define MAP_HUGE_1GB 0
-+#endif
-+#ifndef MAP_UNINITIALIZED
-+#define MAP_UNINITIALIZED 0
-+#endif
-+
-+/*
-+ * The historical set of flags that all mmap implementations implicitly
-+ * support when a ->mmap_validate() op is not provided in file_operations.
-+ */
-+#define LEGACY_MAP_MASK (MAP_SHARED \
-+		| MAP_PRIVATE \
-+		| MAP_FIXED \
-+		| MAP_ANONYMOUS \
-+		| MAP_DENYWRITE \
-+		| MAP_EXECUTABLE \
-+		| MAP_UNINITIALIZED \
-+		| MAP_GROWSDOWN \
-+		| MAP_LOCKED \
-+		| MAP_NORESERVE \
-+		| MAP_POPULATE \
-+		| MAP_NONBLOCK \
-+		| MAP_STACK \
-+		| MAP_HUGETLB \
-+		| MAP_32BIT \
-+		| MAP_HUGE_2MB \
-+		| MAP_HUGE_1GB)
-+
- extern int sysctl_overcommit_memory;
- extern int sysctl_overcommit_ratio;
- extern unsigned long sysctl_overcommit_kbytes;
-diff --git a/include/uapi/asm-generic/mman-common.h b/include/uapi/asm-generic/mman-common.h
-index 203268f9231e..ac55d1c0ec0f 100644
---- a/include/uapi/asm-generic/mman-common.h
-+++ b/include/uapi/asm-generic/mman-common.h
-@@ -24,6 +24,7 @@
- #else
- # define MAP_UNINITIALIZED 0x0		/* Don't support this flag */
- #endif
-+#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
- 
- /*
-  * Flags for mlock
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 680506faceae..a1bcaa9eff42 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1389,6 +1389,18 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 		struct inode *inode = file_inode(file);
- 
- 		switch (flags & MAP_TYPE) {
-+		case (MAP_SHARED_VALIDATE):
-+			if ((flags & ~LEGACY_MAP_MASK) == 0) {
-+				/*
-+				 * If all legacy mmap flags, downgrade
-+				 * to MAP_SHARED, i.e. invoke ->mmap()
-+				 * instead of ->mmap_validate()
-+				 */
-+				flags &= ~MAP_TYPE;
-+				flags |= MAP_SHARED;
-+			} else if (!file->f_op->mmap_validate)
-+				return -EOPNOTSUPP;
-+			/* fall through */
- 		case MAP_SHARED:
- 			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
- 				return -EACCES;
-@@ -1465,7 +1477,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 			vm_flags |= VM_NORESERVE;
- 	}
- 
--	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf);
-+	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf, flags);
- 	if (!IS_ERR_VALUE(addr) &&
- 	    ((vm_flags & VM_LOCKED) ||
- 	     (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
-@@ -1602,7 +1614,7 @@ static inline int accountable_mapping(struct file *file, vm_flags_t vm_flags)
- 
- unsigned long mmap_region(struct file *file, unsigned long addr,
- 		unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
--		struct list_head *uf)
-+		struct list_head *uf, unsigned long map_flags)
- {
- 	struct mm_struct *mm = current->mm;
- 	struct vm_area_struct *vma, *prev;
-@@ -1687,7 +1699,10 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
- 		 * new file must not have been exposed to user-space, yet.
- 		 */
- 		vma->vm_file = get_file(file);
--		error = call_mmap(file, vma);
-+		if ((map_flags & MAP_TYPE) == MAP_SHARED_VALIDATE)
-+			error = file->f_op->mmap_validate(file, vma, map_flags);
-+		else
-+			error = call_mmap(file, vma);
- 		if (error)
- 			goto unmap_and_free_vma;
- 
-diff --git a/tools/include/uapi/asm-generic/mman-common.h b/tools/include/uapi/asm-generic/mman-common.h
-index 8c27db0c5c08..202bc4277fb5 100644
---- a/tools/include/uapi/asm-generic/mman-common.h
-+++ b/tools/include/uapi/asm-generic/mman-common.h
-@@ -24,6 +24,7 @@
- #else
- # define MAP_UNINITIALIZED 0x0		/* Don't support this flag */
- #endif
-+#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
- 
- /*
-  * Flags for mlock
+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_NAME,
+	                alip->name_buf, alip->namelen);
+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_VALUE,
+	                alip->value_buf, alip->valuelen);
 
+Make a bit more sense now?
+
+I suspect taht because we won't ever relog a "set" intent, we can
+clear the name_buf/value_buf pointers from the log item once we've
+copied them into the log vector. That means we can use pointers to
+the buffers containing the name and value already allocated in the
+attr code and so won't need to allocate another set of buffers just
+for the log item.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
