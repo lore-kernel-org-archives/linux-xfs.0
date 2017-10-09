@@ -1,47 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38255 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754225AbdJISrl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 14:47:41 -0400
-Date: Mon, 9 Oct 2017 11:47:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/4] xfs: miscellaneous fixes
-Message-ID: <20171009184736.GS7122@magnolia>
-References: <20171008235414.13866-1-david@fromorbit.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:43403 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752072AbdJICSK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 22:18:10 -0400
+Date: Mon, 9 Oct 2017 13:13:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 21/25] xfs: scrub extended attributes
+Message-ID: <20171009021312.GC3666@dastard>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706338252.19351.5670406854902904109.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171008235414.13866-1-david@fromorbit.com>
+In-Reply-To: <150706338252.19351.5670406854902904109.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 10:54:10AM +1100, Dave Chinner wrote:
-> Darrick,
-> 
-> These are fixes that have been sitting in my test tree for a while,
-> so I thought I better get them cleaned out and up into the main
-> tree. They all address recent reported problems on the list - the RT
-> is not directly related to a user bug report but is something I
-> did while looking at the recent CVE issue.
-> 
-> Please consider for merge.
+On Tue, Oct 03, 2017 at 01:43:02PM -0700, Darrick J. Wong wrote:
+> +/* Extended Attributes */
+> +
+> +struct xfs_scrub_xattr {
+> +	struct xfs_attr_list_context	context;
+> +	struct xfs_scrub_context	*sc;
+> +};
 
-For patches 1-3,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+A comment here explaining that we are using the listattr callback
+infrastructure to scrub the xattr?  And, now that I've got to the
+rest of the code, that we don't validate the pointers/values in the
+attribute records when doing dabtree record check because we are
+doing that indirectly afterwards by reading every attribute value.
+And that this follows the pointers for remote attr blocks and reads
+them, hence checking the remote attr is valid via verifiers?
 
-Will run them through a test cycle and see what happens.
+And, with that out of the way, what about attributes that listent
+skips? i.e. those with the flag that says they are not valid? We
+don't check they exist or are valid, and their existence would be
+a case for preening the xattr tree...
 
-(Still trying to wrap my head around #4 having screwed up in that area
-once already.)
+Otherwise this seems pretty straight forward...
 
---D
+Cheers,
 
-> 
-> -Dave.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
