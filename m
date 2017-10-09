@@ -1,320 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45627 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754241AbdJIWvr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:51:47 -0400
-Subject: Re: [PATCH 02/17] Set up infastructure for deferred attribute
- operations
-From: Allison Henderson <allison.henderson@oracle.com>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
- <1507327548-3221-3-git-send-email-allison.henderson@oracle.com>
- <20171009042026.GJ3666@dastard>
- <acc1732a-7c7a-5a11-ace3-e052134b1590@oracle.com>
-Message-ID: <8dafd7c1-fd4e-6ec4-28dd-72d4eeff602c@oracle.com>
-Date: Mon, 9 Oct 2017 15:51:42 -0700
+Received: from mx2.suse.de ([195.135.220.15]:52527 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754246AbdJIWvw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 18:51:52 -0400
+Subject: Re: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
+ <20170929130035.24760-2-rgoldwyn@suse.de> <20171009171953.GR7122@magnolia>
+ <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
+ <20171009223714.GS3666@dastard>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <dd6e45df-da8c-0b8c-cca7-76f937e6cf9d@suse.de>
+Date: Mon, 9 Oct 2017 17:51:48 -0500
 MIME-Version: 1.0
-In-Reply-To: <acc1732a-7c7a-5a11-ace3-e052134b1590@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20171009223714.GS3666@dastard>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
 
 
-On 10/09/2017 02:25 PM, Allison Henderson wrote:
->
->
-> On 10/8/2017 9:20 PM, Dave Chinner wrote:
+On 10/09/2017 05:37 PM, Dave Chinner wrote:
+> On Mon, Oct 09, 2017 at 04:11:17PM -0500, Goldwyn Rodrigues wrote:
 >>
->> On Fri, Oct 06, 2017 at 03:05:33PM -0700, Allison Henderson wrote:
->>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> hi Allison,
 >>
->> I'm just having a quick browse, not a complete review. This is a
->> really good start for deferred attributes, but I think there's bits
->> we'll have to redesign slightly for performance reasons.
+>> On 10/09/2017 12:19 PM, Darrick J. Wong wrote:
+>>> On Fri, Sep 29, 2017 at 08:00:34AM -0500, Goldwyn Rodrigues wrote:
+>>>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>>>
+>>>> This allows to make pwritev2() calls with RWF_NOWAIT,
+>>>> which would fail in case the call blocks.
+>>>>
+>>>> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>>> ---
+>>>>  io/pwrite.c       | 8 +++++++-
+>>>>  man/man8/xfs_io.8 | 6 ++++++
+>>>>  2 files changed, 13 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/io/pwrite.c b/io/pwrite.c
+>>>> index e7d411bb..2b85a528 100644
+>>>> --- a/io/pwrite.c
+>>>> +++ b/io/pwrite.c
+>>>> @@ -52,6 +52,9 @@ pwrite_help(void)
+>>>>  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+>>>>  #ifdef HAVE_PWRITEV
+>>>>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+>>>> +#ifdef HAVE_PWRITEV2
+>>>> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+>>>> +#endif
+>>>
+>>> Separate these two? i.e.
+>>>
+>>> #ifdef HAVE_PWRITEV
+>>> " -V N..."
+>>> #endif
+>>> #ifdef HAVE_PWRITEV2
+>>> " -N ..."
+>>> #endif
+>>>
+>>> They're tested separately in configure, so the ifdefs needn't be nested.
+>>>
+>>>>  #endif
+>>>>  "\n"));
+>>>>  }
+>>>> @@ -276,7 +279,7 @@ pwrite_f(
+>>>>  	init_cvtnum(&fsblocksize, &fssectsize);
+>>>>  	bsize = fsblocksize;
+>>>>  
+>>>> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
+>>>> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+>>>>  		switch (c) {
+>>>>  		case 'b':
+>>>>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+>>>> @@ -305,6 +308,9 @@ pwrite_f(
+>>>>  		case 'i':
+>>>>  			infile = optarg;
+>>>>  			break;
+>>>> +		case 'N':
+>>>> +			pwritev2_flags |= RWF_NOWAIT;
+>>>> +			break;
+>>>
+>>> Needs #ifdef HAVE_PWRITEV2.
+>>>
+>>> If you feel the need to be extra cautious, you could also put:
+>>>
+>>> #ifndef HAVE_PWRITEV2
+>>> 	assert(pwritev2_flags == 0);
+>>> #endif
+>>>
+>>> ...just after the getopt parsing to make sure that we never silently
+>>> drop RWF_* flags due to code bugs.
+>>>
 >>
->> First: needs a commit message to describe the design and structure,
->> so the reviewer is not left to guess. :P
+>> Instead I am planning to put an #else to #ifdef in the case 'N' to make
+>> sure that people who do not have pwritev2() get the proper message
+>> instead of the command failing without reason.
 >>
->>> ---
->>> :100644 100644 b3edd66... 8d2c152... M    fs/xfs/Makefile
->>> :100644 100644 b00ec1f... 5325ec2... M fs/xfs/libxfs/xfs_attr.c
->>> :100644 100644 2ea26b1... 38ae64a... M fs/xfs/libxfs/xfs_attr_leaf.c
->>> :100644 100644 d4f046d... ef0f8bf... M fs/xfs/libxfs/xfs_defer.h
->>> :100644 100644 8372e9b... 3778c8e... M fs/xfs/libxfs/xfs_log_format.h
->>> :100644 100644 0220159... 5372063... M fs/xfs/libxfs/xfs_types.h
->>> :100644 100644 8542606... 06c4081... M    fs/xfs/xfs_attr.h
->>> :000000 100644 0000000... 419f90a... A fs/xfs/xfs_attr_item.c
->>> :000000 100644 0000000... aec854f... A fs/xfs/xfs_attr_item.h
->>> :100644 100644 d9a3a55... a206d51... M    fs/xfs/xfs_super.c
->>> :100644 100644 815b53d2.. 66c3c5f... M    fs/xfs/xfs_trans.h
->>> :000000 100644 0000000... 183c841... A fs/xfs/xfs_trans_attr.c
->>
->> This info isn't needed. Diffstat is sufficient.
->>
->>> @@ -254,7 +261,9 @@ typedef struct xfs_trans_header {
->>>       { XFS_LI_CUI,        "XFS_LI_CUI" }, \
->>>       { XFS_LI_CUD,        "XFS_LI_CUD" }, \
->>>       { XFS_LI_BUI,        "XFS_LI_BUI" }, \
->>> -    { XFS_LI_BUD,        "XFS_LI_BUD" }
->>> +    { XFS_LI_BUD,        "XFS_LI_BUD" }, \
->>> +    { XFS_LI_ATTRI,        "XFS_LI_ATTRI" }, \
->>> +    { XFS_LI_ATTRD,        "XFS_LI_ATTRD" }
->>
->> "attr intent", "attr done"?
->>
->> What object/action are we taking here? Set, flip-flags or remove? Or
->> something else?
->>
->
-> Yes, "intent" and "done" was the idea I was going for. The actions are 
-> set and remove. The info needed for both operations seemed similar 
-> enough that it seemed excessive to make another intent/done type.  The 
-> xfs_attr struct has an attr_op_flags that marks it as a set or a 
-> remove action.  I will add some comments in the code to help clarify.
->
->
->>>     /*
->>>    * Inode Log Item Format definitions.
->>> @@ -863,4 +872,45 @@ struct xfs_icreate_log {
->>>       __be32        icl_gen;    /* inode generation number to use */
->>>   };
->>>   +/* Flags for defered attribute operations */
->>> +#define ATTR_OP_FLAGS_SET    0x01    /* Set the attribute */
->>> +#define ATTR_OP_FLAGS_REMOVE    0x02    /* Remove the attribute */
->>> +#define ATTR_OP_FLAGS_MAX    0x02    /* Max flags */
->>> +
->>> +/*
->>> + * ATTRI/ATTRD log format definitions
->>> + */
->>> +struct xfs_attr {
->>> +    xfs_ino_t    attr_ino;
->>> +    uint32_t    attr_op_flags;
->>> +    uint32_t    attr_nameval_len;
->>> +    uint32_t    attr_name_len;
->>> +    uint32_t        attr_flags;
->>> +    uint8_t        attr_nameval[MAX_NAMEVAL_LEN];
->>> +};
->>
->> "struct xfs_attr" is very generic. This ends up in the log on disk,
->> right? So it's a log format structure? struct xfs_attr_log_format?
->>
->> This also needs padding to ensure it's size is 64bit aligned.
->>
-Hmm, if this structure is meant to be stored on disk, is it really a 
-good idea to put pointers in here as you mentioned in your conclusion 
-below?  If we get remounted or rebooted and loose the pointer that may 
-not work.  Or am I not understanding what you meant?
+>> +               case 'N':
+>> +#ifdef HAVE_PWRITEV2
+>> +                       pwritev2_flags |= RWF_NOWAIT;
+>> +                       break;
+>> +#else
+>> +                       printf(_("-N: Kernel does not support
+>> pwritev2()\n"));
+>> +                       return 0;
+>> +#endif
+> 
+> Why add support for a command only to say "command not supported"?
+> The error message is also incorrect - the build environment didn't
+> support pwritev2, not the kernel the xfs_io binary is currently
+> running on.
+> 
+> As it is, I really don't like this sort of ifdef pattern because it
+> means over time we'll end up with an ifdef mess in the option
+> parsing as more flags are added. Just make the default case say
+> "command -%c not supported", and that removes the need for any of
+> these else cases.
+> 
 
->>> +/*
->>> + * This is the structure used to lay out an attri log item in the
->>> + * log.  The attri_attrs field is a variable size array whose
->>> + * size is given by attri_nattrs.
->>> + */
->>> +struct xfs_attri_log_format {
->>> +    uint16_t        attri_type;    /* attri log item type */
->>> +    uint16_t        attri_size;    /* size of this item */
->>> +    uint64_t        attri_id;    /* attri identifier */
->>> +    struct xfs_attr        attri_attr;    /* attribute */
->>> +};
->>
->> That's got a 4 byte hole in it between attri_size and attri_id,
->> so needs explicit padding. What's attri_id supposed to be and how is
->> it used?
->>
->> Also, i'd drop the "attri" from these, so.....
->
->
-> Hmm, I don't think attri_id is used.  I had used the extent free 
-> intent code as a sort of template for this and probably missed culling 
-> out the id.  I will get this struct cleaned up and padded out.
->
->>
->>> +
->>> +/*
->>> + * This is the structure used to lay out an attrd log item in the
->>> + * log.  The attrd_attrs array is a variable size array whose
->>> + * size is given by attrd_nattrs;
->>> + */
->>> +struct xfs_attrd_log_format {
->>> +    uint16_t        attrd_type;    /* attrd log item type */
->>> +    uint16_t        attrd_size;    /* size of this item */
->>> +    uint64_t        attrd_attri_id;    /* id of corresponding attri */
->>> +    struct xfs_attr        attrd_attr;    /* attribute */
->>> +};
->>
->> .... these can use the same struct xfs_attr_log_format structure.
->>
->
-> Alrighty
->
->>>   #endif /* __XFS_LOG_FORMAT_H__ */
->>> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
->>> index 0220159..5372063 100644
->>> --- a/fs/xfs/libxfs/xfs_types.h
->>> +++ b/fs/xfs/libxfs/xfs_types.h
->>> @@ -23,6 +23,7 @@ typedef uint32_t    prid_t;        /* project ID */
->>>   typedef uint32_t    xfs_agblock_t;    /* blockno in alloc. group */
->>>   typedef uint32_t    xfs_agino_t;    /* inode # within allocation 
->>> grp */
->>>   typedef uint32_t    xfs_extlen_t;    /* extent length in blocks */
->>> +typedef uint32_t    xfs_attrlen_t;    /* attr length */
->>>   typedef uint32_t    xfs_agnumber_t;    /* allocation group number */
->>>   typedef int32_t        xfs_extnum_t;    /* # of extents in a file */
->>>   typedef int16_t        xfs_aextnum_t;    /* # extents in an 
->>> attribute fork */
->>> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
->>> index 8542606..06c4081 100644
->>> --- a/fs/xfs/xfs_attr.h
->>> +++ b/fs/xfs/xfs_attr.h
->>> @@ -18,6 +18,8 @@
->>>   #ifndef __XFS_ATTR_H__
->>>   #define    __XFS_ATTR_H__
->>>   +#include "libxfs/xfs_defer.h"
->>> +
->>>   struct xfs_inode;
->>>   struct xfs_da_args;
->>>   struct xfs_attr_list_context;
->>> @@ -65,6 +67,10 @@ struct xfs_attr_list_context;
->>>    */
->>>   #define    ATTR_MAX_VALUELEN    (64*1024)    /* max length of a 
->>> value */
->>>   +/* Max name length in the xfs_attr_item */
->>> +#define MAX_NAME_LEN        255
->>
->> Should be defined in xfs_da_format.h where the entries and
->> name length types are defined. SHould also try to derive it from
->> the namelen variable of one of the types rather than hard code it.
->>
->>> +#define MAX_NAMEVAL_LEN (MAX_NAME_LEN + ATTR_MAX_VALUELEN)
->>
->> as should this, I think.
->>> +
->>>   /*
->>>    * Define how lists of attribute names are returned to the user from
->>>    * the attr_list() call.  A large, 32bit aligned, buffer is passed in
->>> @@ -87,6 +93,19 @@ typedef struct attrlist_ent {    /* data from 
->>> attr_list() */
->>>   } attrlist_ent_t;
->>>     /*
->>> + * List of attrs to commit later.
->>> + */
->>> +struct xfs_attr_item {
->>> +    xfs_ino_t      xattri_ino;
->>> +    uint32_t      xattri_op_flags;
->>> +    uint32_t      xattri_nameval_len; /* length of name and val */
->>> +    uint32_t      xattri_name_len;    /* length of name */
->>> +    uint32_t      xattri_flags;       /* attr flags */
->>> +    char          xattri_nameval[MAX_NAMEVAL_LEN];
->>> +    struct list_head  xattri_list;
->>> +};
->>
->> Ok, that's a ~65kB structure.
->>
->> Oh, that means the ATTRI/ATTRD log format structures are also 65kB
->> structures. That's going to need fixing - that far too big an
->> allocation to be doing for tiny little xattrs like parent pointers.
->>
->
-> Ok, I will see if I can come up with something more dynamic.
->
->>
->>
->>> +xfs_attri_item_free(
->>> +    struct xfs_attri_log_item    *attrip)
->>> +{
->>> +    kmem_free(attrip->attri_item.li_lv_shadow);
->>> +    kmem_free(attrip);
->>> +}
->>> +
->>> +/*
->>> + * This returns the number of iovecs needed to log the given attri 
->>> item.
->>> + * We only need 1 iovec for an attri item.  It just logs the 
->>> attri_log_format
->>> + * structure.
->>> + */
->>> +static inline int
->>> +xfs_attri_item_sizeof(
->>> +    struct xfs_attri_log_item *attrip)
->>> +{
->>> +    return sizeof(struct xfs_attri_log_format);
->>> +}
->>> +
->>> +STATIC void
->>> +xfs_attri_item_size(
->>> +    struct xfs_log_item    *lip,
->>> +    int            *nvecs,
->>> +    int            *nbytes)
->>> +{
->>> +    *nvecs += 1;
->>> +    *nbytes += xfs_attri_item_sizeof(ATTRI_ITEM(lip));
->>> +}
->>
->> This will trigger 65kB allocations.....
->>
->>> +
->>> +/*
->>> + * This is called to fill in the vector of log iovecs for the
->>> + * given attri log item. We use only 1 iovec, and we point that
->>> + * at the attri_log_format structure embedded in the attri item.
->>> + * It is at this point that we assert that all of the attr
->>> + * slots in the attri item have been filled.
->>> + */
->>> +STATIC void
->>> +xfs_attri_item_format(
->>> +    struct xfs_log_item    *lip,
->>> +    struct xfs_log_vec    *lv)
->>> +{
->>> +    struct xfs_attri_log_item    *attrip = ATTRI_ITEM(lip);
->>> +    struct xfs_log_iovec    *vecp = NULL;
->>> +
->>> +    attrip->attri_format.attri_type = XFS_LI_ATTRI;
->>> +    attrip->attri_format.attri_size = 1;
->>> +
->>> +    xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRI_FORMAT,
->>> +            &attrip->attri_format,
->>> +            xfs_attri_item_sizeof(attrip));
->>> +}
->>
->> ANd we'll always copy 65kB structures here even if the attribute
->> is only a few tens of bytes. That's just going to burn through log
->> bandwidth and really needs fixing.
->>
->> THe log item (and log format) structures really need to point to the
->> attribute name/value information rather than contain copies of them.
->> That way the information that is logged and the allocations required
->> are sized exactly for the attribute being created/removed. The cost
->> of dynamically allocating the buffers is less than the cost of
->> unnecessarily copying and logging 64k on eveery attribute operation.
->>
->> Indeed, for a remove operation there is no value, so we should only
->> be logging an intent with a name (a few tens of bytes), not a 65kb
->> structure....
->>
->> I'll stop here for the moment, because most of this code is going to
->> change to support dynamic allocation of name/value buffers, anyway.
->>
->> Cheers,
->>
->> Dave.
->>
->
-> Alrighty, thanks for the review Dave.  I will work on getting these 
-> things updated and send out another set once I get it working.
->
-> Thank you!
->
-> Allison Henderson
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-> https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PQcxBKCX5YTpkKY057SbK10&r=XFp4B05bcXkJ0dhYaFjd3F8telP01COkBp9cI7mKLb4&m=nw_o5VNTP1pgN6tnmVUK8si19OGGbovdt9cIHgFXjww&s=TVRphCUEAJj2sjtglo4hDCrG8TqgKrNeG3GP5bVT2Oo&e= 
+In that case, it would go to "default" which will print the
+command_usage. I am fine with that as long as the user understands why
+-N is not working.
 
-
+-- 
+Goldwyn
