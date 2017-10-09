@@ -1,122 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:26750 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753592AbdJHXyW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 19:54:22 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1e1LOk-0002Ek-3F
-        for linux-xfs@vger.kernel.org; Mon, 09 Oct 2017 10:54:18 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.89)
-        (envelope-from <david@fromorbit.com>)
-        id 1e1LOk-0003db-22
-        for linux-xfs@vger.kernel.org; Mon, 09 Oct 2017 10:54:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/4] xfs: cancel dirty pages on invalidation
-Date: Mon,  9 Oct 2017 10:54:14 +1100
-Message-Id: <20171008235414.13866-5-david@fromorbit.com>
-In-Reply-To: <20171008235414.13866-1-david@fromorbit.com>
-References: <20171008235414.13866-1-david@fromorbit.com>
+Received: from sandeen.net ([63.231.237.45]:39340 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751172AbdJIDL5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Oct 2017 23:11:57 -0400
+Subject: Re: [GIT PULL] xfsprogs: mkfs refactor
+References: <20171003080607.GM15067@dastard>
+ <eca367b2-03de-517d-9ef5-5400e8a4739e@sandeen.net>
+ <20171009004240.GZ3666@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a6c5d1bd-8cff-95e2-dd0a-2278433c5de1@sandeen.net>
+Date: Sun, 8 Oct 2017 22:11:56 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171009004240.GZ3666@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 10/8/17 7:42 PM, Dave Chinner wrote:
+> On Fri, Oct 06, 2017 at 01:01:39PM -0500, Eric Sandeen wrote:
+>> On 10/3/17 3:06 AM, Dave Chinner wrote:
+>>> Hi Eric,
+>>>
+>>> I've put the latest mkfs refactor code that I have up in place
+>>> you can pull it from. I've rebased it against the current for-next
+>>> tree (4.13.1 release) and fixed all the problems that xfstests
+>>> exposes. The only thing I haven't fixed is xfs/191 that does mkfs
+>>> command line behaviour verification because the refactored version
+>>> fixes several problems that the old mkfs didn't handle correctly
+>>> (e.g. being able to specify certain things like agsize in blocks or
+>>> sectors).
+>>>
+>>> There's a small filter patch needed for xfstests that I'll post in
+>>> a reply to this pull request that will filter out the new "defaults
+>>> sourced from ..." output and so prevent spurious xfstests failures.
+>>>
+>>> If you want I can tag the branch with a signed tag for you to pull
+>>> from (same process as Linus prefers) rather than just a branch in a
+>>> tree. If you'd prefer that I post this as patches instead, then let
+>>> me know and I'll bomb the list instead.
+>>
+>> Thanks Dave.  Trying to un-swamp from other things.
+>>
+>> Only advantage to patchbombing is having a permanent record of discussions,
+>> but maybe it can happen in reference to patches as follows.... mostly
+>> minor nits.
+> 
+> Yup, but when it's been posted before, multiple ppl have said
+> "tested ok" but nobody is looking like they are going to review it,
+> I'm going to send a pull request rather than another patchbomb. :/
 
-Recently we've had warnings arise from the vm handing us pages
-without bufferheads attached to them. This should not ever occur
-in XFS, but we don't defend against it properly if it does. The only
-place where we remove bufferheads from a page is in
-xfs_vm_releasepage(), but we can't tell the difference here between
-"page is dirty so don't release" and "page is dirty but is being
-invalidated so release it".
+That's fine.  I've been swamped, sorry.
 
-In some places that are invalidating pages ask for pages to be
-released and follow up afterward calling ->releasepage by checking
-whether the page was dirty and then aborting the invalidation. This
-is a possible vector for releasing buffers from a page but then
-leaving it in the mapping, so we really do need to avoid dirty pages
-in xfs_vm_releasepage().
+(OTOH it never stopped djwong) ;)
 
-To differentiate between invalidated pages and normal pages, we need
-to clear the page dirty flag when invalidating the pages. This can
-be done through xfs_vm_invalidatepage(), and will result
-xfs_vm_releasepage() seeing the page as clean which matches the
-bufferhead state on the page after calling block_invalidatepage().
+>>
+>>> mkfs: can't specify sector size of internal log
+>>
+>> commit log is a bit vague/misleading; I think you mean that
+>> it should be /disallowed/ because it must match the filesystem's
+>> /sector/ size when it's internal?  It's not actually clear to me why
+>> an external log can have a "mismatched" sector size but internal can't.
+> 
+> I thought that was obvious.  If we have a 512 byte data device (e.g.
+> HDD) but a 4k sector external log device (e.g. pmem) then we'll have
+> the situation where the log device requires a different sector size
+> to the data device.  And we allow this, because the on disk log
+> format is only dependent on the underlying sector size, not the
+> configuration of the filesystem.
+> 
+> However, if the log is on the data device (i.e. internal) then it
+> should match the sector size the data device is using, otherwise
+> one or the other doesn't have atomic sector writes. Not to mention
+> that it's simply wrong to have two different sector sizes for the
+> same device.
 
-Hence we can re-add the page dirty check in xfs_vm_releasepage to
-catch the case where we might be releasing a page that is actually
-dirty and so should not have the bufferheads on it removed. This
-will remove one possible vector of "dirty page with no bufferheads"
-and so help narrow down the search for the root cause of that
-problem.
+Presumably with a 512e drive, you /could/ have 512 vs 4k on fs vs
+log ... but sure, it's not a good idea.  But that wasn't really
+my main point.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
- 1 file changed, 22 insertions(+), 12 deletions(-)
+> If you need to change the write size (i.e. padding) characteristics
+> of the log for an internal/external, then use the log stripe unit
+> because that's exactly what it does...
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f18e5932aec4..067284d84d9e 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -735,6 +735,14 @@ xfs_vm_invalidatepage(
- {
- 	trace_xfs_invalidatepage(page->mapping->host, page, offset,
- 				 length);
-+
-+	/*
-+	 * If we are invalidating the entire page, clear the dirty state from it
-+	 * so that we can check for attempts to release dirty cached pages in
-+	 * xfs_vm_releasepage().
-+	 */
-+	if (offset == 0 && length >= PAGE_SIZE)
-+		cancel_dirty_page(page);
- 	block_invalidatepage(page, offset, length);
- }
+So anyway, I was being a bit pedantic; my main concern is with
+the wording..
+
+Don't say "can't specify," say "disallow specification" -
+that was my main point about the changelog.
+
+i.e. instead of:
+
+mkfs: can't specify sector size of internal log
+Because it's fixed by the underlying device size.
+
+say:
+
+mkfs: disallow specification of sector size of internal log
+
+To guarantee atomic writes, the log sector size must match
+the underlying device's advertised sector size.
+
+which IMHO more clearly says what you're doing and why.
+
+>>> mkfs: introduce a structure to hold CLI options
+>>
+>> "between th einput"  (the input)
+>>
+>> Comment mentions initialization to -1 or 0 but I don't see that this
+>> gets done, at least not in this patch? (Am I missing it?)  I took
+>> this to mean that before anything happens this would be initialized
+>> so we know what was and was not specified after everything was parsed...
+> 
+> Stale comment, updated. We initialise it all to zero, if we need
+> flags to see if the option was set we look at the option table
+> "seen" value.
+> 
+>>> mkfs: introduce a structure to hold CLI options
+>>
+>> +/* quick way of checking is a parameter was set on the CLI */
+>>                          "if"
+>>
+>>> mkfs: factor naming subopts parser
+>>
+>> no "nvflag" in "temp don't break" code?  Oh, nice - write-only var.  Ok.
+>> do we still test it for respec, or care?  Will check later.
+> 
+> I was only making the code build with the temp code. Stuff like
+> crappy write-only vars got dropped at the first point they were
+> found to be crap.
+> 
+> And, FYI, with code that does this:
+> 
+> 	nvflag = nlflag = foo = bar = 0;
+> 
+> gcc does not report set-but-unused or other such warnings because
+> it seems to stop checking the moment there's a multiple assignment
+> statement like the above. Hence shit code like in mkfs basically
+> prevented gcc from warning about how the shit code was dead code....
+
+Yeah, and I confirmed that respecs still get caught, so that's fine.
+I was wondering out loud.
  
-@@ -1190,25 +1198,27 @@ xfs_vm_releasepage(
- 	 * mm accommodates an old ext3 case where clean pages might not have had
- 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
- 	 * ->releasepage() via shrink_active_list(). Conversely,
--	 * block_invalidatepage() can send pages that are still marked dirty
--	 * but otherwise have invalidated buffers.
-+	 * block_invalidatepage() can send pages that are still marked dirty but
-+	 * otherwise have invalidated buffers.
- 	 *
- 	 * We want to release the latter to avoid unnecessary buildup of the
--	 * LRU, skip the former and warn if we've left any lingering
--	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
--	 * or unwritten buffers and warn if the page is not dirty. Otherwise
--	 * try to release the buffers.
-+	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
-+	 * that are entirely invalidated and need to be released.  Hence the
-+	 * only time we should get dirty pages here is through
-+	 * shrink_active_list() and so we can simply skip those now.
-+	 *
-+	 * warn if we've left any lingering delalloc/unwritten buffers on clean
-+	 * or invalidated pages we are about to release.
- 	 */
-+	if (PageDirty(page))
-+		return 0;
-+
- 	xfs_count_page_state(page, &delalloc, &unwritten);
- 
--	if (delalloc) {
--		WARN_ON_ONCE(!PageDirty(page));
-+	if (WARN_ON_ONCE(delalloc))
- 		return 0;
--	}
--	if (unwritten) {
--		WARN_ON_ONCE(!PageDirty(page));
-+	if (WARN_ON_ONCE(unwritten))
- 		return 0;
--	}
- 
- 	return try_to_free_buffers(page);
- }
--- 
-2.14.2
+> 
+>>> mkfs: Introduce mkfs configuration structure
+>>
+>> would be nice to proofread commit log a bit ;)
+> 
+> Seriously, after several hours of tedious, boring patch splitting
+> I only cared that the code was correct. Commit logs were write once,
+> read never. :/
 
+I do appreciate all those tedious hours.
+
+> Fixed.
+
+Thanks.  I only mentioned the ones that look like the dog might
+have helped write them ;)
+
+>>> mkfs: Introduce mkfs configuration structure
+>>
+>> s/teh/the/
+>>
+>> <ok stopping here for now, will send more later>
+> 
+> Thanks!
+
+"You're welcome." ;)  Will try to get through more soon.  We'll
+get this into the next point release, I'm sure.
+
+-Eric
