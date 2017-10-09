@@ -1,208 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35848 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751779AbdJIIRn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 04:17:43 -0400
-Date: Mon, 9 Oct 2017 16:17:41 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] generic: test race between block map change and writeback
-Message-ID: <20171009081741.GG10593@eguan.usersys.redhat.com>
-References: <20170831040237.16022-1-eguan@redhat.com>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:3963 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751896AbdJIK5D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 06:57:03 -0400
+Date: Mon, 9 Oct 2017 21:57:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Questions about backups with XFS
+Message-ID: <20171009105701.GL3666@dastard>
+References: <20171007114343.3bd42f98@lubh.lubhome>
+ <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831040237.16022-1-eguan@redhat.com>
+In-Reply-To: <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Luciano ES <lucmove@gmail.com>, linux-xfs@vger.kernel.org
 
-On Thu, Aug 31, 2017 at 12:02:37PM +0800, Eryu Guan wrote:
-> Run delalloc writes & append writes & non-data-integrity syncs
-> concurrently to test the race between block map change vs writeback.
+On Mon, Oct 09, 2017 at 10:44:51AM +0200, Carlos Maiolino wrote:
+> Hi.
 > 
-> This is to cover an XFS bug that data could be written to wrong
-> block and delay allocated blocks are leaked because the block map
-> was changed due to the removal of speculative allocated eofblocks
-> when writeback is in progress.
 > 
-> And this test partially mimics what lustre-racer[1] test does, using
-> which this bug was first found.
+> On Sat, Oct 07, 2017 at 02:43:43PM +0000, Luciano ES wrote:
+> > I have a few questions and I was torn between asking them separately 
+> > and putting them all in one message. I decided for the latter and I 
+> > hope this is not a problem.
+> > 
+> > Once upon a time, many many years ago, I used to make backup copies 
+> > of my file systems with the 'cp -aux' command, including my live 
+> > root file system. Luckily, I never had to restore any live root file 
+> > system from those backups. They probably would never have worked.
+> > 
+> > Later on, someone taught me to do it like this:
+> > 
+> > find /source -xdev -print0 | cpio -pa0V /target
+> > 
+> > That command is supposed to copy everything, including special files 
+> > (not really sure which) that mere cp or even rsync would not copy. 
+> > I actually used that approach several times, including restoration, 
+> > and it always worked.
+> > 
+> > For some reason, I stopped making backups of my live root file 
+> > system, but I still backup other partitions with rsync, always with 
+> > the --delete-before parameter, so the target is always an exact copy 
+> > of the source.
+> > 
+> > I have been using XFS for a few years and thought that maybe it's 
+> > time I enjoyed all the benefits of the XFS management tools.
+> > However, I am uncertain about things I haven't been able to find in 
+> > the documentation or even on the Web:
+> > 
+> > Question #1:
+> > Does xfsdump really copy EVERYTHING? Can I backup a full live root 
+> > file system with it and expect a restored copy to boot and run 
+> > uneventfully? Or should I rather do a 'hard' image with xfs_copy? 
 > 
-> [1] https://git.hpdd.intel.com/?p=fs/lustre-release.git;a=tree;f=lustre/tests/racer;hb=HEAD
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> xfs_copy must only be used an unmounted filesystem (or read-only, frozen, etc),
+> so, unless you want to freeze/unmount your FS everytime you do a xfs_copy, then
+> xfs_copy is not what you are looking for
 
-Ping on this test.
+I'll just say this: xfs_copy is not a backup tool. It's a filesystem
+image replication tool designed for fast, efficient 1-to-many
+duplication of a golden filesystem image to multiple drives, such as
+is done in manufacturing lines....
 
-Eryu
+Cheers,
 
-> ---
-> 
-> This may not reproduce the bug on all hosts, but it does reproduce the XFS
-> corruption issue reliably on my different test hosts.
-> 
->  tests/generic/451     | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/451.out |   2 +
->  tests/generic/group   |   1 +
->  3 files changed, 133 insertions(+)
->  create mode 100755 tests/generic/451
->  create mode 100644 tests/generic/451.out
-> 
-> diff --git a/tests/generic/451 b/tests/generic/451
-> new file mode 100755
-> index 000000000000..72cdd1c01de2
-> --- /dev/null
-> +++ b/tests/generic/451
-> @@ -0,0 +1,130 @@
-> +#! /bin/bash
-> +# FS QA Test 451
-> +#
-> +# Run delalloc writes & append writes & non-data-integrity syncs concurrently
-> +# to test the race between block map change vs writeback.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +MAXFILES=200
-> +BLOCK_SZ=65536
-> +
-> +LOOP_CNT=12
-> +LOOP_TIME=5
-> +PROC_CNT=16
-> +
-> +stop=$tmp.stop
-> +
-> +# get a random file to work on
-> +getfile()
-> +{
-> +	echo $SCRATCH_MNT/$((RANDOM % MAXFILES))
-> +}
-> +
-> +# delalloc write a relative big file to get enough dirty pages to be written
-> +# back, and XFS needs big enough file to trigger speculative preallocations, so
-> +# freeing these eofblocks could change the extent record
-> +do_write()
-> +{
-> +	local blockcount=$((RANDOM % 100))
-> +	local filesize=$((blockcount * BLOCK_SZ))
-> +	$XFS_IO_PROG -ftc "pwrite -b $BLOCK_SZ 0 $filesize" `getfile` >/dev/null 2>&1
-> +}
-> +
-> +# append another dirty page to the file, the writeback might pick it up too if
-> +# the file is already under writeback
-> +do_append()
-> +{
-> +	echo "test string" >> `getfile`
-> +}
-> +
-> +# issue WB_SYNC_NONE writeback with the '-w' option of sync_range xfs_io
-> +# command, so that the last dirty page from append write can be picked up in
-> +# this writeback cycle. This is not mandatory but could help reproduce XFS
-> +# corruption more easily.
-> +do_writeback()
-> +{
-> +	$XFS_IO_PROG -c "sync_range -w 0 0" `getfile` >/dev/null 2>&1
-> +}
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +# do fsck after each iteration in test
-> +_require_scratch_nocheck
-> +_require_xfs_io_command "sync_range"
-> +
-> +_scratch_mkfs >>$seqres.full 2>&1
-> +_scratch_mount
-> +
-> +# loop for $LOOP_CNT iterations, and each iteration starts $PROC_CNT processes
-> +# for each operation and runs for $LOOP_TIME seconds, and check filesystem
-> +# consistency after each iteration
-> +for i in `seq 1 $LOOP_CNT`; do
-> +	rm -f $stop
-> +	for j in `seq 1 $PROC_CNT`; do
-> +		while [ ! -e $stop ]; do
-> +			do_write
-> +		done &
-> +
-> +		while [ ! -e $stop ]; do
-> +			do_append
-> +		done &
-> +
-> +		while [ ! -e $stop ]; do
-> +			do_writeback
-> +		done &
-> +	done
-> +	sleep $LOOP_TIME
-> +	touch $stop
-> +	wait
-> +
-> +	_scratch_unmount
-> +	# test exits here if fs is inconsistent
-> +	_check_scratch_fs
-> +	_scratch_mount
-> +done
-> +
-> +echo "Silence is golden"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/451.out b/tests/generic/451.out
-> new file mode 100644
-> index 000000000000..db924411b72f
-> --- /dev/null
-> +++ b/tests/generic/451.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 451
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 044ec3f355ed..b4bd66bc65a9 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -453,3 +453,4 @@
->  448 auto quick rw
->  449 auto quick acl enospc
->  450 auto quick rw
-> +451 auto rw
-> -- 
-> 2.13.5
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
