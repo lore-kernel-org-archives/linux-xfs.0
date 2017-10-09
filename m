@@ -1,140 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42596 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755039AbdJIVLV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 17:11:21 -0400
-Subject: Re: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
-References: <20170929130035.24760-1-rgoldwyn@suse.de>
- <20170929130035.24760-2-rgoldwyn@suse.de> <20171009171953.GR7122@magnolia>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
-Date: Mon, 9 Oct 2017 16:11:17 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:46169 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755014AbdJIVOX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 17:14:23 -0400
+Date: Mon, 9 Oct 2017 14:14:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 21/25] xfs: scrub extended attributes
+Message-ID: <20171009211419.GV7122@magnolia>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706338252.19351.5670406854902904109.stgit@magnolia>
+ <20171009021312.GC3666@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171009171953.GR7122@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171009021312.GC3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
+On Mon, Oct 09, 2017 at 01:13:12PM +1100, Dave Chinner wrote:
+> On Tue, Oct 03, 2017 at 01:43:02PM -0700, Darrick J. Wong wrote:
+> > +/* Extended Attributes */
+> > +
+> > +struct xfs_scrub_xattr {
+> > +	struct xfs_attr_list_context	context;
+> > +	struct xfs_scrub_context	*sc;
+> > +};
+> 
+> A comment here explaining that we are using the listattr callback
+> infrastructure to scrub the xattr?
 
+New comments:
 
-On 10/09/2017 12:19 PM, Darrick J. Wong wrote:
-> On Fri, Sep 29, 2017 at 08:00:34AM -0500, Goldwyn Rodrigues wrote:
->> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
->>
->> This allows to make pwritev2() calls with RWF_NOWAIT,
->> which would fail in case the call blocks.
->>
->> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->> ---
->>  io/pwrite.c       | 8 +++++++-
->>  man/man8/xfs_io.8 | 6 ++++++
->>  2 files changed, 13 insertions(+), 1 deletion(-)
->>
->> diff --git a/io/pwrite.c b/io/pwrite.c
->> index e7d411bb..2b85a528 100644
->> --- a/io/pwrite.c
->> +++ b/io/pwrite.c
->> @@ -52,6 +52,9 @@ pwrite_help(void)
->>  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
->>  #ifdef HAVE_PWRITEV
->>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
->> +#ifdef HAVE_PWRITEV2
->> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
->> +#endif
-> 
-> Separate these two? i.e.
-> 
-> #ifdef HAVE_PWRITEV
-> " -V N..."
-> #endif
-> #ifdef HAVE_PWRITEV2
-> " -N ..."
-> #endif
-> 
-> They're tested separately in configure, so the ifdefs needn't be nested.
-> 
->>  #endif
->>  "\n"));
->>  }
->> @@ -276,7 +279,7 @@ pwrite_f(
->>  	init_cvtnum(&fsblocksize, &fssectsize);
->>  	bsize = fsblocksize;
->>  
->> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
->> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
->>  		switch (c) {
->>  		case 'b':
->>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
->> @@ -305,6 +308,9 @@ pwrite_f(
->>  		case 'i':
->>  			infile = optarg;
->>  			break;
->> +		case 'N':
->> +			pwritev2_flags |= RWF_NOWAIT;
->> +			break;
-> 
-> Needs #ifdef HAVE_PWRITEV2.
-> 
-> If you feel the need to be extra cautious, you could also put:
-> 
-> #ifndef HAVE_PWRITEV2
-> 	assert(pwritev2_flags == 0);
-> #endif
-> 
-> ...just after the getopt parsing to make sure that we never silently
-> drop RWF_* flags due to code bugs.
-> 
+/*
+ * Check that an extended attribute key can be looked up by hash.
+ *
+ * We use the XFS attribute list iterator (i.e. xfs_attr_list_int_ilocked)
+ * to call this function for every attribute key in an inode.  Once
+ * we're here, we load the attribute value to see if any errors happen,
+ * or if we get more or less data than we expected.
+ */
 
-Instead I am planning to put an #else to #ifdef in the case 'N' to make
-sure that people who do not have pwritev2() get the proper message
-instead of the command failing without reason.
+...comes before the definition of xfs_scrub_xattr_listent, and...
 
-+               case 'N':
-+#ifdef HAVE_PWRITEV2
-+                       pwritev2_flags |= RWF_NOWAIT;
-+                       break;
-+#else
-+                       printf(_("-N: Kernel does not support
-pwritev2()\n"));
-+                       return 0;
-+#endif
+/*
+ * Look up every xattr in this file by name.
+ *
+ * Use the backend implementation of xfs_attr_list to call
+ * xfs_scrub_xattr_listent on every attribute key in this inode.
+ * In other words, we use the same iterator/callback mechanism
+ * that listattr uses to scrub extended attributes, though in our
+ * _listent function, we check the value of the attribute.
+ *
+ * The VFS only locks i_rwsem when modifying attrs, so keep all
+ * three locks held because that's the only way to ensure we're
+ * the only thread poking into the da btree.  We traverse the da
+ * btree while holding a leaf buffer locked for the xattr name
+ * iteration, which doesn't really follow the usual buffer
+ * locking order.
+ */
 
+...comes right before the call to xfs_attr_list_int_ilocked.
 
+> And, now that I've got to the rest of the code, that we don't validate
+> the pointers/values in the attribute records when doing dabtree record
+> check because we are doing that indirectly afterwards by reading every
+> attribute value.
 
-> --D
+Correct.
+
+> And that this follows the pointers for remote attr blocks and reads
+> them, hence checking the remote attr is valid via verifiers?
+
+Correct.
+
+> And, with that out of the way, what about attributes that listent
+> skips?
+
+Oops, I forgot those.
+
+> i.e. those with the flag that says they are not valid?  We don't check
+> they exist or are valid, and their existence would be a case for
+> preening the xattr tree...
+
+Good point, I'll add those.
+
+> Otherwise this seems pretty straight forward...
+
+Woot.
+
+--D
+
 > 
->>  		case 's':
->>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
->>  			if (skip < 0) {
->> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
->> index 0fd9b951..9c58914f 100644
->> --- a/man/man8/xfs_io.8
->> +++ b/man/man8/xfs_io.8
->> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
->>  with a number of blocksize length iovecs. The number of iovecs is set by the
->>  .I vectors
->>  parameter.
->> +.TP
->> +.B \-N
->> +Perform the
->> +.BR pwritev2 (2)
->> +call with
->> +.I RWF_NOWAIT.
->>  .RE
->>  .PD
->>  .TP
->> -- 
->> 2.14.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Goldwyn
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
