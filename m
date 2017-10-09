@@ -1,129 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56908 "EHLO mx1.redhat.com"
+Received: from foss.arm.com ([217.140.101.70]:54318 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750891AbdJGMOu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 7 Oct 2017 08:14:50 -0400
-Date: Sat, 7 Oct 2017 08:14:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
-Message-ID: <20171007121448.GA10074@bfoster.bfoster>
-References: <20171006200740.7140-1-bfoster@redhat.com>
- <20171006204751.GM7122@magnolia>
+        id S1751401AbdJIKhK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 06:37:10 -0400
+Subject: Re: [PATCH v8] dma-mapping: introduce dma_get_iommu_domain()
+References: <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150743420333.12880.6968831423519457797.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <8161efa8-a315-3b0b-4159-9bdf3bfb98aa@arm.com>
+Date: Mon, 9 Oct 2017 11:37:04 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171006204751.GM7122@magnolia>
+In-Reply-To: <150743420333.12880.6968831423519457797.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org
+Cc: Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Fri, Oct 06, 2017 at 01:47:51PM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 06, 2017 at 04:07:40PM -0400, Brian Foster wrote:
-> > xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
-> > associated blocks. xfs_attr3_node_inactive() recursively descends
-> > from internal blocks to leaf blocks, caching block address values
-> > along the way to revisit parent blocks, locate the next entry and
-> > descend down that branch of the tree.
-> > 
-> > The code that attempts to reread the parent block is unsafe because
-> > it assumes that the local xfs_da_node_entry pointer remains valid
-> > after an xfs_trans_brelse() and re-read of the parent buffer. Under
-> > heavy memory pressure, it is possible that the buffer has been
-> > reclaimed and reallocated by the time the parent block is reread.
-> > This means that 'btree' can point to an invalid memory address, lead
-> > to a random/garbage value for child_fsb and cause the subsequent
-> > read of the attr fork to go off the rails and return a NULL buffer
-> > for an attr fork offset that is most likely not allocated.
-> > 
-> > Note that this problem can be manufactured by setting
-> > XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
-> > creating a file with a multi-level attr fork and removing it to
-> > trigger inactivation.
-> > 
-> > To address this problem, reinit the node/btree pointers to the
-> > parent buffer after it has been re-read. This ensures btree points
-> > to a valid record and allows the walk to proceed.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+Hi Dan,
+
+On 08/10/17 04:45, Dan Williams wrote:
+> Add a dma-mapping api helper to retrieve the generic iommu_domain for a device.
+> The motivation for this interface is making RDMA transfers to DAX mappings
+> safe. If the DAX file's block map changes we need to be to reliably stop
+> accesses to blocks that have been freed or re-assigned to a new file.
+
+...which is also going to require some way to force the IOMMU drivers
+(on x86 at least) to do a fully-synchronous unmap, instead of just
+throwing the IOVA onto a flush queue to invalidate the TLBs at some
+point in the future. Assuming of course that there's an IOMMU both
+present and performing DMA translation in the first place.
+
+> With the
+> iommu_domain and a callback from the DAX filesystem the kernel can safely
+> revoke access to a DMA device. The process that performed the RDMA memory
+> registration is also notified of this revocation event, but the kernel can not
+> otherwise be in the position of waiting for userspace to quiesce the device.
+
+OK, but why reinvent iommu_get_domain_for_dev()?
+
+> Since PMEM+DAX is currently only enabled for x86, we only update the x86
+> iommu drivers.
+
+Note in particular that those two drivers happen to be the *only* place
+this approach could work - everyone else is going to have to fall back
+to the generic IOMMU API function anyway.
+
+Robin.
+
+> Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: David Woodhouse <dwmw2@infradead.org>
+> Cc: Ashok Raj <ashok.raj@intel.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> Changes since v7:
+> * retrieve the iommu_domain so that we can later pass the results of
+>   dma_map_* to iommu_unmap() in advance of the actual dma_unmap_*.
 > 
-> Looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>  drivers/base/dma-mapping.c  |   10 ++++++++++
+>  drivers/iommu/amd_iommu.c   |   10 ++++++++++
+>  drivers/iommu/intel-iommu.c |   15 +++++++++++++++
+>  include/linux/dma-mapping.h |    3 +++
+>  4 files changed, 38 insertions(+)
 > 
-> /me wonders if this is a good enough reason to introduce a new errortag
-> that turns xfs_buf_set_ref into a no-op and fills bp->b_addr with
-> garbage prior to releasing the memory to weed out any other dangling
-> pointers?
+> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+> index e584eddef0a7..fdb9764f95a4 100644
+> --- a/drivers/base/dma-mapping.c
+> +++ b/drivers/base/dma-mapping.c
+> @@ -369,3 +369,13 @@ void dma_deconfigure(struct device *dev)
+>  	of_dma_deconfigure(dev);
+>  	acpi_dma_deconfigure(dev);
+>  }
+> +
+> +struct iommu_domain *dma_get_iommu_domain(struct device *dev)
+> +{
+> +	const struct dma_map_ops *ops = get_dma_ops(dev);
+> +
+> +	if (ops && ops->get_iommu)
+> +		return ops->get_iommu(dev);
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL(dma_get_iommu_domain);
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index 51f8215877f5..c8e1a45af182 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -2271,6 +2271,15 @@ static struct protection_domain *get_domain(struct device *dev)
+>  	return domain;
+>  }
+>  
+> +static struct iommu_domain *amd_dma_get_iommu(struct device *dev)
+> +{
+> +	struct protection_domain *domain = get_domain(dev);
+> +
+> +	if (IS_ERR(domain))
+> +		return NULL;
+> +	return &domain->domain;
+> +}
+> +
+>  static void update_device_table(struct protection_domain *domain)
+>  {
+>  	struct iommu_dev_data *dev_data;
+> @@ -2689,6 +2698,7 @@ static const struct dma_map_ops amd_iommu_dma_ops = {
+>  	.unmap_sg	= unmap_sg,
+>  	.dma_supported	= amd_iommu_dma_supported,
+>  	.mapping_error	= amd_iommu_mapping_error,
+> +	.get_iommu	= amd_dma_get_iommu,
+>  };
+>  
+>  static int init_reserved_iova_ranges(void)
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 6784a05dd6b2..f3f4939cebad 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -3578,6 +3578,20 @@ static int iommu_no_mapping(struct device *dev)
+>  	return 0;
+>  }
+>  
+> +static struct iommu_domain *intel_dma_get_iommu(struct device *dev)
+> +{
+> +	struct dmar_domain *domain;
+> +
+> +	if (iommu_no_mapping(dev))
+> +		return NULL;
+> +
+> +	domain = get_valid_domain_for_dev(dev);
+> +	if (!domain)
+> +		return NULL;
+> +
+> +	return &domain->domain;
+> +}
+> +
+>  static dma_addr_t __intel_map_single(struct device *dev, phys_addr_t paddr,
+>  				     size_t size, int dir, u64 dma_mask)
+>  {
+> @@ -3872,6 +3886,7 @@ const struct dma_map_ops intel_dma_ops = {
+>  	.map_page = intel_map_page,
+>  	.unmap_page = intel_unmap_page,
+>  	.mapping_error = intel_mapping_error,
+> +	.get_iommu = intel_dma_get_iommu,
+>  #ifdef CONFIG_X86
+>  	.dma_supported = x86_dma_supported,
+>  #endif
+> diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+> index 29ce9815da87..aa62df1d0d72 100644
+> --- a/include/linux/dma-mapping.h
+> +++ b/include/linux/dma-mapping.h
+> @@ -128,6 +128,7 @@ struct dma_map_ops {
+>  				   enum dma_data_direction dir);
+>  	int (*mapping_error)(struct device *dev, dma_addr_t dma_addr);
+>  	int (*dma_supported)(struct device *dev, u64 mask);
+> +	struct iommu_domain *(*get_iommu)(struct device *dev);
+>  #ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
+>  	u64 (*get_required_mask)(struct device *dev);
+>  #endif
+> @@ -221,6 +222,8 @@ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
+>  }
+>  #endif
+>  
+> +extern struct iommu_domain *dma_get_iommu_domain(struct device *dev);
+> +
+>  static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
+>  					      size_t size,
+>  					      enum dma_data_direction dir,
 > 
 
-I was starting to think about if/how we could test for this but hadn't
-come up with anything concrete yet. An errortag that forces
-_buf_set_ref() to set ->b_lru_ref to 0 of all buffer types might be
-simple and effective enough to do the trick. I'll play around with that
-next week.
-
-Note that with my roughly equivalent hack in place, I didn't have to
-overwrite the buffer content to observe the tree walk to go off the
-rails. I haven't confirmed why, but perhaps the memory just happens to
-be reused fairly quickly for the next buffer (we have a zone for
-buffers, after all). I don't have poisoning or anything like that
-enabled that I know of.
-
-We may need a better way to know whether the test failed, however, since
-the kernel now handles the !bpp case without crashing (as it should).
-Perhaps we can assert that we don't hit a hole in this case, but that
-has me wondering why we pass -2 to _da3_node_read() and skip over the
-!child_bp case in xfs_attr3_node_inactive() in the first place. Is there
-some legitimate case where we can hit a hole here that we don't know
-about? I suppose adding an assert might be a more cautious first step
-than switching it to -1 and potentially subjecting real users to
-corruption errors. Thoughts?
-
-> > ---
-> > 
-> > I suspect this is the cause of the NULL buf problem down in
-> > xfs_attr_inactive(). I can manufacture an instance of that problem as
-> > noted above. We have a customer who's hitting that problem and will
-> > attempt to validate this fix, but there is no confirmation as of yet.
-> > I'm posting this for review in the meantime because this seems like a
-> > legit fix regardless of whether they are hitting this or something else.
-> 
-> Let me know what they report back.
-> 
-
-Will do, thanks.
-
-Brian
-
-> --D
-> 
-> > Brian
-> > 
-> >  fs/xfs/xfs_attr_inactive.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> > index ebd66b1..e3a950e 100644
-> > --- a/fs/xfs/xfs_attr_inactive.c
-> > +++ b/fs/xfs/xfs_attr_inactive.c
-> > @@ -302,6 +302,8 @@ xfs_attr3_node_inactive(
-> >  						 &bp, XFS_ATTR_FORK);
-> >  			if (error)
-> >  				return error;
-> > +			node = bp->b_addr;
-> > +			btree = dp->d_ops->node_tree_p(node);
-> >  			child_fsb = be32_to_cpu(btree[i + 1].before);
-> >  			xfs_trans_brelse(*trans, bp);
-> >  		}
-> > -- 
-> > 2.9.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
