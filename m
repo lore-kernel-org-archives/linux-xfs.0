@@ -1,193 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out01.mta.xmission.com ([166.70.13.231]:48424 "EHLO
-        out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751184AbdJITDJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 15:03:09 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
-        <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
-        <20171009000529.GY3666@dastard> <20171009183129.GE11645@wotan.suse.de>
-Date: Mon, 09 Oct 2017 14:02:49 -0500
-In-Reply-To: <20171009183129.GE11645@wotan.suse.de> (Luis R. Rodriguez's
-        message of "Mon, 9 Oct 2017 20:31:29 +0200")
-Message-ID: <87wp442lgm.fsf@xmission.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:22567 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751550AbdJIFSV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 01:18:21 -0400
+Date: Mon, 9 Oct 2017 16:17:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
+ framework
+Message-ID: <20171009051731.GK3666@dastard>
+References: <20171006210956.vf326sydjiphsefo@destiny>
+ <20171009005137.GA3666@dastard>
+ <20171009022509.rz6goq3sec5ppxrr@destiny>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171009022509.rz6goq3sec5ppxrr@destiny>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT?= =?utf-8?B?0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Aleksa Sarai <asarai@suse.com>, Hannes Reinecke <hare@suse.de>, Jan Blunck <jblunck@infradead.org>, Oscar Salvador <osalvador@suse.com>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
+> On Mon, Oct 09, 2017 at 11:51:37AM +1100, Dave Chinner wrote:
+> > On Fri, Oct 06, 2017 at 05:09:57PM -0400, Josef Bacik wrote:
+> > > Hello,
+> > > 
+> > > One thing that comes up a lot every LSF is the fact that we have no general way
+> > > that we do performance testing.  Every fs developer has a set of scripts or
+> > > things that they run with varying degrees of consistency, but nothing central
+> > > that we all use.  I for one am getting tired of finding regressions when we are
+> > > deploying new kernels internally, so I wired this thing up to try and address
+> > > this need.
+> > > 
+> > > We all hate convoluted setups, the more brain power we have to put in to setting
+> > > something up the less likely we are to use it, so I took the xfstests approach
+> > > of making it relatively simple to get running and relatively easy to add new
+> > > tests.  For right now the only thing this framework does is run fio scripts.  I
+> > > chose fio because it already gathers loads of performance data about it's runs.
+> > > We have everything we need there, latency, bandwidth, cpu time, and all broken
+> > > down by reads, writes, and trims.  I figure most of us are familiar enough with
+> > > fio and how it works to make it relatively easy to add new tests to the
+> > > framework.
+> > > 
+> > > I've posted my code up on github, you can get it here
+> > > 
+> > > https://github.com/josefbacik/fsperf
+> > > 
+> > > All (well most) of the results from fio are stored in a local sqlite database.
+> > > Right now the comparison stuff is very crude, it simply checks against the
+> > > previous run and it only checks a few of the keys by default.  You can check
+> > > latency if you want, but while writing this stuff up it seemed that latency was
+> > > too variable from run to run to be useful in a "did my thing regress or improve"
+> > > sort of way.
+> > > 
+> > > The configuration is brain dead simple, the README has examples.  All you need
+> > > to do is make your local.cfg, run ./setup and then run ./fsperf and you are good
+> > > to go.
+> > 
+> > Why re-invent the test infrastructure? Why not just make it a
+> > tests/perf subdir in fstests?
+> > 
+> 
+> Probably should have led with that shouldn't I have?  There's nothing keeping me
+> from doing it, but I didn't want to try and shoehorn in a python thing into
+> fstests.  I need python to do the sqlite and the json parsing to dump into the
+> sqlite database.
+> 
+> Now if you (and others) are not opposed to this being dropped into tests/perf
+> then I'll work that up.  But it's definitely going to need to be done in python.
+> I know you yourself have said you aren't opposed to using python in the past, so
+> if that's still the case then I can definitely wire it all up.
 
-> On Mon, Oct 09, 2017 at 11:05:29AM +1100, Dave Chinner wrote:
->> On Sat, Oct 07, 2017 at 01:10:58PM +0500, Михаил Гаврилов wrote:
->> > But seems now got another issue:
->> > 
->> > [ 1966.953781] INFO: task tracker-store:8578 blocked for more than 120 seconds.
->> > [ 1966.953797]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
->> > [ 1966.953800] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->> > disables this message.
->> > [ 1966.953804] tracker-store   D12840  8578   1655 0x00000000
->> > [ 1966.953811] Call Trace:
->> > [ 1966.953823]  __schedule+0x2dc/0xbb0
->> > [ 1966.953830]  ? wait_on_page_bit_common+0xfb/0x1a0
->> > [ 1966.953838]  schedule+0x3d/0x90
->> > [ 1966.953843]  io_schedule+0x16/0x40
->> > [ 1966.953847]  wait_on_page_bit_common+0x10a/0x1a0
->> > [ 1966.953857]  ? page_cache_tree_insert+0x170/0x170
->> > [ 1966.953865]  __filemap_fdatawait_range+0x101/0x1a0
->> > [ 1966.953883]  file_write_and_wait_range+0x63/0xc0
->> 
->> Ok, that's in wait_on_page_writeback(page)
->> ......
->> 
->> > And yet another
->> > 
->> > [41288.797026] INFO: task tracker-store:4535 blocked for more than 120 seconds.
->> > [41288.797034]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
->> > [41288.797037] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->> > disables this message.
->> > [41288.797041] tracker-store   D10616  4535   1655 0x00000000
->> > [41288.797049] Call Trace:
->> > [41288.797061]  __schedule+0x2dc/0xbb0
->> > [41288.797072]  ? bit_wait+0x60/0x60
->> > [41288.797076]  schedule+0x3d/0x90
->> > [41288.797082]  io_schedule+0x16/0x40
->> > [41288.797086]  bit_wait_io+0x11/0x60
->> > [41288.797091]  __wait_on_bit+0x31/0x90
->> > [41288.797099]  out_of_line_wait_on_bit+0x94/0xb0
->> > [41288.797106]  ? bit_waitqueue+0x40/0x40
->> > [41288.797113]  __block_write_begin_int+0x265/0x550
->> > [41288.797132]  iomap_write_begin.constprop.14+0x7d/0x130
->> 
->> And that's in wait_on_buffer().
->> 
->> In both cases we are waiting on a bit lock for IO completion. In the
->> first case it is on page, the second it's on sub-page read IO
->> completion during a write.
->> 
->> Triggeringa hung task timeouts like this doesn't usually indicate a
->> filesystem problem.
->
-> <-- snip -->
->
->> None of these things usually filesystem problems, and the trainsmash
->> of blocked tasks on filesystem locks is typical for these types of
->> "blocked indefinitely with locks held" type of situations. It does
->> tend to indicate taht there is quite a bit of load on the
->> filesystem, though...
->
-> As Jan Kara noted we've seen this also on customers SLE12-SP2 kernel (4.4
-> based). Although we also were never able to root cause, since that bug
-> is now closed on our end I figured it would be worth mentioning two
-> theories we discussed, one more recent than the other.
->
-> One theory came from observation of logs and these logs hinting at an
-> older issue our Docker team had been looking into for a while, that of
-> libdm mounts being leaked into another container's namespace. Apparently
-> the clue to when this happens is when something as follows is seen on
-> the docker logs:
->
-> 2017-06-22T18:59:47.925917+08:00 host-docker-01 dockerd[1957]: time="2017-06-22T18:59:47.925857351+08:00" level=info msg="Container
-> 6b8f678a27d61939f358614c673224675d64f1527bb2046943e2d493f095c865 failed to exit within 30 seconds of signal 15 - using the force"
->
-> This is a SIGTERM. When one sees the above message it is a good hint that the
-> container actually did not finish at all, but instead was forced to be
-> terminated via 'docker kill' or 'docker rm -f'. To be clear docker was not able
-> to use SIGTERM so then resorts to SIGKILL.
->
-> After this is when we get the next clueful message which interests us to try
-> to figure out a way to reproduce the originally reported issue:
->
-> 2017-06-22T18:59:48.071374+08:00 host-docker-01 dockerd[1957]: time="2017-06-22T18:59:48.071314219+08:00" level=error msg="devmapper: Error
-> unmounting device
->
-> Aleksa indicates he's been studying this code for a while, and although he
-> has fixes for this on Docker it also means he does understands what is
-> going on here. The above error message indicates Docker in turn *failed* to
-> still kill the damn container with SIGKILL. This, he indicates, is due to
-> libdm mounts leaking from one container namespace to another container's
-> namespace. The error is not docker being unable to umount, its actually
-> that docker cannot remove the backing device.
->
-> Its after this when the bug triggers. It doesn't explain *why* we hit this
-> bug on XFS, but it should be a clue. Aleksa is however is absolutely sure
-> that the bugs found internally *are* caused by mount leakage somehow, and
-> all we know is that XFS oops happened after this.
->
-> He suggests this could in theory be reproduced by doing the following
-> while you have a Docker daemon running:
->
->   o unshare -m
->   o mount --make-rprivate /
->
-> Effectively forcing a mount leak. We had someone trying to reproduce this
-> internally somehow but I don't think they were in the end able to.
->
-> If this docker issue leads to a kernel issue the severity might be a bit more
-> serious, it indicates an unprivileged user namespaces can effectively perform a
-> DoS against the host if it's trying to operate on devicemapper mounts.
->
-> Then *another* theory came recently from Jan Blunck during the ALPSS, he noted
-> he traced a similar issue back to a systemd misuse, ie, systemd setting the
-> root namespace to 'shared' by default. Originally the root namespace is set to
-> 'private', but systemd decided it'd be a good idea to set it to 'shared'. Which
-> would quite easily explain the mount namespace leaking.
->
-> Aleksa however contends that the mountspace leaking happens because of Docker's
-> architecture (all of the mounts are created in one mount namespace, and all of
-> the runc invocations happen in that same mount namespace). Even if you
-> explicitly set different sharing options (which runc already supports), the
-> problem still exists.
->
-> But if *not* using docker, it gives us an idea of how you perhaps you could
-> run into a similar issue.
->
-> Regardless Aleksa points out there's still a more fundamental issue of "I can
-> leak a mountpoint as an unprivileged user, no matter what the propagation is":
->
->   % unshare -rm
->   % mount --make-rprivate /
->   % # I now have the mount alive.
->
->   Luis
+I have no problems with people using python for stuff like this but,
+OTOH, I'm not the fstests maintainer anymore :P
 
-*Scratches my head*
+> > > The plan is to add lots of workloads as we discover regressions and such.  We
+> > > don't want anything that takes too long to run otherwise people won't run this,
+> > > so the existing tests don't take much longer than a few minutes each.  I will be
+> > > adding some more comparison options so you can compare against averages of all
+> > > previous runs and such.
+> > 
+> > Yup, that fits exactly into what fstests is for... :P
+> > 
+> > Integrating into fstests means it will be immediately available to
+> > all fs developers, it'll run on everything that everyone already has
+> > setup for filesystem testing, and it will have familiar mkfs/mount
+> > option setup behaviour so there's no new hoops for everyone to jump
+> > through to run it...
+> > 
+> 
+> TBF I specifically made it as easy as possible because I know we all hate trying
+> to learn new shit.
 
-That most definitely is not a leak.  It is a creation of a duplicate set
-of mounts.
+Yeah, it's also hard to get people to change their workflows to add
+a whole new test harness into them. It's easy if it's just a new
+command to an existing workflow :P
 
-It is true that unmount in the parent will not remove those duplicate
-mounts in the other mount namespaces.  Unlink of the mountpoint will
-ensure that nothing is mounted on a file or directory in any mount
-namespace.
+> I figured this was different enough to warrant a separate
+> project, especially since I'm going to add block device jobs so Jens can test
+> block layer things.  If we all agree we'd rather see this in fstests then I'm
+> happy to do that too.  Thanks,
 
-Given that they are duplicate of the mount they will not make any umount
-fail in the original namespace.
+I'm not fussed either way - it's a good discussion to have, though.
 
-The superblock and the block device will remain busy.  But that is not
-new as any open file or directory can already do that.
+If I want to add tests (e.g. my time-honoured fsmark tests), where
+should I send patches?
 
-Further mount namespaces reference counts are held open by processes
-directly or file descriptors or other mount namespaces which are held
-open by processes.  So killing the appropriate set of processes should
-make the mount namespace go away.
+Cheers,
 
-I have heard tell of cases where mounts make it into mount namespaces
-where no one was expecting them to exist, and no one wanting to kill the
-processes using those mount namespaces.  But that is mostly sloppiness.
-That is not a big bad leak that can not be prevented, it is an "oops did
-I put that there?" kind of situation.
-
-If there is something special about device mapper that needs to be take
-into account I would love to hear about it.
-
-The only scenario I can currently imagine that goes from umount failing
-to excessive I/O happening on the system, is if userspace decides not
-to send a SIGKILL to some set of processes that then do a bunch of I/O.
-
-Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
