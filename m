@@ -1,248 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52144 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754411AbdJIOYd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 10:24:33 -0400
-Date: Mon, 9 Oct 2017 10:24:31 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: Don't log uninitialised fields in inode
- structures
-Message-ID: <20171009142431.GB18663@bfoster.bfoster>
-References: <20171008235414.13866-1-david@fromorbit.com>
- <20171008235414.13866-2-david@fromorbit.com>
+Received: from out01.mta.xmission.com ([166.70.13.231]:48424 "EHLO
+        out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751184AbdJITDJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 15:03:09 -0400
+From: ebiederm@xmission.com (Eric W. Biederman)
+References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
+        <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
+        <20171009000529.GY3666@dastard> <20171009183129.GE11645@wotan.suse.de>
+Date: Mon, 09 Oct 2017 14:02:49 -0500
+In-Reply-To: <20171009183129.GE11645@wotan.suse.de> (Luis R. Rodriguez's
+        message of "Mon, 9 Oct 2017 20:31:29 +0200")
+Message-ID: <87wp442lgm.fsf@xmission.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171008235414.13866-2-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT?= =?utf-8?B?0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Aleksa Sarai <asarai@suse.com>, Hannes Reinecke <hare@suse.de>, Jan Blunck <jblunck@infradead.org>, Oscar Salvador <osalvador@suse.com>
 
-On Mon, Oct 09, 2017 at 10:54:11AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Prevent kmemcheck from throwing warnings about reading uninitialised
-> memory when formatting inodes into the incore log buffer. There are
-> several issues here - we don't always log all the fields in the
-> inode log format item, and we never log the inode the
-> di_next_unlinked field.
-> 
-> In the case of the inode log format item, this is exacerbated
-> by the old xfs_inode_log_format structure padding issue. Hence make
-> the padded, 64 bit aligned version of the structure the one we always
-> use for formatting the log and get rid of the 64 bit variant. This
-> means we'll always log the 64-bit version and so recovery only needs
-> to convert from the unpadded 32 bit version from older 32 bit
-> kernels.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> Tested-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> ---
+"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> On Mon, Oct 09, 2017 at 11:05:29AM +1100, Dave Chinner wrote:
+>> On Sat, Oct 07, 2017 at 01:10:58PM +0500, Михаил Гаврилов wrote:
+>> > But seems now got another issue:
+>> > 
+>> > [ 1966.953781] INFO: task tracker-store:8578 blocked for more than 120 seconds.
+>> > [ 1966.953797]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
+>> > [ 1966.953800] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+>> > disables this message.
+>> > [ 1966.953804] tracker-store   D12840  8578   1655 0x00000000
+>> > [ 1966.953811] Call Trace:
+>> > [ 1966.953823]  __schedule+0x2dc/0xbb0
+>> > [ 1966.953830]  ? wait_on_page_bit_common+0xfb/0x1a0
+>> > [ 1966.953838]  schedule+0x3d/0x90
+>> > [ 1966.953843]  io_schedule+0x16/0x40
+>> > [ 1966.953847]  wait_on_page_bit_common+0x10a/0x1a0
+>> > [ 1966.953857]  ? page_cache_tree_insert+0x170/0x170
+>> > [ 1966.953865]  __filemap_fdatawait_range+0x101/0x1a0
+>> > [ 1966.953883]  file_write_and_wait_range+0x63/0xc0
+>> 
+>> Ok, that's in wait_on_page_writeback(page)
+>> ......
+>> 
+>> > And yet another
+>> > 
+>> > [41288.797026] INFO: task tracker-store:4535 blocked for more than 120 seconds.
+>> > [41288.797034]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
+>> > [41288.797037] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+>> > disables this message.
+>> > [41288.797041] tracker-store   D10616  4535   1655 0x00000000
+>> > [41288.797049] Call Trace:
+>> > [41288.797061]  __schedule+0x2dc/0xbb0
+>> > [41288.797072]  ? bit_wait+0x60/0x60
+>> > [41288.797076]  schedule+0x3d/0x90
+>> > [41288.797082]  io_schedule+0x16/0x40
+>> > [41288.797086]  bit_wait_io+0x11/0x60
+>> > [41288.797091]  __wait_on_bit+0x31/0x90
+>> > [41288.797099]  out_of_line_wait_on_bit+0x94/0xb0
+>> > [41288.797106]  ? bit_waitqueue+0x40/0x40
+>> > [41288.797113]  __block_write_begin_int+0x265/0x550
+>> > [41288.797132]  iomap_write_begin.constprop.14+0x7d/0x130
+>> 
+>> And that's in wait_on_buffer().
+>> 
+>> In both cases we are waiting on a bit lock for IO completion. In the
+>> first case it is on page, the second it's on sub-page read IO
+>> completion during a write.
+>> 
+>> Triggeringa hung task timeouts like this doesn't usually indicate a
+>> filesystem problem.
+>
+> <-- snip -->
+>
+>> None of these things usually filesystem problems, and the trainsmash
+>> of blocked tasks on filesystem locks is typical for these types of
+>> "blocked indefinitely with locks held" type of situations. It does
+>> tend to indicate taht there is quite a bit of load on the
+>> filesystem, though...
+>
+> As Jan Kara noted we've seen this also on customers SLE12-SP2 kernel (4.4
+> based). Although we also were never able to root cause, since that bug
+> is now closed on our end I figured it would be worth mentioning two
+> theories we discussed, one more recent than the other.
+>
+> One theory came from observation of logs and these logs hinting at an
+> older issue our Docker team had been looking into for a while, that of
+> libdm mounts being leaked into another container's namespace. Apparently
+> the clue to when this happens is when something as follows is seen on
+> the docker logs:
+>
+> 2017-06-22T18:59:47.925917+08:00 host-docker-01 dockerd[1957]: time="2017-06-22T18:59:47.925857351+08:00" level=info msg="Container
+> 6b8f678a27d61939f358614c673224675d64f1527bb2046943e2d493f095c865 failed to exit within 30 seconds of signal 15 - using the force"
+>
+> This is a SIGTERM. When one sees the above message it is a good hint that the
+> container actually did not finish at all, but instead was forced to be
+> terminated via 'docker kill' or 'docker rm -f'. To be clear docker was not able
+> to use SIGTERM so then resorts to SIGKILL.
+>
+> After this is when we get the next clueful message which interests us to try
+> to figure out a way to reproduce the originally reported issue:
+>
+> 2017-06-22T18:59:48.071374+08:00 host-docker-01 dockerd[1957]: time="2017-06-22T18:59:48.071314219+08:00" level=error msg="devmapper: Error
+> unmounting device
+>
+> Aleksa indicates he's been studying this code for a while, and although he
+> has fixes for this on Docker it also means he does understands what is
+> going on here. The above error message indicates Docker in turn *failed* to
+> still kill the damn container with SIGKILL. This, he indicates, is due to
+> libdm mounts leaking from one container namespace to another container's
+> namespace. The error is not docker being unable to umount, its actually
+> that docker cannot remove the backing device.
+>
+> Its after this when the bug triggers. It doesn't explain *why* we hit this
+> bug on XFS, but it should be a clue. Aleksa is however is absolutely sure
+> that the bugs found internally *are* caused by mount leakage somehow, and
+> all we know is that XFS oops happened after this.
+>
+> He suggests this could in theory be reproduced by doing the following
+> while you have a Docker daemon running:
+>
+>   o unshare -m
+>   o mount --make-rprivate /
+>
+> Effectively forcing a mount leak. We had someone trying to reproduce this
+> internally somehow but I don't think they were in the end able to.
+>
+> If this docker issue leads to a kernel issue the severity might be a bit more
+> serious, it indicates an unprivileged user namespaces can effectively perform a
+> DoS against the host if it's trying to operate on devicemapper mounts.
+>
+> Then *another* theory came recently from Jan Blunck during the ALPSS, he noted
+> he traced a similar issue back to a systemd misuse, ie, systemd setting the
+> root namespace to 'shared' by default. Originally the root namespace is set to
+> 'private', but systemd decided it'd be a good idea to set it to 'shared'. Which
+> would quite easily explain the mount namespace leaking.
+>
+> Aleksa however contends that the mountspace leaking happens because of Docker's
+> architecture (all of the mounts are created in one mount namespace, and all of
+> the runc invocations happen in that same mount namespace). Even if you
+> explicitly set different sharing options (which runc already supports), the
+> problem still exists.
+>
+> But if *not* using docker, it gives us an idea of how you perhaps you could
+> run into a similar issue.
+>
+> Regardless Aleksa points out there's still a more fundamental issue of "I can
+> leak a mountpoint as an unprivileged user, no matter what the propagation is":
+>
+>   % unshare -rm
+>   % mount --make-rprivate /
+>   % # I now have the mount alive.
+>
+>   Luis
 
->  fs/xfs/libxfs/xfs_log_format.h | 27 +++++----------
->  fs/xfs/xfs_inode_item.c        | 79 ++++++++++++++++++++++--------------------
->  fs/xfs/xfs_ondisk.h            |  2 +-
->  3 files changed, 50 insertions(+), 58 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index 8372e9bcd7b6..71de185735e0 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -270,6 +270,7 @@ typedef struct xfs_inode_log_format {
->  	uint32_t		ilf_fields;	/* flags for fields logged */
->  	uint16_t		ilf_asize;	/* size of attr d/ext/root */
->  	uint16_t		ilf_dsize;	/* size of data/ext/root */
-> +	uint32_t		ilf_pad;	/* pad for 64 bit boundary */
->  	uint64_t		ilf_ino;	/* inode number */
->  	union {
->  		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-> @@ -280,29 +281,17 @@ typedef struct xfs_inode_log_format {
->  	int32_t			ilf_boffset;	/* off of inode in buffer */
->  } xfs_inode_log_format_t;
->  
-> -typedef struct xfs_inode_log_format_32 {
-> -	uint16_t		ilf_type;	/* inode log item type */
-> -	uint16_t		ilf_size;	/* size of this item */
-> -	uint32_t		ilf_fields;	/* flags for fields logged */
-> -	uint16_t		ilf_asize;	/* size of attr d/ext/root */
-> -	uint16_t		ilf_dsize;	/* size of data/ext/root */
-> -	uint64_t		ilf_ino;	/* inode number */
-> -	union {
-> -		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-> -		uuid_t		ilfu_uuid;	/* mount point value */
-> -	} ilf_u;
-> -	int64_t			ilf_blkno;	/* blkno of inode buffer */
-> -	int32_t			ilf_len;	/* len of inode buffer */
-> -	int32_t			ilf_boffset;	/* off of inode in buffer */
-> -} __attribute__((packed)) xfs_inode_log_format_32_t;
-> -
-> -typedef struct xfs_inode_log_format_64 {
-> +/*
-> + * Old 32 bit systems will log in this format without the 64 bit
-> + * alignment padding. Recovery will detect this and convert it to the
-> + * correct format.
-> + */
-> +struct xfs_inode_log_format_32 {
->  	uint16_t		ilf_type;	/* inode log item type */
->  	uint16_t		ilf_size;	/* size of this item */
->  	uint32_t		ilf_fields;	/* flags for fields logged */
->  	uint16_t		ilf_asize;	/* size of attr d/ext/root */
->  	uint16_t		ilf_dsize;	/* size of data/ext/root */
-> -	uint32_t		ilf_pad;	/* pad for 64 bit boundary */
->  	uint64_t		ilf_ino;	/* inode number */
->  	union {
->  		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-> @@ -311,7 +300,7 @@ typedef struct xfs_inode_log_format_64 {
->  	int64_t			ilf_blkno;	/* blkno of inode buffer */
->  	int32_t			ilf_len;	/* len of inode buffer */
->  	int32_t			ilf_boffset;	/* off of inode in buffer */
-> -} xfs_inode_log_format_64_t;
-> +} __attribute__((packed));
->  
->  
->  /*
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index a705f34b58fa..9bbc2d7cc8cb 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -364,6 +364,9 @@ xfs_inode_to_log_dinode(
->  	to->di_dmstate = from->di_dmstate;
->  	to->di_flags = from->di_flags;
->  
-> +	/* log a dummy value to ensure log structure is fully initialised */
-> +	to->di_next_unlinked = NULLAGINO;
-> +
->  	if (from->di_version == 3) {
->  		to->di_changecount = inode->i_version;
->  		to->di_crtime.t_sec = from->di_crtime.t_sec;
-> @@ -404,6 +407,11 @@ xfs_inode_item_format_core(
->   * the second with the on-disk inode structure, and a possible third and/or
->   * fourth with the inode data/extents/b-tree root and inode attributes
->   * data/extents/b-tree root.
-> + *
-> + * Note: Always use the 64 bit inode log format structure so we don't
-> + * leave an uninitialised hole in the format item on 64 bit systems. Log
-> + * recovery on 32 bit systems handles this just fine, so there's no reason
-> + * for not using an initialising the properly padded structure all the time.
->   */
->  STATIC void
->  xfs_inode_item_format(
-> @@ -412,8 +420,8 @@ xfs_inode_item_format(
->  {
->  	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
->  	struct xfs_inode	*ip = iip->ili_inode;
-> -	struct xfs_inode_log_format *ilf;
->  	struct xfs_log_iovec	*vecp = NULL;
-> +	struct xfs_inode_log_format *ilf;
->  
->  	ASSERT(ip->i_d.di_version > 1);
->  
-> @@ -425,7 +433,17 @@ xfs_inode_item_format(
->  	ilf->ilf_boffset = ip->i_imap.im_boffset;
->  	ilf->ilf_fields = XFS_ILOG_CORE;
->  	ilf->ilf_size = 2; /* format + core */
-> -	xlog_finish_iovec(lv, vecp, sizeof(struct xfs_inode_log_format));
-> +
-> +	/*
-> +	 * make sure we don't leak uninitialised data into the log in the case
-> +	 * when we don't log every field in the inode.
-> +	 */
-> +	ilf->ilf_dsize = 0;
-> +	ilf->ilf_asize = 0;
-> +	ilf->ilf_pad = 0;
-> +	uuid_copy(&ilf->ilf_u.ilfu_uuid, &uuid_null);
-> +
-> +	xlog_finish_iovec(lv, vecp, sizeof(*ilf));
->  
->  	xfs_inode_item_format_core(ip, lv, &vecp);
->  	xfs_inode_item_format_data_fork(iip, ilf, lv, &vecp);
-> @@ -855,44 +873,29 @@ xfs_istale_done(
->  }
->  
->  /*
-> - * convert an xfs_inode_log_format struct from either 32 or 64 bit versions
-> - * (which can have different field alignments) to the native version
-> + * convert an xfs_inode_log_format struct from the old 32 bit version
-> + * (which can have different field alignments) to the native 64 bit version
->   */
->  int
->  xfs_inode_item_format_convert(
-> -	xfs_log_iovec_t		*buf,
-> -	xfs_inode_log_format_t	*in_f)
-> +	struct xfs_log_iovec		*buf,
-> +	struct xfs_inode_log_format	*in_f)
->  {
-> -	if (buf->i_len == sizeof(xfs_inode_log_format_32_t)) {
-> -		xfs_inode_log_format_32_t *in_f32 = buf->i_addr;
-> -
-> -		in_f->ilf_type = in_f32->ilf_type;
-> -		in_f->ilf_size = in_f32->ilf_size;
-> -		in_f->ilf_fields = in_f32->ilf_fields;
-> -		in_f->ilf_asize = in_f32->ilf_asize;
-> -		in_f->ilf_dsize = in_f32->ilf_dsize;
-> -		in_f->ilf_ino = in_f32->ilf_ino;
-> -		/* copy biggest field of ilf_u */
-> -		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
-> -		in_f->ilf_blkno = in_f32->ilf_blkno;
-> -		in_f->ilf_len = in_f32->ilf_len;
-> -		in_f->ilf_boffset = in_f32->ilf_boffset;
-> -		return 0;
-> -	} else if (buf->i_len == sizeof(xfs_inode_log_format_64_t)){
-> -		xfs_inode_log_format_64_t *in_f64 = buf->i_addr;
-> -
-> -		in_f->ilf_type = in_f64->ilf_type;
-> -		in_f->ilf_size = in_f64->ilf_size;
-> -		in_f->ilf_fields = in_f64->ilf_fields;
-> -		in_f->ilf_asize = in_f64->ilf_asize;
-> -		in_f->ilf_dsize = in_f64->ilf_dsize;
-> -		in_f->ilf_ino = in_f64->ilf_ino;
-> -		/* copy biggest field of ilf_u */
-> -		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f64->ilf_u.ilfu_uuid);
-> -		in_f->ilf_blkno = in_f64->ilf_blkno;
-> -		in_f->ilf_len = in_f64->ilf_len;
-> -		in_f->ilf_boffset = in_f64->ilf_boffset;
-> -		return 0;
-> -	}
-> -	return -EFSCORRUPTED;
-> +	struct xfs_inode_log_format_32	*in_f32 = buf->i_addr;
-> +
-> +	if (buf->i_len != sizeof(*in_f32))
-> +		return -EFSCORRUPTED;
-> +
-> +	in_f->ilf_type = in_f32->ilf_type;
-> +	in_f->ilf_size = in_f32->ilf_size;
-> +	in_f->ilf_fields = in_f32->ilf_fields;
-> +	in_f->ilf_asize = in_f32->ilf_asize;
-> +	in_f->ilf_dsize = in_f32->ilf_dsize;
-> +	in_f->ilf_ino = in_f32->ilf_ino;
-> +	/* copy biggest field of ilf_u */
-> +	uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
-> +	in_f->ilf_blkno = in_f32->ilf_blkno;
-> +	in_f->ilf_len = in_f32->ilf_len;
-> +	in_f->ilf_boffset = in_f32->ilf_boffset;
-> +	return 0;
->  }
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index 0c381d71b242..0492436a053f 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -134,7 +134,7 @@ xfs_check_ondisk_structs(void)
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
-> -	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
->  }
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+*Scratches my head*
+
+That most definitely is not a leak.  It is a creation of a duplicate set
+of mounts.
+
+It is true that unmount in the parent will not remove those duplicate
+mounts in the other mount namespaces.  Unlink of the mountpoint will
+ensure that nothing is mounted on a file or directory in any mount
+namespace.
+
+Given that they are duplicate of the mount they will not make any umount
+fail in the original namespace.
+
+The superblock and the block device will remain busy.  But that is not
+new as any open file or directory can already do that.
+
+Further mount namespaces reference counts are held open by processes
+directly or file descriptors or other mount namespaces which are held
+open by processes.  So killing the appropriate set of processes should
+make the mount namespace go away.
+
+I have heard tell of cases where mounts make it into mount namespaces
+where no one was expecting them to exist, and no one wanting to kill the
+processes using those mount namespaces.  But that is mostly sloppiness.
+That is not a big bad leak that can not be prevented, it is an "oops did
+I put that there?" kind of situation.
+
+If there is something special about device mapper that needs to be take
+into account I would love to hear about it.
+
+The only scenario I can currently imagine that goes from umount failing
+to excessive I/O happening on the system, is if userspace decides not
+to send a SIGKILL to some set of processes that then do a bunch of I/O.
+
+Eric
