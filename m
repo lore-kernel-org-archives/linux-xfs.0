@@ -1,121 +1,303 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:50934 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755486AbdJIVPG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 17:15:06 -0400
-Received: by mail-qt0-f180.google.com with SMTP id f15so45764222qtf.7
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 14:15:05 -0700 (PDT)
-Date: Mon, 9 Oct 2017 17:15:02 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
- framework
-Message-ID: <20171009211501.vnyol76nzl4rma42@destiny>
-References: <20171006210956.vf326sydjiphsefo@destiny>
- <20171009005137.GA3666@dastard>
- <20171009022509.rz6goq3sec5ppxrr@destiny>
- <20171009051731.GK3666@dastard>
- <20171009130050.ufnmdhslc53bwpgc@destiny>
- <20171009210920.GO3666@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:50193 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751156AbdJIVZK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 17:25:10 -0400
+Subject: Re: [PATCH 02/17] Set up infastructure for deferred attribute
+ operations
+References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
+ <1507327548-3221-3-git-send-email-allison.henderson@oracle.com>
+ <20171009042026.GJ3666@dastard>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <acc1732a-7c7a-5a11-ace3-e052134b1590@oracle.com>
+Date: Mon, 9 Oct 2017 14:25:04 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171009210920.GO3666@dastard>
+In-Reply-To: <20171009042026.GJ3666@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 10, 2017 at 08:09:20AM +1100, Dave Chinner wrote:
-> On Mon, Oct 09, 2017 at 09:00:51AM -0400, Josef Bacik wrote:
-> > On Mon, Oct 09, 2017 at 04:17:31PM +1100, Dave Chinner wrote:
-> > > On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
-> > > > > Integrating into fstests means it will be immediately available to
-> > > > > all fs developers, it'll run on everything that everyone already has
-> > > > > setup for filesystem testing, and it will have familiar mkfs/mount
-> > > > > option setup behaviour so there's no new hoops for everyone to jump
-> > > > > through to run it...
-> > > > > 
-> > > > 
-> > > > TBF I specifically made it as easy as possible because I know we all hate trying
-> > > > to learn new shit.
-> > > 
-> > > Yeah, it's also hard to get people to change their workflows to add
-> > > a whole new test harness into them. It's easy if it's just a new
-> > > command to an existing workflow :P
-> > > 
-> > 
-> > Agreed, so if you probably won't run this outside of fstests then I'll add it to
-> > xfstests.  I envision this tool as being run by maintainers to verify their pull
-> > requests haven't regressed since the last set of patches, as well as by anybody
-> > trying to fix performance problems.  So it's way more important to me that you,
-> > Ted, and all the various btrfs maintainers will run it than anybody else.
-> > 
-> > > > I figured this was different enough to warrant a separate
-> > > > project, especially since I'm going to add block device jobs so Jens can test
-> > > > block layer things.  If we all agree we'd rather see this in fstests then I'm
-> > > > happy to do that too.  Thanks,
-> > > 
-> > > I'm not fussed either way - it's a good discussion to have, though.
-> > > 
-> > > If I want to add tests (e.g. my time-honoured fsmark tests), where
-> > > should I send patches?
-> > > 
-> > 
-> > I beat you to that!  I wanted to avoid adding fs_mark to the suite because it
-> > means parsing another different set of outputs, so I added a new ioengine to fio
-> > for this
-> > 
-> > http://www.spinics.net/lists/fio/msg06367.html
-> > 
-> > and added a fio job to do 500k files
-> > 
-> > https://github.com/josefbacik/fsperf/blob/master/tests/500kemptyfiles.fio
-> > 
-> > The test is disabled by default for now because obviously the fio support hasn't
-> > landed yet.
+
+
+On 10/8/2017 9:20 PM, Dave Chinner wrote:
 > 
-> That seems .... misguided. fio is good, but it's not a universal
-> solution.
+> On Fri, Oct 06, 2017 at 03:05:33PM -0700, Allison Henderson wrote:
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> hi Allison,
 > 
-> > I'd _like_ to expand fio for cases we come up with that aren't possible, as
-> > there's already a ton of measurements that are taken, especially around
-> > latencies.
+> I'm just having a quick browse, not a complete review. This is a
+> really good start for deferred attributes, but I think there's bits
+> we'll have to redesign slightly for performance reasons.
 > 
-> To be properly useful it needs to support more than just fio to run
-> tests. Indeed, it's largely useless to me if that's all it can do or
-> it's a major pain to add support for different tools like fsmark.
+> First: needs a commit message to describe the design and structure,
+> so the reviewer is not left to guess. :P
 > 
-> e.g.  my typical perf regression test that you see the concurrnet
-> fsmark create workload is actually a lot more. It does:
+>> ---
+>> :100644 100644 b3edd66... 8d2c152... M	fs/xfs/Makefile
+>> :100644 100644 b00ec1f... 5325ec2... M	fs/xfs/libxfs/xfs_attr.c
+>> :100644 100644 2ea26b1... 38ae64a... M	fs/xfs/libxfs/xfs_attr_leaf.c
+>> :100644 100644 d4f046d... ef0f8bf... M	fs/xfs/libxfs/xfs_defer.h
+>> :100644 100644 8372e9b... 3778c8e... M	fs/xfs/libxfs/xfs_log_format.h
+>> :100644 100644 0220159... 5372063... M	fs/xfs/libxfs/xfs_types.h
+>> :100644 100644 8542606... 06c4081... M	fs/xfs/xfs_attr.h
+>> :000000 100644 0000000... 419f90a... A	fs/xfs/xfs_attr_item.c
+>> :000000 100644 0000000... aec854f... A	fs/xfs/xfs_attr_item.h
+>> :100644 100644 d9a3a55... a206d51... M	fs/xfs/xfs_super.c
+>> :100644 100644 815b53d2.. 66c3c5f... M	fs/xfs/xfs_trans.h
+>> :000000 100644 0000000... 183c841... A	fs/xfs/xfs_trans_attr.c
 > 
-> 	fsmark to create 50m zero length files
-> 	umount,
-> 	run parallel xfs_repair (excellent mmap_sem/page fault punisher)
-> 	mount
-> 	run parallel find -ctime (readdir + lookup traversal)
-> 	unmount, mount
-> 	run parallel ls -R (readdir + dtype traversal)
-> 	unmount, mount
-> 	parallel rm -rf of 50m files
+> This info isn't needed. Diffstat is sufficient.
 > 
-> I have variants that use small 4k files or large files rather than
-> empty files, taht use different fsync patterns to stress the
-> log, use grep -R to traverse the data as well as
-> the directory/inode structure instead of find, etc.
+>> @@ -254,7 +261,9 @@ typedef struct xfs_trans_header {
+>>   	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
+>>   	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
+>>   	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
+>> -	{ XFS_LI_BUD,		"XFS_LI_BUD" }
+>> +	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
+>> +	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
+>> +	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
 > 
-> > That said I'm not opposed to throwing new stuff in there, it just
-> > means we have to add stuff to parse the output and store it in the database in a
-> > consistent way, which seems like more of a pain than just making fio do what we
-> > need it to.  Thanks,
+> "attr intent", "attr done"?
 > 
-> fio is not going to be able to replace the sort of perf tests I run
-> from week to week. If that's all it's going to do then it's not
-> directly useful to me...
+> What object/action are we taking here? Set, flip-flags or remove? Or
+> something else?
 > 
 
-Agreed, I'm just going to add this stuff to fstests since I'd like to be able to
-use the _require stuff to make sure we only run stuff we have support for.  I'll
-wire that up this week and send patches along.  Thanks,
+Yes, "intent" and "done" was the idea I was going for. The actions are 
+set and remove. The info needed for both operations seemed similar 
+enough that it seemed excessive to make another intent/done type.  The 
+xfs_attr struct has an attr_op_flags that marks it as a set or a remove 
+action.  I will add some comments in the code to help clarify.
 
-Josef
+
+>>   
+>>   /*
+>>    * Inode Log Item Format definitions.
+>> @@ -863,4 +872,45 @@ struct xfs_icreate_log {
+>>   	__be32		icl_gen;	/* inode generation number to use */
+>>   };
+>>   
+>> +/* Flags for defered attribute operations */
+>> +#define ATTR_OP_FLAGS_SET	0x01	/* Set the attribute */
+>> +#define ATTR_OP_FLAGS_REMOVE	0x02	/* Remove the attribute */
+>> +#define ATTR_OP_FLAGS_MAX	0x02	/* Max flags */
+>> +
+>> +/*
+>> + * ATTRI/ATTRD log format definitions
+>> + */
+>> +struct xfs_attr {
+>> +	xfs_ino_t	attr_ino;
+>> +	uint32_t	attr_op_flags;
+>> +	uint32_t	attr_nameval_len;
+>> +	uint32_t	attr_name_len;
+>> +	uint32_t        attr_flags;
+>> +	uint8_t		attr_nameval[MAX_NAMEVAL_LEN];
+>> +};
+> 
+> "struct xfs_attr" is very generic. This ends up in the log on disk,
+> right? So it's a log format structure? struct xfs_attr_log_format?
+> 
+> This also needs padding to ensure it's size is 64bit aligned.
+> 
+>> +/*
+>> + * This is the structure used to lay out an attri log item in the
+>> + * log.  The attri_attrs field is a variable size array whose
+>> + * size is given by attri_nattrs.
+>> + */
+>> +struct xfs_attri_log_format {
+>> +	uint16_t		attri_type;	/* attri log item type */
+>> +	uint16_t		attri_size;	/* size of this item */
+>> +	uint64_t		attri_id;	/* attri identifier */
+>> +	struct xfs_attr		attri_attr;	/* attribute */
+>> +};
+> 
+> That's got a 4 byte hole in it between attri_size and attri_id,
+> so needs explicit padding. What's attri_id supposed to be and how is
+> it used?
+> 
+> Also, i'd drop the "attri" from these, so.....
+
+
+Hmm, I don't think attri_id is used.  I had used the extent free intent 
+code as a sort of template for this and probably missed culling out the 
+id.  I will get this struct cleaned up and padded out.
+
+> 
+>> +
+>> +/*
+>> + * This is the structure used to lay out an attrd log item in the
+>> + * log.  The attrd_attrs array is a variable size array whose
+>> + * size is given by attrd_nattrs;
+>> + */
+>> +struct xfs_attrd_log_format {
+>> +	uint16_t		attrd_type;	/* attrd log item type */
+>> +	uint16_t		attrd_size;	/* size of this item */
+>> +	uint64_t		attrd_attri_id;	/* id of corresponding attri */
+>> +	struct xfs_attr		attrd_attr;	/* attribute */
+>> +};
+> 
+> .... these can use the same struct xfs_attr_log_format structure.
+> 
+
+Alrighty
+
+>>   #endif /* __XFS_LOG_FORMAT_H__ */
+>> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+>> index 0220159..5372063 100644
+>> --- a/fs/xfs/libxfs/xfs_types.h
+>> +++ b/fs/xfs/libxfs/xfs_types.h
+>> @@ -23,6 +23,7 @@ typedef uint32_t	prid_t;		/* project ID */
+>>   typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+>>   typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+>>   typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
+>> +typedef uint32_t	xfs_attrlen_t;	/* attr length */
+>>   typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
+>>   typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
+>>   typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
+>> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+>> index 8542606..06c4081 100644
+>> --- a/fs/xfs/xfs_attr.h
+>> +++ b/fs/xfs/xfs_attr.h
+>> @@ -18,6 +18,8 @@
+>>   #ifndef __XFS_ATTR_H__
+>>   #define	__XFS_ATTR_H__
+>>   
+>> +#include "libxfs/xfs_defer.h"
+>> +
+>>   struct xfs_inode;
+>>   struct xfs_da_args;
+>>   struct xfs_attr_list_context;
+>> @@ -65,6 +67,10 @@ struct xfs_attr_list_context;
+>>    */
+>>   #define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
+>>   
+>> +/* Max name length in the xfs_attr_item */
+>> +#define MAX_NAME_LEN		255
+> 
+> Should be defined in xfs_da_format.h where the entries and
+> name length types are defined. SHould also try to derive it from
+> the namelen variable of one of the types rather than hard code it.
+> 
+>> +#define MAX_NAMEVAL_LEN (MAX_NAME_LEN + ATTR_MAX_VALUELEN)
+> 
+> as should this, I think.
+>> +
+>>   /*
+>>    * Define how lists of attribute names are returned to the user from
+>>    * the attr_list() call.  A large, 32bit aligned, buffer is passed in
+>> @@ -87,6 +93,19 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+>>   } attrlist_ent_t;
+>>   
+>>   /*
+>> + * List of attrs to commit later.
+>> + */
+>> +struct xfs_attr_item {
+>> +	xfs_ino_t	  xattri_ino;
+>> +	uint32_t	  xattri_op_flags;
+>> +	uint32_t	  xattri_nameval_len; /* length of name and val */
+>> +	uint32_t	  xattri_name_len;    /* length of name */
+>> +	uint32_t	  xattri_flags;       /* attr flags */
+>> +	char		  xattri_nameval[MAX_NAMEVAL_LEN];
+>> +	struct list_head  xattri_list;
+>> +};
+> 
+> Ok, that's a ~65kB structure.
+> 
+> Oh, that means the ATTRI/ATTRD log format structures are also 65kB
+> structures. That's going to need fixing - that far too big an
+> allocation to be doing for tiny little xattrs like parent pointers.
+> 
+
+Ok, I will see if I can come up with something more dynamic.
+
+> 
+> 
+>> +xfs_attri_item_free(
+>> +	struct xfs_attri_log_item	*attrip)
+>> +{
+>> +	kmem_free(attrip->attri_item.li_lv_shadow);
+>> +	kmem_free(attrip);
+>> +}
+>> +
+>> +/*
+>> + * This returns the number of iovecs needed to log the given attri item.
+>> + * We only need 1 iovec for an attri item.  It just logs the attri_log_format
+>> + * structure.
+>> + */
+>> +static inline int
+>> +xfs_attri_item_sizeof(
+>> +	struct xfs_attri_log_item *attrip)
+>> +{
+>> +	return sizeof(struct xfs_attri_log_format);
+>> +}
+>> +
+>> +STATIC void
+>> +xfs_attri_item_size(
+>> +	struct xfs_log_item	*lip,
+>> +	int			*nvecs,
+>> +	int			*nbytes)
+>> +{
+>> +	*nvecs += 1;
+>> +	*nbytes += xfs_attri_item_sizeof(ATTRI_ITEM(lip));
+>> +}
+> 
+> This will trigger 65kB allocations.....
+> 
+>> +
+>> +/*
+>> + * This is called to fill in the vector of log iovecs for the
+>> + * given attri log item. We use only 1 iovec, and we point that
+>> + * at the attri_log_format structure embedded in the attri item.
+>> + * It is at this point that we assert that all of the attr
+>> + * slots in the attri item have been filled.
+>> + */
+>> +STATIC void
+>> +xfs_attri_item_format(
+>> +	struct xfs_log_item	*lip,
+>> +	struct xfs_log_vec	*lv)
+>> +{
+>> +	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
+>> +	struct xfs_log_iovec	*vecp = NULL;
+>> +
+>> +	attrip->attri_format.attri_type = XFS_LI_ATTRI;
+>> +	attrip->attri_format.attri_size = 1;
+>> +
+>> +	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRI_FORMAT,
+>> +			&attrip->attri_format,
+>> +			xfs_attri_item_sizeof(attrip));
+>> +}
+> 
+> ANd we'll always copy 65kB structures here even if the attribute
+> is only a few tens of bytes. That's just going to burn through log
+> bandwidth and really needs fixing.
+> 
+> THe log item (and log format) structures really need to point to the
+> attribute name/value information rather than contain copies of them.
+> That way the information that is logged and the allocations required
+> are sized exactly for the attribute being created/removed. The cost
+> of dynamically allocating the buffers is less than the cost of
+> unnecessarily copying and logging 64k on eveery attribute operation.
+> 
+> Indeed, for a remove operation there is no value, so we should only
+> be logging an intent with a name (a few tens of bytes), not a 65kb
+> structure....
+> 
+> I'll stop here for the moment, because most of this code is going to
+> change to support dynamic allocation of name/value buffers, anyway.
+> 
+> Cheers,
+> 
+> Dave.
+> 
+
+Alrighty, thanks for the review Dave.  I will work on getting these 
+things updated and send out another set once I get it working.
+
+Thank you!
+
+Allison Henderson
