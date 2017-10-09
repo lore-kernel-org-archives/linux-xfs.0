@@ -1,80 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:54172 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754018AbdJIMyS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 08:54:18 -0400
-Received: by mail-qk0-f172.google.com with SMTP id w63so23440355qkd.10
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 05:54:18 -0700 (PDT)
-Date: Mon, 9 Oct 2017 08:54:16 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
- framework
-Message-ID: <20171009125415.wrfd5rp5zlf4qsgm@destiny>
-References: <20171006210956.vf326sydjiphsefo@destiny>
- <20171009005137.GA3666@dastard>
- <20171009022509.rz6goq3sec5ppxrr@destiny>
- <20171009034335.pwehn4kz3cwjy6o7@thunk.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54432 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754680AbdJIOY2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 10:24:28 -0400
+Date: Mon, 9 Oct 2017 10:24:26 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: Fix bool initialization/comparison
+Message-ID: <20171009142426.GA18663@bfoster.bfoster>
+References: <1507383097081-778026979-0-diffsplit-thomas@m3y3r.de>
+ <1507383097088-1367347759-14-diffsplit-thomas@m3y3r.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171009034335.pwehn4kz3cwjy6o7@thunk.org>
+In-Reply-To: <1507383097088-1367347759-14-diffsplit-thomas@m3y3r.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Josef Bacik <josef@toxicpanda.com>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Thomas Meyer <thomas@m3y3r.de>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Oct 08, 2017 at 11:43:35PM -0400, Theodore Ts'o wrote:
-> On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
-> > 
-> > Probably should have led with that shouldn't I have?  There's nothing keeping me
-> > from doing it, but I didn't want to try and shoehorn in a python thing into
-> > fstests.  I need python to do the sqlite and the json parsing to dump into the
-> > sqlite database.
+On Sat, Oct 07, 2017 at 04:02:21PM +0200, Thomas Meyer wrote:
+> Bool initializations should use true and false. Bool tests don't need
+> comparisons.
 > 
-> What version of python are you using?  From inspection it looks like
-> some variant of python 3.x (you're using print as a function w/o using
-> "from __future import print_function") but it's not immediately
-> obvious from the top-level fsperf shell script what version of python
-> your scripts are dependant upon.
-> 
-> This could potentially be a bit of a portability issue across various
-> distributions --- RHEL doesn't ship with Python 3.x at all, and on
-> Debian you need to use python3 to get python 3.x, since
-> /usr/bin/python still points at Python 2.7 by default.  So I could see
-> this as a potential issue for xfstests.
-> 
-> I'm currently using Python 2.7 in my wrapper scripts for, among other
-> things, to parse xUnit XML format and create nice summaries like this:
-> 
-> ext4/4k: 337 tests, 6 failures, 21 skipped, 3814 seconds
->   Failures: generic/232 generic/233 generic/361 generic/388
->     generic/451 generic/459
-> 
-> So I'm not opposed to python, but I will note that if you are using
-> modules from the Python Package Index, and they are modules which are
-> not packaged by your distribution (so you're using pip or easy_install
-> to pull them off the network), it does make doing hermetic builds from
-> trusted sources to be a bit trickier.
-> 
-> If you have a secops team who wants to know the provenance of software
-> which get thrown in production data centers (and automated downloading
-> from random external sources w/o any code review makes them break out
-> in hives), use of PyPI adds a new wrinkle.  It's not impossible to
-> solve, by any means, but it's something to consider.
->
+> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+> ---
 
-I purposefully used as little as possible, just json and sqlite, and I tried to
-use as little python3 isms as possible.  Any rpm based systems should have these
-libraries already installed, I agree that using any of the PyPI stuff is a pain
-and is a non-starter for me as I want to make it as easy as possible to get
-running.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Where do you fall on the including it in xfstests question?  I expect that the
-perf stuff would be run more as maintainers put their pull requests together to
-make sure things haven't regressed.  To that end I was going to wire up
-xfstests-bld to run this as well.  Whatever you and Dave prefer is what I'll do,
-I'll use it wherever it ends up so you two are the ones that get to decide.
-Thanks,
-
-Josef
+> 
+> diff -u -p a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1490,14 +1490,14 @@ xfs_bmap_isaeof(
+>  	int			is_empty;
+>  	int			error;
+>  
+> -	bma->aeof = 0;
+> +	bma->aeof = false;
+>  	error = xfs_bmap_last_extent(NULL, bma->ip, whichfork, &rec,
+>  				     &is_empty);
+>  	if (error)
+>  		return error;
+>  
+>  	if (is_empty) {
+> -		bma->aeof = 1;
+> +		bma->aeof = true;
+>  		return 0;
+>  	}
+>  
+> diff -u -p a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -1962,7 +1962,7 @@ xfs_difree_inobt(
+>  	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
+>  	    rec.ir_free == XFS_INOBT_ALL_FREE &&
+>  	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
+> -		xic->deleted = 1;
+> +		xic->deleted = true;
+>  		xic->first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
+>  		xic->alloc = xfs_inobt_irec_to_allocmask(&rec);
+>  
+> @@ -1989,7 +1989,7 @@ xfs_difree_inobt(
+>  
+>  		xfs_difree_inode_chunk(mp, agno, &rec, dfops);
+>  	} else {
+> -		xic->deleted = 0;
+> +		xic->deleted = false;
+>  
+>  		error = xfs_inobt_update(cur, &rec);
+>  		if (error) {
+> diff -u -p a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -761,7 +761,7 @@ xfs_file_fallocate(
+>  	enum xfs_prealloc_flags	flags = 0;
+>  	uint			iolock = XFS_IOLOCK_EXCL;
+>  	loff_t			new_size = 0;
+> -	bool			do_file_insert = 0;
+> +	bool			do_file_insert = false;
+>  
+>  	if (!S_ISREG(inode->i_mode))
+>  		return -EINVAL;
+> @@ -822,7 +822,7 @@ xfs_file_fallocate(
+>  			error = -EINVAL;
+>  			goto out_unlock;
+>  		}
+> -		do_file_insert = 1;
+> +		do_file_insert = true;
+>  	} else {
+>  		flags |= XFS_PREALLOC_SET;
+>  
+> diff -u -p a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -2515,7 +2515,7 @@ next_lv:
+>  				if (lv)
+>  					vecp = lv->lv_iovecp;
+>  			}
+> -			if (record_cnt == 0 && ordered == false) {
+> +			if (record_cnt == 0 && !ordered) {
+>  				if (!lv)
+>  					return 0;
+>  				break;
+> diff -u -p a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -704,7 +704,7 @@ xfs_mountfs(
+>  	xfs_set_maxicount(mp);
+>  
+>  	/* enable fail_at_unmount as default */
+> -	mp->m_fail_unmount = 1;
+> +	mp->m_fail_unmount = true;
+>  
+>  	error = xfs_sysfs_init(&mp->m_kobj, &xfs_mp_ktype, NULL, mp->m_fsname);
+>  	if (error)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
