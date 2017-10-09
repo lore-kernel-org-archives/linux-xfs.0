@@ -1,66 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27203 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751177AbdJCR0J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2017 13:26:09 -0400
-Date: Tue, 3 Oct 2017 10:26:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH]  xfs: handle racy AIO in xfs_reflink_end_cow
-Message-ID: <20171003172603.GD6503@magnolia>
-References: <20171003143416.12188-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:36964 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754619AbdJIOYs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 10:24:48 -0400
+Date: Mon, 9 Oct 2017 10:24:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
+Message-ID: <20171009142445.GE18663@bfoster.bfoster>
+References: <20171008235414.13866-1-david@fromorbit.com>
+ <20171008235414.13866-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171003143416.12188-1-hch@lst.de>
+In-Reply-To: <20171008235414.13866-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 04:34:16PM +0200, Christoph Hellwig wrote:
-> If we got two AIO writes into a COW area the second one might not have any
-> COW extents left to convert.  Handle that case gracefully instead of
-> triggering an assert or accessing beyond the bounds of the extent list.
+On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Recently we've had warnings arise from the vm handing us pages
+> without bufferheads attached to them. This should not ever occur
+> in XFS, but we don't defend against it properly if it does. The only
+> place where we remove bufferheads from a page is in
+> xfs_vm_releasepage(), but we can't tell the difference here between
+> "page is dirty so don't release" and "page is dirty but is being
+> invalidated so release it".
+> 
 
-Looks ok, will test.
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Ok, so we changed ->releasepage() in 99579ccec4 ("xfs: skip dirty pages
+in ->releasepage()") to deal with the fact that the mm can send
+legitimately dirty pages to ->releasepage(). That was apparently too
+aggressive a change because truncated pages would also end up skipped
+because the dirty bit is not cleared by the time the release occurs.
+Commit 0a417b8dc1 ("xfs: Timely free truncated dirty pages") modified
+->releasepage() again to not skip all dirty pages and only warn for
+delalloc/unwritten blocks on clean pages.
 
+That was apparently insufficient because we have some codepaths where
+not skipping dirty pages can allow us to strip the buffers from a page
+incorrectly...
+
+> In some places that are invalidating pages ask for pages to be
+> released and follow up afterward calling ->releasepage by checking
+> whether the page was dirty and then aborting the invalidation. This
+> is a possible vector for releasing buffers from a page but then
+> leaving it in the mapping, so we really do need to avoid dirty pages
+> in xfs_vm_releasepage().
+> 
+
+... but I'm having a hard time parsing that first sentence to understand
+how that is. Can you elaborate on and/or give a specific reference to
+this problematic invalidation abort sequence?
+
+Also, it looks like truncate_complete_page() eventually and
+unconditionally clears the page dirty bit, it just happens after the
+invalidate -> release attempt sequence that occurs down through
+do_invalidatepage(). IIUC, this was the problem fixed by Jan's patch
+mentioned above. Is there any reason we can't do the dirty cancel a
+little earlier there? Would that also address this problem?
+
+Brian
+
+> To differentiate between invalidated pages and normal pages, we need
+> to clear the page dirty flag when invalidating the pages. This can
+> be done through xfs_vm_invalidatepage(), and will result
+> xfs_vm_releasepage() seeing the page as clean which matches the
+> bufferhead state on the page after calling block_invalidatepage().
+> 
+> Hence we can re-add the page dirty check in xfs_vm_releasepage to
+> catch the case where we might be releasing a page that is actually
+> dirty and so should not have the bufferheads on it removed. This
+> will remove one possible vector of "dirty page with no bufferheads"
+> and so help narrow down the search for the root cause of that
+> problem.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_reflink.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+
+>  fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
+>  1 file changed, 22 insertions(+), 12 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 3246815c24d6..37e603bf1591 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -736,7 +736,13 @@ xfs_reflink_end_cow(
->  	/* If there is a hole at end_fsb - 1 go to the previous extent */
->  	if (!xfs_iext_lookup_extent(ip, ifp, end_fsb - 1, &idx, &got) ||
->  	    got.br_startoff > end_fsb) {
-> -		ASSERT(idx > 0);
-> +		/*
-> +		 * In case of racing, overlapping AIO writes no COW extents
-> +		 * might be left by the time I/O completes for the loser of
-> +		 * the race.  In that case we are done.
-> +		 */
-> +		if (idx <= 0)
-> +			goto out_cancel;
->  		xfs_iext_get_extent(ifp, --idx, &got);
->  	}
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index f18e5932aec4..067284d84d9e 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -735,6 +735,14 @@ xfs_vm_invalidatepage(
+>  {
+>  	trace_xfs_invalidatepage(page->mapping->host, page, offset,
+>  				 length);
+> +
+> +	/*
+> +	 * If we are invalidating the entire page, clear the dirty state from it
+> +	 * so that we can check for attempts to release dirty cached pages in
+> +	 * xfs_vm_releasepage().
+> +	 */
+> +	if (offset == 0 && length >= PAGE_SIZE)
+> +		cancel_dirty_page(page);
+>  	block_invalidatepage(page, offset, length);
+>  }
 >  
-> @@ -809,6 +815,7 @@ xfs_reflink_end_cow(
+> @@ -1190,25 +1198,27 @@ xfs_vm_releasepage(
+>  	 * mm accommodates an old ext3 case where clean pages might not have had
+>  	 * the dirty bit cleared. Thus, it can send actual dirty pages to
+>  	 * ->releasepage() via shrink_active_list(). Conversely,
+> -	 * block_invalidatepage() can send pages that are still marked dirty
+> -	 * but otherwise have invalidated buffers.
+> +	 * block_invalidatepage() can send pages that are still marked dirty but
+> +	 * otherwise have invalidated buffers.
+>  	 *
+>  	 * We want to release the latter to avoid unnecessary buildup of the
+> -	 * LRU, skip the former and warn if we've left any lingering
+> -	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
+> -	 * or unwritten buffers and warn if the page is not dirty. Otherwise
+> -	 * try to release the buffers.
+> +	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
+> +	 * that are entirely invalidated and need to be released.  Hence the
+> +	 * only time we should get dirty pages here is through
+> +	 * shrink_active_list() and so we can simply skip those now.
+> +	 *
+> +	 * warn if we've left any lingering delalloc/unwritten buffers on clean
+> +	 * or invalidated pages we are about to release.
+>  	 */
+> +	if (PageDirty(page))
+> +		return 0;
+> +
+>  	xfs_count_page_state(page, &delalloc, &unwritten);
 >  
->  out_defer:
->  	xfs_defer_cancel(&dfops);
-> +out_cancel:
->  	xfs_trans_cancel(tp);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  out:
+> -	if (delalloc) {
+> -		WARN_ON_ONCE(!PageDirty(page));
+> +	if (WARN_ON_ONCE(delalloc))
+>  		return 0;
+> -	}
+> -	if (unwritten) {
+> -		WARN_ON_ONCE(!PageDirty(page));
+> +	if (WARN_ON_ONCE(unwritten))
+>  		return 0;
+> -	}
+>  
+>  	return try_to_free_buffers(page);
+>  }
 > -- 
-> 2.14.1
+> 2.14.2
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
