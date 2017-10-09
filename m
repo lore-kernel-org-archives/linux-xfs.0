@@ -1,303 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50193 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751156AbdJIVZK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 17:25:10 -0400
-Subject: Re: [PATCH 02/17] Set up infastructure for deferred attribute
- operations
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
- <1507327548-3221-3-git-send-email-allison.henderson@oracle.com>
- <20171009042026.GJ3666@dastard>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <acc1732a-7c7a-5a11-ace3-e052134b1590@oracle.com>
-Date: Mon, 9 Oct 2017 14:25:04 -0700
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32113 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751184AbdJIWE7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:04:59 -0400
+Date: Tue, 10 Oct 2017 09:03:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+Message-ID: <20171009220332.GP3666@dastard>
+References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
+ <20171006153803.GI7122@magnolia>
+ <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
+ <20171006222031.GU3666@dastard>
+ <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
+ <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
+ <20171009112306.GM3666@dastard>
+ <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
 MIME-Version: 1.0
-In-Reply-To: <20171009042026.GJ3666@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
+On Mon, Oct 09, 2017 at 06:46:41PM +0300, Avi Kivity wrote:
+> 
+> 
+> On 10/09/2017 02:23 PM, Dave Chinner wrote:
+> >On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
+> >>On 10/07/2017 01:21 AM, Eric Sandeen wrote:
+> >>>On 10/6/17 5:20 PM, Dave Chinner wrote:
+> >>>>On Fri, Oct 06, 2017 at 11:18:39AM -0500, Eric Sandeen wrote:
+> >>>>>On 10/6/17 10:38 AM, Darrick J. Wong wrote:
+> >>>>>>On Fri, Oct 06, 2017 at 10:46:20AM +0200, Gandalf Corvotempesta wrote:
+> >>>>>>Semirelated question: for a solid state disk on a machine with high CPU
+> >>>>>>counts do we prefer agcount == cpucount to take advantage of the
+> >>>>>>high(er) iops and lack of seek time to increase parallelism?
+> >>>>>>
+> >>>>>>(Not that I've studied that in depth.)
+> >>>>>Interesting question.  :)  Maybe harder to answer for SSD black boxes?
+> >>>>Easy: switch to multidisk mode if /sys/block/<dev>/queue/rotational
+> >>>>is zero after doing all the other checks. Then SSDs will get larger
+> >>>>AG counts automatically.
+> >>>The "hard part" was knowing just how much parallelism is actually inside
+> >>>the black box.
+> >>It's often > 100.
+> >Sure, that might be the IO concurrency the SSD sees and handles, but
+> >you very rarely require that much allocation parallelism in the
+> >workload. Only a small amount of the IO submission path is actually
+> >allocation work, so a single AG can provide plenty of async IO
+> >parallelism before an AG is the limiting factor.
+> 
+> Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
 
+AGs don't issue IO. Applications issue IO, the filesystem allocates
+space from AGs according to the write IO that passes through it.
 
-On 10/8/2017 9:20 PM, Dave Chinner wrote:
-> 
-> On Fri, Oct 06, 2017 at 03:05:33PM -0700, Allison Henderson wrote:
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> hi Allison,
-> 
-> I'm just having a quick browse, not a complete review. This is a
-> really good start for deferred attributes, but I think there's bits
-> we'll have to redesign slightly for performance reasons.
-> 
-> First: needs a commit message to describe the design and structure,
-> so the reviewer is not left to guess. :P
-> 
->> ---
->> :100644 100644 b3edd66... 8d2c152... M	fs/xfs/Makefile
->> :100644 100644 b00ec1f... 5325ec2... M	fs/xfs/libxfs/xfs_attr.c
->> :100644 100644 2ea26b1... 38ae64a... M	fs/xfs/libxfs/xfs_attr_leaf.c
->> :100644 100644 d4f046d... ef0f8bf... M	fs/xfs/libxfs/xfs_defer.h
->> :100644 100644 8372e9b... 3778c8e... M	fs/xfs/libxfs/xfs_log_format.h
->> :100644 100644 0220159... 5372063... M	fs/xfs/libxfs/xfs_types.h
->> :100644 100644 8542606... 06c4081... M	fs/xfs/xfs_attr.h
->> :000000 100644 0000000... 419f90a... A	fs/xfs/xfs_attr_item.c
->> :000000 100644 0000000... aec854f... A	fs/xfs/xfs_attr_item.h
->> :100644 100644 d9a3a55... a206d51... M	fs/xfs/xfs_super.c
->> :100644 100644 815b53d2.. 66c3c5f... M	fs/xfs/xfs_trans.h
->> :000000 100644 0000000... 183c841... A	fs/xfs/xfs_trans_attr.c
-> 
-> This info isn't needed. Diffstat is sufficient.
-> 
->> @@ -254,7 +261,9 @@ typedef struct xfs_trans_header {
->>   	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
->>   	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
->>   	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
->> -	{ XFS_LI_BUD,		"XFS_LI_BUD" }
->> +	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
->> +	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
->> +	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
-> 
-> "attr intent", "attr done"?
-> 
-> What object/action are we taking here? Set, flip-flags or remove? Or
-> something else?
-> 
+i.e. when you don't do allocation in the write IO path or you are
+doing read IOs, then the number of AGs is /completely irrelevant/.
+In those cases a single AG can "support" the entire IO load your
+application and storage subsystem can handle.
 
-Yes, "intent" and "done" was the idea I was going for. The actions are 
-set and remove. The info needed for both operations seemed similar 
-enough that it seemed excessive to make another intent/done type.  The 
-xfs_attr struct has an attr_op_flags that marks it as a set or a remove 
-action.  I will add some comments in the code to help clarify.
+The only time an AG lock is taken in the IO path is during extent
+allocation (i.e. writes). And, as I've already said, a single AG can
+easily handle tens of thousands of allocation transactions a second
+before it becomes a bottleneck.
 
+IOWs, the worse case is that you'll get tens of thousands of IOs per
+second through an AG.
 
->>   
->>   /*
->>    * Inode Log Item Format definitions.
->> @@ -863,4 +872,45 @@ struct xfs_icreate_log {
->>   	__be32		icl_gen;	/* inode generation number to use */
->>   };
->>   
->> +/* Flags for defered attribute operations */
->> +#define ATTR_OP_FLAGS_SET	0x01	/* Set the attribute */
->> +#define ATTR_OP_FLAGS_REMOVE	0x02	/* Remove the attribute */
->> +#define ATTR_OP_FLAGS_MAX	0x02	/* Max flags */
->> +
->> +/*
->> + * ATTRI/ATTRD log format definitions
->> + */
->> +struct xfs_attr {
->> +	xfs_ino_t	attr_ino;
->> +	uint32_t	attr_op_flags;
->> +	uint32_t	attr_nameval_len;
->> +	uint32_t	attr_name_len;
->> +	uint32_t        attr_flags;
->> +	uint8_t		attr_nameval[MAX_NAMEVAL_LEN];
->> +};
-> 
-> "struct xfs_attr" is very generic. This ends up in the log on disk,
-> right? So it's a log format structure? struct xfs_attr_log_format?
-> 
-> This also needs padding to ensure it's size is 64bit aligned.
-> 
->> +/*
->> + * This is the structure used to lay out an attri log item in the
->> + * log.  The attri_attrs field is a variable size array whose
->> + * size is given by attri_nattrs.
->> + */
->> +struct xfs_attri_log_format {
->> +	uint16_t		attri_type;	/* attri log item type */
->> +	uint16_t		attri_size;	/* size of this item */
->> +	uint64_t		attri_id;	/* attri identifier */
->> +	struct xfs_attr		attri_attr;	/* attribute */
->> +};
-> 
-> That's got a 4 byte hole in it between attri_size and attri_id,
-> so needs explicit padding. What's attri_id supposed to be and how is
-> it used?
-> 
-> Also, i'd drop the "attri" from these, so.....
+> I understand that XFS_XFLAG_EXTSIZE and XFS_IOC_FSSETXATTR can
+> reduce the AG's load.
 
+Not really. They change the allocation pattern on the inode. This
+changes how the inode data is laid out on disk, but it doesn't
+necessarily change the allocation overhead of the write IO path.
+That's all dependent on what the application IO patterns are and how
+they match the extent size hints.
 
-Hmm, I don't think attri_id is used.  I had used the extent free intent 
-code as a sort of template for this and probably missed culling out the 
-id.  I will get this struct cleaned up and padded out.
+In general, nobody ever notices what the "load" on an AG is and
+that's because almost no-one ever drives AGs to their limits.  The
+mkfs defaults and the allocation policies keep the load distributed
+across the filesystem and so storage subsystems almost always run
+out of IO and/or seek capability before the filesystem runs out of
+allocation concurrency. And, in general, most machines run out of
+CPU power before they drive enough concurrency and load through the
+filesystem that it starts contending on internal locks.
 
-> 
->> +
->> +/*
->> + * This is the structure used to lay out an attrd log item in the
->> + * log.  The attrd_attrs array is a variable size array whose
->> + * size is given by attrd_nattrs;
->> + */
->> +struct xfs_attrd_log_format {
->> +	uint16_t		attrd_type;	/* attrd log item type */
->> +	uint16_t		attrd_size;	/* size of this item */
->> +	uint64_t		attrd_attri_id;	/* id of corresponding attri */
->> +	struct xfs_attr		attrd_attr;	/* attribute */
->> +};
-> 
-> .... these can use the same struct xfs_attr_log_format structure.
-> 
+Sure, I have plenty of artificial workloads that drive this sort
+contention, but no-one has a production workload that requires those
+sorts of behaviours or creates the same level of lock contention
+that these artificial workloads drive.
 
-Alrighty
+> Is there a downside? for example, when I
+> truncate + close the file, will the preallocated data still remain
+> allocated? Do I need to return it with an fallocate()?
 
->>   #endif /* __XFS_LOG_FORMAT_H__ */
->> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
->> index 0220159..5372063 100644
->> --- a/fs/xfs/libxfs/xfs_types.h
->> +++ b/fs/xfs/libxfs/xfs_types.h
->> @@ -23,6 +23,7 @@ typedef uint32_t	prid_t;		/* project ID */
->>   typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
->>   typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
->>   typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
->> +typedef uint32_t	xfs_attrlen_t;	/* attr length */
->>   typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
->>   typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
->>   typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
->> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
->> index 8542606..06c4081 100644
->> --- a/fs/xfs/xfs_attr.h
->> +++ b/fs/xfs/xfs_attr.h
->> @@ -18,6 +18,8 @@
->>   #ifndef __XFS_ATTR_H__
->>   #define	__XFS_ATTR_H__
->>   
->> +#include "libxfs/xfs_defer.h"
->> +
->>   struct xfs_inode;
->>   struct xfs_da_args;
->>   struct xfs_attr_list_context;
->> @@ -65,6 +67,10 @@ struct xfs_attr_list_context;
->>    */
->>   #define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
->>   
->> +/* Max name length in the xfs_attr_item */
->> +#define MAX_NAME_LEN		255
-> 
-> Should be defined in xfs_da_format.h where the entries and
-> name length types are defined. SHould also try to derive it from
-> the namelen variable of one of the types rather than hard code it.
-> 
->> +#define MAX_NAMEVAL_LEN (MAX_NAME_LEN + ATTR_MAX_VALUELEN)
-> 
-> as should this, I think.
->> +
->>   /*
->>    * Define how lists of attribute names are returned to the user from
->>    * the attr_list() call.  A large, 32bit aligned, buffer is passed in
->> @@ -87,6 +93,19 @@ typedef struct attrlist_ent {	/* data from attr_list() */
->>   } attrlist_ent_t;
->>   
->>   /*
->> + * List of attrs to commit later.
->> + */
->> +struct xfs_attr_item {
->> +	xfs_ino_t	  xattri_ino;
->> +	uint32_t	  xattri_op_flags;
->> +	uint32_t	  xattri_nameval_len; /* length of name and val */
->> +	uint32_t	  xattri_name_len;    /* length of name */
->> +	uint32_t	  xattri_flags;       /* attr flags */
->> +	char		  xattri_nameval[MAX_NAMEVAL_LEN];
->> +	struct list_head  xattri_list;
->> +};
-> 
-> Ok, that's a ~65kB structure.
-> 
-> Oh, that means the ATTRI/ATTRD log format structures are also 65kB
-> structures. That's going to need fixing - that far too big an
-> allocation to be doing for tiny little xattrs like parent pointers.
-> 
+No. Yes.
 
-Ok, I will see if I can come up with something more dynamic.
+> >space manipulations per second before the AG locks become the
+> >bottleneck. Hence by the time you get to 16 AGs there's concurrency
+> >available for (runs a concurrent workload and measures) at least
+> >350,000 allocation transactions per second on relatively slow 5 year
+> >old 8-core server CPUs. And that's CPU bound (16 CPUs all at >95%),
+> >so faster, more recent CPUs will run much higher numbers.
+> >
+> >IOws, don't confuse allocation concurrency with IO concurrency or
+> >application concurrency. It's not the same thing and it is rarely a
+> >limiting factor for most workloads, even the most IO intensive
+> >ones...
+> 
+> In my load, the allocation load is not very high, but the impact of
+> iowait is. So if I can reduce the chance of io_submit() blocking
+> because of AG contention, then I'm happy to increase the number of
+> AGs even if it hurts other things.
 
-> 
-> 
->> +xfs_attri_item_free(
->> +	struct xfs_attri_log_item	*attrip)
->> +{
->> +	kmem_free(attrip->attri_item.li_lv_shadow);
->> +	kmem_free(attrip);
->> +}
->> +
->> +/*
->> + * This returns the number of iovecs needed to log the given attri item.
->> + * We only need 1 iovec for an attri item.  It just logs the attri_log_format
->> + * structure.
->> + */
->> +static inline int
->> +xfs_attri_item_sizeof(
->> +	struct xfs_attri_log_item *attrip)
->> +{
->> +	return sizeof(struct xfs_attri_log_format);
->> +}
->> +
->> +STATIC void
->> +xfs_attri_item_size(
->> +	struct xfs_log_item	*lip,
->> +	int			*nvecs,
->> +	int			*nbytes)
->> +{
->> +	*nvecs += 1;
->> +	*nbytes += xfs_attri_item_sizeof(ATTRI_ITEM(lip));
->> +}
-> 
-> This will trigger 65kB allocations.....
-> 
->> +
->> +/*
->> + * This is called to fill in the vector of log iovecs for the
->> + * given attri log item. We use only 1 iovec, and we point that
->> + * at the attri_log_format structure embedded in the attri item.
->> + * It is at this point that we assert that all of the attr
->> + * slots in the attri item have been filled.
->> + */
->> +STATIC void
->> +xfs_attri_item_format(
->> +	struct xfs_log_item	*lip,
->> +	struct xfs_log_vec	*lv)
->> +{
->> +	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
->> +	struct xfs_log_iovec	*vecp = NULL;
->> +
->> +	attrip->attri_format.attri_type = XFS_LI_ATTRI;
->> +	attrip->attri_format.attri_size = 1;
->> +
->> +	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRI_FORMAT,
->> +			&attrip->attri_format,
->> +			xfs_attri_item_sizeof(attrip));
->> +}
-> 
-> ANd we'll always copy 65kB structures here even if the attribute
-> is only a few tens of bytes. That's just going to burn through log
-> bandwidth and really needs fixing.
-> 
-> THe log item (and log format) structures really need to point to the
-> attribute name/value information rather than contain copies of them.
-> That way the information that is logged and the allocations required
-> are sized exactly for the attribute being created/removed. The cost
-> of dynamically allocating the buffers is less than the cost of
-> unnecessarily copying and logging 64k on eveery attribute operation.
-> 
-> Indeed, for a remove operation there is no value, so we should only
-> be logging an intent with a name (a few tens of bytes), not a 65kb
-> structure....
-> 
-> I'll stop here for the moment, because most of this code is going to
-> change to support dynamic allocation of name/value buffers, anyway.
-> 
-> Cheers,
-> 
-> Dave.
-> 
+That's what RWF_NOWAIT is for. It pushes any write IO that requires
+allocation into a thread rather possibly blocking the submitting
+thread on any lock or IO in the allocation path.
 
-Alrighty, thanks for the review Dave.  I will work on getting these 
-things updated and send out another set once I get it working.
+> >>>   But "multidisk mode" doesn't go too overboard, so yeah
+> >>>that's probably fine.
+> >>Is there a penalty associated with having too many allocation groups?
+> >Yes. You break up the large contiguous free spaces into many smaller
+> >free spaces and so can induce premature onset of filesystem aging
+> >related performance degradations. And for spinning disks, more than
+> >4-8AGs per spindle causes excessive seeks in mixed workloads and
+> >degrades performance that way....
+> 
+> For an SSD, would an AG per 10GB be reasonable? per 100GB?
 
-Thank you!
+No. Maybe.
 
-Allison Henderson
+Like I said, we can use the multi-disk mode in mkfs for this - it
+already selects an appropriate number of AGs according to the size
+of the filesystem appropriately.
+
+> Machines with 60-100 logical cores and low-tens of terabytes of SSD
+> are becoming common.  How many AGs would work for such a machine?
+
+Multidisk default, which will be 32 AGs for anything in the 1->32TB
+range. And over 32TB, you get 1 AG per TB...
+
+> Again the allocation load is not very high (allocating a few GB/s
+> with 32MB hints, so < 100 allocs/sec), but the penalty for
+> contention is pretty high.
+
+I think you're worrying about a non-problem. Use RWF_NOWAIT for your
+AIO, and most of your existing IO submission blocking problems will
+go away.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
