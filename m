@@ -1,160 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from twosheds.infradead.org ([90.155.92.209]:43272 "EHLO
-        twosheds.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753025AbdJFXKt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 19:10:49 -0400
-Message-ID: <1507331434.29211.439.camel@infradead.org>
-Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <CAPcyv4jLj2WOgPA+B5eYME0uZyuoy3gp35w+4rCa_EZxm-QSKA@mail.gmail.com>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
-         <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
-         <1507329939.29211.434.camel@infradead.org>
-         <CAPcyv4jLj2WOgPA+B5eYME0uZyuoy3gp35w+4rCa_EZxm-QSKA@mail.gmail.com>
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-309WFqKqv3GM7Se1C2w/"
-Date: Sat, 07 Oct 2017 00:10:34 +0100
-Mime-Version: 1.0
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:49764 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754409AbdJIPqq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 11:46:46 -0400
+Received: by mail-wm0-f48.google.com with SMTP id b189so23644751wmd.4
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 08:46:45 -0700 (PDT)
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
+ <20171006153803.GI7122@magnolia>
+ <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
+ <20171006222031.GU3666@dastard>
+ <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
+ <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
+ <20171009112306.GM3666@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
+Date: Mon, 9 Oct 2017 18:46:41 +0300
+MIME-Version: 1.0
+In-Reply-To: <20171009112306.GM3666@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
 
---=-309WFqKqv3GM7Se1C2w/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2017-10-06 at 15:52 -0700, Dan Williams wrote:
-> On Fri, Oct 6, 2017 at 3:45 PM, David Woodhouse <dwmw2@infradead.org> wro=
-te:
-> >=20
-> > On Fri, 2017-10-06 at 15:35 -0700, Dan Williams wrote:
-> > >=20
-> > > Add a helper to determine if the dma mappings set up for a given devi=
-ce
-> > > are backed by an iommu. In particular, this lets code paths know that=
- a
-> > > dma_unmap operation will revoke access to memory if the device can no=
-t
-> > > otherwise be quiesced. The need for this knowledge is driven by a nee=
-d
-> > > to make RDMA transfers to DAX mappings safe. If the DAX file's block =
-map
-> > > changes we need to be to reliably stop accesses to blocks that have b=
-een
-> > > freed or re-assigned to a new file.
-> > "a dma_unmap operation revoke access to memory"... but it's OK that the
-> > next *map* will give the same DMA address to someone else, right?
+On 10/09/2017 02:23 PM, Dave Chinner wrote:
+> On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
+>> On 10/07/2017 01:21 AM, Eric Sandeen wrote:
+>>> On 10/6/17 5:20 PM, Dave Chinner wrote:
+>>>> On Fri, Oct 06, 2017 at 11:18:39AM -0500, Eric Sandeen wrote:
+>>>>> On 10/6/17 10:38 AM, Darrick J. Wong wrote:
+>>>>>> On Fri, Oct 06, 2017 at 10:46:20AM +0200, Gandalf Corvotempesta wrote:
+>>>>>> Semirelated question: for a solid state disk on a machine with high CPU
+>>>>>> counts do we prefer agcount == cpucount to take advantage of the
+>>>>>> high(er) iops and lack of seek time to increase parallelism?
+>>>>>>
+>>>>>> (Not that I've studied that in depth.)
+>>>>> Interesting question.  :)  Maybe harder to answer for SSD black boxes?
+>>>> Easy: switch to multidisk mode if /sys/block/<dev>/queue/rotational
+>>>> is zero after doing all the other checks. Then SSDs will get larger
+>>>> AG counts automatically.
+>>> The "hard part" was knowing just how much parallelism is actually inside
+>>> the black box.
+>> It's often > 100.
+> Sure, that might be the IO concurrency the SSD sees and handles, but
+> you very rarely require that much allocation parallelism in the
+> workload. Only a small amount of the IO submission path is actually
+> allocation work, so a single AG can provide plenty of async IO
+> parallelism before an AG is the limiting factor.
+
+Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
+
+I understand that XFS_XFLAG_EXTSIZE and XFS_IOC_FSSETXATTR can reduce 
+the AG's load. Is there a downside? for example, when I truncate + close 
+the file, will the preallocated data still remain allocated? Do I need 
+to return it with an fallocate()?
+
 >
-> I'm assuming the next map will be to other physical addresses and a
-> different requester device since the memory is still registered
-> exclusively.
+> i.e. A single AG can typically support tens of thousands of free
+> space manipulations per second before the AG locks become the
+> bottleneck. Hence by the time you get to 16 AGs there's concurrency
+> available for (runs a concurrent workload and measures) at least
+> 350,000 allocation transactions per second on relatively slow 5 year
+> old 8-core server CPUs. And that's CPU bound (16 CPUs all at >95%),
+> so faster, more recent CPUs will run much higher numbers.
+>
+> IOws, don't confuse allocation concurrency with IO concurrency or
+> application concurrency. It's not the same thing and it is rarely a
+> limiting factor for most workloads, even the most IO intensive
+> ones...
 
-I meant the next map for this device/group.
+In my load, the allocation load is not very high, but the impact of 
+iowait is. So if I can reduce the chance of io_submit() blocking because 
+of AG contention, then I'm happy to increase the number of AGs even if 
+it hurts other things.
 
-It may well use the same virtual DMA address as the one you just
-unmapped, yet actually map to a different physical address. So if the
-DMA still occurs to the "old" address, that isn't revoked at all =E2=80=94 =
-it's
-just going to the wrong physical location.
+>
+>>>    But "multidisk mode" doesn't go too overboard, so yeah
+>>> that's probably fine.
+>> Is there a penalty associated with having too many allocation groups?
+> Yes. You break up the large contiguous free spaces into many smaller
+> free spaces and so can induce premature onset of filesystem aging
+> related performance degradations. And for spinning disks, more than
+> 4-8AGs per spindle causes excessive seeks in mixed workloads and
+> degrades performance that way....
 
-And if you are sure that the DMA will never happen, why do you need to
-revoke the mapping in the first place?
+For an SSD, would an AG per 10GB be reasonable? per 100GB?
 
---=-309WFqKqv3GM7Se1C2w/
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+Machines with 60-100 logical cores and low-tens of terabytes of SSD are 
+becoming common.  How many AGs would work for such a machine? Again the 
+allocation load is not very high (allocating a few GB/s with 32MB hints, 
+so < 100 allocs/sec), but the penalty for contention is pretty high.
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
-ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
-EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
-UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
-MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
-bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
-PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
-bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
-uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
-LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
-QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
-UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
-UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
-MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
-BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
-HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
-LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
-mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
-nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
-4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
-yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
-+nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
-CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
-MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
-MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
-pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
-An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
-p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
-HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
-AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
-dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
-MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
-BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
-UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
-Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
-gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
-dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
-Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
-DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
-eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
-hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
-PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
-QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
-WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
-ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
-bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
-SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
-RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
-dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
-iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
-M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
-FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
-HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
-BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
-BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
-dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
-ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
-BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
-2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
-vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
-YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
-fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
-GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
-R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
-TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
-ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MTAwNjIzMTAzNFowLwYJ
-KoZIhvcNAQkEMSIEICSnoIcN27CByS33aRqT9WiEOKKaEXEPfkKTKIYNNCAtMIHBBgkrBgEEAYI3
-EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
-BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
-RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
-WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
-VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
-TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
-b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQAX8T9d3oSkDeYU4mFBZjMFYld0iMgJ7oz+6jvVw7infhNJdQ5Cp+RqIQOnMKCHTyWZ2nmPM+3u
-BGRMa41dAEc6LokmSYHckNhBds9ZEdH4uvO1mqETf59t+mvsL2eVOxFhcqgPY1i/E+HGP0ZJaSIo
-Km0+JmIadZlXLV6iQIjZpHZuVr9kRW6qi9oSz+CVkchATMXpPKh8z2VgDHxlk7fqfOXRnjqvFoUv
-xgqJtVkZgTUXMZl+pRnNfLUU8Y+UDwKV8cjUxYes+Zy5OQqi+GEUeQyu+rOmpcO/nM084Gvx+uCO
-+dIB4ZUoKyz2gxv2EanSNOnwLX17wkyGivjpHNxhAAAAAAAA
+Thanks for the info!
 
-
---=-309WFqKqv3GM7Se1C2w/--
+> Cheers,
+>
+> Dave.
 
