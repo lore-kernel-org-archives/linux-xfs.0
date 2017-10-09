@@ -1,36 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45394 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750930AbdJIH2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 03:28:22 -0400
-Date: Mon, 9 Oct 2017 09:28:20 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: add a new test for racing AIO COW writes V2
-Message-ID: <20171009072820.GA30228@lst.de>
-References: <20171003143802.GA3964@lst.de> <20171004061616.GA20222@lst.de> <20171009071833.GE10593@eguan.usersys.redhat.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:54984 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751661AbdJIIGB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 04:06:01 -0400
+Received: by mail-wm0-f46.google.com with SMTP id i124so20906921wmf.3
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 01:06:00 -0700 (PDT)
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
+ <20171006153803.GI7122@magnolia>
+ <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
+ <20171006222031.GU3666@dastard>
+ <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
+Date: Mon, 9 Oct 2017 11:05:56 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171009071833.GE10593@eguan.usersys.redhat.com>
+In-Reply-To: <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 03:18:33PM +0800, Eryu Guan wrote:
-> On Wed, Oct 04, 2017 at 08:16:16AM +0200, Christoph Hellwig wrote:
-> > This can be used to trigger an assert in the current XFS code because it
-> > can't handle the case where there are COW extents on a file, but none
-> > at or below the range converted by the AIO completion handler.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> I fixed several minor issues on commit (see inline comments).
-> 
-> I haven't reproduced the assert failure yet on my test vm, but as the
-> commit log in v1 patch, it's not 100% reproducible, maybe I'm just lucky
-> (or not lucky :)
 
-Hmm, I only got 1 non-reproduce out of about 100 runs.  Maybe your
-device is too fast, as this was in a VM.
+
+On 10/07/2017 01:21 AM, Eric Sandeen wrote:
+>
+> On 10/6/17 5:20 PM, Dave Chinner wrote:
+>> On Fri, Oct 06, 2017 at 11:18:39AM -0500, Eric Sandeen wrote:
+>>> On 10/6/17 10:38 AM, Darrick J. Wong wrote:
+>>>> On Fri, Oct 06, 2017 at 10:46:20AM +0200, Gandalf Corvotempesta wrote:
+>>>> Semirelated question: for a solid state disk on a machine with high CPU
+>>>> counts do we prefer agcount == cpucount to take advantage of the
+>>>> high(er) iops and lack of seek time to increase parallelism?
+>>>>
+>>>> (Not that I've studied that in depth.)
+>>> Interesting question.  :)  Maybe harder to answer for SSD black boxes?
+>> Easy: switch to multidisk mode if /sys/block/<dev>/queue/rotational
+>> is zero after doing all the other checks. Then SSDs will get larger
+>> AG counts automatically.
+> The "hard part" was knowing just how much parallelism is actually inside
+> the black box.
+
+It's often > 100.
+
+>    But "multidisk mode" doesn't go too overboard, so yeah
+> that's probably fine.
+>
+
+
+Is there a penalty associated with having too many allocation groups?
