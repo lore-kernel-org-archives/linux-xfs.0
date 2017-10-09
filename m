@@ -1,139 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34660 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752924AbdJFWmU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Oct 2017 18:42:20 -0400
-Subject: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 06 Oct 2017 15:35:54 -0700
-Message-ID: <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:43462 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754509AbdJINUr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 09:20:47 -0400
+Content-Type: text/plain; charset="UTF-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Mon, 09 Oct 2017 13:44:24 +0100
+Message-ID: <lsq.1507553064.729046564@decadent.org.uk>
+Subject: [PATCH 3.16 053/192] xfs: Don't clear SGID when inheriting ACLs
+In-Reply-To: <lsq.1507553063.449494954@decadent.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: akpm@linux-foundation.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Add a helper to determine if the dma mappings set up for a given device
-are backed by an iommu. In particular, this lets code paths know that a
-dma_unmap operation will revoke access to memory if the device can not
-otherwise be quiesced. The need for this knowledge is driven by a need
-to make RDMA transfers to DAX mappings safe. If the DAX file's block map
-changes we need to be to reliably stop accesses to blocks that have been
-freed or re-assigned to a new file.
+3.16.49-rc1 review patch.  If anyone has any objections, please let me know.
 
-Since PMEM+DAX is currently only enabled for x86, we only update the x86
-iommu drivers.
+------------------
 
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+From: Jan Kara <jack@suse.cz>
+
+commit 8ba358756aa08414fa9e65a1a41d28304ed6fd7f upstream.
+
+When new directory 'DIR1' is created in a directory 'DIR0' with SGID bit
+set, DIR1 is expected to have SGID bit set (and owning group equal to
+the owning group of 'DIR0'). However when 'DIR0' also has some default
+ACLs that 'DIR1' inherits, setting these ACLs will result in SGID bit on
+'DIR1' to get cleared if user is not member of the owning group.
+
+Fix the problem by calling __xfs_set_acl() instead of xfs_set_acl() when
+setting up inode in xfs_generic_create(). That prevents SGID bit
+clearing and mode is properly set by posix_acl_create() anyway. We also
+reorder arguments of __xfs_set_acl() to match the ordering of
+xfs_set_acl() to make things consistent.
+
+Fixes: 073931017b49d9458aa351605b43a7e34598caef
+CC: Darrick J. Wong <darrick.wong@oracle.com>
+CC: linux-xfs@vger.kernel.org
+Signed-off-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[bwh: Backported to 3.16: adjust context]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/base/dma-mapping.c  |   10 ++++++++++
- drivers/iommu/amd_iommu.c   |    6 ++++++
- drivers/iommu/intel-iommu.c |    6 ++++++
- include/linux/dma-mapping.h |    3 +++
- 4 files changed, 25 insertions(+)
+ fs/xfs/xfs_acl.c  | 6 +++---
+ fs/xfs/xfs_acl.h  | 1 +
+ fs/xfs/xfs_iops.c | 4 ++--
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index e584eddef0a7..e1b5f103d90e 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -369,3 +369,13 @@ void dma_deconfigure(struct device *dev)
- 	of_dma_deconfigure(dev);
- 	acpi_dma_deconfigure(dev);
- }
-+
-+bool dma_has_iommu(struct device *dev)
-+{
-+	const struct dma_map_ops *ops = get_dma_ops(dev);
-+
-+	if (ops && ops->has_iommu)
-+		return ops->has_iommu(dev);
-+	return false;
-+}
-+EXPORT_SYMBOL(dma_has_iommu);
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 51f8215877f5..873f899fcf57 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2271,6 +2271,11 @@ static struct protection_domain *get_domain(struct device *dev)
- 	return domain;
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -176,8 +176,8 @@ out:
+ 	return acl;
  }
  
-+static bool amd_dma_has_iommu(struct device *dev)
-+{
-+	return !IS_ERR(get_domain(dev));
-+}
-+
- static void update_device_table(struct protection_domain *domain)
+-STATIC int
+-__xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
++int
++__xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
  {
- 	struct iommu_dev_data *dev_data;
-@@ -2689,6 +2694,7 @@ static const struct dma_map_ops amd_iommu_dma_ops = {
- 	.unmap_sg	= unmap_sg,
- 	.dma_supported	= amd_iommu_dma_supported,
- 	.mapping_error	= amd_iommu_mapping_error,
-+	.has_iommu	= amd_dma_has_iommu,
- };
+ 	struct xfs_inode *ip = XFS_I(inode);
+ 	unsigned char *ea_name;
+@@ -297,5 +297,5 @@ xfs_set_acl(struct inode *inode, struct
+ 	}
  
- static int init_reserved_iova_ranges(void)
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6784a05dd6b2..243ef42fdad4 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3578,6 +3578,11 @@ static int iommu_no_mapping(struct device *dev)
- 	return 0;
+  set_acl:
+-	return __xfs_set_acl(inode, type, acl);
++	return __xfs_set_acl(inode, acl, type);
  }
+--- a/fs/xfs/xfs_acl.h
++++ b/fs/xfs/xfs_acl.h
+@@ -61,6 +61,7 @@ struct xfs_acl {
+ #ifdef CONFIG_XFS_POSIX_ACL
+ extern struct posix_acl *xfs_get_acl(struct inode *inode, int type);
+ extern int xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
++extern int __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
+ extern int posix_acl_access_exists(struct inode *inode);
+ extern int posix_acl_default_exists(struct inode *inode);
+ #else
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -173,12 +173,12 @@ xfs_generic_create(
  
-+static bool intel_dma_has_iommu(struct device *dev)
-+{
-+	return !iommu_no_mapping(dev);
-+}
-+
- static dma_addr_t __intel_map_single(struct device *dev, phys_addr_t paddr,
- 				     size_t size, int dir, u64 dma_mask)
- {
-@@ -3872,6 +3877,7 @@ const struct dma_map_ops intel_dma_ops = {
- 	.map_page = intel_map_page,
- 	.unmap_page = intel_unmap_page,
- 	.mapping_error = intel_mapping_error,
-+	.has_iommu = intel_dma_has_iommu,
- #ifdef CONFIG_X86
- 	.dma_supported = x86_dma_supported,
- #endif
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 29ce9815da87..659f122c18f5 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -128,6 +128,7 @@ struct dma_map_ops {
- 				   enum dma_data_direction dir);
- 	int (*mapping_error)(struct device *dev, dma_addr_t dma_addr);
- 	int (*dma_supported)(struct device *dev, u64 mask);
-+	bool (*has_iommu)(struct device *dev);
- #ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
- 	u64 (*get_required_mask)(struct device *dev);
- #endif
-@@ -221,6 +222,8 @@ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
- }
- #endif
- 
-+extern bool dma_has_iommu(struct device *dev);
-+
- static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
- 					      size_t size,
- 					      enum dma_data_direction dir,
+ #ifdef CONFIG_XFS_POSIX_ACL
+ 	if (default_acl) {
+-		error = -xfs_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
++		error = -__xfs_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
+ 		if (error)
+ 			goto out_cleanup_inode;
+ 	}
+ 	if (acl) {
+-		error = -xfs_set_acl(inode, acl, ACL_TYPE_ACCESS);
++		error = -__xfs_set_acl(inode, acl, ACL_TYPE_ACCESS);
+ 		if (error)
+ 			goto out_cleanup_inode;
+ 	}
 
