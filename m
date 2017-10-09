@@ -1,220 +1,329 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:50489 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751858AbdJKAED (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 20:04:03 -0400
-Date: Wed, 11 Oct 2017 11:04:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
-Message-ID: <20171011000400.GW3666@dastard>
-References: <20171008235414.13866-1-david@fromorbit.com>
- <20171008235414.13866-5-david@fromorbit.com>
- <20171009142445.GE18663@bfoster.bfoster>
- <20171009204816.GN3666@dastard>
- <20171010122945.GB23057@bfoster.bfoster>
+Received: from userp1040.oracle.com ([156.151.31.81]:45369 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751185AbdJIUDc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 16:03:32 -0400
+Date: Mon, 9 Oct 2017 13:03:28 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 25/25] xfs: scrub quota information
+Message-ID: <20171009200328.GT7122@magnolia>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706340739.19351.4078240552236189694.stgit@magnolia>
+ <20171009025151.GF3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171010122945.GB23057@bfoster.bfoster>
+In-Reply-To: <20171009025151.GF3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 10, 2017 at 08:29:45AM -0400, Brian Foster wrote:
-> On Tue, Oct 10, 2017 at 07:48:16AM +1100, Dave Chinner wrote:
-> > On Mon, Oct 09, 2017 at 10:24:46AM -0400, Brian Foster wrote:
-> > > On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Recently we've had warnings arise from the vm handing us pages
-> > > > without bufferheads attached to them. This should not ever occur
-> > > > in XFS, but we don't defend against it properly if it does. The only
-> > > > place where we remove bufferheads from a page is in
-> > > > xfs_vm_releasepage(), but we can't tell the difference here between
-> > > > "page is dirty so don't release" and "page is dirty but is being
-> > > > invalidated so release it".
-> > > > 
-> > > 
-> > > Ok, so we changed ->releasepage() in 99579ccec4 ("xfs: skip dirty pages
-> > > in ->releasepage()") to deal with the fact that the mm can send
-> > > legitimately dirty pages to ->releasepage(). That was apparently too
-> > > aggressive a change because truncated pages would also end up skipped
-> > > because the dirty bit is not cleared by the time the release occurs.
-> > > Commit 0a417b8dc1 ("xfs: Timely free truncated dirty pages") modified
-> > > ->releasepage() again to not skip all dirty pages and only warn for
-> > > delalloc/unwritten blocks on clean pages.
-> > > 
-> > > That was apparently insufficient because we have some codepaths where
-> > > not skipping dirty pages can allow us to strip the buffers from a page
-> > > incorrectly...
-> > 
-> > Right, Jan's patch fixed the truncate problem but re-opened the
-> > memory reclaim hole. It effectively reverted the original patch.
-> > 
+On Mon, Oct 09, 2017 at 01:51:51PM +1100, Dave Chinner wrote:
+> On Tue, Oct 03, 2017 at 01:43:27PM -0700, Darrick J. Wong wrote:
+> > +xfs_scrub_quota_to_dqtype(
+> > +	struct xfs_scrub_context	*sc)
+> > +{
+> > +	switch (sc->sm->sm_type) {
+> > +	case XFS_SCRUB_TYPE_UQUOTA:
+> > +		return XFS_DQ_USER;
+> > +	case XFS_SCRUB_TYPE_GQUOTA:
+> > +		return XFS_DQ_GROUP;
+> > +	case XFS_SCRUB_TYPE_PQUOTA:
+> > +		return XFS_DQ_PROJ;
+> > +	default:
+> > +		return 0;
+> > +	}
+> > +}
+> > +
+> > +/* Set us up to scrub a quota. */
+> > +int
+> > +xfs_scrub_setup_quota(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_inode		*ip)
+> > +{
+> > +	uint				dqtype;
+> > +
+> > +	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
+> > +		return -EINVAL;
+> > +
+> > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
+> > +	if (dqtype == 0)
+> > +		return -EINVAL;
+> > +	return 0;
+> > +}
 > 
-> (Bear with me, trying to work through my confusion...). So the original
-> patch documents XFS release page delalloc warnings and the conditions
-> that occur that make these warnings spurious. The objective of the patch
-> (as documented) was therefore to quiet the warnings. Jan's patch came
-> along to address the lru issue and quieted the warning in a different
-> way.
+> Should this check whether the quota type is actually enabled, and
+> return ENOENT if it's not? i.e move the check out of
+> xfs_scrub_quota() and into the setup function?
+
+I can add a xfs_this_quota_on check to the setup function, but don't we
+need xfs_scrub_quota to lock qi_quotaofflock and then recheck that the
+quota type is still enabled?
+
+> > +/* Quotas. */
+> > +
+> > +/* Scrub the fields in an individual quota item. */
+> > +STATIC void
+> > +xfs_scrub_quota_item(
+> > +	struct xfs_scrub_context	*sc,
+> > +	uint				dqtype,
+> > +	struct xfs_dquot		*dq,
+> > +	xfs_dqid_t			id)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_disk_dquot		*d = &dq->q_core;
+> > +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+> > +	xfs_fileoff_t			offset;
+> > +	unsigned long long		bsoft;
+> > +	unsigned long long		isoft;
+> > +	unsigned long long		rsoft;
+> > +	unsigned long long		bhard;
+> > +	unsigned long long		ihard;
+> > +	unsigned long long		rhard;
+> > +	unsigned long long		bcount;
+> > +	unsigned long long		icount;
+> > +	unsigned long long		rcount;
+> > +	xfs_ino_t			inodes;
+> > +
+> > +	/* Did we get the dquot we wanted? */
+> > +	offset = id * qi->qi_dqperchunk;
+> > +	if (id > be32_to_cpu(d->d_id) ||
 > 
-> FWIW, my impression is that this patch is intending to fix some other
-> side effect of this ext/mm behavior also fixed by the original patch,
-> but at least wasn't documented by the commit log. What this additional
-> side effect is is the part I'm trying to understand...
+> Why is this a ">" check rather than "!="?
+
+/*
+ * We fed id and DQNEXT into the xfs_qm_dqget call, which means
+ * that the actual dquot we got must either have the same id or
+ * the next higher id.
+ */
+
 > 
-> > > > In some places that are invalidating pages ask for pages to be
-> > > > released and follow up afterward calling ->releasepage by checking
-> > > > whether the page was dirty and then aborting the invalidation. This
-> > > > is a possible vector for releasing buffers from a page but then
-> > > > leaving it in the mapping, so we really do need to avoid dirty pages
-> > > > in xfs_vm_releasepage().
-> > > > 
-> > > 
-> > > ... but I'm having a hard time parsing that first sentence to understand
-> > > how that is. Can you elaborate on and/or give a specific reference to
-> > > this problematic invalidation abort sequence?
-> > 
-> > e.g. invalidate_complete_page2():
-> > 
-> > /*                                                                               
-> >  * This is for invalidate_mapping_pages().  That function can be called at       
-> >  * any time, and is not supposed to throw away dirty pages.  But pages can       
-> > .....
-> >        if (page_has_private(page) && !try_to_release_page(page, GFP_KERNEL))
-> >                 return 0;
-> > 
-> >         spin_lock_irqsave(&mapping->tree_lock, flags);
-> >         if (PageDirty(page))
-> >                 goto failed;
-> > ....
-> > 
-> > It's not supposed to throw away dirty pages. But
-> > try_to_release_page() on a dirty page in XFS will currently do just
-> > that.
-> > 
+> > +	    dqtype != (d->d_flags & XFS_DQ_ALLTYPES))
+> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+> > +
+> > +	/* Check the limits. */
+> > +	bhard = be64_to_cpu(d->d_blk_hardlimit);
+> > +	ihard = be64_to_cpu(d->d_ino_hardlimit);
+> > +	rhard = be64_to_cpu(d->d_rtb_hardlimit);
+> > +
+> > +	bsoft = be64_to_cpu(d->d_blk_softlimit);
+> > +	isoft = be64_to_cpu(d->d_ino_softlimit);
+> > +	rsoft = be64_to_cpu(d->d_rtb_softlimit);
+> > +
+> > +	inodes = XFS_AGINO_TO_INO(mp, mp->m_sb.sb_agcount, 0);
 > 
-> If the page is legitimately dirty, shouldn't the underlying buffer be
-> dirty as well?
+> Allocated inode counts should check against the filesystem inode
+> limit (mp->m_maxicount) rather than the physical last inode number
+> (which is wrong, anyway, for a small last AG).
 
-The answer is "yes for all filesystems but ext3". In ext3, journal
-checkpoints can write back the buffers directly and clean them
-without updating the page state on IO completion. So we end up in
-the state where the page state and bufferhead state is not coherent.
+Oops, ok.
 
-Hence the generic code can't check for the page being clean before
-releasing the page/buffers, because then it would never end up
-noticing and correcting ext3 pages in this state.
+> > +
+> > +	/*
+> > +	 * Warn if the limits are larger than the fs.  Administrators
+> > +	 * can do this, though in production this seems suspect.
+> > +	 */
+> > +	if (bhard > mp->m_sb.sb_dblocks || bsoft > mp->m_sb.sb_dblocks)
+> > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> > +	if (ihard > inodes || isoft > inodes)
+> > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> > +	if (rhard > mp->m_sb.sb_rblocks || rsoft > mp->m_sb.sb_rblocks)
+> > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> 
+> Can you stack these so there's one per line? i.e.:
 
-> ISTM that try_to_release_page() (which eventually gets to
-> try_to_free_buffers()) accommodates the case of a dirty page w/o
-> dirty buffers by checking the latter state and updating the
-> former. So if the page has dirty buffers, try_to_release_page()
-> returns 0 and the invalidate exits with -EBUSY.  If the page does
-> not have dirty buffers, the buffers are dropped, the page dirty
-> state is cancelled and the invalidate proceeds.
->
-> So for XFS this (dirty page && !dirty bufs) state should not exist.
+Will do.  I'll also change the ihard/isoft check here to check against
+mp->m_maxicount directly.
 
-But it does!
+> 	if (bhard > mp->m_sb.sb_dblocks ||
+> 	    bsoft > mp->m_sb.sb_dblocks)
+> 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> 
+> > +
+> > +	/* Soft limit must be less than the hard limit. */
+> > +	if (bsoft > bhard || isoft > ihard || rsoft > rhard)
+> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+> 
+> Though with this check, I suspect you only need to check the hard
+> limits against their upper limits because if the hard limit is valid
+> and the soft is above then it's going to trigger corruption. Do we
+> need a warning as well in that case?
 
-Take a dirty page, and truncate it:
+I don't follow here ... if the soft limit is above the hard limit, what
+will trigger corruption?  The quota syscalls enforce that bhard > bsoft
+when the admin tries to set new limits, but if the disk is corrupt such
+that dblocks = 300, bhard = 250, and bsoft = 280, the checks for
+(bhard > dblocks || bsoft > dblocks) checks won't trigger.  That's why
+there's an explicit bsoft > bhard check here.
 
-truncate_complete_page
-  do_invalidatepage
-    xfs_vm_invalidatepage
-      block_invalidatepage
-        discard_buffers		<<<<<<<<< clears all buffer state!
-  try_to_release_page
-    xfs_vm_releasepage
-      xfs_count_page_state   <<< finds clean buffers, no warnings
+I found a softlimit/hardlimit comparison in a debugging ASSERT in
+xfs_qm_adjust_dqtimers, but I didn't find anything that looked like a
+direct comparison of softlimit <= hardlimit leading to a corruption
+message in the xfs_qm_dqget path.
 
-That's why the truncate path doesn't issue warnings about
-invalidating and releasing dirty pages.
+<shrug> I might be missing something here.
 
-> A
-> dirty page should always have dirty buffers and vice versa. For XFS,
-> therefore, I don't see how this patch affects
-> invalidate_complete_page2() at all.
+> > +	/* Check the resource counts. */
+> > +	bcount = be64_to_cpu(d->d_bcount);
+> > +	icount = be64_to_cpu(d->d_icount);
+> > +	rcount = be64_to_cpu(d->d_rtbcount);
+> > +	inodes = percpu_counter_sum(&mp->m_icount);
+> 
+> Can we use different variable names for "inodes" here? One is the
+> maximum allowed, the other is currently allocated.
 
-That's what I was trying to point out! i.e. that the patch fixes
-spurious false positive warnigns but doesn't affect the high level
-invalidate_complete_page2() or other invalidation code.
+Renamed to fs_icount.
 
->
-> What am I missing? Is there some
-> other problematic sequence?
+> > +/* Scrub all of a quota type's items. */
+> > +int
+> > +xfs_scrub_quota(
+> > +	struct xfs_scrub_context	*sc)
+> > +{
+> > +	struct xfs_bmbt_irec		irec = { 0 };
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_inode		*ip;
+> > +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+> > +	struct xfs_dquot		*dq;
+> > +	xfs_fileoff_t			max_dqid_off;
+> > +	xfs_fileoff_t			off = 0;
+> > +	xfs_dqid_t			id = 0;
+> > +	uint				dqtype;
+> > +	int				nimaps;
+> > +	int				error;
+> > +
+> > +	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+> > +		return -ENOENT;
+> > +
+> > +	mutex_lock(&qi->qi_quotaofflock);
+> > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
+> > +	if (!xfs_this_quota_on(sc->mp, dqtype)) {
+> > +		error = -ENOENT;
+> > +		goto out;
+> 
+> goto out_unlock_quota
+> 
+> > +	}
+> > +
+> > +	/* Attach to the quota inode and set sc->ip so that reporting works. */
+> > +	ip = xfs_quota_inode(sc->mp, dqtype);
+> > +	sc->ip = ip;
+> > +
+> > +	/* Look for problem extents. */
+> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > +	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+> > +	while (1) {
+> > +		if (xfs_scrub_should_terminate(sc, &error))
+> > +			break;
+> 
+> goto out_unlock_inode
+> 
+> > +
+> > +		off = irec.br_startoff + irec.br_blockcount;
+> > +		nimaps = 1;
+> > +		error = xfs_bmapi_read(ip, off, -1, &irec, &nimaps,
+> > +				XFS_BMAPI_ENTIRE);
+> > +		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, off, &error))
+> > +			goto out_unlock;
+> 
+> out_unlock_inode
+> 
+> > +		if (!nimaps)
+> > +			break;
+> > +		if (irec.br_startblock == HOLESTARTBLOCK)
+> > +			continue;
+> > +
+> > +		/*
+> > +		 * Unwritten extents or blocks mapped above the highest
+> > +		 * quota id shouldn't happen.
+> > +		 */
+> > +		if (isnullstartblock(irec.br_startblock) ||
+> > +		    irec.br_startoff > max_dqid_off ||
+> > +		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
+> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
+> > +	}
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +
+> > +	/* Check all the quota items. */
+> > +	while (id < ((xfs_dqid_t)-1ULL)) {
+> > +		if (xfs_scrub_should_terminate(sc, &error))
+> > +			break;
+> > +
+> > +		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
+> > +				&dq);
+> > +		if (error == -ENOENT)
+> > +			break;
+> > +		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK,
+> > +				id * qi->qi_dqperchunk, &error))
+> > +			goto out;
+> 
+> break
+> 
+> > +
+> > +		xfs_scrub_quota_item(sc, dqtype, dq, id);
+> > +
+> > +		id = be32_to_cpu(dq->q_core.d_id) + 1;
+> > +		xfs_qm_dqput(dq);
+> > +		if (!id)
+> > +			break;
+> > +	}
+> 
+> out_unlock_quota:
+> 	sc->ip = NULL;
+> 	mutex_unlock(&qi->qi_quotaofflock);
+> 	return error;
+> 
+> out_unlock_inode:
+> 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> 	goto out_unlock_quota;
 
-Memory reclaim, dirty page over delalloc/unwritten extent:
+Fixed.
 
-shrink_inactive_list
-  shrink_list
-    buffer_heads_over_limit
-      try_to_release_page
-        xfs_vm_releasepage()
-	  xfs_count_page_state   <<< finds delalloc/unwritten buffer
-	  WARN_ON(delalloc)
+> }
+> 
+> > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> > index 348e3c3..0849b3f 100644
+> > --- a/fs/xfs/scrub/scrub.c
+> > +++ b/fs/xfs/scrub/scrub.c
+> > @@ -256,6 +256,24 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+> >  	{ NULL },
+> >  	{ NULL },
+> >  #endif
+> > +#ifdef CONFIG_XFS_QUOTA
+> > +	{ /* user quota */
+> > +		.setup = xfs_scrub_setup_quota,
+> > +		.scrub = xfs_scrub_quota,
+> > +	},
+> > +	{ /* group quota */
+> > +		.setup = xfs_scrub_setup_quota,
+> > +		.scrub = xfs_scrub_quota,
+> > +	},
+> > +	{ /* project quota */
+> > +		.setup = xfs_scrub_setup_quota,
+> > +		.scrub = xfs_scrub_quota,
+> > +	},
+> > +#else
+> > +	{ NULL },
+> > +	{ NULL },
+> > +	{ NULL },
+> > +#endif
+> >  };
+> 
+> Again, I think stub functions are in order here.
 
-That warning is still emitted after Jan's patch. That warning is
-meaningless - we've been called to release a valid page from code
-that is only called on dirty pages to work around ext3's "journal
-cleaned the buffers" dirty state incoherency problem.  We've been
-told that this is not going to be fixed in the high level code, so
-we have to handle it ourselves.
+Ok, will do.
 
-That is, trying to release a dirty page with valid state from this
-path on XFS is simply wrong. We shouldn't pollute logs with warnings
-about dirty pages with delalloc/unwritten state in this case because
-/the page and buffers have a valid state/. Hence from this path we
-need to avoid issuing a warning - it's a false positive.
+--D
 
-Similarly for invalidate_complete_page2() calling
-try_to_release_page with a dirty page - we're supposed to skip them
-and not release them at all as documented by the
-invalidate_complete_page2 API. However, we'll issue warnings:
-
-invalidate_complete_page2
-  try_to_release_page
-    xfs_vm_releasepage
-      xfs_count_page_state	<<< finds delalloc/unwritten buffer
-      WARN_ON(unwritten)
-  <skips page correctly>
-
-Because, again, we've been handed a dirty page in a valid state that
-we're not supposed to free. The warning is, again, a false positive.
-
-If xfs_vm_releasepage gets handed a clean page with dirty buffer
-state on it, then we most definitely need to warn. But we should not
-warn when we are handed dirty pages with valid state from paths that
-actually want us to leave dirty pages completely alone.
-
-> AIUI, the historical warning problem in XFS was because we issued the
-> warning before/without any similar assessment of the validity of the
-> dirty state (i.e., we assumed the page should not be dirty in
-> ->releasepage()).
-
-And that's precisely what Jan's patch made the code do again. We
-*know* we are going to get handed dirty pages with valid
-delalloc/unwritten state by ->releasepage now, and issuing warnigns
-in those cases is wrong.
-
-> Hmm, I thought the ext3-specific wart was the fact that dirty pages w/o
-> dirty buffers could exist in the first place (why ->releasepage() must
-> handle dirty pages), not necessarily that a page being removed had to be
-> cleaned/invalidated in any particular order. No matter, I probably need
-> to understand the issue better first...
-
-Yup, and that means ->releasepage needs to be called before doing
-anything that assumes the page is clean and can be freed. i.e. we
-have to get the ext3 buffer state propagated back to the the page
-state before we take action on the page....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
