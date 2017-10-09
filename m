@@ -1,176 +1,253 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39340 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:7423 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751172AbdJIDL5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Oct 2017 23:11:57 -0400
-Subject: Re: [GIT PULL] xfsprogs: mkfs refactor
-References: <20171003080607.GM15067@dastard>
- <eca367b2-03de-517d-9ef5-5400e8a4739e@sandeen.net>
- <20171009004240.GZ3666@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a6c5d1bd-8cff-95e2-dd0a-2278433c5de1@sandeen.net>
-Date: Sun, 8 Oct 2017 22:11:56 -0500
+        id S1754200AbdJIQj7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 12:39:59 -0400
+Date: Mon, 9 Oct 2017 12:39:52 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] generic: test race when checking i_size on direct i/o
+ read
+Message-ID: <20171009163951.GB19847@bfoster.bfoster>
+References: <20170925101847.29539-1-eguan@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20171009004240.GZ3666@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170925101847.29539-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, Eric Sandeen <sandeen@redhat.com>
 
-On 10/8/17 7:42 PM, Dave Chinner wrote:
-> On Fri, Oct 06, 2017 at 01:01:39PM -0500, Eric Sandeen wrote:
->> On 10/3/17 3:06 AM, Dave Chinner wrote:
->>> Hi Eric,
->>>
->>> I've put the latest mkfs refactor code that I have up in place
->>> you can pull it from. I've rebased it against the current for-next
->>> tree (4.13.1 release) and fixed all the problems that xfstests
->>> exposes. The only thing I haven't fixed is xfs/191 that does mkfs
->>> command line behaviour verification because the refactored version
->>> fixes several problems that the old mkfs didn't handle correctly
->>> (e.g. being able to specify certain things like agsize in blocks or
->>> sectors).
->>>
->>> There's a small filter patch needed for xfstests that I'll post in
->>> a reply to this pull request that will filter out the new "defaults
->>> sourced from ..." output and so prevent spurious xfstests failures.
->>>
->>> If you want I can tag the branch with a signed tag for you to pull
->>> from (same process as Linus prefers) rather than just a branch in a
->>> tree. If you'd prefer that I post this as patches instead, then let
->>> me know and I'll bomb the list instead.
->>
->> Thanks Dave.  Trying to un-swamp from other things.
->>
->> Only advantage to patchbombing is having a permanent record of discussions,
->> but maybe it can happen in reference to patches as follows.... mostly
->> minor nits.
+On Mon, Sep 25, 2017 at 06:18:47PM +0800, Eryu Guan wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
 > 
-> Yup, but when it's been posted before, multiple ppl have said
-> "tested ok" but nobody is looking like they are going to review it,
-> I'm going to send a pull request rather than another patchbomb. :/
-
-That's fine.  I've been swamped, sorry.
-
-(OTOH it never stopped djwong) ;)
-
->>
->>> mkfs: can't specify sector size of internal log
->>
->> commit log is a bit vague/misleading; I think you mean that
->> it should be /disallowed/ because it must match the filesystem's
->> /sector/ size when it's internal?  It's not actually clear to me why
->> an external log can have a "mismatched" sector size but internal can't.
+> In this commit a new test case is added to test that i_size races
+> don't occur under dio reads/writes.  We add a program in /src dir,
+> which has a writer to issue some append dio writes.  Meanwhile it
+> has a reader in this test to do some dio reads.  As we expect,
+> reader should read nothing or data with 'a'. But it might read some
+> data with '0'.
 > 
-> I thought that was obvious.  If we have a 512 byte data device (e.g.
-> HDD) but a 4k sector external log device (e.g. pmem) then we'll have
-> the situation where the log device requires a different sector size
-> to the data device.  And we allow this, because the on disk log
-> format is only dependent on the underlying sector size, not the
-> configuration of the filesystem.
+> The bug can be reproduced by this test case [1].
 > 
-> However, if the log is on the data device (i.e. internal) then it
-> should match the sector size the data device is using, otherwise
-> one or the other doesn't have atomic sector writes. Not to mention
-> that it's simply wrong to have two different sector sizes for the
-> same device.
-
-Presumably with a 512e drive, you /could/ have 512 vs 4k on fs vs
-log ... but sure, it's not a good idea.  But that wasn't really
-my main point.
-
-> If you need to change the write size (i.e. padding) characteristics
-> of the log for an internal/external, then use the log stripe unit
-> because that's exactly what it does...
-
-So anyway, I was being a bit pedantic; my main concern is with
-the wording..
-
-Don't say "can't specify," say "disallow specification" -
-that was my main point about the changelog.
-
-i.e. instead of:
-
-mkfs: can't specify sector size of internal log
-Because it's fixed by the underlying device size.
-
-say:
-
-mkfs: disallow specification of sector size of internal log
-
-To guarantee atomic writes, the log sector size must match
-the underlying device's advertised sector size.
-
-which IMHO more clearly says what you're doing and why.
-
->>> mkfs: introduce a structure to hold CLI options
->>
->> "between th einput"  (the input)
->>
->> Comment mentions initialization to -1 or 0 but I don't see that this
->> gets done, at least not in this patch? (Am I missing it?)  I took
->> this to mean that before anything happens this would be initialized
->> so we know what was and was not specified after everything was parsed...
+> 1.  http://patchwork.ozlabs.org/patch/311761/
 > 
-> Stale comment, updated. We initialise it all to zero, if we need
-> flags to see if the option was set we look at the option table
-> "seen" value.
+> This ostensibly tests commit:
+> 9fe55eea7 Fix race when checking i_size on direct i/o read
 > 
->>> mkfs: introduce a structure to hold CLI options
->>
->> +/* quick way of checking is a parameter was set on the CLI */
->>                          "if"
->>
->>> mkfs: factor naming subopts parser
->>
->> no "nvflag" in "temp don't break" code?  Oh, nice - write-only var.  Ok.
->> do we still test it for respec, or care?  Will check later.
+> Update by Eric Sandeen:
+> - update to recent xfstests
+> - update commit log
 > 
-> I was only making the code build with the temp code. Stuff like
-> crappy write-only vars got dropped at the first point they were
-> found to be crap.
+> Update by Eryu Guan:
+> - add aio-dio support to the test and add 'aio' group
+> - add ability to test different alignments
+> - move test from src/ to src/aio-dio-regress/
+> - add .gitignore entry
+> - rebase against latest xfstests with various minor fixes & cleanups
+> - update commit log
 > 
-> And, FYI, with code that does this:
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+> This test fails on XFS, the following patch fixed the XFS failure
+> https://www.spinics.net/lists/linux-xfs/msg10865.html
 > 
-> 	nvflag = nlflag = foo = bar = 0;
+> btrfs also fails when io alignment is not 4k, perhaps a btrfs bug?
 > 
-> gcc does not report set-but-unused or other such warnings because
-> it seems to stop checking the moment there's a multiple assignment
-> statement like the above. Hence shit code like in mkfs basically
-> prevented gcc from warning about how the shit code was dead code....
+> Eric's original post
+> http://www.spinics.net/lists/fstests/msg06978.html
+> 
+>  .gitignore                                         |   1 +
+>  .../aio-dio-append-write-read-race.c               | 214 +++++++++++++++++++++
+>  tests/generic/462                                  |  75 ++++++++
+>  tests/generic/462.out                              |   3 +
+>  tests/generic/group                                |   1 +
+>  5 files changed, 294 insertions(+)
+>  create mode 100644 src/aio-dio-regress/aio-dio-append-write-read-race.c
+>  create mode 100755 tests/generic/462
+>  create mode 100644 tests/generic/462.out
+> 
+...
+> diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+> new file mode 100644
+> index 000000000000..dce2ab743f11
+> --- /dev/null
+> +++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+> @@ -0,0 +1,214 @@
+...
+> +
+> +int main(int argc, char *argv[])
+> +{
+...
+> +	for (i = 0; i < max_blocks; i++) {
+> +		wdata.offset = i * blksize;
+> +		if (use_aio)
+> +			ret = pthread_create(&tid, NULL, aio_writer, &wdata);
+> +		else
+> +			ret = pthread_create(&tid, NULL, dio_writer, &wdata);
+> +		if (ret) {
+> +			fprintf(stderr, "create thread failed: %s\n",
+> +				strerror(ret));
+> +			ret = 1;
+> +			goto err;
+> +		}
+> +
+> +		memset(rbuf, 'b', blksize);
+> +		do {
+> +			ret = pread(rfd, rbuf, blksize, i * blksize);
+> +			if (ret < 0)
+> +				perror("read file");
+> +		} while (ret <= 0);
 
-Yeah, and I confirmed that respecs still get caught, so that's fine.
-I was wondering out loud.
- 
+Hmm, so IIUC the objective is to kick off a writer thread then issue
+reads in a loop to try and guarantee that the first valid read returns
+valid data. By kicking off the writer first, aren't we risking the test
+could be silently ineffective if the writer thread happens to run early
+enough to miss the conversion? I'm wondering if it might be more
+reliable to start the reader in a background thread first and signal a
+condition once it starts issuing reads. Then wait for the condition here
+and invoke the appropriate writer func directly.
+
+Brian
+
+> +
+> +		ret = pthread_join(tid, NULL);
+> +		if (ret) {
+> +			fprintf(stderr, "pthread join failed: %s\n",
+> +				strerror(ret));
+> +			ret = 1;
+> +			goto err;
+> +		}
+> +
+> +		for (j = 0; j < blksize; j++) {
+> +			if (rbuf[j] != 'a') {
+> +				fprintf(stderr, "encounter an error: "
+> +					"block %d offset %d, content %x\n",
+> +					i, j, rbuf[j]);
+> +				ret = 1;
+> +				goto err;
+> +			}
+> +		}
+> +	}
+> +
+> +err:
+> +	if (rfd)
+> +		close(rfd);
+> +	if (wfd)
+> +		close(wfd);
+> +	if (rbuf)
+> +		free(rbuf);
+> +	if (wbuf)
+> +		free(wbuf);
+> +
+> +	exit(ret);
+> +}
+> diff --git a/tests/generic/462 b/tests/generic/462
+> new file mode 100755
+> index 000000000000..7abadcb11921
+> --- /dev/null
+> +++ b/tests/generic/462
+> @@ -0,0 +1,75 @@
+> +#! /bin/bash
+> +# FS QA Test No. 462
+> +#
+> +# Test i_size is updated properly under dio read/write
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
+> +# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.* $testfile.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_aiodio aio-dio-append-write-read-race
+> +_require_test_program "feature"
+> +
+> +testfile=$TEST_DIR/$seq.$$
+> +min_dio_align=`_min_dio_alignment $TEST_DEV`
+> +page_size=`$here/src/feature -s`
+> +
+> +rm -f $seqres.full
+> +
+> +echo "non-aio dio test"
+> +align=$min_dio_align
+> +while [ $align -le $page_size ]; do
+> +	echo "$AIO_TEST -a $align -d $testfile.$align" >> $seqres.full
+> +	$AIO_TEST -a $align -d $testfile.$align 2>&1 | tee -a $seqres.full
+> +	align=$((align * 2))
+> +done
+> +
+> +echo "aio-dio test"
+> +align=$min_dio_align
+> +while [ $align -le $page_size ]; do
+> +	echo "$AIO_TEST -a $align $testfile.$align" >> $seqres.full
+> +	$AIO_TEST -a $align $testfile.$align 2>&1 | tee -a $seqres.full
+> +	align=$((align * 2))
+> +done
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/462.out b/tests/generic/462.out
+> new file mode 100644
+> index 000000000000..9a368005af49
+> --- /dev/null
+> +++ b/tests/generic/462.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 462
+> +non-aio dio test
+> +aio-dio test
+> diff --git a/tests/generic/group b/tests/generic/group
+> index dfa86edc4a93..c65058976f1e 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -464,3 +464,4 @@
+>  459 auto dangerous
+>  460 auto quick rw
+>  461 auto rw
+> +462 auto rw quick aio
+> -- 
+> 2.13.5
 > 
->>> mkfs: Introduce mkfs configuration structure
->>
->> would be nice to proofread commit log a bit ;)
-> 
-> Seriously, after several hours of tedious, boring patch splitting
-> I only cared that the code was correct. Commit logs were write once,
-> read never. :/
-
-I do appreciate all those tedious hours.
-
-> Fixed.
-
-Thanks.  I only mentioned the ones that look like the dog might
-have helped write them ;)
-
->>> mkfs: Introduce mkfs configuration structure
->>
->> s/teh/the/
->>
->> <ok stopping here for now, will send more later>
-> 
-> Thanks!
-
-"You're welcome." ;)  Will try to get through more soon.  We'll
-get this into the next point release, I'm sure.
-
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
