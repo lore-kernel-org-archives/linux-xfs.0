@@ -1,157 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32113 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46853 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751184AbdJIWE7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:04:59 -0400
-Date: Tue, 10 Oct 2017 09:03:32 +1100
+        by vger.kernel.org with ESMTP id S1754418AbdJIWRy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:17:54 -0400
+Date: Tue, 10 Oct 2017 09:17:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: agcount for 2TB, 4TB and 8TB drives
-Message-ID: <20171009220332.GP3666@dastard>
-References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
- <20171006153803.GI7122@magnolia>
- <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
- <20171006222031.GU3666@dastard>
- <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
- <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
- <20171009112306.GM3666@dastard>
- <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
+Subject: Re: [PATCH 25/25] xfs: scrub quota information
+Message-ID: <20171009221751.GQ3666@dastard>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706340739.19351.4078240552236189694.stgit@magnolia>
+ <20171009025151.GF3666@dastard>
+ <20171009200328.GT7122@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
+In-Reply-To: <20171009200328.GT7122@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 06:46:41PM +0300, Avi Kivity wrote:
+On Mon, Oct 09, 2017 at 01:03:28PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 09, 2017 at 01:51:51PM +1100, Dave Chinner wrote:
+> > On Tue, Oct 03, 2017 at 01:43:27PM -0700, Darrick J. Wong wrote:
+> > > +xfs_scrub_quota_to_dqtype(
+> > > +	struct xfs_scrub_context	*sc)
+> > > +{
+> > > +	switch (sc->sm->sm_type) {
+> > > +	case XFS_SCRUB_TYPE_UQUOTA:
+> > > +		return XFS_DQ_USER;
+> > > +	case XFS_SCRUB_TYPE_GQUOTA:
+> > > +		return XFS_DQ_GROUP;
+> > > +	case XFS_SCRUB_TYPE_PQUOTA:
+> > > +		return XFS_DQ_PROJ;
+> > > +	default:
+> > > +		return 0;
+> > > +	}
+> > > +}
+> > > +
+> > > +/* Set us up to scrub a quota. */
+> > > +int
+> > > +xfs_scrub_setup_quota(
+> > > +	struct xfs_scrub_context	*sc,
+> > > +	struct xfs_inode		*ip)
+> > > +{
+> > > +	uint				dqtype;
+> > > +
+> > > +	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
+> > > +		return -EINVAL;
+> > > +
+> > > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
+> > > +	if (dqtype == 0)
+> > > +		return -EINVAL;
+> > > +	return 0;
+> > > +}
+> > 
+> > Should this check whether the quota type is actually enabled, and
+> > return ENOENT if it's not? i.e move the check out of
+> > xfs_scrub_quota() and into the setup function?
 > 
+> I can add a xfs_this_quota_on check to the setup function, but don't we
+> need xfs_scrub_quota to lock qi_quotaofflock and then recheck that the
+> quota type is still enabled?
+
+The qi_quotaofflock is held across the entire scrub, right?
+
+Ah, this is called before the qi_quotaofflock is held - is there
+a teardown callback? If so, would it be better to lock
+qi_quotaofflock in the setup, release it in the teardown? That way
+we can check here in the setup code, and not have to double check
+the user input it in the scrub function itself?
+
+> > > +	/*
+> > > +	 * Warn if the limits are larger than the fs.  Administrators
+> > > +	 * can do this, though in production this seems suspect.
+> > > +	 */
+> > > +	if (bhard > mp->m_sb.sb_dblocks || bsoft > mp->m_sb.sb_dblocks)
+> > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> > > +	if (ihard > inodes || isoft > inodes)
+> > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> > > +	if (rhard > mp->m_sb.sb_rblocks || rsoft > mp->m_sb.sb_rblocks)
+> > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> > 
+> > Can you stack these so there's one per line? i.e.:
 > 
-> On 10/09/2017 02:23 PM, Dave Chinner wrote:
-> >On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
-> >>On 10/07/2017 01:21 AM, Eric Sandeen wrote:
-> >>>On 10/6/17 5:20 PM, Dave Chinner wrote:
-> >>>>On Fri, Oct 06, 2017 at 11:18:39AM -0500, Eric Sandeen wrote:
-> >>>>>On 10/6/17 10:38 AM, Darrick J. Wong wrote:
-> >>>>>>On Fri, Oct 06, 2017 at 10:46:20AM +0200, Gandalf Corvotempesta wrote:
-> >>>>>>Semirelated question: for a solid state disk on a machine with high CPU
-> >>>>>>counts do we prefer agcount == cpucount to take advantage of the
-> >>>>>>high(er) iops and lack of seek time to increase parallelism?
-> >>>>>>
-> >>>>>>(Not that I've studied that in depth.)
-> >>>>>Interesting question.  :)  Maybe harder to answer for SSD black boxes?
-> >>>>Easy: switch to multidisk mode if /sys/block/<dev>/queue/rotational
-> >>>>is zero after doing all the other checks. Then SSDs will get larger
-> >>>>AG counts automatically.
-> >>>The "hard part" was knowing just how much parallelism is actually inside
-> >>>the black box.
-> >>It's often > 100.
-> >Sure, that might be the IO concurrency the SSD sees and handles, but
-> >you very rarely require that much allocation parallelism in the
-> >workload. Only a small amount of the IO submission path is actually
-> >allocation work, so a single AG can provide plenty of async IO
-> >parallelism before an AG is the limiting factor.
+> Will do.  I'll also change the ihard/isoft check here to check against
+> mp->m_maxicount directly.
 > 
-> Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
-
-AGs don't issue IO. Applications issue IO, the filesystem allocates
-space from AGs according to the write IO that passes through it.
-
-i.e. when you don't do allocation in the write IO path or you are
-doing read IOs, then the number of AGs is /completely irrelevant/.
-In those cases a single AG can "support" the entire IO load your
-application and storage subsystem can handle.
-
-The only time an AG lock is taken in the IO path is during extent
-allocation (i.e. writes). And, as I've already said, a single AG can
-easily handle tens of thousands of allocation transactions a second
-before it becomes a bottleneck.
-
-IOWs, the worse case is that you'll get tens of thousands of IOs per
-second through an AG.
-
-> I understand that XFS_XFLAG_EXTSIZE and XFS_IOC_FSSETXATTR can
-> reduce the AG's load.
-
-Not really. They change the allocation pattern on the inode. This
-changes how the inode data is laid out on disk, but it doesn't
-necessarily change the allocation overhead of the write IO path.
-That's all dependent on what the application IO patterns are and how
-they match the extent size hints.
-
-In general, nobody ever notices what the "load" on an AG is and
-that's because almost no-one ever drives AGs to their limits.  The
-mkfs defaults and the allocation policies keep the load distributed
-across the filesystem and so storage subsystems almost always run
-out of IO and/or seek capability before the filesystem runs out of
-allocation concurrency. And, in general, most machines run out of
-CPU power before they drive enough concurrency and load through the
-filesystem that it starts contending on internal locks.
-
-Sure, I have plenty of artificial workloads that drive this sort
-contention, but no-one has a production workload that requires those
-sorts of behaviours or creates the same level of lock contention
-that these artificial workloads drive.
-
-> Is there a downside? for example, when I
-> truncate + close the file, will the preallocated data still remain
-> allocated? Do I need to return it with an fallocate()?
-
-No. Yes.
-
-> >space manipulations per second before the AG locks become the
-> >bottleneck. Hence by the time you get to 16 AGs there's concurrency
-> >available for (runs a concurrent workload and measures) at least
-> >350,000 allocation transactions per second on relatively slow 5 year
-> >old 8-core server CPUs. And that's CPU bound (16 CPUs all at >95%),
-> >so faster, more recent CPUs will run much higher numbers.
-> >
-> >IOws, don't confuse allocation concurrency with IO concurrency or
-> >application concurrency. It's not the same thing and it is rarely a
-> >limiting factor for most workloads, even the most IO intensive
-> >ones...
+> > 	if (bhard > mp->m_sb.sb_dblocks ||
+> > 	    bsoft > mp->m_sb.sb_dblocks)
+> > 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+> > 
+> > > +
+> > > +	/* Soft limit must be less than the hard limit. */
+> > > +	if (bsoft > bhard || isoft > ihard || rsoft > rhard)
+> > > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+> > 
+> > Though with this check, I suspect you only need to check the hard
+> > limits against their upper limits because if the hard limit is valid
+> > and the soft is above then it's going to trigger corruption. Do we
+> > need a warning as well in that case?
 > 
-> In my load, the allocation load is not very high, but the impact of
-> iowait is. So if I can reduce the chance of io_submit() blocking
-> because of AG contention, then I'm happy to increase the number of
-> AGs even if it hurts other things.
+> I don't follow here ... if the soft limit is above the hard limit, what
+> will trigger corruption? 
 
-That's what RWF_NOWAIT is for. It pushes any write IO that requires
-allocation into a thread rather possibly blocking the submitting
-thread on any lock or IO in the allocation path.
+What I mean was this:
 
-> >>>   But "multidisk mode" doesn't go too overboard, so yeah
-> >>>that's probably fine.
-> >>Is there a penalty associated with having too many allocation groups?
-> >Yes. You break up the large contiguous free spaces into many smaller
-> >free spaces and so can induce premature onset of filesystem aging
-> >related performance degradations. And for spinning disks, more than
-> >4-8AGs per spindle causes excessive seeks in mixed workloads and
-> >degrades performance that way....
-> 
-> For an SSD, would an AG per 10GB be reasonable? per 100GB?
+	if (bhard > mp->m_sb.sb_dblocks)
+		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+	if (bsoft > bhard)
+		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
 
-No. Maybe.
+That is, if bhard is over the valid limit, throw a warning and we
+now don't care about bsoft because we've already signalled to
+userspace there's a problem.
 
-Like I said, we can use the multi-disk mode in mkfs for this - it
-already selects an appropriate number of AGs according to the size
-of the filesystem appropriately.
+If bsoft is now greater than bhard, regardless of whether it's over
+the valid size, we signal a corruption. If bhard is already an
+invalid number, then this corruption report also implies that bsoft
+is over the limit...
 
-> Machines with 60-100 logical cores and low-tens of terabytes of SSD
-> are becoming common.  How many AGs would work for such a machine?
+> The quota syscalls enforce that bhard > bsoft
+> when the admin tries to set new limits, but if the disk is corrupt such
+> that dblocks = 300, bhard = 250, and bsoft = 280, the checks for
+> (bhard > dblocks || bsoft > dblocks) checks won't trigger.  That's why
+> there's an explicit bsoft > bhard check here.
 
-Multidisk default, which will be 32 AGs for anything in the 1->32TB
-range. And over 32TB, you get 1 AG per TB...
-
-> Again the allocation load is not very high (allocating a few GB/s
-> with 32MB hints, so < 100 allocs/sec), but the penalty for
-> contention is pretty high.
-
-I think you're worrying about a non-problem. Use RWF_NOWAIT for your
-AIO, and most of your existing IO submission blocking problems will
-go away.
+Right, I wasn't suggesting removing it - I didn't make it very clear
+what I meant.
 
 Cheers,
 
