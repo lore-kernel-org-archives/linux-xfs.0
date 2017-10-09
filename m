@@ -1,172 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20728 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754387AbdJIUYj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 16:24:39 -0400
-Date: Mon, 9 Oct 2017 13:24:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 24/25] xfs: scrub realtime bitmap/summary
-Message-ID: <20171009202430.GU7122@magnolia>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706340125.19351.13494381752104107446.stgit@magnolia>
- <20171009022804.GE3666@dastard>
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:11089 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755084AbdJIUsV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 16:48:21 -0400
+Date: Tue, 10 Oct 2017 07:48:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
+Message-ID: <20171009204816.GN3666@dastard>
+References: <20171008235414.13866-1-david@fromorbit.com>
+ <20171008235414.13866-5-david@fromorbit.com>
+ <20171009142445.GE18663@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171009022804.GE3666@dastard>
+In-Reply-To: <20171009142445.GE18663@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 01:28:04PM +1100, Dave Chinner wrote:
-> On Tue, Oct 03, 2017 at 01:43:21PM -0700, Darrick J. Wong wrote:
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index 154c3dd..d4d9bef 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -315,6 +315,11 @@ static inline bool xfs_sb_good_version(struct xfs_sb *sbp)
-> >  	return false;
-> >  }
-> >  
-> > +static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
-> > +{
-> > +	return sbp->sb_rblocks > 0;
-> > +}
+On Mon, Oct 09, 2017 at 10:24:46AM -0400, Brian Foster wrote:
+> On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Recently we've had warnings arise from the vm handing us pages
+> > without bufferheads attached to them. This should not ever occur
+> > in XFS, but we don't defend against it properly if it does. The only
+> > place where we remove bufferheads from a page is in
+> > xfs_vm_releasepage(), but we can't tell the difference here between
+> > "page is dirty so don't release" and "page is dirty but is being
+> > invalidated so release it".
+> > 
 > 
-> How much can we rely on that? do we allow a fs to mount with that
-> being > 0 but no rtdev= mount option?
+> Ok, so we changed ->releasepage() in 99579ccec4 ("xfs: skip dirty pages
+> in ->releasepage()") to deal with the fact that the mm can send
+> legitimately dirty pages to ->releasepage(). That was apparently too
+> aggressive a change because truncated pages would also end up skipped
+> because the dirty bit is not cleared by the time the release occurs.
+> Commit 0a417b8dc1 ("xfs: Timely free truncated dirty pages") modified
+> ->releasepage() again to not skip all dirty pages and only warn for
+> delalloc/unwritten blocks on clean pages.
 > 
-> > +/* Set us up with the realtime metadata locked. */
-> > +int
-> > +xfs_scrub_setup_rt(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	int				lockmode;
-> > +	int				error = 0;
-> > +
-> > +	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
-> > +		return -EINVAL;
+> That was apparently insufficient because we have some codepaths where
+> not skipping dirty pages can allow us to strip the buffers from a page
+> incorrectly...
+
+Right, Jan's patch fixed the truncate problem but re-opened the
+memory reclaim hole. It effectively reverted the original patch.
+
+> > In some places that are invalidating pages ask for pages to be
+> > released and follow up afterward calling ->releasepage by checking
+> > whether the page was dirty and then aborting the invalidation. This
+> > is a possible vector for releasing buffers from a page but then
+> > leaving it in the mapping, so we really do need to avoid dirty pages
+> > in xfs_vm_releasepage().
+> > 
 > 
-> I've forgotten what this means already :/
+> ... but I'm having a hard time parsing that first sentence to understand
+> how that is. Can you elaborate on and/or give a specific reference to
+> this problematic invalidation abort sequence?
 
-(I fixed all of these the first time you complained. :))
+e.g. invalidate_complete_page2():
 
-> > +	error = xfs_scrub_setup_fs(sc, ip);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	lockmode = XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP;
-> > +	xfs_ilock(mp->m_rbmip, lockmode);
-> > +	xfs_trans_ijoin(sc->tp, mp->m_rbmip, lockmode);
-> 
-> Ok, so why do we join this inode to the transaction and not use
-> the sc->ilock_flags field to track how we've locked it?
+/*                                                                               
+ * This is for invalidate_mapping_pages().  That function can be called at       
+ * any time, and is not supposed to throw away dirty pages.  But pages can       
+.....
+       if (page_has_private(page) && !try_to_release_page(page, GFP_KERNEL))
+                return 0;
 
-I don't know why.
+        spin_lock_irqsave(&mapping->tree_lock, flags);
+        if (PageDirty(page))
+                goto failed;
+....
 
-It might just be a forgotten leftover from when I started tracking
-inodes in the scrub context.
+It's not supposed to throw away dirty pages. But
+try_to_release_page() on a dirty page in XFS will currently do just
+that.
 
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/* Realtime bitmap. */
-> > +
-> > +/* Scrub a free extent record from the realtime bitmap. */
-> > +STATIC int
-> > +xfs_scrub_rtbitmap_helper(
-> > +	struct xfs_trans		*tp,
-> > +	struct xfs_rtalloc_rec		*rec,
-> > +	void				*priv)
-> > +{
-> > +	return 0;
-> > +}
-> 
-> Check the extent record returned is within the range of the rtdev
-> address space?
+> Also, it looks like truncate_complete_page() eventually and
+> unconditionally clears the page dirty bit, it just happens after the
+> invalidate -> release attempt sequence that occurs down through
+> do_invalidatepage().
 
-I added:
+Right, we just need to do it earlier, but.....
 
-if (rec->ar_startblock + rec->ar_blockcount <= rec->ar_startblock ||
-    !xfs_verify_rtbno_ptr(sc->mp, rec->ar_startblock) ||
-    !xfs_verify_rtbno_ptr(sc->mp, rec->ar_startblock +
-		rec->ar_blockcount - 1))
-	xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> IIUC, this was the problem fixed by Jan's patch
+> mentioned above.  Is there any reason we can't do the dirty cancel a
+> little earlier there? Would that also address this problem?
 
-...back when I was reworking the scrub patches to add verify_agbno_ptr and
-declutter the bnobt scrubbers.
+.... we can't do that in generic code because ext3.
 
-> > +
-> > +/* Scrub the realtime bitmap. */
-> > +int
-> > +xfs_scrub_rtbitmap(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	int				error;
-> > +
-> > +	error = xfs_rtalloc_query_all(sc->tp, xfs_scrub_rtbitmap_helper, NULL);
-> > +	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
-> > +		goto out;
-> > +
-> > +out:
-> > +	return error;
-> > +}
-> > +
-> > +/* Scrub the realtime summary. */
-> > +int
-> > +xfs_scrub_rtsummary(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	/* XXX: implement this some day */
-> > +	return -ENOENT;
-> > +}
-> 
-> Alright, this is all just a stub that doesn't really do any real
-> scrubbing yet. I guess it's better that nothing in that it walks
-> the rtbitmap....
-> 
-> > --- a/fs/xfs/scrub/scrub.c
-> > +++ b/fs/xfs/scrub/scrub.c
-> > @@ -241,6 +241,21 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
-> >  		.setup	= xfs_scrub_setup_parent,
-> >  		.scrub	= xfs_scrub_parent,
-> >  	},
-> > +#ifdef CONFIG_XFS_RT
-> > +	{ /* realtime bitmap */
-> > +		.setup	= xfs_scrub_setup_rt,
-> > +		.scrub	= xfs_scrub_rtbitmap,
-> > +		.has	= xfs_sb_version_hasrealtime,
-> > +	},
-> > +	{ /* realtime summary */
-> > +		.setup	= xfs_scrub_setup_rt,
-> > +		.scrub	= xfs_scrub_rtsummary,
-> > +		.has	= xfs_sb_version_hasrealtime,
-> > +	},
-> > +#else
-> > +	{ NULL },
-> > +	{ NULL },
-> > +#endif
-> 
-> I think I'd prefer that you supply stub functions when
-> CONFIG_XFS_RT=n so this table doesn't require ifdefs.
+Essentially, there are ext3 specific behaviours encoded into the generic
+code. We can't fix the generic code because then we break ext3,
+and nobody is going to redesign the ext3 journalling code to fix
+the bogosities it has that require the generic invalidation/release
+paths to work the way they do.
 
-Ok.
+That leaves us with having to work around the filesystem specific
+code in the generic paths in the filesystem specific code...
 
---D
+Cheers,
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
