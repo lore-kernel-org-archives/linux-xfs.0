@@ -1,111 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60243 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751161AbdJPV3g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 17:29:36 -0400
-Date: Tue, 17 Oct 2017 08:29:33 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45286 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754203AbdJIW2y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:28:54 -0400
+Date: Tue, 10 Oct 2017 09:28:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
- recovered buffers")
-Message-ID: <20171016212933.GG15067@dastard>
-References: <20171013184916.GS7122@magnolia>
- <20171014115550.GB50635@bfoster.bfoster>
- <20171014190530.GA4594@magnolia>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20171009222851.GR3666@dastard>
+References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
+ <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
+ <20171009000529.GY3666@dastard>
+ <20171009183129.GE11645@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20171014190530.GA4594@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20171009183129.GE11645@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Aleksa Sarai <asarai@suse.com>, Hannes Reinecke <hare@suse.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Jan Blunck <jblunck@infradead.org>, Oscar Salvador <osalvador@suse.com>
 
-On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
-> On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
-> > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
-> > > Hi all,
+On Mon, Oct 09, 2017 at 08:31:29PM +0200, Luis R. Rodriguez wrote:
+> On Mon, Oct 09, 2017 at 11:05:29AM +1100, Dave Chinner wrote:
+> > On Sat, Oct 07, 2017 at 01:10:58PM +0500, Михаил Гаврилов wrote:
+> > > But seems now got another issue:
 > > > 
-> > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
-> > > recovered buffers").  I was analyzing a scrub failure on generic/392
-> > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
-> > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
-> > > and signalling error.
+> > > [ 1966.953781] INFO: task tracker-store:8578 blocked for more than 120 seconds.
+> > > [ 1966.953797]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
+> > > [ 1966.953800] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> > > disables this message.
+> > > [ 1966.953804] tracker-store   D12840  8578   1655 0x00000000
+> > > [ 1966.953811] Call Trace:
+> > > [ 1966.953823]  __schedule+0x2dc/0xbb0
+> > > [ 1966.953830]  ? wait_on_page_bit_common+0xfb/0x1a0
+> > > [ 1966.953838]  schedule+0x3d/0x90
+> > > [ 1966.953843]  io_schedule+0x16/0x40
+> > > [ 1966.953847]  wait_on_page_bit_common+0x10a/0x1a0
+> > > [ 1966.953857]  ? page_cache_tree_insert+0x170/0x170
+> > > [ 1966.953865]  __filemap_fdatawait_range+0x101/0x1a0
+> > > [ 1966.953883]  file_write_and_wait_range+0x63/0xc0
+> > 
+> > Ok, that's in wait_on_page_writeback(page)
+> > ......
+> > 
+> > > And yet another
 > > > 
-> > > The pattern I observe is that when log recovery runs on a v4 filesystem,
-> > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
-> > > buffer therefore gets created and read without any verifiers.
-> > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
-> > > filesystem we come back and attach verifiers and all is well.  However,
-> > > on a v4 filesystem the function returns without doing anything, so the
-> > > xfs_buf just sits around in memory with no verifier.  Subsequent
-> > > read/log/relse patterns can write anything they want without write
-> > > verifiers to check that.
-> > > 
-> > > If the v4 fs didn't need log recovery, the buffers get created with
-> > > b_ops as you'd expect.
-> > > 
-> > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
-> > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
-> > > LSN is up to date?
-> > > 
+> > > [41288.797026] INFO: task tracker-store:4535 blocked for more than 120 seconds.
+> > > [41288.797034]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
+> > > [41288.797037] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> > > disables this message.
+> > > [41288.797041] tracker-store   D10616  4535   1655 0x00000000
+> > > [41288.797049] Call Trace:
+> > > [41288.797061]  __schedule+0x2dc/0xbb0
+> > > [41288.797072]  ? bit_wait+0x60/0x60
+> > > [41288.797076]  schedule+0x3d/0x90
+> > > [41288.797082]  io_schedule+0x16/0x40
+> > > [41288.797086]  bit_wait_io+0x11/0x60
+> > > [41288.797091]  __wait_on_bit+0x31/0x90
+> > > [41288.797099]  out_of_line_wait_on_bit+0x94/0xb0
+> > > [41288.797106]  ? bit_waitqueue+0x40/0x40
+> > > [41288.797113]  __block_write_begin_int+0x265/0x550
+> > > [41288.797132]  iomap_write_begin.constprop.14+0x7d/0x130
 > > 
-> > Seems reasonable, but I notice that the has_crc() check around
-> > _validate_buf_type() comes in sometime after the the original commit
-> > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
-> > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
-> > errors").
+> > And that's in wait_on_buffer().
 > > 
-> > IIRC, the problem there is that log recovery had traditionally always
-> > unconditionally replayed everything in the log over whatever resides in
-> > the fs. This actually meant that recovery could transiently corrupt
-> > buffers in certain cases if the target buffer happened to be relogged
-> > more than once and was already up to date, which leads to verification
-> > failures. This was addressed for v5 filesystems with LSN ordering rules,
-> > but the challenge for v4 filesystems was that there is no metadata LSN
-> > and thus no means to detect whether a buffer is already up to date with
-> > regard to a transaction in the log.
+> > In both cases we are waiting on a bit lock for IO completion. In the
+> > first case it is on page, the second it's on sub-page read IO
+> > completion during a write.
 > > 
-> > Dave might have more historical context to confirm that... If that is
-> > still an open issue, a couple initial ideas come to mind:
-> > 
-> > 1.) Do something simple/crude like reclaim all buffers after log
-> > recovery on v4 filesystems to provide a clean slate going forward.
-> > 
-> > 2.) Unconditionally attach verifiers during recovery as originally done
-> > and wire up something generic that short circuits verifier invocations
-> > on v4 filesystems when log recovery is in progress.
+> > Triggeringa hung task timeouts like this doesn't usually indicate a
+> > filesystem problem.
 > 
-> What do you think about 3) add b_ops later if they're missing?
+> <-- snip -->
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 2f97c12..8842a27 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -742,6 +742,15 @@ xfs_buf_read_map(
->         if (bp) {
->                 trace_xfs_buf_read(bp, flags, _RET_IP_);
->  
-> +               /*
-> +                * If this buffer is up to date and has no verifier, try
-> +                * to set one.  This can happen on v4 because log
-> +                * recovery reads in the buffers for replay but does not
-> +                * set b_ops.
-> +                */
-> +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
-> +                       bp->b_ops = ops;
+> > None of these things usually filesystem problems, and the trainsmash
+> > of blocked tasks on filesystem locks is typical for these types of
+> > "blocked indefinitely with locks held" type of situations. It does
+> > tend to indicate taht there is quite a bit of load on the
+> > filesystem, though...
+> 
+> As Jan Kara noted we've seen this also on customers SLE12-SP2 kernel (4.4
+> based). Although we also were never able to root cause, since that bug
+> is now closed on our end I figured it would be worth mentioning two
+> theories we discussed, one more recent than the other.
 
-I don't really like this because it will hide bugs in the code.
-
-It also doesn't solve the problem because a read with NULL ops will
-still leave a buffer with no ops attached.
-
-IMO, if we've read/created a buffer without ops, then it is up to
-the code that created/read it to either attach the required ops
-before the buffer is released or to invalidate the buffer before
-anyone else can use it or write it. The buffer write code warns
-about writing buffers without verfiers, but we can't warn on read
-because read-with-NULL-verifier is a valid thing to do....
+Sure, but stuff going on with docker mounts and namespaces has
+nothing to do with IO path locking and completions. There's
+something in the filesystem or the storage stack below going
+wrong here, not above it in the vfsmount layer....
 
 Cheers,
 
