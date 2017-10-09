@@ -1,112 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44692 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754408AbdJIOmB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 10:42:01 -0400
-Date: Mon, 9 Oct 2017 16:40:15 +0200
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
- framework
-Message-ID: <20171009144015.GD3521@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <20171006210956.vf326sydjiphsefo@destiny>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:57013 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751636AbdJIRIm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 13:08:42 -0400
+Received: by mail-oi0-f43.google.com with SMTP id v9so28709808oif.13
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 10:08:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171006210956.vf326sydjiphsefo@destiny>
+In-Reply-To: <20171009034030.GH3666@dastard>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732934955.22363.14950885120988262779.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009034030.GH3666@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 9 Oct 2017 10:08:40 -0700
+Message-ID: <CAPcyv4i6WBxfVJ0yqWbuW2kiJ-wpi+iYRPk=Kykqt3U5Rrw7MA@mail.gmail.com>
+Subject: Re: [PATCH v7 06/12] xfs: wire up MAP_DIRECT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Fri, Oct 06, 2017 at 05:09:57PM -0400, Josef Bacik wrote:
-> One thing that comes up a lot every LSF is the fact that we have no general way
-> that we do performance testing.  Every fs developer has a set of scripts or
-> things that they run with varying degrees of consistency, but nothing central
-> that we all use.  I for one am getting tired of finding regressions when we are
-> deploying new kernels internally, so I wired this thing up to try and address
-> this need.
-> 
-> We all hate convoluted setups, the more brain power we have to put in to setting
-> something up the less likely we are to use it, so I took the xfstests approach
-> of making it relatively simple to get running and relatively easy to add new
-> tests.  For right now the only thing this framework does is run fio scripts.  I
-> chose fio because it already gathers loads of performance data about it's runs.
-> We have everything we need there, latency, bandwidth, cpu time, and all broken
-> down by reads, writes, and trims.  I figure most of us are familiar enough with
-> fio and how it works to make it relatively easy to add new tests to the
-> framework.
-> 
-> I've posted my code up on github, you can get it here
-> 
-> https://github.com/josefbacik/fsperf
+On Sun, Oct 8, 2017 at 8:40 PM, Dave Chinner <david@fromorbit.com> wrote:
 
-Let me propose an existing framework that is capable of what is in
-fsperf, and much more. I'ts Mel Gorman's mmtests
-http://github.com/gormanm/mmtests .
+Thanks for the review Dave.
 
-I've been using it for a year or so, built a few scripts on top of that to
-help me set up configs for specific machines or run tests in sequences.
+> On Fri, Oct 06, 2017 at 03:35:49PM -0700, Dan Williams wrote:
+>> MAP_DIRECT is an mmap(2) flag with the following semantics:
+>>
+>>   MAP_DIRECT
+>>   When specified with MAP_SHARED_VALIDATE, sets up a file lease with the
+>>   same lifetime as the mapping. Unlike a typical F_RDLCK lease this lease
+>>   is broken when a "lease breaker" attempts to write(2), change the block
+>>   map (fallocate), or change the size of the file. Otherwise the mechanism
+>>   of a lease break is identical to the typical lease break case where the
+>>   lease needs to be removed (munmap) within the number of seconds
+>>   specified by /proc/sys/fs/lease-break-time. If the lease holder fails to
+>>   remove the lease in time the kernel will invalidate the mapping and
+>>   force all future accesses to the mapping to trigger SIGBUS.
+>>
+>>   In addition to lease break timeouts causing faults in the mapping to
+>>   result in SIGBUS, other states of the file will trigger SIGBUS at fault
+>>   time:
+>>
+>>       * The file is not DAX capable
+>>       * The file has reflinked (copy-on-write) blocks
+>>       * The fault would trigger the filesystem to allocate blocks
+>>       * The fault would trigger the filesystem to perform extent conversion
+>>
+>>   In other words, MAP_DIRECT expects and enforces a fully allocated file
+>>   where faults can be satisfied without modifying block map metadata.
+>>
+>>   An unprivileged process may establish a MAP_DIRECT mapping on a file
+>>   whose UID (owner) matches the filesystem UID of the  process. A process
+>>   with the CAP_LEASE capability may establish a MAP_DIRECT mapping on
+>>   arbitrary files
+>>
+>>   ERRORS
+>>   EACCES Beyond the typical mmap(2) conditions that trigger EACCES
+>>   MAP_DIRECT also requires the permission to set a file lease.
+>>
+>>   EOPNOTSUPP The filesystem explicitly does not support the flag
+>>
+>>   SIGBUS Attempted to write a MAP_DIRECT mapping at a file offset that
+>>          might require block-map updates, or the lease timed out and the
+>>          kernel invalidated the mapping.
+>>
+>> Cc: Jan Kara <jack@suse.cz>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Jeff Moyer <jmoyer@redhat.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: Dave Chinner <david@fromorbit.com>
+>> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+>> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+>> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> Cc: Jeff Layton <jlayton@poochiereds.net>
+>> Cc: "J. Bruce Fields" <bfields@fieldses.org>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> ---
+>>  fs/xfs/Kconfig                  |    2 -
+>>  fs/xfs/xfs_file.c               |  102 +++++++++++++++++++++++++++++++++++++++
+>>  include/linux/mman.h            |    3 +
+>>  include/uapi/asm-generic/mman.h |    1
+>>  4 files changed, 106 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+>> index f62fc6629abb..f8765653a438 100644
+>> --- a/fs/xfs/Kconfig
+>> +++ b/fs/xfs/Kconfig
+>> @@ -112,4 +112,4 @@ config XFS_ASSERT_FATAL
+>>
+>>  config XFS_LAYOUT
+>>       def_bool y
+>> -     depends on EXPORTFS_BLOCK_OPS
+>> +     depends on EXPORTFS_BLOCK_OPS || FS_DAX
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index ebdd0bd2b261..e35518600e28 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -40,12 +40,22 @@
+>>  #include "xfs_iomap.h"
+>>  #include "xfs_reflink.h"
+>>
+>> +#include <linux/mman.h>
+>>  #include <linux/dcache.h>
+>>  #include <linux/falloc.h>
+>>  #include <linux/pagevec.h>
+>> +#include <linux/mapdirect.h>
+>>  #include <linux/backing-dev.h>
+>>
+>>  static const struct vm_operations_struct xfs_file_vm_ops;
+>> +static const struct vm_operations_struct xfs_file_vm_direct_ops;
+>> +
+>> +static inline bool
+>> +is_xfs_map_direct(
+>> +             struct vm_area_struct *vma)
+>> +{
+>> +     return vma->vm_ops == &xfs_file_vm_direct_ops;
+>> +}
+>
+> Namespacing (xfs_vma_is_direct) and whitespace damage.
 
-What are the capabilities regarding filesystem tests:
+Will fix.
 
-* create and mount filesystems (based on configs)
-* start various workloads, that are possibly adapted to the machine
-  (cpu, memory), there are many types, we'd be interested in those
-  touching filesystems
-* gather system statistics - cpu, memory, IO, latency there are scripts
-  that understand the output of various benchmarking tools (fio, dbench,
-  ffsb, tiobench, bonnie, fs_mark, iozone, blogbench, ...)
-* export the results into plain text or html, with tables and graphs
-* it is already able to compare results of several runs, with
-  statistical indicators
+>
+>>
+>>  /*
+>>   * Clear the specified ranges to zero through either the pagecache or DAX.
+>> @@ -1008,6 +1018,26 @@ xfs_file_llseek(
+>>       return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+>>  }
+>>
+>> +static int
+>> +xfs_vma_checks(
+>> +     struct vm_area_struct   *vma,
+>> +     struct inode            *inode)
+>
+> Exactly what are we checking for - function name doesn't tell me,
+> and there's no comments, either?
 
-The testsuite is actively used and maintained, which means that the
-efforts are mosly on the configuration side. From users' perspective
-this means to spend time with the setup and the rest will work as
-expected. Ie. you don't have to start debugging the suite because there
-are some version mismatches.
+Ok, I'll improve this.
 
-> All (well most) of the results from fio are stored in a local sqlite database.
-> Right now the comparison stuff is very crude, it simply checks against the
-> previous run and it only checks a few of the keys by default.  You can check
-> latency if you want, but while writing this stuff up it seemed that latency was
-> too variable from run to run to be useful in a "did my thing regress or improve"
-> sort of way.
-> 
-> The configuration is brain dead simple, the README has examples.  All you need
-> to do is make your local.cfg, run ./setup and then run ./fsperf and you are good
-> to go.
-> 
-> The plan is to add lots of workloads as we discover regressions and such.  We
-> don't want anything that takes too long to run otherwise people won't run this,
-> so the existing tests don't take much longer than a few minutes each.
+>
+>> +{
+>> +     if (!is_xfs_map_direct(vma))
+>> +             return 0;
+>> +
+>> +     if (!is_map_direct_valid(vma->vm_private_data))
+>> +             return VM_FAULT_SIGBUS;
+>> +
+>> +     if (xfs_is_reflink_inode(XFS_I(inode)))
+>> +             return VM_FAULT_SIGBUS;
+>> +
+>> +     if (!IS_DAX(inode))
+>> +             return VM_FAULT_SIGBUS;
+>
+> And how do we get is_xfs_map_direct() set to true if we don't have a
+> DAX inode or the inode has shared extents?
 
-Sorry, this is IMO the wrong approach to benchmarking. Can you exercise
-the filesystem enough in a few minutes? Can you write at least 2 times
-memory size of data to the filesystem? Everything works fine when it's
-from caches and the filesystem is fresh. With that you can simply start
-using phoronix-test-suite and be done, with the same quality of results
-we all roll eyes about.
+So, this was my way of trying to satisfy the request you made here:
 
-Targeted tests using fio are fine and I understand the need to keep it
-minimal. mmtests have support for fio and any jobfile can be used,
-internally implemented with the 'fio --cmdline' option that will
-transform it to a shell variable that's passed to fio in the end.
+    https://lkml.org/lkml/2017/8/11/876
 
-As proposed in the thread, why not use xfstests? It could be suitable
-for the configs, mkfs/mount and running but I think it would need a lot
-of work to enhance the result gathering and presentation. Essentially
-duplicating mmtests from that side.
+i.e. allow MAP_DIRECT on non-dax files to enable a use case of
+freezing the block-map to examine which file extents are linked. If
+you don't want to use MAP_DIRECT for this, we can move these checks to
+mmap time.
 
-I was positively surprised by various performance monitors that I was
-not primarily interested in, like memory allocations or context
-switches.  This gives deeper insights into the system and may help
-analyzing the benchmark results.
+>
+>> +
+>> +     return 0;
+>> +}
+>> +
+>>  /*
+>>   * Locking for serialisation of IO during page faults. This results in a lock
+>>   * ordering of:
+>> @@ -1024,6 +1054,7 @@ __xfs_filemap_fault(
+>>       enum page_entry_size    pe_size,
+>>       bool                    write_fault)
+>>  {
+>> +     struct vm_area_struct   *vma = vmf->vma;
+>>       struct inode            *inode = file_inode(vmf->vma->vm_file);
+>
+> You missed this vmf->vma....
+>
+> .....
+>>
+>> +#define XFS_MAP_SUPPORTED (LEGACY_MAP_MASK | MAP_DIRECT)
+>> +
+>> +STATIC int
+>> +xfs_file_mmap_validate(
+>> +     struct file             *filp,
+>> +     struct vm_area_struct   *vma,
+>> +     unsigned long           map_flags,
+>> +     int                     fd)
+>> +{
+>> +     struct inode            *inode = file_inode(filp);
+>> +     struct xfs_inode        *ip = XFS_I(inode);
+>> +     struct map_direct_state *mds;
+>> +
+>> +     if (map_flags & ~(XFS_MAP_SUPPORTED))
+>> +             return -EOPNOTSUPP;
+>> +
+>> +     if ((map_flags & MAP_DIRECT) == 0)
+>> +             return xfs_file_mmap(filp, vma);
+>> +
+>> +     file_accessed(filp);
+>> +     vma->vm_ops = &xfs_file_vm_direct_ops;
+>> +     if (IS_DAX(inode))
+>> +             vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+>
+> And if it isn't a DAX inode? what is MAP_DIRECT supposed to do then?
 
-Side note: you can run xfstests from mmtests, ie. the machine/options
-confugration is shared.
+In the non-DAX case it just takes the FL_LAYOUT file lease... although
+we could also just have an fcntl for that purpose. The use case of
+just freezing the block map does not need a mapping.
 
-I'm willing to write more about the actual usage of mmtests, but at this
-point I'm proposing the whole framework for consideration.
+>> +     mds = map_direct_register(fd, vma);
+>> +     if (IS_ERR(mds))
+>> +             return PTR_ERR(mds);
+>> +
+>> +     /* flush in-flight faults */
+>> +     xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+>> +     xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+>
+> Urk. That's nasty. And why is it even necessary? Please explain why
+> this is necessary in the comment, because it's not at all obvious to
+> me...
+
+This is related to your other observation about i_mapdcount and adding
+an iomap_can_allocate() helper. I think I can clean both of these up
+by using a call to break_layout(inode, false) and bailing in
+->iomap_begin() if it returns EWOULDBLOCK. This would also fix the
+current problem that allocating write-faults don't start the lease
+break process.
