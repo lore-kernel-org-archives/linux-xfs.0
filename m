@@ -1,142 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:44475 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754342AbdJINAx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 09:00:53 -0400
-Received: by mail-qk0-f172.google.com with SMTP id r64so23198727qkc.1
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 06:00:53 -0700 (PDT)
-Date: Mon, 9 Oct 2017 09:00:51 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
- framework
-Message-ID: <20171009130050.ufnmdhslc53bwpgc@destiny>
-References: <20171006210956.vf326sydjiphsefo@destiny>
- <20171009005137.GA3666@dastard>
- <20171009022509.rz6goq3sec5ppxrr@destiny>
- <20171009051731.GK3666@dastard>
+Received: from smtp2.provo.novell.com ([137.65.250.81]:46520 "EHLO
+        smtp2.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754045AbdJILO5 (ORCPT
+        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
+        Mon, 9 Oct 2017 07:14:57 -0400
+Subject: Re: [PATCH v2 1/3] xfs_io: Add support for pwritev2()
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Message-ID: <f4df1c9f-b067-d836-8584-b6bd4443d3a2@suse.com>
+Date: Mon, 9 Oct 2017 06:14:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171009051731.GK3666@dastard>
+In-Reply-To: <20170929130035.24760-1-rgoldwyn@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com
 
-On Mon, Oct 09, 2017 at 04:17:31PM +1100, Dave Chinner wrote:
-> On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
-> > On Mon, Oct 09, 2017 at 11:51:37AM +1100, Dave Chinner wrote:
-> > > On Fri, Oct 06, 2017 at 05:09:57PM -0400, Josef Bacik wrote:
-> > > > Hello,
-> > > > 
-> > > > One thing that comes up a lot every LSF is the fact that we have no general way
-> > > > that we do performance testing.  Every fs developer has a set of scripts or
-> > > > things that they run with varying degrees of consistency, but nothing central
-> > > > that we all use.  I for one am getting tired of finding regressions when we are
-> > > > deploying new kernels internally, so I wired this thing up to try and address
-> > > > this need.
-> > > > 
-> > > > We all hate convoluted setups, the more brain power we have to put in to setting
-> > > > something up the less likely we are to use it, so I took the xfstests approach
-> > > > of making it relatively simple to get running and relatively easy to add new
-> > > > tests.  For right now the only thing this framework does is run fio scripts.  I
-> > > > chose fio because it already gathers loads of performance data about it's runs.
-> > > > We have everything we need there, latency, bandwidth, cpu time, and all broken
-> > > > down by reads, writes, and trims.  I figure most of us are familiar enough with
-> > > > fio and how it works to make it relatively easy to add new tests to the
-> > > > framework.
-> > > > 
-> > > > I've posted my code up on github, you can get it here
-> > > > 
-> > > > https://github.com/josefbacik/fsperf
-> > > > 
-> > > > All (well most) of the results from fio are stored in a local sqlite database.
-> > > > Right now the comparison stuff is very crude, it simply checks against the
-> > > > previous run and it only checks a few of the keys by default.  You can check
-> > > > latency if you want, but while writing this stuff up it seemed that latency was
-> > > > too variable from run to run to be useful in a "did my thing regress or improve"
-> > > > sort of way.
-> > > > 
-> > > > The configuration is brain dead simple, the README has examples.  All you need
-> > > > to do is make your local.cfg, run ./setup and then run ./fsperf and you are good
-> > > > to go.
-> > > 
-> > > Why re-invent the test infrastructure? Why not just make it a
-> > > tests/perf subdir in fstests?
-> > > 
-> > 
-> > Probably should have led with that shouldn't I have?  There's nothing keeping me
-> > from doing it, but I didn't want to try and shoehorn in a python thing into
-> > fstests.  I need python to do the sqlite and the json parsing to dump into the
-> > sqlite database.
-> > 
-> > Now if you (and others) are not opposed to this being dropped into tests/perf
-> > then I'll work that up.  But it's definitely going to need to be done in python.
-> > I know you yourself have said you aren't opposed to using python in the past, so
-> > if that's still the case then I can definitely wire it all up.
+Hi,
+
+Any response/review comments to these patches?
+I have two fstests waiting for these patches to be incorporated.
+
+-- 
+Goldwyn
+
+On 09/29/2017 08:00 AM, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> I have no problems with people using python for stuff like this but,
-> OTOH, I'm not the fstests maintainer anymore :P
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  configure.ac          |  1 +
+>  include/builddefs.in  |  1 +
+>  io/Makefile           |  4 ++++
+>  io/pwrite.c           | 39 ++++++++++++++++++++++++++-------------
+>  m4/package_libcdev.m4 | 16 ++++++++++++++++
+>  5 files changed, 48 insertions(+), 13 deletions(-)
 > 
-> > > > The plan is to add lots of workloads as we discover regressions and such.  We
-> > > > don't want anything that takes too long to run otherwise people won't run this,
-> > > > so the existing tests don't take much longer than a few minutes each.  I will be
-> > > > adding some more comparison options so you can compare against averages of all
-> > > > previous runs and such.
-> > > 
-> > > Yup, that fits exactly into what fstests is for... :P
-> > > 
-> > > Integrating into fstests means it will be immediately available to
-> > > all fs developers, it'll run on everything that everyone already has
-> > > setup for filesystem testing, and it will have familiar mkfs/mount
-> > > option setup behaviour so there's no new hoops for everyone to jump
-> > > through to run it...
-> > > 
-> > 
-> > TBF I specifically made it as easy as possible because I know we all hate trying
-> > to learn new shit.
+> diff --git a/configure.ac b/configure.ac
+> index 4161c3b4..2320e3e3 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -132,6 +132,7 @@ AC_HAVE_GETMNTENT
+>  AC_HAVE_GETMNTINFO
+>  AC_HAVE_FALLOCATE
+>  AC_HAVE_FIEMAP
+> +AC_HAVE_PWRITEV2
+>  AC_HAVE_PREADV
+>  AC_HAVE_COPY_FILE_RANGE
+>  AC_HAVE_SYNC_FILE_RANGE
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index ec630bd9..cd58ea8e 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -103,6 +103,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
+>  HAVE_FALLOCATE = @have_fallocate@
+>  HAVE_FIEMAP = @have_fiemap@
+>  HAVE_PREADV = @have_preadv@
+> +HAVE_PWRITEV2 = @have_pwritev2@
+>  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+>  HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+>  HAVE_SYNCFS = @have_syncfs@
+> diff --git a/io/Makefile b/io/Makefile
+> index 47b0a669..050d6bd0 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -90,6 +90,10 @@ ifeq ($(HAVE_PREADV),yes)
+>  LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+>  endif
+>  
+> +ifeq ($(HAVE_PWRITEV2),yes)
+> +LCFLAGS += -DHAVE_PWRITEV2
+> +endif
+> +
+>  ifeq ($(HAVE_READDIR),yes)
+>  CFILES += readdir.c
+>  LCFLAGS += -DHAVE_READDIR
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index 1c5dfca1..e7d411bb 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -62,7 +62,8 @@ do_pwritev(
+>  	int		fd,
+>  	off64_t		offset,
+>  	ssize_t		count,
+> -	ssize_t		buffer_size)
+> +	ssize_t		buffer_size,
+> +	int 		pwritev2_flags)
+>  {
+>  	int vecs = 0;
+>  	ssize_t oldlen = 0;
+> @@ -81,7 +82,14 @@ do_pwritev(
+>  	} else {
+>  		vecs = vectors;
+>  	}
+> +#ifdef HAVE_PWRITEV2
+> +	if (pwritev2_flags)
+> +		bytes = pwritev2(fd, iov, vectors, offset, pwritev2_flags);
+> +	else
+> +		bytes = pwritev(fd, iov, vectors, offset);
+> +#else
+>  	bytes = pwritev(fd, iov, vectors, offset);
+> +#endif
+>  
+>  	/* restore trimmed iov */
+>  	if (oldlen)
+> @@ -98,12 +106,13 @@ do_pwrite(
+>  	int		fd,
+>  	off64_t		offset,
+>  	ssize_t		count,
+> -	ssize_t		buffer_size)
+> +	ssize_t		buffer_size,
+> +	int		pwritev2_flags)
+>  {
+>  	if (!vectors)
+>  		return pwrite(fd, buffer, min(count, buffer_size), offset);
+>  
+> -	return do_pwritev(fd, offset, count, buffer_size);
+> +	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
+>  }
+>  
+>  static int
+> @@ -111,7 +120,8 @@ write_random(
+>  	off64_t		offset,
+>  	long long	count,
+>  	unsigned int	seed,
+> -	long long	*total)
+> +	long long	*total,
+> +	int 		pwritev2_flags)
+>  {
+>  	off64_t		off, range;
+>  	ssize_t		bytes;
+> @@ -133,7 +143,7 @@ write_random(
+>  				buffersize;
+>  		else
+>  			off = offset;
+> -		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
+> +		bytes = do_pwrite(file->fd, off, buffersize, buffersize, pwritev2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -153,7 +163,8 @@ static int
+>  write_backward(
+>  	off64_t		offset,
+>  	long long	*count,
+> -	long long	*total)
+> +	long long	*total,
+> +	int		pwritev2_flags)
+>  {
+>  	off64_t		end, off = offset;
+>  	ssize_t		bytes = 0, bytes_requested;
+> @@ -171,7 +182,7 @@ write_backward(
+>  	if ((bytes_requested = (off % buffersize))) {
+>  		bytes_requested = min(cnt, bytes_requested);
+>  		off -= bytes_requested;
+> -		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
+> +		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize, pwritev2_flags);
+>  		if (bytes == 0)
+>  			return ops;
+>  		if (bytes < 0) {
+> @@ -189,7 +200,7 @@ write_backward(
+>  	while (cnt > end) {
+>  		bytes_requested = min(cnt, buffersize);
+>  		off -= bytes_requested;
+> -		bytes = do_pwrite(file->fd, off, cnt, buffersize);
+> +		bytes = do_pwrite(file->fd, off, cnt, buffersize, pwritev2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -212,7 +223,8 @@ write_buffer(
+>  	size_t		bs,
+>  	int		fd,
+>  	off64_t		skip,
+> -	long long	*total)
+> +	long long	*total,
+> +	int		pwritev2_flags)
+>  {
+>  	ssize_t		bytes;
+>  	long long	bar = min(bs, count);
+> @@ -224,7 +236,7 @@ write_buffer(
+>  			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
+>  				break;
+>  		}
+> -		bytes = do_pwrite(file->fd, offset, count, bar);
+> +		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -258,6 +270,7 @@ pwrite_f(
+>  	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
+>  	int		direction = IO_FORWARD;
+>  	int		c, fd = -1;
+> +	int		pwritev2_flags = 0;
+>  
+>  	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+> @@ -365,13 +378,13 @@ pwrite_f(
+>  	case IO_RANDOM:
+>  		if (!zeed)	/* srandom seed */
+>  			zeed = time(NULL);
+> -		c = write_random(offset, count, zeed, &total);
+> +		c = write_random(offset, count, zeed, &total, pwritev2_flags);
+>  		break;
+>  	case IO_FORWARD:
+> -		c = write_buffer(offset, count, bsize, fd, skip, &total);
+> +		c = write_buffer(offset, count, bsize, fd, skip, &total, pwritev2_flags);
+>  		break;
+>  	case IO_BACKWARD:
+> -		c = write_backward(offset, &count, &total);
+> +		c = write_backward(offset, &count, &total, pwritev2_flags);
+>  		break;
+>  	default:
+>  		total = 0;
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index fa5b6397..48da0783 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -146,6 +146,22 @@ AC_DEFUN([AC_HAVE_PREADV],
+>      AC_SUBST(have_preadv)
+>    ])
+>  
+> +#
+> +# Check if we have a pwritev2 libc call (Linux)
+> +#
+> +AC_DEFUN([AC_HAVE_PWRITEV2],
+> +  [ AC_MSG_CHECKING([for pwritev2])
+> +    AC_TRY_LINK([
+> +#define _BSD_SOURCE
+> +#include <sys/uio.h>
+> +    ], [
+> +         pwritev2(0, 0, 0, 0, 0);
+> +    ], have_pwritev2=yes
+> +       AC_MSG_RESULT(yes),
+> +       AC_MSG_RESULT(no))
+> +    AC_SUBST(have_pwritev2)
+> +  ])
+> +
+>  #
+>  # Check if we have a copy_file_range system call (Linux)
+>  #
 > 
-> Yeah, it's also hard to get people to change their workflows to add
-> a whole new test harness into them. It's easy if it's just a new
-> command to an existing workflow :P
-> 
 
-Agreed, so if you probably won't run this outside of fstests then I'll add it to
-xfstests.  I envision this tool as being run by maintainers to verify their pull
-requests haven't regressed since the last set of patches, as well as by anybody
-trying to fix performance problems.  So it's way more important to me that you,
-Ted, and all the various btrfs maintainers will run it than anybody else.
-
-> > I figured this was different enough to warrant a separate
-> > project, especially since I'm going to add block device jobs so Jens can test
-> > block layer things.  If we all agree we'd rather see this in fstests then I'm
-> > happy to do that too.  Thanks,
-> 
-> I'm not fussed either way - it's a good discussion to have, though.
-> 
-> If I want to add tests (e.g. my time-honoured fsmark tests), where
-> should I send patches?
-> 
-
-I beat you to that!  I wanted to avoid adding fs_mark to the suite because it
-means parsing another different set of outputs, so I added a new ioengine to fio
-for this
-
-http://www.spinics.net/lists/fio/msg06367.html
-
-and added a fio job to do 500k files
-
-https://github.com/josefbacik/fsperf/blob/master/tests/500kemptyfiles.fio
-
-The test is disabled by default for now because obviously the fio support hasn't
-landed yet.
-
-I'd _like_ to expand fio for cases we come up with that aren't possible, as
-there's already a ton of measurements that are taken, especially around
-latencies.  That said I'm not opposed to throwing new stuff in there, it just
-means we have to add stuff to parse the output and store it in the database in a
-consistent way, which seems like more of a pain than just making fio do what we
-need it to.  Thanks,
-
-Josef
+-- 
+Goldwyn
