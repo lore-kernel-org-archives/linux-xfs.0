@@ -1,120 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29896 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752023AbdJaU3m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 16:29:42 -0400
-Date: Tue, 31 Oct 2017 13:29:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/2] fiemap: Factor out actual fiemap call code
-Message-ID: <20171031202937.GH4911@magnolia>
-References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
- <1509459011-7398-1-git-send-email-nborisov@suse.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6397 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754644AbdJIWhZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:37:25 -0400
+Date: Tue, 10 Oct 2017 09:37:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+Message-ID: <20171009223714.GS3666@dastard>
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
+ <20170929130035.24760-2-rgoldwyn@suse.de>
+ <20171009171953.GR7122@magnolia>
+ <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1509459011-7398-1-git-send-email-nborisov@suse.com>
+In-Reply-To: <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-> Subject: Re: [PATCH v2 1/2] fiemap: Factor out actual fiemap call code
-
-I thought this was v3....
-
-On Tue, Oct 31, 2017 at 04:10:10PM +0200, Nikolay Borisov wrote:
-> This will be needed to in a subsequent patch to avoid code duplication
+On Mon, Oct 09, 2017 at 04:11:17PM -0500, Goldwyn Rodrigues wrote:
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
-> v2:
->  * Incorporated Daricks feedback - removed variables which weren't introduced
->  until the next patch as a result the build with this patch was broken. This is 
->  fixed now
->  io/fiemap.c | 39 ++++++++++++++++++++++++++++-----------
->  1 file changed, 28 insertions(+), 11 deletions(-)
 > 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index e6fd66da753d..08391f69d9bd 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -211,6 +211,31 @@ calc_print_format(
->  	}
->  }
->  
-> +static int
-> +__fiemap(
-> +	 struct fiemap * fiemap,
-
-	struct fiemap	*fiemap,
-
-> +	 int		 mapsize,
-> +	 __u32		 flags,
-> +	 __u64		 start,
-> +	 __u64		 length) {
-> +
-> +	int ret;
-
-	int		ret;
-
-(Yeah, I know...)
-
-> +
-> +	memset(fiemap, 0, mapsize);
-> +	fiemap->fm_flags = flags;
-> +	fiemap->fm_start = start;
-> +	fiemap->fm_length = length;
-> +	fiemap->fm_extent_count = EXTENT_BATCH;
-
-It's odd that we pass in both the struct* and its initializers here, but
-we still have to have a way to pass fm_flags and fm_mapped_extents back
-to the __fiemap() caller.
-
-(TBH I'm wondering if this patch is necessary...)
-
---D
-
-> +	ret = ioctl(file->fd, FS_IOC_FIEMAP, fiemap);
-> +	if (ret < 0) {
-> +	        fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-> +	                "%s\n", progname, file->name, strerror(errno));
-> +	        return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  int
->  fiemap_f(
->  	int		argc,
-> @@ -266,19 +291,11 @@ fiemap_f(
->  
->  	while (!last && (cur_extent != max_extents)) {
->  
-> -		memset(fiemap, 0, map_size);
-> -		fiemap->fm_flags = fiemap_flags;
-> -		fiemap->fm_start = last_logical;
-> -		fiemap->fm_length = -1LL;
-> -		fiemap->fm_extent_count = EXTENT_BATCH;
-> -
-> -		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> +		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
-> +			       -1LL);
->  		if (ret < 0) {
-> -			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-> -				"%s\n", progname, file->name, strerror(errno));
-> -			free(fiemap);
->  			exitcode = 1;
-> -			return 0;
-> +			goto out;
->  		}
->  
->  		/* No more extents to map, exit */
-> -- 
-> 2.7.4
+> On 10/09/2017 12:19 PM, Darrick J. Wong wrote:
+> > On Fri, Sep 29, 2017 at 08:00:34AM -0500, Goldwyn Rodrigues wrote:
+> >> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> >>
+> >> This allows to make pwritev2() calls with RWF_NOWAIT,
+> >> which would fail in case the call blocks.
+> >>
+> >> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> >> ---
+> >>  io/pwrite.c       | 8 +++++++-
+> >>  man/man8/xfs_io.8 | 6 ++++++
+> >>  2 files changed, 13 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/io/pwrite.c b/io/pwrite.c
+> >> index e7d411bb..2b85a528 100644
+> >> --- a/io/pwrite.c
+> >> +++ b/io/pwrite.c
+> >> @@ -52,6 +52,9 @@ pwrite_help(void)
+> >>  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+> >>  #ifdef HAVE_PWRITEV
+> >>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+> >> +#ifdef HAVE_PWRITEV2
+> >> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+> >> +#endif
+> > 
+> > Separate these two? i.e.
+> > 
+> > #ifdef HAVE_PWRITEV
+> > " -V N..."
+> > #endif
+> > #ifdef HAVE_PWRITEV2
+> > " -N ..."
+> > #endif
+> > 
+> > They're tested separately in configure, so the ifdefs needn't be nested.
+> > 
+> >>  #endif
+> >>  "\n"));
+> >>  }
+> >> @@ -276,7 +279,7 @@ pwrite_f(
+> >>  	init_cvtnum(&fsblocksize, &fssectsize);
+> >>  	bsize = fsblocksize;
+> >>  
+> >> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
+> >> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+> >>  		switch (c) {
+> >>  		case 'b':
+> >>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+> >> @@ -305,6 +308,9 @@ pwrite_f(
+> >>  		case 'i':
+> >>  			infile = optarg;
+> >>  			break;
+> >> +		case 'N':
+> >> +			pwritev2_flags |= RWF_NOWAIT;
+> >> +			break;
+> > 
+> > Needs #ifdef HAVE_PWRITEV2.
+> > 
+> > If you feel the need to be extra cautious, you could also put:
+> > 
+> > #ifndef HAVE_PWRITEV2
+> > 	assert(pwritev2_flags == 0);
+> > #endif
+> > 
+> > ...just after the getopt parsing to make sure that we never silently
+> > drop RWF_* flags due to code bugs.
+> > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Instead I am planning to put an #else to #ifdef in the case 'N' to make
+> sure that people who do not have pwritev2() get the proper message
+> instead of the command failing without reason.
+> 
+> +               case 'N':
+> +#ifdef HAVE_PWRITEV2
+> +                       pwritev2_flags |= RWF_NOWAIT;
+> +                       break;
+> +#else
+> +                       printf(_("-N: Kernel does not support
+> pwritev2()\n"));
+> +                       return 0;
+> +#endif
+
+Why add support for a command only to say "command not supported"?
+The error message is also incorrect - the build environment didn't
+support pwritev2, not the kernel the xfs_io binary is currently
+running on.
+
+As it is, I really don't like this sort of ifdef pattern because it
+means over time we'll end up with an ifdef mess in the option
+parsing as more flags are added. Just make the default case say
+"command -%c not supported", and that removes the need for any of
+these else cases.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
