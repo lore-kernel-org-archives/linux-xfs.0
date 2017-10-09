@@ -1,80 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39143 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752724AbdJPVih (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 17:38:37 -0400
-Date: Tue, 17 Oct 2017 08:38:11 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:25873 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754172AbdJIWu3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:50:29 -0400
+Date: Tue, 10 Oct 2017 09:50:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20171016213811.GH15067@dastard>
-References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
- <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
- <20171009000529.GY3666@dastard>
- <20171009183129.GE11645@wotan.suse.de>
- <87wp442lgm.fsf@xmission.com>
- <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
- <20171015130625.o5k6tk5uflm3rx65@thunk.org>
- <87efq4qcry.fsf@xmission.com>
- <20171015232246.GI3666@dastard>
- <877evvng1q.fsf@xmission.com>
+Subject: Re: [PATCH v7 06/12] xfs: wire up MAP_DIRECT
+Message-ID: <20171009225025.GT3666@dastard>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732934955.22363.14950885120988262779.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009034030.GH3666@dastard>
+ <CAPcyv4i6WBxfVJ0yqWbuW2kiJ-wpi+iYRPk=Kykqt3U5Rrw7MA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <877evvng1q.fsf@xmission.com>
+In-Reply-To: <CAPcyv4i6WBxfVJ0yqWbuW2kiJ-wpi+iYRPk=Kykqt3U5Rrw7MA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Aleksa Sarai <asarai@suse.de>, "Luis R. Rodriguez" <mcgrof@kernel.org>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Mon, Oct 16, 2017 at 12:44:33PM -0500, Eric W. Biederman wrote:
-> Dave Chinner <david@fromorbit.com> writes:
-> > On Sun, Oct 15, 2017 at 05:14:41PM -0500, Eric W. Biederman wrote:
-> >> So my suggestions for this case are two fold.
-> >> 
-> >> - Tweak Docker and friends to not be sloppy and hold onto extra
-> >>   resources that they don't need.  That is just bad form.
-> >> 
-> >> - Generalize what ext4, f2fs, xfs and possibly the network filesystems
-> >>   with umount_begin are doing into a general disconnect this filesystem
-> >>   from it's backing store operation.
-> >> 
-> >>   That operation should be enough to drop the reference to the backing
-> >>   device so that device mapper doesn't care.
+On Mon, Oct 09, 2017 at 10:08:40AM -0700, Dan Williams wrote:
+> On Sun, Oct 8, 2017 at 8:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >>
+> >>  /*
+> >>   * Clear the specified ranges to zero through either the pagecache or DAX.
+> >> @@ -1008,6 +1018,26 @@ xfs_file_llseek(
+> >>       return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> >>  }
+> >>
+> >> +static int
+> >> +xfs_vma_checks(
+> >> +     struct vm_area_struct   *vma,
+> >> +     struct inode            *inode)
 > >
-> > Define the semantics of a forced filesystem unmount are supposed to
-> > be first, then decide whether an existing shutdown operation can be
-> > used. It may be we just need a new flag to the existing API to
-> > implement slightly different semantics (e.g to silence unnecessary
-> > warnings), but at minimum I think we've need the ->unmount_begin op
-> > name to change to indicate it's function, not document the calling
-> > context...
+> > Exactly what are we checking for - function name doesn't tell me,
+> > and there's no comments, either?
 > 
-> Definite the expected semantics of a forced filesystem umount is the
-> same process as defining the semantics of a forced filesytem shutdown.
-> Look at the code and see what it does and document it.
+> Ok, I'll improve this.
 > 
-> That said, a quick skim through the umount_begin methods on network
-> filesystems (the only filesystems that implement umount_begin) it
-> appears they drop the network connection.  Which is pretty much the same
-> as dropping the connection to the bdev.
+> >
+> >> +{
+> >> +     if (!is_xfs_map_direct(vma))
+> >> +             return 0;
+> >> +
+> >> +     if (!is_map_direct_valid(vma->vm_private_data))
+> >> +             return VM_FAULT_SIGBUS;
+> >> +
+> >> +     if (xfs_is_reflink_inode(XFS_I(inode)))
+> >> +             return VM_FAULT_SIGBUS;
+> >> +
+> >> +     if (!IS_DAX(inode))
+> >> +             return VM_FAULT_SIGBUS;
+> >
+> > And how do we get is_xfs_map_direct() set to true if we don't have a
+> > DAX inode or the inode has shared extents?
+> 
+> So, this was my way of trying to satisfy the request you made here:
+> 
+>     https://lkml.org/lkml/2017/8/11/876
+> 
+> i.e. allow MAP_DIRECT on non-dax files to enable a use case of
+> freezing the block-map to examine which file extents are linked. If
+> you don't want to use MAP_DIRECT for this, we can move these checks to
+> mmap time.
 
-Sure. But what do they do to incoming attempts to read from the
-filesystem, or modify/write it in some way? That behaviour really
-isn't defined in any way and what we need to do that so *all
-filesystems behave the same way*.
+Ok, but I don't want to use mmap to deal with this, nor do I care
+whether DAX is in use or not. So I don't think this is really
+necessary for MAP_DIRECT.
 
-As I've already pointed out, ext4 implements different shutdown
-semantics to XFS even though it copied the user API to trigger
-shutdowns. That's not an acceptible situation for a generic shutdown
-operation....
 
-> So I think there is good reason
-> to believe these two cases can be unified.  They may not be exactly the
-> same but they are close enough that the should be able to share common
-> infrastructure.
+> >> +xfs_file_mmap_validate(
+> >> +     struct file             *filp,
+> >> +     struct vm_area_struct   *vma,
+> >> +     unsigned long           map_flags,
+> >> +     int                     fd)
+> >> +{
+> >> +     struct inode            *inode = file_inode(filp);
+> >> +     struct xfs_inode        *ip = XFS_I(inode);
+> >> +     struct map_direct_state *mds;
+> >> +
+> >> +     if (map_flags & ~(XFS_MAP_SUPPORTED))
+> >> +             return -EOPNOTSUPP;
+> >> +
+> >> +     if ((map_flags & MAP_DIRECT) == 0)
+> >> +             return xfs_file_mmap(filp, vma);
+> >> +
+> >> +     file_accessed(filp);
+> >> +     vma->vm_ops = &xfs_file_vm_direct_ops;
+> >> +     if (IS_DAX(inode))
+> >> +             vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+> >
+> > And if it isn't a DAX inode? what is MAP_DIRECT supposed to do then?
+> 
+> In the non-DAX case it just takes the FL_LAYOUT file lease... although
+> we could also just have an fcntl for that purpose. The use case of
+> just freezing the block map does not need a mapping.
 
-You're making it sound so much simpler than it really is...
+RIght, so I think we should just add a fcntl for the non-DAX case I
+have in mind, and not complicate the MAP_DIRECT implementation right
+now.  We can alsways extend the scope of MAP_DIRECT in future if we
+actually need to do so.
+
+> >> +     mds = map_direct_register(fd, vma);
+> >> +     if (IS_ERR(mds))
+> >> +             return PTR_ERR(mds);
+> >> +
+> >> +     /* flush in-flight faults */
+> >> +     xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> >> +     xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> >
+> > Urk. That's nasty. And why is it even necessary? Please explain why
+> > this is necessary in the comment, because it's not at all obvious to
+> > me...
+> 
+> This is related to your other observation about i_mapdcount and adding
+> an iomap_can_allocate() helper. I think I can clean both of these up
+> by using a call to break_layout(inode, false) and bailing in
+> ->iomap_begin() if it returns EWOULDBLOCK. This would also fix the
+> current problem that allocating write-faults don't start the lease
+> break process.
+
+OK.
 
 Cheers,
 
