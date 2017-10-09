@@ -1,210 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:58576 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752161AbdJIDkf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 23:40:35 -0400
-Date: Mon, 9 Oct 2017 14:40:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v7 06/12] xfs: wire up MAP_DIRECT
-Message-ID: <20171009034030.GH3666@dastard>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150732934955.22363.14950885120988262779.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:44844 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753711AbdJICZM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 22:25:12 -0400
+Received: by mail-qt0-f172.google.com with SMTP id v28so31813182qtv.1
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Oct 2017 19:25:12 -0700 (PDT)
+Date: Sun, 8 Oct 2017 22:25:10 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
+ framework
+Message-ID: <20171009022509.rz6goq3sec5ppxrr@destiny>
+References: <20171006210956.vf326sydjiphsefo@destiny>
+ <20171009005137.GA3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150732934955.22363.14950885120988262779.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20171009005137.GA3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Oct 06, 2017 at 03:35:49PM -0700, Dan Williams wrote:
-> MAP_DIRECT is an mmap(2) flag with the following semantics:
+On Mon, Oct 09, 2017 at 11:51:37AM +1100, Dave Chinner wrote:
+> On Fri, Oct 06, 2017 at 05:09:57PM -0400, Josef Bacik wrote:
+> > Hello,
+> > 
+> > One thing that comes up a lot every LSF is the fact that we have no general way
+> > that we do performance testing.  Every fs developer has a set of scripts or
+> > things that they run with varying degrees of consistency, but nothing central
+> > that we all use.  I for one am getting tired of finding regressions when we are
+> > deploying new kernels internally, so I wired this thing up to try and address
+> > this need.
+> > 
+> > We all hate convoluted setups, the more brain power we have to put in to setting
+> > something up the less likely we are to use it, so I took the xfstests approach
+> > of making it relatively simple to get running and relatively easy to add new
+> > tests.  For right now the only thing this framework does is run fio scripts.  I
+> > chose fio because it already gathers loads of performance data about it's runs.
+> > We have everything we need there, latency, bandwidth, cpu time, and all broken
+> > down by reads, writes, and trims.  I figure most of us are familiar enough with
+> > fio and how it works to make it relatively easy to add new tests to the
+> > framework.
+> > 
+> > I've posted my code up on github, you can get it here
+> > 
+> > https://github.com/josefbacik/fsperf
+> > 
+> > All (well most) of the results from fio are stored in a local sqlite database.
+> > Right now the comparison stuff is very crude, it simply checks against the
+> > previous run and it only checks a few of the keys by default.  You can check
+> > latency if you want, but while writing this stuff up it seemed that latency was
+> > too variable from run to run to be useful in a "did my thing regress or improve"
+> > sort of way.
+> > 
+> > The configuration is brain dead simple, the README has examples.  All you need
+> > to do is make your local.cfg, run ./setup and then run ./fsperf and you are good
+> > to go.
 > 
->   MAP_DIRECT
->   When specified with MAP_SHARED_VALIDATE, sets up a file lease with the
->   same lifetime as the mapping. Unlike a typical F_RDLCK lease this lease
->   is broken when a "lease breaker" attempts to write(2), change the block
->   map (fallocate), or change the size of the file. Otherwise the mechanism
->   of a lease break is identical to the typical lease break case where the
->   lease needs to be removed (munmap) within the number of seconds
->   specified by /proc/sys/fs/lease-break-time. If the lease holder fails to
->   remove the lease in time the kernel will invalidate the mapping and
->   force all future accesses to the mapping to trigger SIGBUS.
+> Why re-invent the test infrastructure? Why not just make it a
+> tests/perf subdir in fstests?
 > 
->   In addition to lease break timeouts causing faults in the mapping to
->   result in SIGBUS, other states of the file will trigger SIGBUS at fault
->   time:
+
+Probably should have led with that shouldn't I have?  There's nothing keeping me
+from doing it, but I didn't want to try and shoehorn in a python thing into
+fstests.  I need python to do the sqlite and the json parsing to dump into the
+sqlite database.
+
+Now if you (and others) are not opposed to this being dropped into tests/perf
+then I'll work that up.  But it's definitely going to need to be done in python.
+I know you yourself have said you aren't opposed to using python in the past, so
+if that's still the case then I can definitely wire it all up.
+
+> > The plan is to add lots of workloads as we discover regressions and such.  We
+> > don't want anything that takes too long to run otherwise people won't run this,
+> > so the existing tests don't take much longer than a few minutes each.  I will be
+> > adding some more comparison options so you can compare against averages of all
+> > previous runs and such.
 > 
->       * The file is not DAX capable
->       * The file has reflinked (copy-on-write) blocks
->       * The fault would trigger the filesystem to allocate blocks
->       * The fault would trigger the filesystem to perform extent conversion
+> Yup, that fits exactly into what fstests is for... :P
 > 
->   In other words, MAP_DIRECT expects and enforces a fully allocated file
->   where faults can be satisfied without modifying block map metadata.
+> Integrating into fstests means it will be immediately available to
+> all fs developers, it'll run on everything that everyone already has
+> setup for filesystem testing, and it will have familiar mkfs/mount
+> option setup behaviour so there's no new hoops for everyone to jump
+> through to run it...
 > 
->   An unprivileged process may establish a MAP_DIRECT mapping on a file
->   whose UID (owner) matches the filesystem UID of the  process. A process
->   with the CAP_LEASE capability may establish a MAP_DIRECT mapping on
->   arbitrary files
-> 
->   ERRORS
->   EACCES Beyond the typical mmap(2) conditions that trigger EACCES
->   MAP_DIRECT also requires the permission to set a file lease.
-> 
->   EOPNOTSUPP The filesystem explicitly does not support the flag
-> 
->   SIGBUS Attempted to write a MAP_DIRECT mapping at a file offset that
->          might require block-map updates, or the lease timed out and the
->          kernel invalidated the mapping.
-> 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Jeff Moyer <jmoyer@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: Jeff Layton <jlayton@poochiereds.net>
-> Cc: "J. Bruce Fields" <bfields@fieldses.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  fs/xfs/Kconfig                  |    2 -
->  fs/xfs/xfs_file.c               |  102 +++++++++++++++++++++++++++++++++++++++
->  include/linux/mman.h            |    3 +
->  include/uapi/asm-generic/mman.h |    1 
->  4 files changed, 106 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index f62fc6629abb..f8765653a438 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -112,4 +112,4 @@ config XFS_ASSERT_FATAL
->  
->  config XFS_LAYOUT
->  	def_bool y
-> -	depends on EXPORTFS_BLOCK_OPS
-> +	depends on EXPORTFS_BLOCK_OPS || FS_DAX
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index ebdd0bd2b261..e35518600e28 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -40,12 +40,22 @@
->  #include "xfs_iomap.h"
->  #include "xfs_reflink.h"
->  
-> +#include <linux/mman.h>
->  #include <linux/dcache.h>
->  #include <linux/falloc.h>
->  #include <linux/pagevec.h>
-> +#include <linux/mapdirect.h>
->  #include <linux/backing-dev.h>
->  
->  static const struct vm_operations_struct xfs_file_vm_ops;
-> +static const struct vm_operations_struct xfs_file_vm_direct_ops;
-> +
-> +static inline bool
-> +is_xfs_map_direct(
-> +		struct vm_area_struct *vma)
-> +{
-> +	return vma->vm_ops == &xfs_file_vm_direct_ops;
-> +}
 
-Namespacing (xfs_vma_is_direct) and whitespace damage.
+TBF I specifically made it as easy as possible because I know we all hate trying
+to learn new shit.  I figured this was different enough to warrant a separate
+project, especially since I'm going to add block device jobs so Jens can test
+block layer things.  If we all agree we'd rather see this in fstests then I'm
+happy to do that too.  Thanks,
 
->  
->  /*
->   * Clear the specified ranges to zero through either the pagecache or DAX.
-> @@ -1008,6 +1018,26 @@ xfs_file_llseek(
->  	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
->  }
->  
-> +static int
-> +xfs_vma_checks(
-> +	struct vm_area_struct	*vma,
-> +	struct inode		*inode)
-
-Exactly what are we checking for - function name doesn't tell me,
-and there's no comments, either?
-
-> +{
-> +	if (!is_xfs_map_direct(vma))
-> +		return 0;
-> +
-> +	if (!is_map_direct_valid(vma->vm_private_data))
-> +		return VM_FAULT_SIGBUS;
-> +
-> +	if (xfs_is_reflink_inode(XFS_I(inode)))
-> +		return VM_FAULT_SIGBUS;
-> +
-> +	if (!IS_DAX(inode))
-> +		return VM_FAULT_SIGBUS;
-
-And how do we get is_xfs_map_direct() set to true if we don't have a
-DAX inode or the inode has shared extents?
-
-> +
-> +	return 0;
-> +}
-> +
->  /*
->   * Locking for serialisation of IO during page faults. This results in a lock
->   * ordering of:
-> @@ -1024,6 +1054,7 @@ __xfs_filemap_fault(
->  	enum page_entry_size	pe_size,
->  	bool			write_fault)
->  {
-> +	struct vm_area_struct	*vma = vmf->vma;
->  	struct inode		*inode = file_inode(vmf->vma->vm_file);
-
-You missed this vmf->vma....
-
-.....
->  
-> +#define XFS_MAP_SUPPORTED (LEGACY_MAP_MASK | MAP_DIRECT)
-> +
-> +STATIC int
-> +xfs_file_mmap_validate(
-> +	struct file		*filp,
-> +	struct vm_area_struct	*vma,
-> +	unsigned long		map_flags,
-> +	int			fd)
-> +{
-> +	struct inode		*inode = file_inode(filp);
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct map_direct_state	*mds;
-> +
-> +	if (map_flags & ~(XFS_MAP_SUPPORTED))
-> +		return -EOPNOTSUPP;
-> +
-> +	if ((map_flags & MAP_DIRECT) == 0)
-> +		return xfs_file_mmap(filp, vma);
-> +
-> +	file_accessed(filp);
-> +	vma->vm_ops = &xfs_file_vm_direct_ops;
-> +	if (IS_DAX(inode))
-> +		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
-
-And if it isn't a DAX inode? what is MAP_DIRECT supposed to do then?
-
-> +	mds = map_direct_register(fd, vma);
-> +	if (IS_ERR(mds))
-> +		return PTR_ERR(mds);
-> +
-> +	/* flush in-flight faults */
-> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-
-Urk. That's nasty. And why is it even necessary? Please explain why
-this is necessary in the comment, because it's not at all obvious to
-me...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Josef
