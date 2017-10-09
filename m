@@ -1,70 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:55569 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751485AbdJFXPJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2017 19:15:09 -0400
-Received: by mail-oi0-f53.google.com with SMTP id g125so14432389oib.12
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2017 16:15:08 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:52444 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754722AbdJIOYi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 10:24:38 -0400
+Date: Mon, 9 Oct 2017 10:24:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: move more RT specific code under CONFIG_XFS_RT
+Message-ID: <20171009142436.GC18663@bfoster.bfoster>
+References: <20171008235414.13866-1-david@fromorbit.com>
+ <20171008235414.13866-3-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <1507331434.29211.439.camel@infradead.org>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
- <1507329939.29211.434.camel@infradead.org> <CAPcyv4jLj2WOgPA+B5eYME0uZyuoy3gp35w+4rCa_EZxm-QSKA@mail.gmail.com>
- <1507331434.29211.439.camel@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 6 Oct 2017 16:15:08 -0700
-Message-ID: <CAPcyv4j0gbXtyviEA00ktav_-VwZUpd1+BgBNfzBqFA9XOqXBw@mail.gmail.com>
-Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171008235414.13866-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 6, 2017 at 4:10 PM, David Woodhouse <dwmw2@infradead.org> wrote=
-:
-> On Fri, 2017-10-06 at 15:52 -0700, Dan Williams wrote:
->> On Fri, Oct 6, 2017 at 3:45 PM, David Woodhouse <dwmw2@infradead.org> wr=
-ote:
->> >
->> > On Fri, 2017-10-06 at 15:35 -0700, Dan Williams wrote:
->> > >
->> > > Add a helper to determine if the dma mappings set up for a given dev=
-ice
->> > > are backed by an iommu. In particular, this lets code paths know tha=
-t a
->> > > dma_unmap operation will revoke access to memory if the device can n=
-ot
->> > > otherwise be quiesced. The need for this knowledge is driven by a ne=
-ed
->> > > to make RDMA transfers to DAX mappings safe. If the DAX file's block=
- map
->> > > changes we need to be to reliably stop accesses to blocks that have =
-been
->> > > freed or re-assigned to a new file.
->> > "a dma_unmap operation revoke access to memory"... but it's OK that th=
-e
->> > next *map* will give the same DMA address to someone else, right?
->>
->> I'm assuming the next map will be to other physical addresses and a
->> different requester device since the memory is still registered
->> exclusively.
->
-> I meant the next map for this device/group.
->
-> It may well use the same virtual DMA address as the one you just
-> unmapped, yet actually map to a different physical address. So if the
-> DMA still occurs to the "old" address, that isn't revoked at all =E2=80=
-=94 it's
-> just going to the wrong physical location.
->
-> And if you are sure that the DMA will never happen, why do you need to
-> revoke the mapping in the first place?
+On Mon, Oct 09, 2017 at 10:54:12AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Various utility functions and interfaces that iterate internal
+> devices try to reference the realtime device even when RT support is
+> not compiled into the kernel.
+> 
+> Make sure this code is excluded from the CONFIG_XFS_RT=n build,
+> and where appropriate stub functions to return fatal errors if
+> they ever get called when RT support is not present.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Right, crossed mails. The semantic I want is that the IOVA is
-invalidated / starts throwing errors to the device because the address
-it thought it was talking to has been remapped in the file. Once
-userspace wakes up and responds to this invalidation event it can do
-the actual unmap to make the IOVA reusable again.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_bmap_util.c |  2 ++
+>  fs/xfs/xfs_bmap_util.h | 13 +++++++++++++
+>  fs/xfs/xfs_fsmap.c     | 12 ++++++++++++
+>  3 files changed, 27 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index e9db7fc95b70..6503cfa44262 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -84,6 +84,7 @@ xfs_zero_extent(
+>  		GFP_NOFS, 0);
+>  }
+>  
+> +#ifdef CONFIG_XFS_RT
+>  int
+>  xfs_bmap_rtalloc(
+>  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+> @@ -190,6 +191,7 @@ xfs_bmap_rtalloc(
+>  	}
+>  	return 0;
+>  }
+> +#endif /* CONFIG_XFS_RT */
+>  
+>  /*
+>   * Check if the endoff is outside the last extent. If so the caller will grow
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 0eaa81dc49be..7d330b3c77c3 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -28,7 +28,20 @@ struct xfs_mount;
+>  struct xfs_trans;
+>  struct xfs_bmalloca;
+>  
+> +#ifdef CONFIG_XFS_RT
+>  int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
+> +#else /* !CONFIG_XFS_RT */
+> +/*
+> + * Attempts to allocate RT extents when RT is disable indicates corruption and
+> + * should trigger a shutdown.
+> + */
+> +static inline int
+> +xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
+> +{
+> +	return -EFSCORRUPTED;
+> +}
+> +#endif /* CONFIG_XFS_RT */
+> +
+>  int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+>  		     int whichfork, int *eof);
+>  int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 814ed729881d..560e0b40ac1b 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -521,6 +521,7 @@ __xfs_getfsmap_rtdev(
+>  	return query_fn(tp, info);
+>  }
+>  
+> +#ifdef CONFIG_XFS_RT
+>  /* Actually query the realtime bitmap. */
+>  STATIC int
+>  xfs_getfsmap_rtdev_rtbitmap_query(
+> @@ -561,6 +562,7 @@ xfs_getfsmap_rtdev_rtbitmap(
+>  	return __xfs_getfsmap_rtdev(tp, keys, xfs_getfsmap_rtdev_rtbitmap_query,
+>  			info);
+>  }
+> +#endif /* CONFIG_XFS_RT */
+>  
+>  /* Execute a getfsmap query against the regular data device. */
+>  STATIC int
+> @@ -795,7 +797,15 @@ xfs_getfsmap_check_keys(
+>  	return false;
+>  }
+>  
+> +/*
+> + * There are only two devices if we didn't configure RT devices at build time.
+> + */
+> +#ifdef CONFIG_XFS_RT
+>  #define XFS_GETFSMAP_DEVS	3
+> +#else
+> +#define XFS_GETFSMAP_DEVS	2
+> +#endif /* CONFIG_XFS_RT */
+> +
+>  /*
+>   * Get filesystem's extents as described in head, and format for
+>   * output.  Calls formatter to fill the user's buffer until all
+> @@ -853,10 +863,12 @@ xfs_getfsmap(
+>  		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+>  		handlers[1].fn = xfs_getfsmap_logdev;
+>  	}
+> +#ifdef CONFIG_XFS_RT
+>  	if (mp->m_rtdev_targp) {
+>  		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
+>  		handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
+>  	}
+> +#endif /* CONFIG_XFS_RT */
+>  
+>  	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+>  			xfs_getfsmap_dev_compare);
+> -- 
+> 2.14.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
