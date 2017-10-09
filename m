@@ -1,169 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6254 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754084AbdJIPCV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 11:02:21 -0400
-Date: Mon, 9 Oct 2017 11:02:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 1/3] xfs_io: Add support for pwritev2()
-Message-ID: <20171009150219.GA19322@bfoster.bfoster>
-References: <20170929130035.24760-1-rgoldwyn@suse.de>
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:54172 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754018AbdJIMyS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 08:54:18 -0400
+Received: by mail-qk0-f172.google.com with SMTP id w63so23440355qkd.10
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 05:54:18 -0700 (PDT)
+Date: Mon, 9 Oct 2017 08:54:16 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
+ framework
+Message-ID: <20171009125415.wrfd5rp5zlf4qsgm@destiny>
+References: <20171006210956.vf326sydjiphsefo@destiny>
+ <20171009005137.GA3666@dastard>
+ <20171009022509.rz6goq3sec5ppxrr@destiny>
+ <20171009034335.pwehn4kz3cwjy6o7@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170929130035.24760-1-rgoldwyn@suse.de>
+In-Reply-To: <20171009034335.pwehn4kz3cwjy6o7@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Josef Bacik <josef@toxicpanda.com>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 29, 2017 at 08:00:33AM -0500, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Sun, Oct 08, 2017 at 11:43:35PM -0400, Theodore Ts'o wrote:
+> On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
+> > 
+> > Probably should have led with that shouldn't I have?  There's nothing keeping me
+> > from doing it, but I didn't want to try and shoehorn in a python thing into
+> > fstests.  I need python to do the sqlite and the json parsing to dump into the
+> > sqlite database.
 > 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> ---
->  configure.ac          |  1 +
->  include/builddefs.in  |  1 +
->  io/Makefile           |  4 ++++
->  io/pwrite.c           | 39 ++++++++++++++++++++++++++-------------
->  m4/package_libcdev.m4 | 16 ++++++++++++++++
->  5 files changed, 48 insertions(+), 13 deletions(-)
+> What version of python are you using?  From inspection it looks like
+> some variant of python 3.x (you're using print as a function w/o using
+> "from __future import print_function") but it's not immediately
+> obvious from the top-level fsperf shell script what version of python
+> your scripts are dependant upon.
 > 
-...
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 1c5dfca1..e7d411bb 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-...
-> @@ -111,7 +120,8 @@ write_random(
->  	off64_t		offset,
->  	long long	count,
->  	unsigned int	seed,
-> -	long long	*total)
-> +	long long	*total,
-> +	int 		pwritev2_flags)
->  {
->  	off64_t		off, range;
->  	ssize_t		bytes;
-> @@ -133,7 +143,7 @@ write_random(
->  				buffersize;
->  		else
->  			off = offset;
-> -		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
-> +		bytes = do_pwrite(file->fd, off, buffersize, buffersize, pwritev2_flags);
-
-Looks like a couple or so long lines here and below. We usually wrap
-lines at 80 chars. Otherwise this seems fine to me.
-
-Brian
-
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -153,7 +163,8 @@ static int
->  write_backward(
->  	off64_t		offset,
->  	long long	*count,
-> -	long long	*total)
-> +	long long	*total,
-> +	int		pwritev2_flags)
->  {
->  	off64_t		end, off = offset;
->  	ssize_t		bytes = 0, bytes_requested;
-> @@ -171,7 +182,7 @@ write_backward(
->  	if ((bytes_requested = (off % buffersize))) {
->  		bytes_requested = min(cnt, bytes_requested);
->  		off -= bytes_requested;
-> -		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
-> +		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			return ops;
->  		if (bytes < 0) {
-> @@ -189,7 +200,7 @@ write_backward(
->  	while (cnt > end) {
->  		bytes_requested = min(cnt, buffersize);
->  		off -= bytes_requested;
-> -		bytes = do_pwrite(file->fd, off, cnt, buffersize);
-> +		bytes = do_pwrite(file->fd, off, cnt, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -212,7 +223,8 @@ write_buffer(
->  	size_t		bs,
->  	int		fd,
->  	off64_t		skip,
-> -	long long	*total)
-> +	long long	*total,
-> +	int		pwritev2_flags)
->  {
->  	ssize_t		bytes;
->  	long long	bar = min(bs, count);
-> @@ -224,7 +236,7 @@ write_buffer(
->  			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
->  				break;
->  		}
-> -		bytes = do_pwrite(file->fd, offset, count, bar);
-> +		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -258,6 +270,7 @@ pwrite_f(
->  	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
->  	int		direction = IO_FORWARD;
->  	int		c, fd = -1;
-> +	int		pwritev2_flags = 0;
->  
->  	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
->  	init_cvtnum(&fsblocksize, &fssectsize);
-> @@ -365,13 +378,13 @@ pwrite_f(
->  	case IO_RANDOM:
->  		if (!zeed)	/* srandom seed */
->  			zeed = time(NULL);
-> -		c = write_random(offset, count, zeed, &total);
-> +		c = write_random(offset, count, zeed, &total, pwritev2_flags);
->  		break;
->  	case IO_FORWARD:
-> -		c = write_buffer(offset, count, bsize, fd, skip, &total);
-> +		c = write_buffer(offset, count, bsize, fd, skip, &total, pwritev2_flags);
->  		break;
->  	case IO_BACKWARD:
-> -		c = write_backward(offset, &count, &total);
-> +		c = write_backward(offset, &count, &total, pwritev2_flags);
->  		break;
->  	default:
->  		total = 0;
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index fa5b6397..48da0783 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -146,6 +146,22 @@ AC_DEFUN([AC_HAVE_PREADV],
->      AC_SUBST(have_preadv)
->    ])
->  
-> +#
-> +# Check if we have a pwritev2 libc call (Linux)
-> +#
-> +AC_DEFUN([AC_HAVE_PWRITEV2],
-> +  [ AC_MSG_CHECKING([for pwritev2])
-> +    AC_TRY_LINK([
-> +#define _BSD_SOURCE
-> +#include <sys/uio.h>
-> +    ], [
-> +         pwritev2(0, 0, 0, 0, 0);
-> +    ], have_pwritev2=yes
-> +       AC_MSG_RESULT(yes),
-> +       AC_MSG_RESULT(no))
-> +    AC_SUBST(have_pwritev2)
-> +  ])
-> +
->  #
->  # Check if we have a copy_file_range system call (Linux)
->  #
-> -- 
-> 2.14.1
+> This could potentially be a bit of a portability issue across various
+> distributions --- RHEL doesn't ship with Python 3.x at all, and on
+> Debian you need to use python3 to get python 3.x, since
+> /usr/bin/python still points at Python 2.7 by default.  So I could see
+> this as a potential issue for xfstests.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'm currently using Python 2.7 in my wrapper scripts for, among other
+> things, to parse xUnit XML format and create nice summaries like this:
+> 
+> ext4/4k: 337 tests, 6 failures, 21 skipped, 3814 seconds
+>   Failures: generic/232 generic/233 generic/361 generic/388
+>     generic/451 generic/459
+> 
+> So I'm not opposed to python, but I will note that if you are using
+> modules from the Python Package Index, and they are modules which are
+> not packaged by your distribution (so you're using pip or easy_install
+> to pull them off the network), it does make doing hermetic builds from
+> trusted sources to be a bit trickier.
+> 
+> If you have a secops team who wants to know the provenance of software
+> which get thrown in production data centers (and automated downloading
+> from random external sources w/o any code review makes them break out
+> in hives), use of PyPI adds a new wrinkle.  It's not impossible to
+> solve, by any means, but it's something to consider.
+>
+
+I purposefully used as little as possible, just json and sqlite, and I tried to
+use as little python3 isms as possible.  Any rpm based systems should have these
+libraries already installed, I agree that using any of the PyPI stuff is a pain
+and is a non-starter for me as I want to make it as easy as possible to get
+running.
+
+Where do you fall on the including it in xfstests question?  I expect that the
+perf stuff would be run more as maintainers put their pull requests together to
+make sure things haven't regressed.  To that end I was going to wire up
+xfstests-bld to run this as well.  Whatever you and Dave prefer is what I'll do,
+I'll use it wherever it ends up so you two are the ones that get to decide.
+Thanks,
+
+Josef
