@@ -1,284 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:4991 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752161AbdJICwQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 22:52:16 -0400
-Date: Mon, 9 Oct 2017 13:51:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 25/25] xfs: scrub quota information
-Message-ID: <20171009025151.GF3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706340739.19351.4078240552236189694.stgit@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18020 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754224AbdJIRUC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 13:20:02 -0400
+Date: Mon, 9 Oct 2017 10:19:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+Message-ID: <20171009171953.GR7122@magnolia>
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
+ <20170929130035.24760-2-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150706340739.19351.4078240552236189694.stgit@magnolia>
+In-Reply-To: <20170929130035.24760-2-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Tue, Oct 03, 2017 at 01:43:27PM -0700, Darrick J. Wong wrote:
-> +xfs_scrub_quota_to_dqtype(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	switch (sc->sm->sm_type) {
-> +	case XFS_SCRUB_TYPE_UQUOTA:
-> +		return XFS_DQ_USER;
-> +	case XFS_SCRUB_TYPE_GQUOTA:
-> +		return XFS_DQ_GROUP;
-> +	case XFS_SCRUB_TYPE_PQUOTA:
-> +		return XFS_DQ_PROJ;
-> +	default:
-> +		return 0;
-> +	}
-> +}
-> +
-> +/* Set us up to scrub a quota. */
-> +int
-> +xfs_scrub_setup_quota(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	uint				dqtype;
-> +
-> +	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
-> +		return -EINVAL;
-> +
-> +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> +	if (dqtype == 0)
-> +		return -EINVAL;
-> +	return 0;
-> +}
-
-Should this check whether the quota type is actually enabled, and
-return ENOENT if it's not? i.e move the check out of
-xfs_scrub_quota() and into the setup function?
-
-> +
-> +/* Quotas. */
-> +
-> +/* Scrub the fields in an individual quota item. */
-> +STATIC void
-> +xfs_scrub_quota_item(
-> +	struct xfs_scrub_context	*sc,
-> +	uint				dqtype,
-> +	struct xfs_dquot		*dq,
-> +	xfs_dqid_t			id)
-> +{
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_disk_dquot		*d = &dq->q_core;
-> +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> +	xfs_fileoff_t			offset;
-> +	unsigned long long		bsoft;
-> +	unsigned long long		isoft;
-> +	unsigned long long		rsoft;
-> +	unsigned long long		bhard;
-> +	unsigned long long		ihard;
-> +	unsigned long long		rhard;
-> +	unsigned long long		bcount;
-> +	unsigned long long		icount;
-> +	unsigned long long		rcount;
-> +	xfs_ino_t			inodes;
-> +
-> +	/* Did we get the dquot we wanted? */
-> +	offset = id * qi->qi_dqperchunk;
-> +	if (id > be32_to_cpu(d->d_id) ||
-
-Why is this a ">" check rather than "!="?
-
-> +	    dqtype != (d->d_flags & XFS_DQ_ALLTYPES))
-> +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-> +
-> +	/* Check the limits. */
-> +	bhard = be64_to_cpu(d->d_blk_hardlimit);
-> +	ihard = be64_to_cpu(d->d_ino_hardlimit);
-> +	rhard = be64_to_cpu(d->d_rtb_hardlimit);
-> +
-> +	bsoft = be64_to_cpu(d->d_blk_softlimit);
-> +	isoft = be64_to_cpu(d->d_ino_softlimit);
-> +	rsoft = be64_to_cpu(d->d_rtb_softlimit);
-> +
-> +	inodes = XFS_AGINO_TO_INO(mp, mp->m_sb.sb_agcount, 0);
-
-Allocated inode counts should check against the filesystem inode
-limit (mp->m_maxicount) rather than the physical last inode number
-(which is wrong, anyway, for a small last AG).
-
-> +
-> +	/*
-> +	 * Warn if the limits are larger than the fs.  Administrators
-> +	 * can do this, though in production this seems suspect.
-> +	 */
-> +	if (bhard > mp->m_sb.sb_dblocks || bsoft > mp->m_sb.sb_dblocks)
-> +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> +	if (ihard > inodes || isoft > inodes)
-> +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> +	if (rhard > mp->m_sb.sb_rblocks || rsoft > mp->m_sb.sb_rblocks)
-> +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-
-Can you stack these so there's one per line? i.e.:
-
-	if (bhard > mp->m_sb.sb_dblocks ||
-	    bsoft > mp->m_sb.sb_dblocks)
-		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-
-> +
-> +	/* Soft limit must be less than the hard limit. */
-> +	if (bsoft > bhard || isoft > ihard || rsoft > rhard)
-> +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-
-Though with this check, I suspect you only need to check the hard
-limits against their upper limits because if the hard limit is valid
-and the soft is above then it's going to trigger corruption. Do we
-need a warning as well in that case?
-
-> +	/* Check the resource counts. */
-> +	bcount = be64_to_cpu(d->d_bcount);
-> +	icount = be64_to_cpu(d->d_icount);
-> +	rcount = be64_to_cpu(d->d_rtbcount);
-> +	inodes = percpu_counter_sum(&mp->m_icount);
-
-Can we use different variable names for "inodes" here? One is the
-maximum allowed, the other is currently allocated.
-
-> +/* Scrub all of a quota type's items. */
-> +int
-> +xfs_scrub_quota(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	struct xfs_bmbt_irec		irec = { 0 };
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_inode		*ip;
-> +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> +	struct xfs_dquot		*dq;
-> +	xfs_fileoff_t			max_dqid_off;
-> +	xfs_fileoff_t			off = 0;
-> +	xfs_dqid_t			id = 0;
-> +	uint				dqtype;
-> +	int				nimaps;
-> +	int				error;
-> +
-> +	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +		return -ENOENT;
-> +
-> +	mutex_lock(&qi->qi_quotaofflock);
-> +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> +	if (!xfs_this_quota_on(sc->mp, dqtype)) {
-> +		error = -ENOENT;
-> +		goto out;
-
-goto out_unlock_quota
-
-> +	}
-> +
-> +	/* Attach to the quota inode and set sc->ip so that reporting works. */
-> +	ip = xfs_quota_inode(sc->mp, dqtype);
-> +	sc->ip = ip;
-> +
-> +	/* Look for problem extents. */
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-> +	while (1) {
-> +		if (xfs_scrub_should_terminate(sc, &error))
-> +			break;
-
-goto out_unlock_inode
-
-> +
-> +		off = irec.br_startoff + irec.br_blockcount;
-> +		nimaps = 1;
-> +		error = xfs_bmapi_read(ip, off, -1, &irec, &nimaps,
-> +				XFS_BMAPI_ENTIRE);
-> +		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, off, &error))
-> +			goto out_unlock;
-
-out_unlock_inode
-
-> +		if (!nimaps)
-> +			break;
-> +		if (irec.br_startblock == HOLESTARTBLOCK)
-> +			continue;
-> +
-> +		/*
-> +		 * Unwritten extents or blocks mapped above the highest
-> +		 * quota id shouldn't happen.
-> +		 */
-> +		if (isnullstartblock(irec.br_startblock) ||
-> +		    irec.br_startoff > max_dqid_off ||
-> +		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
-> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-> +	}
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +	/* Check all the quota items. */
-> +	while (id < ((xfs_dqid_t)-1ULL)) {
-> +		if (xfs_scrub_should_terminate(sc, &error))
-> +			break;
-> +
-> +		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
-> +				&dq);
-> +		if (error == -ENOENT)
-> +			break;
-> +		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK,
-> +				id * qi->qi_dqperchunk, &error))
-> +			goto out;
-
-break
-
-> +
-> +		xfs_scrub_quota_item(sc, dqtype, dq, id);
-> +
-> +		id = be32_to_cpu(dq->q_core.d_id) + 1;
-> +		xfs_qm_dqput(dq);
-> +		if (!id)
-> +			break;
-> +	}
-
-out_unlock_quota:
-	sc->ip = NULL;
-	mutex_unlock(&qi->qi_quotaofflock);
-	return error;
-
-out_unlock_inode:
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-	goto out_unlock_quota;
-}
-
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 348e3c3..0849b3f 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -256,6 +256,24 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
->  	{ NULL },
->  	{ NULL },
->  #endif
-> +#ifdef CONFIG_XFS_QUOTA
-> +	{ /* user quota */
-> +		.setup = xfs_scrub_setup_quota,
-> +		.scrub = xfs_scrub_quota,
-> +	},
-> +	{ /* group quota */
-> +		.setup = xfs_scrub_setup_quota,
-> +		.scrub = xfs_scrub_quota,
-> +	},
-> +	{ /* project quota */
-> +		.setup = xfs_scrub_setup_quota,
-> +		.scrub = xfs_scrub_quota,
-> +	},
-> +#else
-> +	{ NULL },
-> +	{ NULL },
-> +	{ NULL },
+On Fri, Sep 29, 2017 at 08:00:34AM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> This allows to make pwritev2() calls with RWF_NOWAIT,
+> which would fail in case the call blocks.
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  io/pwrite.c       | 8 +++++++-
+>  man/man8/xfs_io.8 | 6 ++++++
+>  2 files changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index e7d411bb..2b85a528 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -52,6 +52,9 @@ pwrite_help(void)
+>  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+>  #ifdef HAVE_PWRITEV
+>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+> +#ifdef HAVE_PWRITEV2
+> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
 > +#endif
->  };
 
-Again, I think stub functions are in order here.
+Separate these two? i.e.
 
-Cheers,
+#ifdef HAVE_PWRITEV
+" -V N..."
+#endif
+#ifdef HAVE_PWRITEV2
+" -N ..."
+#endif
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+They're tested separately in configure, so the ifdefs needn't be nested.
+
+>  #endif
+>  "\n"));
+>  }
+> @@ -276,7 +279,7 @@ pwrite_f(
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+>  
+> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+>  		switch (c) {
+>  		case 'b':
+>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -305,6 +308,9 @@ pwrite_f(
+>  		case 'i':
+>  			infile = optarg;
+>  			break;
+> +		case 'N':
+> +			pwritev2_flags |= RWF_NOWAIT;
+> +			break;
+
+Needs #ifdef HAVE_PWRITEV2.
+
+If you feel the need to be extra cautious, you could also put:
+
+#ifndef HAVE_PWRITEV2
+	assert(pwritev2_flags == 0);
+#endif
+
+...just after the getopt parsing to make sure that we never silently
+drop RWF_* flags due to code bugs.
+
+--D
+
+>  		case 's':
+>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
+>  			if (skip < 0) {
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 0fd9b951..9c58914f 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
+>  with a number of blocksize length iovecs. The number of iovecs is set by the
+>  .I vectors
+>  parameter.
+> +.TP
+> +.B \-N
+> +Perform the
+> +.BR pwritev2 (2)
+> +call with
+> +.I RWF_NOWAIT.
+>  .RE
+>  .PD
+>  .TP
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
