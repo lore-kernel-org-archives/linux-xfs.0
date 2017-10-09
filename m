@@ -1,135 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46626 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754227AbdJIPDA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 11:03:00 -0400
-Date: Mon, 9 Oct 2017 11:02:58 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 3/3] xfs_io: Allow partial writes
-Message-ID: <20171009150258.GC19322@bfoster.bfoster>
-References: <20170929130035.24760-1-rgoldwyn@suse.de>
- <20170929130035.24760-3-rgoldwyn@suse.de>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:54911 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbdJIRcL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 13:32:11 -0400
+Received: by mail-oi0-f53.google.com with SMTP id u130so41046630oib.11
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 10:32:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170929130035.24760-3-rgoldwyn@suse.de>
+In-Reply-To: <8161efa8-a315-3b0b-4159-9bdf3bfb98aa@arm.com>
+References: <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150743420333.12880.6968831423519457797.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <8161efa8-a315-3b0b-4159-9bdf3bfb98aa@arm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 9 Oct 2017 10:32:10 -0700
+Message-ID: <CAPcyv4jU0L-LocP7ZKWcUoft+h5rpMYsvgO_dEWfkrSxrQxJOA@mail.gmail.com>
+Subject: Re: [PATCH v8] dma-mapping: introduce dma_get_iommu_domain()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Fri, Sep 29, 2017 at 08:00:35AM -0500, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> Partial writes are performed when there is an error midway
-> while performing the I/O. Perform the write exactly once and
-> return the number of bytes written so far, until the error.
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> ---
+On Mon, Oct 9, 2017 at 3:37 AM, Robin Murphy <robin.murphy@arm.com> wrote:
+> Hi Dan,
+>
+> On 08/10/17 04:45, Dan Williams wrote:
+>> Add a dma-mapping api helper to retrieve the generic iommu_domain for a device.
+>> The motivation for this interface is making RDMA transfers to DAX mappings
+>> safe. If the DAX file's block map changes we need to be to reliably stop
+>> accesses to blocks that have been freed or re-assigned to a new file.
+>
+> ...which is also going to require some way to force the IOMMU drivers
+> (on x86 at least) to do a fully-synchronous unmap, instead of just
+> throwing the IOVA onto a flush queue to invalidate the TLBs at some
+> point in the future.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Isn't that the difference between iommu_unmap() and
+iommu_unmap_fast()? As far as I can tell amd-iommu and intel-iommu
+both flush iotlbs on iommu_unmap() and don't support fast unmaps.
 
->  io/io.h           |  1 +
->  io/pwrite.c       | 25 ++++++++++++++++++++++++-
->  man/man8/xfs_io.8 |  3 +++
->  3 files changed, 28 insertions(+), 1 deletion(-)
-> 
-> diff --git a/io/io.h b/io/io.h
-> index 6a0fe657..3862985f 100644
-> --- a/io/io.h
-> +++ b/io/io.h
-> @@ -25,6 +25,7 @@
->  #define IO_RANDOM	( 0)
->  #define IO_FORWARD	( 1)
->  #define IO_BACKWARD	(-1)
-> +#define IO_ONCE		( 2)
->  
->  /*
->   * File descriptor options
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 2b85a528..dcf130d6 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -47,6 +47,7 @@ pwrite_help(void)
->  " -W   -- call fsync(2) at the end (included in timing results)\n"
->  " -B   -- write backwards through the range from offset (backwards N bytes)\n"
->  " -F   -- write forwards through the range of bytes from offset (default)\n"
-> +" -O   -- perform pwrite call once and return (maybe partial) bytes written\n"
->  " -R   -- write at random offsets in the specified range of bytes\n"
->  " -Z N -- zeed the random number generator (used when writing randomly)\n"
->  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
-> @@ -258,6 +259,22 @@ write_buffer(
->  	return ops;
->  }
->  
-> +static int
-> +write_once(
-> +	off64_t		offset,
-> +	long long	count,
-> +	long long	*total,
-> +	int		pwritev2_flags)
-> +{
-> +	size_t bytes;
-> +	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
-> +	if (bytes < 0)
-> +		return -1;
-> +	*total = bytes;
-> +	return 1;
-> +}
-> +
-> +
->  static int
->  pwrite_f(
->  	int		argc,
-> @@ -279,7 +296,7 @@ pwrite_f(
->  	init_cvtnum(&fsblocksize, &fssectsize);
->  	bsize = fsblocksize;
->  
-> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
-> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
->  		switch (c) {
->  		case 'b':
->  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-> @@ -301,6 +318,9 @@ pwrite_f(
->  		case 'R':
->  			direction = IO_RANDOM;
->  			break;
-> +		case 'O':
-> +			direction = IO_ONCE;
-> +			break;
->  		case 'd':
->  			dflag = 1;
->  			break;
-> @@ -392,6 +412,9 @@ pwrite_f(
->  	case IO_BACKWARD:
->  		c = write_backward(offset, &count, &total, pwritev2_flags);
->  		break;
-> +	case IO_ONCE:
-> +		c = write_once(offset, count, &total, pwritev2_flags);
-> +		break;
->  	default:
->  		total = 0;
->  		ASSERT(0);
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 9c58914f..b7c0f099 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -263,6 +263,9 @@ write the buffers in a reserve sequential direction.
->  .B \-R
->  write the buffers in the give range in a random order.
->  .TP
-> +.B \-O
-> +perform pwrite once and return the (maybe partial) bytes written.
-> +.TP
->  .B \-Z seed
->  specify the random number seed used for random write
->  .TP
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Assuming of course that there's an IOMMU both
+> present and performing DMA translation in the first place.
+
+That's why I want to call through the dma api to see if the iommu is
+being used to satisfy dma mappings.
+
+>> With the
+>> iommu_domain and a callback from the DAX filesystem the kernel can safely
+>> revoke access to a DMA device. The process that performed the RDMA memory
+>> registration is also notified of this revocation event, but the kernel can not
+>> otherwise be in the position of waiting for userspace to quiesce the device.
+>
+> OK, but why reinvent iommu_get_domain_for_dev()?
+
+How do I know if the iommu returned from that routine is the one being
+used for dma mapping operations for the device? Specifically, how
+would I discover that the result of dma_map_sg() can be passed as an
+IOVA range to iommu_unmap()?
+
+>> Since PMEM+DAX is currently only enabled for x86, we only update the x86
+>> iommu drivers.
+>
+> Note in particular that those two drivers happen to be the *only* place
+> this approach could work - everyone else is going to have to fall back
+> to the generic IOMMU API function anyway.
+
+I want to make this functionality generic, but I'm not familiar with
+the iommu sub-system. How are dma mapping operations routed to the
+iommu driver in those other imlementations?
