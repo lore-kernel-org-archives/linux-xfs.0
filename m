@@ -1,117 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:29032 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754098AbdJIVJ0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 17:09:26 -0400
-Date: Tue, 10 Oct 2017 08:09:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] fsperf: a simple fs/block performance testing
- framework
-Message-ID: <20171009210920.GO3666@dastard>
-References: <20171006210956.vf326sydjiphsefo@destiny>
- <20171009005137.GA3666@dastard>
- <20171009022509.rz6goq3sec5ppxrr@destiny>
- <20171009051731.GK3666@dastard>
- <20171009130050.ufnmdhslc53bwpgc@destiny>
+Received: from mx2.suse.de ([195.135.220.15]:42596 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755039AbdJIVLV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Oct 2017 17:11:21 -0400
+Subject: Re: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+References: <20170929130035.24760-1-rgoldwyn@suse.de>
+ <20170929130035.24760-2-rgoldwyn@suse.de> <20171009171953.GR7122@magnolia>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
+Date: Mon, 9 Oct 2017 16:11:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171009130050.ufnmdhslc53bwpgc@destiny>
+In-Reply-To: <20171009171953.GR7122@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-fsdevel@vger.kernel.org, kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, Oct 09, 2017 at 09:00:51AM -0400, Josef Bacik wrote:
-> On Mon, Oct 09, 2017 at 04:17:31PM +1100, Dave Chinner wrote:
-> > On Sun, Oct 08, 2017 at 10:25:10PM -0400, Josef Bacik wrote:
-> > > > Integrating into fstests means it will be immediately available to
-> > > > all fs developers, it'll run on everything that everyone already has
-> > > > setup for filesystem testing, and it will have familiar mkfs/mount
-> > > > option setup behaviour so there's no new hoops for everyone to jump
-> > > > through to run it...
-> > > > 
-> > > 
-> > > TBF I specifically made it as easy as possible because I know we all hate trying
-> > > to learn new shit.
-> > 
-> > Yeah, it's also hard to get people to change their workflows to add
-> > a whole new test harness into them. It's easy if it's just a new
-> > command to an existing workflow :P
-> > 
+
+
+On 10/09/2017 12:19 PM, Darrick J. Wong wrote:
+> On Fri, Sep 29, 2017 at 08:00:34AM -0500, Goldwyn Rodrigues wrote:
+>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>
+>> This allows to make pwritev2() calls with RWF_NOWAIT,
+>> which would fail in case the call blocks.
+>>
+>> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>> ---
+>>  io/pwrite.c       | 8 +++++++-
+>>  man/man8/xfs_io.8 | 6 ++++++
+>>  2 files changed, 13 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/io/pwrite.c b/io/pwrite.c
+>> index e7d411bb..2b85a528 100644
+>> --- a/io/pwrite.c
+>> +++ b/io/pwrite.c
+>> @@ -52,6 +52,9 @@ pwrite_help(void)
+>>  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+>>  #ifdef HAVE_PWRITEV
+>>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+>> +#ifdef HAVE_PWRITEV2
+>> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+>> +#endif
 > 
-> Agreed, so if you probably won't run this outside of fstests then I'll add it to
-> xfstests.  I envision this tool as being run by maintainers to verify their pull
-> requests haven't regressed since the last set of patches, as well as by anybody
-> trying to fix performance problems.  So it's way more important to me that you,
-> Ted, and all the various btrfs maintainers will run it than anybody else.
+> Separate these two? i.e.
 > 
-> > > I figured this was different enough to warrant a separate
-> > > project, especially since I'm going to add block device jobs so Jens can test
-> > > block layer things.  If we all agree we'd rather see this in fstests then I'm
-> > > happy to do that too.  Thanks,
-> > 
-> > I'm not fussed either way - it's a good discussion to have, though.
-> > 
-> > If I want to add tests (e.g. my time-honoured fsmark tests), where
-> > should I send patches?
-> > 
+> #ifdef HAVE_PWRITEV
+> " -V N..."
+> #endif
+> #ifdef HAVE_PWRITEV2
+> " -N ..."
+> #endif
 > 
-> I beat you to that!  I wanted to avoid adding fs_mark to the suite because it
-> means parsing another different set of outputs, so I added a new ioengine to fio
-> for this
+> They're tested separately in configure, so the ifdefs needn't be nested.
 > 
-> http://www.spinics.net/lists/fio/msg06367.html
+>>  #endif
+>>  "\n"));
+>>  }
+>> @@ -276,7 +279,7 @@ pwrite_f(
+>>  	init_cvtnum(&fsblocksize, &fssectsize);
+>>  	bsize = fsblocksize;
+>>  
+>> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
+>> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+>>  		switch (c) {
+>>  		case 'b':
+>>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+>> @@ -305,6 +308,9 @@ pwrite_f(
+>>  		case 'i':
+>>  			infile = optarg;
+>>  			break;
+>> +		case 'N':
+>> +			pwritev2_flags |= RWF_NOWAIT;
+>> +			break;
 > 
-> and added a fio job to do 500k files
+> Needs #ifdef HAVE_PWRITEV2.
 > 
-> https://github.com/josefbacik/fsperf/blob/master/tests/500kemptyfiles.fio
+> If you feel the need to be extra cautious, you could also put:
 > 
-> The test is disabled by default for now because obviously the fio support hasn't
-> landed yet.
+> #ifndef HAVE_PWRITEV2
+> 	assert(pwritev2_flags == 0);
+> #endif
+> 
+> ...just after the getopt parsing to make sure that we never silently
+> drop RWF_* flags due to code bugs.
+> 
 
-That seems .... misguided. fio is good, but it's not a universal
-solution.
+Instead I am planning to put an #else to #ifdef in the case 'N' to make
+sure that people who do not have pwritev2() get the proper message
+instead of the command failing without reason.
 
-> I'd _like_ to expand fio for cases we come up with that aren't possible, as
-> there's already a ton of measurements that are taken, especially around
-> latencies.
++               case 'N':
++#ifdef HAVE_PWRITEV2
++                       pwritev2_flags |= RWF_NOWAIT;
++                       break;
++#else
++                       printf(_("-N: Kernel does not support
+pwritev2()\n"));
++                       return 0;
++#endif
 
-To be properly useful it needs to support more than just fio to run
-tests. Indeed, it's largely useless to me if that's all it can do or
-it's a major pain to add support for different tools like fsmark.
 
-e.g.  my typical perf regression test that you see the concurrnet
-fsmark create workload is actually a lot more. It does:
 
-	fsmark to create 50m zero length files
-	umount,
-	run parallel xfs_repair (excellent mmap_sem/page fault punisher)
-	mount
-	run parallel find -ctime (readdir + lookup traversal)
-	unmount, mount
-	run parallel ls -R (readdir + dtype traversal)
-	unmount, mount
-	parallel rm -rf of 50m files
+> --D
+> 
+>>  		case 's':
+>>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
+>>  			if (skip < 0) {
+>> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+>> index 0fd9b951..9c58914f 100644
+>> --- a/man/man8/xfs_io.8
+>> +++ b/man/man8/xfs_io.8
+>> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
+>>  with a number of blocksize length iovecs. The number of iovecs is set by the
+>>  .I vectors
+>>  parameter.
+>> +.TP
+>> +.B \-N
+>> +Perform the
+>> +.BR pwritev2 (2)
+>> +call with
+>> +.I RWF_NOWAIT.
+>>  .RE
+>>  .PD
+>>  .TP
+>> -- 
+>> 2.14.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I have variants that use small 4k files or large files rather than
-empty files, taht use different fsync patterns to stress the
-log, use grep -R to traverse the data as well as
-the directory/inode structure instead of find, etc.
-
-> That said I'm not opposed to throwing new stuff in there, it just
-> means we have to add stuff to parse the output and store it in the database in a
-> consistent way, which seems like more of a pain than just making fio do what we
-> need it to.  Thanks,
-
-fio is not going to be able to replace the sort of perf tests I run
-from week to week. If that's all it's going to do then it's not
-directly useful to me...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Goldwyn
