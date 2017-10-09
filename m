@@ -1,236 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:57013 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751636AbdJIRIm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 13:08:42 -0400
-Received: by mail-oi0-f43.google.com with SMTP id v9so28709808oif.13
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 10:08:41 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:7378 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751263AbdJIAGO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 20:06:14 -0400
+Date: Mon, 9 Oct 2017 11:05:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20171009000529.GY3666@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171009034030.GH3666@dastard>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150732934955.22363.14950885120988262779.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171009034030.GH3666@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 9 Oct 2017 10:08:40 -0700
-Message-ID: <CAPcyv4i6WBxfVJ0yqWbuW2kiJ-wpi+iYRPk=Kykqt3U5Rrw7MA@mail.gmail.com>
-Subject: Re: [PATCH v7 06/12] xfs: wire up MAP_DIRECT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
+ <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Sun, Oct 8, 2017 at 8:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Sat, Oct 07, 2017 at 01:10:58PM +0500, Михаил Гаврилов wrote:
+> But seems now got another issue:
+> 
+> [ 1966.953781] INFO: task tracker-store:8578 blocked for more than 120 seconds.
+> [ 1966.953797]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
+> [ 1966.953800] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [ 1966.953804] tracker-store   D12840  8578   1655 0x00000000
+> [ 1966.953811] Call Trace:
+> [ 1966.953823]  __schedule+0x2dc/0xbb0
+> [ 1966.953830]  ? wait_on_page_bit_common+0xfb/0x1a0
+> [ 1966.953838]  schedule+0x3d/0x90
+> [ 1966.953843]  io_schedule+0x16/0x40
+> [ 1966.953847]  wait_on_page_bit_common+0x10a/0x1a0
+> [ 1966.953857]  ? page_cache_tree_insert+0x170/0x170
+> [ 1966.953865]  __filemap_fdatawait_range+0x101/0x1a0
+> [ 1966.953883]  file_write_and_wait_range+0x63/0xc0
 
-Thanks for the review Dave.
+Ok, that's in wait_on_page_writeback(page)
+......
 
-> On Fri, Oct 06, 2017 at 03:35:49PM -0700, Dan Williams wrote:
->> MAP_DIRECT is an mmap(2) flag with the following semantics:
->>
->>   MAP_DIRECT
->>   When specified with MAP_SHARED_VALIDATE, sets up a file lease with the
->>   same lifetime as the mapping. Unlike a typical F_RDLCK lease this lease
->>   is broken when a "lease breaker" attempts to write(2), change the block
->>   map (fallocate), or change the size of the file. Otherwise the mechanism
->>   of a lease break is identical to the typical lease break case where the
->>   lease needs to be removed (munmap) within the number of seconds
->>   specified by /proc/sys/fs/lease-break-time. If the lease holder fails to
->>   remove the lease in time the kernel will invalidate the mapping and
->>   force all future accesses to the mapping to trigger SIGBUS.
->>
->>   In addition to lease break timeouts causing faults in the mapping to
->>   result in SIGBUS, other states of the file will trigger SIGBUS at fault
->>   time:
->>
->>       * The file is not DAX capable
->>       * The file has reflinked (copy-on-write) blocks
->>       * The fault would trigger the filesystem to allocate blocks
->>       * The fault would trigger the filesystem to perform extent conversion
->>
->>   In other words, MAP_DIRECT expects and enforces a fully allocated file
->>   where faults can be satisfied without modifying block map metadata.
->>
->>   An unprivileged process may establish a MAP_DIRECT mapping on a file
->>   whose UID (owner) matches the filesystem UID of the  process. A process
->>   with the CAP_LEASE capability may establish a MAP_DIRECT mapping on
->>   arbitrary files
->>
->>   ERRORS
->>   EACCES Beyond the typical mmap(2) conditions that trigger EACCES
->>   MAP_DIRECT also requires the permission to set a file lease.
->>
->>   EOPNOTSUPP The filesystem explicitly does not support the flag
->>
->>   SIGBUS Attempted to write a MAP_DIRECT mapping at a file offset that
->>          might require block-map updates, or the lease timed out and the
->>          kernel invalidated the mapping.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Arnd Bergmann <arnd@arndb.de>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: Dave Chinner <david@fromorbit.com>
->> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
->> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Cc: Jeff Layton <jlayton@poochiereds.net>
->> Cc: "J. Bruce Fields" <bfields@fieldses.org>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  fs/xfs/Kconfig                  |    2 -
->>  fs/xfs/xfs_file.c               |  102 +++++++++++++++++++++++++++++++++++++++
->>  include/linux/mman.h            |    3 +
->>  include/uapi/asm-generic/mman.h |    1
->>  4 files changed, 106 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
->> index f62fc6629abb..f8765653a438 100644
->> --- a/fs/xfs/Kconfig
->> +++ b/fs/xfs/Kconfig
->> @@ -112,4 +112,4 @@ config XFS_ASSERT_FATAL
->>
->>  config XFS_LAYOUT
->>       def_bool y
->> -     depends on EXPORTFS_BLOCK_OPS
->> +     depends on EXPORTFS_BLOCK_OPS || FS_DAX
->> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> index ebdd0bd2b261..e35518600e28 100644
->> --- a/fs/xfs/xfs_file.c
->> +++ b/fs/xfs/xfs_file.c
->> @@ -40,12 +40,22 @@
->>  #include "xfs_iomap.h"
->>  #include "xfs_reflink.h"
->>
->> +#include <linux/mman.h>
->>  #include <linux/dcache.h>
->>  #include <linux/falloc.h>
->>  #include <linux/pagevec.h>
->> +#include <linux/mapdirect.h>
->>  #include <linux/backing-dev.h>
->>
->>  static const struct vm_operations_struct xfs_file_vm_ops;
->> +static const struct vm_operations_struct xfs_file_vm_direct_ops;
->> +
->> +static inline bool
->> +is_xfs_map_direct(
->> +             struct vm_area_struct *vma)
->> +{
->> +     return vma->vm_ops == &xfs_file_vm_direct_ops;
->> +}
->
-> Namespacing (xfs_vma_is_direct) and whitespace damage.
+> And yet another
+> 
+> [41288.797026] INFO: task tracker-store:4535 blocked for more than 120 seconds.
+> [41288.797034]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
+> [41288.797037] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [41288.797041] tracker-store   D10616  4535   1655 0x00000000
+> [41288.797049] Call Trace:
+> [41288.797061]  __schedule+0x2dc/0xbb0
+> [41288.797072]  ? bit_wait+0x60/0x60
+> [41288.797076]  schedule+0x3d/0x90
+> [41288.797082]  io_schedule+0x16/0x40
+> [41288.797086]  bit_wait_io+0x11/0x60
+> [41288.797091]  __wait_on_bit+0x31/0x90
+> [41288.797099]  out_of_line_wait_on_bit+0x94/0xb0
+> [41288.797106]  ? bit_waitqueue+0x40/0x40
+> [41288.797113]  __block_write_begin_int+0x265/0x550
+> [41288.797132]  iomap_write_begin.constprop.14+0x7d/0x130
 
-Will fix.
+And that's in wait_on_buffer().
 
->
->>
->>  /*
->>   * Clear the specified ranges to zero through either the pagecache or DAX.
->> @@ -1008,6 +1018,26 @@ xfs_file_llseek(
->>       return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
->>  }
->>
->> +static int
->> +xfs_vma_checks(
->> +     struct vm_area_struct   *vma,
->> +     struct inode            *inode)
->
-> Exactly what are we checking for - function name doesn't tell me,
-> and there's no comments, either?
+In both cases we are waiting on a bit lock for IO completion. In the
+first case it is on page, the second it's on sub-page read IO
+completion during a write.
 
-Ok, I'll improve this.
+Triggeringa hung task timeouts like this doesn't usually indicate a
+filesystem problem. In general, it means that the
+IO subsystem is overloaded such that iowait times are blowing out
+to >120s, an IO has been lost and/or not completed correctly or you
+are getting single bit memory errors or corruption occurring.
 
->
->> +{
->> +     if (!is_xfs_map_direct(vma))
->> +             return 0;
->> +
->> +     if (!is_map_direct_valid(vma->vm_private_data))
->> +             return VM_FAULT_SIGBUS;
->> +
->> +     if (xfs_is_reflink_inode(XFS_I(inode)))
->> +             return VM_FAULT_SIGBUS;
->> +
->> +     if (!IS_DAX(inode))
->> +             return VM_FAULT_SIGBUS;
->
-> And how do we get is_xfs_map_direct() set to true if we don't have a
-> DAX inode or the inode has shared extents?
+None of these things usually filesystem problems, and the trainsmash
+of blocked tasks on filesystem locks is typical for these types of
+"blocked indefinitely with locks held" type of situations. It does
+tend to indicate taht there is quite a bit of load on the
+filesystem, though...
 
-So, this was my way of trying to satisfy the request you made here:
+Cheers,
 
-    https://lkml.org/lkml/2017/8/11/876
-
-i.e. allow MAP_DIRECT on non-dax files to enable a use case of
-freezing the block-map to examine which file extents are linked. If
-you don't want to use MAP_DIRECT for this, we can move these checks to
-mmap time.
-
->
->> +
->> +     return 0;
->> +}
->> +
->>  /*
->>   * Locking for serialisation of IO during page faults. This results in a lock
->>   * ordering of:
->> @@ -1024,6 +1054,7 @@ __xfs_filemap_fault(
->>       enum page_entry_size    pe_size,
->>       bool                    write_fault)
->>  {
->> +     struct vm_area_struct   *vma = vmf->vma;
->>       struct inode            *inode = file_inode(vmf->vma->vm_file);
->
-> You missed this vmf->vma....
->
-> .....
->>
->> +#define XFS_MAP_SUPPORTED (LEGACY_MAP_MASK | MAP_DIRECT)
->> +
->> +STATIC int
->> +xfs_file_mmap_validate(
->> +     struct file             *filp,
->> +     struct vm_area_struct   *vma,
->> +     unsigned long           map_flags,
->> +     int                     fd)
->> +{
->> +     struct inode            *inode = file_inode(filp);
->> +     struct xfs_inode        *ip = XFS_I(inode);
->> +     struct map_direct_state *mds;
->> +
->> +     if (map_flags & ~(XFS_MAP_SUPPORTED))
->> +             return -EOPNOTSUPP;
->> +
->> +     if ((map_flags & MAP_DIRECT) == 0)
->> +             return xfs_file_mmap(filp, vma);
->> +
->> +     file_accessed(filp);
->> +     vma->vm_ops = &xfs_file_vm_direct_ops;
->> +     if (IS_DAX(inode))
->> +             vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
->
-> And if it isn't a DAX inode? what is MAP_DIRECT supposed to do then?
-
-In the non-DAX case it just takes the FL_LAYOUT file lease... although
-we could also just have an fcntl for that purpose. The use case of
-just freezing the block map does not need a mapping.
-
->> +     mds = map_direct_register(fd, vma);
->> +     if (IS_ERR(mds))
->> +             return PTR_ERR(mds);
->> +
->> +     /* flush in-flight faults */
->> +     xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
->> +     xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
->
-> Urk. That's nasty. And why is it even necessary? Please explain why
-> this is necessary in the comment, because it's not at all obvious to
-> me...
-
-This is related to your other observation about i_mapdcount and adding
-an iomap_can_allocate() helper. I think I can clean both of these up
-by using a call to break_layout(inode, false) and bailing in
-->iomap_begin() if it returns EWOULDBLOCK. This would also fix the
-current problem that allocating write-faults don't start the lease
-break process.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
