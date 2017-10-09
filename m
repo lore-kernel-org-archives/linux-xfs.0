@@ -1,248 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp2.provo.novell.com ([137.65.250.81]:46520 "EHLO
-        smtp2.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754045AbdJILO5 (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
-        Mon, 9 Oct 2017 07:14:57 -0400
-Subject: Re: [PATCH v2 1/3] xfs_io: Add support for pwritev2()
-References: <20170929130035.24760-1-rgoldwyn@suse.de>
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Message-ID: <f4df1c9f-b067-d836-8584-b6bd4443d3a2@suse.com>
-Date: Mon, 9 Oct 2017 06:14:53 -0500
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:49240 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751733AbdJIIoz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 04:44:55 -0400
+Received: by mail-wm0-f52.google.com with SMTP id b189so20242168wmd.4
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 01:44:54 -0700 (PDT)
+Date: Mon, 9 Oct 2017 10:44:51 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Questions about backups with XFS
+Message-ID: <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
+References: <20171007114343.3bd42f98@lubh.lubhome>
 MIME-Version: 1.0
-In-Reply-To: <20170929130035.24760-1-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171007114343.3bd42f98@lubh.lubhome>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, david@fromorbit.com
+To: Luciano ES <lucmove@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi,
+Hi.
 
-Any response/review comments to these patches?
-I have two fstests waiting for these patches to be incorporated.
+
+On Sat, Oct 07, 2017 at 02:43:43PM +0000, Luciano ES wrote:
+> I have a few questions and I was torn between asking them separately 
+> and putting them all in one message. I decided for the latter and I 
+> hope this is not a problem.
+> 
+> Once upon a time, many many years ago, I used to make backup copies 
+> of my file systems with the 'cp -aux' command, including my live 
+> root file system. Luckily, I never had to restore any live root file 
+> system from those backups. They probably would never have worked.
+> 
+> Later on, someone taught me to do it like this:
+> 
+> find /source -xdev -print0 | cpio -pa0V /target
+> 
+> That command is supposed to copy everything, including special files 
+> (not really sure which) that mere cp or even rsync would not copy. 
+> I actually used that approach several times, including restoration, 
+> and it always worked.
+> 
+> For some reason, I stopped making backups of my live root file 
+> system, but I still backup other partitions with rsync, always with 
+> the --delete-before parameter, so the target is always an exact copy 
+> of the source.
+> 
+> I have been using XFS for a few years and thought that maybe it's 
+> time I enjoyed all the benefits of the XFS management tools.
+> However, I am uncertain about things I haven't been able to find in 
+> the documentation or even on the Web:
+> 
+> Question #1:
+> Does xfsdump really copy EVERYTHING? Can I backup a full live root 
+> file system with it and expect a restored copy to boot and run 
+> uneventfully? Or should I rather do a 'hard' image with xfs_copy? 
+
+xfs_copy must only be used an unmounted filesystem (or read-only, frozen, etc),
+so, unless you want to freeze/unmount your FS everytime you do a xfs_copy, then
+xfs_copy is not what you are looking for
+
+xfsdump though will certainly backup everything you have in the filesystem you
+specify.
+
+Regarding the "restore everything and expect the system to boot", I think you
+are forgetting a few things here:
+
+	1 - xfsdump will backup the filesystem, not the device, so, MBR for
+	    example is not backed up
+	2 - Is a bad idea to try to backup /dev for several reasons, like device
+	    names can change.
+
+
+So, IMHO, if you want to plan a disaster recovery, you need first to identify
+all the configuration files you need to recover after a disaster :) instead of
+expecting that a full "/" backup-restore will bring your system back from ashes.
+
+ 
+> Question #2:
+> By the way, I see that pcmanfm can mount an xfs_copy image quite 
+> easily, but how do I mount it on the command line, and can I mount 
+> it in rw mode?
+> 
+As you mount any filesystem. If you xfs_copy it to an image, a `mount <image>
+<mpoint> should work.
+
+I've never worked on xfs_copy, but IIRC, the biggest difference from using
+xfs_copy and a simple `dd` is that xfs_copy will update the filesystem uuid so
+you won't have problems mounting the new image.
+
+> Question #3:
+> If I make incremental backups with several levels then perform a 
+> restore, I know that files added in subsequent levels will be added 
+> to the dump, but what happens with files that have been deleted in 
+> the source file system? Will they be removed from the dump? In other 
+> words, is there something analogous to rsync's --delete-before in 
+> xfsdump/xfsrestore?
+> 
+
+I don't know the answer for this :( but most likely it doesn't have.
+
+> Question #4:
+> Is there any benefit to making incremental backups of a small file 
+> system? I mean, it's just 10GB, and deleting the old backup and 
+> doing a level 0 dump from scratch would take what, 3 minutes.
+
+I'm not quite sure if xfsdump/xfsrestore you can restore backups between the
+increments (like you do a full backup, then do an incremental backup, then
+another, etc and you can chose from which incremental backup you want to
+restore). But this might one reason.
+
+The another one is, why would you hammer your disk with a whole 10GiB rewrite if
+you can simply rewrite a few MiB?
+
+> 
+> Please note that my goal is disaster recovery. I am planning to run 
+> a few experiments on my live root file and must be able to restore 
+> it to a certain state whenever necessary.
+> 
+
+I think you are looking more for something like snapshots than a backup tool.
+Having a full root directory backed up, restore it and simply expect the system
+will be alive again, without any problems is not a good idea IMHO. It might even
+work, but still, there are several things that can go wrong and you end up with
+system in a dubious state.
 
 -- 
-Goldwyn
-
-On 09/29/2017 08:00 AM, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> ---
->  configure.ac          |  1 +
->  include/builddefs.in  |  1 +
->  io/Makefile           |  4 ++++
->  io/pwrite.c           | 39 ++++++++++++++++++++++++++-------------
->  m4/package_libcdev.m4 | 16 ++++++++++++++++
->  5 files changed, 48 insertions(+), 13 deletions(-)
-> 
-> diff --git a/configure.ac b/configure.ac
-> index 4161c3b4..2320e3e3 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -132,6 +132,7 @@ AC_HAVE_GETMNTENT
->  AC_HAVE_GETMNTINFO
->  AC_HAVE_FALLOCATE
->  AC_HAVE_FIEMAP
-> +AC_HAVE_PWRITEV2
->  AC_HAVE_PREADV
->  AC_HAVE_COPY_FILE_RANGE
->  AC_HAVE_SYNC_FILE_RANGE
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index ec630bd9..cd58ea8e 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -103,6 +103,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
->  HAVE_FALLOCATE = @have_fallocate@
->  HAVE_FIEMAP = @have_fiemap@
->  HAVE_PREADV = @have_preadv@
-> +HAVE_PWRITEV2 = @have_pwritev2@
->  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
->  HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
->  HAVE_SYNCFS = @have_syncfs@
-> diff --git a/io/Makefile b/io/Makefile
-> index 47b0a669..050d6bd0 100644
-> --- a/io/Makefile
-> +++ b/io/Makefile
-> @@ -90,6 +90,10 @@ ifeq ($(HAVE_PREADV),yes)
->  LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
->  endif
->  
-> +ifeq ($(HAVE_PWRITEV2),yes)
-> +LCFLAGS += -DHAVE_PWRITEV2
-> +endif
-> +
->  ifeq ($(HAVE_READDIR),yes)
->  CFILES += readdir.c
->  LCFLAGS += -DHAVE_READDIR
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 1c5dfca1..e7d411bb 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -62,7 +62,8 @@ do_pwritev(
->  	int		fd,
->  	off64_t		offset,
->  	ssize_t		count,
-> -	ssize_t		buffer_size)
-> +	ssize_t		buffer_size,
-> +	int 		pwritev2_flags)
->  {
->  	int vecs = 0;
->  	ssize_t oldlen = 0;
-> @@ -81,7 +82,14 @@ do_pwritev(
->  	} else {
->  		vecs = vectors;
->  	}
-> +#ifdef HAVE_PWRITEV2
-> +	if (pwritev2_flags)
-> +		bytes = pwritev2(fd, iov, vectors, offset, pwritev2_flags);
-> +	else
-> +		bytes = pwritev(fd, iov, vectors, offset);
-> +#else
->  	bytes = pwritev(fd, iov, vectors, offset);
-> +#endif
->  
->  	/* restore trimmed iov */
->  	if (oldlen)
-> @@ -98,12 +106,13 @@ do_pwrite(
->  	int		fd,
->  	off64_t		offset,
->  	ssize_t		count,
-> -	ssize_t		buffer_size)
-> +	ssize_t		buffer_size,
-> +	int		pwritev2_flags)
->  {
->  	if (!vectors)
->  		return pwrite(fd, buffer, min(count, buffer_size), offset);
->  
-> -	return do_pwritev(fd, offset, count, buffer_size);
-> +	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
->  }
->  
->  static int
-> @@ -111,7 +120,8 @@ write_random(
->  	off64_t		offset,
->  	long long	count,
->  	unsigned int	seed,
-> -	long long	*total)
-> +	long long	*total,
-> +	int 		pwritev2_flags)
->  {
->  	off64_t		off, range;
->  	ssize_t		bytes;
-> @@ -133,7 +143,7 @@ write_random(
->  				buffersize;
->  		else
->  			off = offset;
-> -		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
-> +		bytes = do_pwrite(file->fd, off, buffersize, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -153,7 +163,8 @@ static int
->  write_backward(
->  	off64_t		offset,
->  	long long	*count,
-> -	long long	*total)
-> +	long long	*total,
-> +	int		pwritev2_flags)
->  {
->  	off64_t		end, off = offset;
->  	ssize_t		bytes = 0, bytes_requested;
-> @@ -171,7 +182,7 @@ write_backward(
->  	if ((bytes_requested = (off % buffersize))) {
->  		bytes_requested = min(cnt, bytes_requested);
->  		off -= bytes_requested;
-> -		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
-> +		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			return ops;
->  		if (bytes < 0) {
-> @@ -189,7 +200,7 @@ write_backward(
->  	while (cnt > end) {
->  		bytes_requested = min(cnt, buffersize);
->  		off -= bytes_requested;
-> -		bytes = do_pwrite(file->fd, off, cnt, buffersize);
-> +		bytes = do_pwrite(file->fd, off, cnt, buffersize, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -212,7 +223,8 @@ write_buffer(
->  	size_t		bs,
->  	int		fd,
->  	off64_t		skip,
-> -	long long	*total)
-> +	long long	*total,
-> +	int		pwritev2_flags)
->  {
->  	ssize_t		bytes;
->  	long long	bar = min(bs, count);
-> @@ -224,7 +236,7 @@ write_buffer(
->  			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
->  				break;
->  		}
-> -		bytes = do_pwrite(file->fd, offset, count, bar);
-> +		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
->  		if (bytes == 0)
->  			break;
->  		if (bytes < 0) {
-> @@ -258,6 +270,7 @@ pwrite_f(
->  	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
->  	int		direction = IO_FORWARD;
->  	int		c, fd = -1;
-> +	int		pwritev2_flags = 0;
->  
->  	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
->  	init_cvtnum(&fsblocksize, &fssectsize);
-> @@ -365,13 +378,13 @@ pwrite_f(
->  	case IO_RANDOM:
->  		if (!zeed)	/* srandom seed */
->  			zeed = time(NULL);
-> -		c = write_random(offset, count, zeed, &total);
-> +		c = write_random(offset, count, zeed, &total, pwritev2_flags);
->  		break;
->  	case IO_FORWARD:
-> -		c = write_buffer(offset, count, bsize, fd, skip, &total);
-> +		c = write_buffer(offset, count, bsize, fd, skip, &total, pwritev2_flags);
->  		break;
->  	case IO_BACKWARD:
-> -		c = write_backward(offset, &count, &total);
-> +		c = write_backward(offset, &count, &total, pwritev2_flags);
->  		break;
->  	default:
->  		total = 0;
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index fa5b6397..48da0783 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -146,6 +146,22 @@ AC_DEFUN([AC_HAVE_PREADV],
->      AC_SUBST(have_preadv)
->    ])
->  
-> +#
-> +# Check if we have a pwritev2 libc call (Linux)
-> +#
-> +AC_DEFUN([AC_HAVE_PWRITEV2],
-> +  [ AC_MSG_CHECKING([for pwritev2])
-> +    AC_TRY_LINK([
-> +#define _BSD_SOURCE
-> +#include <sys/uio.h>
-> +    ], [
-> +         pwritev2(0, 0, 0, 0, 0);
-> +    ], have_pwritev2=yes
-> +       AC_MSG_RESULT(yes),
-> +       AC_MSG_RESULT(no))
-> +    AC_SUBST(have_pwritev2)
-> +  ])
-> +
->  #
->  # Check if we have a copy_file_range system call (Linux)
->  #
-> 
-
--- 
-Goldwyn
+Carlos
