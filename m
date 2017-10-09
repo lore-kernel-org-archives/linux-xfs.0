@@ -1,264 +1,436 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39146 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753948AbdJIHSf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Oct 2017 03:18:35 -0400
-Date: Mon, 9 Oct 2017 15:18:33 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: add a new test for racing AIO COW writes V2
-Message-ID: <20171009071833.GE10593@eguan.usersys.redhat.com>
-References: <20171003143802.GA3964@lst.de>
- <20171004061616.GA20222@lst.de>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:44050 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753280AbdJIBod (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 21:44:33 -0400
+Date: Mon, 9 Oct 2017 12:44:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 20/25] xfs: scrub directory freespace
+Message-ID: <20171009014429.GB3666@dastard>
+References: <150706324963.19351.17715069858921948692.stgit@magnolia>
+ <150706337519.19351.13526798476488574495.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171004061616.GA20222@lst.de>
+In-Reply-To: <150706337519.19351.13526798476488574495.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 04, 2017 at 08:16:16AM +0200, Christoph Hellwig wrote:
-> This can be used to trigger an assert in the current XFS code because it
-> can't handle the case where there are COW extents on a file, but none
-> at or below the range converted by the AIO completion handler.
+On Tue, Oct 03, 2017 at 01:42:55PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-I fixed several minor issues on commit (see inline comments).
-
-I haven't reproduced the assert failure yet on my test vm, but as the
-commit log in v1 patch, it's not 100% reproducible, maybe I'm just lucky
-(or not lucky :)
-
+> Check the free space information in a directory.
 > 
-> diff --git a/src/aio-dio-regress/aio-dio-cow-race.c b/src/aio-dio-regress/aio-dio-cow-race.c
-> new file mode 100755
-> index 0000000..c7f8e89
-> --- /dev/null
-> +++ b/src/aio-dio-regress/aio-dio-cow-race.c
-
-Added new gitignore entry for this new binary file.
-
-> @@ -0,0 +1,119 @@
-> +/*
-> + * Copyright (c) Christoph Hellwig.  All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +#include <sys/stat.h>
-> +#include <sys/types.h>
-> +#include <errno.h>
-> +#include <libgen.h>
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <unistd.h>
-> +#include <ctype.h>
-> +#include <sys/ioctl.h>
-> +#include <linux/fs.h>
-> +
-> +#include <libaio.h>
-> +
-> +#ifndef FICLONE
-> +#define FICLONE		_IOW(0x94, 9, int)
-> +#endif
-> +
-> +#define IO_PATTERN	0xab
-> +
-> +int main(int argc, char *argv[])
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/dir.c |  347 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 347 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+> index e58252b..6ea06c3 100644
+> --- a/fs/xfs/scrub/dir.c
+> +++ b/fs/xfs/scrub/dir.c
+> @@ -239,6 +239,348 @@ xfs_scrub_dir_rec(
+>  	return error;
+>  }
+>  
+> +/* Is this free entry either in the bestfree or smaller than all of them? */
+> +static inline void
+> +xfs_scrub_directory_check_free_entry(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_dablk_t			lblk,
+> +	struct xfs_dir2_data_free	*bf,
+> +	struct xfs_dir2_data_unused	*dup)
 > +{
-> +	struct io_context *ctx = NULL;
-> +	struct io_event evs[4];
-> +	struct iocb iocb1, iocb2, iocb3, iocb4;
-> +	struct iocb *iocbs[] = { &iocb1, &iocb2, &iocb3, &iocb4 };
-> +	void *buf;
-> +	int fd, clone, err = 0;
-> +	unsigned long buf_size = getpagesize() * 2;
-> +	char *filename, *clonename;
+> +	struct xfs_dir2_data_free	*dfp;
+> +	unsigned int			smallest;
 > +
-> +	if (argc != 3) {
-> +		fprintf(stderr, "usage: %s filename clonename\n", argv[0]);
-> +		exit(1);
-> +	}
-> +
-> +	err = posix_memalign(&buf, getpagesize(), buf_size);
-> +	if (err) {
-> +		fprintf(stderr, "error %s during %s\n",
-> +			strerror(err), "posix_memalign");
-> +		return 1;
-> +	}
-> +	memset(buf, IO_PATTERN, buf_size);
-> +
-> +	filename = argv[1];
-> +	fd = open(filename, O_DIRECT | O_CREAT | O_TRUNC | O_RDWR, 0600);
-> +	if (fd == -1) {
-> +		perror("open");
-> +		return 1;
-> +	}
-> +
-> +	if (write(fd, buf, buf_size) != buf_size) {
-> +		perror("write");
-> +		return 1;
-> +	}
-> +
-> +	clonename = argv[2];
-> +	clone = open(clonename, O_DIRECT | O_CREAT | O_TRUNC | O_RDWR, 0600);
-> +	if (clone == -1) {
-> +		perror("open clone");
-> +		return 1;
-> +	}
-> +
-> +	if (ioctl(clone, FICLONE, fd)) {
-> +		perror("FICLONE");
-> +		return 1;
-> +	}
-> +
-> +	err = io_setup(4, &ctx);
-> +	if (err) {
-> +		fprintf(stderr, "error %s during %s\n",
-> +			strerror(err),
-> +			"io_setup");
+> +	smallest = -1U;
 
-This error message format looks weired, I changed it to
+Urk. That's the same as "smallest = UINT_MAX", and so ......
 
-		fprintf(stderr, "io_setup error %s\n", strerror(err));
+> +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+> +		if (dfp->offset &&
+> +		    be16_to_cpu(dfp->length) == be16_to_cpu(dup->length))
+> +			return;
+> +		if (smallest < be16_to_cpu(dfp->length))
+> +			smallest = be16_to_cpu(dfp->length);
 
-Did the same to io_submit and io_getevents.
+.... how does this work? Shouldn't it be a ">" check here?
 
-> +		return 1;
+
 > +	}
 > +
-> +	/*
-> +	 * Test overlapping aio writes, where an earlier one clears the whole
-> +	 * range of a later aio, thus leaving nothing to do for the I/O
-> +	 * completion to do.  To make things harder also make sure there is
-> +	 * other outstanding COW I/O.
-> +	 */
-> +	io_prep_pwrite(&iocb1, fd, buf, buf_size, 0);
-> +	io_prep_pwrite(&iocb2, fd, buf, buf_size / 2, 0);
-> +	io_prep_pwrite(&iocb3, fd, buf, buf_size / 2, buf_size);
-> +	io_prep_pwrite(&iocb4, fd, buf, buf_size, 0);
-> +
-> +	err = io_submit(ctx, 4, iocbs);
-> +	if (err != 4) {
-> +		fprintf(stderr, "error %s during %s\n",
-> +			strerror(err), "io_submit");
-> +		return 1;
-> +	}
-> +
-> +	err = io_getevents(ctx, 4, 4, evs, NULL);
-> +	if (err != 4) {
-> +		fprintf(stderr, "error %s during %s\n",
-> +			strerror(err), "io_getevents");
-> +		return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-> diff --git a/tests/generic/463 b/tests/generic/463
-> new file mode 100755
-> index 0000000..b3afbb0
-> --- /dev/null
-> +++ b/tests/generic/463
-> @@ -0,0 +1,60 @@
-> +#! /bin/bash
-> +# FS QA Test 463
-> +#
-> +# Test racy COW AIO write completions.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Christoph Hellwig.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	rm -f $TEST_DIR/file $TEST_DIR/clone
+> +	if (be16_to_cpu(dup->length) > smallest)
+> +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
 > +}
 > +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/reflink
+> +/* Check free space info in a directory data block. */
+> +STATIC int
+> +xfs_scrub_directory_data_bestfree(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_dablk_t			lblk,
+> +	bool				is_block)
+> +{
+> +	struct xfs_dir2_data_unused	*dup;
+> +	struct xfs_dir2_data_free	*dfp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_dir2_data_free	*bf;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	char				*ptr;
+> +	char				*endptr;
+> +	u16				tag;
+> +	int				newlen;
+> +	int				offset;
+> +	int				error;
 > +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
+> +	if (is_block) {
+> +		/* dir block format */
+> +		if (lblk != XFS_B_TO_FSBT(mp, XFS_DIR2_DATA_OFFSET))
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +		error = xfs_dir3_block_read(sc->tp, sc->ip, &bp);
+> +	} else {
+> +		/* dir data format */
+> +		error = xfs_dir3_data_read(sc->tp, sc->ip, lblk, -1, &bp);
+> +	}
+> +	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, lblk, &error))
+> +		goto out;
 > +
-> +_supported_fs generic
-> +_supported_os Linux
+> +	/* Do the bestfrees correspond to actual free space? */
+> +	bf = sc->ip->d_ops->data_bestfree_p(bp->b_addr);
+
+With the number of d_ops callouts in this code, a local dops
+variable might be in order.
+
+> +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+> +		offset = be16_to_cpu(dfp->offset);
+> +		if (offset == 0)
+> +			continue;
+> +		if (offset >= BBTOB(bp->b_length)) {
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +			continue;
+> +		}
+
+Not sure I like all the checks against and calculations using
+bp->b_length in this function. it would be more correct to check
+against geo->blksize.
+
+> +		dup = (struct xfs_dir2_data_unused *)(bp->b_addr + offset);
+> +		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
 > +
-> +_require_test
-> +_require_test_reflink
-> +_require_aio
-> +_require_odirect
+> +		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG) ||
+> +		    be16_to_cpu(dup->length) != be16_to_cpu(dfp->length) ||
+> +		    tag != ((char *)dup - (char *)bp->b_addr))
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +	}
 
-Need _require_test_program "aio-dio-regress/aio-dio-cow-race"
-
-But a single '_require_aiodio "aio-dio-cow-race"' did all the three
-requirements check above.
+Also, count the number of best frees here.
 
 > +
-> +$here/src/aio-dio-regress/aio-dio-cow-race $TEST_DIR/file $TEST_DIR/clone
+> +	/* Make sure the bestfrees are actually the best free spaces. */
+> +	ptr = (char *)sc->ip->d_ops->data_entry_p(bp->b_addr);
+> +	if (is_block) {
+> +		struct xfs_dir2_block_tail	*btp;
+> +
+> +		btp = xfs_dir2_block_tail_p(sc->mp->m_dir_geo, bp->b_addr);
 
-With _require_aiodio, we can use $AIO_TEST here for the test binary.
+mp->m_dir_geo
+
+> +		endptr = (char *)xfs_dir2_block_leaf_p(btp);
+> +	} else
+> +		endptr = (char *)bp->b_addr + BBTOB(bp->b_length);
+
+
+
+
+> +	while (ptr < endptr) {
+> +		dup = (struct xfs_dir2_data_unused *)ptr;
+> +		/* Skip real entries */
+> +		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG)) {
+> +			struct xfs_dir2_data_entry	*dep;
+> +
+> +			dep = (struct xfs_dir2_data_entry *)ptr;
+> +			newlen = sc->ip->d_ops->data_entsize(dep->namelen);
+> +			if (newlen <= 0) {
+> +				xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> +						lblk);
+> +				goto out_buf;
+> +			}
+> +			ptr += newlen;
+> +			if (endptr < ptr)
+> +				xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> +					      lblk);
+> +			continue;
+> +		}
+> +
+> +		/* Spot check this free entry */
+> +		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
+> +		if (tag != ((char *)dup - (char *)bp->b_addr))
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +
+> +		/*
+> +		 * Either this entry is a bestfree or it's smaller than
+> +		 * any of the bestfrees.
+> +		 */
+> +		xfs_scrub_directory_check_free_entry(sc, lblk, bf, dup);
+
+SO this checks if the entry is in the bestfree, but it doesn't
+tell us if the bestfree array has the correct number of entries...
 
 > +
-> +echo "Silence is golden"
+> +		/* Move on. */
+> +		newlen = be16_to_cpu(dup->length);
+> +		if (newlen <= 0) {
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +			goto out_buf;
+> +		}
+> +		ptr += newlen;
+> +		if (endptr < ptr)
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
 
-Added generic/463.out file too.
+Count the number of free entries here.
 
-Thanks,
-Eryu
+> +	}
 
-> +status=0
-> +exit
-> diff --git a/tests/generic/group b/tests/generic/group
-> index f2a6cda..014d6ea 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -465,3 +465,4 @@
->  460 auto quick rw
->  461 auto shutdown stress
->  462 auto quick dax
-> +463 auto quick clone dangerous
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And now check that the number of bestfrees vs free entries is
+valid. If there's more than 3 free entries in the block, the
+bestfrees array should be full...
+
+> +out_buf:
+> +	xfs_trans_brelse(sc->tp, bp);
+> +out:
+> +	return error;
+> +}
+> +
+> +/* Is this the longest free entry in the block? */
+> +static inline void
+> +xfs_scrub_directory_check_freesp(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_dablk_t			lblk,
+> +	struct xfs_buf			*dbp,
+> +	unsigned int			len)
+> +{
+> +	struct xfs_dir2_data_free	*bf;
+> +	struct xfs_dir2_data_free	*dfp;
+> +	unsigned int			longest = 0;
+> +	int				offset;
+> +
+> +	bf = sc->ip->d_ops->data_bestfree_p(dbp->b_addr);
+> +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+> +		offset = be16_to_cpu(dfp->offset);
+> +		if (!offset)
+> +			continue;
+> +		if (longest < be16_to_cpu(dfp->length))
+> +			longest = be16_to_cpu(dfp->length);
+> +	}
+> +
+> +	if (longest != len)
+> +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +}
+
+This needs a better explanation - it's called to check whether then
+freespace length in the freespace index matches the longest
+freespace in the data block bests array.
+
+And from that, the data block bests array is supposed to be ordered
+from largest to smallest, yes? As per __xfs_dir3_data_check():
+
+
+	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[0].length) >=
+						be16_to_cpu(bf[1].length));
+	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[1].length) >=
+						be16_to_cpu(bf[2].length));
+
+So why doesn't this code just check the first entry in the array?
+
+Hmmm, and now I've remembered that, xfs_scrub_directory_check_free_entry()
+probably only needs to do a reverse scan just to find the smallest
+non-zero entry...
+
+> +/* Check free space info in a directory leaf1 block. */
+> +STATIC int
+> +xfs_scrub_directory_leaf1_bestfree(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_da_args		*args,
+> +	xfs_dablk_t			lblk)
+> +{
+> +	struct xfs_dir2_leaf_tail	*ltp;
+> +	struct xfs_buf			*dbp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	__be16				*bestp;
+> +	__u16				best;
+> +	int				i;
+> +	int				error;
+> +
+> +	/* Read the free space block */
+> +	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
+> +	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, lblk, &error))
+> +		goto out;
+> +
+> +	/* Check all the entries. */
+> +	ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, bp->b_addr);
+> +	bestp = xfs_dir2_leaf_bests_p(ltp);
+> +	for (i = 0; i < be32_to_cpu(ltp->bestcount); i++, bestp++) {
+> +		best = be16_to_cpu(*bestp);
+> +		if (best == NULLDATAOFF)
+> +			continue;
+> +		error = xfs_dir3_data_read(sc->tp, sc->ip,
+> +				i * args->geo->fsbcount, -1, &dbp);
+> +		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, lblk, &error))
+> +			continue;
+> +		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
+> +		xfs_trans_brelse(sc->tp, dbp);
+> +	}
+> +out:
+> +	return error;
+
+This needs comments to explain what it is not checking because those
+checks were done in the verifier. (i.e.  hash index does not overlap
+the freespace index, stale entry count is valid).
+
+hmmmm. More philosophical question: should we rerun the verifiers
+in the scrubber manually so guarantee that we fully cover whatever
+is in memory on cached and modified buffers?
+
+> +
+> +/* Check free space info in a directory freespace block. */
+> +STATIC int
+> +xfs_scrub_directory_free_bestfree(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_da_args		*args,
+> +	xfs_dablk_t			lblk)
+> +{
+> +	struct xfs_dir3_icfree_hdr	freehdr;
+> +	struct xfs_buf			*dbp;
+> +	struct xfs_buf			*bp;
+> +	__be16				*bestp;
+> +	__be16				best;
+> +	int				i;
+> +	int				error;
+> +
+> +	/* Read the free space block */
+> +	error = xfs_dir2_free_read(sc->tp, sc->ip, lblk, &bp);
+> +	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, lblk, &error))
+> +		goto out;
+> +
+> +	/* Check all the entries. */
+> +	sc->ip->d_ops->free_hdr_from_disk(&freehdr, bp->b_addr);
+> +	bestp = sc->ip->d_ops->free_bests_p(bp->b_addr);
+> +	for (i = 0; i < freehdr.nvalid; i++, bestp++) {
+> +		best = be16_to_cpu(*bestp);
+> +		if (best == NULLDATAOFF)
+> +			continue;
+> +		error = xfs_dir3_data_read(sc->tp, sc->ip,
+> +				(freehdr.firstdb + i) * args->geo->fsbcount,
+> +				-1, &dbp);
+> +		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, lblk, &error))
+> +			continue;
+> +		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
+> +		xfs_trans_brelse(sc->tp, dbp);
+> +	}
+> +out:
+> +	return error;
+> +}
+> +
+> +/* Check free space information in directories. */
+> +STATIC int
+> +xfs_scrub_directory_blocks(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_bmbt_irec		got;
+> +	struct xfs_da_args		args;
+> +	struct xfs_ifork		*ifp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fileoff_t			leaf_lblk;
+> +	xfs_fileoff_t			free_lblk;
+> +	xfs_fileoff_t			lblk;
+> +	xfs_extnum_t			idx;
+> +	bool				found;
+> +	int				is_block = 0;
+> +	int				error;
+> +
+> +	/* Ignore local format directories. */
+> +	if (sc->ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+> +	    sc->ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
+> +		return 0;
+> +
+> +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
+> +	lblk = XFS_B_TO_FSB(mp, XFS_DIR2_DATA_OFFSET);
+> +	leaf_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_LEAF_OFFSET);
+> +	free_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_FREE_OFFSET);
+> +
+> +	/* Is this a block dir? */
+> +	args.dp = sc->ip;
+> +	args.geo = mp->m_dir_geo;
+> +	args.trans = sc->tp;
+> +	error = xfs_dir2_isblock(&args, &is_block);
+> +	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, lblk, &error))
+> +		goto out;
+> +
+> +	/* Iterate all the data extents in the directory... */
+> +	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
+> +	while (found) {
+> +		/* No more data blocks... */
+> +		if (got.br_startoff >= leaf_lblk)
+> +			break;
+
+If it's a block dir and got.br_startoff > 0, then it's corrupt?
+
+> +
+> +		/* Check each data block's bestfree data */
+> +		for (lblk = roundup((xfs_dablk_t)got.br_startoff,
+> +				args.geo->fsbcount);
+> +		     lblk < got.br_startoff + got.br_blockcount;
+> +		     lblk += args.geo->fsbcount) {
+
+This is not obvious as to why it works with discontiguous directory
+blocks. I think it's because it grabs the aligned start block of
+each directory block and then internally the blocks get mapped
+correctly via the directory block read functions, but this
+definitely needs a better comment explaining the iteration mechanism
+being used here....
+
+> +			error = xfs_scrub_directory_data_bestfree(sc, lblk,
+> +					is_block);
+> +			if (error)
+> +				goto out;
+> +		}
+> +
+> +		found = xfs_iext_get_extent(ifp, ++idx, &got);
+
+As it is, I think this is going to check discontiguous directory
+blocks multiple times. It's going to find each extent in a
+discontiguous dir block, round it up to the next dirblock and
+scan that next dirblock. It then finds the next block in the
+current discontig block, rounds it up to the next dirblock, and
+scans it again....
+
+I think it would be much better to use xfs_iext_lookup_extent() here
+to iterate by expected start block rather than iterating by extent
+index.
+
+> +	}
+> +
+> +	/* Look for a leaf1 block, which has free info. */
+> +	if (xfs_iext_lookup_extent(sc->ip, ifp, leaf_lblk, &idx, &got) &&
+> +	    got.br_startoff == leaf_lblk &&
+> +	    got.br_blockcount == args.geo->fsbcount &&
+> +	    !xfs_iext_get_extent(ifp, ++idx, &got)) {
+> +		if (is_block) {
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+> +			goto not_leaf1;
+
+Can just abort the scrub at this point.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
