@@ -1,151 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51406 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754416AbdJIXIj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 19:08:39 -0400
-Date: Mon, 9 Oct 2017 16:08:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 25/25] xfs: scrub quota information
-Message-ID: <20171009230834.GX7122@magnolia>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706340739.19351.4078240552236189694.stgit@magnolia>
- <20171009025151.GF3666@dastard>
- <20171009200328.GT7122@magnolia>
- <20171009221751.GQ3666@dastard>
+Received: from quartz.orcorp.ca ([184.70.90.242]:47133 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932682AbdJJSF1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 14:05:27 -0400
+Date: Tue, 10 Oct 2017 12:05:12 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Message-ID: <20171010180512.GA31734@obsidianresearch.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009185840.GB15336@obsidianresearch.com>
+ <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com>
+ <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com>
+ <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171009221751.GQ3666@dastard>
+In-Reply-To: <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Tue, Oct 10, 2017 at 09:17:51AM +1100, Dave Chinner wrote:
-> On Mon, Oct 09, 2017 at 01:03:28PM -0700, Darrick J. Wong wrote:
-> > On Mon, Oct 09, 2017 at 01:51:51PM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 03, 2017 at 01:43:27PM -0700, Darrick J. Wong wrote:
-> > > > +xfs_scrub_quota_to_dqtype(
-> > > > +	struct xfs_scrub_context	*sc)
-> > > > +{
-> > > > +	switch (sc->sm->sm_type) {
-> > > > +	case XFS_SCRUB_TYPE_UQUOTA:
-> > > > +		return XFS_DQ_USER;
-> > > > +	case XFS_SCRUB_TYPE_GQUOTA:
-> > > > +		return XFS_DQ_GROUP;
-> > > > +	case XFS_SCRUB_TYPE_PQUOTA:
-> > > > +		return XFS_DQ_PROJ;
-> > > > +	default:
-> > > > +		return 0;
-> > > > +	}
-> > > > +}
-> > > > +
-> > > > +/* Set us up to scrub a quota. */
-> > > > +int
-> > > > +xfs_scrub_setup_quota(
-> > > > +	struct xfs_scrub_context	*sc,
-> > > > +	struct xfs_inode		*ip)
-> > > > +{
-> > > > +	uint				dqtype;
-> > > > +
-> > > > +	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
-> > > > +		return -EINVAL;
-> > > > +
-> > > > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> > > > +	if (dqtype == 0)
-> > > > +		return -EINVAL;
-> > > > +	return 0;
-> > > > +}
-> > > 
-> > > Should this check whether the quota type is actually enabled, and
-> > > return ENOENT if it's not? i.e move the check out of
-> > > xfs_scrub_quota() and into the setup function?
-> > 
-> > I can add a xfs_this_quota_on check to the setup function, but don't we
-> > need xfs_scrub_quota to lock qi_quotaofflock and then recheck that the
-> > quota type is still enabled?
-> 
-> The qi_quotaofflock is held across the entire scrub, right?
-> 
-> Ah, this is called before the qi_quotaofflock is held - is there
-> a teardown callback? If so, would it be better to lock
-> qi_quotaofflock in the setup, release it in the teardown? That way
-> we can check here in the setup code, and not have to double check
-> the user input it in the scrub function itself?
+On Tue, Oct 10, 2017 at 10:39:27AM -0700, Dan Williams wrote:
+> On Tue, Oct 10, 2017 at 10:25 AM, Jason Gunthorpe
 
-There isn't a generic callback in the teardown.
+> >> Have a look at the patch [1], I don't touch the ODP path.
+> >
+> > But, does ODP work OK already? I'm not clear on that..
+> 
+> It had better. If the mapping is invalidated I would hope that
+> generates an io fault that gets handled by the driver to setup the new
+> mapping. I don't see how it can work otherwise.
 
-> > > > +	/*
-> > > > +	 * Warn if the limits are larger than the fs.  Administrators
-> > > > +	 * can do this, though in production this seems suspect.
-> > > > +	 */
-> > > > +	if (bhard > mp->m_sb.sb_dblocks || bsoft > mp->m_sb.sb_dblocks)
-> > > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > > > +	if (ihard > inodes || isoft > inodes)
-> > > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > > > +	if (rhard > mp->m_sb.sb_rblocks || rsoft > mp->m_sb.sb_rblocks)
-> > > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > > 
-> > > Can you stack these so there's one per line? i.e.:
-> > 
-> > Will do.  I'll also change the ihard/isoft check here to check against
-> > mp->m_maxicount directly.
-> > 
-> > > 	if (bhard > mp->m_sb.sb_dblocks ||
-> > > 	    bsoft > mp->m_sb.sb_dblocks)
-> > > 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > > 
-> > > > +
-> > > > +	/* Soft limit must be less than the hard limit. */
-> > > > +	if (bsoft > bhard || isoft > ihard || rsoft > rhard)
-> > > > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-> > > 
-> > > Though with this check, I suspect you only need to check the hard
-> > > limits against their upper limits because if the hard limit is valid
-> > > and the soft is above then it's going to trigger corruption. Do we
-> > > need a warning as well in that case?
-> > 
-> > I don't follow here ... if the soft limit is above the hard limit, what
-> > will trigger corruption? 
-> 
-> What I mean was this:
-> 
-> 	if (bhard > mp->m_sb.sb_dblocks)
-> 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> 	if (bsoft > bhard)
-> 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-> 
-> That is, if bhard is over the valid limit, throw a warning and we
-> now don't care about bsoft because we've already signalled to
-> userspace there's a problem.
-> 
-> If bsoft is now greater than bhard, regardless of whether it's over
-> the valid size, we signal a corruption. If bhard is already an
-> invalid number, then this corruption report also implies that bsoft
-> is over the limit...
-> 
-> > The quota syscalls enforce that bhard > bsoft
-> > when the admin tries to set new limits, but if the disk is corrupt such
-> > that dblocks = 300, bhard = 250, and bsoft = 280, the checks for
-> > (bhard > dblocks || bsoft > dblocks) checks won't trigger.  That's why
-> > there's an explicit bsoft > bhard check here.
-> 
-> Right, I wasn't suggesting removing it - I didn't make it very clear
-> what I meant.
+I would assume so too...
 
-Ah, ok, I get it now, thanks.
-
---D
-
+> > This is why ODP should be the focus because this cannot work fully
+> > reliably otherwise..
 > 
-> Cheers,
+> The lease break time is configurable. If that application can't
+> respond to a stop request within a timeout of its own choosing then it
+> should not be using DAX mappings.
+
+Well, no RDMA application can really do this, unless you set the
+timeout to multiple minutes, on par with network timeouts.
+
+Again, these details are why I think this kind of DAX and non ODP-MRs
+are probably practically not too useful for a production system. Great
+for test of course, but in that case SIGKILL would be fine too...
+
+> > Well, what about using SIGKILL if the lease-break-time hits? The
+> > kernel will clean up the MRs when the process exits and this will
+> > fence DMA to that memory.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Can you point me to where the MR cleanup code fences DMA and quiesces
+> the device?
+
+Yes. The MR's are associated with an fd. When the fd is closed
+ib_uverbs_close triggers ib_uverbs_cleanup_ucontext which runs through
+all the objects, including MRs, and deletes them.
+
+The specification for deleting a MR requires a synchronous fence with
+the hardware. After MR deletion the hardware will not DMA to any pages
+described by the old MR, and those pages will be unpinned.
+
+> > But, still, if you really want to be fined graned, then I think
+> > invalidating the impacted MR's is a better solution for RDMA than
+> > trying to do it with the IOMMU...
+> 
+> If there's a better routine for handling ib_umem_lease_break() I'd
+> love to use it. Right now I'm reaching for the only tool I know for
+> kernel enforced revocation of DMA access.
+
+Well, you'd have to code something in the MR code to keep track of DAX
+MRs and issue an out of band invalidate to impacted MRs to create the
+fence.
+
+This probably needs some driver work, I'm not sure if all the hardware
+can do out of band invalidate to any MR or not..
+
+Generally speaking, in RDMA, when a new feature like this comes along
+we have to push a lot of the work down to the driver authors, and the
+approach has historically been that new features only work on some
+hardware (as much as I dislike this, it is pragmatic)
+
+So, not being able to support DAX on certain RDMA hardware is not
+an unreasonable situation in our space.
+
+Jason
