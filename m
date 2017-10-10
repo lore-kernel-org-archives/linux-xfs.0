@@ -1,50 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40630 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:57060 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932300AbdJJQr6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 12:47:58 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 735EB883C3
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 16:47:58 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5573469554
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 16:47:58 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/2] xfs: test support for xattr inactivate
-Date: Tue, 10 Oct 2017 12:47:54 -0400
-Message-Id: <20171010164756.28390-1-bfoster@redhat.com>
+        id S1756464AbdJJRZi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 13:25:38 -0400
+Date: Tue, 10 Oct 2017 11:25:16 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Message-ID: <20171010172516.GA29915@obsidianresearch.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009185840.GB15336@obsidianresearch.com>
+ <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com>
+ <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-Hi all,
+On Mon, Oct 09, 2017 at 12:28:29PM -0700, Dan Williams wrote:
 
-This series adds some testability to the issue fixed by "xfs: reinit
-btree pointer on attr tree inactivation walk." Patch 1 adds an assert
-and patch 2 adds an error injection tag to disable buffer LRU caching. I
-have an xfstests test that reproduces the aforementioned problem
-reliably using the error injection tag.
+> > I don't think this has ever come up in the context of an all-device MR
+> > invalidate requirement. Drivers already have code to invalidate
+> > specifc MRs, but to find all MRs that touch certain pages and then
+> > invalidate them would be new code.
+> >
+> > We also have ODP aware drivers that can retarget a MR to new
+> > physical pages. If the block map changes DAX should synchronously
+> > retarget the ODP MR, not halt DMA.
+> 
+> Have a look at the patch [1], I don't touch the ODP path.
 
-Note that patch 1 is kind of a cautious attempt to detect the issue. I'm
-wondering if the better fix is to pass -1 if we indeed should not ever
-expect to hit a hole in this particular path. Thoughts?
+But, does ODP work OK already? I'm not clear on that..
 
-Brian
+> > Most likely ODP & DAX would need to be used together to get robust
+> > user applications, as having the user QP's go to an error state at
+> > random times (due to DMA failures) during operation is never going to
+> > be acceptable...
+> 
+> It's not random. The process that set up the mapping and registered
+> the memory gets SIGIO when someone else tries to modify the file map.
+> That process then gets /proc/sys/fs/lease-break-time seconds to fix
+> the problem before the kernel force revokes the DMA access.
 
-Brian Foster (2):
-  xfs: assert that xattr inactivation never reaches a hole
-  xfs: buffer lru reference count error injection tag
+Well, the process can't fix the problem in bounded time, so it is
+random if it will fail or not.
 
- fs/xfs/xfs_attr_inactive.c |  1 +
- fs/xfs/xfs_buf.c           | 16 ++++++++++++++++
- fs/xfs/xfs_buf.h           |  5 +----
- fs/xfs/xfs_error.c         |  3 +++
- fs/xfs/xfs_error.h         |  4 +++-
- 5 files changed, 24 insertions(+), 5 deletions(-)
+MR life time is under the control of the remote side, and time to
+complete the network exchanges required to release the MRs is hard to
+bound. So even if I implement SIGIO properly my app will still likely
+have random QP failures under various cases and work loads. :(
 
--- 
-2.9.5
+This is why ODP should be the focus because this cannot work fully
+reliably otherwise..
 
+> > Perhaps you might want to initially only support ODP MR mappings with
+> > DAX and then the DMA fencing issue goes away?
+> 
+> I'd rather try to fix the non-ODP DAX case instead of just turning it off.
+
+Well, what about using SIGKILL if the lease-break-time hits? The
+kernel will clean up the MRs when the process exits and this will
+fence DMA to that memory.
+
+But, still, if you really want to be fined graned, then I think
+invalidating the impacted MR's is a better solution for RDMA than
+trying to do it with the IOMMU...
+
+Jason
