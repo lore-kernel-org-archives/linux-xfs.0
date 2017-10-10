@@ -1,77 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39802 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750949AbdJBWPF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Oct 2017 18:15:05 -0400
-Date: Mon, 2 Oct 2017 15:15:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
-Message-ID: <20171002221500.GA6503@magnolia>
-References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
- <20171001225849.GH3666@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171001225849.GH3666@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:39055 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932151AbdJJK6J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 06:58:09 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH v3 1/3] xfs_io: Add support for pwritev2()
+Date: Tue, 10 Oct 2017 05:58:00 -0500
+Message-Id: <20171010105802.31353-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com, bfoster@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, Oct 02, 2017 at 09:58:49AM +1100, Dave Chinner wrote:
-> On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
-> > Hi,
-> > 
-> > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
-> > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
-> > twice. But I can't reproduce it on another machine.
-> > 
-> > Maybe there're some hardware specific requirement to trigger this panic. I
-> > tested on normal disk partition, but the disk is multi stripes RAID device.
-> > I didn't get the mkfs output of g/085, bug I found the default mkfs output
-> > (mkfs.xfs -f /dev/sda3) is:
-> > 
-> > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
-> > data     =                       bsize=1024   blocks=15720448, imaxpct=25
-> >          =                       sunit=512    swidth=1024 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > log      =internal log           bsize=1024   blocks=10240, version=2
-> >          =                       sectsz=512   sunit=32 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> FWIW, I've come across a few of these log recovery crashes recently
-> when reworking mkfs.xfs. The cause of them has always been either a
-> log being too small or a mismatch between log size and log stripe
-> unit configuration. The typical sign of that was either a
-> negative buffer length like this one (XFS (dm-0): Invalid block
-> length (0xfffffed8) for buffer) or the head/tail block initially
-> being calculated before/after the actual log and so the log offset
-> was negative.
-> 
-> I'm guessing the recent log validity checking we've added isn't as
-> robust as it should be, but I haven't had time to dig into it yet.
-> I've debugged the issues far enough to point to mkfs being wrong
-> with xfs_logprint - it runs the same head/tail recovery code as the
-> kernel so typically crashes on the same problems as the kernel. It's
-> much easier to debug in userspace with gdb, though.....
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Just to pile on with everyone else: I've noticed that fuzzing logsunit
-to -1 causes the mount process to spit out a bunch of recovery-related
-io errors.  Shortly thereafter the kernel crashes too.
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
---D
+---
+ configure.ac          |  1 +
+ include/builddefs.in  |  1 +
+ io/Makefile           |  4 ++++
+ io/pwrite.c           | 43 ++++++++++++++++++++++++++++++-------------
+ m4/package_libcdev.m4 | 16 ++++++++++++++++
+ 5 files changed, 52 insertions(+), 13 deletions(-)
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/configure.ac b/configure.ac
+index 4161c3b4..2320e3e3 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -132,6 +132,7 @@ AC_HAVE_GETMNTENT
+ AC_HAVE_GETMNTINFO
+ AC_HAVE_FALLOCATE
+ AC_HAVE_FIEMAP
++AC_HAVE_PWRITEV2
+ AC_HAVE_PREADV
+ AC_HAVE_COPY_FILE_RANGE
+ AC_HAVE_SYNC_FILE_RANGE
+diff --git a/include/builddefs.in b/include/builddefs.in
+index ec630bd9..cd58ea8e 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -103,6 +103,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_PREADV = @have_preadv@
++HAVE_PWRITEV2 = @have_pwritev2@
+ HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+ HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+ HAVE_SYNCFS = @have_syncfs@
+diff --git a/io/Makefile b/io/Makefile
+index 47b0a669..050d6bd0 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -90,6 +90,10 @@ ifeq ($(HAVE_PREADV),yes)
+ LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+ endif
+ 
++ifeq ($(HAVE_PWRITEV2),yes)
++LCFLAGS += -DHAVE_PWRITEV2
++endif
++
+ ifeq ($(HAVE_READDIR),yes)
+ CFILES += readdir.c
+ LCFLAGS += -DHAVE_READDIR
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 1c5dfca1..5ceb26c7 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -62,7 +62,8 @@ do_pwritev(
+ 	int		fd,
+ 	off64_t		offset,
+ 	ssize_t		count,
+-	ssize_t		buffer_size)
++	ssize_t		buffer_size,
++	int 		pwritev2_flags)
+ {
+ 	int vecs = 0;
+ 	ssize_t oldlen = 0;
+@@ -81,7 +82,14 @@ do_pwritev(
+ 	} else {
+ 		vecs = vectors;
+ 	}
++#ifdef HAVE_PWRITEV2
++	if (pwritev2_flags)
++		bytes = pwritev2(fd, iov, vectors, offset, pwritev2_flags);
++	else
++		bytes = pwritev(fd, iov, vectors, offset);
++#else
+ 	bytes = pwritev(fd, iov, vectors, offset);
++#endif
+ 
+ 	/* restore trimmed iov */
+ 	if (oldlen)
+@@ -98,12 +106,13 @@ do_pwrite(
+ 	int		fd,
+ 	off64_t		offset,
+ 	ssize_t		count,
+-	ssize_t		buffer_size)
++	ssize_t		buffer_size,
++	int		pwritev2_flags)
+ {
+ 	if (!vectors)
+ 		return pwrite(fd, buffer, min(count, buffer_size), offset);
+ 
+-	return do_pwritev(fd, offset, count, buffer_size);
++	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
+ }
+ 
+ static int
+@@ -111,7 +120,8 @@ write_random(
+ 	off64_t		offset,
+ 	long long	count,
+ 	unsigned int	seed,
+-	long long	*total)
++	long long	*total,
++	int 		pwritev2_flags)
+ {
+ 	off64_t		off, range;
+ 	ssize_t		bytes;
+@@ -133,7 +143,8 @@ write_random(
+ 				buffersize;
+ 		else
+ 			off = offset;
+-		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
++		bytes = do_pwrite(file->fd, off, buffersize, buffersize,
++				pwritev2_flags);
+ 		if (bytes == 0)
+ 			break;
+ 		if (bytes < 0) {
+@@ -153,7 +164,8 @@ static int
+ write_backward(
+ 	off64_t		offset,
+ 	long long	*count,
+-	long long	*total)
++	long long	*total,
++	int		pwritev2_flags)
+ {
+ 	off64_t		end, off = offset;
+ 	ssize_t		bytes = 0, bytes_requested;
+@@ -171,7 +183,8 @@ write_backward(
+ 	if ((bytes_requested = (off % buffersize))) {
+ 		bytes_requested = min(cnt, bytes_requested);
+ 		off -= bytes_requested;
+-		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
++		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize,
++				pwritev2_flags);
+ 		if (bytes == 0)
+ 			return ops;
+ 		if (bytes < 0) {
+@@ -189,7 +202,8 @@ write_backward(
+ 	while (cnt > end) {
+ 		bytes_requested = min(cnt, buffersize);
+ 		off -= bytes_requested;
+-		bytes = do_pwrite(file->fd, off, cnt, buffersize);
++		bytes = do_pwrite(file->fd, off, cnt, buffersize,
++				pwritev2_flags);
+ 		if (bytes == 0)
+ 			break;
+ 		if (bytes < 0) {
+@@ -212,7 +226,8 @@ write_buffer(
+ 	size_t		bs,
+ 	int		fd,
+ 	off64_t		skip,
+-	long long	*total)
++	long long	*total,
++	int		pwritev2_flags)
+ {
+ 	ssize_t		bytes;
+ 	long long	bar = min(bs, count);
+@@ -224,7 +239,7 @@ write_buffer(
+ 			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
+ 				break;
+ 		}
+-		bytes = do_pwrite(file->fd, offset, count, bar);
++		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
+ 		if (bytes == 0)
+ 			break;
+ 		if (bytes < 0) {
+@@ -258,6 +273,7 @@ pwrite_f(
+ 	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
+ 	int		direction = IO_FORWARD;
+ 	int		c, fd = -1;
++	int		pwritev2_flags = 0;
+ 
+ 	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
+ 	init_cvtnum(&fsblocksize, &fssectsize);
+@@ -365,13 +381,14 @@ pwrite_f(
+ 	case IO_RANDOM:
+ 		if (!zeed)	/* srandom seed */
+ 			zeed = time(NULL);
+-		c = write_random(offset, count, zeed, &total);
++		c = write_random(offset, count, zeed, &total, pwritev2_flags);
+ 		break;
+ 	case IO_FORWARD:
+-		c = write_buffer(offset, count, bsize, fd, skip, &total);
++		c = write_buffer(offset, count, bsize, fd, skip, &total,
++				pwritev2_flags);
+ 		break;
+ 	case IO_BACKWARD:
+-		c = write_backward(offset, &count, &total);
++		c = write_backward(offset, &count, &total, pwritev2_flags);
+ 		break;
+ 	default:
+ 		total = 0;
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index fa5b6397..48da0783 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -146,6 +146,22 @@ AC_DEFUN([AC_HAVE_PREADV],
+     AC_SUBST(have_preadv)
+   ])
+ 
++#
++# Check if we have a pwritev2 libc call (Linux)
++#
++AC_DEFUN([AC_HAVE_PWRITEV2],
++  [ AC_MSG_CHECKING([for pwritev2])
++    AC_TRY_LINK([
++#define _BSD_SOURCE
++#include <sys/uio.h>
++    ], [
++         pwritev2(0, 0, 0, 0, 0);
++    ], have_pwritev2=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_pwritev2)
++  ])
++
+ #
+ # Check if we have a copy_file_range system call (Linux)
+ #
+-- 
+2.14.2
+
