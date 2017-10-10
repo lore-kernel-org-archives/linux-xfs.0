@@ -1,285 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23584 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756357AbdJJSTT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 14:19:19 -0400
-Date: Tue, 10 Oct 2017 11:19:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfsprogs: explicitly cast troublesome types to match
- printf format specifiers
-Message-ID: <20171010181913.GB7122@magnolia>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:45744 "EHLO
+        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933881AbdJJUR2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 16:17:28 -0400
+Received: by mail-oi0-f52.google.com with SMTP id f66so3009838oib.2
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 13:17:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20171010180512.GA31734@obsidianresearch.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
+ <20171010180512.GA31734@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 10 Oct 2017 13:17:26 -0700
+Message-ID: <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-Certain system-defined types (__u64, __s64, __nlink_t, __ino64_t,
-__off64_t, __blkcnt64_t) don't have a consistent definition across
-different architectures, so wherever we use a printf format specifier on
-such a variable, we have to typecast the variable or else the compiler
-will complain.
+On Tue, Oct 10, 2017 at 11:05 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Oct 10, 2017 at 10:39:27AM -0700, Dan Williams wrote:
+>> On Tue, Oct 10, 2017 at 10:25 AM, Jason Gunthorpe
+>
+>> >> Have a look at the patch [1], I don't touch the ODP path.
+>> >
+>> > But, does ODP work OK already? I'm not clear on that..
+>>
+>> It had better. If the mapping is invalidated I would hope that
+>> generates an io fault that gets handled by the driver to setup the new
+>> mapping. I don't see how it can work otherwise.
+>
+> I would assume so too...
+>
+>> > This is why ODP should be the focus because this cannot work fully
+>> > reliably otherwise..
+>>
+>> The lease break time is configurable. If that application can't
+>> respond to a stop request within a timeout of its own choosing then it
+>> should not be using DAX mappings.
+>
+> Well, no RDMA application can really do this, unless you set the
+> timeout to multiple minutes, on par with network timeouts.
 
-IOWs this fixes build warnings on ppc64le.
+The default lease break timeout is 45 seconds on my system, so minutes
+does not seem out of the question.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: remove the scan_rtrmapbt stuff that snuck in accidentally
----
- io/fiemap.c          |   37 +++++++++++++++++++++----------------
- io/open.c            |    4 ++--
- io/stat.c            |   26 +++++++++++++-------------
- repair/attr_repair.c |    6 ++++--
- repair/dinode.c      |    3 ++-
- repair/phase6.c      |    4 ++--
- repair/scan.c        |    9 ++++++---
- 7 files changed, 50 insertions(+), 39 deletions(-)
+Also keep in mind that what triggers the lease break is another
+application trying to write or punch holes in a file that is mapped
+for RDMA. So, if the hardware can't handle the iommu mapping getting
+invalidated asynchronously and the application can't react in the
+lease break timeout period then the administrator should arrange for
+the file to not be written or truncated while it is mapped.
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index e6fd66d..bdcfacd 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -67,16 +67,18 @@ print_hole(
- 
- 	   if (plain) {
- 		printf("\t%d: [%llu..%llu]: hole", cur_extent,
--		       llast, lstart - 1ULL);
-+		       (unsigned long long)llast, lstart - 1ULL);
- 		if (lflag)
--			printf(_(" %llu blocks\n"), lstart - llast);
-+			printf(_(" %llu blocks\n"),
-+			       (unsigned long long)lstart - llast);
- 		else
- 			printf("\n");
- 	   } else {
--		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
--			 lstart - 1ULL);
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
-+			 (unsigned long long)llast, lstart - 1ULL);
- 		printf("%4d: %-*s %-*s %*llu\n", cur_extent, foff_w, lbuf,
--		       boff_w, _("hole"), tot_w, lstart - llast);
-+		       boff_w, _("hole"), tot_w,
-+		       (unsigned long long)lstart - llast);
- 	   }
- 
- 
-@@ -125,12 +127,13 @@ print_verbose(
- 	if (cur_extent == max_extents)
- 		return 1;
- 
--	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
--		 lstart + len - 1ULL);
--	snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block, block + len - 1ULL);
-+	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
-+		 (unsigned long long)lstart, lstart + len - 1ULL);
-+	snprintf(bbuf, sizeof(bbuf), "%llu..%llu",
-+		 (unsigned long long)block, block + len - 1ULL);
- 	snprintf(flgbuf, sizeof(flgbuf), "0x%x", extent->fe_flags);
- 	printf("%4d: %-*s %-*s %*llu %*s\n", cur_extent, foff_w, lbuf,
--	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
-+	       boff_w, bbuf, tot_w, (unsigned long long)len, flg_w, flgbuf);
- 
- 	return 2;
- }
-@@ -161,11 +164,11 @@ print_plain(
- 		return 1;
- 
- 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
--	       lstart, lstart + len - 1ULL, block,
--	       block + len - 1ULL);
-+	       (unsigned long long)lstart, lstart + len - 1ULL,
-+	       (unsigned long long)block, block + len - 1ULL);
- 
- 	if (lflag)
--		printf(_(" %llu blocks\n"), len);
-+		printf(_(" %llu blocks\n"), (unsigned long long)len);
- 	else
- 		printf("\n");
- 	return 2;
-@@ -198,10 +201,12 @@ calc_print_format(
- 		len = BTOBBT(extent->fe_length);
- 		block = BTOBBT(extent->fe_physical);
- 
--		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
--			 logical + len - 1);
--		snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
--			 block + len - 1);
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]",
-+			 (unsigned long long)logical,
-+			 (unsigned long long)logical + len - 1);
-+		snprintf(bbuf, sizeof(bbuf), "%llu..%llu",
-+			 (unsigned long long)block,
-+			 (unsigned long long)block + len - 1);
- 		*foff_w = max(*foff_w, strlen(lbuf));
- 		*boff_w = max(*boff_w, strlen(bbuf));
- 		*tot_w = max(*tot_w, numlen(len, 10));
-diff --git a/io/open.c b/io/open.c
-index f2ea7c3..2cce045 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -762,14 +762,14 @@ inode_f(
- 
- 	if (verbose && result_ino) {
- 		/* Requested verbose and we have an answer */
--		printf("%llu:%d\n", result_ino,
-+		printf("%llu:%d\n", (unsigned long long)result_ino,
- 			result_ino > XFS_MAXINUMBER_32 ? 64 : 32);
- 	} else if (userino == NULLFSINO) {
- 		/* Just checking 32 or 64 bit presence, non-verbose */
- 		printf("%d\n", result_ino > XFS_MAXINUMBER_32 ? 1 : 0);
- 	} else {
- 		/* We asked about a specific inode, non-verbose */
--		printf("%llu\n", result_ino);
-+		printf("%llu\n", (unsigned long long)result_ino);
- 	}
- 
- 	return 0;
-diff --git a/io/stat.c b/io/stat.c
-index 060ff83..b97cced 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -69,14 +69,14 @@ filetype(mode_t mode)
- static int
- dump_raw_stat(struct stat *st)
- {
--	printf("stat.blksize = %lu\n", st->st_blksize);
--	printf("stat.nlink = %lu\n", st->st_nlink);
-+	printf("stat.blksize = %lu\n", (unsigned long)st->st_blksize);
-+	printf("stat.nlink = %lu\n", (unsigned long)st->st_nlink);
- 	printf("stat.uid = %u\n", st->st_uid);
- 	printf("stat.gid = %u\n", st->st_gid);
- 	printf("stat.mode: 0%o\n", st->st_mode);
--	printf("stat.ino = %lu\n", st->st_ino);
--	printf("stat.size = %lu\n", st->st_size);
--	printf("stat.blocks = %lu\n", st->st_blocks);
-+	printf("stat.ino = %llu\n", (unsigned long long)st->st_ino);
-+	printf("stat.size = %lld\n", (long long)st->st_size);
-+	printf("stat.blocks = %lld\n", (long long)st->st_blocks);
- 	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
- 	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
- 	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
-@@ -273,21 +273,21 @@ dump_raw_statx(struct statx *stx)
- {
- 	printf("stat.mask = 0x%x\n", stx->stx_mask);
- 	printf("stat.blksize = %u\n", stx->stx_blksize);
--	printf("stat.attributes = 0x%llx\n", stx->stx_attributes);
-+	printf("stat.attributes = 0x%llx\n", (unsigned long long)stx->stx_attributes);
- 	printf("stat.nlink = %u\n", stx->stx_nlink);
- 	printf("stat.uid = %u\n", stx->stx_uid);
- 	printf("stat.gid = %u\n", stx->stx_gid);
- 	printf("stat.mode: 0%o\n", stx->stx_mode);
--	printf("stat.ino = %llu\n", stx->stx_ino);
--	printf("stat.size = %llu\n", stx->stx_size);
--	printf("stat.blocks = %llu\n", stx->stx_blocks);
--	printf("stat.atime.tv_sec = %lld\n", stx->stx_atime.tv_sec);
-+	printf("stat.ino = %llu\n", (unsigned long long)stx->stx_ino);
-+	printf("stat.size = %llu\n", (unsigned long long)stx->stx_size);
-+	printf("stat.blocks = %llu\n", (unsigned long long)stx->stx_blocks);
-+	printf("stat.atime.tv_sec = %lld\n", (long long)stx->stx_atime.tv_sec);
- 	printf("stat.atime.tv_nsec = %d\n", stx->stx_atime.tv_nsec);
--	printf("stat.btime.tv_sec = %lld\n", stx->stx_btime.tv_sec);
-+	printf("stat.btime.tv_sec = %lld\n", (long long)stx->stx_btime.tv_sec);
- 	printf("stat.btime.tv_nsec = %d\n", stx->stx_btime.tv_nsec);
--	printf("stat.ctime.tv_sec = %lld\n", stx->stx_ctime.tv_sec);
-+	printf("stat.ctime.tv_sec = %lld\n", (long long)stx->stx_ctime.tv_sec);
- 	printf("stat.ctime.tv_nsec = %d\n", stx->stx_ctime.tv_nsec);
--	printf("stat.mtime.tv_sec = %lld\n", stx->stx_mtime.tv_sec);
-+	printf("stat.mtime.tv_sec = %lld\n", (long long)stx->stx_mtime.tv_sec);
- 	printf("stat.mtime.tv_nsec = %d\n", stx->stx_mtime.tv_nsec);
- 	printf("stat.rdev_major = %u\n", stx->stx_rdev_major);
- 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 9ec2231..8b1b8a7 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -943,14 +943,16 @@ __check_attr_header(
- 	if (be64_to_cpu(info->owner) != ino) {
- 		do_warn(
- _("expected owner inode %" PRIu64 ", got %llu, attr block %" PRIu64 "\n"),
--			ino, be64_to_cpu(info->owner), bp->b_bn);
-+			ino, (unsigned long long)be64_to_cpu(info->owner),
-+			bp->b_bn);
- 		return 1;
- 	}
- 	/* verify block number */
- 	if (be64_to_cpu(info->blkno) != bp->b_bn) {
- 		do_warn(
- _("expected block %" PRIu64 ", got %llu, inode %" PRIu64 "attr block\n"),
--			bp->b_bn, be64_to_cpu(info->blkno), ino);
-+			bp->b_bn, (unsigned long long)be64_to_cpu(info->blkno),
-+			ino);
- 		return 1;
- 	}
- 	/* verify uuid */
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 15ba8cc..e7de6d4 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2330,7 +2330,8 @@ process_dinode_int(xfs_mount_t *mp,
- 			if (!uncertain)
- 				do_warn(
- _("inode identifier %llu mismatch on inode %" PRIu64 "\n"),
--					be64_to_cpu(dino->di_ino), lino);
-+					(unsigned long long)be64_to_cpu(dino->di_ino),
-+					lino);
- 			if (verify_mode)
- 				return 1;
- 			goto clear_bad_out;
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 19e2980..8b1823c 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1907,14 +1907,14 @@ __check_dir3_header(
- 	if (be64_to_cpu(owner) != ino) {
- 		do_warn(
- _("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
--			ino, be64_to_cpu(owner), bp->b_bn);
-+			ino, (unsigned long long)be64_to_cpu(owner), bp->b_bn);
- 		return 1;
- 	}
- 	/* verify block number */
- 	if (be64_to_cpu(blkno) != bp->b_bn) {
- 		do_warn(
- _("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
--			bp->b_bn, be64_to_cpu(blkno), ino);
-+			bp->b_bn, (unsigned long long)be64_to_cpu(blkno), ino);
- 		return 1;
- 	}
- 	/* verify uuid */
-diff --git a/repair/scan.c b/repair/scan.c
-index 9c0f2d6..22c7331 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -227,7 +227,9 @@ _("expected level %d got %d in inode %" PRIu64 ", (%s fork) bmbt block %" PRIu64
- 		if (be64_to_cpu(block->bb_u.l.bb_owner) != ino) {
- 			do_warn(
- _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
--				ino, be64_to_cpu(block->bb_u.l.bb_owner), bno);
-+				ino,
-+				(unsigned long long)be64_to_cpu(block->bb_u.l.bb_owner),
-+				bno);
- 			return 1;
- 		}
- 		/* verify block number */
-@@ -236,7 +238,8 @@ _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
- 			do_warn(
- _("expected block %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
- 				XFS_FSB_TO_DADDR(mp, bno),
--				be64_to_cpu(block->bb_u.l.bb_blkno), bno);
-+				(unsigned long long)be64_to_cpu(block->bb_u.l.bb_blkno),
-+				bno);
- 			return 1;
- 		}
- 		/* verify uuid */
-@@ -1587,7 +1590,7 @@ import_single_ino_chunk(
- _("ir_holemask/ir_free mismatch, %s chunk %d/%u, holemask 0x%x free 0x%llx\n"),
- 					inobt_name, agno, ino,
- 					be16_to_cpu(rp->ir_u.sp.ir_holemask),
--					be64_to_cpu(rp->ir_free));
-+					(unsigned long long)be64_to_cpu(rp->ir_free));
- 				suspect++;
- 			}
- 			if (!suspect && ino_rec)
+It's already the case that get_user_pages() does not lock down file
+associations, so if your application is contending with these types of
+file changes it likely already has a problem keeping transactions in
+sync with the file state even without DAX.
+
+> Again, these details are why I think this kind of DAX and non ODP-MRs
+> are probably practically not too useful for a production system. Great
+> for test of course, but in that case SIGKILL would be fine too...
+>
+>> > Well, what about using SIGKILL if the lease-break-time hits? The
+>> > kernel will clean up the MRs when the process exits and this will
+>> > fence DMA to that memory.
+>>
+>> Can you point me to where the MR cleanup code fences DMA and quiesces
+>> the device?
+>
+> Yes. The MR's are associated with an fd. When the fd is closed
+> ib_uverbs_close triggers ib_uverbs_cleanup_ucontext which runs through
+> all the objects, including MRs, and deletes them.
+>
+> The specification for deleting a MR requires a synchronous fence with
+> the hardware. After MR deletion the hardware will not DMA to any pages
+> described by the old MR, and those pages will be unpinned.
+>
+>> > But, still, if you really want to be fined graned, then I think
+>> > invalidating the impacted MR's is a better solution for RDMA than
+>> > trying to do it with the IOMMU...
+>>
+>> If there's a better routine for handling ib_umem_lease_break() I'd
+>> love to use it. Right now I'm reaching for the only tool I know for
+>> kernel enforced revocation of DMA access.
+>
+> Well, you'd have to code something in the MR code to keep track of DAX
+> MRs and issue an out of band invalidate to impacted MRs to create the
+> fence.
+>
+> This probably needs some driver work, I'm not sure if all the hardware
+> can do out of band invalidate to any MR or not..
+
+Ok.
+
+>
+> Generally speaking, in RDMA, when a new feature like this comes along
+> we have to push a lot of the work down to the driver authors, and the
+> approach has historically been that new features only work on some
+> hardware (as much as I dislike this, it is pragmatic)
+>
+> So, not being able to support DAX on certain RDMA hardware is not
+> an unreasonable situation in our space.
+
+That makes sense, but it still seems to me that this proposed solution
+allows more than enough ways to avoid that worst case scenario where
+hardware reacts badly to iommu invalidation. Drivers that can do
+better than iommu invalidation can arrange for a callback to do their
+driver-specific action at lease break time. Hardware that can't should
+be blacklisted from supporting DAX altogether. In other words this is
+a starting point to incrementally enhance or disable specific drivers,
+but with the assurance that the kernel can always do the safe thing
+when / if the driver is missing a finer grained solution.
