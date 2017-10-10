@@ -1,82 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:49651 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754231AbdJKBNu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 21:13:50 -0400
-Date: Wed, 11 Oct 2017 12:09:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 06/14] xfs: wire up MAP_DIRECT
-Message-ID: <20171011010922.GY3666@dastard>
+Received: from mga06.intel.com ([134.134.136.31]:20274 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932183AbdJJOzr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 10:55:47 -0400
+Subject: [PATCH v8 04/14] xfs: prepare xfs_break_layouts() for reuse with
+ MAP_DIRECT
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 10 Oct 2017 07:49:17 -0700
+Message-ID: <150764695771.16882.9179160793491582514.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150764697001.16882.13486539828150761233.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150764697001.16882.13486539828150761233.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, iommu@lists.linux-foundation.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: linux-nvdimm@lists.01.org
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, iommu@lists.linux-foundation.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Oct 10, 2017 at 07:49:30AM -0700, Dan Williams wrote:
-> @@ -1009,6 +1019,22 @@ xfs_file_llseek(
->  }
->  
->  /*
-> + * MAP_DIRECT faults can only be serviced while the FL_LAYOUT lease is
-> + * valid. See map_direct_invalidate.
-> + */
-> +static int
-> +xfs_can_fault_direct(
-> +	struct vm_area_struct	*vma)
-> +{
-> +	if (!xfs_vma_is_direct(vma))
-> +		return 0;
-> +
-> +	if (!test_map_direct_valid(vma->vm_private_data))
-> +		return VM_FAULT_SIGBUS;
-> +	return 0;
-> +}
+Move xfs_break_layouts() to its own compilation unit so that it can be
+used for both pnfs layouts and MAP_DIRECT mappings.
 
-Better, but I'm going to be an annoying pedant here: a "can
-<something>" check should return a boolean true/false.
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/Kconfig      |    4 ++++
+ fs/xfs/Makefile     |    1 +
+ fs/xfs/xfs_layout.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_layout.h |   13 +++++++++++++
+ fs/xfs/xfs_pnfs.c   |   30 ------------------------------
+ fs/xfs/xfs_pnfs.h   |   10 ++--------
+ 6 files changed, 62 insertions(+), 38 deletions(-)
+ create mode 100644 fs/xfs/xfs_layout.c
+ create mode 100644 fs/xfs/xfs_layout.h
 
-Also, it's a bit jarring to see that a non-direct VMA that /can't/
-do direct faults returns the same thing as a direct-vma that /can/
-do direct faults, so a couple of extra comments for people who will
-quickly forget how this code works (i.e. me) will be helpful. Say
-something like this:
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 1b98cfa342ab..f62fc6629abb 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -109,3 +109,7 @@ config XFS_ASSERT_FATAL
+ 	  result in warnings.
+ 
+ 	  This behavior can be modified at runtime via sysfs.
++
++config XFS_LAYOUT
++	def_bool y
++	depends on EXPORTFS_BLOCK_OPS
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index a6e955bfead8..d44135107490 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -135,3 +135,4 @@ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
+ xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
+ xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
++xfs-$(CONFIG_XFS_LAYOUT)	+= xfs_layout.o
+diff --git a/fs/xfs/xfs_layout.c b/fs/xfs/xfs_layout.c
+new file mode 100644
+index 000000000000..71d95e1a910a
+--- /dev/null
++++ b/fs/xfs/xfs_layout.c
+@@ -0,0 +1,42 @@
++/*
++ * Copyright (c) 2014 Christoph Hellwig.
++ */
++#include "xfs.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_inode.h"
++
++#include <linux/fs.h>
++
++/*
++ * Ensure that we do not have any outstanding pNFS layouts that can be used by
++ * clients to directly read from or write to this inode.  This must be called
++ * before every operation that can remove blocks from the extent map.
++ * Additionally we call it during the write operation, where aren't concerned
++ * about exposing unallocated blocks but just want to provide basic
++ * synchronization between a local writer and pNFS clients.  mmap writes would
++ * also benefit from this sort of synchronization, but due to the tricky locking
++ * rules in the page fault path we don't bother.
++ */
++int
++xfs_break_layouts(
++	struct inode		*inode,
++	uint			*iolock)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	int			error;
++
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
++
++	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
++		xfs_iunlock(ip, *iolock);
++		error = break_layout(inode, true);
++		*iolock = XFS_IOLOCK_EXCL;
++		xfs_ilock(ip, *iolock);
++	}
++
++	return error;
++}
+diff --git a/fs/xfs/xfs_layout.h b/fs/xfs/xfs_layout.h
+new file mode 100644
+index 000000000000..f848ee78cc93
+--- /dev/null
++++ b/fs/xfs/xfs_layout.h
+@@ -0,0 +1,13 @@
++#ifndef _XFS_LAYOUT_H
++#define _XFS_LAYOUT_H 1
++
++#ifdef CONFIG_XFS_LAYOUT
++int xfs_break_layouts(struct inode *inode, uint *iolock);
++#else
++static inline int
++xfs_break_layouts(struct inode *inode, uint *iolock)
++{
++	return 0;
++}
++#endif /* CONFIG_XFS_LAYOUT */
++#endif /* _XFS_LAYOUT_H */
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 2f2dc3c09ad0..8ec72220e73b 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -20,36 +20,6 @@
+ #include "xfs_pnfs.h"
+ 
+ /*
+- * Ensure that we do not have any outstanding pNFS layouts that can be used by
+- * clients to directly read from or write to this inode.  This must be called
+- * before every operation that can remove blocks from the extent map.
+- * Additionally we call it during the write operation, where aren't concerned
+- * about exposing unallocated blocks but just want to provide basic
+- * synchronization between a local writer and pNFS clients.  mmap writes would
+- * also benefit from this sort of synchronization, but due to the tricky locking
+- * rules in the page fault path we don't bother.
+- */
+-int
+-xfs_break_layouts(
+-	struct inode		*inode,
+-	uint			*iolock)
+-{
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	int			error;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
+-
+-	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
+-		xfs_iunlock(ip, *iolock);
+-		error = break_layout(inode, true);
+-		*iolock = XFS_IOLOCK_EXCL;
+-		xfs_ilock(ip, *iolock);
+-	}
+-
+-	return error;
+-}
+-
+-/*
+  * Get a unique ID including its location so that the client can identify
+  * the exported device.
+  */
+diff --git a/fs/xfs/xfs_pnfs.h b/fs/xfs/xfs_pnfs.h
+index b587cb99b2b7..4135b2482697 100644
+--- a/fs/xfs/xfs_pnfs.h
++++ b/fs/xfs/xfs_pnfs.h
+@@ -1,19 +1,13 @@
+ #ifndef _XFS_PNFS_H
+ #define _XFS_PNFS_H 1
+ 
++#include "xfs_layout.h"
++
+ #ifdef CONFIG_EXPORTFS_BLOCK_OPS
+ int xfs_fs_get_uuid(struct super_block *sb, u8 *buf, u32 *len, u64 *offset);
+ int xfs_fs_map_blocks(struct inode *inode, loff_t offset, u64 length,
+ 		struct iomap *iomap, bool write, u32 *device_generation);
+ int xfs_fs_commit_blocks(struct inode *inode, struct iomap *maps, int nr_maps,
+ 		struct iattr *iattr);
+-
+-int xfs_break_layouts(struct inode *inode, uint *iolock);
+-#else
+-static inline int
+-xfs_break_layouts(struct inode *inode, uint *iolock)
+-{
+-	return 0;
+-}
+ #endif /* CONFIG_EXPORTFS_BLOCK_OPS */
+ #endif /* _XFS_PNFS_H */
 
-/*
- * MAP_DIRECT faults can only be serviced while the FL_LAYOUT lease is
- * valid. See map_direct_invalidate.
- */
-static bool
-xfs_vma_has_direct_lease(
-	struct vm_area_struct	*vma)
-{
-	/* Non MAP_DIRECT vmas do not require layout leases */
-	if (!xfs_vma_is_direct(vma))
-		return true;
-
-	if (!test_map_direct_valid(vma->vm_private_data))
-		return false;
-
-	/* We have a valid lease */
-	return true;
-}
-
-.....
-	if (!xfs_vma_has_direct_lease(vma)) {
-		ret = VM_FAULT_SIGBUS;
-		goto out_unlock;
-	}
-....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
