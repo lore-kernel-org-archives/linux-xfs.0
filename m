@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:6747 "EHLO mga05.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:35924 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932087AbdJJO4T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:56:19 -0400
-Subject: [PATCH v8 10/14] device-dax: wire up ->lease_direct()
+        id S932313AbdJJO4h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 10:56:37 -0400
+Subject: [PATCH v8 13/14] IB/core: use MAP_DIRECT to fix / enable RDMA to
+ DAX mappings
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:49:54 -0700
-Message-ID: <150764699451.16882.18368970483709189847.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Tue, 10 Oct 2017 07:50:12 -0700
+Message-ID: <150764701194.16882.9682569707416653741.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,146 +17,246 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, iommu@lists.linux-foundation.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: Sean Hefty <sean.hefty@intel.com>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, Jeff Moyer <jmoyer@redhat.com>, iommu@lists.linux-foundation.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, David Woodhouse <dwmw2@infradead.org>, Hal Rosenstock <hal.rosenstock@gmail.com>
 
-The only event that will break a lease_direct lease in the device-dax
-case is the device shutdown path where the physical pages might get
-assigned to another device.
+Currently the ibverbs core in the kernel is completely unaware of the
+dangers of filesystem-DAX mappings. Specifically, the filesystem is free
+to move file blocks at will. In the case of DAX, it means that RDMA to a
+given file offset can dynamically switch to another file offset, another
+file, or free space with no notification to RDMA device to cease
+operations. Historically, this lack of communication between the ibverbs
+core and filesystem was not a problem because RDMA always targeted
+dynamically allocated page cache, so at least the RDMA device would have
+valid memory to target even if the file was being modified. With DAX we
+need to add coordination since RDMA is bypassing page-cache and going
+direct to on-media pages of the file. RDMA to DAX can cause damage if
+filesystem blocks move / change state.
 
+Use the new ->lease_direct() operation to get a notification when the
+filesystem is invalidating the block map of the file and needs RDMA
+operations to stop. Given that the kernel can not be in a position where
+it needs to wait indefinitely for userspace to stop a device we need a
+mechanism where the kernel can force-revoke access. Towards that end, use
+the dma_get_iommu_domain() to both check if the device has domain
+mappings that can be invalidated and retrieve the iommu_domain for use
+with iommu_unmap.
+
+Once we have that assurance that we can block in-flight I/O when the
+file's block map changes then we can safely allow RDMA to DAX.
+
+Cc: Sean Hefty <sean.hefty@intel.com>
+Cc: Doug Ledford <dledford@redhat.com>
+Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
 Cc: Jan Kara <jack@suse.cz>
 Cc: Jeff Moyer <jmoyer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jeff Layton <jlayton@poochiereds.net>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/Kconfig       |    1 +
- drivers/dax/device.c      |    4 ++++
- fs/Kconfig                |    4 ++++
- fs/Makefile               |    3 ++-
- fs/mapdirect.c            |    3 ++-
- include/linux/mapdirect.h |    5 ++++-
- 6 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/infiniband/core/umem.c |   90 +++++++++++++++++++++++++++++++++++-----
+ include/rdma/ib_umem.h         |    8 ++++
+ 2 files changed, 86 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
-index b79aa8f7a497..be03d4dbe646 100644
---- a/drivers/dax/Kconfig
-+++ b/drivers/dax/Kconfig
-@@ -8,6 +8,7 @@ if DAX
- config DEV_DAX
- 	tristate "Device DAX: direct access mapping device"
- 	depends on TRANSPARENT_HUGEPAGE
-+	depends on FILE_LOCKING
- 	help
- 	  Support raw access to differentiated (persistence, bandwidth,
- 	  latency...) memory via an mmap(2) capable character
-diff --git a/drivers/dax/device.c b/drivers/dax/device.c
-index e9f3b3e4bbf4..fa75004185c4 100644
---- a/drivers/dax/device.c
-+++ b/drivers/dax/device.c
-@@ -10,6 +10,7 @@
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * General Public License for more details.
-  */
+diff --git a/drivers/infiniband/core/umem.c b/drivers/infiniband/core/umem.c
+index 21e60b1e2ff4..5e4598982359 100644
+--- a/drivers/infiniband/core/umem.c
++++ b/drivers/infiniband/core/umem.c
+@@ -36,6 +36,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/sched/signal.h>
+ #include <linux/sched/mm.h>
 +#include <linux/mapdirect.h>
- #include <linux/pagemap.h>
- #include <linux/module.h>
- #include <linux/device.h>
-@@ -430,6 +431,7 @@ static int dev_dax_fault(struct vm_fault *vmf)
- static const struct vm_operations_struct dax_vm_ops = {
- 	.fault = dev_dax_fault,
- 	.huge_fault = dev_dax_huge_fault,
-+	.lease_direct = map_direct_lease,
- };
+ #include <linux/export.h>
+ #include <linux/hugetlb.h>
+ #include <linux/slab.h>
+@@ -46,10 +47,16 @@
  
- static int dax_mmap(struct file *filp, struct vm_area_struct *vma)
-@@ -540,8 +542,10 @@ static void kill_dev_dax(struct dev_dax *dev_dax)
+ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int dirty)
  {
- 	struct dax_device *dax_dev = dev_dax->dax_dev;
- 	struct inode *inode = dax_inode(dax_dev);
-+	const bool wait = true;
++	struct lease_direct *ld, *_ld;
+ 	struct scatterlist *sg;
+ 	struct page *page;
+ 	int i;
  
- 	kill_dax(dax_dev);
-+	break_layout(inode, wait);
- 	unmap_mapping_range(inode->i_mapping, 0, 0, 1);
- }
- 
-diff --git a/fs/Kconfig b/fs/Kconfig
-index a7b31a96a753..3668cfb046d5 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -59,6 +59,10 @@ config FS_DAX_PMD
- 	depends on ZONE_DEVICE
- 	depends on TRANSPARENT_HUGEPAGE
- 
-+config DAX_MAP_DIRECT
-+	bool
-+	default FS_DAX || DEV_DAX
++	list_for_each_entry_safe(ld, _ld, &umem->leases, list) {
++		list_del_init(&ld->list);
++		map_direct_lease_destroy(ld);
++	}
 +
- endif # BLOCK
+ 	if (umem->nmap > 0)
+ 		ib_dma_unmap_sg(dev, umem->sg_head.sgl,
+ 				umem->npages,
+@@ -64,10 +71,20 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
+ 	}
  
- # Posix ACL utility routines
-diff --git a/fs/Makefile b/fs/Makefile
-index c0e791d235d8..21b8fb104656 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -29,7 +29,8 @@ obj-$(CONFIG_TIMERFD)		+= timerfd.o
- obj-$(CONFIG_EVENTFD)		+= eventfd.o
- obj-$(CONFIG_USERFAULTFD)	+= userfaultfd.o
- obj-$(CONFIG_AIO)               += aio.o
--obj-$(CONFIG_FS_DAX)		+= dax.o mapdirect.o
-+obj-$(CONFIG_FS_DAX)		+= dax.o
-+obj-$(CONFIG_DAX_MAP_DIRECT)	+= mapdirect.o
- obj-$(CONFIG_FS_ENCRYPTION)	+= crypto/
- obj-$(CONFIG_FILE_LOCKING)      += locks.o
- obj-$(CONFIG_COMPAT)		+= compat.o compat_ioctl.o
-diff --git a/fs/mapdirect.c b/fs/mapdirect.c
-index c6954033fc1a..dd4a16f9ffc6 100644
---- a/fs/mapdirect.c
-+++ b/fs/mapdirect.c
-@@ -218,7 +218,7 @@ static const struct lock_manager_operations lease_direct_lm_ops = {
- 	.lm_change = lease_direct_lm_change,
+ 	sg_free_table(&umem->sg_head);
+-	return;
+ 
+ }
+ 
++static void ib_umem_lease_break(void *__umem)
++{
++	struct ib_umem *umem = umem;
++	struct ib_device *idev = umem->context->device;
++	struct device *dev = idev->dma_device;
++	struct scatterlist *sgl = umem->sg_head.sgl;
++
++	iommu_unmap(umem->iommu, sg_dma_address(sgl) & PAGE_MASK,
++			iommu_sg_num_pages(dev, sgl, umem->npages));
++}
++
+ /**
+  * ib_umem_get - Pin and DMA map userspace memory.
+  *
+@@ -96,7 +113,10 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
+ 	struct scatterlist *sg, *sg_list_start;
+ 	int need_release = 0;
+ 	unsigned int gup_flags = FOLL_WRITE;
++	struct vm_area_struct *vma_prev = NULL;
++	struct device *dma_dev;
+ 
++	dma_dev = context->device->dma_device;
+ 	if (dmasync)
+ 		dma_attrs |= DMA_ATTR_WRITE_BARRIER;
+ 
+@@ -120,6 +140,7 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
+ 	umem->address    = addr;
+ 	umem->page_shift = PAGE_SHIFT;
+ 	umem->pid	 = get_task_pid(current, PIDTYPE_PID);
++	INIT_LIST_HEAD(&umem->leases);
+ 	/*
+ 	 * We ask for writable memory if any of the following
+ 	 * access flags are set.  "Local write" and "remote write"
+@@ -147,19 +168,21 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
+ 	umem->hugetlb   = 1;
+ 
+ 	page_list = (struct page **) __get_free_page(GFP_KERNEL);
+-	if (!page_list) {
+-		put_pid(umem->pid);
+-		kfree(umem);
+-		return ERR_PTR(-ENOMEM);
+-	}
++	if (!page_list)
++		goto err_pagelist;
+ 
+ 	/*
+-	 * if we can't alloc the vma_list, it's not so bad;
+-	 * just assume the memory is not hugetlb memory
++	 * If DAX is enabled we need the vma to setup a ->lease_direct()
++	 * lease to protect against file modifications, otherwise we can
++	 * tolerate a failure to allocate the vma_list and just assume
++	 * that all vmas are not hugetlb-vmas.
+ 	 */
+ 	vma_list = (struct vm_area_struct **) __get_free_page(GFP_KERNEL);
+-	if (!vma_list)
++	if (!vma_list) {
++		if (IS_ENABLED(CONFIG_DAX_MAP_DIRECT))
++			goto err_vmalist;
+ 		umem->hugetlb = 0;
++	}
+ 
+ 	npages = ib_umem_num_pages(umem);
+ 
+@@ -199,15 +222,52 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		umem->npages += ret;
+ 		cur_base += ret * PAGE_SIZE;
+ 		npages   -= ret;
+ 
+ 		for_each_sg(sg_list_start, sg, ret, i) {
+-			if (vma_list && !is_vm_hugetlb_page(vma_list[i]))
+-				umem->hugetlb = 0;
++			const struct vm_operations_struct *vm_ops;
++			struct vm_area_struct *vma;
++			struct lease_direct *ld;
+ 
+ 			sg_set_page(sg, page_list[i], PAGE_SIZE, 0);
++			umem->npages++;
++
++			if (!vma_list)
++				continue;
++			vma = vma_list[i];
++
++			if (vma == vma_prev)
++				continue;
++			vma_prev = vma;
++
++			if (!is_vm_hugetlb_page(vma))
++				umem->hugetlb = 0;
++
++			if (!vma_is_dax(vma))
++				continue;
++
++			vm_ops = vma->vm_ops;
++			if (!vm_ops->lease_direct) {
++				dev_info(dma_dev, "DAX-RDMA requires a MAP_DIRECT mapping\n");
++				ret = -EOPNOTSUPP;
++				goto out;
++			}
++
++			if (!umem->iommu)
++				umem->iommu = dma_get_iommu_domain(dma_dev);
++			if (!umem->iommu) {
++				dev_info(dma_dev, "DAX-RDMA requires an iommu protected device\n");
++				ret = -EOPNOTSUPP;
++				goto out;
++			}
++			ld = vm_ops->lease_direct(vma, ib_umem_lease_break,
++					umem);
++			if (IS_ERR(ld)) {
++				ret = PTR_ERR(ld);
++				goto out;
++			}
++			list_add(&ld->list, &umem->leases);
+ 		}
+ 
+ 		/* preparing for next loop */
+@@ -242,6 +302,12 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
+ 	free_page((unsigned long) page_list);
+ 
+ 	return ret < 0 ? ERR_PTR(ret) : umem;
++err_vmalist:
++	free_page((unsigned long) page_list);
++err_pagelist:
++	put_pid(umem->pid);
++	kfree(umem);
++	return ERR_PTR(-ENOMEM);
+ }
+ EXPORT_SYMBOL(ib_umem_get);
+ 
+diff --git a/include/rdma/ib_umem.h b/include/rdma/ib_umem.h
+index 23159dd5be18..5048be012f96 100644
+--- a/include/rdma/ib_umem.h
++++ b/include/rdma/ib_umem.h
+@@ -34,6 +34,7 @@
+ #define IB_UMEM_H
+ 
+ #include <linux/list.h>
++#include <linux/iommu.h>
+ #include <linux/scatterlist.h>
+ #include <linux/workqueue.h>
+ 
+@@ -55,6 +56,13 @@ struct ib_umem {
+ 	struct sg_table sg_head;
+ 	int             nmap;
+ 	int             npages;
++	/*
++	 * Note: no lock protects this list since we assume memory
++	 * registration never races unregistration for a given ib_umem
++	 * instance.
++	 */
++	struct list_head	leases;
++	struct iommu_domain	*iommu;
  };
  
--static struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
-+struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
- 		void (*lds_break_fn)(void *), void *lds_owner)
- {
- 	struct file *file = vma->vm_file;
-@@ -272,6 +272,7 @@ static struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
- 	kfree(lds);
- 	return ERR_PTR(rc);
- }
-+EXPORT_SYMBOL_GPL(map_direct_lease);
- 
- struct lease_direct *generic_map_direct_lease(struct vm_area_struct *vma,
- 		void (*break_fn)(void *), void *owner)
-diff --git a/include/linux/mapdirect.h b/include/linux/mapdirect.h
-index e0df6ac5795a..6695fdcf8009 100644
---- a/include/linux/mapdirect.h
-+++ b/include/linux/mapdirect.h
-@@ -26,13 +26,15 @@ struct lease_direct {
- 	struct lease_direct_state *lds;
- };
- 
--#if IS_ENABLED(CONFIG_FS_DAX)
-+#if IS_ENABLED(CONFIG_DAX_MAP_DIRECT)
- struct map_direct_state *map_direct_register(int fd, struct vm_area_struct *vma);
- bool test_map_direct_valid(struct map_direct_state *mds);
- void generic_map_direct_open(struct vm_area_struct *vma);
- void generic_map_direct_close(struct vm_area_struct *vma);
- struct lease_direct *generic_map_direct_lease(struct vm_area_struct *vma,
- 		void (*ld_break_fn)(void *), void *ld_owner);
-+struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
-+		void (*lds_break_fn)(void *), void *lds_owner);
- void map_direct_lease_destroy(struct lease_direct *ld);
- #else
- static inline struct map_direct_state *map_direct_register(int fd,
-@@ -47,6 +49,7 @@ static inline bool test_map_direct_valid(struct map_direct_state *mds)
- #define generic_map_direct_open NULL
- #define generic_map_direct_close NULL
- #define generic_map_direct_lease NULL
-+#define map_direct_lease NULL
- static inline void map_direct_lease_destroy(struct lease_direct *ld)
- {
- }
+ /* Returns the offset of the umem start relative to the first page. */
 
