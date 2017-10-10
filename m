@@ -1,38 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:1223 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932080AbdJQWLc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Oct 2017 18:11:32 -0400
-Date: Wed, 18 Oct 2017 09:11:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 28/30] xfs: scrub directory parent pointers
-Message-ID: <20171017221130.GV15067@dastard>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777262776.1724.11135251107601015017.stgit@magnolia>
- <20171017001603.GY4703@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:49755 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751596AbdJJEH7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 00:07:59 -0400
+Date: Mon, 9 Oct 2017 21:07:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: handle error if xfs_btree_get_bufs fails
+Message-ID: <20171010040736.GY7122@magnolia>
+References: <20171010021949.GB8049@wotan.suse.de>
+ <a0eaaf24-75cf-19c4-c287-2445eae6fc70@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171017001603.GY4703@magnolia>
+In-Reply-To: <a0eaaf24-75cf-19c4-c287-2445eae6fc70@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, gfigueira@suse.com, tetsuya.inoue@suse.com
 
-On Mon, Oct 16, 2017 at 05:16:03PM -0700, Darrick J. Wong wrote:
-> Scrub parent pointers, sort of.  For directories, we can ride the
-> '..' entry up to the parent to confirm that there's at most one
-> dentry that points back to this directory.
+On Mon, Oct 09, 2017 at 10:07:12PM -0500, Eric Sandeen wrote:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: refactor the single-ilock-retry code into a separate validate function
+> 
+> On 10/9/17 9:19 PM, Luis R. Rodriguez wrote:
+> > What ever happened to this patch [0]? It was ACKed [1] 
+> 
+> (it was reviewed-by hch)
+> 
+> > but I haven't
+> > seen it merged. Did it fall through the cracks?
+> 
+> Seems like it, possibly because I sent V2 as a re:, accidentally.
 
-Looks fine.
+<grumble>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> 
+> -Eric
+>  
+> > [0] https://patchwork.kernel.org/patch/9486811/
+> > [1] https://www.spinics.net/lists/linux-xfs/msg02818.html
+> > 
+> >   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
