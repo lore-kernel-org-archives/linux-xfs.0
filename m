@@ -1,260 +1,240 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:46536 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932406AbdJKCiW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 22:38:22 -0400
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-        by m0001303.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v9B2b2kX026368
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:38:21 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by m0001303.ppops.net with ESMTP id 2dh1h62y71-8
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:38:21 -0700
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v6 3/3] xfs: Add realtime fallback if data device full
-Date: Tue, 10 Oct 2017 19:37:52 -0700
-Message-ID: <20171011023752.1373259-4-rwareing@fb.com>
-In-Reply-To: <20171011023752.1373259-1-rwareing@fb.com>
-References: <20171011023752.1373259-1-rwareing@fb.com>
+Received: from mx1.redhat.com ([209.132.183.28]:8444 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751156AbdJJEgv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 00:36:51 -0400
+Date: Tue, 10 Oct 2017 12:36:49 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] generic: test race between block map change and writeback
+Message-ID: <20171010043649.GI10593@eguan.usersys.redhat.com>
+References: <20170831040237.16022-1-eguan@redhat.com>
+ <20171009161255.GA19847@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171009161255.GA19847@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-- For FSes which have a realtime device configured, rt_fallback_pct forces
-  allocations to the realtime device after data device usage reaches
-  rt_fallback_pct.
-- Useful for realtime device users to help prevent ENOSPC errors when
-  selectively storing some files (e.g. small files) on data device, while
-  others are stored on realtime block device.
-- Set via the "rt_fallback_pct" sysfs value which is available if
-  the kernel is compiled with CONFIG_XFS_RT.
+On Mon, Oct 09, 2017 at 12:12:55PM -0400, Brian Foster wrote:
+> On Thu, Aug 31, 2017 at 12:02:37PM +0800, Eryu Guan wrote:
+> > Run delalloc writes & append writes & non-data-integrity syncs
+> > concurrently to test the race between block map change vs writeback.
+> > 
+> > This is to cover an XFS bug that data could be written to wrong
+> > block and delay allocated blocks are leaked because the block map
+> > was changed due to the removal of speculative allocated eofblocks
+> > when writeback is in progress.
+> > 
+> > And this test partially mimics what lustre-racer[1] test does, using
+> > which this bug was first found.
+> > 
+> > [1] https://git.hpdd.intel.com/?p=fs/lustre-release.git;a=tree;f=lustre/tests/racer;hb=HEAD
+> > 
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
+> > ---
+> > 
+> > This may not reproduce the bug on all hosts, but it does reproduce the XFS
+> > corruption issue reliably on my different test hosts.
+> > 
+> 
+> Was this problem fixed already or are we still waiting on a fix?
 
-Signed-off-by: Richard Wareing <rwareing@fb.com>
----
-Changes since v5:
-* Minor change to work with XFS_BMAPI_RTDATA method described
-  in rt_alloc_min patch
-* Fixed bounds checks on sysfs option
-* Documentation
+It's still an unfixed problem. Dave provided a test patch (which did fix
+the bug for me) then Christoph suggested a fix based on seqlock, and
+things stalled there. (I'm happy to pick up the work, but I'm not that
+familiar with all the allocation paths that could change the extent map,
+so I may need some guidance and time to play with it.)
 
-Changes since v4:
-* Refactored to align with xfs_inode_select_target change
-* Fallback percentage reworked to trigger on % space used on data device.
-  I find this a bit more intuitive as it aligns well with "df" output.
-* mp->m_rt_min_fdblocks now assigned via function call
-* Better consistency on sysfs options
+> 
+> >  tests/generic/451     | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/451.out |   2 +
+> >  tests/generic/group   |   1 +
+> >  3 files changed, 133 insertions(+)
+> >  create mode 100755 tests/generic/451
+> >  create mode 100644 tests/generic/451.out
+> > 
+> > diff --git a/tests/generic/451 b/tests/generic/451
+> > new file mode 100755
+> > index 000000000000..72cdd1c01de2
+> > --- /dev/null
+> > +++ b/tests/generic/451
+> > @@ -0,0 +1,130 @@
+> > +#! /bin/bash
+> > +# FS QA Test 451
+> > +#
+> > +# Run delalloc writes & append writes & non-data-integrity syncs concurrently
+> > +# to test the race between block map change vs writeback.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +MAXFILES=200
+> > +BLOCK_SZ=65536
+> > +
+> > +LOOP_CNT=12
+> 
+> If I skip the failure detection below, the test runs for 100s on my vm.
+> Otherwise it fails consistently within ~45s (worst case in 5 or 6
+> tries). Do you observe differently? If not, I'm wondering if we could
+> speed up the common case and reduce the number of iterations.
 
-Changes since v3:
-* None, new patch to patch set
+On my test vm, around 60% runs failed for me, and the run time of failed
+runs can vary from 6s to 65s. A successful run needs around 70s. I think
+I can reduce the LOOP_CNT to 10, then more than 50% runs failed for me
+and a successful run needs around 60s on my test vm.
 
- Documentation/filesystems/xfs.txt |  6 ++++++
- fs/xfs/xfs_fsops.c                |  2 ++
- fs/xfs/xfs_mount.c                | 24 ++++++++++++++++++++++
- fs/xfs/xfs_mount.h                |  7 +++++++
- fs/xfs/xfs_rtalloc.c              | 42 ++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.c                | 38 +++++++++++++++++++++++++++++++++++
- 6 files changed, 118 insertions(+), 1 deletion(-)
+> 
+> > +LOOP_TIME=5
+> > +PROC_CNT=16
+> > +
+> > +stop=$tmp.stop
+> > +
+> > +# get a random file to work on
+> > +getfile()
+> > +{
+> > +	echo $SCRATCH_MNT/$((RANDOM % MAXFILES))
+> > +}
+> > +
+> > +# delalloc write a relative big file to get enough dirty pages to be written
+> > +# back, and XFS needs big enough file to trigger speculative preallocations, so
+> > +# freeing these eofblocks could change the extent record
+> > +do_write()
+> > +{
+> > +	local blockcount=$((RANDOM % 100))
+> > +	local filesize=$((blockcount * BLOCK_SZ))
+> > +	$XFS_IO_PROG -ftc "pwrite -b $BLOCK_SZ 0 $filesize" `getfile` >/dev/null 2>&1
+> 
+> Long line here. Otherwise the rest of the test looks good.
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 0763972..ed6f6e2 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -486,3 +486,9 @@ When using a realtime sub-volume, the following sysfs options are supported:
- 	Buffered, direct IO and pre-allocation are supported.
- 
- 	Setting the value to "0" disables this behavior.
-+
-+  /sys/fs/xfs/<dev>/rt_fallback_pct
-+  (Units: percentage  Min: 0  Default: 0,  Max: 100)
-+	When set, the file will be allocated blocks from the realtime device if the
-+	data device space utilization rises above rt_fallback_pct.  Setting the
-+	value to "0" disables this behavior.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 6ccaae9..80ccb14 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -610,6 +610,8 @@ xfs_growfs_data_private(
- 	xfs_set_low_space_thresholds(mp);
- 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
- 
-+	mp->m_rt_min_free_dblocks = xfs_rt_calc_min_free_dblocks(mp);
-+
- 	/*
- 	 * If we expanded the last AG, free the per-AG reservation
- 	 * so we can reinitialize it with the new size.
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2eaf818..c91e6c4 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1396,3 +1396,27 @@ xfs_dev_is_read_only(
- 	}
- 	return 0;
- }
-+
-+/*
-+ * precalculate minimum of data blocks required, if we fall
-+ * below this value, we will fallback to the real-time device.
-+ *
-+ * m_rt_fallback_pct can only be non-zero if a real-time device
-+ * is configured.
-+ */
-+uint64_t
-+xfs_rt_calc_min_free_dblocks(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_rfsblock_t		min_free_dblocks = 0;
-+
-+	if (!XFS_IS_REALTIME_MOUNT(mp))
-+		return 0;
-+
-+	/* Pre-compute minimum data blocks required before
-+	 * falling back to RT device for allocations
-+	 */
-+	min_free_dblocks = mp->m_sb.sb_dblocks * (100 - mp->m_rt_fallback_pct);
-+	do_div(min_free_dblocks, 100);
-+	return min_free_dblocks;
-+}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e64936f..318bacc 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -198,6 +198,12 @@ typedef struct xfs_mount {
- 
- 	bool			m_fail_unmount;
- 	xfs_off_t		m_rt_alloc_min; /* Min RT allocation */
-+	/* Fallback to realtime device if data device usage above rt_fallback_pct */
-+	uint			m_rt_fallback_pct;
-+	/* Use realtime device if free data device blocks falls below this; computed
-+	 * from m_rt_fallback_pct.
-+	 */
-+	xfs_rfsblock_t		m_rt_min_free_dblocks;
- #ifdef DEBUG
- 	/*
- 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
-@@ -463,4 +469,5 @@ int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
- struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
- 		int error_class, int error);
- 
-+uint64_t	xfs_rt_calc_min_free_dblocks(struct xfs_mount *mp);
- #endif	/* __XFS_MOUNT_H__ */
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 4866e52..2dc9761 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1304,6 +1304,37 @@ xfs_rt_alloc_min(
- }
- 
- /*
-+ * m_rt_min_free_dblocks is a pre-computed threshold, which controls target
-+ * selection based on how many free blocks are available on the data device.
-+ *
-+ * If the number of free data device blocks falls below
-+ * mp->m_rt_min_free_dblocks, the realtime device is selected as the target
-+ * device.  If this value is not set, this target policy is in-active.
-+ *
-+ */
-+bool
-+xfs_rt_min_free_dblocks(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*ip,
-+	xfs_off_t		len)
-+{
-+	/* Disabled */
-+	if (!mp->m_rt_fallback_pct)
-+		return false;
-+
-+	/* If inode target is already realtime device, nothing to do here */
-+	if (!XFS_IS_REALTIME_INODE(ip)) {
-+		uint64_t	free_dblocks;
-+		free_dblocks = percpu_counter_sum(&mp->m_fdblocks) -
-+			mp->m_alloc_set_aside;
-+		if (free_dblocks < mp->m_rt_min_free_dblocks) {
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
-+/*
- * Select the target device for the inode based on either the size of the
- * initial allocation, or the amount of space available on the data device.
- *
-@@ -1332,5 +1363,14 @@ xfs_inode_select_rt_target(
- 	/* Select realtime device as our target based on the value of
- 	 * mp->m_rt_alloc_min.  Target selection code if not valid if not set.
- 	 */
--	return xfs_rt_alloc_min(mp, len);
-+	if (xfs_rt_alloc_min(mp, len))
-+		return true;
-+
-+	/* Check if data device has enough space, if not fallback to realtime
-+	 * device.  Valid only if mp->m_rt_fallback_pct is set.
-+	 */
-+	if (xfs_rt_min_free_dblocks(mp, ip, len))
-+		return true;
-+
-+	return false;
- }
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 954398d..f8c3523 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -166,6 +166,43 @@ rt_alloc_min_show(
- 	return snprintf(buf, PAGE_SIZE, "%lld\n", mp->m_rt_alloc_min);
- }
- XFS_SYSFS_ATTR_RW(rt_alloc_min);
-+
-+STATIC ssize_t
-+rt_fallback_pct_store(
-+	struct kobject		*kobject,
-+	const char		*buf,
-+	size_t			count)
-+{
-+	struct xfs_mount	*mp = to_mp(kobject);
-+	int			ret;
-+	int			val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (!XFS_IS_REALTIME_MOUNT(mp))
-+		return -EINVAL;
-+
-+	if (val < 0 || val > 100)
-+		return -EINVAL;
-+
-+	/* Only valid if using a real-time device */
-+	mp->m_rt_fallback_pct = val;
-+	mp->m_rt_min_free_dblocks = xfs_rt_calc_min_free_dblocks(mp);
-+	return count;
-+}
-+
-+STATIC ssize_t
-+rt_fallback_pct_show(
-+	struct kobject          *kobject,
-+	char                    *buf)
-+{
-+	struct xfs_mount        *mp = to_mp(kobject);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_fallback_pct);
-+}
-+XFS_SYSFS_ATTR_RW(rt_fallback_pct);
- #endif
- 
- static struct attribute *xfs_mp_attrs[] = {
-@@ -174,6 +211,7 @@ static struct attribute *xfs_mp_attrs[] = {
- #endif
- #ifdef CONFIG_XFS_RT
- 	ATTR_LIST(rt_alloc_min),
-+	ATTR_LIST(rt_fallback_pct),
- #endif
- 	NULL,
- };
--- 
-2.9.5
+Sure, will fix that. Thanks a lot for the review!
 
+Eryu
+> 
+> Brian
+> 
+> > +}
+> > +
+> > +# append another dirty page to the file, the writeback might pick it up too if
+> > +# the file is already under writeback
+> > +do_append()
+> > +{
+> > +	echo "test string" >> `getfile`
+> > +}
+> > +
+> > +# issue WB_SYNC_NONE writeback with the '-w' option of sync_range xfs_io
+> > +# command, so that the last dirty page from append write can be picked up in
+> > +# this writeback cycle. This is not mandatory but could help reproduce XFS
+> > +# corruption more easily.
+> > +do_writeback()
+> > +{
+> > +	$XFS_IO_PROG -c "sync_range -w 0 0" `getfile` >/dev/null 2>&1
+> > +}
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +# do fsck after each iteration in test
+> > +_require_scratch_nocheck
+> > +_require_xfs_io_command "sync_range"
+> > +
+> > +_scratch_mkfs >>$seqres.full 2>&1
+> > +_scratch_mount
+> > +
+> > +# loop for $LOOP_CNT iterations, and each iteration starts $PROC_CNT processes
+> > +# for each operation and runs for $LOOP_TIME seconds, and check filesystem
+> > +# consistency after each iteration
+> > +for i in `seq 1 $LOOP_CNT`; do
+> > +	rm -f $stop
+> > +	for j in `seq 1 $PROC_CNT`; do
+> > +		while [ ! -e $stop ]; do
+> > +			do_write
+> > +		done &
+> > +
+> > +		while [ ! -e $stop ]; do
+> > +			do_append
+> > +		done &
+> > +
+> > +		while [ ! -e $stop ]; do
+> > +			do_writeback
+> > +		done &
+> > +	done
+> > +	sleep $LOOP_TIME
+> > +	touch $stop
+> > +	wait
+> > +
+> > +	_scratch_unmount
+> > +	# test exits here if fs is inconsistent
+> > +	_check_scratch_fs
+> > +	_scratch_mount
+> > +done
+> > +
+> > +echo "Silence is golden"
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/451.out b/tests/generic/451.out
+> > new file mode 100644
+> > index 000000000000..db924411b72f
+> > --- /dev/null
+> > +++ b/tests/generic/451.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 451
+> > +Silence is golden
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 044ec3f355ed..b4bd66bc65a9 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -453,3 +453,4 @@
+> >  448 auto quick rw
+> >  449 auto quick acl enospc
+> >  450 auto quick rw
+> > +451 auto rw
+> > -- 
+> > 2.13.5
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
