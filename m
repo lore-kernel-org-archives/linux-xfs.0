@@ -1,12 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9037 "EHLO mga02.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:5865 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932191AbdJJOzn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:55:43 -0400
-Subject: [PATCH v8 00/14] MAP_DIRECT for DAX RDMA and userspace flush
+        id S932245AbdJJO4D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 10:56:03 -0400
+Subject: [PATCH v8 07/14] iommu,
+ dma-mapping: introduce dma_get_iommu_domain()
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:48:55 -0700
-Message-ID: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Tue, 10 Oct 2017 07:49:37 -0700
+Message-ID: <150764697773.16882.5489456954873798235.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -14,122 +17,139 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Marek Szyprowski <m.szyprowski@samsung.com>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, Doug Ledford <dledford@redhat.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Robin Murphy <robin.murphy@arm.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, iommu@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, David Woodhouse <dwmw2@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, iommu@lists.linux-foundation.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-Changes since v7 [1]:
-* Fix IOVA reuse race by leaving the dma scatterlist mapped until
-  unregistration time. Use iommu_unmap() in ib_umem_lease_break() to
-  force-invalidate the ibverbs memory registration. (David Woodhouse)
+Add a dma-mapping api helper to retrieve the generic iommu_domain for a
+device.  The motivation for this interface is making RDMA transfers to
+DAX mappings safe. If the DAX file's block map changes we need to be to
+reliably stop accesses to blocks that have been freed or re-assigned to
+a new file. With the iommu_domain and a callback from the DAX filesystem
+the kernel can safely revoke access to a DMA device. The process that
+performed the RDMA memory registration is also notified of this
+revocation event, but the kernel can not otherwise be in the position of
+waiting for userspace to quiesce the device.
 
-* Introduce iomap_can_allocate() as a way to check if any layouts are
-  present in the mmap write-fault path to prevent block map changes, and
-  start the leak break process when an allocating write-fault occurs.
-  This also removes the i_mapdcount bloat of 'struct inode' from v7.
-  (Dave Chinner)
+Since PMEM+DAX is currently only enabled for x86, we only update the x86
+iommu drivers.
 
-* Provide generic_map_direct_{open,close,lease} to cleanup the
-  filesystem wiring to implement MAP_DIRECT support (Dave Chinner)
-
-* Abandon (defer to a potential new fcntl()) support for using
-  MAP_DIRECT on non-DAX files. With this change we can validate the
-  inode is MAP_DIRECT capable just once at mmap time rather than every
-  fault.  (Dave Chinner)
-
-* Arrange for lease_direct leases to also wait the
-  /proc/sys/fs/lease-break-time period before calling break_fn. For
-  example, allow the lease-holder time to quiesce RDMA operations before
-  the iommu starts throwing io-faults.
-
-* Switch intel-iommu to use iommu_num_sg_pages().
-
-[1]: https://lists.01.org/pipermail/linux-nvdimm/2017-October/012707.html
-
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/base/dma-mapping.c  |   10 ++++++++++
+ drivers/iommu/amd_iommu.c   |   10 ++++++++++
+ drivers/iommu/intel-iommu.c |   15 +++++++++++++++
+ include/linux/dma-mapping.h |    3 +++
+ 4 files changed, 38 insertions(+)
 
-MAP_DIRECT is a mechanism that allows an application to establish a
-mapping where the kernel will not change the block-map, or otherwise
-dirty the block-map metadata of a file without notification. It supports
-a "flush from userspace" model where persistent memory applications can
-bypass the overhead of ongoing coordination of writes with the
-filesystem, and it provides safety to RDMA operations involving DAX
-mappings.
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index e584eddef0a7..fdb9764f95a4 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -369,3 +369,13 @@ void dma_deconfigure(struct device *dev)
+ 	of_dma_deconfigure(dev);
+ 	acpi_dma_deconfigure(dev);
+ }
++
++struct iommu_domain *dma_get_iommu_domain(struct device *dev)
++{
++	const struct dma_map_ops *ops = get_dma_ops(dev);
++
++	if (ops && ops->get_iommu)
++		return ops->get_iommu(dev);
++	return NULL;
++}
++EXPORT_SYMBOL(dma_get_iommu_domain);
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 51f8215877f5..c8e1a45af182 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -2271,6 +2271,15 @@ static struct protection_domain *get_domain(struct device *dev)
+ 	return domain;
+ }
+ 
++static struct iommu_domain *amd_dma_get_iommu(struct device *dev)
++{
++	struct protection_domain *domain = get_domain(dev);
++
++	if (IS_ERR(domain))
++		return NULL;
++	return &domain->domain;
++}
++
+ static void update_device_table(struct protection_domain *domain)
+ {
+ 	struct iommu_dev_data *dev_data;
+@@ -2689,6 +2698,7 @@ static const struct dma_map_ops amd_iommu_dma_ops = {
+ 	.unmap_sg	= unmap_sg,
+ 	.dma_supported	= amd_iommu_dma_supported,
+ 	.mapping_error	= amd_iommu_mapping_error,
++	.get_iommu	= amd_dma_get_iommu,
+ };
+ 
+ static int init_reserved_iova_ranges(void)
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 6784a05dd6b2..f3f4939cebad 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3578,6 +3578,20 @@ static int iommu_no_mapping(struct device *dev)
+ 	return 0;
+ }
+ 
++static struct iommu_domain *intel_dma_get_iommu(struct device *dev)
++{
++	struct dmar_domain *domain;
++
++	if (iommu_no_mapping(dev))
++		return NULL;
++
++	domain = get_valid_domain_for_dev(dev);
++	if (!domain)
++		return NULL;
++
++	return &domain->domain;
++}
++
+ static dma_addr_t __intel_map_single(struct device *dev, phys_addr_t paddr,
+ 				     size_t size, int dir, u64 dma_mask)
+ {
+@@ -3872,6 +3886,7 @@ const struct dma_map_ops intel_dma_ops = {
+ 	.map_page = intel_map_page,
+ 	.unmap_page = intel_unmap_page,
+ 	.mapping_error = intel_mapping_error,
++	.get_iommu = intel_dma_get_iommu,
+ #ifdef CONFIG_X86
+ 	.dma_supported = x86_dma_supported,
+ #endif
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 29ce9815da87..aa62df1d0d72 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -128,6 +128,7 @@ struct dma_map_ops {
+ 				   enum dma_data_direction dir);
+ 	int (*mapping_error)(struct device *dev, dma_addr_t dma_addr);
+ 	int (*dma_supported)(struct device *dev, u64 mask);
++	struct iommu_domain *(*get_iommu)(struct device *dev);
+ #ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
+ 	u64 (*get_required_mask)(struct device *dev);
+ #endif
+@@ -221,6 +222,8 @@ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
+ }
+ #endif
+ 
++extern struct iommu_domain *dma_get_iommu_domain(struct device *dev);
++
+ static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
+ 					      size_t size,
+ 					      enum dma_data_direction dir,
 
-The kernel always has the ability to revoke access and convert the file
-back to normal operation after performing a "lease break". Similar to
-fcntl leases, there is no way for userspace to to cancel the lease break
-process once it has started, it can only delay it via the
-/proc/sys/fs/lease-break-time setting.
-
-MAP_DIRECT enables XFS to supplant the device-dax interface for
-mmap-write access to persistent memory with no ongoing coordination with
-the filesystem via fsync/msync syscalls.
-
----
-
-Dan Williams (14):
-      mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap flags
-      fs, mm: pass fd to ->mmap_validate()
-      fs: MAP_DIRECT core
-      xfs: prepare xfs_break_layouts() for reuse with MAP_DIRECT
-      fs, xfs, iomap: introduce iomap_can_allocate()
-      xfs: wire up MAP_DIRECT
-      iommu, dma-mapping: introduce dma_get_iommu_domain()
-      fs, mapdirect: introduce ->lease_direct()
-      xfs: wire up ->lease_direct()
-      device-dax: wire up ->lease_direct()
-      iommu: up-level sg_num_pages() from amd-iommu
-      iommu/vt-d: use iommu_num_sg_pages
-      IB/core: use MAP_DIRECT to fix / enable RDMA to DAX mappings
-      tools/testing/nvdimm: enable rdma unit tests
-
-
- arch/alpha/include/uapi/asm/mman.h           |    1 
- arch/mips/include/uapi/asm/mman.h            |    1 
- arch/mips/kernel/vdso.c                      |    2 
- arch/parisc/include/uapi/asm/mman.h          |    1 
- arch/tile/mm/elf.c                           |    3 
- arch/x86/mm/mpx.c                            |    3 
- arch/xtensa/include/uapi/asm/mman.h          |    1 
- drivers/base/dma-mapping.c                   |   10 +
- drivers/dax/Kconfig                          |    1 
- drivers/dax/device.c                         |    4 
- drivers/infiniband/core/umem.c               |   90 +++++-
- drivers/iommu/amd_iommu.c                    |   40 +--
- drivers/iommu/intel-iommu.c                  |   30 +-
- drivers/iommu/iommu.c                        |   27 ++
- fs/Kconfig                                   |    5 
- fs/Makefile                                  |    1 
- fs/aio.c                                     |    2 
- fs/mapdirect.c                               |  382 ++++++++++++++++++++++++++
- fs/xfs/Kconfig                               |    4 
- fs/xfs/Makefile                              |    1 
- fs/xfs/xfs_file.c                            |  103 +++++++
- fs/xfs/xfs_iomap.c                           |    3 
- fs/xfs/xfs_layout.c                          |   45 +++
- fs/xfs/xfs_layout.h                          |   13 +
- fs/xfs/xfs_pnfs.c                            |   30 --
- fs/xfs/xfs_pnfs.h                            |   10 -
- include/linux/dma-mapping.h                  |    3 
- include/linux/fs.h                           |    2 
- include/linux/iomap.h                        |   10 +
- include/linux/iommu.h                        |    2 
- include/linux/mapdirect.h                    |   57 ++++
- include/linux/mm.h                           |   17 +
- include/linux/mman.h                         |   42 +++
- include/rdma/ib_umem.h                       |    8 +
- include/uapi/asm-generic/mman-common.h       |    1 
- include/uapi/asm-generic/mman.h              |    1 
- ipc/shm.c                                    |    3 
- mm/internal.h                                |    2 
- mm/mmap.c                                    |   28 +-
- mm/nommu.c                                   |    5 
- mm/util.c                                    |    7 
- tools/include/uapi/asm-generic/mman-common.h |    1 
- tools/testing/nvdimm/Kbuild                  |   31 ++
- tools/testing/nvdimm/config_check.c          |    2 
- tools/testing/nvdimm/test/iomap.c            |   14 +
- 45 files changed, 938 insertions(+), 111 deletions(-)
- create mode 100644 fs/mapdirect.c
- create mode 100644 fs/xfs/xfs_layout.c
- create mode 100644 fs/xfs/xfs_layout.h
- create mode 100644 include/linux/mapdirect.h
