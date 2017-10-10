@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9833 "EHLO mga02.intel.com"
+Received: from mga06.intel.com ([134.134.136.31]:38548 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932245AbdJJO4O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:56:14 -0400
-Subject: [PATCH v8 09/14] xfs: wire up ->lease_direct()
+        id S932325AbdJJO4m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 10:56:42 -0400
+Subject: [PATCH v8 14/14] tools/testing/nvdimm: enable rdma unit tests
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:49:48 -0700
-Message-ID: <150764698865.16882.6963827339963112876.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Tue, 10 Oct 2017 07:50:17 -0700
+Message-ID: <150764701713.16882.9840394340145664403.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,52 +16,116 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, iommu@lists.linux-foundation.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org
 
-A 'lease_direct' lease requires that the vma have a valid MAP_DIRECT
-mapping established. For xfs we use the generic_map_direct_lease()
-handler for ->lease_direct(). It establishes a new lease and then checks
-if the MAP_DIRECT mapping has been broken. We want to be sure that the
-process will receive notification that the MAP_DIRECT mapping is being
-torn down so it knows why other code paths are throwing failures.
+Provide a mock dma_get_iommu_domain() for the ibverbs core. Enable
+ib_umem_get() to satisfy its DAX safety checks for a controlled test.
 
-For example in the RDMA/ibverbs case we want ibv_reg_mr() to fail if the
-MAP_DIRECT mapping is invalid or in the process of being invalidated.
-
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jeff Layton <jlayton@poochiereds.net>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/xfs/xfs_file.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ tools/testing/nvdimm/Kbuild         |   31 +++++++++++++++++++++++++++++++
+ tools/testing/nvdimm/config_check.c |    2 ++
+ tools/testing/nvdimm/test/iomap.c   |   14 ++++++++++++++
+ 3 files changed, 47 insertions(+)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4bee027c9366..bc512a9a8df5 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1157,6 +1157,7 @@ static const struct vm_operations_struct xfs_file_vm_direct_ops = {
+diff --git a/tools/testing/nvdimm/Kbuild b/tools/testing/nvdimm/Kbuild
+index d870520da68b..f4a007090950 100644
+--- a/tools/testing/nvdimm/Kbuild
++++ b/tools/testing/nvdimm/Kbuild
+@@ -15,11 +15,13 @@ ldflags-y += --wrap=insert_resource
+ ldflags-y += --wrap=remove_resource
+ ldflags-y += --wrap=acpi_evaluate_object
+ ldflags-y += --wrap=acpi_evaluate_dsm
++ldflags-y += --wrap=dma_get_iommu_domain
  
- 	.open		= generic_map_direct_open,
- 	.close		= generic_map_direct_close,
-+	.lease_direct	= generic_map_direct_lease,
- };
+ DRIVERS := ../../../drivers
+ NVDIMM_SRC := $(DRIVERS)/nvdimm
+ ACPI_SRC := $(DRIVERS)/acpi/nfit
+ DAX_SRC := $(DRIVERS)/dax
++IBCORE := $(DRIVERS)/infiniband/core
+ ccflags-y := -I$(src)/$(NVDIMM_SRC)/
  
- static const struct vm_operations_struct xfs_file_vm_ops = {
-@@ -1209,8 +1210,8 @@ xfs_file_mmap_direct(
- 	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+ obj-$(CONFIG_LIBNVDIMM) += libnvdimm.o
+@@ -33,6 +35,7 @@ obj-$(CONFIG_DAX) += dax.o
+ endif
+ obj-$(CONFIG_DEV_DAX) += device_dax.o
+ obj-$(CONFIG_DEV_DAX_PMEM) += dax_pmem.o
++obj-$(CONFIG_INFINIBAND) += ib_core.o
  
- 	/*
--	 * generic_map_direct_{open,close} expect ->vm_private_data is
--	 * set to the result of map_direct_register
-+	 * generic_map_direct_{open,close,lease} expect
-+	 * ->vm_private_data is set to the result of map_direct_register
- 	 */
- 	vma->vm_private_data = mds;
- 	return 0;
+ nfit-y := $(ACPI_SRC)/core.o
+ nfit-$(CONFIG_X86_MCE) += $(ACPI_SRC)/mce.o
+@@ -75,4 +78,32 @@ libnvdimm-$(CONFIG_NVDIMM_PFN) += $(NVDIMM_SRC)/pfn_devs.o
+ libnvdimm-$(CONFIG_NVDIMM_DAX) += $(NVDIMM_SRC)/dax_devs.o
+ libnvdimm-y += config_check.o
+ 
++ib_core-y := $(IBCORE)/packer.o
++ib_core-y += $(IBCORE)/ud_header.o
++ib_core-y += $(IBCORE)/verbs.o
++ib_core-y += $(IBCORE)/cq.o
++ib_core-y += $(IBCORE)/rw.o
++ib_core-y += $(IBCORE)/sysfs.o
++ib_core-y += $(IBCORE)/device.o
++ib_core-y += $(IBCORE)/fmr_pool.o
++ib_core-y += $(IBCORE)/cache.o
++ib_core-y += $(IBCORE)/netlink.o
++ib_core-y += $(IBCORE)/roce_gid_mgmt.o
++ib_core-y += $(IBCORE)/mr_pool.o
++ib_core-y += $(IBCORE)/addr.o
++ib_core-y += $(IBCORE)/sa_query.o
++ib_core-y += $(IBCORE)/multicast.o
++ib_core-y += $(IBCORE)/mad.o
++ib_core-y += $(IBCORE)/smi.o
++ib_core-y += $(IBCORE)/agent.o
++ib_core-y += $(IBCORE)/mad_rmpp.o
++ib_core-y += $(IBCORE)/security.o
++ib_core-y += $(IBCORE)/nldev.o
++
++ib_core-$(CONFIG_INFINIBAND_USER_MEM) += $(IBCORE)/umem.o
++ib_core-$(CONFIG_INFINIBAND_ON_DEMAND_PAGING) += $(IBCORE)/umem_odp.o
++ib_core-$(CONFIG_INFINIBAND_ON_DEMAND_PAGING) += $(IBCORE)/umem_rbtree.o
++ib_core-$(CONFIG_CGROUP_RDMA) += $(IBCORE)/cgroup.o
++ib_core-y += config_check.o
++
+ obj-m += test/
+diff --git a/tools/testing/nvdimm/config_check.c b/tools/testing/nvdimm/config_check.c
+index 7dc5a0af9b54..33e7c805bfd6 100644
+--- a/tools/testing/nvdimm/config_check.c
++++ b/tools/testing/nvdimm/config_check.c
+@@ -14,4 +14,6 @@ void check(void)
+ 	BUILD_BUG_ON(!IS_MODULE(CONFIG_ACPI_NFIT));
+ 	BUILD_BUG_ON(!IS_MODULE(CONFIG_DEV_DAX));
+ 	BUILD_BUG_ON(!IS_MODULE(CONFIG_DEV_DAX_PMEM));
++	BUILD_BUG_ON(!IS_ENABLED(CONFIG_INFINIBAND_USER_MEM));
++	BUILD_BUG_ON(!IS_MODULE(CONFIG_INFINIBAND));
+ }
+diff --git a/tools/testing/nvdimm/test/iomap.c b/tools/testing/nvdimm/test/iomap.c
+index e1f75a1914a1..1e439b2b01e7 100644
+--- a/tools/testing/nvdimm/test/iomap.c
++++ b/tools/testing/nvdimm/test/iomap.c
+@@ -17,6 +17,7 @@
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/pfn_t.h>
++#include <linux/iommu.h>
+ #include <linux/acpi.h>
+ #include <linux/io.h>
+ #include <linux/mm.h>
+@@ -388,4 +389,17 @@ union acpi_object * __wrap_acpi_evaluate_dsm(acpi_handle handle, const guid_t *g
+ }
+ EXPORT_SYMBOL(__wrap_acpi_evaluate_dsm);
+ 
++/*
++ * This assumes that any iommu api routine we would call with this
++ * domain checks for NULL ops and either returns an error or does
++ * nothing.
++ */
++struct iommu_domain *__wrap_dma_get_iommu_domain(struct device *dev)
++{
++	static struct iommu_domain domain;
++
++	return &domain;
++}
++EXPORT_SYMBOL(__wrap_dma_get_iommu_domain);
++
+ MODULE_LICENSE("GPL v2");
 
