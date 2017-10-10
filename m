@@ -1,155 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45693 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdJJQ7Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 12:59:16 -0400
-Date: Tue, 10 Oct 2017 09:59:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: buffer lru reference count error injection tag
-Message-ID: <20171010165911.GA7122@magnolia>
-References: <20171010164756.28390-1-bfoster@redhat.com>
- <20171010164756.28390-3-bfoster@redhat.com>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:52546 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932243AbdJJRj2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 13:39:28 -0400
+Received: by mail-oi0-f41.google.com with SMTP id p126so46484944oih.9
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 10:39:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171010164756.28390-3-bfoster@redhat.com>
+In-Reply-To: <20171010172516.GA29915@obsidianresearch.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 10 Oct 2017 10:39:27 -0700
+Message-ID: <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Tue, Oct 10, 2017 at 12:47:56PM -0400, Brian Foster wrote:
-> XFS uses a fixed reference count for certain types of buffers in the
-> internal LRU cache. These reference counts dictate how aggressively
-> certain buffers are reclaimed vs. others. While the reference counts
-> implements priority across different buffer types, all buffers
-> (other than uncached buffers) are typically cached for at least one
-> reclaim cycle.
-> 
-> We've had at least one bug recently that has been hidden by a
-> released buffer sitting around in the LRU. Users hitting the problem
-> were able to reproduce under enough memory pressure to cause
-> aggressive reclaim in a particular window of time.
-> 
-> To support future xfstests cases, add an error injection tag to
-> hardcode the buffer reference count to zero. When enabled, this
-> bypasses caching of associated buffers and facilitates test cases
-> that depend on this behavior.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Tue, Oct 10, 2017 at 10:25 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Mon, Oct 09, 2017 at 12:28:29PM -0700, Dan Williams wrote:
+>
+>> > I don't think this has ever come up in the context of an all-device MR
+>> > invalidate requirement. Drivers already have code to invalidate
+>> > specifc MRs, but to find all MRs that touch certain pages and then
+>> > invalidate them would be new code.
+>> >
+>> > We also have ODP aware drivers that can retarget a MR to new
+>> > physical pages. If the block map changes DAX should synchronously
+>> > retarget the ODP MR, not halt DMA.
+>>
+>> Have a look at the patch [1], I don't touch the ODP path.
+>
+> But, does ODP work OK already? I'm not clear on that..
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+It had better. If the mapping is invalidated I would hope that
+generates an io fault that gets handled by the driver to setup the new
+mapping. I don't see how it can work otherwise.
 
-> ---
->  fs/xfs/xfs_buf.c   | 16 ++++++++++++++++
->  fs/xfs/xfs_buf.h   |  5 +----
->  fs/xfs/xfs_error.c |  3 +++
->  fs/xfs/xfs_error.h |  4 +++-
->  4 files changed, 23 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 2f97c12..d481dd2 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -42,6 +42,7 @@
->  #include "xfs_mount.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_error.h"
->  
->  static kmem_zone_t *xfs_buf_zone;
->  
-> @@ -2129,3 +2130,18 @@ xfs_buf_terminate(void)
->  {
->  	kmem_zone_destroy(xfs_buf_zone);
->  }
-> +
-> +void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
-> +{
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +
-> +	/*
-> +	 * Set the lru reference count to 0 based on the error injection tag.
-> +	 * This allows userspace to disrupt buffer caching for debug/testing
-> +	 * purposes.
-> +	 */
-> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BUF_LRU_REF))
-> +		lru_ref = 0;
-> +
-> +	atomic_set(&bp->b_lru_ref, lru_ref);
-> +}
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index bf71507d..f873bb7 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -352,10 +352,7 @@ extern void xfs_buf_terminate(void);
->  #define XFS_BUF_ADDR(bp)		((bp)->b_maps[0].bm_bn)
->  #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_maps[0].bm_bn = (xfs_daddr_t)(bno))
->  
-> -static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
-> -{
-> -	atomic_set(&bp->b_lru_ref, lru_ref);
-> -}
-> +void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref);
->  
->  static inline int xfs_buf_ispinned(struct xfs_buf *bp)
->  {
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index eaf86f5..6732b0a 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -58,6 +58,7 @@ static unsigned int xfs_errortag_random_default[] = {
->  	XFS_RANDOM_DROP_WRITES,
->  	XFS_RANDOM_LOG_BAD_CRC,
->  	XFS_RANDOM_LOG_ITEM_PIN,
-> +	XFS_RANDOM_BUF_LRU_REF,
->  };
->  
->  struct xfs_errortag_attr {
-> @@ -163,6 +164,7 @@ XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
->  XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
->  XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
->  XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
-> +XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
->  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -196,6 +198,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(drop_writes),
->  	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
->  	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
-> +	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
->  	NULL,
->  };
->  
-> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index 7c4bef3..78a7f43 100644
-> --- a/fs/xfs/xfs_error.h
-> +++ b/fs/xfs/xfs_error.h
-> @@ -107,7 +107,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->  #define XFS_ERRTAG_DROP_WRITES				28
->  #define XFS_ERRTAG_LOG_BAD_CRC				29
->  #define XFS_ERRTAG_LOG_ITEM_PIN				30
-> -#define XFS_ERRTAG_MAX					31
-> +#define XFS_ERRTAG_BUF_LRU_REF				31
-> +#define XFS_ERRTAG_MAX					32
->  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> @@ -143,6 +144,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->  #define XFS_RANDOM_DROP_WRITES				1
->  #define XFS_RANDOM_LOG_BAD_CRC				1
->  #define XFS_RANDOM_LOG_ITEM_PIN				1
-> +#define XFS_RANDOM_BUF_LRU_REF				2
->  
->  #ifdef DEBUG
->  extern int xfs_errortag_init(struct xfs_mount *mp);
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> > Most likely ODP & DAX would need to be used together to get robust
+>> > user applications, as having the user QP's go to an error state at
+>> > random times (due to DMA failures) during operation is never going to
+>> > be acceptable...
+>>
+>> It's not random. The process that set up the mapping and registered
+>> the memory gets SIGIO when someone else tries to modify the file map.
+>> That process then gets /proc/sys/fs/lease-break-time seconds to fix
+>> the problem before the kernel force revokes the DMA access.
+>
+> Well, the process can't fix the problem in bounded time, so it is
+> random if it will fail or not.
+>
+> MR life time is under the control of the remote side, and time to
+> complete the network exchanges required to release the MRs is hard to
+> bound. So even if I implement SIGIO properly my app will still likely
+> have random QP failures under various cases and work loads. :(
+>
+> This is why ODP should be the focus because this cannot work fully
+> reliably otherwise..
+
+The lease break time is configurable. If that application can't
+respond to a stop request within a timeout of its own choosing then it
+should not be using DAX mappings.
+
+>
+>> > Perhaps you might want to initially only support ODP MR mappings with
+>> > DAX and then the DMA fencing issue goes away?
+>>
+>> I'd rather try to fix the non-ODP DAX case instead of just turning it off.
+>
+> Well, what about using SIGKILL if the lease-break-time hits? The
+> kernel will clean up the MRs when the process exits and this will
+> fence DMA to that memory.
+
+Can you point me to where the MR cleanup code fences DMA and quiesces
+the device?
+
+> But, still, if you really want to be fined graned, then I think
+> invalidating the impacted MR's is a better solution for RDMA than
+> trying to do it with the IOMMU...
+
+If there's a better routine for handling ib_umem_lease_break() I'd
+love to use it. Right now I'm reaching for the only tool I know for
+kernel enforced revocation of DMA access.
