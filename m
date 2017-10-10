@@ -1,213 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55804 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42228 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751415AbdJJMo4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 08:44:56 -0400
-Date: Tue, 10 Oct 2017 20:44:55 +0800
-From: Xiong Zhou <xzhou@redhat.com>
-Subject: Re: [PATCH] generic: test race between block map change and writeback
-Message-ID: <20171010124455.kmnld7ejc6h7kgsz@XZHOUW.usersys.redhat.com>
-References: <20170831040237.16022-1-eguan@redhat.com>
+        id S1756254AbdJJNl6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 09:41:58 -0400
+Date: Tue, 10 Oct 2017 09:41:57 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+Message-ID: <20171010134156.GB24506@bfoster.bfoster>
+References: <20171010105802.31353-1-rgoldwyn@suse.de>
+ <20171010105802.31353-2-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831040237.16022-1-eguan@redhat.com>
+In-Reply-To: <20171010105802.31353-2-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Thu, Aug 31, 2017 at 12:02:37PM +0800, Eryu Guan wrote:
-> Run delalloc writes & append writes & non-data-integrity syncs
-> concurrently to test the race between block map change vs writeback.
+On Tue, Oct 10, 2017 at 05:58:01AM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> This is to cover an XFS bug that data could be written to wrong
-> block and delay allocated blocks are leaked because the block map
-> was changed due to the removal of speculative allocated eofblocks
-> when writeback is in progress.
+> This allows to make pwritev2() calls with RWF_NOWAIT,
+> which would fail in case the call blocks.
 > 
-> And this test partially mimics what lustre-racer[1] test does, using
-> which this bug was first found.
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> [1] https://git.hpdd.intel.com/?p=fs/lustre-release.git;a=tree;f=lustre/tests/racer;hb=HEAD
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> Changes since v2:
+> 	- ifdef around -N which set RWF_NOWAIT
 > ---
-> 
-> This may not reproduce the bug on all hosts, but it does reproduce the XFS
-> corruption issue reliably on my different test hosts.
-> 
->  tests/generic/451     | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/451.out |   2 +
->  tests/generic/group   |   1 +
->  3 files changed, 133 insertions(+)
->  create mode 100755 tests/generic/451
->  create mode 100644 tests/generic/451.out
-> 
-> diff --git a/tests/generic/451 b/tests/generic/451
-> new file mode 100755
-> index 000000000000..72cdd1c01de2
-> --- /dev/null
-> +++ b/tests/generic/451
-> @@ -0,0 +1,130 @@
-> +#! /bin/bash
-> +# FS QA Test 451
-> +#
-> +# Run delalloc writes & append writes & non-data-integrity syncs concurrently
-> +# to test the race between block map change vs writeback.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +MAXFILES=200
-> +BLOCK_SZ=65536
-> +
-> +LOOP_CNT=12
-> +LOOP_TIME=5
-> +PROC_CNT=16
-> +
-> +stop=$tmp.stop
-> +
-> +# get a random file to work on
-> +getfile()
-> +{
-> +	echo $SCRATCH_MNT/$((RANDOM % MAXFILES))
-> +}
-> +
-> +# delalloc write a relative big file to get enough dirty pages to be written
-> +# back, and XFS needs big enough file to trigger speculative preallocations, so
-> +# freeing these eofblocks could change the extent record
-> +do_write()
-> +{
-> +	local blockcount=$((RANDOM % 100))
-> +	local filesize=$((blockcount * BLOCK_SZ))
-> +	$XFS_IO_PROG -ftc "pwrite -b $BLOCK_SZ 0 $filesize" `getfile` >/dev/null 2>&1
-> +}
-> +
-> +# append another dirty page to the file, the writeback might pick it up too if
-> +# the file is already under writeback
-> +do_append()
-> +{
-> +	echo "test string" >> `getfile`
-> +}
-> +
-> +# issue WB_SYNC_NONE writeback with the '-w' option of sync_range xfs_io
-> +# command, so that the last dirty page from append write can be picked up in
-> +# this writeback cycle. This is not mandatory but could help reproduce XFS
-> +# corruption more easily.
-> +do_writeback()
-> +{
-> +	$XFS_IO_PROG -c "sync_range -w 0 0" `getfile` >/dev/null 2>&1
-> +}
 
-How about adding a do_read() to read some data and check.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Thanks,
-Xiong
-
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +# do fsck after each iteration in test
-> +_require_scratch_nocheck
-> +_require_xfs_io_command "sync_range"
-> +
-> +_scratch_mkfs >>$seqres.full 2>&1
-> +_scratch_mount
-> +
-> +# loop for $LOOP_CNT iterations, and each iteration starts $PROC_CNT processes
-> +# for each operation and runs for $LOOP_TIME seconds, and check filesystem
-> +# consistency after each iteration
-> +for i in `seq 1 $LOOP_CNT`; do
-> +	rm -f $stop
-> +	for j in `seq 1 $PROC_CNT`; do
-> +		while [ ! -e $stop ]; do
-> +			do_write
-> +		done &
-> +
-> +		while [ ! -e $stop ]; do
-> +			do_append
-> +		done &
-> +
-> +		while [ ! -e $stop ]; do
-> +			do_writeback
-> +		done &
-> +	done
-> +	sleep $LOOP_TIME
-> +	touch $stop
-> +	wait
-> +
-> +	_scratch_unmount
-> +	# test exits here if fs is inconsistent
-> +	_check_scratch_fs
-> +	_scratch_mount
-> +done
-> +
-> +echo "Silence is golden"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/451.out b/tests/generic/451.out
-> new file mode 100644
-> index 000000000000..db924411b72f
-> --- /dev/null
-> +++ b/tests/generic/451.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 451
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 044ec3f355ed..b4bd66bc65a9 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -453,3 +453,4 @@
->  448 auto quick rw
->  449 auto quick acl enospc
->  450 auto quick rw
-> +451 auto rw
+>  io/pwrite.c       | 10 +++++++++-
+>  man/man8/xfs_io.8 |  6 ++++++
+>  2 files changed, 15 insertions(+), 1 deletion(-)
+> 
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index 5ceb26c7..e06dfb46 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -53,6 +53,9 @@ pwrite_help(void)
+>  #ifdef HAVE_PWRITEV
+>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+>  #endif
+> +#ifdef HAVE_PWRITEV2
+> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+> +#endif
+>  "\n"));
+>  }
+>  
+> @@ -279,7 +282,7 @@ pwrite_f(
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+>  
+> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+>  		switch (c) {
+>  		case 'b':
+>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -308,6 +311,11 @@ pwrite_f(
+>  		case 'i':
+>  			infile = optarg;
+>  			break;
+> +#ifdef HAVE_PWRITEV2
+> +		case 'N':
+> +			pwritev2_flags |= RWF_NOWAIT;
+> +			break;
+> +#endif
+>  		case 's':
+>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
+>  			if (skip < 0) {
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 0fd9b951..9c58914f 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
+>  with a number of blocksize length iovecs. The number of iovecs is set by the
+>  .I vectors
+>  parameter.
+> +.TP
+> +.B \-N
+> +Perform the
+> +.BR pwritev2 (2)
+> +call with
+> +.I RWF_NOWAIT.
+>  .RE
+>  .PD
+>  .TP
 > -- 
-> 2.13.5
+> 2.14.2
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
