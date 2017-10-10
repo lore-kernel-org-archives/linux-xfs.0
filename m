@@ -1,88 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10931 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932087AbdJJO4c (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:56:32 -0400
-Subject: [PATCH v8 12/14] iommu/vt-d: use iommu_num_sg_pages
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:50:05 -0700
-Message-ID: <150764700544.16882.8780240398561523090.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43663 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932075AbdJJQzx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 12:55:53 -0400
+Date: Tue, 10 Oct 2017 09:55:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: assert that xattr inactivation never reaches a
+ hole
+Message-ID: <20171010165546.GZ7122@magnolia>
+References: <20171010164756.28390-1-bfoster@redhat.com>
+ <20171010164756.28390-2-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171010164756.28390-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Ashok Raj <ashok.raj@intel.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Use the common helper for accounting the size of the IOVA range for a
-scatterlist so that iommu and dma apis agree on the size of a
-scatterlist. This is in support for using iommu_unmap() in advance of
-dma_unmap_sg() to invalidate an io-mapping in advance of the IOVA range
-being deallocated. MAP_DIRECT needs this functionality for force
-revoking RDMA access to a DAX mapping when userspace fails to respond to
-within a lease break timeout period.
+On Tue, Oct 10, 2017 at 12:47:55PM -0400, Brian Foster wrote:
+> The child buffer read in xfs_attr3_node_inactive() should never
+> reach a hole in the attr fork. If this occurs, it is likely due to a
+> bug. Prior to commit cd87d867 ("xfs: don't crash on unexpected holes
+> in dir/attr btrees"), this would result in a crash. Now that the
+> crash has been fixed, this is a silent failure.
+> 
+> Add an assert in this codepath to detect this particular condition.
+> Note that the right fix here may be to pass -1 to
+> xfs_da3_node_read() such that a hole returns an error. This is a
+> cautious first step in that direction.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_attr_inactive.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> index ebd66b1..6b4f5c6 100644
+> --- a/fs/xfs/xfs_attr_inactive.c
+> +++ b/fs/xfs/xfs_attr_inactive.c
+> @@ -255,6 +255,7 @@ xfs_attr3_node_inactive(
+>  						XFS_ATTR_FORK);
+>  		if (error)
+>  			return error;
+> +		ASSERT(child_bp);
 
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/iommu/intel-iommu.c |   19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+xfs_dabuf_map will log an error message and return -EFSCORRUPTED if
+mappedbno == -1, so (afaict) you might as well do that instead of adding
+the ASSERT.  We'll still see the dmesg report.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f3f4939cebad..94a5fbe62fb8 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3785,14 +3785,9 @@ static void intel_unmap_sg(struct device *dev, struct scatterlist *sglist,
- 			   unsigned long attrs)
- {
- 	dma_addr_t startaddr = sg_dma_address(sglist) & PAGE_MASK;
--	unsigned long nrpages = 0;
--	struct scatterlist *sg;
--	int i;
--
--	for_each_sg(sglist, sg, nelems, i) {
--		nrpages += aligned_nrpages(sg_dma_address(sg), sg_dma_len(sg));
--	}
-+	unsigned long nrpages;
- 
-+	nrpages = iommu_sg_num_pages(dev, sglist, nelems);
- 	intel_unmap(dev, startaddr, nrpages << VTD_PAGE_SHIFT);
- }
- 
-@@ -3813,14 +3808,12 @@ static int intel_nontranslate_map_sg(struct device *hddev,
- static int intel_map_sg(struct device *dev, struct scatterlist *sglist, int nelems,
- 			enum dma_data_direction dir, unsigned long attrs)
- {
--	int i;
- 	struct dmar_domain *domain;
- 	size_t size = 0;
- 	int prot = 0;
- 	unsigned long iova_pfn;
- 	int ret;
--	struct scatterlist *sg;
--	unsigned long start_vpfn;
-+	unsigned long start_vpfn, npages;
- 	struct intel_iommu *iommu;
- 
- 	BUG_ON(dir == DMA_NONE);
-@@ -3833,11 +3826,9 @@ static int intel_map_sg(struct device *dev, struct scatterlist *sglist, int nele
- 
- 	iommu = domain_get_iommu(domain);
- 
--	for_each_sg(sglist, sg, nelems, i)
--		size += aligned_nrpages(sg->offset, sg->length);
-+	npages = iommu_sg_num_pages(dev, sglist, nelems);
- 
--	iova_pfn = intel_alloc_iova(dev, domain, dma_to_mm_pfn(size),
--				*dev->dma_mask);
-+	iova_pfn = intel_alloc_iova(dev, domain, npages, *dev->dma_mask);
- 	if (!iova_pfn) {
- 		sglist->dma_length = 0;
- 		return 0;
+--D
 
+>  		if (child_bp) {
+>  						/* save for re-read later */
+>  			child_blkno = XFS_BUF_ADDR(child_bp);
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
