@@ -1,148 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:9706 "EHLO mga04.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55092 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932087AbdJJO4Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:56:25 -0400
-Subject: [PATCH v8 11/14] iommu: up-level sg_num_pages() from amd-iommu
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:50:00 -0700
-Message-ID: <150764700026.16882.6848398427693240452.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S932431AbdJJQr6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 12:47:58 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 80A081299
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 16:47:58 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5F4BA17C2D
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 16:47:58 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/2] xfs: assert that xattr inactivation never reaches a hole
+Date: Tue, 10 Oct 2017 12:47:55 -0400
+Message-Id: <20171010164756.28390-2-bfoster@redhat.com>
+In-Reply-To: <20171010164756.28390-1-bfoster@redhat.com>
+References: <20171010164756.28390-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-iommu_sg_num_pages() is a helper that walks a scattlerlist and counts
-pages taking segment boundaries and iommu_num_pages() into account.
-Up-level it for determining the IOVA range that dma_map_ops established
-at dma_map_sg() time. The intent is to iommu_unmap() the IOVA range in
-advance of freeing IOVA range.
+The child buffer read in xfs_attr3_node_inactive() should never
+reach a hole in the attr fork. If this occurs, it is likely due to a
+bug. Prior to commit cd87d867 ("xfs: don't crash on unexpected holes
+in dir/attr btrees"), this would result in a crash. Now that the
+crash has been fixed, this is a silent failure.
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Add an assert in this codepath to detect this particular condition.
+Note that the right fix here may be to pass -1 to
+xfs_da3_node_read() such that a hole returns an error. This is a
+cautious first step in that direction.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- drivers/iommu/amd_iommu.c |   30 ++----------------------------
- drivers/iommu/iommu.c     |   27 +++++++++++++++++++++++++++
- include/linux/iommu.h     |    2 ++
- 3 files changed, 31 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_attr_inactive.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index c8e1a45af182..4795b0823469 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2459,32 +2459,6 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
- 	__unmap_single(dma_dom, dma_addr, size, dir);
- }
- 
--static int sg_num_pages(struct device *dev,
--			struct scatterlist *sglist,
--			int nelems)
--{
--	unsigned long mask, boundary_size;
--	struct scatterlist *s;
--	int i, npages = 0;
--
--	mask          = dma_get_seg_boundary(dev);
--	boundary_size = mask + 1 ? ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT :
--				   1UL << (BITS_PER_LONG - PAGE_SHIFT);
--
--	for_each_sg(sglist, s, nelems, i) {
--		int p, n;
--
--		s->dma_address = npages << PAGE_SHIFT;
--		p = npages % boundary_size;
--		n = iommu_num_pages(sg_phys(s), s->length, PAGE_SIZE);
--		if (p + n > boundary_size)
--			npages += boundary_size - p;
--		npages += n;
--	}
--
--	return npages;
--}
--
- /*
-  * The exported map_sg function for dma_ops (handles scatter-gather
-  * lists).
-@@ -2507,7 +2481,7 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
- 	dma_dom  = to_dma_ops_domain(domain);
- 	dma_mask = *dev->dma_mask;
- 
--	npages = sg_num_pages(dev, sglist, nelems);
-+	npages = iommu_sg_num_pages(dev, sglist, nelems);
- 
- 	address = dma_ops_alloc_iova(dev, dma_dom, npages, dma_mask);
- 	if (address == AMD_IOMMU_MAPPING_ERROR)
-@@ -2585,7 +2559,7 @@ static void unmap_sg(struct device *dev, struct scatterlist *sglist,
- 
- 	startaddr = sg_dma_address(sglist) & PAGE_MASK;
- 	dma_dom   = to_dma_ops_domain(domain);
--	npages    = sg_num_pages(dev, sglist, nelems);
-+	npages    = iommu_sg_num_pages(dev, sglist, nelems);
- 
- 	__unmap_single(dma_dom, startaddr, npages << PAGE_SHIFT, dir);
- }
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 3de5c0bcb5cc..cfe6eeea3578 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -33,6 +33,7 @@
- #include <linux/bitops.h>
- #include <linux/property.h>
- #include <trace/events/iommu.h>
-+#include <linux/iommu-helper.h>
- 
- static struct kset *iommu_group_kset;
- static DEFINE_IDA(iommu_group_ida);
-@@ -1631,6 +1632,32 @@ size_t iommu_unmap_fast(struct iommu_domain *domain,
- }
- EXPORT_SYMBOL_GPL(iommu_unmap_fast);
- 
-+int iommu_sg_num_pages(struct device *dev, struct scatterlist *sglist,
-+		int nelems)
-+{
-+	unsigned long mask, boundary_size;
-+	struct scatterlist *s;
-+	int i, npages = 0;
-+
-+	mask = dma_get_seg_boundary(dev);
-+	boundary_size = mask + 1 ? ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT
-+		: 1UL << (BITS_PER_LONG - PAGE_SHIFT);
-+
-+	for_each_sg(sglist, s, nelems, i) {
-+		int p, n;
-+
-+		s->dma_address = npages << PAGE_SHIFT;
-+		p = npages % boundary_size;
-+		n = iommu_num_pages(sg_phys(s), s->length, PAGE_SIZE);
-+		if (p + n > boundary_size)
-+			npages += boundary_size - p;
-+		npages += n;
-+	}
-+
-+	return npages;
-+}
-+EXPORT_SYMBOL_GPL(iommu_sg_num_pages);
-+
- size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
- 			 struct scatterlist *sg, unsigned int nents, int prot)
- {
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index a7f2ac689d29..5b2d20e1475a 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -303,6 +303,8 @@ extern size_t iommu_unmap(struct iommu_domain *domain, unsigned long iova,
- 			  size_t size);
- extern size_t iommu_unmap_fast(struct iommu_domain *domain,
- 			       unsigned long iova, size_t size);
-+extern int iommu_sg_num_pages(struct device *dev, struct scatterlist *sglist,
-+		int nelems);
- extern size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
- 				struct scatterlist *sg,unsigned int nents,
- 				int prot);
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index ebd66b1..6b4f5c6 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -255,6 +255,7 @@ xfs_attr3_node_inactive(
+ 						XFS_ATTR_FORK);
+ 		if (error)
+ 			return error;
++		ASSERT(child_bp);
+ 		if (child_bp) {
+ 						/* save for re-read later */
+ 			child_blkno = XFS_BUF_ADDR(child_bp);
+-- 
+2.9.5
 
