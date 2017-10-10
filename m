@@ -1,46 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:44006 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752099AbdJKCMZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 22:12:25 -0400
-Received: by mail-oi0-f51.google.com with SMTP id c77so663598oig.0
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:12:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20171011004631.GX3666@dastard>
-References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150764695771.16882.9179160793491582514.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171011004631.GX3666@dastard>
+Received: from mga04.intel.com ([192.55.52.120]:9706 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932087AbdJJO4Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 10:56:25 -0400
+Subject: [PATCH v8 11/14] iommu: up-level sg_num_pages() from amd-iommu
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 19:12:23 -0700
-Message-ID: <CAPcyv4jK9-otfgtyoq_9i+jDzdzYpBRTk0s5UqM8zMOMC09CXw@mail.gmail.com>
-Subject: Re: [PATCH v8 04/14] xfs: prepare xfs_break_layouts() for reuse with MAP_DIRECT
-Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 10 Oct 2017 07:50:00 -0700
+Message-ID: <150764700026.16882.6848398427693240452.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, iommu@lists.linux-foundation.org, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: linux-nvdimm@lists.01.org
+Cc: linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Oct 10, 2017 at 5:46 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Oct 10, 2017 at 07:49:17AM -0700, Dan Williams wrote:
->> Move xfs_break_layouts() to its own compilation unit so that it can be
->> used for both pnfs layouts and MAP_DIRECT mappings.
-> .....
->> diff --git a/fs/xfs/xfs_pnfs.h b/fs/xfs/xfs_pnfs.h
->> index b587cb99b2b7..4135b2482697 100644
->> --- a/fs/xfs/xfs_pnfs.h
->> +++ b/fs/xfs/xfs_pnfs.h
->> @@ -1,19 +1,13 @@
->>  #ifndef _XFS_PNFS_H
->>  #define _XFS_PNFS_H 1
->>
->> +#include "xfs_layout.h"
->> +
->
-> I missed this the first time through - we try not to put includes
-> in header files, and instead make sure each C file has all the
-> includes they require. Can you move this to all the C files that
-> need layouts and remove the include of the xfs_pnfs.h include from
-> them?
+iommu_sg_num_pages() is a helper that walks a scattlerlist and counts
+pages taking segment boundaries and iommu_num_pages() into account.
+Up-level it for determining the IOVA range that dma_map_ops established
+at dma_map_sg() time. The intent is to iommu_unmap() the IOVA range in
+advance of freeing IOVA range.
 
-Sure, will do.
+Cc: Joerg Roedel <joro@8bytes.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/iommu/amd_iommu.c |   30 ++----------------------------
+ drivers/iommu/iommu.c     |   27 +++++++++++++++++++++++++++
+ include/linux/iommu.h     |    2 ++
+ 3 files changed, 31 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index c8e1a45af182..4795b0823469 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -2459,32 +2459,6 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+ 	__unmap_single(dma_dom, dma_addr, size, dir);
+ }
+ 
+-static int sg_num_pages(struct device *dev,
+-			struct scatterlist *sglist,
+-			int nelems)
+-{
+-	unsigned long mask, boundary_size;
+-	struct scatterlist *s;
+-	int i, npages = 0;
+-
+-	mask          = dma_get_seg_boundary(dev);
+-	boundary_size = mask + 1 ? ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT :
+-				   1UL << (BITS_PER_LONG - PAGE_SHIFT);
+-
+-	for_each_sg(sglist, s, nelems, i) {
+-		int p, n;
+-
+-		s->dma_address = npages << PAGE_SHIFT;
+-		p = npages % boundary_size;
+-		n = iommu_num_pages(sg_phys(s), s->length, PAGE_SIZE);
+-		if (p + n > boundary_size)
+-			npages += boundary_size - p;
+-		npages += n;
+-	}
+-
+-	return npages;
+-}
+-
+ /*
+  * The exported map_sg function for dma_ops (handles scatter-gather
+  * lists).
+@@ -2507,7 +2481,7 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
+ 	dma_dom  = to_dma_ops_domain(domain);
+ 	dma_mask = *dev->dma_mask;
+ 
+-	npages = sg_num_pages(dev, sglist, nelems);
++	npages = iommu_sg_num_pages(dev, sglist, nelems);
+ 
+ 	address = dma_ops_alloc_iova(dev, dma_dom, npages, dma_mask);
+ 	if (address == AMD_IOMMU_MAPPING_ERROR)
+@@ -2585,7 +2559,7 @@ static void unmap_sg(struct device *dev, struct scatterlist *sglist,
+ 
+ 	startaddr = sg_dma_address(sglist) & PAGE_MASK;
+ 	dma_dom   = to_dma_ops_domain(domain);
+-	npages    = sg_num_pages(dev, sglist, nelems);
++	npages    = iommu_sg_num_pages(dev, sglist, nelems);
+ 
+ 	__unmap_single(dma_dom, startaddr, npages << PAGE_SHIFT, dir);
+ }
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 3de5c0bcb5cc..cfe6eeea3578 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -33,6 +33,7 @@
+ #include <linux/bitops.h>
+ #include <linux/property.h>
+ #include <trace/events/iommu.h>
++#include <linux/iommu-helper.h>
+ 
+ static struct kset *iommu_group_kset;
+ static DEFINE_IDA(iommu_group_ida);
+@@ -1631,6 +1632,32 @@ size_t iommu_unmap_fast(struct iommu_domain *domain,
+ }
+ EXPORT_SYMBOL_GPL(iommu_unmap_fast);
+ 
++int iommu_sg_num_pages(struct device *dev, struct scatterlist *sglist,
++		int nelems)
++{
++	unsigned long mask, boundary_size;
++	struct scatterlist *s;
++	int i, npages = 0;
++
++	mask = dma_get_seg_boundary(dev);
++	boundary_size = mask + 1 ? ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT
++		: 1UL << (BITS_PER_LONG - PAGE_SHIFT);
++
++	for_each_sg(sglist, s, nelems, i) {
++		int p, n;
++
++		s->dma_address = npages << PAGE_SHIFT;
++		p = npages % boundary_size;
++		n = iommu_num_pages(sg_phys(s), s->length, PAGE_SIZE);
++		if (p + n > boundary_size)
++			npages += boundary_size - p;
++		npages += n;
++	}
++
++	return npages;
++}
++EXPORT_SYMBOL_GPL(iommu_sg_num_pages);
++
+ size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
+ 			 struct scatterlist *sg, unsigned int nents, int prot)
+ {
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index a7f2ac689d29..5b2d20e1475a 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -303,6 +303,8 @@ extern size_t iommu_unmap(struct iommu_domain *domain, unsigned long iova,
+ 			  size_t size);
+ extern size_t iommu_unmap_fast(struct iommu_domain *domain,
+ 			       unsigned long iova, size_t size);
++extern int iommu_sg_num_pages(struct device *dev, struct scatterlist *sglist,
++		int nelems);
+ extern size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
+ 				struct scatterlist *sg,unsigned int nents,
+ 				int prot);
+
