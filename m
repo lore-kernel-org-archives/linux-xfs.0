@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:5865 "EHLO mga05.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:6747 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932245AbdJJO4D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 10:56:03 -0400
-Subject: [PATCH v8 07/14] iommu,
- dma-mapping: introduce dma_get_iommu_domain()
+        id S932087AbdJJO4T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Oct 2017 10:56:19 -0400
+Subject: [PATCH v8 10/14] device-dax: wire up ->lease_direct()
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 10 Oct 2017 07:49:37 -0700
-Message-ID: <150764697773.16882.5489456954873798235.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Tue, 10 Oct 2017 07:49:54 -0700
+Message-ID: <150764699451.16882.18368970483709189847.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -17,139 +16,146 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, iommu@lists.linux-foundation.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Jan Kara <jack@suse.cz>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, iommu@lists.linux-foundation.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-Add a dma-mapping api helper to retrieve the generic iommu_domain for a
-device.  The motivation for this interface is making RDMA transfers to
-DAX mappings safe. If the DAX file's block map changes we need to be to
-reliably stop accesses to blocks that have been freed or re-assigned to
-a new file. With the iommu_domain and a callback from the DAX filesystem
-the kernel can safely revoke access to a DMA device. The process that
-performed the RDMA memory registration is also notified of this
-revocation event, but the kernel can not otherwise be in the position of
-waiting for userspace to quiesce the device.
+The only event that will break a lease_direct lease in the device-dax
+case is the device shutdown path where the physical pages might get
+assigned to another device.
 
-Since PMEM+DAX is currently only enabled for x86, we only update the x86
-iommu drivers.
-
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Ashok Raj <ashok.raj@intel.com>
 Cc: Jan Kara <jack@suse.cz>
 Cc: Jeff Moyer <jmoyer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/base/dma-mapping.c  |   10 ++++++++++
- drivers/iommu/amd_iommu.c   |   10 ++++++++++
- drivers/iommu/intel-iommu.c |   15 +++++++++++++++
- include/linux/dma-mapping.h |    3 +++
- 4 files changed, 38 insertions(+)
+ drivers/dax/Kconfig       |    1 +
+ drivers/dax/device.c      |    4 ++++
+ fs/Kconfig                |    4 ++++
+ fs/Makefile               |    3 ++-
+ fs/mapdirect.c            |    3 ++-
+ include/linux/mapdirect.h |    5 ++++-
+ 6 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index e584eddef0a7..fdb9764f95a4 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -369,3 +369,13 @@ void dma_deconfigure(struct device *dev)
- 	of_dma_deconfigure(dev);
- 	acpi_dma_deconfigure(dev);
- }
-+
-+struct iommu_domain *dma_get_iommu_domain(struct device *dev)
-+{
-+	const struct dma_map_ops *ops = get_dma_ops(dev);
-+
-+	if (ops && ops->get_iommu)
-+		return ops->get_iommu(dev);
-+	return NULL;
-+}
-+EXPORT_SYMBOL(dma_get_iommu_domain);
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 51f8215877f5..c8e1a45af182 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2271,6 +2271,15 @@ static struct protection_domain *get_domain(struct device *dev)
- 	return domain;
- }
- 
-+static struct iommu_domain *amd_dma_get_iommu(struct device *dev)
-+{
-+	struct protection_domain *domain = get_domain(dev);
-+
-+	if (IS_ERR(domain))
-+		return NULL;
-+	return &domain->domain;
-+}
-+
- static void update_device_table(struct protection_domain *domain)
- {
- 	struct iommu_dev_data *dev_data;
-@@ -2689,6 +2698,7 @@ static const struct dma_map_ops amd_iommu_dma_ops = {
- 	.unmap_sg	= unmap_sg,
- 	.dma_supported	= amd_iommu_dma_supported,
- 	.mapping_error	= amd_iommu_mapping_error,
-+	.get_iommu	= amd_dma_get_iommu,
+diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
+index b79aa8f7a497..be03d4dbe646 100644
+--- a/drivers/dax/Kconfig
++++ b/drivers/dax/Kconfig
+@@ -8,6 +8,7 @@ if DAX
+ config DEV_DAX
+ 	tristate "Device DAX: direct access mapping device"
+ 	depends on TRANSPARENT_HUGEPAGE
++	depends on FILE_LOCKING
+ 	help
+ 	  Support raw access to differentiated (persistence, bandwidth,
+ 	  latency...) memory via an mmap(2) capable character
+diff --git a/drivers/dax/device.c b/drivers/dax/device.c
+index e9f3b3e4bbf4..fa75004185c4 100644
+--- a/drivers/dax/device.c
++++ b/drivers/dax/device.c
+@@ -10,6 +10,7 @@
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  */
++#include <linux/mapdirect.h>
+ #include <linux/pagemap.h>
+ #include <linux/module.h>
+ #include <linux/device.h>
+@@ -430,6 +431,7 @@ static int dev_dax_fault(struct vm_fault *vmf)
+ static const struct vm_operations_struct dax_vm_ops = {
+ 	.fault = dev_dax_fault,
+ 	.huge_fault = dev_dax_huge_fault,
++	.lease_direct = map_direct_lease,
  };
  
- static int init_reserved_iova_ranges(void)
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6784a05dd6b2..f3f4939cebad 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3578,6 +3578,20 @@ static int iommu_no_mapping(struct device *dev)
- 	return 0;
- }
- 
-+static struct iommu_domain *intel_dma_get_iommu(struct device *dev)
-+{
-+	struct dmar_domain *domain;
-+
-+	if (iommu_no_mapping(dev))
-+		return NULL;
-+
-+	domain = get_valid_domain_for_dev(dev);
-+	if (!domain)
-+		return NULL;
-+
-+	return &domain->domain;
-+}
-+
- static dma_addr_t __intel_map_single(struct device *dev, phys_addr_t paddr,
- 				     size_t size, int dir, u64 dma_mask)
+ static int dax_mmap(struct file *filp, struct vm_area_struct *vma)
+@@ -540,8 +542,10 @@ static void kill_dev_dax(struct dev_dax *dev_dax)
  {
-@@ -3872,6 +3886,7 @@ const struct dma_map_ops intel_dma_ops = {
- 	.map_page = intel_map_page,
- 	.unmap_page = intel_unmap_page,
- 	.mapping_error = intel_mapping_error,
-+	.get_iommu = intel_dma_get_iommu,
- #ifdef CONFIG_X86
- 	.dma_supported = x86_dma_supported,
- #endif
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 29ce9815da87..aa62df1d0d72 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -128,6 +128,7 @@ struct dma_map_ops {
- 				   enum dma_data_direction dir);
- 	int (*mapping_error)(struct device *dev, dma_addr_t dma_addr);
- 	int (*dma_supported)(struct device *dev, u64 mask);
-+	struct iommu_domain *(*get_iommu)(struct device *dev);
- #ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
- 	u64 (*get_required_mask)(struct device *dev);
- #endif
-@@ -221,6 +222,8 @@ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
- }
- #endif
+ 	struct dax_device *dax_dev = dev_dax->dax_dev;
+ 	struct inode *inode = dax_inode(dax_dev);
++	const bool wait = true;
  
-+extern struct iommu_domain *dma_get_iommu_domain(struct device *dev);
+ 	kill_dax(dax_dev);
++	break_layout(inode, wait);
+ 	unmap_mapping_range(inode->i_mapping, 0, 0, 1);
+ }
+ 
+diff --git a/fs/Kconfig b/fs/Kconfig
+index a7b31a96a753..3668cfb046d5 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -59,6 +59,10 @@ config FS_DAX_PMD
+ 	depends on ZONE_DEVICE
+ 	depends on TRANSPARENT_HUGEPAGE
+ 
++config DAX_MAP_DIRECT
++	bool
++	default FS_DAX || DEV_DAX
 +
- static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
- 					      size_t size,
- 					      enum dma_data_direction dir,
+ endif # BLOCK
+ 
+ # Posix ACL utility routines
+diff --git a/fs/Makefile b/fs/Makefile
+index c0e791d235d8..21b8fb104656 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -29,7 +29,8 @@ obj-$(CONFIG_TIMERFD)		+= timerfd.o
+ obj-$(CONFIG_EVENTFD)		+= eventfd.o
+ obj-$(CONFIG_USERFAULTFD)	+= userfaultfd.o
+ obj-$(CONFIG_AIO)               += aio.o
+-obj-$(CONFIG_FS_DAX)		+= dax.o mapdirect.o
++obj-$(CONFIG_FS_DAX)		+= dax.o
++obj-$(CONFIG_DAX_MAP_DIRECT)	+= mapdirect.o
+ obj-$(CONFIG_FS_ENCRYPTION)	+= crypto/
+ obj-$(CONFIG_FILE_LOCKING)      += locks.o
+ obj-$(CONFIG_COMPAT)		+= compat.o compat_ioctl.o
+diff --git a/fs/mapdirect.c b/fs/mapdirect.c
+index c6954033fc1a..dd4a16f9ffc6 100644
+--- a/fs/mapdirect.c
++++ b/fs/mapdirect.c
+@@ -218,7 +218,7 @@ static const struct lock_manager_operations lease_direct_lm_ops = {
+ 	.lm_change = lease_direct_lm_change,
+ };
+ 
+-static struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
++struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
+ 		void (*lds_break_fn)(void *), void *lds_owner)
+ {
+ 	struct file *file = vma->vm_file;
+@@ -272,6 +272,7 @@ static struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
+ 	kfree(lds);
+ 	return ERR_PTR(rc);
+ }
++EXPORT_SYMBOL_GPL(map_direct_lease);
+ 
+ struct lease_direct *generic_map_direct_lease(struct vm_area_struct *vma,
+ 		void (*break_fn)(void *), void *owner)
+diff --git a/include/linux/mapdirect.h b/include/linux/mapdirect.h
+index e0df6ac5795a..6695fdcf8009 100644
+--- a/include/linux/mapdirect.h
++++ b/include/linux/mapdirect.h
+@@ -26,13 +26,15 @@ struct lease_direct {
+ 	struct lease_direct_state *lds;
+ };
+ 
+-#if IS_ENABLED(CONFIG_FS_DAX)
++#if IS_ENABLED(CONFIG_DAX_MAP_DIRECT)
+ struct map_direct_state *map_direct_register(int fd, struct vm_area_struct *vma);
+ bool test_map_direct_valid(struct map_direct_state *mds);
+ void generic_map_direct_open(struct vm_area_struct *vma);
+ void generic_map_direct_close(struct vm_area_struct *vma);
+ struct lease_direct *generic_map_direct_lease(struct vm_area_struct *vma,
+ 		void (*ld_break_fn)(void *), void *ld_owner);
++struct lease_direct *map_direct_lease(struct vm_area_struct *vma,
++		void (*lds_break_fn)(void *), void *lds_owner);
+ void map_direct_lease_destroy(struct lease_direct *ld);
+ #else
+ static inline struct map_direct_state *map_direct_register(int fd,
+@@ -47,6 +49,7 @@ static inline bool test_map_direct_valid(struct map_direct_state *mds)
+ #define generic_map_direct_open NULL
+ #define generic_map_direct_close NULL
+ #define generic_map_direct_lease NULL
++#define map_direct_lease NULL
+ static inline void map_direct_lease_destroy(struct lease_direct *ld)
+ {
+ }
 
