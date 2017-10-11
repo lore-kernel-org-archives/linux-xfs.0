@@ -1,862 +1,316 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30656 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752807AbdJLBnD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:43:03 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1h1Jf028808
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:02 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1h1Bn007840
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:01 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9C1h1dx029184
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:01 GMT
-Subject: [PATCH 21/30] xfs: scrub inodes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Oct 2017 18:43:00 -0700
-Message-ID: <150777258004.1724.14107466871314594061.stgit@magnolia>
-In-Reply-To: <150777244315.1724.6916081372861799350.stgit@magnolia>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx2.suse.de ([195.135.220.15]:58299 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757651AbdJKUGW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Oct 2017 16:06:22 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 01/19] mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap flags
+Date: Wed, 11 Oct 2017 22:05:45 +0200
+Message-Id: <20171011200603.27442-2-jack@suse.cz>
+In-Reply-To: <20171011200603.27442-1-jack@suse.cz>
+References: <20171011200603.27442-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dan Williams <dan.j.williams@intel.com>
 
-Scrub the fields within an inode.
+The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
+mechanism to define new behavior that is known to fail on older kernels
+without the support. Define a new MAP_SHARED_VALIDATE flag pattern that
+is guaranteed to fail on all legacy mmap implementations.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+It is worth noting that the original proposal was for a standalone
+MAP_VALIDATE flag. However, when that  could not be supported by all
+archs Linus observed:
+
+    I see why you *think* you want a bitmap. You think you want
+    a bitmap because you want to make MAP_VALIDATE be part of MAP_SYNC
+    etc, so that people can do
+
+    ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED
+		    | MAP_SYNC, fd, 0);
+
+    and "know" that MAP_SYNC actually takes.
+
+    And I'm saying that whole wish is bogus. You're fundamentally
+    depending on special semantics, just make it explicit. It's already
+    not portable, so don't try to make it so.
+
+    Rename that MAP_VALIDATE as MAP_SHARED_VALIDATE, make it have a value
+    of 0x3, and make people do
+
+    ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE
+		    | MAP_SYNC, fd, 0);
+
+    and then the kernel side is easier too (none of that random garbage
+    playing games with looking at the "MAP_VALIDATE bit", but just another
+    case statement in that map type thing.
+
+    Boom. Done.
+
+Similar to ->fallocate() we also want the ability to validate the
+support for new flags on a per ->mmap() 'struct file_operations'
+instance basis.  Towards that end arrange for flags to be generically
+validated against a mmap_supported_mask exported by 'struct
+file_operations'. By default all existing flags are implicitly
+supported, but new flags require MAP_SHARED_VALIDATE and
+per-instance-opt-in.
+
+Cc: Jan Kara <jack@suse.cz>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    3 
- fs/xfs/scrub/common.c  |   54 ++++
- fs/xfs/scrub/common.h  |    3 
- fs/xfs/scrub/inode.c   |  607 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.c   |   18 +
- fs/xfs/scrub/scrub.h   |    2 
- 7 files changed, 685 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/scrub/inode.c
+ arch/alpha/include/uapi/asm/mman.h           |  1 +
+ arch/mips/include/uapi/asm/mman.h            |  1 +
+ arch/mips/kernel/vdso.c                      |  2 +-
+ arch/parisc/include/uapi/asm/mman.h          |  1 +
+ arch/tile/mm/elf.c                           |  3 ++-
+ arch/xtensa/include/uapi/asm/mman.h          |  1 +
+ include/linux/fs.h                           |  2 ++
+ include/linux/mm.h                           |  2 +-
+ include/linux/mman.h                         | 39 ++++++++++++++++++++++++++++
+ include/uapi/asm-generic/mman-common.h       |  1 +
+ mm/mmap.c                                    | 21 ++++++++++++---
+ tools/include/uapi/asm-generic/mman-common.h |  1 +
+ 12 files changed, 69 insertions(+), 6 deletions(-)
 
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index a7c5752..28e14b7 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -151,6 +151,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   btree.o \
- 				   common.o \
- 				   ialloc.o \
-+				   inode.o \
- 				   refcount.o \
- 				   rmap.o \
- 				   scrub.o \
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b3f992c..f8463e0 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -494,9 +494,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
- #define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
-+#define XFS_SCRUB_TYPE_INODE	11	/* inode record */
+diff --git a/arch/alpha/include/uapi/asm/mman.h b/arch/alpha/include/uapi/asm/mman.h
+index 3b26cc62dadb..92823f24890b 100644
+--- a/arch/alpha/include/uapi/asm/mman.h
++++ b/arch/alpha/include/uapi/asm/mman.h
+@@ -14,6 +14,7 @@
+ #define MAP_TYPE	0x0f		/* Mask for type of mapping (OSF/1 is _wrong_) */
+ #define MAP_FIXED	0x100		/* Interpret addr exactly */
+ #define MAP_ANONYMOUS	0x10		/* don't use a file */
++#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	11
-+#define XFS_SCRUB_TYPE_NR	12
+ /* not used by linux, but here to make sure we don't clash with OSF/1 defines */
+ #define _MAP_HASSEMAPHORE 0x0200
+diff --git a/arch/mips/include/uapi/asm/mman.h b/arch/mips/include/uapi/asm/mman.h
+index da3216007fe0..c77689076577 100644
+--- a/arch/mips/include/uapi/asm/mman.h
++++ b/arch/mips/include/uapi/asm/mman.h
+@@ -30,6 +30,7 @@
+ #define MAP_PRIVATE	0x002		/* Changes are private */
+ #define MAP_TYPE	0x00f		/* Mask for type of mapping */
+ #define MAP_FIXED	0x010		/* Interpret addr exactly */
++#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 39165c3..415c6a9 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -30,6 +30,8 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_itable.h"
- #include "xfs_alloc.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_bmap.h"
-@@ -488,3 +490,55 @@ xfs_scrub_checkpoint_log(
- 	xfs_ail_push_all_sync(mp->m_ail);
- 	return 0;
- }
-+
-+/*
-+ * Given an inode and the scrub control structure, grab either the
-+ * inode referenced in the control structure or the inode passed in.
-+ * The inode is not locked.
-+ */
-+int
-+xfs_scrub_get_inode(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip_in)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip = NULL;
-+	int				error;
-+
-+	/*
-+	 * If userspace passed us an AG number or a generation number
-+	 * without an inode number, they haven't got a clue so bail out
-+	 * immediately.
-+	 */
-+	if (sc->sm->sm_agno || (sc->sm->sm_gen && !sc->sm->sm_ino))
-+		return -EINVAL;
-+
-+	/* We want to scan the inode we already had opened. */
-+	if (sc->sm->sm_ino == 0 || sc->sm->sm_ino == ip_in->i_ino) {
-+		sc->ip = ip_in;
-+		return 0;
-+	}
-+
-+	/* Look up the inode, see if the generation number matches. */
-+	if (xfs_internal_inum(mp, sc->sm->sm_ino))
-+		return -ENOENT;
-+	error = xfs_iget(mp, NULL, sc->sm->sm_ino,
-+			XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE, 0, &ip);
-+	if (error == -ENOENT || error == -EINVAL) {
-+		/* inode doesn't exist... */
-+		return -ENOENT;
-+	} else if (error) {
-+		trace_xfs_scrub_op_error(sc,
-+				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
-+				XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
-+				error, __return_address);
-+		return error;
-+	}
-+	if (VFS_I(ip)->i_generation != sc->sm->sm_gen) {
-+		iput(VFS_I(ip));
-+		return -ENOENT;
-+	}
-+
-+	sc->ip = ip;
-+	return 0;
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 610e956..fcec11e 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -87,6 +87,8 @@ int xfs_scrub_setup_ag_rmapbt(struct xfs_scrub_context *sc,
- 			      struct xfs_inode *ip);
- int xfs_scrub_setup_ag_refcountbt(struct xfs_scrub_context *sc,
- 				  struct xfs_inode *ip);
-+int xfs_scrub_setup_inode(struct xfs_scrub_context *sc,
-+			  struct xfs_inode *ip);
+ /* not used by linux, but here to make sure we don't clash with ABI defines */
+ #define MAP_RENAME	0x020		/* Assign page to file */
+diff --git a/arch/mips/kernel/vdso.c b/arch/mips/kernel/vdso.c
+index 019035d7225c..cf10654477a9 100644
+--- a/arch/mips/kernel/vdso.c
++++ b/arch/mips/kernel/vdso.c
+@@ -110,7 +110,7 @@ int arch_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
+ 	base = mmap_region(NULL, STACK_TOP, PAGE_SIZE,
+ 			   VM_READ|VM_WRITE|VM_EXEC|
+ 			   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC,
+-			   0, NULL);
++			   0, NULL, 0);
+ 	if (IS_ERR_VALUE(base)) {
+ 		ret = base;
+ 		goto out;
+diff --git a/arch/parisc/include/uapi/asm/mman.h b/arch/parisc/include/uapi/asm/mman.h
+index 775b5d5e41a1..36b688d52de3 100644
+--- a/arch/parisc/include/uapi/asm/mman.h
++++ b/arch/parisc/include/uapi/asm/mman.h
+@@ -14,6 +14,7 @@
+ #define MAP_TYPE	0x03		/* Mask for type of mapping */
+ #define MAP_FIXED	0x04		/* Interpret addr exactly */
+ #define MAP_ANONYMOUS	0x10		/* don't use a file */
++#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
  
- 
- void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
-@@ -105,5 +107,6 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
- 
- int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
- 			     struct xfs_inode *ip, bool force_log);
-+int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
- 
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-new file mode 100644
-index 0000000..aa1c549
---- /dev/null
-+++ b/fs/xfs/scrub/inode.c
-@@ -0,0 +1,607 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_inode_buf.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_da_format.h"
-+#include "xfs_reflink.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+
-+/*
-+ * Grab total control of the inode metadata.  It doesn't matter here if
-+ * the file data is still changing; exclusive access to the metadata is
-+ * the goal.
-+ */
-+int
-+xfs_scrub_setup_inode(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	int				error;
-+
-+	/*
-+	 * Try to get the inode.  If the verifiers fail, we try again
-+	 * in raw mode.
-+	 */
-+	error = xfs_scrub_get_inode(sc, ip);
-+	switch (error) {
-+	case 0:
-+		break;
-+	case -EFSCORRUPTED:
-+	case -EFSBADCRC:
-+		return 0;
-+	default:
-+		return error;
-+	}
-+
-+	/* Got the inode, lock it and we're ready to go. */
-+	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	xfs_ilock(sc->ip, sc->ilock_flags);
-+	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	if (error)
-+		goto out;
-+	sc->ilock_flags |= XFS_ILOCK_EXCL;
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-+
-+out:
-+	/* scrub teardown will unlock and release the inode for us */
-+	return error;
-+}
-+
-+/* Inode core */
-+
-+/*
-+ * di_extsize hint validation is somewhat cumbersome. Rules are:
-+ *
-+ * 1. extent size hint is only valid for directories and regular files
-+ * 2. DIFLAG_EXTSIZE is only valid for regular files
-+ * 3. DIFLAG_EXTSZINHERIT is only valid for directories.
-+ * 4. extsize hint of 0 turns off hints, clears inode flags.
-+ * 5. either flag must be set if extsize != 0
-+ * 6. Extent size must be a multiple of the appropriate block size.
-+ * 7. extent size hint cannot be longer than maximum extent length
-+ * 8. for non-realtime files, the extent size hint must be limited
-+ *    to half the AG size to avoid alignment extending the extent
-+ *    beyond the limits of the AG.
-+ */
-+STATIC void
-+xfs_scrub_inode_extsize(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	struct xfs_dinode		*dip,
-+	xfs_ino_t			ino,
-+	uint16_t			mode,
-+	uint16_t			flags)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	bool				rt_flag;
-+	bool				hint_flag;
-+	bool				inherit_flag;
-+	uint32_t			extsize;
-+	uint32_t			extsize_bytes;
-+	uint32_t			blocksize_bytes;
-+
-+	rt_flag = (flags & XFS_DIFLAG_REALTIME);
-+	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
-+	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
-+	extsize = be32_to_cpu(dip->di_extsize);
-+	extsize_bytes = XFS_FSB_TO_B(sc->mp, extsize);
-+
-+	if (rt_flag)
-+		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-+	else
-+		blocksize_bytes = mp->m_sb.sb_blocksize;
-+
-+	if ((hint_flag || inherit_flag) && (!S_ISDIR(mode) && !S_ISREG(mode)))
-+		goto bad;
-+
-+	if (hint_flag && !S_ISREG(mode))
-+		goto bad;
-+
-+	if (inherit_flag && !S_ISDIR(mode))
-+		goto bad;
-+
-+	if ((hint_flag || inherit_flag) && extsize == 0)
-+		goto bad;
-+
-+	if (!(hint_flag || inherit_flag) && extsize != 0)
-+		goto bad;
-+
-+	if (extsize_bytes % blocksize_bytes)
-+		goto bad;
-+
-+	if (extsize > MAXEXTLEN)
-+		goto bad;
-+
-+	if (!rt_flag && extsize > mp->m_sb.sb_agblocks / 2)
-+		goto bad;
-+
-+	return;
-+bad:
-+	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+}
-+
-+/*
-+ * di_cowextsize hint validation is somewhat cumbersome. Rules are:
-+ *
-+ * 1. flag requires reflink feature
-+ * 2. cow extent size hint is only valid for directories and regular files
-+ * 3. cow extsize hint of 0 turns off hints, clears inode flags.
-+ * 4. either flag must be set if cow extsize != 0
-+ * 5. flag cannot be set for rt files
-+ * 6. Extent size must be a multiple of the appropriate block size.
-+ * 7. extent size hint cannot be longer than maximum extent length
-+ * 8. the extent size hint must be limited
-+ *    to half the AG size to avoid alignment extending the extent
-+ *    beyond the limits of the AG.
-+ */
-+STATIC void
-+xfs_scrub_inode_cowextsize(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	struct xfs_dinode		*dip,
-+	xfs_ino_t			ino,
-+	uint16_t			mode,
-+	uint16_t			flags,
-+	uint64_t			flags2)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	bool				rt_flag;
-+	bool				hint_flag;
-+	uint32_t			extsize;
-+	uint32_t			extsize_bytes;
-+
-+	rt_flag = (flags & XFS_DIFLAG_REALTIME);
-+	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
-+	extsize = be32_to_cpu(dip->di_extsize);
-+	extsize_bytes = XFS_FSB_TO_B(sc->mp, extsize);
-+
-+	if (hint_flag && !xfs_sb_version_hasreflink(&mp->m_sb))
-+		goto bad;
-+
-+	if (hint_flag && (!S_ISDIR(mode) && !S_ISREG(mode)))
-+		goto bad;
-+
-+	if (hint_flag && extsize == 0)
-+		goto bad;
-+
-+	if (!hint_flag && extsize != 0)
-+		goto bad;
-+
-+	if (hint_flag && rt_flag)
-+		goto bad;
-+
-+	if (extsize_bytes % mp->m_sb.sb_blocksize)
-+		goto bad;
-+
-+	if (extsize > MAXEXTLEN)
-+		goto bad;
-+
-+	if (extsize > mp->m_sb.sb_agblocks / 2)
-+		goto bad;
-+
-+	return;
-+bad:
-+	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+}
-+
-+/* Make sure the di_flags make sense for the inode. */
-+STATIC void
-+xfs_scrub_inode_flags(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	struct xfs_dinode		*dip,
-+	xfs_ino_t			ino,
-+	uint16_t			mode,
-+	uint16_t			flags)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+
-+	if (flags & ~XFS_DIFLAG_ANY)
-+		goto bad;
-+
-+	/* rt flags require rt device */
-+	if ((flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) &&
-+	    !mp->m_rtdev_targp)
-+		goto bad;
-+
-+	/* new rt bitmap flag only valid for rbmino */
-+	if ((flags & XFS_DIFLAG_NEWRTBM) && ino != mp->m_sb.sb_rbmino)
-+		goto bad;
-+
-+	/* directory-only flags */
-+	if ((flags & (XFS_DIFLAG_RTINHERIT |
-+		     XFS_DIFLAG_EXTSZINHERIT |
-+		     XFS_DIFLAG_PROJINHERIT |
-+		     XFS_DIFLAG_NOSYMLINKS)) &&
-+	    !S_ISDIR(mode))
-+		goto bad;
-+
-+	/* file-only flags */
-+	if ((flags & (XFS_DIFLAG_REALTIME | FS_XFLAG_EXTSIZE)) &&
-+	    !S_ISREG(mode))
-+		goto bad;
-+
-+	/* filestreams and rt make no sense */
-+	if ((flags & XFS_DIFLAG_FILESTREAM) && (flags & XFS_DIFLAG_REALTIME))
-+		goto bad;
-+
-+	return;
-+bad:
-+	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+}
-+
-+/* Make sure the di_flags2 make sense for the inode. */
-+STATIC void
-+xfs_scrub_inode_flags2(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	struct xfs_dinode		*dip,
-+	xfs_ino_t			ino,
-+	uint16_t			mode,
-+	uint64_t			flags2)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+
-+	if (flags2 & ~XFS_DIFLAG2_ANY)
-+		goto bad;
-+
-+	/* reflink flag requires reflink feature */
-+	if ((flags2 & XFS_DIFLAG2_REFLINK) &&
-+	    !xfs_sb_version_hasreflink(&mp->m_sb))
-+		goto bad;
-+
-+	/* cowextsize flag is checked w.r.t. mode separately */
-+
-+	/* file-only flags */
-+	if ((flags2 & (XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK)) &&
-+	    !S_ISREG(mode))
-+		goto bad;
-+
-+	/* dax and reflink make no sense, currently */
-+	if ((flags2 & XFS_DIFLAG2_DAX) && (flags2 & XFS_DIFLAG2_REFLINK))
-+		goto bad;
-+
-+	return;
-+bad:
-+	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+}
-+
-+/* Scrub all the ondisk inode fields. */
-+STATIC void
-+xfs_scrub_dinode(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	struct xfs_dinode		*dip,
-+	xfs_ino_t			ino)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	size_t				fork_recs;
-+	unsigned long long		isize;
-+	uint64_t			flags2;
-+	uint32_t			nextents;
-+	uint16_t			flags;
-+	uint16_t			mode;
-+
-+	flags = be16_to_cpu(dip->di_flags);
-+	if (dip->di_version >= 3)
-+		flags2 = be64_to_cpu(dip->di_flags2);
-+	else
-+		flags2 = 0;
-+
-+	/* di_mode */
-+	mode = be16_to_cpu(dip->di_mode);
-+	if (mode & ~(S_IALLUGO | S_IFMT))
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/* v1/v2 fields */
-+	switch (dip->di_version) {
-+	case 1:
-+		/*
-+		 * We autoconvert v1 inodes into v2 inodes on writeout,
-+		 * so just mark this inode for preening.
-+		 */
-+		xfs_scrub_ino_set_preen(sc, bp);
-+		break;
-+	case 2:
-+	case 3:
-+		if (dip->di_onlink != 0)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+		if (dip->di_mode == 0 && sc->ip)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+		if (dip->di_projid_hi != 0 &&
-+		    !xfs_sb_version_hasprojid32bit(&mp->m_sb))
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	default:
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		return;
-+	}
-+
-+	/*
-+	 * di_uid/di_gid -- -1 isn't invalid, but there's no way that
-+	 * userspace could have created that.
-+	 */
-+	if (dip->di_uid == cpu_to_be32(-1U) ||
-+	    dip->di_gid == cpu_to_be32(-1U))
-+		xfs_scrub_ino_set_warning(sc, bp);
-+
-+	/* di_format */
-+	switch (dip->di_format) {
-+	case XFS_DINODE_FMT_DEV:
-+		if (!S_ISCHR(mode) && !S_ISBLK(mode) &&
-+		    !S_ISFIFO(mode) && !S_ISSOCK(mode))
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:
-+		if (!S_ISDIR(mode) && !S_ISLNK(mode))
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	case XFS_DINODE_FMT_EXTENTS:
-+		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		if (!S_ISREG(mode) && !S_ISDIR(mode))
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	case XFS_DINODE_FMT_UUID:
-+	default:
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	}
-+
-+	/*
-+	 * di_size.  xfs_dinode_verify checks for things that screw up
-+	 * the VFS such as the upper bit being set and zero-length
-+	 * symlinks/directories, but we can do more here.
-+	 */
-+	isize = be64_to_cpu(dip->di_size);
-+	if (isize & (1ULL << 63))
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/* Devices, fifos, and sockets must have zero size */
-+	if (!S_ISDIR(mode) && !S_ISREG(mode) && !S_ISLNK(mode) && isize != 0)
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/* Directories can't be larger than the data section size (32G) */
-+	if (S_ISDIR(mode) && (isize == 0 || isize >= XFS_DIR2_SPACE_SIZE))
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/* Symlinks can't be larger than SYMLINK_MAXLEN */
-+	if (S_ISLNK(mode) && (isize == 0 || isize >= XFS_SYMLINK_MAXLEN))
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/*
-+	 * Warn if the running kernel can't handle the kinds of offsets
-+	 * needed to deal with the file size.  In other words, if the
-+	 * pagecache can't cache all the blocks in this file due to
-+	 * overly large offsets, flag the inode for admin review.
-+	 */
-+	if (isize >= mp->m_super->s_maxbytes)
-+		xfs_scrub_ino_set_warning(sc, bp);
-+
-+	/* di_nblocks */
-+	if (flags2 & XFS_DIFLAG2_REFLINK) {
-+		; /* nblocks can exceed dblocks */
-+	} else if (flags & XFS_DIFLAG_REALTIME) {
-+		/*
-+		 * nblocks is the sum of data extents (in the rtdev),
-+		 * attr extents (in the datadev), and both forks' bmbt
-+		 * blocks (in the datadev).  This clumsy check is the
-+		 * best we can do without cross-referencing with the
-+		 * inode forks.
-+		 */
-+		if (be64_to_cpu(dip->di_nblocks) >=
-+		    mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	} else {
-+		if (be64_to_cpu(dip->di_nblocks) >= mp->m_sb.sb_dblocks)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	}
-+
-+	xfs_scrub_inode_flags(sc, bp, dip, ino, mode, flags);
-+
-+	xfs_scrub_inode_extsize(sc, bp, dip, ino, mode, flags);
-+
-+	/* di_nextents */
-+	nextents = be32_to_cpu(dip->di_nextents);
-+	fork_recs =  XFS_DFORK_DSIZE(dip, mp) / sizeof(struct xfs_bmbt_rec);
-+	switch (dip->di_format) {
-+	case XFS_DINODE_FMT_EXTENTS:
-+		if (nextents > fork_recs)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		if (nextents <= fork_recs)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	default:
-+		if (nextents != 0)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	}
-+
-+	/* di_forkoff */
-+	if (XFS_DFORK_APTR(dip) >= (char *)dip + mp->m_sb.sb_inodesize)
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	if (dip->di_anextents != 0 && dip->di_forkoff == 0)
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	if (dip->di_forkoff == 0 && dip->di_aformat != XFS_DINODE_FMT_EXTENTS)
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/* di_aformat */
-+	if (dip->di_aformat != XFS_DINODE_FMT_LOCAL &&
-+	    dip->di_aformat != XFS_DINODE_FMT_EXTENTS &&
-+	    dip->di_aformat != XFS_DINODE_FMT_BTREE)
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+
-+	/* di_anextents */
-+	nextents = be16_to_cpu(dip->di_anextents);
-+	fork_recs =  XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec);
-+	switch (dip->di_aformat) {
-+	case XFS_DINODE_FMT_EXTENTS:
-+		if (nextents > fork_recs)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		if (nextents <= fork_recs)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		break;
-+	default:
-+		if (nextents != 0)
-+			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	}
-+
-+	if (flags2)
-+		xfs_scrub_inode_flags2(sc, bp, dip, ino, mode, flags2);
-+
-+	xfs_scrub_inode_cowextsize(sc, bp, dip, ino, mode, flags, flags2);
-+}
-+
-+/* Map and read a raw inode. */
-+STATIC int
-+xfs_scrub_inode_map_raw(
-+	struct xfs_scrub_context	*sc,
-+	xfs_ino_t			ino,
-+	struct xfs_buf			**bpp,
-+	struct xfs_dinode		**dipp)
-+{
-+	struct xfs_imap			imap;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*bp;
-+	struct xfs_dinode		*dip;
-+	int				error;
-+
-+	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
-+	if (error == -EINVAL) {
-+		/*
-+		 * Inode could have gotten deleted out from under us;
-+		 * just forget about it.
-+		 */
-+		error = -ENOENT;
-+		goto out;
-+	}
-+	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
-+			XFS_INO_TO_AGBNO(mp, ino), &error))
-+		goto out;
-+
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
-+			NULL);
-+	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
-+			XFS_INO_TO_AGBNO(mp, ino), &error))
-+		goto out;
-+
-+	/* Is this really an inode? */
-+	bp->b_ops = &xfs_inode_buf_ops;
-+	dip = xfs_buf_offset(bp, imap.im_boffset);
-+	if (!xfs_dinode_verify(mp, ino, dip) ||
-+	    !xfs_dinode_good_version(mp, dip->di_version)) {
-+		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		goto out;
-+	}
-+
-+	/* ...and is it the one we asked for? */
-+	if (be32_to_cpu(dip->di_gen) != sc->sm->sm_gen) {
-+		error = -ENOENT;
-+		goto out;
-+	}
-+
-+	*dipp = dip;
-+	*bpp = bp;
-+out:
-+	return error;
-+}
-+
-+/* Scrub an inode. */
-+int
-+xfs_scrub_inode(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_dinode		di;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*bp = NULL;
-+	struct xfs_dinode		*dip;
-+	xfs_ino_t			ino;
-+
-+	bool				has_shared;
-+	int				error = 0;
-+
-+	/* Did we get the in-core inode, or are we doing this manually? */
-+	if (sc->ip) {
-+		ino = sc->ip->i_ino;
-+		xfs_inode_to_disk(sc->ip, &di, 0);
-+		dip = &di;
-+	} else {
-+		/* Map & read inode. */
-+		ino = sc->sm->sm_ino;
-+		error = xfs_scrub_inode_map_raw(sc, ino, &bp, &dip);
-+		if (error)
-+			goto out;
-+	}
-+
-+	xfs_scrub_dinode(sc, bp, dip, ino);
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		goto out;
-+
-+	/* Now let's do the things that require a live inode. */
-+	if (!sc->ip)
-+		goto out;
-+
-+	/*
-+	 * Does this inode have the reflink flag set but no shared extents?
-+	 * Set the preening flag if this is the case.
-+	 */
-+	if (xfs_is_reflink_inode(sc->ip)) {
-+		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
-+				&has_shared);
-+		if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
-+				XFS_INO_TO_AGBNO(mp, ino), &error))
-+			goto out;
-+		if (!has_shared)
-+			xfs_scrub_ino_set_preen(sc, bp);
-+	}
-+
-+out:
-+	if (bp)
-+		xfs_trans_brelse(sc->tp, bp);
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 10c9078..ab4209c 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -30,6 +30,8 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_itable.h"
- #include "xfs_alloc.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_bmap.h"
-@@ -131,6 +133,7 @@ xfs_scrub_probe(
- STATIC int
- xfs_scrub_teardown(
- 	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip_in,
- 	int				error)
- {
- 	xfs_scrub_ag_free(sc, &sc->sa);
-@@ -138,6 +141,13 @@ xfs_scrub_teardown(
- 		xfs_trans_cancel(sc->tp);
- 		sc->tp = NULL;
+ #define MAP_DENYWRITE	0x0800		/* ETXTBSY */
+ #define MAP_EXECUTABLE	0x1000		/* mark it as an executable */
+diff --git a/arch/tile/mm/elf.c b/arch/tile/mm/elf.c
+index 889901824400..5ffcbe76aef9 100644
+--- a/arch/tile/mm/elf.c
++++ b/arch/tile/mm/elf.c
+@@ -143,7 +143,8 @@ int arch_setup_additional_pages(struct linux_binprm *bprm,
+ 		unsigned long addr = MEM_USER_INTRPT;
+ 		addr = mmap_region(NULL, addr, INTRPT_SIZE,
+ 				   VM_READ|VM_EXEC|
+-				   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC, 0, NULL);
++				   VM_MAYREAD|VM_MAYWRITE|VM_MAYEXEC, 0,
++				   NULL, 0);
+ 		if (addr > (unsigned long) -PAGE_SIZE)
+ 			retval = (int) addr;
  	}
-+	if (sc->ip) {
-+		xfs_iunlock(sc->ip, sc->ilock_flags);
-+		if (sc->ip != ip_in &&
-+		    !xfs_internal_inum(sc->mp, sc->ip->i_ino))
-+			iput(VFS_I(sc->ip));
-+		sc->ip = NULL;
-+	}
- 	return error;
- }
+diff --git a/arch/xtensa/include/uapi/asm/mman.h b/arch/xtensa/include/uapi/asm/mman.h
+index b15b278aa314..ec597900eec7 100644
+--- a/arch/xtensa/include/uapi/asm/mman.h
++++ b/arch/xtensa/include/uapi/asm/mman.h
+@@ -37,6 +37,7 @@
+ #define MAP_PRIVATE	0x002		/* Changes are private */
+ #define MAP_TYPE	0x00f		/* Mask for type of mapping */
+ #define MAP_FIXED	0x010		/* Interpret addr exactly */
++#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
  
-@@ -191,6 +201,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.scrub	= xfs_scrub_refcountbt,
- 		.has	= xfs_sb_version_hasreflink,
- 	},
-+	{ /* inode record */
-+		.setup	= xfs_scrub_setup_inode,
-+		.scrub	= xfs_scrub_inode,
-+	},
- };
+ /* not used by linux, but here to make sure we don't clash with ABI defines */
+ #define MAP_RENAME	0x020		/* Assign page to file */
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 13dab191a23e..5aee97d64cae 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1701,6 +1701,8 @@ struct file_operations {
+ 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+ 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+ 	int (*mmap) (struct file *, struct vm_area_struct *);
++	int (*mmap_validate) (struct file *, struct vm_area_struct *,
++			unsigned long);
+ 	int (*open) (struct inode *, struct file *);
+ 	int (*flush) (struct file *, fl_owner_t id);
+ 	int (*release) (struct inode *, struct file *);
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 065d99deb847..38f6ed954dde 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -2133,7 +2133,7 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
  
- /* This isn't a stable feature, warn once per day. */
-@@ -290,7 +304,7 @@ xfs_scrub_metadata(
- 		 * Tear down everything we hold, then set up again with
- 		 * preparation for worst-case scenarios.
+ extern unsigned long mmap_region(struct file *file, unsigned long addr,
+ 	unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
+-	struct list_head *uf);
++	struct list_head *uf, unsigned long map_flags);
+ extern unsigned long do_mmap(struct file *file, unsigned long addr,
+ 	unsigned long len, unsigned long prot, unsigned long flags,
+ 	vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
+diff --git a/include/linux/mman.h b/include/linux/mman.h
+index c8367041fafd..94b63b4d71ff 100644
+--- a/include/linux/mman.h
++++ b/include/linux/mman.h
+@@ -7,6 +7,45 @@
+ #include <linux/atomic.h>
+ #include <uapi/linux/mman.h>
+ 
++/*
++ * Arrange for legacy / undefined architecture specific flags to be
++ * ignored by default in LEGACY_MAP_MASK.
++ */
++#ifndef MAP_32BIT
++#define MAP_32BIT 0
++#endif
++#ifndef MAP_HUGE_2MB
++#define MAP_HUGE_2MB 0
++#endif
++#ifndef MAP_HUGE_1GB
++#define MAP_HUGE_1GB 0
++#endif
++#ifndef MAP_UNINITIALIZED
++#define MAP_UNINITIALIZED 0
++#endif
++
++/*
++ * The historical set of flags that all mmap implementations implicitly
++ * support when a ->mmap_validate() op is not provided in file_operations.
++ */
++#define LEGACY_MAP_MASK (MAP_SHARED \
++		| MAP_PRIVATE \
++		| MAP_FIXED \
++		| MAP_ANONYMOUS \
++		| MAP_DENYWRITE \
++		| MAP_EXECUTABLE \
++		| MAP_UNINITIALIZED \
++		| MAP_GROWSDOWN \
++		| MAP_LOCKED \
++		| MAP_NORESERVE \
++		| MAP_POPULATE \
++		| MAP_NONBLOCK \
++		| MAP_STACK \
++		| MAP_HUGETLB \
++		| MAP_32BIT \
++		| MAP_HUGE_2MB \
++		| MAP_HUGE_1GB)
++
+ extern int sysctl_overcommit_memory;
+ extern int sysctl_overcommit_ratio;
+ extern unsigned long sysctl_overcommit_kbytes;
+diff --git a/include/uapi/asm-generic/mman-common.h b/include/uapi/asm-generic/mman-common.h
+index 203268f9231e..ac55d1c0ec0f 100644
+--- a/include/uapi/asm-generic/mman-common.h
++++ b/include/uapi/asm-generic/mman-common.h
+@@ -24,6 +24,7 @@
+ #else
+ # define MAP_UNINITIALIZED 0x0		/* Don't support this flag */
+ #endif
++#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
+ 
+ /*
+  * Flags for mlock
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 680506faceae..a1bcaa9eff42 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1389,6 +1389,18 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 		struct inode *inode = file_inode(file);
+ 
+ 		switch (flags & MAP_TYPE) {
++		case (MAP_SHARED_VALIDATE):
++			if ((flags & ~LEGACY_MAP_MASK) == 0) {
++				/*
++				 * If all legacy mmap flags, downgrade
++				 * to MAP_SHARED, i.e. invoke ->mmap()
++				 * instead of ->mmap_validate()
++				 */
++				flags &= ~MAP_TYPE;
++				flags |= MAP_SHARED;
++			} else if (!file->f_op->mmap_validate)
++				return -EOPNOTSUPP;
++			/* fall through */
+ 		case MAP_SHARED:
+ 			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
+ 				return -EACCES;
+@@ -1465,7 +1477,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 			vm_flags |= VM_NORESERVE;
+ 	}
+ 
+-	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf);
++	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf, flags);
+ 	if (!IS_ERR_VALUE(addr) &&
+ 	    ((vm_flags & VM_LOCKED) ||
+ 	     (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
+@@ -1602,7 +1614,7 @@ static inline int accountable_mapping(struct file *file, vm_flags_t vm_flags)
+ 
+ unsigned long mmap_region(struct file *file, unsigned long addr,
+ 		unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
+-		struct list_head *uf)
++		struct list_head *uf, unsigned long map_flags)
+ {
+ 	struct mm_struct *mm = current->mm;
+ 	struct vm_area_struct *vma, *prev;
+@@ -1687,7 +1699,10 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
+ 		 * new file must not have been exposed to user-space, yet.
  		 */
--		error = xfs_scrub_teardown(&sc, 0);
-+		error = xfs_scrub_teardown(&sc, ip, 0);
+ 		vma->vm_file = get_file(file);
+-		error = call_mmap(file, vma);
++		if ((map_flags & MAP_TYPE) == MAP_SHARED_VALIDATE)
++			error = file->f_op->mmap_validate(file, vma, map_flags);
++		else
++			error = call_mmap(file, vma);
  		if (error)
- 			goto out;
- 		try_harder = true;
-@@ -303,7 +317,7 @@ xfs_scrub_metadata(
- 		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
+ 			goto unmap_and_free_vma;
  
- out_teardown:
--	error = xfs_scrub_teardown(&sc, error);
-+	error = xfs_scrub_teardown(&sc, ip, error);
- out:
- 	trace_xfs_scrub_done(ip, sm, error);
- 	return error;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 1c80bf5..ec635d4 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -59,6 +59,7 @@ struct xfs_scrub_context {
- 	const struct xfs_scrub_meta_ops	*ops;
- 	struct xfs_trans		*tp;
- 	struct xfs_inode		*ip;
-+	uint				ilock_flags;
- 	bool				try_harder;
+diff --git a/tools/include/uapi/asm-generic/mman-common.h b/tools/include/uapi/asm-generic/mman-common.h
+index 203268f9231e..ac55d1c0ec0f 100644
+--- a/tools/include/uapi/asm-generic/mman-common.h
++++ b/tools/include/uapi/asm-generic/mman-common.h
+@@ -24,6 +24,7 @@
+ #else
+ # define MAP_UNINITIALIZED 0x0		/* Don't support this flag */
+ #endif
++#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
  
- 	/* State tracking for single-AG operations. */
-@@ -77,5 +78,6 @@ int xfs_scrub_inobt(struct xfs_scrub_context *sc);
- int xfs_scrub_finobt(struct xfs_scrub_context *sc);
- int xfs_scrub_rmapbt(struct xfs_scrub_context *sc);
- int xfs_scrub_refcountbt(struct xfs_scrub_context *sc);
-+int xfs_scrub_inode(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
+ /*
+  * Flags for mlock
+-- 
+2.12.3
 
