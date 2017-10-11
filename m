@@ -1,87 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45983 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753711AbdJIDpK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 23:45:10 -0400
-Date: Mon, 9 Oct 2017 14:45:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v7 09/12] xfs: wire up ->lease_direct()
-Message-ID: <20171009034506.GI3666@dastard>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150732936625.22363.7638037715540836828.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:34558 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932406AbdJKCi2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 22:38:28 -0400
+Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
+        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9B2axYk013470
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:38:27 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0b-00082601.pphosted.com with ESMTP id 2dh271tntp-4
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:38:27 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v6 1/3] xfs: Show realtime device stats on statfs calls if inherit flag set
+Date: Tue, 10 Oct 2017 19:37:50 -0700
+Message-ID: <20171011023752.1373259-2-rwareing@fb.com>
+In-Reply-To: <20171011023752.1373259-1-rwareing@fb.com>
+References: <20171011023752.1373259-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150732936625.22363.7638037715540836828.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-On Fri, Oct 06, 2017 at 03:36:06PM -0700, Dan Williams wrote:
-> A 'lease_direct' lease requires that the vma have a valid MAP_DIRECT
-> mapping established. For xfs we establish a new lease and then check if
-> the MAP_DIRECT mapping has been broken. We want to be sure that the
-> process will receive notification that the MAP_DIRECT mapping is being
-> torn down so it knows why other code paths are throwing failures.
-> 
-> For example in the RDMA/ibverbs case we want ibv_reg_mr() to fail if the
-> MAP_DIRECT mapping is invalid or in the process of being invalidated.
-> 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Jeff Moyer <jmoyer@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: Jeff Layton <jlayton@poochiereds.net>
-> Cc: "J. Bruce Fields" <bfields@fieldses.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  fs/xfs/xfs_file.c |   28 ++++++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e35518600e28..823b65f17429 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1166,6 +1166,33 @@ xfs_filemap_direct_close(
->  	put_map_direct_vma(vma->vm_private_data);
->  }
->  
-> +static struct lease_direct *
-> +xfs_filemap_direct_lease(
-> +	struct vm_area_struct	*vma,
-> +	void			(*break_fn)(void *),
-> +	void			*owner)
-> +{
-> +	struct lease_direct	*ld;
-> +
-> +	ld = map_direct_lease(vma, break_fn, owner);
-> +
-> +	if (IS_ERR(ld))
-> +		return ld;
-> +
-> +	/*
-> +	 * We now have an established lease while the base MAP_DIRECT
-> +	 * lease was not broken. So, we know that the "lease holder" will
-> +	 * receive a SIGIO notification when the lease is broken and
-> +	 * take any necessary cleanup actions.
-> +	 */
-> +	if (!is_map_direct_broken(vma->vm_private_data))
-> +		return ld;
-> +
-> +	map_direct_lease_destroy(ld);
-> +
-> +	return ERR_PTR(-ENXIO);
+- Reports realtime device free blocks in statfs calls if inheritance
+  bit is set on the inode of directory.  This is a bit more intuitive,
+  especially for use-cases which are using a much larger device for
+  the realtime device.
+- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
+  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
+  option.
 
-What's any of this got to do with XFS? Shouldn't it be in generic
-code, and called generic_filemap_direct_lease()?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v5:
+* None
 
-Cheers,
+Changes since v4:
+* None
 
-Dave.
+Changes since v3:
+* Fixed accounting bug, we are not required to substract m_alloc_set_aside
+  as this is a data device only requirement.
+* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
+  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
+  for the inode.
+
+Changes since v2:
+* Style updated per Christoph Hellwig's comment
+* Fixed bug: statp->f_bavail = statp->f_bfree
+
+ fs/xfs/xfs_linux.h | 2 ++
+ fs/xfs/xfs_super.c | 8 ++++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e..fe46e71 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -280,8 +280,10 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+ 
+ #ifdef CONFIG_XFS_RT
+ #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
++#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
+ #else
+ #define XFS_IS_REALTIME_INODE(ip) (0)
++#define XFS_IS_REALTIME_MOUNT(mp) (0)
+ #endif
+ 
+ #endif /* __XFS_LINUX__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 455a575..6d33a5e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1136,6 +1136,14 @@ xfs_fs_statfs(
+ 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+ 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+ 		xfs_qm_statvfs(ip, statp);
++
++	if (XFS_IS_REALTIME_MOUNT(mp) &&
++	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
++		statp->f_blocks = sbp->sb_rblocks;
++		statp->f_bavail = statp->f_bfree =
++			sbp->sb_frextents * sbp->sb_rextsize;
++	}
++
+ 	return 0;
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
+
