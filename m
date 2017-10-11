@@ -1,416 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17727 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:40641 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755810AbdJKGw0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Oct 2017 02:52:26 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v3] generic: test race when checking i_size on direct i/o read
-Date: Wed, 11 Oct 2017 14:52:02 +0800
-Message-Id: <20171011065202.25531-1-eguan@redhat.com>
-In-Reply-To: <20171010074208.15389-2-eguan@redhat.com>
-References: <20171010074208.15389-2-eguan@redhat.com>
+        id S1751952AbdJKHnY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Oct 2017 03:43:24 -0400
+Date: Wed, 11 Oct 2017 09:43:20 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 01/14] mm: introduce MAP_SHARED_VALIDATE, a mechanism
+ to safely define new mmap flags
+Message-ID: <20171011074320.GG3667@quack2.suse.cz>
+References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150764694114.16882.5128952296874418457.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150764694114.16882.5128952296874418457.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, Eric Sandeen <sandeen@redhat.com>, Eryu Guan <eguan@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, Andy Lutomirski <luto@kernel.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-From: Zheng Liu <wenqing.lz@taobao.com>
+On Tue 10-10-17 07:49:01, Dan Williams wrote:
+> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+> unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
+> mechanism to define new behavior that is known to fail on older kernels
+> without the support. Define a new MAP_SHARED_VALIDATE flag pattern that
+> is guaranteed to fail on all legacy mmap implementations.
+> 
+> It is worth noting that the original proposal was for a standalone
+> MAP_VALIDATE flag. However, when that  could not be supported by all
+> archs Linus observed:
+> 
+>     I see why you *think* you want a bitmap. You think you want
+>     a bitmap because you want to make MAP_VALIDATE be part of MAP_SYNC
+>     etc, so that people can do
+> 
+>     ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED
+> 		    | MAP_SYNC, fd, 0);
+> 
+>     and "know" that MAP_SYNC actually takes.
+> 
+>     And I'm saying that whole wish is bogus. You're fundamentally
+>     depending on special semantics, just make it explicit. It's already
+>     not portable, so don't try to make it so.
+> 
+>     Rename that MAP_VALIDATE as MAP_SHARED_VALIDATE, make it have a value
+>     of 0x3, and make people do
+> 
+>     ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE
+> 		    | MAP_SYNC, fd, 0);
+> 
+>     and then the kernel side is easier too (none of that random garbage
+>     playing games with looking at the "MAP_VALIDATE bit", but just another
+>     case statement in that map type thing.
+> 
+>     Boom. Done.
+> 
+> Similar to ->fallocate() we also want the ability to validate the
+> support for new flags on a per ->mmap() 'struct file_operations'
+> instance basis.  Towards that end arrange for flags to be generically
+> validated against a mmap_supported_mask exported by 'struct
+> file_operations'. By default all existing flags are implicitly
+> supported, but new flags require MAP_SHARED_VALIDATE and
+> per-instance-opt-in.
+> 
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Andy Lutomirski <luto@kernel.org>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  arch/alpha/include/uapi/asm/mman.h           |    1 +
+>  arch/mips/include/uapi/asm/mman.h            |    1 +
+>  arch/mips/kernel/vdso.c                      |    2 +
+>  arch/parisc/include/uapi/asm/mman.h          |    1 +
+>  arch/tile/mm/elf.c                           |    3 +-
+>  arch/xtensa/include/uapi/asm/mman.h          |    1 +
+>  include/linux/fs.h                           |    2 +
+>  include/linux/mm.h                           |    2 +
+>  include/linux/mman.h                         |   39 ++++++++++++++++++++++++++
+>  include/uapi/asm-generic/mman-common.h       |    1 +
+>  mm/mmap.c                                    |   21 ++++++++++++--
+>  tools/include/uapi/asm-generic/mman-common.h |    1 +
+>  12 files changed, 69 insertions(+), 6 deletions(-)
+> 
+> diff --git a/arch/alpha/include/uapi/asm/mman.h b/arch/alpha/include/uapi/asm/mman.h
+> index 3b26cc62dadb..92823f24890b 100644
+> --- a/arch/alpha/include/uapi/asm/mman.h
+> +++ b/arch/alpha/include/uapi/asm/mman.h
+> @@ -14,6 +14,7 @@
+>  #define MAP_TYPE	0x0f		/* Mask for type of mapping (OSF/1 is _wrong_) */
+>  #define MAP_FIXED	0x100		/* Interpret addr exactly */
+>  #define MAP_ANONYMOUS	0x10		/* don't use a file */
+> +#define MAP_SHARED_VALIDATE 0x3		/* share + validate extension flags */
 
-In this commit a new test case is added to test that i_size races
-don't occur under dio reads/writes.  We add a program in /src dir,
-which has a writer to issue some append dio writes.  Meanwhile it
-has a reader in this test to do some dio reads.  As we expect,
-reader should read nothing or data with 'a'. But it might read some
-data with '0'.
+Just a nit but I'd put definition of MAP_SHARED_VALIDATE close to the
+definition of MAP_SHARED and MAP_PRIVATE where it logically belongs (for
+all archs).
 
-The bug can be reproduced by this test case [1].
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index f8c10d336e42..5c4c98e4adc9 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -2133,7 +2133,7 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
+>  
+>  extern unsigned long mmap_region(struct file *file, unsigned long addr,
+>  	unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
+> -	struct list_head *uf);
+> +	struct list_head *uf, unsigned long map_flags);
+>  extern unsigned long do_mmap(struct file *file, unsigned long addr,
+>  	unsigned long len, unsigned long prot, unsigned long flags,
+>  	vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
 
-1.  http://patchwork.ozlabs.org/patch/311761/
+I have to say I'm not very keen on passing down both vm_flags and map_flags
+- vm_flags are almost a subset of map_flags but not quite and the ambiguity
+which needs to be used for a particular check seems to open a space for
+errors. Granted you currently only care about MAP_DIRECT in ->mmap_validate
+and just pass map_flags through mmap_region() so there's no space for
+confusion but future checks could do something different. But OTOH I don't
+see a cleaner way of avoiding the need to allocate vma flag for something
+you need to check down in ->mmap_validate so I guess I'll live with that
+and if problems really happen, we may have cleaner idea what needs to be
+done.
 
-This ostensibly tests commit:
-9fe55eea7 Fix race when checking i_size on direct i/o read
+So overall feel free to add:
 
-Update by Eric Sandeen:
-- update to recent xfstests
-- update commit log
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Update by Eryu Guan:
-- add aio-dio support to the test and add 'aio' group
-- add ability to test different alignments
-- move test from src/ to src/aio-dio-regress/
-- add .gitignore entry
-- rebase against latest xfstests with various minor fixes & cleanups
-- update commit log
-
-Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v3:
-- fix reader/writer synchronization race
-
-v2:
-- start background reader in a thread first then start writer only after
-  reader starts issuing reads
-
- .gitignore                                         |   1 +
- .../aio-dio-append-write-read-race.c               | 230 +++++++++++++++++++++
- tests/generic/464                                  |  75 +++++++
- tests/generic/464.out                              |   3 +
- tests/generic/group                                |   1 +
- 5 files changed, 310 insertions(+)
- create mode 100644 src/aio-dio-regress/aio-dio-append-write-read-race.c
- create mode 100755 tests/generic/464
- create mode 100644 tests/generic/464.out
-
-diff --git a/.gitignore b/.gitignore
-index ae7ef87ab384..2dface41d485 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -142,6 +142,7 @@
- /src/writemod
- /src/writev_on_pagefault
- /src/xfsctl
-+/src/aio-dio-regress/aio-dio-append-write-read-race
- /src/aio-dio-regress/aio-dio-cycle-write
- /src/aio-dio-regress/aio-dio-eof-race
- /src/aio-dio-regress/aio-dio-extend-stat
-diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
-new file mode 100644
-index 000000000000..1a78009eb18a
---- /dev/null
-+++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
-@@ -0,0 +1,230 @@
-+/*
-+ * Copyright (c) 2013 Alibaba Group.
-+ * Copyright (c) 2017 Red Hat Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+/*
-+ * This is a normal case that we do some append dio writes and meanwhile
-+ * we do some dio reads.  Currently in vfs we don't ensure that i_size
-+ * is updated properly.  Hence the reader will read some data with '0'.
-+ * But we expect that the reader should read nothing or data with 'a'.
-+ */
-+
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#include <errno.h>
-+
-+#include <libaio.h>
-+#include <pthread.h>
-+
-+struct io_data {
-+	int fd;
-+	size_t blksize;
-+	off_t offset;
-+	char *buf;
-+	int use_aio;
-+};
-+
-+int reader_ready = 0;
-+
-+static void usage(const char *prog)
-+{
-+	fprintf(stderr, "usage: %s [-a] <file>\n", prog);
-+	fprintf(stderr, "\t-a\tuse aio-dio\n");
-+	exit(EXIT_FAILURE);
-+}
-+
-+static void *reader(void *arg)
-+{
-+	struct io_data *data = (struct io_data *)arg;
-+	int ret;
-+
-+	memset(data->buf, 'b', data->blksize);
-+	reader_ready = 1;
-+	do {
-+		ret = pread(data->fd, data->buf, data->blksize, data->offset);
-+		if (ret < 0)
-+			perror("read file");
-+	} while (ret <= 0);
-+
-+	return NULL;
-+}
-+
-+static void *writer(struct io_data *data)
-+{
-+	int ret;
-+
-+	while (!reader_ready)
-+		usleep(1);
-+
-+	if (data->use_aio) {
-+		struct io_context *ctx = NULL;
-+		struct io_event evs[1];
-+		struct iocb iocb;
-+		struct iocb *iocbs[] = { &iocb };
-+
-+		ret = io_setup(1, &ctx);
-+		if (ret) {
-+			fprintf(stderr, "error %s during io_setup\n",
-+				strerror(ret));
-+			return NULL;
-+		}
-+		io_prep_pwrite(&iocb, data->fd, data->buf, data->blksize, data->offset);
-+		ret = io_submit(ctx, 1, iocbs);
-+		if (ret != 1) {
-+			fprintf(stderr, "error %s during io_submit\n",
-+				strerror(ret));
-+			return NULL;
-+		}
-+		ret = io_getevents(ctx, 1, 1, evs, NULL);
-+		if (ret != 1) {
-+			fprintf(stderr, "error %s during io_getevents\n",
-+				strerror(ret));
-+			return NULL;
-+		}
-+	} else {
-+		ret = pwrite(data->fd, data->buf, data->blksize, data->offset);
-+		if (ret < 0)
-+			perror("write file failed");
-+	}
-+
-+	return NULL;
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	pthread_t tid;
-+	struct io_data wdata;
-+	struct io_data rdata;
-+	size_t max_blocks = 128;		/* 128 */
-+	size_t blksize = 1 * 1024 * 1024;	/* 1M */
-+	char *rbuf = NULL, *wbuf = NULL;
-+	int rfd = 0, wfd = 0;
-+	int i, j, c;
-+	int use_aio = 1;
-+	int ret = 0;
-+	int io_align = 4096;
-+	char *prog;
-+	char *testfile;
-+
-+
-+	prog = basename(argv[0]);
-+
-+	while ((c = getopt(argc, argv, "a:d")) != -1) {
-+		switch (c) {
-+		case 'a':
-+			io_align = strtol(optarg, NULL, 0);
-+			break;
-+		case 'd':
-+			use_aio = 0;
-+			break;
-+		default:
-+			usage(prog);
-+		}
-+	}
-+	if (optind != argc - 1)
-+		usage(prog);
-+	testfile = argv[optind];
-+
-+	wfd = open(testfile, O_CREAT|O_DIRECT|O_WRONLY|O_TRUNC, 0644);
-+	if (wfd < 0) {
-+		perror("open for write");
-+		exit(1);
-+	}
-+
-+	rfd = open(testfile, O_DIRECT|O_RDONLY, 0644);
-+	if (rfd < 0) {
-+		perror("open for read");
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	ret = posix_memalign((void **)&wbuf, io_align, blksize);
-+	if (ret) {
-+		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	ret = posix_memalign((void **)&rbuf, io_align, blksize);
-+	if (ret) {
-+		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	memset(wbuf, 'a', blksize);
-+	wdata.fd = wfd;
-+	wdata.blksize = blksize;
-+	wdata.buf = wbuf;
-+	wdata.use_aio = use_aio;
-+	rdata.fd = rfd;
-+	rdata.blksize = blksize;
-+	rdata.buf = rbuf;
-+
-+	for (i = 0; i < max_blocks; i++) {
-+		wdata.offset = rdata.offset = i * blksize;
-+
-+		/* reset reader_ready, it will be set in reader thread */
-+		reader_ready = 0;
-+		ret = pthread_create(&tid, NULL, reader, &rdata);
-+		if (ret) {
-+			fprintf(stderr, "create reader thread failed: %s\n",
-+				strerror(ret));
-+			ret = 1;
-+			goto err;
-+		}
-+
-+		writer(&wdata);
-+
-+		ret = pthread_join(tid, NULL);
-+		if (ret) {
-+			fprintf(stderr, "pthread join reader failed: %s\n",
-+				strerror(ret));
-+			ret = 1;
-+			goto err;
-+		}
-+
-+		for (j = 0; j < blksize; j++) {
-+			if (rdata.buf[j] != 'a') {
-+				fprintf(stderr, "encounter an error: "
-+					"block %d offset %d, content %x\n",
-+					i, j, rbuf[j]);
-+				ret = 1;
-+				goto err;
-+			}
-+		}
-+	}
-+
-+err:
-+	if (rfd)
-+		close(rfd);
-+	if (wfd)
-+		close(wfd);
-+	if (rbuf)
-+		free(rbuf);
-+	if (wbuf)
-+		free(wbuf);
-+
-+	exit(ret);
-+}
-diff --git a/tests/generic/464 b/tests/generic/464
-new file mode 100755
-index 000000000000..b0423c91a7cf
---- /dev/null
-+++ b/tests/generic/464
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# FS QA Test No. 464
-+#
-+# Test i_size is updated properly under dio read/write
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
-+# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.* $testfile.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_aiodio aio-dio-append-write-read-race
-+_require_test_program "feature"
-+
-+testfile=$TEST_DIR/$seq.$$
-+min_dio_align=`_min_dio_alignment $TEST_DEV`
-+page_size=`$here/src/feature -s`
-+
-+rm -f $seqres.full
-+
-+echo "non-aio dio test"
-+align=$min_dio_align
-+while [ $align -le $page_size ]; do
-+	echo "$AIO_TEST -a $align -d $testfile.$align" >> $seqres.full
-+	$AIO_TEST -a $align -d $testfile.$align 2>&1 | tee -a $seqres.full
-+	align=$((align * 2))
-+done
-+
-+echo "aio-dio test"
-+align=$min_dio_align
-+while [ $align -le $page_size ]; do
-+	echo "$AIO_TEST -a $align $testfile.$align" >> $seqres.full
-+	$AIO_TEST -a $align $testfile.$align 2>&1 | tee -a $seqres.full
-+	align=$((align * 2))
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/464.out b/tests/generic/464.out
-new file mode 100644
-index 000000000000..14e66fe7d778
---- /dev/null
-+++ b/tests/generic/464.out
-@@ -0,0 +1,3 @@
-+QA output created by 464
-+non-aio dio test
-+aio-dio test
-diff --git a/tests/generic/group b/tests/generic/group
-index 9f173e7a63c9..556add16286b 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -466,3 +466,4 @@
- 461 auto shutdown stress
- 462 auto quick dax
- 463 auto rw
-+464 auto rw quick aio
+								Honza
 -- 
-2.13.6
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
