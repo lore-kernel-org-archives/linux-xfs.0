@@ -1,74 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:47882 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754049AbdJIT2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 15:28:30 -0400
-Received: by mail-oi0-f53.google.com with SMTP id h200so14513630oib.4
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2017 12:28:30 -0700 (PDT)
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:50489 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751858AbdJKAED (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 20:04:03 -0400
+Date: Wed, 11 Oct 2017 11:04:00 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
+Message-ID: <20171011000400.GW3666@dastard>
+References: <20171008235414.13866-1-david@fromorbit.com>
+ <20171008235414.13866-5-david@fromorbit.com>
+ <20171009142445.GE18663@bfoster.bfoster>
+ <20171009204816.GN3666@dastard>
+ <20171010122945.GB23057@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20171009191820.GD15336@obsidianresearch.com>
-References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
- <20171009191820.GD15336@obsidianresearch.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 9 Oct 2017 12:28:29 -0700
-Message-ID: <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
-Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171010122945.GB23057@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 9, 2017 at 12:18 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Mon, Oct 09, 2017 at 12:05:30PM -0700, Dan Williams wrote:
->> On Mon, Oct 9, 2017 at 11:58 AM, Jason Gunthorpe
->> <jgunthorpe@obsidianresearch.com> wrote:
->> > On Fri, Oct 06, 2017 at 03:35:54PM -0700, Dan Williams wrote:
->> >> otherwise be quiesced. The need for this knowledge is driven by a need
->> >> to make RDMA transfers to DAX mappings safe. If the DAX file's block map
->> >> changes we need to be to reliably stop accesses to blocks that have been
->> >> freed or re-assigned to a new file.
->> >
->> > If RDMA is driving this need, why not invalidate backing RDMA MRs
->> > instead of requiring a IOMMU to do it? RDMA MR are finer grained and
->> > do not suffer from the re-use problem David W. brought up with IOVAs..
->>
->> Sounds promising. All I want in the end is to be sure that the kernel
->> is enabled to stop any in-flight RDMA at will without asking
->> userspace. Does this require per-RDMA driver opt-in or is there a
->> common call that can be made?
+On Tue, Oct 10, 2017 at 08:29:45AM -0400, Brian Foster wrote:
+> On Tue, Oct 10, 2017 at 07:48:16AM +1100, Dave Chinner wrote:
+> > On Mon, Oct 09, 2017 at 10:24:46AM -0400, Brian Foster wrote:
+> > > On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > Recently we've had warnings arise from the vm handing us pages
+> > > > without bufferheads attached to them. This should not ever occur
+> > > > in XFS, but we don't defend against it properly if it does. The only
+> > > > place where we remove bufferheads from a page is in
+> > > > xfs_vm_releasepage(), but we can't tell the difference here between
+> > > > "page is dirty so don't release" and "page is dirty but is being
+> > > > invalidated so release it".
+> > > > 
+> > > 
+> > > Ok, so we changed ->releasepage() in 99579ccec4 ("xfs: skip dirty pages
+> > > in ->releasepage()") to deal with the fact that the mm can send
+> > > legitimately dirty pages to ->releasepage(). That was apparently too
+> > > aggressive a change because truncated pages would also end up skipped
+> > > because the dirty bit is not cleared by the time the release occurs.
+> > > Commit 0a417b8dc1 ("xfs: Timely free truncated dirty pages") modified
+> > > ->releasepage() again to not skip all dirty pages and only warn for
+> > > delalloc/unwritten blocks on clean pages.
+> > > 
+> > > That was apparently insufficient because we have some codepaths where
+> > > not skipping dirty pages can allow us to strip the buffers from a page
+> > > incorrectly...
+> > 
+> > Right, Jan's patch fixed the truncate problem but re-opened the
+> > memory reclaim hole. It effectively reverted the original patch.
+> > 
+> 
+> (Bear with me, trying to work through my confusion...). So the original
+> patch documents XFS release page delalloc warnings and the conditions
+> that occur that make these warnings spurious. The objective of the patch
+> (as documented) was therefore to quiet the warnings. Jan's patch came
+> along to address the lru issue and quieted the warning in a different
+> way.
+> 
+> FWIW, my impression is that this patch is intending to fix some other
+> side effect of this ext/mm behavior also fixed by the original patch,
+> but at least wasn't documented by the commit log. What this additional
+> side effect is is the part I'm trying to understand...
+> 
+> > > > In some places that are invalidating pages ask for pages to be
+> > > > released and follow up afterward calling ->releasepage by checking
+> > > > whether the page was dirty and then aborting the invalidation. This
+> > > > is a possible vector for releasing buffers from a page but then
+> > > > leaving it in the mapping, so we really do need to avoid dirty pages
+> > > > in xfs_vm_releasepage().
+> > > > 
+> > > 
+> > > ... but I'm having a hard time parsing that first sentence to understand
+> > > how that is. Can you elaborate on and/or give a specific reference to
+> > > this problematic invalidation abort sequence?
+> > 
+> > e.g. invalidate_complete_page2():
+> > 
+> > /*                                                                               
+> >  * This is for invalidate_mapping_pages().  That function can be called at       
+> >  * any time, and is not supposed to throw away dirty pages.  But pages can       
+> > .....
+> >        if (page_has_private(page) && !try_to_release_page(page, GFP_KERNEL))
+> >                 return 0;
+> > 
+> >         spin_lock_irqsave(&mapping->tree_lock, flags);
+> >         if (PageDirty(page))
+> >                 goto failed;
+> > ....
+> > 
+> > It's not supposed to throw away dirty pages. But
+> > try_to_release_page() on a dirty page in XFS will currently do just
+> > that.
+> > 
+> 
+> If the page is legitimately dirty, shouldn't the underlying buffer be
+> dirty as well?
+
+The answer is "yes for all filesystems but ext3". In ext3, journal
+checkpoints can write back the buffers directly and clean them
+without updating the page state on IO completion. So we end up in
+the state where the page state and bufferhead state is not coherent.
+
+Hence the generic code can't check for the page being clean before
+releasing the page/buffers, because then it would never end up
+noticing and correcting ext3 pages in this state.
+
+> ISTM that try_to_release_page() (which eventually gets to
+> try_to_free_buffers()) accommodates the case of a dirty page w/o
+> dirty buffers by checking the latter state and updating the
+> former. So if the page has dirty buffers, try_to_release_page()
+> returns 0 and the invalidate exits with -EBUSY.  If the page does
+> not have dirty buffers, the buffers are dropped, the page dirty
+> state is cancelled and the invalidate proceeds.
 >
-> I don't think this has ever come up in the context of an all-device MR
-> invalidate requirement. Drivers already have code to invalidate
-> specifc MRs, but to find all MRs that touch certain pages and then
-> invalidate them would be new code.
+> So for XFS this (dirty page && !dirty bufs) state should not exist.
+
+But it does!
+
+Take a dirty page, and truncate it:
+
+truncate_complete_page
+  do_invalidatepage
+    xfs_vm_invalidatepage
+      block_invalidatepage
+        discard_buffers		<<<<<<<<< clears all buffer state!
+  try_to_release_page
+    xfs_vm_releasepage
+      xfs_count_page_state   <<< finds clean buffers, no warnings
+
+That's why the truncate path doesn't issue warnings about
+invalidating and releasing dirty pages.
+
+> A
+> dirty page should always have dirty buffers and vice versa. For XFS,
+> therefore, I don't see how this patch affects
+> invalidate_complete_page2() at all.
+
+That's what I was trying to point out! i.e. that the patch fixes
+spurious false positive warnigns but doesn't affect the high level
+invalidate_complete_page2() or other invalidation code.
+
 >
-> We also have ODP aware drivers that can retarget a MR to new
-> physical pages. If the block map changes DAX should synchronously
-> retarget the ODP MR, not halt DMA.
+> What am I missing? Is there some
+> other problematic sequence?
 
-Have a look at the patch [1], I don't touch the ODP path.
+Memory reclaim, dirty page over delalloc/unwritten extent:
 
-> Most likely ODP & DAX would need to be used together to get robust
-> user applications, as having the user QP's go to an error state at
-> random times (due to DMA failures) during operation is never going to
-> be acceptable...
+shrink_inactive_list
+  shrink_list
+    buffer_heads_over_limit
+      try_to_release_page
+        xfs_vm_releasepage()
+	  xfs_count_page_state   <<< finds delalloc/unwritten buffer
+	  WARN_ON(delalloc)
 
-It's not random. The process that set up the mapping and registered
-the memory gets SIGIO when someone else tries to modify the file map.
-That process then gets /proc/sys/fs/lease-break-time seconds to fix
-the problem before the kernel force revokes the DMA access.
+That warning is still emitted after Jan's patch. That warning is
+meaningless - we've been called to release a valid page from code
+that is only called on dirty pages to work around ext3's "journal
+cleaned the buffers" dirty state incoherency problem.  We've been
+told that this is not going to be fixed in the high level code, so
+we have to handle it ourselves.
 
-It's otherwise not acceptable to allow DMA into random locations when
-the file map changes.
+That is, trying to release a dirty page with valid state from this
+path on XFS is simply wrong. We shouldn't pollute logs with warnings
+about dirty pages with delalloc/unwritten state in this case because
+/the page and buffers have a valid state/. Hence from this path we
+need to avoid issuing a warning - it's a false positive.
 
-> Perhaps you might want to initially only support ODP MR mappings with
-> DAX and then the DMA fencing issue goes away?
+Similarly for invalidate_complete_page2() calling
+try_to_release_page with a dirty page - we're supposed to skip them
+and not release them at all as documented by the
+invalidate_complete_page2 API. However, we'll issue warnings:
 
-I'd rather try to fix the non-ODP DAX case instead of just turning it off.
+invalidate_complete_page2
+  try_to_release_page
+    xfs_vm_releasepage
+      xfs_count_page_state	<<< finds delalloc/unwritten buffer
+      WARN_ON(unwritten)
+  <skips page correctly>
 
-[1]: https://patchwork.kernel.org/patch/9991681/
+Because, again, we've been handed a dirty page in a valid state that
+we're not supposed to free. The warning is, again, a false positive.
+
+If xfs_vm_releasepage gets handed a clean page with dirty buffer
+state on it, then we most definitely need to warn. But we should not
+warn when we are handed dirty pages with valid state from paths that
+actually want us to leave dirty pages completely alone.
+
+> AIUI, the historical warning problem in XFS was because we issued the
+> warning before/without any similar assessment of the validity of the
+> dirty state (i.e., we assumed the page should not be dirty in
+> ->releasepage()).
+
+And that's precisely what Jan's patch made the code do again. We
+*know* we are going to get handed dirty pages with valid
+delalloc/unwritten state by ->releasepage now, and issuing warnigns
+in those cases is wrong.
+
+> Hmm, I thought the ext3-specific wart was the fact that dirty pages w/o
+> dirty buffers could exist in the first place (why ->releasepage() must
+> handle dirty pages), not necessarily that a page being removed had to be
+> cleaned/invalidated in any particular order. No matter, I probably need
+> to understand the issue better first...
+
+Yup, and that means ->releasepage needs to be called before doing
+anything that assumes the page is clean and can be freed. i.e. we
+have to get the ext3 buffer state propagated back to the the page
+state before we take action on the page....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
