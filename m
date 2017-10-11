@@ -1,160 +1,431 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50708 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41264 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751801AbdJKJpy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Oct 2017 05:45:54 -0400
-Date: Wed, 11 Oct 2017 05:45:53 -0400
+        id S1751968AbdJKKLh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Oct 2017 06:11:37 -0400
+Date: Wed, 11 Oct 2017 06:11:32 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] generic: test race between block map change and writeback
-Message-ID: <20171011094553.GB32909@bfoster.bfoster>
-References: <20170831040237.16022-1-eguan@redhat.com>
- <20171009161255.GA19847@bfoster.bfoster>
- <20171010043649.GI10593@eguan.usersys.redhat.com>
- <20171010052459.GB15067@dastard>
- <20171010105622.GA23057@bfoster.bfoster>
- <20171011053025.GC15067@dastard>
+Subject: Re: [PATCH v3] generic: test race when checking i_size on direct i/o
+ read
+Message-ID: <20171011101131.GD32909@bfoster.bfoster>
+References: <20171010074208.15389-2-eguan@redhat.com>
+ <20171011065202.25531-1-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171011053025.GC15067@dastard>
+In-Reply-To: <20171011065202.25531-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Oct 11, 2017 at 04:30:25PM +1100, Dave Chinner wrote:
-> On Tue, Oct 10, 2017 at 06:56:22AM -0400, Brian Foster wrote:
-> > On Tue, Oct 10, 2017 at 04:24:59PM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 10, 2017 at 12:36:49PM +0800, Eryu Guan wrote:
-> > > > On Mon, Oct 09, 2017 at 12:12:55PM -0400, Brian Foster wrote:
-> > > > > On Thu, Aug 31, 2017 at 12:02:37PM +0800, Eryu Guan wrote:
-> > > > > > Run delalloc writes & append writes & non-data-integrity syncs
-> > > > > > concurrently to test the race between block map change vs writeback.
-> > > > > > 
-> > > > > > This is to cover an XFS bug that data could be written to wrong
-> > > > > > block and delay allocated blocks are leaked because the block map
-> > > > > > was changed due to the removal of speculative allocated eofblocks
-> > > > > > when writeback is in progress.
-> > > > > > 
-> > > > > > And this test partially mimics what lustre-racer[1] test does, using
-> > > > > > which this bug was first found.
-> > > > > > 
-> > > > > > [1] https://git.hpdd.intel.com/?p=fs/lustre-release.git;a=tree;f=lustre/tests/racer;hb=HEAD
-> > > > > > 
-> > > > > > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > > > > > ---
-> > > > > > 
-> > > > > > This may not reproduce the bug on all hosts, but it does reproduce the XFS
-> > > > > > corruption issue reliably on my different test hosts.
-> > > > > > 
-> > > > > 
-> > > > > Was this problem fixed already or are we still waiting on a fix?
-> > > > 
-> > > > It's still an unfixed problem. Dave provided a test patch (which did fix
-> > > > the bug for me)
-> > > 
-> > > The test patch I provided broken the COW writeback path, primarily
-> > > because it's a separate mapping path and the change I made doesn't
-> > > work at all well with it....
-> > > 
-> > > > then Christoph suggested a fix based on seqlock, and
-> > > > things stalled there.
-> > > 
-> > > I had a look at doing that and got stalled on the fact that, again,
-> > > the COW writeback is completely separate to the existing block
-> > > mapping during writeback path and so applying a seqlock algorithm is
-> > > pretty difficult.
-> > > 
-> > > Basically, to fix the problem, we first need to merge the COW and
-> > > delalloc paths in the writepage code and then we'll have a sane base
-> > > on which to apply a proper fix...
-> > > 
-> > > (we need to do this to get rid of the bufferhead dependency, anyway)
-> > > 
-> > > > (I'm happy to pick up the work, but I'm not that
-> > > > familiar with all the allocation paths that could change the extent map,
-> > > > so I may need some guidance and time to play with it.)
-> > > 
-> > > There's some black magic in amongst it all. I'll spend some time on
-> > > it again over the next week and see what I come up with...
-> > > 
-> > 
-> > Hmm, is this[1] the test patch/thread associated with this test case? If
-> > so, I'm still wondering why we can't just trim the mapping to eof like
-> > the previous code had effectively done for so long..? Eryu, does the
-> > appended diff address this test case?
+On Wed, Oct 11, 2017 at 02:52:02PM +0800, Eryu Guan wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
 > 
-> I'm not sure that is sufficient. To me addresses the symptom, not
-> the root problem. The cached extent can go stale at any time, so
-> we really need to ensure that cannot go unnoticed in any
-> circumstance, not just EOF trimming....
+> In this commit a new test case is added to test that i_size races
+> don't occur under dio reads/writes.  We add a program in /src dir,
+> which has a writer to issue some append dio writes.  Meanwhile it
+> has a reader in this test to do some dio reads.  As we expect,
+> reader should read nothing or data with 'a'. But it might read some
+> data with '0'.
 > 
-
-I agree that it may not be sufficient. But the fact remains that the
-only currently reproducible component of this is a regression as of the
-page writeback rework that killed off the old cluster_write() bits. I've
-asked a couple times about proving out the broader design flaw of the
-mapping going stale leading to a tangible problem (using
-instrumentation, if necessary) without any feedback so far, so I'm going
-to consider that a theoretical problem until that happens. To put it
-another way, I don't think this test is sufficient validation of the
-root problem. ;)
-
-The intent is not to avoid fixing the root problem, but to suggest that
-we classify it as a second part of a two part fix. I think the benefits
-of doing so are twofold:
-
-1.) The aforementioned change provides a straightforward and practical
-fix for a reproducible regression (i.e., the workaround is more likely
--rc material and stable fodder).
-
-2.) Using the simple regression fix to address this particular test
-nudges us to also consider a better, more thorough test for the broader
-design flaw.
-
-I think it would be a bit of a shame to fix this kind of longstanding
-design flaw using a regression test that only tests for a particular
-symptom, as you put it. Simple changes to speculative preallocation in
-the future could potentially render it (silently) ineffective.
-
-> I'm working on a patch right now that unifies the writeback mapping
-> mechanisms so we can apply something like a seqlock (a.k.a a
-> generation number) to a cached extent, and that solves the general
-> problem of caching extent lookup results without inode locks held.
-> We do this in several places, and we've had problems in the past
-> that we've worked around by reducing the number of cached extents
-> to 1 (e.g. xfs_iomap_write_allocate()).
+> The bug can be reproduced by this test case [1].
 > 
-
-Sounds interesting.
-
-> Hence I think it's something we really need to solve rather than
-> continuing to add case-by-case work arounds every time we have this
-> problem...
+> 1.  http://patchwork.ozlabs.org/patch/311761/
 > 
-
-The workaround doesn't elide the need for the design fix. The latter can
-essentially replace the former, but a workaround first allows us to fix
-the regression more quickly and with limited risk to older kernels. It
-looks like this regression was introduced in v4.6, thus taking over a
-year to be teased out.
-
-If we assume that you are going to continue to work out a design fix for
-the root problem of the writeback mapping becoming invalid (and perhaps
-I'll take a stab at another test that more thoroughly tests that
-problem), do you see any problems with the patch itself? If not, do you
-object to getting it posted for review in the meantime?
-
-Brian
-
-> Cheers,
+> This ostensibly tests commit:
+> 9fe55eea7 Fix race when checking i_size on direct i/o read
 > 
-> Dave.
+> Update by Eric Sandeen:
+> - update to recent xfstests
+> - update commit log
+> 
+> Update by Eryu Guan:
+> - add aio-dio support to the test and add 'aio' group
+> - add ability to test different alignments
+> - move test from src/ to src/aio-dio-regress/
+> - add .gitignore entry
+> - rebase against latest xfstests with various minor fixes & cleanups
+> - update commit log
+> 
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+
+Looks good, thanks Eryu:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> v3:
+> - fix reader/writer synchronization race
+> 
+> v2:
+> - start background reader in a thread first then start writer only after
+>   reader starts issuing reads
+> 
+>  .gitignore                                         |   1 +
+>  .../aio-dio-append-write-read-race.c               | 230 +++++++++++++++++++++
+>  tests/generic/464                                  |  75 +++++++
+>  tests/generic/464.out                              |   3 +
+>  tests/generic/group                                |   1 +
+>  5 files changed, 310 insertions(+)
+>  create mode 100644 src/aio-dio-regress/aio-dio-append-write-read-race.c
+>  create mode 100755 tests/generic/464
+>  create mode 100644 tests/generic/464.out
+> 
+> diff --git a/.gitignore b/.gitignore
+> index ae7ef87ab384..2dface41d485 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -142,6 +142,7 @@
+>  /src/writemod
+>  /src/writev_on_pagefault
+>  /src/xfsctl
+> +/src/aio-dio-regress/aio-dio-append-write-read-race
+>  /src/aio-dio-regress/aio-dio-cycle-write
+>  /src/aio-dio-regress/aio-dio-eof-race
+>  /src/aio-dio-regress/aio-dio-extend-stat
+> diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+> new file mode 100644
+> index 000000000000..1a78009eb18a
+> --- /dev/null
+> +++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+> @@ -0,0 +1,230 @@
+> +/*
+> + * Copyright (c) 2013 Alibaba Group.
+> + * Copyright (c) 2017 Red Hat Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +/*
+> + * This is a normal case that we do some append dio writes and meanwhile
+> + * we do some dio reads.  Currently in vfs we don't ensure that i_size
+> + * is updated properly.  Hence the reader will read some data with '0'.
+> + * But we expect that the reader should read nothing or data with 'a'.
+> + */
+> +
+> +#include <stdio.h>
+> +#include <stdlib.h>
+> +#include <string.h>
+> +
+> +#include <unistd.h>
+> +#include <sys/types.h>
+> +#include <sys/stat.h>
+> +#include <fcntl.h>
+> +#include <errno.h>
+> +
+> +#include <libaio.h>
+> +#include <pthread.h>
+> +
+> +struct io_data {
+> +	int fd;
+> +	size_t blksize;
+> +	off_t offset;
+> +	char *buf;
+> +	int use_aio;
+> +};
+> +
+> +int reader_ready = 0;
+> +
+> +static void usage(const char *prog)
+> +{
+> +	fprintf(stderr, "usage: %s [-a] <file>\n", prog);
+> +	fprintf(stderr, "\t-a\tuse aio-dio\n");
+> +	exit(EXIT_FAILURE);
+> +}
+> +
+> +static void *reader(void *arg)
+> +{
+> +	struct io_data *data = (struct io_data *)arg;
+> +	int ret;
+> +
+> +	memset(data->buf, 'b', data->blksize);
+> +	reader_ready = 1;
+> +	do {
+> +		ret = pread(data->fd, data->buf, data->blksize, data->offset);
+> +		if (ret < 0)
+> +			perror("read file");
+> +	} while (ret <= 0);
+> +
+> +	return NULL;
+> +}
+> +
+> +static void *writer(struct io_data *data)
+> +{
+> +	int ret;
+> +
+> +	while (!reader_ready)
+> +		usleep(1);
+> +
+> +	if (data->use_aio) {
+> +		struct io_context *ctx = NULL;
+> +		struct io_event evs[1];
+> +		struct iocb iocb;
+> +		struct iocb *iocbs[] = { &iocb };
+> +
+> +		ret = io_setup(1, &ctx);
+> +		if (ret) {
+> +			fprintf(stderr, "error %s during io_setup\n",
+> +				strerror(ret));
+> +			return NULL;
+> +		}
+> +		io_prep_pwrite(&iocb, data->fd, data->buf, data->blksize, data->offset);
+> +		ret = io_submit(ctx, 1, iocbs);
+> +		if (ret != 1) {
+> +			fprintf(stderr, "error %s during io_submit\n",
+> +				strerror(ret));
+> +			return NULL;
+> +		}
+> +		ret = io_getevents(ctx, 1, 1, evs, NULL);
+> +		if (ret != 1) {
+> +			fprintf(stderr, "error %s during io_getevents\n",
+> +				strerror(ret));
+> +			return NULL;
+> +		}
+> +	} else {
+> +		ret = pwrite(data->fd, data->buf, data->blksize, data->offset);
+> +		if (ret < 0)
+> +			perror("write file failed");
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +int main(int argc, char *argv[])
+> +{
+> +	pthread_t tid;
+> +	struct io_data wdata;
+> +	struct io_data rdata;
+> +	size_t max_blocks = 128;		/* 128 */
+> +	size_t blksize = 1 * 1024 * 1024;	/* 1M */
+> +	char *rbuf = NULL, *wbuf = NULL;
+> +	int rfd = 0, wfd = 0;
+> +	int i, j, c;
+> +	int use_aio = 1;
+> +	int ret = 0;
+> +	int io_align = 4096;
+> +	char *prog;
+> +	char *testfile;
+> +
+> +
+> +	prog = basename(argv[0]);
+> +
+> +	while ((c = getopt(argc, argv, "a:d")) != -1) {
+> +		switch (c) {
+> +		case 'a':
+> +			io_align = strtol(optarg, NULL, 0);
+> +			break;
+> +		case 'd':
+> +			use_aio = 0;
+> +			break;
+> +		default:
+> +			usage(prog);
+> +		}
+> +	}
+> +	if (optind != argc - 1)
+> +		usage(prog);
+> +	testfile = argv[optind];
+> +
+> +	wfd = open(testfile, O_CREAT|O_DIRECT|O_WRONLY|O_TRUNC, 0644);
+> +	if (wfd < 0) {
+> +		perror("open for write");
+> +		exit(1);
+> +	}
+> +
+> +	rfd = open(testfile, O_DIRECT|O_RDONLY, 0644);
+> +	if (rfd < 0) {
+> +		perror("open for read");
+> +		ret = 1;
+> +		goto err;
+> +	}
+> +
+> +	ret = posix_memalign((void **)&wbuf, io_align, blksize);
+> +	if (ret) {
+> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
+> +		ret = 1;
+> +		goto err;
+> +	}
+> +
+> +	ret = posix_memalign((void **)&rbuf, io_align, blksize);
+> +	if (ret) {
+> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
+> +		ret = 1;
+> +		goto err;
+> +	}
+> +
+> +	memset(wbuf, 'a', blksize);
+> +	wdata.fd = wfd;
+> +	wdata.blksize = blksize;
+> +	wdata.buf = wbuf;
+> +	wdata.use_aio = use_aio;
+> +	rdata.fd = rfd;
+> +	rdata.blksize = blksize;
+> +	rdata.buf = rbuf;
+> +
+> +	for (i = 0; i < max_blocks; i++) {
+> +		wdata.offset = rdata.offset = i * blksize;
+> +
+> +		/* reset reader_ready, it will be set in reader thread */
+> +		reader_ready = 0;
+> +		ret = pthread_create(&tid, NULL, reader, &rdata);
+> +		if (ret) {
+> +			fprintf(stderr, "create reader thread failed: %s\n",
+> +				strerror(ret));
+> +			ret = 1;
+> +			goto err;
+> +		}
+> +
+> +		writer(&wdata);
+> +
+> +		ret = pthread_join(tid, NULL);
+> +		if (ret) {
+> +			fprintf(stderr, "pthread join reader failed: %s\n",
+> +				strerror(ret));
+> +			ret = 1;
+> +			goto err;
+> +		}
+> +
+> +		for (j = 0; j < blksize; j++) {
+> +			if (rdata.buf[j] != 'a') {
+> +				fprintf(stderr, "encounter an error: "
+> +					"block %d offset %d, content %x\n",
+> +					i, j, rbuf[j]);
+> +				ret = 1;
+> +				goto err;
+> +			}
+> +		}
+> +	}
+> +
+> +err:
+> +	if (rfd)
+> +		close(rfd);
+> +	if (wfd)
+> +		close(wfd);
+> +	if (rbuf)
+> +		free(rbuf);
+> +	if (wbuf)
+> +		free(wbuf);
+> +
+> +	exit(ret);
+> +}
+> diff --git a/tests/generic/464 b/tests/generic/464
+> new file mode 100755
+> index 000000000000..b0423c91a7cf
+> --- /dev/null
+> +++ b/tests/generic/464
+> @@ -0,0 +1,75 @@
+> +#! /bin/bash
+> +# FS QA Test No. 464
+> +#
+> +# Test i_size is updated properly under dio read/write
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
+> +# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.* $testfile.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_aiodio aio-dio-append-write-read-race
+> +_require_test_program "feature"
+> +
+> +testfile=$TEST_DIR/$seq.$$
+> +min_dio_align=`_min_dio_alignment $TEST_DEV`
+> +page_size=`$here/src/feature -s`
+> +
+> +rm -f $seqres.full
+> +
+> +echo "non-aio dio test"
+> +align=$min_dio_align
+> +while [ $align -le $page_size ]; do
+> +	echo "$AIO_TEST -a $align -d $testfile.$align" >> $seqres.full
+> +	$AIO_TEST -a $align -d $testfile.$align 2>&1 | tee -a $seqres.full
+> +	align=$((align * 2))
+> +done
+> +
+> +echo "aio-dio test"
+> +align=$min_dio_align
+> +while [ $align -le $page_size ]; do
+> +	echo "$AIO_TEST -a $align $testfile.$align" >> $seqres.full
+> +	$AIO_TEST -a $align $testfile.$align 2>&1 | tee -a $seqres.full
+> +	align=$((align * 2))
+> +done
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/464.out b/tests/generic/464.out
+> new file mode 100644
+> index 000000000000..14e66fe7d778
+> --- /dev/null
+> +++ b/tests/generic/464.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 464
+> +non-aio dio test
+> +aio-dio test
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 9f173e7a63c9..556add16286b 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -466,3 +466,4 @@
+>  461 auto shutdown stress
+>  462 auto quick dax
+>  463 auto rw
+> +464 auto rw quick aio
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.13.6
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
