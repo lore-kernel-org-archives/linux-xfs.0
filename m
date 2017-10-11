@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58319 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58311 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757503AbdJKUGU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1757465AbdJKUGU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 11 Oct 2017 16:06:20 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 16/19] ext4: Support for synchronous DAX faults
-Date: Wed, 11 Oct 2017 22:06:00 +0200
-Message-Id: <20171011200603.27442-17-jack@suse.cz>
+Subject: [PATCH 14/19] dax: Implement dax_finish_sync_fault()
+Date: Wed, 11 Oct 2017 22:05:58 +0200
+Message-Id: <20171011200603.27442-15-jack@suse.cz>
 In-Reply-To: <20171011200603.27442-1-jack@suse.cz>
 References: <20171011200603.27442-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,123 +15,134 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-We return IOMAP_F_NEEDDSYNC flag from ext4_iomap_begin() for a
-synchronous write fault when inode has some uncommitted metadata
-changes. In the fault handler ext4_dax_fault() we then detect this case,
-call vfs_fsync_range() to make sure all metadata is committed, and call
-dax_insert_pfn_mkwrite() to insert page table entry. Note that this will
-also dirty corresponding radix tree entry which is what we want -
-fsync(2) will still provide data integrity guarantees for applications
-not using userspace flushing. And applications using userspace flushing
-can avoid calling fsync(2) and thus avoid the performance overhead.
+Implement a function that filesystems can call to finish handling of
+synchronous page faults. It takes care of syncing appropriare file range
+and insertion of page table entry.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/file.c       |  6 +++++-
- fs/ext4/inode.c      | 15 +++++++++++++++
- fs/jbd2/journal.c    | 17 +++++++++++++++++
- include/linux/jbd2.h |  1 +
- 4 files changed, 38 insertions(+), 1 deletion(-)
+ fs/dax.c                      | 83 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h           |  2 ++
+ include/trace/events/fs_dax.h |  2 ++
+ 3 files changed, 87 insertions(+)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 208adfc3e673..61a8788168f3 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -295,6 +295,7 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
- 	 */
- 	bool write = (vmf->flags & FAULT_FLAG_WRITE) &&
- 		(vmf->vma->vm_flags & VM_SHARED);
-+	pfn_t pfn;
- 
- 	if (write) {
- 		sb_start_pagefault(sb);
-@@ -310,9 +311,12 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
- 	} else {
- 		down_read(&EXT4_I(inode)->i_mmap_sem);
+diff --git a/fs/dax.c b/fs/dax.c
+index bb9ff907738c..98840043b88d 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1492,3 +1492,86 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
  	}
--	result = dax_iomap_fault(vmf, pe_size, NULL, &ext4_iomap_ops);
-+	result = dax_iomap_fault(vmf, pe_size, &pfn, &ext4_iomap_ops);
- 	if (write) {
- 		ext4_journal_stop(handle);
-+		/* Handling synchronous page fault? */
-+		if (result & VM_FAULT_NEEDDSYNC)
-+			result = dax_finish_sync_fault(vmf, pe_size, pfn);
- 		up_read(&EXT4_I(inode)->i_mmap_sem);
- 		sb_end_pagefault(sb);
- 	} else {
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 31db875bc7a1..13a198924a0f 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3394,6 +3394,19 @@ static int ext4_releasepage(struct page *page, gfp_t wait)
  }
- 
- #ifdef CONFIG_FS_DAX
-+static bool ext4_inode_datasync_dirty(struct inode *inode)
-+{
-+	journal_t *journal = EXT4_SB(inode->i_sb)->s_journal;
+ EXPORT_SYMBOL_GPL(dax_iomap_fault);
 +
-+	if (journal)
-+		return !jbd2_transaction_committed(journal,
-+					EXT4_I(inode)->i_datasync_tid);
-+	/* Any metadata buffers to write? */
-+	if (!list_empty(&inode->i_mapping->private_list))
-+		return true;
-+	return inode->i_state & I_DIRTY_DATASYNC;
++/**
++ * dax_insert_pfn_mkwrite - insert PTE or PMD entry into page tables
++ * @vmf: The description of the fault
++ * @pe_size: Size of entry to be inserted
++ * @pfn: PFN to insert
++ *
++ * This function inserts writeable PTE or PMD entry into page tables for mmaped
++ * DAX file.  It takes care of marking corresponding radix tree entry as dirty
++ * as well.
++ */
++static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
++				  enum page_entry_size pe_size,
++				  pfn_t pfn)
++{
++	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
++	void *entry, **slot;
++	pgoff_t index = vmf->pgoff;
++	int vmf_ret, error;
++
++	spin_lock_irq(&mapping->tree_lock);
++	entry = get_unlocked_mapping_entry(mapping, index, &slot);
++	/* Did we race with someone splitting entry or so? */
++	if (!entry || (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
++	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
++		put_unlocked_mapping_entry(mapping, index, entry);
++		spin_unlock_irq(&mapping->tree_lock);
++		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
++						      VM_FAULT_NOPAGE);
++		return VM_FAULT_NOPAGE;
++	}
++	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
++	entry = lock_slot(mapping, slot);
++	spin_unlock_irq(&mapping->tree_lock);
++	switch (pe_size) {
++	case PE_SIZE_PTE:
++		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
++		vmf_ret = dax_fault_return(error);
++		break;
++#ifdef CONFIG_FS_DAX_PMD
++	case PE_SIZE_PMD:
++		vmf_ret = vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
++			pfn, true);
++		break;
++#endif
++	default:
++		vmf_ret = VM_FAULT_FALLBACK;
++	}
++	put_locked_mapping_entry(mapping, index);
++	trace_dax_insert_pfn_mkwrite(mapping->host, vmf, vmf_ret);
++	return vmf_ret;
 +}
 +
- static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 			    unsigned flags, struct iomap *iomap)
- {
-@@ -3466,6 +3479,8 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	}
- 
- 	iomap->flags = 0;
-+	if ((flags & IOMAP_WRITE) && ext4_inode_datasync_dirty(inode))
-+		iomap->flags |= IOMAP_F_DIRTY;
- 	iomap->bdev = inode->i_sb->s_bdev;
- 	iomap->dax_dev = sbi->s_daxdev;
- 	iomap->offset = first_block << blkbits;
-diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
-index 7d5ef3bf3f3e..fa8cde498b4b 100644
---- a/fs/jbd2/journal.c
-+++ b/fs/jbd2/journal.c
-@@ -738,6 +738,23 @@ int jbd2_log_wait_commit(journal_t *journal, tid_t tid)
- 	return err;
- }
- 
-+/* Return 1 when transaction with given tid has already committed. */
-+int jbd2_transaction_committed(journal_t *journal, tid_t tid)
++/**
++ * dax_finish_sync_fault - finish synchronous page fault
++ * @vmf: The description of the fault
++ * @pe_size: Size of entry to be inserted
++ * @pfn: PFN to insert
++ *
++ * This function calls fdatasync() on the range of file touched by the page
++ * fault and handles inserting of appropriate page table entry.
++ */
++int dax_finish_sync_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
++			  pfn_t pfn)
 +{
-+	int ret = 1;
++	int err;
++	loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
++	size_t len = 0;
 +
-+	read_lock(&journal->j_state_lock);
-+	if (journal->j_running_transaction &&
-+	    journal->j_running_transaction->t_tid == tid)
-+		ret = 0;
-+	if (journal->j_committing_transaction &&
-+	    journal->j_committing_transaction->t_tid == tid)
-+		ret = 0;
-+	read_unlock(&journal->j_state_lock);
-+	return ret;
++	if (pe_size == PE_SIZE_PTE)
++		len = PAGE_SIZE;
++#ifdef CONFIG_FS_DAX_PMD
++	else if (pe_size == PE_SIZE_PMD)
++		len = PMD_SIZE;
++#endif
++	else
++		WARN_ON_ONCE(1);
++	err = vfs_fsync_range(vmf->vma->vm_file, start, start + len - 1, 1);
++	if (err)
++		return VM_FAULT_SIGBUS;
++	return dax_insert_pfn_mkwrite(vmf, pe_size, pfn);
 +}
-+EXPORT_SYMBOL(jbd2_transaction_committed);
-+
- /*
-  * When this function returns the transaction corresponding to tid
-  * will be completed.  If the transaction has currently running, start
-diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
-index 606b6bce3a5b..296d1e0ea87b 100644
---- a/include/linux/jbd2.h
-+++ b/include/linux/jbd2.h
-@@ -1367,6 +1367,7 @@ int jbd2_log_start_commit(journal_t *journal, tid_t tid);
- int __jbd2_log_start_commit(journal_t *journal, tid_t tid);
- int jbd2_journal_start_commit(journal_t *journal, tid_t *tid);
- int jbd2_log_wait_commit(journal_t *journal, tid_t tid);
-+int jbd2_transaction_committed(journal_t *journal, tid_t tid);
- int jbd2_complete_transaction(journal_t *journal, tid_t tid);
- int jbd2_log_do_checkpoint(journal_t *journal);
- int jbd2_trans_will_send_data_barrier(journal_t *journal, tid_t tid);
++EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index e7fa4b8f45bc..d403f78b706c 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -96,6 +96,8 @@ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops);
+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+ 		    pfn_t *pfnp, const struct iomap_ops *ops);
++int dax_finish_sync_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
++			  pfn_t pfn);
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+diff --git a/include/trace/events/fs_dax.h b/include/trace/events/fs_dax.h
+index 88a9d19b8ff8..7725459fafef 100644
+--- a/include/trace/events/fs_dax.h
++++ b/include/trace/events/fs_dax.h
+@@ -190,6 +190,8 @@ DEFINE_EVENT(dax_pte_fault_class, name, \
+ DEFINE_PTE_FAULT_EVENT(dax_pte_fault);
+ DEFINE_PTE_FAULT_EVENT(dax_pte_fault_done);
+ DEFINE_PTE_FAULT_EVENT(dax_load_hole);
++DEFINE_PTE_FAULT_EVENT(dax_insert_pfn_mkwrite_no_entry);
++DEFINE_PTE_FAULT_EVENT(dax_insert_pfn_mkwrite);
+ 
+ TRACE_EVENT(dax_insert_mapping,
+ 	TP_PROTO(struct inode *inode, struct vm_fault *vmf, void *radix_entry),
 -- 
 2.12.3
 
