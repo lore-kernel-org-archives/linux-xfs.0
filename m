@@ -1,136 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:60169 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755612AbdJIXmR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 19:42:17 -0400
-Date: Tue, 10 Oct 2017 10:27:01 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:49651 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754231AbdJKBNu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 21:13:50 -0400
+Date: Wed, 11 Oct 2017 12:09:22 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/17] Set up infastructure for deferred attribute
- operations
-Message-ID: <20171009232701.GU3666@dastard>
-References: <1507327548-3221-1-git-send-email-allison.henderson@oracle.com>
- <1507327548-3221-3-git-send-email-allison.henderson@oracle.com>
- <20171009042026.GJ3666@dastard>
- <acc1732a-7c7a-5a11-ace3-e052134b1590@oracle.com>
- <8dafd7c1-fd4e-6ec4-28dd-72d4eeff602c@oracle.com>
+Subject: Re: [PATCH v8 06/14] xfs: wire up MAP_DIRECT
+Message-ID: <20171011010922.GY3666@dastard>
+References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150764697001.16882.13486539828150761233.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <8dafd7c1-fd4e-6ec4-28dd-72d4eeff602c@oracle.com>
+In-Reply-To: <150764697001.16882.13486539828150761233.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, linux-api@vger.kernel.org, iommu@lists.linux-foundation.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Mon, Oct 09, 2017 at 03:51:42PM -0700, Allison Henderson wrote:
-> On 10/09/2017 02:25 PM, Allison Henderson wrote:
-> >On 10/8/2017 9:20 PM, Dave Chinner wrote:
-> >>On Fri, Oct 06, 2017 at 03:05:33PM -0700, Allison Henderson wrote:
-> >>>Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> >>>    /*
-> >>>   * Inode Log Item Format definitions.
-> >>>@@ -863,4 +872,45 @@ struct xfs_icreate_log {
-> >>>      __be32        icl_gen;    /* inode generation number to use */
-> >>>  };
-> >>>  +/* Flags for defered attribute operations */
-> >>>+#define ATTR_OP_FLAGS_SET    0x01    /* Set the attribute */
-> >>>+#define ATTR_OP_FLAGS_REMOVE    0x02    /* Remove the attribute */
-> >>>+#define ATTR_OP_FLAGS_MAX    0x02    /* Max flags */
-> >>>+
-> >>>+/*
-> >>>+ * ATTRI/ATTRD log format definitions
-> >>>+ */
-> >>>+struct xfs_attr {
-> >>>+    xfs_ino_t    attr_ino;
-> >>>+    uint32_t    attr_op_flags;
-> >>>+    uint32_t    attr_nameval_len;
-> >>>+    uint32_t    attr_name_len;
-> >>>+    uint32_t        attr_flags;
-> >>>+    uint8_t        attr_nameval[MAX_NAMEVAL_LEN];
-> >>>+};
-> >>
-> >>"struct xfs_attr" is very generic. This ends up in the log on disk,
-> >>right? So it's a log format structure? struct xfs_attr_log_format?
-> >>
-> >>This also needs padding to ensure it's size is 64bit aligned.
-> >>
-> Hmm, if this structure is meant to be stored on disk, is it really a
-> good idea to put pointers in here as you mentioned in your
-> conclusion below?  If we get remounted or rebooted and loose the
-> pointer that may not work.  Or am I not understanding what you
-> meant?
+On Tue, Oct 10, 2017 at 07:49:30AM -0700, Dan Williams wrote:
+> @@ -1009,6 +1019,22 @@ xfs_file_llseek(
+>  }
+>  
+>  /*
+> + * MAP_DIRECT faults can only be serviced while the FL_LAYOUT lease is
+> + * valid. See map_direct_invalidate.
+> + */
+> +static int
+> +xfs_can_fault_direct(
+> +	struct vm_area_struct	*vma)
+> +{
+> +	if (!xfs_vma_is_direct(vma))
+> +		return 0;
+> +
+> +	if (!test_map_direct_valid(vma->vm_private_data))
+> +		return VM_FAULT_SIGBUS;
+> +	return 0;
+> +}
 
-The log format structure on disk needs to be encoded correctly - it
-will contain data, not pointers. The in-memory log item will contain
-the pointers to the xattr name/value buffers. i.e.
+Better, but I'm going to be an annoying pedant here: a "can
+<something>" check should return a boolean true/false.
 
-struct xfs_attr_log_item {
-	struct xfs_log_item	item;
-	....
-	int			namelen;
-	void			*name_buf;
-	int			valuelen;
-	void			*value_buf;
-	struct xfs_attr_log_format alf;
-};
+Also, it's a bit jarring to see that a non-direct VMA that /can't/
+do direct faults returns the same thing as a direct-vma that /can/
+do direct faults, so a couple of extra comments for people who will
+quickly forget how this code works (i.e. me) will be helpful. Say
+something like this:
 
-And the log format structure looks like:
+/*
+ * MAP_DIRECT faults can only be serviced while the FL_LAYOUT lease is
+ * valid. See map_direct_invalidate.
+ */
+static bool
+xfs_vma_has_direct_lease(
+	struct vm_area_struct	*vma)
+{
+	/* Non MAP_DIRECT vmas do not require layout leases */
+	if (!xfs_vma_is_direct(vma))
+		return true;
 
-struct xfs_attr_log_format {
-	be64		ino;
-	be32		gen;
-	be32		intent_id;
-	be32		op_flags;
-	be32		attr_flags;
-	be32		namelen;
-	be32		valuelen;
-	/* name gets copied here into first trailing log iovec */
-	/* value gets copied here into second trailing log iovec */
-};
+	if (!test_map_direct_valid(vma->vm_private_data))
+		return false;
 
-note that the intent id is used by recovery to make the intent item
-to the done item - that's probably what the "id" variable in the
-original structure you had was supposed to be used for. :P
+	/* We have a valid lease */
+	return true;
+}
 
-So essentially the ->item_size code does:
-
-	/* log format header */
-	nvecs++;
-	nbytes += sizeof(struct xfs_attr_log_format);
-	if (opflags == remove ||
-	    opflags == flipflags)
-		return;
-
-	/* add/set */
-	nvecs += 2;
-	nbytes += namelen;
-	nbytes += valuelen;
-	return;
-
-And the ->item_format code does something like:
-
-	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_FORMAT,
-	                &alip->alf, sizeof(struct xfs_attr_log_format));
-
-	if (opflags == remove ||
-	    opflags == flipflags)
-		return;
-
-	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_NAME,
-	                alip->name_buf, alip->namelen);
-	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_VALUE,
-	                alip->value_buf, alip->valuelen);
-
-Make a bit more sense now?
-
-I suspect taht because we won't ever relog a "set" intent, we can
-clear the name_buf/value_buf pointers from the log item once we've
-copied them into the log vector. That means we can use pointers to
-the buffers containing the name and value already allocated in the
-attr code and so won't need to allocate another set of buffers just
-for the log item.
+.....
+	if (!xfs_vma_has_direct_lease(vma)) {
+		ret = VM_FAULT_SIGBUS;
+		goto out_unlock;
+	}
+....
 
 Cheers,
 
