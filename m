@@ -1,102 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58291 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757413AbdJKUGT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Oct 2017 16:06:19 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 07/19] dax: Inline dax_insert_mapping() into the callsite
-Date: Wed, 11 Oct 2017 22:05:51 +0200
-Message-Id: <20171011200603.27442-8-jack@suse.cz>
-In-Reply-To: <20171011200603.27442-1-jack@suse.cz>
-References: <20171011200603.27442-1-jack@suse.cz>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:49112 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752365AbdJKVNo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 17:13:44 -0400
+Date: Thu, 12 Oct 2017 08:10:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: ffsb job does not exit on xfs 4.14-rc1+
+Message-ID: <20171011211010.GA3666@dastard>
+References: <20170925014006.5tvdkjszrbj6uhgc@XZHOUW.usersys.redhat.com>
+ <20170925084903.fsjgrn7rfernou5j@hades.localdomain>
+ <20171011135415.6omvzcdflflqghbo@XZHOUW.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171011135415.6omvzcdflflqghbo@XZHOUW.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
+To: Xiong Zhou <xzhou@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
 
-dax_insert_mapping() has only one callsite and we will need to further
-fine tune what it does for synchronous faults. Just inline it into the
-callsite so that we don't have to pass awkward bools around.
+On Wed, Oct 11, 2017 at 09:54:15PM +0800, Xiong Zhou wrote:
+> On Mon, Sep 25, 2017 at 10:49:03AM +0200, Carlos Maiolino wrote:
+> > On Mon, Sep 25, 2017 at 01:40:06AM +0000, Xiong Zhou wrote:
+> > > Hi,
+> > > 
+> > > ffsb test won't exit like this on Linus tree 4.14-rc1+.
+> > > Latest commit cd4175b11685
+> > 
+> > Can you provide more information? Do you have any kernel log from this issue?
+> > dmesg, Oopses, traces, etc.
+> > Storage configuration might also be required here.
+> 
+> Turns out this only repreduces on nvdimm devices, xfs without dax
+> mount option. More logs are attached.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 46 +++++++++++++++++++---------------------------
- 1 file changed, 19 insertions(+), 27 deletions(-)
+It's a hang, so what's the output of sysrq-w once it's hung?
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5ea71381dba0..5b20c6456926 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -858,32 +858,6 @@ static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
- 	return rc;
- }
- 
--static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
--			      loff_t pos, void *entry)
--{
--	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct vm_area_struct *vma = vmf->vma;
--	struct address_space *mapping = vma->vm_file->f_mapping;
--	unsigned long vaddr = vmf->address;
--	void *ret;
--	int rc;
--	pfn_t pfn;
--
--	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
--	if (rc < 0)
--		return rc;
--
--	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
--	if (IS_ERR(ret))
--		return PTR_ERR(ret);
--
--	trace_dax_insert_mapping(mapping->host, vmf, ret);
--	if (vmf->flags & FAULT_FLAG_WRITE)
--		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
--	else
--		return vm_insert_mixed(vma, vaddr, pfn);
--}
--
- /*
-  * The user has performed a load from a hole in the file.  Allocating a new
-  * page in the file would cause excessive storage usage for workloads with
-@@ -1119,6 +1093,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 	bool write = vmf->flags & FAULT_FLAG_WRITE;
- 	int vmf_ret = 0;
- 	void *entry;
-+	pfn_t pfn;
- 
- 	trace_dax_pte_fault(inode, vmf, vmf_ret);
- 	/*
-@@ -1201,7 +1176,24 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
- 			major = VM_FAULT_MAJOR;
- 		}
--		error = dax_insert_mapping(vmf, &iomap, pos, entry);
-+		error = dax_iomap_pfn(&iomap, pos, PAGE_SIZE, &pfn);
-+		if (error < 0)
-+			goto error_finish_iomap;
-+
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry,
-+						 dax_iomap_sector(&iomap, pos),
-+						 0);
-+		if (IS_ERR(entry)) {
-+			error = PTR_ERR(entry);
-+			goto error_finish_iomap;
-+		}
-+
-+		trace_dax_insert_mapping(inode, vmf, entry);
-+		if (write)
-+			error = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
-+		else
-+			error = vm_insert_mixed(vma, vaddr, pfn);
-+
- 		/* -EBUSY is fine, somebody else faulted on the same PTE */
- 		if (error == -EBUSY)
- 			error = 0;
+> > have you also tried to reproduce it with another filesystem? If so, is the same
+> > problem reproducible with another filesystem or only with XFS?
+> 
+> Only xfs. Test on ext4 ends shortly.
+> 
+> > 
+> > P.S. please avoid sending it to all lists (mainly LKML).
+> 
+> Why?  I thought LKML was better archived.
+
+The lists are all archived, but that's irrelevant. The list you
+should report problems to is based on the scope of the problem, not
+whether the lists are archived or not.
+
+Because the scope of the problem at this point is XFS, it's
+inappropriate to report it to lists that are for general kernel or
+VFS issues. There's enough noise on those lists without everyone
+bombarding them with subsystem specific issues - that's why we have
+subsystem specific lists in the first place.
+
+If it turns out to be a problem in some other subsystem, we'll add
+cc's to other subsystem or general lists as appropriate.
+
+Cheers,
+
+Dave.
 -- 
-2.12.3
-
+Dave Chinner
+david@fromorbit.com
