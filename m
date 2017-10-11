@@ -1,77 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:55190 "EHLO quartz.orcorp.ca"
+Received: from mx2.suse.de ([195.135.220.15]:58250 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751812AbdJMRcJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 13:32:09 -0400
-Date: Fri, 13 Oct 2017 11:31:45 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Message-ID: <20171013173145.GA18702@obsidianresearch.com>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171012142319.GA11254@lst.de>
- <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
- <20171013065716.GB26461@lst.de>
- <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
- <20171013163822.GA17411@obsidianresearch.com>
- <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
+        id S1752275AbdJKUGR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Oct 2017 16:06:17 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 03/19] dax: Simplify arguments of dax_insert_mapping()
+Date: Wed, 11 Oct 2017 22:05:47 +0200
+Message-Id: <20171011200603.27442-4-jack@suse.cz>
+In-Reply-To: <20171011200603.27442-1-jack@suse.cz>
+References: <20171011200603.27442-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-On Fri, Oct 13, 2017 at 10:01:04AM -0700, Dan Williams wrote:
-> On Fri, Oct 13, 2017 at 9:38 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > On Fri, Oct 13, 2017 at 08:14:55AM -0700, Dan Williams wrote:
-> >
-> >> scheme specific to RDMA which seems like a waste to me when we can
-> >> generically signal an event on the fd for any event that effects any
-> >> of the vma's on the file. The FL_LAYOUT lease impacts the entire file,
-> >> so as far as I can see delaying the notification until MR-init is too
-> >> late, too granular, and too RDMA specific.
-> >
-> > But for RDMA a FD is not what we care about - we want the MR handle so
-> > the app knows which MR needs fixing.
-> 
-> I'd rather put the onus on userspace to remember where it used a
-> MAP_DIRECT mapping and be aware that all the mappings of that file are
-> subject to a lease break. Sure, we could build up a pile of kernel
-> infrastructure to notify on a per-MR basis, but I think that would
-> only be worth it if leases were range based. As it is, the entire file
-> is covered by a lease instance and all MRs that might reference that
-> file get one notification. That said, we can always arrange for a
-> per-driver callback at lease-break time so that it can do something
-> above and beyond the default notification.
+dax_insert_mapping() has lots of arguments and a lot of them is actuall
+duplicated by passing vm_fault structure as well. Change the function to
+take the same arguments as dax_pmd_insert_mapping().
 
-I don't think that really represents how lots of apps actually use
-RDMA.
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-RDMA is often buried down in the software stack (eg in a MPI), and by
-the time a mapping gets used for RDMA transfer the link between the
-FD, mmap and the MR is totally opaque.
+diff --git a/fs/dax.c b/fs/dax.c
+index f001d8c72a06..0bc42ac294ca 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -820,23 +820,30 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ }
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
+ 
+-static int dax_insert_mapping(struct address_space *mapping,
+-		struct block_device *bdev, struct dax_device *dax_dev,
+-		sector_t sector, size_t size, void *entry,
+-		struct vm_area_struct *vma, struct vm_fault *vmf)
++static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
++{
++	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
++}
++
++static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
++			      loff_t pos, void *entry)
+ {
++	const sector_t sector = dax_iomap_sector(iomap, pos);
++	struct vm_area_struct *vma = vmf->vma;
++	struct address_space *mapping = vma->vm_file->f_mapping;
+ 	unsigned long vaddr = vmf->address;
+ 	void *ret, *kaddr;
+ 	pgoff_t pgoff;
+ 	int id, rc;
+ 	pfn_t pfn;
+ 
+-	rc = bdev_dax_pgoff(bdev, sector, size, &pgoff);
++	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
+ 	if (rc)
+ 		return rc;
+ 
+ 	id = dax_read_lock();
+-	rc = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
++	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
++			       &kaddr, &pfn);
+ 	if (rc < 0) {
+ 		dax_read_unlock(id);
+ 		return rc;
+@@ -936,11 +943,6 @@ int __dax_zero_page_range(struct block_device *bdev,
+ }
+ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
+ 
+-static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+-{
+-	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+-}
+-
+ static loff_t
+ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap)
+@@ -1087,7 +1089,6 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 	struct inode *inode = mapping->host;
+ 	unsigned long vaddr = vmf->address;
+ 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+-	sector_t sector;
+ 	struct iomap iomap = { 0 };
+ 	unsigned flags = IOMAP_FAULT;
+ 	int error, major = 0;
+@@ -1140,9 +1141,9 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 		goto error_finish_iomap;
+ 	}
+ 
+-	sector = dax_iomap_sector(&iomap, pos);
+-
+ 	if (vmf->cow_page) {
++		sector_t sector = dax_iomap_sector(&iomap, pos);
++
+ 		switch (iomap.type) {
+ 		case IOMAP_HOLE:
+ 		case IOMAP_UNWRITTEN:
+@@ -1175,8 +1176,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 			count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
+ 			major = VM_FAULT_MAJOR;
+ 		}
+-		error = dax_insert_mapping(mapping, iomap.bdev, iomap.dax_dev,
+-				sector, PAGE_SIZE, entry, vmf->vma, vmf);
++		error = dax_insert_mapping(vmf, &iomap, pos, entry);
+ 		/* -EBUSY is fine, somebody else faulted on the same PTE */
+ 		if (error == -EBUSY)
+ 			error = 0;
+-- 
+2.12.3
 
-Having a MR specific notification means the low level RDMA libraries
-have a chance to deal with everything for the app.
-
-Eg consider a HPC app using MPI that uses some DAX aware library to
-get DAX backed mmap's. It then passes memory in those mmaps to the
-MPI library to do transfers. The MPI creates the MR on demand.
-
-So, who should be responsible for MR coherency? Today we say the MPI
-is responsible. But we can't really expect the MPI
-to hook SIGIO and somehow try to reverse engineer what MRs are
-impacted from a FD that may not even still be open.
-
-I think, if you want to build a uAPI for notification of MR lease
-break, then you need show how it fits into the above software model:
- - How it can be hidden in a RDMA specific library
- - How lease break can be done hitlessly, so the library user never
-   needs to know it is happening or see failed/missed transfers
- - Whatever fast path checking is needed does not kill performance
-
-Jason
