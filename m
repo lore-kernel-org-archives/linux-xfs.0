@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58337 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58291 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757609AbdJKUGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1752386AbdJKUGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 11 Oct 2017 16:06:21 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 02/19] mm: Remove VM_FAULT_HWPOISON_LARGE_MASK
-Date: Wed, 11 Oct 2017 22:05:46 +0200
-Message-Id: <20171011200603.27442-3-jack@suse.cz>
+Subject: [PATCH 17/19] ext4: Add support for MAP_SYNC flag
+Date: Wed, 11 Oct 2017 22:06:01 +0200
+Message-Id: <20171011200603.27442-18-jack@suse.cz>
 In-Reply-To: <20171011200603.27442-1-jack@suse.cz>
 References: <20171011200603.27442-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,28 +15,52 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-It is unused.
+Now when everything is prepared, add support in ext4 to accept MAP_SYNC
+as an mmap(2) flag.
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- include/linux/mm.h | 2 --
- 1 file changed, 2 deletions(-)
+ fs/ext4/file.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 38f6ed954dde..55a9d2d109d9 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1182,8 +1182,6 @@ static inline void clear_page_pfmemalloc(struct page *page)
- #define VM_FAULT_FALLBACK 0x0800	/* huge page fault failed, fall back to small */
- #define VM_FAULT_DONE_COW   0x1000	/* ->fault has fully handled COW */
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 61a8788168f3..f013cda84b3d 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -364,6 +364,25 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 	return 0;
+ }
  
--#define VM_FAULT_HWPOISON_LARGE_MASK 0xf000 /* encodes hpage index for large hwpoison */
--
- #define VM_FAULT_ERROR	(VM_FAULT_OOM | VM_FAULT_SIGBUS | VM_FAULT_SIGSEGV | \
- 			 VM_FAULT_HWPOISON | VM_FAULT_HWPOISON_LARGE | \
- 			 VM_FAULT_FALLBACK)
++#define EXT4_SUPPORTED_MAP_FLAGS (LEGACY_MAP_MASK | MAP_SYNC)
++
++static int ext4_file_mmap_validate(struct file *file,
++				   struct vm_area_struct *vma,
++				   unsigned long map_flags)
++{
++	if (map_flags & ~EXT4_SUPPORTED_MAP_FLAGS)
++		return -EOPNOTSUPP;
++
++	/*
++	 * We don't support synchronous mappings for non-DAX files. At least
++	 * until someone comes with a sensible use case.
++	 */
++	if (!IS_DAX(file_inode(file)) && (map_flags & MAP_SYNC))
++		return -EOPNOTSUPP;
++
++	return ext4_file_mmap(file, vma);
++}
++
+ static int ext4_file_open(struct inode * inode, struct file * filp)
+ {
+ 	struct super_block *sb = inode->i_sb;
+@@ -723,6 +742,7 @@ const struct file_operations ext4_file_operations = {
+ 	.compat_ioctl	= ext4_compat_ioctl,
+ #endif
+ 	.mmap		= ext4_file_mmap,
++	.mmap_validate	= ext4_file_mmap_validate,
+ 	.open		= ext4_file_open,
+ 	.release	= ext4_release_file,
+ 	.fsync		= ext4_sync_file,
 -- 
 2.12.3
 
