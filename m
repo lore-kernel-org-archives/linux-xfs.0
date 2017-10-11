@@ -1,96 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:34558 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932406AbdJKCi2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2017 22:38:28 -0400
-Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
-        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9B2axYk013470
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:38:27 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0b-00082601.pphosted.com with ESMTP id 2dh271tntp-4
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2017 19:38:27 -0700
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v6 1/3] xfs: Show realtime device stats on statfs calls if inherit flag set
-Date: Tue, 10 Oct 2017 19:37:50 -0700
-Message-ID: <20171011023752.1373259-2-rwareing@fb.com>
-In-Reply-To: <20171011023752.1373259-1-rwareing@fb.com>
-References: <20171011023752.1373259-1-rwareing@fb.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx2.suse.de ([195.135.220.15]:58267 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752555AbdJKUGR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Oct 2017 16:06:17 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 09/19] dax: Fix comment describing dax_iomap_fault()
+Date: Wed, 11 Oct 2017 22:05:53 +0200
+Message-Id: <20171011200603.27442-10-jack@suse.cz>
+In-Reply-To: <20171011200603.27442-1-jack@suse.cz>
+References: <20171011200603.27442-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-- Reports realtime device free blocks in statfs calls if inheritance
-  bit is set on the inode of directory.  This is a bit more intuitive,
-  especially for use-cases which are using a much larger device for
-  the realtime device.
-- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
-  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
-  option.
+Add missing argument description.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Richard Wareing <rwareing@fb.com>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
-Changes since v5:
-* None
+ fs/dax.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes since v4:
-* None
-
-Changes since v3:
-* Fixed accounting bug, we are not required to substract m_alloc_set_aside
-  as this is a data device only requirement.
-* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
-  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
-  for the inode.
-
-Changes since v2:
-* Style updated per Christoph Hellwig's comment
-* Fixed bug: statp->f_bavail = statp->f_bfree
-
- fs/xfs/xfs_linux.h | 2 ++
- fs/xfs/xfs_super.c | 8 ++++++++
- 2 files changed, 10 insertions(+)
-
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 044fb0e..fe46e71 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -280,8 +280,10 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
- 
- #ifdef CONFIG_XFS_RT
- #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
-+#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
- #else
- #define XFS_IS_REALTIME_INODE(ip) (0)
-+#define XFS_IS_REALTIME_MOUNT(mp) (0)
- #endif
- 
- #endif /* __XFS_LINUX__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 455a575..6d33a5e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1136,6 +1136,14 @@ xfs_fs_statfs(
- 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
- 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
- 		xfs_qm_statvfs(ip, statp);
-+
-+	if (XFS_IS_REALTIME_MOUNT(mp) &&
-+	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
-+		statp->f_blocks = sbp->sb_rblocks;
-+		statp->f_bavail = statp->f_bfree =
-+			sbp->sb_frextents * sbp->sb_rextsize;
-+	}
-+
- 	return 0;
- }
- 
+diff --git a/fs/dax.c b/fs/dax.c
+index 675fab8ec41f..5214ed9ba508 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1435,7 +1435,8 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
+ /**
+  * dax_iomap_fault - handle a page fault on a DAX file
+  * @vmf: The description of the fault
+- * @ops: iomap ops passed from the file system
++ * @pe_size: Size of the page to fault in
++ * @ops: Iomap ops passed from the file system
+  *
+  * When a page fault occurs, filesystems may call this helper in
+  * their fault handler for DAX files. dax_iomap_fault() assumes the caller
 -- 
-2.9.5
+2.12.3
 
