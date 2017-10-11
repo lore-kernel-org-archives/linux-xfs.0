@@ -1,145 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:43257 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751689AbdJKOPR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 10:15:17 -0400
-Received: by mail-oi0-f51.google.com with SMTP id c77so3300432oig.0
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2017 07:15:17 -0700 (PDT)
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35868 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbdJKQB1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 12:01:27 -0400
 MIME-Version: 1.0
-In-Reply-To: <20171011074320.GG3667@quack2.suse.cz>
+In-Reply-To: <20171011115410.GF30803@8bytes.org>
 References: <150764693502.16882.15848797003793552156.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150764694114.16882.5128952296874418457.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171011074320.GG3667@quack2.suse.cz>
+ <150764701194.16882.9682569707416653741.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171011115410.GF30803@8bytes.org>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 11 Oct 2017 07:15:16 -0700
-Message-ID: <CAPcyv4iVpnce_LTCuprmbeOk9zh7O4Q7O4_V8u4RzHTuO=S02g@mail.gmail.com>
-Subject: Re: [PATCH v8 01/14] mm: introduce MAP_SHARED_VALIDATE, a mechanism
- to safely define new mmap flags
+Date: Wed, 11 Oct 2017 09:01:25 -0700
+Message-ID: <CAA9_cmdN4N8nDdyhgn61A2_vwuTP3LJTgDCEHMQLoaFZg=DtHw@mail.gmail.com>
+Subject: Re: [PATCH v8 13/14] IB/core: use MAP_DIRECT to fix / enable RDMA to
+ DAX mappings
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Arnd Bergmann <arnd@arndb.de>, linux-rdma@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, iommu@lists.linux-foundation.org, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Sean Hefty <sean.hefty@intel.com>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Jeff Moyer <jmoyer@redhat.com>, iommu@lists.linux-foundation.org, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm <linux-mm@kvack.org>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, David Woodhouse <dwmw2@infradead.org>, Hal Rosenstock <hal.rosenstock@gmail.com>
 
-On Wed, Oct 11, 2017 at 12:43 AM, Jan Kara <jack@suse.cz> wrote:
-> On Tue 10-10-17 07:49:01, Dan Williams wrote:
->> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
->> unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
->> mechanism to define new behavior that is known to fail on older kernels
->> without the support. Define a new MAP_SHARED_VALIDATE flag pattern that
->> is guaranteed to fail on all legacy mmap implementations.
->>
->> It is worth noting that the original proposal was for a standalone
->> MAP_VALIDATE flag. However, when that  could not be supported by all
->> archs Linus observed:
->>
->>     I see why you *think* you want a bitmap. You think you want
->>     a bitmap because you want to make MAP_VALIDATE be part of MAP_SYNC
->>     etc, so that people can do
->>
->>     ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED
->>                   | MAP_SYNC, fd, 0);
->>
->>     and "know" that MAP_SYNC actually takes.
->>
->>     And I'm saying that whole wish is bogus. You're fundamentally
->>     depending on special semantics, just make it explicit. It's already
->>     not portable, so don't try to make it so.
->>
->>     Rename that MAP_VALIDATE as MAP_SHARED_VALIDATE, make it have a value
->>     of 0x3, and make people do
->>
->>     ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE
->>                   | MAP_SYNC, fd, 0);
->>
->>     and then the kernel side is easier too (none of that random garbage
->>     playing games with looking at the "MAP_VALIDATE bit", but just another
->>     case statement in that map type thing.
->>
->>     Boom. Done.
->>
->> Similar to ->fallocate() we also want the ability to validate the
->> support for new flags on a per ->mmap() 'struct file_operations'
->> instance basis.  Towards that end arrange for flags to be generically
->> validated against a mmap_supported_mask exported by 'struct
->> file_operations'. By default all existing flags are implicitly
->> supported, but new flags require MAP_SHARED_VALIDATE and
->> per-instance-opt-in.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Arnd Bergmann <arnd@arndb.de>
->> Cc: Andy Lutomirski <luto@kernel.org>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Suggested-by: Christoph Hellwig <hch@lst.de>
->> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  arch/alpha/include/uapi/asm/mman.h           |    1 +
->>  arch/mips/include/uapi/asm/mman.h            |    1 +
->>  arch/mips/kernel/vdso.c                      |    2 +
->>  arch/parisc/include/uapi/asm/mman.h          |    1 +
->>  arch/tile/mm/elf.c                           |    3 +-
->>  arch/xtensa/include/uapi/asm/mman.h          |    1 +
->>  include/linux/fs.h                           |    2 +
->>  include/linux/mm.h                           |    2 +
->>  include/linux/mman.h                         |   39 ++++++++++++++++++++++++++
->>  include/uapi/asm-generic/mman-common.h       |    1 +
->>  mm/mmap.c                                    |   21 ++++++++++++--
->>  tools/include/uapi/asm-generic/mman-common.h |    1 +
->>  12 files changed, 69 insertions(+), 6 deletions(-)
->>
->> diff --git a/arch/alpha/include/uapi/asm/mman.h b/arch/alpha/include/uapi/asm/mman.h
->> index 3b26cc62dadb..92823f24890b 100644
->> --- a/arch/alpha/include/uapi/asm/mman.h
->> +++ b/arch/alpha/include/uapi/asm/mman.h
->> @@ -14,6 +14,7 @@
->>  #define MAP_TYPE     0x0f            /* Mask for type of mapping (OSF/1 is _wrong_) */
->>  #define MAP_FIXED    0x100           /* Interpret addr exactly */
->>  #define MAP_ANONYMOUS        0x10            /* don't use a file */
->> +#define MAP_SHARED_VALIDATE 0x3              /* share + validate extension flags */
+On Wed, Oct 11, 2017 at 4:54 AM, Joerg Roedel <joro@8bytes.org> wrote:
+> On Tue, Oct 10, 2017 at 07:50:12AM -0700, Dan Williams wrote:
+>> +static void ib_umem_lease_break(void *__umem)
+>> +{
+>> +     struct ib_umem *umem = umem;
+>> +     struct ib_device *idev = umem->context->device;
+>> +     struct device *dev = idev->dma_device;
+>> +     struct scatterlist *sgl = umem->sg_head.sgl;
+>> +
+>> +     iommu_unmap(umem->iommu, sg_dma_address(sgl) & PAGE_MASK,
+>> +                     iommu_sg_num_pages(dev, sgl, umem->npages));
+>> +}
 >
-> Just a nit but I'd put definition of MAP_SHARED_VALIDATE close to the
-> definition of MAP_SHARED and MAP_PRIVATE where it logically belongs (for
-> all archs).
-
-Will do.
-
+> This looks like an invitation to break your code by random iommu-driver
+> changes. There is no guarantee that an iommu-backed dma-api
+> implemenation will map exactly iommu_sg_num_pages() pages for a given
+> sg-list. In other words, you are mixing the use of the IOMMU-API and the
+> DMA-API in an incompatible way that only works because you know the
+> internals of the iommu-drivers.
 >
->> diff --git a/include/linux/mm.h b/include/linux/mm.h
->> index f8c10d336e42..5c4c98e4adc9 100644
->> --- a/include/linux/mm.h
->> +++ b/include/linux/mm.h
->> @@ -2133,7 +2133,7 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
->>
->>  extern unsigned long mmap_region(struct file *file, unsigned long addr,
->>       unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
->> -     struct list_head *uf);
->> +     struct list_head *uf, unsigned long map_flags);
->>  extern unsigned long do_mmap(struct file *file, unsigned long addr,
->>       unsigned long len, unsigned long prot, unsigned long flags,
->>       vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
+> I've seen in another patch that your changes strictly require an IOMMU,
+> so you what you should do instead is to switch from the DMA-API to the
+> IOMMU-API and do the address-space management yourself.
 >
-> I have to say I'm not very keen on passing down both vm_flags and map_flags
-> - vm_flags are almost a subset of map_flags but not quite and the ambiguity
-> which needs to be used for a particular check seems to open a space for
-> errors. Granted you currently only care about MAP_DIRECT in ->mmap_validate
-> and just pass map_flags through mmap_region() so there's no space for
-> confusion but future checks could do something different.
 
-I was hoping the fact that one can't trigger a call to
-->mmap_validate() unless they specify a flag outside of
-LEGACY_MAP_MASK makes it clearer that validation is only for new
-flags. Old flags get the existing "may be silently ignored" behavior.
-
-> But OTOH I don't
-> see a cleaner way of avoiding the need to allocate vma flag for something
-> you need to check down in ->mmap_validate so I guess I'll live with that
-> and if problems really happen, we may have cleaner idea what needs to be
-> done.
->
-> So overall feel free to add:
->
-> Reviewed-by: Jan Kara <jack@suse.cz>
-
-Thanks Jan.
+Ok, I'll switch over completely to the iommu api for this. It will
+also address Robin's concern.
