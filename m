@@ -1,60 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39529 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:38500 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750716AbdJLNva (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Oct 2017 09:51:30 -0400
-Date: Thu, 12 Oct 2017 15:51:27 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v9 1/6] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
-Message-ID: <20171012135127.GG29293@quack2.suse.cz>
+        id S1751853AbdJLOXV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 10:23:21 -0400
+Date: Thu, 12 Oct 2017 16:23:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
+Message-ID: <20171012142319.GA11254@lst.de>
 References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150776923320.9144.6119113178052262946.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150776923320.9144.6119113178052262946.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Andy Lutomirski <luto@kernel.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Hi,
+Sorry for chiming in so late, been extremely busy lately.
 
-> diff --git a/mm/mmap.c b/mm/mmap.c
-> index 680506faceae..2649c00581a0 100644
-> --- a/mm/mmap.c
-> +++ b/mm/mmap.c
-> @@ -1389,6 +1389,18 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
->  		struct inode *inode = file_inode(file);
->  
->  		switch (flags & MAP_TYPE) {
-> +		case MAP_SHARED_VALIDATE:
-> +			if ((flags & ~LEGACY_MAP_MASK) == 0) {
-> +				/*
-> +				 * If all legacy mmap flags, downgrade
-> +				 * to MAP_SHARED, i.e. invoke ->mmap()
-> +				 * instead of ->mmap_validate()
-> +				 */
-> +				flags &= ~MAP_TYPE;
-> +				flags |= MAP_SHARED;
-> +			} else if (!file->f_op->mmap_validate)
-> +				return -EOPNOTSUPP;
-> +			/* fall through */
->  		case MAP_SHARED:
->  			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
->  				return -EACCES;
+>From quickly glacing over what the now finally described use case is
+(which contradicts the subject btw - it's not about flushing, it's
+about not removing block mapping under a MR) and the previous comments
+I think that mmap is simply the wrong kind of interface for this.
 
-When thinking a bit more about this I've realized one problem: Currently
-user can call mmap() with MAP_SHARED type and MAP_SYNC or MAP_DIRECT flags
-and he will get the new semantics (if the kernel happens to support it).  I
-think that is undesirable and we should force usage of MAP_SHARED_VALIDATE
-when you want to use flags outside of LEGACY_MAP_MASK. So I'd just mask off
-non-legacy flags for MAP_SHARED mappings (so they would be silently ignored
-as they used to be until now).
+What we want is support for a new kinds of userspace memory registration in the
+RDMA code that uses the pnfs export interface, both getting the block (or
+rather byte in this case) mapping, and also gets the FL_LAYOUT lease for the
+memory registration.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+That btw is exactly what I do for the pNFS RDMA layout, just in-kernel.
