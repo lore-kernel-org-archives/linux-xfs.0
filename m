@@ -1,123 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:56330 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752766AbdJLAxd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Oct 2017 20:53:33 -0400
-Subject: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 11 Oct 2017 17:47:07 -0700
-Message-ID: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:54409 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752905AbdJLA6k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 20:58:40 -0400
+Received: by mail-qt0-f195.google.com with SMTP id z19so10635034qtg.11
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2017 17:58:40 -0700 (PDT)
+Received: from lubh.lubhome ([179.34.192.80])
+        by smtp.gmail.com with ESMTPSA id w6sm1780706qtc.53.2017.10.11.17.58.38
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 11 Oct 2017 17:58:39 -0700 (PDT)
+Date: Wed, 11 Oct 2017 21:58:30 -0300
+From: Luciano ES <lucmove@gmail.com>
+Subject: Re: Questions about backups with XFS
+Message-ID: <20171011215830.34959f4d@lubh.lubhome>
+In-Reply-To: <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
+References: <20171007114343.3bd42f98@lubh.lubhome>
+        <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-xfs@vger.kernel.org
 
-Changes since v8 [1]:
-* Move MAP_SHARED_VALIDATE definition next to MAP_SHARED in all arch
-  headers (Jan)
+On Mon, 9 Oct 2017 10:44:51 +0200, Carlos Maiolino wrote:
 
-* Include xfs_layout.h directly in all the files that call
-  xfs_break_layouts() (Dave)
+> Hi.
+> 
+> 
+> On Sat, Oct 07, 2017 at 02:43:43PM +0000, Luciano ES wrote:
+> > I have a few questions and I was torn between asking them
+> > separately and putting them all in one message. I decided for the
+> > latter and I hope this is not a problem.
+> > 
+> > Once upon a time, many many years ago, I used to make backup copies 
+> > of my file systems with the 'cp -aux' command, including my live 
+> > root file system. Luckily, I never had to restore any live root
+> > file system from those backups. They probably would never have
+> > worked.
+> > 
+> > Later on, someone taught me to do it like this:
+> > 
+> > find /source -xdev -print0 | cpio -pa0V /target
+> > 
+> > That command is supposed to copy everything, including special
+> > files (not really sure which) that mere cp or even rsync would not
+> > copy. I actually used that approach several times, including
+> > restoration, and it always worked.
+> > 
+> > For some reason, I stopped making backups of my live root file 
+> > system, but I still backup other partitions with rsync, always with 
+> > the --delete-before parameter, so the target is always an exact
+> > copy of the source.
+> > 
+> > I have been using XFS for a few years and thought that maybe it's 
+> > time I enjoyed all the benefits of the XFS management tools.
+> > However, I am uncertain about things I haven't been able to find in 
+> > the documentation or even on the Web:
+> > 
+> > Question #1:
+> > Does xfsdump really copy EVERYTHING? Can I backup a full live root 
+> > file system with it and expect a restored copy to boot and run 
+> > uneventfully? Or should I rather do a 'hard' image with xfs_copy? 
+> 
+> xfs_copy must only be used an unmounted filesystem (or read-only,
+> frozen, etc), so, unless you want to freeze/unmount your FS everytime
+> you do a xfs_copy, then xfs_copy is not what you are looking for
 
-* Clarify / add more comments to the MAP_DIRECT checks at fault time
-  (Dave)
+You say that as if it were a bad thing. What is the problem with 
+freezing the file system every time I do an xfs_copy? I would likely 
+do that once a month, perhaps once a week at most, so why not? What 
+is inherently bad about freezing the file system for a few minutes?
 
-* Rename iomap_can_allocate() to break_layouts_nowait() to make it plain
-  the reason we are bailing out of iomap_begin.
+-- 
+Luciano ES
+>>
 
-* Defer the lease_direct mechanism and RDMA core changes to a later
-  patch series.
-
-* EXT4 support is in the works and will be rebased on Jan's MAP_SYNC
-  patches.
-
-[1]: https://lists.01.org/pipermail/linux-nvdimm/2017-October/012772.html
-
----
-
-MAP_DIRECT is a mechanism that allows an application to establish a
-mapping where the kernel will not change the block-map, or otherwise
-dirty the block-map metadata of a file without notification. It supports
-a "flush from userspace" model where persistent memory applications can
-bypass the overhead of ongoing coordination of writes with the
-filesystem, and it provides safety to RDMA operations involving DAX
-mappings.
-
-The kernel always has the ability to revoke access and convert the file
-back to normal operation after performing a "lease break". Similar to
-fcntl leases, there is no way for userspace to to cancel the lease break
-process once it has started, it can only delay it via the
-/proc/sys/fs/lease-break-time setting.
-
-MAP_DIRECT enables XFS to supplant the device-dax interface for
-mmap-write access to persistent memory with no ongoing coordination with
-the filesystem via fsync/msync syscalls.
-
-The MAP_DIRECT mechanism is complimentary to MAP_SYNC. Here are some
-scenarios where you would choose one over the other:
-
-* 3rd party DMA / RDMA to DAX with hardware that does not support
-  on-demand paging (shared virtual memory) => MAP_DIRECT
-
-* Support for reflinked inodes, fallocate-punch-hole, truncate, or any
-  other operation that mutates the block map of an actively
-  mapped file => MAP_SYNC
-
-* Userpsace flush => MAP_SYNC or MAP_DIRECT
-
-* Assurances that the file's block map metadata is stable, i.e. minimize
-  worst case fault latency by locking out updates => MAP_DIRECT
-
----
-
-Dan Williams (6):
-      mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap flags
-      fs, mm: pass fd to ->mmap_validate()
-      fs: MAP_DIRECT core
-      xfs: prepare xfs_break_layouts() for reuse with MAP_DIRECT
-      fs, xfs, iomap: introduce break_layout_nowait()
-      xfs: wire up MAP_DIRECT
-
-
- arch/alpha/include/uapi/asm/mman.h           |    1 
- arch/mips/include/uapi/asm/mman.h            |    1 
- arch/mips/kernel/vdso.c                      |    2 
- arch/parisc/include/uapi/asm/mman.h          |    1 
- arch/tile/mm/elf.c                           |    3 
- arch/x86/mm/mpx.c                            |    3 
- arch/xtensa/include/uapi/asm/mman.h          |    1 
- fs/Kconfig                                   |    1 
- fs/Makefile                                  |    2 
- fs/aio.c                                     |    2 
- fs/mapdirect.c                               |  237 ++++++++++++++++++++++++++
- fs/xfs/Kconfig                               |    4 
- fs/xfs/Makefile                              |    1 
- fs/xfs/xfs_file.c                            |  108 ++++++++++++
- fs/xfs/xfs_ioctl.c                           |    1 
- fs/xfs/xfs_iomap.c                           |    3 
- fs/xfs/xfs_iops.c                            |    1 
- fs/xfs/xfs_layout.c                          |   45 +++++
- fs/xfs/xfs_layout.h                          |   13 +
- fs/xfs/xfs_pnfs.c                            |   31 ---
- fs/xfs/xfs_pnfs.h                            |    8 -
- include/linux/fs.h                           |   11 +
- include/linux/mapdirect.h                    |   40 ++++
- include/linux/mm.h                           |    9 +
- include/linux/mman.h                         |   42 +++++
- include/uapi/asm-generic/mman-common.h       |    1 
- include/uapi/asm-generic/mman.h              |    1 
- ipc/shm.c                                    |    3 
- mm/internal.h                                |    2 
- mm/mmap.c                                    |   28 ++-
- mm/nommu.c                                   |    5 -
- mm/util.c                                    |    7 -
- tools/include/uapi/asm-generic/mman-common.h |    1 
- 33 files changed, 557 insertions(+), 62 deletions(-)
- create mode 100644 fs/mapdirect.c
- create mode 100644 fs/xfs/xfs_layout.c
- create mode 100644 fs/xfs/xfs_layout.h
- create mode 100644 include/linux/mapdirect.h
