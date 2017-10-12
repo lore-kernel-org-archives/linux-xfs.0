@@ -1,41 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:46907 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755587AbdJLQcS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 12:32:18 -0400
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:45429 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbdJLRlx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 13:41:53 -0400
+Received: by mail-oi0-f41.google.com with SMTP id f66so9711883oib.2
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 10:41:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20171012135127.GG29293@quack2.suse.cz>
+In-Reply-To: <20171012142319.GA11254@lst.de>
 References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150776923320.9144.6119113178052262946.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171012135127.GG29293@quack2.suse.cz>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 12 Oct 2017 09:32:17 -0700
-Message-ID: <CA+55aFyy-nz99c6erFh=aeyCOzsk0td5wHaVLpwBNA-sWNDZkA@mail.gmail.com>
-Subject: Re: [PATCH v9 1/6] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
+ <20171012142319.GA11254@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 12 Oct 2017 10:41:39 -0700
+Message-ID: <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Arnd Bergmann <arnd@arndb.de>, Linux API <linux-api@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 
-On Thu, Oct 12, 2017 at 6:51 AM, Jan Kara <jack@suse.cz> wrote:
+On Thu, Oct 12, 2017 at 7:23 AM, Christoph Hellwig <hch@lst.de> wrote:
+> Sorry for chiming in so late, been extremely busy lately.
 >
-> When thinking a bit more about this I've realized one problem: Currently
-> user can call mmap() with MAP_SHARED type and MAP_SYNC or MAP_DIRECT flags
-> and he will get the new semantics (if the kernel happens to support it).  I
-> think that is undesirable [..]
+> From quickly glacing over what the now finally described use case is
+> (which contradicts the subject btw - it's not about flushing, it's
+> about not removing block mapping under a MR) and the previous comments
+> I think that mmap is simply the wrong kind of interface for this.
+>
+> What we want is support for a new kinds of userspace memory registration in the
+> RDMA code that uses the pnfs export interface, both getting the block (or
+> rather byte in this case) mapping, and also gets the FL_LAYOUT lease for the
+> memory registration.
+>
+> That btw is exactly what I do for the pNFS RDMA layout, just in-kernel.
 
-Why?
+...and this is exactly my plan.
 
-If you have a performance preference for MAP_DIRECT or something like
-that, but you don't want to *enforce* it, you'd use just plain
-MAP_SHARED with it.
+So, you're jumping into this review at v9 where I've split the patches
+that take an initial MAP_DIRECT lease out from the patches that take
+FL_LAYOUT leases at memory registration time. You can see a previous
+attempt in "[PATCH v8 00/14] MAP_DIRECT for DAX RDMA and userspace
+flush" which should be in your inbox.
 
-Ie there may well be "I want this to work, possibly with downsides" issues.
+I'm not proposing mmap as the memory registration interface, it's the
+"register for notification of lease break" interface. Here's my
+proposed sequence:
 
-So it seems to be a reasonable model, and disallowing it seems to
-limit people and not really help anything.
+addr = mmap(..., MAP_DIRECT.., fd); <- register a vma for "direct"
+memory registrations with an FL_LAYOUT lease that at a lease break
+event sends SIGIO on the fd used for mmap.
 
-                 Linus
+ibv_reg_mr(..., addr, ...); <- check for a valid MAP_DIRECT vma, and
+take out another FL_LAYOUT lease. This lease force revokes the RDMA
+mapping when it expires, and it relies on the process receiving SIGIO
+as the 'break' notification.
+
+fallocate(fd, PUNCH_HOLE...) <- breaks all the FL_LAYOUT leases, the
+vma owner gets notified by fd.
+
+Al, rightly points out that the fd may be closed by the time the event
+fires since the lease follows the vma lifetime. I see two ways to
+solve this, document that the process may get notifications on a stale
+fd if close() happens before munmap(), or, similar to how we call
+locks_remove_posix() in filp_close(), add a routine to disable any
+lease notifiers on close(). I'll investigate the second option because
+this seems to be a general problem with leases.
+
+For RDMA I am presently re-working the implementation [1]. Inspired by
+a discussion with Jason [2], I am going to add something like
+ib_umem_ops to allow drivers to override the default policy of what
+happens on a lease that expires. The default action is to invalidate
+device access to the memory with iommu_unmap(), but I want to allow
+for drivers to do something smarter or choose to not support DAX
+mappings at all.
+
+[1]: https://lists.01.org/pipermail/linux-nvdimm/2017-October/012785.html
+[2]: https://lists.01.org/pipermail/linux-nvdimm/2017-October/012793.html
