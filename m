@@ -1,292 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32691 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753184AbdJLAyG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Oct 2017 20:54:06 -0400
-Subject: [PATCH v9 6/6] xfs: wire up MAP_DIRECT
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 11 Oct 2017 17:47:40 -0700
-Message-ID: <150776926029.9144.10163099373354512491.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:58653 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752692AbdJLA4M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 20:56:12 -0400
+Date: Thu, 12 Oct 2017 11:56:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
+Message-ID: <20171012005608.GO15067@dastard>
+References: <20171008235414.13866-1-david@fromorbit.com>
+ <20171008235414.13866-5-david@fromorbit.com>
+ <20171009142445.GE18663@bfoster.bfoster>
+ <20171009204816.GN3666@dastard>
+ <20171010122945.GB23057@bfoster.bfoster>
+ <20171011000400.GW3666@dastard>
+ <20171011090219.GA32909@bfoster.bfoster>
+ <20171011115858.GZ3666@dastard>
+ <20171011130237.GF32909@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171011130237.GF32909@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-MAP_DIRECT is an mmap(2) flag with the following semantics:
+On Wed, Oct 11, 2017 at 09:02:38AM -0400, Brian Foster wrote:
+> On Wed, Oct 11, 2017 at 10:58:58PM +1100, Dave Chinner wrote:
+> > On Wed, Oct 11, 2017 at 05:02:20AM -0400, Brian Foster wrote:
+> 
+> > i.e. if xfs_invalidatepage() is trashing the dirty state on the
+> > buffers, then we should also be trashing the dirty state on the page
+> > so they are clean and coherent when passed to xfs_vm_releasepage.
+> > That leaves us with the simple rule in xfs_vm_releasepage():
+> > 
+> > 	Never release a dirty page because they always contain valid
+> > 	data that needs to be written back first.
+> > 
+> > That's what I'm trying to do - move the control decisions to page
+> > level, rather than having them split and, at times, be incoherent
+> > at bufferhead level. We're wanting to get rid of bufferheads so we
+> > should be making decisions in this code based on page state, not
+> > the bufferhead state...
+> > 
+> 
+> That seems reasonable to me. I'm not against this patch if it simplifies
+> our internal logic for dealing with pages, though I'm still kind of
+> wondering why to not do this by simply clearing the page earlier in
+> truncate_complete_page().
 
-  MAP_DIRECT
-  When specified with MAP_SHARED_VALIDATE, sets up a file lease with the
-  same lifetime as the mapping. Unlike a typical F_RDLCK lease this lease
-  is broken when a "lease breaker" attempts to write(2), change the block
-  map (fallocate), or change the size of the file. Otherwise the mechanism
-  of a lease break is identical to the typical lease break case where the
-  lease needs to be removed (munmap) within the number of seconds
-  specified by /proc/sys/fs/lease-break-time. If the lease holder fails to
-  remove the lease in time the kernel will invalidate the mapping and
-  force all future accesses to the mapping to trigger SIGBUS.
+/broken record
 
-  In addition to lease break timeouts causing faults in the mapping to
-  result in SIGBUS, other states of the file will trigger SIGBUS at fault
-  time:
+We can't change the generic code because of ext3.
 
-      * The fault would trigger the filesystem to allocate blocks
-      * The fault would trigger the filesystem to perform extent conversion
+Yes, it makes no sense that we can't just change the order to skip
+over dirty pages first when you look at the generic code. But the
+reality is we will break ext3 if we do that.
 
-  In other words, MAP_DIRECT expects and enforces a fully allocated file
-  where faults can be satisfied without modifying block map metadata.
+> That said, I suppose there's an argument to be made to do that locally
+> and perhaps try to push it up the chain once the approach has some soak
+> time.
 
-  An unprivileged process may establish a MAP_DIRECT mapping on a file
-  whose UID (owner) matches the filesystem UID of the  process. A process
-  with the CAP_LEASE capability may establish a MAP_DIRECT mapping on
-  arbitrary files
+That was my argument for a long while, but it's just not feasible
+until someone fixes ext3. We've been advised, instead, to just fix
+the filesystem specific callouts to behave correctly.
 
-  ERRORS
-  EACCES Beyond the typical mmap(2) conditions that trigger EACCES
-  MAP_DIRECT also requires the permission to set a file lease.
+> Could you at least rewrite the commit log to reflect that this is
+> not a regression and is more of a refactoring/cleanup to effectively
+> elevate page state over bh state (a code comment to that effect probably
+> couldn't hurt either)? Thanks.
 
-  EOPNOTSUPP The filesystem explicitly does not support the flag
+I just went back and re-read the commit message I originally wrote.
+It talks about being "defensive" and "being able to catch the case
+where the page is dirty and should not have bufferheads removed from
+it". There's othing about spurious warnings or regressions in it at all.
 
-  EPERM The file does not permit MAP_DIRECT mappings. Potential reasons
-  are that DAX access is not available or the file has reflink extents.
+IOWs, it's already saying "use the page state to determine actions
+rather than bufferhead state." Not in those exact words, but it's
+not far off it. I'll rewrite it, but on re-reading the commit
+message I've now got no idea what the problem was in the first
+place. :/
 
-  SIGBUS Attempted to write a MAP_DIRECT mapping at a file offset that
-         might require block-map updates, or the lease timed out and the
-         kernel invalidated the mapping.
+Cheers,
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jeff Layton <jlayton@poochiereds.net>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/Kconfig                  |    2 -
- fs/xfs/xfs_file.c               |  107 ++++++++++++++++++++++++++++++++++++++-
- include/linux/mman.h            |    3 +
- include/uapi/asm-generic/mman.h |    1 
- 4 files changed, 110 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index f62fc6629abb..f8765653a438 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -112,4 +112,4 @@ config XFS_ASSERT_FATAL
- 
- config XFS_LAYOUT
- 	def_bool y
--	depends on EXPORTFS_BLOCK_OPS
-+	depends on EXPORTFS_BLOCK_OPS || FS_DAX
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3cc7292b2e9f..71dbe0307746 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -41,12 +41,22 @@
- #include "xfs_reflink.h"
- #include "xfs_layout.h"
- 
-+#include <linux/mman.h>
- #include <linux/dcache.h>
- #include <linux/falloc.h>
- #include <linux/pagevec.h>
-+#include <linux/mapdirect.h>
- #include <linux/backing-dev.h>
- 
- static const struct vm_operations_struct xfs_file_vm_ops;
-+static const struct vm_operations_struct xfs_file_vm_direct_ops;
-+
-+static bool
-+xfs_vma_is_direct(
-+	struct vm_area_struct	*vma)
-+{
-+	return vma->vm_ops == &xfs_file_vm_direct_ops;
-+}
- 
- /*
-  * Clear the specified ranges to zero through either the pagecache or DAX.
-@@ -1013,6 +1023,25 @@ xfs_file_llseek(
- }
- 
- /*
-+ * MAP_DIRECT faults can only be serviced while the FL_LAYOUT lease is
-+ * valid. See map_direct_invalidate.
-+ */
-+static bool
-+xfs_vma_has_direct_lease(
-+	struct vm_area_struct	*vma)
-+{
-+	/* Non MAP_DIRECT vmas do not require layout leases */
-+	if (!xfs_vma_is_direct(vma))
-+		return true;
-+
-+	if (!test_map_direct_valid(vma->vm_private_data))
-+		return false;
-+
-+	/* We have a valid lease */
-+	return true;
-+}
-+
-+/*
-  * Locking for serialisation of IO during page faults. This results in a lock
-  * ordering of:
-  *
-@@ -1028,7 +1057,8 @@ __xfs_filemap_fault(
- 	enum page_entry_size	pe_size,
- 	bool			write_fault)
- {
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
-+	struct vm_area_struct	*vma = vmf->vma;
-+	struct inode		*inode = file_inode(vma->vm_file);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	int			ret;
- 
-@@ -1036,10 +1066,15 @@ __xfs_filemap_fault(
- 
- 	if (write_fault) {
- 		sb_start_pagefault(inode->i_sb);
--		file_update_time(vmf->vma->vm_file);
-+		file_update_time(vma->vm_file);
- 	}
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+	if (!xfs_vma_has_direct_lease(vma)) {
-+		ret = VM_FAULT_SIGBUS;
-+		goto out_unlock;
-+	}
-+
- 	if (IS_DAX(inode)) {
- 		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
- 	} else {
-@@ -1048,6 +1083,8 @@ __xfs_filemap_fault(
- 		else
- 			ret = filemap_fault(vmf);
- 	}
-+
-+out_unlock:
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (write_fault)
-@@ -1119,6 +1156,17 @@ xfs_filemap_pfn_mkwrite(
- 
- }
- 
-+static const struct vm_operations_struct xfs_file_vm_direct_ops = {
-+	.fault		= xfs_filemap_fault,
-+	.huge_fault	= xfs_filemap_huge_fault,
-+	.map_pages	= filemap_map_pages,
-+	.page_mkwrite	= xfs_filemap_page_mkwrite,
-+	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
-+
-+	.open		= generic_map_direct_open,
-+	.close		= generic_map_direct_close,
-+};
-+
- static const struct vm_operations_struct xfs_file_vm_ops = {
- 	.fault		= xfs_filemap_fault,
- 	.huge_fault	= xfs_filemap_huge_fault,
-@@ -1139,6 +1187,60 @@ xfs_file_mmap(
- 	return 0;
- }
- 
-+static int
-+xfs_file_mmap_direct(
-+	struct file		*filp,
-+	struct vm_area_struct	*vma,
-+	int			fd)
-+{
-+	struct inode		*inode = file_inode(filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct map_direct_state	*mds;
-+
-+	/*
-+	 * Not permitted to set up MAP_DIRECT mapping over reflinked or
-+	 * non-DAX extents since reflink may cause block moves /
-+	 * copy-on-write, and non-DAX is by definition always indirect
-+	 * through the page cache.
-+	 */
-+	if (xfs_is_reflink_inode(ip))
-+		return -EPERM;
-+	if (!IS_DAX(inode))
-+		return -EPERM;
-+
-+	mds = map_direct_register(fd, vma);
-+	if (IS_ERR(mds))
-+		return PTR_ERR(mds);
-+
-+	file_accessed(filp);
-+	vma->vm_ops = &xfs_file_vm_direct_ops;
-+	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
-+
-+	/*
-+	 * generic_map_direct_{open,close} expect ->vm_private_data is
-+	 * set to the result of map_direct_register
-+	 */
-+	vma->vm_private_data = mds;
-+	return 0;
-+}
-+
-+#define XFS_MAP_SUPPORTED (LEGACY_MAP_MASK | MAP_DIRECT)
-+
-+static int
-+xfs_file_mmap_validate(
-+	struct file		*filp,
-+	struct vm_area_struct	*vma,
-+	unsigned long		map_flags,
-+	int			fd)
-+{
-+	if (map_flags & ~(XFS_MAP_SUPPORTED))
-+		return -EOPNOTSUPP;
-+
-+	if ((map_flags & MAP_DIRECT) == 0)
-+		return xfs_file_mmap(filp, vma);
-+	return xfs_file_mmap_direct(filp, vma, fd);
-+}
-+
- const struct file_operations xfs_file_operations = {
- 	.llseek		= xfs_file_llseek,
- 	.read_iter	= xfs_file_read_iter,
-@@ -1150,6 +1252,7 @@ const struct file_operations xfs_file_operations = {
- 	.compat_ioctl	= xfs_file_compat_ioctl,
- #endif
- 	.mmap		= xfs_file_mmap,
-+	.mmap_validate	= xfs_file_mmap_validate,
- 	.open		= xfs_file_open,
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index 94b63b4d71ff..fab393a9dda9 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -20,6 +20,9 @@
- #ifndef MAP_HUGE_1GB
- #define MAP_HUGE_1GB 0
- #endif
-+#ifndef MAP_DIRECT
-+#define MAP_DIRECT 0
-+#endif
- #ifndef MAP_UNINITIALIZED
- #define MAP_UNINITIALIZED 0
- #endif
-diff --git a/include/uapi/asm-generic/mman.h b/include/uapi/asm-generic/mman.h
-index 7162cd4cca73..c916f22008e0 100644
---- a/include/uapi/asm-generic/mman.h
-+++ b/include/uapi/asm-generic/mman.h
-@@ -12,6 +12,7 @@
- #define MAP_NONBLOCK	0x10000		/* do not block on IO */
- #define MAP_STACK	0x20000		/* give out an address that is best suited for process/thread stacks */
- #define MAP_HUGETLB	0x40000		/* create a huge page mapping */
-+#define MAP_DIRECT	0x80000		/* leased block map (layout) for DAX */
- 
- /* Bits [26:31] are reserved, see mman-common.h for MAP_HUGETLB usage */
- 
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
