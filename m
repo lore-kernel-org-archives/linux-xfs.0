@@ -1,36 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:52353 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752065AbdJLB2e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:28:34 -0400
-Received: by mail-oi0-f53.google.com with SMTP id c202so5926515oih.9
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2017 18:28:34 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:27668 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752616AbdJLBkx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:40:53 -0400
+Subject: [PATCH 01/30] xfs: return a distinct error code value for
+ IGET_INCORE cache misses
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 11 Oct 2017 18:40:49 -0700
+Message-ID: <150777244964.1724.18204520366062829583.stgit@magnolia>
+In-Reply-To: <150777244315.1724.6916081372861799350.stgit@magnolia>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171012012131.GD21978@ZenIV.linux.org.uk>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150776923838.9144.15727770472447035032.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171012012131.GD21978@ZenIV.linux.org.uk>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 11 Oct 2017 18:28:32 -0700
-Message-ID: <CAPcyv4jr4atxCqFW_337Sguu8LswVgjsJVOd65n4RODttX9cxQ@mail.gmail.com>
-Subject: Re: [PATCH v9 2/6] fs, mm: pass fd to ->mmap_validate()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Wed, Oct 11, 2017 at 6:21 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> On Wed, Oct 11, 2017 at 05:47:18PM -0700, Dan Williams wrote:
->> The MAP_DIRECT mechanism for mmap intends to use a file lease to prevent
->> block map changes while the file is mapped. It requires the fd to setup
->> an fasync_struct for signalling lease break events to the lease holder.
->
-> *UGH*
->
-> That looks like one hell of a bad API.  You are not even guaranteed that
-> descriptor will remain be still open by the time you pass it down to your
-> helper, nevermind the moment when event actually happens...
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-What am I missing, fcntl(F_SETLEASE) seems to follow a similar pattern?
+For an XFS_IGET_INCORE iget operation, if the inode isn't in the cache,
+return ENODATA so that we don't confuse it with the pre-existing ENOENT
+cases (inode is in cache, but freed).
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_icache.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 3422711..43005fb 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -610,7 +610,7 @@ xfs_iget(
+ 	} else {
+ 		rcu_read_unlock();
+ 		if (flags & XFS_IGET_INCORE) {
+-			error = -ENOENT;
++			error = -ENODATA;
+ 			goto out_error_or_again;
+ 		}
+ 		XFS_STATS_INC(mp, xs_ig_missed);
+
