@@ -1,90 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:58653 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752692AbdJLA4M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 20:56:12 -0400
-Date: Thu, 12 Oct 2017 11:56:08 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
-Message-ID: <20171012005608.GO15067@dastard>
-References: <20171008235414.13866-1-david@fromorbit.com>
- <20171008235414.13866-5-david@fromorbit.com>
- <20171009142445.GE18663@bfoster.bfoster>
- <20171009204816.GN3666@dastard>
- <20171010122945.GB23057@bfoster.bfoster>
- <20171011000400.GW3666@dastard>
- <20171011090219.GA32909@bfoster.bfoster>
- <20171011115858.GZ3666@dastard>
- <20171011130237.GF32909@bfoster.bfoster>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:44545 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752212AbdJLBDf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:03:35 -0400
+Received: by mail-qt0-f193.google.com with SMTP id 8so10702677qtv.1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2017 18:03:35 -0700 (PDT)
+Received: from lubh.lubhome ([179.34.192.80])
+        by smtp.gmail.com with ESMTPSA id 36sm8986227qtr.42.2017.10.11.18.03.33
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 11 Oct 2017 18:03:34 -0700 (PDT)
+Date: Wed, 11 Oct 2017 22:03:31 -0300
+From: Luciano ES <lucmove@gmail.com>
+Subject: Re: Questions about backups with XFS
+Message-ID: <20171011220331.4af6308c@lubh.lubhome>
+In-Reply-To: <20171009105701.GL3666@dastard>
+References: <20171007114343.3bd42f98@lubh.lubhome>
+        <20171009084451.yj7fvv6wqra27vuo@hades.localdomain>
+        <20171009105701.GL3666@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171011130237.GF32909@bfoster.bfoster>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 11, 2017 at 09:02:38AM -0400, Brian Foster wrote:
-> On Wed, Oct 11, 2017 at 10:58:58PM +1100, Dave Chinner wrote:
-> > On Wed, Oct 11, 2017 at 05:02:20AM -0400, Brian Foster wrote:
+On Mon, 9 Oct 2017 21:57:01 +1100, Dave Chinner wrote:
+
+> On Mon, Oct 09, 2017 at 10:44:51AM +0200, Carlos Maiolino wrote:
+> > Hi.
+> > 
+> > 
+> > On Sat, Oct 07, 2017 at 02:43:43PM +0000, Luciano ES wrote:
+> > > I have a few questions and I was torn between asking them
+> > > separately and putting them all in one message. I decided for the
+> > > latter and I hope this is not a problem.
+> > > 
+> > > Once upon a time, many many years ago, I used to make backup
+> > > copies of my file systems with the 'cp -aux' command, including
+> > > my live root file system. Luckily, I never had to restore any
+> > > live root file system from those backups. They probably would
+> > > never have worked.
+> > > 
+> > > Later on, someone taught me to do it like this:
+> > > 
+> > > find /source -xdev -print0 | cpio -pa0V /target
+> > > 
+> > > That command is supposed to copy everything, including special
+> > > files (not really sure which) that mere cp or even rsync would
+> > > not copy. I actually used that approach several times, including
+> > > restoration, and it always worked.
+> > > 
+> > > For some reason, I stopped making backups of my live root file 
+> > > system, but I still backup other partitions with rsync, always
+> > > with the --delete-before parameter, so the target is always an
+> > > exact copy of the source.
+> > > 
+> > > I have been using XFS for a few years and thought that maybe it's 
+> > > time I enjoyed all the benefits of the XFS management tools.
+> > > However, I am uncertain about things I haven't been able to find
+> > > in the documentation or even on the Web:
+> > > 
+> > > Question #1:
+> > > Does xfsdump really copy EVERYTHING? Can I backup a full live
+> > > root file system with it and expect a restored copy to boot and
+> > > run uneventfully? Or should I rather do a 'hard' image with
+> > > xfs_copy? 
+> > 
+> > xfs_copy must only be used an unmounted filesystem (or read-only,
+> > frozen, etc), so, unless you want to freeze/unmount your FS
+> > everytime you do a xfs_copy, then xfs_copy is not what you are
+> > looking for
 > 
-> > i.e. if xfs_invalidatepage() is trashing the dirty state on the
-> > buffers, then we should also be trashing the dirty state on the page
-> > so they are clean and coherent when passed to xfs_vm_releasepage.
-> > That leaves us with the simple rule in xfs_vm_releasepage():
-> > 
-> > 	Never release a dirty page because they always contain valid
-> > 	data that needs to be written back first.
-> > 
-> > That's what I'm trying to do - move the control decisions to page
-> > level, rather than having them split and, at times, be incoherent
-> > at bufferhead level. We're wanting to get rid of bufferheads so we
-> > should be making decisions in this code based on page state, not
-> > the bufferhead state...
-> > 
-> 
-> That seems reasonable to me. I'm not against this patch if it simplifies
-> our internal logic for dealing with pages, though I'm still kind of
-> wondering why to not do this by simply clearing the page earlier in
-> truncate_complete_page().
+> I'll just say this: xfs_copy is not a backup tool. It's a filesystem
+> image replication tool designed for fast, efficient 1-to-many
+> duplication of a golden filesystem image to multiple drives, such as
+> is done in manufacturing lines....
 
-/broken record
 
-We can't change the generic code because of ext3.
+So xfs_copy is not a backup tool, and what does that mean in the 
+context of my backup plan? Why can't I or should I not use it as a 
+backup tool? If it is a replication tool, well, it replicates, it 
+creates a copy that can be used to recreate a file system in a very 
+specific state. Is there any technical impediment to the use I plan 
+to make of it?
 
-Yes, it makes no sense that we can't just change the order to skip
-over dirty pages first when you look at the generic code. But the
-reality is we will break ext3 if we do that.
 
-> That said, I suppose there's an argument to be made to do that locally
-> and perhaps try to push it up the chain once the approach has some soak
-> time.
-
-That was my argument for a long while, but it's just not feasible
-until someone fixes ext3. We've been advised, instead, to just fix
-the filesystem specific callouts to behave correctly.
-
-> Could you at least rewrite the commit log to reflect that this is
-> not a regression and is more of a refactoring/cleanup to effectively
-> elevate page state over bh state (a code comment to that effect probably
-> couldn't hurt either)? Thanks.
-
-I just went back and re-read the commit message I originally wrote.
-It talks about being "defensive" and "being able to catch the case
-where the page is dirty and should not have bufferheads removed from
-it". There's othing about spurious warnings or regressions in it at all.
-
-IOWs, it's already saying "use the page state to determine actions
-rather than bufferhead state." Not in those exact words, but it's
-not far off it. I'll rewrite it, but on re-reading the commit
-message I've now got no idea what the problem was in the first
-place. :/
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Luciano ES
+>>
