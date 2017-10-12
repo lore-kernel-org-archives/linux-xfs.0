@@ -1,166 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21736 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752540AbdJLUFy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 16:05:54 -0400
-Date: Thu, 12 Oct 2017 13:05:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: trim writepage mapping to within eof
-Message-ID: <20171012200550.GH7122@magnolia>
-References: <20171012114754.39626-1-bfoster@redhat.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:48217 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753401AbdJLUKe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 16:10:34 -0400
+Received: by mail-oi0-f51.google.com with SMTP id m198so10295540oig.5
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 13:10:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171012114754.39626-1-bfoster@redhat.com>
+In-Reply-To: <20171012182712.GA5772@obsidianresearch.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
+ <20171010180512.GA31734@obsidianresearch.com> <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
+ <20171012182712.GA5772@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 12 Oct 2017 13:10:33 -0700
+Message-ID: <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Thu, Oct 12, 2017 at 07:47:54AM -0400, Brian Foster wrote:
-> The writeback rework in commit fbcc02561359 ("xfs: Introduce
-> writeback context for writepages") introduced a subtle change in
-> behavior with regard to the block mapping used across the
-> ->writepages() sequence. The previous xfs_cluster_write() code would
-> only flush pages up to EOF at the time of the writepage, thus
-> ensuring that any pages due to file-extending writes would be
-> handled on a separate cycle and with a new, updated block mapping.
-> 
-> The updated code establishes a block mapping in xfs_writepage_map()
-> that could extend beyond EOF if the file has post-eof preallocation.
-> Because we now use the generic writeback infrastructure and pass the
-> cached mapping to each writepage call, there is no implicit EOF
-> limit in place. If eofblocks trimming occurs during ->writepages(),
-> any post-eof portion of the cached mapping becomes invalid. The
-> eofblocks code has no means to serialize against writeback because
-> there are no pages associated with post-eof blocks. Therefore if an
-> eofblocks trim occurs and is followed by a file-extending buffered
-> write, not only has the mapping become invalid, but we could end up
-> writing a page to disk based on the invalid mapping.
-> 
-> Consider the following sequence of events:
-> 
-> - A buffered write creates a delalloc extent and post-eof
->   speculative preallocation.
-> - Writeback starts and on the first writepage cycle, the delalloc
->   extent is converted to real blocks (including the post-eof blocks)
->   and the mapping is cached.
-> - The file is closed and xfs_release() trims post-eof blocks. The
->   cached writeback mapping is now invalid.
-> - Another buffered write appends the file with a delalloc extent.
-> - The concurrent writeback cycle picks up the just written page
->   because the writeback range end is LLONG_MAX. xfs_writepage_map()
->   attributes it to the (now invalid) cached mapping and writes the
->   data to an incorrect location on disk (and where the file offset is
->   still backed by a delalloc extent).
-> 
-> This problem is reproduced by xfstests test generic/463, which
-> triggers racing writes, appends, open/closes and writeback requests.
-> 
-> To address this problem, trim the mapping used during writeback to
-> within EOF when the mapping is created. This ensures the mapping is
-> revalidated for any pages encountered beyond EOF as of the time the
-> current mapping was cached.
-> 
-> Reported-by: Eryu Guan <eguan@redhat.com>
-> Diagnosed-by: Eryu Guan <eguan@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Thu, Oct 12, 2017 at 11:27 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Oct 10, 2017 at 01:17:26PM -0700, Dan Williams wrote:
+>
+>> Also keep in mind that what triggers the lease break is another
+>> application trying to write or punch holes in a file that is mapped
+>> for RDMA. So, if the hardware can't handle the iommu mapping getting
+>> invalidated asynchronously and the application can't react in the
+>> lease break timeout period then the administrator should arrange for
+>> the file to not be written or truncated while it is mapped.
+>
+> That makes sense, but why not return ENOSYS or something to the app
+> trying to alter the file if the RDMA hardware can't support this
+> instead of having the RDMA app deal with this lease break weirdness?
 
-Will throw this into the testing machine.  Is this serious enough to
-push into 4.14?  I'm thinking of doing one more 4.14-fixes next week...
+That's where I started, an inode flag that said "hands off, this file
+is busy", but Christoph pointed out that we should reuse the same
+mechanisms that pnfs is using. The pnfs protection scheme uses file
+leases, and once the kernel decides that a lease needs to be broken /
+layout needs to be recalled there is no stopping it, only delaying.
 
-...granted I mostly hear my stomach churning "ye $deities another one of
-these stale writeback blahblah problem workarounds" but this would seem
-to fix a file corruption problem. :(
+>> It's already the case that get_user_pages() does not lock down file
+>> associations, so if your application is contending with these types of
+>> file changes it likely already has a problem keeping transactions in
+>> sync with the file state even without DAX.
+>
+> Yes, things go weird in non-ODP RDMA cases like this..
+>
+> Also, just to clear, I would expect an app using the SIGIO interface
+> to basically halt ongoing RDMA, wait for MRs to become unused locally
+> and remotely, destroy the MRs, then somehow, establish new MRs that
+> cover the same logical map (eg what ODP would do transparently) after
+> the lease breaker has made their changes, then restart their IO.
+>
+> Does your SIGIO approach have a race-free way to do that last steps?
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+After the SIGIO that's becomes a userspace / driver problem to quiesce
+the I/O...
 
---D
+However, chatting this over with a few more people I have an alternate
+solution that effectively behaves the same as how non-ODP hardware
+handles this case of hole punch / truncation today. So, today if this
+scenario happens on a page-cache backed mapping, the file blocks are
+unmapped and the RDMA continues into pinned pages that are no longer
+part of the file. We can achieve the same thing with the iommu, just
+re-target the I/O into memory that isn't part of the file. That way
+hardware does not see I/O errors and the DAX data consistency model is
+no worse than the page-cache case.
 
-> ---
-> 
-> Hi all,
-> 
-> This is a followup to the issue Eryu tracked down, described here[1].
-> 
-> Note that this patch will not deal with any writeback mapping validity
-> issues not associated with eofblocks management. Dave is working on a
-> more generic approach to deal with such problems. This patch is intended
-> to be a targeted and backportable fix for the regression in the
-> writeback code.
-> 
-> Brian
-> 
-> [1] https://marc.info/?l=linux-xfs&m=150406724427829&w=2
-> 
->  fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
->  fs/xfs/libxfs/xfs_bmap.h |  1 +
->  fs/xfs/xfs_aops.c        |  6 ++++--
->  3 files changed, 16 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 044a363..dd3fb7b 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3852,6 +3852,17 @@ xfs_trim_extent(
->  	}
->  }
->  
-> +/* trim extent to within eof */
-> +void
-> +xfs_trim_extent_eof(
-> +	struct xfs_bmbt_irec	*irec,
-> +	struct xfs_inode	*ip)
-> +
-> +{
-> +	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
-> +					      i_size_read(VFS_I(ip))));
-> +}
-> +
->  /*
->   * Trim the returned map to the required bounds
->   */
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 851982a..502e0d8 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -208,6 +208,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
->  
->  void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
->  		xfs_filblks_t len);
-> +void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
->  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
->  void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
->  void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 1dbc5cf..3ab6d9d 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -423,7 +423,7 @@ xfs_map_blocks(
->  				imap);
->  		if (!error)
->  			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
-> -		return error;
-> +		goto out_trim;
->  	}
->  
->  #ifdef DEBUG
-> @@ -435,7 +435,9 @@ xfs_map_blocks(
->  #endif
->  	if (nimaps)
->  		trace_xfs_map_blocks_found(ip, offset, count, type, imap);
-> -	return 0;
-> +out_trim:
-> +	xfs_trim_extent_eof(imap, ip);
-> +	return error;
->  }
->  
->  STATIC bool
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> > So, not being able to support DAX on certain RDMA hardware is not
+>> > an unreasonable situation in our space.
+>>
+>> That makes sense, but it still seems to me that this proposed solution
+>> allows more than enough ways to avoid that worst case scenario where
+>> hardware reacts badly to iommu invalidation.
+>
+> Yes, although I am concerned that returning PCI-E errors is such an
+> unusual and untested path for some of our RDMA drivers that they may
+> malfunction badly...
+>
+> Again, going back to the question of who would ever use this, I would
+> be very relucant to deploy a production configuration relying on the iommu
+> invalidate or SIGIO techniques, when ODP HW is available and works
+> flawlessly.
+
+I don't think it is reasonable to tell people you need to throw away
+your old hardware just because you want to target a DAX mapping.
+
+>> be blacklisted from supporting DAX altogether. In other words this is
+>> a starting point to incrementally enhance or disable specific drivers,
+>> but with the assurance that the kernel can always do the safe thing
+>> when / if the driver is missing a finer grained solution.
+>
+> Seems reasonable.. I think existing HW will have an easier time adding
+> invalidate, while new hardware really should implement ODP.
+>
+
+Yeah, so if we go with 'remap' instead of 'invalidate' does that
+address your concerns?
