@@ -1,67 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38147 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751004AbdJLNmM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Oct 2017 09:42:12 -0400
-Date: Thu, 12 Oct 2017 15:42:09 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 17/19] ext4: Add support for MAP_SYNC flag
-Message-ID: <20171012134209.GE29293@quack2.suse.cz>
-References: <20171011200603.27442-1-jack@suse.cz>
- <20171011200603.27442-18-jack@suse.cz>
- <CAPcyv4gZw0QCG08Qs8dP8TMhgXo0_KcVq-33uhaG8QuwxXT=Wg@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:38646 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750990AbdJLWAD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 18:00:03 -0400
+Date: Thu, 12 Oct 2017 14:59:56 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: implement cgroup writeback support
+Message-ID: <20171012215956.GL7122@magnolia>
+References: <1f2527ae0951650976e788e10e2951bb3e2c1cac.1507835570.git.shli@fb.com>
+ <20171012201618.GI7122@magnolia>
+ <20171012194913.gtrxsqtji6o7ffr5@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gZw0QCG08Qs8dP8TMhgXo0_KcVq-33uhaG8QuwxXT=Wg@mail.gmail.com>
+In-Reply-To: <20171012194913.gtrxsqtji6o7ffr5@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Kernel-team@fb.com, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>
 
-On Wed 11-10-17 15:11:21, Dan Williams wrote:
-> On Wed, Oct 11, 2017 at 1:06 PM, Jan Kara <jack@suse.cz> wrote:
-> > Now when everything is prepared, add support in ext4 to accept MAP_SYNC
-> > as an mmap(2) flag.
-> >
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/ext4/file.c | 20 ++++++++++++++++++++
-> >  1 file changed, 20 insertions(+)
-> >
-> > diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> > index 61a8788168f3..f013cda84b3d 100644
-> > --- a/fs/ext4/file.c
-> > +++ b/fs/ext4/file.c
-> > @@ -364,6 +364,25 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
-> >         return 0;
-> >  }
-> >
-> > +#define EXT4_SUPPORTED_MAP_FLAGS (LEGACY_MAP_MASK | MAP_SYNC)
-> > +
-> > +static int ext4_file_mmap_validate(struct file *file,
-> > +                                  struct vm_area_struct *vma,
-> > +                                  unsigned long map_flags)
-> > +{
-> > +       if (map_flags & ~EXT4_SUPPORTED_MAP_FLAGS)
-> > +               return -EOPNOTSUPP;
-> > +
-> > +       /*
-> > +        * We don't support synchronous mappings for non-DAX files. At least
-> > +        * until someone comes with a sensible use case.
-> > +        */
-> > +       if (!IS_DAX(file_inode(file)) && (map_flags & MAP_SYNC))
-> > +               return -EOPNOTSUPP;
+On Thu, Oct 12, 2017 at 12:49:13PM -0700, Shaohua Li wrote:
+> On Thu, Oct 12, 2017 at 01:16:18PM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 12, 2017 at 12:16:48PM -0700, Shaohua Li wrote:
+> > > From: Shaohua Li <shli@fb.com>
+> > > 
+> > > Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
+> > > writeback support). Tested with a fio test, verified writeback is
+> > > throttled against cgroup io.max write bandwidth, also verified moving
+> > > the fio test to another cgroup and the writeback is throttled against
+> > > new cgroup setting.
+> > 
+> > Just out of curiosity, is there an xfstests that covers this?
 > 
-> Perhaps EPERM instead to differentiate the unsupported flags case?
-> There's precedent for mmap returning EPERM for reasons other than
-> incompatible PROT flags.
+> No as far as I know
 
-Hum, I could make it EINVAL. EPERM looks just too bogus to me.
+I think we had better have some bare minimum functionality tests before
+merging so that I can figure out if this really works (without having to
+figure out how to test this manually) and everyone else can make sure
+they don't cause regressions when they go modifying the writeback code.
 
-								Honza
+> > It /looks/ ok at a first glance, but I'll have to take a closer look to
+> > figure out if the warnings in Documentation/ apply:
+> > 
+> > "Depending on the configuration, the bio may be executed at a lower
+> > priority and if the writeback session is holding shared resources, e.g.
+> > a journal entry, may lead to priority inversion."
+> 
+> The writepages code path is for file data, which I think should not cause
+> priority inversion because there is dependence between writeback to different
+> files. For metadata write, the priority inversion could happen. This happens to
+> other filesystems too, like ext4 and btrfs. Tejun submitted patches recently to
+> force metadata write from root cgroup, which could fix the issue. We might need
+> to do similar thing for xfs later.
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+<nod>
+
+--D
+
+> 
+> Thanks,
+> Shaohua
+> > > Cc: Tejun Heo <tj@kernel.org>
+> > > Signed-off-by: Shaohua Li <shli@fb.com>
+> > > ---
+> > >  fs/xfs/xfs_aops.c  | 2 ++
+> > >  fs/xfs/xfs_super.c | 1 +
+> > >  2 files changed, 3 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > > index f18e593..6535054 100644
+> > > --- a/fs/xfs/xfs_aops.c
+> > > +++ b/fs/xfs/xfs_aops.c
+> > > @@ -630,8 +630,10 @@ xfs_add_to_ioend(
+> > >  		if (wpc->ioend)
+> > >  			list_add(&wpc->ioend->io_list, iolist);
+> > >  		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
+> > > +		wbc_init_bio(wbc, wpc->ioend->io_bio);
+> > >  	}
+> > >  
+> > > +	wbc_account_io(wbc, bh->b_page, bh->b_size);
+> > >  	/*
+> > >  	 * If the buffer doesn't fit into the bio we need to allocate a new
+> > >  	 * one.  This shouldn't happen more than once for a given buffer.
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index 584cf2d..aea3bc2 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -1634,6 +1634,7 @@ xfs_fs_fill_super(
+> > >  	sb->s_max_links = XFS_MAXLINK;
+> > >  	sb->s_time_gran = 1;
+> > >  	set_posix_acl_flag(sb);
+> > > +	sb->s_iflags |= SB_I_CGROUPWB;
+> > >  
+> > >  	/* version 5 superblocks support inode version counters. */
+> > >  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+> > > -- 
+> > > 2.9.5
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
