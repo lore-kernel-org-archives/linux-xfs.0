@@ -1,40 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from wombat.san-francisco.ca.us ([75.101.60.140]:51705 "EHLO
-        wombat.san-francisco.ca.us" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751098AbdJLFVd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 01:21:33 -0400
-Date: Wed, 11 Oct 2017 22:13:04 -0700
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: Questions about backups with XFS
-Message-ID: <20171012051304.GA29977@wombat.san-francisco.ca.us>
-References: <20171007114343.3bd42f98@lubh.lubhome> <20171009084451.yj7fvv6wqra27vuo@hades.localdomain> <20171011215830.34959f4d@lubh.lubhome>
-Mime-Version: 1.0
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:40029 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751034AbdJLFZk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 01:25:40 -0400
+Date: Thu, 12 Oct 2017 16:25:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/30] xfs: return a distinct error code value for
+ IGET_INCORE cache misses
+Message-ID: <20171012052537.GP15067@dastard>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777244964.1724.18204520366062829583.stgit@magnolia>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171011215830.34959f4d@lubh.lubhome>
+In-Reply-To: <150777244964.1724.18204520366062829583.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Wed, Oct 11, 2017 at 09:58:30PM -0300, Luciano ES wrote:
-> On Mon, 9 Oct 2017 10:44:51 +0200, Carlos Maiolino wrote:
-> > 
-> > xfs_copy must only be used an unmounted filesystem (or read-only,
-> > frozen, etc), so, unless you want to freeze/unmount your FS everytime
-> > you do a xfs_copy, then xfs_copy is not what you are looking for
+On Wed, Oct 11, 2017 at 06:40:49PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> You say that as if it were a bad thing. What is the problem with 
-> freezing the file system every time I do an xfs_copy? I would likely 
-> do that once a month, perhaps once a week at most, so why not? What 
-> is inherently bad about freezing the file system for a few minutes?
+> For an XFS_IGET_INCORE iget operation, if the inode isn't in the cache,
+> return ENODATA so that we don't confuse it with the pre-existing ENOENT
+> cases (inode is in cache, but freed).
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-On some systems it would not be desirable to freeze a filesystem for
-even a few minutes.  An active database server might be one example.
-Your use case may be totally fine with freezing.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
---keith
+> ---
+>  fs/xfs/xfs_icache.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 3422711..43005fb 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -610,7 +610,7 @@ xfs_iget(
+>  	} else {
+>  		rcu_read_unlock();
+>  		if (flags & XFS_IGET_INCORE) {
+> -			error = -ENOENT;
+> +			error = -ENODATA;
+>  			goto out_error_or_again;
+>  		}
+>  		XFS_STATS_INC(mp, xs_ig_missed);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 -- 
-kkeller@wombat.san-francisco.ca.us
-
+Dave Chinner
+david@fromorbit.com
