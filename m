@@ -1,49 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25376 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:24021 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932275AbdJZSWI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 14:22:08 -0400
-Date: Thu, 26 Oct 2017 12:22:05 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
- MAP_SYNC
-Message-ID: <20171026182205.GA8048@linux.intel.com>
-References: <20171024152415.22864-1-jack@suse.cz>
- <20171024152415.22864-19-jack@suse.cz>
- <20171024211007.GA1611@linux.intel.com>
- <20171026132402.GB31161@quack2.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171026132402.GB31161@quack2.suse.cz>
+        id S1755944AbdJLL1d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 07:27:33 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 68526C049D7F
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 11:27:33 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4D11C6062F
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 11:27:33 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2] xfs: fail if xattr inactivation hits a hole
+Date: Thu, 12 Oct 2017 07:27:32 -0400
+Message-Id: <20171012112732.39137-1-bfoster@redhat.com>
+In-Reply-To: <20171010164756.28390-2-bfoster@redhat.com>
+References: <20171010164756.28390-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 03:24:02PM +0200, Jan Kara wrote:
-> On Tue 24-10-17 15:10:07, Ross Zwisler wrote:
-> > On Tue, Oct 24, 2017 at 05:24:15PM +0200, Jan Kara wrote:
-> > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > 
-> > This looks unchanged since the previous version?
-> 
-> Ah, thanks for checking. I forgot to commit modifications. Attached is
-> really updated patch.
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+The child buffer read in xfs_attr3_node_inactive() should never
+reach a hole in the attr fork. If this occurs, it is likely due to a
+bug. Prior to commit cd87d867 ("xfs: don't crash on unexpected holes
+in dir/attr btrees"), this would result in a crash. Now that the
+crash has been fixed, this is a silent failure.
 
-> From 59eeec2998ed9b3840aab951f213148cb1d053a5 Mon Sep 17 00:00:00 2001
-> From: Jan Kara <jack@suse.cz>
-> Date: Thu, 19 Oct 2017 14:44:55 +0200
-> Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+Pass -1 to xfs_da3_node_read() from xfs_da3_node_inactive() to
+indicate that reading from a hole is an error. This logs an error to
+syslog and fails the inode inactivation, leaving the inode on the AG
+unlinked list until removed by xfs_repair (or log recovery). Also
+update the subsequent code to reflect that the read now returns a
+non-NULL buffer or an error.
 
-Looks good, you can add: 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_attr_inactive.c | 69 ++++++++++++++++++++++------------------------
+ 1 file changed, 33 insertions(+), 36 deletions(-)
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index e3a950e..52818ea 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -251,47 +251,44 @@ xfs_attr3_node_inactive(
+ 		 * traversal of the tree so we may deal with many blocks
+ 		 * before we come back to this one.
+ 		 */
+-		error = xfs_da3_node_read(*trans, dp, child_fsb, -2, &child_bp,
+-						XFS_ATTR_FORK);
++		error = xfs_da3_node_read(*trans, dp, child_fsb, -1, &child_bp,
++					  XFS_ATTR_FORK);
+ 		if (error)
+ 			return error;
+-		if (child_bp) {
+-						/* save for re-read later */
+-			child_blkno = XFS_BUF_ADDR(child_bp);
+ 
+-			/*
+-			 * Invalidate the subtree, however we have to.
+-			 */
+-			info = child_bp->b_addr;
+-			switch (info->magic) {
+-			case cpu_to_be16(XFS_DA_NODE_MAGIC):
+-			case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+-				error = xfs_attr3_node_inactive(trans, dp,
+-							child_bp, level + 1);
+-				break;
+-			case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+-			case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+-				error = xfs_attr3_leaf_inactive(trans, dp,
+-							child_bp);
+-				break;
+-			default:
+-				error = -EIO;
+-				xfs_trans_brelse(*trans, child_bp);
+-				break;
+-			}
+-			if (error)
+-				return error;
++		/* save for re-read later */
++		child_blkno = XFS_BUF_ADDR(child_bp);
+ 
+-			/*
+-			 * Remove the subsidiary block from the cache
+-			 * and from the log.
+-			 */
+-			error = xfs_da_get_buf(*trans, dp, 0, child_blkno,
+-				&child_bp, XFS_ATTR_FORK);
+-			if (error)
+-				return error;
+-			xfs_trans_binval(*trans, child_bp);
++		/*
++		 * Invalidate the subtree, however we have to.
++		 */
++		info = child_bp->b_addr;
++		switch (info->magic) {
++		case cpu_to_be16(XFS_DA_NODE_MAGIC):
++		case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++			error = xfs_attr3_node_inactive(trans, dp, child_bp,
++							level + 1);
++			break;
++		case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
++		case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++			error = xfs_attr3_leaf_inactive(trans, dp, child_bp);
++			break;
++		default:
++			error = -EIO;
++			xfs_trans_brelse(*trans, child_bp);
++			break;
+ 		}
++		if (error)
++			return error;
++
++		/*
++		 * Remove the subsidiary block from the cache and from the log.
++		 */
++		error = xfs_da_get_buf(*trans, dp, 0, child_blkno, &child_bp,
++				       XFS_ATTR_FORK);
++		if (error)
++			return error;
++		xfs_trans_binval(*trans, child_bp);
+ 
+ 		/*
+ 		 * If we're not done, re-read the parent to get the next
+-- 
+2.9.5
+
