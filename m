@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30675 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752807AbdJLBnI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:43:08 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1h792028874
+Received: from userp1040.oracle.com ([156.151.31.81]:28273 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752807AbdJLBnW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:43:22 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1hLf4001205
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:07 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:21 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1h7ix031789
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1hLbe001188
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:07 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9C1h7LF029214
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:07 GMT
-Subject: [PATCH 22/30] xfs: scrub inode block mappings
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:21 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9C1hLG6029320
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:43:21 GMT
+Subject: [PATCH 24/30] xfs: scrub directory metadata
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Oct 2017 18:43:06 -0700
-Message-ID: <150777258634.1724.8710762615801926700.stgit@magnolia>
+Date: Wed, 11 Oct 2017 18:43:19 -0700
+Message-ID: <150777259980.1724.8093055918170430129.stgit@magnolia>
 In-Reply-To: <150777244315.1724.6916081372861799350.stgit@magnolia>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,56 +31,112 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scrub an individual inode's block mappings to make sure they make sense.
+Scrub the hash tree and all the entries in a directory.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    5 +
- fs/xfs/scrub/bmap.c    |  362 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h  |    5 +
- fs/xfs/scrub/scrub.c   |   12 ++
- fs/xfs/scrub/scrub.h   |    3 
- 6 files changed, 386 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/bmap.c
+ fs/xfs/libxfs/xfs_fs.h |    3 
+ fs/xfs/scrub/common.c  |   28 ++++
+ fs/xfs/scrub/common.h  |    4 +
+ fs/xfs/scrub/dir.c     |  318 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c   |    4 +
+ fs/xfs/scrub/scrub.h   |    1 
+ 7 files changed, 358 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/scrub/dir.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 28e14b7..5a77489 100644
+index b48437f..69aa88e 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -148,6 +148,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   trace.o \
- 				   agheader.o \
- 				   alloc.o \
-+				   bmap.o \
+@@ -152,6 +152,7 @@ xfs-y				+= $(addprefix scrub/, \
  				   btree.o \
  				   common.o \
+ 				   dabtree.o \
++				   dir.o \
  				   ialloc.o \
+ 				   inode.o \
+ 				   refcount.o \
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index f8463e0..02ae58b 100644
+index 02ae58b..b16d004 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -495,9 +495,12 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
- #define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
- #define XFS_SCRUB_TYPE_INODE	11	/* inode record */
-+#define XFS_SCRUB_TYPE_BMBTD	12	/* data fork block mapping */
-+#define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
-+#define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
+@@ -498,9 +498,10 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_BMBTD	12	/* data fork block mapping */
+ #define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
+ #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
++#define XFS_SCRUB_TYPE_DIR	15	/* directory */
  
  /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	12
-+#define XFS_SCRUB_TYPE_NR	15
+-#define XFS_SCRUB_TYPE_NR	15
++#define XFS_SCRUB_TYPE_NR	16
  
  /* i: Repair this metadata. */
  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 415c6a9..318dd97 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -542,3 +542,31 @@ xfs_scrub_get_inode(
+ 	sc->ip = ip;
+ 	return 0;
+ }
++
++/* Set us up to scrub a file's contents. */
++int
++xfs_scrub_setup_inode_contents(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*ip,
++	unsigned int			resblks)
++{
++	struct xfs_mount		*mp = sc->mp;
++	int				error;
++
++	error = xfs_scrub_get_inode(sc, ip);
++	if (error)
++		return error;
++
++	/* Got the inode, lock it and we're ready to go. */
++	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
++	xfs_ilock(sc->ip, sc->ilock_flags);
++	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	if (error)
++		goto out;
++	sc->ilock_flags |= XFS_ILOCK_EXCL;
++	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
++
++out:
++	/* scrub teardown will unlock and release the inode for us */
++	return error;
++}
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index b3cf4a2..7cd4a78 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -93,6 +93,8 @@ int xfs_scrub_setup_inode_bmap(struct xfs_scrub_context *sc,
+ 			       struct xfs_inode *ip);
+ int xfs_scrub_setup_inode_bmap_data(struct xfs_scrub_context *sc,
+ 				    struct xfs_inode *ip);
++int xfs_scrub_setup_directory(struct xfs_scrub_context *sc,
++			      struct xfs_inode *ip);
+ 
+ void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+@@ -111,5 +113,7 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+ int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
+ 			     struct xfs_inode *ip, bool force_log);
+ int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
++int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
++				   struct xfs_inode *ip, unsigned int resblks);
+ 
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
 new file mode 100644
-index 0000000..3955933
+index 0000000..e2a8f90
 --- /dev/null
-+++ b/fs/xfs/scrub/bmap.c
-@@ -0,0 +1,362 @@
++++ b/fs/xfs/scrub/dir.c
+@@ -0,0 +1,318 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -113,386 +169,316 @@ index 0000000..3955933
 +#include "xfs_trans.h"
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_rmap.h"
++#include "xfs_icache.h"
++#include "xfs_itable.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2.h"
++#include "xfs_dir2_priv.h"
++#include "xfs_ialloc.h"
 +#include "scrub/xfs_scrub.h"
 +#include "scrub/scrub.h"
 +#include "scrub/common.h"
-+#include "scrub/btree.h"
 +#include "scrub/trace.h"
++#include "scrub/dabtree.h"
 +
-+/* Set us up with an inode's bmap. */
++/* Set us up to scrub directories. */
 +int
-+xfs_scrub_setup_inode_bmap(
++xfs_scrub_setup_directory(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip)
 +{
-+	struct xfs_mount		*mp = sc->mp;
-+	int				error;
-+
-+	error = xfs_scrub_get_inode(sc, ip);
-+	if (error)
-+		goto out;
-+
-+	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	xfs_ilock(sc->ip, sc->ilock_flags);
-+
-+	/*
-+	 * We don't want any ephemeral data fork updates sitting around
-+	 * while we inspect block mappings, so wait for directio to finish
-+	 * and flush dirty data if we have delalloc reservations.
-+	 */
-+	if (S_ISREG(VFS_I(sc->ip)->i_mode) &&
-+	    sc->sm->sm_type == XFS_SCRUB_TYPE_BMBTD) {
-+		inode_dio_wait(VFS_I(sc->ip));
-+		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
-+		if (error)
-+			goto out;
-+
-+		/* Drop the page cache if we're repairing block mappings. */
-+		if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-+			error = invalidate_inode_pages2(
-+					VFS_I(sc->ip)->i_mapping);
-+			if (error)
-+				goto out;
-+		}
-+	}
-+
-+	/* Got the inode, lock it and we're ready to go. */
-+	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	if (error)
-+		goto out;
-+	sc->ilock_flags |= XFS_ILOCK_EXCL;
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-+
-+out:
-+	/* scrub teardown will unlock and release the inode */
-+	return error;
++	return xfs_scrub_setup_inode_contents(sc, ip, 0);
 +}
 +
-+/*
-+ * Inode fork block mapping (BMBT) scrubber.
-+ * More complex than the others because we have to scrub
-+ * all the extents regardless of whether or not the fork
-+ * is in btree format.
-+ */
++/* Directories */
 +
-+struct xfs_scrub_bmap_info {
++/* Scrub a directory entry. */
++
++struct xfs_scrub_dir_ctx {
++	/* VFS fill-directory iterator */
++	struct dir_context		dir_iter;
++
 +	struct xfs_scrub_context	*sc;
-+	xfs_fileoff_t			lastoff;
-+	bool				is_rt;
-+	bool				is_shared;
-+	int				whichfork;
 +};
 +
-+/* Scrub a single extent record. */
++/* Check that an inode's mode matches a given DT_ type. */
 +STATIC int
-+xfs_scrub_bmap_extent(
-+	struct xfs_inode		*ip,
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_scrub_bmap_info	*info,
-+	struct xfs_bmbt_irec		*irec)
++xfs_scrub_dir_check_ftype(
++	struct xfs_scrub_dir_ctx	*sdc,
++	xfs_fileoff_t			offset,
++	xfs_ino_t			inum,
++	int				dtype)
 +{
-+	struct xfs_mount		*mp = info->sc->mp;
-+	struct xfs_buf			*bp = NULL;
++	struct xfs_mount		*mp = sdc->sc->mp;
++	struct xfs_inode		*ip;
++	int				ino_dtype;
 +	int				error = 0;
 +
-+	if (cur)
-+		xfs_btree_get_block(cur, 0, &bp);
-+
-+	/*
-+	 * Check for out-of-order extents.  This record could have come
-+	 * from the incore list, for which there is no ordering check.
-+	 */
-+	if (irec->br_startoff < info->lastoff)
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	/* There should never be a "hole" extent in either extent list. */
-+	if (irec->br_startblock == HOLESTARTBLOCK)
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	/*
-+	 * Check for delalloc extents.  We never iterate the ones in the
-+	 * in-core extent scan, and we should never see these in the bmbt.
-+	 */
-+	if (isnullstartblock(irec->br_startblock))
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	/* Make sure the extent points to a valid place. */
-+	if (irec->br_startblock + irec->br_blockcount <= irec->br_startblock)
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+	if (info->is_rt &&
-+	    (!xfs_verify_rtbno_ptr(mp, irec->br_startblock) ||
-+	     !xfs_verify_rtbno_ptr(mp, irec->br_startblock +
-+				irec->br_blockcount - 1)))
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+	if (!info->is_rt &&
-+	    (!xfs_verify_fsbno_ptr(mp, irec->br_startblock) ||
-+	     !xfs_verify_fsbno_ptr(mp, irec->br_startblock +
-+				irec->br_blockcount - 1)))
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	if (irec->br_state == XFS_EXT_UNWRITTEN &&
-+	    !xfs_sb_version_hasextflgbit(&mp->m_sb))
-+		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	info->lastoff = irec->br_startoff + irec->br_blockcount;
-+	return error;
-+}
-+
-+/* Scrub a bmbt record. */
-+STATIC int
-+xfs_scrub_bmapbt_helper(
-+	struct xfs_scrub_btree		*bs,
-+	union xfs_btree_rec		*rec)
-+{
-+	struct xfs_bmbt_rec_host	ihost;
-+	struct xfs_bmbt_irec		irec;
-+	struct xfs_scrub_bmap_info	*info = bs->private;
-+	struct xfs_inode		*ip = bs->cur->bc_private.b.ip;
-+	struct xfs_buf			*bp = NULL;
-+	struct xfs_btree_block		*block;
-+	uint64_t			owner;
-+	int				i;
-+
-+	/*
-+	 * Check the owners of the btree blocks up to the level below
-+	 * the root since the verifiers don't do that.
-+	 */
-+	if (xfs_sb_version_hascrc(&bs->cur->bc_mp->m_sb) &&
-+	    bs->cur->bc_ptrs[0] == 1) {
-+		for (i = 0; i < bs->cur->bc_nlevels - 1; i++) {
-+			block = xfs_btree_get_block(bs->cur, i, &bp);
-+			owner = be64_to_cpu(block->bb_u.l.bb_owner);
-+			if (owner != ip->i_ino)
-+				xfs_scrub_fblock_set_corrupt(bs->sc,
-+						info->whichfork, 0);
-+		}
++	if (!xfs_sb_version_hasftype(&mp->m_sb)) {
++		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
++			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
++					offset);
++		goto out;
 +	}
 +
-+	/* Set up the in-core record and scrub it. */
-+	ihost.l0 = be64_to_cpu(rec->bmbt.l0);
-+	ihost.l1 = be64_to_cpu(rec->bmbt.l1);
-+	xfs_bmbt_get_all(&ihost, &irec);
-+	return xfs_scrub_bmap_extent(ip, bs->cur, info, &irec);
-+}
++	error = xfs_iget(mp, sdc->sc->tp, inum, XFS_IGET_DONTCACHE, 0, &ip);
++	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
++			&error))
++		goto out;
 +
-+/* Scan the btree records. */
-+STATIC int
-+xfs_scrub_bmap_btree(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	struct xfs_scrub_bmap_info	*info)
-+{
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_btree_cur		*cur;
-+	int				error;
-+
-+	cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
-+	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
-+	error = xfs_scrub_btree(sc, cur, xfs_scrub_bmapbt_helper, &oinfo, info);
-+	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+					  XFS_BTREE_NOERROR);
++	/* Convert mode to the DT_* values that dir_emit uses. */
++	ino_dtype = (VFS_I(ip)->i_mode & S_IFMT) >> 12;
++	if (ino_dtype != dtype)
++		xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
++	iput(VFS_I(ip));
++out:
 +	return error;
 +}
 +
 +/*
-+ * Scrub an inode fork's block mappings.
++ * Scrub a single directory entry.
 + *
-+ * First we scan every record in every btree block, if applicable.
-+ * Then we unconditionally scan the incore extent cache.
++ * We use the VFS directory iterator (i.e. readdir) to call this
++ * function for every directory entry in a directory.  Once we're here,
++ * we check the inode number to make sure it's sane, then we check that
++ * we can look up this filename.  Finally, we check the ftype.
 + */
 +STATIC int
-+xfs_scrub_bmap(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork)
++xfs_scrub_dir_actor(
++	struct dir_context		*dir_iter,
++	const char			*name,
++	int				namelen,
++	loff_t				pos,
++	u64				ino,
++	unsigned			type)
 +{
-+	struct xfs_bmbt_irec		irec;
-+	struct xfs_scrub_bmap_info	info = {0};
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	xfs_fileoff_t			endoff;
-+	xfs_extnum_t			idx;
-+	bool				found;
++	struct xfs_mount		*mp;
++	struct xfs_inode		*ip;
++	struct xfs_scrub_dir_ctx	*sdc;
++	struct xfs_name			xname;
++	xfs_ino_t			lookup_ino;
++	xfs_dablk_t			offset;
 +	int				error = 0;
 +
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
++	sdc = container_of(dir_iter, struct xfs_scrub_dir_ctx, dir_iter);
++	ip = sdc->sc->ip;
++	mp = ip->i_mount;
++	offset = xfs_dir2_db_to_da(mp->m_dir_geo,
++			xfs_dir2_dataptr_to_db(mp->m_dir_geo, pos));
 +
-+	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
-+	info.whichfork = whichfork;
-+	info.is_shared = whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip);
-+	info.sc = sc;
-+
-+	switch (whichfork) {
-+	case XFS_COW_FORK:
-+		/* Non-existent CoW forks are ignorable. */
-+		if (!ifp)
-+			goto out;
-+		/* No CoW forks on non-reflink inodes/filesystems. */
-+		if (!xfs_is_reflink_inode(ip)) {
-+			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-+			goto out;
-+		}
-+		break;
-+	case XFS_ATTR_FORK:
-+		if (!ifp)
-+			goto out;
-+		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
-+		    !xfs_sb_version_hasattr2(&mp->m_sb))
-+			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-+		break;
-+	}
-+
-+	/* Check the fork values */
-+	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
-+	case XFS_DINODE_FMT_UUID:
-+	case XFS_DINODE_FMT_DEV:
-+	case XFS_DINODE_FMT_LOCAL:
-+		/* No mappings to check. */
-+		goto out;
-+	case XFS_DINODE_FMT_EXTENTS:
-+		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+			xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
-+			goto out;
-+		}
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		if (whichfork == XFS_COW_FORK) {
-+			xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
-+			goto out;
-+		}
-+
-+		error = xfs_scrub_bmap_btree(sc, whichfork, &info);
-+		if (error)
-+			goto out;
-+		break;
-+	default:
-+		xfs_scrub_fblock_set_corrupt(sc, whichfork, 0);
++	/* Does this inode number make sense? */
++	if (!xfs_verify_dir_ino_ptr(mp, ino)) {
++		xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
 +		goto out;
 +	}
 +
-+	/* Extent data is in memory, so scrub that. */
++	if (!strncmp(".", name, namelen)) {
++		/* If this is "." then check that the inum matches the dir. */
++		if (xfs_sb_version_hasftype(&mp->m_sb) && type != DT_DIR)
++			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
++					offset);
++		if (ino != ip->i_ino)
++			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
++					offset);
++	} else if (!strncmp("..", name, namelen)) {
++		/*
++		 * If this is ".." in the root inode, check that the inum
++		 * matches this dir.
++		 */
++		if (xfs_sb_version_hasftype(&mp->m_sb) && type != DT_DIR)
++			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
++					offset);
++		if (ip->i_ino == mp->m_sb.sb_rootino && ino != ip->i_ino)
++			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
++					offset);
++	}
 +
-+	/* Find the offset of the last extent in the mapping. */
-+	error = xfs_bmap_last_offset(ip, &endoff, whichfork);
-+	if (!xfs_scrub_fblock_process_error(sc, whichfork, 0, &error))
++	/* Verify that we can look up this name by hash. */
++	xname.name = name;
++	xname.len = namelen;
++	xname.type = XFS_DIR3_FT_UNKNOWN;
++
++	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
++	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
++			&error))
++		goto fail_xref;
++	if (lookup_ino != ino) {
++		xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
++		goto out;
++	}
++
++	/* Verify the file type.  This function absorbs error codes. */
++	error = xfs_scrub_dir_check_ftype(sdc, offset, lookup_ino, type);
++	if (error)
++		goto out;
++out:
++	return error;
++fail_xref:
++	return error;
++}
++
++/* Scrub a directory btree record. */
++STATIC int
++xfs_scrub_dir_rec(
++	struct xfs_scrub_da_btree	*ds,
++	int				level,
++	void				*rec)
++{
++	struct xfs_mount		*mp = ds->state->mp;
++	struct xfs_dir2_leaf_entry	*ent = rec;
++	struct xfs_inode		*dp = ds->dargs.dp;
++	struct xfs_dir2_data_entry	*dent;
++	struct xfs_buf			*bp;
++	xfs_ino_t			ino;
++	xfs_dablk_t			rec_bno;
++	xfs_dir2_db_t			db;
++	xfs_dir2_data_aoff_t		off;
++	xfs_dir2_dataptr_t		ptr;
++	xfs_dahash_t			calc_hash;
++	xfs_dahash_t			hash;
++	unsigned int			tag;
++	int				error;
++
++	/* Check the hash of the entry. */
++	error = xfs_scrub_da_btree_hash(ds, level, &ent->hashval);
++	if (error)
 +		goto out;
 +
-+	/* Scrub extent records. */
-+	info.lastoff = 0;
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	for (found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &irec);
-+	     found != 0;
-+	     found = xfs_iext_get_extent(ifp, ++idx, &irec)) {
-+		if (xfs_scrub_should_terminate(sc, &error))
++	/* Valid hash pointer? */
++	ptr = be32_to_cpu(ent->address);
++	if (ptr == 0)
++		return 0;
++
++	/* Find the directory entry's location. */
++	db = xfs_dir2_dataptr_to_db(mp->m_dir_geo, ptr);
++	off = xfs_dir2_dataptr_to_off(mp->m_dir_geo, ptr);
++	rec_bno = xfs_dir2_db_to_da(mp->m_dir_geo, db);
++
++	if (rec_bno >= mp->m_dir_geo->leafblk) {
++		xfs_scrub_da_set_corrupt(ds, level);
++		goto out;
++	}
++	error = xfs_dir3_data_read(ds->dargs.trans, dp, rec_bno, -2, &bp);
++	if (!xfs_scrub_fblock_process_error(ds->sc, XFS_DATA_FORK, rec_bno,
++			&error))
++		goto out;
++	if (!bp) {
++		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
++		goto out;
++	}
++
++	/* Retrieve the entry, sanity check it, and compare hashes. */
++	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
++	ino = be64_to_cpu(dent->inumber);
++	hash = be32_to_cpu(ent->hashval);
++	tag = be16_to_cpup(dp->d_ops->data_entry_tag_p(dent));
++	if (!xfs_verify_dir_ino_ptr(mp, ino) || tag != off)
++		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
++	if (dent->namelen == 0) {
++		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
++		goto out_relse;
++	}
++	calc_hash = xfs_da_hashname(dent->name, dent->namelen);
++	if (calc_hash != hash)
++		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
++
++out_relse:
++	xfs_trans_brelse(ds->dargs.trans, bp);
++out:
++	return error;
++}
++
++/* Scrub a whole directory. */
++int
++xfs_scrub_directory(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_scrub_dir_ctx	sdc = {
++		.dir_iter.actor = xfs_scrub_dir_actor,
++		.dir_iter.pos = 0,
++		.sc = sc,
++	};
++	size_t				bufsize;
++	loff_t				oldpos;
++	int				error;
++
++	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
++		return -ENOENT;
++
++	/* Plausible size? */
++	if (sc->ip->i_d.di_size < xfs_dir2_sf_hdr_size(0)) {
++		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
++		goto out;
++	}
++
++	/* Check directory tree structure */
++	error = xfs_scrub_da_btree(sc, XFS_DATA_FORK, xfs_scrub_dir_rec);
++	if (error)
++		return error;
++
++	/*
++	 * Check that every dirent we see can also be looked up by hash.
++	 * Userspace usually asks for a 32k buffer, so we will too.
++	 */
++	bufsize = (size_t)min_t(loff_t, 32768, sc->ip->i_d.di_size);
++
++	/*
++	 * Look up every name in this directory by hash.
++	 *
++	 * Use the xfs_readdir function to call xfs_scrub_dir_actor on
++	 * every directory entry in this directory.  In _actor, we check
++	 * the name, inode number, and ftype (if applicable) of the
++	 * entry.  xfs_readdir uses the VFS filldir functions to provide
++	 * iteration context.
++	 *
++	 * The VFS grabs a read or write lock via i_rwsem before it reads
++	 * or writes to a directory.  If we've gotten this far we've
++	 * already obtained IOLOCK_EXCL, which (since 4.10) is the same as
++	 * getting a write lock on i_rwsem.  Therefore, it is safe for us
++	 * to drop the ILOCK here in order to reuse the _readdir and
++	 * _dir_lookup routines, which do their own ILOCK locking.
++	 */
++	oldpos = 0;
++	sc->ilock_flags &= ~XFS_ILOCK_EXCL;
++	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
++	while (true) {
++		error = xfs_readdir(sc->tp, sc->ip, &sdc.dir_iter, bufsize);
++		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
++				&error))
++			goto out;
++		if (oldpos == sdc.dir_iter.pos)
 +			break;
-+		if (isnullstartblock(irec.br_startblock))
-+			continue;
-+		if (irec.br_startoff >= endoff) {
-+			xfs_scrub_fblock_set_corrupt(sc, whichfork,
-+					irec.br_startoff);
-+			goto out;
-+		}
-+		error = xfs_scrub_bmap_extent(ip, NULL, &info, &irec);
-+		if (error)
-+			goto out;
++		oldpos = sdc.dir_iter.pos;
 +	}
 +
 +out:
 +	return error;
 +}
-+
-+/* Scrub an inode's data fork. */
-+int
-+xfs_scrub_bmap_data(
-+	struct xfs_scrub_context	*sc)
-+{
-+	return xfs_scrub_bmap(sc, XFS_DATA_FORK);
-+}
-+
-+/* Scrub an inode's attr fork. */
-+int
-+xfs_scrub_bmap_attr(
-+	struct xfs_scrub_context	*sc)
-+{
-+	return xfs_scrub_bmap(sc, XFS_ATTR_FORK);
-+}
-+
-+/* Scrub an inode's CoW fork. */
-+int
-+xfs_scrub_bmap_cow(
-+	struct xfs_scrub_context	*sc)
-+{
-+	if (!xfs_is_reflink_inode(sc->ip))
-+		return -ENOENT;
-+
-+	return xfs_scrub_bmap(sc, XFS_COW_FORK);
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index fcec11e..b3cf4a2 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -89,7 +89,10 @@ int xfs_scrub_setup_ag_refcountbt(struct xfs_scrub_context *sc,
- 				  struct xfs_inode *ip);
- int xfs_scrub_setup_inode(struct xfs_scrub_context *sc,
- 			  struct xfs_inode *ip);
--
-+int xfs_scrub_setup_inode_bmap(struct xfs_scrub_context *sc,
-+			       struct xfs_inode *ip);
-+int xfs_scrub_setup_inode_bmap_data(struct xfs_scrub_context *sc,
-+				    struct xfs_inode *ip);
- 
- void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index ab4209c..b20fdd3 100644
+index b20fdd3..4a44727 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -205,6 +205,18 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.setup	= xfs_scrub_setup_inode,
- 		.scrub	= xfs_scrub_inode,
+@@ -217,6 +217,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xfs_scrub_setup_inode_bmap,
+ 		.scrub	= xfs_scrub_bmap_cow,
  	},
-+	{ /* inode data fork */
-+		.setup	= xfs_scrub_setup_inode_bmap,
-+		.scrub	= xfs_scrub_bmap_data,
-+	},
-+	{ /* inode attr fork */
-+		.setup	= xfs_scrub_setup_inode_bmap,
-+		.scrub	= xfs_scrub_bmap_attr,
-+	},
-+	{ /* inode CoW fork */
-+		.setup	= xfs_scrub_setup_inode_bmap,
-+		.scrub	= xfs_scrub_bmap_cow,
++	{ /* directory */
++		.setup	= xfs_scrub_setup_directory,
++		.scrub	= xfs_scrub_directory,
 +	},
  };
  
  /* This isn't a stable feature, warn once per day. */
 diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index ec635d4..8920ccf 100644
+index 8920ccf..844506e 100644
 --- a/fs/xfs/scrub/scrub.h
 +++ b/fs/xfs/scrub/scrub.h
-@@ -79,5 +79,8 @@ int xfs_scrub_finobt(struct xfs_scrub_context *sc);
- int xfs_scrub_rmapbt(struct xfs_scrub_context *sc);
- int xfs_scrub_refcountbt(struct xfs_scrub_context *sc);
- int xfs_scrub_inode(struct xfs_scrub_context *sc);
-+int xfs_scrub_bmap_data(struct xfs_scrub_context *sc);
-+int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
-+int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
+@@ -82,5 +82,6 @@ int xfs_scrub_inode(struct xfs_scrub_context *sc);
+ int xfs_scrub_bmap_data(struct xfs_scrub_context *sc);
+ int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
+ int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
++int xfs_scrub_directory(struct xfs_scrub_context *sc);
  
  #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
