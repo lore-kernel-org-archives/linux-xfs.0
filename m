@@ -1,153 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47574 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45210 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751492AbdJLLg2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Oct 2017 07:36:28 -0400
+        id S1752581AbdJLLrz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 07:47:55 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9FF8B5BED9
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 11:47:55 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 730AC18A68
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 11:47:55 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] tests/xfs: test for NULL xattr buffer problem during unlink
-Date: Thu, 12 Oct 2017 07:36:27 -0400
-Message-Id: <20171012113627.39452-1-bfoster@redhat.com>
+Subject: [PATCH] xfs: trim writepage mapping to within eof
+Date: Thu, 12 Oct 2017 07:47:54 -0400
+Message-Id: <20171012114754.39626-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-XFS had a bug that resulted in an unexpected NULL buffer during
-unlink of an inode with a multi-level attr fork tree. This occurred
-due to a stale reference to content in a released/reclaimed buffer.
+The writeback rework in commit fbcc02561359 ("xfs: Introduce
+writeback context for writepages") introduced a subtle change in
+behavior with regard to the block mapping used across the
+->writepages() sequence. The previous xfs_cluster_write() code would
+only flush pages up to EOF at the time of the writepage, thus
+ensuring that any pages due to file-extending writes would be
+handled on a separate cycle and with a new, updated block mapping.
 
-Use the XFS buffer LRU reference count error injection tag to
-recreate the conditions for the bug. Create a file with a
-multi-level attr fork tree and then unlink it with buffer caching
-disabled.
+The updated code establishes a block mapping in xfs_writepage_map()
+that could extend beyond EOF if the file has post-eof preallocation.
+Because we now use the generic writeback infrastructure and pass the
+cached mapping to each writepage call, there is no implicit EOF
+limit in place. If eofblocks trimming occurs during ->writepages(),
+any post-eof portion of the cached mapping becomes invalid. The
+eofblocks code has no means to serialize against writeback because
+there are no pages associated with post-eof blocks. Therefore if an
+eofblocks trim occurs and is followed by a file-extending buffered
+write, not only has the mapping become invalid, but we could end up
+writing a page to disk based on the invalid mapping.
 
+Consider the following sequence of events:
+
+- A buffered write creates a delalloc extent and post-eof
+  speculative preallocation.
+- Writeback starts and on the first writepage cycle, the delalloc
+  extent is converted to real blocks (including the post-eof blocks)
+  and the mapping is cached.
+- The file is closed and xfs_release() trims post-eof blocks. The
+  cached writeback mapping is now invalid.
+- Another buffered write appends the file with a delalloc extent.
+- The concurrent writeback cycle picks up the just written page
+  because the writeback range end is LLONG_MAX. xfs_writepage_map()
+  attributes it to the (now invalid) cached mapping and writes the
+  data to an incorrect location on disk (and where the file offset is
+  still backed by a delalloc extent).
+
+This problem is reproduced by xfstests test generic/463, which
+triggers racing writes, appends, open/closes and writeback requests.
+
+To address this problem, trim the mapping used during writeback to
+within EOF when the mapping is created. This ensures the mapping is
+revalidated for any pages encountered beyond EOF as of the time the
+current mapping was cached.
+
+Reported-by: Eryu Guan <eguan@redhat.com>
+Diagnosed-by: Eryu Guan <eguan@redhat.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
 
-Note that this test depends on a pending[1] XFS error injection tag.
+Hi all,
+
+This is a followup to the issue Eryu tracked down, described here[1].
+
+Note that this patch will not deal with any writeback mapping validity
+issues not associated with eofblocks management. Dave is working on a
+more generic approach to deal with such problems. This patch is intended
+to be a targeted and backportable fix for the regression in the
+writeback code.
 
 Brian
 
-[1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
+[1] https://marc.info/?l=linux-xfs&m=150406724427829&w=2
 
- tests/xfs/999     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |  2 ++
- tests/xfs/group   |  1 +
- 3 files changed, 90 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
+ fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
+ fs/xfs/libxfs/xfs_bmap.h |  1 +
+ fs/xfs/xfs_aops.c        |  6 ++++--
+ 3 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 0000000..261b83f
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,87 @@
-+#! /bin/bash
-+# FS QA Test 999
-+#
-+# Regression test for an XFS NULL xattr buffer problem during unlink. XFS had a
-+# bug where the attr fork walk during file removal could go off the rails due to
-+# a stale reference to content of a released buffer. Memory pressure could cause
-+# this reference to point to free or reused memory and cause subsequent
-+# attribute fork lookups to fail, return a NULL buffer and possibly crash.
-+#
-+# This test emulates this behavior using an error injection knob to explicitly
-+# disable buffer LRU caching. This forces the attr walk to execute under
-+# conditions where each buffer is immediately freed on release.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 044a363..dd3fb7b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3852,6 +3852,17 @@ xfs_trim_extent(
+ 	}
+ }
+ 
++/* trim extent to within eof */
++void
++xfs_trim_extent_eof(
++	struct xfs_bmbt_irec	*irec,
++	struct xfs_inode	*ip)
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
 +{
-+	cd /
-+	rm -f $tmp.*
++	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
++					      i_size_read(VFS_I(ip))));
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/attr
-+. ./common/inject
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_xfs_io_error_injection buf_lru_ref
-+_require_scratch
-+_require_attrs
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount || _fail "mount failure"
-+
-+file=$SCRATCH_MNT/testfile
-+
-+# create a bunch of xattrs to form a multi-level attr tree
-+touch $file
-+for i in $(seq 0 499); do
-+	$SETFATTR_PROG -n trusted.user.$i -v 0 $file
-+done
-+
-+# cycle the mount to clear any buffer references
-+_scratch_cycle_mount || _fail "cycle mount failure"
-+
-+# disable the lru cache and unlink the file
-+_scratch_inject_error buf_lru_ref 1
-+rm -f $file
-+_scratch_inject_error buf_lru_ref 0
-+
-+echo Silence is golden
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 0000000..3b276ca
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 25bb8b3..f0c15f7 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -430,3 +430,4 @@
- 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 431 auto quick dangerous
- 432 auto quick dir metadata
-+999 auto quick attr
+ /*
+  * Trim the returned map to the required bounds
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 851982a..502e0d8 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -208,6 +208,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+ 
+ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+ 		xfs_filblks_t len);
++void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+ void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 1dbc5cf..3ab6d9d 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -423,7 +423,7 @@ xfs_map_blocks(
+ 				imap);
+ 		if (!error)
+ 			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+-		return error;
++		goto out_trim;
+ 	}
+ 
+ #ifdef DEBUG
+@@ -435,7 +435,9 @@ xfs_map_blocks(
+ #endif
+ 	if (nimaps)
+ 		trace_xfs_map_blocks_found(ip, offset, count, type, imap);
+-	return 0;
++out_trim:
++	xfs_trim_extent_eof(imap, ip);
++	return error;
+ }
+ 
+ STATIC bool
 -- 
 2.9.5
 
