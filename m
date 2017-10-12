@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27720 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdJLBk6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:40:58 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1evWM031628
+Received: from aserp1040.oracle.com ([141.146.126.69]:30269 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752958AbdJLBlS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:41:18 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1fH3u027580
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:40:58 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:41:17 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1evWE027363
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1fHff029947
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:40:57 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1euOB000748
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:40:57 GMT
-Subject: [PATCH 02/30] xfs: create block pointer check functions
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:41:17 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1fG2A000839
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:41:16 GMT
+Subject: [PATCH 05/30] xfs: create inode pointer verifiers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Oct 2017 18:40:55 -0700
-Message-ID: <150777245581.1724.14031376814151145502.stgit@magnolia>
+Date: Wed, 11 Oct 2017 18:41:15 -0700
+Message-ID: <150777247562.1724.7094279740133124537.stgit@magnolia>
 In-Reply-To: <150777244315.1724.6916081372861799350.stgit@magnolia>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,128 +31,194 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create some helper functions to check that a block pointer points
-within the filesystem (or AG) and doesn't point at static metadata.
-We will use this for scrub.
+Create some helper functions to check that inode pointers point to
+somewhere within the filesystem and not at the static AG metadata.
+Move xfs_internal_inum and create a directory inode check function.
+We will use these functions in scrub and elsewhere.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c    |   49 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h    |    4 +++
- fs/xfs/libxfs/xfs_rtbitmap.c |   12 ++++++++++
- fs/xfs/xfs_rtalloc.h         |    2 ++
- 4 files changed, 67 insertions(+)
+ fs/xfs/libxfs/xfs_dir2.c   |   19 ++--------
+ fs/xfs/libxfs/xfs_ialloc.c |   81 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.h |    7 ++++
+ fs/xfs/xfs_itable.c        |   10 -----
+ fs/xfs/xfs_itable.h        |    2 -
+ 5 files changed, 91 insertions(+), 28 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 744dcae..bd3a943 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2923,3 +2923,52 @@ xfs_alloc_query_all(
- 	query.fn = fn;
- 	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index ccf9783..ee4d2a3 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -30,6 +30,7 @@
+ #include "xfs_bmap.h"
+ #include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
++#include "xfs_ialloc.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ 
+@@ -202,22 +203,8 @@ xfs_dir_ino_validate(
+ 	xfs_mount_t	*mp,
+ 	xfs_ino_t	ino)
+ {
+-	xfs_agblock_t	agblkno;
+-	xfs_agino_t	agino;
+-	xfs_agnumber_t	agno;
+-	int		ino_ok;
+-	int		ioff;
+-
+-	agno = XFS_INO_TO_AGNO(mp, ino);
+-	agblkno = XFS_INO_TO_AGBNO(mp, ino);
+-	ioff = XFS_INO_TO_OFFSET(mp, ino);
+-	agino = XFS_OFFBNO_TO_AGINO(mp, agblkno, ioff);
+-	ino_ok =
+-		agno < mp->m_sb.sb_agcount &&
+-		agblkno < mp->m_sb.sb_agblocks &&
+-		agblkno != 0 &&
+-		ioff < (1 << mp->m_sb.sb_inopblog) &&
+-		XFS_AGINO_TO_INO(mp, agno, agino) == ino;
++	bool		ino_ok = xfs_verify_dir_ino_ptr(mp, ino);
++
+ 	if (unlikely(XFS_TEST_ERROR(!ino_ok, mp, XFS_ERRTAG_DIR_INO_VALIDATE))) {
+ 		xfs_warn(mp, "Invalid inode number 0x%Lx",
+ 				(unsigned long long) ino);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 988bb3f..da3652b 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2664,3 +2664,84 @@ xfs_ialloc_pagi_init(
+ 		xfs_trans_brelse(tp, bp);
+ 	return 0;
  }
 +
-+/* Find the size of the AG, in blocks. */
-+xfs_agblock_t
-+xfs_ag_block_count(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
-+{
-+	ASSERT(agno < mp->m_sb.sb_agcount);
-+
-+	if (agno < mp->m_sb.sb_agcount - 1)
-+		return mp->m_sb.sb_agblocks;
-+	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
-+}
-+
-+/*
-+ * Verify that an AG block number pointer neither points outside the AG
-+ * nor points at static metadata.
-+ */
-+bool
-+xfs_verify_agbno_ptr(
++/* Calculate the first and last possible inode number in an AG. */
++void
++xfs_ialloc_aginode_range(
 +	struct xfs_mount	*mp,
 +	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno)
++	xfs_agino_t		*first,
++	xfs_agino_t		*last)
 +{
 +	xfs_agblock_t		eoag;
 +
 +	eoag = xfs_ag_block_count(mp, agno);
-+	if (agbno >= eoag)
-+		return false;
-+	if (agbno <= XFS_AGFL_BLOCK(mp))
-+		return false;
-+	return true;
++	*first = round_up(XFS_OFFBNO_TO_AGINO(mp, XFS_AGFL_BLOCK(mp) + 1, 0),
++			XFS_INODES_PER_CHUNK);
++	*last = round_down(XFS_OFFBNO_TO_AGINO(mp, eoag, 0),
++			XFS_INODES_PER_CHUNK) - 1;
 +}
 +
 +/*
-+ * Verify that an FS block number pointer neither points outside the
++ * Verify that an AG inode number pointer neither points outside the AG
++ * nor points at static metadata.
++ */
++bool
++xfs_verify_agino_ptr(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino)
++{
++	xfs_agino_t		first;
++	xfs_agino_t		last;
++	int			ioff;
++
++	ioff = XFS_AGINO_TO_OFFSET(mp, agino);
++	xfs_ialloc_aginode_range(mp, agno, &first, &last);
++	return agino >= first && agino <= last &&
++	       ioff < (1 << mp->m_sb.sb_inopblog);
++}
++
++/*
++ * Verify that an FS inode number pointer neither points outside the
 + * filesystem nor points at static AG metadata.
 + */
 +bool
-+xfs_verify_fsbno_ptr(
++xfs_verify_ino_ptr(
 +	struct xfs_mount	*mp,
-+	xfs_fsblock_t		fsbno)
++	xfs_ino_t		ino)
 +{
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
++	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ino);
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
 +
 +	if (agno >= mp->m_sb.sb_agcount)
 +		return false;
-+	return xfs_verify_agbno_ptr(mp, agno, XFS_FSB_TO_AGBNO(mp, fsbno));
++	if (XFS_AGINO_TO_INO(mp, agno, agino) != ino)
++		return false;
++	return xfs_verify_agino_ptr(mp, agno, agino);
 +}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index ef26edc..3185807 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -232,5 +232,9 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
- 		xfs_alloc_query_range_fn fn, void *priv);
- int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
- 		void *priv);
-+xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
-+bool xfs_verify_agbno_ptr(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		xfs_agblock_t agbno);
-+bool xfs_verify_fsbno_ptr(struct xfs_mount *mp, xfs_fsblock_t fsbno);
- 
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 5d4e43e..0a49348 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1086,3 +1086,15 @@ xfs_rtalloc_query_all(
- 
- 	return xfs_rtalloc_query_range(tp, &keys[0], &keys[1], fn, priv);
- }
++
++/* Is this an internal inode number? */
++bool
++xfs_internal_inum(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino)
++{
++	return ino == mp->m_sb.sb_rbmino || ino == mp->m_sb.sb_rsumino ||
++		(xfs_sb_version_hasquota(&mp->m_sb) &&
++		 xfs_is_quota_inode(&mp->m_sb, ino));
++}
 +
 +/*
-+ * Verify that an realtime block number pointer doesn't point off the
-+ * end of the realtime device.
++ * Verify that a directory entry's inode number doesn't point at an internal
++ * inode, empty space, or static AG metadata.
 + */
 +bool
-+xfs_verify_rtbno_ptr(
++xfs_verify_dir_ino_ptr(
 +	struct xfs_mount	*mp,
-+	xfs_rtblock_t		rtbno)
++	xfs_ino_t		ino)
 +{
-+	return rtbno < mp->m_sb.sb_rblocks;
++	if (xfs_internal_inum(mp, ino))
++		return false;
++	return xfs_verify_ino_ptr(mp, ino);
 +}
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 79defa7..11b8554 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -138,6 +138,7 @@ int xfs_rtalloc_query_range(struct xfs_trans *tp,
- int xfs_rtalloc_query_all(struct xfs_trans *tp,
- 			  xfs_rtalloc_query_range_fn fn,
- 			  void *priv);
-+bool xfs_verify_rtbno_ptr(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- #else
- # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
- # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
-@@ -146,6 +147,7 @@ int xfs_rtalloc_query_all(struct xfs_trans *tp,
- # define xfs_rtalloc_query_range(t,l,h,f,p)             (ENOSYS)
- # define xfs_rtalloc_query_all(t,f,p)                   (ENOSYS)
- # define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
-+# define xfs_verify_rtbno_ptr(m, r)			(false)
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index b32cfb5..904d69a 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -173,5 +173,12 @@ void xfs_inobt_btrec_to_irec(struct xfs_mount *mp, union xfs_btree_rec *rec,
+ 		struct xfs_inobt_rec_incore *irec);
+ 
+ int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
++void xfs_ialloc_aginode_range(struct xfs_mount *mp, xfs_agnumber_t agno,
++		xfs_agino_t *first, xfs_agino_t *last);
++bool xfs_verify_agino_ptr(struct xfs_mount *mp, xfs_agnumber_t agno,
++		xfs_agino_t agino);
++bool xfs_verify_ino_ptr(struct xfs_mount *mp, xfs_ino_t ino);
++bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
++bool xfs_verify_dir_ino_ptr(struct xfs_mount *mp, xfs_ino_t ino);
+ 
+ #endif	/* __XFS_IALLOC_H__ */
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index c393a2f..0172d0b 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -31,16 +31,6 @@
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+ 
+-int
+-xfs_internal_inum(
+-	xfs_mount_t	*mp,
+-	xfs_ino_t	ino)
+-{
+-	return (ino == mp->m_sb.sb_rbmino || ino == mp->m_sb.sb_rsumino ||
+-		(xfs_sb_version_hasquota(&mp->m_sb) &&
+-		 xfs_is_quota_inode(&mp->m_sb, ino)));
+-}
+-
+ /*
+  * Return stat information for one inode.
+  * Return 0 if ok, else errno.
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index 17e86e0..6ea8b39 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -96,6 +96,4 @@ xfs_inumbers(
+ 	void			__user *buffer, /* buffer with inode info */
+ 	inumbers_fmt_pf		formatter);
+ 
+-int xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+-
+ #endif	/* __XFS_ITABLE_H__ */
 
