@@ -1,138 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19036 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751900AbdJLTz6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 15:55:58 -0400
-Date: Thu, 12 Oct 2017 12:55:53 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:17603 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752246AbdJLT57 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 15:57:59 -0400
+Date: Thu, 12 Oct 2017 12:57:54 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: fail if xattr inactivation hits a hole
-Message-ID: <20171012195553.GF7122@magnolia>
-References: <20171010164756.28390-2-bfoster@redhat.com>
- <20171012112732.39137-1-bfoster@redhat.com>
+Subject: Re: [PATCH] tests/xfs: test for NULL xattr buffer problem during
+ unlink
+Message-ID: <20171012195754.GG7122@magnolia>
+References: <20171012113627.39452-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171012112732.39137-1-bfoster@redhat.com>
+In-Reply-To: <20171012113627.39452-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Oct 12, 2017 at 07:27:32AM -0400, Brian Foster wrote:
-> The child buffer read in xfs_attr3_node_inactive() should never
-> reach a hole in the attr fork. If this occurs, it is likely due to a
-> bug. Prior to commit cd87d867 ("xfs: don't crash on unexpected holes
-> in dir/attr btrees"), this would result in a crash. Now that the
-> crash has been fixed, this is a silent failure.
+On Thu, Oct 12, 2017 at 07:36:27AM -0400, Brian Foster wrote:
+> XFS had a bug that resulted in an unexpected NULL buffer during
+> unlink of an inode with a multi-level attr fork tree. This occurred
+> due to a stale reference to content in a released/reclaimed buffer.
 > 
-> Pass -1 to xfs_da3_node_read() from xfs_da3_node_inactive() to
-> indicate that reading from a hole is an error. This logs an error to
-> syslog and fails the inode inactivation, leaving the inode on the AG
-> unlinked list until removed by xfs_repair (or log recovery). Also
-> update the subsequent code to reflect that the read now returns a
-> non-NULL buffer or an error.
+> Use the XFS buffer LRU reference count error injection tag to
+> recreate the conditions for the bug. Create a file with a
+> multi-level attr fork tree and then unlink it with buffer caching
+> disabled.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
 Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since we've already fixed the crash problem and the dangling pointer
-problem (as soon as I send this week's fixes to Linus, anyway), I think
-this can wait for 4.15, unless anyone wants me to push sooner.
-
---D
-
 > ---
->  fs/xfs/xfs_attr_inactive.c | 69 ++++++++++++++++++++++------------------------
->  1 file changed, 33 insertions(+), 36 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index e3a950e..52818ea 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -251,47 +251,44 @@ xfs_attr3_node_inactive(
->  		 * traversal of the tree so we may deal with many blocks
->  		 * before we come back to this one.
->  		 */
-> -		error = xfs_da3_node_read(*trans, dp, child_fsb, -2, &child_bp,
-> -						XFS_ATTR_FORK);
-> +		error = xfs_da3_node_read(*trans, dp, child_fsb, -1, &child_bp,
-> +					  XFS_ATTR_FORK);
->  		if (error)
->  			return error;
-> -		if (child_bp) {
-> -						/* save for re-read later */
-> -			child_blkno = XFS_BUF_ADDR(child_bp);
->  
-> -			/*
-> -			 * Invalidate the subtree, however we have to.
-> -			 */
-> -			info = child_bp->b_addr;
-> -			switch (info->magic) {
-> -			case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> -			case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> -				error = xfs_attr3_node_inactive(trans, dp,
-> -							child_bp, level + 1);
-> -				break;
-> -			case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
-> -			case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-> -				error = xfs_attr3_leaf_inactive(trans, dp,
-> -							child_bp);
-> -				break;
-> -			default:
-> -				error = -EIO;
-> -				xfs_trans_brelse(*trans, child_bp);
-> -				break;
-> -			}
-> -			if (error)
-> -				return error;
-> +		/* save for re-read later */
-> +		child_blkno = XFS_BUF_ADDR(child_bp);
->  
-> -			/*
-> -			 * Remove the subsidiary block from the cache
-> -			 * and from the log.
-> -			 */
-> -			error = xfs_da_get_buf(*trans, dp, 0, child_blkno,
-> -				&child_bp, XFS_ATTR_FORK);
-> -			if (error)
-> -				return error;
-> -			xfs_trans_binval(*trans, child_bp);
-> +		/*
-> +		 * Invalidate the subtree, however we have to.
-> +		 */
-> +		info = child_bp->b_addr;
-> +		switch (info->magic) {
-> +		case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> +		case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +			error = xfs_attr3_node_inactive(trans, dp, child_bp,
-> +							level + 1);
-> +			break;
-> +		case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
-> +		case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-> +			error = xfs_attr3_leaf_inactive(trans, dp, child_bp);
-> +			break;
-> +		default:
-> +			error = -EIO;
-> +			xfs_trans_brelse(*trans, child_bp);
-> +			break;
->  		}
-> +		if (error)
-> +			return error;
+> Note that this test depends on a pending[1] XFS error injection tag.
+> 
+> Brian
+> 
+> [1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
+> 
+>  tests/xfs/999     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |  2 ++
+>  tests/xfs/group   |  1 +
+>  3 files changed, 90 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 0000000..261b83f
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,87 @@
+> +#! /bin/bash
+> +# FS QA Test 999
+> +#
+> +# Regression test for an XFS NULL xattr buffer problem during unlink. XFS had a
+> +# bug where the attr fork walk during file removal could go off the rails due to
+> +# a stale reference to content of a released buffer. Memory pressure could cause
+> +# this reference to point to free or reused memory and cause subsequent
+> +# attribute fork lookups to fail, return a NULL buffer and possibly crash.
+> +#
+> +# This test emulates this behavior using an error injection knob to explicitly
+> +# disable buffer LRU caching. This forces the attr walk to execute under
+> +# conditions where each buffer is immediately freed on release.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
 > +
-> +		/*
-> +		 * Remove the subsidiary block from the cache and from the log.
-> +		 */
-> +		error = xfs_da_get_buf(*trans, dp, 0, child_blkno, &child_bp,
-> +				       XFS_ATTR_FORK);
-> +		if (error)
-> +			return error;
-> +		xfs_trans_binval(*trans, child_bp);
->  
->  		/*
->  		 * If we're not done, re-read the parent to get the next
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/attr
+> +. ./common/inject
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_xfs_io_error_injection buf_lru_ref
+> +_require_scratch
+> +_require_attrs
+> +
+> +_scratch_mkfs > $seqres.full 2>&1
+> +_scratch_mount || _fail "mount failure"
+> +
+> +file=$SCRATCH_MNT/testfile
+> +
+> +# create a bunch of xattrs to form a multi-level attr tree
+> +touch $file
+> +for i in $(seq 0 499); do
+> +	$SETFATTR_PROG -n trusted.user.$i -v 0 $file
+> +done
+> +
+> +# cycle the mount to clear any buffer references
+> +_scratch_cycle_mount || _fail "cycle mount failure"
+> +
+> +# disable the lru cache and unlink the file
+> +_scratch_inject_error buf_lru_ref 1
+> +rm -f $file
+> +_scratch_inject_error buf_lru_ref 0
+> +
+> +echo Silence is golden
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> new file mode 100644
+> index 0000000..3b276ca
+> --- /dev/null
+> +++ b/tests/xfs/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 25bb8b3..f0c15f7 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -430,3 +430,4 @@
+>  430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+>  431 auto quick dangerous
+>  432 auto quick dir metadata
+> +999 auto quick attr
 > -- 
 > 2.9.5
 > 
