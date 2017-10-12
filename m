@@ -1,79 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:45429 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750722AbdJLRlx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 13:41:53 -0400
-Received: by mail-oi0-f41.google.com with SMTP id f66so9711883oib.2
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 10:41:52 -0700 (PDT)
+Received: from quartz.orcorp.ca ([184.70.90.242]:54530 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750729AbdJLS1o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 14:27:44 -0400
+Date: Thu, 12 Oct 2017 12:27:12 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Message-ID: <20171012182712.GA5772@obsidianresearch.com>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171009185840.GB15336@obsidianresearch.com>
+ <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com>
+ <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com>
+ <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
+ <20171010180512.GA31734@obsidianresearch.com>
+ <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171012142319.GA11254@lst.de>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171012142319.GA11254@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 12 Oct 2017 10:41:39 -0700
-Message-ID: <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Thu, Oct 12, 2017 at 7:23 AM, Christoph Hellwig <hch@lst.de> wrote:
-> Sorry for chiming in so late, been extremely busy lately.
->
-> From quickly glacing over what the now finally described use case is
-> (which contradicts the subject btw - it's not about flushing, it's
-> about not removing block mapping under a MR) and the previous comments
-> I think that mmap is simply the wrong kind of interface for this.
->
-> What we want is support for a new kinds of userspace memory registration in the
-> RDMA code that uses the pnfs export interface, both getting the block (or
-> rather byte in this case) mapping, and also gets the FL_LAYOUT lease for the
-> memory registration.
->
-> That btw is exactly what I do for the pNFS RDMA layout, just in-kernel.
+On Tue, Oct 10, 2017 at 01:17:26PM -0700, Dan Williams wrote:
 
-...and this is exactly my plan.
+> Also keep in mind that what triggers the lease break is another
+> application trying to write or punch holes in a file that is mapped
+> for RDMA. So, if the hardware can't handle the iommu mapping getting
+> invalidated asynchronously and the application can't react in the
+> lease break timeout period then the administrator should arrange for
+> the file to not be written or truncated while it is mapped.
 
-So, you're jumping into this review at v9 where I've split the patches
-that take an initial MAP_DIRECT lease out from the patches that take
-FL_LAYOUT leases at memory registration time. You can see a previous
-attempt in "[PATCH v8 00/14] MAP_DIRECT for DAX RDMA and userspace
-flush" which should be in your inbox.
+That makes sense, but why not return ENOSYS or something to the app
+trying to alter the file if the RDMA hardware can't support this
+instead of having the RDMA app deal with this lease break weirdness?
 
-I'm not proposing mmap as the memory registration interface, it's the
-"register for notification of lease break" interface. Here's my
-proposed sequence:
+> It's already the case that get_user_pages() does not lock down file
+> associations, so if your application is contending with these types of
+> file changes it likely already has a problem keeping transactions in
+> sync with the file state even without DAX.
 
-addr = mmap(..., MAP_DIRECT.., fd); <- register a vma for "direct"
-memory registrations with an FL_LAYOUT lease that at a lease break
-event sends SIGIO on the fd used for mmap.
+Yes, things go weird in non-ODP RDMA cases like this..
 
-ibv_reg_mr(..., addr, ...); <- check for a valid MAP_DIRECT vma, and
-take out another FL_LAYOUT lease. This lease force revokes the RDMA
-mapping when it expires, and it relies on the process receiving SIGIO
-as the 'break' notification.
+Also, just to clear, I would expect an app using the SIGIO interface
+to basically halt ongoing RDMA, wait for MRs to become unused locally
+and remotely, destroy the MRs, then somehow, establish new MRs that
+cover the same logical map (eg what ODP would do transparently) after
+the lease breaker has made their changes, then restart their IO.
 
-fallocate(fd, PUNCH_HOLE...) <- breaks all the FL_LAYOUT leases, the
-vma owner gets notified by fd.
+Does your SIGIO approach have a race-free way to do that last steps?
 
-Al, rightly points out that the fd may be closed by the time the event
-fires since the lease follows the vma lifetime. I see two ways to
-solve this, document that the process may get notifications on a stale
-fd if close() happens before munmap(), or, similar to how we call
-locks_remove_posix() in filp_close(), add a routine to disable any
-lease notifiers on close(). I'll investigate the second option because
-this seems to be a general problem with leases.
+> > So, not being able to support DAX on certain RDMA hardware is not
+> > an unreasonable situation in our space.
+> 
+> That makes sense, but it still seems to me that this proposed solution
+> allows more than enough ways to avoid that worst case scenario where
+> hardware reacts badly to iommu invalidation.
 
-For RDMA I am presently re-working the implementation [1]. Inspired by
-a discussion with Jason [2], I am going to add something like
-ib_umem_ops to allow drivers to override the default policy of what
-happens on a lease that expires. The default action is to invalidate
-device access to the memory with iommu_unmap(), but I want to allow
-for drivers to do something smarter or choose to not support DAX
-mappings at all.
+Yes, although I am concerned that returning PCI-E errors is such an
+unusual and untested path for some of our RDMA drivers that they may
+malfunction badly...
 
-[1]: https://lists.01.org/pipermail/linux-nvdimm/2017-October/012785.html
-[2]: https://lists.01.org/pipermail/linux-nvdimm/2017-October/012793.html
+Again, going back to the question of who would ever use this, I would
+be very relucant to deploy a production configuration relying on the iommu
+invalidate or SIGIO techniques, when ODP HW is available and works
+flawlessly.
+
+> be blacklisted from supporting DAX altogether. In other words this is
+> a starting point to incrementally enhance or disable specific drivers,
+> but with the assurance that the kernel can always do the safe thing
+> when / if the driver is missing a finer grained solution.
+
+Seems reasonable.. I think existing HW will have an easier time adding
+invalidate, while new hardware really should implement ODP.
+
+Jason
