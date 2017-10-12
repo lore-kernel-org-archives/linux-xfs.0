@@ -1,86 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39068 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932152AbdJJK6L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Oct 2017 06:58:11 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH v3 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
-Date: Tue, 10 Oct 2017 05:58:01 -0500
-Message-Id: <20171010105802.31353-2-rgoldwyn@suse.de>
-In-Reply-To: <20171010105802.31353-1-rgoldwyn@suse.de>
-References: <20171010105802.31353-1-rgoldwyn@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41512 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753191AbdJLWCz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 18:02:55 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9CM2sg2011956
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 22:02:54 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9CM2qi9009876
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 22:02:53 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v9CM2peW015039
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 22:02:52 GMT
+Date: Thu, 12 Oct 2017 15:02:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_io: report io error for pwrite -W and -w
+Message-ID: <20171012220245.GM7122@magnolia>
+References: <20171012204949.8225-1-bo.li.liu@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171012204949.8225-1-bo.li.liu@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, david@fromorbit.com, bfoster@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Liu Bo <bo.li.liu@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Thu, Oct 12, 2017 at 02:49:49PM -0600, Liu Bo wrote:
+> When IO error occurs, xfs_io -c "pwrite -W/w" doesn't report errors
+> while xfs_io -c "pwrite" -c "fsync" does.
+> 
+> This changes "pwrite -W/w" to report errors when it should.
+> 
+> Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
+> ---
+>  io/pwrite.c | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index 1c5dfca..71bcccc 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -379,11 +379,18 @@ pwrite_f(
+>  	}
+>  	if (c < 0)
+>  		goto done;
+> -	if (Wflag)
+> -		fsync(file->fd);
+> -	if (wflag)
+> -		fdatasync(file->fd);
+> +	if (Wflag) {
+> +		if (fsync(file->fd) < 0) {
+> +			perror("fsync");
+> +			goto done;
+> +		}
+> +	}
+> +	if (wflag) {
+> +		if (fdatasync(file->fd) < 0) {
+> +			perror("fdatasync");
 
-This allows to make pwritev2() calls with RWF_NOWAIT,
-which would fail in case the call blocks.
+Ok.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> +			goto done;
 
-Changes since v2:
-	- ifdef around -N which set RWF_NOWAIT
----
- io/pwrite.c       | 10 +++++++++-
- man/man8/xfs_io.8 |  6 ++++++
- 2 files changed, 15 insertions(+), 1 deletion(-)
+So this is a new behavior -- previously we'd print the timing info even
+if the f{data,}sync call fails.  I don't know that the timing matters if
+we fail to guarantee the data is on stable storage, but does anyone else
+have opinions?
 
-diff --git a/io/pwrite.c b/io/pwrite.c
-index 5ceb26c7..e06dfb46 100644
---- a/io/pwrite.c
-+++ b/io/pwrite.c
-@@ -53,6 +53,9 @@ pwrite_help(void)
- #ifdef HAVE_PWRITEV
- " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
- #endif
-+#ifdef HAVE_PWRITEV2
-+" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
-+#endif
- "\n"));
- }
- 
-@@ -279,7 +282,7 @@ pwrite_f(
- 	init_cvtnum(&fsblocksize, &fssectsize);
- 	bsize = fsblocksize;
- 
--	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
-+	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
- 		switch (c) {
- 		case 'b':
- 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-@@ -308,6 +311,11 @@ pwrite_f(
- 		case 'i':
- 			infile = optarg;
- 			break;
-+#ifdef HAVE_PWRITEV2
-+		case 'N':
-+			pwritev2_flags |= RWF_NOWAIT;
-+			break;
-+#endif
- 		case 's':
- 			skip = cvtnum(fsblocksize, fssectsize, optarg);
- 			if (skip < 0) {
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 0fd9b951..9c58914f 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -282,6 +282,12 @@ Use the vectored IO write syscall
- with a number of blocksize length iovecs. The number of iovecs is set by the
- .I vectors
- parameter.
-+.TP
-+.B \-N
-+Perform the
-+.BR pwritev2 (2)
-+call with
-+.I RWF_NOWAIT.
- .RE
- .PD
- .TP
--- 
-2.14.2
+--D
 
+> +		}
+> +	}
+>  	if (qflag)
+>  		goto done;
+>  	gettimeofday(&t2, NULL);
+> -- 
+> 2.9.4
+> 
+> @@ -390,0 +397,0 @@
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
