@@ -1,64 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:15941 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751576AbdJLVfY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 17:35:24 -0400
-Date: Fri, 13 Oct 2017 08:33:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: implement cgroup writeback support
-Message-ID: <20171012213342.GU15067@dastard>
-References: <1f2527ae0951650976e788e10e2951bb3e2c1cac.1507835570.git.shli@fb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1f2527ae0951650976e788e10e2951bb3e2c1cac.1507835570.git.shli@fb.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:35826 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754586AbdJLVvy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 17:51:54 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9CLpqk5006437
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 21:51:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9CLppZp011660
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 21:51:52 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9CLppw2001709
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 21:51:51 GMT
+From: Liu Bo <bo.li.liu@oracle.com>
+Subject: [PATCH] xfs_io: report io error for pwrite -W and -w
+Date: Thu, 12 Oct 2017 14:49:49 -0600
+Message-Id: <20171012204949.8225-1-bo.li.liu@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, Kernel-team@fb.com, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Oct 12, 2017 at 12:16:48PM -0700, Shaohua Li wrote:
-> From: Shaohua Li <shli@fb.com>
-> 
-> Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
-> writeback support). Tested with a fio test, verified writeback is
-> throttled against cgroup io.max write bandwidth, also verified moving
-> the fio test to another cgroup and the writeback is throttled against
-> new cgroup setting.
+When IO error occurs, xfs_io -c "pwrite -W/w" doesn't report errors
+while xfs_io -c "pwrite" -c "fsync" does.
 
-So, I pushed back on this originally because there is no test
-infrastructure for it. IOWs, we can't actually validate this code
-works as intended. It appears you have some method of validating it
-- please turn that into some fstests so the filesystem
-developers know when we break it. Because we will break it, and if
-there's regression tests in fstests we'll also notice when somebody
-else breaks it, too.
+This changes "pwrite -W/w" to report errors when it should.
 
-> ---
->  fs/xfs/xfs_aops.c  | 2 ++
->  fs/xfs/xfs_super.c | 1 +
->  2 files changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index f18e593..6535054 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -630,8 +630,10 @@ xfs_add_to_ioend(
->  		if (wpc->ioend)
->  			list_add(&wpc->ioend->io_list, iolist);
->  		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
-> +		wbc_init_bio(wbc, wpc->ioend->io_bio);
->  	}
->  
-> +	wbc_account_io(wbc, bh->b_page, bh->b_size);
+Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
+---
+ io/pwrite.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-A comment, please. I'm going to look at this in a couple of months
-and not have a clue why this is here...
-
-Cheers,
-
-Dave.
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 1c5dfca..71bcccc 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -379,11 +379,18 @@ pwrite_f(
+ 	}
+ 	if (c < 0)
+ 		goto done;
+-	if (Wflag)
+-		fsync(file->fd);
+-	if (wflag)
+-		fdatasync(file->fd);
++	if (Wflag) {
++		if (fsync(file->fd) < 0) {
++			perror("fsync");
++			goto done;
++		}
++	}
++	if (wflag) {
++		if (fdatasync(file->fd) < 0) {
++			perror("fdatasync");
++			goto done;
++		}
++	}
+ 	if (qflag)
+ 		goto done;
+ 	gettimeofday(&t2, NULL);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.4
+
+@@ -390,0 +397,0 @@
