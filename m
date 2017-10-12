@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30418 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751512AbdJLBl7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:41:59 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1fw7n027947
+Received: from userp1040.oracle.com ([156.151.31.81]:27967 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752622AbdJLBmM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:42:12 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9C1gCs0032532
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:41:58 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1fvs8005721
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:42:12 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1gBPx031724
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:41:58 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9C1fv5d020519
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:41:57 GMT
-Subject: [PATCH 11/30] xfs: scrub the shape of a metadata btree
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:42:11 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v9C1gBSl020304
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 01:42:11 GMT
+Subject: [PATCH 13/30] xfs: create helpers to scan an allocation group
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Oct 2017 18:41:56 -0700
-Message-ID: <150777251646.1724.4676276998721808182.stgit@magnolia>
+Date: Wed, 11 Oct 2017 18:42:08 -0700
+Message-ID: <150777252881.1724.797907625131044293.stgit@magnolia>
 In-Reply-To: <150777244315.1724.6916081372861799350.stgit@magnolia>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,373 +31,301 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a function that can check the shape of a btree -- each block
-passes basic inspection and all the pointers look ok.  In the next patch
-we'll add the ability to check the actual keys and records stored within
-the btree.  Add some helper functions so that we report detailed scrub
-errors in a uniform manner in dmesg.  These are helper functions for
-subsequent patches.
+Add some helpers to enable us to lock an AG's headers, create btree
+cursors for all btrees in that allocation group, and clean up
+afterwards.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c |   16 +++
- fs/xfs/libxfs/xfs_btree.h |    7 +
- fs/xfs/scrub/btree.c      |  249 ++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/common.h     |   18 +++
- 4 files changed, 283 insertions(+), 7 deletions(-)
+ fs/xfs/scrub/common.c |  179 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.h |   10 +++
+ fs/xfs/scrub/scrub.c  |    4 +
+ fs/xfs/scrub/scrub.h  |   21 ++++++
+ 4 files changed, 214 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 2266a5a..dc23407 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1051,7 +1051,7 @@ xfs_btree_setbuf(
- 	}
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 709d491..cd6fada 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -44,6 +44,7 @@
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
++#include "scrub/btree.h"
+ 
+ /* Common code for the metadata scrubbers. */
+ 
+@@ -237,6 +238,184 @@ xfs_scrub_set_incomplete(
+ 	trace_xfs_scrub_incomplete(sc, __return_address);
  }
  
--STATIC int
-+bool
- xfs_btree_ptr_is_null(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_ptr	*ptr)
-@@ -1076,7 +1076,7 @@ xfs_btree_set_ptr_null(
- /*
-  * Get/set/init sibling pointers
-  */
--STATIC void
++/*
++ * AG scrubbing
++ *
++ * These helpers facilitate locking an allocation group's header
++ * buffers, setting up cursors for all btrees that are present, and
++ * cleaning everything up once we're through.
++ */
++
++/*
++ * Grab all the headers for an AG.
++ *
++ * The headers should be released by xfs_scrub_ag_free, but as a fail
++ * safe we attach all the buffers we grab to the scrub transaction so
++ * they'll all be freed when we cancel it.
++ */
++int
++xfs_scrub_ag_read_headers(
++	struct xfs_scrub_context	*sc,
++	xfs_agnumber_t			agno,
++	struct xfs_buf			**agi,
++	struct xfs_buf			**agf,
++	struct xfs_buf			**agfl)
++{
++	struct xfs_mount		*mp = sc->mp;
++	int				error;
++
++	error = xfs_ialloc_read_agi(mp, sc->tp, agno, agi);
++	if (error)
++		goto out;
++
++	error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, agf);
++	if (error)
++		goto out;
++	if (!*agf) {
++		error = -ENOMEM;
++		goto out;
++	}
++
++	error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
++	if (error)
++		goto out;
++
++out:
++	return error;
++}
++
++/* Release all the AG btree cursors. */
 +void
- xfs_btree_get_sibling(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_btree_block	*block,
-@@ -4938,3 +4938,15 @@ xfs_btree_count_blocks(
- 	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
- 			blocks);
- }
-+
-+/* Compare two btree pointers. */
-+int64_t
-+xfs_btree_diff_two_ptrs(
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*a,
-+	const union xfs_btree_ptr	*b)
++xfs_scrub_ag_btcur_free(
++	struct xfs_scrub_ag		*sa)
 +{
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+		return (int64_t)be64_to_cpu(a->l) - be64_to_cpu(b->l);
-+	return (int64_t)be32_to_cpu(a->s) - be32_to_cpu(b->s);
-+}
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index baf7064..a8431bc 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -531,5 +531,12 @@ int xfs_btree_lookup_get_block(struct xfs_btree_cur *cur, int level,
- 		union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
- struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
- 		int level, struct xfs_buf **bpp);
-+bool xfs_btree_ptr_is_null(struct xfs_btree_cur *cur, union xfs_btree_ptr *ptr);
-+int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
-+				const union xfs_btree_ptr *a,
-+				const union xfs_btree_ptr *b);
-+void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
-+			   struct xfs_btree_block *block,
-+			   union xfs_btree_ptr *ptr, int lr);
- 
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 28539081..68dec6a 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -93,11 +93,170 @@ xfs_scrub_btree_set_corrupt(
- }
- 
- /*
-+ * Check a btree pointer.  Returns true if it's ok to use this pointer.
-+ * Callers do not need to set the corrupt flag.
-+ */
-+static bool
-+xfs_scrub_btree_ptr_ok(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	union xfs_btree_ptr		*ptr)
-+{
-+	bool				res;
++	if (sa->refc_cur)
++		xfs_btree_del_cursor(sa->refc_cur, XFS_BTREE_ERROR);
++	if (sa->rmap_cur)
++		xfs_btree_del_cursor(sa->rmap_cur, XFS_BTREE_ERROR);
++	if (sa->fino_cur)
++		xfs_btree_del_cursor(sa->fino_cur, XFS_BTREE_ERROR);
++	if (sa->ino_cur)
++		xfs_btree_del_cursor(sa->ino_cur, XFS_BTREE_ERROR);
++	if (sa->cnt_cur)
++		xfs_btree_del_cursor(sa->cnt_cur, XFS_BTREE_ERROR);
++	if (sa->bno_cur)
++		xfs_btree_del_cursor(sa->bno_cur, XFS_BTREE_ERROR);
 +
-+	/* A btree rooted in an inode has no block pointer to the root. */
-+	if ((bs->cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
-+	    level == bs->cur->bc_nlevels)
-+		return true;
-+
-+	/* Otherwise, check the pointers. */
-+	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		res = xfs_btree_check_lptr(bs->cur, be64_to_cpu(ptr->l), level);
-+		if (!res)
-+			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-+	} else {
-+		res = xfs_btree_check_sptr(bs->cur, be32_to_cpu(ptr->s), level);
-+		if (!res)
-+			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-+	}
-+
-+	return res;
++	sa->refc_cur = NULL;
++	sa->rmap_cur = NULL;
++	sa->fino_cur = NULL;
++	sa->ino_cur = NULL;
++	sa->bno_cur = NULL;
++	sa->cnt_cur = NULL;
 +}
 +
-+/* Check that a btree block's sibling matches what we expect it. */
-+STATIC int
-+xfs_scrub_btree_block_check_sibling(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	int				direction,
-+	union xfs_btree_ptr		*sibling)
++/* Initialize all the btree cursors for an AG. */
++int
++xfs_scrub_ag_btcur_init(
++	struct xfs_scrub_context	*sc,
++	struct xfs_scrub_ag		*sa)
 +{
-+	struct xfs_btree_cur		*cur = bs->cur;
-+	struct xfs_btree_block		*pblock;
-+	struct xfs_buf			*pbp;
-+	struct xfs_btree_cur		*ncur = NULL;
-+	union xfs_btree_ptr		*pp;
-+	int				success;
-+	int				error;
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agnumber_t			agno = sa->agno;
 +
-+	if (xfs_btree_ptr_is_null(cur, sibling))
-+		return 0;
++	if (sa->agf_bp) {
++		/* Set up a bnobt cursor for cross-referencing. */
++		sa->bno_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
++				agno, XFS_BTNUM_BNO);
++		if (!sa->bno_cur)
++			goto err;
 +
-+	error = xfs_btree_dup_cursor(cur, &ncur);
-+	if (!xfs_scrub_btree_process_error(bs->sc, cur, level + 1, &error) ||
-+	    !ncur)
-+		return error;
-+
-+	if (direction > 0)
-+		error = xfs_btree_increment(ncur, level + 1, &success);
-+	else
-+		error = xfs_btree_decrement(ncur, level + 1, &success);
-+	if (!xfs_scrub_btree_process_error(bs->sc, cur, level + 1, &error))
-+		goto out;
-+	if (!success) {
-+		xfs_scrub_btree_set_corrupt(bs->sc, cur, level + 1);
-+		goto out;
++		/* Set up a cntbt cursor for cross-referencing. */
++		sa->cnt_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
++				agno, XFS_BTNUM_CNT);
++		if (!sa->cnt_cur)
++			goto err;
 +	}
 +
-+	pblock = xfs_btree_get_block(ncur, level + 1, &pbp);
-+	pp = xfs_btree_ptr_addr(ncur, ncur->bc_ptrs[level + 1], pblock);
-+	if (!xfs_scrub_btree_ptr_ok(bs, level + 1, pp))
-+		goto out;
++	/* Set up a inobt cursor for cross-referencing. */
++	if (sa->agi_bp) {
++		sa->ino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
++					agno, XFS_BTNUM_INO);
++		if (!sa->ino_cur)
++			goto err;
++	}
 +
-+	if (xfs_btree_diff_two_ptrs(cur, pp, sibling))
-+		xfs_scrub_btree_set_corrupt(bs->sc, cur, level);
-+out:
-+	xfs_btree_del_cursor(ncur, XFS_BTREE_ERROR);
-+	return error;
++	/* Set up a finobt cursor for cross-referencing. */
++	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
++				agno, XFS_BTNUM_FINO);
++		if (!sa->fino_cur)
++			goto err;
++	}
++
++	/* Set up a rmapbt cursor for cross-referencing. */
++	if (sa->agf_bp && xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
++				agno);
++		if (!sa->rmap_cur)
++			goto err;
++	}
++
++	/* Set up a refcountbt cursor for cross-referencing. */
++	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb)) {
++		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
++				sa->agf_bp, agno, NULL);
++		if (!sa->refc_cur)
++			goto err;
++	}
++
++	return 0;
++err:
++	return -ENOMEM;
 +}
 +
-+/* Check the siblings of a btree block. */
-+STATIC int
-+xfs_scrub_btree_block_check_siblings(
-+	struct xfs_scrub_btree		*bs,
-+	struct xfs_btree_block		*block)
++/* Release the AG header context and btree cursors. */
++void
++xfs_scrub_ag_free(
++	struct xfs_scrub_context	*sc,
++	struct xfs_scrub_ag		*sa)
 +{
-+	struct xfs_btree_cur		*cur = bs->cur;
-+	union xfs_btree_ptr		leftsib;
-+	union xfs_btree_ptr		rightsib;
-+	int				level;
-+	int				error = 0;
-+
-+	xfs_btree_get_sibling(cur, block, &leftsib, XFS_BB_LEFTSIB);
-+	xfs_btree_get_sibling(cur, block, &rightsib, XFS_BB_RIGHTSIB);
-+	level = xfs_btree_get_level(block);
-+
-+	/* Root block should never have siblings. */
-+	if (level == cur->bc_nlevels - 1) {
-+		if (!xfs_btree_ptr_is_null(cur, &leftsib) ||
-+		    !xfs_btree_ptr_is_null(cur, &rightsib))
-+			xfs_scrub_btree_set_corrupt(bs->sc, cur, level);
-+		goto out;
++	xfs_scrub_ag_btcur_free(sa);
++	if (sa->agfl_bp) {
++		xfs_trans_brelse(sc->tp, sa->agfl_bp);
++		sa->agfl_bp = NULL;
 +	}
-+
-+	/*
-+	 * Does the left & right sibling pointers match the adjacent
-+	 * parent level pointers?
-+	 * (These function absorbs error codes for us.)
-+	 */
-+	error = xfs_scrub_btree_block_check_sibling(bs, level, -1, &leftsib);
-+	if (error)
-+		return error;
-+	error = xfs_scrub_btree_block_check_sibling(bs, level, 1, &rightsib);
-+	if (error)
-+		return error;
-+out:
-+	return error;
++	if (sa->agf_bp) {
++		xfs_trans_brelse(sc->tp, sa->agf_bp);
++		sa->agf_bp = NULL;
++	}
++	if (sa->agi_bp) {
++		xfs_trans_brelse(sc->tp, sa->agi_bp);
++		sa->agi_bp = NULL;
++	}
++	sa->agno = NULLAGNUMBER;
 +}
 +
 +/*
-+ * Grab and scrub a btree block given a btree pointer.  Returns block
-+ * and buffer pointers (if applicable) if they're ok to use.
++ * For scrub, grab the AGI and the AGF headers, in that order.  Locking
++ * order requires us to get the AGI before the AGF.  We use the
++ * transaction to avoid deadlocking on crosslinked metadata buffers;
++ * either the caller passes one in (bmap scrub) or we have to create a
++ * transaction ourselves.
 + */
-+STATIC int
-+xfs_scrub_btree_get_block(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	union xfs_btree_ptr		*pp,
-+	struct xfs_btree_block		**pblock,
-+	struct xfs_buf			**pbp)
++int
++xfs_scrub_ag_init(
++	struct xfs_scrub_context	*sc,
++	xfs_agnumber_t			agno,
++	struct xfs_scrub_ag		*sa)
 +{
-+	void				*failed_at;
 +	int				error;
 +
-+	error = xfs_btree_lookup_get_block(bs->cur, level, pp, pblock);
-+	if (!xfs_scrub_btree_process_error(bs->sc, bs->cur, level, &error) ||
-+	    !pblock)
++	sa->agno = agno;
++	error = xfs_scrub_ag_read_headers(sc, agno, &sa->agi_bp,
++			&sa->agf_bp, &sa->agfl_bp);
++	if (error)
 +		return error;
 +
-+	xfs_btree_get_block(bs->cur, level, pbp);
-+	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		failed_at = __xfs_btree_check_lblock(bs->cur, *pblock,
-+				level, *pbp);
-+		if (failed_at) {
-+			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-+			return 0;
-+		}
-+	} else {
-+		failed_at = __xfs_btree_check_sblock(bs->cur, *pblock,
-+				 level, *pbp);
-+		if (failed_at) {
-+			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-+			return 0;
-+		}
-+	}
-+
-+	/*
-+	 * Check the block's siblings; this function absorbs error codes
-+	 * for us.
-+	 */
-+	return xfs_scrub_btree_block_check_siblings(bs, *pblock);
++	return xfs_scrub_ag_btcur_init(sc, sa);
 +}
 +
-+/*
-  * Visit all nodes and leaves of a btree.  Check that all pointers and
-  * records are in order, that the keys reflect the records, and use a callback
-- * so that the caller can verify individual records.  The callback is the same
-- * as the one for xfs_btree_query_range, so therefore this function also
-- * returns XFS_BTREE_QUERY_RANGE_ABORT, zero, or a negative error code.
-+ * so that the caller can verify individual records.
-  */
- int
- xfs_scrub_btree(
-@@ -107,8 +266,88 @@ xfs_scrub_btree(
- 	struct xfs_owner_info		*oinfo,
- 	void				*private)
- {
--	int				error = -EOPNOTSUPP;
-+	struct xfs_scrub_btree		bs = {0};
-+	union xfs_btree_ptr		ptr;
-+	union xfs_btree_ptr		*pp;
-+	struct xfs_btree_block		*block;
-+	int				level;
-+	struct xfs_buf			*bp;
-+	int				i;
-+	int				error = 0;
-+
-+	/* Initialize scrub state */
-+	bs.cur = cur;
-+	bs.scrub_rec = scrub_fn;
-+	bs.oinfo = oinfo;
-+	bs.firstrec = true;
-+	bs.private = private;
-+	bs.sc = sc;
-+	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
-+		bs.firstkey[i] = true;
-+	INIT_LIST_HEAD(&bs.to_check);
-+
-+	/* Don't try to check a tree with a height we can't handle. */
-+	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS) {
-+		xfs_scrub_btree_set_corrupt(sc, cur, 0);
-+		goto out;
-+	}
-+
-+	/*
-+	 * Load the root of the btree.  The helper function absorbs
-+	 * error codes for us.
-+	 */
-+	level = cur->bc_nlevels - 1;
-+	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
-+	if (!xfs_scrub_btree_ptr_ok(&bs, cur->bc_nlevels, &ptr))
-+		goto out;
-+	error = xfs_scrub_btree_get_block(&bs, level, &ptr, &block, &bp);
-+	if (error)
-+		goto out;
-+
-+	cur->bc_ptrs[level] = 1;
-+
-+	while (level < cur->bc_nlevels) {
-+		block = xfs_btree_get_block(cur, level, &bp);
-+
-+		if (level == 0) {
-+			/* End of leaf, pop back towards the root. */
-+			if (cur->bc_ptrs[level] >
-+			    be16_to_cpu(block->bb_numrecs)) {
-+				if (level < cur->bc_nlevels - 1)
-+					cur->bc_ptrs[level + 1]++;
-+				level++;
-+				continue;
-+			}
-+
-+			if (xfs_scrub_should_terminate(sc, &error))
-+				break;
-+
-+			cur->bc_ptrs[level]++;
-+			continue;
-+		}
-+
-+		/* End of node, pop back towards the root. */
-+		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-+			if (level < cur->bc_nlevels - 1)
-+				cur->bc_ptrs[level + 1]++;
-+			level++;
-+			continue;
-+		}
-+
-+		/* Drill another level deeper. */
-+		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
-+		if (!xfs_scrub_btree_ptr_ok(&bs, level, pp)) {
-+			cur->bc_ptrs[level]++;
-+			continue;
-+		}
-+		level--;
-+		error = xfs_scrub_btree_get_block(&bs, level, pp, &block, &bp);
-+		if (!xfs_scrub_btree_process_error(sc, cur, level, &error))
-+			goto out;
-+
-+		cur->bc_ptrs[level] = 1;
-+	}
+ /* Per-scrubber setup functions */
  
--	xfs_scrub_btree_process_error(sc, cur, 0, &error);
-+out:
- 	return error;
- }
+ /* Set us up with a transaction and an empty context. */
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index a7c3361..414bbb8 100644
+index 414bbb8..aca39b5 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -21,6 +21,24 @@
- #define __XFS_SCRUB_COMMON_H__
+@@ -77,4 +77,14 @@ void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
+ /* Setup functions */
+ int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
+ 
++void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
++int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++		      struct xfs_scrub_ag *sa);
++int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
++			      struct xfs_buf **agi, struct xfs_buf **agf,
++			      struct xfs_buf **agfl);
++void xfs_scrub_ag_btcur_free(struct xfs_scrub_ag *sa);
++int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
++			    struct xfs_scrub_ag *sa);
++
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 92eac98..3a98060 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -44,6 +44,8 @@
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
++#include "scrub/scrub.h"
++#include "scrub/btree.h"
  
  /*
-+ * We /could/ terminate a scrub/repair operation early.  If we're not
-+ * in a good place to continue (fatal signal, etc.) then bail out.
-+ * Note that we're careful not to make any judgements about *error.
-+ */
-+static inline bool
-+xfs_scrub_should_terminate(
-+	struct xfs_scrub_context	*sc,
-+	int				*error)
-+{
-+	if (fatal_signal_pending(current)) {
-+		if (*error == 0)
-+			*error = -EAGAIN;
-+		return true;
-+	}
-+	return false;
-+}
+  * Online Scrub and Repair
+@@ -131,6 +133,7 @@ xfs_scrub_teardown(
+ 	struct xfs_scrub_context	*sc,
+ 	int				error)
+ {
++	xfs_scrub_ag_free(sc, &sc->sa);
+ 	if (sc->tp) {
+ 		xfs_trans_cancel(sc->tp);
+ 		sc->tp = NULL;
+@@ -231,6 +234,7 @@ xfs_scrub_metadata(
+ 	sc.sm = sm;
+ 	sc.ops = ops;
+ 	sc.try_harder = try_harder;
++	sc.sa.agno = NULLAGNUMBER;
+ 	error = sc.ops->setup(&sc, ip);
+ 	if (error)
+ 		goto out_teardown;
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index b7b9422..1385295 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -34,6 +34,24 @@ struct xfs_scrub_meta_ops {
+ 	bool		(*has)(struct xfs_sb *);
+ };
+ 
++/* Buffer pointers and btree cursors for an entire AG. */
++struct xfs_scrub_ag {
++	xfs_agnumber_t			agno;
 +
-+/*
-  * Grab an empty transaction so that we can re-grab locked buffers if
-  * one of our btrees turns out to be cyclic.
-  */
++	/* AG btree roots */
++	struct xfs_buf			*agf_bp;
++	struct xfs_buf			*agfl_bp;
++	struct xfs_buf			*agi_bp;
++
++	/* AG btrees */
++	struct xfs_btree_cur		*bno_cur;
++	struct xfs_btree_cur		*cnt_cur;
++	struct xfs_btree_cur		*ino_cur;
++	struct xfs_btree_cur		*fino_cur;
++	struct xfs_btree_cur		*rmap_cur;
++	struct xfs_btree_cur		*refc_cur;
++};
++
+ struct xfs_scrub_context {
+ 	/* General scrub state. */
+ 	struct xfs_mount		*mp;
+@@ -42,6 +60,9 @@ struct xfs_scrub_context {
+ 	struct xfs_trans		*tp;
+ 	struct xfs_inode		*ip;
+ 	bool				try_harder;
++
++	/* State tracking for single-AG operations. */
++	struct xfs_scrub_ag		sa;
+ };
+ 
+ /* Metadata scrubbers */
 
