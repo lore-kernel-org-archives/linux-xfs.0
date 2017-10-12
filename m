@@ -1,37 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:47950 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752065AbdJLBSz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:18:55 -0400
-Received: by mail-oi0-f51.google.com with SMTP id h200so6068653oib.4
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2017 18:18:55 -0700 (PDT)
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:52353 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752065AbdJLB2e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2017 21:28:34 -0400
+Received: by mail-oi0-f53.google.com with SMTP id c202so5926515oih.9
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2017 18:28:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20171011224331.GB3666@dastard>
-References: <20171011200603.27442-1-jack@suse.cz> <CAPcyv4g6tjyUy_zxVVze+C+xZiT89qa1GiSoVjhH3G-6r3eXDA@mail.gmail.com>
- <20171011224331.GB3666@dastard>
+In-Reply-To: <20171012012131.GD21978@ZenIV.linux.org.uk>
+References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150776923838.9144.15727770472447035032.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171012012131.GD21978@ZenIV.linux.org.uk>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 11 Oct 2017 18:18:54 -0700
-Message-ID: <CAPcyv4iv7Tr2NPjWZbuq-4yTmrKpNikxnVWdt9PfZUp5JvF43w@mail.gmail.com>
-Subject: Re: [PATCH 0/19 v3] dax, ext4, xfs: Synchronous page faults
+Date: Wed, 11 Oct 2017 18:28:32 -0700
+Message-ID: <CAPcyv4jr4atxCqFW_337Sguu8LswVgjsJVOd65n4RODttX9cxQ@mail.gmail.com>
+Subject: Re: [PATCH v9 2/6] fs, mm: pass fd to ->mmap_validate()
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Wed, Oct 11, 2017 at 3:43 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Oct 11, 2017 at 02:18:06PM -0700, Dan Williams wrote:
->> On Wed, Oct 11, 2017 at 1:05 PM, Jan Kara <jack@suse.cz> wrote:
->> > Anyway, here are the patches and AFAICT the series is pretty much complete
->> > so we can start thinking how to merge this. Changes to ext4 / XFS are pretty
->> > minimal so either tree is fine I guess. Comments are welcome.
->>
->> I'd like to propose taking this through the nvdimm tree. Some of these
->> changes make the MAP_DIRECT support for ext4 easier, so I'd like to
->> rebase that support on top and carry both.
+On Wed, Oct 11, 2017 at 6:21 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> On Wed, Oct 11, 2017 at 05:47:18PM -0700, Dan Williams wrote:
+>> The MAP_DIRECT mechanism for mmap intends to use a file lease to prevent
+>> block map changes while the file is mapped. It requires the fd to setup
+>> an fasync_struct for signalling lease break events to the lease holder.
 >
-> This functionality needs to be exercised and stressed by fstests
-> in some way before it gets merged.
+> *UGH*
+>
+> That looks like one hell of a bad API.  You are not even guaranteed that
+> descriptor will remain be still open by the time you pass it down to your
+> helper, nevermind the moment when event actually happens...
 
-Yes, and man page updates for mmap(2).
+What am I missing, fcntl(F_SETLEASE) seems to follow a similar pattern?
