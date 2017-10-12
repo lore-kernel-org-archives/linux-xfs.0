@@ -1,151 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45210 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:38147 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752581AbdJLLrz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Oct 2017 07:47:55 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9FF8B5BED9
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 11:47:55 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 730AC18A68
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 11:47:55 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: trim writepage mapping to within eof
-Date: Thu, 12 Oct 2017 07:47:54 -0400
-Message-Id: <20171012114754.39626-1-bfoster@redhat.com>
+        id S1751004AbdJLNmM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 09:42:12 -0400
+Date: Thu, 12 Oct 2017 15:42:09 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 17/19] ext4: Add support for MAP_SYNC flag
+Message-ID: <20171012134209.GE29293@quack2.suse.cz>
+References: <20171011200603.27442-1-jack@suse.cz>
+ <20171011200603.27442-18-jack@suse.cz>
+ <CAPcyv4gZw0QCG08Qs8dP8TMhgXo0_KcVq-33uhaG8QuwxXT=Wg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gZw0QCG08Qs8dP8TMhgXo0_KcVq-33uhaG8QuwxXT=Wg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-The writeback rework in commit fbcc02561359 ("xfs: Introduce
-writeback context for writepages") introduced a subtle change in
-behavior with regard to the block mapping used across the
-->writepages() sequence. The previous xfs_cluster_write() code would
-only flush pages up to EOF at the time of the writepage, thus
-ensuring that any pages due to file-extending writes would be
-handled on a separate cycle and with a new, updated block mapping.
+On Wed 11-10-17 15:11:21, Dan Williams wrote:
+> On Wed, Oct 11, 2017 at 1:06 PM, Jan Kara <jack@suse.cz> wrote:
+> > Now when everything is prepared, add support in ext4 to accept MAP_SYNC
+> > as an mmap(2) flag.
+> >
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/ext4/file.c | 20 ++++++++++++++++++++
+> >  1 file changed, 20 insertions(+)
+> >
+> > diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> > index 61a8788168f3..f013cda84b3d 100644
+> > --- a/fs/ext4/file.c
+> > +++ b/fs/ext4/file.c
+> > @@ -364,6 +364,25 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+> >         return 0;
+> >  }
+> >
+> > +#define EXT4_SUPPORTED_MAP_FLAGS (LEGACY_MAP_MASK | MAP_SYNC)
+> > +
+> > +static int ext4_file_mmap_validate(struct file *file,
+> > +                                  struct vm_area_struct *vma,
+> > +                                  unsigned long map_flags)
+> > +{
+> > +       if (map_flags & ~EXT4_SUPPORTED_MAP_FLAGS)
+> > +               return -EOPNOTSUPP;
+> > +
+> > +       /*
+> > +        * We don't support synchronous mappings for non-DAX files. At least
+> > +        * until someone comes with a sensible use case.
+> > +        */
+> > +       if (!IS_DAX(file_inode(file)) && (map_flags & MAP_SYNC))
+> > +               return -EOPNOTSUPP;
+> 
+> Perhaps EPERM instead to differentiate the unsupported flags case?
+> There's precedent for mmap returning EPERM for reasons other than
+> incompatible PROT flags.
 
-The updated code establishes a block mapping in xfs_writepage_map()
-that could extend beyond EOF if the file has post-eof preallocation.
-Because we now use the generic writeback infrastructure and pass the
-cached mapping to each writepage call, there is no implicit EOF
-limit in place. If eofblocks trimming occurs during ->writepages(),
-any post-eof portion of the cached mapping becomes invalid. The
-eofblocks code has no means to serialize against writeback because
-there are no pages associated with post-eof blocks. Therefore if an
-eofblocks trim occurs and is followed by a file-extending buffered
-write, not only has the mapping become invalid, but we could end up
-writing a page to disk based on the invalid mapping.
+Hum, I could make it EINVAL. EPERM looks just too bogus to me.
 
-Consider the following sequence of events:
+								Honza
 
-- A buffered write creates a delalloc extent and post-eof
-  speculative preallocation.
-- Writeback starts and on the first writepage cycle, the delalloc
-  extent is converted to real blocks (including the post-eof blocks)
-  and the mapping is cached.
-- The file is closed and xfs_release() trims post-eof blocks. The
-  cached writeback mapping is now invalid.
-- Another buffered write appends the file with a delalloc extent.
-- The concurrent writeback cycle picks up the just written page
-  because the writeback range end is LLONG_MAX. xfs_writepage_map()
-  attributes it to the (now invalid) cached mapping and writes the
-  data to an incorrect location on disk (and where the file offset is
-  still backed by a delalloc extent).
-
-This problem is reproduced by xfstests test generic/463, which
-triggers racing writes, appends, open/closes and writeback requests.
-
-To address this problem, trim the mapping used during writeback to
-within EOF when the mapping is created. This ensures the mapping is
-revalidated for any pages encountered beyond EOF as of the time the
-current mapping was cached.
-
-Reported-by: Eryu Guan <eguan@redhat.com>
-Diagnosed-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-Hi all,
-
-This is a followup to the issue Eryu tracked down, described here[1].
-
-Note that this patch will not deal with any writeback mapping validity
-issues not associated with eofblocks management. Dave is working on a
-more generic approach to deal with such problems. This patch is intended
-to be a targeted and backportable fix for the regression in the
-writeback code.
-
-Brian
-
-[1] https://marc.info/?l=linux-xfs&m=150406724427829&w=2
-
- fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
- fs/xfs/libxfs/xfs_bmap.h |  1 +
- fs/xfs/xfs_aops.c        |  6 ++++--
- 3 files changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 044a363..dd3fb7b 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3852,6 +3852,17 @@ xfs_trim_extent(
- 	}
- }
- 
-+/* trim extent to within eof */
-+void
-+xfs_trim_extent_eof(
-+	struct xfs_bmbt_irec	*irec,
-+	struct xfs_inode	*ip)
-+
-+{
-+	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
-+					      i_size_read(VFS_I(ip))));
-+}
-+
- /*
-  * Trim the returned map to the required bounds
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 851982a..502e0d8 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -208,6 +208,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- 
- void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
-+void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1dbc5cf..3ab6d9d 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -423,7 +423,7 @@ xfs_map_blocks(
- 				imap);
- 		if (!error)
- 			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
--		return error;
-+		goto out_trim;
- 	}
- 
- #ifdef DEBUG
-@@ -435,7 +435,9 @@ xfs_map_blocks(
- #endif
- 	if (nimaps)
- 		trace_xfs_map_blocks_found(ip, offset, count, type, imap);
--	return 0;
-+out_trim:
-+	xfs_trim_extent_eof(imap, ip);
-+	return error;
- }
- 
- STATIC bool
 -- 
-2.9.5
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
