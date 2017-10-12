@@ -1,85 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39202 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932394AbdJZT7c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 15:59:32 -0400
-Date: Thu, 26 Oct 2017 12:59:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
-Message-ID: <20171026195923.GB5483@magnolia>
-References: <20171026144131.26885-1-keith.busch@intel.com>
- <20171026162518.GW5483@magnolia>
- <3ad1751a-a4df-b0ee-d2c5-d1ac4deb5b46@sandeen.net>
- <0d50ca3b-0b27-8ac1-c102-9ea656f3f926@sandeen.net>
- <20171026183216.GA27317@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171026183216.GA27317@localhost.localdomain>
+Received: from mx1.redhat.com ([209.132.183.28]:47574 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751492AbdJLLg2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 07:36:28 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] tests/xfs: test for NULL xattr buffer problem during unlink
+Date: Thu, 12 Oct 2017 07:36:27 -0400
+Message-Id: <20171012113627.39452-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Keith Busch <keith.busch@intel.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 12:32:17PM -0600, Keith Busch wrote:
-> On Thu, Oct 26, 2017 at 01:01:29PM -0500, Eric Sandeen wrote:
-> > On 10/26/17 12:49 PM, Eric Sandeen wrote:
-> > > Yeah, lots of devices are unhappy with large discards.  And yeah, in the
-> > > end I think this papers over a kernel and/or hardware problem.
-> > > 
-> > > But sometimes we do that, if only to keep things working reasonably
-> > > well with older kernels or hardware that'll never get fixed...
-> > > 
-> > > (TBH sometimes I regret putting mkfs-time discard in by default in the
-> > > first place.)
-> > 
-> > I think I left this on a too-positive note.  It seems pretty clear that there
-> > is no way to fix all of userspace to not issue "too big" discards, when
-> > "too big" isn't even well-defined, or specified by anything at all.
-> 
-> Yeah, I totally get this proposal is just a bandaid, and other user
-> space programs may suffer when used with devices behaving this way. XFS
-> is just very popular, so it's frequently reported as problematic against
-> large capacity devices.
+XFS had a bug that resulted in an unexpected NULL buffer during
+unlink of an inode with a multi-level attr fork tree. This occurred
+due to a stale reference to content in a released/reclaimed buffer.
 
-Sure, but now you have to go fix mke2fs and everything /else/ that
-issues BLKDISCARD (or FALLOC_FL_PUNCH) on a large file / device, and
-until you fix every program to work around this weird thing in the
-kernel there'll still be someone somewhere with this timeout problem...
+Use the XFS buffer LRU reference count error injection tag to
+recreate the conditions for the bug. Create a file with a
+multi-level attr fork tree and then unlink it with buffer caching
+disabled.
 
-...so I started digging into what the kernel does with a BLKDISCARD
-request, which is to say that I looked at blkdev_issue_discard.  That
-function uses blk_*_plug() to wrap __blkdev_issue_discard, which in turn
-splits the request into a chain of UINT_MAX-sized struct bios.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-128G's worth of 4G ios == 32 chained bios.
+Note that this test depends on a pending[1] XFS error injection tag.
 
-2T worth of 4G ios == 512 chained bios.
+Brian
 
-So now I'm wondering, is the problem more that the first bio in the
-chain times out because the last one hasn't finished yet, so the whole
-thing gets aborted because we chained too much work together?
+[1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
 
-Would it make sense to fix __blkdev_issue_discard to chain fewer bios
-together?  Or just issue the bios independently and track the
-completions individually?
+ tests/xfs/999     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 90 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
 
-> > I'm not wise in the ways of queueing and throttling, but from my naiive
-> > perspective, it seems like something to be fixed in the kernel, or if it
-> > can't, export some new "maximum discard request size" which can be trusted?
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 0000000..261b83f
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,87 @@
++#! /bin/bash
++# FS QA Test 999
++#
++# Regression test for an XFS NULL xattr buffer problem during unlink. XFS had a
++# bug where the attr fork walk during file removal could go off the rails due to
++# a stale reference to content of a released buffer. Memory pressure could cause
++# this reference to point to free or reused memory and cause subsequent
++# attribute fork lookups to fail, return a NULL buffer and possibly crash.
++#
++# This test emulates this behavior using an error injection knob to explicitly
++# disable buffer LRU caching. This forces the attr walk to execute under
++# conditions where each buffer is immediately freed on release.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/attr
++. ./common/inject
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_xfs_io_error_injection buf_lru_ref
++_require_scratch
++_require_attrs
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount || _fail "mount failure"
++
++file=$SCRATCH_MNT/testfile
++
++# create a bunch of xattrs to form a multi-level attr tree
++touch $file
++for i in $(seq 0 499); do
++	$SETFATTR_PROG -n trusted.user.$i -v 0 $file
++done
++
++# cycle the mount to clear any buffer references
++_scratch_cycle_mount || _fail "cycle mount failure"
++
++# disable the lru cache and unlink the file
++_scratch_inject_error buf_lru_ref 1
++rm -f $file
++_scratch_inject_error buf_lru_ref 0
++
++echo Silence is golden
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 0000000..3b276ca
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 25bb8b3..f0c15f7 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -430,3 +430,4 @@
+ 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 431 auto quick dangerous
+ 432 auto quick dir metadata
++999 auto quick attr
+-- 
+2.9.5
 
-I would've thought that's what max_discard_sectors was for, but... eh.
-
-How big is the device you were trying to mkfs, anyway?
-
---D
-
-> The problem isn't really that a discard sent to the device was "too
-> big". It's that "too many" are issued at the same time, and there isn't
-> a way for a driver to limit the number of outstanding discards without
-> affecting read/write.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
