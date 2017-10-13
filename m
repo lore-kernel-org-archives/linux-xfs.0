@@ -1,112 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:53329 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750729AbdJNWeu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 18:34:50 -0400
-Date: Sun, 15 Oct 2017 09:34:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
-Message-ID: <20171014223447.GC15067@dastard>
-References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
- <20171002135618.GA32279@bfoster.bfoster>
- <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
- <20171013181605.GA46787@bfoster.bfoster>
- <20171013195334.GB46787@bfoster.bfoster>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:55905 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751823AbdJMSWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 14:22:22 -0400
+Received: by mail-oi0-f53.google.com with SMTP id g125so15571135oib.12
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 11:22:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171013195334.GB46787@bfoster.bfoster>
+In-Reply-To: <20171013173145.GA18702@obsidianresearch.com>
+References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+ <20171013065716.GB26461@lst.de> <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
+ <20171013163822.GA17411@obsidianresearch.com> <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
+ <20171013173145.GA18702@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 13 Oct 2017 11:22:21 -0700
+Message-ID: <CAPcyv4jZJRto1jwmNU--pqH_6dOVMyj=68ZwEjAmmkgX=mRk7w@mail.gmail.com>
+Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Fri, Oct 13, 2017 at 03:53:35PM -0400, Brian Foster wrote:
-> On Fri, Oct 13, 2017 at 02:16:05PM -0400, Brian Foster wrote:
-> > On Fri, Oct 13, 2017 at 09:29:35PM +0800, Zorro Lang wrote:
-> > > On Mon, Oct 02, 2017 at 09:56:18AM -0400, Brian Foster wrote:
-> > > > On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
-> > > > > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
-> > > > > twice. But I can't reproduce it on another machine.
-> > > > > 
-> > > > > Maybe there're some hardware specific requirement to trigger this panic. I
-> > > > > tested on normal disk partition, but the disk is multi stripes RAID device.
-> > > > > I didn't get the mkfs output of g/085, bug I found the default mkfs output
-> > > > > (mkfs.xfs -f /dev/sda3) is:
-> > > > > 
-> > > > > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
-> > > > >          =                       sectsz=512   attr=2, projid32bit=1
-> > > > >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
-> > > > > data     =                       bsize=1024   blocks=15720448, imaxpct=25
-> > > > >          =                       sunit=512    swidth=1024 blks
-> > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > > > > log      =internal log           bsize=1024   blocks=10240, version=2
-> > > > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
-> > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > > 
-> > > > > (The test machine is not on my hand now, I need time reserve it.)
-> > > > > 
-> > > > 
-> > > > If you are able to reproduce, could you provide a metadump of this fs
-> > > > immediately after the crash?
-> > > 
-> > > Finally I got the machine which can reproduce this bug for 1 day. Then I
-> > > got the XFS metadump which can trigger this bug.
-> > > 
-> > > Please download the metadump file by opening below link:
-> > > https://drive.google.com/file/d/0B5dFDeCXGOPXalNuMUJNdDM3STQ/view?usp=sharing
-> > > 
-> > > Just mount this xfs image, then kernel will crash. I didn't do any operations
-> > > on this XFS, just did "mkfs.xfs -b size=1024".
-> > > 
-> > 
-> > Thanks Zorro. I can reproduce with this image. It looks like the root
-> > problem is that a block address calculation goes wrong in
-> > xlog_find_head():
-> > 
-> > 	start_blk = log_bbnum - (num_scan_bblks - head_blk);
-> > 
-> > With log_bbnum = 3264, num_scan_bblks = 4096 and head_blk = 512,
-> > start_blk underflows and we go off the rails from there. Aside from
-> > addressing the crash, I think either this value and/or num_scan_bblks
-> > need to be clamped to within the range of the log.
-> > 
-> 
-> Actually Zorro, how are you creating a filesystem with such a small log?
-> I can't seem to create anything with a log smaller than 2MB. FWIW,
-> xfs_info shows the following once I work around the crash and mount the
-> fs:
-> 
-> meta-data=/dev/mapper/test-scratch isize=512    agcount=8, agsize=32256 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=1024   blocks=258048, imaxpct=25
->          =                       sunit=512    swidth=1024 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal               bsize=1024   blocks=1632, version=2
->          =                       sectsz=512   sunit=32 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+On Fri, Oct 13, 2017 at 10:31 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Fri, Oct 13, 2017 at 10:01:04AM -0700, Dan Williams wrote:
+>> On Fri, Oct 13, 2017 at 9:38 AM, Jason Gunthorpe
+>> <jgunthorpe@obsidianresearch.com> wrote:
+>> > On Fri, Oct 13, 2017 at 08:14:55AM -0700, Dan Williams wrote:
+>> >
+>> >> scheme specific to RDMA which seems like a waste to me when we can
+>> >> generically signal an event on the fd for any event that effects any
+>> >> of the vma's on the file. The FL_LAYOUT lease impacts the entire file,
+>> >> so as far as I can see delaying the notification until MR-init is too
+>> >> late, too granular, and too RDMA specific.
+>> >
+>> > But for RDMA a FD is not what we care about - we want the MR handle so
+>> > the app knows which MR needs fixing.
+>>
+>> I'd rather put the onus on userspace to remember where it used a
+>> MAP_DIRECT mapping and be aware that all the mappings of that file are
+>> subject to a lease break. Sure, we could build up a pile of kernel
+>> infrastructure to notify on a per-MR basis, but I think that would
+>> only be worth it if leases were range based. As it is, the entire file
+>> is covered by a lease instance and all MRs that might reference that
+>> file get one notification. That said, we can always arrange for a
+>> per-driver callback at lease-break time so that it can do something
+>> above and beyond the default notification.
+>
+> I don't think that really represents how lots of apps actually use
+> RDMA.
+>
+> RDMA is often buried down in the software stack (eg in a MPI), and by
+> the time a mapping gets used for RDMA transfer the link between the
+> FD, mmap and the MR is totally opaque.
+>
+> Having a MR specific notification means the low level RDMA libraries
+> have a chance to deal with everything for the app.
+>
+> Eg consider a HPC app using MPI that uses some DAX aware library to
+> get DAX backed mmap's. It then passes memory in those mmaps to the
+> MPI library to do transfers. The MPI creates the MR on demand.
+>
+> So, who should be responsible for MR coherency? Today we say the MPI
+> is responsible. But we can't really expect the MPI
+> to hook SIGIO and somehow try to reverse engineer what MRs are
+> impacted from a FD that may not even still be open.
 
-THis is one of the issues I came across with my mkfs refactoring.
+Ok, that's good insight that I didn't have. Userspace needs more help
+than just an fd notification.
 
-The problem is the block size is 1k, not 4k, and there's a check
-somewhere against the number of log blocks rather than bytes, and
-so you can get a log smaller than the 2MB window that log recovery
-expects from 8x256k log buffers....
+> I think, if you want to build a uAPI for notification of MR lease
+> break, then you need show how it fits into the above software model:
+>  - How it can be hidden in a RDMA specific library
 
-i.e. somewhere in mkfs we need to clamp the minimum log size to
-something greater than 2MB. I didn't get to the bottom of it - I
-fixed the option parsing bug that caused it and the log went to
-someting like 4.5MB instead of 1.6MB....
+So, here's a strawman can ibv_poll_cq() start returning ibv_wc_status
+== IBV_WC_LOC_PROT_ERR when file coherency is lost. This would make
+the solution generic across DAX and non-DAX. What's you're feeling for
+how well applications are prepared to deal with that status return?
 
-Cheers,
+>  - How lease break can be done hitlessly, so the library user never
+>    needs to know it is happening or see failed/missed transfers
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+iommu redirect should be hit less and behave like the page cache case
+where RDMA targets pages that are no longer part of the file.
+
+>  - Whatever fast path checking is needed does not kill performance
+
+What do you consider a fast path? I was assuming that memory
+registration is a slow path, and iommu operations are asynchronous so
+should not impact performance of ongoing operations beyond typical
+iommu overhead.
