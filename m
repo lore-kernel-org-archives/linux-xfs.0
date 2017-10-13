@@ -1,54 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:43314 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758629AbdJMPoh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 11:44:37 -0400
-Received: by mail-oi0-f49.google.com with SMTP id c77so14940498oig.0
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 08:44:37 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:38320 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750990AbdJMQQ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 12:16:58 -0400
+Date: Fri, 13 Oct 2017 09:16:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 05/30] xfs: create inode pointer verifiers
+Message-ID: <20171013161652.GO7122@magnolia>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777247562.1724.7094279740133124537.stgit@magnolia>
+ <20171012202303.GJ7122@magnolia>
+ <20171013052220.GX15067@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171013071203.GA9105@infradead.org>
-References: <20171011200603.27442-1-jack@suse.cz> <20171011200603.27442-2-jack@suse.cz>
- <20171013071203.GA9105@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 13 Oct 2017 08:44:36 -0700
-Message-ID: <CAPcyv4hYuL-wOu7oBt5P=pj8rSnwudNEzRdqswaOhMN0QvN1yg@mail.gmail.com>
-Subject: Re: [PATCH 01/19] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171013052220.GX15067@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 12:12 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> So did we settle on the new mmap_validate vs adding a new argument
-> to ->mmap for real now?  I have to say I'd much prefer passing an
-> additional argument instead, but if higher powers rule that out
-> this version is ok.
+On Fri, Oct 13, 2017 at 04:22:20PM +1100, Dave Chinner wrote:
+> On Thu, Oct 12, 2017 at 01:23:03PM -0700, Darrick J. Wong wrote:
+> > On Wed, Oct 11, 2017 at 06:41:15PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Create some helper functions to check that inode pointers point to
+> > > somewhere within the filesystem and not at the static AG metadata.
+> > > Move xfs_internal_inum and create a directory inode check function.
+> > > We will use these functions in scrub and elsewhere.
+> ....
+> > > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > > index 988bb3f..da3652b 100644
+> > > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > > @@ -2664,3 +2664,84 @@ xfs_ialloc_pagi_init(
+> > >  		xfs_trans_brelse(tp, bp);
+> > >  	return 0;
+> > >  }
+> > > +
+> > > +/* Calculate the first and last possible inode number in an AG. */
+> > > +void
+> > > +xfs_ialloc_aginode_range(
+> 
+> agino_range?
+> 
+> > > +	struct xfs_mount	*mp,
+> > > +	xfs_agnumber_t		agno,
+> > > +	xfs_agino_t		*first,
+> > > +	xfs_agino_t		*last)
+> > > +{
+> > > +	xfs_agblock_t		eoag;
+> > > +
+> > > +	eoag = xfs_ag_block_count(mp, agno);
+> > > +	*first = round_up(XFS_OFFBNO_TO_AGINO(mp, XFS_AGFL_BLOCK(mp) + 1, 0),
+> > > +			XFS_INODES_PER_CHUNK);
+> > > +	*last = round_down(XFS_OFFBNO_TO_AGINO(mp, eoag, 0),
+> > > +			XFS_INODES_PER_CHUNK) - 1;
+> > 
+> > This is incorrect; we allocate inode chunks aligned to
+> > xfs_ialloc_cluster_alignment blocks, which doesn't necessarily result in
+> > ir_startino being aligned to XFS_INODES_PER_CHUNK.
+> 
+> *nod*
+> 
+> > I think the correct code is this:
+> > 
+> > 	/* Calculate the first inode. */
+> > 	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
+> > 			xfs_ialloc_cluster_alignment(mp));
+> > 	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
+> 
+> *nod*
+> 
+> > 	/* Calculate the last inode. */
+> > 	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
+> > 	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
+> 
+> Bit tricky - I'm not sure that this will give the same inode number
+> in all cases as rounding down to last valid chunk start offset and
+> then adding (MAX(XFS_INODES_PER_CHUNK, inodes-per-block) - 1) to
+> it....
+> 
+> > ...which unfortunately I didn't realize until trying to play with
+> > nondefault geometry options (1k blocks, no sparse inodes).
+> 
+> Ok, that might explain a bunch of inode noise on my 1k block size
+> test runs...
+> 
+> > > +/*
+> > > + * Verify that an AG inode number pointer neither points outside the AG
+> > > + * nor points at static metadata.
+> > > + */
+> > > +bool
+> > > +xfs_verify_agino_ptr(
+> 
+> Again, I'd probably drop the _ptr suffix here.
+> 
+> > > +	struct xfs_mount	*mp,
+> > > +	xfs_agnumber_t		agno,
+> > > +	xfs_agino_t		agino)
+> > > +{
+> > > +	xfs_agino_t		first;
+> > > +	xfs_agino_t		last;
+> > > +	int			ioff;
+> > > +
+> > > +	ioff = XFS_AGINO_TO_OFFSET(mp, agino);
+> > > +	xfs_ialloc_aginode_range(mp, agno, &first, &last);
+> > > +	return agino >= first && agino <= last &&
+> > > +	       ioff < (1 << mp->m_sb.sb_inopblog);
+> 
+> This ioff check will always evaluate as true, yes?
+> 
+> ioff	= XFS_AGINO_TO_OFFSET(i)
+> 	= ((i) & XFS_INO_MASK(XFS_INO_OFFSET_BITS(mp)))
+> 	= (i & XFS_INO_MASK((mp)->m_sb.sb_inopblog))
+> 	= (i & (uint32_t)((1ULL << (mp)->m_sb.sb_inopblog)) - 1)
+> 
+> say sb_inopblog = 8:
+> 
+> ioff	= (i & 0xFF)
+> 
+> And so:
+> 
+> 	ioff < (1 << 8)
+> 
+> will always be true.
+> 
+> So I'm not sure this check is needed?
 
-MAP_DIRECT also needs the fd now, so it would be two arguments. Before
-you say "that's bogus" I want to understand what the alternative looks
-like for notifying userspace that its get_user_pages() registration
-lease is being invalidated.
+Indeed not.
 
->
->> diff --git a/include/linux/fs.h b/include/linux/fs.h
->> index 13dab191a23e..5aee97d64cae 100644
->> --- a/include/linux/fs.h
->> +++ b/include/linux/fs.h
->> @@ -1701,6 +1701,8 @@ struct file_operations {
->>       long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
->>       long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
->>       int (*mmap) (struct file *, struct vm_area_struct *);
->> +     int (*mmap_validate) (struct file *, struct vm_area_struct *,
->> +                     unsigned long);
->
-> Can we make this return a bool for ok vs not ok?  That way we only
-> need to have the error code discussion in one place instead of every
-> file system.
+--D
 
-How does userspace figure out what went wrong if we lose the ability
-to return different failure reasons from the ops owner? Maybe an enum
-to cut down the possible error codes to 'flag not supported', 'flag
-supported but failed to setup the mapping', and 'success'.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
