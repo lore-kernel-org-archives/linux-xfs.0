@@ -1,83 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54038 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53624 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753326AbdJMCIb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Oct 2017 22:08:31 -0400
-Date: Fri, 13 Oct 2017 10:08:29 +0800
-From: Xiong Zhou <xzhou@redhat.com>
-Subject: Re: ffsb job does not exit on xfs 4.14-rc1+
-Message-ID: <20171013020829.2bqzj5d3ny66opgz@XZHOUW.usersys.redhat.com>
-References: <20170925014006.5tvdkjszrbj6uhgc@XZHOUW.usersys.redhat.com>
- <20170925084903.fsjgrn7rfernou5j@hades.localdomain>
- <20171011135415.6omvzcdflflqghbo@XZHOUW.usersys.redhat.com>
- <20171011211010.GA3666@dastard>
+        id S1750872AbdJMFqH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Oct 2017 01:46:07 -0400
+Date: Fri, 13 Oct 2017 13:46:05 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] tests/xfs: test for NULL xattr buffer problem during
+ unlink
+Message-ID: <20171013054605.GN10593@eguan.usersys.redhat.com>
+References: <20171012113627.39452-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171011211010.GA3666@dastard>
+In-Reply-To: <20171012113627.39452-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Oct 12, 2017 at 08:10:10AM +1100, Dave Chinner wrote:
-> On Wed, Oct 11, 2017 at 09:54:15PM +0800, Xiong Zhou wrote:
-> > On Mon, Sep 25, 2017 at 10:49:03AM +0200, Carlos Maiolino wrote:
-> > > On Mon, Sep 25, 2017 at 01:40:06AM +0000, Xiong Zhou wrote:
-> > > > Hi,
-> > > > 
-> > > > ffsb test won't exit like this on Linus tree 4.14-rc1+.
-> > > > Latest commit cd4175b11685
-
-Hi all,
-
-This is a false alarm because I've messed up the kernel config.
-After making .config right, test does not hang.
-
-My fault. Very Sorry for the noise.
-
-> > > 
-> > > Can you provide more information? Do you have any kernel log from this issue?
-> > > dmesg, Oopses, traces, etc.
-> > > Storage configuration might also be required here.
-> > 
-> > Turns out this only repreduces on nvdimm devices, xfs without dax
-> > mount option. More logs are attached.
+On Thu, Oct 12, 2017 at 07:36:27AM -0400, Brian Foster wrote:
+> XFS had a bug that resulted in an unexpected NULL buffer during
+> unlink of an inode with a multi-level attr fork tree. This occurred
+> due to a stale reference to content in a released/reclaimed buffer.
 > 
-> It's a hang, so what's the output of sysrq-w once it's hung?
+> Use the XFS buffer LRU reference count error injection tag to
+> recreate the conditions for the bug. Create a file with a
+> multi-level attr fork tree and then unlink it with buffer caching
+> disabled.
 > 
-> > > have you also tried to reproduce it with another filesystem? If so, is the same
-> > > problem reproducible with another filesystem or only with XFS?
-> > 
-> > Only xfs. Test on ext4 ends shortly.
-> > 
-> > > 
-> > > P.S. please avoid sending it to all lists (mainly LKML).
-> > 
-> > Why?  I thought LKML was better archived.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> The lists are all archived, but that's irrelevant. The list you
-> should report problems to is based on the scope of the problem, not
-> whether the lists are archived or not.
+> Note that this test depends on a pending[1] XFS error injection tag.
 > 
-> Because the scope of the problem at this point is XFS, it's
-> inappropriate to report it to lists that are for general kernel or
-> VFS issues. There's enough noise on those lists without everyone
-> bombarding them with subsystem specific issues - that's why we have
-> subsystem specific lists in the first place.
+> Brian
 > 
-> If it turns out to be a problem in some other subsystem, we'll add
-> cc's to other subsystem or general lists as appropriate.
+> [1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
 
-Fair enough. Thanks very much for your time!
+I ran this test with above patch applied (v4.14-rc4 based), and kernel
+crashed as expected. Then cherry-pick commit f35c5e10c6ed ("xfs: reinit
+btree pointer on attr tree inactivation walk") and test passed. So test
+looks good to me, just that I added 'dangerous' group and referenced the
+fix in commit log and test description.
 
-Xiong
+Thanks for the test!
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Eryu
