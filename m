@@ -1,136 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45184 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750733AbdJMFWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 01:22:24 -0400
-Date: Fri, 13 Oct 2017 16:22:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/30] xfs: create inode pointer verifiers
-Message-ID: <20171013052220.GX15067@dastard>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777247562.1724.7094279740133124537.stgit@magnolia>
- <20171012202303.GJ7122@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:41844 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751024AbdJMGut (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Oct 2017 02:50:49 -0400
+Date: Fri, 13 Oct 2017 08:50:47 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Message-ID: <20171013065047.GA26461@lst.de>
+References: <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com> <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com> <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com> <20171010180512.GA31734@obsidianresearch.com> <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com> <20171012182712.GA5772@obsidianresearch.com> <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171012202303.GJ7122@magnolia>
+In-Reply-To: <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Thu, Oct 12, 2017 at 01:23:03PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 11, 2017 at 06:41:15PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Create some helper functions to check that inode pointers point to
-> > somewhere within the filesystem and not at the static AG metadata.
-> > Move xfs_internal_inum and create a directory inode check function.
-> > We will use these functions in scrub and elsewhere.
-....
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 988bb3f..da3652b 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -2664,3 +2664,84 @@ xfs_ialloc_pagi_init(
-> >  		xfs_trans_brelse(tp, bp);
-> >  	return 0;
-> >  }
-> > +
-> > +/* Calculate the first and last possible inode number in an AG. */
-> > +void
-> > +xfs_ialloc_aginode_range(
-
-agino_range?
-
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		agno,
-> > +	xfs_agino_t		*first,
-> > +	xfs_agino_t		*last)
-> > +{
-> > +	xfs_agblock_t		eoag;
-> > +
-> > +	eoag = xfs_ag_block_count(mp, agno);
-> > +	*first = round_up(XFS_OFFBNO_TO_AGINO(mp, XFS_AGFL_BLOCK(mp) + 1, 0),
-> > +			XFS_INODES_PER_CHUNK);
-> > +	*last = round_down(XFS_OFFBNO_TO_AGINO(mp, eoag, 0),
-> > +			XFS_INODES_PER_CHUNK) - 1;
+On Thu, Oct 12, 2017 at 01:10:33PM -0700, Dan Williams wrote:
+> On Thu, Oct 12, 2017 at 11:27 AM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+> > On Tue, Oct 10, 2017 at 01:17:26PM -0700, Dan Williams wrote:
+> >
+> >> Also keep in mind that what triggers the lease break is another
+> >> application trying to write or punch holes in a file that is mapped
+> >> for RDMA. So, if the hardware can't handle the iommu mapping getting
+> >> invalidated asynchronously and the application can't react in the
+> >> lease break timeout period then the administrator should arrange for
+> >> the file to not be written or truncated while it is mapped.
+> >
+> > That makes sense, but why not return ENOSYS or something to the app
+> > trying to alter the file if the RDMA hardware can't support this
+> > instead of having the RDMA app deal with this lease break weirdness?
 > 
-> This is incorrect; we allocate inode chunks aligned to
-> xfs_ialloc_cluster_alignment blocks, which doesn't necessarily result in
-> ir_startino being aligned to XFS_INODES_PER_CHUNK.
+> That's where I started, an inode flag that said "hands off, this file
+> is busy", but Christoph pointed out that we should reuse the same
+> mechanisms that pnfs is using. The pnfs protection scheme uses file
+> leases, and once the kernel decides that a lease needs to be broken /
+> layout needs to be recalled there is no stopping it, only delaying.
 
-*nod*
+That was just a suggestion - the important statement is that a hands
+off flag is just a no-go.
 
-> I think the correct code is this:
-> 
-> 	/* Calculate the first inode. */
-> 	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
-> 			xfs_ialloc_cluster_alignment(mp));
-> 	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
+> However, chatting this over with a few more people I have an alternate
+> solution that effectively behaves the same as how non-ODP hardware
+> handles this case of hole punch / truncation today. So, today if this
+> scenario happens on a page-cache backed mapping, the file blocks are
+> unmapped and the RDMA continues into pinned pages that are no longer
+> part of the file. We can achieve the same thing with the iommu, just
+> re-target the I/O into memory that isn't part of the file. That way
+> hardware does not see I/O errors and the DAX data consistency model is
+> no worse than the page-cache case.
 
-*nod*
-
-> 	/* Calculate the last inode. */
-> 	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
-> 	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
-
-Bit tricky - I'm not sure that this will give the same inode number
-in all cases as rounding down to last valid chunk start offset and
-then adding (MAX(XFS_INODES_PER_CHUNK, inodes-per-block) - 1) to
-it....
-
-> ...which unfortunately I didn't realize until trying to play with
-> nondefault geometry options (1k blocks, no sparse inodes).
-
-Ok, that might explain a bunch of inode noise on my 1k block size
-test runs...
-
-> > +/*
-> > + * Verify that an AG inode number pointer neither points outside the AG
-> > + * nor points at static metadata.
-> > + */
-> > +bool
-> > +xfs_verify_agino_ptr(
-
-Again, I'd probably drop the _ptr suffix here.
-
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		agno,
-> > +	xfs_agino_t		agino)
-> > +{
-> > +	xfs_agino_t		first;
-> > +	xfs_agino_t		last;
-> > +	int			ioff;
-> > +
-> > +	ioff = XFS_AGINO_TO_OFFSET(mp, agino);
-> > +	xfs_ialloc_aginode_range(mp, agno, &first, &last);
-> > +	return agino >= first && agino <= last &&
-> > +	       ioff < (1 << mp->m_sb.sb_inopblog);
-
-This ioff check will always evaluate as true, yes?
-
-ioff	= XFS_AGINO_TO_OFFSET(i)
-	= ((i) & XFS_INO_MASK(XFS_INO_OFFSET_BITS(mp)))
-	= (i & XFS_INO_MASK((mp)->m_sb.sb_inopblog))
-	= (i & (uint32_t)((1ULL << (mp)->m_sb.sb_inopblog)) - 1)
-
-say sb_inopblog = 8:
-
-ioff	= (i & 0xFF)
-
-And so:
-
-	ioff < (1 << 8)
-
-will always be true.
-
-So I'm not sure this check is needed?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yikes.
