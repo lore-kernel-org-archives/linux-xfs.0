@@ -1,147 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:44192 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751307AbdJMIN3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 04:13:29 -0400
-Received: by mail-wm0-f44.google.com with SMTP id 196so26951269wma.1
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 01:13:28 -0700 (PDT)
-Subject: Re: agcount for 2TB, 4TB and 8TB drives
-References: <CAJH6TXgShHj6UynrNAs8eG0ZRFz5gSGGY1ZARPSofsNibi0Grg@mail.gmail.com>
- <20171006153803.GI7122@magnolia>
- <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
- <20171006222031.GU3666@dastard>
- <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
- <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
- <20171009112306.GM3666@dastard>
- <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
- <20171009220332.GP3666@dastard>
- <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
- <20171010225524.GV3666@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
-Date: Fri, 13 Oct 2017 11:13:24 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:44144 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751480AbdJMLmd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Oct 2017 07:42:33 -0400
+Date: Fri, 13 Oct 2017 07:42:31 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: trim writepage mapping to within eof
+Message-ID: <20171013114231.GA44461@bfoster.bfoster>
+References: <20171012114754.39626-1-bfoster@redhat.com>
+ <20171012212244.GT15067@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171010225524.GV3666@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171012212244.GT15067@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On 10/11/2017 01:55 AM, Dave Chinner wrote:
-> On Tue, Oct 10, 2017 at 12:07:42PM +0300, Avi Kivity wrote:
->> On 10/10/2017 01:03 AM, Dave Chinner wrote:
->>>> On 10/09/2017 02:23 PM, Dave Chinner wrote:
->>>>> On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
->>>>> Sure, that might be the IO concurrency the SSD sees and handles, but
->>>>> you very rarely require that much allocation parallelism in the
->>>>> workload. Only a small amount of the IO submission path is actually
->>>>> allocation work, so a single AG can provide plenty of async IO
->>>>> parallelism before an AG is the limiting factor.
->>>> Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
->>> AGs don't issue IO. Applications issue IO, the filesystem allocates
->>> space from AGs according to the write IO that passes through it.
->> What I meant was I/O in order to satisfy an allocation (read from
->> the free extent btree or whatever), not the application's I/O.
-> Once you're in the per-AG allocator context, it is single threaded
-> until the allocation is complete. We do things like btree block
-> readahead to minimise IO wait times, but we can't completely hide
-> things like metadata read Io wait time when it is required to make
-> progress.
+On Fri, Oct 13, 2017 at 08:22:44AM +1100, Dave Chinner wrote:
+> On Thu, Oct 12, 2017 at 07:47:54AM -0400, Brian Foster wrote:
+> > The writeback rework in commit fbcc02561359 ("xfs: Introduce
+> > writeback context for writepages") introduced a subtle change in
+> > behavior with regard to the block mapping used across the
+> > ->writepages() sequence. The previous xfs_cluster_write() code would
+> > only flush pages up to EOF at the time of the writepage, thus
+> > ensuring that any pages due to file-extending writes would be
+> > handled on a separate cycle and with a new, updated block mapping.
+> > 
+> > The updated code establishes a block mapping in xfs_writepage_map()
+> > that could extend beyond EOF if the file has post-eof preallocation.
+> > Because we now use the generic writeback infrastructure and pass the
+> > cached mapping to each writepage call, there is no implicit EOF
+> > limit in place. If eofblocks trimming occurs during ->writepages(),
+> > any post-eof portion of the cached mapping becomes invalid. The
+> > eofblocks code has no means to serialize against writeback because
+> > there are no pages associated with post-eof blocks. Therefore if an
+> > eofblocks trim occurs and is followed by a file-extending buffered
+> > write, not only has the mapping become invalid, but we could end up
+> > writing a page to disk based on the invalid mapping.
+> > 
+> > Consider the following sequence of events:
+> > 
+> > - A buffered write creates a delalloc extent and post-eof
+> >   speculative preallocation.
+> > - Writeback starts and on the first writepage cycle, the delalloc
+> >   extent is converted to real blocks (including the post-eof blocks)
+> >   and the mapping is cached.
+> > - The file is closed and xfs_release() trims post-eof blocks. The
+> >   cached writeback mapping is now invalid.
+> > - Another buffered write appends the file with a delalloc extent.
+> > - The concurrent writeback cycle picks up the just written page
+> >   because the writeback range end is LLONG_MAX. xfs_writepage_map()
+> >   attributes it to the (now invalid) cached mapping and writes the
+> >   data to an incorrect location on disk (and where the file offset is
+> >   still backed by a delalloc extent).
+> > 
+> > This problem is reproduced by xfstests test generic/463, which
+> > triggers racing writes, appends, open/closes and writeback requests.
+> > 
+> > To address this problem, trim the mapping used during writeback to
+> > within EOF when the mapping is created. This ensures the mapping is
+> > revalidated for any pages encountered beyond EOF as of the time the
+> > current mapping was cached.
+> > 
+> > Reported-by: Eryu Guan <eguan@redhat.com>
+> > Diagnosed-by: Eryu Guan <eguan@redhat.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Hi all,
+> > 
+> > This is a followup to the issue Eryu tracked down, described here[1].
+> > 
+> > Note that this patch will not deal with any writeback mapping validity
+> > issues not associated with eofblocks management. Dave is working on a
+> > more generic approach to deal with such problems. This patch is intended
+> > to be a targeted and backportable fix for the regression in the
+> > writeback code.
+> > 
+> > Brian
+> > 
+> > [1] https://marc.info/?l=linux-xfs&m=150406724427829&w=2
+> > 
+> >  fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
+> >  fs/xfs/libxfs/xfs_bmap.h |  1 +
+> >  fs/xfs/xfs_aops.c        |  6 ++++--
+> >  3 files changed, 16 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 044a363..dd3fb7b 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -3852,6 +3852,17 @@ xfs_trim_extent(
+> >  	}
+> >  }
+> >  
+> > +/* trim extent to within eof */
+> > +void
+> > +xfs_trim_extent_eof(
+> > +	struct xfs_bmbt_irec	*irec,
+> > +	struct xfs_inode	*ip)
+> > +
+> > +{
+> > +	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
+> > +					      i_size_read(VFS_I(ip))));
+> > +}
+> 
+> Ok, so it's an unlocked, instantaneous sample of the inode size.
+> Truncate can race with this and still occur any time after we've
+> trimmed the extent but still have it cached.
+> 
 
-I see, thanks. Will RWF_NOWAIT detect the need to do I/O for the free 
-space btree, or just contention? (I expect the latter from the patches 
-I've seen, but perhaps I missed something).
+Yeah, but note that this is really only intended to deal with writeback
+racing with eofblocks trimming. I'm not sure we can fully close any
+other truncate/writeback issues without your broader, more generic
+mapping invalidation work.
 
-I imagine I'll have a lot of amortization there: if a 32MB allocation 
-fails, the subsequent 32MB allocation for the same file will likely hit 
-the same location and be satisified from cache. My workload is pure 
-O_DIRECT so no memory pressure in the kernel.
+With regard to eofblocks trimming, I don't think it can hurt us once
+we've trimmed the cached mapping once. Any new eofblocks that come in
+due to new buffered writes aren't discovered until we acquire a new
+mapping. Truncates up or down before we actually trim the cached mapping
+basically also rule out eofblocks trims on file release causing a
+problem for the writeback cycle.
 
->>>> I understand that XFS_XFLAG_EXTSIZE and XFS_IOC_FSSETXATTR can
->>>> reduce the AG's load.
->>> Not really. They change the allocation pattern on the inode. This
->>> changes how the inode data is laid out on disk, but it doesn't
->>> necessarily change the allocation overhead of the write IO path.
->>> That's all dependent on what the application IO patterns are and how
->>> they match the extent size hints.
->> I write 128k naturally-aligned writes using aio, so I expect it will
->> match. Will every write go into the AG allocator, or just writes
->> that cross a 32MB boundary?
-> It enters an allocation only when an allocation is required. i.e.
-> only when the write lands in a hole. If you're doing sequential 128k
-> writes and using 32MB extent size hints, then it only allocates once
-> every 32768/128 = 256 writes. If you are doing random IO into a
-> sparse file, then it all bets are off.
+> As such, I'm thinking this EOF trimming it should be put in
+> xfs_imap_valid() - not xfs_map_blocks() - so it gets revalidated
+> every time we check to see if the map covers the current file
+> extent...
+> 
 
-Pure sequential writes.
+I'm not sure it's necessary, but it seems Ok to me to be slightly more
+aggressive in the validation as long as it's clear (which I think it is
+;P) that it isn't intended to technically close any issues unrelated to
+eofblocks. I'll give it a shot.
 
+Brian
 
->
->>> That's what RWF_NOWAIT is for. It pushes any write IO that requires
->>> allocation into a thread rather possibly blocking the submitting
->>> thread on any lock or IO in the allocation path.
->> Excellent, we'll use that, although it will be years before our
->> users see the benefit.
-> Well, that's really in your control, not mine.
->
-> The disconnect between upstream progress and LTS production
-> systems is not something upstream can do anything about. Often the
-> problems LTS production systems see are already solved upstream and
-> so the only answer we can really give you here is "upgrade, backport
-> features your customers need yourself, or pay someone else to
-> maintain a backport with the features you need".
-
-I understand the situation. This was to explain why I'm looking for 
-workarounds in deployed code when fixes in new code are available. My 
-users/customers don't run kernels provided by me.
-
->>>> Machines with 60-100 logical cores and low-tens of terabytes of SSD
->>>> are becoming common.  How many AGs would work for such a machine?
->>> Multidisk default, which will be 32 AGs for anything in the 1->32TB
->>> range. And over 32TB, you get 1 AG per TB...
->>
->> Ok. Then doubling it so that each logical core has an AG wouldn't be
->> such a big change.
-> But it won't make any difference to your workload because there's no
-> relationship between CPU cores and the AG selected for allocation.
-> The AG selection is based on filesystem relationships (e.g. local to
-> parent directory inode), and so if you have two files in the same
-> directory they will start trying to allocate from the same AG even
-> thought hey get written from different cores concurrently. The only
-> time they'll get moved into different AGs is if there is allocation
-> contention.
-
-Unfortunately, all cores writing files in the same directory is exactly 
-my workload. I can change it, but there is a backwards compatibility 
-cost to that change. I can probably also trick XFS by creating the file 
-in a dedicated subdirectory and rename()ing it later.
-
->
-> Yes, the allocator algorithms detect AG contention internally and
-> switch to uncontended AGs rather than blocking. There's /lots/ of
-> stuff inside the allocators to minimise blocking - that's one of the
-> reasons you see less submission blocking problems on XFS than other
-> filesytsems. If you're not getting threads blocking waiting to get
-> AGF locks, then you most certainly don't have allocator contention.
-> Even if you do have threads blocking on AGF locks, that could simply
-> be a sign you are running too close to ENOSPC, not contention...
->
-> The reality is, however, that even an uncontended AG can block if
-> the necessary metadata isn't in memory, or the log is full, or
-> memory cannot be immediately allocated, etc. RWF_NOWAIT avoids the
-> whole class of "allocator can block" problem...
-
-
-Thanks. I do have blocks from time to time, but we were not able to 
-pinpoint the cause as I don't own those systems (and also lack knowledge 
-about the internals). At least one issue _was_ related to free space 
-running out, so that fits.
-
-The vast majority of the time XFS AIO works very well. The problem is 
-that when problems do happen, performance drops of sharply, and it's 
-often in a situation that's hard to debug.
-
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
