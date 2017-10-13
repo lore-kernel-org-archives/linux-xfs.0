@@ -1,56 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41844 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:41939 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751024AbdJMGut (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 02:50:49 -0400
-Date: Fri, 13 Oct 2017 08:50:47 +0200
+        id S1750785AbdJMHJb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Oct 2017 03:09:31 -0400
+Date: Fri, 13 Oct 2017 09:09:29 +0200
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
-Message-ID: <20171013065047.GA26461@lst.de>
-References: <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com> <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com> <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com> <20171010180512.GA31734@obsidianresearch.com> <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com> <20171012182712.GA5772@obsidianresearch.com> <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
+Message-ID: <20171013070929.GA26652@lst.de>
+References: <150732931273.22363.8436792888326501071.stgit@dwillia2-desk3.amr.corp.intel.com> <150732935473.22363.1853399637339625023.stgit@dwillia2-desk3.amr.corp.intel.com> <20171009185840.GB15336@obsidianresearch.com> <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com> <20171009191820.GD15336@obsidianresearch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
+In-Reply-To: <20171009191820.GD15336@obsidianresearch.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 
-On Thu, Oct 12, 2017 at 01:10:33PM -0700, Dan Williams wrote:
-> On Thu, Oct 12, 2017 at 11:27 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > On Tue, Oct 10, 2017 at 01:17:26PM -0700, Dan Williams wrote:
-> >
-> >> Also keep in mind that what triggers the lease break is another
-> >> application trying to write or punch holes in a file that is mapped
-> >> for RDMA. So, if the hardware can't handle the iommu mapping getting
-> >> invalidated asynchronously and the application can't react in the
-> >> lease break timeout period then the administrator should arrange for
-> >> the file to not be written or truncated while it is mapped.
-> >
-> > That makes sense, but why not return ENOSYS or something to the app
-> > trying to alter the file if the RDMA hardware can't support this
-> > instead of having the RDMA app deal with this lease break weirdness?
+On Mon, Oct 09, 2017 at 01:18:20PM -0600, Jason Gunthorpe wrote:
+> > > If RDMA is driving this need, why not invalidate backing RDMA MRs
+> > > instead of requiring a IOMMU to do it? RDMA MR are finer grained and
+> > > do not suffer from the re-use problem David W. brought up with IOVAs..
+> > 
+> > Sounds promising. All I want in the end is to be sure that the kernel
+> > is enabled to stop any in-flight RDMA at will without asking
+> > userspace. Does this require per-RDMA driver opt-in or is there a
+> > common call that can be made?
 > 
-> That's where I started, an inode flag that said "hands off, this file
-> is busy", but Christoph pointed out that we should reuse the same
-> mechanisms that pnfs is using. The pnfs protection scheme uses file
-> leases, and once the kernel decides that a lease needs to be broken /
-> layout needs to be recalled there is no stopping it, only delaying.
+> I don't think this has ever come up in the context of an all-device MR
+> invalidate requirement. Drivers already have code to invalidate
+> specifc MRs, but to find all MRs that touch certain pages and then
+> invalidate them would be new code.
 
-That was just a suggestion - the important statement is that a hands
-off flag is just a no-go.
+The whole point is that we should not need that IFF we provide the
+right interface.
 
-> However, chatting this over with a few more people I have an alternate
-> solution that effectively behaves the same as how non-ODP hardware
-> handles this case of hole punch / truncation today. So, today if this
-> scenario happens on a page-cache backed mapping, the file blocks are
-> unmapped and the RDMA continues into pinned pages that are no longer
-> part of the file. We can achieve the same thing with the iommu, just
-> re-target the I/O into memory that isn't part of the file. That way
-> hardware does not see I/O errors and the DAX data consistency model is
-> no worse than the page-cache case.
+If we have a new 'register memory with a lease', the driver (or in fact
+probably the umem core for the drivers using it) has the lease associated
+with the ib_umem structure, which will just need a backpointer from the
+ib_umem to the to the MR to unregister it.
 
-Yikes.
+Which might be a good opportunity to break the user MR from the in-kernel
+ones and merge it with ib_umem, but that's a different story..
