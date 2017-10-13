@@ -1,50 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41868 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751551AbdJMG5S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 02:57:18 -0400
-Date: Fri, 13 Oct 2017 08:57:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Message-ID: <20171013065716.GB26461@lst.de>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com> <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:55212 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753018AbdJMHMH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 03:12:07 -0400
+Date: Fri, 13 Oct 2017 00:12:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/19] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Message-ID: <20171013071203.GA9105@infradead.org>
+References: <20171011200603.27442-1-jack@suse.cz>
+ <20171011200603.27442-2-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+In-Reply-To: <20171011200603.27442-2-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Oct 12, 2017 at 10:41:39AM -0700, Dan Williams wrote:
-> So, you're jumping into this review at v9 where I've split the patches
-> that take an initial MAP_DIRECT lease out from the patches that take
-> FL_LAYOUT leases at memory registration time. You can see a previous
-> attempt in "[PATCH v8 00/14] MAP_DIRECT for DAX RDMA and userspace
-> flush" which should be in your inbox.
+So did we settle on the new mmap_validate vs adding a new argument
+to ->mmap for real now?  I have to say I'd much prefer passing an
+additional argument instead, but if higher powers rule that out
+this version is ok.
 
-The point is that your problem has absolutely nothing to do with mmap,
-and all with get_user_pages.
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 13dab191a23e..5aee97d64cae 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1701,6 +1701,8 @@ struct file_operations {
+>  	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+>  	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+>  	int (*mmap) (struct file *, struct vm_area_struct *);
+> +	int (*mmap_validate) (struct file *, struct vm_area_struct *,
+> +			unsigned long);
 
-get_user_pages on DAX doesn't give the same guarantees as on pagecache
-or anonymous memory, and that is the prbolem we need to fix.  In fact
-I'm pretty sure if we try hard enough (and we might have to try
-very hard) we can see the same problem with plain direct I/O and without
-any RDMA involved, e.g. do a larger direct I/O write to memory that is
-mmap()ed from a DAX file, then truncate the DAX file and reallocate
-the blocks, and we might corrupt that new file.  We'll probably need
-a special setup where there is little other chance but to reallocate
-those used blocks.
-
-So what we need to do first is to fix get_user_pages vs unmapping
-DAX mmap()ed blocks, be that from a hole punch, truncate, COW
-operation, etc.
-
-Then we need to look into the special case of a long-living non-transient
-get_user_pages that RDMA does - we can't just reject any truncate or
-other operation for that, so that's where something like me layout
-lease suggestion comes into play - but the call that should get the
-least is not the mmap - it's the memory registration call that does
-the get_user_pages.
+Can we make this return a bool for ok vs not ok?  That way we only
+need to have the error code discussion in one place instead of every
+file system.
