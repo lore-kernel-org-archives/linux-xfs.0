@@ -1,65 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:47925 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751205AbdJMAXC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2017 20:23:02 -0400
-Received: by mail-oi0-f41.google.com with SMTP id h200so11228672oib.4
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2017 17:23:02 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:54038 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753326AbdJMCIb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Oct 2017 22:08:31 -0400
+Date: Fri, 13 Oct 2017 10:08:29 +0800
+From: Xiong Zhou <xzhou@redhat.com>
+Subject: Re: ffsb job does not exit on xfs 4.14-rc1+
+Message-ID: <20171013020829.2bqzj5d3ny66opgz@XZHOUW.usersys.redhat.com>
+References: <20170925014006.5tvdkjszrbj6uhgc@XZHOUW.usersys.redhat.com>
+ <20170925084903.fsjgrn7rfernou5j@hades.localdomain>
+ <20171011135415.6omvzcdflflqghbo@XZHOUW.usersys.redhat.com>
+ <20171011211010.GA3666@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171012134209.GE29293@quack2.suse.cz>
-References: <20171011200603.27442-1-jack@suse.cz> <20171011200603.27442-18-jack@suse.cz>
- <CAPcyv4gZw0QCG08Qs8dP8TMhgXo0_KcVq-33uhaG8QuwxXT=Wg@mail.gmail.com> <20171012134209.GE29293@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 12 Oct 2017 17:23:01 -0700
-Message-ID: <CAPcyv4gpJV7m5wAtqivykmAM0VKNZxyLh3e9rZcGpQg1v_EN=g@mail.gmail.com>
-Subject: Re: [PATCH 17/19] ext4: Add support for MAP_SYNC flag
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171011211010.GA3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
 
-On Thu, Oct 12, 2017 at 6:42 AM, Jan Kara <jack@suse.cz> wrote:
-> On Wed 11-10-17 15:11:21, Dan Williams wrote:
->> On Wed, Oct 11, 2017 at 1:06 PM, Jan Kara <jack@suse.cz> wrote:
->> > Now when everything is prepared, add support in ext4 to accept MAP_SYNC
->> > as an mmap(2) flag.
->> >
->> > Signed-off-by: Jan Kara <jack@suse.cz>
->> > ---
->> >  fs/ext4/file.c | 20 ++++++++++++++++++++
->> >  1 file changed, 20 insertions(+)
->> >
->> > diff --git a/fs/ext4/file.c b/fs/ext4/file.c
->> > index 61a8788168f3..f013cda84b3d 100644
->> > --- a/fs/ext4/file.c
->> > +++ b/fs/ext4/file.c
->> > @@ -364,6 +364,25 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
->> >         return 0;
->> >  }
->> >
->> > +#define EXT4_SUPPORTED_MAP_FLAGS (LEGACY_MAP_MASK | MAP_SYNC)
->> > +
->> > +static int ext4_file_mmap_validate(struct file *file,
->> > +                                  struct vm_area_struct *vma,
->> > +                                  unsigned long map_flags)
->> > +{
->> > +       if (map_flags & ~EXT4_SUPPORTED_MAP_FLAGS)
->> > +               return -EOPNOTSUPP;
->> > +
->> > +       /*
->> > +        * We don't support synchronous mappings for non-DAX files. At least
->> > +        * until someone comes with a sensible use case.
->> > +        */
->> > +       if (!IS_DAX(file_inode(file)) && (map_flags & MAP_SYNC))
->> > +               return -EOPNOTSUPP;
->>
->> Perhaps EPERM instead to differentiate the unsupported flags case?
->> There's precedent for mmap returning EPERM for reasons other than
->> incompatible PROT flags.
->
-> Hum, I could make it EINVAL. EPERM looks just too bogus to me.
+On Thu, Oct 12, 2017 at 08:10:10AM +1100, Dave Chinner wrote:
+> On Wed, Oct 11, 2017 at 09:54:15PM +0800, Xiong Zhou wrote:
+> > On Mon, Sep 25, 2017 at 10:49:03AM +0200, Carlos Maiolino wrote:
+> > > On Mon, Sep 25, 2017 at 01:40:06AM +0000, Xiong Zhou wrote:
+> > > > Hi,
+> > > > 
+> > > > ffsb test won't exit like this on Linus tree 4.14-rc1+.
+> > > > Latest commit cd4175b11685
 
-EINVAL is indistinguishable from a kernel that does not support
-MAP_SHARED_VALIDATE...
+Hi all,
+
+This is a false alarm because I've messed up the kernel config.
+After making .config right, test does not hang.
+
+My fault. Very Sorry for the noise.
+
+> > > 
+> > > Can you provide more information? Do you have any kernel log from this issue?
+> > > dmesg, Oopses, traces, etc.
+> > > Storage configuration might also be required here.
+> > 
+> > Turns out this only repreduces on nvdimm devices, xfs without dax
+> > mount option. More logs are attached.
+> 
+> It's a hang, so what's the output of sysrq-w once it's hung?
+> 
+> > > have you also tried to reproduce it with another filesystem? If so, is the same
+> > > problem reproducible with another filesystem or only with XFS?
+> > 
+> > Only xfs. Test on ext4 ends shortly.
+> > 
+> > > 
+> > > P.S. please avoid sending it to all lists (mainly LKML).
+> > 
+> > Why?  I thought LKML was better archived.
+> 
+> The lists are all archived, but that's irrelevant. The list you
+> should report problems to is based on the scope of the problem, not
+> whether the lists are archived or not.
+> 
+> Because the scope of the problem at this point is XFS, it's
+> inappropriate to report it to lists that are for general kernel or
+> VFS issues. There's enough noise on those lists without everyone
+> bombarding them with subsystem specific issues - that's why we have
+> subsystem specific lists in the first place.
+> 
+> If it turns out to be a problem in some other subsystem, we'll add
+> cc's to other subsystem or general lists as appropriate.
+
+Fair enough. Thanks very much for your time!
+
+Xiong
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
