@@ -1,68 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52894 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751762AbdJMKIk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 06:08:40 -0400
-Date: Fri, 13 Oct 2017 06:08:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] tests/xfs: test for NULL xattr buffer problem during
- unlink
-Message-ID: <20171013100838.GA44117@bfoster.bfoster>
-References: <20171012113627.39452-1-bfoster@redhat.com>
- <20171013054605.GN10593@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171013054605.GN10593@eguan.usersys.redhat.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:58112 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753406AbdJMMGN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 08:06:13 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] xfs: move two more RT specific functions into CONFIG_XFS_RT
+Date: Fri, 13 Oct 2017 14:05:40 +0200
+Message-Id: <20171013120603.4135344-1-arnd@arndb.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Brian Foster <bfoster@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 01:46:05PM +0800, Eryu Guan wrote:
-> On Thu, Oct 12, 2017 at 07:36:27AM -0400, Brian Foster wrote:
-> > XFS had a bug that resulted in an unexpected NULL buffer during
-> > unlink of an inode with a multi-level attr fork tree. This occurred
-> > due to a stale reference to content in a released/reclaimed buffer.
-> > 
-> > Use the XFS buffer LRU reference count error injection tag to
-> > recreate the conditions for the bug. Create a file with a
-> > multi-level attr fork tree and then unlink it with buffer caching
-> > disabled.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > Note that this test depends on a pending[1] XFS error injection tag.
-> > 
-> > Brian
-> > 
-> > [1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
-> 
-> I ran this test with above patch applied (v4.14-rc4 based), and kernel
-> crashed as expected. Then cherry-pick commit f35c5e10c6ed ("xfs: reinit
-> btree pointer on attr tree inactivation walk") and test passed. So test
-> looks good to me, just that I added 'dangerous' group and referenced the
-> fix in commit log and test description.
-> 
+The last cleanup introduced two harmless warnings:
 
-I don't think dangerous is really necessary because this test won't run
-on any kernels prior to those with the patch above, which is still
-pending, and the crash issue had already been addressed in commit
-cd87d8679 ("xfs: don't crash on unexpected holes in dir/attr btrees").
+fs/xfs/xfs_fsmap.c:480:1: warning: '__xfs_getfsmap_rtdev' defined but not used
+fs/xfs/xfs_fsmap.c:372:1: warning: 'xfs_getfsmap_rtdev_rtbitmap_helper' defined but not used
 
-There is technically a crash possibility for custom kernels that
-backport the later errortag patch without the earlier crash/corruption
-fix, as you have for testing purposes. I think that is out of the
-ordinary and doesn't really justify tagging the test, IMO.
+This moves those two functions as well.
 
-Brian
+Fixes: bb9c2e543325 ("xfs: move more RT specific code under CONFIG_XFS_RT")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ fs/xfs/xfs_fsmap.c | 48 ++++++++++++++++++++++++------------------------
+ 1 file changed, 24 insertions(+), 24 deletions(-)
 
-> Thanks for the test!
-> 
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 560e0b40ac1b..43cfc07996a4 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -367,29 +367,6 @@ xfs_getfsmap_datadev_helper(
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+ }
+ 
+-/* Transform a rtbitmap "record" into a fsmap */
+-STATIC int
+-xfs_getfsmap_rtdev_rtbitmap_helper(
+-	struct xfs_trans		*tp,
+-	struct xfs_rtalloc_rec		*rec,
+-	void				*priv)
+-{
+-	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_getfsmap_info	*info = priv;
+-	struct xfs_rmap_irec		irec;
+-	xfs_daddr_t			rec_daddr;
+-
+-	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
+-
+-	irec.rm_startblock = rec->ar_startblock;
+-	irec.rm_blockcount = rec->ar_blockcount;
+-	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+-	irec.rm_offset = 0;
+-	irec.rm_flags = 0;
+-
+-	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
+-}
+-
+ /* Transform a bnobt irec into a fsmap */
+ STATIC int
+ xfs_getfsmap_datadev_bnobt_helper(
+@@ -475,6 +452,30 @@ xfs_getfsmap_logdev(
+ 	return xfs_getfsmap_helper(tp, info, &rmap, 0);
+ }
+ 
++#ifdef CONFIG_XFS_RT
++/* Transform a rtbitmap "record" into a fsmap */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap_helper(
++	struct xfs_trans		*tp,
++	struct xfs_rtalloc_rec		*rec,
++	void				*priv)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_daddr_t			rec_daddr;
++
++	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
++
++	irec.rm_startblock = rec->ar_startblock;
++	irec.rm_blockcount = rec->ar_blockcount;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
++}
++
+ /* Execute a getfsmap query against the realtime device. */
+ STATIC int
+ __xfs_getfsmap_rtdev(
+@@ -521,7 +522,6 @@ __xfs_getfsmap_rtdev(
+ 	return query_fn(tp, info);
+ }
+ 
+-#ifdef CONFIG_XFS_RT
+ /* Actually query the realtime bitmap. */
+ STATIC int
+ xfs_getfsmap_rtdev_rtbitmap_query(
+-- 
+2.9.0
+
