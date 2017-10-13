@@ -1,150 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59358 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53408 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753231AbdJMMi1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 08:38:27 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6B7CFC0587C7
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 12:38:27 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3B74218B27
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 12:38:27 +0000 (UTC)
+        id S1758036AbdJMNY3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Oct 2017 09:24:29 -0400
+Date: Fri, 13 Oct 2017 09:24:27 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: trim writepage mapping to within eof
-Date: Fri, 13 Oct 2017 08:38:26 -0400
-Message-Id: <20171013123826.46207-1-bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: move two more RT specific functions into
+ CONFIG_XFS_RT
+Message-ID: <20171013132427.GC44461@bfoster.bfoster>
+References: <20171013120603.4135344-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171013120603.4135344-1-arnd@arndb.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
 
-The writeback rework in commit fbcc02561359 ("xfs: Introduce
-writeback context for writepages") introduced a subtle change in
-behavior with regard to the block mapping used across the
-->writepages() sequence. The previous xfs_cluster_write() code would
-only flush pages up to EOF at the time of the writepage, thus
-ensuring that any pages due to file-extending writes would be
-handled on a separate cycle and with a new, updated block mapping.
+On Fri, Oct 13, 2017 at 02:05:40PM +0200, Arnd Bergmann wrote:
+> The last cleanup introduced two harmless warnings:
+> 
+> fs/xfs/xfs_fsmap.c:480:1: warning: '__xfs_getfsmap_rtdev' defined but not used
+> fs/xfs/xfs_fsmap.c:372:1: warning: 'xfs_getfsmap_rtdev_rtbitmap_helper' defined but not used
+> 
+> This moves those two functions as well.
+> 
+> Fixes: bb9c2e543325 ("xfs: move more RT specific code under CONFIG_XFS_RT")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-The updated code establishes a block mapping in xfs_writepage_map()
-that could extend beyond EOF if the file has post-eof preallocation.
-Because we now use the generic writeback infrastructure and pass the
-cached mapping to each writepage call, there is no implicit EOF
-limit in place. If eofblocks trimming occurs during ->writepages(),
-any post-eof portion of the cached mapping becomes invalid. The
-eofblocks code has no means to serialize against writeback because
-there are no pages associated with post-eof blocks. Therefore if an
-eofblocks trim occurs and is followed by a file-extending buffered
-write, not only has the mapping become invalid, but we could end up
-writing a page to disk based on the invalid mapping.
+I don't reproduce the warning, but the patch looks fine:
 
-Consider the following sequence of events:
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-- A buffered write creates a delalloc extent and post-eof
-  speculative preallocation.
-- Writeback starts and on the first writepage cycle, the delalloc
-  extent is converted to real blocks (including the post-eof blocks)
-  and the mapping is cached.
-- The file is closed and xfs_release() trims post-eof blocks. The
-  cached writeback mapping is now invalid.
-- Another buffered write appends the file with a delalloc extent.
-- The concurrent writeback cycle picks up the just written page
-  because the writeback range end is LLONG_MAX. xfs_writepage_map()
-  attributes it to the (now invalid) cached mapping and writes the
-  data to an incorrect location on disk (and where the file offset is
-  still backed by a delalloc extent).
-
-This problem is reproduced by xfstests test generic/464, which
-triggers racing writes, appends, open/closes and writeback requests.
-
-To address this problem, trim the mapping used during writeback to
-within EOF when the mapping is validated. This ensures the mapping
-is revalidated for any pages encountered beyond EOF as of the time
-the current mapping was cached or last validated.
-
-Reported-by: Eryu Guan <eguan@redhat.com>
-Diagnosed-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-Hi all,
-
-Here's a v2 with the validation changes suggested against v1. This
-survives 16 iterations of Eryu's test. Additional testing is in progress
-now...
-
-Brian
-
-v2:
-- Perform eof extent trim on each validation of the cached imap instead
-  of only when the mapping is first cached.
-v1: https://marc.info/?l=linux-xfs&m=150780887829820&w=2
-
- fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
- fs/xfs/libxfs/xfs_bmap.h |  1 +
- fs/xfs/xfs_aops.c        | 13 +++++++++++++
- 3 files changed, 25 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index def32fa1..8926379 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3852,6 +3852,17 @@ xfs_trim_extent(
- 	}
- }
- 
-+/* trim extent to within eof */
-+void
-+xfs_trim_extent_eof(
-+	struct xfs_bmbt_irec	*irec,
-+	struct xfs_inode	*ip)
-+
-+{
-+	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
-+					      i_size_read(VFS_I(ip))));
-+}
-+
- /*
-  * Trim the returned map to the required bounds
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 851982a..502e0d8 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -208,6 +208,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- 
- void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
-+void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f18e593..3d1d88a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -446,6 +446,19 @@ xfs_imap_valid(
- {
- 	offset >>= inode->i_blkbits;
- 
-+	/*
-+	 * We have to make sure the cached mapping is within EOF to protect
-+	 * against eofblocks trimming on file release leaving us with a stale
-+	 * mapping. Otherwise, a page for a subsequent file extending buffered
-+	 * write could get picked up by this writeback cycle and written to the
-+	 * wrong blocks.
-+	 *
-+	 * Note that what we really want here is a generic mapping invalidation
-+	 * mechanism to protect us from arbitrary extent modifying contexts, not
-+	 * just eofblocks.
-+	 */
-+	xfs_trim_extent_eof(imap, XFS_I(inode));
-+
- 	return offset >= imap->br_startoff &&
- 		offset < imap->br_startoff + imap->br_blockcount;
- }
--- 
-2.9.5
-
+>  fs/xfs/xfs_fsmap.c | 48 ++++++++++++++++++++++++------------------------
+>  1 file changed, 24 insertions(+), 24 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 560e0b40ac1b..43cfc07996a4 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -367,29 +367,6 @@ xfs_getfsmap_datadev_helper(
+>  	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+>  }
+>  
+> -/* Transform a rtbitmap "record" into a fsmap */
+> -STATIC int
+> -xfs_getfsmap_rtdev_rtbitmap_helper(
+> -	struct xfs_trans		*tp,
+> -	struct xfs_rtalloc_rec		*rec,
+> -	void				*priv)
+> -{
+> -	struct xfs_mount		*mp = tp->t_mountp;
+> -	struct xfs_getfsmap_info	*info = priv;
+> -	struct xfs_rmap_irec		irec;
+> -	xfs_daddr_t			rec_daddr;
+> -
+> -	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
+> -
+> -	irec.rm_startblock = rec->ar_startblock;
+> -	irec.rm_blockcount = rec->ar_blockcount;
+> -	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+> -	irec.rm_offset = 0;
+> -	irec.rm_flags = 0;
+> -
+> -	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
+> -}
+> -
+>  /* Transform a bnobt irec into a fsmap */
+>  STATIC int
+>  xfs_getfsmap_datadev_bnobt_helper(
+> @@ -475,6 +452,30 @@ xfs_getfsmap_logdev(
+>  	return xfs_getfsmap_helper(tp, info, &rmap, 0);
+>  }
+>  
+> +#ifdef CONFIG_XFS_RT
+> +/* Transform a rtbitmap "record" into a fsmap */
+> +STATIC int
+> +xfs_getfsmap_rtdev_rtbitmap_helper(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_rtalloc_rec		*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	struct xfs_getfsmap_info	*info = priv;
+> +	struct xfs_rmap_irec		irec;
+> +	xfs_daddr_t			rec_daddr;
+> +
+> +	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
+> +
+> +	irec.rm_startblock = rec->ar_startblock;
+> +	irec.rm_blockcount = rec->ar_blockcount;
+> +	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+> +	irec.rm_offset = 0;
+> +	irec.rm_flags = 0;
+> +
+> +	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
+> +}
+> +
+>  /* Execute a getfsmap query against the realtime device. */
+>  STATIC int
+>  __xfs_getfsmap_rtdev(
+> @@ -521,7 +522,6 @@ __xfs_getfsmap_rtdev(
+>  	return query_fn(tp, info);
+>  }
+>  
+> -#ifdef CONFIG_XFS_RT
+>  /* Actually query the realtime bitmap. */
+>  STATIC int
+>  xfs_getfsmap_rtdev_rtbitmap_query(
+> -- 
+> 2.9.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
