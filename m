@@ -1,59 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20111 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:23184 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751441AbdJMQzP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 12:55:15 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9DGtDnL011903
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 16:55:14 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9DGtDXl025701
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 16:55:13 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9DGtCsC004088
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Oct 2017 16:55:12 GMT
-Date: Fri, 13 Oct 2017 09:55:08 -0700
+        with ESMTP id S1752409AbdJMRBQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Oct 2017 13:01:16 -0400
+Date: Fri, 13 Oct 2017 10:01:10 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-documentation: updated to b6b0dbd
-Message-ID: <20171013165508.GR7122@magnolia>
+Subject: Re: [PATCH] tests/xfs: test for NULL xattr buffer problem during
+ unlink
+Message-ID: <20171013170110.GE23353@magnolia>
+References: <20171012113627.39452-1-bfoster@redhat.com>
+ <20171013054605.GN10593@eguan.usersys.redhat.com>
+ <20171013100838.GA44117@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171013100838.GA44117@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi folks,
+On Fri, Oct 13, 2017 at 06:08:39AM -0400, Brian Foster wrote:
+> On Fri, Oct 13, 2017 at 01:46:05PM +0800, Eryu Guan wrote:
+> > On Thu, Oct 12, 2017 at 07:36:27AM -0400, Brian Foster wrote:
+> > > XFS had a bug that resulted in an unexpected NULL buffer during
+> > > unlink of an inode with a multi-level attr fork tree. This occurred
+> > > due to a stale reference to content in a released/reclaimed buffer.
+> > > 
+> > > Use the XFS buffer LRU reference count error injection tag to
+> > > recreate the conditions for the bug. Create a file with a
+> > > multi-level attr fork tree and then unlink it with buffer caching
+> > > disabled.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > Note that this test depends on a pending[1] XFS error injection tag.
+> > > 
+> > > Brian
+> > > 
+> > > [1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
+> > 
+> > I ran this test with above patch applied (v4.14-rc4 based), and kernel
+> > crashed as expected. Then cherry-pick commit f35c5e10c6ed ("xfs: reinit
+> > btree pointer on attr tree inactivation walk") and test passed. So test
+> > looks good to me, just that I added 'dangerous' group and referenced the
+> > fix in commit log and test description.
+> > 
+> 
+> I don't think dangerous is really necessary because this test won't run
+> on any kernels prior to those with the patch above, which is still
+> pending, and the crash issue had already been addressed in commit
+> cd87d8679 ("xfs: don't crash on unexpected holes in dir/attr btrees").
 
-The master branch of the xfs-documentation repository at:
+Waitaminute, cd87d8679 went in 4.13-rc1, so any 4.14 should not crash.
+What backtrace did you see?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+--D
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-b6b0dbd xfs: move dir-attr btree sections to a separate chapter
-
-New Commits:
-
-Darrick J. Wong (1):
-      [b6b0dbd] xfs: move dir-attr btree sections to a separate chapter
-
-
-Code Diffstat:
-
- design/XFS_Filesystem_Structure/btrees.asciidoc    |   2 +-
- design/XFS_Filesystem_Structure/dabtrees.asciidoc  | 219 +++++++++++++++++++++
- .../XFS_Filesystem_Structure/directories.asciidoc  | 157 +--------------
- .../xfs_filesystem_structure.asciidoc              |   2 +
- 4 files changed, 223 insertions(+), 157 deletions(-)
- create mode 100644 design/XFS_Filesystem_Structure/dabtrees.asciidoc
+> There is technically a crash possibility for custom kernels that
+> backport the later errortag patch without the earlier crash/corruption
+> fix, as you have for testing purposes. I think that is out of the
+> ordinary and doesn't really justify tagging the test, IMO.
+> 
+> Brian
+> 
+> > Thanks for the test!
+> > 
+> > Eryu
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
