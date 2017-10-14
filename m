@@ -1,140 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40141 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752350AbdJPTLy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:11:54 -0400
-Date: Mon, 16 Oct 2017 12:11:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
-Message-ID: <20171016191147.GC4703@magnolia>
-References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
- <20171002135618.GA32279@bfoster.bfoster>
- <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
- <20171013181605.GA46787@bfoster.bfoster>
- <20171013195334.GB46787@bfoster.bfoster>
- <20171014223447.GC15067@dastard>
- <20171016100904.GA58994@bfoster.bfoster>
+Received: from mga09.intel.com ([134.134.136.24]:19366 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751742AbdJNP6C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 14 Oct 2017 11:58:02 -0400
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [PATCH 01/19] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Date: Sat, 14 Oct 2017 15:57:59 +0000
+Message-ID: <1507996677.21357.1.camel@intel.com>
+References: <20171011200603.27442-1-jack@suse.cz>
+         <20171011200603.27442-2-jack@suse.cz> <20171013071203.GA9105@infradead.org>
+In-Reply-To: <20171013071203.GA9105@infradead.org>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-7"
+Content-ID: <AEC2F79FFD749245BF4279CC59DD5F40@intel.com>
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171016100904.GA58994@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "luto@kernel.org" <luto@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "arnd@arndb.de" <arnd@arndb.de>
 
-On Mon, Oct 16, 2017 at 06:09:04AM -0400, Brian Foster wrote:
-> On Sun, Oct 15, 2017 at 09:34:47AM +1100, Dave Chinner wrote:
-> > On Fri, Oct 13, 2017 at 03:53:35PM -0400, Brian Foster wrote:
-> > > On Fri, Oct 13, 2017 at 02:16:05PM -0400, Brian Foster wrote:
-> > > > On Fri, Oct 13, 2017 at 09:29:35PM +0800, Zorro Lang wrote:
-> > > > > On Mon, Oct 02, 2017 at 09:56:18AM -0400, Brian Foster wrote:
-> > > > > > On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
-> > > > > > > Hi,
-> > > > > > > 
-> > > > > > > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
-> > > > > > > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
-> > > > > > > twice. But I can't reproduce it on another machine.
-> > > > > > > 
-> > > > > > > Maybe there're some hardware specific requirement to trigger this panic. I
-> > > > > > > tested on normal disk partition, but the disk is multi stripes RAID device.
-> > > > > > > I didn't get the mkfs output of g/085, bug I found the default mkfs output
-> > > > > > > (mkfs.xfs -f /dev/sda3) is:
-> > > > > > > 
-> > > > > > > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
-> > > > > > >          =                       sectsz=512   attr=2, projid32bit=1
-> > > > > > >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
-> > > > > > > data     =                       bsize=1024   blocks=15720448, imaxpct=25
-> > > > > > >          =                       sunit=512    swidth=1024 blks
-> > > > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > > > > > > log      =internal log           bsize=1024   blocks=10240, version=2
-> > > > > > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
-> > > > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > > > > 
-> > > > > > > (The test machine is not on my hand now, I need time reserve it.)
-> > > > > > > 
-> > > > > > 
-> > > > > > If you are able to reproduce, could you provide a metadump of this fs
-> > > > > > immediately after the crash?
-> > > > > 
-> > > > > Finally I got the machine which can reproduce this bug for 1 day. Then I
-> > > > > got the XFS metadump which can trigger this bug.
-> > > > > 
-> > > > > Please download the metadump file by opening below link:
-> > > > > https://drive.google.com/file/d/0B5dFDeCXGOPXalNuMUJNdDM3STQ/view?usp=sharing
-> > > > > 
-> > > > > Just mount this xfs image, then kernel will crash. I didn't do any operations
-> > > > > on this XFS, just did "mkfs.xfs -b size=1024".
-> > > > > 
-> > > > 
-> > > > Thanks Zorro. I can reproduce with this image. It looks like the root
-> > > > problem is that a block address calculation goes wrong in
-> > > > xlog_find_head():
-> > > > 
-> > > > 	start_blk = log_bbnum - (num_scan_bblks - head_blk);
-> > > > 
-> > > > With log_bbnum = 3264, num_scan_bblks = 4096 and head_blk = 512,
-> > > > start_blk underflows and we go off the rails from there. Aside from
-> > > > addressing the crash, I think either this value and/or num_scan_bblks
-> > > > need to be clamped to within the range of the log.
-> > > > 
-> > > 
-> > > Actually Zorro, how are you creating a filesystem with such a small log?
-> > > I can't seem to create anything with a log smaller than 2MB. FWIW,
-> > > xfs_info shows the following once I work around the crash and mount the
-> > > fs:
-> > > 
-> > > meta-data=/dev/mapper/test-scratch isize=512    agcount=8, agsize=32256 blks
-> > >          =                       sectsz=512   attr=2, projid32bit=1
-> > >          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
-> > >          =                       reflink=0
-> > > data     =                       bsize=1024   blocks=258048, imaxpct=25
-> > >          =                       sunit=512    swidth=1024 blks
-> > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > > log      =internal               bsize=1024   blocks=1632, version=2
-> > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
-> > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > THis is one of the issues I came across with my mkfs refactoring.
-> > 
-> > The problem is the block size is 1k, not 4k, and there's a check
-> > somewhere against the number of log blocks rather than bytes, and
-> > so you can get a log smaller than the 2MB window that log recovery
-> > expects from 8x256k log buffers....
-> > 
-> > i.e. somewhere in mkfs we need to clamp the minimum log size to
-> > something greater than 2MB. I didn't get to the bottom of it - I
-> > fixed the option parsing bug that caused it and the log went to
-> > someting like 4.5MB instead of 1.6MB....
-> > 
-> 
-> Ok, so it sounds like that is the root cause and is fixed by the mkfs
-> rework. I have a couple patches laying around that fix up the
-> calculation and add some error checks to prevent the kernel crash, but
-> this has me wondering whether we should fail to mount the fs due to the
-> geometry. Thoughts?
+On Fri, 2017-10-13 at 00:12 -0700, Christoph Hellwig wrote:
++AD4- So did we settle on the new mmap+AF8-validate vs adding a new argument
++AD4- to -+AD4-mmap for real now?+AKAAoA-I have to say I'd much prefer passing an
++AD4- additional argument instead, but if higher powers rule that out
++AD4- this version is ok.
 
-Failing the mount sounds ok to me, but do we have any other options to
-deal with undersized logs?  Is there a scenario where we /could/ mount
-an undersized log and not blow up, either immediately or later on?
+Even if we decide to add a parameter to -+AD4-mmap() I think that should be
+done after we merge this version. Otherwise there's no way to stage
+these changes in advance of the merge window since we need to run the
++ACI-add parameter+ACI- coccinelle script near or after -rc1 when there's no
+risk of new -+AD4-mmap() users being added.
 
---D
++AD4- 
++AD4- +AD4- diff --git a/include/linux/fs.h b/include/linux/fs.h
++AD4- +AD4- index 13dab191a23e..5aee97d64cae 100644
++AD4- +AD4- --- a/include/linux/fs.h
++AD4- +AD4- +-+-+- b/include/linux/fs.h
++AD4- +AD4- +AEAAQA- -1701,6 +-1701,8 +AEAAQA- struct file+AF8-operations +AHs-
++AD4- +AD4- +AKA-	long (+ACo-unlocked+AF8-ioctl) (struct file +ACo-, unsigned int,
++AD4- +AD4- unsigned long)+ADs-
++AD4- +AD4- +AKA-	long (+ACo-compat+AF8-ioctl) (struct file +ACo-, unsigned int,
++AD4- +AD4- unsigned long)+ADs-
++AD4- +AD4- +AKA-	int (+ACo-mmap) (struct file +ACo-, struct vm+AF8-area+AF8-struct +ACo-)+ADs-
++AD4- +AD4- +-	int (+ACo-mmap+AF8-validate) (struct file +ACo-, struct vm+AF8-area+AF8-struct
++AD4- +AD4- +ACo-,
++AD4- +AD4- +-			unsigned long)+ADs-
++AD4- 
++AD4- Can we make this return a bool for ok vs not ok?+AKAAoA-That way we only
++AD4- need to have the error code discussion in one place instead of every
++AD4- file system.
 
-> 
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+How about the following incremental update? It allows -+AD4-mmap+AF8-validate()
+to be used as a full replacement for -+AD4-mmap() and it limits the error
+code freedom to a centralized mmap+AF8-status+AF8-errno() routine:
+
+---
+
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 5aee97d64cae..e07fcac17ba7 100644
+--- a/include/linux/fs.h
++-+-+- b/include/linux/fs.h
++AEAAQA- -1685,6 +-1685,13 +AEAAQA- struct block+AF8-device+AF8-operations+ADs-
+ +ACM-define NOMMU+AF8-VMFLAGS +AFw-
+ 	(NOMMU+AF8-MAP+AF8-READ +AHw- NOMMU+AF8-MAP+AF8-WRITE +AHw- NOMMU+AF8-MAP+AF8-EXEC)
+ 
++-enum mmap+AF8-status +AHs-
++-	MMAP+AF8-SUCCESS,
++-	MMAP+AF8-UNSUPPORTED+AF8-FLAGS,
++-	MMAP+AF8-INVALID+AF8-FILE,
++-	MMAP+AF8-RESOURCE+AF8-FAILURE,
++-+AH0AOw-
++-typedef enum mmap+AF8-status mmap+AF8-status+AF8-t+ADs-
+ 
+ struct iov+AF8-iter+ADs-
+ 
++AEAAQA- -1701,7 +-1708,7 +AEAAQA- struct file+AF8-operations +AHs-
+ 	long (+ACo-unlocked+AF8-ioctl) (struct file +ACo-, unsigned int, unsigned long)+ADs-
+ 	long (+ACo-compat+AF8-ioctl) (struct file +ACo-, unsigned int, unsigned long)+ADs-
+ 	int (+ACo-mmap) (struct file +ACo-, struct vm+AF8-area+AF8-struct +ACo-)+ADs-
+-	int (+ACo-mmap+AF8-validate) (struct file +ACo-, struct vm+AF8-area+AF8-struct +ACo-,
++-	mmap+AF8-status+AF8-t (+ACo-mmap+AF8-validate) (struct file +ACo-, struct vm+AF8-area+AF8-struct +ACo-,
+ 			unsigned long)+ADs-
+ 	int (+ACo-open) (struct inode +ACo-, struct file +ACo-)+ADs-
+ 	int (+ACo-flush) (struct file +ACo-, fl+AF8-owner+AF8-t id)+ADs-
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 2649c00581a0..c1b6a8c25ce7 100644
+--- a/mm/mmap.c
++-+-+- b/mm/mmap.c
++AEAAQA- -1432,7 +-1432,7 +AEAAQA- unsigned long do+AF8-mmap(struct file +ACo-file, unsigned long addr,
+ 				vm+AF8-flags +ACYAPQ- +AH4-VM+AF8-MAYEXEC+ADs-
+ 			+AH0-
+ 
+-			if (+ACE-file-+AD4-f+AF8-op-+AD4-mmap)
++-			if (+ACE-file-+AD4-f+AF8-op-+AD4-mmap +ACYAJg- +ACE-file-+AD4-f+AF8-op-+AD4-mmap+AF8-validate)
+ 				return -ENODEV+ADs-
+ 			if (vm+AF8-flags +ACY- (VM+AF8-GROWSDOWN+AHw-VM+AF8-GROWSUP))
+ 				return -EINVAL+ADs-
++AEAAQA- -1612,6 +-1612,27 +AEAAQA- static inline int accountable+AF8-mapping(struct file +ACo-file, vm+AF8-flags+AF8-t vm+AF8-flags)
+ 	return (vm+AF8-flags +ACY- (VM+AF8-NORESERVE +AHw- VM+AF8-SHARED +AHw- VM+AF8-WRITE)) +AD0APQ- VM+AF8-WRITE+ADs-
+ +AH0-
+ 
++-static int mmap+AF8-status+AF8-errno(mmap+AF8-status+AF8-t stat)
++-+AHs-
++-	static const int rc+AFsAXQ- +AD0- +AHs-
++-		+AFs-MMAP+AF8-SUCCESS+AF0- +AD0- 0,
++-		+AFs-MMAP+AF8-UNSUPPORTED+AF8-FLAGS+AF0- +AD0- -EOPNOTSUPP,
++-		+AFs-MMAP+AF8-INVALID+AF8-FILE+AF0- +AD0- -ENOTTY,
++-		+AFs-MMAP+AF8-RESOURCE+AF8-FAILURE+AF0- +AD0- -ENOMEM,
++-	+AH0AOw-
++-
++-	switch (stat) +AHs-
++-	case MMAP+AF8-SUCCESS:
++-	case MMAP+AF8-UNSUPPORTED+AF8-FLAGS:
++-	case MMAP+AF8-INVALID+AF8-FILE:
++-	case MMAP+AF8-RESOURCE+AF8-FAILURE:
++-		return rc+AFs-stat+AF0AOw-
++-	default:
++-		/+ACo- unknown mmap+AF8-status +ACo-/
++-		return rc+AFs-MMAP+AF8-UNSUPPORTED+AF8-FLAGS+AF0AOw-
++-	+AH0-
++-+AH0-
++-
+ unsigned long mmap+AF8-region(struct file +ACo-file, unsigned long addr,
+ 		unsigned long len, vm+AF8-flags+AF8-t vm+AF8-flags, unsigned long pgoff,
+ 		struct list+AF8-head +ACo-uf, unsigned long map+AF8-flags)
++AEAAQA- -1619,6 +-1640,7 +AEAAQA- unsigned long mmap+AF8-region(struct file +ACo-file, unsigned long addr,
+ 	struct mm+AF8-struct +ACo-mm +AD0- current-+AD4-mm+ADs-
+ 	struct vm+AF8-area+AF8-struct +ACo-vma, +ACo-prev+ADs-
+ 	int error+ADs-
++-	mmap+AF8-status+AF8-t status+ADs-
+ 	struct rb+AF8-node +ACoAKg-rb+AF8-link, +ACo-rb+AF8-parent+ADs-
+ 	unsigned long charged +AD0- 0+ADs-
+ 
++AEAAQA- -1697,11 +-1719,19 +AEAAQA- unsigned long mmap+AF8-region(struct file +ACo-file, unsigned long addr,
+ 		 +ACo- vma+AF8-link() below can deny write-access if VM+AF8-DENYWRITE is set
+ 		 +ACo- and map writably if VM+AF8-SHARED is set. This usually means the
+ 		 +ACo- new file must not have been exposed to user-space, yet.
++-		 +ACo-
++-		 +ACo- We require -+AD4-mmap+AF8-validate in the MAP+AF8-SHARED+AF8-VALIDATE
++-		 +ACo- case, prefer -+AD4-mmap+AF8-validate over -+AD4-mmap, and
++-		 +ACo- otherwise fallback to legacy -+AD4-mmap.
+ 		 +ACo-/
+ 		vma-+AD4-vm+AF8-file +AD0- get+AF8-file(file)+ADs-
+-		if ((map+AF8-flags +ACY- MAP+AF8-TYPE) +AD0APQ- MAP+AF8-SHARED+AF8-VALIDATE)
+-			error +AD0- file-+AD4-f+AF8-op-+AD4-mmap+AF8-validate(file, vma, map+AF8-flags)+ADs-
+-		else
++-		if ((map+AF8-flags +ACY- MAP+AF8-TYPE) +AD0APQ- MAP+AF8-SHARED+AF8-VALIDATE) +AHs-
++-			status +AD0- file-+AD4-f+AF8-op-+AD4-mmap+AF8-validate(file, vma, map+AF8-flags)+ADs-
++-			error +AD0- mmap+AF8-status+AF8-errno(status)+ADs-
++-		+AH0- else if (file-+AD4-f+AF8-op-+AD4-mmap+AF8-validate) +AHs-
++-			status +AD0- file-+AD4-f+AF8-op-+AD4-mmap+AF8-validate(file, vma, map+AF8-flags)+ADs-
++-			error +AD0- mmap+AF8-status+AF8-errno(status)+ADs-
++-		+AH0- else
+ 			error +AD0- call+AF8-mmap(file, vma)+ADs-
+ 		if (error)
+ 			goto unmap+AF8-and+AF8-free+AF8-vma+ADs
