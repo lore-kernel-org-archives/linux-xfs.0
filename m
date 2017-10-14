@@ -1,72 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:43477 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753023AbdJPWAO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 18:00:14 -0400
-Date: Tue, 17 Oct 2017 09:00:11 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31769 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751138AbdJNWID (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 18:08:03 -0400
+Date: Sun, 15 Oct 2017 09:07:59 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20171016220010.GI15067@dastard>
-References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
- <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
- <20171009000529.GY3666@dastard>
- <20171009183129.GE11645@wotan.suse.de>
- <87wp442lgm.fsf@xmission.com>
- <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
- <20171015130625.o5k6tk5uflm3rx65@thunk.org>
- <87efq4qcry.fsf@xmission.com>
- <20171016011301.dcam44qylno7rm6a@thunk.org>
+Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
+ recovered buffers")
+Message-ID: <20171014220759.GZ15067@dastard>
+References: <20171013184916.GS7122@magnolia>
+ <20171014115550.GB50635@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016011301.dcam44qylno7rm6a@thunk.org>
+In-Reply-To: <20171014115550.GB50635@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Aleksa Sarai <asarai@suse.de>, "Luis R. Rodriguez" <mcgrof@kernel.org>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Oct 15, 2017 at 09:13:01PM -0400, Theodore Ts'o wrote:
-> On Sun, Oct 15, 2017 at 05:14:41PM -0500, Eric W. Biederman wrote:
+On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
+> On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
+> > Hi all,
 > > 
-> > Looking at the code it appears ext4, f2fs, and xfs shutdown path
-> > implements revoking a bdev from a filesystem.  Further if the ext4
-> > implementation is anything to go by it looks like something we could
-> > generalize into the vfs.
+> > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
+> > recovered buffers").  I was analyzing a scrub failure on generic/392
+> > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
+> > scrub part 4) being unable to find a b_ops attached to the AGF buffer
+> > and signalling error.
+> > 
+> > The pattern I observe is that when log recovery runs on a v4 filesystem,
+> > we call some variant of xfs_buf_read with a NULL ops parameter.  The
+> > buffer therefore gets created and read without any verifiers.
+> > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
+> > filesystem we come back and attach verifiers and all is well.  However,
+> > on a v4 filesystem the function returns without doing anything, so the
+> > xfs_buf just sits around in memory with no verifier.  Subsequent
+> > read/log/relse patterns can write anything they want without write
+> > verifiers to check that.
+> > 
+> > If the v4 fs didn't need log recovery, the buffers get created with
+> > b_ops as you'd expect.
+> > 
+> > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
+> > set b_ops and save the "if (hascrc)" bits for the part that ensures the
+> > LSN is up to date?
+> > 
 > 
-> There are two things which the current file system shutdown paths do.
-> The first is that they prevent the file system from attempting to
-> write to the bdev.  That's all very file system specific, and can't be
-> generalized into the VFS.
+> Seems reasonable, but I notice that the has_crc() check around
+> _validate_buf_type() comes in sometime after the the original commit
+> referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
+> commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
+> errors").
 > 
-> The second thing they do is they cause system calls which might modify
-> the file system to return an error.  Currently operations that might
-> result in _reads_ are not shutdown, so it's not a true revoke(2)
+> IIRC, the problem there is that log recovery had traditionally always
+> unconditionally replayed everything in the log over whatever resides in
+> the fs. This actually meant that recovery could transiently corrupt
+> buffers in certain cases if the target buffer happened to be relogged
+> more than once and was already up to date, which leads to verification
+> failures.
 
-Which is different to XFS - XFS shuts down all access to the bdev,
-read or write, and returns EIO to the callers.(*) IOWs, a UAPI has
-been copy-and-pasted, but the behaviour and semantics have not been
-copied/duplicated. The requirement was "close enough for fstests to
-use it" not "must behave the exact same way on all filesystems".
+Yes, that is one of the problems - we can get writeback of partially
+updated buffers mid-way through log recovery on v4 filesystems.
 
->From that perspective, I agree with Ted:  we need an interface
-that provides userspace with sane, consistent semantics and allows
-filesystems to be disconnected from userspace references so can be
-unmounted. What the filesystem then does to disconnect itself from
-the block device and allow unmount to complete (i.e. the shutdown
-implementation) is irrelevant to the VFS and users....
+> This was addressed for v5 filesystems with LSN ordering rules,
+> but the challenge for v4 filesystems was that there is no metadata LSN
+> and thus no means to detect whether a buffer is already up to date with
+> regard to a transaction in the log.
+
+In a nutshell.
+
+> Dave might have more historical context to confirm that...
+
+Historically it only occurred (rarely) due to memory pressure
+triggering writeback during recovery. However, when we changed to context
+specific delayed write buffer lists we started doing that writeback
+after every checkpoint was recovered. Hence it's now pretty trivial
+to trigger verifier failures during log recovery on v4
+filesystems...
+
+> If that is
+> still an open issue, a couple initial ideas come to mind:
+> 
+> 1.) Do something simple/crude like reclaim all buffers after log
+> recovery on v4 filesystems to provide a clean slate going forward.
+
+This might be a worthwhile thing to do, anyway. Log recovery can
+lead to a lot of cached metadata that won't be referenced again
+after reocvery is complete. Perhaps we should just clear the
+buffer cache after the first phase of recovery just before/after
+we re-read the superblock and re-init the incore space accounting...
+
+> 2.) Unconditionally attach verifiers during recovery as originally done
+> and wire up something generic that short circuits verifier invocations
+> on v4 filesystems when log recovery is in progress.
+
+I'd prefer "return to clean slate" than have to handle log
+recovery state specially in every verifier. It's simple, it's easy
+to maintain, and it creates a barrier between metadata recovered
+from the log and post-processing of intents/unlinks that ensures
+we've made all the recovered changes stable on disk before we move
+on...
 
 Cheers,
 
 Dave.
-
-(*) Shutdown in XFS is primarily intended to prevent propagating
-damage in the filesystem when corruption is first detected or an
-unrecoverable error occurs. Historically speaking, it is always
-initiated by the XFS filesystem itself, so whatever we do to provide
-unmount sanity isn't going to replace internal filesystem shutdown
-functionality...
-
 -- 
 Dave Chinner
 david@fromorbit.com
