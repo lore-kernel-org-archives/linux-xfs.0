@@ -1,251 +1,237 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46428 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34462 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757931AbdJMNNt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:13:49 -0400
-Date: Fri, 13 Oct 2017 09:13:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] [RFC] xfs: make xfs_writepage_map extent map centric
-Message-ID: <20171013131347.GB44461@bfoster.bfoster>
-References: <20171011081131.8029-1-david@fromorbit.com>
- <20171012161433.GA40005@bfoster.bfoster>
- <20171012232221.GV15067@dastard>
+        id S1751715AbdJNNaR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 14 Oct 2017 09:30:17 -0400
+Date: Sat, 14 Oct 2017 21:30:15 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
+Message-ID: <20171014133015.GF21475@dhcp12-143.nay.redhat.com>
+References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
+ <20171002135618.GA32279@bfoster.bfoster>
+ <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
+ <20171013181605.GA46787@bfoster.bfoster>
+ <20171013195334.GB46787@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171012232221.GV15067@dastard>
+In-Reply-To: <20171013195334.GB46787@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com
 
-On Fri, Oct 13, 2017 at 10:22:21AM +1100, Dave Chinner wrote:
-> On Thu, Oct 12, 2017 at 12:14:37PM -0400, Brian Foster wrote:
-> > On Wed, Oct 11, 2017 at 07:11:31PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
+On Fri, Oct 13, 2017 at 03:53:35PM -0400, Brian Foster wrote:
+> On Fri, Oct 13, 2017 at 02:16:05PM -0400, Brian Foster wrote:
+> > On Fri, Oct 13, 2017 at 09:29:35PM +0800, Zorro Lang wrote:
+> > > On Mon, Oct 02, 2017 at 09:56:18AM -0400, Brian Foster wrote:
+> > > > On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
+> > > > > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
+> > > > > twice. But I can't reproduce it on another machine.
+> > > > > 
+> > > > > Maybe there're some hardware specific requirement to trigger this panic. I
+> > > > > tested on normal disk partition, but the disk is multi stripes RAID device.
+> > > > > I didn't get the mkfs output of g/085, bug I found the default mkfs output
+> > > > > (mkfs.xfs -f /dev/sda3) is:
+> > > > > 
+> > > > > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
+> > > > >          =                       sectsz=512   attr=2, projid32bit=1
+> > > > >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+> > > > > data     =                       bsize=1024   blocks=15720448, imaxpct=25
+> > > > >          =                       sunit=512    swidth=1024 blks
+> > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> > > > > log      =internal log           bsize=1024   blocks=10240, version=2
+> > > > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > > > > 
+> > > > > (The test machine is not on my hand now, I need time reserve it.)
+> > > > > 
+> > > > 
+> > > > If you are able to reproduce, could you provide a metadump of this fs
+> > > > immediately after the crash?
 > > > 
-> > > xfs_writepage_map() iterates over the bufferheads on a page to decide
-> > > what sort of IO to do and what actions to take. However, when it comes
-> > > to reflink and deciding when it needs to execute a COW operation, we no
-> > > longer look at the bufferhead state but instead we ignore than and look up
-> > > internal state held in teh COW fork extent list.
-> 
-> [....]
+> > > Finally I got the machine which can reproduce this bug for 1 day. Then I
+> > > got the XFS metadump which can trigger this bug.
 > > > 
-> > > This patch has smoke tested ok on 1k and 4k block filesystems with and without
-> > > reflink enabled, so it seems solid enough for initial comments to be made. Next
-> > > step is to get some kind of generation count or seqlock based cached map
-> > > invalidation into this code now that it's all unified.
+> > > Please download the metadump file by opening below link:
+> > > https://drive.google.com/file/d/0B5dFDeCXGOPXalNuMUJNdDM3STQ/view?usp=sharing
 > > > 
-> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > > ---
+> > > Just mount this xfs image, then kernel will crash. I didn't do any operations
+> > > on this XFS, just did "mkfs.xfs -b size=1024".
+> > > 
 > > 
-> > This seems sane to me on a first look. You may be planning this anyways
-> > since this is an RFC, but could we split up the patches into separate
-> > logical changes? For example, folding xfs_map_cow() into
-> > xfs_map_blocks() seems like it could be a separate patch.
-> 
-> Yeah, I intend to split it up for review and submission. I generally
-> just write a big single patch first to get the code into the right
-> shape and working first, then worry about how to split it sanely for
-> review. That way I don't waste time generating patches that have
-> to be completely reworked after an initial RFC...
-> 
-
-Yup, I figured.
-
-...
+> > Thanks Zorro. I can reproduce with this image. It looks like the root
+> > problem is that a block address calculation goes wrong in
+> > xlog_find_head():
 > > 
-> > > +		case XFS_IO_HOLE:
-> > > +			/* nothing to do! */
-> > > +			trace_xfs_map_blocks_found(ip, offset, count, *type, imap);
-> > > +			return 0;
+> > 	start_blk = log_bbnum - (num_scan_bblks - head_blk);
 > > 
-> > I'm a little confused about this case. How can this happen, and why do
-> > we use the _blocks_found() tracepoint?
-> 
-> isnullstartblock() evaluates as true for HOLESTARTBLOCK, which we
-> mapped above in the !COW case. I just reused the tracepoint as a
-> quick and dirty method of tracing that holes were being mapped
-> properly via the type field.
-> 
-
-Ah, Ok. This will be less confusing when the hole case can simply skip
-over this branch rather than drop into a branch for allocation only to
-return.
-
-> > > +		default:
-> > > +			ASSERT(0);
-> > > +			return -EFSCORRUPTED;
-> > > +		}
+> > With log_bbnum = 3264, num_scan_bblks = 4096 and head_blk = 512,
+> > start_blk underflows and we go off the rails from there. Aside from
+> > addressing the crash, I think either this value and/or num_scan_bblks
+> > need to be clamped to within the range of the log.
 > > 
-> > Previous question aside, it looks like doing something like:
 > 
-> This caught quite a few bugs as I developed the patch :P
+> Actually Zorro, how are you creating a filesystem with such a small log?
+> I can't seem to create anything with a log smaller than 2MB. FWIW,
+
+Hi Brian,
+
+I found this panic by run g/085 on my test machine. Then I got this metadump
+file only by:
+
+MKFS_OPTIONS="-b size=1024"
+size=$((256 * 1024 * 1024))
+_scratch_mkfs_sized $size
+xfs_metadump -o $SCRATCH_DEV /path/to/mymetadumpfile
+
+4k block size can't reproduce it on my test machine, but 1k can. So I think
+maybe mkfs.xfs make something wrong?
+
+Thanks,
+Zorro
+
+> xfs_info shows the following once I work around the crash and mount the
+> fs:
 > 
-
-I'm not advocating to kill the corruption checks, they just seem more
-clear to me when checked directly at a higher level. I.e., logic like
-'if nullstartblock && type != some value we should have set earlier'
-kind of makes my eyes cross once I have to go hunting around for what
-type should/could be. Seeing them embedded in a if (nullstartblock())
-branch also makes me start to wonder what cases we've missed. Better
-would be just some top level checks that ensure the *type and startblock
-state are sane.
-
+> meta-data=/dev/mapper/test-scratch isize=512    agcount=8, agsize=32256 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=1024   blocks=258048, imaxpct=25
+>          =                       sunit=512    swidth=1024 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal               bsize=1024   blocks=1632, version=2
+>          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> Brian
+> 
+> > Brian
 > > 
-> > 	if (isnullstartblock(..) &&
-> > 	    (*type == XFS_IO_DELALLOC || *type == XFS_IO_COW)) {
-> > 		...
-> > 	}
-> > 
-> > ... and doing some of the corruption checks separately could then
-> > eliminate this switch statement entirely.
-> 
-> Yeah, it can definitely be cleaned up - handling the non-allocation
-> case first would also help a lot....
-> 
-> 
-> > > @@ -883,89 +900,93 @@ xfs_writepage_map(
-> > >  	struct writeback_control *wbc,
-> > >  	struct inode		*inode,
-> > >  	struct page		*page,
-> > > -	loff_t			offset,
-> > >  	uint64_t              end_offset)
-> > >  {
-> > >  	LIST_HEAD(submit_list);
-> > >  	struct xfs_ioend	*ioend, *next;
-> > > -	struct buffer_head	*bh, *head;
-> > > +	struct buffer_head	*bh;
-> > >  	ssize_t			len = i_blocksize(inode);
-> > >  	int			error = 0;
-> > >  	int			count = 0;
-> > > -	int			uptodate = 1;
-> > > -	unsigned int		new_type;
-> > > +	bool			uptodate = true;
-> > > +	loff_t			file_offset;	/* file offset of page */
-> > > +	int			poffset;	/* offset into page */
-> > >  
-> > > -	bh = head = page_buffers(page);
-> > > -	offset = page_offset(page);
-> > > -	do {
-> > > -		if (offset >= end_offset)
-> > > +	/*
-> > > +	 * walk the blocks on the page, and we we run off then end of the
-> > > +	 * current map or find the current map invalid, grab a new one.
-> > > +	 * We only use bufferheads here to check per-block state - they no
-> > > +	 * longer control the iteration through the page. This allows us to
-> > > +	 * replace the bufferhead with some other state tracking mechanism in
-> > > +	 * future.
-> > > +	 */
-> > > +	file_offset = page_offset(page);
-> > > +	bh = page_buffers(page);
-> > > +	for (poffset = 0;
-> > > +	     poffset < PAGE_SIZE;
-> > > +	     poffset += len, file_offset += len, bh = bh->b_this_page) {
-> > > +
-> > > +		/* past the range we are writing, so nothing more to write. */
-> > > +		if (file_offset >= end_offset)
-> > >  			break;
-> > ...
-> > > +
-> > > +		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
-> > > +			/*
-> > > +			 * set_page_dirty dirties all buffers in a page, independent
-> > > +			 * of their state.  The dirty state however is entirely
-> > > +			 * meaningless for holes (!mapped && uptodate), so check we did
-> > > +			 * have a buffer covering a hole here and continue.
-> > > +			 */
-> > > +			ASSERT(!buffer_mapped(bh));
-> > > +			continue;
-> > >  		}
-> > 
-> > IIRC, the old (broken) write over hole situation would allocate a block,
-> > potentially yell about a block reservation overrun and ultimately write
-> > the page.
-> 
-> Which was [always] the wrong thing to do.
-> 
-> However, we were forced to do this historically because it covered
-> bugs and deficiencies in the front end mapping code, such as before
-> we had ->page_mkwrite notification. In those ancient times, mmap()
-> could not do delayed allocation or discover unwritten extents
-> correctly.  So back in those days we had to do unreserved
-> allocations in writeback and risk transaction overruns and ENOSPC in
-> writeback because mmap writes were unable to do the right thing.
-> 
-> Nowdays, we've closed off all those issues and the only situation we
-> can get unreserved allocation into a hole is when we've got a
-> mismatch between bufferhead and extent state. This should never
-> happen anymore, and silently allocating blocks for ranges that may
-> or may not have valid data in them and writing it to disk is
-> exactly the wrong thing to be doing now.
-> 
-
-"This should never happen ..."
-
-Famous last words? ;) 
-
-Yeah, I understand it's a broken case, but I'm slightly concerned over
-the fact that it has happened in the past due to filesystem bugs. I
-think due to more than one problem as well, but my memory is hazy.
-
-Note that I'm not suggesting we go ahead and write the page like we used
-to do, but rather that we at least have a defensive check for a
-discrepancy between pagecache state that suggests a buffer is dirty and
-extent state says there is no place to write. If so, throw a warning
-(either xfs_alert() or WARN_ON()) to indicate something went wrong
-because we tossed a dirty page without writing it anywhere. In other
-words, all I'm really saying here is that I don't think an assert is
-good enough.
-
-> > Now it looks like we silently (aside from the assert on dev
-> > kernels) skip the writeback and clean the page.
-> 
-> Which, IMO, is correct behaviour - the old code danced around this
-> because we couldn't easily answer the question of "what to do when
-> we have a bufferhead state vs extent map mismatch?".
-> 
-> All we care about now is "does the block have valid data" and "does
-> the extent map say we can write it". By the time we get here, we've
-> already skipped blocks that don't have valid data, and the checks
-> above say "we can't write this data because it's a hole". The reason
-> it has valid data is that has been previously read - which is pretty
-> common and most definitely exercised by fstests - so we silently
-> skip it.
-> 
-> One of the benefits of this change is that we remove these
-> ambiguities from the writeback code. If we get fed crap in the
-> writeback code, then we've got a bug in the front end iomap code...
-> 
-
-Indeed, I agree with regard to the overall behavior.
-
-> > Unless I've missed that
-> > being handled somewhere, that seems like a slightly more severe error
-> > from the user perspective. Perhaps we should have a noiser warning here
-> > or even consider that a writeback error?
-> 
-> No, because it's a valid state to have cached data over a hole if
-> it's been read. Hence the assert to ensure what we got was from a
-> previous read into a hole - if a mod we make to the higher level
-> code screws up, we'll catch it pretty quickly during testing...
-> 
-
-We should be able to distinguish between page/buffer state that
-indicates we have valid data over a hole vs. valid+dirty data over a
-hole in order to flag the latter as a problem.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > Thanks,
+> > > Zorro
+> > > 
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > Thanks,
+> > > > > Zorro
+> > > > > 
+> > > > > [1]:
+> > > > > 
+> > > > > [  373.165020] run fstests generic/085 at 2017-09-29 10:29:32 
+> > > > > [  373.522944] XFS (sda4): Unmounting Filesystem 
+> > > > > [  373.700510] device-mapper: uevent: version 1.0.3 
+> > > > > [  373.725266] device-mapper: ioctl: 4.36.0-ioctl (2017-06-09) initialised: dm-devel@redhat.com 
+> > > > > [  374.199737] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  374.228642] XFS (dm-0): Ending clean mount 
+> > > > > [  374.285479] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  374.319080] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  374.353123] XFS (dm-0): Ending clean mount 
+> > > > > [  374.409625] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  374.437494] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  374.477124] XFS (dm-0): Ending clean mount 
+> > > > > [  374.549775] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  374.578300] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  374.618208] XFS (dm-0): Ending clean mount 
+> > > > > [  374.672593] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  374.701455] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  374.741861] XFS (dm-0): Ending clean mount 
+> > > > > [  374.798972] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  374.827584] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  374.872622] XFS (dm-0): Ending clean mount 
+> > > > > [  374.938045] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  374.966630] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  375.009748] XFS (dm-0): Ending clean mount 
+> > > > > [  375.067006] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  375.095371] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  375.134992] XFS (dm-0): Ending clean mount 
+> > > > > [  375.198436] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  375.226926] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  375.271643] XFS (dm-0): Ending clean mount 
+> > > > > [  375.326618] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  375.357583] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  375.402952] XFS (dm-0): Ending clean mount 
+> > > > > [  375.454747] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  375.483053] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  375.527584] XFS (dm-0): Ending clean mount 
+> > > > > [  375.592113] XFS (dm-0): Unmounting Filesystem 
+> > > > > [  375.620637] XFS (dm-0): Mounting V5 Filesystem 
+> > > > > [  375.683969] XFS (dm-0): Invalid block length (0xfffffed8) for buffer 
+> > > > > [  375.713282] BUG: unable to handle kernel NULL pointer dereference at           (null) 
+> > > > > [  375.749352] IP: xlog_header_check_mount+0x11/0xd0 [xfs] 
+> > > > > [  375.773424] PGD 0 P4D 0  
+> > > > > [  375.784990] Oops: 0000 [#1] SMP 
+> > > > > [  375.799382] Modules linked in: dm_mod rpcrdma ib_isert iscsi_target_mod ib_iser libiscsi scsi_transport_iscsi ib_srpt target_core_mod ib_srp scsi_transport_srp ib_ipoib rdma_ucm ib_ucm ib_uverbs ib_umad rdma_cm ib_cm iw_cm ib_core intel_rapl sb_edac x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm ext4 mbcache jbd2 irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel pcbc vfat fat aesni_intel crypto_simd glue_helper ipmi_ssif cryptd iTCO_wdt joydev hpilo iTCO_vendor_support sg ipmi_si hpwdt ipmi_devintf i2c_i801 pcspkr lpc_ich ioatdma ipmi_msghandler shpchp dca nfsd wmi acpi_power_meter auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c mgag200 i2c_algo_bit drm_kms_helper sd_mod syscopyarea sysfillrect sysimgblt fb_sys_fops ttm drm crc32c_intel i2c_core hpsa be2net 
+> > > > > [  376.134079]  scsi_transport_sas 
+> > > > > [  376.148586] CPU: 52 PID: 46126 Comm: mount Not tainted 4.14.0-rc2 #1 
+> > > > > [  376.177733] Hardware name: HP ProLiant BL460c Gen9, BIOS I36 09/12/2016 
+> > > > > [  376.209076] task: ffff9e448206b4c0 task.stack: ffffab2bc9828000 
+> > > > > [  376.236861] RIP: 0010:xlog_header_check_mount+0x11/0xd0 [xfs] 
+> > > > > [  376.263261] RSP: 0018:ffffab2bc982baf8 EFLAGS: 00010246 
+> > > > > [  376.287307] RAX: 0000000000000001 RBX: fffffffffffffed7 RCX: 0000000000000000 
+> > > > > [  376.320119] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff9e44827ee000 
+> > > > > [  376.353016] RBP: ffffab2bc982bb10 R08: 0000000000000000 R09: 0000000000000000 
+> > > > > [  376.388077] R10: 0000000000000001 R11: 000000008dbdaba7 R12: ffff9e3e84567b80 
+> > > > > [  376.423650] R13: ffff9e44827ee000 R14: 0000000000000001 R15: 0000000000000000 
+> > > > > [  376.456573] FS:  00007f7ea6c46880(0000) GS:ffff9e3ea7a00000(0000) knlGS:0000000000000000 
+> > > > > [  376.493753] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
+> > > > > [  376.520232] CR2: 0000000000000000 CR3: 0000000c3b76a004 CR4: 00000000001606e0 
+> > > > > [  376.553291] Call Trace: 
+> > > > > [  376.564479]  xlog_find_verify_log_record+0x13b/0x270 [xfs] 
+> > > > > [  376.589761]  xlog_find_head+0x1ed/0x4d0 [xfs] 
+> > > > > [  376.609787]  ? mark_held_locks+0x66/0x90 
+> > > > > [  376.627819]  xlog_find_tail+0x43/0x3a0 [xfs] 
+> > > > > [  376.647431]  ? try_to_wake_up+0x59/0x750 
+> > > > > [  376.665459]  xlog_recover+0x2d/0x170 [xfs] 
+> > > > > [  376.684250]  ? xfs_trans_ail_init+0xc7/0xf0 [xfs] 
+> > > > > [  376.706261]  xfs_log_mount+0x2b0/0x320 [xfs] 
+> > > > > [  376.726658]  xfs_mountfs+0x55c/0xaf0 [xfs] 
+> > > > > [  376.745614]  ? xfs_mru_cache_create+0x178/0x1d0 [xfs] 
+> > > > > [  376.768813]  xfs_fs_fill_super+0x4bd/0x620 [xfs] 
+> > > > > [  376.790017]  mount_bdev+0x18c/0x1c0 
+> > > > > [  376.806030]  ? xfs_test_remount_options.isra.15+0x60/0x60 [xfs] 
+> > > > > [  376.833247]  xfs_fs_mount+0x15/0x20 [xfs] 
+> > > > > [  376.851728]  mount_fs+0x39/0x150 
+> > > > > [  376.866558]  vfs_kern_mount+0x6b/0x170 
+> > > > > [  376.884623]  do_mount+0x1f0/0xd60 
+> > > > > [  376.901879]  ? memdup_user+0x42/0x60 
+> > > > > [  376.919545]  SyS_mount+0x83/0xd0 
+> > > > > [  376.936736]  do_syscall_64+0x6c/0x220 
+> > > > > [  376.954020]  entry_SYSCALL64_slow_path+0x25/0x25 
+> > > > > [  376.975265] RIP: 0033:0x7f7ea5ec0aaa 
+> > > > > [  376.991661] RSP: 002b:00007ffe777381e8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5 
+> > > > > [  377.026394] RAX: ffffffffffffffda RBX: 00005596b8d93080 RCX: 00007f7ea5ec0aaa 
+> > > > > [  377.059178] RDX: 00005596b8d95640 RSI: 00005596b8d93270 RDI: 00005596b8d93250 
+> > > > > [  377.092234] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000010 
+> > > > > [  377.125095] R10: 00000000c0ed0000 R11: 0000000000000206 R12: 00005596b8d93250 
+> > > > > [  377.158157] R13: 00005596b8d95640 R14: 0000000000000000 R15: 00005596b8d93080 
+> > > > > [  377.192994] Code: c0 48 c7 c7 58 13 70 c0 e8 2d 2a fe ff e9 aa fd ff ff 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 e5 41 55 49 89 fd 41 54 53 <81> 3e fe ed ba be 48 89 f3 75 5b 4c 8d a3 30 01 00 00 ba 10 00  
+> > > > > [  377.291657] RIP: xlog_header_check_mount+0x11/0xd0 [xfs] RSP: ffffab2bc982baf8 
+> > > > > [  377.326553] CR2: 0000000000000000 
+> > > > > [  377.342022] ---[ end trace 85d9cc5b8e738db6 ]--- 
+> > > > > 
+> > > > > 
+> > > > > 
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
