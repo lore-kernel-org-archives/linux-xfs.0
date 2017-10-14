@@ -1,77 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41030 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752096AbdJLVnL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Oct 2017 17:43:11 -0400
-Date: Thu, 12 Oct 2017 14:43:09 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: fixes for 4.14-rc5
-Message-ID: <20171012214309.GK7122@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:53329 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750729AbdJNWeu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 18:34:50 -0400
+Date: Sun, 15 Oct 2017 09:34:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
+Message-ID: <20171014223447.GC15067@dastard>
+References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
+ <20171002135618.GA32279@bfoster.bfoster>
+ <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
+ <20171013181605.GA46787@bfoster.bfoster>
+ <20171013195334.GB46787@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171013195334.GB46787@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-Hi Linus,
+On Fri, Oct 13, 2017 at 03:53:35PM -0400, Brian Foster wrote:
+> On Fri, Oct 13, 2017 at 02:16:05PM -0400, Brian Foster wrote:
+> > On Fri, Oct 13, 2017 at 09:29:35PM +0800, Zorro Lang wrote:
+> > > On Mon, Oct 02, 2017 at 09:56:18AM -0400, Brian Foster wrote:
+> > > > On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
+> > > > > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
+> > > > > twice. But I can't reproduce it on another machine.
+> > > > > 
+> > > > > Maybe there're some hardware specific requirement to trigger this panic. I
+> > > > > tested on normal disk partition, but the disk is multi stripes RAID device.
+> > > > > I didn't get the mkfs output of g/085, bug I found the default mkfs output
+> > > > > (mkfs.xfs -f /dev/sda3) is:
+> > > > > 
+> > > > > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
+> > > > >          =                       sectsz=512   attr=2, projid32bit=1
+> > > > >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+> > > > > data     =                       bsize=1024   blocks=15720448, imaxpct=25
+> > > > >          =                       sunit=512    swidth=1024 blks
+> > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> > > > > log      =internal log           bsize=1024   blocks=10240, version=2
+> > > > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > > > > 
+> > > > > (The test machine is not on my hand now, I need time reserve it.)
+> > > > > 
+> > > > 
+> > > > If you are able to reproduce, could you provide a metadump of this fs
+> > > > immediately after the crash?
+> > > 
+> > > Finally I got the machine which can reproduce this bug for 1 day. Then I
+> > > got the XFS metadump which can trigger this bug.
+> > > 
+> > > Please download the metadump file by opening below link:
+> > > https://drive.google.com/file/d/0B5dFDeCXGOPXalNuMUJNdDM3STQ/view?usp=sharing
+> > > 
+> > > Just mount this xfs image, then kernel will crash. I didn't do any operations
+> > > on this XFS, just did "mkfs.xfs -b size=1024".
+> > > 
+> > 
+> > Thanks Zorro. I can reproduce with this image. It looks like the root
+> > problem is that a block address calculation goes wrong in
+> > xlog_find_head():
+> > 
+> > 	start_blk = log_bbnum - (num_scan_bblks - head_blk);
+> > 
+> > With log_bbnum = 3264, num_scan_bblks = 4096 and head_blk = 512,
+> > start_blk underflows and we go off the rails from there. Aside from
+> > addressing the crash, I think either this value and/or num_scan_bblks
+> > need to be clamped to within the range of the log.
+> > 
+> 
+> Actually Zorro, how are you creating a filesystem with such a small log?
+> I can't seem to create anything with a log smaller than 2MB. FWIW,
+> xfs_info shows the following once I work around the crash and mount the
+> fs:
+> 
+> meta-data=/dev/mapper/test-scratch isize=512    agcount=8, agsize=32256 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=1024   blocks=258048, imaxpct=25
+>          =                       sunit=512    swidth=1024 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal               bsize=1024   blocks=1632, version=2
+>          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Here's round three of bug fixes and other build problems.
+THis is one of the issues I came across with my mkfs refactoring.
 
---D
+The problem is the block size is 1k, not 4k, and there's a check
+somewhere against the number of log blocks rather than bytes, and
+so you can get a log smaller than the 2MB window that log recovery
+expects from 8x256k log buffers....
 
-The following changes since commit e12199f85d0ad1b04ce6c425ad93cd847fe930bb:
+i.e. somewhere in mkfs we need to clamp the minimum log size to
+something greater than 2MB. I didn't get to the bottom of it - I
+fixed the option parsing bug that caused it and the log went to
+someting like 4.5MB instead of 1.6MB....
 
-   xfs: handle racy AIO in xfs_reflink_end_cow (2017-10-03 21:27:55 -0700)
+Cheers,
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.14-fixes-5
-
-for you to fetch changes up to 93e8befc17f6d6ea92b0aee3741ceac8bca4590f:
-
-  xfs: handle error if xfs_btree_get_bufs fails (2017-10-11 10:21:07 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- Fix a stale kernel memory exposure when logging inodes.
-- Fix some build problems with CONFIG_XFS_RT=n
-- Don't change inode mode if the acl write fails, leaving the file totally
-  inaccessible.
-- Fix a dangling pointer problem when removing an attr fork under memory
-  pressure.
-- Don't crash while trying to invalidate a null buffer associated with a
-  corrupt metadata pointer.
-
-----------------------------------------------------------------
-Brian Foster (1):
-      xfs: reinit btree pointer on attr tree inactivation walk
-
-Dave Chinner (3):
-      xfs: Don't log uninitialised fields in inode structures
-      xfs: move more RT specific code under CONFIG_XFS_RT
-      xfs: don't change inode mode if ACL update fails
-
-Eric Sandeen (1):
-      xfs: handle error if xfs_btree_get_bufs fails
-
-Thomas Meyer (1):
-      xfs: Fix bool initialization/comparison
-
- fs/xfs/libxfs/xfs_alloc.c      |  8 +++++
- fs/xfs/libxfs/xfs_bmap.c       |  4 +--
- fs/xfs/libxfs/xfs_ialloc.c     |  4 +--
- fs/xfs/libxfs/xfs_log_format.h | 27 +++++----------
- fs/xfs/xfs_acl.c               | 22 ++++++++----
- fs/xfs/xfs_attr_inactive.c     |  2 ++
- fs/xfs/xfs_bmap_util.c         |  2 ++
- fs/xfs/xfs_bmap_util.h         | 13 +++++++
- fs/xfs/xfs_file.c              |  4 +--
- fs/xfs/xfs_fsmap.c             | 12 +++++++
- fs/xfs/xfs_inode_item.c        | 79 ++++++++++++++++++++++--------------------
- fs/xfs/xfs_log.c               |  2 +-
- fs/xfs/xfs_mount.c             |  2 +-
- fs/xfs/xfs_ondisk.h            |  2 +-
- 14 files changed, 111 insertions(+), 72 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
