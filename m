@@ -1,171 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41606 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932333AbdJRMF2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Oct 2017 08:05:28 -0400
-Date: Wed, 18 Oct 2017 08:05:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
-Message-ID: <20171018120526.GA4362@bfoster.bfoster>
-References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
- <20171002135618.GA32279@bfoster.bfoster>
- <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
- <20171013181605.GA46787@bfoster.bfoster>
- <20171013195334.GB46787@bfoster.bfoster>
- <20171014223447.GC15067@dastard>
- <20171016100904.GA58994@bfoster.bfoster>
- <20171016191147.GC4703@magnolia>
- <20171016222604.GJ15067@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6278 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750729AbdJNWm1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 18:42:27 -0400
+Date: Sun, 15 Oct 2017 09:42:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+Message-ID: <20171014224224.GD15067@dastard>
+References: <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
+ <20171006222031.GU3666@dastard>
+ <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
+ <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
+ <20171009112306.GM3666@dastard>
+ <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
+ <20171009220332.GP3666@dastard>
+ <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
+ <20171010225524.GV3666@dastard>
+ <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016222604.GJ15067@dastard>
+In-Reply-To: <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
-On Tue, Oct 17, 2017 at 09:26:04AM +1100, Dave Chinner wrote:
-...
+On Fri, Oct 13, 2017 at 11:13:24AM +0300, Avi Kivity wrote:
+> On 10/11/2017 01:55 AM, Dave Chinner wrote:
+> >On Tue, Oct 10, 2017 at 12:07:42PM +0300, Avi Kivity wrote:
+> >>On 10/10/2017 01:03 AM, Dave Chinner wrote:
+> >>>>On 10/09/2017 02:23 PM, Dave Chinner wrote:
+> >>>>>On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
+> >>>>>Sure, that might be the IO concurrency the SSD sees and handles, but
+> >>>>>you very rarely require that much allocation parallelism in the
+> >>>>>workload. Only a small amount of the IO submission path is actually
+> >>>>>allocation work, so a single AG can provide plenty of async IO
+> >>>>>parallelism before an AG is the limiting factor.
+> >>>>Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
+> >>>AGs don't issue IO. Applications issue IO, the filesystem allocates
+> >>>space from AGs according to the write IO that passes through it.
+> >>What I meant was I/O in order to satisfy an allocation (read from
+> >>the free extent btree or whatever), not the application's I/O.
+> >Once you're in the per-AG allocator context, it is single threaded
+> >until the allocation is complete. We do things like btree block
+> >readahead to minimise IO wait times, but we can't completely hide
+> >things like metadata read Io wait time when it is required to make
+> >progress.
 > 
-> For the cases I came across. I haven't solved the root problem in
-> mkfs yet, so this could still occur. FYI, there was some interesting
-> and unexpected interactions with log stripe units that triggered it,
-> and I note the above filesystem has a log stripe unit set. So it's
-> likely I haven't solved all the issues yet.
-> 
+> I see, thanks. Will RWF_NOWAIT detect the need to do I/O for the
+> free space btree, or just contention? (I expect the latter from the
+> patches I've seen, but perhaps I missed something).
 
-Ok.
+No, it checks at a high level whether allocation is needed (i.e. IO
+into a hole) and if allocation is needed, it punts the IO
+immediately to the background thread and returns to userspace. i.e.
+it never gets near the allocator to begin with....
 
-> The problem most likely is based in confusion around these
-> definitions for log size (in xfs_fs.h):
-> 
-> /*
->  * Minimum and maximum sizes need for growth checks.
->  *
->  * Block counts are in units of filesystem blocks, not basic blocks.
->  */
-> #define XFS_MIN_AG_BLOCKS       64
-> #define XFS_MIN_LOG_BLOCKS      512ULL
-> #define XFS_MAX_LOG_BLOCKS      (1024 * 1024ULL)
-> #define XFS_MIN_LOG_BYTES       (10 * 1024 * 1024ULL)
-> 
-> The log size limits need to be rationalised and moved to
-> xfs_log_format.h, and mkfs needs to be made to enforce them
-> consistently regardless of block size.
-> 
-> > > I have a couple patches laying around that fix up the
-> > > calculation and add some error checks to prevent the kernel crash, but
-> > > this has me wondering whether we should fail to mount the fs due to the
-> > > geometry. Thoughts?
-> 
-> Unfortunately, I don't think that's an option - there will be
-> filesysetms out there that the geometry checks fail and refuse to
-> mount with a new kernel, despite it working without problems for
-> years....
-> 
+Like I said before, RWF_NOWAIT prevents entire classes of
+AIO submission blocking issues from occuring. Use it and almost all
+filesystem blocking concerns go away....
 
-That's kind of what I was afraid of. :P
+> The vast majority of the time XFS AIO works very well. The problem
+> is that when problems do happen, performance drops of sharply, and
+> it's often in a situation that's hard to debug.
 
-> > Failing the mount sounds ok to me, but do we have any other options to
-> > deal with undersized logs?  Is there a scenario where we /could/ mount
-> > an undersized log and not blow up, either immediately or later on?
-> 
-> In this case, I think the problem is the 2MB window we consider to
-> be the worst case "partially written" window at the head of the log.
-> i.e.  8x256k log buffers.  We assume that this is always the worst
-> case, because the previous mount could have been using that.
-> 
-> This assumption has always been used for simplicity. i.e. worst case
-> is assumed in place of detecting the previous mount's log buffer
-> size from the log records written to the log. If we read the log and
-> determine the maximum record size, we know exactly what the worst
-> case dirty region is going to be.
-> 
+Yes, and that's made worse by there being relatively few people
+around with the knowledge to be able to find the the root cause when
+it does happen. :/
 
-So from doing a quick, high-level rundown of the log recovery
-algorithm...
+Cheers,
 
-- We read the blocks at the start and end of the physical log to
-  determine the current cycle. We then essentially bisect the log to try
-  and locate the last block in the current cycle (or more specifically,
-  the first block in the previous cycle that has not yet been
-  overwritten). IOW, this is where the prospective log head appears to
-  be based on an initial cycle value bisection/estimation.
-- From there, we scan backwards XLOG_TOTAL_REC_SHIFT() blocks (which is
-  the 2MB window referenced above) looking for earlier instances of the
-  "previous" cycle. I.e., this is essentially a finer tuned cycle-based
-  search for the appropriate head, using the maximum possible partial or
-  out of order write window based on the max iclog count/size. (This is
-  where we explode.)
-- Next, we potentially fine tune the head again based on the last valid
-  log record header in the log. This uses XLOG_REC_SHIFT(), which is the
-  max size of a single record (256k) and so I don't think should post a
-  risk.
-
-It isn't until this step that we actually have a reference to
-potentially valid log record content.
-
-- We return the head block and xlog_find_tail() seeks backwards for the
-  last valid log record header, using it to look up the tail block.
-- We check for an unmount record to determine whether the log is clean.
-- If not, we move on to the higher level head/tail validation that has
-  been added more recently (torn write detection, tail overwrite
-  detection).
-  
-At this point, it looks like scanning associated with the higher-level
-verification is mostly based on max iclog count (i.e., scan windows are
-based on a certain number of record headers within the head/tail) rather
-than a fixed size window such as the 2MB window used during the cycle
-search.
-
-> I think the kernel side defense needs to be some combination of these
-> three things:
-> 
-> 	1. check what the log record sizes we see during the tail
-> 	search and trim the "dirty head" window to suit.
-> 
-
-The reason I wrote up the above is because I'm not quite following what
-you mean here. The first few steps noted above that use the 2MB window
-don't actually have log record data to reference, because this is the
-early part of the process of locating a valid record.
-
-Am I missing something or just misreading..? Could you elaborate on
-where in the above sequence we could tighten up a fixed 2MB window..?
-
-> 	2. If the dirty window is larger than the log, then trim
-> 	it to search the entire log rather than overrun into
-> 	negative block offsets like we do now.
-> 
-
-Otherwise, this is basically the fix I have so far and I think it covers
-the immediate underflow problem.
-
-> 	3. in the case of tiny logs, we shouldn't even be allowing
-> 	users to mount with logbsize * logbufs > log size / 2.  Then
-> 	we can size the initial dirty window appropiately based on
-> 	the log size....
-> 
-
-Ok, I'll look into this. Should this be a generic restriction or only
-associated with logs under a particular size threshold? For example, I
-can currently create a small, 512b blocksize fs with a 4800 block
-(~2.3MB) log and mount it with '-o logbufs=8,logbsize=256k' without a
-problem.
-
-Either way, what is the (log size / 2) metric based on? Thanks.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
