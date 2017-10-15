@@ -1,64 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44686 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:60798 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750704AbdJOHQH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Oct 2017 03:16:07 -0400
-Date: Sun, 15 Oct 2017 15:16:05 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] tests/xfs: test for NULL xattr buffer problem during
- unlink
-Message-ID: <20171015071605.GX10593@eguan.usersys.redhat.com>
-References: <20171012113627.39452-1-bfoster@redhat.com>
- <20171013054605.GN10593@eguan.usersys.redhat.com>
- <20171013100838.GA44117@bfoster.bfoster>
+        id S1751630AbdJOIxY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Oct 2017 04:53:24 -0400
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
+ <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
+ <20171009000529.GY3666@dastard> <20171009183129.GE11645@wotan.suse.de>
+ <87wp442lgm.fsf@xmission.com>
+From: Aleksa Sarai <asarai@suse.de>
+Message-ID: <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
+Date: Sun, 15 Oct 2017 19:53:11 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171013100838.GA44117@bfoster.bfoster>
+In-Reply-To: <87wp442lgm.fsf@xmission.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, =?UTF-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 06:08:39AM -0400, Brian Foster wrote:
-> On Fri, Oct 13, 2017 at 01:46:05PM +0800, Eryu Guan wrote:
-> > On Thu, Oct 12, 2017 at 07:36:27AM -0400, Brian Foster wrote:
-> > > XFS had a bug that resulted in an unexpected NULL buffer during
-> > > unlink of an inode with a multi-level attr fork tree. This occurred
-> > > due to a stale reference to content in a released/reclaimed buffer.
-> > > 
-> > > Use the XFS buffer LRU reference count error injection tag to
-> > > recreate the conditions for the bug. Create a file with a
-> > > multi-level attr fork tree and then unlink it with buffer caching
-> > > disabled.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > > 
-> > > Note that this test depends on a pending[1] XFS error injection tag.
-> > > 
-> > > Brian
-> > > 
-> > > [1] https://marc.info/?l=linux-xfs&m=150765408521029&w=2
-> > 
-> > I ran this test with above patch applied (v4.14-rc4 based), and kernel
-> > crashed as expected. Then cherry-pick commit f35c5e10c6ed ("xfs: reinit
-> > btree pointer on attr tree inactivation walk") and test passed. So test
-> > looks good to me, just that I added 'dangerous' group and referenced the
-> > fix in commit log and test description.
-> > 
+[Dammit, I thought I sent this earlier -- it looks like Thunderbird 
+swallowed my original draft for this email.]
+
+Hi Eric,
+
+This is the bug that I talked to you about at LPC, related to 
+devicemapper and it not being possible to issue DELETE and REMOVE 
+operations on a devicemapper device that is still mounted in 
+$some_namespace. [Before we go on, deferred removal and deletion can 
+help here, but the deferral will never kick in until the reference goes 
+away. On SUSE systems, deferred removal doesn't appear to work at all, 
+but that's an issue for us to solve.]
+
+> *Scratches my head*
 > 
-> I don't think dangerous is really necessary because this test won't run
-> on any kernels prior to those with the patch above, which is still
-> pending, and the crash issue had already been addressed in commit
-> cd87d8679 ("xfs: don't crash on unexpected holes in dir/attr btrees").
+> That most definitely is not a leak.  It is a creation of a duplicate set
+> of mounts.
+
+Sorry for my sloppy wording, "leak" in this context means (for me at 
+least) that the mount has been duplicated into a mount namespace due to 
+sloppiness or malice by userspace.
+
+> It is true that unmount in the parent will not remove those duplicate
+> mounts in the other mount namespaces.  Unlink of the mountpoint will
+> ensure that nothing is mounted on a file or directory in any mount
+> namespace.
 > 
-> There is technically a crash possibility for custom kernels that
-> backport the later errortag patch without the earlier crash/corruption
-> fix, as you have for testing purposes. I think that is out of the
-> ordinary and doesn't really justify tagging the test, IMO.
+> Given that they are duplicate of the mount they will not make any umount
+> fail in the original namespace.
 
-That makes sense, I'll drop dangerous group, thanks!
+The error is a bit confusing. If you read the code, it turns out that 
+"unmount failed" doesn't actually mean that umount(2) returned EBUSY. It 
+means that the umount(2) *succeeded* and then the subsequent cleanup by 
+Docker (where it tries to remove and delete unused devicemapper devices) 
+fails. This is caused by the mount still existing in a container's mount 
+namespace, due either a race condition (that I may have patch to fix[1]) 
+or due to the container inadvertently bind-mounting the rootfs mounts 
+from the host (I've seen people do ridiculous things like a recursive 
+bind-mount of '/' into a container, for example).
 
-Eryu
+> Further mount namespaces reference counts are held open by processes
+> directly or file descriptors or other mount namespaces which are held
+> open by processes.  So killing the appropriate set of processes should
+> make the mount namespace go away.
+> 
+> I have heard tell of cases where mounts make it into mount namespaces
+> where no one was expecting them to exist, and no one wanting to kill the
+> processes using those mount namespaces.  But that is mostly sloppiness.
+> That is not a big bad leak that can not be prevented, it is an "oops did
+> I put that there?" kind of situation.
+> 
+> If there is something special about device mapper that needs to be take
+> into account I would love to hear about it.
+
+You're right that most of this issue (in the case of Docker) is just 
+sloppiness, though the architecture makes it quite hard to resolve this 
+issue at the moment. But the problem in Docker /can/ be solved at least 
+partially by just removing the mountpoint. In fact I have a patch to do 
+that already[2].
+
+However, there is a more fundamental issue here, one which is quite 
+concerning. It basically boils down to the fact that any unprivileged 
+user can create a reference to a devicemapper mount on the host in such 
+a way that the host won't know about it. A toy example is the following:
+
+   % unshare -rm
+   # mount --make-rprivate
+   # mount -t tmpfs tmpfs /tmp && mkdir /tmp/saved_mount
+   # mount --rbind /some/devicemapper/mount /tmp/saved_mount
+
+At this point, even if the host does an `rm /some/devicemapper/mount`, 
+the devicemapper reference will stick around in the "container". This 
+isn't an issue for most cases, but with devicemapper, the host might 
+want to do more management operations than just ` rm 
+/some/devicemapper/mount`. They probably (like Docker does) want to 
+remove the device and/or delete the device. In the above situation, they 
+would be blocked from doing so. As I mention above, deferred deletion 
+and removal can help here (the operation succeeds on non-SUSE systems) 
+but there is still an issue that the space will not be reclaimed because 
+the deferred operation will never kick off (because there is still a 
+reference lying around).
+
+As you've said, 8ed936b5671b ("vfs: Lazily remove mounts on unlinked 
+files and directories.") added the ability to reduce possible DoS 
+attacks against rmdir(2) by forcing unmounts in all mount namespaces 
+that would block the removal from working. I'm wondering whether there 
+would be interest in doing something similar for devicemapper's DELETE 
+and REMOVE operations? From my perspective, it is quite hard for 
+userspace to be able to resolve this issue. You mentioned that
+
+ > killing the appropriate set of processes should
+ > make the mount namespace go away.
+
+But I'm not sure I understand how userspace can tell what "the 
+appropriate set of processes" is. Not to mention that the appropriate 
+set of processes could be an "innocent" process inside a container that 
+accidentally inherited the mount, and then a malicious process 
+duplicated the mount further -- making it hard to remove by the host.
+
+[1]: https://github.com/opencontainers/runc/pull/1500
+[2]: https://github.com/docker/docker/pull/34573
+
+-- 
+Aleksa Sarai
+Snr. Software Engineer (Containers)
+SUSE Linux GmbH
+https://www.cyphar.com/
