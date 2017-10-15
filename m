@@ -1,238 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42670 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751416AbdJOFHy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Oct 2017 01:07:54 -0400
-Date: Sat, 14 Oct 2017 22:07:51 -0700
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH V2] xfs: implement cgroup writeback support
-Message-ID: <20171015050751.dfznko2hxhi6jvra@kernel.org>
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:47252 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751386AbdJOPOz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 11:14:55 -0400
+Received: by mail-ua0-f196.google.com with SMTP id e46so8156302uaa.4
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Oct 2017 08:14:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="ybjc454kubnt76ke"
-Content-Disposition: inline
+In-Reply-To: <20171013150348.GA11257@obsidianresearch.com>
+References: <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
+ <20171010180512.GA31734@obsidianresearch.com> <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
+ <20171012182712.GA5772@obsidianresearch.com> <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
+ <20171013065047.GA26461@lst.de> <20171013150348.GA11257@obsidianresearch.com>
+From: Matan Barak <matanb@dev.mellanox.co.il>
+Date: Sun, 15 Oct 2017 18:14:53 +0300
+Message-ID: <CAAKD3BBR2CmQvg-3bqPog0VFrEm=QU-b-xBDH-_Q+sXV9NkFUA@mail.gmail.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
-Cc: david@fromorbit.com, tj@kernel.org, Kernel-team@fb.com
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma <linux-rdma@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Marek Szyprowski <m.szyprowski@samsung.com>, Liran Liss <liranl@mellanox.com>
 
+On Fri, Oct 13, 2017 at 6:03 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Fri, Oct 13, 2017 at 08:50:47AM +0200, Christoph Hellwig wrote:
+>
+>> > However, chatting this over with a few more people I have an alternate
+>> > solution that effectively behaves the same as how non-ODP hardware
+>> > handles this case of hole punch / truncation today. So, today if this
+>> > scenario happens on a page-cache backed mapping, the file blocks are
+>> > unmapped and the RDMA continues into pinned pages that are no longer
+>> > part of the file. We can achieve the same thing with the iommu, just
+>> > re-target the I/O into memory that isn't part of the file. That way
+>> > hardware does not see I/O errors and the DAX data consistency model is
+>> > no worse than the page-cache case.
+>>
+>> Yikes.
+>
+> Well, as much as you say Yikes, Dan is correct, this does match the
+> semantics RDMA MR's already have. They become non-coherent if their
+> underlying object is changed, and there are many ways to get there.
+> I've never thought about it, but it does sound like ftruncate,
+> fallocate, etc on a normal file would break the MR coherency too??
+>
+> There have been efforts in the past driven by the MPI people to
+> create, essentially, something like lease-break' SIGIO. Except it was
+> intended to be general, and wanted solve all the problems related with
+> MR de-coherence. This was complicated and never became acceptable to
+> mainline.
+>
+> Instead ODP was developed, and ODP actually solves all the problem
+> sanely.
+>
+> Thinking about it some more, and with your other comments on
+> get_user_pages in this thread, I tend to agree. It doesn't make sense
+> to develop a user space lease break API for MR's that is a DAX
+> specific feature.
+>
+> Along the some lines, it also doesn't make sense to force-invalidate
+> MR's linked to DAX regions, while leaving MR's linked to other
+> regions that have the same problem alone.
+>
+> If you want to make non-ODP MR's work better, then you need to have a
+> general overall solution to tell userspace when the MR becomes (or I
+> guess, is becoming) non-coherent, that covers all the cases that break
+> MR coherence, not just via DAX.
+>
+> Otherwise, I think Dan is right, keeping the current semantic of
+> having MRs just do something wrong, but not corrupt memory, when they
+> loose coherence, is broadly consistent with how non-ODP MRs work today.
+>
 
---ybjc454kubnt76ke
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I agree, keeping the current semantics is probably the best thing we
+could do. It's a trade-off between breaking existing applications,
+having a new lease API for DAX or just failing DAX in particular (as
+opposed to other cases). For stable mappings, what we have is probably
+sufficient. For mappings which could be changed, it's unclear to me
+how you could guarantee non-racy behavior that is bounded by a
+pre-defined time and guarantee no user-space errors. On top of that,
+ODP (should) already solve that problem transparently.
 
-From: Shaohua Li <shli@fb.com>
+IMHO, using iommu for that and causing DMA errors just because the
+lease broke isn't the right thing to do.
 
-Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
-writeback support). Tested with a fio test, verified writeback is
-throttled against cgroup io.max write bandwidth, also verified moving
-the fio test to another cgroup and the writeback is throttled against
-new cgroup setting.
+> Jason
 
-I created a test for this as attached, please try! I'll send the test out for
-inclusion later.
+Matan
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- fs/xfs/xfs_aops.c  | 12 ++++++++++--
- fs/xfs/xfs_super.c |  1 +
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2917260..0c41f82 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -561,7 +561,8 @@ xfs_alloc_ioend(
- 	struct inode		*inode,
- 	unsigned int		type,
- 	xfs_off_t		offset,
--	struct buffer_head	*bh)
-+	struct buffer_head	*bh,
-+	struct writeback_control *wbc)
- {
- 	struct xfs_ioend	*ioend;
- 	struct bio		*bio;
-@@ -578,6 +579,8 @@ xfs_alloc_ioend(
- 	INIT_WORK(&ioend->io_work, xfs_end_io);
- 	ioend->io_append_trans = NULL;
- 	ioend->io_bio = bio;
-+	/* attach new bio to its cgroup */
-+	wbc_init_bio(wbc, bio);
- 	return ioend;
- }
- 
-@@ -605,6 +608,8 @@ xfs_chain_bio(
- 	ioend->io_bio->bi_write_hint = ioend->io_inode->i_write_hint;
- 	submit_bio(ioend->io_bio);
- 	ioend->io_bio = new;
-+	/* attach new bio to its cgroup */
-+	wbc_init_bio(wbc, new);
- }
- 
- /*
-@@ -628,7 +633,7 @@ xfs_add_to_ioend(
- 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
- 		if (wpc->ioend)
- 			list_add(&wpc->ioend->io_list, iolist);
--		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
-+		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh, wbc);
- 	}
- 
- 	/*
-@@ -638,6 +643,9 @@ xfs_add_to_ioend(
- 	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
- 		xfs_chain_bio(wpc->ioend, wbc, bh);
- 
-+	/* Charge write size to its cgroup for cgroup switching track */
-+	wbc_account_io(wbc, bh->b_page, bh->b_size);
-+
- 	wpc->ioend->io_size += bh->b_size;
- 	wpc->last_block = bh->b_blocknr;
- 	xfs_start_buffer_writeback(bh);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index c996f4a..41eb6e0 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1634,6 +1634,7 @@ xfs_fs_fill_super(
- 	sb->s_max_links = XFS_MAXLINK;
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
-+	sb->s_iflags |= SB_I_CGROUPWB;
- 
- 	/* version 5 superblocks support inode version counters. */
- 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
--- 
-2.9.5
-
-
---ybjc454kubnt76ke
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="0001-Add-cgroup2-writeback-test.patch"
-
->From 0edbc6d9f7abae299d6b1bd4b8ad76728afab313 Mon Sep 17 00:00:00 2001
-Message-Id: <0edbc6d9f7abae299d6b1bd4b8ad76728afab313.1508043579.git.shli@fb.com>
-From: Shaohua Li <shli@fb.com>
-Date: Sat, 14 Oct 2017 18:57:06 -0700
-Subject: [PATCH] Add cgroup2 writeback test
-
----
- common/cgroup2        | 18 +++++++++++++++++
- tests/generic/463     | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/463.out |  2 ++
- tests/generic/group   |  1 +
- 4 files changed, 77 insertions(+)
- create mode 100644 common/cgroup2
- create mode 100755 tests/generic/463
- create mode 100644 tests/generic/463.out
-
-diff --git a/common/cgroup2 b/common/cgroup2
-new file mode 100644
-index 00000000..130c2f79
---- /dev/null
-+++ b/common/cgroup2
-@@ -0,0 +1,18 @@
-+#!/bin/bash
-+# cgroup2 specific common functions
-+
-+export CGROUP2_PATH="/sys/fs/cgroup"
-+
-+_require_cgroup2()
-+{
-+	if [ ! -f ${CGROUP2_PATH}/cgroup.subtree_control ]; then
-+		_notrun "Test requires cgroup2 enabled"
-+	fi
-+}
-+
-+_get_scratch_dev_devt()
-+{
-+	ls -l $SCRATCH_DEV | awk '{printf("%s:%s", substr($5, 1, length($5)-1), 0)}'
-+}
-+
-+/bin/true
-diff --git a/tests/generic/463 b/tests/generic/463
-new file mode 100755
-index 00000000..8dafadb0
---- /dev/null
-+++ b/tests/generic/463
-@@ -0,0 +1,56 @@
-+#! /bin/bash
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/cgroup2
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+cgname=`mktemp -du ${CGROUP2_PATH}/test.XXXXXX`
-+_cleanup()
-+{
-+    _scratch_unmount
-+    cd /
-+    rmdir $cgname
-+}
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_cgroup2
-+
-+# Setup Filesystem
-+_scratch_mkfs >/dev/null 2>&1 \
-+        || _fail "mkfs failed"
-+
-+_scratch_mount \
-+        || _fail "mount failed"
-+
-+echo +io > /sys/fs/cgroup/cgroup.subtree_control
-+mkdir $cgname
-+
-+wbytes=$(
-+echo $BASHPID > $cgname/cgroup.procs;
-+dd if=/dev/zero of=$SCRATCH_MNT/image bs=1M count=100 >/dev/null 2>&1;
-+# Makre sure writeback starts
-+sleep 120;
-+cat $cgname/io.stat | sed -n "s/$(_get_scratch_dev_devt).*wbytes=\([0-9]*\).*/\1/p"
-+)
-+
-+[ -z "$wbytes" -o "$wbytes" = "0" ] && _fail "Cgroup writeback doesn't work"
-+echo "Cgroup writeback test success"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/463.out b/tests/generic/463.out
-new file mode 100644
-index 00000000..211da95e
---- /dev/null
-+++ b/tests/generic/463.out
-@@ -0,0 +1,2 @@
-+QA output created by 463
-+Cgroup writeback test success
-diff --git a/tests/generic/group b/tests/generic/group
-index f2a6cdad..ea7b6956 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -465,3 +465,4 @@
- 460 auto quick rw
- 461 auto shutdown stress
- 462 auto quick dax
-+463 cgroup writeback test
--- 
-2.11.0
-
-
---ybjc454kubnt76ke--
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
