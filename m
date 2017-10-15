@@ -1,96 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:47252 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751386AbdJOPOz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 11:14:55 -0400
-Received: by mail-ua0-f196.google.com with SMTP id e46so8156302uaa.4
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Oct 2017 08:14:55 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:18724 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751235AbdJOWAX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 18:00:23 -0400
+Date: Mon, 16 Oct 2017 09:00:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+Message-ID: <20171015220018.GG3666@dastard>
+References: <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
+ <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
+ <20171009112306.GM3666@dastard>
+ <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
+ <20171009220332.GP3666@dastard>
+ <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
+ <20171010225524.GV3666@dastard>
+ <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
+ <20171014224224.GD15067@dastard>
+ <db0ca95f-ce16-4b2e-7d69-52f3552a6004@scylladb.com>
 MIME-Version: 1.0
-In-Reply-To: <20171013150348.GA11257@obsidianresearch.com>
-References: <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
- <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
- <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
- <20171010180512.GA31734@obsidianresearch.com> <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
- <20171012182712.GA5772@obsidianresearch.com> <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
- <20171013065047.GA26461@lst.de> <20171013150348.GA11257@obsidianresearch.com>
-From: Matan Barak <matanb@dev.mellanox.co.il>
-Date: Sun, 15 Oct 2017 18:14:53 +0300
-Message-ID: <CAAKD3BBR2CmQvg-3bqPog0VFrEm=QU-b-xBDH-_Q+sXV9NkFUA@mail.gmail.com>
-Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <db0ca95f-ce16-4b2e-7d69-52f3552a6004@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma <linux-rdma@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Marek Szyprowski <m.szyprowski@samsung.com>, Liran Liss <liranl@mellanox.com>
+To: Avi Kivity <avi@scylladb.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 6:03 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Fri, Oct 13, 2017 at 08:50:47AM +0200, Christoph Hellwig wrote:
->
->> > However, chatting this over with a few more people I have an alternate
->> > solution that effectively behaves the same as how non-ODP hardware
->> > handles this case of hole punch / truncation today. So, today if this
->> > scenario happens on a page-cache backed mapping, the file blocks are
->> > unmapped and the RDMA continues into pinned pages that are no longer
->> > part of the file. We can achieve the same thing with the iommu, just
->> > re-target the I/O into memory that isn't part of the file. That way
->> > hardware does not see I/O errors and the DAX data consistency model is
->> > no worse than the page-cache case.
->>
->> Yikes.
->
-> Well, as much as you say Yikes, Dan is correct, this does match the
-> semantics RDMA MR's already have. They become non-coherent if their
-> underlying object is changed, and there are many ways to get there.
-> I've never thought about it, but it does sound like ftruncate,
-> fallocate, etc on a normal file would break the MR coherency too??
->
-> There have been efforts in the past driven by the MPI people to
-> create, essentially, something like lease-break' SIGIO. Except it was
-> intended to be general, and wanted solve all the problems related with
-> MR de-coherence. This was complicated and never became acceptable to
-> mainline.
->
-> Instead ODP was developed, and ODP actually solves all the problem
-> sanely.
->
-> Thinking about it some more, and with your other comments on
-> get_user_pages in this thread, I tend to agree. It doesn't make sense
-> to develop a user space lease break API for MR's that is a DAX
-> specific feature.
->
-> Along the some lines, it also doesn't make sense to force-invalidate
-> MR's linked to DAX regions, while leaving MR's linked to other
-> regions that have the same problem alone.
->
-> If you want to make non-ODP MR's work better, then you need to have a
-> general overall solution to tell userspace when the MR becomes (or I
-> guess, is becoming) non-coherent, that covers all the cases that break
-> MR coherence, not just via DAX.
->
-> Otherwise, I think Dan is right, keeping the current semantic of
-> having MRs just do something wrong, but not corrupt memory, when they
-> loose coherence, is broadly consistent with how non-ODP MRs work today.
->
+On Sun, Oct 15, 2017 at 12:36:03PM +0300, Avi Kivity wrote:
+> 
+> 
+> On 10/15/2017 01:42 AM, Dave Chinner wrote:
+> >On Fri, Oct 13, 2017 at 11:13:24AM +0300, Avi Kivity wrote:
+> >>On 10/11/2017 01:55 AM, Dave Chinner wrote:
+> >>>On Tue, Oct 10, 2017 at 12:07:42PM +0300, Avi Kivity wrote:
+> >>>>On 10/10/2017 01:03 AM, Dave Chinner wrote:
+> >>>>>>On 10/09/2017 02:23 PM, Dave Chinner wrote:
+> >>>>>>>On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
+> >>>>>>>Sure, that might be the IO concurrency the SSD sees and handles, but
+> >>>>>>>you very rarely require that much allocation parallelism in the
+> >>>>>>>workload. Only a small amount of the IO submission path is actually
+> >>>>>>>allocation work, so a single AG can provide plenty of async IO
+> >>>>>>>parallelism before an AG is the limiting factor.
+> >>>>>>Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
+> >>>>>AGs don't issue IO. Applications issue IO, the filesystem allocates
+> >>>>>space from AGs according to the write IO that passes through it.
+> >>>>What I meant was I/O in order to satisfy an allocation (read from
+> >>>>the free extent btree or whatever), not the application's I/O.
+> >>>Once you're in the per-AG allocator context, it is single threaded
+> >>>until the allocation is complete. We do things like btree block
+> >>>readahead to minimise IO wait times, but we can't completely hide
+> >>>things like metadata read Io wait time when it is required to make
+> >>>progress.
+> >>I see, thanks. Will RWF_NOWAIT detect the need to do I/O for the
+> >>free space btree, or just contention? (I expect the latter from the
+> >>patches I've seen, but perhaps I missed something).
+> >No, it checks at a high level whether allocation is needed (i.e. IO
+> >into a hole) and if allocation is needed, it punts the IO
+> >immediately to the background thread and returns to userspace. i.e.
+> >it never gets near the allocator to begin with....
+> 
+> Interesting, that's both good and bad. Good, because we avoided a
+> potential stall. Bad, because if the stall would not actually have
+> happened (lock not contended, btree nodes cached) then we got punted
+> to the helper thread which is a more expensive path.
 
-I agree, keeping the current semantics is probably the best thing we
-could do. It's a trade-off between breaking existing applications,
-having a new lease API for DAX or just failing DAX in particular (as
-opposed to other cases). For stable mappings, what we have is probably
-sufficient. For mappings which could be changed, it's unclear to me
-how you could guarantee non-racy behavior that is bounded by a
-pre-defined time and guarantee no user-space errors. On top of that,
-ODP (should) already solve that problem transparently.
+Avoiding latency has costs in complexity, resources and CPU time.
+That's why we've never ended up with a fully generic async syscall
+interface in the kernel - every time someone tries, it dies the
+death of complexity.
 
-IMHO, using iommu for that and causing DMA errors just because the
-lease broke isn't the right thing to do.
+RWF_NOWAIT is simple, easy to maintain and has, in most cases, no
+observable overhead.
 
-> Jason
+> In fact we don't even need to try the write, we know that every
+> 32MB/128k = 256 writes we will hit an allocation. Perhaps we can
+> fallocate() the next 32MB chunk while writing to the previous one.
 
-Matan
+fallocate will block *all* IO and mmap faults on that file, not just
+the ones that require allocation. fallocate creates a complete IO
+submission pipeline stall, punting all new IO submissions to the
+background worker where they will block until fallocate completes.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+IOWs, in terms of overhead, IO submission efficiency and IO pipeline
+bubbles, fallocate is close the worst thing you can possibly do.
+Extent size hints are far more efficient and less intrusive than
+manually using fallocate from userspace.
+
+> If fallocate() is fast enough, writes will both never block/fail. If
+> it's not, then we'll block/fail, but the likelihood is reduced. We
+> can even increase the chunk size if we see we're getting blocked.
+
+If you call fallocate, other AIO writes will always get blocked
+because fallocate creates an IO submission barrier. fallocate might
+be fast, but it's also a total IO submission serialisation point and
+so has a much more significant effect on IO submission latency when
+compared to doing allocation directly in the IO path via extent size
+hints...
+
+> Even better would be if XFS would detect the sequential write and
+> start allocating ahead of it.
+
+That's what delayed allocation does with buffered IO. We
+specifically do not do that with direct IO because it's direct IO
+and we only do exactly what the IO the user submits requires us to
+do.
+
+As it is, I'm not sure that it would gain us anything over extent
+size hints because they are effectively doing exactly the same thing
+(i.e.  allocate ahead) on every write that hits a hole beyond
+EOF when extending the file....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
