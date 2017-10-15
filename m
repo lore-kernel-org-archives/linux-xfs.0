@@ -1,89 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:52477 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750829AbdJOJgJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 05:36:09 -0400
-Received: by mail-wm0-f52.google.com with SMTP id k4so28618369wmc.1
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Oct 2017 02:36:09 -0700 (PDT)
-Subject: Re: agcount for 2TB, 4TB and 8TB drives
-References: <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
- <20171006222031.GU3666@dastard>
- <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
- <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
- <20171009112306.GM3666@dastard>
- <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
- <20171009220332.GP3666@dastard>
- <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
- <20171010225524.GV3666@dastard>
- <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
- <20171014224224.GD15067@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <db0ca95f-ce16-4b2e-7d69-52f3552a6004@scylladb.com>
-Date: Sun, 15 Oct 2017 12:36:03 +0300
+Received: from imap.thunk.org ([74.207.234.97]:48696 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750924AbdJONGr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Oct 2017 09:06:47 -0400
+Date: Sun, 15 Oct 2017 09:06:25 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20171015130625.o5k6tk5uflm3rx65@thunk.org>
+References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
+ <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
+ <20171009000529.GY3666@dastard>
+ <20171009183129.GE11645@wotan.suse.de>
+ <87wp442lgm.fsf@xmission.com>
+ <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20171014224224.GD15067@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
+To: Aleksa Sarai <asarai@suse.de>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
 
+On Sun, Oct 15, 2017 at 07:53:11PM +1100, Aleksa Sarai wrote:
+> This is the bug that I talked to you about at LPC, related to devicemapper
+> and it not being possible to issue DELETE and REMOVE operations on a
+> devicemapper device that is still mounted in $some_namespace. [Before we go
+> on, deferred removal and deletion can help here, but the deferral will never
+> kick in until the reference goes away. On SUSE systems, deferred removal
+> doesn't appear to work at all, but that's an issue for us to solve.]
 
+Yeah, it's not really a bug, as much as (IMHO) a profound design
+misfeature in the way mount namespaces work.  And the fundamental
+problem is that there are two distinct things that you might want to
+do:
 
-On 10/15/2017 01:42 AM, Dave Chinner wrote:
-> On Fri, Oct 13, 2017 at 11:13:24AM +0300, Avi Kivity wrote:
->> On 10/11/2017 01:55 AM, Dave Chinner wrote:
->>> On Tue, Oct 10, 2017 at 12:07:42PM +0300, Avi Kivity wrote:
->>>> On 10/10/2017 01:03 AM, Dave Chinner wrote:
->>>>>> On 10/09/2017 02:23 PM, Dave Chinner wrote:
->>>>>>> On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
->>>>>>> Sure, that might be the IO concurrency the SSD sees and handles, but
->>>>>>> you very rarely require that much allocation parallelism in the
->>>>>>> workload. Only a small amount of the IO submission path is actually
->>>>>>> allocation work, so a single AG can provide plenty of async IO
->>>>>>> parallelism before an AG is the limiting factor.
->>>>>> Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
->>>>> AGs don't issue IO. Applications issue IO, the filesystem allocates
->>>>> space from AGs according to the write IO that passes through it.
->>>> What I meant was I/O in order to satisfy an allocation (read from
->>>> the free extent btree or whatever), not the application's I/O.
->>> Once you're in the per-AG allocator context, it is single threaded
->>> until the allocation is complete. We do things like btree block
->>> readahead to minimise IO wait times, but we can't completely hide
->>> things like metadata read Io wait time when it is required to make
->>> progress.
->> I see, thanks. Will RWF_NOWAIT detect the need to do I/O for the
->> free space btree, or just contention? (I expect the latter from the
->> patches I've seen, but perhaps I missed something).
-> No, it checks at a high level whether allocation is needed (i.e. IO
-> into a hole) and if allocation is needed, it punts the IO
-> immediately to the background thread and returns to userspace. i.e.
-> it never gets near the allocator to begin with....
+    * In a container, "unmount" a file system is it no longer shows up in
+      your mount namespace.
 
+    * As a system administrator, make a mounted file system **go** **away**
+      because the device is about to disapear, either because:
+         * The iscsi/nbd device is gone or about to disappear (maybe the server is
+	   about to shut down)
+	 * The user wants to yank out the USB thumb drive
+	 * The system is shutting down and for whatever reason the shutdown
+	   sequence wants to remove the block device driver or otherwise shutdown
+	   the UFS device on the Android system.
 
-Interesting, that's both good and bad. Good, because we avoided a 
-potential stall. Bad, because if the stall would not actually have 
-happened (lock not contended, btree nodes cached) then we got punted to 
-the helper thread which is a more expensive path.
+The last three examples are all real world examples where people have
+complained to me about, and there have been some hacky things we've
+done as a result.
 
-In fact we don't even need to try the write, we know that every 
-32MB/128k = 256 writes we will hit an allocation. Perhaps we can 
-fallocate() the next 32MB chunk while writing to the previous one. If 
-fallocate() is fast enough, writes will both never block/fail. If it's 
-not, then we'll block/fail, but the likelihood is reduced. We can even 
-increase the chunk size if we see we're getting blocked.
+We sort of have a hacky solution which works today, at least for f2fs,
+ext4 and xfs file systems, which is you can use
+{EXT4,F2FS}_FS_IOC_SHUTDOWN / XFS_IOC_GOINGDOWN ioctls to forcibly
+shutdown the file system, and then recurse over all of /proc looking
+for /proc/*/mounts files and seeing if the file system is mounted in
+that namespace, and then either killing the pid or somehow entering
+the namespace of that process and unmounting the file system.  But
+it's ugly and messy, and it's not at all intuitive, and so people keep
+tripping against the problem.
 
-Even better would be if XFS would detect the sequential write and start 
-allocating ahead of it.
+What we really need is some kind of "global shutdown and unmount"
+system call which safely and cleanly does this.  Instead of relying on
+the file system's brute force shutdown sequence, it would be better if
+we implemented some kind of VFS-level revoke(2) functionality (ala the
+*BSD revoke system call, which they've had for ages) on all file
+descriptors opened on the file systems, and if any processes have a
+CWD in the file system, it is replaced by an anonymous
+invalid/"deleted" directory, followed by a syncfs() on the file
+system, followed by a recursive search and removal of the file system
+from all mount namespaces.
 
->
-> Like I said before, RWF_NOWAIT prevents entire classes of
-> AIO submission blocking issues from occuring. Use it and almost all
-> filesystem blocking concerns go away....
+Obviously, this could only be used by someone with root privileges on
+the "root" container.
 
-I will indeed.
-
-
+						- Ted
