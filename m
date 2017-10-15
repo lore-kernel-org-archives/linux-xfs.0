@@ -1,79 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:48696 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750924AbdJONGr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Oct 2017 09:06:47 -0400
-Date: Sun, 15 Oct 2017 09:06:25 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20171015130625.o5k6tk5uflm3rx65@thunk.org>
-References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
- <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
- <20171009000529.GY3666@dastard>
- <20171009183129.GE11645@wotan.suse.de>
- <87wp442lgm.fsf@xmission.com>
- <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:47007 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750854AbdJOPV1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 11:21:27 -0400
+Received: by mail-oi0-f54.google.com with SMTP id n82so21281027oig.3
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Oct 2017 08:21:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
+In-Reply-To: <CAAKD3BBR2CmQvg-3bqPog0VFrEm=QU-b-xBDH-_Q+sXV9NkFUA@mail.gmail.com>
+References: <CAPcyv4gXzC8OUgO_PciQ2phyq0YtmXjMGWvoPSVVuuZR7ohVCg@mail.gmail.com>
+ <20171009191820.GD15336@obsidianresearch.com> <CAPcyv4h_uQGBAX6-bMkkZLO_YyQ6t4n_b8tH8wU_P0Jh23N5MQ@mail.gmail.com>
+ <20171010172516.GA29915@obsidianresearch.com> <CAPcyv4jL5fN7jjXkQum8ERQ45eW63dCYp5Pm6aHY4OPudz4Wsw@mail.gmail.com>
+ <20171010180512.GA31734@obsidianresearch.com> <CAPcyv4gCBu5ptmWyof+Z-p7NbuCygEs2rMe2wdL0n3QQbXhrzA@mail.gmail.com>
+ <20171012182712.GA5772@obsidianresearch.com> <CAPcyv4g1zXq7MbtivoviHEME6Oi8YJOnVG3jBah3YpHXPAhg6Q@mail.gmail.com>
+ <20171013065047.GA26461@lst.de> <20171013150348.GA11257@obsidianresearch.com> <CAAKD3BBR2CmQvg-3bqPog0VFrEm=QU-b-xBDH-_Q+sXV9NkFUA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 15 Oct 2017 08:21:25 -0700
+Message-ID: <CAPcyv4gBbTr6qbR0AQb1uwWoYQZCwPLGSLdkv4dQP3RUm9XhUw@mail.gmail.com>
+Subject: Re: [PATCH v7 07/12] dma-mapping: introduce dma_has_iommu()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Aleksa Sarai <asarai@suse.de>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
+To: Matan Barak <matanb@dev.mellanox.co.il>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Ashok Raj <ashok.raj@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-rdma <linux-rdma@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Joerg Roedel <joro@8bytes.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Linux API <linux-api@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, Robin Murphy <robin.murphy@arm.com>, Marek Szyprowski <m.szyprowski@samsung.com>, Liran Liss <liranl@mellanox.com>
 
-On Sun, Oct 15, 2017 at 07:53:11PM +1100, Aleksa Sarai wrote:
-> This is the bug that I talked to you about at LPC, related to devicemapper
-> and it not being possible to issue DELETE and REMOVE operations on a
-> devicemapper device that is still mounted in $some_namespace. [Before we go
-> on, deferred removal and deletion can help here, but the deferral will never
-> kick in until the reference goes away. On SUSE systems, deferred removal
-> doesn't appear to work at all, but that's an issue for us to solve.]
+On Sun, Oct 15, 2017 at 8:14 AM, Matan Barak <matanb@dev.mellanox.co.il> wrote:
+[..]
+> IMHO, using iommu for that and causing DMA errors just because the
+> lease broke isn't the right thing to do.
 
-Yeah, it's not really a bug, as much as (IMHO) a profound design
-misfeature in the way mount namespaces work.  And the fundamental
-problem is that there are two distinct things that you might want to
-do:
+Yes, see the current proposal over in this thread:
 
-    * In a container, "unmount" a file system is it no longer shows up in
-      your mount namespace.
-
-    * As a system administrator, make a mounted file system **go** **away**
-      because the device is about to disapear, either because:
-         * The iscsi/nbd device is gone or about to disappear (maybe the server is
-	   about to shut down)
-	 * The user wants to yank out the USB thumb drive
-	 * The system is shutting down and for whatever reason the shutdown
-	   sequence wants to remove the block device driver or otherwise shutdown
-	   the UFS device on the Android system.
-
-The last three examples are all real world examples where people have
-complained to me about, and there have been some hacky things we've
-done as a result.
-
-We sort of have a hacky solution which works today, at least for f2fs,
-ext4 and xfs file systems, which is you can use
-{EXT4,F2FS}_FS_IOC_SHUTDOWN / XFS_IOC_GOINGDOWN ioctls to forcibly
-shutdown the file system, and then recurse over all of /proc looking
-for /proc/*/mounts files and seeing if the file system is mounted in
-that namespace, and then either killing the pid or somehow entering
-the namespace of that process and unmounting the file system.  But
-it's ugly and messy, and it's not at all intuitive, and so people keep
-tripping against the problem.
-
-What we really need is some kind of "global shutdown and unmount"
-system call which safely and cleanly does this.  Instead of relying on
-the file system's brute force shutdown sequence, it would be better if
-we implemented some kind of VFS-level revoke(2) functionality (ala the
-*BSD revoke system call, which they've had for ages) on all file
-descriptors opened on the file systems, and if any processes have a
-CWD in the file system, it is replaced by an anonymous
-invalid/"deleted" directory, followed by a syncfs() on the file
-system, followed by a recursive search and removal of the file system
-from all mount namespaces.
-
-Obviously, this could only be used by someone with root privileges on
-the "root" container.
-
-						- Ted
+https://lists.01.org/pipermail/linux-nvdimm/2017-October/012885.html
