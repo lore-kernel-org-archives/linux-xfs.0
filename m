@@ -1,144 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40391 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:21063 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754127AbdJPUJF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 16:09:05 -0400
-Date: Mon, 16 Oct 2017 13:09:01 -0700
+        with ESMTP id S1751817AbdJPUgn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 16:36:43 -0400
+Date: Mon, 16 Oct 2017 13:36:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/30] xfs: scrub the shape of a metadata btree
-Message-ID: <20171016200901.GJ4703@magnolia>
+Subject: Re: [PATCH 17/30] xfs: scrub free space btrees
+Message-ID: <20171016203639.GK4703@magnolia>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777251646.1724.4676276998721808182.stgit@magnolia>
- <20171016012959.GO3666@dastard>
+ <150777255503.1724.7657235551348811131.stgit@magnolia>
+ <20171016022558.GT3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016012959.GO3666@dastard>
+In-Reply-To: <20171016022558.GT3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 12:29:59PM +1100, Dave Chinner wrote:
-> On Wed, Oct 11, 2017 at 06:41:56PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 16, 2017 at 01:25:58PM +1100, Dave Chinner wrote:
+> On Wed, Oct 11, 2017 at 06:42:35PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Create a function that can check the shape of a btree -- each block
-> > passes basic inspection and all the pointers look ok.  In the next patch
-> > we'll add the ability to check the actual keys and records stored within
-> > the btree.  Add some helper functions so that we report detailed scrub
-> > errors in a uniform manner in dmesg.  These are helper functions for
-> > subsequent patches.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Check the extent records free space btrees to ensure that the values
+> > look sane.
 > 
 > Minor thing:
 > 
-> >  /*
-> > + * Check a btree pointer.  Returns true if it's ok to use this pointer.
-> > + * Callers do not need to set the corrupt flag.
-> > + */
-> > +static bool
-> > +xfs_scrub_btree_ptr_ok(
-> > +	struct xfs_scrub_btree		*bs,
-> > +	int				level,
-> > +	union xfs_btree_ptr		*ptr)
-> > +{
-> > +	bool				res;
-> > +
-> > +	/* A btree rooted in an inode has no block pointer to the root. */
-> > +	if ((bs->cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
-> > +	    level == bs->cur->bc_nlevels)
-> > +		return true;
-> > +
-> > +	/* Otherwise, check the pointers. */
-> > +	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> > +		res = xfs_btree_check_lptr(bs->cur, be64_to_cpu(ptr->l), level);
-> > +		if (!res)
-> > +			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-> > +	} else {
-> > +		res = xfs_btree_check_sptr(bs->cur, be32_to_cpu(ptr->s), level);
-> > +		if (!res)
-> > +			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-> > +	}
-> 
-> We should already know what type of btree we are scrubbing, so I
-> think this can be simplified to a single
-> xfs_scrub_btree_set_corrupt() tracepoint.
-
-Ok to both.
-
+> > +/* Scrub a bnobt/cntbt record. */
 > > +STATIC int
-> > +xfs_scrub_btree_get_block(
-> > +	struct xfs_scrub_btree		*bs,
-> > +	int				level,
-> > +	union xfs_btree_ptr		*pp,
-> > +	struct xfs_btree_block		**pblock,
-> > +	struct xfs_buf			**pbp)
-> > +{
-> > +	void				*failed_at;
-> > +	int				error;
-> > +
-> > +	error = xfs_btree_lookup_get_block(bs->cur, level, pp, pblock);
-> > +	if (!xfs_scrub_btree_process_error(bs->sc, bs->cur, level, &error) ||
-> > +	    !pblock)
-> > +		return error;
-> > +
-> > +	xfs_btree_get_block(bs->cur, level, pbp);
-> > +	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> > +		failed_at = __xfs_btree_check_lblock(bs->cur, *pblock,
-> > +				level, *pbp);
-> > +		if (failed_at) {
-> > +			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-> > +			return 0;
-> > +		}
-> > +	} else {
-> > +		failed_at = __xfs_btree_check_sblock(bs->cur, *pblock,
-> > +				 level, *pbp);
-> > +		if (failed_at) {
-> > +			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
-> > +			return 0;
-> > +		}
-> > +	}
+> > +xfs_scrub_allocbt_helper(
 > 
-> And same here.
+> xfs_scrub_allocbt_rec()
 > 
-> > diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> > index a7c3361..414bbb8 100644
-> > --- a/fs/xfs/scrub/common.h
-> > +++ b/fs/xfs/scrub/common.h
-> > @@ -21,6 +21,24 @@
-> >  #define __XFS_SCRUB_COMMON_H__
-> >  
-> >  /*
-> > + * We /could/ terminate a scrub/repair operation early.  If we're not
-> > + * in a good place to continue (fatal signal, etc.) then bail out.
-> > + * Note that we're careful not to make any judgements about *error.
-> > + */
-> > +static inline bool
-> > +xfs_scrub_should_terminate(
-> > +	struct xfs_scrub_context	*sc,
-> > +	int				*error)
-> > +{
-> > +	if (fatal_signal_pending(current)) {
-> > +		if (*error == 0)
-> > +			*error = -EAGAIN;
-> > +		return true;
-> > +	}
-> > +	return false;
-> > +}
-> 
-> Probably should move that to the original scrub infrastructure
-> patch.
+> Reads much more nicely with this name. :P
 
-Will do.  It's in this patch because (iirc) this is the first time
-anything uses it.
+<nod> Will change as I go through the patches.
 
 --D
 
-> Otherwise looks fine.
-> 
+> Otherwise, consider it:
 > 
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
