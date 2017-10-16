@@ -1,48 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35653 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751589AbdJSG75 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 02:59:57 -0400
-Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e54o8-0004Bj-NO
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 06:59:57 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/15] xfs: make better use of the 'state' variable in xfs_bmap_del_extent_real
-Date: Thu, 19 Oct 2017 08:59:29 +0200
-Message-Id: <20171019065942.18813-3-hch@lst.de>
-In-Reply-To: <20171019065942.18813-1-hch@lst.de>
-References: <20171019065942.18813-1-hch@lst.de>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:6573 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752193AbdJPWcA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 18:32:00 -0400
+Date: Tue, 17 Oct 2017 09:31:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: agcount for 2TB, 4TB and 8TB drives
+Message-ID: <20171016223158.GK15067@dastard>
+References: <20171009112306.GM3666@dastard>
+ <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
+ <20171009220332.GP3666@dastard>
+ <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
+ <20171010225524.GV3666@dastard>
+ <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
+ <20171014224224.GD15067@dastard>
+ <db0ca95f-ce16-4b2e-7d69-52f3552a6004@scylladb.com>
+ <20171015220018.GG3666@dastard>
+ <10d04693-02ef-427f-95fe-cc7bcaf3ec6f@scylladb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <10d04693-02ef-427f-95fe-cc7bcaf3ec6f@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
 
-We already have all the information about the fork aѕ well as additional
-tracing information, so pass that to xfs_iext_remove().
+On Mon, Oct 16, 2017 at 01:00:32PM +0300, Avi Kivity wrote:
+> On 10/16/2017 01:00 AM, Dave Chinner wrote:
+> >On Sun, Oct 15, 2017 at 12:36:03PM +0300, Avi Kivity wrote:
+> >>On 10/15/2017 01:42 AM, Dave Chinner wrote:
+> >>>On Fri, Oct 13, 2017 at 11:13:24AM +0300, Avi Kivity wrote:
+> >>Even better would be if XFS would detect the sequential write and
+> >>start allocating ahead of it.
+> >That's what delayed allocation does with buffered IO. We
+> >specifically do not do that with direct IO because it's direct IO
+> >and we only do exactly what the IO the user submits requires us to
+> >do.
+> >
+> >As it is, I'm not sure that it would gain us anything over extent
+> >size hints because they are effectively doing exactly the same thing
+> >(i.e.  allocate ahead) on every write that hits a hole beyond
+> >EOF when extending the file....
+> 
+> If I understand correctly, you do get momentary serialization when
+> you cross a hint boundary, while with allocate ahead, you would not.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Allocate ahead still requires a threshold to be crossed to trigger
+allocation. So it doesn't get rid of allocation, it just changes
+what IO triggers it.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 676fc8aed67f..06a9ac7dcdab 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5022,8 +5022,7 @@ xfs_bmap_del_extent_real(
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_iext_remove(ip, *idx, 1,
--				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
-+		xfs_iext_remove(ip, *idx, 1, state);
- 		--*idx;
- 
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
+Cheers,
+
+Dave.
 -- 
-2.14.1
-
+Dave Chinner
+david@fromorbit.com
