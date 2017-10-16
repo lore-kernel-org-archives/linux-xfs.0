@@ -1,271 +1,244 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23115 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932076AbdJPVqH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 17:46:07 -0400
-Date: Mon, 16 Oct 2017 14:46:01 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:30693 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753006AbdJPWIy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 18:08:54 -0400
+Date: Mon, 16 Oct 2017 15:08:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 28/30] xfs: scrub directory parent pointers
-Message-ID: <20171016214601.GN4703@magnolia>
+Subject: Re: [PATCH 21/30] xfs: scrub inodes
+Message-ID: <20171016220850.GO4703@magnolia>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777262776.1724.11135251107601015017.stgit@magnolia>
- <20171016050928.GE3666@dastard>
+ <150777258004.1724.14107466871314594061.stgit@magnolia>
+ <20171012223250.GN7122@magnolia>
+ <20171016031647.GX3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016050928.GE3666@dastard>
+In-Reply-To: <20171016031647.GX3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 04:09:28PM +1100, Dave Chinner wrote:
-> On Wed, Oct 11, 2017 at 06:43:47PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 16, 2017 at 02:16:47PM +1100, Dave Chinner wrote:
+> On Thu, Oct 12, 2017 at 03:32:50PM -0700, Darrick J. Wong wrote:
+> > On Wed, Oct 11, 2017 at 06:43:00PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Scrub the fields within an inode.
+> 
+> .....
+> 
+> > > +
+> > > +/*
+> > > + * Given an inode and the scrub control structure, grab either the
+> > > + * inode referenced in the control structure or the inode passed in.
+> > > + * The inode is not locked.
+> > > + */
+> > > +int
+> > > +xfs_scrub_get_inode(
+> > > +	struct xfs_scrub_context	*sc,
+> > > +	struct xfs_inode		*ip_in)
+> > > +{
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	struct xfs_inode		*ip = NULL;
+> > > +	int				error;
+> > > +
+> > > +	/*
+> > > +	 * If userspace passed us an AG number or a generation number
+> > > +	 * without an inode number, they haven't got a clue so bail out
+> > > +	 * immediately.
+> > > +	 */
+> > > +	if (sc->sm->sm_agno || (sc->sm->sm_gen && !sc->sm->sm_ino))
+> > > +		return -EINVAL;
+> > > +
+> > > +	/* We want to scan the inode we already had opened. */
+> > > +	if (sc->sm->sm_ino == 0 || sc->sm->sm_ino == ip_in->i_ino) {
+> > > +		sc->ip = ip_in;
+> > > +		return 0;
+> > > +	}
+> > > +
+> > > +	/* Look up the inode, see if the generation number matches. */
+> > > +	if (xfs_internal_inum(mp, sc->sm->sm_ino))
+> > > +		return -ENOENT;
+> > > +	error = xfs_iget(mp, NULL, sc->sm->sm_ino,
+> > > +			XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE, 0, &ip);
+> > > +	if (error == -ENOENT || error == -EINVAL) {
+> > > +		/* inode doesn't exist... */
+> > > +		return -ENOENT;
+> > > +	} else if (error) {
+> > > +		trace_xfs_scrub_op_error(sc,
+> > > +				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
+> > > +				XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
+> > > +				error, __return_address);
+> > > +		return error;
+> > > +	}
+> > > +	if (VFS_I(ip)->i_generation != sc->sm->sm_gen) {
+> > > +		iput(VFS_I(ip));
+> > > +		return -ENOENT;
+> > > +	}
+> > > +
+> > > +	sc->ip = ip;
+> > > +	return 0;
+> > > +}
+> 
+> Much nicer with the way everything is clearly spelled out :P
+> 
+> > > +/* Inode core */
+> > > +
+> > > +/*
+> > > + * di_extsize hint validation is somewhat cumbersome. Rules are:
+> > > + *
+> > > + * 1. extent size hint is only valid for directories and regular files
+> > > + * 2. DIFLAG_EXTSIZE is only valid for regular files
+> > > + * 3. DIFLAG_EXTSZINHERIT is only valid for directories.
+> > > + * 4. extsize hint of 0 turns off hints, clears inode flags.
+> > > + * 5. either flag must be set if extsize != 0
+> > > + * 6. Extent size must be a multiple of the appropriate block size.
+> > > + * 7. extent size hint cannot be longer than maximum extent length
+> > > + * 8. for non-realtime files, the extent size hint must be limited
+> > > + *    to half the AG size to avoid alignment extending the extent
+> > > + *    beyond the limits of the AG.
+> > > + */
+> > > +STATIC void
+> > > +xfs_scrub_inode_extsize(
+> > > +	struct xfs_scrub_context	*sc,
+> > > +	struct xfs_buf			*bp,
+> > > +	struct xfs_dinode		*dip,
+> > > +	xfs_ino_t			ino,
+> > > +	uint16_t			mode,
+> > > +	uint16_t			flags)
+> > > +{
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	bool				rt_flag;
+> > > +	bool				hint_flag;
+> > > +	bool				inherit_flag;
+> > > +	uint32_t			extsize;
+> > > +	uint32_t			extsize_bytes;
+> > > +	uint32_t			blocksize_bytes;
+> > > +
+> > > +	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+> > > +	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
+> > > +	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
+> > > +	extsize = be32_to_cpu(dip->di_extsize);
+> > > +	extsize_bytes = XFS_FSB_TO_B(sc->mp, extsize);
+> > > +
+> > > +	if (rt_flag)
+> > > +		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
+> > > +	else
+> > > +		blocksize_bytes = mp->m_sb.sb_blocksize;
+> > > +
+> > > +	if ((hint_flag || inherit_flag) && (!S_ISDIR(mode) && !S_ISREG(mode)))
+> 
+> Logic is a correct but reads funny:
+> 
+> 	if ((hint_flag || inherit_flag) &&
+> 	    !(S_ISREG(mode) || S_ISDIR(mode)))
+
+Ok.  Fixed this and the cowextsize.
+
+> > > +/*
+> > > + * di_cowextsize hint validation is somewhat cumbersome. Rules are:
+> > > + *
+> > > + * 1. flag requires reflink feature
+> > > + * 2. cow extent size hint is only valid for directories and regular files
+> > > + * 3. cow extsize hint of 0 turns off hints, clears inode flags.
+> > > + * 4. either flag must be set if cow extsize != 0
+> > > + * 5. flag cannot be set for rt files
+> > > + * 6. Extent size must be a multiple of the appropriate block size.
+> > > + * 7. extent size hint cannot be longer than maximum extent length
+> > > + * 8. the extent size hint must be limited
+> > > + *    to half the AG size to avoid alignment extending the extent
+> > > + *    beyond the limits of the AG.
+> > > + */
+> 
+> Perhaps this comment doesn't need duplicating for a 3rd time. Maybe
+> for both di_extsize and di_cowextsize just say:
+> 
+> /*
+>  * Extent size hints have explicit rules. They are documented at
+>  * xfs_ioctl_setattr_check_extsize() - these functions need to be
+>  * kept in sync with each other.
+>  */
+
+Ok.  I've also amended the comment at xfs_ioctl_setattr_check_extsize to
+remind people to keep the scrub version in sync.
+
+> > > +STATIC void
+> > > +xfs_scrub_inode_cowextsize(
+> > > +	struct xfs_scrub_context	*sc,
+> > > +	struct xfs_buf			*bp,
+> > > +	struct xfs_dinode		*dip,
+> > > +	xfs_ino_t			ino,
+> > > +	uint16_t			mode,
+> > > +	uint16_t			flags,
+> > > +	uint64_t			flags2)
+> > > +{
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	bool				rt_flag;
+> > > +	bool				hint_flag;
+> > > +	uint32_t			extsize;
+> > > +	uint32_t			extsize_bytes;
+> > > +
+> > > +	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+> > > +	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
+> > > +	extsize = be32_to_cpu(dip->di_extsize);
 > > 
-> > Scrub parent pointers, sort of.  For directories, we can ride the
-> > '..' entry up to the parent to confirm that there's at most one
-> > dentry that points back to this directory.
+> > Doh, this ought to be extsize = be32_to_cpu(dip->di_cowextsize); will fix.
 > 
-> ....
+> Yup, with that fix in place all the spurious inode warnings I was
+> getting went away.
 > 
-> > +/* Count the number of dentries in the parent dir that point to this inode. */
-> > +STATIC int
-> > +xfs_scrub_parent_count_parent_dentries(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*parent,
-> > +	xfs_nlink_t			*nlink)
-> > +{
-> > +	struct xfs_scrub_parent_ctx	spc = {
-> > +		.dc.actor = xfs_scrub_parent_actor,
-> > +		.dc.pos = 0,
-> > +		.ino = sc->ip->i_ino,
-> > +		.nlink = 0,
-> > +	};
-> > +	struct xfs_ifork		*ifp;
-> > +	size_t				bufsize;
-> > +	loff_t				oldpos;
-> > +	uint				lock_mode;
-> > +	int				error;
-> > +
-> > +	/*
-> > +	 * Load the parent directory's extent map.  A regular directory
-> > +	 * open would start readahead (and thus load the extent map)
-> > +	 * before we even got to a readdir call, but this isn't
-> > +	 * guaranteed here.
-> > +	 */
-> > +	lock_mode = xfs_ilock_data_map_shared(parent);
-> > +	ifp = XFS_IFORK_PTR(parent, XFS_DATA_FORK);
-> > +	if (XFS_IFORK_FORMAT(parent, XFS_DATA_FORK) == XFS_DINODE_FMT_BTREE &&
-> > +	    !(ifp->if_flags & XFS_IFEXTENTS)) {
-> > +		error = xfs_iread_extents(sc->tp, parent, XFS_DATA_FORK);
-> > +		if (error) {
-> > +			xfs_iunlock(parent, lock_mode);
-> > +			return error;
-> > +		}
-> > +	}
-> > +	xfs_iunlock(parent, lock_mode);
+> > > +/* Map and read a raw inode. */
+> > > +STATIC int
+> > > +xfs_scrub_inode_map_raw(
+> > > +	struct xfs_scrub_context	*sc,
+> > > +	xfs_ino_t			ino,
+> > > +	struct xfs_buf			**bpp,
+> > > +	struct xfs_dinode		**dipp)
+> > > +{
+> > > +	struct xfs_imap			imap;
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	struct xfs_buf			*bp;
+> > > +	struct xfs_dinode		*dip;
+> > > +	int				error;
+> > > +
+> > > +	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+> > > +	if (error == -EINVAL) {
+> > > +		/*
+> > > +		 * Inode could have gotten deleted out from under us;
+> > > +		 * just forget about it.
+> > > +		 */
+> > > +		error = -ENOENT;
+> > > +		goto out;
+> > > +	}
+> > > +	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+> > > +			XFS_INO_TO_AGBNO(mp, ino), &error))
+> > > +		goto out;
+> > > +
+> > > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > > +			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
+> > > +			NULL);
+> > > +	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+> > > +			XFS_INO_TO_AGBNO(mp, ino), &error))
+> > > +		goto out;
+> > > +
+> > > +	/* Is this really an inode? */
+> > > +	bp->b_ops = &xfs_inode_buf_ops;
 > 
-> Why not just do what xfs_dir_open() does? i.e.
-> 
->         /*
->          * If there are any blocks, read-ahead block 0 as we're almost
->          * certain to have the next operation be a read there.
->          */
->         mode = xfs_ilock_data_map_shared(ip);
->         if (ip->i_d.di_nextents > 0)
->                 error = xfs_dir3_data_readahead(ip, 0, -1);
->         xfs_iunlock(ip, mode);
-
-Ok.
-
-> > +	/*
-> > +	 * Iterate the parent dir to confirm that there is
-> > +	 * exactly one entry pointing back to the inode being
-> > +	 * scanned.
-> > +	 */
-> > +	bufsize = (size_t)min_t(loff_t, 32768, parent->i_d.di_size);
-> 
-> Perhaps we need a define for that 32k magic number now it's being
-> used in multiple places?
-
-Magic indeed; glibc uses the minimum of (4 * BUFSIZ) or (sizeof(struct
-dirent)); musl uses a static 2k buffer; dietlibc uses (PAGE_SIZE -
-sizeof(structure header))...
-
-...what would we call it?
+> A comment here on why we skip the read verifier when pulling in the
+> inode buffer would be nice.
 
 /*
- * The Linux API doesn't pass down the total size of the buffer we read
- * into down to the filesystem.  With the filldir concept it's not
- * needed for correct information, but the XFS dir2 leaf code wants an
- * estimate of the buffer size to calculate its readahead window and
- * size the buffers used for mapping to physical blocks.
- *
- * Try to give it an estimate that's good enough, maybe at some point we
- * can change the ->readdir prototype to include the buffer size.  For
- * now we use the current glibc buffer size.
+ * Is this really an inode?  We disabled verifiers in the above
+ * xfs_trans_read_buf call because the inode buffer verifier
+ * fails on /any/ inode record in the inode cluster with a bad
+ * magic or version number, not just the one that we're
+ * checking.  Therefore, grab the buffer unconditionally, attach
+ * the inode verifiers by hand, and run the inode verifier only
+ * on the one inode we want.
  */
-#define XFS_DEFAULT_READDIR_BUFSIZE	(32768)
-
-(As a side question, do we want to bump this up to a full pagesize on
-architectures that have 64k pages?  I'd probably just leave it, but
-let's see if anyone running those architectures complains or sends in a
-patch?)
-
-> > +	oldpos = 0;
-> > +	while (true) {
-> > +		error = xfs_readdir(sc->tp, parent, &spc.dc, bufsize);
-> > +		if (error)
-> > +			goto out;
-> > +		if (oldpos == spc.dc.pos)
-> > +			break;
-> > +		oldpos = spc.dc.pos;
-> > +	}
-> > +	*nlink = spc.nlink;
-> > +out:
-> > +	return error;
-> > +}
-> > +
-> > +/* Scrub a parent pointer. */
-> > +int
-> > +xfs_scrub_parent(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_inode		*dp = NULL;
-> > +	xfs_ino_t			dnum;
-> > +	xfs_nlink_t			expected_nlink;
-> > +	xfs_nlink_t			nlink;
-> > +	int				tries = 0;
-> > +	int				error;
-> > +
-> > +	/*
-> > +	 * If we're a directory, check that the '..' link points up to
-> > +	 * a directory that has one entry pointing to us.
-> > +	 */
-> > +	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
-> > +		return -ENOENT;
-> > +
-> > +	/* We're not a special inode, are we? */
-> > +	if (!xfs_verify_dir_ino_ptr(mp, sc->ip->i_ino)) {
-> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> > +		goto out;
-> > +	}
-> > +
-> > +	/*
-> > +	 * If we're an unlinked directory, the parent /won't/ have a link
-> > +	 * to us.  Otherwise, it should have one link.
-> > +	 */
-> > +	expected_nlink = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
-> > +
-> > +	/*
-> > +	 * The VFS grabs a read or write lock via i_rwsem before it reads
-> > +	 * or writes to a directory.  If we've gotten this far we've
-> > +	 * already obtained IOLOCK_EXCL, which (since 4.10) is the same as
-> > +	 * getting a write lock on i_rwsem.  Therefore, it is safe for us
-> > +	 * to drop the ILOCK here in order to do directory lookups.
-> > +	 */
-> > +	sc->ilock_flags &= ~(XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
-> > +	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
-> > +
-> > +	/* Look up '..' */
-> > +	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
-> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-> > +		goto out;
-> > +	if (!xfs_verify_dir_ino_ptr(mp, dnum)) {
-> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> > +		goto out;
-> > +	}
-> > +
-> > +	/* Is this the root dir?  Then '..' must point to itself. */
-> > +	if (sc->ip == mp->m_rootip) {
-> > +		if (sc->ip->i_ino != mp->m_sb.sb_rootino ||
-> > +		    sc->ip->i_ino != dnum)
-> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> > +		return 0;
-> > +	}
-> 
-> All good to here.
-> 
-> > +try_again:
-> > +	/* Otherwise, '..' must not point to ourselves. */
-> > +	if (sc->ip->i_ino == dnum) {
-> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> > +		goto out;
-> > +	}
-> > +
-> > +	error = xfs_iget(mp, sc->tp, dnum, XFS_IGET_DONTCACHE, 0, &dp);
-> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-> > +		goto out;
-> > +	if (dp == sc->ip) {
-> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> > +		goto out_rele;
-> > +	}
-> > +
-> > +	/*
-> > +	 * We prefer to keep the inode locked while we lock and search
-> > +	 * its alleged parent for a forward reference.  However, this
-> > +	 * child -> parent scheme can deadlock with the parent -> child
-> > +	 * scheme that is normally used.  Therefore, if we can lock the
-> > +	 * parent, just validate the references and get out.
-> > +	 */
-> > +	if (xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
-> > +		error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
-> > +		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
-> > +				&error))
-> > +			goto out_unlock;
-> > +		if (nlink != expected_nlink)
-> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> > +		goto out_unlock;
-> > +	}
-> > +
-> > +	/*
-> > +	 * The game changes if we get here.  We failed to lock the parent,
-> > +	 * so we're going to try to verify both pointers while only holding
-> > +	 * one lock so as to avoid deadlocking with something that's actually
-> > +	 * trying to traverse down the directory tree.
-> > +	 */
-> > +	xfs_iunlock(sc->ip, sc->ilock_flags);
-> > +	sc->ilock_flags = 0;
-> > +	xfs_ilock(dp, XFS_IOLOCK_SHARED);
-> > +
-> > +	/* Go looking for our dentry. */
-> > +	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
-> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-> > +		goto out_unlock;
-> > +
-> > +	/* Drop the parent lock, relock this inode. */
-> > +	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-> > +	sc->ilock_flags = XFS_IOLOCK_EXCL;
-> > +	xfs_ilock(sc->ip, sc->ilock_flags);
-> > +
-> > +	/* Look up '..' to see if the inode changed. */
-> > +	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
-> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-> > +		goto out_rele;
-> > +
-> > +	/* Drat, parent changed.  Try again! */
-> > +	if (dnum != dp->i_ino) {
-> > +		iput(VFS_I(dp));
-> > +		tries++;
-> > +		if (tries < 20)
-> > +			goto try_again;
-> > +		xfs_scrub_set_incomplete(sc);
-> > +		goto out;
-> > +	}
-> > +	iput(VFS_I(dp));
-> 
-> Can you factor this into a loop and function?
-> 
-> 	do {
-> 		valid = xfs_scrub_parent_validate(&error)
-> 		if (error)
-> 			goto out_unlock;
-> 	} while (!valid && ++retries < 20)
-
-Ok.
 
 --D
 
