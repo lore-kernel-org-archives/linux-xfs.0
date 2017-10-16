@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17379 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757367AbdJPXLv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 19:11:51 -0400
-Date: Mon, 16 Oct 2017 16:11:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64362 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752519AbdJPXTc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 19:19:32 -0400
+Date: Tue, 17 Oct 2017 10:14:13 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 25/30] xfs: scrub directory freespace
-Message-ID: <20171016231147.GS4703@magnolia>
+Message-ID: <20171016231413.GM15067@dastard>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
  <150777260602.1724.16339769636569418352.stgit@magnolia>
  <20171016044921.GB3666@dastard>
@@ -18,7 +18,7 @@ In-Reply-To: <20171016223708.GR4703@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
 On Mon, Oct 16, 2017 at 03:37:08PM -0700, Darrick J. Wong wrote:
@@ -30,134 +30,6 @@ On Mon, Oct 16, 2017 at 03:37:08PM -0700, Darrick J. Wong wrote:
 > > 
 > > ....
 > > 
-> > > diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> > > index e2a8f90..a41310f 100644
-> > > --- a/fs/xfs/scrub/dir.c
-> > > +++ b/fs/xfs/scrub/dir.c
-> > > @@ -250,6 +250,426 @@ xfs_scrub_dir_rec(
-> > >  	return error;
-> > >  }
-> > >  
-> > > +/*
-> > > + * Is this unused entry either in the bestfree or smaller than all of them?
-> > > + * We assume the bestfrees are sorted longest to shortest, and that there
-> > > + * aren't any bogus entries.
-> > 
-> > s/We assume/We've already checked/
-> 
-> Ok.
-> 
-> > > + */
-> > > +static inline void
-> > > +xfs_scrub_directory_check_free_entry(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	xfs_dablk_t			lblk,
-> > > +	struct xfs_dir2_data_free	*bf,
-> > > +	struct xfs_dir2_data_unused	*dup)
-> > 
-> > ....
-> > 
-> > > +	while (ptr < endptr) {
-> > > +		dup = (struct xfs_dir2_data_unused *)ptr;
-> > > +		/* Skip real entries */
-> > > +		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG)) {
-> > > +			struct xfs_dir2_data_entry	*dep;
-> > > +
-> > > +			dep = (struct xfs_dir2_data_entry *)ptr;
-> > > +			newlen = d_ops->data_entsize(dep->namelen);
-> > > +			if (newlen <= 0) {
-> > > +				xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > > +						lblk);
-> > > +				goto out_buf;
-> > > +			}
-> > > +			ptr += newlen;
-> > > +			if (endptr < ptr)
-> > > +				xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > > +					      lblk);
-> > > +			continue;
-> > > +		}
-> > > +
-> > > +		/* Spot check this free entry */
-> > > +		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
-> > > +		if (tag != ((char *)dup - (char *)bp->b_addr))
-> > > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> > > +
-> > > +		/*
-> > > +		 * Either this entry is a bestfree or it's smaller than
-> > > +		 * any of the bestfrees.
-> > > +		 */
-> > > +		xfs_scrub_directory_check_free_entry(sc, lblk, bf, dup);
-> > > +
-> > > +		/* Move on. */
-> > > +		newlen = be16_to_cpu(dup->length);
-> > > +		if (newlen <= 0) {
-> > > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> > > +			goto out_buf;
-> > > +		}
-> > > +		ptr += newlen;
-> > > +		if (endptr < ptr)
-> > > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> > 
-> > I'd prefer this matches the loop logic order. ie.
-> > 
-> > 		if (ptr >= endptr)
-> > 
-> 
-> Ok.  That check can be lifted out of the loop anyway.
-> 
-> > > +		else
-> > > +			nr_frees++;
-> > > +	}
-> > > +
-> > > +	/* Did we see at least as many free slots as there are bestfrees? */
-> > > +	if (nr_frees < nr_bestfrees)
-> > > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> > > +out_buf:
-> > > +	xfs_trans_brelse(sc->tp, bp);
-> > > +out:
-> > > +	return error;
-> > > +}
-> > > +
-> > > +/*
-> > > + * Does the free space length in the free space index block ($len) match
-> > > + * the longest length in the directory data block's bestfree array?
-> > > + * Assume that we've already checked that the data block's bestfree
-> > > + * array is in order.
-> > > + */
-> > > +static inline void
-> > > +xfs_scrub_directory_check_freesp(
-> > 
-> > No need for inline here, the compiler will do that automatically if
-> > appropriate.
-> 
-> Ok.  I'll make it STATIC like everything else here.
-> 
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	xfs_dablk_t			lblk,
-> > > +	struct xfs_buf			*dbp,
-> > > +	unsigned int			len)
-> > > +{
-> > > +	struct xfs_dir2_data_free	*bf;
-> > > +	struct xfs_dir2_data_free	*dfp;
-> > > +	int				offset;
-> > > +
-> > > +	if (len == 0)
-> > > +		return;
-> > > +
-> > > +	bf = sc->ip->d_ops->data_bestfree_p(dbp->b_addr);
-> > > +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
-> > > +		offset = be16_to_cpu(dfp->offset);
-> > > +		if (offset == 0)
-> > > +			break;
-> > > +		if (len == be16_to_cpu(dfp->length))
-> > > +			return;
-> > > +		/* Didn't find the best length in the bestfree data */
-> > > +		break;
-> > > +	}
-> > > +
-> > > +	xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> > > +}
-> > > +
 > > > +/* Check free space info in a directory leaf1 block. */
 > > > +STATIC int
 > > > +xfs_scrub_directory_leaf1_bestfree(
@@ -195,10 +67,15 @@ On Mon, Oct 16, 2017 at 03:37:08PM -0700, Darrick J. Wong wrote:
 > This should already be done by xfs_dir3_leaf_read ->
 > xfs_dir3_leaf1_read_verify -> __read_verify -> xfs_dir3_leaf_verify ->
 > xfs_dir3_leaf_check_int, right?
-> 
-> > 
-> > > +		error = xfs_dir3_data_read(sc->tp, sc->ip,
-> > > +				i * args->geo->fsbcount, -1, &dbp);
+
+True. However, it's simple to do and we're already iterating over
+all the structures necessary and detecting the case necessary to
+check it, so it doesn't hurt and might catch in-core corruptions
+before they hit the write verifier?
+
+And it makes it do the same checks as the free_bestfree checks
+below....
+
 > > > +		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
 > > > +				&error))
 > > > +			continue;
@@ -243,24 +120,11 @@ On Mon, Oct 16, 2017 at 03:37:08PM -0700, Darrick J. Wong wrote:
 > 
 > Also that for loop needs to be terminated on i < freehdr.nused.
 
-(Er... NAK on that last sentence; it's the documentation that are wrong.)
+Good catch - I missed that, too :P
 
---D
+Cheers,
 
-> 
-> --D
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
