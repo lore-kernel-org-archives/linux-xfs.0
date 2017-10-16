@@ -1,96 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56426 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752477AbdJPPui (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Oct 2017 11:50:38 -0400
-Date: Mon, 16 Oct 2017 17:50:35 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 16/19] ext4: Support for synchronous DAX faults
-Message-ID: <20171016155034.GL9762@quack2.suse.cz>
-References: <20171011200603.27442-1-jack@suse.cz>
- <20171011200603.27442-17-jack@suse.cz>
- <20171013205854.GE29081@linux.intel.com>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:52125 "EHLO
+        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754593AbdJPRnx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 13:43:53 -0400
+Received: by mail-oi0-f49.google.com with SMTP id j126so26409223oib.8
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2017 10:43:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171013205854.GE29081@linux.intel.com>
+In-Reply-To: <20171016072644.GB28270@lst.de>
+References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+ <20171013065716.GB26461@lst.de> <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
+ <20171013163822.GA17411@obsidianresearch.com> <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
+ <20171013173145.GA18702@obsidianresearch.com> <20171016072644.GB28270@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 16 Oct 2017 10:43:52 -0700
+Message-ID: <CAPcyv4itbYQqVrHBZ=+BRLH39WwDZ_RGg6sSaodVZ93LRYigNA@mail.gmail.com>
+Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Fri 13-10-17 14:58:54, Ross Zwisler wrote:
-> On Wed, Oct 11, 2017 at 10:06:00PM +0200, Jan Kara wrote:
-> > We return IOMAP_F_NEEDDSYNC flag from ext4_iomap_begin() for a
-> > synchronous write fault when inode has some uncommitted metadata
-> > changes. In the fault handler ext4_dax_fault() we then detect this case,
-> > call vfs_fsync_range() to make sure all metadata is committed, and call
-> > dax_insert_pfn_mkwrite() to insert page table entry. Note that this will
-> > also dirty corresponding radix tree entry which is what we want -
-> > fsync(2) will still provide data integrity guarantees for applications
-> > not using userspace flushing. And applications using userspace flushing
-> > can avoid calling fsync(2) and thus avoid the performance overhead.
-> > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/ext4/file.c       |  6 +++++-
-> >  fs/ext4/inode.c      | 15 +++++++++++++++
-> >  fs/jbd2/journal.c    | 17 +++++++++++++++++
-> >  include/linux/jbd2.h |  1 +
-> >  4 files changed, 38 insertions(+), 1 deletion(-)
-> 
-> <>
-> 
-> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> > index 31db875bc7a1..13a198924a0f 100644
-> > --- a/fs/ext4/inode.c
-> > +++ b/fs/ext4/inode.c
-> > @@ -3394,6 +3394,19 @@ static int ext4_releasepage(struct page *page, gfp_t wait)
-> >  }
-> >  
-> >  #ifdef CONFIG_FS_DAX
-> > +static bool ext4_inode_datasync_dirty(struct inode *inode)
-> > +{
-> > +	journal_t *journal = EXT4_SB(inode->i_sb)->s_journal;
-> > +
-> > +	if (journal)
-> > +		return !jbd2_transaction_committed(journal,
-> > +					EXT4_I(inode)->i_datasync_tid);
-> > +	/* Any metadata buffers to write? */
-> > +	if (!list_empty(&inode->i_mapping->private_list))
-> > +		return true;
-> > +	return inode->i_state & I_DIRTY_DATASYNC;
-> > +}
-> 
-> I just had 2 quick questions on this:
-> 
-> 1) Does ext4 actually use inode->i_mapping->private_list to keep track of
-> dirty metadata buffers?  The comment above ext4_write_end() leads me to
-> believe that this list is unused?
-> 
->  * ext4 never places buffers on inode->i_mapping->private_list.  metadata
->  * buffers are managed internally.
-> 
-> Or does the above comment only apply to ext4 with a journal?
+On Mon, Oct 16, 2017 at 12:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Fri, Oct 13, 2017 at 11:31:45AM -0600, Jason Gunthorpe wrote:
+>> I don't think that really represents how lots of apps actually use
+>> RDMA.
+>>
+>> RDMA is often buried down in the software stack (eg in a MPI), and by
+>> the time a mapping gets used for RDMA transfer the link between the
+>> FD, mmap and the MR is totally opaque.
+>>
+>> Having a MR specific notification means the low level RDMA libraries
+>> have a chance to deal with everything for the app.
+>>
+>> Eg consider a HPC app using MPI that uses some DAX aware library to
+>> get DAX backed mmap's. It then passes memory in those mmaps to the
+>> MPI library to do transfers. The MPI creates the MR on demand.
+>>
+>
+> I suspect one of the more interesting use cases might be a file server,
+> for which that's not the case.  But otherwise I agree with the above,
+> and also thing that notifying the MR handle is the only way to go for
+> another very important reason:  fencing.  What if the application/library
+> does not react on the notification?  With a per-MR notification we
+> can unregister the MR in kernel space and have a rock solid fencing
+> mechanism.  And that is the most important bit here.
 
-Yes, the above applies for ext4 with a journal. ext4 without a journal uses
-inode->i_mapping->private_list for metadata tracking. And DAX can be used
-without the journal just fine...
-
-> 2) Where is I_DIRTY_DATASYNC set in inode->i_state?  I poked around a bit and
-> couldn't see it.
-
-Never directly (at least for ext4). But it will get set by
-mark_inode_dirty() as I_DIRTY contains I_DIRTY_DATASYNC.
-
-> The rest of the patch looks good to me, and you can add:
-> 
-> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-
-Thanks!
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+While I agree with the need for a per-MR notification mechanism, one
+thing we lose by walking away from MAP_DIRECT is a way for a
+hypervisor to coordinate pass through of a DAX mapping to an RDMA
+device in a guest. That will remain a case where we will still need to
+use device-dax. I'm fine if that's the answer, but just want to be
+clear about all the places we need to protect a DAX mapping against
+RDMA from a non-ODP device.
