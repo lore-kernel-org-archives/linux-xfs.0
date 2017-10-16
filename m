@@ -1,231 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62897 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751871AbdJPDQu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 23:16:50 -0400
-Date: Mon, 16 Oct 2017 14:16:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 21/30] xfs: scrub inodes
-Message-ID: <20171016031647.GX3666@dastard>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777258004.1724.14107466871314594061.stgit@magnolia>
- <20171012223250.GN7122@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:52666 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751461AbdJPDfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Oct 2017 23:35:41 -0400
+Date: Sun, 15 Oct 2017 20:35:39 -0700
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
+Message-ID: <20171016033538.5y2xnxkddhrcjlmj@kernel.org>
+References: <20171015050751.dfznko2hxhi6jvra@kernel.org>
+ <20171015222202.GH3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171012223250.GN7122@magnolia>
+In-Reply-To: <20171015222202.GH3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, tj@kernel.org, Kernel-team@fb.com
 
-On Thu, Oct 12, 2017 at 03:32:50PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 11, 2017 at 06:43:00PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 16, 2017 at 09:22:02AM +1100, Dave Chinner wrote:
+> On Sat, Oct 14, 2017 at 10:07:51PM -0700, Shaohua Li wrote:
+> > From: Shaohua Li <shli@fb.com>
 > > 
-> > Scrub the fields within an inode.
-
-.....
-
-> > +
-> > +/*
-> > + * Given an inode and the scrub control structure, grab either the
-> > + * inode referenced in the control structure or the inode passed in.
-> > + * The inode is not locked.
-> > + */
-> > +int
-> > +xfs_scrub_get_inode(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*ip_in)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_inode		*ip = NULL;
-> > +	int				error;
-> > +
-> > +	/*
-> > +	 * If userspace passed us an AG number or a generation number
-> > +	 * without an inode number, they haven't got a clue so bail out
-> > +	 * immediately.
-> > +	 */
-> > +	if (sc->sm->sm_agno || (sc->sm->sm_gen && !sc->sm->sm_ino))
-> > +		return -EINVAL;
-> > +
-> > +	/* We want to scan the inode we already had opened. */
-> > +	if (sc->sm->sm_ino == 0 || sc->sm->sm_ino == ip_in->i_ino) {
-> > +		sc->ip = ip_in;
-> > +		return 0;
-> > +	}
-> > +
-> > +	/* Look up the inode, see if the generation number matches. */
-> > +	if (xfs_internal_inum(mp, sc->sm->sm_ino))
-> > +		return -ENOENT;
-> > +	error = xfs_iget(mp, NULL, sc->sm->sm_ino,
-> > +			XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE, 0, &ip);
-> > +	if (error == -ENOENT || error == -EINVAL) {
-> > +		/* inode doesn't exist... */
-> > +		return -ENOENT;
-> > +	} else if (error) {
-> > +		trace_xfs_scrub_op_error(sc,
-> > +				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
-> > +				XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
-> > +				error, __return_address);
-> > +		return error;
-> > +	}
-> > +	if (VFS_I(ip)->i_generation != sc->sm->sm_gen) {
-> > +		iput(VFS_I(ip));
-> > +		return -ENOENT;
-> > +	}
-> > +
-> > +	sc->ip = ip;
-> > +	return 0;
-> > +}
-
-Much nicer with the way everything is clearly spelled out :P
-
-> > +/* Inode core */
-> > +
-> > +/*
-> > + * di_extsize hint validation is somewhat cumbersome. Rules are:
-> > + *
-> > + * 1. extent size hint is only valid for directories and regular files
-> > + * 2. DIFLAG_EXTSIZE is only valid for regular files
-> > + * 3. DIFLAG_EXTSZINHERIT is only valid for directories.
-> > + * 4. extsize hint of 0 turns off hints, clears inode flags.
-> > + * 5. either flag must be set if extsize != 0
-> > + * 6. Extent size must be a multiple of the appropriate block size.
-> > + * 7. extent size hint cannot be longer than maximum extent length
-> > + * 8. for non-realtime files, the extent size hint must be limited
-> > + *    to half the AG size to avoid alignment extending the extent
-> > + *    beyond the limits of the AG.
-> > + */
-> > +STATIC void
-> > +xfs_scrub_inode_extsize(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_buf			*bp,
-> > +	struct xfs_dinode		*dip,
-> > +	xfs_ino_t			ino,
-> > +	uint16_t			mode,
-> > +	uint16_t			flags)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	bool				rt_flag;
-> > +	bool				hint_flag;
-> > +	bool				inherit_flag;
-> > +	uint32_t			extsize;
-> > +	uint32_t			extsize_bytes;
-> > +	uint32_t			blocksize_bytes;
-> > +
-> > +	rt_flag = (flags & XFS_DIFLAG_REALTIME);
-> > +	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
-> > +	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
-> > +	extsize = be32_to_cpu(dip->di_extsize);
-> > +	extsize_bytes = XFS_FSB_TO_B(sc->mp, extsize);
-> > +
-> > +	if (rt_flag)
-> > +		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-> > +	else
-> > +		blocksize_bytes = mp->m_sb.sb_blocksize;
-> > +
-> > +	if ((hint_flag || inherit_flag) && (!S_ISDIR(mode) && !S_ISREG(mode)))
-
-Logic is a correct but reads funny:
-
-	if ((hint_flag || inherit_flag) &&
-	    !(S_ISREG(mode) || S_ISDIR(mode)))
-
-> > +/*
-> > + * di_cowextsize hint validation is somewhat cumbersome. Rules are:
-> > + *
-> > + * 1. flag requires reflink feature
-> > + * 2. cow extent size hint is only valid for directories and regular files
-> > + * 3. cow extsize hint of 0 turns off hints, clears inode flags.
-> > + * 4. either flag must be set if cow extsize != 0
-> > + * 5. flag cannot be set for rt files
-> > + * 6. Extent size must be a multiple of the appropriate block size.
-> > + * 7. extent size hint cannot be longer than maximum extent length
-> > + * 8. the extent size hint must be limited
-> > + *    to half the AG size to avoid alignment extending the extent
-> > + *    beyond the limits of the AG.
-> > + */
-
-Perhaps this comment doesn't need duplicating for a 3rd time. Maybe
-for both di_extsize and di_cowextsize just say:
-
-/*
- * Extent size hints have explicit rules. They are documented at
- * xfs_ioctl_setattr_check_extsize() - these functions need to be
- * kept in sync with each other.
- */
-
-> > +STATIC void
-> > +xfs_scrub_inode_cowextsize(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_buf			*bp,
-> > +	struct xfs_dinode		*dip,
-> > +	xfs_ino_t			ino,
-> > +	uint16_t			mode,
-> > +	uint16_t			flags,
-> > +	uint64_t			flags2)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	bool				rt_flag;
-> > +	bool				hint_flag;
-> > +	uint32_t			extsize;
-> > +	uint32_t			extsize_bytes;
-> > +
-> > +	rt_flag = (flags & XFS_DIFLAG_REALTIME);
-> > +	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
-> > +	extsize = be32_to_cpu(dip->di_extsize);
+> > Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
+> > writeback support). Tested with a fio test, verified writeback is
+> > throttled against cgroup io.max write bandwidth, also verified moving
+> > the fio test to another cgroup and the writeback is throttled against
+> > new cgroup setting.
+> > 
+> > I created a test for this as attached, please try! I'll send the test out for
+> > inclusion later.
 > 
-> Doh, this ought to be extsize = be32_to_cpu(dip->di_cowextsize); will fix.
+> Hmmm. The test you appended just checks that bytes get written.
+> That's pretty much useless for verification of the features you
+> describe above (throttling rate it correct, dynamic throttle
+> application as memcg config changes).
+> 
+> You explicitly state this is a memcg IO QoS feature and that you
+> have a set of fio tests that verify that it works as expected. We
+> need those "works as expected" fio tests formalised into automated
+> fstests. Both upstream fs developers and downstream distro QE
+> departments need to be able to verify that the bandwidth control and
+> throttling works as advertised - it's essential that we have
+> regression tests for this....
 
-Yup, with that fix in place all the spurious inode warnings I was
-getting went away.
+Right, this test only verifies the writeback is correctly charged to a cgroup,
+it doesn't verify the writeback is running in correct bandwidth. I did try to
+create such automatic test, but my attempt failed. To measure speed, we need
+measure the time for a test. But writeback is async, the file write finishes
+before the data is written to disk. We can't call a fsync, because fsync write
+is different than writeback write, which is charged to correct cgroup even
+without cgroup writeback support. For my test, I run iostat and check the disk
+speed is correct, so I don't have idea to create an automatic test.
 
-> > +/* Map and read a raw inode. */
-> > +STATIC int
-> > +xfs_scrub_inode_map_raw(
-> > +	struct xfs_scrub_context	*sc,
-> > +	xfs_ino_t			ino,
-> > +	struct xfs_buf			**bpp,
-> > +	struct xfs_dinode		**dipp)
-> > +{
-> > +	struct xfs_imap			imap;
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_buf			*bp;
-> > +	struct xfs_dinode		*dip;
-> > +	int				error;
-> > +
-> > +	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
-> > +	if (error == -EINVAL) {
-> > +		/*
-> > +		 * Inode could have gotten deleted out from under us;
-> > +		 * just forget about it.
-> > +		 */
-> > +		error = -ENOENT;
-> > +		goto out;
-> > +	}
-> > +	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
-> > +			XFS_INO_TO_AGBNO(mp, ino), &error))
-> > +		goto out;
-> > +
-> > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-> > +			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
-> > +			NULL);
-> > +	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
-> > +			XFS_INO_TO_AGBNO(mp, ino), &error))
-> > +		goto out;
-> > +
-> > +	/* Is this really an inode? */
-> > +	bp->b_ops = &xfs_inode_buf_ops;
-
-A comment here on why we skip the read verifier when pulling in the
-inode buffer would be nice.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Shaohua
