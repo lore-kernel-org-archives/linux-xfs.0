@@ -1,129 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21302 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754983AbdJPTj2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:39:28 -0400
-Date: Mon, 16 Oct 2017 12:39:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/4] xfs: cancel dirty pages on invalidation
-Message-ID: <20171016193923.GE4703@magnolia>
-References: <20171008235414.13866-1-david@fromorbit.com>
- <20171008235414.13866-5-david@fromorbit.com>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:48045 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755616AbdJPToc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:44:32 -0400
+Received: by mail-oi0-f53.google.com with SMTP id h200so26979752oib.4
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2017 12:44:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171008235414.13866-5-david@fromorbit.com>
+In-Reply-To: <CAPcyv4itbYQqVrHBZ=+BRLH39WwDZ_RGg6sSaodVZ93LRYigNA@mail.gmail.com>
+References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+ <20171013065716.GB26461@lst.de> <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
+ <20171013163822.GA17411@obsidianresearch.com> <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
+ <20171013173145.GA18702@obsidianresearch.com> <20171016072644.GB28270@lst.de> <CAPcyv4itbYQqVrHBZ=+BRLH39WwDZ_RGg6sSaodVZ93LRYigNA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 16 Oct 2017 12:44:31 -0700
+Message-ID: <CAPcyv4gtnZu7obG7UwaBq1-fwRZj06HCa=mjBfDKKgfp97nYaw@mail.gmail.com>
+Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, Oct 09, 2017 at 10:54:14AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Recently we've had warnings arise from the vm handing us pages
-> without bufferheads attached to them. This should not ever occur
-> in XFS, but we don't defend against it properly if it does. The only
-> place where we remove bufferheads from a page is in
-> xfs_vm_releasepage(), but we can't tell the difference here between
-> "page is dirty so don't release" and "page is dirty but is being
-> invalidated so release it".
-> 
-> In some places that are invalidating pages ask for pages to be
-> released and follow up afterward calling ->releasepage by checking
-> whether the page was dirty and then aborting the invalidation. This
-> is a possible vector for releasing buffers from a page but then
-> leaving it in the mapping, so we really do need to avoid dirty pages
-> in xfs_vm_releasepage().
-> 
-> To differentiate between invalidated pages and normal pages, we need
-> to clear the page dirty flag when invalidating the pages. This can
-> be done through xfs_vm_invalidatepage(), and will result
-> xfs_vm_releasepage() seeing the page as clean which matches the
-> bufferhead state on the page after calling block_invalidatepage().
-> 
-> Hence we can re-add the page dirty check in xfs_vm_releasepage to
-> catch the case where we might be releasing a page that is actually
-> dirty and so should not have the bufferheads on it removed. This
-> will remove one possible vector of "dirty page with no bufferheads"
-> and so help narrow down the search for the root cause of that
-> problem.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Mon, Oct 16, 2017 at 10:43 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Mon, Oct 16, 2017 at 12:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> On Fri, Oct 13, 2017 at 11:31:45AM -0600, Jason Gunthorpe wrote:
+>>> I don't think that really represents how lots of apps actually use
+>>> RDMA.
+>>>
+>>> RDMA is often buried down in the software stack (eg in a MPI), and by
+>>> the time a mapping gets used for RDMA transfer the link between the
+>>> FD, mmap and the MR is totally opaque.
+>>>
+>>> Having a MR specific notification means the low level RDMA libraries
+>>> have a chance to deal with everything for the app.
+>>>
+>>> Eg consider a HPC app using MPI that uses some DAX aware library to
+>>> get DAX backed mmap's. It then passes memory in those mmaps to the
+>>> MPI library to do transfers. The MPI creates the MR on demand.
+>>>
+>>
+>> I suspect one of the more interesting use cases might be a file server,
+>> for which that's not the case.  But otherwise I agree with the above,
+>> and also thing that notifying the MR handle is the only way to go for
+>> another very important reason:  fencing.  What if the application/library
+>> does not react on the notification?  With a per-MR notification we
+>> can unregister the MR in kernel space and have a rock solid fencing
+>> mechanism.  And that is the most important bit here.
+>
+> While I agree with the need for a per-MR notification mechanism, one
+> thing we lose by walking away from MAP_DIRECT is a way for a
+> hypervisor to coordinate pass through of a DAX mapping to an RDMA
+> device in a guest. That will remain a case where we will still need to
+> use device-dax. I'm fine if that's the answer, but just want to be
+> clear about all the places we need to protect a DAX mapping against
+> RDMA from a non-ODP device.
 
-Took forever to wrap my head around the bufferhead vs. page state mess,
-but I think it looks ok.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-> ---
->  fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
->  1 file changed, 22 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index f18e5932aec4..067284d84d9e 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -735,6 +735,14 @@ xfs_vm_invalidatepage(
->  {
->  	trace_xfs_invalidatepage(page->mapping->host, page, offset,
->  				 length);
-> +
-> +	/*
-> +	 * If we are invalidating the entire page, clear the dirty state from it
-> +	 * so that we can check for attempts to release dirty cached pages in
-> +	 * xfs_vm_releasepage().
-> +	 */
-> +	if (offset == 0 && length >= PAGE_SIZE)
-> +		cancel_dirty_page(page);
->  	block_invalidatepage(page, offset, length);
->  }
->  
-> @@ -1190,25 +1198,27 @@ xfs_vm_releasepage(
->  	 * mm accommodates an old ext3 case where clean pages might not have had
->  	 * the dirty bit cleared. Thus, it can send actual dirty pages to
->  	 * ->releasepage() via shrink_active_list(). Conversely,
-> -	 * block_invalidatepage() can send pages that are still marked dirty
-> -	 * but otherwise have invalidated buffers.
-> +	 * block_invalidatepage() can send pages that are still marked dirty but
-> +	 * otherwise have invalidated buffers.
->  	 *
->  	 * We want to release the latter to avoid unnecessary buildup of the
-> -	 * LRU, skip the former and warn if we've left any lingering
-> -	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
-> -	 * or unwritten buffers and warn if the page is not dirty. Otherwise
-> -	 * try to release the buffers.
-> +	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
-> +	 * that are entirely invalidated and need to be released.  Hence the
-> +	 * only time we should get dirty pages here is through
-> +	 * shrink_active_list() and so we can simply skip those now.
-> +	 *
-> +	 * warn if we've left any lingering delalloc/unwritten buffers on clean
-> +	 * or invalidated pages we are about to release.
->  	 */
-> +	if (PageDirty(page))
-> +		return 0;
-> +
->  	xfs_count_page_state(page, &delalloc, &unwritten);
->  
-> -	if (delalloc) {
-> -		WARN_ON_ONCE(!PageDirty(page));
-> +	if (WARN_ON_ONCE(delalloc))
->  		return 0;
-> -	}
-> -	if (unwritten) {
-> -		WARN_ON_ONCE(!PageDirty(page));
-> +	if (WARN_ON_ONCE(unwritten))
->  		return 0;
-> -	}
->  
->  	return try_to_free_buffers(page);
->  }
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+For this specific issue perhaps we promote FL_LAYOUT as a lease-type
+that can be set by fcntl().
