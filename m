@@ -1,231 +1,282 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO11.lge.com ([156.147.23.51]:40854 "EHLO
-        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967288AbdJRJjS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 05:39:18 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [RESEND PATCH 3/3] lockdep: Assign a lock_class per gendisk used for wait_for_completion()
-Date: Wed, 18 Oct 2017 18:38:52 +0900
-Message-Id: <1508319532-24655-4-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23115 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932076AbdJPVqH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 17:46:07 -0400
+Date: Mon, 16 Oct 2017 14:46:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 28/30] xfs: scrub directory parent pointers
+Message-ID: <20171016214601.GN4703@magnolia>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777262776.1724.11135251107601015017.stgit@magnolia>
+ <20171016050928.GE3666@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171016050928.GE3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org
-Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Darrick and Dave Chinner posted the following warning:
+On Mon, Oct 16, 2017 at 04:09:28PM +1100, Dave Chinner wrote:
+> On Wed, Oct 11, 2017 at 06:43:47PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Scrub parent pointers, sort of.  For directories, we can ride the
+> > '..' entry up to the parent to confirm that there's at most one
+> > dentry that points back to this directory.
+> 
+> ....
+> 
+> > +/* Count the number of dentries in the parent dir that point to this inode. */
+> > +STATIC int
+> > +xfs_scrub_parent_count_parent_dentries(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_inode		*parent,
+> > +	xfs_nlink_t			*nlink)
+> > +{
+> > +	struct xfs_scrub_parent_ctx	spc = {
+> > +		.dc.actor = xfs_scrub_parent_actor,
+> > +		.dc.pos = 0,
+> > +		.ino = sc->ip->i_ino,
+> > +		.nlink = 0,
+> > +	};
+> > +	struct xfs_ifork		*ifp;
+> > +	size_t				bufsize;
+> > +	loff_t				oldpos;
+> > +	uint				lock_mode;
+> > +	int				error;
+> > +
+> > +	/*
+> > +	 * Load the parent directory's extent map.  A regular directory
+> > +	 * open would start readahead (and thus load the extent map)
+> > +	 * before we even got to a readdir call, but this isn't
+> > +	 * guaranteed here.
+> > +	 */
+> > +	lock_mode = xfs_ilock_data_map_shared(parent);
+> > +	ifp = XFS_IFORK_PTR(parent, XFS_DATA_FORK);
+> > +	if (XFS_IFORK_FORMAT(parent, XFS_DATA_FORK) == XFS_DINODE_FMT_BTREE &&
+> > +	    !(ifp->if_flags & XFS_IFEXTENTS)) {
+> > +		error = xfs_iread_extents(sc->tp, parent, XFS_DATA_FORK);
+> > +		if (error) {
+> > +			xfs_iunlock(parent, lock_mode);
+> > +			return error;
+> > +		}
+> > +	}
+> > +	xfs_iunlock(parent, lock_mode);
+> 
+> Why not just do what xfs_dir_open() does? i.e.
+> 
+>         /*
+>          * If there are any blocks, read-ahead block 0 as we're almost
+>          * certain to have the next operation be a read there.
+>          */
+>         mode = xfs_ilock_data_map_shared(ip);
+>         if (ip->i_d.di_nextents > 0)
+>                 error = xfs_dir3_data_readahead(ip, 0, -1);
+>         xfs_iunlock(ip, mode);
 
-> ======================================================
-> WARNING: possible circular locking dependency detected
-> 4.14.0-rc1-fixes #1 Tainted: G        W
-> ------------------------------------------------------
-> loop0/31693 is trying to acquire lock:
->  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
->
-> but now in release context of a crosslock acquired at the following:
->  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
->
-> which lock already depends on the new lock.
->
-> the existing dependency chain (in reverse order) is:
->
-> -> #2 ((complete)&ret.event){+.+.}:
->        lock_acquire+0xab/0x200
->        wait_for_completion_io+0x4e/0x1a0
->        submit_bio_wait+0x7f/0xb0
->        blkdev_issue_zeroout+0x71/0xa0
->        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
->        xfs_bmapi_write+0x374/0x11f0 [xfs]
->        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
->        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
->        iomap_apply+0x43/0xe0
->        dax_iomap_rw+0x89/0xf0
->        xfs_file_dax_write+0xcc/0x220 [xfs]
->        xfs_file_write_iter+0xf0/0x130 [xfs]
->        __vfs_write+0xd9/0x150
->        vfs_write+0xc8/0x1c0
->        SyS_write+0x45/0xa0
->        entry_SYSCALL_64_fastpath+0x1f/0xbe
->
-> -> #1 (&xfs_nondir_ilock_class){++++}:
->        lock_acquire+0xab/0x200
->        down_write_nested+0x4a/0xb0
->        xfs_ilock+0x263/0x330 [xfs]
->        xfs_setattr_size+0x152/0x370 [xfs]
->        xfs_vn_setattr+0x6b/0x90 [xfs]
->        notify_change+0x27d/0x3f0
->        do_truncate+0x5b/0x90
->        path_openat+0x237/0xa90
->        do_filp_open+0x8a/0xf0
->        do_sys_open+0x11c/0x1f0
->        entry_SYSCALL_64_fastpath+0x1f/0xbe
->
-> -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
->        up_write+0x1c/0x40
->        xfs_iunlock+0x1d0/0x310 [xfs]
->        xfs_file_fallocate+0x8a/0x310 [xfs]
->        loop_queue_work+0xb7/0x8d0
->        kthread_worker_fn+0xb9/0x1f0
->
-> Chain exists of:
->   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
->
->  Possible unsafe locking scenario by crosslock:
->
->        CPU0                    CPU1
->        ----                    ----
->   lock(&xfs_nondir_ilock_class);
->   lock((complete)&ret.event);
->                                lock(&(&ip->i_mmaplock)->mr_lock);
->                                unlock((complete)&ret.event);
->
->                *** DEADLOCK ***
+Ok.
 
-The warning is a false positive, caused by the fact that all
-wait_for_completion()s in submit_bio_wait() are waiting with the same
-lock class.
+> > +	/*
+> > +	 * Iterate the parent dir to confirm that there is
+> > +	 * exactly one entry pointing back to the inode being
+> > +	 * scanned.
+> > +	 */
+> > +	bufsize = (size_t)min_t(loff_t, 32768, parent->i_d.di_size);
+> 
+> Perhaps we need a define for that 32k magic number now it's being
+> used in multiple places?
 
-However, some bios have nothing to do with others, for example, the case
-might happen while using loop devices, between bios of an upper device
-and a lower device(=loop device).
+Magic indeed; glibc uses the minimum of (4 * BUFSIZ) or (sizeof(struct
+dirent)); musl uses a static 2k buffer; dietlibc uses (PAGE_SIZE -
+sizeof(structure header))...
 
-The safest way to assign different lock classes to different devices is
-to do it for each gendisk. In other words, this patch assigns a
-lockdep_map per gendisk and uses it when initializing completion in
-submit_bio_wait().
+...what would we call it?
 
-Of course, it might be too conservative. But, making it safest for now
-and extended by block layer experts later is good, atm.
+/*
+ * The Linux API doesn't pass down the total size of the buffer we read
+ * into down to the filesystem.  With the filldir concept it's not
+ * needed for correct information, but the XFS dir2 leaf code wants an
+ * estimate of the buffer size to calculate its readahead window and
+ * size the buffers used for mapping to physical blocks.
+ *
+ * Try to give it an estimate that's good enough, maybe at some point we
+ * can change the ->readdir prototype to include the buffer size.  For
+ * now we use the current glibc buffer size.
+ */
+#define XFS_DEFAULT_READDIR_BUFSIZE	(32768)
 
-Signed-off-by: Byungchul Park <byungchul.park@lge.com>
----
- block/bio.c           |  4 ++--
- block/genhd.c         | 13 +++++--------
- include/linux/genhd.h | 26 ++++++++++++++++++++++----
- 3 files changed, 29 insertions(+), 14 deletions(-)
+(As a side question, do we want to bump this up to a full pagesize on
+architectures that have 64k pages?  I'd probably just leave it, but
+let's see if anyone running those architectures complains or sends in a
+patch?)
 
-diff --git a/block/bio.c b/block/bio.c
-index 9a63597..0d4d6c0 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -941,7 +941,7 @@ int submit_bio_wait(struct bio *bio)
- {
- 	struct submit_bio_ret ret;
- 
--	init_completion(&ret.event);
-+	init_completion_with_map(&ret.event, &bio->bi_disk->lockdep_map);
- 	bio->bi_private = &ret;
- 	bio->bi_end_io = submit_bio_wait_endio;
- 	bio->bi_opf |= REQ_SYNC;
-@@ -1382,7 +1382,7 @@ struct bio *bio_map_user_iov(struct request_queue *q,
- 
- 			if (len <= 0)
- 				break;
--			
-+
- 			if (bytes > len)
- 				bytes = len;
- 
-diff --git a/block/genhd.c b/block/genhd.c
-index 7f520fa..676c245 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1304,13 +1304,7 @@ dev_t blk_lookup_devt(const char *name, int partno)
- }
- EXPORT_SYMBOL(blk_lookup_devt);
- 
--struct gendisk *alloc_disk(int minors)
--{
--	return alloc_disk_node(minors, NUMA_NO_NODE);
--}
--EXPORT_SYMBOL(alloc_disk);
--
--struct gendisk *alloc_disk_node(int minors, int node_id)
-+struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name)
- {
- 	struct gendisk *disk;
- 
-@@ -1350,9 +1344,12 @@ struct gendisk *alloc_disk_node(int minors, int node_id)
- 		disk_to_dev(disk)->type = &disk_type;
- 		device_initialize(disk_to_dev(disk));
- 	}
-+
-+	lockdep_init_map(&disk->lockdep_map, lock_name, key, 0);
-+
- 	return disk;
- }
--EXPORT_SYMBOL(alloc_disk_node);
-+EXPORT_SYMBOL(__alloc_disk_node);
- 
- struct kobject *get_disk(struct gendisk *disk)
- {
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index e619fae..5225efc 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -3,7 +3,7 @@
- 
- /*
-  * 	genhd.h Copyright (C) 1992 Drew Eckhardt
-- *	Generic hard disk header file by  
-+ *	Generic hard disk header file by
-  * 		Drew Eckhardt
-  *
-  *		<drew@colorado.edu>
-@@ -206,6 +206,9 @@ struct gendisk {
- #endif	/* CONFIG_BLK_DEV_INTEGRITY */
- 	int node_id;
- 	struct badblocks *bb;
-+#ifdef CONFIG_LOCKDEP_COMPLETIONS
-+	struct lockdep_map lockdep_map;
-+#endif
- };
- 
- static inline struct gendisk *part_to_disk(struct hd_struct *part)
-@@ -483,7 +486,7 @@ struct bsd_disklabel {
- 	__s16	d_type;			/* drive type */
- 	__s16	d_subtype;		/* controller/d_type specific */
- 	char	d_typename[16];		/* type name, e.g. "eagle" */
--	char	d_packname[16];			/* pack identifier */ 
-+	char	d_packname[16];			/* pack identifier */
- 	__u32	d_secsize;		/* # of bytes per sector */
- 	__u32	d_nsectors;		/* # of data sectors per track */
- 	__u32	d_ntracks;		/* # of tracks per cylinder */
-@@ -602,8 +605,7 @@ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
- extern void delete_partition(struct gendisk *, int);
- extern void printk_all_partitions(void);
- 
--extern struct gendisk *alloc_disk_node(int minors, int node_id);
--extern struct gendisk *alloc_disk(int minors);
-+extern struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name);
- extern struct kobject *get_disk(struct gendisk *disk);
- extern void put_disk(struct gendisk *disk);
- extern void blk_register_region(dev_t devt, unsigned long range,
-@@ -627,6 +629,22 @@ extern ssize_t part_fail_store(struct device *dev,
- 			       const char *buf, size_t count);
- #endif /* CONFIG_FAIL_MAKE_REQUEST */
- 
-+#ifdef CONFIG_LOCKDEP_COMPLETIONS
-+#define alloc_disk_node(m, id) \
-+({									\
-+	static struct lock_class_key __key;				\
-+	const char *__lock_name;					\
-+									\
-+	__lock_name = "(complete)"#m"("#id")";				\
-+									\
-+	__alloc_disk_node(m, id, &__key, __lock_name);			\
-+})
-+#else
-+#define alloc_disk_node(m, id)	__alloc_disk_node(m, id, NULL, NULL)
-+#endif
-+
-+#define alloc_disk(m)		alloc_disk_node(m, NUMA_NO_NODE)
-+
- static inline int hd_ref_init(struct hd_struct *part)
- {
- 	if (percpu_ref_init(&part->ref, __delete_partition, 0,
--- 
-1.9.1
+> > +	oldpos = 0;
+> > +	while (true) {
+> > +		error = xfs_readdir(sc->tp, parent, &spc.dc, bufsize);
+> > +		if (error)
+> > +			goto out;
+> > +		if (oldpos == spc.dc.pos)
+> > +			break;
+> > +		oldpos = spc.dc.pos;
+> > +	}
+> > +	*nlink = spc.nlink;
+> > +out:
+> > +	return error;
+> > +}
+> > +
+> > +/* Scrub a parent pointer. */
+> > +int
+> > +xfs_scrub_parent(
+> > +	struct xfs_scrub_context	*sc)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_inode		*dp = NULL;
+> > +	xfs_ino_t			dnum;
+> > +	xfs_nlink_t			expected_nlink;
+> > +	xfs_nlink_t			nlink;
+> > +	int				tries = 0;
+> > +	int				error;
+> > +
+> > +	/*
+> > +	 * If we're a directory, check that the '..' link points up to
+> > +	 * a directory that has one entry pointing to us.
+> > +	 */
+> > +	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
+> > +		return -ENOENT;
+> > +
+> > +	/* We're not a special inode, are we? */
+> > +	if (!xfs_verify_dir_ino_ptr(mp, sc->ip->i_ino)) {
+> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> > +		goto out;
+> > +	}
+> > +
+> > +	/*
+> > +	 * If we're an unlinked directory, the parent /won't/ have a link
+> > +	 * to us.  Otherwise, it should have one link.
+> > +	 */
+> > +	expected_nlink = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
+> > +
+> > +	/*
+> > +	 * The VFS grabs a read or write lock via i_rwsem before it reads
+> > +	 * or writes to a directory.  If we've gotten this far we've
+> > +	 * already obtained IOLOCK_EXCL, which (since 4.10) is the same as
+> > +	 * getting a write lock on i_rwsem.  Therefore, it is safe for us
+> > +	 * to drop the ILOCK here in order to do directory lookups.
+> > +	 */
+> > +	sc->ilock_flags &= ~(XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
+> > +	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
+> > +
+> > +	/* Look up '..' */
+> > +	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
+> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+> > +		goto out;
+> > +	if (!xfs_verify_dir_ino_ptr(mp, dnum)) {
+> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* Is this the root dir?  Then '..' must point to itself. */
+> > +	if (sc->ip == mp->m_rootip) {
+> > +		if (sc->ip->i_ino != mp->m_sb.sb_rootino ||
+> > +		    sc->ip->i_ino != dnum)
+> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> > +		return 0;
+> > +	}
+> 
+> All good to here.
+> 
+> > +try_again:
+> > +	/* Otherwise, '..' must not point to ourselves. */
+> > +	if (sc->ip->i_ino == dnum) {
+> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> > +		goto out;
+> > +	}
+> > +
+> > +	error = xfs_iget(mp, sc->tp, dnum, XFS_IGET_DONTCACHE, 0, &dp);
+> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+> > +		goto out;
+> > +	if (dp == sc->ip) {
+> > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> > +		goto out_rele;
+> > +	}
+> > +
+> > +	/*
+> > +	 * We prefer to keep the inode locked while we lock and search
+> > +	 * its alleged parent for a forward reference.  However, this
+> > +	 * child -> parent scheme can deadlock with the parent -> child
+> > +	 * scheme that is normally used.  Therefore, if we can lock the
+> > +	 * parent, just validate the references and get out.
+> > +	 */
+> > +	if (xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
+> > +		error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
+> > +		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
+> > +				&error))
+> > +			goto out_unlock;
+> > +		if (nlink != expected_nlink)
+> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+> > +		goto out_unlock;
+> > +	}
+> > +
+> > +	/*
+> > +	 * The game changes if we get here.  We failed to lock the parent,
+> > +	 * so we're going to try to verify both pointers while only holding
+> > +	 * one lock so as to avoid deadlocking with something that's actually
+> > +	 * trying to traverse down the directory tree.
+> > +	 */
+> > +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> > +	sc->ilock_flags = 0;
+> > +	xfs_ilock(dp, XFS_IOLOCK_SHARED);
+> > +
+> > +	/* Go looking for our dentry. */
+> > +	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
+> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+> > +		goto out_unlock;
+> > +
+> > +	/* Drop the parent lock, relock this inode. */
+> > +	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
+> > +	sc->ilock_flags = XFS_IOLOCK_EXCL;
+> > +	xfs_ilock(sc->ip, sc->ilock_flags);
+> > +
+> > +	/* Look up '..' to see if the inode changed. */
+> > +	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
+> > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+> > +		goto out_rele;
+> > +
+> > +	/* Drat, parent changed.  Try again! */
+> > +	if (dnum != dp->i_ino) {
+> > +		iput(VFS_I(dp));
+> > +		tries++;
+> > +		if (tries < 20)
+> > +			goto try_again;
+> > +		xfs_scrub_set_incomplete(sc);
+> > +		goto out;
+> > +	}
+> > +	iput(VFS_I(dp));
+> 
+> Can you factor this into a loop and function?
+> 
+> 	do {
+> 		valid = xfs_scrub_parent_validate(&error)
+> 		if (error)
+> 			goto out_unlock;
+> 	} while (!valid && ++retries < 20)
 
+Ok.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
