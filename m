@@ -1,95 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:55073 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752160AbdJPMC6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 08:02:58 -0400
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171012142319.GA11254@lst.de>
- <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
- <20171013065716.GB26461@lst.de>
- <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
- <20171013163822.GA17411@obsidianresearch.com>
- <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
- <20171013173145.GA18702@obsidianresearch.com>
- <CAPcyv4jZJRto1jwmNU--pqH_6dOVMyj=68ZwEjAmmkgX=mRk7w@mail.gmail.com>
- <20171014015752.GA25172@obsidianresearch.com>
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <e29eb9ed-2d87-cde8-4efa-50de1fff0c04@grimberg.me>
-Date: Mon, 16 Oct 2017 15:02:52 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:42330 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752004AbdJPMR4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Oct 2017 08:17:56 -0400
+Date: Mon, 16 Oct 2017 08:17:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] [RFC] xfs: make xfs_writepage_map extent map centric
+Message-ID: <20171016121754.GD58994@bfoster.bfoster>
+References: <20171011081131.8029-1-david@fromorbit.com>
+ <20171012161433.GA40005@bfoster.bfoster>
+ <20171012232221.GV15067@dastard>
+ <20171013131347.GB44461@bfoster.bfoster>
+ <20171014222532.GB15067@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171014015752.GA25172@obsidianresearch.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171014222532.GB15067@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-Hey folks, (chiming in very late here...)
-
->>> I think, if you want to build a uAPI for notification of MR lease
->>> break, then you need show how it fits into the above software model:
->>>   - How it can be hidden in a RDMA specific library
->>
->> So, here's a strawman can ibv_poll_cq() start returning ibv_wc_status
->> == IBV_WC_LOC_PROT_ERR when file coherency is lost. This would make
->> the solution generic across DAX and non-DAX. What's you're feeling for
->> how well applications are prepared to deal with that status return?
+On Sun, Oct 15, 2017 at 09:25:32AM +1100, Dave Chinner wrote:
+> On Fri, Oct 13, 2017 at 09:13:48AM -0400, Brian Foster wrote:
+> > On Fri, Oct 13, 2017 at 10:22:21AM +1100, Dave Chinner wrote:
+> > > On Thu, Oct 12, 2017 at 12:14:37PM -0400, Brian Foster wrote:
+> > > > On Wed, Oct 11, 2017 at 07:11:31PM +1100, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > 
+> > > > > xfs_writepage_map() iterates over the bufferheads on a page to decide
+> > > > > what sort of IO to do and what actions to take. However, when it comes
+> > > > > to reflink and deciding when it needs to execute a COW operation, we no
+> > > > > longer look at the bufferhead state but instead we ignore than and look up
+> > > > > internal state held in teh COW fork extent list.
+> > > 
+> > > [....]
+> > > 
+> > > > > +
+> > > > > +		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
+> > > > > +			/*
+> > > > > +			 * set_page_dirty dirties all buffers in a page, independent
+> > > > > +			 * of their state.  The dirty state however is entirely
+> > > > > +			 * meaningless for holes (!mapped && uptodate), so check we did
+> > > > > +			 * have a buffer covering a hole here and continue.
+> > > > > +			 */
+> > > > > +			ASSERT(!buffer_mapped(bh));
+> > > > > +			continue;
+> > > > >  		}
+> > > > 
+> > > > IIRC, the old (broken) write over hole situation would allocate a block,
+> > > > potentially yell about a block reservation overrun and ultimately write
+> > > > the page.
+> > > 
+> > > Which was [always] the wrong thing to do.
+> > > 
+> > > However, we were forced to do this historically because it covered
+> > > bugs and deficiencies in the front end mapping code, such as before
+> > > we had ->page_mkwrite notification. In those ancient times, mmap()
+> > > could not do delayed allocation or discover unwritten extents
+> > > correctly.  So back in those days we had to do unreserved
+> > > allocations in writeback and risk transaction overruns and ENOSPC in
+> > > writeback because mmap writes were unable to do the right thing.
+> > > 
+> > > Nowdays, we've closed off all those issues and the only situation we
+> > > can get unreserved allocation into a hole is when we've got a
+> > > mismatch between bufferhead and extent state. This should never
+> > > happen anymore, and silently allocating blocks for ranges that may
+> > > or may not have valid data in them and writing it to disk is
+> > > exactly the wrong thing to be doing now.
+> > > 
+> > 
+> > "This should never happen ..."
+> > 
+> > Famous last words? ;) 
+> > 
+> > Yeah, I understand it's a broken case, but I'm slightly concerned over
+> > the fact that it has happened in the past due to filesystem bugs. I
+> > think due to more than one problem as well, but my memory is hazy.
+> > 
+> > Note that I'm not suggesting we go ahead and write the page like we used
+> > to do, but rather that we at least have a defensive check for a
+> > discrepancy between pagecache state that suggests a buffer is dirty and
+> > extent state says there is no place to write.
 > 
-> Stuffing an entry into the CQ is difficult. The CQ is in user memory
-> and it is DMA'd from the HCA for several pieces of hardware, so the
-> kernel can't just stuff something in there. It can be done
-> with HW support by having the HCA DMA it via an exception path or
-> something, but even then, you run into questions like CQ overflow and
-> accounting issues since it is not ment for this.
-
-But why should the kernel ever need to mangle the CQ? if a lease break
-would deregister the MR the device is expected to generate remote
-protection errors on its own.
-
-And in that case, I think we need a query mechanism rather an event
-mechanism so when the application starts seeing protection errors
-it can query the relevant MR (I think most if not all devices have that
-information in their internal completion queue entries).
-
+> This code does not checking against "buffer_dirty" because we've
+> never done that in the writeback path - we've always written clean,
+> uptodate, mapped sub-page buffers if the page is dirty.
 > 
-> So, you need a side channel of some kind, either in certain drivers or
-> generically..
+> So the only case left to defend against here is mapped buffers over
+> a hole or an invalid extent. The writeback path currently checks
+> that doesn't happen with an ASSERT(), and the code above retains
+> that ASSERT(). It will go away completely when we move away from
+> bufferheads....
 > 
->>>   - How lease break can be done hitlessly, so the library user never
->>>     needs to know it is happening or see failed/missed transfers
+> > If so, throw a warning
+> > (either xfs_alert() or WARN_ON()) to indicate something went wrong
+> > because we tossed a dirty page without writing it anywhere. In other
+> > words, all I'm really saying here is that I don't think an assert is
+> > good enough.
+> 
+> It's the same as what we've always had to defend against this "we
+> fucked up the higher layer mapping" type of bug. I'm not creating
+> any new situation here, so I don't think it warrants a new warning
+> that will simply go away with bufferheads...
+> 
 
-I agree that the application should not be aware of lease breakages, but
-seeing failed transfers is perfectly acceptable given that an access
-violation is happening (my assumption is that failed transfers are error
-completions reported in the user completion queue). What we need to have
-is a framework to help user-space to recover sanely, which is to query
-what MR had the access violation, restore it, and re-establish the queue
-pair.
+Ok, then it may not be ideal to rely on the buffer_head to detect the
+error.
 
->>
->> iommu redirect should be hit less and behave like the page cache case
->> where RDMA targets pages that are no longer part of the file.
+> > > > Unless I've missed that
+> > > > being handled somewhere, that seems like a slightly more severe error
+> > > > from the user perspective. Perhaps we should have a noiser warning here
+> > > > or even consider that a writeback error?
+> > > 
+> > > No, because it's a valid state to have cached data over a hole if
+> > > it's been read. Hence the assert to ensure what we got was from a
+> > > previous read into a hole - if a mod we make to the higher level
+> > > code screws up, we'll catch it pretty quickly during testing...
+> > 
+> > We should be able to distinguish between page/buffer state that
+> > indicates we have valid data over a hole vs. valid+dirty data over a
+> > hole in order to flag the latter as a problem.
 > 
-> Yes, if the iommu can be fenced properly it sounds doable.
+> Except that, as above, we treat clean/dirty data exactly the same in
+> writepage - we write it if it's mapped over a valid extent. The code
+> catches the only case left that is invalid and it doesn't matter if
+> the buffer is clean or dirty - in both cases it is invalid....
 > 
->>>   - Whatever fast path checking is needed does not kill performance
->>
->> What do you consider a fast path? I was assuming that memory
->> registration is a slow path, and iommu operations are asynchronous so
->> should not impact performance of ongoing operations beyond typical
->> iommu overhead.
-> 
-> ibv_poll_cq() and ibv_post_send() would be a fast path.
-> 
-> Where this struggled before is in creating a side channel you also now
-> have to check that side channel, and checking it at high performance
-> is quite hard.. Even quiecing things to be able to tear down the MR
-> has performance implications on post send...
 
-This is exactly why I think we should not have it, but instead give
-building blocks to recover sanely from error completions...
+This is simply not the case as it pertains to how the current code deals
+with holes. Initially I was thinking we still quietly wrote the page,
+but that is incorrect too. Christoph added the XFS_BMAPI_DELALLOC flag
+in commit d2b3964a ("xfs: fix COW writeback race") that alters this
+behavior.
+
+The current behavior of the broken dirty page over a hole case is that
+we no longer silenty attempt a hole -> real allocation. Instead,
+writeback fails with -EIO. With this patch, that exact same broken case
+fails the assert, but otherwise skips the dirty page without any error
+or notification to userspace. IOW, by skipping the
+iomap_write_allocate() code unconditionally we've effectively removed an
+error check and made the pre-existing assert logic responsible for it.
+
+So regardless of what specific buffer state checks pre-existed or not,
+this patch subtly changes an existing error condition to an assertion
+without any explicit intent/justification. I can understand not wanting
+to add new logic related to buffer heads, but I don't think "buffer
+heads suck" is a good enough reason alone to just drop the error. The
+safer approach is to retain the error so that it's clear we need to find
+a better way to detect it before we eliminate buffer_heads.
+
+It would be nice if we could just rely on the page state to detect the
+error. For example, is there any real non-erroneous case for having a
+dirty page completely over a hole within EOF of a file? Unfortunately
+that doesn't help us in the sub-page blocksize case where some of the
+page might be valid, but perhaps that is a reasonable compromise. If so,
+I think that should be part of a patch that actually eliminates
+buffer_heads rather than reworking writepage because it at least gives
+us more time to think about the problem.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
