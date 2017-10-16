@@ -1,61 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:48045 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755616AbdJPToc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:44:32 -0400
-Received: by mail-oi0-f53.google.com with SMTP id h200so26979752oib.4
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2017 12:44:32 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:27028 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755727AbdJPTqa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:46:30 -0400
+Date: Mon, 16 Oct 2017 12:46:25 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/30] xfs: create block pointer check functions
+Message-ID: <20171016194625.GF4703@magnolia>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777245581.1724.14031376814151145502.stgit@magnolia>
+ <20171012052852.GQ15067@dastard>
+ <20171012054856.GR15067@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4itbYQqVrHBZ=+BRLH39WwDZ_RGg6sSaodVZ93LRYigNA@mail.gmail.com>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
- <20171013065716.GB26461@lst.de> <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
- <20171013163822.GA17411@obsidianresearch.com> <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
- <20171013173145.GA18702@obsidianresearch.com> <20171016072644.GB28270@lst.de> <CAPcyv4itbYQqVrHBZ=+BRLH39WwDZ_RGg6sSaodVZ93LRYigNA@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 16 Oct 2017 12:44:31 -0700
-Message-ID: <CAPcyv4gtnZu7obG7UwaBq1-fwRZj06HCa=mjBfDKKgfp97nYaw@mail.gmail.com>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171012054856.GR15067@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 10:43 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Mon, Oct 16, 2017 at 12:26 AM, Christoph Hellwig <hch@lst.de> wrote:
->> On Fri, Oct 13, 2017 at 11:31:45AM -0600, Jason Gunthorpe wrote:
->>> I don't think that really represents how lots of apps actually use
->>> RDMA.
->>>
->>> RDMA is often buried down in the software stack (eg in a MPI), and by
->>> the time a mapping gets used for RDMA transfer the link between the
->>> FD, mmap and the MR is totally opaque.
->>>
->>> Having a MR specific notification means the low level RDMA libraries
->>> have a chance to deal with everything for the app.
->>>
->>> Eg consider a HPC app using MPI that uses some DAX aware library to
->>> get DAX backed mmap's. It then passes memory in those mmaps to the
->>> MPI library to do transfers. The MPI creates the MR on demand.
->>>
->>
->> I suspect one of the more interesting use cases might be a file server,
->> for which that's not the case.  But otherwise I agree with the above,
->> and also thing that notifying the MR handle is the only way to go for
->> another very important reason:  fencing.  What if the application/library
->> does not react on the notification?  With a per-MR notification we
->> can unregister the MR in kernel space and have a rock solid fencing
->> mechanism.  And that is the most important bit here.
->
-> While I agree with the need for a per-MR notification mechanism, one
-> thing we lose by walking away from MAP_DIRECT is a way for a
-> hypervisor to coordinate pass through of a DAX mapping to an RDMA
-> device in a guest. That will remain a case where we will still need to
-> use device-dax. I'm fine if that's the answer, but just want to be
-> clear about all the places we need to protect a DAX mapping against
-> RDMA from a non-ODP device.
+On Thu, Oct 12, 2017 at 04:48:56PM +1100, Dave Chinner wrote:
+> On Thu, Oct 12, 2017 at 04:28:52PM +1100, Dave Chinner wrote:
+> > On Wed, Oct 11, 2017 at 06:40:55PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Create some helper functions to check that a block pointer points
+> > > within the filesystem (or AG) and doesn't point at static metadata.
+> > > We will use this for scrub.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Look fine
+> 
+> now that I think about it and seen a bit more code....
+> 
+> > 
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > > ---
+> > >  fs/xfs/libxfs/xfs_alloc.c    |   49 ++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_alloc.h    |    4 +++
+> > >  fs/xfs/libxfs/xfs_rtbitmap.c |   12 ++++++++++
+> > >  fs/xfs/xfs_rtalloc.h         |    2 ++
+> > >  4 files changed, 67 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index 744dcae..bd3a943 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -2923,3 +2923,52 @@ xfs_alloc_query_all(
+> > >  	query.fn = fn;
+> > >  	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
+> > >  }
+> > > +
+> > > +/* Find the size of the AG, in blocks. */
+> > > +xfs_agblock_t
+> > > +xfs_ag_block_count(
+> > > +	struct xfs_mount	*mp,
+> > > +	xfs_agnumber_t		agno)
+> > > +{
+> > > +	ASSERT(agno < mp->m_sb.sb_agcount);
+> > > +
+> > > +	if (agno < mp->m_sb.sb_agcount - 1)
+> > > +		return mp->m_sb.sb_agblocks;
+> > > +	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
+> > > +}
+> > > +
+> > > +/*
+> > > + * Verify that an AG block number pointer neither points outside the AG
+> > > + * nor points at static metadata.
+> > > + */
+> > > +bool
+> > > +xfs_verify_agbno_ptr(
+> 
+> You can probably drop the "_ptr" prefix from these because I don't
+> think we every try to check/validate the agbno/fsbno of the static
+> metadata....
+> 
+> Some of the code just reads a bit weird with the "_ptr" suffix
+> in it...
 
-For this specific issue perhaps we promote FL_LAYOUT as a lease-type
-that can be set by fcntl().
+I wrangled with the name for a while too -- a generic block number could
+refer to any part of the AG, whereas a block number in a metadata
+structure is a pointer and should never point to static metadata, hence
+the _ptr suffix.  On the other hand, some of the block pointers can be
+NULL{FS,AG}BLOCK and others can't, and we don't check that here so it's
+not quite a pointer check either.
+
+Meh.
+
+xfs_verify_agbno() it is.  Anyone reading the comments will figure out
+why xfs_verify_agbno(mp, agno, XFS_AGFL_BLOCK(mp)) == false.
+
+> Still consider it reviewed....
+
+Ok.
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
