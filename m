@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35734 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:55292 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752080AbdJPMZx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Oct 2017 08:25:53 -0400
-Date: Mon, 16 Oct 2017 14:25:51 +0200
-From: Jan Kara <jack@suse.cz>
+        id S1751389AbdJPNAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Oct 2017 09:00:24 -0400
+Date: Mon, 16 Oct 2017 15:00:20 +0200
+From: Lukas Czerner <lczerner@redhat.com>
 Subject: Re: [PATCH] fs: invalidate page cache after end_io() in dio
  completion
-Message-ID: <20171016122551.GD9762@quack2.suse.cz>
+Message-ID: <20171016130020.e4zsfuvak75s7ym4@rh_laptop>
 References: <20171003160201.11208-1-eguan@redhat.com>
  <20171016112300.GC10593@eguan.usersys.redhat.com>
 MIME-Version: 1.0
@@ -18,9 +18,9 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eryu Guan <eguan@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-On Mon 16-10-17 19:23:00, Eryu Guan wrote:
+On Mon, Oct 16, 2017 at 07:23:00PM +0800, Eryu Guan wrote:
 > On Wed, Oct 04, 2017 at 12:02:01AM +0800, Eryu Guan wrote:
 > > Commit 332391a9935d ("fs: Fix page cache inconsistency when mixing
 > > buffered and AIO DIO") moved page cache invalidation from
@@ -54,13 +54,16 @@ On Mon 16-10-17 19:23:00, Eryu Guan wrote:
 > XFS was affected (because of the iomap based DIO adoption). I've tested
 > it with the reproducer generic/418, LTP and full rounds of fstests runs
 > with different feature and block size enabled.
+> 
+> Thanks,
+> Eryu
 
-The patch looks good to me. You can add:
+Ah, right. I did not notice the problem before. Thanks. The patch looks
+good.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Lukas Czerner <lczerner@redhat.com>
 
-								Honza
-
+> 
 > > ---
 > >  fs/direct-io.c | 20 ++++++++++++--------
 > >  fs/iomap.c     | 41 ++++++++++++++++++++++++-----------------
@@ -178,6 +181,3 @@ Reviewed-by: Jan Kara <jack@suse.cz>
 > > -- 
 > > 2.13.6
 > > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
