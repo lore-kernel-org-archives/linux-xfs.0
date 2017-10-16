@@ -1,43 +1,231 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6776 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62897 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751724AbdJPDCz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 23:02:55 -0400
-Date: Mon, 16 Oct 2017 14:02:52 +1100
+        by vger.kernel.org with ESMTP id S1751871AbdJPDQu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 23:16:50 -0400
+Date: Mon, 16 Oct 2017 14:16:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 20/30] xfs: scrub refcount btrees
-Message-ID: <20171016030252.GW3666@dastard>
+Subject: Re: [PATCH 21/30] xfs: scrub inodes
+Message-ID: <20171016031647.GX3666@dastard>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777257372.1724.10044986248908141456.stgit@magnolia>
+ <150777258004.1724.14107466871314594061.stgit@magnolia>
+ <20171012223250.GN7122@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150777257372.1724.10044986248908141456.stgit@magnolia>
+In-Reply-To: <20171012223250.GN7122@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 11, 2017 at 06:42:53PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 12, 2017 at 03:32:50PM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 11, 2017 at 06:43:00PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Scrub the fields within an inode.
+
+.....
+
+> > +
+> > +/*
+> > + * Given an inode and the scrub control structure, grab either the
+> > + * inode referenced in the control structure or the inode passed in.
+> > + * The inode is not locked.
+> > + */
+> > +int
+> > +xfs_scrub_get_inode(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_inode		*ip_in)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_inode		*ip = NULL;
+> > +	int				error;
+> > +
+> > +	/*
+> > +	 * If userspace passed us an AG number or a generation number
+> > +	 * without an inode number, they haven't got a clue so bail out
+> > +	 * immediately.
+> > +	 */
+> > +	if (sc->sm->sm_agno || (sc->sm->sm_gen && !sc->sm->sm_ino))
+> > +		return -EINVAL;
+> > +
+> > +	/* We want to scan the inode we already had opened. */
+> > +	if (sc->sm->sm_ino == 0 || sc->sm->sm_ino == ip_in->i_ino) {
+> > +		sc->ip = ip_in;
+> > +		return 0;
+> > +	}
+> > +
+> > +	/* Look up the inode, see if the generation number matches. */
+> > +	if (xfs_internal_inum(mp, sc->sm->sm_ino))
+> > +		return -ENOENT;
+> > +	error = xfs_iget(mp, NULL, sc->sm->sm_ino,
+> > +			XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE, 0, &ip);
+> > +	if (error == -ENOENT || error == -EINVAL) {
+> > +		/* inode doesn't exist... */
+> > +		return -ENOENT;
+> > +	} else if (error) {
+> > +		trace_xfs_scrub_op_error(sc,
+> > +				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
+> > +				XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
+> > +				error, __return_address);
+> > +		return error;
+> > +	}
+> > +	if (VFS_I(ip)->i_generation != sc->sm->sm_gen) {
+> > +		iput(VFS_I(ip));
+> > +		return -ENOENT;
+> > +	}
+> > +
+> > +	sc->ip = ip;
+> > +	return 0;
+> > +}
+
+Much nicer with the way everything is clearly spelled out :P
+
+> > +/* Inode core */
+> > +
+> > +/*
+> > + * di_extsize hint validation is somewhat cumbersome. Rules are:
+> > + *
+> > + * 1. extent size hint is only valid for directories and regular files
+> > + * 2. DIFLAG_EXTSIZE is only valid for regular files
+> > + * 3. DIFLAG_EXTSZINHERIT is only valid for directories.
+> > + * 4. extsize hint of 0 turns off hints, clears inode flags.
+> > + * 5. either flag must be set if extsize != 0
+> > + * 6. Extent size must be a multiple of the appropriate block size.
+> > + * 7. extent size hint cannot be longer than maximum extent length
+> > + * 8. for non-realtime files, the extent size hint must be limited
+> > + *    to half the AG size to avoid alignment extending the extent
+> > + *    beyond the limits of the AG.
+> > + */
+> > +STATIC void
+> > +xfs_scrub_inode_extsize(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_buf			*bp,
+> > +	struct xfs_dinode		*dip,
+> > +	xfs_ino_t			ino,
+> > +	uint16_t			mode,
+> > +	uint16_t			flags)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	bool				rt_flag;
+> > +	bool				hint_flag;
+> > +	bool				inherit_flag;
+> > +	uint32_t			extsize;
+> > +	uint32_t			extsize_bytes;
+> > +	uint32_t			blocksize_bytes;
+> > +
+> > +	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+> > +	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
+> > +	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
+> > +	extsize = be32_to_cpu(dip->di_extsize);
+> > +	extsize_bytes = XFS_FSB_TO_B(sc->mp, extsize);
+> > +
+> > +	if (rt_flag)
+> > +		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
+> > +	else
+> > +		blocksize_bytes = mp->m_sb.sb_blocksize;
+> > +
+> > +	if ((hint_flag || inherit_flag) && (!S_ISDIR(mode) && !S_ISREG(mode)))
+
+Logic is a correct but reads funny:
+
+	if ((hint_flag || inherit_flag) &&
+	    !(S_ISREG(mode) || S_ISDIR(mode)))
+
+> > +/*
+> > + * di_cowextsize hint validation is somewhat cumbersome. Rules are:
+> > + *
+> > + * 1. flag requires reflink feature
+> > + * 2. cow extent size hint is only valid for directories and regular files
+> > + * 3. cow extsize hint of 0 turns off hints, clears inode flags.
+> > + * 4. either flag must be set if cow extsize != 0
+> > + * 5. flag cannot be set for rt files
+> > + * 6. Extent size must be a multiple of the appropriate block size.
+> > + * 7. extent size hint cannot be longer than maximum extent length
+> > + * 8. the extent size hint must be limited
+> > + *    to half the AG size to avoid alignment extending the extent
+> > + *    beyond the limits of the AG.
+> > + */
+
+Perhaps this comment doesn't need duplicating for a 3rd time. Maybe
+for both di_extsize and di_cowextsize just say:
+
+/*
+ * Extent size hints have explicit rules. They are documented at
+ * xfs_ioctl_setattr_check_extsize() - these functions need to be
+ * kept in sync with each other.
+ */
+
+> > +STATIC void
+> > +xfs_scrub_inode_cowextsize(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_buf			*bp,
+> > +	struct xfs_dinode		*dip,
+> > +	xfs_ino_t			ino,
+> > +	uint16_t			mode,
+> > +	uint16_t			flags,
+> > +	uint64_t			flags2)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	bool				rt_flag;
+> > +	bool				hint_flag;
+> > +	uint32_t			extsize;
+> > +	uint32_t			extsize_bytes;
+> > +
+> > +	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+> > +	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
+> > +	extsize = be32_to_cpu(dip->di_extsize);
 > 
-> Plumb in the pieces necessary to check the refcount btree.  If rmap is
-> available, check the reference count by performing an interval query
-> against the rmapbt.
+> Doh, this ought to be extsize = be32_to_cpu(dip->di_cowextsize); will fix.
 
-....
+Yup, with that fix in place all the spurious inode warnings I was
+getting went away.
 
-> +/* Scrub a refcountbt record. */
-> +STATIC int
-> +xfs_scrub_refcountbt_helper(
+> > +/* Map and read a raw inode. */
+> > +STATIC int
+> > +xfs_scrub_inode_map_raw(
+> > +	struct xfs_scrub_context	*sc,
+> > +	xfs_ino_t			ino,
+> > +	struct xfs_buf			**bpp,
+> > +	struct xfs_dinode		**dipp)
+> > +{
+> > +	struct xfs_imap			imap;
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_buf			*bp;
+> > +	struct xfs_dinode		*dip;
+> > +	int				error;
+> > +
+> > +	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+> > +	if (error == -EINVAL) {
+> > +		/*
+> > +		 * Inode could have gotten deleted out from under us;
+> > +		 * just forget about it.
+> > +		 */
+> > +		error = -ENOENT;
+> > +		goto out;
+> > +	}
+> > +	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+> > +			XFS_INO_TO_AGBNO(mp, ino), &error))
+> > +		goto out;
+> > +
+> > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > +			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
+> > +			NULL);
+> > +	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+> > +			XFS_INO_TO_AGBNO(mp, ino), &error))
+> > +		goto out;
+> > +
+> > +	/* Is this really an inode? */
+> > +	bp->b_ops = &xfs_inode_buf_ops;
 
-s/helper/rec/
+A comment here on why we skip the read verifier when pulling in the
+inode buffer would be nice.
 
-Apart from that
+Cheers,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
