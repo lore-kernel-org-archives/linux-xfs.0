@@ -1,98 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42212 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964880AbdJRFSZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Oct 2017 01:18:25 -0400
-Date: Tue, 17 Oct 2017 22:18:22 -0700
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
-Message-ID: <20171018051822.ygpkx2iyuv62vuvs@kernel.org>
-References: <20171015050751.dfznko2hxhi6jvra@kernel.org>
- <20171015222202.GH3666@dastard>
- <20171016033538.5y2xnxkddhrcjlmj@kernel.org>
- <20171016062244.GI3666@dastard>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:55073 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752160AbdJPMC6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 08:02:58 -0400
+Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
+References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171012142319.GA11254@lst.de>
+ <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
+ <20171013065716.GB26461@lst.de>
+ <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
+ <20171013163822.GA17411@obsidianresearch.com>
+ <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
+ <20171013173145.GA18702@obsidianresearch.com>
+ <CAPcyv4jZJRto1jwmNU--pqH_6dOVMyj=68ZwEjAmmkgX=mRk7w@mail.gmail.com>
+ <20171014015752.GA25172@obsidianresearch.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <e29eb9ed-2d87-cde8-4efa-50de1fff0c04@grimberg.me>
+Date: Mon, 16 Oct 2017 15:02:52 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171016062244.GI3666@dastard>
+In-Reply-To: <20171014015752.GA25172@obsidianresearch.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, tj@kernel.org, Kernel-team@fb.com
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-On Mon, Oct 16, 2017 at 05:22:44PM +1100, Dave Chinner wrote:
-> On Sun, Oct 15, 2017 at 08:35:39PM -0700, Shaohua Li wrote:
-> > On Mon, Oct 16, 2017 at 09:22:02AM +1100, Dave Chinner wrote:
-> > > On Sat, Oct 14, 2017 at 10:07:51PM -0700, Shaohua Li wrote:
-> > > > From: Shaohua Li <shli@fb.com>
-> > > > 
-> > > > Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
-> > > > writeback support). Tested with a fio test, verified writeback is
-> > > > throttled against cgroup io.max write bandwidth, also verified moving
-> > > > the fio test to another cgroup and the writeback is throttled against
-> > > > new cgroup setting.
-> > > > 
-> > > > I created a test for this as attached, please try! I'll send the test out for
-> > > > inclusion later.
-> > > 
-> > > Hmmm. The test you appended just checks that bytes get written.
-> > > That's pretty much useless for verification of the features you
-> > > describe above (throttling rate it correct, dynamic throttle
-> > > application as memcg config changes).
-> > > 
-> > > You explicitly state this is a memcg IO QoS feature and that you
-> > > have a set of fio tests that verify that it works as expected. We
-> > > need those "works as expected" fio tests formalised into automated
-> > > fstests. Both upstream fs developers and downstream distro QE
-> > > departments need to be able to verify that the bandwidth control and
-> > > throttling works as advertised - it's essential that we have
-> > > regression tests for this....
-> > 
-> > Right, this test only verifies the writeback is correctly charged to a cgroup,
-> > it doesn't verify the writeback is running in correct bandwidth. I did try to
-> > create such automatic test, but my attempt failed.
-> 
-> <sigh>
-> 
-> > To measure speed, we need measure the time for a test. But
-> > writeback is async, the file write finishes before the data is
-> > written to disk. We can't call a fsync, because fsync write is
-> > different than writeback write, which is charged to correct cgroup
-> > even without cgroup writeback support.
-> 
-> What a fucking mess.  We were told that if we didn't implement the
-> writeback hooks in the filesystem then the memcg write throttling
-> would not be active on the filesystem.
-> 
-> Looks like we got taken for a bunch of suckers, eh?
-> 
-> So now I don't trust what we've been told about metadata IO being
-> ignored by memcg throttling. What happens to REQ_META IO from within
-> a throttled memcg task context? Does that also get throttled
-> according to the current task memcg limits?
 
-Yes, it's throttled according to current blkcg settings. This can be fixed
-however, Tejun recently posted patches to force all meta IO changed to root
-cgroup, we can do same thing for xfs.
- 
-> > For my test, I run iostat and check the disk
-> > speed is correct, so I don't have idea to create an automatic test.
-> 
-> Seems to me like there is an obvious answer to your problem:
-> syncfs()
-> 
-> That is, syncfs uses the bdi flusher threads to do async writeback
-> of all outstanding dirty data on the filesystem, and it also waits
-> for that async writeback to complete.  e.g: set the writeback
-> throttle speed to 5MB/s then run:
-> 
-> # time xfs_io -f -c "pwrite 0 100m" -c "syncfs" /path/to/file
-> 
-> If that takes less than 20s to run, then async writeback through the
-> bdi flusher workqueue wasn't throttled properly.
+Hey folks, (chiming in very late here...)
 
-Good idea, this is exactly what I want, thanks! Will post a xfs test soon.
+>>> I think, if you want to build a uAPI for notification of MR lease
+>>> break, then you need show how it fits into the above software model:
+>>>   - How it can be hidden in a RDMA specific library
+>>
+>> So, here's a strawman can ibv_poll_cq() start returning ibv_wc_status
+>> == IBV_WC_LOC_PROT_ERR when file coherency is lost. This would make
+>> the solution generic across DAX and non-DAX. What's you're feeling for
+>> how well applications are prepared to deal with that status return?
+> 
+> Stuffing an entry into the CQ is difficult. The CQ is in user memory
+> and it is DMA'd from the HCA for several pieces of hardware, so the
+> kernel can't just stuff something in there. It can be done
+> with HW support by having the HCA DMA it via an exception path or
+> something, but even then, you run into questions like CQ overflow and
+> accounting issues since it is not ment for this.
 
-Thanks,
-Shaohua
+But why should the kernel ever need to mangle the CQ? if a lease break
+would deregister the MR the device is expected to generate remote
+protection errors on its own.
+
+And in that case, I think we need a query mechanism rather an event
+mechanism so when the application starts seeing protection errors
+it can query the relevant MR (I think most if not all devices have that
+information in their internal completion queue entries).
+
+> 
+> So, you need a side channel of some kind, either in certain drivers or
+> generically..
+> 
+>>>   - How lease break can be done hitlessly, so the library user never
+>>>     needs to know it is happening or see failed/missed transfers
+
+I agree that the application should not be aware of lease breakages, but
+seeing failed transfers is perfectly acceptable given that an access
+violation is happening (my assumption is that failed transfers are error
+completions reported in the user completion queue). What we need to have
+is a framework to help user-space to recover sanely, which is to query
+what MR had the access violation, restore it, and re-establish the queue
+pair.
+
+>>
+>> iommu redirect should be hit less and behave like the page cache case
+>> where RDMA targets pages that are no longer part of the file.
+> 
+> Yes, if the iommu can be fenced properly it sounds doable.
+> 
+>>>   - Whatever fast path checking is needed does not kill performance
+>>
+>> What do you consider a fast path? I was assuming that memory
+>> registration is a slow path, and iommu operations are asynchronous so
+>> should not impact performance of ongoing operations beyond typical
+>> iommu overhead.
+> 
+> ibv_poll_cq() and ibv_post_send() would be a fast path.
+> 
+> Where this struggled before is in creating a side channel you also now
+> have to check that side channel, and checking it at high performance
+> is quite hard.. Even quiecing things to be able to tear down the MR
+> has performance implications on post send...
+
+This is exactly why I think we should not have it, but instead give
+building blocks to recover sanely from error completions...
