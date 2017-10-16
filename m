@@ -1,54 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48600 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751165AbdJODZv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 14 Oct 2017 23:25:51 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8CDDC13AAC
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Oct 2017 03:25:51 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-12-41.pek2.redhat.com [10.72.12.41])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B0823600CD
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Oct 2017 03:25:50 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfsprogs: add xfs_spaceman to .gitignore
-Date: Sun, 15 Oct 2017 11:25:46 +0800
-Message-Id: <20171015032546.4503-1-zlang@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27301 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754722AbdJPStp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 14:49:45 -0400
+Date: Mon, 16 Oct 2017 11:49:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH] xfs: Properly retry failed dquot items in case of
+ error during buffer writeback
+Message-ID: <20171016184938.GB4703@magnolia>
+References: <20170825120752.22553-1-cmaiolino@redhat.com>
+ <20170825170400.GS4796@magnolia>
+ <20170825215701.GT4796@magnolia>
+ <20170828092030.l5z2hruccr7ctvl3@hades.localdomain>
+ <e982d98b-973d-1679-9236-57cee47aff07@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e982d98b-973d-1679-9236-57cee47aff07@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-The new binary xfs_spaceman isn't in .gitignore, so ignore it in
-this patch.
+On Mon, Oct 16, 2017 at 11:05:42AM +0800, Hou Tao wrote:
+> Hi Carlos,
+> 
+> On 2017/8/28 17:20, Carlos Maiolino wrote:
+> > Hi Darrick.
+> > 
+> > 
+> >>>> BTW, This patch should be applied only over branch xfs-4.14-merge, it requires
+> >>>> my previous patches, which are not in the master branch yet.
+> >>>
+> >>> Looks ok, but is there an xfstests case to cover this?
+> >>
+> > 
+> > No,
+> > 
+> > I still don't have a xfstests to cover it, I couldn't reproduce the problem with
+> > dquots yet, I'll focus more on this soon.
+> I had written an xfstest case for the umount hang problem which is caused by the
+> writeback of the dquota update, and it can be reproduced reliably. If you don't mind,
+> i will clean it up and post to xfstest maillist this week.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+I look forward to reviewing it.
 
-Hi,
+--D
 
-If you don't think it's worth fixing it in a single patch, feel free
-to fix it in next xfs_spaceman related patchset :)
-
-Thanks,
-Zorro
-
- .gitignore | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/.gitignore b/.gitignore
-index 913b371f..e839e2a1 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -67,6 +67,7 @@ cscope.*
- /quota/xfs_quota
- /repair/xfs_repair
- /rtcp/xfs_rtcp
-+/spaceman/xfs_spaceman
- 
- # generated crc files
- /libxfs/crc32selftest
--- 
-2.13.6
-
+> 
+> Regards,
+> 
+> Tao
+> > 
+> >>>>  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
+> >>>> -	    lip->li_lsn == qip->qli_flush_lsn) {
+> >>>> +	   (lip->li_lsn == qip->qli_flush_lsn) ||
+> >>>> +	    lip->li_flags & XFS_LI_FAILED) {
+> >>
+> > 
+> >> ...come to think of it, shouldn't there be a couple extra pairs of parentheses
+> >> in this somewhere?...
+> >>
+> > IIRC there is no need, && has a higher precedenc over ||, but I really don't
+> > mind to add an extra pair of () here.
+> > 
+> >>>>  
+> >>>>  		/* xfs_trans_ail_delete() drops the AIL lock. */
+> >>>>  		spin_lock(&ailp->xa_lock);
+> >>>> -		if (lip->li_lsn == qip->qli_flush_lsn)
+> >>>> +		if (lip->li_lsn == qip->qli_flush_lsn) {
+> >>>>  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+> >>>> -		else
+> >>>> +		} else if (lip->li_flags & XFS_LI_FAILED) {
+> >>>> +			xfs_clear_li_failed(lip);
+> >>>>  			spin_unlock(&ailp->xa_lock);
+> >>>> +		} else {
+> >>>> +			spin_unlock(&ailp->xa_lock);
+> >>>> +		}
+> >>>>  	}
+> >>>>  
+> >>>>  	/*
+> >>>> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> >>>> index 2c7a1629e064..35fd6d71bc42 100644
+> >>>> --- a/fs/xfs/xfs_dquot_item.c
+> >>>> +++ b/fs/xfs/xfs_dquot_item.c
+> >>>> @@ -137,6 +137,23 @@ xfs_qm_dqunpin_wait(
+> >>>>  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
+> >>>>  }
+> >>>>  
+> >>>> +/*
+> >>>> + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
+> >>>> + * have been failed during writeback
+> >>>> + *
+> >>>> + * this informs the AIL that the dquot is already flush locked on the next push,
+> >>>> + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
+> >>>> + * dirty data makes it to disk.
+> >>>> + */
+> >>>> +STATIC void
+> >>>> +xfs_dquot_item_error(
+> >>>> +	struct xfs_log_item	*lip,
+> >>>> +	struct xfs_buf		*bp)
+> >>>> +{
+> >>>> +	ASSERT(XFS_DQ_IS_LOCKED(DQUOT_ITEM(lip)->qli_item));
+> >>
+> >> ...and isn't this qli_dquot, not qli_item?
+> >>
+> > 
+> > Yup, you are right.
+> > 
+> >> (Does this compile at all?)
+> >>
+> > 
+> > Yes, it compiled the way it was :P
+> > 
+> > I'll wait for some extra comments here, before submitting a non-RFC patch, and
+> > will think about how can I reproduce it on xfstests, maybe filling the
+> > filesystem and then playing with quotas.
+> > 
+> > Thanks for the review Darrick.
+> > 
+> > Cheers.
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
