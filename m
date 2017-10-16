@@ -1,117 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:8452 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdJPDGt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 23:06:49 -0400
-Subject: Re: [RFC PATCH] xfs: Properly retry failed dquot items in case of
- error during buffer writeback
-References: <20170825120752.22553-1-cmaiolino@redhat.com>
- <20170825170400.GS4796@magnolia> <20170825215701.GT4796@magnolia>
- <20170828092030.l5z2hruccr7ctvl3@hades.localdomain>
-From: Hou Tao <houtao1@huawei.com>
-Message-ID: <e982d98b-973d-1679-9236-57cee47aff07@huawei.com>
-Date: Mon, 16 Oct 2017 11:05:42 +0800
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:21274
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751612AbdJPD1W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 23:27:22 -0400
+Date: Mon, 16 Oct 2017 14:26:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 22/30] xfs: scrub inode block mappings
+Message-ID: <20171016032601.GY3666@dastard>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777258634.1724.8710762615801926700.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170828092030.l5z2hruccr7ctvl3@hades.localdomain>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150777258634.1724.8710762615801926700.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Carlos,
+On Wed, Oct 11, 2017 at 06:43:06PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Scrub an individual inode's block mappings to make sure they make sense.
 
-On 2017/8/28 17:20, Carlos Maiolino wrote:
-> Hi Darrick.
-> 
-> 
->>>> BTW, This patch should be applied only over branch xfs-4.14-merge, it requires
->>>> my previous patches, which are not in the master branch yet.
->>>
->>> Looks ok, but is there an xfstests case to cover this?
->>
-> 
-> No,
-> 
-> I still don't have a xfstests to cover it, I couldn't reproduce the problem with
-> dquots yet, I'll focus more on this soon.
-I had written an xfstest case for the umount hang problem which is caused by the
-writeback of the dquota update, and it can be reproduced reliably. If you don't mind,
-i will clean it up and post to xfstest maillist this week.
+....
 
-Regards,
+> +/* Set us up with an inode's bmap. */
+> +int
+> +xfs_scrub_setup_inode_bmap(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	int				error;
+> +
+> +	error = xfs_scrub_get_inode(sc, ip);
+> +	if (error)
+> +		goto out;
+> +
+> +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> +	xfs_ilock(sc->ip, sc->ilock_flags);
+> +
+> +	/*
+> +	 * We don't want any ephemeral data fork updates sitting around
+> +	 * while we inspect block mappings, so wait for directio to finish
+> +	 * and flush dirty data if we have delalloc reservations.
+> +	 */
+> +	if (S_ISREG(VFS_I(sc->ip)->i_mode) &&
+> +	    sc->sm->sm_type == XFS_SCRUB_TYPE_BMBTD) {
+> +		inode_dio_wait(VFS_I(sc->ip));
+> +		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
+> +		if (error)
+> +			goto out;
+> +
+> +		/* Drop the page cache if we're repairing block mappings. */
+> +		if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
+> +			error = invalidate_inode_pages2(
+> +					VFS_I(sc->ip)->i_mapping);
+> +			if (error)
+> +				goto out;
 
-Tao
-> 
->>>>  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
->>>> -	    lip->li_lsn == qip->qli_flush_lsn) {
->>>> +	   (lip->li_lsn == qip->qli_flush_lsn) ||
->>>> +	    lip->li_flags & XFS_LI_FAILED) {
->>
-> 
->> ...come to think of it, shouldn't there be a couple extra pairs of parentheses
->> in this somewhere?...
->>
-> IIRC there is no need, && has a higher precedenc over ||, but I really don't
-> mind to add an extra pair of () here.
-> 
->>>>  
->>>>  		/* xfs_trans_ail_delete() drops the AIL lock. */
->>>>  		spin_lock(&ailp->xa_lock);
->>>> -		if (lip->li_lsn == qip->qli_flush_lsn)
->>>> +		if (lip->li_lsn == qip->qli_flush_lsn) {
->>>>  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
->>>> -		else
->>>> +		} else if (lip->li_flags & XFS_LI_FAILED) {
->>>> +			xfs_clear_li_failed(lip);
->>>>  			spin_unlock(&ailp->xa_lock);
->>>> +		} else {
->>>> +			spin_unlock(&ailp->xa_lock);
->>>> +		}
->>>>  	}
->>>>  
->>>>  	/*
->>>> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
->>>> index 2c7a1629e064..35fd6d71bc42 100644
->>>> --- a/fs/xfs/xfs_dquot_item.c
->>>> +++ b/fs/xfs/xfs_dquot_item.c
->>>> @@ -137,6 +137,23 @@ xfs_qm_dqunpin_wait(
->>>>  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
->>>>  }
->>>>  
->>>> +/*
->>>> + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
->>>> + * have been failed during writeback
->>>> + *
->>>> + * this informs the AIL that the dquot is already flush locked on the next push,
->>>> + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
->>>> + * dirty data makes it to disk.
->>>> + */
->>>> +STATIC void
->>>> +xfs_dquot_item_error(
->>>> +	struct xfs_log_item	*lip,
->>>> +	struct xfs_buf		*bp)
->>>> +{
->>>> +	ASSERT(XFS_DQ_IS_LOCKED(DQUOT_ITEM(lip)->qli_item));
->>
->> ...and isn't this qli_dquot, not qli_item?
->>
-> 
-> Yup, you are right.
-> 
->> (Does this compile at all?)
->>
-> 
-> Yes, it compiled the way it was :P
-> 
-> I'll wait for some extra comments here, before submitting a non-RFC patch, and
-> will think about how can I reproduce it on xfstests, maybe filling the
-> filesystem and then playing with quotas.
-> 
-> Thanks for the review Darrick.
-> 
-> Cheers.
-> 
+I'll point this out just to say I've seen it. It's a little out of
+place for this patch set, but it's harmless.
 
+> +/* Scrub a bmbt record. */
+> +STATIC int
+> +xfs_scrub_bmapbt_helper(
+
+s/helper/rec/
+
+> + *
+> + * First we scan every record in every btree block, if applicable.
+> + * Then we unconditionally scan the incore extent cache.
+> + */
+> +STATIC int
+> +xfs_scrub_bmap(
+> +	struct xfs_scrub_context	*sc,
+> +	int				whichfork)
+> +{
+> +	struct xfs_bmbt_irec		irec;
+> +	struct xfs_scrub_bmap_info	info = {0};
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_inode		*ip = sc->ip;
+> +	struct xfs_ifork		*ifp;
+> +	xfs_fileoff_t			endoff;
+> +	xfs_extnum_t			idx;
+> +	bool				found;
+> +	int				error = 0;
+> +
+> +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> +
+> +	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
+> +	info.whichfork = whichfork;
+> +	info.is_shared = whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip);
+> +	info.sc = sc;
+> +
+> +	switch (whichfork) {
+> +	case XFS_COW_FORK:
+> +		/* Non-existent CoW forks are ignorable. */
+> +		if (!ifp)
+> +			goto out;
+> +		/* No CoW forks on non-reflink inodes/filesystems. */
+> +		if (!xfs_is_reflink_inode(ip)) {
+> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
+> +			goto out;
+> +		}
+> +		break;
+> +	case XFS_ATTR_FORK:
+> +		if (!ifp)
+> +			goto out;
+> +		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
+> +		    !xfs_sb_version_hasattr2(&mp->m_sb))
+> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
+> +		break;
+> +	}
+
+Missing a default option here for other values. Some compilers will
+warn about this.
+
+Otherwise this look fine.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
