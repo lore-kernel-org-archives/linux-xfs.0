@@ -1,134 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46853 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754418AbdJIWRy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:17:54 -0400
-Date: Tue, 10 Oct 2017 09:17:51 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39143 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752724AbdJPVih (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 17:38:37 -0400
+Date: Tue, 17 Oct 2017 08:38:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 25/25] xfs: scrub quota information
-Message-ID: <20171009221751.GQ3666@dastard>
-References: <150706324963.19351.17715069858921948692.stgit@magnolia>
- <150706340739.19351.4078240552236189694.stgit@magnolia>
- <20171009025151.GF3666@dastard>
- <20171009200328.GT7122@magnolia>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20171016213811.GH15067@dastard>
+References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
+ <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
+ <20171009000529.GY3666@dastard>
+ <20171009183129.GE11645@wotan.suse.de>
+ <87wp442lgm.fsf@xmission.com>
+ <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
+ <20171015130625.o5k6tk5uflm3rx65@thunk.org>
+ <87efq4qcry.fsf@xmission.com>
+ <20171015232246.GI3666@dastard>
+ <877evvng1q.fsf@xmission.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171009200328.GT7122@magnolia>
+In-Reply-To: <877evvng1q.fsf@xmission.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Aleksa Sarai <asarai@suse.de>, "Luis R. Rodriguez" <mcgrof@kernel.org>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, linux-mm@kvack.org, Oscar Salvador <osalvador@suse.com>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 01:03:28PM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 09, 2017 at 01:51:51PM +1100, Dave Chinner wrote:
-> > On Tue, Oct 03, 2017 at 01:43:27PM -0700, Darrick J. Wong wrote:
-> > > +xfs_scrub_quota_to_dqtype(
-> > > +	struct xfs_scrub_context	*sc)
-> > > +{
-> > > +	switch (sc->sm->sm_type) {
-> > > +	case XFS_SCRUB_TYPE_UQUOTA:
-> > > +		return XFS_DQ_USER;
-> > > +	case XFS_SCRUB_TYPE_GQUOTA:
-> > > +		return XFS_DQ_GROUP;
-> > > +	case XFS_SCRUB_TYPE_PQUOTA:
-> > > +		return XFS_DQ_PROJ;
-> > > +	default:
-> > > +		return 0;
-> > > +	}
-> > > +}
-> > > +
-> > > +/* Set us up to scrub a quota. */
-> > > +int
-> > > +xfs_scrub_setup_quota(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	struct xfs_inode		*ip)
-> > > +{
-> > > +	uint				dqtype;
-> > > +
-> > > +	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
-> > > +		return -EINVAL;
-> > > +
-> > > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> > > +	if (dqtype == 0)
-> > > +		return -EINVAL;
-> > > +	return 0;
-> > > +}
-> > 
-> > Should this check whether the quota type is actually enabled, and
-> > return ENOENT if it's not? i.e move the check out of
-> > xfs_scrub_quota() and into the setup function?
+On Mon, Oct 16, 2017 at 12:44:33PM -0500, Eric W. Biederman wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> > On Sun, Oct 15, 2017 at 05:14:41PM -0500, Eric W. Biederman wrote:
+> >> So my suggestions for this case are two fold.
+> >> 
+> >> - Tweak Docker and friends to not be sloppy and hold onto extra
+> >>   resources that they don't need.  That is just bad form.
+> >> 
+> >> - Generalize what ext4, f2fs, xfs and possibly the network filesystems
+> >>   with umount_begin are doing into a general disconnect this filesystem
+> >>   from it's backing store operation.
+> >> 
+> >>   That operation should be enough to drop the reference to the backing
+> >>   device so that device mapper doesn't care.
+> >
+> > Define the semantics of a forced filesystem unmount are supposed to
+> > be first, then decide whether an existing shutdown operation can be
+> > used. It may be we just need a new flag to the existing API to
+> > implement slightly different semantics (e.g to silence unnecessary
+> > warnings), but at minimum I think we've need the ->unmount_begin op
+> > name to change to indicate it's function, not document the calling
+> > context...
 > 
-> I can add a xfs_this_quota_on check to the setup function, but don't we
-> need xfs_scrub_quota to lock qi_quotaofflock and then recheck that the
-> quota type is still enabled?
-
-The qi_quotaofflock is held across the entire scrub, right?
-
-Ah, this is called before the qi_quotaofflock is held - is there
-a teardown callback? If so, would it be better to lock
-qi_quotaofflock in the setup, release it in the teardown? That way
-we can check here in the setup code, and not have to double check
-the user input it in the scrub function itself?
-
-> > > +	/*
-> > > +	 * Warn if the limits are larger than the fs.  Administrators
-> > > +	 * can do this, though in production this seems suspect.
-> > > +	 */
-> > > +	if (bhard > mp->m_sb.sb_dblocks || bsoft > mp->m_sb.sb_dblocks)
-> > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > > +	if (ihard > inodes || isoft > inodes)
-> > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > > +	if (rhard > mp->m_sb.sb_rblocks || rsoft > mp->m_sb.sb_rblocks)
-> > > +		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > 
-> > Can you stack these so there's one per line? i.e.:
+> Definite the expected semantics of a forced filesystem umount is the
+> same process as defining the semantics of a forced filesytem shutdown.
+> Look at the code and see what it does and document it.
 > 
-> Will do.  I'll also change the ihard/isoft check here to check against
-> mp->m_maxicount directly.
-> 
-> > 	if (bhard > mp->m_sb.sb_dblocks ||
-> > 	    bsoft > mp->m_sb.sb_dblocks)
-> > 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-> > 
-> > > +
-> > > +	/* Soft limit must be less than the hard limit. */
-> > > +	if (bsoft > bhard || isoft > ihard || rsoft > rhard)
-> > > +		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-> > 
-> > Though with this check, I suspect you only need to check the hard
-> > limits against their upper limits because if the hard limit is valid
-> > and the soft is above then it's going to trigger corruption. Do we
-> > need a warning as well in that case?
-> 
-> I don't follow here ... if the soft limit is above the hard limit, what
-> will trigger corruption? 
+> That said, a quick skim through the umount_begin methods on network
+> filesystems (the only filesystems that implement umount_begin) it
+> appears they drop the network connection.  Which is pretty much the same
+> as dropping the connection to the bdev.
 
-What I mean was this:
+Sure. But what do they do to incoming attempts to read from the
+filesystem, or modify/write it in some way? That behaviour really
+isn't defined in any way and what we need to do that so *all
+filesystems behave the same way*.
 
-	if (bhard > mp->m_sb.sb_dblocks)
-		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-	if (bsoft > bhard)
-		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+As I've already pointed out, ext4 implements different shutdown
+semantics to XFS even though it copied the user API to trigger
+shutdowns. That's not an acceptible situation for a generic shutdown
+operation....
 
-That is, if bhard is over the valid limit, throw a warning and we
-now don't care about bsoft because we've already signalled to
-userspace there's a problem.
+> So I think there is good reason
+> to believe these two cases can be unified.  They may not be exactly the
+> same but they are close enough that the should be able to share common
+> infrastructure.
 
-If bsoft is now greater than bhard, regardless of whether it's over
-the valid size, we signal a corruption. If bhard is already an
-invalid number, then this corruption report also implies that bsoft
-is over the limit...
-
-> The quota syscalls enforce that bhard > bsoft
-> when the admin tries to set new limits, but if the disk is corrupt such
-> that dblocks = 300, bhard = 250, and bsoft = 280, the checks for
-> (bhard > dblocks || bsoft > dblocks) checks won't trigger.  That's why
-> there's an explicit bsoft > bhard check here.
-
-Right, I wasn't suggesting removing it - I didn't make it very clear
-what I meant.
+You're making it sound so much simpler than it really is...
 
 Cheers,
 
