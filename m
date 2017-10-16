@@ -1,172 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53396 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54953 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754107AbdJPPiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Oct 2017 11:38:00 -0400
-Date: Mon, 16 Oct 2017 17:37:56 +0200
+        id S1752415AbdJPPn7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Oct 2017 11:43:59 -0400
+Date: Mon, 16 Oct 2017 17:43:57 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 12/19] mm: Define MAP_SYNC and VM_SYNC flags
-Message-ID: <20171016153756.GJ9762@quack2.suse.cz>
+Subject: Re: [PATCH 14/19] dax: Implement dax_finish_sync_fault()
+Message-ID: <20171016154357.GK9762@quack2.suse.cz>
 References: <20171011200603.27442-1-jack@suse.cz>
- <20171011200603.27442-13-jack@suse.cz>
- <20171013194444.GB29081@linux.intel.com>
+ <20171011200603.27442-15-jack@suse.cz>
+ <20171013072101.GE9105@infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="qlTNgmc+xy1dBmNv"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171013194444.GB29081@linux.intel.com>
+In-Reply-To: <20171013072101.GE9105@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Ted Tso <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-
---qlTNgmc+xy1dBmNv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Fri 13-10-17 13:44:44, Ross Zwisler wrote:
-> On Wed, Oct 11, 2017 at 10:05:56PM +0200, Jan Kara wrote:
-> > Define new MAP_SYNC flag and corresponding VMA VM_SYNC flag. As the
-> > MAP_SYNC flag is not part of LEGACY_MAP_MASK, currently it will be
-> > refused by all MAP_SHARED_VALIDATE map attempts and silently ignored for
-> > everything else.
+On Fri 13-10-17 00:21:01, Christoph Hellwig wrote:
+> On Wed, Oct 11, 2017 at 10:05:58PM +0200, Jan Kara wrote:
+> > Implement a function that filesystems can call to finish handling of
+> > synchronous page faults. It takes care of syncing appropriare file range
+> > and insertion of page table entry.
 > > 
 > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  arch/xtensa/include/uapi/asm/mman.h | 1 +
-> >  fs/proc/task_mmu.c                  | 1 +
-> >  include/linux/mm.h                  | 1 +
-> >  include/linux/mman.h                | 3 ++-
-> >  include/uapi/asm-generic/mman.h     | 1 +
-> >  5 files changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/arch/xtensa/include/uapi/asm/mman.h b/arch/xtensa/include/uapi/asm/mman.h
-> > index ec597900eec7..b62a7ce166fb 100644
-> > --- a/arch/xtensa/include/uapi/asm/mman.h
-> > +++ b/arch/xtensa/include/uapi/asm/mman.h
-> > @@ -56,6 +56,7 @@
-> >  #define MAP_NONBLOCK	0x20000		/* do not block on IO */
-> >  #define MAP_STACK	0x40000		/* give out an address that is best suited for process/thread stacks */
-> >  #define MAP_HUGETLB	0x80000		/* create a huge page mapping */
-> > +#define MAP_SYNC	0x100000	/* perform synchronous page faults for the mapping */
 > 
-> Why define MAP_SYNC for this one architecture, but not for the rest that have
-> their own arch/*/include/uapi/asm/mman.h?  AFAIK xtensa doesn't support DAX,
-> so has no need for MAP_SYNC?
-
-Yeah, good point. I guess I'll just define it in asm-generic (which covers
-x86 as well) and just define MAP_SYNC to 0 if not defined in linux/mman.h.
-That should make the code compile and make sure userspace gets error if he
-tries to use MAP_SYNC somehow on arch without its definition. Attached is a
-new version of the patch.
-
-> Other than this one question, this patch looks fine:
+> Looks fine except for a few nitpicks below:
 > 
-> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Thanks.
+Thanks! Implemented all your comments.
 
 								Honza
+
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
-
---qlTNgmc+xy1dBmNv
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-mm-Define-MAP_SYNC-and-VM_SYNC-flags.patch"
-
->From e15030463a8be760e10843fc9cf08c082a783c22 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Thu, 17 Aug 2017 11:55:26 +0200
-Subject: [PATCH] mm: Define MAP_SYNC and VM_SYNC flags
-
-Define new MAP_SYNC flag and corresponding VMA VM_SYNC flag. As the
-MAP_SYNC flag is not part of LEGACY_MAP_MASK, currently it will be
-refused by all MAP_SHARED_VALIDATE map attempts and silently ignored for
-everything else.
-
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/proc/task_mmu.c              | 1 +
- include/linux/mm.h              | 1 +
- include/linux/mman.h            | 8 ++++++--
- include/uapi/asm-generic/mman.h | 1 +
- 4 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 5589b4bd4b85..ea78b37deeaa 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -664,6 +664,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
- 		[ilog2(VM_ACCOUNT)]	= "ac",
- 		[ilog2(VM_NORESERVE)]	= "nr",
- 		[ilog2(VM_HUGETLB)]	= "ht",
-+		[ilog2(VM_SYNC)]	= "sf",
- 		[ilog2(VM_ARCH_1)]	= "ar",
- 		[ilog2(VM_WIPEONFORK)]	= "wf",
- 		[ilog2(VM_DONTDUMP)]	= "dd",
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 55a9d2d109d9..cb62f2127314 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -189,6 +189,7 @@ extern unsigned int kobjsize(const void *objp);
- #define VM_ACCOUNT	0x00100000	/* Is a VM accounted object */
- #define VM_NORESERVE	0x00200000	/* should the VM suppress accounting */
- #define VM_HUGETLB	0x00400000	/* Huge TLB Page VM */
-+#define VM_SYNC		0x00800000	/* Synchronous page faults */
- #define VM_ARCH_1	0x01000000	/* Architecture-specific flag */
- #define VM_WIPEONFORK	0x02000000	/* Wipe VMA contents in child. */
- #define VM_DONTDUMP	0x04000000	/* Do not include in the core dump */
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index 94b63b4d71ff..8f7cc87828e6 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -9,7 +9,7 @@
- 
- /*
-  * Arrange for legacy / undefined architecture specific flags to be
-- * ignored by default in LEGACY_MAP_MASK.
-+ * ignored by mmap handling code.
-  */
- #ifndef MAP_32BIT
- #define MAP_32BIT 0
-@@ -23,6 +23,9 @@
- #ifndef MAP_UNINITIALIZED
- #define MAP_UNINITIALIZED 0
- #endif
-+#ifndef MAP_SYNC
-+#define MAP_SYNC 0
-+#endif
- 
- /*
-  * The historical set of flags that all mmap implementations implicitly
-@@ -125,7 +128,8 @@ calc_vm_flag_bits(unsigned long flags)
- {
- 	return _calc_vm_trans(flags, MAP_GROWSDOWN,  VM_GROWSDOWN ) |
- 	       _calc_vm_trans(flags, MAP_DENYWRITE,  VM_DENYWRITE ) |
--	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    );
-+	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    ) |
-+	       _calc_vm_trans(flags, MAP_SYNC,	     VM_SYNC      );
- }
- 
- unsigned long vm_commit_limit(void);
-diff --git a/include/uapi/asm-generic/mman.h b/include/uapi/asm-generic/mman.h
-index 7162cd4cca73..00e55627d2df 100644
---- a/include/uapi/asm-generic/mman.h
-+++ b/include/uapi/asm-generic/mman.h
-@@ -12,6 +12,7 @@
- #define MAP_NONBLOCK	0x10000		/* do not block on IO */
- #define MAP_STACK	0x20000		/* give out an address that is best suited for process/thread stacks */
- #define MAP_HUGETLB	0x40000		/* create a huge page mapping */
-+#define MAP_SYNC	0x80000		/* perform synchronous page faults for the mapping */
- 
- /* Bits [26:31] are reserved, see mman-common.h for MAP_HUGETLB usage */
- 
--- 
-2.12.3
-
-
---qlTNgmc+xy1dBmNv--
