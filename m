@@ -1,118 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758036AbdJMNY3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:24:29 -0400
-Date: Fri, 13 Oct 2017 09:24:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: move two more RT specific functions into
- CONFIG_XFS_RT
-Message-ID: <20171013132427.GC44461@bfoster.bfoster>
-References: <20171013120603.4135344-1-arnd@arndb.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18272 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754703AbdJPSgH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 14:36:07 -0400
+Date: Mon, 16 Oct 2017 11:36:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: add xfs_spaceman to .gitignore
+Message-ID: <20171016183601.GA4703@magnolia>
+References: <20171015032546.4503-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171013120603.4135344-1-arnd@arndb.de>
+In-Reply-To: <20171015032546.4503-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 02:05:40PM +0200, Arnd Bergmann wrote:
-> The last cleanup introduced two harmless warnings:
+On Sun, Oct 15, 2017 at 11:25:46AM +0800, Zorro Lang wrote:
+> The new binary xfs_spaceman isn't in .gitignore, so ignore it in
+> this patch.
 > 
-> fs/xfs/xfs_fsmap.c:480:1: warning: '__xfs_getfsmap_rtdev' defined but not used
-> fs/xfs/xfs_fsmap.c:372:1: warning: 'xfs_getfsmap_rtdev_rtbitmap_helper' defined but not used
-> 
-> This moves those two functions as well.
-> 
-> Fixes: bb9c2e543325 ("xfs: move more RT specific code under CONFIG_XFS_RT")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
 > ---
-
-I don't reproduce the warning, but the patch looks fine:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_fsmap.c | 48 ++++++++++++++++++++++++------------------------
->  1 file changed, 24 insertions(+), 24 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 560e0b40ac1b..43cfc07996a4 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -367,29 +367,6 @@ xfs_getfsmap_datadev_helper(
->  	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
->  }
+> Hi,
+> 
+> If you don't think it's worth fixing it in a single patch, feel free
+> to fix it in next xfs_spaceman related patchset :)
+> 
+> Thanks,
+> Zorro
+> 
+>  .gitignore | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/.gitignore b/.gitignore
+> index 913b371f..e839e2a1 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -67,6 +67,7 @@ cscope.*
+>  /quota/xfs_quota
+>  /repair/xfs_repair
+>  /rtcp/xfs_rtcp
+> +/spaceman/xfs_spaceman
 >  
-> -/* Transform a rtbitmap "record" into a fsmap */
-> -STATIC int
-> -xfs_getfsmap_rtdev_rtbitmap_helper(
-> -	struct xfs_trans		*tp,
-> -	struct xfs_rtalloc_rec		*rec,
-> -	void				*priv)
-> -{
-> -	struct xfs_mount		*mp = tp->t_mountp;
-> -	struct xfs_getfsmap_info	*info = priv;
-> -	struct xfs_rmap_irec		irec;
-> -	xfs_daddr_t			rec_daddr;
-> -
-> -	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
-> -
-> -	irec.rm_startblock = rec->ar_startblock;
-> -	irec.rm_blockcount = rec->ar_blockcount;
-> -	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
-> -	irec.rm_offset = 0;
-> -	irec.rm_flags = 0;
-> -
-> -	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
-> -}
-> -
->  /* Transform a bnobt irec into a fsmap */
->  STATIC int
->  xfs_getfsmap_datadev_bnobt_helper(
-> @@ -475,6 +452,30 @@ xfs_getfsmap_logdev(
->  	return xfs_getfsmap_helper(tp, info, &rmap, 0);
->  }
->  
-> +#ifdef CONFIG_XFS_RT
-> +/* Transform a rtbitmap "record" into a fsmap */
-> +STATIC int
-> +xfs_getfsmap_rtdev_rtbitmap_helper(
-> +	struct xfs_trans		*tp,
-> +	struct xfs_rtalloc_rec		*rec,
-> +	void				*priv)
-> +{
-> +	struct xfs_mount		*mp = tp->t_mountp;
-> +	struct xfs_getfsmap_info	*info = priv;
-> +	struct xfs_rmap_irec		irec;
-> +	xfs_daddr_t			rec_daddr;
-> +
-> +	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
-> +
-> +	irec.rm_startblock = rec->ar_startblock;
-> +	irec.rm_blockcount = rec->ar_blockcount;
-> +	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
-> +	irec.rm_offset = 0;
-> +	irec.rm_flags = 0;
-> +
-> +	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
-> +}
-> +
->  /* Execute a getfsmap query against the realtime device. */
->  STATIC int
->  __xfs_getfsmap_rtdev(
-> @@ -521,7 +522,6 @@ __xfs_getfsmap_rtdev(
->  	return query_fn(tp, info);
->  }
->  
-> -#ifdef CONFIG_XFS_RT
->  /* Actually query the realtime bitmap. */
->  STATIC int
->  xfs_getfsmap_rtdev_rtbitmap_query(
+>  # generated crc files
+>  /libxfs/crc32selftest
 > -- 
-> 2.9.0
+> 2.13.6
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
