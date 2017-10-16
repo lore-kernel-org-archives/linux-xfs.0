@@ -1,74 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27430 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754876AbdJPUrD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 16:47:03 -0400
-Date: Mon, 16 Oct 2017 13:46:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 24/30] xfs: scrub directory metadata
-Message-ID: <20171016204658.GM4703@magnolia>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777259980.1724.8093055918170430129.stgit@magnolia>
- <20171016042947.GA3666@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60243 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751161AbdJPV3g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 17:29:36 -0400
+Date: Tue, 17 Oct 2017 08:29:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
+ recovered buffers")
+Message-ID: <20171016212933.GG15067@dastard>
+References: <20171013184916.GS7122@magnolia>
+ <20171014115550.GB50635@bfoster.bfoster>
+ <20171014190530.GA4594@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016042947.GA3666@dastard>
+In-Reply-To: <20171014190530.GA4594@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 03:29:47PM +1100, Dave Chinner wrote:
-> On Wed, Oct 11, 2017 at 06:43:19PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
+> On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
+> > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
+> > > Hi all,
+> > > 
+> > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
+> > > recovered buffers").  I was analyzing a scrub failure on generic/392
+> > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
+> > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
+> > > and signalling error.
+> > > 
+> > > The pattern I observe is that when log recovery runs on a v4 filesystem,
+> > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
+> > > buffer therefore gets created and read without any verifiers.
+> > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
+> > > filesystem we come back and attach verifiers and all is well.  However,
+> > > on a v4 filesystem the function returns without doing anything, so the
+> > > xfs_buf just sits around in memory with no verifier.  Subsequent
+> > > read/log/relse patterns can write anything they want without write
+> > > verifiers to check that.
+> > > 
+> > > If the v4 fs didn't need log recovery, the buffers get created with
+> > > b_ops as you'd expect.
+> > > 
+> > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
+> > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
+> > > LSN is up to date?
+> > > 
 > > 
-> > Scrub the hash tree and all the entries in a directory.
+> > Seems reasonable, but I notice that the has_crc() check around
+> > _validate_buf_type() comes in sometime after the the original commit
+> > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
+> > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
+> > errors").
+> > 
+> > IIRC, the problem there is that log recovery had traditionally always
+> > unconditionally replayed everything in the log over whatever resides in
+> > the fs. This actually meant that recovery could transiently corrupt
+> > buffers in certain cases if the target buffer happened to be relogged
+> > more than once and was already up to date, which leads to verification
+> > failures. This was addressed for v5 filesystems with LSN ordering rules,
+> > but the challenge for v4 filesystems was that there is no metadata LSN
+> > and thus no means to detect whether a buffer is already up to date with
+> > regard to a transaction in the log.
+> > 
+> > Dave might have more historical context to confirm that... If that is
+> > still an open issue, a couple initial ideas come to mind:
+> > 
+> > 1.) Do something simple/crude like reclaim all buffers after log
+> > recovery on v4 filesystems to provide a clean slate going forward.
+> > 
+> > 2.) Unconditionally attach verifiers during recovery as originally done
+> > and wire up something generic that short circuits verifier invocations
+> > on v4 filesystems when log recovery is in progress.
 > 
-> .....
-> > +/* Check that an inode's mode matches a given DT_ type. */
-> > +STATIC int
-> > +xfs_scrub_dir_check_ftype(
-> > +	struct xfs_scrub_dir_ctx	*sdc,
-> > +	xfs_fileoff_t			offset,
-> > +	xfs_ino_t			inum,
-> > +	int				dtype)
-> > +{
-> > +	struct xfs_mount		*mp = sdc->sc->mp;
-> > +	struct xfs_inode		*ip;
-> > +	int				ino_dtype;
-> > +	int				error = 0;
-> > +
-> > +	if (!xfs_sb_version_hasftype(&mp->m_sb)) {
-> > +		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
-> > +			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
-> > +					offset);
-> > +		goto out;
-> > +	}
-> > +
-> > +	error = xfs_iget(mp, sdc->sc->tp, inum, XFS_IGET_DONTCACHE, 0, &ip);
-> > +	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
-> > +			&error))
-> > +		goto out;
-> > +
-> > +	/* Convert mode to the DT_* values that dir_emit uses. */
-> > +	ino_dtype = (VFS_I(ip)->i_mode & S_IFMT) >> 12;
+> What do you think about 3) add b_ops later if they're missing?
 > 
-> xfs_mode_to_ftype() ?
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 2f97c12..8842a27 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -742,6 +742,15 @@ xfs_buf_read_map(
+>         if (bp) {
+>                 trace_xfs_buf_read(bp, flags, _RET_IP_);
+>  
+> +               /*
+> +                * If this buffer is up to date and has no verifier, try
+> +                * to set one.  This can happen on v4 because log
+> +                * recovery reads in the buffers for replay but does not
+> +                * set b_ops.
+> +                */
+> +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
+> +                       bp->b_ops = ops;
 
-Yep, will fix.
+I don't really like this because it will hide bugs in the code.
 
---D
+It also doesn't solve the problem because a read with NULL ops will
+still leave a buffer with no ops attached.
 
-> Otherwise it looks ok.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+IMO, if we've read/created a buffer without ops, then it is up to
+the code that created/read it to either attach the required ops
+before the buffer is released or to invalidate the buffer before
+anyone else can use it or write it. The buffer write code warns
+about writing buffers without verfiers, but we can't warn on read
+because read-with-NULL-verifier is a valid thing to do....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
