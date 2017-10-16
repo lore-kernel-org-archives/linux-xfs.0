@@ -1,58 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52666 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751461AbdJPDfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Oct 2017 23:35:41 -0400
-Date: Sun, 15 Oct 2017 20:35:39 -0700
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
-Message-ID: <20171016033538.5y2xnxkddhrcjlmj@kernel.org>
-References: <20171015050751.dfznko2hxhi6jvra@kernel.org>
- <20171015222202.GH3666@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:50883 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750826AbdJPE3u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 00:29:50 -0400
+Date: Mon, 16 Oct 2017 15:29:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 24/30] xfs: scrub directory metadata
+Message-ID: <20171016042947.GA3666@dastard>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777259980.1724.8093055918170430129.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171015222202.GH3666@dastard>
+In-Reply-To: <150777259980.1724.8093055918170430129.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, tj@kernel.org, Kernel-team@fb.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 09:22:02AM +1100, Dave Chinner wrote:
-> On Sat, Oct 14, 2017 at 10:07:51PM -0700, Shaohua Li wrote:
-> > From: Shaohua Li <shli@fb.com>
-> > 
-> > Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
-> > writeback support). Tested with a fio test, verified writeback is
-> > throttled against cgroup io.max write bandwidth, also verified moving
-> > the fio test to another cgroup and the writeback is throttled against
-> > new cgroup setting.
-> > 
-> > I created a test for this as attached, please try! I'll send the test out for
-> > inclusion later.
+On Wed, Oct 11, 2017 at 06:43:19PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Hmmm. The test you appended just checks that bytes get written.
-> That's pretty much useless for verification of the features you
-> describe above (throttling rate it correct, dynamic throttle
-> application as memcg config changes).
-> 
-> You explicitly state this is a memcg IO QoS feature and that you
-> have a set of fio tests that verify that it works as expected. We
-> need those "works as expected" fio tests formalised into automated
-> fstests. Both upstream fs developers and downstream distro QE
-> departments need to be able to verify that the bandwidth control and
-> throttling works as advertised - it's essential that we have
-> regression tests for this....
+> Scrub the hash tree and all the entries in a directory.
 
-Right, this test only verifies the writeback is correctly charged to a cgroup,
-it doesn't verify the writeback is running in correct bandwidth. I did try to
-create such automatic test, but my attempt failed. To measure speed, we need
-measure the time for a test. But writeback is async, the file write finishes
-before the data is written to disk. We can't call a fsync, because fsync write
-is different than writeback write, which is charged to correct cgroup even
-without cgroup writeback support. For my test, I run iostat and check the disk
-speed is correct, so I don't have idea to create an automatic test.
+.....
+> +/* Check that an inode's mode matches a given DT_ type. */
+> +STATIC int
+> +xfs_scrub_dir_check_ftype(
+> +	struct xfs_scrub_dir_ctx	*sdc,
+> +	xfs_fileoff_t			offset,
+> +	xfs_ino_t			inum,
+> +	int				dtype)
+> +{
+> +	struct xfs_mount		*mp = sdc->sc->mp;
+> +	struct xfs_inode		*ip;
+> +	int				ino_dtype;
+> +	int				error = 0;
+> +
+> +	if (!xfs_sb_version_hasftype(&mp->m_sb)) {
+> +		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
+> +			xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
+> +					offset);
+> +		goto out;
+> +	}
+> +
+> +	error = xfs_iget(mp, sdc->sc->tp, inum, XFS_IGET_DONTCACHE, 0, &ip);
+> +	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
+> +			&error))
+> +		goto out;
+> +
+> +	/* Convert mode to the DT_* values that dir_emit uses. */
+> +	ino_dtype = (VFS_I(ip)->i_mode & S_IFMT) >> 12;
 
-Thanks,
-Shaohua
+xfs_mode_to_ftype() ?
+
+Otherwise it looks ok.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
