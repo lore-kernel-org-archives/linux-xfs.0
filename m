@@ -1,136 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:46901 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751410AbdJPKAj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 06:00:39 -0400
-Received: by mail-wm0-f42.google.com with SMTP id m72so1384195wmc.1
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2017 03:00:39 -0700 (PDT)
-Subject: Re: agcount for 2TB, 4TB and 8TB drives
-References: <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
- <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
- <20171009112306.GM3666@dastard>
- <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
- <20171009220332.GP3666@dastard>
- <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
- <20171010225524.GV3666@dastard>
- <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
- <20171014224224.GD15067@dastard>
- <db0ca95f-ce16-4b2e-7d69-52f3552a6004@scylladb.com>
- <20171015220018.GG3666@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <10d04693-02ef-427f-95fe-cc7bcaf3ec6f@scylladb.com>
-Date: Mon, 16 Oct 2017 13:00:32 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:38806 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750914AbdJPKhV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Oct 2017 06:37:21 -0400
+Date: Mon, 16 Oct 2017 06:37:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
+ recovered buffers")
+Message-ID: <20171016103719.GB58994@bfoster.bfoster>
+References: <20171013184916.GS7122@magnolia>
+ <20171014115550.GB50635@bfoster.bfoster>
+ <20171014190530.GA4594@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171015220018.GG3666@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171014190530.GA4594@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
+On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
+> On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
+> > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
+> > > Hi all,
+> > > 
+> > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
+> > > recovered buffers").  I was analyzing a scrub failure on generic/392
+> > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
+> > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
+> > > and signalling error.
+> > > 
+> > > The pattern I observe is that when log recovery runs on a v4 filesystem,
+> > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
+> > > buffer therefore gets created and read without any verifiers.
+> > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
+> > > filesystem we come back and attach verifiers and all is well.  However,
+> > > on a v4 filesystem the function returns without doing anything, so the
+> > > xfs_buf just sits around in memory with no verifier.  Subsequent
+> > > read/log/relse patterns can write anything they want without write
+> > > verifiers to check that.
+> > > 
+> > > If the v4 fs didn't need log recovery, the buffers get created with
+> > > b_ops as you'd expect.
+> > > 
+> > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
+> > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
+> > > LSN is up to date?
+> > > 
+> > 
+> > Seems reasonable, but I notice that the has_crc() check around
+> > _validate_buf_type() comes in sometime after the the original commit
+> > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
+> > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
+> > errors").
+> > 
+> > IIRC, the problem there is that log recovery had traditionally always
+> > unconditionally replayed everything in the log over whatever resides in
+> > the fs. This actually meant that recovery could transiently corrupt
+> > buffers in certain cases if the target buffer happened to be relogged
+> > more than once and was already up to date, which leads to verification
+> > failures. This was addressed for v5 filesystems with LSN ordering rules,
+> > but the challenge for v4 filesystems was that there is no metadata LSN
+> > and thus no means to detect whether a buffer is already up to date with
+> > regard to a transaction in the log.
+> > 
+> > Dave might have more historical context to confirm that... If that is
+> > still an open issue, a couple initial ideas come to mind:
+> > 
+> > 1.) Do something simple/crude like reclaim all buffers after log
+> > recovery on v4 filesystems to provide a clean slate going forward.
+> > 
+> > 2.) Unconditionally attach verifiers during recovery as originally done
+> > and wire up something generic that short circuits verifier invocations
+> > on v4 filesystems when log recovery is in progress.
+> 
+> What do you think about 3) add b_ops later if they're missing?
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 2f97c12..8842a27 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -742,6 +742,15 @@ xfs_buf_read_map(
+>         if (bp) {
+>                 trace_xfs_buf_read(bp, flags, _RET_IP_);
+>  
+> +               /*
+> +                * If this buffer is up to date and has no verifier, try
+> +                * to set one.  This can happen on v4 because log
+> +                * recovery reads in the buffers for replay but does not
+> +                * set b_ops.
+> +                */
+> +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
+> +                       bp->b_ops = ops;
+> +
+>                 if (!(bp->b_flags & XBF_DONE)) {
+>                         XFS_STATS_INC(target->bt_mount, xb_get_read);
+>                         bp->b_ops = ops;
+> 
+> 
+> (Sort of a hack, I think I prefer something along the lines of #2 better.)
+> 
 
+Yeah, seems like a plausible fix from a technical perspective. The first
+thing that comes to mind is the need to verify that nothing actually
+looks up an in-core buffer rather than attempt to read it and could
+somehow use it from there. That may not be the case or even likely going
+forward, but you never know how code is going to change in the future.
+The fact that it's not a relevant concern with the other approaches is
+what makes me give slight preference to those, fwiw.
 
-On 10/16/2017 01:00 AM, Dave Chinner wrote:
-> On Sun, Oct 15, 2017 at 12:36:03PM +0300, Avi Kivity wrote:
->>
->> On 10/15/2017 01:42 AM, Dave Chinner wrote:
->>> On Fri, Oct 13, 2017 at 11:13:24AM +0300, Avi Kivity wrote:
->>>> On 10/11/2017 01:55 AM, Dave Chinner wrote:
->>>>> On Tue, Oct 10, 2017 at 12:07:42PM +0300, Avi Kivity wrote:
->>>>>> On 10/10/2017 01:03 AM, Dave Chinner wrote:
->>>>>>>> On 10/09/2017 02:23 PM, Dave Chinner wrote:
->>>>>>>>> On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
->>>>>>>>> Sure, that might be the IO concurrency the SSD sees and handles, but
->>>>>>>>> you very rarely require that much allocation parallelism in the
->>>>>>>>> workload. Only a small amount of the IO submission path is actually
->>>>>>>>> allocation work, so a single AG can provide plenty of async IO
->>>>>>>>> parallelism before an AG is the limiting factor.
->>>>>>>> Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
->>>>>>> AGs don't issue IO. Applications issue IO, the filesystem allocates
->>>>>>> space from AGs according to the write IO that passes through it.
->>>>>> What I meant was I/O in order to satisfy an allocation (read from
->>>>>> the free extent btree or whatever), not the application's I/O.
->>>>> Once you're in the per-AG allocator context, it is single threaded
->>>>> until the allocation is complete. We do things like btree block
->>>>> readahead to minimise IO wait times, but we can't completely hide
->>>>> things like metadata read Io wait time when it is required to make
->>>>> progress.
->>>> I see, thanks. Will RWF_NOWAIT detect the need to do I/O for the
->>>> free space btree, or just contention? (I expect the latter from the
->>>> patches I've seen, but perhaps I missed something).
->>> No, it checks at a high level whether allocation is needed (i.e. IO
->>> into a hole) and if allocation is needed, it punts the IO
->>> immediately to the background thread and returns to userspace. i.e.
->>> it never gets near the allocator to begin with....
->> Interesting, that's both good and bad. Good, because we avoided a
->> potential stall. Bad, because if the stall would not actually have
->> happened (lock not contended, btree nodes cached) then we got punted
->> to the helper thread which is a more expensive path.
-> Avoiding latency has costs in complexity, resources and CPU time.
-> That's why we've never ended up with a fully generic async syscall
-> interface in the kernel - every time someone tries, it dies the
-> death of complexity.
->
-> RWF_NOWAIT is simple, easy to maintain and has, in most cases, no
-> observable overhead.
+OTOH, a variant of this that say iterated the cached buffers and did a
+post-recovery "validation" to attach any missing verifiers might be a
+way to avoid that flaw. As Dave kind of alludes to in his reply, that
+just might be more work/code than it's really worth.
 
-There is no observable overhead in the kernel, but there will be some 
-for the application. As soon as we cross a hint boundary writes start to 
-fail, and the application needs to move them to a helper thread and 
-re-submit them. These duplicate submissions happen until the helper 
-thread is able to respond, and the first write manages to allocate the 
-space.
+Brian
 
-Without RWF_NOWAIT, there are two possibilities: either you get lucky 
-and the first write to cross the boundary doesn't block, or you get  
-unlucky and you stall. There's no doubt that RWF_NOWAIT is a lot better, 
-but it does cause the system to do some more work. I guess it can be 
-amortized away with larger hints.
-
->> In fact we don't even need to try the write, we know that every
->> 32MB/128k = 256 writes we will hit an allocation. Perhaps we can
->> fallocate() the next 32MB chunk while writing to the previous one.
-> fallocate will block *all* IO and mmap faults on that file, not just
-> the ones that require allocation. fallocate creates a complete IO
-> submission pipeline stall, punting all new IO submissions to the
-> background worker where they will block until fallocate completes.
-
-Ok, I'll stay away from it, except during close time to remove unused 
-extents.
-
-> IOWs, in terms of overhead, IO submission efficiency and IO pipeline
-> bubbles, fallocate is close the worst thing you can possibly do.
-> Extent size hints are far more efficient and less intrusive than
-> manually using fallocate from userspace.
->
->> If fallocate() is fast enough, writes will both never block/fail. If
->> it's not, then we'll block/fail, but the likelihood is reduced. We
->> can even increase the chunk size if we see we're getting blocked.
-> If you call fallocate, other AIO writes will always get blocked
-> because fallocate creates an IO submission barrier. fallocate might
-> be fast, but it's also a total IO submission serialisation point and
-> so has a much more significant effect on IO submission latency when
-> compared to doing allocation directly in the IO path via extent size
-> hints...
-
-Got it.
-
->> Even better would be if XFS would detect the sequential write and
->> start allocating ahead of it.
-> That's what delayed allocation does with buffered IO. We
-> specifically do not do that with direct IO because it's direct IO
-> and we only do exactly what the IO the user submits requires us to
-> do.
->
-> As it is, I'm not sure that it would gain us anything over extent
-> size hints because they are effectively doing exactly the same thing
-> (i.e.  allocate ahead) on every write that hits a hole beyond
-> EOF when extending the file....
-
-If I understand correctly, you do get momentary serialization when you 
-cross a hint boundary, while with allocate ahead, you would not.
-
-
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > > It seems like a bad idea to let buffers sit around with no verifier.
+> > > The original patch adding this function is d75afeb3 ("xfs: add buffer
+> > > types to directory and attribute buffers") and looks like it was
+> > > supposed to do this for any filesystem, but I wasn't around to know the
+> > > evolution of that part of xlog.
+> > > 
+> > > --D
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
