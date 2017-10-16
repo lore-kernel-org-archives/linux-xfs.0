@@ -1,57 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53544 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750821AbdJPHii (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Oct 2017 03:38:38 -0400
-Date: Mon, 16 Oct 2017 09:38:36 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v9 1/6] mm: introduce MAP_SHARED_VALIDATE, a mechanism
-        to safely define new mmap flags
-Message-ID: <20171016073836.GB28778@lst.de>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com> <150776923320.9144.6119113178052262946.stgit@dwillia2-desk3.amr.corp.intel.com> <20171012135127.GG29293@quack2.suse.cz> <CA+55aFyy-nz99c6erFh=aeyCOzsk0td5wHaVLpwBNA-sWNDZkA@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:58420 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751743AbdJPHpI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 03:45:08 -0400
+Date: Mon, 16 Oct 2017 00:45:04 -0700
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 01/19] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Message-ID: <20171016074504.GA7316@infradead.org>
+References: <20171011200603.27442-1-jack@suse.cz>
+ <20171011200603.27442-2-jack@suse.cz>
+ <20171013071203.GA9105@infradead.org>
+ <1507996677.21357.1.camel@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CA+55aFyy-nz99c6erFh=aeyCOzsk0td5wHaVLpwBNA-sWNDZkA@mail.gmail.com>
+In-Reply-To: <1507996677.21357.1.camel@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Arnd Bergmann <arnd@arndb.de>, Linux API <linux-api@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "luto@kernel.org" <luto@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "arnd@arndb.de" <arnd@arndb.de>
 
-On Thu, Oct 12, 2017 at 09:32:17AM -0700, Linus Torvalds wrote:
-> On Thu, Oct 12, 2017 at 6:51 AM, Jan Kara <jack@suse.cz> wrote:
-> >
-> > When thinking a bit more about this I've realized one problem: Currently
-> > user can call mmap() with MAP_SHARED type and MAP_SYNC or MAP_DIRECT flags
-> > and he will get the new semantics (if the kernel happens to support it).  I
-> > think that is undesirable [..]
-> 
-> Why?
-> 
-> If you have a performance preference for MAP_DIRECT or something like
-> that, but you don't want to *enforce* it, you'd use just plain
-> MAP_SHARED with it.
-> 
-> Ie there may well be "I want this to work, possibly with downsides" issues.
-> 
-> So it seems to be a reasonable model, and disallowing it seems to
-> limit people and not really help anything.
+> How about the following incremental update? It allows ->mmap_validate()
+> to be used as a full replacement for ->mmap() and it limits the error
+> code freedom to a centralized mmap_status_errno() routine:
 
-I don't think for MAP_DIRECT it matters (and I think we shouldn't have
-MAP_DIRECT to start with, see the discussions later in the thread).
+Nah - my earlier comment was simply misinformed because I didn't
+read the whole patch and the _validate name mislead me.
 
-But for the main use case, MAP_SYNC you really want a hard error when you
-don't get it.  And while we could tell people that they should only use
-MAP_SYNC with MAP_SHARED_VALIDATE instead of MAP_SHARED chances that they
-get it wrong are extremely high.  On the other hand if you really only
-want a flag to optimize calling mmap twice is very little overhead, and
-a very good documentation of you intent:
-
-	addr = mmap(...., MAP_SHARED_VALIDATE | MAP_DIRECT, ...);
-	if (!addr && errno = EOPNOTSUPP) {
-		/* MAP_DIRECT didn't work, we'll just cope using blah, blah */
-		addr = mmap(...., MAP_SHARED, ...);
-	}
-	if (!addr)
-		goto handle_error;
+So I think the current calling conventions are ok, I'd just like a
+better name (mmap_flags maybe?) and avoid the need the file system
+also has to implement ->mmap.
