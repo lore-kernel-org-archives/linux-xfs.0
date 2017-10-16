@@ -1,32 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58488 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751580AbdJSG7t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 02:59:49 -0400
-Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e54o0-00045u-Hy
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 06:59:49 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: more extent mapping cleanups
-Date: Thu, 19 Oct 2017 08:59:27 +0200
-Message-Id: <20171019065942.18813-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48539 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754812AbdJPT02 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:26:28 -0400
+Date: Mon, 16 Oct 2017 12:26:24 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] fs: invalidate page cache after end_io() in dio
+ completion
+Message-ID: <20171016192624.GD4703@magnolia>
+References: <20171003160201.11208-1-eguan@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171003160201.11208-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>
 
-Hi all,
+On Wed, Oct 04, 2017 at 12:02:01AM +0800, Eryu Guan wrote:
+> Commit 332391a9935d ("fs: Fix page cache inconsistency when mixing
+> buffered and AIO DIO") moved page cache invalidation from
+> iomap_dio_rw() to iomap_dio_complete() for iomap based direct write
+> path, but before the dio->end_io() call, and it re-introdued the bug
+> fixed by commit c771c14baa33 ("iomap: invalidate page caches should
+> be after iomap_dio_complete() in direct write").
+> 
+> I found this because fstests generic/418 started failing on XFS with
+> v4.14-rc3 kernel, which is the regression test for this specific
+> bug.
+> 
+> So similarly, fix it by moving dio->end_io() (which does the
+> unwritten extent conversion) before page cache invalidation, to make
+> sure next buffer read reads the final real allocations not unwritten
+> extents. I also add some comments about why should end_io() go first
+> in case we get it wrong again in the future.
+> 
+> Note that, there's no such problem in the non-iomap based direct
+> write path, because we didn't remove the page cache invalidation
+> after the ->direct_IO() in generic_file_direct_write() call, but I
+> decided to fix dio_complete() too so we don't leave a landmine
+> there, also be consistent with iomap_dio_complete().
+> 
+> Fixes: 332391a9935d ("fs: Fix page cache inconsistency when mixing buffered and AIO DIO")
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 
-This series contains another round of extent map related cleanups
-to prepare for the new incore extent list.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Because it is based on a huge number of outstanding (and reviewed)
-patches it might be a good idea to pull in the git tree for testing
-or detailed review:
+I've picked this up for the xfs tree.
 
-	git://git.infradead.org/users/hch/xfs.git xfs-bmbt-cleanup.2
+--D
 
-Gitweb:
-
-	http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-bmbt-cleanup.2
+> ---
+>  fs/direct-io.c | 20 ++++++++++++--------
+>  fs/iomap.c     | 41 ++++++++++++++++++++++++-----------------
+>  2 files changed, 36 insertions(+), 25 deletions(-)
+> 
+> diff --git a/fs/direct-io.c b/fs/direct-io.c
+> index 62cf812ed0e5..1dba6842c349 100644
+> --- a/fs/direct-io.c
+> +++ b/fs/direct-io.c
+> @@ -259,12 +259,24 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
+>  	if (ret == 0)
+>  		ret = transferred;
+>  
+> +	if (dio->end_io) {
+> +		// XXX: ki_pos??
+> +		err = dio->end_io(dio->iocb, offset, ret, dio->private);
+> +		if (err)
+> +			ret = err;
+> +	}
+> +
+>  	/*
+>  	 * Try again to invalidate clean pages which might have been cached by
+>  	 * non-direct readahead, or faulted in by get_user_pages() if the source
+>  	 * of the write was an mmap'ed region of the file we're writing.  Either
+>  	 * one is a pretty crazy thing to do, so we don't support it 100%.  If
+>  	 * this invalidation fails, tough, the write still worked...
+> +	 *
+> +	 * And this page cache invalidation has to be after dio->end_io(), as
+> +	 * some filesystems convert unwritten extents to real allocations in
+> +	 * end_io() when necessary, otherwise a racing buffer read would cache
+> +	 * zeros from unwritten extents.
+>  	 */
+>  	if (ret > 0 && dio->op == REQ_OP_WRITE &&
+>  	    dio->inode->i_mapping->nrpages) {
+> @@ -274,14 +286,6 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
+>  		WARN_ON_ONCE(err);
+>  	}
+>  
+> -	if (dio->end_io) {
+> -
+> -		// XXX: ki_pos??
+> -		err = dio->end_io(dio->iocb, offset, ret, dio->private);
+> -		if (err)
+> -			ret = err;
+> -	}
+> -
+>  	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
+>  		inode_dio_end(dio->inode);
+>  
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index be61cf742b5e..d4801f8dd4fd 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -714,23 +714,9 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  {
+>  	struct kiocb *iocb = dio->iocb;
+>  	struct inode *inode = file_inode(iocb->ki_filp);
+> +	loff_t offset = iocb->ki_pos;
+>  	ssize_t ret;
+>  
+> -	/*
+> -	 * Try again to invalidate clean pages which might have been cached by
+> -	 * non-direct readahead, or faulted in by get_user_pages() if the source
+> -	 * of the write was an mmap'ed region of the file we're writing.  Either
+> -	 * one is a pretty crazy thing to do, so we don't support it 100%.  If
+> -	 * this invalidation fails, tough, the write still worked...
+> -	 */
+> -	if (!dio->error &&
+> -	    (dio->flags & IOMAP_DIO_WRITE) && inode->i_mapping->nrpages) {
+> -		ret = invalidate_inode_pages2_range(inode->i_mapping,
+> -				iocb->ki_pos >> PAGE_SHIFT,
+> -				(iocb->ki_pos + dio->size - 1) >> PAGE_SHIFT);
+> -		WARN_ON_ONCE(ret);
+> -	}
+> -
+>  	if (dio->end_io) {
+>  		ret = dio->end_io(iocb,
+>  				dio->error ? dio->error : dio->size,
+> @@ -742,12 +728,33 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  	if (likely(!ret)) {
+>  		ret = dio->size;
+>  		/* check for short read */
+> -		if (iocb->ki_pos + ret > dio->i_size &&
+> +		if (offset + ret > dio->i_size &&
+>  		    !(dio->flags & IOMAP_DIO_WRITE))
+> -			ret = dio->i_size - iocb->ki_pos;
+> +			ret = dio->i_size - offset;
+>  		iocb->ki_pos += ret;
+>  	}
+>  
+> +	/*
+> +	 * Try again to invalidate clean pages which might have been cached by
+> +	 * non-direct readahead, or faulted in by get_user_pages() if the source
+> +	 * of the write was an mmap'ed region of the file we're writing.  Either
+> +	 * one is a pretty crazy thing to do, so we don't support it 100%.  If
+> +	 * this invalidation fails, tough, the write still worked...
+> +	 *
+> +	 * And this page cache invalidation has to be after dio->end_io(), as
+> +	 * some filesystems convert unwritten extents to real allocations in
+> +	 * end_io() when necessary, otherwise a racing buffer read would cache
+> +	 * zeros from unwritten extents.
+> +	 */
+> +	if (!dio->error &&
+> +	    (dio->flags & IOMAP_DIO_WRITE) && inode->i_mapping->nrpages) {
+> +		int err;
+> +		err = invalidate_inode_pages2_range(inode->i_mapping,
+> +				offset >> PAGE_SHIFT,
+> +				(offset + dio->size - 1) >> PAGE_SHIFT);
+> +		WARN_ON_ONCE(err);
+> +	}
+> +
+>  	inode_dio_end(file_inode(iocb->ki_filp));
+>  	kfree(dio);
+>  
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
