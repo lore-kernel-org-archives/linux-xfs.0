@@ -1,46 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53512 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750880AbdJPHaO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Oct 2017 03:30:14 -0400
-Date: Mon, 16 Oct 2017 09:30:12 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Message-ID: <20171016073012.GC28270@lst.de>
-References: <150776922692.9144.16963640112710410217.stgit@dwillia2-desk3.amr.corp.intel.com> <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com> <20171013065716.GB26461@lst.de> <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com> <20171013163822.GA17411@obsidianresearch.com> <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com> <20171013173145.GA18702@obsidianresearch.com> <CAPcyv4jZJRto1jwmNU--pqH_6dOVMyj=68ZwEjAmmkgX=mRk7w@mail.gmail.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:38498 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750880AbdJPHlP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 03:41:15 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jZJRto1jwmNU--pqH_6dOVMyj=68ZwEjAmmkgX=mRk7w@mail.gmail.com>
+In-Reply-To: <20171013120603.4135344-1-arnd@arndb.de>
+References: <20171013120603.4135344-1-arnd@arndb.de>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 16 Oct 2017 09:41:13 +0200
+Message-ID: <CAMuHMdVT=r7vA+rtp1ROhzcHK-JtAK8JS1-QOf-+tK5BWT26Kw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: move two more RT specific functions into CONFIG_XFS_RT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, Dave Chinner <dchinner@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Oct 13, 2017 at 11:22:21AM -0700, Dan Williams wrote:
-> So, here's a strawman can ibv_poll_cq() start returning ibv_wc_status
-> == IBV_WC_LOC_PROT_ERR when file coherency is lost. This would make
-> the solution generic across DAX and non-DAX. What's you're feeling for
-> how well applications are prepared to deal with that status return?
+On Fri, Oct 13, 2017 at 2:05 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> The last cleanup introduced two harmless warnings:
+>
+> fs/xfs/xfs_fsmap.c:480:1: warning: '__xfs_getfsmap_rtdev' defined but not used
+> fs/xfs/xfs_fsmap.c:372:1: warning: 'xfs_getfsmap_rtdev_rtbitmap_helper' defined but not used
+>
+> This moves those two functions as well.
+>
+> Fixes: bb9c2e543325 ("xfs: move more RT specific code under CONFIG_XFS_RT")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-The problem aren't local protection errors, but remote protection errors
-when we modify a MR with an rkey that the remote side accesses.
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-> >  - How lease break can be done hitlessly, so the library user never
-> >    needs to know it is happening or see failed/missed transfers
-> 
-> iommu redirect should be hit less and behave like the page cache case
-> where RDMA targets pages that are no longer part of the file.
+Gr{oetje,eeting}s,
 
-But systems that care about performance (e.g. the usual RDMA users) usually
-don't use an IOMMU due to the performance impact.  Especially as HCAs
-already have their own built-in iommus (aka the MR mechanism).
+                        Geert
 
-Note that file systems already have a mechanism like you mention above
-to keep extents that are busy from being reallocated.  E.g. take a look at
-fs/xfs/xfs_extent_busy.c.  The downside is that this could lock down
-a massive amount of space in the busy list if we for example have a MR
-covering a huge file that is truncated down.  So even if we'd want that
-scheme we'd need some sort of ulmit for the amount of DAX pages locked
-down in get_user_pages.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
