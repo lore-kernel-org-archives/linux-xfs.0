@@ -1,117 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44193 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:40141 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750907AbdJNTFg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 15:05:36 -0400
-Date: Sat, 14 Oct 2017 12:05:30 -0700
+        with ESMTP id S1752350AbdJPTLy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:11:54 -0400
+Date: Mon, 16 Oct 2017 12:11:47 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
- recovered buffers")
-Message-ID: <20171014190530.GA4594@magnolia>
-References: <20171013184916.GS7122@magnolia>
- <20171014115550.GB50635@bfoster.bfoster>
+Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
+Message-ID: <20171016191147.GC4703@magnolia>
+References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
+ <20171002135618.GA32279@bfoster.bfoster>
+ <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
+ <20171013181605.GA46787@bfoster.bfoster>
+ <20171013195334.GB46787@bfoster.bfoster>
+ <20171014223447.GC15067@dastard>
+ <20171016100904.GA58994@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171014115550.GB50635@bfoster.bfoster>
+In-Reply-To: <20171016100904.GA58994@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
 
-On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
-> On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
-> > Hi all,
+On Mon, Oct 16, 2017 at 06:09:04AM -0400, Brian Foster wrote:
+> On Sun, Oct 15, 2017 at 09:34:47AM +1100, Dave Chinner wrote:
+> > On Fri, Oct 13, 2017 at 03:53:35PM -0400, Brian Foster wrote:
+> > > On Fri, Oct 13, 2017 at 02:16:05PM -0400, Brian Foster wrote:
+> > > > On Fri, Oct 13, 2017 at 09:29:35PM +0800, Zorro Lang wrote:
+> > > > > On Mon, Oct 02, 2017 at 09:56:18AM -0400, Brian Foster wrote:
+> > > > > > On Sat, Sep 30, 2017 at 11:28:57AM +0800, Zorro Lang wrote:
+> > > > > > > Hi,
+> > > > > > > 
+> > > > > > > I hit a panic[1] when I ran xfstests on debug kernel v4.14-rc2
+> > > > > > > (with xfsprogs 4.13.1), and I can reproduce it on the same machine
+> > > > > > > twice. But I can't reproduce it on another machine.
+> > > > > > > 
+> > > > > > > Maybe there're some hardware specific requirement to trigger this panic. I
+> > > > > > > tested on normal disk partition, but the disk is multi stripes RAID device.
+> > > > > > > I didn't get the mkfs output of g/085, bug I found the default mkfs output
+> > > > > > > (mkfs.xfs -f /dev/sda3) is:
+> > > > > > > 
+> > > > > > > meta-data=/dev/sda3              isize=512    agcount=16, agsize=982528 blks
+> > > > > > >          =                       sectsz=512   attr=2, projid32bit=1
+> > > > > > >          =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+> > > > > > > data     =                       bsize=1024   blocks=15720448, imaxpct=25
+> > > > > > >          =                       sunit=512    swidth=1024 blks
+> > > > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> > > > > > > log      =internal log           bsize=1024   blocks=10240, version=2
+> > > > > > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> > > > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > > > > > > 
+> > > > > > > (The test machine is not on my hand now, I need time reserve it.)
+> > > > > > > 
+> > > > > > 
+> > > > > > If you are able to reproduce, could you provide a metadump of this fs
+> > > > > > immediately after the crash?
+> > > > > 
+> > > > > Finally I got the machine which can reproduce this bug for 1 day. Then I
+> > > > > got the XFS metadump which can trigger this bug.
+> > > > > 
+> > > > > Please download the metadump file by opening below link:
+> > > > > https://drive.google.com/file/d/0B5dFDeCXGOPXalNuMUJNdDM3STQ/view?usp=sharing
+> > > > > 
+> > > > > Just mount this xfs image, then kernel will crash. I didn't do any operations
+> > > > > on this XFS, just did "mkfs.xfs -b size=1024".
+> > > > > 
+> > > > 
+> > > > Thanks Zorro. I can reproduce with this image. It looks like the root
+> > > > problem is that a block address calculation goes wrong in
+> > > > xlog_find_head():
+> > > > 
+> > > > 	start_blk = log_bbnum - (num_scan_bblks - head_blk);
+> > > > 
+> > > > With log_bbnum = 3264, num_scan_bblks = 4096 and head_blk = 512,
+> > > > start_blk underflows and we go off the rails from there. Aside from
+> > > > addressing the crash, I think either this value and/or num_scan_bblks
+> > > > need to be clamped to within the range of the log.
+> > > > 
+> > > 
+> > > Actually Zorro, how are you creating a filesystem with such a small log?
+> > > I can't seem to create anything with a log smaller than 2MB. FWIW,
+> > > xfs_info shows the following once I work around the crash and mount the
+> > > fs:
+> > > 
+> > > meta-data=/dev/mapper/test-scratch isize=512    agcount=8, agsize=32256 blks
+> > >          =                       sectsz=512   attr=2, projid32bit=1
+> > >          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+> > >          =                       reflink=0
+> > > data     =                       bsize=1024   blocks=258048, imaxpct=25
+> > >          =                       sunit=512    swidth=1024 blks
+> > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> > > log      =internal               bsize=1024   blocks=1632, version=2
+> > >          =                       sectsz=512   sunit=32 blks, lazy-count=1
+> > > realtime =none                   extsz=4096   blocks=0, rtextents=0
 > > 
-> > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
-> > recovered buffers").  I was analyzing a scrub failure on generic/392
-> > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
-> > scrub part 4) being unable to find a b_ops attached to the AGF buffer
-> > and signalling error.
+> > THis is one of the issues I came across with my mkfs refactoring.
 > > 
-> > The pattern I observe is that when log recovery runs on a v4 filesystem,
-> > we call some variant of xfs_buf_read with a NULL ops parameter.  The
-> > buffer therefore gets created and read without any verifiers.
-> > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
-> > filesystem we come back and attach verifiers and all is well.  However,
-> > on a v4 filesystem the function returns without doing anything, so the
-> > xfs_buf just sits around in memory with no verifier.  Subsequent
-> > read/log/relse patterns can write anything they want without write
-> > verifiers to check that.
+> > The problem is the block size is 1k, not 4k, and there's a check
+> > somewhere against the number of log blocks rather than bytes, and
+> > so you can get a log smaller than the 2MB window that log recovery
+> > expects from 8x256k log buffers....
 > > 
-> > If the v4 fs didn't need log recovery, the buffers get created with
-> > b_ops as you'd expect.
-> > 
-> > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
-> > set b_ops and save the "if (hascrc)" bits for the part that ensures the
-> > LSN is up to date?
+> > i.e. somewhere in mkfs we need to clamp the minimum log size to
+> > something greater than 2MB. I didn't get to the bottom of it - I
+> > fixed the option parsing bug that caused it and the log went to
+> > someting like 4.5MB instead of 1.6MB....
 > > 
 > 
-> Seems reasonable, but I notice that the has_crc() check around
-> _validate_buf_type() comes in sometime after the the original commit
-> referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
-> commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
-> errors").
-> 
-> IIRC, the problem there is that log recovery had traditionally always
-> unconditionally replayed everything in the log over whatever resides in
-> the fs. This actually meant that recovery could transiently corrupt
-> buffers in certain cases if the target buffer happened to be relogged
-> more than once and was already up to date, which leads to verification
-> failures. This was addressed for v5 filesystems with LSN ordering rules,
-> but the challenge for v4 filesystems was that there is no metadata LSN
-> and thus no means to detect whether a buffer is already up to date with
-> regard to a transaction in the log.
-> 
-> Dave might have more historical context to confirm that... If that is
-> still an open issue, a couple initial ideas come to mind:
-> 
-> 1.) Do something simple/crude like reclaim all buffers after log
-> recovery on v4 filesystems to provide a clean slate going forward.
-> 
-> 2.) Unconditionally attach verifiers during recovery as originally done
-> and wire up something generic that short circuits verifier invocations
-> on v4 filesystems when log recovery is in progress.
+> Ok, so it sounds like that is the root cause and is fixed by the mkfs
+> rework. I have a couple patches laying around that fix up the
+> calculation and add some error checks to prevent the kernel crash, but
+> this has me wondering whether we should fail to mount the fs due to the
+> geometry. Thoughts?
 
-What do you think about 3) add b_ops later if they're missing?
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2f97c12..8842a27 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -742,6 +742,15 @@ xfs_buf_read_map(
-        if (bp) {
-                trace_xfs_buf_read(bp, flags, _RET_IP_);
- 
-+               /*
-+                * If this buffer is up to date and has no verifier, try
-+                * to set one.  This can happen on v4 because log
-+                * recovery reads in the buffers for replay but does not
-+                * set b_ops.
-+                */
-+               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
-+                       bp->b_ops = ops;
-+
-                if (!(bp->b_flags & XBF_DONE)) {
-                        XFS_STATS_INC(target->bt_mount, xb_get_read);
-                        bp->b_ops = ops;
-
-
-(Sort of a hack, I think I prefer something along the lines of #2 better.)
+Failing the mount sounds ok to me, but do we have any other options to
+deal with undersized logs?  Is there a scenario where we /could/ mount
+an undersized log and not blow up, either immediately or later on?
 
 --D
 
 > 
 > Brian
 > 
-> > It seems like a bad idea to let buffers sit around with no verifier.
-> > The original patch adding this function is d75afeb3 ("xfs: add buffer
-> > types to directory and attribute buffers") and looks like it was
-> > supposed to do this for any filesystem, but I wasn't around to know the
-> > evolution of that part of xlog.
+> > Cheers,
 > > 
-> > --D
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
