@@ -1,130 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64362 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752519AbdJPXTc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 19:19:32 -0400
-Date: Tue, 17 Oct 2017 10:14:13 +1100
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:1400 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932488AbdJPXab (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 19:30:31 -0400
+Date: Tue, 17 Oct 2017 10:30:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 25/30] xfs: scrub directory freespace
-Message-ID: <20171016231413.GM15067@dastard>
+Subject: Re: [PATCH 28/30] xfs: scrub directory parent pointers
+Message-ID: <20171016233017.GN15067@dastard>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777260602.1724.16339769636569418352.stgit@magnolia>
- <20171016044921.GB3666@dastard>
- <20171016223708.GR4703@magnolia>
+ <150777262776.1724.11135251107601015017.stgit@magnolia>
+ <20171016050928.GE3666@dastard>
+ <20171016214601.GN4703@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016223708.GR4703@magnolia>
+In-Reply-To: <20171016214601.GN4703@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 03:37:08PM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 16, 2017 at 03:49:21PM +1100, Dave Chinner wrote:
-> > On Wed, Oct 11, 2017 at 06:43:26PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 16, 2017 at 02:46:01PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 16, 2017 at 04:09:28PM +1100, Dave Chinner wrote:
+> > On Wed, Oct 11, 2017 at 06:43:47PM -0700, Darrick J. Wong wrote:
 > > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > > Check the free space information in a directory.
+> > > Scrub parent pointers, sort of.  For directories, we can ride the
+> > > '..' entry up to the parent to confirm that there's at most one
+> > > dentry that points back to this directory.
 > > 
 > > ....
 > > 
-> > > +/* Check free space info in a directory leaf1 block. */
+> > > +/* Count the number of dentries in the parent dir that point to this inode. */
 > > > +STATIC int
-> > > +xfs_scrub_directory_leaf1_bestfree(
+> > > +xfs_scrub_parent_count_parent_dentries(
 > > > +	struct xfs_scrub_context	*sc,
-> > > +	struct xfs_da_args		*args,
-> > > +	xfs_dablk_t			lblk)
+> > > +	struct xfs_inode		*parent,
+> > > +	xfs_nlink_t			*nlink)
 > > > +{
-> > > +	struct xfs_dir2_leaf_tail	*ltp;
-> > > +	struct xfs_buf			*dbp;
-> > > +	struct xfs_buf			*bp;
-> > > +	struct xfs_mount		*mp = sc->mp;
-> > > +	__be16				*bestp;
-> > > +	__u16				best;
-> > > +	int				i;
+> > > +	struct xfs_scrub_parent_ctx	spc = {
+> > > +		.dc.actor = xfs_scrub_parent_actor,
+> > > +		.dc.pos = 0,
+> > > +		.ino = sc->ip->i_ino,
+> > > +		.nlink = 0,
+> > > +	};
+> > > +	struct xfs_ifork		*ifp;
+> > > +	size_t				bufsize;
+> > > +	loff_t				oldpos;
+> > > +	uint				lock_mode;
 > > > +	int				error;
 > > > +
 > > > +	/*
-> > > +	 * Read the free space block.  The verifier will check for hash
-> > > +	 * value ordering problems and check the stale entry count.
+> > > +	 * Load the parent directory's extent map.  A regular directory
+> > > +	 * open would start readahead (and thus load the extent map)
+> > > +	 * before we even got to a readdir call, but this isn't
+> > > +	 * guaranteed here.
 > > > +	 */
-> > > +	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
-> > > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
-> > > +		goto out;
-> > > +
-> > > +	/* Check all the entries. */
-> > > +	ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, bp->b_addr);
-> > > +	bestp = xfs_dir2_leaf_bests_p(ltp);
-> > > +	for (i = 0; i < be32_to_cpu(ltp->bestcount); i++, bestp++) {
-> > > +		best = be16_to_cpu(*bestp);
-> > > +		if (best == NULLDATAOFF)
-> > > +			continue;
-> > 
-> > Count stale entries, check if matches hdr->stale ?
-> 
-> This should already be done by xfs_dir3_leaf_read ->
-> xfs_dir3_leaf1_read_verify -> __read_verify -> xfs_dir3_leaf_verify ->
-> xfs_dir3_leaf_check_int, right?
-
-True. However, it's simple to do and we're already iterating over
-all the structures necessary and detecting the case necessary to
-check it, so it doesn't hurt and might catch in-core corruptions
-before they hit the write verifier?
-
-And it makes it do the same checks as the free_bestfree checks
-below....
-
-> > > +		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
-> > > +				&error))
-> > > +			continue;
-> > > +		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
-> > > +		xfs_trans_brelse(sc->tp, dbp);
+> > > +	lock_mode = xfs_ilock_data_map_shared(parent);
+> > > +	ifp = XFS_IFORK_PTR(parent, XFS_DATA_FORK);
+> > > +	if (XFS_IFORK_FORMAT(parent, XFS_DATA_FORK) == XFS_DINODE_FMT_BTREE &&
+> > > +	    !(ifp->if_flags & XFS_IFEXTENTS)) {
+> > > +		error = xfs_iread_extents(sc->tp, parent, XFS_DATA_FORK);
+> > > +		if (error) {
+> > > +			xfs_iunlock(parent, lock_mode);
+> > > +			return error;
+> > > +		}
 > > > +	}
-> > > +out:
-> > > +	return error;
-> > > +}
-> > > +
-> > > +/* Check free space info in a directory freespace block. */
-> > > +STATIC int
-> > > +xfs_scrub_directory_free_bestfree(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	struct xfs_da_args		*args,
-> > > +	xfs_dablk_t			lblk)
-> > > +{
-> > > +	struct xfs_dir3_icfree_hdr	freehdr;
-> > > +	struct xfs_buf			*dbp;
-> > > +	struct xfs_buf			*bp;
-> > > +	__be16				*bestp;
-> > > +	__be16				best;
-> > > +	int				i;
-> > > +	int				error;
-> > > +
-> > > +	/* Read the free space block */
-> > > +	error = xfs_dir2_free_read(sc->tp, sc->ip, lblk, &bp);
-> > > +	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
-> > > +		goto out;
-> > > +
-> > > +	/* Check all the entries. */
-> > > +	sc->ip->d_ops->free_hdr_from_disk(&freehdr, bp->b_addr);
-> > > +	bestp = sc->ip->d_ops->free_bests_p(bp->b_addr);
-> > > +	for (i = 0; i < freehdr.nvalid; i++, bestp++) {
-> > > +		best = be16_to_cpu(*bestp);
-> > > +		if (best == NULLDATAOFF)
-> > > +			continue;
+> > > +	xfs_iunlock(parent, lock_mode);
 > > 
-> > Count stale entries, check freehdr.nvalid + stale = freehdr.nused?
+> > Why not just do what xfs_dir_open() does? i.e.
+> > 
+> >         /*
+> >          * If there are any blocks, read-ahead block 0 as we're almost
+> >          * certain to have the next operation be a read there.
+> >          */
+> >         mode = xfs_ilock_data_map_shared(ip);
+> >         if (ip->i_d.di_nextents > 0)
+> >                 error = xfs_dir3_data_readahead(ip, 0, -1);
+> >         xfs_iunlock(ip, mode);
 > 
-> Aha, yes, that needs to be checked.
+> Ok.
 > 
-> Also that for loop needs to be terminated on i < freehdr.nused.
+> > > +	/*
+> > > +	 * Iterate the parent dir to confirm that there is
+> > > +	 * exactly one entry pointing back to the inode being
+> > > +	 * scanned.
+> > > +	 */
+> > > +	bufsize = (size_t)min_t(loff_t, 32768, parent->i_d.di_size);
+> > 
+> > Perhaps we need a define for that 32k magic number now it's being
+> > used in multiple places?
+> 
+> Magic indeed; glibc uses the minimum of (4 * BUFSIZ) or (sizeof(struct
+> dirent)); musl uses a static 2k buffer; dietlibc uses (PAGE_SIZE -
+> sizeof(structure header))...
+> 
+> ...what would we call it?
+> 
+> /*
+>  * The Linux API doesn't pass down the total size of the buffer we read
+>  * into down to the filesystem.  With the filldir concept it's not
+>  * needed for correct information, but the XFS dir2 leaf code wants an
+>  * estimate of the buffer size to calculate its readahead window and
+>  * size the buffers used for mapping to physical blocks.
+>  *
+>  * Try to give it an estimate that's good enough, maybe at some point we
+>  * can change the ->readdir prototype to include the buffer size.  For
+>  * now we use the current glibc buffer size.
+>  */
+> #define XFS_DEFAULT_READDIR_BUFSIZE	(32768)
 
-Good catch - I missed that, too :P
+That looks fine, though I think XFS_READDIR_BUFSIZE (or purple!) is
+sufficient.
+
+> (As a side question, do we want to bump this up to a full pagesize on
+> architectures that have 64k pages?  I'd probably just leave it, but
+> let's see if anyone running those architectures complains or sends in a
+> patch?)
+
+If it was to be dynamic, it should be determined by the directory
+block size, not the arch page size.
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
