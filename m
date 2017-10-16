@@ -1,113 +1,268 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27028 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755727AbdJPTqa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:46:30 -0400
-Date: Mon, 16 Oct 2017 12:46:25 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:27787 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753214AbdJPTsH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 15:48:07 -0400
+Date: Mon, 16 Oct 2017 12:48:03 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/30] xfs: create block pointer check functions
-Message-ID: <20171016194625.GF4703@magnolia>
+Subject: [PATCH v2 04/30] xfs: refactor btree block header checking functions
+Message-ID: <20171016194803.GG4703@magnolia>
 References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777245581.1724.14031376814151145502.stgit@magnolia>
- <20171012052852.GQ15067@dastard>
- <20171012054856.GR15067@dastard>
+ <150777246790.1724.5365622613986439998.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171012054856.GR15067@dastard>
+In-Reply-To: <150777246790.1724.5365622613986439998.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>
 
-On Thu, Oct 12, 2017 at 04:48:56PM +1100, Dave Chinner wrote:
-> On Thu, Oct 12, 2017 at 04:28:52PM +1100, Dave Chinner wrote:
-> > On Wed, Oct 11, 2017 at 06:40:55PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Create some helper functions to check that a block pointer points
-> > > within the filesystem (or AG) and doesn't point at static metadata.
-> > > We will use this for scrub.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Look fine
-> 
-> now that I think about it and seen a bit more code....
-> 
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > > ---
-> > >  fs/xfs/libxfs/xfs_alloc.c    |   49 ++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/libxfs/xfs_alloc.h    |    4 +++
-> > >  fs/xfs/libxfs/xfs_rtbitmap.c |   12 ++++++++++
-> > >  fs/xfs/xfs_rtalloc.h         |    2 ++
-> > >  4 files changed, 67 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > index 744dcae..bd3a943 100644
-> > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > @@ -2923,3 +2923,52 @@ xfs_alloc_query_all(
-> > >  	query.fn = fn;
-> > >  	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
-> > >  }
-> > > +
-> > > +/* Find the size of the AG, in blocks. */
-> > > +xfs_agblock_t
-> > > +xfs_ag_block_count(
-> > > +	struct xfs_mount	*mp,
-> > > +	xfs_agnumber_t		agno)
-> > > +{
-> > > +	ASSERT(agno < mp->m_sb.sb_agcount);
-> > > +
-> > > +	if (agno < mp->m_sb.sb_agcount - 1)
-> > > +		return mp->m_sb.sb_agblocks;
-> > > +	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
-> > > +}
-> > > +
-> > > +/*
-> > > + * Verify that an AG block number pointer neither points outside the AG
-> > > + * nor points at static metadata.
-> > > + */
-> > > +bool
-> > > +xfs_verify_agbno_ptr(
-> 
-> You can probably drop the "_ptr" prefix from these because I don't
-> think we every try to check/validate the agbno/fsbno of the static
-> metadata....
-> 
-> Some of the code just reads a bit weird with the "_ptr" suffix
-> in it...
+Refactor the btree block header checks to have an internal function that
+returns the address of the failing check without logging errors.  The
+scrubber will call the internal function, while the external version
+will maintain the current logging behavior.
 
-I wrangled with the name for a while too -- a generic block number could
-refer to any part of the AG, whereas a block number in a metadata
-structure is a pointer and should never point to static metadata, hence
-the _ptr suffix.  On the other hand, some of the block pointers can be
-NULL{FS,AG}BLOCK and others can't, and we don't check that here so it's
-not quite a pointer check either.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix raw use of asm volatile in __this_address and lengthen comments
+---
+ fs/xfs/libxfs/xfs_btree.c |  166 +++++++++++++++++++++++++++------------------
+ fs/xfs/libxfs/xfs_btree.h |    8 ++
+ fs/xfs/xfs_linux.h        |    7 ++
+ 3 files changed, 113 insertions(+), 68 deletions(-)
 
-Meh.
-
-xfs_verify_agbno() it is.  Anyone reading the comments will figure out
-why xfs_verify_agbno(mp, agno, XFS_AGFL_BLOCK(mp)) == false.
-
-> Still consider it reviewed....
-
-Ok.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index ae19f24..67a5b0f 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -63,44 +63,61 @@ xfs_btree_magic(
+ 	return magic;
+ }
+ 
+-STATIC int				/* error (0 or EFSCORRUPTED) */
+-xfs_btree_check_lblock(
+-	struct xfs_btree_cur	*cur,	/* btree cursor */
+-	struct xfs_btree_block	*block,	/* btree long form block pointer */
+-	int			level,	/* level of the btree block */
+-	struct xfs_buf		*bp)	/* buffer for block, if any */
++/*
++ * Check a long btree block header.  Return the address of the failing check,
++ * or NULL if everything is ok.
++ */
++void *
++__xfs_btree_check_lblock(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	int			level,
++	struct xfs_buf		*bp)
+ {
+-	int			lblock_ok = 1; /* block passes checks */
+-	struct xfs_mount	*mp;	/* file system mount point */
++	struct xfs_mount	*mp = cur->bc_mp;
+ 	xfs_btnum_t		btnum = cur->bc_btnum;
+-	int			crc;
+-
+-	mp = cur->bc_mp;
+-	crc = xfs_sb_version_hascrc(&mp->m_sb);
++	int			crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 
+ 	if (crc) {
+-		lblock_ok = lblock_ok &&
+-			uuid_equal(&block->bb_u.l.bb_uuid,
+-				   &mp->m_sb.sb_meta_uuid) &&
+-			block->bb_u.l.bb_blkno == cpu_to_be64(
+-				bp ? bp->b_bn : XFS_BUF_DADDR_NULL);
++		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
++			return __this_address;
++		if (block->bb_u.l.bb_blkno !=
++		    cpu_to_be64(bp ? bp->b_bn : XFS_BUF_DADDR_NULL))
++			return __this_address;
+ 	}
+ 
+-	lblock_ok = lblock_ok &&
+-		be32_to_cpu(block->bb_magic) == xfs_btree_magic(crc, btnum) &&
+-		be16_to_cpu(block->bb_level) == level &&
+-		be16_to_cpu(block->bb_numrecs) <=
+-			cur->bc_ops->get_maxrecs(cur, level) &&
+-		block->bb_u.l.bb_leftsib &&
+-		(block->bb_u.l.bb_leftsib == cpu_to_be64(NULLFSBLOCK) ||
+-		 XFS_FSB_SANITY_CHECK(mp,
+-			be64_to_cpu(block->bb_u.l.bb_leftsib))) &&
+-		block->bb_u.l.bb_rightsib &&
+-		(block->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK) ||
+-		 XFS_FSB_SANITY_CHECK(mp,
+-			be64_to_cpu(block->bb_u.l.bb_rightsib)));
+-
+-	if (unlikely(XFS_TEST_ERROR(!lblock_ok, mp,
++	if (be32_to_cpu(block->bb_magic) != xfs_btree_magic(crc, btnum))
++		return __this_address;
++	if (be16_to_cpu(block->bb_level) != level)
++		return __this_address;
++	if (be16_to_cpu(block->bb_numrecs) >
++	    cur->bc_ops->get_maxrecs(cur, level))
++		return __this_address;
++	if (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
++	    !xfs_btree_check_lptr(cur, be64_to_cpu(block->bb_u.l.bb_leftsib),
++			level + 1))
++		return __this_address;
++	if (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
++	    !xfs_btree_check_lptr(cur, be64_to_cpu(block->bb_u.l.bb_rightsib),
++			level + 1))
++		return __this_address;
++
++	return NULL;
++}
++
++/* Check a long btree block header. */
++int
++xfs_btree_check_lblock(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	int			level,
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = cur->bc_mp;
++	void			*failed_at;
++
++	failed_at = __xfs_btree_check_lblock(cur, block, level, bp);
++	if (unlikely(XFS_TEST_ERROR(failed_at != NULL, mp,
+ 			XFS_ERRTAG_BTREE_CHECK_LBLOCK))) {
+ 		if (bp)
+ 			trace_xfs_btree_corrupt(bp, _RET_IP_);
+@@ -110,48 +127,61 @@ xfs_btree_check_lblock(
+ 	return 0;
+ }
+ 
+-STATIC int				/* error (0 or EFSCORRUPTED) */
+-xfs_btree_check_sblock(
+-	struct xfs_btree_cur	*cur,	/* btree cursor */
+-	struct xfs_btree_block	*block,	/* btree short form block pointer */
+-	int			level,	/* level of the btree block */
+-	struct xfs_buf		*bp)	/* buffer containing block */
++/*
++ * Check a short btree block header.  Return the address of the failing check,
++ * or NULL if everything is ok.
++ */
++void *
++__xfs_btree_check_sblock(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	int			level,
++	struct xfs_buf		*bp)
+ {
+-	struct xfs_mount	*mp;	/* file system mount point */
+-	struct xfs_buf		*agbp;	/* buffer for ag. freespace struct */
+-	struct xfs_agf		*agf;	/* ag. freespace structure */
+-	xfs_agblock_t		agflen;	/* native ag. freespace length */
+-	int			sblock_ok = 1; /* block passes checks */
++	struct xfs_mount	*mp = cur->bc_mp;
+ 	xfs_btnum_t		btnum = cur->bc_btnum;
+-	int			crc;
+-
+-	mp = cur->bc_mp;
+-	crc = xfs_sb_version_hascrc(&mp->m_sb);
+-	agbp = cur->bc_private.a.agbp;
+-	agf = XFS_BUF_TO_AGF(agbp);
+-	agflen = be32_to_cpu(agf->agf_length);
++	int			crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 
+ 	if (crc) {
+-		sblock_ok = sblock_ok &&
+-			uuid_equal(&block->bb_u.s.bb_uuid,
+-				   &mp->m_sb.sb_meta_uuid) &&
+-			block->bb_u.s.bb_blkno == cpu_to_be64(
+-				bp ? bp->b_bn : XFS_BUF_DADDR_NULL);
++		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
++			return __this_address;
++		if (block->bb_u.s.bb_blkno !=
++		    cpu_to_be64(bp ? bp->b_bn : XFS_BUF_DADDR_NULL))
++			return __this_address;
+ 	}
+ 
+-	sblock_ok = sblock_ok &&
+-		be32_to_cpu(block->bb_magic) == xfs_btree_magic(crc, btnum) &&
+-		be16_to_cpu(block->bb_level) == level &&
+-		be16_to_cpu(block->bb_numrecs) <=
+-			cur->bc_ops->get_maxrecs(cur, level) &&
+-		(block->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) ||
+-		 be32_to_cpu(block->bb_u.s.bb_leftsib) < agflen) &&
+-		block->bb_u.s.bb_leftsib &&
+-		(block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK) ||
+-		 be32_to_cpu(block->bb_u.s.bb_rightsib) < agflen) &&
+-		block->bb_u.s.bb_rightsib;
+-
+-	if (unlikely(XFS_TEST_ERROR(!sblock_ok, mp,
++	if (be32_to_cpu(block->bb_magic) != xfs_btree_magic(crc, btnum))
++		return __this_address;
++	if (be16_to_cpu(block->bb_level) != level)
++		return __this_address;
++	if (be16_to_cpu(block->bb_numrecs) >
++	    cur->bc_ops->get_maxrecs(cur, level))
++		return __this_address;
++	if (block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) &&
++	    !xfs_btree_check_sptr(cur, be32_to_cpu(block->bb_u.s.bb_leftsib),
++			level + 1))
++		return __this_address;
++	if (block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK) &&
++	    !xfs_btree_check_sptr(cur, be32_to_cpu(block->bb_u.s.bb_rightsib),
++			level + 1))
++		return __this_address;
++
++	return NULL;
++}
++
++/* Check a short btree block header. */
++STATIC int
++xfs_btree_check_sblock(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	int			level,
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = cur->bc_mp;
++	void			*failed_at;
++
++	failed_at = __xfs_btree_check_sblock(cur, block, level, bp);
++	if (unlikely(XFS_TEST_ERROR(failed_at != NULL, mp,
+ 			XFS_ERRTAG_BTREE_CHECK_SBLOCK))) {
+ 		if (bp)
+ 			trace_xfs_btree_corrupt(bp, _RET_IP_);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 8f52eda..43694e4 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -255,6 +255,14 @@ typedef struct xfs_btree_cur
+  */
+ #define	XFS_BUF_TO_BLOCK(bp)	((struct xfs_btree_block *)((bp)->b_addr))
+ 
++/*
++ * Internal long and short btree block checks.  They return NULL if the
++ * block is ok or the address of the failed check otherwise.
++ */
++void *__xfs_btree_check_lblock(struct xfs_btree_cur *cur,
++		struct xfs_btree_block *block, int level, struct xfs_buf *bp);
++void *__xfs_btree_check_sblock(struct xfs_btree_cur *cur,
++		struct xfs_btree_block *block, int level, struct xfs_buf *bp);
+ 
+ /*
+  * Check that block header is ok.
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index dcd1292..00a5efe 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -142,6 +142,13 @@ typedef __u32			xfs_nlink_t;
+ #define SYNCHRONIZE()	barrier()
+ #define __return_address __builtin_return_address(0)
+ 
++/*
++ * Return the address of a label.  Use barrier() so that the optimizer
++ * won't reorder code to refactor the error jumpouts into a single
++ * return, which throws off the reported address.
++ */
++#define __this_address	({ __label__ __here; __here: barrier(); &&__here; })
++
+ #define XFS_PROJID_DEFAULT	0
+ 
+ #define MIN(a,b)	(min(a,b))
