@@ -1,99 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45286 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754203AbdJIW2y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:28:54 -0400
-Date: Tue, 10 Oct 2017 09:28:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20171009222851.GR3666@dastard>
-References: <CABXGCsMorRzy-dJrjTO6sP80BSb0RAeMhF3QGwSkk50m7VYzOA@mail.gmail.com>
- <CABXGCsOeex62Y4qQJwvMJ+fJ+MnKyKGDj9eRbKemeMVWo5huKw@mail.gmail.com>
- <20171009000529.GY3666@dastard>
- <20171009183129.GE11645@wotan.suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:33287 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753167AbdJPX6m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2017 19:58:42 -0400
+Date: Mon, 16 Oct 2017 16:58:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 28/30] xfs: scrub directory parent pointers
+Message-ID: <20171016235838.GU4703@magnolia>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777262776.1724.11135251107601015017.stgit@magnolia>
+ <20171016050928.GE3666@dastard>
+ <20171016214601.GN4703@magnolia>
+ <20171016233017.GN15067@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171009183129.GE11645@wotan.suse.de>
+In-Reply-To: <20171016233017.GN15067@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Aleksa Sarai <asarai@suse.com>, Hannes Reinecke <hare@suse.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Jan Blunck <jblunck@infradead.org>, Oscar Salvador <osalvador@suse.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 08:31:29PM +0200, Luis R. Rodriguez wrote:
-> On Mon, Oct 09, 2017 at 11:05:29AM +1100, Dave Chinner wrote:
-> > On Sat, Oct 07, 2017 at 01:10:58PM +0500, Михаил Гаврилов wrote:
-> > > But seems now got another issue:
+On Tue, Oct 17, 2017 at 10:30:17AM +1100, Dave Chinner wrote:
+> On Mon, Oct 16, 2017 at 02:46:01PM -0700, Darrick J. Wong wrote:
+> > On Mon, Oct 16, 2017 at 04:09:28PM +1100, Dave Chinner wrote:
+> > > On Wed, Oct 11, 2017 at 06:43:47PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Scrub parent pointers, sort of.  For directories, we can ride the
+> > > > '..' entry up to the parent to confirm that there's at most one
+> > > > dentry that points back to this directory.
 > > > 
-> > > [ 1966.953781] INFO: task tracker-store:8578 blocked for more than 120 seconds.
-> > > [ 1966.953797]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
-> > > [ 1966.953800] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > > disables this message.
-> > > [ 1966.953804] tracker-store   D12840  8578   1655 0x00000000
-> > > [ 1966.953811] Call Trace:
-> > > [ 1966.953823]  __schedule+0x2dc/0xbb0
-> > > [ 1966.953830]  ? wait_on_page_bit_common+0xfb/0x1a0
-> > > [ 1966.953838]  schedule+0x3d/0x90
-> > > [ 1966.953843]  io_schedule+0x16/0x40
-> > > [ 1966.953847]  wait_on_page_bit_common+0x10a/0x1a0
-> > > [ 1966.953857]  ? page_cache_tree_insert+0x170/0x170
-> > > [ 1966.953865]  __filemap_fdatawait_range+0x101/0x1a0
-> > > [ 1966.953883]  file_write_and_wait_range+0x63/0xc0
-> > 
-> > Ok, that's in wait_on_page_writeback(page)
-> > ......
-> > 
-> > > And yet another
+> > > ....
 > > > 
-> > > [41288.797026] INFO: task tracker-store:4535 blocked for more than 120 seconds.
-> > > [41288.797034]       Not tainted 4.13.4-301.fc27.x86_64+debug #1
-> > > [41288.797037] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > > disables this message.
-> > > [41288.797041] tracker-store   D10616  4535   1655 0x00000000
-> > > [41288.797049] Call Trace:
-> > > [41288.797061]  __schedule+0x2dc/0xbb0
-> > > [41288.797072]  ? bit_wait+0x60/0x60
-> > > [41288.797076]  schedule+0x3d/0x90
-> > > [41288.797082]  io_schedule+0x16/0x40
-> > > [41288.797086]  bit_wait_io+0x11/0x60
-> > > [41288.797091]  __wait_on_bit+0x31/0x90
-> > > [41288.797099]  out_of_line_wait_on_bit+0x94/0xb0
-> > > [41288.797106]  ? bit_waitqueue+0x40/0x40
-> > > [41288.797113]  __block_write_begin_int+0x265/0x550
-> > > [41288.797132]  iomap_write_begin.constprop.14+0x7d/0x130
+> > > > +/* Count the number of dentries in the parent dir that point to this inode. */
+> > > > +STATIC int
+> > > > +xfs_scrub_parent_count_parent_dentries(
+> > > > +	struct xfs_scrub_context	*sc,
+> > > > +	struct xfs_inode		*parent,
+> > > > +	xfs_nlink_t			*nlink)
+> > > > +{
+> > > > +	struct xfs_scrub_parent_ctx	spc = {
+> > > > +		.dc.actor = xfs_scrub_parent_actor,
+> > > > +		.dc.pos = 0,
+> > > > +		.ino = sc->ip->i_ino,
+> > > > +		.nlink = 0,
+> > > > +	};
+> > > > +	struct xfs_ifork		*ifp;
+> > > > +	size_t				bufsize;
+> > > > +	loff_t				oldpos;
+> > > > +	uint				lock_mode;
+> > > > +	int				error;
+> > > > +
+> > > > +	/*
+> > > > +	 * Load the parent directory's extent map.  A regular directory
+> > > > +	 * open would start readahead (and thus load the extent map)
+> > > > +	 * before we even got to a readdir call, but this isn't
+> > > > +	 * guaranteed here.
+> > > > +	 */
+> > > > +	lock_mode = xfs_ilock_data_map_shared(parent);
+> > > > +	ifp = XFS_IFORK_PTR(parent, XFS_DATA_FORK);
+> > > > +	if (XFS_IFORK_FORMAT(parent, XFS_DATA_FORK) == XFS_DINODE_FMT_BTREE &&
+> > > > +	    !(ifp->if_flags & XFS_IFEXTENTS)) {
+> > > > +		error = xfs_iread_extents(sc->tp, parent, XFS_DATA_FORK);
+> > > > +		if (error) {
+> > > > +			xfs_iunlock(parent, lock_mode);
+> > > > +			return error;
+> > > > +		}
+> > > > +	}
+> > > > +	xfs_iunlock(parent, lock_mode);
+> > > 
+> > > Why not just do what xfs_dir_open() does? i.e.
+> > > 
+> > >         /*
+> > >          * If there are any blocks, read-ahead block 0 as we're almost
+> > >          * certain to have the next operation be a read there.
+> > >          */
+> > >         mode = xfs_ilock_data_map_shared(ip);
+> > >         if (ip->i_d.di_nextents > 0)
+> > >                 error = xfs_dir3_data_readahead(ip, 0, -1);
+> > >         xfs_iunlock(ip, mode);
 > > 
-> > And that's in wait_on_buffer().
+> > Ok.
 > > 
-> > In both cases we are waiting on a bit lock for IO completion. In the
-> > first case it is on page, the second it's on sub-page read IO
-> > completion during a write.
+> > > > +	/*
+> > > > +	 * Iterate the parent dir to confirm that there is
+> > > > +	 * exactly one entry pointing back to the inode being
+> > > > +	 * scanned.
+> > > > +	 */
+> > > > +	bufsize = (size_t)min_t(loff_t, 32768, parent->i_d.di_size);
+> > > 
+> > > Perhaps we need a define for that 32k magic number now it's being
+> > > used in multiple places?
 > > 
-> > Triggeringa hung task timeouts like this doesn't usually indicate a
-> > filesystem problem.
+> > Magic indeed; glibc uses the minimum of (4 * BUFSIZ) or (sizeof(struct
+> > dirent)); musl uses a static 2k buffer; dietlibc uses (PAGE_SIZE -
+> > sizeof(structure header))...
+> > 
+> > ...what would we call it?
+> > 
+> > /*
+> >  * The Linux API doesn't pass down the total size of the buffer we read
+> >  * into down to the filesystem.  With the filldir concept it's not
+> >  * needed for correct information, but the XFS dir2 leaf code wants an
+> >  * estimate of the buffer size to calculate its readahead window and
+> >  * size the buffers used for mapping to physical blocks.
+> >  *
+> >  * Try to give it an estimate that's good enough, maybe at some point we
+> >  * can change the ->readdir prototype to include the buffer size.  For
+> >  * now we use the current glibc buffer size.
+> >  */
+> > #define XFS_DEFAULT_READDIR_BUFSIZE	(32768)
 > 
-> <-- snip -->
+> That looks fine, though I think XFS_READDIR_BUFSIZE (or purple!) is
+> sufficient.
+
+I like the shorter name, done.
+
+> > (As a side question, do we want to bump this up to a full pagesize on
+> > architectures that have 64k pages?  I'd probably just leave it, but
+> > let's see if anyone running those architectures complains or sends in a
+> > patch?)
 > 
-> > None of these things usually filesystem problems, and the trainsmash
-> > of blocked tasks on filesystem locks is typical for these types of
-> > "blocked indefinitely with locks held" type of situations. It does
-> > tend to indicate taht there is quite a bit of load on the
-> > filesystem, though...
+> If it was to be dynamic, it should be determined by the directory
+> block size, not the arch page size.
+
+<nod>
+
+--D
+
+> Cheers,
 > 
-> As Jan Kara noted we've seen this also on customers SLE12-SP2 kernel (4.4
-> based). Although we also were never able to root cause, since that bug
-> is now closed on our end I figured it would be worth mentioning two
-> theories we discussed, one more recent than the other.
-
-Sure, but stuff going on with docker mounts and namespaces has
-nothing to do with IO path locking and completions. There's
-something in the filesystem or the storage stack below going
-wrong here, not above it in the vfsmount layer....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
