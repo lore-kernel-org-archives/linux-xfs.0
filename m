@@ -1,39 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58428 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932526AbdJQGqt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Oct 2017 02:46:49 -0400
-Date: Tue, 17 Oct 2017 08:46:47 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Message-ID: <20171017064647.GA15437@lst.de>
-References: <20171012142319.GA11254@lst.de> <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com> <20171013065716.GB26461@lst.de> <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com> <20171013163822.GA17411@obsidianresearch.com> <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com> <20171013173145.GA18702@obsidianresearch.com> <20171016072644.GB28270@lst.de> <CAPcyv4itbYQqVrHBZ=+BRLH39WwDZ_RGg6sSaodVZ93LRYigNA@mail.gmail.com> <CAPcyv4gtnZu7obG7UwaBq1-fwRZj06HCa=mjBfDKKgfp97nYaw@mail.gmail.com>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:55921 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753349AbdJQIib (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Oct 2017 04:38:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gtnZu7obG7UwaBq1-fwRZj06HCa=mjBfDKKgfp97nYaw@mail.gmail.com>
+In-Reply-To: <59e01fb1.9b88df0a.6e93f.3781@mx.google.com>
+References: <59e01fb1.9b88df0a.6e93f.3781@mx.google.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 17 Oct 2017 10:38:30 +0200
+Message-ID: <CAK8P3a1OcUGEDqA0MQk+037jMXQnZgYgMtYvKeJTXgNsy+4Bzw@mail.gmail.com>
+Subject: Re: mainline/master build: 212 builds: 0 failed, 212 passed, 48
+ warnings (v4.14-rc4-126-g3d7882769b5d)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: "kernelci.org bot" <bot@kernelci.org>
+Cc: Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 12:44:31PM -0700, Dan Williams wrote:
-> > While I agree with the need for a per-MR notification mechanism, one
-> > thing we lose by walking away from MAP_DIRECT is a way for a
-> > hypervisor to coordinate pass through of a DAX mapping to an RDMA
-> > device in a guest. That will remain a case where we will still need to
-> > use device-dax. I'm fine if that's the answer, but just want to be
-> > clear about all the places we need to protect a DAX mapping against
-> > RDMA from a non-ODP device.
-> 
-> For this specific issue perhaps we promote FL_LAYOUT as a lease-type
-> that can be set by fcntl().
+On Fri, Oct 13, 2017 at 4:06 AM, kernelci.org bot <bot@kernelci.org> wrote:
+>
+> mainline/master build: 212 builds: 0 failed, 212 passed, 48 warnings (v4.14-rc4-126-g3d7882769b5d)
+> Full Build Summary: https://kernelci.org/build/mainline/branch/master/kernel/v4.14-rc4-126-g3d7882769b5d/
+> Tree: mainline
+> Branch: master
+> Git Describe: v4.14-rc4-126-g3d7882769b5d
+> Git Commit: 3d7882769b5dc929690f96e0c318c29b97f51018
+> Git URL: http://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+> Built: 4 unique architectures
+>
+> Warnings Detected:
+>
+> arm64: gcc version 5.3.1 20160412 (Linaro GCC 5.3-2016.05)
+> defconfig+kselftest 2 warnings
+> arm: gcc version 5.3.1 20160412 (Linaro GCC 5.3-2016.05)
+> davinci_all_defconfig 2 warnings
+> multi_v7_defconfig+kselftest 2 warnings
+> pxa_defconfig 2 warnings
+> mips: gcc version 6.3.0 (GCC)
+> db1xxx_defconfig 2 warnings
+> defconfig+CONFIG_LKDTM=y 2 warnings
+> defconfig+kselftest 2 warnings
+> ip22_defconfig 2 warnings
+> ip27_defconfig 2 warnings
+> jazz_defconfig 2 warnings
+> lemote2f_defconfig 2 warnings
+> malta_defconfig 2 warnings
+> malta_kvm_defconfig 2 warnings
+> malta_kvm_guest_defconfig 2 warnings
+> malta_qemu_32r6_defconfig 2 warnings
+> maltaaprp_defconfig 2 warnings
+> maltasmvp_defconfig 2 warnings
+> maltasmvp_eva_defconfig 2 warnings
+> maltaup_defconfig 2 warnings
+> maltaup_xpa_defconfig 2 warnings
+> markeins_defconfig 2 warnings
+> rm200_defconfig 2 warnings
+> tb0287_defconfig 2 warnings
+> x86: gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
+> defconfig+kselftest 2 warnings
+> Warnings summary:
+> 24 fs/xfs/xfs_fsmap.c:480:1: warning: '__xfs_getfsmap_rtdev' defined but not used [-Wunused-function]
+> 24 fs/xfs/xfs_fsmap.c:372:1: warning: 'xfs_getfsmap_rtdev_rtbitmap_helper' defined but not used [-Wunused-function]
 
-I don't think it is a good userspace interface, mostly because it
-is about things that don't matter for userspace (block mappings).
+I found the problem independently while testing linux-next. My patch
+has been Acked already and I assume it will soon make it into mainline.
 
-It makes sense as a kernel interface for callers that want to pin
-down a memory long-term, but for userspace the fact that the block
-mapping changes doesn't matter - it matters that their long term
-pin is broken by something.
+      Arnd
