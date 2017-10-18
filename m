@@ -1,41 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34754 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755632AbdJRHbG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 03:31:06 -0400
-Date: Wed, 18 Oct 2017 00:31:04 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: agcount for 2TB, 4TB and 8TB drives
-Message-ID: <20171018073104.GA6274@infradead.org>
-References: <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
- <20171009112306.GM3666@dastard>
- <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
- <20171009220332.GP3666@dastard>
- <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
- <20171010225524.GV3666@dastard>
- <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
- <20171014224224.GD15067@dastard>
- <db0ca95f-ce16-4b2e-7d69-52f3552a6004@scylladb.com>
- <20171015220018.GG3666@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171015220018.GG3666@dastard>
+Received: from LGEAMRELO12.lge.com ([156.147.23.52]:39917 "EHLO
+        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936571AbdJRJjP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 05:39:15 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [RESEND PATCH 2/3] lockdep: Remove unnecessary acquisitions wrt workqueue flush
+Date: Wed, 18 Oct 2017 18:38:51 +0900
+Message-Id: <1508319532-24655-3-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Avi Kivity <avi@scylladb.com>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
+To: peterz@infradead.org, mingo@kernel.org
+Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-On Mon, Oct 16, 2017 at 09:00:19AM +1100, Dave Chinner wrote:
-> fallocate will block *all* IO and mmap faults on that file, not just
-> the ones that require allocation. fallocate creates a complete IO
-> submission pipeline stall, punting all new IO submissions to the
-> background worker where they will block until fallocate completes.
+The workqueue added manual acquisitions to catch deadlock cases.
+Now crossrelease was introduced, some of those are redundant, since
+wait_for_completion() already includes the acquisition for itself.
+Removed it.
 
-Not sure if it helps Avis case, but I think we could relax the
-fallocate exclusive i_rwsem requirement a bit, similar to direct I/O
-writes.  Basically as long as your fallocate is block aligned we
-should be fine with a shared iolock for the "normal" allocating
-fallocate (discounting things like hole punches and extent shifts
-of course).
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+---
+ include/linux/workqueue.h |  4 ++--
+ kernel/workqueue.c        | 20 ++++----------------
+ 2 files changed, 6 insertions(+), 18 deletions(-)
+
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index db6dc9d..1bef13e 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -218,7 +218,7 @@ static inline void destroy_delayed_work_on_stack(struct delayed_work *work) { }
+ 									\
+ 		__init_work((_work), _onstack);				\
+ 		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
+-		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0); \
++		lockdep_init_map(&(_work)->lockdep_map, "(complete)"#_work, &__key, 0); \
+ 		INIT_LIST_HEAD(&(_work)->entry);			\
+ 		(_work)->func = (_func);				\
+ 	} while (0)
+@@ -398,7 +398,7 @@ enum {
+ 	static struct lock_class_key __key;				\
+ 	const char *__lock_name;					\
+ 									\
+-	__lock_name = #fmt#args;					\
++	__lock_name = "(complete)"#fmt#args;				\
+ 									\
+ 	__alloc_workqueue_key((fmt), (flags), (max_active),		\
+ 			      &__key, __lock_name, ##args);		\
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index ab3c0dc..72f68b1 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2497,15 +2497,8 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ 	INIT_WORK_ONSTACK(&barr->work, wq_barrier_func);
+ 	__set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(&barr->work));
+ 
+-	/*
+-	 * Explicitly init the crosslock for wq_barrier::done, make its lock
+-	 * key a subkey of the corresponding work. As a result we won't
+-	 * build a dependency between wq_barrier::done and unrelated work.
+-	 */
+-	lockdep_init_map_crosslock((struct lockdep_map *)&barr->done.map,
+-				   "(complete)wq_barr::done",
+-				   target->lockdep_map.key, 1);
+-	__init_completion(&barr->done);
++	init_completion_with_map(&barr->done, &target->lockdep_map);
++
+ 	barr->task = current;
+ 
+ 	/*
+@@ -2611,16 +2604,14 @@ void flush_workqueue(struct workqueue_struct *wq)
+ 	struct wq_flusher this_flusher = {
+ 		.list = LIST_HEAD_INIT(this_flusher.list),
+ 		.flush_color = -1,
+-		.done = COMPLETION_INITIALIZER_ONSTACK(this_flusher.done),
+ 	};
+ 	int next_color;
+ 
++	init_completion_with_map(&this_flusher.done, &wq->lockdep_map);
++
+ 	if (WARN_ON(!wq_online))
+ 		return;
+ 
+-	lock_map_acquire(&wq->lockdep_map);
+-	lock_map_release(&wq->lockdep_map);
+-
+ 	mutex_lock(&wq->mutex);
+ 
+ 	/*
+@@ -2883,9 +2874,6 @@ bool flush_work(struct work_struct *work)
+ 	if (WARN_ON(!wq_online))
+ 		return false;
+ 
+-	lock_map_acquire(&work->lockdep_map);
+-	lock_map_release(&work->lockdep_map);
+-
+ 	if (start_flush_work(work, &barr)) {
+ 		wait_for_completion(&barr.done);
+ 		destroy_work_on_stack(&barr.work);
+-- 
+1.9.1
+
