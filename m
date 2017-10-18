@@ -1,130 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3124 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750722AbdJNWZg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 18:25:36 -0400
-Date: Sun, 15 Oct 2017 09:25:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: make xfs_writepage_map extent map centric
-Message-ID: <20171014222532.GB15067@dastard>
-References: <20171011081131.8029-1-david@fromorbit.com>
- <20171012161433.GA40005@bfoster.bfoster>
- <20171012232221.GV15067@dastard>
- <20171013131347.GB44461@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:41606 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932333AbdJRMF2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Oct 2017 08:05:28 -0400
+Date: Wed, 18 Oct 2017 08:05:26 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [Bug Report]: generic/085 trigger a XFS panic on kernel 4.14-rc2
+Message-ID: <20171018120526.GA4362@bfoster.bfoster>
+References: <20170930032857.GQ21475@dhcp12-143.nay.redhat.com>
+ <20171002135618.GA32279@bfoster.bfoster>
+ <20171013132935.GE21475@dhcp12-143.nay.redhat.com>
+ <20171013181605.GA46787@bfoster.bfoster>
+ <20171013195334.GB46787@bfoster.bfoster>
+ <20171014223447.GC15067@dastard>
+ <20171016100904.GA58994@bfoster.bfoster>
+ <20171016191147.GC4703@magnolia>
+ <20171016222604.GJ15067@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171013131347.GB44461@bfoster.bfoster>
+In-Reply-To: <20171016222604.GJ15067@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 09:13:48AM -0400, Brian Foster wrote:
-> On Fri, Oct 13, 2017 at 10:22:21AM +1100, Dave Chinner wrote:
-> > On Thu, Oct 12, 2017 at 12:14:37PM -0400, Brian Foster wrote:
-> > > On Wed, Oct 11, 2017 at 07:11:31PM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > xfs_writepage_map() iterates over the bufferheads on a page to decide
-> > > > what sort of IO to do and what actions to take. However, when it comes
-> > > > to reflink and deciding when it needs to execute a COW operation, we no
-> > > > longer look at the bufferhead state but instead we ignore than and look up
-> > > > internal state held in teh COW fork extent list.
-> > 
-> > [....]
-> > 
-> > > > +
-> > > > +		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
-> > > > +			/*
-> > > > +			 * set_page_dirty dirties all buffers in a page, independent
-> > > > +			 * of their state.  The dirty state however is entirely
-> > > > +			 * meaningless for holes (!mapped && uptodate), so check we did
-> > > > +			 * have a buffer covering a hole here and continue.
-> > > > +			 */
-> > > > +			ASSERT(!buffer_mapped(bh));
-> > > > +			continue;
-> > > >  		}
-> > > 
-> > > IIRC, the old (broken) write over hole situation would allocate a block,
-> > > potentially yell about a block reservation overrun and ultimately write
-> > > the page.
-> > 
-> > Which was [always] the wrong thing to do.
-> > 
-> > However, we were forced to do this historically because it covered
-> > bugs and deficiencies in the front end mapping code, such as before
-> > we had ->page_mkwrite notification. In those ancient times, mmap()
-> > could not do delayed allocation or discover unwritten extents
-> > correctly.  So back in those days we had to do unreserved
-> > allocations in writeback and risk transaction overruns and ENOSPC in
-> > writeback because mmap writes were unable to do the right thing.
-> > 
-> > Nowdays, we've closed off all those issues and the only situation we
-> > can get unreserved allocation into a hole is when we've got a
-> > mismatch between bufferhead and extent state. This should never
-> > happen anymore, and silently allocating blocks for ranges that may
-> > or may not have valid data in them and writing it to disk is
-> > exactly the wrong thing to be doing now.
-> > 
+On Tue, Oct 17, 2017 at 09:26:04AM +1100, Dave Chinner wrote:
+...
 > 
-> "This should never happen ..."
+> For the cases I came across. I haven't solved the root problem in
+> mkfs yet, so this could still occur. FYI, there was some interesting
+> and unexpected interactions with log stripe units that triggered it,
+> and I note the above filesystem has a log stripe unit set. So it's
+> likely I haven't solved all the issues yet.
 > 
-> Famous last words? ;) 
+
+Ok.
+
+> The problem most likely is based in confusion around these
+> definitions for log size (in xfs_fs.h):
 > 
-> Yeah, I understand it's a broken case, but I'm slightly concerned over
-> the fact that it has happened in the past due to filesystem bugs. I
-> think due to more than one problem as well, but my memory is hazy.
+> /*
+>  * Minimum and maximum sizes need for growth checks.
+>  *
+>  * Block counts are in units of filesystem blocks, not basic blocks.
+>  */
+> #define XFS_MIN_AG_BLOCKS       64
+> #define XFS_MIN_LOG_BLOCKS      512ULL
+> #define XFS_MAX_LOG_BLOCKS      (1024 * 1024ULL)
+> #define XFS_MIN_LOG_BYTES       (10 * 1024 * 1024ULL)
 > 
-> Note that I'm not suggesting we go ahead and write the page like we used
-> to do, but rather that we at least have a defensive check for a
-> discrepancy between pagecache state that suggests a buffer is dirty and
-> extent state says there is no place to write.
-
-This code does not checking against "buffer_dirty" because we've
-never done that in the writeback path - we've always written clean,
-uptodate, mapped sub-page buffers if the page is dirty.
-
-So the only case left to defend against here is mapped buffers over
-a hole or an invalid extent. The writeback path currently checks
-that doesn't happen with an ASSERT(), and the code above retains
-that ASSERT(). It will go away completely when we move away from
-bufferheads....
-
-> If so, throw a warning
-> (either xfs_alert() or WARN_ON()) to indicate something went wrong
-> because we tossed a dirty page without writing it anywhere. In other
-> words, all I'm really saying here is that I don't think an assert is
-> good enough.
-
-It's the same as what we've always had to defend against this "we
-fucked up the higher layer mapping" type of bug. I'm not creating
-any new situation here, so I don't think it warrants a new warning
-that will simply go away with bufferheads...
-
-> > > Unless I've missed that
-> > > being handled somewhere, that seems like a slightly more severe error
-> > > from the user perspective. Perhaps we should have a noiser warning here
-> > > or even consider that a writeback error?
-> > 
-> > No, because it's a valid state to have cached data over a hole if
-> > it's been read. Hence the assert to ensure what we got was from a
-> > previous read into a hole - if a mod we make to the higher level
-> > code screws up, we'll catch it pretty quickly during testing...
+> The log size limits need to be rationalised and moved to
+> xfs_log_format.h, and mkfs needs to be made to enforce them
+> consistently regardless of block size.
 > 
-> We should be able to distinguish between page/buffer state that
-> indicates we have valid data over a hole vs. valid+dirty data over a
-> hole in order to flag the latter as a problem.
+> > > I have a couple patches laying around that fix up the
+> > > calculation and add some error checks to prevent the kernel crash, but
+> > > this has me wondering whether we should fail to mount the fs due to the
+> > > geometry. Thoughts?
+> 
+> Unfortunately, I don't think that's an option - there will be
+> filesysetms out there that the geometry checks fail and refuse to
+> mount with a new kernel, despite it working without problems for
+> years....
+> 
 
-Except that, as above, we treat clean/dirty data exactly the same in
-writepage - we write it if it's mapped over a valid extent. The code
-catches the only case left that is invalid and it doesn't matter if
-the buffer is clean or dirty - in both cases it is invalid....
+That's kind of what I was afraid of. :P
 
-Cheers,
+> > Failing the mount sounds ok to me, but do we have any other options to
+> > deal with undersized logs?  Is there a scenario where we /could/ mount
+> > an undersized log and not blow up, either immediately or later on?
+> 
+> In this case, I think the problem is the 2MB window we consider to
+> be the worst case "partially written" window at the head of the log.
+> i.e.  8x256k log buffers.  We assume that this is always the worst
+> case, because the previous mount could have been using that.
+> 
+> This assumption has always been used for simplicity. i.e. worst case
+> is assumed in place of detecting the previous mount's log buffer
+> size from the log records written to the log. If we read the log and
+> determine the maximum record size, we know exactly what the worst
+> case dirty region is going to be.
+> 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+So from doing a quick, high-level rundown of the log recovery
+algorithm...
+
+- We read the blocks at the start and end of the physical log to
+  determine the current cycle. We then essentially bisect the log to try
+  and locate the last block in the current cycle (or more specifically,
+  the first block in the previous cycle that has not yet been
+  overwritten). IOW, this is where the prospective log head appears to
+  be based on an initial cycle value bisection/estimation.
+- From there, we scan backwards XLOG_TOTAL_REC_SHIFT() blocks (which is
+  the 2MB window referenced above) looking for earlier instances of the
+  "previous" cycle. I.e., this is essentially a finer tuned cycle-based
+  search for the appropriate head, using the maximum possible partial or
+  out of order write window based on the max iclog count/size. (This is
+  where we explode.)
+- Next, we potentially fine tune the head again based on the last valid
+  log record header in the log. This uses XLOG_REC_SHIFT(), which is the
+  max size of a single record (256k) and so I don't think should post a
+  risk.
+
+It isn't until this step that we actually have a reference to
+potentially valid log record content.
+
+- We return the head block and xlog_find_tail() seeks backwards for the
+  last valid log record header, using it to look up the tail block.
+- We check for an unmount record to determine whether the log is clean.
+- If not, we move on to the higher level head/tail validation that has
+  been added more recently (torn write detection, tail overwrite
+  detection).
+  
+At this point, it looks like scanning associated with the higher-level
+verification is mostly based on max iclog count (i.e., scan windows are
+based on a certain number of record headers within the head/tail) rather
+than a fixed size window such as the 2MB window used during the cycle
+search.
+
+> I think the kernel side defense needs to be some combination of these
+> three things:
+> 
+> 	1. check what the log record sizes we see during the tail
+> 	search and trim the "dirty head" window to suit.
+> 
+
+The reason I wrote up the above is because I'm not quite following what
+you mean here. The first few steps noted above that use the 2MB window
+don't actually have log record data to reference, because this is the
+early part of the process of locating a valid record.
+
+Am I missing something or just misreading..? Could you elaborate on
+where in the above sequence we could tighten up a fixed 2MB window..?
+
+> 	2. If the dirty window is larger than the log, then trim
+> 	it to search the entire log rather than overrun into
+> 	negative block offsets like we do now.
+> 
+
+Otherwise, this is basically the fix I have so far and I think it covers
+the immediate underflow problem.
+
+> 	3. in the case of tiny logs, we shouldn't even be allowing
+> 	users to mount with logbsize * logbufs > log size / 2.  Then
+> 	we can size the initial dirty window appropiately based on
+> 	the log size....
+> 
+
+Ok, I'll look into this. Should this be a generic restriction or only
+associated with logs under a particular size threshold? For example, I
+can currently create a small, 512b blocksize fs with a 4800 block
+(~2.3MB) log and mount it with '-o logbufs=8,logbsize=256k' without a
+problem.
+
+Either way, what is the (log size / 2) metric based on? Thanks.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
