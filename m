@@ -1,194 +1,231 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45979 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751681AbdJSG7x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 02:59:53 -0400
-Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e54o4-00048B-RF
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 06:59:53 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/15] xfs: add a xfs_bmap_fork_to_state helper
-Date: Thu, 19 Oct 2017 08:59:28 +0200
-Message-Id: <20171019065942.18813-2-hch@lst.de>
-In-Reply-To: <20171019065942.18813-1-hch@lst.de>
-References: <20171019065942.18813-1-hch@lst.de>
+Received: from LGEAMRELO11.lge.com ([156.147.23.51]:40854 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967288AbdJRJjS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 05:39:18 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [RESEND PATCH 3/3] lockdep: Assign a lock_class per gendisk used for wait_for_completion()
+Date: Wed, 18 Oct 2017 18:38:52 +0900
+Message-Id: <1508319532-24655-4-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: peterz@infradead.org, mingo@kernel.org
+Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-This creates the right initial bmap state from the passed in inode
-fork enum.
+Darrick and Dave Chinner posted the following warning:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ======================================================
+> WARNING: possible circular locking dependency detected
+> 4.14.0-rc1-fixes #1 Tainted: G        W
+> ------------------------------------------------------
+> loop0/31693 is trying to acquire lock:
+>  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
+>
+> but now in release context of a crosslock acquired at the following:
+>  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
+>
+> which lock already depends on the new lock.
+>
+> the existing dependency chain (in reverse order) is:
+>
+> -> #2 ((complete)&ret.event){+.+.}:
+>        lock_acquire+0xab/0x200
+>        wait_for_completion_io+0x4e/0x1a0
+>        submit_bio_wait+0x7f/0xb0
+>        blkdev_issue_zeroout+0x71/0xa0
+>        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
+>        xfs_bmapi_write+0x374/0x11f0 [xfs]
+>        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
+>        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
+>        iomap_apply+0x43/0xe0
+>        dax_iomap_rw+0x89/0xf0
+>        xfs_file_dax_write+0xcc/0x220 [xfs]
+>        xfs_file_write_iter+0xf0/0x130 [xfs]
+>        __vfs_write+0xd9/0x150
+>        vfs_write+0xc8/0x1c0
+>        SyS_write+0x45/0xa0
+>        entry_SYSCALL_64_fastpath+0x1f/0xbe
+>
+> -> #1 (&xfs_nondir_ilock_class){++++}:
+>        lock_acquire+0xab/0x200
+>        down_write_nested+0x4a/0xb0
+>        xfs_ilock+0x263/0x330 [xfs]
+>        xfs_setattr_size+0x152/0x370 [xfs]
+>        xfs_vn_setattr+0x6b/0x90 [xfs]
+>        notify_change+0x27d/0x3f0
+>        do_truncate+0x5b/0x90
+>        path_openat+0x237/0xa90
+>        do_filp_open+0x8a/0xf0
+>        do_sys_open+0x11c/0x1f0
+>        entry_SYSCALL_64_fastpath+0x1f/0xbe
+>
+> -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
+>        up_write+0x1c/0x40
+>        xfs_iunlock+0x1d0/0x310 [xfs]
+>        xfs_file_fallocate+0x8a/0x310 [xfs]
+>        loop_queue_work+0xb7/0x8d0
+>        kthread_worker_fn+0xb9/0x1f0
+>
+> Chain exists of:
+>   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
+>
+>  Possible unsafe locking scenario by crosslock:
+>
+>        CPU0                    CPU1
+>        ----                    ----
+>   lock(&xfs_nondir_ilock_class);
+>   lock((complete)&ret.event);
+>                                lock(&(&ip->i_mmaplock)->mr_lock);
+>                                unlock((complete)&ret.event);
+>
+>                *** DEADLOCK ***
+
+The warning is a false positive, caused by the fact that all
+wait_for_completion()s in submit_bio_wait() are waiting with the same
+lock class.
+
+However, some bios have nothing to do with others, for example, the case
+might happen while using loop devices, between bios of an upper device
+and a lower device(=loop device).
+
+The safest way to assign different lock classes to different devices is
+to do it for each gendisk. In other words, this patch assigns a
+lockdep_map per gendisk and uses it when initializing completion in
+submit_bio_wait().
+
+Of course, it might be too conservative. But, making it safest for now
+and extended by block layer experts later is good, atm.
+
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 45 +++++++++------------------------------------
- fs/xfs/libxfs/xfs_bmap.h | 12 ++++++++++++
- 2 files changed, 21 insertions(+), 36 deletions(-)
+ block/bio.c           |  4 ++--
+ block/genhd.c         | 13 +++++--------
+ include/linux/genhd.h | 26 ++++++++++++++++++++++----
+ 3 files changed, 29 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6c2ae3011964..676fc8aed67f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -499,12 +499,7 @@ xfs_bmap_trace_exlist(
+diff --git a/block/bio.c b/block/bio.c
+index 9a63597..0d4d6c0 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -941,7 +941,7 @@ int submit_bio_wait(struct bio *bio)
  {
- 	xfs_extnum_t	idx;		/* extent record index */
- 	xfs_ifork_t	*ifp;		/* inode fork pointer */
--	int		state = 0;
--
--	if (whichfork == XFS_ATTR_FORK)
--		state |= BMAP_ATTRFORK;
--	else if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
-+	int		state = xfs_bmap_fork_to_state(whichfork);
+ 	struct submit_bio_ret ret;
  
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(cnt == xfs_iext_count(ifp));
-@@ -925,8 +920,7 @@ xfs_bmap_local_to_extents(
- 	rec.br_state = XFS_EXT_NORM;
- 	xfs_iext_insert(ip, 0, 1, &rec, 0);
+-	init_completion(&ret.event);
++	init_completion_with_map(&ret.event, &bio->bi_disk->lockdep_map);
+ 	bio->bi_private = &ret;
+ 	bio->bi_end_io = submit_bio_wait_endio;
+ 	bio->bi_opf |= REQ_SYNC;
+@@ -1382,7 +1382,7 @@ struct bio *bio_map_user_iov(struct request_queue *q,
  
--	trace_xfs_bmap_post_update(ip, 0,
--			whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
-+	trace_xfs_bmap_post_update(ip, 0, xfs_bmap_fork_to_state(whichfork),
- 			_THIS_IP_);
- 	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
- 	ip->i_d.di_nblocks = 1;
-@@ -1571,7 +1565,7 @@ xfs_bmap_add_extent_delay_real(
- 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
--	int			state = 0;/* state bits, accessed thru macros */
-+	int			state = xfs_bmap_fork_to_state(whichfork);
- 	xfs_filblks_t		da_new; /* new count del alloc blocks used */
- 	xfs_filblks_t		da_old; /* old count del alloc blocks used */
- 	xfs_filblks_t		temp=0;	/* value for da_new calculations */
-@@ -1598,9 +1592,6 @@ xfs_bmap_add_extent_delay_real(
- #define	RIGHT		r[1]
- #define	PREV		r[2]
- 
--	if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
--
- 	/*
- 	 * Set up a bunch of variables to make the tests simpler.
- 	 */
-@@ -2108,7 +2099,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
--	int			state = 0;/* state bits, accessed thru macros */
-+	int			state = xfs_bmap_fork_to_state(whichfork);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_bmbt_irec	old;
- 
-@@ -2116,8 +2107,6 @@ xfs_bmap_add_extent_unwritten_real(
- 
- 	cur = *curp;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
--	if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
- 
- 	ASSERT(*idx >= 0);
- 	ASSERT(*idx <= xfs_iext_count(ifp));
-@@ -2601,13 +2590,10 @@ xfs_bmap_add_extent_hole_delay(
- 	xfs_filblks_t		newlen=0;	/* new indirect size */
- 	xfs_filblks_t		oldlen=0;	/* old indirect size */
- 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
--	int			state;  /* state bits, accessed thru macros */
-+	int			state = xfs_bmap_fork_to_state(whichfork);
- 	xfs_filblks_t		temp;	 /* temp for indirect calculations */
- 
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
--	state = 0;
--	if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
- 	ASSERT(isnullstartblock(new->br_startblock));
- 
- 	/*
-@@ -2760,7 +2746,7 @@ xfs_bmap_add_extent_hole_real(
- 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
- 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
- 	int			rval=0;	/* return value (logging flags) */
--	int			state;	/* state bits, accessed thru macros */
-+	int			state = xfs_bmap_fork_to_state(whichfork);
- 	struct xfs_bmbt_irec	old;
- 
- 	ASSERT(*idx >= 0);
-@@ -2770,12 +2756,6 @@ xfs_bmap_add_extent_hole_real(
- 
- 	XFS_STATS_INC(mp, xs_add_exlist);
- 
--	state = 0;
--	if (whichfork == XFS_ATTR_FORK)
--		state |= BMAP_ATTRFORK;
--	if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
--
- 	/*
- 	 * Check and set flags if this segment has a left neighbor.
- 	 */
-@@ -4737,7 +4717,8 @@ xfs_bmap_del_extent_delay(
- 	int64_t			da_old, da_new, da_diff = 0;
- 	xfs_fileoff_t		del_endoff, got_endoff;
- 	xfs_filblks_t		got_indlen, new_indlen, stolen;
--	int			error = 0, state = 0;
-+	int			state = xfs_bmap_fork_to_state(whichfork);
-+	int			error = 0;
- 	bool			isrt;
- 
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -4773,9 +4754,6 @@ xfs_bmap_del_extent_delay(
- 		return error;
- 	ip->i_delayed_blks -= del->br_blockcount;
- 
--	if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
--
- 	if (got->br_startoff == del->br_startoff)
- 		state |= BMAP_LEFT_FILLING;
- 	if (got_endoff == del_endoff)
-@@ -4969,17 +4947,12 @@ xfs_bmap_del_extent_real(
- 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
- 	/* REFERENCED */
- 	uint			qfield;	/* quota field to update */
--	int			state = 0;
-+	int			state = xfs_bmap_fork_to_state(whichfork);
- 	struct xfs_bmbt_irec	old;
- 
- 	mp = ip->i_mount;
- 	XFS_STATS_INC(mp, xs_del_exlist);
- 
--	if (whichfork == XFS_ATTR_FORK)
--		state |= BMAP_ATTRFORK;
--	else if (whichfork == XFS_COW_FORK)
--		state |= BMAP_COWFORK;
--
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
- 	ASSERT(del->br_blockcount > 0);
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 851982a5dfbc..a61c5480b6ad 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -277,4 +277,16 @@ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
- int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
- 		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
- 
-+static inline int xfs_bmap_fork_to_state(int whichfork)
-+{
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		return BMAP_ATTRFORK;
-+	case XFS_COW_FORK:
-+		return BMAP_COWFORK;
-+	default:
-+		return 0;
-+	}
-+}
+ 			if (len <= 0)
+ 				break;
+-			
 +
- #endif	/* __XFS_BMAP_H__ */
+ 			if (bytes > len)
+ 				bytes = len;
+ 
+diff --git a/block/genhd.c b/block/genhd.c
+index 7f520fa..676c245 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1304,13 +1304,7 @@ dev_t blk_lookup_devt(const char *name, int partno)
+ }
+ EXPORT_SYMBOL(blk_lookup_devt);
+ 
+-struct gendisk *alloc_disk(int minors)
+-{
+-	return alloc_disk_node(minors, NUMA_NO_NODE);
+-}
+-EXPORT_SYMBOL(alloc_disk);
+-
+-struct gendisk *alloc_disk_node(int minors, int node_id)
++struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name)
+ {
+ 	struct gendisk *disk;
+ 
+@@ -1350,9 +1344,12 @@ struct gendisk *alloc_disk_node(int minors, int node_id)
+ 		disk_to_dev(disk)->type = &disk_type;
+ 		device_initialize(disk_to_dev(disk));
+ 	}
++
++	lockdep_init_map(&disk->lockdep_map, lock_name, key, 0);
++
+ 	return disk;
+ }
+-EXPORT_SYMBOL(alloc_disk_node);
++EXPORT_SYMBOL(__alloc_disk_node);
+ 
+ struct kobject *get_disk(struct gendisk *disk)
+ {
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index e619fae..5225efc 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -3,7 +3,7 @@
+ 
+ /*
+  * 	genhd.h Copyright (C) 1992 Drew Eckhardt
+- *	Generic hard disk header file by  
++ *	Generic hard disk header file by
+  * 		Drew Eckhardt
+  *
+  *		<drew@colorado.edu>
+@@ -206,6 +206,9 @@ struct gendisk {
+ #endif	/* CONFIG_BLK_DEV_INTEGRITY */
+ 	int node_id;
+ 	struct badblocks *bb;
++#ifdef CONFIG_LOCKDEP_COMPLETIONS
++	struct lockdep_map lockdep_map;
++#endif
+ };
+ 
+ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+@@ -483,7 +486,7 @@ struct bsd_disklabel {
+ 	__s16	d_type;			/* drive type */
+ 	__s16	d_subtype;		/* controller/d_type specific */
+ 	char	d_typename[16];		/* type name, e.g. "eagle" */
+-	char	d_packname[16];			/* pack identifier */ 
++	char	d_packname[16];			/* pack identifier */
+ 	__u32	d_secsize;		/* # of bytes per sector */
+ 	__u32	d_nsectors;		/* # of data sectors per track */
+ 	__u32	d_ntracks;		/* # of tracks per cylinder */
+@@ -602,8 +605,7 @@ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
+ extern void delete_partition(struct gendisk *, int);
+ extern void printk_all_partitions(void);
+ 
+-extern struct gendisk *alloc_disk_node(int minors, int node_id);
+-extern struct gendisk *alloc_disk(int minors);
++extern struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name);
+ extern struct kobject *get_disk(struct gendisk *disk);
+ extern void put_disk(struct gendisk *disk);
+ extern void blk_register_region(dev_t devt, unsigned long range,
+@@ -627,6 +629,22 @@ extern ssize_t part_fail_store(struct device *dev,
+ 			       const char *buf, size_t count);
+ #endif /* CONFIG_FAIL_MAKE_REQUEST */
+ 
++#ifdef CONFIG_LOCKDEP_COMPLETIONS
++#define alloc_disk_node(m, id) \
++({									\
++	static struct lock_class_key __key;				\
++	const char *__lock_name;					\
++									\
++	__lock_name = "(complete)"#m"("#id")";				\
++									\
++	__alloc_disk_node(m, id, &__key, __lock_name);			\
++})
++#else
++#define alloc_disk_node(m, id)	__alloc_disk_node(m, id, NULL, NULL)
++#endif
++
++#define alloc_disk(m)		alloc_disk_node(m, NUMA_NO_NODE)
++
+ static inline int hd_ref_init(struct hd_struct *part)
+ {
+ 	if (percpu_ref_init(&part->ref, __delete_partition, 0,
 -- 
-2.14.1
+1.9.1
 
