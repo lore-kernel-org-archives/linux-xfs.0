@@ -1,106 +1,266 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29960 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751108AbdJRXAP (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:28254 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751264AbdJRXAP (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 19:00:15 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 08/17] xfs: add parent pointer support to attribute code
-Date: Wed, 18 Oct 2017 15:55:24 -0700
-Message-Id: <1508367333-3237-9-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 13/17] xfs: add parent attributes to link
+Date: Wed, 18 Oct 2017 15:55:29 -0700
+Message-Id: <1508367333-3237-14-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
 References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-From: Mark Tinguely <tinguely@sgi.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+[bfoster: rebase, use VFS inode fields, fix xfs_bmap_finish() usage]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+	   fixed null pointer bugs]
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      |  2 +-
- fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
- fs/xfs/xfs_attr.h             |  2 ++
- 3 files changed, 11 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c   | 20 +++++++++++++-
+ fs/xfs/libxfs/xfs_parent.c | 43 ++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr.h          | 10 +++++++
+ fs/xfs/xfs_inode.c         | 66 ++++++++++++++++++++++++++++++++++++----------
+ 4 files changed, 124 insertions(+), 15 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index b94f0cd..8f8bfff9 100644
+index 8aad242..e7692ef 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -397,7 +397,7 @@ xfs_attr_set(
- 	struct xfs_da_args	args;
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		firstblock;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	bool			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
- 	int			error, local;
+@@ -35,6 +35,7 @@
+ #include "xfs_bmap_util.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_attr.h"
++#include "xfs_attr_sf.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_attr_remote.h"
+ #include "xfs_error.h"
+@@ -266,6 +267,23 @@ xfs_attr_set_first_parent(
+ 	return error;
+ }
  
- 	XFS_STATS_INC(mp, xs_attr_set);
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 3771edc..5f94c84 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -758,24 +758,28 @@ struct xfs_attr3_icleaf_hdr {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
- 
++int
++xfs_attr_set_parent(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct xfs_parent_name_rec *rec,
++	int			reclen,
++	const char		*value,
++	int			valuelen,
++	struct xfs_defer_ops	*dfops,
++	xfs_fsblock_t		*firstblock)
++{
++	int                     flags = ATTR_PARENT;
++
++	return xfs_attr_set_deferred(ip, dfops, (char *)rec, reclen,
++				    (char *)value, valuelen, flags);
++}
++
  /*
-  * Conversion macros for converting namespace bits from argument flags
-  * to ondisk flags.
-  */
--#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
- #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
- #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
- #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
--					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-+					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-+					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
- #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
--					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-+					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-+					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
+  * set the attribute specified in @args. In the case of the parent attribute
+  * being set, we do not want to roll the transaction on shortform-to-leaf
+@@ -512,8 +530,8 @@ xfs_attr_set(
+ 	 */
+ 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
+ 	error = xfs_trans_commit(args.trans);
+-	xfs_iunlock(dp, XFS_ILOCK_EXCL);
  
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 	return error;
+ 
+ out_defer_cancel:
+diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+index 88f7edc..0707336 100644
+--- a/fs/xfs/libxfs/xfs_parent.c
++++ b/fs/xfs/libxfs/xfs_parent.c
+@@ -96,3 +96,46 @@ xfs_parent_create(
+ 
+ 	return xfs_parent_create_nrec(tp, child, &nrec, dfops, firstblock);
+ }
++
++static int
++xfs_parent_add_nrec(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*child,
++	struct xfs_parent_name_irec *nrec,
++	struct xfs_defer_ops	*dfops,
++	xfs_fsblock_t		*firstblock)
++{
++	struct xfs_parent_name_rec rec;
++
++	rec.p_ino = cpu_to_be64(nrec->p_ino);
++	rec.p_gen = cpu_to_be32(nrec->p_gen);
++	rec.p_diroffset = cpu_to_be32(nrec->p_diroffset);
++
++	return xfs_attr_set_parent(tp, child, &rec, sizeof(rec),
++				   nrec->p_name, nrec->p_namelen,
++				   dfops, firstblock);
++}
++
++/*
++ * Add a parent record to an inode with existing parent records.
++ */
++int
++xfs_parent_add(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*parent,
++	struct xfs_inode	*child,
++	struct xfs_name		*child_name,
++	uint32_t		diroffset,
++	struct xfs_defer_ops	*dfops,
++	xfs_fsblock_t		*firstblock)
++{
++	struct xfs_parent_name_irec nrec;
++
++	nrec.p_ino = parent->i_ino;
++	nrec.p_gen = VFS_I(parent)->i_generation;
++	nrec.p_diroffset = diroffset;
++	nrec.p_name = child_name->name;
++	nrec.p_namelen = child_name->len;
++
++	return xfs_parent_add_nrec(tp, child, &nrec, dfops, firstblock);
++}
 diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 532567e..7901c3b 100644
+index b48e31b..acb6157 100644
 --- a/fs/xfs/xfs_attr.h
 +++ b/fs/xfs/xfs_attr.h
-@@ -46,6 +46,7 @@ struct xfs_attr_list_context;
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
+@@ -197,4 +197,14 @@ int xfs_attr_set_first_parent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 			      const char *value, int valuelen,
+ 			      struct xfs_defer_ops *dfops,
+ 			      xfs_fsblock_t *firstblock);
++
++int xfs_parent_add(struct xfs_trans *tp, struct xfs_inode *parent,
++		   struct xfs_inode *child, struct xfs_name *child_name,
++		   xfs_dir2_dataptr_t diroffset, struct xfs_defer_ops *dfops,
++		   xfs_fsblock_t *firstblock);
++int xfs_attr_set_parent(struct xfs_trans *tp, struct xfs_inode *ip,
++			struct xfs_parent_name_rec *rec, int reclen,
++			const char *value, int valuelen,
++			struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
++
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 4396561..51b623b 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1451,6 +1451,8 @@ xfs_link(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t           first_block;
+ 	int			resblks;
++	uint32_t		diroffset;
++	bool			first_parent = false;
  
- #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
- #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-@@ -57,6 +58,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_PARENT,		"PARENT" }, \
- 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
- 	{ ATTR_KERNOVAL,	"KERNOVAL" }
+ 	trace_xfs_link(tdp, target_name);
+ 
+@@ -1467,6 +1469,25 @@ xfs_link(
+ 	if (error)
+ 		goto std_return;
+ 
++	/*
++	 * If we have parent pointers and there is no attribute fork (i.e. we
++	 * are linking in a O_TMPFILE created inode) we need to add the
++	 * attribute fork to the inode. Because we may have an existing data
++	 * fork, we do this before we start the link transaction as adding an
++	 * attribute fork requires it's own transaction.
++	 */
++	if (xfs_sb_version_hasparent(&mp->m_sb) && !xfs_inode_hasattr(sip)) {
++		int sf_size = sizeof(struct xfs_attr_sf_hdr) +
++				XFS_ATTR_SF_ENTSIZE_BYNAME(
++					sizeof(struct xfs_parent_name_rec),
++					target_name->len);
++		ASSERT(VFS_I(sip)->i_nlink == 0);
++		error = xfs_bmap_add_attrfork(sip, sf_size, 0);
++		if (error)
++			goto std_return;
++		first_parent = true;
++	}
++
+ 	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_link, resblks, 0, 0, &tp);
+ 	if (error == -ENOSPC) {
+@@ -1498,8 +1519,6 @@ xfs_link(
+ 			goto error_return;
+ 	}
+ 
+-	xfs_defer_init(&dfops, &first_block);
+-
+ 	/*
+ 	 * Handle initial link state of O_TMPFILE inode
+ 	 */
+@@ -1509,36 +1528,55 @@ xfs_link(
+ 			goto error_return;
+ 	}
+ 
++	xfs_defer_init(&dfops, &first_block);
+ 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+-				   &first_block, &dfops, resblks, NULL);
++				   &first_block, &dfops, resblks, &diroffset);
+ 	if (error)
+-		goto error_return;
++		goto out_defer_cancel;
+ 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+ 
+ 	error = xfs_bumplink(tp, sip);
+ 	if (error)
+-		goto error_return;
++		goto out_defer_cancel;
+ 
+ 	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * link transaction goes to disk before returning to
+-	 * the user.
++	 * If we have parent pointers, we now need to add the parent record to
++	 * the attribute fork of the inode. If this is the initial parent
++	 * atribute, we need to create it correctly, otherwise we can just add
++	 * the parent to the inode.
++	 */
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		if (first_parent)
++			error = xfs_parent_create(tp, tdp, sip, target_name,
++						  diroffset, &dfops,
++						  &first_block);
++		else
++			error = xfs_parent_add(tp, tdp, sip, target_name,
++					       diroffset, &dfops,
++					       &first_block);
++		if (error)
++			goto out_defer_cancel;
++	}
++
++	/*
++	 * If this is a synchronous mount, make sure that the link transaction
++	 * goes to disk before returning to the user.
+ 	 */
+ 	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
+ 		xfs_trans_set_sync(tp);
+ 
+ 	error = xfs_defer_finish(&tp, &dfops);
+-	if (error) {
+-		xfs_defer_cancel(&dfops);
+-		goto error_return;
+-	}
++	if (error)
++		goto out_defer_cancel;
+ 
+ 	return xfs_trans_commit(tp);
+ 
+- error_return:
++out_defer_cancel:
++	xfs_defer_cancel(&dfops);
++error_return:
+ 	xfs_trans_cancel(tp);
+- std_return:
++std_return:
+ 	return error;
+ }
  
 -- 
 2.7.4
