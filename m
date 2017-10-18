@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38671 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdJRXhk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 19:37:40 -0400
-Subject: [PATCH 1/5] quota: clear speculative delalloc when checking quota
- usage
+Received: from userp1040.oracle.com ([156.151.31.81]:39952 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdJRXhr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 19:37:47 -0400
+Subject: [PATCH 2/5] common/xfs: refactor xfs_scrub presence testing
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 18 Oct 2017 16:37:36 -0700
-Message-ID: <150836985643.27213.927427950548904105.stgit@magnolia>
+Date: Wed, 18 Oct 2017 16:37:42 -0700
+Message-ID: <150836986275.27213.11426507059309321722.stgit@magnolia>
 In-Reply-To: <150836985024.27213.3715197937819365388.stgit@magnolia>
 References: <150836985024.27213.3715197937819365388.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,51 +20,150 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Occasionally speculative preallocation kicks in when writing files to a
-filesystem under test.  These preallocations consume quota and /usually/
-aren't around after we drop_caches, but there's nothing to guarantee
-that they actually have, so the quota reports will be different before
-and after the fs remount, causing sporadic test failures in
-generic/{23[123],270}.
+Move all the requirements checking for xfs_scrub into a helper function.
+Make sure the helper properly detects the presence of the scrub ioctl
+and situations where we can't run scrub (e.g. norecovery).
 
-We now have xfs_spaceman which can instruct XFS to forcibly remove the
-speculative preallocations.  This fixes the sporadic failures, at
-least for XFS.
+Refactor the existing three xfs_scrub call sites to use the helper to
+check if it's appropriate to run scrub.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config |    1 +
- common/quota  |    6 ++++++
- 2 files changed, 7 insertions(+)
+ common/rc         |    2 +-
+ common/xfs        |   40 +++++++++++++++++++++++++++++++++-------
+ tests/generic/453 |   11 +----------
+ tests/generic/454 |   11 +----------
+ 4 files changed, 36 insertions(+), 28 deletions(-)
 
 
-diff --git a/common/config b/common/config
-index 8844173..96503c6 100644
---- a/common/config
-+++ b/common/config
-@@ -149,6 +149,7 @@ export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
- export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
- export XFS_DB_PROG="`set_prog_path xfs_db`"
- export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
-+export XFS_SPACEMAN_PROG="`set_prog_path xfs_spaceman`"
- export XFS_SCRUB_PROG="`set_prog_path xfs_scrub`"
- export XFS_PARALLEL_REPAIR_PROG="`set_prog_path xfs_prepair`"
- export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
-diff --git a/common/quota b/common/quota
-index d027a8c..2611c48 100644
---- a/common/quota
-+++ b/common/quota
-@@ -267,6 +267,12 @@ _check_quota_usage()
- 		VFS_QUOTA=1
- 		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
+diff --git a/common/rc b/common/rc
+index 1a4d81e..83aaced 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2091,7 +2091,7 @@ _require_xfs_io_command()
+ 			_notrun "xfs_io $command support is missing"
  		;;
-+	xfs)
-+		# Clear out speculative preallocations to eliminate them
-+		# as a source of intermittent orig/checked differences.
-+		test -x "$XFS_SPACEMAN_PROG" && \
-+			"$XFS_SPACEMAN_PROG" -c 'prealloc -s' $SCRATCH_MNT
-+		;;
- 	*)
+ 	"scrub"|"repair")
+-		testio=`$XFS_IO_PROG -x -c "$command test 0" $TEST_DIR 2>&1`
++		testio=`$XFS_IO_PROG -x -c "$command probe 0" $TEST_DIR 2>&1`
+ 		echo $testio | grep -q "Inappropriate ioctl" && \
+ 			_notrun "xfs_io $command support is missing"
  		;;
- 	esac
+diff --git a/common/xfs b/common/xfs
+index dff8454..7d8f275 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -298,6 +298,29 @@ _require_xfs_db_command()
+ 		_notrun "xfs_db $command support is missing"
+ }
+ 
++# Does the filesystem mounted from a particular device support scrub?
++_supports_xfs_scrub()
++{
++	mountpoint="$1"
++	device="$2"
++
++	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
++		echo "Usage: _supports_xfs_scrub mountpoint device"
++		exit 1
++	fi
++
++	test "$FSTYP" = "xfs" || return 1
++	test -x "$XFS_SCRUB_PROG" || return 1
++
++	# Probe for kernel support...
++	$XFS_IO_PROG -x -c "scrub probe 0" "$mountpoint" 2>&1 | grep -q "Inappropriate ioctl" && return 1
++
++	# Scrub can't run on norecovery mounts
++	_fs_options "$device" | grep -q "norecovery" && return 1
++
++	return 0
++}
++
+ # run xfs_check and friends on a FS.
+ _check_xfs_filesystem()
+ {
+@@ -330,14 +353,17 @@ _check_xfs_filesystem()
+ 	type=`_fs_type $device`
+ 	ok=1
+ 
+-	if [ "$type" = "xfs" ]; then
+-		if [ -n "$TEST_XFS_SCRUB" ] && [ -x "$XFS_SCRUB_PROG" ]; then
+-			"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
+-			if [ $? -ne 0 ]; then
+-				_log_err "filesystem on $device failed scrub"
+-				ok=0
+-			fi
++	# Run online scrub if we can.
++	mntpt="$(_is_mounted $device)"
++	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
++		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
++		if [ $? -ne 0 ]; then
++			_log_err "filesystem on $device failed scrub"
++			ok=0
+ 		fi
++	fi
++
++	if [ "$type" = "xfs" ]; then
+ 		# mounted ...
+ 		mountpoint=`_umount_or_remount_ro $device`
+ 	fi
+diff --git a/tests/generic/453 b/tests/generic/453
+index ff29736..40fae91 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -136,10 +136,7 @@ echo "Test XFS online scrub, if applicable"
+ 
+ # Only run this on xfs if xfs_scrub is available and has the unicode checker
+ check_xfs_scrub() {
+-	# Ignore non-XFS fs or no scrub program...
+-	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+-		return 1
+-	fi
++	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+@@ -147,12 +144,6 @@ check_xfs_scrub() {
+ 		return 1
+ 	fi
+ 
+-	# Does the ioctl work?
+-	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+-	   grep -q "Inappropriate ioctl"; then
+-		return 1
+-	fi
+-
+ 	return 0
+ }
+ 
+diff --git a/tests/generic/454 b/tests/generic/454
+index 01279ee..462185a 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -132,10 +132,7 @@ echo "Test XFS online scrub, if applicable"
+ 
+ # Only run this on xfs if xfs_scrub is available and has the unicode checker
+ check_xfs_scrub() {
+-	# Ignore non-XFS fs or no scrub program...
+-	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+-		return 1
+-	fi
++	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+@@ -143,12 +140,6 @@ check_xfs_scrub() {
+ 		return 1
+ 	fi
+ 
+-	# Does the ioctl work?
+-	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+-	   grep -q "Inappropriate ioctl"; then
+-		return 1
+-	fi
+-
+ 	return 0
+ }
+ 
 
