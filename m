@@ -1,33 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:56759 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751048AbdJROaA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 10:30:00 -0400
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: Fix false positive by LOCKDEP_CROSSRELEASE
-Date: Wed, 18 Oct 2017 14:29:56 +0000
-Message-ID: <1508336995.2923.2.camel@wdc.com>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <BA1A9EAFF803F749BFC56F3492D9FC98@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Received: from bombadil.infradead.org ([65.50.211.133]:50410 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752107AbdJRG7m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 02:59:42 -0400
+Date: Tue, 17 Oct 2017 23:59:38 -0700
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 01/19] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Message-ID: <20171018065938.GA15310@infradead.org>
+References: <20171011200603.27442-1-jack@suse.cz>
+ <20171011200603.27442-2-jack@suse.cz>
+ <20171013071203.GA9105@infradead.org>
+ <1507996677.21357.1.camel@intel.com>
+ <20171016074504.GA7316@infradead.org>
+ <20171017115047.GD24136@quack2.suse.cz>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171017115047.GD24136@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "mingo@kernel.org" <mingo@kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "byungchul.park@lge.com" <byungchul.park@lge.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
+To: Jan Kara <jack@suse.cz>
+Cc: "hch@infradead.org" <hch@infradead.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "luto@kernel.org" <luto@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "arnd@arndb.de" <arnd@arndb.de>
 
-T24gV2VkLCAyMDE3LTEwLTE4IGF0IDE4OjM4ICswOTAwLCBCeXVuZ2NodWwgUGFyayB3cm90ZToN
-Cj4gU2V2ZXJhbCBmYWxzZSBwb3NpdGl2ZXMgd2VyZSByZXBvcnRlZCwgc28gSSB0cmllZCB0byBm
-aXggdGhlbS4NCj4gDQo+IEl0IHdvdWxkIGJlIGFwcHJlY2lhdGVkIGlmIHlvdSB0ZWxsIG1lIGlm
-IGl0IHdvcmtzIGFzIGV4cGVjdGVkLCBvciBsZXQNCj4gbWUga25vdyB5b3VyIG9waW5pb24uDQoN
-CldoYXQgSSBoYXZlIGJlZW4gd29uZGVyaW5nIGFib3V0IGlzIHdoZXRoZXIgdGhlIGNyb3NzbG9j
-ayBjaGVja2luZyBtYWtlcw0Kc2Vuc2UgZnJvbSBhIGNvbmNlcHR1YWwgcG9pbnQgb2Ygdmlldy4g
-SSB0cmllZCB0byBmaW5kIGRvY3VtZW50YXRpb24gZm9yIHRoZQ0KY3Jvc3Nsb2NrIGNoZWNraW5n
-IGluIERvY3VtZW50YXRpb24vbG9ja2luZy9sb2NrZGVwLWRlc2lnbi50eHQgYnV0DQpjb3VsZG4n
-dCBmaW5kIGEgZGVzY3JpcHRpb24gb2YgdGhlIGNyb3NzbG9jayBjaGVja2luZy4gU2hvdWxkbid0
-IGl0IGJlDQpkb2N1bWVudGVkIHNvbWV3aGVyZSB3aGF0IHRoZSBjcm9zc2xvY2sgY2hlY2tzIGRv
-IGFuZCB3aGF0IHRoZSB0aGVvcnkgaXMNCmJlaGluZCB0aGVzZSBjaGVja3M/DQoNCkJhcnQuDQo=
+On Tue, Oct 17, 2017 at 01:50:47PM +0200, Jan Kara wrote:
+> OK, I can do that. But I had just realized that if MAP_DIRECT isn't going
+> to end up using mmap(2) interface but something else (and I'm not sure
+> where discussions on this matter ended), we don't need flags argument for
+> ->mmap at all. MAP_SYNC uses a VMA flag anyway and thus it is fine with the
+> current ->mmap interface. We still need some opt-in mechanism for
+> MAP_SHARED_VALIDATE though (probably supported mmap flags as Dan had in one
+> version of his patch). Thoughts on which way to go for now?
+
+Yes, I'd much prefer the mmap_flags in file_operations.  The other
+option would be a new FMODE_* flag which is what Al did for various
+other optional features, but I generally thing that is a confusing
+interface.
