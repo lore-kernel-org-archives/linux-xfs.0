@@ -1,192 +1,257 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34146 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:42291 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751442AbdJXTr4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Oct 2017 15:47:56 -0400
-Date: Tue, 24 Oct 2017 15:47:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: drain the buffer LRU on mount
-Message-ID: <20171024194753.GE56184@bfoster.bfoster>
-References: <20171023144646.50107-1-bfoster@redhat.com>
- <20171023144646.50107-4-bfoster@redhat.com>
- <20171023163940.GE5483@magnolia>
- <20171023165416.GD45316@bfoster.bfoster>
- <20171024002334.GK5483@magnolia>
- <20171024140606.GD56184@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171024140606.GD56184@bfoster.bfoster>
+        id S1751437AbdJSKeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Oct 2017 06:34:46 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH] fiemap: Implement ranged query
+Date: Thu, 19 Oct 2017 13:34:41 +0300
+Message-Id: <1508409281-7183-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net, Nikolay Borisov <nborisov@suse.com>
 
-On Tue, Oct 24, 2017 at 10:06:06AM -0400, Brian Foster wrote:
-> On Mon, Oct 23, 2017 at 05:23:34PM -0700, Darrick J. Wong wrote:
-> > On Mon, Oct 23, 2017 at 12:54:17PM -0400, Brian Foster wrote:
-> > > On Mon, Oct 23, 2017 at 09:39:40AM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Oct 23, 2017 at 10:46:45AM -0400, Brian Foster wrote:
-> > > > > Log recovery of v4 filesystems does not use buffer verifiers because
-> > > > > log recovery historically can result in transient buffer corruption
-> > > > > when target buffers might be ahead of the log after a crash. v5
-> > > > > filesystems work around this problem with metadata LSN ordering.
-> > > > > 
-> > > > > While the log recovery behavior is necessary on v4 supers, it
-> > > > > currently can result in leaving buffers around in the LRU without
-> > > > > verifiers attached for a significant amount of time. This can lead
-> > > > > to use of unverified buffers while the filesystem is in active use,
-> > > > > long after recovery has completed.
-> > > > > 
-> > > > > To address this problem and provide a more consistent clean,
-> > > > > post-mount buffer cache state, update the log mount sequence to
-> > > > > unconditionally drain all buffers from the LRU as a final step.
-> > > > > 
-> > > > > Reported-by: Darrick Wong <darrick.wong@oracle.com>
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > ---
-> > > > >  fs/xfs/xfs_log.c | 13 +++++++++++++
-> > > > >  1 file changed, 13 insertions(+)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > > > index dc95a49..e282fd8 100644
-> > > > > --- a/fs/xfs/xfs_log.c
-> > > > > +++ b/fs/xfs/xfs_log.c
-> > > > > @@ -744,6 +744,7 @@ xfs_log_mount_finish(
-> > > > >  {
-> > > > >  	int	error = 0;
-> > > > >  	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-> > > > > +	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
-> > > > >  
-> > > > >  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> > > > >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> > > > > @@ -780,6 +781,18 @@ xfs_log_mount_finish(
-> > > > >  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> > > > >  	evict_inodes(mp->m_super);
-> > > > >  
-> > > > > +	/*
-> > > > > +	 * Drain the buffer LRU after log recovery. This is required for v4
-> > > > > +	 * filesystems to avoid leaving around buffers with NULL verifier ops,
-> > > > > +	 * but we do it unconditionally to make sure we're always in a clean
-> > > > > +	 * cache state after mount.
-> > > > > +	 */
-> > > > > +	if (recovered) {
-> > > > 
-> > > > if (recovered && !error) { ?
-> > > > 
-> > > > I observed that running xfs/376 on an rmap filesystem fails when it
-> > > > tries to fuzz the high bit of u3.bmx[0].startoff.  That triggers an
-> > > > incorrect freeing of what is now a post-eof extent.  The corresponding
-> > > > rmap free operation fails after the RUI has been logged and shuts down
-> > > > the filesystem, so a subsequent log recovery attempt also fails when it
-> > > > tries to remove an rmap that doesn't exist.  If we then try to force the
-> > > > log we end up deadlocked somehwere... though if we /don't/ then memory
-> > > > gets corrupted and the kernel blows up anyway. :(
-> > > > 
-> > > 
-> > > Interesting... do you have a stack trace? I'm curious why forcing the
-> > > log would hang here and not in the subsequent log force in
-> > > xfs_log_unmount() -> xfs_log_quiesce().
-> > 
-> ...
-> > ...after which I see this once before the system totally hangs:
-> > 
-> > [ 5405.641103] INFO: task mount:28033 blocked for more than 60 seconds.
-> > [ 5405.643982]       Tainted: G        W       4.14.0-rc6-xfsx #1
-> > [ 5405.646067] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > [ 5405.650068] mount           D12768 28033  27973 0x80000000
-> > [ 5405.655505] Call Trace:
-> > [ 5405.657210]  ? __schedule+0x40d/0xb20
-> > [ 5405.658865]  schedule+0x40/0x90
-> > [ 5405.661340]  xfs_ail_push_all_sync+0xa4/0xe0 [xfs]
-> > [ 5405.664348]  ? remove_wait_queue+0x60/0x60
-> > [ 5405.668815]  xfs_log_mount_finish+0xc7/0x110 [xfs]
-> > [ 5405.671736]  xfs_mountfs+0x68f/0xaf0 [xfs]
-> > [ 5405.674645]  xfs_fs_fill_super+0x4d7/0x630 [xfs]
-> > [ 5405.677673]  ? xfs_finish_flags+0x150/0x150 [xfs]
-> > [ 5405.679966]  mount_bdev+0x178/0x1b0
-> > [ 5405.681300]  mount_fs+0xf/0x80
-> > [ 5405.682426]  vfs_kern_mount+0x62/0x160
-> > [ 5405.683712]  do_mount+0x1b1/0xd50
-> > [ 5405.687634]  ? rcu_read_lock_sched_held+0x3f/0x70
-> > [ 5405.688453]  SyS_mount+0x85/0xd0
-> > [ 5405.689033]  entry_SYSCALL_64_fastpath+0x1f/0xbe
-> > [ 5405.689955] RIP: 0033:0x7f0226c72b5a
-> > [ 5405.690533] RSP: 002b:00007fff9ddea318 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-> > [ 5405.692074] RAX: ffffffffffffffda RBX: 00007f0226f6b63a RCX: 00007f0226c72b5a
-> > [ 5405.695604] RDX: 0000000001a3b2d0 RSI: 0000000001a3b310 RDI: 0000000001a3b2f0
-> > [ 5405.696566] RBP: 0000000001a3b120 R08: 0000000001a3b270 R09: 0000000000000012
-> > [ 5405.699583] R10: 00000000c0ed0000 R11: 0000000000000206 R12: 00007f022717b83c
-> > [ 5405.700465] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000005
-> > [ 5405.702569] 
-> > [ 5405.702569] Showing all locks held in the system:
-> > [ 5405.703485] 1 lock held by khungtaskd/37:
-> > [ 5405.704095]  #0:  (tasklist_lock){.+.+}, at: [<ffffffff810dfbf7>] debug_show_all_locks+0x37/0x190
-> > [ 5405.705342] 2 locks held by agetty/810:
-> > [ 5405.705845]  #0:  (&tty->ldisc_sem){++++}, at: [<ffffffff813fecf4>] tty_ldisc_ref_wait+0x24/0x50
-> > [ 5405.706934]  #1:  (&ldata->atomic_read_lock){+.+.}, at: [<ffffffff813fd034>] n_tty_read+0xc4/0x880
-> > [ 5405.708030] 1 lock held by in:imklog/864:
-> > [ 5405.708534]  #0:  (&f->f_pos_lock){+.+.}, at: [<ffffffff8125d8d8>] __fdget_pos+0x48/0x60
-> > [ 5405.709572] 1 lock held by mount/28033:
-> > [ 5405.710112]  #0:  (&type->s_umount_key#45/1){+.+.}, at: [<ffffffff8123c993>] sget_userns+0x303/0x4f0
-> > [ 5405.711210] 
-> > [ 5405.711408] =============================================
-> > [ 5405.711408] 
-> > 
-> 
-> Thanks. Hmm, when I run xfs/376 on the djwong-devel xfs I see a bunch of
-> mm/usercopy.c BUG()s and what looks like a mount hang during quotacheck,
-> but it's blocked down in the block layer in io_schedule() attempting a
-> readahead. I'm not terribly surprised by the lockup after all the BUG()
-> invocations, but what I'm seeing doesn't appear to be similar to what
-> you reproduce or related to the AIL in any way.
-> 
-> I assume this mount behavior repeats after the test completes. If so,
-> could you grab a metadump of the fs?
-> 
+Currently the fiemap implementation of xfs_io doesn't support making ranged
+queries. This patch implements two optional arguments which take the starting
+offset and the length of the region to be queried. The impelmentation also
+calculates printed holes as an extent for the purpose of terminating the query.
 
-Ok, I can reproduce the problem now that I have the metadump. The AIL
-push hangs because there's a pinned EFI sitting on the AIL. The reason
-the subsequent push succeeds is because we cancel the recovery (which
-cancels the intents) before we get to that point. Given that, I agree
-that it makes sense to check for an error here. Thanks!
+I.e. if we create a file with the following layout :
 
-Brian
+xfs_io -f -c "falloc 0 32k" -c "fpunch 0 4k" -c "fpunch 8k 4k" \
+-c "fpunch 28k 4k" -c "fiemap" fragmented-file
 
-> Brian
-> 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > +		xfs_log_force(mp, XFS_LOG_SYNC);
-> > > > > +		xfs_ail_push_all_sync(mp->m_ail);
-> > > > > +	}
-> > > > > +	xfs_wait_buftarg(mp->m_ddev_targp);
-> > > > > +
-> > > > >  	if (readonly)
-> > > > >  		mp->m_flags |= XFS_MOUNT_RDONLY;
-> > > > >  
-> > > > > -- 
-> > > > > 2.9.5
-> > > > > 
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+       H     D         H           D                    H
+|--------|--------|---------|--------------|-----------------|
+0         4k       8k        12k            28k                32k
+
+Then the output is :
+
+xfs_io -c "fiemap 0 10k" fragmented-file
+fragmented-file:
+	0: [0..7]: hole
+	1: [8..15]: 897844104..897844111
+	2: [16..23]: hole
+
+xfs_io -c "fiemap 0" fragmented-file
+fragmented-file:
+	0: [0..7]: hole
+	1: [8..15]: 897844104..897844111
+	2: [16..23]: hole
+	3: [24..55]: 897844120..897844151
+	4: [56..63]: hole
+
+xfs_io -c "fiemap 10k 5k" fragmented-file
+fragmented-file:
+	0: [20..23]: hole
+	1: [24..55]: 897844120..897844151
+
+xfs_io -c "fiemap 10k 18k" fragmented-file
+fragmented-file:
+	0: [20..23]: hole
+	1: [24..55]: 897844120..897844151
+	2: [56..63]: hole
+
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c       | 61 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ man/man8/xfs_io.8 |  5 +++--
+ 2 files changed, 54 insertions(+), 12 deletions(-)
+
+diff --git a/io/fiemap.c b/io/fiemap.c
+index e6fd66da753d..844741cb07d3 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -27,6 +27,8 @@
+ 
+ static cmdinfo_t fiemap_cmd;
+ static int max_extents = -1;
++static __u64 covered_length = 0;
++static bool range_limit = false;
+ 
+ static void
+ fiemap_help(void)
+@@ -79,7 +81,7 @@ print_hole(
+ 		       boff_w, _("hole"), tot_w, lstart - llast);
+ 	   }
+ 
+-
++	   covered_length += BBTOB(lstart - llast);
+ }
+ 
+ static int
+@@ -90,7 +92,8 @@ print_verbose(
+ 	int			tot_w,
+ 	int			flg_w,
+ 	int			cur_extent,
+-	__u64			last_logical)
++	__u64			last_logical,
++	__u64			limit)
+ {
+ 	__u64			lstart;
+ 	__u64			llast;
+@@ -122,7 +125,7 @@ print_verbose(
+ 		cur_extent++;
+ 	}
+ 
+-	if (cur_extent == max_extents)
++	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+ 		return 1;
+ 
+ 	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+@@ -140,7 +143,8 @@ print_plain(
+ 	struct fiemap_extent	*extent,
+ 	int			lflag,
+ 	int			cur_extent,
+-	__u64			last_logical)
++	__u64			last_logical,
++	__u64			limit)
+ {
+ 	__u64			lstart;
+ 	__u64			llast;
+@@ -157,7 +161,7 @@ print_plain(
+ 		cur_extent++;
+ 	}
+ 
+-	if (cur_extent == max_extents)
++	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+ 		return 1;
+ 
+ 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+@@ -211,6 +215,7 @@ calc_print_format(
+ 	}
+ }
+ 
++
+ int
+ fiemap_f(
+ 	int		argc,
+@@ -231,8 +236,14 @@ fiemap_f(
+ 	int		tot_w = 5;	/* 5 since its just one number */
+ 	int		flg_w = 5;
+ 	__u64		last_logical = 0;
++	__u64		len = -1LL;
++	__u64		stop_offset = -1LL;
++	off64_t		start_offset = 0;
++	size_t		fsblocksize, fssectsize;
+ 	struct stat	st;
+ 
++	init_cvtnum(&fsblocksize, &fssectsize);
++
+ 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+@@ -252,6 +263,27 @@ fiemap_f(
+ 		}
+ 	}
+ 
++	if (optind < argc) {
++		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start_offset < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++		optind++;
++	}
++
++	if (optind < argc) {
++		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (length < 0) {
++			printf("non-numeric len argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		len = length;
++		stop_offset = start_offset + len;
++		range_limit = true;
++	}
++
+ 	map_size = sizeof(struct fiemap) +
+ 		(EXTENT_BATCH * sizeof(struct fiemap_extent));
+ 	fiemap = malloc(map_size);
+@@ -269,7 +301,7 @@ fiemap_f(
+ 		memset(fiemap, 0, map_size);
+ 		fiemap->fm_flags = fiemap_flags;
+ 		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1LL;
++		fiemap->fm_length = len;
+ 		fiemap->fm_extent_count = EXTENT_BATCH;
+ 
+ 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+@@ -300,14 +332,18 @@ fiemap_f(
+ 				num_printed = print_verbose(extent, foff_w,
+ 							    boff_w, tot_w,
+ 							    flg_w, cur_extent,
+-							    last_logical);
++							    last_logical,
++							    stop_offset);
+ 			} else
+ 				num_printed = print_plain(extent, lflag,
+ 							  cur_extent,
+-							  last_logical);
++							  last_logical,
++							  stop_offset);
+ 
+ 			cur_extent += num_printed;
+ 			last_logical = extent->fe_logical + extent->fe_length;
++			if (num_printed == 2)
++				covered_length += extent->fe_length;
+ 
+ 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+ 				last = 1;
+@@ -316,6 +352,9 @@ fiemap_f(
+ 
+ 			if (cur_extent == max_extents)
+ 				break;
++
++			if (range_limit && covered_length >= start_offset + len)
++				goto out;
+ 		}
+ 	}
+ 
+@@ -331,9 +370,11 @@ fiemap_f(
+ 		return 0;
+ 	}
+ 
+-	if (cur_extent && last_logical < st.st_size)
++	if (cur_extent && last_logical < st.st_size &&
++	    (!range_limit || covered_length < start_offset + len)) {
+ 		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
+ 			   BTOBBT(last_logical), BTOBBT(st.st_size));
++	}
+ 
+ out:
+ 	free(fiemap);
+@@ -348,7 +389,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx]");
++	fiemap_cmd.args = _("[-alv] [-n nx] [start offset [len]]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 0fd9b951199c..27f1ae163913 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
+ .BR xfs_bmap (8)
+ manual page for complete documentation.
+ .TP
+-.BI "fiemap [ \-alv ] [ \-n " nx " ]"
++.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+ Prints the block mapping for the current open file using the fiemap
+ ioctl.  Options behave as described in the
+ .BR xfs_bmap (8)
+-manual page.
++manual page. Optionally, this command also supports passing the start offset
++from where to begin the fiemap and the length of that region.
+ .TP
+ .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+ Prints the mapping of disk blocks used by the filesystem hosting the current
+-- 
+2.7.4
+
