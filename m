@@ -1,79 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:57328 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757804AbdJRJ7V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 05:59:21 -0400
-Date: Wed, 18 Oct 2017 11:59:16 +0200
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [RESEND PATCH 3/3] lockdep: Assign a lock_class per gendisk used
- for wait_for_completion()
-Message-ID: <20171018095916.gr3n4mal6dz5xs7v@gmail.com>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
- <1508319532-24655-4-git-send-email-byungchul.park@lge.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1508319532-24655-4-git-send-email-byungchul.park@lge.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:45979 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751681AbdJSG7x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 02:59:53 -0400
+Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e54o4-00048B-RF
+        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 06:59:53 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/15] xfs: add a xfs_bmap_fork_to_state helper
+Date: Thu, 19 Oct 2017 08:59:28 +0200
+Message-Id: <20171019065942.18813-2-hch@lst.de>
+In-Reply-To: <20171019065942.18813-1-hch@lst.de>
+References: <20171019065942.18813-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: peterz@infradead.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: linux-xfs@vger.kernel.org
 
+This creates the right initial bmap state from the passed in inode
+fork enum.
 
-* Byungchul Park <byungchul.park@lge.com> wrote:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 45 +++++++++------------------------------------
+ fs/xfs/libxfs/xfs_bmap.h | 12 ++++++++++++
+ 2 files changed, 21 insertions(+), 36 deletions(-)
 
-> diff --git a/block/bio.c b/block/bio.c
-> index 9a63597..0d4d6c0 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -941,7 +941,7 @@ int submit_bio_wait(struct bio *bio)
->  {
->  	struct submit_bio_ret ret;
->  
-> -	init_completion(&ret.event);
-> +	init_completion_with_map(&ret.event, &bio->bi_disk->lockdep_map);
->  	bio->bi_private = &ret;
->  	bio->bi_end_io = submit_bio_wait_endio;
->  	bio->bi_opf |= REQ_SYNC;
-> @@ -1382,7 +1382,7 @@ struct bio *bio_map_user_iov(struct request_queue *q,
->  
->  			if (len <= 0)
->  				break;
-> -			
-> +
->  			if (bytes > len)
->  				bytes = len;
->  
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6c2ae3011964..676fc8aed67f 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -499,12 +499,7 @@ xfs_bmap_trace_exlist(
+ {
+ 	xfs_extnum_t	idx;		/* extent record index */
+ 	xfs_ifork_t	*ifp;		/* inode fork pointer */
+-	int		state = 0;
+-
+-	if (whichfork == XFS_ATTR_FORK)
+-		state |= BMAP_ATTRFORK;
+-	else if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
++	int		state = xfs_bmap_fork_to_state(whichfork);
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(cnt == xfs_iext_count(ifp));
+@@ -925,8 +920,7 @@ xfs_bmap_local_to_extents(
+ 	rec.br_state = XFS_EXT_NORM;
+ 	xfs_iext_insert(ip, 0, 1, &rec, 0);
+ 
+-	trace_xfs_bmap_post_update(ip, 0,
+-			whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
++	trace_xfs_bmap_post_update(ip, 0, xfs_bmap_fork_to_state(whichfork),
+ 			_THIS_IP_);
+ 	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
+ 	ip->i_d.di_nblocks = 1;
+@@ -1571,7 +1565,7 @@ xfs_bmap_add_extent_delay_real(
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+ 	int			rval=0;	/* return value (logging flags) */
+-	int			state = 0;/* state bits, accessed thru macros */
++	int			state = xfs_bmap_fork_to_state(whichfork);
+ 	xfs_filblks_t		da_new; /* new count del alloc blocks used */
+ 	xfs_filblks_t		da_old; /* old count del alloc blocks used */
+ 	xfs_filblks_t		temp=0;	/* value for da_new calculations */
+@@ -1598,9 +1592,6 @@ xfs_bmap_add_extent_delay_real(
+ #define	RIGHT		r[1]
+ #define	PREV		r[2]
+ 
+-	if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
+-
+ 	/*
+ 	 * Set up a bunch of variables to make the tests simpler.
+ 	 */
+@@ -2108,7 +2099,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+ 	int			rval=0;	/* return value (logging flags) */
+-	int			state = 0;/* state bits, accessed thru macros */
++	int			state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_bmbt_irec	old;
+ 
+@@ -2116,8 +2107,6 @@ xfs_bmap_add_extent_unwritten_real(
+ 
+ 	cur = *curp;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
+ 
+ 	ASSERT(*idx >= 0);
+ 	ASSERT(*idx <= xfs_iext_count(ifp));
+@@ -2601,13 +2590,10 @@ xfs_bmap_add_extent_hole_delay(
+ 	xfs_filblks_t		newlen=0;	/* new indirect size */
+ 	xfs_filblks_t		oldlen=0;	/* old indirect size */
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+-	int			state;  /* state bits, accessed thru macros */
++	int			state = xfs_bmap_fork_to_state(whichfork);
+ 	xfs_filblks_t		temp;	 /* temp for indirect calculations */
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	state = 0;
+-	if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
+ 	ASSERT(isnullstartblock(new->br_startblock));
+ 
+ 	/*
+@@ -2760,7 +2746,7 @@ xfs_bmap_add_extent_hole_real(
+ 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+ 	int			rval=0;	/* return value (logging flags) */
+-	int			state;	/* state bits, accessed thru macros */
++	int			state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_bmbt_irec	old;
+ 
+ 	ASSERT(*idx >= 0);
+@@ -2770,12 +2756,6 @@ xfs_bmap_add_extent_hole_real(
+ 
+ 	XFS_STATS_INC(mp, xs_add_exlist);
+ 
+-	state = 0;
+-	if (whichfork == XFS_ATTR_FORK)
+-		state |= BMAP_ATTRFORK;
+-	if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
+-
+ 	/*
+ 	 * Check and set flags if this segment has a left neighbor.
+ 	 */
+@@ -4737,7 +4717,8 @@ xfs_bmap_del_extent_delay(
+ 	int64_t			da_old, da_new, da_diff = 0;
+ 	xfs_fileoff_t		del_endoff, got_endoff;
+ 	xfs_filblks_t		got_indlen, new_indlen, stolen;
+-	int			error = 0, state = 0;
++	int			state = xfs_bmap_fork_to_state(whichfork);
++	int			error = 0;
+ 	bool			isrt;
+ 
+ 	XFS_STATS_INC(mp, xs_del_exlist);
+@@ -4773,9 +4754,6 @@ xfs_bmap_del_extent_delay(
+ 		return error;
+ 	ip->i_delayed_blks -= del->br_blockcount;
+ 
+-	if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
+-
+ 	if (got->br_startoff == del->br_startoff)
+ 		state |= BMAP_LEFT_FILLING;
+ 	if (got_endoff == del_endoff)
+@@ -4969,17 +4947,12 @@ xfs_bmap_del_extent_real(
+ 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+ 	/* REFERENCED */
+ 	uint			qfield;	/* quota field to update */
+-	int			state = 0;
++	int			state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_bmbt_irec	old;
+ 
+ 	mp = ip->i_mount;
+ 	XFS_STATS_INC(mp, xs_del_exlist);
+ 
+-	if (whichfork == XFS_ATTR_FORK)
+-		state |= BMAP_ATTRFORK;
+-	else if (whichfork == XFS_COW_FORK)
+-		state |= BMAP_COWFORK;
+-
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
+ 	ASSERT(del->br_blockcount > 0);
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 851982a5dfbc..a61c5480b6ad 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -277,4 +277,16 @@ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+ 
++static inline int xfs_bmap_fork_to_state(int whichfork)
++{
++	switch (whichfork) {
++	case XFS_ATTR_FORK:
++		return BMAP_ATTRFORK;
++	case XFS_COW_FORK:
++		return BMAP_COWFORK;
++	default:
++		return 0;
++	}
++}
++
+ #endif	/* __XFS_BMAP_H__ */
+-- 
+2.14.1
 
-That's a spurious cleanup unrelated to this patch.
-
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -3,7 +3,7 @@
->  
->  /*
->   * 	genhd.h Copyright (C) 1992 Drew Eckhardt
-> - *	Generic hard disk header file by  
-> + *	Generic hard disk header file by
->   * 		Drew Eckhardt
->   *
->   *		<drew@colorado.edu>
-
-Ditto.
-
-> @@ -483,7 +486,7 @@ struct bsd_disklabel {
->  	__s16	d_type;			/* drive type */
->  	__s16	d_subtype;		/* controller/d_type specific */
->  	char	d_typename[16];		/* type name, e.g. "eagle" */
-> -	char	d_packname[16];			/* pack identifier */ 
-> +	char	d_packname[16];			/* pack identifier */
->  	__u32	d_secsize;		/* # of bytes per sector */
->  	__u32	d_nsectors;		/* # of data sectors per track */
->  	__u32	d_ntracks;		/* # of tracks per cylinder */
-
-Ditto.
-
-Thanks,
-
-	Ingo
