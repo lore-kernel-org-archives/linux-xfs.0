@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45513 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39236 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754080AbdJSOVx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:53 -0400
+        with ESMTP id S1753833AbdJSOVr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:47 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/18] xfs: always swap the cow forks when swapping extents
-Date: Thu, 19 Oct 2017 16:21:14 +0200
-Message-Id: <20171019142123.18109-10-hch@lst.de>
+Subject: [PATCH 07/18] xfs: perag initialization should only touch m_ag_max_usable for AG 0
+Date: Thu, 19 Oct 2017 16:21:12 +0200
+Message-Id: <20171019142123.18109-8-hch@lst.de>
 In-Reply-To: <20171019142123.18109-1-hch@lst.de>
 References: <20171019142123.18109-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,57 +17,49 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 52bfcdd7adbc26639bc7b2356ab9a3f5dad68ad6 upstream.
+commit 9789dd9e1d939232e8ff4c50ef8e75aa6781b3fb upstream.
 
-Since the CoW fork exists as a secondary data structure to the data
-fork, we must always swap cow forks during swapext.  We also need to
-swap the extent counts and reset the cowblocks tags.
+We call __xfs_ag_resv_init to make a per-AG reservation for each AG.
+This makes the reservation per-AG, not per-filesystem.  Therefore, it
+is incorrect to adjust m_ag_max_usable for each AG.  Adjust it only
+when we're reserving AG 0's blocks so that we only do it once per fs.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 1de4e96df15a..3f97a4122b17 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -2121,11 +2121,31 @@ xfs_swap_extents(
- 		ip->i_d.di_flags2 |= tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
- 		tip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
- 		tip->i_d.di_flags2 |= f & XFS_DIFLAG2_REFLINK;
-+	}
-+
-+	/* Swap the cow forks. */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		xfs_extnum_t	extnum;
-+
-+		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-+		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-+
-+		extnum = ip->i_cnextents;
-+		ip->i_cnextents = tip->i_cnextents;
-+		tip->i_cnextents = extnum;
-+
- 		cowfp = ip->i_cowfp;
- 		ip->i_cowfp = tip->i_cowfp;
- 		tip->i_cowfp = cowfp;
--		xfs_inode_set_cowblocks_tag(ip);
--		xfs_inode_set_cowblocks_tag(tip);
-+
-+		if (ip->i_cowfp && ip->i_cnextents)
-+			xfs_inode_set_cowblocks_tag(ip);
-+		else
-+			xfs_inode_clear_cowblocks_tag(ip);
-+		if (tip->i_cowfp && tip->i_cnextents)
-+			xfs_inode_set_cowblocks_tag(tip);
-+		else
-+			xfs_inode_clear_cowblocks_tag(tip);
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index b008ff3250eb..df3e600835e8 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -156,7 +156,8 @@ __xfs_ag_resv_free(
+ 	trace_xfs_ag_resv_free(pag, type, 0);
+ 
+ 	resv = xfs_perag_resv(pag, type);
+-	pag->pag_mount->m_ag_max_usable += resv->ar_asked;
++	if (pag->pag_agno == 0)
++		pag->pag_mount->m_ag_max_usable += resv->ar_asked;
+ 	/*
+ 	 * AGFL blocks are always considered "free", so whatever
+ 	 * was reserved at mount time must be given back at umount.
+@@ -216,7 +217,14 @@ __xfs_ag_resv_init(
+ 		return error;
  	}
  
- 	xfs_trans_log_inode(tp, ip,  src_log_flags);
+-	mp->m_ag_max_usable -= ask;
++	/*
++	 * Reduce the maximum per-AG allocation length by however much we're
++	 * trying to reserve for an AG.  Since this is a filesystem-wide
++	 * counter, we only make the adjustment for AG 0.  This assumes that
++	 * there aren't any AGs hungrier for per-AG reservation than AG 0.
++	 */
++	if (pag->pag_agno == 0)
++		mp->m_ag_max_usable -= ask;
+ 
+ 	resv = xfs_perag_resv(pag, type);
+ 	resv->ar_asked = ask;
 -- 
 2.14.2
 
