@@ -1,35 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42768 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:34025 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751734AbdJSNOI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Oct 2017 09:14:08 -0400
-Date: Thu, 19 Oct 2017 15:14:07 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH for-4.14] xfs: fix AIM7 regression
-Message-ID: <20171019131407.GA20645@lst.de>
-References: <20171019074705.24827-1-hch@lst.de> <20171019113848.GA8911@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171019113848.GA8911@bfoster.bfoster>
+        id S1752328AbdJSNIn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Oct 2017 09:08:43 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 09/17] dax: Fix comment describing dax_iomap_fault()
+Date: Thu, 19 Oct 2017 14:58:08 +0200
+Message-Id: <20171019125817.11580-10-jack@suse.cz>
+In-Reply-To: <20171019125817.11580-1-jack@suse.cz>
+References: <20171019125817.11580-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-On Thu, Oct 19, 2017 at 07:38:48AM -0400, Brian Foster wrote:
-> On Thu, Oct 19, 2017 at 09:47:05AM +0200, Christoph Hellwig wrote:
-> > Apparently our current rwsem code doesn't like doing the trylock, then
-> > lock for real scheme.  So change our read/write methods to just do the
-> > trylock for the RWF_NOWAIT case.  This fixes a ~25% regression in
-> > AIM7.
-> > 
-> 
-> The code looks fine, but this seems really strange. If the trylock
-> fails, then wouldn't the blocking lock have slept anyways if done
-> initially? Is there any more background info available on this, or
-> perhaps a theory on why there is such a significant regression..?
+Add missing argument description.
 
-No, unfortunately I don't have a theory, but I agree it is odd
-behavior in the rwsem code.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 675fab8ec41f..5214ed9ba508 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1435,7 +1435,8 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
+ /**
+  * dax_iomap_fault - handle a page fault on a DAX file
+  * @vmf: The description of the fault
+- * @ops: iomap ops passed from the file system
++ * @pe_size: Size of the page to fault in
++ * @ops: Iomap ops passed from the file system
+  *
+  * When a page fault occurs, filesystems may call this helper in
+  * their fault handler for DAX files. dax_iomap_fault() assumes the caller
+-- 
+2.12.3
+
