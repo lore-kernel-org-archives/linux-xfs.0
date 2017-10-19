@@ -1,61 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50128 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43060 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753853AbdJSOVg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:36 -0400
+        with ESMTP id S1753853AbdJSOVm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:42 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/18] xfs: evict CoW fork extents when performing finsert/fcollapse
-Date: Thu, 19 Oct 2017 16:21:08 +0200
-Message-Id: <20171019142123.18109-4-hch@lst.de>
+Subject: [PATCH 05/18] xfs: report zeroed or not correctly in xfs_zero_range()
+Date: Thu, 19 Oct 2017 16:21:10 +0200
+Message-Id: <20171019142123.18109-6-hch@lst.de>
 In-Reply-To: <20171019142123.18109-1-hch@lst.de>
 References: <20171019142123.18109-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Eryu Guan <eguan@redhat.com>
 
-commit 3af423b03435c81036fa710623d3ae92fbe346a3 upstream.
+commit d20a5e3851969fa685f118a80e4df670255a4e8d upstream.
 
-When we perform an finsert/fcollapse operation, cancel all the CoW
-extents for the affected file offset range so that they don't end up
-pointing to the wrong blocks.
+The 'did_zero' param of xfs_zero_range() was not passed to
+iomap_zero_range() correctly. This was introduced by commit
+7bb41db3ea16 ("xfs: handle 64-bit length in xfs_iozero"), and found
+by code inspection.
 
-Reported-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 3e9b7a4fb8fd..1de4e96df15a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1459,7 +1459,19 @@ xfs_shift_file_space(
- 		return error;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c4893e226fd8..812cd17b331f 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -58,7 +58,7 @@ xfs_zero_range(
+ 	xfs_off_t		count,
+ 	bool			*did_zero)
+ {
+-	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
++	return iomap_zero_range(VFS_I(ip), pos, count, did_zero, &xfs_iomap_ops);
+ }
  
- 	/*
--	 * The extent shiting code works on extent granularity. So, if
-+	 * Clean out anything hanging around in the cow fork now that
-+	 * we've flushed all the dirty data out to disk to avoid having
-+	 * CoW extents at the wrong offsets.
-+	 */
-+	if (xfs_is_reflink_inode(ip)) {
-+		error = xfs_reflink_cancel_cow_range(ip, offset, NULLFILEOFF,
-+				true);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * The extent shifting code works on extent granularity. So, if
- 	 * stop_fsb is not the starting block of extent, we need to split
- 	 * the extent at stop_fsb.
- 	 */
+ int
 -- 
 2.14.2
 
