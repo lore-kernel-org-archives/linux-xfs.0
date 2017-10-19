@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34848 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59939 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751078AbdJSHAO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:14 -0400
+        with ESMTP id S1751576AbdJSHA1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:27 -0400
 Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e54oP-0004pt-R3
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:14 +0000
+        id 1e54oc-0005nZ-Qe
+        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:27 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/15] xfs: remove the never fully implemented UUID fork format
-Date: Thu, 19 Oct 2017 08:59:33 +0200
-Message-Id: <20171019065942.18813-7-hch@lst.de>
+Subject: [PATCH 09/15] xfs: remove XFS_BMAP_MAX_SHIFT_EXTENTS
+Date: Thu, 19 Oct 2017 08:59:36 +0200
+Message-Id: <20171019065942.18813-10-hch@lst.de>
 In-Reply-To: <20171019065942.18813-1-hch@lst.de>
 References: <20171019065942.18813-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,282 +18,166 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Remove the dead code dealing with the UUID fork format that was never
-implemented in Linux (and neither in IRIX as far as I know).
+The define was always set to 1, which means looping until we reach is
+was dead code from the start.
+
+Also remove an initialization of next_fsb for the done case that doesn't
+fit the new code flow - it was never checked by the caller in the done
+case to start with.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c  |  6 +-----
- fs/xfs/libxfs/xfs_bmap.c       |  4 ----
- fs/xfs/libxfs/xfs_format.h     |  2 +-
- fs/xfs/libxfs/xfs_inode_fork.c |  9 ---------
- fs/xfs/libxfs/xfs_inode_fork.h |  1 -
- fs/xfs/libxfs/xfs_log_format.h | 20 ++++++++++----------
- fs/xfs/xfs_inode_item.c        | 25 ++++++-------------------
- fs/xfs/xfs_itable.c            |  1 -
- fs/xfs/xfs_log_recover.c       | 10 +---------
- 9 files changed, 19 insertions(+), 59 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 47 ++++++++++++++++++++---------------------------
+ fs/xfs/libxfs/xfs_bmap.h | 12 +-----------
+ fs/xfs/xfs_bmap_util.c   | 14 ++------------
+ 3 files changed, 23 insertions(+), 50 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 5c16db86b38f..53cc8b986eac 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -397,13 +397,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
- 	/* rounded down */
- 	offset = (XFS_LITINO(mp, dp->i_d.di_version) - bytes) >> 3;
- 
--	switch (dp->i_d.di_format) {
--	case XFS_DINODE_FMT_DEV:
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_DEV) {
- 		minforkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
- 		return (offset >= minforkoff) ? minforkoff : 0;
--	case XFS_DINODE_FMT_UUID:
--		minforkoff = roundup(sizeof(uuid_t), 8) >> 3;
--		return (offset >= minforkoff) ? minforkoff : 0;
- 	}
- 
- 	/*
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6431386f4676..22e7578e5696 100644
+index 22e7578e5696..89ea8a5235c0 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -231,7 +231,6 @@ xfs_bmap_forkoff_reset(
- {
- 	if (whichfork == XFS_ATTR_FORK &&
- 	    ip->i_d.di_format != XFS_DINODE_FMT_DEV &&
--	    ip->i_d.di_format != XFS_DINODE_FMT_UUID &&
- 	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE) {
- 		uint	dfl_forkoff = xfs_default_attroffset(ip) >> 3;
- 
-@@ -1086,9 +1085,6 @@ xfs_bmap_add_attrfork(
- 	case XFS_DINODE_FMT_DEV:
- 		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
- 		break;
--	case XFS_DINODE_FMT_UUID:
--		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
--		break;
- 	case XFS_DINODE_FMT_LOCAL:
- 	case XFS_DINODE_FMT_EXTENTS:
- 	case XFS_DINODE_FMT_BTREE:
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 23229f0c5b15..66f9b9f61d92 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -941,7 +941,7 @@ typedef enum xfs_dinode_fmt {
- 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
- 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
- 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
--	XFS_DINODE_FMT_UUID		/* uuid_t */
-+	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
- } xfs_dinode_fmt_t;
- 
+@@ -5692,8 +5692,7 @@ xfs_bmse_shift_one(
  /*
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 31786bad9738..1d003ca21562 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -902,15 +902,6 @@ xfs_iflush_fork(
- 		}
- 		break;
- 
--	case XFS_DINODE_FMT_UUID:
--		if (iip->ili_fields & XFS_ILOG_UUID) {
--			ASSERT(whichfork == XFS_DATA_FORK);
--			memcpy(XFS_DFORK_DPTR(dip),
--			       &ip->i_df.if_u2.if_uuid,
--			       sizeof(uuid_t));
--		}
--		break;
--
- 	default:
- 		ASSERT(0);
- 		break;
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 6750f0462d21..064babdc373c 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -70,7 +70,6 @@ typedef struct xfs_ifork {
- 		char		if_inline_data[XFS_INLINE_DATA];
- 						/* very small file data */
- 		xfs_dev_t	if_rdev;	/* dev number if special */
--		uuid_t		if_uuid;	/* mount point value */
- 	} if_u2;
- } xfs_ifork_t;
- 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 71de185735e0..a7ab6adae7f6 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -274,7 +274,7 @@ typedef struct xfs_inode_log_format {
- 	uint64_t		ilf_ino;	/* inode number */
- 	union {
- 		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
--		uuid_t		ilfu_uuid;	/* mount point value */
-+		u8		__pad[16];	/* unused */
- 	} ilf_u;
- 	int64_t			ilf_blkno;	/* blkno of inode buffer */
- 	int32_t			ilf_len;	/* len of inode buffer */
-@@ -295,7 +295,7 @@ struct xfs_inode_log_format_32 {
- 	uint64_t		ilf_ino;	/* inode number */
- 	union {
- 		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
--		uuid_t		ilfu_uuid;	/* mount point value */
-+		u8		__pad[16];	/* unused */
- 	} ilf_u;
- 	int64_t			ilf_blkno;	/* blkno of inode buffer */
- 	int32_t			ilf_len;	/* len of inode buffer */
-@@ -311,7 +311,7 @@ struct xfs_inode_log_format_32 {
- #define	XFS_ILOG_DEXT	0x004	/* log i_df.if_extents */
- #define	XFS_ILOG_DBROOT	0x008	/* log i_df.i_broot */
- #define	XFS_ILOG_DEV	0x010	/* log the dev field */
--#define	XFS_ILOG_UUID	0x020	/* log the uuid field */
-+#define	XFS_ILOG_UUID	0x020	/* added long ago, but never used */
- #define	XFS_ILOG_ADATA	0x040	/* log i_af.if_data */
- #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
- #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
-@@ -329,9 +329,9 @@ struct xfs_inode_log_format_32 {
- 
- #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
--				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
--				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
--				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
-+				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
-+				 XFS_ILOG_ABROOT | XFS_ILOG_DOWNER | \
-+				 XFS_ILOG_AOWNER)
- 
- #define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT)
-@@ -341,10 +341,10 @@ struct xfs_inode_log_format_32 {
- 
- #define	XFS_ILOG_ALL		(XFS_ILOG_CORE | XFS_ILOG_DDATA | \
- 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
--				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
--				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
--				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP | \
--				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
-+				 XFS_ILOG_DEV | XFS_ILOG_ADATA | \
-+				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
-+				 XFS_ILOG_TIMESTAMP | XFS_ILOG_DOWNER | \
-+				 XFS_ILOG_AOWNER)
- 
- static inline int xfs_ilog_fbroot(int w)
+  * Shift extent records to the left/right to cover/create a hole.
+  *
+- * The maximum number of extents to be shifted in a single operation is
+- * @num_exts. @stop_fsb specifies the file offset at which to stop shift and the
++ * @stop_fsb specifies the file offset at which to stop shift and the
+  * file offset where we've left off is returned in @next_fsb. @offset_shift_fsb
+  * is the length by which each extent is shifted. If there is no hole to shift
+  * the extents into, this will be considered invalid operation and we abort
+@@ -5709,14 +5708,12 @@ xfs_bmap_shift_extents(
+ 	xfs_fileoff_t		stop_fsb,
+ 	xfs_fsblock_t		*firstblock,
+ 	struct xfs_defer_ops	*dfops,
+-	enum shift_direction	direction,
+-	int			num_exts)
++	enum shift_direction	direction)
  {
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 9bbc2d7cc8cb..bd60ad313173 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -72,7 +72,6 @@ xfs_inode_item_data_fork_size(
- 		break;
- 
- 	case XFS_DINODE_FMT_DEV:
--	case XFS_DINODE_FMT_UUID:
- 		break;
- 	default:
- 		ASSERT(0);
-@@ -156,8 +155,7 @@ xfs_inode_item_format_data_fork(
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
- 		iip->ili_fields &=
--			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
--			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-+			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
- 
- 		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
- 		    ip->i_d.di_nextents > 0 &&
-@@ -181,8 +179,7 @@ xfs_inode_item_format_data_fork(
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
- 		iip->ili_fields &=
--			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
--			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-+			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT | XFS_ILOG_DEV);
- 
- 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
- 		    ip->i_df.if_broot_bytes > 0) {
-@@ -200,8 +197,7 @@ xfs_inode_item_format_data_fork(
- 		break;
- 	case XFS_DINODE_FMT_LOCAL:
- 		iip->ili_fields &=
--			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT |
--			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-+			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
- 		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
- 		    ip->i_df.if_bytes > 0) {
- 			/*
-@@ -224,18 +220,10 @@ xfs_inode_item_format_data_fork(
- 		break;
- 	case XFS_DINODE_FMT_DEV:
- 		iip->ili_fields &=
--			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
--			  XFS_ILOG_DEXT | XFS_ILOG_UUID);
-+			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
- 		if (iip->ili_fields & XFS_ILOG_DEV)
- 			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
- 		break;
--	case XFS_DINODE_FMT_UUID:
--		iip->ili_fields &=
--			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
--			  XFS_ILOG_DEXT | XFS_ILOG_DEV);
--		if (iip->ili_fields & XFS_ILOG_UUID)
--			ilf->ilf_u.ilfu_uuid = ip->i_df.if_u2.if_uuid;
--		break;
- 	default:
- 		ASSERT(0);
- 		break;
-@@ -441,7 +429,7 @@ xfs_inode_item_format(
- 	ilf->ilf_dsize = 0;
- 	ilf->ilf_asize = 0;
- 	ilf->ilf_pad = 0;
--	uuid_copy(&ilf->ilf_u.ilfu_uuid, &uuid_null);
-+	memset(&ilf->ilf_u, 0, sizeof(ilf->ilf_u));
- 
- 	xlog_finish_iovec(lv, vecp, sizeof(*ilf));
- 
-@@ -892,8 +880,7 @@ xfs_inode_item_format_convert(
- 	in_f->ilf_asize = in_f32->ilf_asize;
- 	in_f->ilf_dsize = in_f32->ilf_dsize;
- 	in_f->ilf_ino = in_f32->ilf_ino;
--	/* copy biggest field of ilf_u */
--	uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
-+	memcpy(&in_f->ilf_u, &in_f32->ilf_u, sizeof(in_f->ilf_u));
- 	in_f->ilf_blkno = in_f32->ilf_blkno;
- 	in_f->ilf_len = in_f32->ilf_len;
- 	in_f->ilf_boffset = in_f32->ilf_boffset;
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index c393a2f6d8c3..23ba69fcc516 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -124,7 +124,6 @@ xfs_bulkstat_one_int(
- 		buf->bs_blocks = 0;
- 		break;
- 	case XFS_DINODE_FMT_LOCAL:
--	case XFS_DINODE_FMT_UUID:
- 		buf->bs_rdev = 0;
- 		buf->bs_blksize = mp->m_sb.sb_blocksize;
- 		buf->bs_blocks = 0;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ee34899396b2..4e48e0534345 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3163,16 +3163,8 @@ xlog_recover_inode_pass2(
+ 	struct xfs_btree_cur		*cur = NULL;
+ 	struct xfs_bmbt_irec            got;
+ 	struct xfs_mount		*mp = ip->i_mount;
+ 	struct xfs_ifork		*ifp;
+-	xfs_extnum_t			nexts = 0;
+ 	xfs_extnum_t			current_ext;
+ 	xfs_extnum_t			total_extents;
+ 	xfs_extnum_t			stop_extent;
+@@ -5814,31 +5811,27 @@ xfs_bmap_shift_extents(
+ 		}
  	}
  
- 	fields = in_f->ilf_fields;
--	switch (fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
--	case XFS_ILOG_DEV:
-+	if (fields & XFS_ILOG_DEV)
- 		xfs_dinode_put_rdev(dip, in_f->ilf_u.ilfu_rdev);
--		break;
--	case XFS_ILOG_UUID:
--		memcpy(XFS_DFORK_DPTR(dip),
--		       &in_f->ilf_u.ilfu_uuid,
--		       sizeof(uuid_t));
--		break;
--	}
+-	while (nexts++ < num_exts) {
+-		error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
+-					   &current_ext, &got, cur, &logflags,
+-					   direction, dfops);
+-		if (error)
+-			goto del_cursor;
+-		/*
+-		 * If there was an extent merge during the shift, the extent
+-		 * count can change. Update the total and grade the next record.
+-		 */
+-		if (direction == SHIFT_LEFT) {
+-			total_extents = xfs_iext_count(ifp);
+-			stop_extent = total_extents;
+-		}
++	error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
++				   &current_ext, &got, cur, &logflags,
++				   direction, dfops);
++	if (error)
++		goto del_cursor;
++	/*
++	 * If there was an extent merge during the shift, the extent
++	 * count can change. Update the total and grade the next record.
++	 */
++	if (direction == SHIFT_LEFT) {
++		total_extents = xfs_iext_count(ifp);
++		stop_extent = total_extents;
++	}
  
- 	if (in_f->ilf_size == 2)
- 		goto out_owner_change;
+-		if (current_ext == stop_extent) {
+-			*done = 1;
+-			*next_fsb = NULLFSBLOCK;
+-			break;
+-		}
+-		xfs_iext_get_extent(ifp, current_ext, &got);
++	if (current_ext == stop_extent) {
++		*done = 1;
++		goto del_cursor;
+ 	}
++	xfs_iext_get_extent(ifp, current_ext, &got);
+ 
+-	if (!*done)
+-		*next_fsb = got.br_startoff;
++	*next_fsb = got.br_startoff;
+ 
+ del_cursor:
+ 	if (cur)
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index c837e88ba19a..985b1c26566a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -183,15 +183,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+ 		!isnullstartblock(irec->br_startblock);
+ }
+ 
+-/*
+- * This macro is used to determine how many extents will be shifted
+- * in one write transaction. We could require two splits,
+- * an extent move on the first and an extent merge on the second,
+- * So it is proper that one extent is shifted inside write transaction
+- * at a time.
+- */
+-#define XFS_BMAP_MAX_SHIFT_EXTENTS	1
+-
+ enum shift_direction {
+ 	SHIFT_LEFT = 0,
+ 	SHIFT_RIGHT,
+@@ -239,8 +230,7 @@ uint	xfs_default_attroffset(struct xfs_inode *ip);
+ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+ 		int *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
+-		struct xfs_defer_ops *dfops, enum shift_direction direction,
+-		int num_exts);
++		struct xfs_defer_ops *dfops, enum shift_direction direction);
+ int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
+ int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+ 		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 47b53c88de7c..3273f083c496 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1359,14 +1359,9 @@ xfs_collapse_file_space(
+ 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+ 		xfs_defer_init(&dfops, &first_block);
+-
+-		/*
+-		 * We are using the write transaction in which max 2 bmbt
+-		 * updates are allowed
+-		 */
+ 		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+ 				&done, stop_fsb, &first_block, &dfops,
+-				SHIFT_LEFT, XFS_BMAP_MAX_SHIFT_EXTENTS);
++				SHIFT_LEFT);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -1438,14 +1433,9 @@ xfs_insert_file_space(
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 		xfs_defer_init(&dfops, &first_block);
+-
+-		/*
+-		 * We are using the write transaction in which max 2 bmbt
+-		 * updates are allowed
+-		 */
+ 		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+ 				&done, stop_fsb, &first_block, &dfops,
+-				SHIFT_RIGHT, XFS_BMAP_MAX_SHIFT_EXTENTS);
++				SHIFT_RIGHT);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
 -- 
 2.14.1
 
