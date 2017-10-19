@@ -1,138 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49092 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52600 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755005AbdJSOXp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:45 -0400
+        with ESMTP id S1754239AbdJSOXU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:20 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/16] xfs: trim writepage mapping to within eof
-Date: Thu, 19 Oct 2017 16:22:59 +0200
-Message-Id: <20171019142259.20082-17-hch@lst.de>
+Subject: [PATCH 07/16] xfs: Capture state of the right inode in xfs_iflush_done
+Date: Thu, 19 Oct 2017 16:22:50 +0200
+Message-Id: <20171019142259.20082-8-hch@lst.de>
 In-Reply-To: <20171019142259.20082-1-hch@lst.de>
 References: <20171019142259.20082-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-commit 40214d128e07dd21bb07a8ed6a7fe2f911281ab2 upstream.
+commit 842f6e9f786226c58fcbd5ef80eadca72fdfe652 upstream.
 
-The writeback rework in commit fbcc02561359 ("xfs: Introduce
-writeback context for writepages") introduced a subtle change in
-behavior with regard to the block mapping used across the
-->writepages() sequence. The previous xfs_cluster_write() code would
-only flush pages up to EOF at the time of the writepage, thus
-ensuring that any pages due to file-extending writes would be
-handled on a separate cycle and with a new, updated block mapping.
+My previous patch: d3a304b6292168b83b45d624784f973fdc1ca674 check for
+XFS_LI_FAILED flag xfs_iflush done, so the failed item can be properly
+resubmitted.
 
-The updated code establishes a block mapping in xfs_writepage_map()
-that could extend beyond EOF if the file has post-eof preallocation.
-Because we now use the generic writeback infrastructure and pass the
-cached mapping to each writepage call, there is no implicit EOF
-limit in place. If eofblocks trimming occurs during ->writepages(),
-any post-eof portion of the cached mapping becomes invalid. The
-eofblocks code has no means to serialize against writeback because
-there are no pages associated with post-eof blocks. Therefore if an
-eofblocks trim occurs and is followed by a file-extending buffered
-write, not only has the mapping become invalid, but we could end up
-writing a page to disk based on the invalid mapping.
+In the loop scanning other inodes being completed, it should check the
+current item for the XFS_LI_FAILED, and not the initial one.
 
-Consider the following sequence of events:
+The state of the initial inode is checked after the loop ends
 
-- A buffered write creates a delalloc extent and post-eof
-  speculative preallocation.
-- Writeback starts and on the first writepage cycle, the delalloc
-  extent is converted to real blocks (including the post-eof blocks)
-  and the mapping is cached.
-- The file is closed and xfs_release() trims post-eof blocks. The
-  cached writeback mapping is now invalid.
-- Another buffered write appends the file with a delalloc extent.
-- The concurrent writeback cycle picks up the just written page
-  because the writeback range end is LLONG_MAX. xfs_writepage_map()
-  attributes it to the (now invalid) cached mapping and writes the
-  data to an incorrect location on disk (and where the file offset is
-  still backed by a delalloc extent).
+Kudos to Eric for catching this.
 
-This problem is reproduced by xfstests test generic/464, which
-triggers racing writes, appends, open/closes and writeback requests.
-
-To address this problem, trim the mapping used during writeback to
-within EOF when the mapping is validated. This ensures the mapping
-is revalidated for any pages encountered beyond EOF as of the time
-the current mapping was cached or last validated.
-
-Reported-by: Eryu Guan <eguan@redhat.com>
-Diagnosed-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
- fs/xfs/libxfs/xfs_bmap.h |  1 +
- fs/xfs/xfs_aops.c        | 13 +++++++++++++
- 3 files changed, 25 insertions(+)
+ fs/xfs/xfs_inode_item.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d2f4ab175096..7eb99701054f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4057,6 +4057,17 @@ xfs_trim_extent(
- 	}
- }
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 94915747042c..3e49a41ca960 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -745,7 +745,7 @@ xfs_iflush_done(
+ 		 */
+ 		iip = INODE_ITEM(blip);
+ 		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
+-		    lip->li_flags & XFS_LI_FAILED)
++		    (blip->li_flags & XFS_LI_FAILED))
+ 			need_ail++;
  
-+/* trim extent to within eof */
-+void
-+xfs_trim_extent_eof(
-+	struct xfs_bmbt_irec	*irec,
-+	struct xfs_inode	*ip)
-+
-+{
-+	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
-+					      i_size_read(VFS_I(ip))));
-+}
-+
- /*
-  * Trim the returned map to the required bounds
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index db53ac7ff6df..f1446d127120 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -196,6 +196,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- 
- void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
-+void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index c2dee43a2994..d31cd1ebd8e9 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -438,6 +438,19 @@ xfs_imap_valid(
- {
- 	offset >>= inode->i_blkbits;
- 
-+	/*
-+	 * We have to make sure the cached mapping is within EOF to protect
-+	 * against eofblocks trimming on file release leaving us with a stale
-+	 * mapping. Otherwise, a page for a subsequent file extending buffered
-+	 * write could get picked up by this writeback cycle and written to the
-+	 * wrong blocks.
-+	 *
-+	 * Note that what we really want here is a generic mapping invalidation
-+	 * mechanism to protect us from arbitrary extent modifying contexts, not
-+	 * just eofblocks.
-+	 */
-+	xfs_trim_extent_eof(imap, XFS_I(inode));
-+
- 	return offset >= imap->br_startoff &&
- 		offset < imap->br_startoff + imap->br_blockcount;
- }
+ 		blip = next;
 -- 
 2.14.2
 
