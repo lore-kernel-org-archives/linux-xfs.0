@@ -1,55 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52600 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754239AbdJSOXU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:20 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/16] xfs: Capture state of the right inode in xfs_iflush_done
-Date: Thu, 19 Oct 2017 16:22:50 +0200
-Message-Id: <20171019142259.20082-8-hch@lst.de>
-In-Reply-To: <20171019142259.20082-1-hch@lst.de>
-References: <20171019142259.20082-1-hch@lst.de>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:2946 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753200AbdJSOxB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:53:01 -0400
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: Fix false positive by LOCKDEP_CROSSRELEASE
+Date: Thu, 19 Oct 2017 14:52:56 +0000
+Message-ID: <1508424774.2429.1.camel@wdc.com>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+         <1508336995.2923.2.camel@wdc.com> <20171019015705.GD32368@X58A-UD3R>
+In-Reply-To: <20171019015705.GD32368@X58A-UD3R>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <65485D8A1A7E2F488AC2566D9B74AA48@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: "byungchul.park@lge.com" <byungchul.park@lge.com>
+Cc: "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
-
-commit 842f6e9f786226c58fcbd5ef80eadca72fdfe652 upstream.
-
-My previous patch: d3a304b6292168b83b45d624784f973fdc1ca674 check for
-XFS_LI_FAILED flag xfs_iflush done, so the failed item can be properly
-resubmitted.
-
-In the loop scanning other inodes being completed, it should check the
-current item for the XFS_LI_FAILED, and not the initial one.
-
-The state of the initial inode is checked after the loop ends
-
-Kudos to Eric for catching this.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_inode_item.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 94915747042c..3e49a41ca960 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -745,7 +745,7 @@ xfs_iflush_done(
- 		 */
- 		iip = INODE_ITEM(blip);
- 		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
--		    lip->li_flags & XFS_LI_FAILED)
-+		    (blip->li_flags & XFS_LI_FAILED))
- 			need_ail++;
- 
- 		blip = next;
--- 
-2.14.2
-
+T24gVGh1LCAyMDE3LTEwLTE5IGF0IDEwOjU3ICswOTAwLCBCeXVuZ2NodWwgUGFyayB3cm90ZToN
+Cj4gT24gV2VkLCBPY3QgMTgsIDIwMTcgYXQgMDI6Mjk6NTZQTSArMDAwMCwgQmFydCBWYW4gQXNz
+Y2hlIHdyb3RlOg0KPiA+IE9uIFdlZCwgMjAxNy0xMC0xOCBhdCAxODozOCArMDkwMCwgQnl1bmdj
+aHVsIFBhcmsgd3JvdGU6DQo+ID4gPiBTZXZlcmFsIGZhbHNlIHBvc2l0aXZlcyB3ZXJlIHJlcG9y
+dGVkLCBzbyBJIHRyaWVkIHRvIGZpeCB0aGVtLg0KPiA+ID4gDQo+ID4gPiBJdCB3b3VsZCBiZSBh
+cHByZWNpYXRlZCBpZiB5b3UgdGVsbCBtZSBpZiBpdCB3b3JrcyBhcyBleHBlY3RlZCwgb3IgbGV0
+DQo+ID4gPiBtZSBrbm93IHlvdXIgb3Bpbmlvbi4NCj4gPiANCj4gPiBXaGF0IEkgaGF2ZSBiZWVu
+IHdvbmRlcmluZyBhYm91dCBpcyB3aGV0aGVyIHRoZSBjcm9zc2xvY2sgY2hlY2tpbmcgbWFrZXMN
+Cj4gPiBzZW5zZSBmcm9tIGEgY29uY2VwdHVhbCBwb2ludCBvZiB2aWV3LiBJIHRyaWVkIHRvIGZp
+bmQgZG9jdW1lbnRhdGlvbiBmb3IgdGhlDQo+ID4gY3Jvc3Nsb2NrIGNoZWNraW5nIGluIERvY3Vt
+ZW50YXRpb24vbG9ja2luZy9sb2NrZGVwLWRlc2lnbi50eHQgYnV0DQo+ID4gY291bGRuJ3QgZmlu
+ZCBhIGRlc2NyaXB0aW9uIG9mIHRoZSBjcm9zc2xvY2sgY2hlY2tpbmcuIFNob3VsZG4ndCBpdCBi
+ZQ0KPiA+IGRvY3VtZW50ZWQgc29tZXdoZXJlIHdoYXQgdGhlIGNyb3NzbG9jayBjaGVja3MgZG8g
+YW5kIHdoYXQgdGhlIHRoZW9yeSBpcw0KPiA+IGJlaGluZCB0aGVzZSBjaGVja3M/DQo+IA0KPiBE
+b2N1bWVudGF0aW9uL2xvY2tpbmcvY3Jvc3NyZWxlYXNlLnR4dCB3b3VsZCBiZSBoZWxwZnVsLg0K
+DQpUaGF0IGRvY3VtZW50IGlzIGluY29tcGxldGUuIEl0IGRvZXMgbm90IG1lbnRpb24gdGhhdCBh
+bHRob3VnaCBpdCBjYW4gYmUNCnByb3ZlbiB0aGF0IHRoZSB0cmFkaXRpb25hbCBsb2NrIHZhbGlk
+YXRpb24gY29kZSB3b24ndCBwcm9kdWNlIGZhbHNlDQpwb3NpdGl2ZXMsIHRoYXQgdGhlIGNyb3Nz
+LXJlbGVhc2UgY2hlY2tzIGRvIG5vdCBoYXZlIGEgc29saWQgdGhlb3JldGljYWwNCmZvdW5kYXRp
+b24gYW5kIGFyZSBwcm9uZSB0byBwcm9kdWNlIGZhbHNlIHBvc2l0aXZlIHJlcG9ydHMuDQoNCkJh
+cnQu
