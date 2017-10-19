@@ -1,41 +1,282 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:50118 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751468AbdJSGD1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Oct 2017 02:03:27 -0400
-Date: Thu, 19 Oct 2017 00:02:49 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v9 0/6] MAP_DIRECT for DAX userspace flush
-Message-ID: <20171019060249.GA6555@obsidianresearch.com>
-References: <20171012142319.GA11254@lst.de>
- <CAPcyv4gTON__Ohop0B5R2gsKXC71bycTBozqGmF3WmwG9C6LVA@mail.gmail.com>
- <20171013065716.GB26461@lst.de>
- <CAPcyv4gaLBBefOU+8f7_ypYnCTjSMk+9nq8NfCqBHAE+NbUusw@mail.gmail.com>
- <20171013163822.GA17411@obsidianresearch.com>
- <CAPcyv4jDHp8z2VgVfyRK1WwMzixYVQnh54LZoPD57HB3yqSPPQ@mail.gmail.com>
- <20171013173145.GA18702@obsidianresearch.com>
- <CAPcyv4jZJRto1jwmNU--pqH_6dOVMyj=68ZwEjAmmkgX=mRk7w@mail.gmail.com>
- <20171014015752.GA25172@obsidianresearch.com>
- <e29eb9ed-2d87-cde8-4efa-50de1fff0c04@grimberg.me>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e29eb9ed-2d87-cde8-4efa-50de1fff0c04@grimberg.me>
+Received: from bombadil.infradead.org ([65.50.211.133]:33864 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbdJSHAT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:19 -0400
+Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e54oU-0005AX-44
+        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:18 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/15] xfs: remove if_rdev
+Date: Thu, 19 Oct 2017 08:59:34 +0200
+Message-Id: <20171019065942.18813-8-hch@lst.de>
+In-Reply-To: <20171019065942.18813-1-hch@lst.de>
+References: <20171019065942.18813-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Dan Williams <dan.j.williams@intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 03:02:52PM +0300, Sagi Grimberg wrote:
-> But why should the kernel ever need to mangle the CQ? if a lease break
-> would deregister the MR the device is expected to generate remote
-> protection errors on its own.
+We can simply use the i_rdev field in the Linux inode and just convert
+to and from the XFS dev_t when reading or logging/writing the inode.
 
-The point is to avoid protection errors - hittles change over when the
-DAX mapping changes like ODP does.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 38 +++++++++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_inode_fork.h |  1 -
+ fs/xfs/xfs_inode.c             |  9 ++++-----
+ fs/xfs/xfs_inode.h             |  4 ++--
+ fs/xfs/xfs_inode_item.c        |  2 +-
+ fs/xfs/xfs_iops.c              | 16 +---------------
+ fs/xfs/xfs_itable.c            |  2 +-
+ 7 files changed, 30 insertions(+), 42 deletions(-)
 
-Theonly way to get there is to notify the app before the mappings
-change.. Dan suggested having ibv_pollcq return this indication..
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 1d003ca21562..b1e69734c450 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -42,21 +42,27 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+ STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+ STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
+ 
++static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
++{
++	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
++}
++
+ /*
+- * Move inode type and inode format specific information from the
+- * on-disk inode to the in-core inode.  For fifos, devs, and sockets
+- * this means set if_rdev to the proper value.  For files, directories,
+- * and symlinks this means to bring in the in-line data or extent
+- * pointers.  For a file in B-tree format, only the root is immediately
+- * brought in-core.  The rest will be in-lined in if_extents when it
+- * is first referenced (see xfs_iread_extents()).
++ * Copy inode type and data and attr format specific information from the
++ * on-disk inode to the in-core inode and fork structures.  For fifos, devices,
++ * and sockets this means set i_rdev to the proper value.  For files,
++ * directories, and symlinks this means to bring in the in-line data or extent
++ * pointers as well as the attribute fork.  For a fork in B-tree format, only
++ * the root is immediately brought in-core.  The rest will be read in later when
++ * first referenced (see xfs_iread_extents()).
+  */
+ int
+ xfs_iformat_fork(
+-	xfs_inode_t		*ip,
+-	xfs_dinode_t		*dip)
++	struct xfs_inode	*ip,
++	struct xfs_dinode	*dip)
+ {
+-	xfs_attr_shortform_t	*atp;
++	struct inode		*inode = VFS_I(ip);
++	struct xfs_attr_shortform *atp;
+ 	int			size;
+ 	int			error = 0;
+ 	xfs_fsize_t             di_size;
+@@ -95,8 +101,7 @@ xfs_iformat_fork(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	if (unlikely(xfs_is_reflink_inode(ip) &&
+-	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
++	if (unlikely(xfs_is_reflink_inode(ip) && !S_ISREG(inode->i_mode))) {
+ 		xfs_warn(ip->i_mount,
+ 			"corrupt dinode %llu, wrong file type for reflink.",
+ 			ip->i_ino);
+@@ -115,7 +120,7 @@ xfs_iformat_fork(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	switch (VFS_I(ip)->i_mode & S_IFMT) {
++	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFIFO:
+ 	case S_IFCHR:
+ 	case S_IFBLK:
+@@ -126,7 +131,7 @@ xfs_iformat_fork(
+ 			return -EFSCORRUPTED;
+ 		}
+ 		ip->i_d.di_size = 0;
+-		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
++		inode->i_rdev = xfs_to_linux_dev_t(xfs_dinode_get_rdev(dip));
+ 		break;
+ 
+ 	case S_IFREG:
+@@ -184,8 +189,7 @@ xfs_iformat_fork(
+ 		return error;
+ 
+ 	/* Check inline dir contents. */
+-	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+-	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
++	if (S_ISDIR(inode->i_mode) && dip->di_format == XFS_DINODE_FMT_LOCAL) {
+ 		error = xfs_dir2_sf_verify(ip);
+ 		if (error) {
+ 			xfs_idestroy_fork(ip, XFS_DATA_FORK);
+@@ -898,7 +902,7 @@ xfs_iflush_fork(
+ 	case XFS_DINODE_FMT_DEV:
+ 		if (iip->ili_fields & XFS_ILOG_DEV) {
+ 			ASSERT(whichfork == XFS_DATA_FORK);
+-			xfs_dinode_put_rdev(dip, ip->i_df.if_u2.if_rdev);
++			xfs_dinode_put_rdev(dip, sysv_encode_dev(VFS_I(ip)->i_rdev));
+ 		}
+ 		break;
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 064babdc373c..e0c42ea9b8d0 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -69,7 +69,6 @@ typedef struct xfs_ifork {
+ 						/* very small file extents */
+ 		char		if_inline_data[XFS_INLINE_DATA];
+ 						/* very small file data */
+-		xfs_dev_t	if_rdev;	/* dev number if special */
+ 	} if_u2;
+ } xfs_ifork_t;
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 4ec5b7f45401..a929ca72fa8e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -767,7 +767,7 @@ xfs_ialloc(
+ 	xfs_inode_t	*pip,
+ 	umode_t		mode,
+ 	xfs_nlink_t	nlink,
+-	xfs_dev_t	rdev,
++	dev_t		rdev,
+ 	prid_t		prid,
+ 	int		okalloc,
+ 	xfs_buf_t	**ialloc_context,
+@@ -819,6 +819,7 @@ xfs_ialloc(
+ 	set_nlink(inode, nlink);
+ 	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+ 	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
++	inode->i_rdev = rdev;
+ 	xfs_set_projid(ip, prid);
+ 
+ 	if (pip && XFS_INHERIT_GID(pip)) {
+@@ -867,7 +868,6 @@ xfs_ialloc(
+ 	case S_IFBLK:
+ 	case S_IFSOCK:
+ 		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
+-		ip->i_df.if_u2.if_rdev = rdev;
+ 		ip->i_df.if_flags = 0;
+ 		flags |= XFS_ILOG_DEV;
+ 		break;
+@@ -975,7 +975,7 @@ xfs_dir_ialloc(
+ 					   the inode. */
+ 	umode_t		mode,
+ 	xfs_nlink_t	nlink,
+-	xfs_dev_t	rdev,
++	dev_t		rdev,
+ 	prid_t		prid,		/* project id */
+ 	int		okalloc,	/* ok to allocate new space */
+ 	xfs_inode_t	**ipp,		/* pointer to inode; it will be
+@@ -1147,7 +1147,7 @@ xfs_create(
+ 	xfs_inode_t		*dp,
+ 	struct xfs_name		*name,
+ 	umode_t			mode,
+-	xfs_dev_t		rdev,
++	dev_t			rdev,
+ 	xfs_inode_t		**ipp)
+ {
+ 	int			is_dir = S_ISDIR(mode);
+@@ -1183,7 +1183,6 @@ xfs_create(
+ 		return error;
+ 
+ 	if (is_dir) {
+-		rdev = 0;
+ 		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
+ 		tres = &M_RES(mp)->tr_mkdir;
+ 	} else {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 0ee453de239a..cc13c3763721 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -391,7 +391,7 @@ void		xfs_inactive(struct xfs_inode *ip);
+ int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
+ 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
+ int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
+-			   umode_t mode, xfs_dev_t rdev, struct xfs_inode **ipp);
++			   umode_t mode, dev_t rdev, struct xfs_inode **ipp);
+ int		xfs_create_tmpfile(struct xfs_inode *dp, struct dentry *dentry,
+ 			   umode_t mode, struct xfs_inode **ipp);
+ int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
+@@ -428,7 +428,7 @@ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+ 
+ int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+-			       xfs_nlink_t, xfs_dev_t, prid_t, int,
++			       xfs_nlink_t, dev_t, prid_t, int,
+ 			       struct xfs_inode **, int *);
+ 
+ /* from xfs_file.c */
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index bd60ad313173..eb6f4f7c9520 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -222,7 +222,7 @@ xfs_inode_item_format_data_fork(
+ 		iip->ili_fields &=
+ 			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
+ 		if (iip->ili_fields & XFS_ILOG_DEV)
+-			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
++			ilf->ilf_u.ilfu_rdev = sysv_encode_dev(VFS_I(ip)->i_rdev);
+ 		break;
+ 	default:
+ 		ASSERT(0);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 17081c77ef86..8b5676d244ca 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -160,7 +160,6 @@ xfs_generic_create(
+ 	if (S_ISCHR(mode) || S_ISBLK(mode)) {
+ 		if (unlikely(!sysv_valid_dev(rdev) || MAJOR(rdev) & ~0x1ff))
+ 			return -EINVAL;
+-		rdev = sysv_encode_dev(rdev);
+ 	} else {
+ 		rdev = 0;
+ 	}
+@@ -535,8 +534,7 @@ xfs_vn_getattr(
+ 	case S_IFBLK:
+ 	case S_IFCHR:
+ 		stat->blksize = BLKDEV_IOSIZE;
+-		stat->rdev = MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
+-				   sysv_minor(ip->i_df.if_u2.if_rdev));
++		stat->rdev = inode->i_rdev;
+ 		break;
+ 	default:
+ 		if (XFS_IS_REALTIME_INODE(ip)) {
+@@ -1231,18 +1229,6 @@ xfs_setup_inode(
+ 	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
+ 	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
+ 
+-	switch (inode->i_mode & S_IFMT) {
+-	case S_IFBLK:
+-	case S_IFCHR:
+-		inode->i_rdev =
+-			MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
+-			      sysv_minor(ip->i_df.if_u2.if_rdev));
+-		break;
+-	default:
+-		inode->i_rdev = 0;
+-		break;
+-	}
+-
+ 	i_size_write(inode, ip->i_d.di_size);
+ 	xfs_diflags_to_iflags(inode, ip);
+ 
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 23ba69fcc516..7595baee0c7c 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -119,7 +119,7 @@ xfs_bulkstat_one_int(
+ 
+ 	switch (dic->di_format) {
+ 	case XFS_DINODE_FMT_DEV:
+-		buf->bs_rdev = ip->i_df.if_u2.if_rdev;
++		buf->bs_rdev = sysv_encode_dev(inode->i_rdev);
+ 		buf->bs_blksize = BLKDEV_IOSIZE;
+ 		buf->bs_blocks = 0;
+ 		break;
+-- 
+2.14.1
 
-Jason
