@@ -1,88 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18463 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932717AbdJRE6C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 00:58:02 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9I4w1rQ022772
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2017 04:58:01 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9I4w00g028126
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2017 04:58:00 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9I4w0u2013854
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2017 04:58:00 GMT
-Date: Tue, 17 Oct 2017 21:57:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfsdocs: fix description of directory free block nvalid and
- nused header fields
-Message-ID: <20171018045759.GC4703@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from bombadil.infradead.org ([65.50.211.133]:34848 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751078AbdJSHAO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:14 -0400
+Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e54oP-0004pt-R3
+        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:14 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/15] xfs: remove the never fully implemented UUID fork format
+Date: Thu, 19 Oct 2017 08:59:33 +0200
+Message-Id: <20171019065942.18813-7-hch@lst.de>
+In-Reply-To: <20171019065942.18813-1-hch@lst.de>
+References: <20171019065942.18813-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-The descriptions of the directory free block header's nvalid and nused
-fields are backwards, so flip them.  While we're fixing them, augment
-the description to relate it to the rest of the directory structure.
+Remove the dead code dealing with the UUID fork format that was never
+implemented in Linux (and neither in IRIX as far as I know).
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- .../XFS_Filesystem_Structure/directories.asciidoc  |   20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  6 +-----
+ fs/xfs/libxfs/xfs_bmap.c       |  4 ----
+ fs/xfs/libxfs/xfs_format.h     |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c |  9 ---------
+ fs/xfs/libxfs/xfs_inode_fork.h |  1 -
+ fs/xfs/libxfs/xfs_log_format.h | 20 ++++++++++----------
+ fs/xfs/xfs_inode_item.c        | 25 ++++++-------------------
+ fs/xfs/xfs_itable.c            |  1 -
+ fs/xfs/xfs_log_recover.c       | 10 +---------
+ 9 files changed, 19 insertions(+), 59 deletions(-)
 
-diff --git a/design/XFS_Filesystem_Structure/directories.asciidoc b/design/XFS_Filesystem_Structure/directories.asciidoc
-index 06d682e..23645a7 100644
---- a/design/XFS_Filesystem_Structure/directories.asciidoc
-+++ b/design/XFS_Filesystem_Structure/directories.asciidoc
-@@ -1221,10 +1221,14 @@ The magic number of the free block, ``XD2F'' (0x0x58443246).
- The starting directory block number for the bests array.
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 5c16db86b38f..53cc8b986eac 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -397,13 +397,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
+ 	/* rounded down */
+ 	offset = (XFS_LITINO(mp, dp->i_d.di_version) - bytes) >> 3;
  
- *nvalid*::
--Number of elements in the bests array.
-+Number of valid elements in the bests array.  This number must
-+correspond with the number of directory blocks can fit under the inode
-++di_size+.
+-	switch (dp->i_d.di_format) {
+-	case XFS_DINODE_FMT_DEV:
++	if (dp->i_d.di_format == XFS_DINODE_FMT_DEV) {
+ 		minforkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
+ 		return (offset >= minforkoff) ? minforkoff : 0;
+-	case XFS_DINODE_FMT_UUID:
+-		minforkoff = roundup(sizeof(uuid_t), 8) >> 3;
+-		return (offset >= minforkoff) ? minforkoff : 0;
+ 	}
  
- *nused*::
--Number of valid elements in the bests array.
-+Number of used elements in the bests array.  This number must correspond
-+with the number of directory blocks actually mapped under the inode
-++di_size+.
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6431386f4676..22e7578e5696 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -231,7 +231,6 @@ xfs_bmap_forkoff_reset(
+ {
+ 	if (whichfork == XFS_ATTR_FORK &&
+ 	    ip->i_d.di_format != XFS_DINODE_FMT_DEV &&
+-	    ip->i_d.di_format != XFS_DINODE_FMT_UUID &&
+ 	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE) {
+ 		uint	dfl_forkoff = xfs_default_attroffset(ip) >> 3;
  
- [source, c]
- ----
-@@ -1262,10 +1266,14 @@ v3 directory block header.  The magic number is "XDF3" (0x0x58444633).
- The starting directory block number for the bests array.
+@@ -1086,9 +1085,6 @@ xfs_bmap_add_attrfork(
+ 	case XFS_DINODE_FMT_DEV:
+ 		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
+ 		break;
+-	case XFS_DINODE_FMT_UUID:
+-		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
+-		break;
+ 	case XFS_DINODE_FMT_LOCAL:
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 	case XFS_DINODE_FMT_BTREE:
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 23229f0c5b15..66f9b9f61d92 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -941,7 +941,7 @@ typedef enum xfs_dinode_fmt {
+ 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
+ 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
+ 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
+-	XFS_DINODE_FMT_UUID		/* uuid_t */
++	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
+ } xfs_dinode_fmt_t;
  
- *nvalid*::
--Number of elements in the bests array.
-+Number of valid elements in the bests array.  This number must
-+correspond with the number of directory blocks can fit under the inode
-++di_size+.
+ /*
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 31786bad9738..1d003ca21562 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -902,15 +902,6 @@ xfs_iflush_fork(
+ 		}
+ 		break;
  
- *nused*::
--Number of valid elements in the bests array.
-+Number of used elements in the bests array.  This number must correspond
-+with the number of directory blocks actually mapped under the inode
-++di_size+.
+-	case XFS_DINODE_FMT_UUID:
+-		if (iip->ili_fields & XFS_ILOG_UUID) {
+-			ASSERT(whichfork == XFS_DATA_FORK);
+-			memcpy(XFS_DFORK_DPTR(dip),
+-			       &ip->i_df.if_u2.if_uuid,
+-			       sizeof(uuid_t));
+-		}
+-		break;
+-
+ 	default:
+ 		ASSERT(0);
+ 		break;
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 6750f0462d21..064babdc373c 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -70,7 +70,6 @@ typedef struct xfs_ifork {
+ 		char		if_inline_data[XFS_INLINE_DATA];
+ 						/* very small file data */
+ 		xfs_dev_t	if_rdev;	/* dev number if special */
+-		uuid_t		if_uuid;	/* mount point value */
+ 	} if_u2;
+ } xfs_ifork_t;
  
- *pad*::
- Padding to maintain alignment.
-@@ -1304,9 +1312,9 @@ value is decremented and the associated +bests[]+ entry is set to 0xffff.
- * As the first data block always contains ``.'' and ``..'', it's invalid for the
- directory to have a hole at the start.
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 71de185735e0..a7ab6adae7f6 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -274,7 +274,7 @@ typedef struct xfs_inode_log_format {
+ 	uint64_t		ilf_ino;	/* inode number */
+ 	union {
+ 		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+-		uuid_t		ilfu_uuid;	/* mount point value */
++		u8		__pad[16];	/* unused */
+ 	} ilf_u;
+ 	int64_t			ilf_blkno;	/* blkno of inode buffer */
+ 	int32_t			ilf_len;	/* len of inode buffer */
+@@ -295,7 +295,7 @@ struct xfs_inode_log_format_32 {
+ 	uint64_t		ilf_ino;	/* inode number */
+ 	union {
+ 		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+-		uuid_t		ilfu_uuid;	/* mount point value */
++		u8		__pad[16];	/* unused */
+ 	} ilf_u;
+ 	int64_t			ilf_blkno;	/* blkno of inode buffer */
+ 	int32_t			ilf_len;	/* len of inode buffer */
+@@ -311,7 +311,7 @@ struct xfs_inode_log_format_32 {
+ #define	XFS_ILOG_DEXT	0x004	/* log i_df.if_extents */
+ #define	XFS_ILOG_DBROOT	0x008	/* log i_df.i_broot */
+ #define	XFS_ILOG_DEV	0x010	/* log the dev field */
+-#define	XFS_ILOG_UUID	0x020	/* log the uuid field */
++#define	XFS_ILOG_UUID	0x020	/* added long ago, but never used */
+ #define	XFS_ILOG_ADATA	0x040	/* log i_af.if_data */
+ #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
+ #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
+@@ -329,9 +329,9 @@ struct xfs_inode_log_format_32 {
  
--* The freeindex's +hdr.nvalid+ should always be the same as the number of
-+* The freeindex's +hdr.nused+ should always be the same as the number of
- allocated data directory blocks containing name/inode data and will always be
--less than or equal to +hdr.nused+.  The value of +hdr.nused+ should be the same
-+less than or equal to +hdr.nvalid+.  The value of +hdr.nvalid+ should be the same
- as the index of the last data directory block plus one (i.e. when the last data
- block is freed, +nused+ and +nvalid+ are decremented).
+ #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+ 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
+-				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
+-				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
+-				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
++				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
++				 XFS_ILOG_ABROOT | XFS_ILOG_DOWNER | \
++				 XFS_ILOG_AOWNER)
  
+ #define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+ 				 XFS_ILOG_DBROOT)
+@@ -341,10 +341,10 @@ struct xfs_inode_log_format_32 {
+ 
+ #define	XFS_ILOG_ALL		(XFS_ILOG_CORE | XFS_ILOG_DDATA | \
+ 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
+-				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
+-				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+-				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP | \
+-				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
++				 XFS_ILOG_DEV | XFS_ILOG_ADATA | \
++				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
++				 XFS_ILOG_TIMESTAMP | XFS_ILOG_DOWNER | \
++				 XFS_ILOG_AOWNER)
+ 
+ static inline int xfs_ilog_fbroot(int w)
+ {
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 9bbc2d7cc8cb..bd60ad313173 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -72,7 +72,6 @@ xfs_inode_item_data_fork_size(
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_DEV:
+-	case XFS_DINODE_FMT_UUID:
+ 		break;
+ 	default:
+ 		ASSERT(0);
+@@ -156,8 +155,7 @@ xfs_inode_item_format_data_fork(
+ 	switch (ip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		iip->ili_fields &=
+-			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+-			  XFS_ILOG_DEV | XFS_ILOG_UUID);
++			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+ 
+ 		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
+ 		    ip->i_d.di_nextents > 0 &&
+@@ -181,8 +179,7 @@ xfs_inode_item_format_data_fork(
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		iip->ili_fields &=
+-			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
+-			  XFS_ILOG_DEV | XFS_ILOG_UUID);
++			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT | XFS_ILOG_DEV);
+ 
+ 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
+ 		    ip->i_df.if_broot_bytes > 0) {
+@@ -200,8 +197,7 @@ xfs_inode_item_format_data_fork(
+ 		break;
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		iip->ili_fields &=
+-			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT |
+-			  XFS_ILOG_DEV | XFS_ILOG_UUID);
++			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+ 		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
+ 		    ip->i_df.if_bytes > 0) {
+ 			/*
+@@ -224,18 +220,10 @@ xfs_inode_item_format_data_fork(
+ 		break;
+ 	case XFS_DINODE_FMT_DEV:
+ 		iip->ili_fields &=
+-			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+-			  XFS_ILOG_DEXT | XFS_ILOG_UUID);
++			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
+ 		if (iip->ili_fields & XFS_ILOG_DEV)
+ 			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
+ 		break;
+-	case XFS_DINODE_FMT_UUID:
+-		iip->ili_fields &=
+-			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+-			  XFS_ILOG_DEXT | XFS_ILOG_DEV);
+-		if (iip->ili_fields & XFS_ILOG_UUID)
+-			ilf->ilf_u.ilfu_uuid = ip->i_df.if_u2.if_uuid;
+-		break;
+ 	default:
+ 		ASSERT(0);
+ 		break;
+@@ -441,7 +429,7 @@ xfs_inode_item_format(
+ 	ilf->ilf_dsize = 0;
+ 	ilf->ilf_asize = 0;
+ 	ilf->ilf_pad = 0;
+-	uuid_copy(&ilf->ilf_u.ilfu_uuid, &uuid_null);
++	memset(&ilf->ilf_u, 0, sizeof(ilf->ilf_u));
+ 
+ 	xlog_finish_iovec(lv, vecp, sizeof(*ilf));
+ 
+@@ -892,8 +880,7 @@ xfs_inode_item_format_convert(
+ 	in_f->ilf_asize = in_f32->ilf_asize;
+ 	in_f->ilf_dsize = in_f32->ilf_dsize;
+ 	in_f->ilf_ino = in_f32->ilf_ino;
+-	/* copy biggest field of ilf_u */
+-	uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
++	memcpy(&in_f->ilf_u, &in_f32->ilf_u, sizeof(in_f->ilf_u));
+ 	in_f->ilf_blkno = in_f32->ilf_blkno;
+ 	in_f->ilf_len = in_f32->ilf_len;
+ 	in_f->ilf_boffset = in_f32->ilf_boffset;
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index c393a2f6d8c3..23ba69fcc516 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -124,7 +124,6 @@ xfs_bulkstat_one_int(
+ 		buf->bs_blocks = 0;
+ 		break;
+ 	case XFS_DINODE_FMT_LOCAL:
+-	case XFS_DINODE_FMT_UUID:
+ 		buf->bs_rdev = 0;
+ 		buf->bs_blksize = mp->m_sb.sb_blocksize;
+ 		buf->bs_blocks = 0;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ee34899396b2..4e48e0534345 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3163,16 +3163,8 @@ xlog_recover_inode_pass2(
+ 	}
+ 
+ 	fields = in_f->ilf_fields;
+-	switch (fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
+-	case XFS_ILOG_DEV:
++	if (fields & XFS_ILOG_DEV)
+ 		xfs_dinode_put_rdev(dip, in_f->ilf_u.ilfu_rdev);
+-		break;
+-	case XFS_ILOG_UUID:
+-		memcpy(XFS_DFORK_DPTR(dip),
+-		       &in_f->ilf_u.ilfu_uuid,
+-		       sizeof(uuid_t));
+-		break;
+-	}
+ 
+ 	if (in_f->ilf_size == 2)
+ 		goto out_owner_change;
+-- 
+2.14.1
+
