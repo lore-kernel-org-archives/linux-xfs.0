@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33864 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37140 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751549AbdJSHAT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:19 -0400
+        with ESMTP id S1751576AbdJSHAX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:23 -0400
 Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e54oU-0005AX-44
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:18 +0000
+        id 1e54oY-0005Tg-Do
+        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:23 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/15] xfs: remove if_rdev
-Date: Thu, 19 Oct 2017 08:59:34 +0200
-Message-Id: <20171019065942.18813-8-hch@lst.de>
+Subject: [PATCH 08/15] xfs: inline xfs_shift_file_space into callers
+Date: Thu, 19 Oct 2017 08:59:35 +0200
+Message-Id: <20171019065942.18813-9-hch@lst.de>
 In-Reply-To: <20171019065942.18813-1-hch@lst.de>
 References: <20171019065942.18813-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,265 +18,275 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We can simply use the i_rdev field in the Linux inode and just convert
-to and from the XFS dev_t when reading or logging/writing the inode.
+The code is sufficiently different for the insert vs collapse cases both
+in xfs_shift_file_space itself and the callers that untangling them will
+make life a lot easier down the road.
+
+We still keep a common helper for flushing all data and COW state to get
+the inode into the right shape for shifting the extents around.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_fork.c | 38 +++++++++++++++++++++-----------------
- fs/xfs/libxfs/xfs_inode_fork.h |  1 -
- fs/xfs/xfs_inode.c             |  9 ++++-----
- fs/xfs/xfs_inode.h             |  4 ++--
- fs/xfs/xfs_inode_item.c        |  2 +-
- fs/xfs/xfs_iops.c              | 16 +---------------
- fs/xfs/xfs_itable.c            |  2 +-
- 7 files changed, 30 insertions(+), 42 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 192 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 102 insertions(+), 90 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 1d003ca21562..b1e69734c450 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -42,21 +42,27 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
- STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
- STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0543423651ff..47b53c88de7c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1260,53 +1260,12 @@ xfs_zero_file_space(
  
-+static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
-+{
-+	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
-+}
-+
- /*
-- * Move inode type and inode format specific information from the
-- * on-disk inode to the in-core inode.  For fifos, devs, and sockets
-- * this means set if_rdev to the proper value.  For files, directories,
-- * and symlinks this means to bring in the in-line data or extent
-- * pointers.  For a file in B-tree format, only the root is immediately
-- * brought in-core.  The rest will be in-lined in if_extents when it
-- * is first referenced (see xfs_iread_extents()).
-+ * Copy inode type and data and attr format specific information from the
-+ * on-disk inode to the in-core inode and fork structures.  For fifos, devices,
-+ * and sockets this means set i_rdev to the proper value.  For files,
-+ * directories, and symlinks this means to bring in the in-line data or extent
-+ * pointers as well as the attribute fork.  For a fork in B-tree format, only
-+ * the root is immediately brought in-core.  The rest will be read in later when
-+ * first referenced (see xfs_iread_extents()).
-  */
- int
- xfs_iformat_fork(
--	xfs_inode_t		*ip,
--	xfs_dinode_t		*dip)
+ }
+ 
+-/*
+- * @next_fsb will keep track of the extent currently undergoing shift.
+- * @stop_fsb will keep track of the extent at which we have to stop.
+- * If we are shifting left, we will start with block (offset + len) and
+- * shift each extent till last extent.
+- * If we are shifting right, we will start with last extent inside file space
+- * and continue until we reach the block corresponding to offset.
+- */
+ static int
+-xfs_shift_file_space(
+-	struct xfs_inode        *ip,
+-	xfs_off_t               offset,
+-	xfs_off_t               len,
+-	enum shift_direction	direction)
++xfs_prepare_shift(
 +	struct xfs_inode	*ip,
-+	struct xfs_dinode	*dip)
++	loff_t			offset)
  {
--	xfs_attr_shortform_t	*atp;
-+	struct inode		*inode = VFS_I(ip);
-+	struct xfs_attr_shortform *atp;
- 	int			size;
- 	int			error = 0;
- 	xfs_fsize_t             di_size;
-@@ -95,8 +101,7 @@ xfs_iformat_fork(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (unlikely(xfs_is_reflink_inode(ip) &&
--	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
-+	if (unlikely(xfs_is_reflink_inode(ip) && !S_ISREG(inode->i_mode))) {
- 		xfs_warn(ip->i_mount,
- 			"corrupt dinode %llu, wrong file type for reflink.",
- 			ip->i_ino);
-@@ -115,7 +120,7 @@ xfs_iformat_fork(
- 		return -EFSCORRUPTED;
- 	}
- 
--	switch (VFS_I(ip)->i_mode & S_IFMT) {
-+	switch (inode->i_mode & S_IFMT) {
- 	case S_IFIFO:
- 	case S_IFCHR:
- 	case S_IFBLK:
-@@ -126,7 +131,7 @@ xfs_iformat_fork(
- 			return -EFSCORRUPTED;
- 		}
- 		ip->i_d.di_size = 0;
--		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
-+		inode->i_rdev = xfs_to_linux_dev_t(xfs_dinode_get_rdev(dip));
- 		break;
- 
- 	case S_IFREG:
-@@ -184,8 +189,7 @@ xfs_iformat_fork(
- 		return error;
- 
- 	/* Check inline dir contents. */
--	if (S_ISDIR(VFS_I(ip)->i_mode) &&
--	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
-+	if (S_ISDIR(inode->i_mode) && dip->di_format == XFS_DINODE_FMT_LOCAL) {
- 		error = xfs_dir2_sf_verify(ip);
- 		if (error) {
- 			xfs_idestroy_fork(ip, XFS_DATA_FORK);
-@@ -898,7 +902,7 @@ xfs_iflush_fork(
- 	case XFS_DINODE_FMT_DEV:
- 		if (iip->ili_fields & XFS_ILOG_DEV) {
- 			ASSERT(whichfork == XFS_DATA_FORK);
--			xfs_dinode_put_rdev(dip, ip->i_df.if_u2.if_rdev);
-+			xfs_dinode_put_rdev(dip, sysv_encode_dev(VFS_I(ip)->i_rdev));
- 		}
- 		break;
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 064babdc373c..e0c42ea9b8d0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -69,7 +69,6 @@ typedef struct xfs_ifork {
- 						/* very small file extents */
- 		char		if_inline_data[XFS_INLINE_DATA];
- 						/* very small file data */
--		xfs_dev_t	if_rdev;	/* dev number if special */
- 	} if_u2;
- } xfs_ifork_t;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4ec5b7f45401..a929ca72fa8e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -767,7 +767,7 @@ xfs_ialloc(
- 	xfs_inode_t	*pip,
- 	umode_t		mode,
- 	xfs_nlink_t	nlink,
--	xfs_dev_t	rdev,
-+	dev_t		rdev,
- 	prid_t		prid,
- 	int		okalloc,
- 	xfs_buf_t	**ialloc_context,
-@@ -819,6 +819,7 @@ xfs_ialloc(
- 	set_nlink(inode, nlink);
- 	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
- 	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
-+	inode->i_rdev = rdev;
- 	xfs_set_projid(ip, prid);
- 
- 	if (pip && XFS_INHERIT_GID(pip)) {
-@@ -867,7 +868,6 @@ xfs_ialloc(
- 	case S_IFBLK:
- 	case S_IFSOCK:
- 		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
--		ip->i_df.if_u2.if_rdev = rdev;
- 		ip->i_df.if_flags = 0;
- 		flags |= XFS_ILOG_DEV;
- 		break;
-@@ -975,7 +975,7 @@ xfs_dir_ialloc(
- 					   the inode. */
- 	umode_t		mode,
- 	xfs_nlink_t	nlink,
--	xfs_dev_t	rdev,
-+	dev_t		rdev,
- 	prid_t		prid,		/* project id */
- 	int		okalloc,	/* ok to allocate new space */
- 	xfs_inode_t	**ipp,		/* pointer to inode; it will be
-@@ -1147,7 +1147,7 @@ xfs_create(
- 	xfs_inode_t		*dp,
- 	struct xfs_name		*name,
- 	umode_t			mode,
--	xfs_dev_t		rdev,
-+	dev_t			rdev,
- 	xfs_inode_t		**ipp)
- {
- 	int			is_dir = S_ISDIR(mode);
-@@ -1183,7 +1183,6 @@ xfs_create(
- 		return error;
- 
- 	if (is_dir) {
--		rdev = 0;
- 		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
- 		tres = &M_RES(mp)->tr_mkdir;
- 	} else {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 0ee453de239a..cc13c3763721 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -391,7 +391,7 @@ void		xfs_inactive(struct xfs_inode *ip);
- int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
- int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
--			   umode_t mode, xfs_dev_t rdev, struct xfs_inode **ipp);
-+			   umode_t mode, dev_t rdev, struct xfs_inode **ipp);
- int		xfs_create_tmpfile(struct xfs_inode *dp, struct dentry *dentry,
- 			   umode_t mode, struct xfs_inode **ipp);
- int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
-@@ -428,7 +428,7 @@ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
- xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
- 
- int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
--			       xfs_nlink_t, xfs_dev_t, prid_t, int,
-+			       xfs_nlink_t, dev_t, prid_t, int,
- 			       struct xfs_inode **, int *);
- 
- /* from xfs_file.c */
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index bd60ad313173..eb6f4f7c9520 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -222,7 +222,7 @@ xfs_inode_item_format_data_fork(
- 		iip->ili_fields &=
- 			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
- 		if (iip->ili_fields & XFS_ILOG_DEV)
--			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
-+			ilf->ilf_u.ilfu_rdev = sysv_encode_dev(VFS_I(ip)->i_rdev);
- 		break;
- 	default:
- 		ASSERT(0);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 17081c77ef86..8b5676d244ca 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -160,7 +160,6 @@ xfs_generic_create(
- 	if (S_ISCHR(mode) || S_ISBLK(mode)) {
- 		if (unlikely(!sysv_valid_dev(rdev) || MAJOR(rdev) & ~0x1ff))
- 			return -EINVAL;
--		rdev = sysv_encode_dev(rdev);
- 	} else {
- 		rdev = 0;
- 	}
-@@ -535,8 +534,7 @@ xfs_vn_getattr(
- 	case S_IFBLK:
- 	case S_IFCHR:
- 		stat->blksize = BLKDEV_IOSIZE;
--		stat->rdev = MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
--				   sysv_minor(ip->i_df.if_u2.if_rdev));
-+		stat->rdev = inode->i_rdev;
- 		break;
- 	default:
- 		if (XFS_IS_REALTIME_INODE(ip)) {
-@@ -1231,18 +1229,6 @@ xfs_setup_inode(
- 	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
- 	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
- 
--	switch (inode->i_mode & S_IFMT) {
--	case S_IFBLK:
--	case S_IFCHR:
--		inode->i_rdev =
--			MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
--			      sysv_minor(ip->i_df.if_u2.if_rdev));
--		break;
--	default:
--		inode->i_rdev = 0;
--		break;
+-	int			done = 0;
+-	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_trans	*tp;
+ 	int			error;
+-	struct xfs_defer_ops	dfops;
+-	xfs_fsblock_t		first_block;
+-	xfs_fileoff_t		stop_fsb;
+-	xfs_fileoff_t		next_fsb;
+-	xfs_fileoff_t		shift_fsb;
+-	uint			resblks;
+-
+-	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+-
+-	if (direction == SHIFT_LEFT) {
+-		/*
+-		 * Reserve blocks to cover potential extent merges after left
+-		 * shift operations.
+-		 */
+-		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+-		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+-		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
+-	} else {
+-		/*
+-		 * If right shift, delegate the work of initialization of
+-		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
+-		 */
+-		resblks = 0;
+-		next_fsb = NULLFSBLOCK;
+-		stop_fsb = XFS_B_TO_FSB(mp, offset);
 -	}
 -
- 	i_size_write(inode, ip->i_d.di_size);
- 	xfs_diflags_to_iflags(inode, ip);
+-	shift_fsb = XFS_B_TO_FSB(mp, len);
  
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 23ba69fcc516..7595baee0c7c 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -119,7 +119,7 @@ xfs_bulkstat_one_int(
+ 	/*
+ 	 * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
+@@ -1322,8 +1281,7 @@ xfs_shift_file_space(
+ 	 * Writeback and invalidate cache for the remainder of the file as we're
+ 	 * about to shift down every extent from offset to EOF.
+ 	 */
+-	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-					     offset, -1);
++	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset, -1);
+ 	if (error)
+ 		return error;
+ 	error = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+@@ -1343,16 +1301,48 @@ xfs_shift_file_space(
+ 			return error;
+ 	}
  
- 	switch (dic->di_format) {
- 	case XFS_DINODE_FMT_DEV:
--		buf->bs_rdev = ip->i_df.if_u2.if_rdev;
-+		buf->bs_rdev = sysv_encode_dev(inode->i_rdev);
- 		buf->bs_blksize = BLKDEV_IOSIZE;
- 		buf->bs_blocks = 0;
- 		break;
+-	/*
+-	 * The extent shifting code works on extent granularity. So, if
+-	 * stop_fsb is not the starting block of extent, we need to split
+-	 * the extent at stop_fsb.
+-	 */
+-	if (direction == SHIFT_RIGHT) {
+-		error = xfs_bmap_split_extent(ip, stop_fsb);
+-		if (error)
+-			return error;
+-	}
++	return 0;
++}
++
++/*
++ * xfs_collapse_file_space()
++ *	This routine frees disk space and shift extent for the given file.
++ *	The first thing we do is to free data blocks in the specified range
++ *	by calling xfs_free_file_space(). It would also sync dirty data
++ *	and invalidate page cache over the region on which collapse range
++ *	is working. And Shift extent records to the left to cover a hole.
++ * RETURNS:
++ *	0 on success
++ *	errno on error
++ *
++ */
++int
++xfs_collapse_file_space(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len)
++{
++	int			done = 0;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
++	struct xfs_defer_ops	dfops;
++	xfs_fsblock_t		first_block;
++	xfs_fileoff_t		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
++	xfs_fileoff_t		next_fsb = XFS_B_TO_FSB(mp, offset + len);
++	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
++	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
++	trace_xfs_collapse_file_space(ip);
++
++	error = xfs_free_file_space(ip, offset, len);
++	if (error)
++		return error;
++
++	error = xfs_prepare_shift(ip, offset);
++	if (error)
++		return error;
+ 
+ 	while (!error && !done) {
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+@@ -1366,7 +1356,6 @@ xfs_shift_file_space(
+ 				XFS_QMOPT_RES_REGBLKS);
+ 		if (error)
+ 			goto out_trans_cancel;
+-
+ 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+ 		xfs_defer_init(&dfops, &first_block);
+@@ -1377,14 +1366,13 @@ xfs_shift_file_space(
+ 		 */
+ 		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+ 				&done, stop_fsb, &first_block, &dfops,
+-				direction, XFS_BMAP_MAX_SHIFT_EXTENTS);
++				SHIFT_LEFT, XFS_BMAP_MAX_SHIFT_EXTENTS);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+ 		error = xfs_defer_finish(&tp, &dfops);
+ 		if (error)
+ 			goto out_bmap_cancel;
+-
+ 		error = xfs_trans_commit(tp);
+ 	}
+ 
+@@ -1397,36 +1385,6 @@ xfs_shift_file_space(
+ 	return error;
+ }
+ 
+-/*
+- * xfs_collapse_file_space()
+- *	This routine frees disk space and shift extent for the given file.
+- *	The first thing we do is to free data blocks in the specified range
+- *	by calling xfs_free_file_space(). It would also sync dirty data
+- *	and invalidate page cache over the region on which collapse range
+- *	is working. And Shift extent records to the left to cover a hole.
+- * RETURNS:
+- *	0 on success
+- *	errno on error
+- *
+- */
+-int
+-xfs_collapse_file_space(
+-	struct xfs_inode	*ip,
+-	xfs_off_t		offset,
+-	xfs_off_t		len)
+-{
+-	int error;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+-	trace_xfs_collapse_file_space(ip);
+-
+-	error = xfs_free_file_space(ip, offset, len);
+-	if (error)
+-		return error;
+-
+-	return xfs_shift_file_space(ip, offset, len, SHIFT_LEFT);
+-}
+-
+ /*
+  * xfs_insert_file_space()
+  *	This routine create hole space by shifting extents for the given file.
+@@ -1445,10 +1403,64 @@ xfs_insert_file_space(
+ 	loff_t			offset,
+ 	loff_t			len)
+ {
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
++	struct xfs_defer_ops	dfops;
++	xfs_fsblock_t		first_block;
++	xfs_fileoff_t		stop_fsb = XFS_B_TO_FSB(mp, offset);
++	xfs_fileoff_t		next_fsb = NULLFSBLOCK;
++	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
++	int			done = 0;
++
+ 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+ 	trace_xfs_insert_file_space(ip);
+ 
+-	return xfs_shift_file_space(ip, offset, len, SHIFT_RIGHT);
++	error = xfs_prepare_shift(ip, offset);
++	if (error)
++		return error;
++
++	/*
++	 * The extent shifting code works on extent granularity. So, if stop_fsb
++	 * is not the starting block of extent, we need to split the extent at
++	 * stop_fsb.
++	 */
++	error = xfs_bmap_split_extent(ip, stop_fsb);
++	if (error)
++		return error;
++
++	while (!error && !done) {
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0,
++					&tp);
++		if (error)
++			break;
++
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++		xfs_defer_init(&dfops, &first_block);
++
++		/*
++		 * We are using the write transaction in which max 2 bmbt
++		 * updates are allowed
++		 */
++		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
++				&done, stop_fsb, &first_block, &dfops,
++				SHIFT_RIGHT, XFS_BMAP_MAX_SHIFT_EXTENTS);
++		if (error)
++			goto out_bmap_cancel;
++
++		error = xfs_defer_finish(&tp, &dfops);
++		if (error)
++			goto out_bmap_cancel;
++		error = xfs_trans_commit(tp);
++	}
++
++	return error;
++
++out_bmap_cancel:
++	xfs_defer_cancel(&dfops);
++	xfs_trans_cancel(tp);
++	return error;
+ }
+ 
+ /*
 -- 
 2.14.1
 
