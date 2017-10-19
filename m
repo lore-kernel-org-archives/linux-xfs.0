@@ -1,75 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59903 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753989AbdJSOWK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:22:10 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/18] xfs: handle error if xfs_btree_get_bufs fails
-Date: Thu, 19 Oct 2017 16:21:20 +0200
-Message-Id: <20171019142123.18109-16-hch@lst.de>
-In-Reply-To: <20171019142123.18109-1-hch@lst.de>
-References: <20171019142123.18109-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38595 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753733AbdJSSNG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 14:13:06 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9JID570014110
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 18:13:06 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9JID5X1006085
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 18:13:05 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9JID54v004440
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 18:13:05 GMT
+Date: Thu, 19 Oct 2017 11:13:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/17] Add the extra space requirements for parent
+ pointer attributes when calculating the minimum log size during mkfs
+Message-ID: <20171019181303.GA4755@magnolia>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <1508367333-3237-12-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1508367333-3237-12-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Eric Sandeen <sandeen@sandeen.net>
+On Wed, Oct 18, 2017 at 03:55:27PM -0700, Allison Henderson wrote:
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_log_rlimit.c | 34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+> index c105979..beec9bf 100644
+> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
+> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+> @@ -39,6 +39,40 @@ xfs_log_calc_max_attrsetm_res(
+>  {
+>  	int			size;
+>  	int			nblks;
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
+> +
+> +	/* Calculate extra space needed for parent pointer attributes */
+> +	if (!xfs_sb_version_hasparent(&mp->m_sb)) {
 
-commit 93e8befc17f6d6ea92b0aee3741ceac8bca4590f upstream.
+Aren't we supposed to be enlarging tr_log{res,count} if hasparent is true?
 
-Jason reported that a corrupted filesystem failed to replay
-the log with a metadata block out of bounds warning:
+> +
+> +		/* rename can add/remove/modify 2 parent attributes */
+> +		resp->tr_rename.tr_logres +=
+> +			2 * max(resp->tr_attrsetm.tr_logres,
+> +				resp->tr_attrrm.tr_logres);
+> +		resp->tr_rename.tr_logcount +=
+> +			2 * max(resp->tr_attrsetm.tr_logcount,
+> +				resp->tr_attrrm.tr_logcount);
+> +
+> +		/* create will add 1 parent attribute */
+> +		resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+> +		resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +		/* mkdir will add 1 parent attribute */
+> +		resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+> +		resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +		/* link will add 1 parent attribute */
+> +		resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+> +		resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +		/* symlink will add 1 parent attribute */
+> +		resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+> +		resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +		/* remove will remove 1 parent attribute */
+> +		resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+> +		resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
 
-XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000
++= ?
 
-_xfs_buf_find() and xfs_btree_get_bufs() return NULL if
-that happens, and then when xfs_alloc_fix_freelist() calls
-xfs_trans_binval() on that NULL bp, we oops with:
+--D
 
-BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
-
-We don't handle _xfs_buf_find errors very well, every
-caller higher up the stack gets to guess at why it failed.
-But we should at least handle it somehow, so return
-EFSCORRUPTED here.
-
-Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 744dcaec34cc..f965ce832bc0 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1584,6 +1584,10 @@ xfs_alloc_ag_vextent_small(
- 
- 				bp = xfs_btree_get_bufs(args->mp, args->tp,
- 					args->agno, fbno, 0);
-+				if (!bp) {
-+					error = -EFSCORRUPTED;
-+					goto error0;
-+				}
- 				xfs_trans_binval(args->tp, bp);
- 			}
- 			args->len = 1;
-@@ -2141,6 +2145,10 @@ xfs_alloc_fix_freelist(
- 		if (error)
- 			goto out_agbp_relse;
- 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-+		if (!bp) {
-+			error = -EFSCORRUPTED;
-+			goto out_agbp_relse;
-+		}
- 		xfs_trans_binval(tp, bp);
- 	}
- 
--- 
-2.14.2
-
+> +	}
+> +
+>  
+>  	size = xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize) -
+>  	       MAXNAMELEN - 1;
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
