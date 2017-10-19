@@ -1,87 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47203 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35864 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754994AbdJSOXe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:34 -0400
+        with ESMTP id S1755005AbdJSOXh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:37 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/16] xfs: don't change inode mode if ACL update fails
-Date: Thu, 19 Oct 2017 16:22:55 +0200
-Message-Id: <20171019142259.20082-13-hch@lst.de>
+Subject: [PATCH 13/16] xfs: reinit btree pointer on attr tree inactivation walk
+Date: Thu, 19 Oct 2017 16:22:56 +0200
+Message-Id: <20171019142259.20082-14-hch@lst.de>
 In-Reply-To: <20171019142259.20082-1-hch@lst.de>
 References: <20171019142259.20082-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 67f2ffe31d1a683170c2ba0ecc643e42a5fdd397 upstream.
+commit f35c5e10c6ed6ba52a8dd8573924a80b6a02f03f upstream.
 
-If we get ENOSPC half way through setting the ACL, the inode mode
-can still be changed even though the ACL does not exist. Reorder the
-operation to only change the mode of the inode if the ACL is set
-correctly.
+xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
+associated blocks. xfs_attr3_node_inactive() recursively descends
+from internal blocks to leaf blocks, caching block address values
+along the way to revisit parent blocks, locate the next entry and
+descend down that branch of the tree.
 
-Whilst this does not fix the problem with crash consistency (that requires
-attribute addition to be a deferred op) it does prevent ENOSPC and other
-non-fatal errors setting an xattr to be handled sanely.
+The code that attempts to reread the parent block is unsafe because
+it assumes that the local xfs_da_node_entry pointer remains valid
+after an xfs_trans_brelse() and re-read of the parent buffer. Under
+heavy memory pressure, it is possible that the buffer has been
+reclaimed and reallocated by the time the parent block is reread.
+This means that 'btree' can point to an invalid memory address, lead
+to a random/garbage value for child_fsb and cause the subsequent
+read of the attr fork to go off the rails and return a NULL buffer
+for an attr fork offset that is most likely not allocated.
 
-This fixes xfstests generic/449.
+Note that this problem can be manufactured by setting
+XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
+creating a file with a multi-level attr fork and removing it to
+trigger inactivation.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+To address this problem, reinit the node/btree pointers to the
+parent buffer after it has been re-read. This ensures btree points
+to a valid record and allows the walk to proceed.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_acl.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_attr_inactive.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 7034e17535de..3354140de07e 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -247,6 +247,8 @@ xfs_set_mode(struct inode *inode, umode_t mode)
- int
- xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- {
-+	umode_t mode;
-+	bool set_mode = false;
- 	int error = 0;
- 
- 	if (!acl)
-@@ -257,16 +259,24 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 		return error;
- 
- 	if (type == ACL_TYPE_ACCESS) {
--		umode_t mode;
--
- 		error = posix_acl_update_mode(inode, &mode, &acl);
- 		if (error)
- 			return error;
--		error = xfs_set_mode(inode, mode);
--		if (error)
--			return error;
-+		set_mode = true;
- 	}
- 
-  set_acl:
--	return __xfs_set_acl(inode, acl, type);
-+	error =  __xfs_set_acl(inode, acl, type);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * We set the mode after successfully updating the ACL xattr because the
-+	 * xattr update can fail at ENOSPC and we don't want to change the mode
-+	 * if the ACL update hasn't been applied.
-+	 */
-+	if (set_mode)
-+		error = xfs_set_mode(inode, mode);
-+
-+	return error;
- }
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index be0b79d8900f..c6643004e583 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -302,6 +302,8 @@ xfs_attr3_node_inactive(
+ 						 &bp, XFS_ATTR_FORK);
+ 			if (error)
+ 				return error;
++			node = bp->b_addr;
++			btree = dp->d_ops->node_tree_p(node);
+ 			child_fsb = be32_to_cpu(btree[i + 1].before);
+ 			xfs_trans_brelse(*trans, bp);
+ 		}
 -- 
 2.14.2
 
