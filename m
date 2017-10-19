@@ -1,122 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34048 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34045 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752542AbdJSNIo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Oct 2017 09:08:44 -0400
+        id S1752069AbdJSNIn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Oct 2017 09:08:43 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 17/17] xfs: support for synchronous DAX faults
-Date: Thu, 19 Oct 2017 14:58:16 +0200
-Message-Id: <20171019125817.11580-18-jack@suse.cz>
+Subject: [PATCH 13/17] dax, iomap: Add support for synchronous faults
+Date: Thu, 19 Oct 2017 14:58:12 +0200
+Message-Id: <20171019125817.11580-14-jack@suse.cz>
 In-Reply-To: <20171019125817.11580-1-jack@suse.cz>
 References: <20171019125817.11580-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-From: Christoph Hellwig <hch@lst.de>
+Add a flag to iomap interface informing the caller that inode needs
+fdstasync(2) for returned extent to become persistent and use it in DAX
+fault code so that we don't map such extents into page tables
+immediately. Instead we propagate the information that fdatasync(2) is
+necessary from dax_iomap_fault() with a new VM_FAULT_NEEDDSYNC flag.
+Filesystem fault handler is then responsible for calling fdatasync(2)
+and inserting pfn into page tables.
 
-Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
-blocks for writing and the inode is pinned, and has dirty fields other
-than the timestamps.  In __xfs_filemap_fault() we then detect this case
-and call dax_finish_sync_fault() to make sure all metadata is committed,
-and to insert the page table entry.
-
-Note that this will also dirty corresponding radix tree entry which is
-what we want - fsync(2) will still provide data integrity guarantees for
-applications not using userspace flushing. And applications using
-userspace flushing can avoid calling fsync(2) and thus avoid the
-performance overhead.
-
-[JK: Added VM_SYNC flag handling]
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_file.c  | 17 ++++++++++++++++-
- fs/xfs/xfs_iomap.c |  5 +++++
- 2 files changed, 21 insertions(+), 1 deletion(-)
+ fs/dax.c              | 39 +++++++++++++++++++++++++++++++++++++--
+ include/linux/iomap.h |  1 +
+ include/linux/mm.h    |  6 +++++-
+ 3 files changed, 43 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7c6b8def6eed..9b8058774af3 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -44,6 +44,7 @@
- #include <linux/falloc.h>
- #include <linux/pagevec.h>
- #include <linux/backing-dev.h>
-+#include <linux/mman.h>
- 
- static const struct vm_operations_struct xfs_file_vm_ops;
- 
-@@ -1040,7 +1041,11 @@ __xfs_filemap_fault(
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
-+		pfn_t pfn;
-+
-+		ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
-+		if (ret & VM_FAULT_NEEDDSYNC)
-+			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
- 	} else {
- 		if (write_fault)
- 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-@@ -1131,6 +1136,13 @@ xfs_file_mmap(
- 	struct file	*filp,
- 	struct vm_area_struct *vma)
- {
-+	/*
-+	 * We don't support synchronous mappings for non-DAX files. At least
-+	 * until someone comes with a sensible use case.
-+	 */
-+	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
-+		return -EOPNOTSUPP;
-+
- 	file_accessed(filp);
- 	vma->vm_ops = &xfs_file_vm_ops;
- 	if (IS_DAX(file_inode(filp)))
-@@ -1138,6 +1150,8 @@ xfs_file_mmap(
- 	return 0;
- }
- 
-+#define XFS_MAP_SUPPORTED (LEGACY_MAP_MASK | MAP_SYNC)
-+
- const struct file_operations xfs_file_operations = {
- 	.llseek		= xfs_file_llseek,
- 	.read_iter	= xfs_file_read_iter,
-@@ -1149,6 +1163,7 @@ const struct file_operations xfs_file_operations = {
- 	.compat_ioctl	= xfs_file_compat_ioctl,
- #endif
- 	.mmap		= xfs_file_mmap,
-+	.mmap_supported_flags	= XFS_MAP_SUPPORTED,
- 	.open		= xfs_file_open,
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index f179bdf1644d..b43be199fbdf 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -33,6 +33,7 @@
- #include "xfs_error.h"
- #include "xfs_trans.h"
- #include "xfs_trans_space.h"
-+#include "xfs_inode_item.h"
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-@@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
- 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+diff --git a/fs/dax.c b/fs/dax.c
+index efc210ff6665..bb9ff907738c 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1091,6 +1091,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 	unsigned flags = IOMAP_FAULT;
+ 	int error, major = 0;
+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
++	bool sync;
+ 	int vmf_ret = 0;
+ 	void *entry;
+ 	pfn_t pfn;
+@@ -1169,6 +1170,8 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 		goto finish_iomap;
  	}
  
-+	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-+	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-+		iomap->flags |= IOMAP_F_DIRTY;
++	sync = (vma->vm_flags & VM_SYNC) && (iomap.flags & IOMAP_F_DIRTY);
 +
- 	xfs_bmbt_to_iomap(ip, iomap, &imap);
+ 	switch (iomap.type) {
+ 	case IOMAP_MAPPED:
+ 		if (iomap.flags & IOMAP_F_NEW) {
+@@ -1182,12 +1185,27 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
  
- 	if (shared)
+ 		entry = dax_insert_mapping_entry(mapping, vmf, entry,
+ 						 dax_iomap_sector(&iomap, pos),
+-						 0, write);
++						 0, write && !sync);
+ 		if (IS_ERR(entry)) {
+ 			error = PTR_ERR(entry);
+ 			goto error_finish_iomap;
+ 		}
+ 
++		/*
++		 * If we are doing synchronous page fault and inode needs fsync,
++		 * we can insert PTE into page tables only after that happens.
++		 * Skip insertion for now and return the pfn so that caller can
++		 * insert it after fsync is done.
++		 */
++		if (sync) {
++			if (WARN_ON_ONCE(!pfnp)) {
++				error = -EIO;
++				goto error_finish_iomap;
++			}
++			*pfnp = pfn;
++			vmf_ret = VM_FAULT_NEEDDSYNC | major;
++			goto finish_iomap;
++		}
+ 		trace_dax_insert_mapping(inode, vmf, entry);
+ 		if (write)
+ 			error = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+@@ -1287,6 +1305,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 	struct address_space *mapping = vma->vm_file->f_mapping;
+ 	unsigned long pmd_addr = vmf->address & PMD_MASK;
+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
++	bool sync;
+ 	unsigned int iomap_flags = (write ? IOMAP_WRITE : 0) | IOMAP_FAULT;
+ 	struct inode *inode = mapping->host;
+ 	int result = VM_FAULT_FALLBACK;
+@@ -1371,6 +1390,8 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 	if (iomap.offset + iomap.length < pos + PMD_SIZE)
+ 		goto finish_iomap;
+ 
++	sync = (vma->vm_flags & VM_SYNC) && (iomap.flags & IOMAP_F_DIRTY);
++
+ 	switch (iomap.type) {
+ 	case IOMAP_MAPPED:
+ 		error = dax_iomap_pfn(&iomap, pos, PMD_SIZE, &pfn);
+@@ -1379,10 +1400,24 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 
+ 		entry = dax_insert_mapping_entry(mapping, vmf, entry,
+ 						dax_iomap_sector(&iomap, pos),
+-						RADIX_DAX_PMD, write);
++						RADIX_DAX_PMD, write && !sync);
+ 		if (IS_ERR(entry))
+ 			goto finish_iomap;
+ 
++		/*
++		 * If we are doing synchronous page fault and inode needs fsync,
++		 * we can insert PMD into page tables only after that happens.
++		 * Skip insertion for now and return the pfn so that caller can
++		 * insert it after fsync is done.
++		 */
++		if (sync) {
++			if (WARN_ON_ONCE(!pfnp))
++				goto finish_iomap;
++			*pfnp = pfn;
++			result = VM_FAULT_NEEDDSYNC;
++			goto finish_iomap;
++		}
++
+ 		trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, entry);
+ 		result = vmf_insert_pfn_pmd(vma, vmf->address, vmf->pmd, pfn,
+ 					    write);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index f64dc6ce5161..4bc0a6fe3b15 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -22,6 +22,7 @@ struct vm_fault;
+  * Flags for all iomap mappings:
+  */
+ #define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
++#define IOMAP_F_DIRTY	0x02	/* block mapping is not yet on persistent storage */
+ 
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 5411cb7442de..f57e55782d7d 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1182,6 +1182,9 @@ static inline void clear_page_pfmemalloc(struct page *page)
+ #define VM_FAULT_RETRY	0x0400	/* ->fault blocked, must retry */
+ #define VM_FAULT_FALLBACK 0x0800	/* huge page fault failed, fall back to small */
+ #define VM_FAULT_DONE_COW   0x1000	/* ->fault has fully handled COW */
++#define VM_FAULT_NEEDDSYNC  0x2000	/* ->fault did not modify page tables
++					 * and needs fsync() to complete (for
++					 * synchronous page faults in DAX) */
+ 
+ #define VM_FAULT_ERROR	(VM_FAULT_OOM | VM_FAULT_SIGBUS | VM_FAULT_SIGSEGV | \
+ 			 VM_FAULT_HWPOISON | VM_FAULT_HWPOISON_LARGE | \
+@@ -1199,7 +1202,8 @@ static inline void clear_page_pfmemalloc(struct page *page)
+ 	{ VM_FAULT_LOCKED,		"LOCKED" }, \
+ 	{ VM_FAULT_RETRY,		"RETRY" }, \
+ 	{ VM_FAULT_FALLBACK,		"FALLBACK" }, \
+-	{ VM_FAULT_DONE_COW,		"DONE_COW" }
++	{ VM_FAULT_DONE_COW,		"DONE_COW" }, \
++	{ VM_FAULT_NEEDDSYNC,		"NEEDDSYNC" }
+ 
+ /* Encode hstate index for a hwpoisoned large page */
+ #define VM_FAULT_SET_HINDEX(x) ((x) << 12)
 -- 
 2.12.3
 
