@@ -1,119 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40114 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751671AbdJSHAw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:00:52 -0400
-Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e54p1-00061X-Tg
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:00:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/15] xfs: rewrite xfs_bmap_first_unused to make better use of xfs_iext_get_extent
-Date: Thu, 19 Oct 2017 08:59:42 +0200
-Message-Id: <20171019065942.18813-16-hch@lst.de>
-In-Reply-To: <20171019065942.18813-1-hch@lst.de>
-References: <20171019065942.18813-1-hch@lst.de>
+Received: from LGEAMRELO13.lge.com ([156.147.23.53]:36061 "EHLO
+        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751637AbdJSHDb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:03:31 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [PATCH v2 2/4] lockdep: Remove unnecessary acquisitions wrt workqueue flush
+Date: Thu, 19 Oct 2017 16:03:25 +0900
+Message-Id: <1508396607-25362-3-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508396607-25362-1-git-send-email-byungchul.park@lge.com>
+References: <1508392531-11284-1-git-send-email-byungchul.park@lge.com>
+ <1508396607-25362-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: peterz@infradead.org, mingo@kernel.org
+Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-Look at the return value of xfs_iext_get_extent instead of figuring out
-the extent count first and looping up to it.
+The workqueue added manual acquisitions to catch deadlock cases.
+Now crossrelease was introduced, some of those are redundant, since
+wait_for_completion() already includes the acquisition for itself.
+Removed it.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 56 ++++++++++++++++++++++--------------------------
- 1 file changed, 26 insertions(+), 30 deletions(-)
+ include/linux/workqueue.h |  4 ++--
+ kernel/workqueue.c        | 20 ++++----------------
+ 2 files changed, 6 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9b638cc49f5c..46813b71dd74 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1285,57 +1285,53 @@ xfs_bmap_read_extents(
- }
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index f3c47a0..1455b5e 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -218,7 +218,7 @@ static inline void destroy_delayed_work_on_stack(struct delayed_work *work) { }
+ 									\
+ 		__init_work((_work), _onstack);				\
+ 		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
+-		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0); \
++		lockdep_init_map(&(_work)->lockdep_map, "(complete)"#_work, &__key, 0); \
+ 		INIT_LIST_HEAD(&(_work)->entry);			\
+ 		(_work)->func = (_func);				\
+ 	} while (0)
+@@ -399,7 +399,7 @@ enum {
+ 	static struct lock_class_key __key;				\
+ 	const char *__lock_name;					\
+ 									\
+-	__lock_name = #fmt#args;					\
++	__lock_name = "(complete)"#fmt#args;				\
+ 									\
+ 	__alloc_workqueue_key((fmt), (flags), (max_active),		\
+ 			      &__key, __lock_name, ##args);		\
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index c77fdf6..8cef533 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2496,15 +2496,8 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ 	INIT_WORK_ONSTACK(&barr->work, wq_barrier_func);
+ 	__set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(&barr->work));
  
- /*
-- * Returns the file-relative block number of the first unused block(s)
-- * in the file with at least "len" logically contiguous blocks free.
-- * This is the lowest-address hole if the file has holes, else the first block
-- * past the end of file.
-- * Return 0 if the file is currently local (in-inode).
-+ * Returns the relative block number of the first unused block(s) in the given
-+ * fork with at least "len" logically contiguous blocks free.  This is the
-+ * lowest-address hole if the fork has holes, else the first block past the end
-+ * of fork.  Return 0 if the fork is currently local (in-inode).
-  */
- int						/* error */
- xfs_bmap_first_unused(
--	xfs_trans_t	*tp,			/* transaction pointer */
--	xfs_inode_t	*ip,			/* incore inode */
--	xfs_extlen_t	len,			/* size of hole to find */
--	xfs_fileoff_t	*first_unused,		/* unused block */
--	int		whichfork)		/* data or attr fork */
-+	struct xfs_trans	*tp,		/* transaction pointer */
-+	struct xfs_inode	*ip,		/* incore inode */
-+	xfs_extlen_t		len,		/* size of hole to find */
-+	xfs_fileoff_t		*first_unused,	/* unused block */
-+	int			whichfork)	/* data or attr fork */
- {
--	int		error;			/* error return value */
--	int		idx;			/* extent record index */
--	xfs_ifork_t	*ifp;			/* inode fork pointer */
--	xfs_fileoff_t	lastaddr;		/* last block number seen */
--	xfs_fileoff_t	lowest;			/* lowest useful block */
--	xfs_fileoff_t	max;			/* starting useful block */
--	xfs_extnum_t	nextents;		/* number of extent entries */
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_bmbt_irec	got;
-+	xfs_extnum_t		idx = 0;
-+	xfs_fileoff_t		lastaddr = 0;
-+	xfs_fileoff_t		lowest, max;
-+	int			error;
- 
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE ||
- 	       XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ||
- 	       XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
+-	/*
+-	 * Explicitly init the crosslock for wq_barrier::done, make its lock
+-	 * key a subkey of the corresponding work. As a result we won't
+-	 * build a dependency between wq_barrier::done and unrelated work.
+-	 */
+-	lockdep_init_map_crosslock((struct lockdep_map *)&barr->done.map,
+-				   "(complete)wq_barr::done",
+-				   target->lockdep_map.key, 1);
+-	__init_completion(&barr->done);
++	init_completion_with_map(&barr->done, &target->lockdep_map);
 +
- 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
- 		*first_unused = 0;
- 		return 0;
- 	}
--	ifp = XFS_IFORK_PTR(ip, whichfork);
--	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
--	    (error = xfs_iread_extents(tp, ip, whichfork)))
--		return error;
--	lowest = *first_unused;
--	nextents = xfs_iext_count(ifp);
--	for (idx = 0, lastaddr = 0, max = lowest; idx < nextents; idx++) {
--		struct xfs_bmbt_irec got;
+ 	barr->task = current;
  
--		xfs_iext_get_extent(ifp, idx, &got);
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(tp, ip, whichfork);
-+		if (error)
-+			return error;
-+	}
+ 	/*
+@@ -2610,16 +2603,14 @@ void flush_workqueue(struct workqueue_struct *wq)
+ 	struct wq_flusher this_flusher = {
+ 		.list = LIST_HEAD_INIT(this_flusher.list),
+ 		.flush_color = -1,
+-		.done = COMPLETION_INITIALIZER_ONSTACK(this_flusher.done),
+ 	};
+ 	int next_color;
  
-+	lowest = max = *first_unused;
-+	while (xfs_iext_get_extent(ifp, idx++, &got)) {
- 		/*
- 		 * See if the hole before this extent will work.
- 		 */
- 		if (got.br_startoff >= lowest + len &&
--		    got.br_startoff - max >= len) {
--			*first_unused = max;
--			return 0;
--		}
-+		    got.br_startoff - max >= len)
-+			break;
- 		lastaddr = got.br_startoff + got.br_blockcount;
- 		max = XFS_FILEOFF_MAX(lastaddr, lowest);
- 	}
++	init_completion_with_map(&this_flusher.done, &wq->lockdep_map);
 +
- 	*first_unused = max;
- 	return 0;
- }
+ 	if (WARN_ON(!wq_online))
+ 		return;
+ 
+-	lock_map_acquire(&wq->lockdep_map);
+-	lock_map_release(&wq->lockdep_map);
+-
+ 	mutex_lock(&wq->mutex);
+ 
+ 	/*
+@@ -2882,9 +2873,6 @@ bool flush_work(struct work_struct *work)
+ 	if (WARN_ON(!wq_online))
+ 		return false;
+ 
+-	lock_map_acquire(&work->lockdep_map);
+-	lock_map_release(&work->lockdep_map);
+-
+ 	if (start_flush_work(work, &barr)) {
+ 		wait_for_completion(&barr.done);
+ 		destroy_work_on_stack(&barr.work);
 -- 
-2.14.1
+1.9.1
 
