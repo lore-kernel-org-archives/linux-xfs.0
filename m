@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:32884 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47203 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753980AbdJSOXb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:31 -0400
+        with ESMTP id S1754994AbdJSOXe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:34 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/16] xfs: move more RT specific code under CONFIG_XFS_RT
-Date: Thu, 19 Oct 2017 16:22:54 +0200
-Message-Id: <20171019142259.20082-12-hch@lst.de>
+Subject: [PATCH 12/16] xfs: don't change inode mode if ACL update fails
+Date: Thu, 19 Oct 2017 16:22:55 +0200
+Message-Id: <20171019142259.20082-13-hch@lst.de>
 In-Reply-To: <20171019142259.20082-1-hch@lst.de>
 References: <20171019142259.20082-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,70 +17,71 @@ Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, "Darrick J . 
 
 From: Dave Chinner <dchinner@redhat.com>
 
-commit bb9c2e5433250f5b477035dc478314f8e6dd5e36 upstream.
+commit 67f2ffe31d1a683170c2ba0ecc643e42a5fdd397 upstream.
 
-Various utility functions and interfaces that iterate internal
-devices try to reference the realtime device even when RT support is
-not compiled into the kernel.
+If we get ENOSPC half way through setting the ACL, the inode mode
+can still be changed even though the ACL does not exist. Reorder the
+operation to only change the mode of the inode if the ACL is set
+correctly.
 
-Make sure this code is excluded from the CONFIG_XFS_RT=n build,
-and where appropriate stub functions to return fatal errors if
-they ever get called when RT support is not present.
+Whilst this does not fix the problem with crash consistency (that requires
+attribute addition to be a deferred op) it does prevent ENOSPC and other
+non-fatal errors setting an xattr to be handled sanely.
+
+This fixes xfstests generic/449.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |  2 ++
- fs/xfs/xfs_bmap_util.h | 13 +++++++++++++
- 2 files changed, 15 insertions(+)
+ fs/xfs/xfs_acl.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index bbc389e353e8..cb62871fb91d 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -84,6 +84,7 @@ xfs_zero_extent(
- 		GFP_NOFS, true);
- }
- 
-+#ifdef CONFIG_XFS_RT
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 7034e17535de..3354140de07e 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -247,6 +247,8 @@ xfs_set_mode(struct inode *inode, umode_t mode)
  int
- xfs_bmap_rtalloc(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-@@ -195,6 +196,7 @@ xfs_bmap_rtalloc(
+ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ {
++	umode_t mode;
++	bool set_mode = false;
+ 	int error = 0;
+ 
+ 	if (!acl)
+@@ -257,16 +259,24 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 		return error;
+ 
+ 	if (type == ACL_TYPE_ACCESS) {
+-		umode_t mode;
+-
+ 		error = posix_acl_update_mode(inode, &mode, &acl);
+ 		if (error)
+ 			return error;
+-		error = xfs_set_mode(inode, mode);
+-		if (error)
+-			return error;
++		set_mode = true;
  	}
- 	return 0;
- }
-+#endif /* CONFIG_XFS_RT */
  
- /*
-  * Check if the endoff is outside the last extent. If so the caller will grow
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index f1005393785c..ce330f06563e 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -28,7 +28,20 @@ struct xfs_mount;
- struct xfs_trans;
- struct xfs_bmalloca;
- 
-+#ifdef CONFIG_XFS_RT
- int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
-+#else /* !CONFIG_XFS_RT */
-+/*
-+ * Attempts to allocate RT extents when RT is disable indicates corruption and
-+ * should trigger a shutdown.
-+ */
-+static inline int
-+xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
-+{
-+	return -EFSCORRUPTED;
-+}
-+#endif /* CONFIG_XFS_RT */
+  set_acl:
+-	return __xfs_set_acl(inode, acl, type);
++	error =  __xfs_set_acl(inode, acl, type);
++	if (error)
++		return error;
 +
- int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
- 		     int whichfork, int *eof);
- int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
++	/*
++	 * We set the mode after successfully updating the ACL xattr because the
++	 * xattr update can fail at ENOSPC and we don't want to change the mode
++	 * if the ACL update hasn't been applied.
++	 */
++	if (set_mode)
++		error = xfs_set_mode(inode, mode);
++
++	return error;
+ }
 -- 
 2.14.2
 
