@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58937 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34905 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754080AbdJSOV7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:59 -0400
+        with ESMTP id S1753887AbdJSOWB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:22:01 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/18] xfs: Don't log uninitialised fields in inode structures
-Date: Thu, 19 Oct 2017 16:21:16 +0200
-Message-Id: <20171019142123.18109-12-hch@lst.de>
+Subject: [PATCH 12/18] xfs: move more RT specific code under CONFIG_XFS_RT
+Date: Thu, 19 Oct 2017 16:21:17 +0200
+Message-Id: <20171019142123.18109-13-hch@lst.de>
 In-Reply-To: <20171019142123.18109-1-hch@lst.de>
 References: <20171019142123.18109-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,224 +17,120 @@ Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, "Darrick J . 
 
 From: Dave Chinner <dchinner@redhat.com>
 
-commit 20413e37d71befd02b5846acdaf5e2564dd1c38e upstream.
+commit bb9c2e5433250f5b477035dc478314f8e6dd5e36 upstream.
 
-Prevent kmemcheck from throwing warnings about reading uninitialised
-memory when formatting inodes into the incore log buffer. There are
-several issues here - we don't always log all the fields in the
-inode log format item, and we never log the inode the
-di_next_unlinked field.
+Various utility functions and interfaces that iterate internal
+devices try to reference the realtime device even when RT support is
+not compiled into the kernel.
 
-In the case of the inode log format item, this is exacerbated
-by the old xfs_inode_log_format structure padding issue. Hence make
-the padded, 64 bit aligned version of the structure the one we always
-use for formatting the log and get rid of the 64 bit variant. This
-means we'll always log the 64-bit version and so recovery only needs
-to convert from the unpadded 32 bit version from older 32 bit
-kernels.
+Make sure this code is excluded from the CONFIG_XFS_RT=n build,
+and where appropriate stub functions to return fatal errors if
+they ever get called when RT support is not present.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Tested-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_log_format.h | 27 +++++----------
- fs/xfs/xfs_inode_item.c        | 79 ++++++++++++++++++++++--------------------
- fs/xfs/xfs_ondisk.h            |  2 +-
- 3 files changed, 50 insertions(+), 58 deletions(-)
+ fs/xfs/xfs_bmap_util.c |  2 ++
+ fs/xfs/xfs_bmap_util.h | 13 +++++++++++++
+ fs/xfs/xfs_fsmap.c     | 12 ++++++++++++
+ 3 files changed, 27 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 8372e9bcd7b6..71de185735e0 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -270,6 +270,7 @@ typedef struct xfs_inode_log_format {
- 	uint32_t		ilf_fields;	/* flags for fields logged */
- 	uint16_t		ilf_asize;	/* size of attr d/ext/root */
- 	uint16_t		ilf_dsize;	/* size of data/ext/root */
-+	uint32_t		ilf_pad;	/* pad for 64 bit boundary */
- 	uint64_t		ilf_ino;	/* inode number */
- 	union {
- 		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-@@ -280,29 +281,17 @@ typedef struct xfs_inode_log_format {
- 	int32_t			ilf_boffset;	/* off of inode in buffer */
- } xfs_inode_log_format_t;
- 
--typedef struct xfs_inode_log_format_32 {
--	uint16_t		ilf_type;	/* inode log item type */
--	uint16_t		ilf_size;	/* size of this item */
--	uint32_t		ilf_fields;	/* flags for fields logged */
--	uint16_t		ilf_asize;	/* size of attr d/ext/root */
--	uint16_t		ilf_dsize;	/* size of data/ext/root */
--	uint64_t		ilf_ino;	/* inode number */
--	union {
--		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
--		uuid_t		ilfu_uuid;	/* mount point value */
--	} ilf_u;
--	int64_t			ilf_blkno;	/* blkno of inode buffer */
--	int32_t			ilf_len;	/* len of inode buffer */
--	int32_t			ilf_boffset;	/* off of inode in buffer */
--} __attribute__((packed)) xfs_inode_log_format_32_t;
--
--typedef struct xfs_inode_log_format_64 {
-+/*
-+ * Old 32 bit systems will log in this format without the 64 bit
-+ * alignment padding. Recovery will detect this and convert it to the
-+ * correct format.
-+ */
-+struct xfs_inode_log_format_32 {
- 	uint16_t		ilf_type;	/* inode log item type */
- 	uint16_t		ilf_size;	/* size of this item */
- 	uint32_t		ilf_fields;	/* flags for fields logged */
- 	uint16_t		ilf_asize;	/* size of attr d/ext/root */
- 	uint16_t		ilf_dsize;	/* size of data/ext/root */
--	uint32_t		ilf_pad;	/* pad for 64 bit boundary */
- 	uint64_t		ilf_ino;	/* inode number */
- 	union {
- 		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-@@ -311,7 +300,7 @@ typedef struct xfs_inode_log_format_64 {
- 	int64_t			ilf_blkno;	/* blkno of inode buffer */
- 	int32_t			ilf_len;	/* len of inode buffer */
- 	int32_t			ilf_boffset;	/* off of inode in buffer */
--} xfs_inode_log_format_64_t;
-+} __attribute__((packed));
- 
- 
- /*
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index a705f34b58fa..9bbc2d7cc8cb 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -364,6 +364,9 @@ xfs_inode_to_log_dinode(
- 	to->di_dmstate = from->di_dmstate;
- 	to->di_flags = from->di_flags;
- 
-+	/* log a dummy value to ensure log structure is fully initialised */
-+	to->di_next_unlinked = NULLAGINO;
-+
- 	if (from->di_version == 3) {
- 		to->di_changecount = inode->i_version;
- 		to->di_crtime.t_sec = from->di_crtime.t_sec;
-@@ -404,6 +407,11 @@ xfs_inode_item_format_core(
-  * the second with the on-disk inode structure, and a possible third and/or
-  * fourth with the inode data/extents/b-tree root and inode attributes
-  * data/extents/b-tree root.
-+ *
-+ * Note: Always use the 64 bit inode log format structure so we don't
-+ * leave an uninitialised hole in the format item on 64 bit systems. Log
-+ * recovery on 32 bit systems handles this just fine, so there's no reason
-+ * for not using an initialising the properly padded structure all the time.
-  */
- STATIC void
- xfs_inode_item_format(
-@@ -412,8 +420,8 @@ xfs_inode_item_format(
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	struct xfs_inode_log_format *ilf;
- 	struct xfs_log_iovec	*vecp = NULL;
-+	struct xfs_inode_log_format *ilf;
- 
- 	ASSERT(ip->i_d.di_version > 1);
- 
-@@ -425,7 +433,17 @@ xfs_inode_item_format(
- 	ilf->ilf_boffset = ip->i_imap.im_boffset;
- 	ilf->ilf_fields = XFS_ILOG_CORE;
- 	ilf->ilf_size = 2; /* format + core */
--	xlog_finish_iovec(lv, vecp, sizeof(struct xfs_inode_log_format));
-+
-+	/*
-+	 * make sure we don't leak uninitialised data into the log in the case
-+	 * when we don't log every field in the inode.
-+	 */
-+	ilf->ilf_dsize = 0;
-+	ilf->ilf_asize = 0;
-+	ilf->ilf_pad = 0;
-+	uuid_copy(&ilf->ilf_u.ilfu_uuid, &uuid_null);
-+
-+	xlog_finish_iovec(lv, vecp, sizeof(*ilf));
- 
- 	xfs_inode_item_format_core(ip, lv, &vecp);
- 	xfs_inode_item_format_data_fork(iip, ilf, lv, &vecp);
-@@ -855,44 +873,29 @@ xfs_istale_done(
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 3f97a4122b17..799c69a72f2c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -84,6 +84,7 @@ xfs_zero_extent(
+ 		GFP_NOFS, 0);
  }
  
- /*
-- * convert an xfs_inode_log_format struct from either 32 or 64 bit versions
-- * (which can have different field alignments) to the native version
-+ * convert an xfs_inode_log_format struct from the old 32 bit version
-+ * (which can have different field alignments) to the native 64 bit version
-  */
++#ifdef CONFIG_XFS_RT
  int
- xfs_inode_item_format_convert(
--	xfs_log_iovec_t		*buf,
--	xfs_inode_log_format_t	*in_f)
-+	struct xfs_log_iovec		*buf,
-+	struct xfs_inode_log_format	*in_f)
- {
--	if (buf->i_len == sizeof(xfs_inode_log_format_32_t)) {
--		xfs_inode_log_format_32_t *in_f32 = buf->i_addr;
--
--		in_f->ilf_type = in_f32->ilf_type;
--		in_f->ilf_size = in_f32->ilf_size;
--		in_f->ilf_fields = in_f32->ilf_fields;
--		in_f->ilf_asize = in_f32->ilf_asize;
--		in_f->ilf_dsize = in_f32->ilf_dsize;
--		in_f->ilf_ino = in_f32->ilf_ino;
--		/* copy biggest field of ilf_u */
--		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
--		in_f->ilf_blkno = in_f32->ilf_blkno;
--		in_f->ilf_len = in_f32->ilf_len;
--		in_f->ilf_boffset = in_f32->ilf_boffset;
--		return 0;
--	} else if (buf->i_len == sizeof(xfs_inode_log_format_64_t)){
--		xfs_inode_log_format_64_t *in_f64 = buf->i_addr;
--
--		in_f->ilf_type = in_f64->ilf_type;
--		in_f->ilf_size = in_f64->ilf_size;
--		in_f->ilf_fields = in_f64->ilf_fields;
--		in_f->ilf_asize = in_f64->ilf_asize;
--		in_f->ilf_dsize = in_f64->ilf_dsize;
--		in_f->ilf_ino = in_f64->ilf_ino;
--		/* copy biggest field of ilf_u */
--		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f64->ilf_u.ilfu_uuid);
--		in_f->ilf_blkno = in_f64->ilf_blkno;
--		in_f->ilf_len = in_f64->ilf_len;
--		in_f->ilf_boffset = in_f64->ilf_boffset;
--		return 0;
--	}
--	return -EFSCORRUPTED;
-+	struct xfs_inode_log_format_32	*in_f32 = buf->i_addr;
-+
-+	if (buf->i_len != sizeof(*in_f32))
-+		return -EFSCORRUPTED;
-+
-+	in_f->ilf_type = in_f32->ilf_type;
-+	in_f->ilf_size = in_f32->ilf_size;
-+	in_f->ilf_fields = in_f32->ilf_fields;
-+	in_f->ilf_asize = in_f32->ilf_asize;
-+	in_f->ilf_dsize = in_f32->ilf_dsize;
-+	in_f->ilf_ino = in_f32->ilf_ino;
-+	/* copy biggest field of ilf_u */
-+	uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
-+	in_f->ilf_blkno = in_f32->ilf_blkno;
-+	in_f->ilf_len = in_f32->ilf_len;
-+	in_f->ilf_boffset = in_f32->ilf_boffset;
-+	return 0;
+ xfs_bmap_rtalloc(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+@@ -190,6 +191,7 @@ xfs_bmap_rtalloc(
+ 	}
+ 	return 0;
  }
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 0c381d71b242..0492436a053f 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -134,7 +134,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
++#endif /* CONFIG_XFS_RT */
+ 
+ /*
+  * Check if the endoff is outside the last extent. If so the caller will grow
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 0cede1043571..fb8d0c7d1db8 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -28,7 +28,20 @@ struct xfs_mount;
+ struct xfs_trans;
+ struct xfs_bmalloca;
+ 
++#ifdef CONFIG_XFS_RT
+ int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
++#else /* !CONFIG_XFS_RT */
++/*
++ * Attempts to allocate RT extents when RT is disable indicates corruption and
++ * should trigger a shutdown.
++ */
++static inline int
++xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
++{
++	return -EFSCORRUPTED;
++}
++#endif /* CONFIG_XFS_RT */
++
+ int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+ 		     int whichfork, int *eof);
+ int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 814ed729881d..560e0b40ac1b 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -521,6 +521,7 @@ __xfs_getfsmap_rtdev(
+ 	return query_fn(tp, info);
  }
+ 
++#ifdef CONFIG_XFS_RT
+ /* Actually query the realtime bitmap. */
+ STATIC int
+ xfs_getfsmap_rtdev_rtbitmap_query(
+@@ -561,6 +562,7 @@ xfs_getfsmap_rtdev_rtbitmap(
+ 	return __xfs_getfsmap_rtdev(tp, keys, xfs_getfsmap_rtdev_rtbitmap_query,
+ 			info);
+ }
++#endif /* CONFIG_XFS_RT */
+ 
+ /* Execute a getfsmap query against the regular data device. */
+ STATIC int
+@@ -795,7 +797,15 @@ xfs_getfsmap_check_keys(
+ 	return false;
+ }
+ 
++/*
++ * There are only two devices if we didn't configure RT devices at build time.
++ */
++#ifdef CONFIG_XFS_RT
+ #define XFS_GETFSMAP_DEVS	3
++#else
++#define XFS_GETFSMAP_DEVS	2
++#endif /* CONFIG_XFS_RT */
++
+ /*
+  * Get filesystem's extents as described in head, and format for
+  * output.  Calls formatter to fill the user's buffer until all
+@@ -853,10 +863,12 @@ xfs_getfsmap(
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
+ 	}
++#ifdef CONFIG_XFS_RT
+ 	if (mp->m_rtdev_targp) {
+ 		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
+ 		handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
+ 	}
++#endif /* CONFIG_XFS_RT */
+ 
+ 	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+ 			xfs_getfsmap_dev_compare);
 -- 
 2.14.2
 
