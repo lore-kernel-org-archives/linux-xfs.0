@@ -1,42 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:36949 "EHLO
-        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751264AbdJSHDa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:03:30 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v2 0/4] Fix false positives by cross-release feature
-Date: Thu, 19 Oct 2017 16:03:23 +0900
-Message-Id: <1508396607-25362-1-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508392531-11284-1-git-send-email-byungchul.park@lge.com>
-References: <1508392531-11284-1-git-send-email-byungchul.park@lge.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:52381 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751592AbdJSHSn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:18:43 -0400
+Date: Thu, 19 Oct 2017 00:18:42 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/5] generic/45[34]: force UTF-8 codeset to enable utf-8
+ namer checks in xfs_scrub
+Message-ID: <20171019071842.GA28970@infradead.org>
+References: <150836985024.27213.3715197937819365388.stgit@magnolia>
+ <150836987529.27213.1335818370452284585.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150836987529.27213.1335818370452284585.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org
-Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-I attached this patchset into another thread for patches fixing a
-performance regression by cross-release, so that the cross-release can
-be re-enabled easily as the last, after fixing false positives as well.
+On Wed, Oct 18, 2017 at 04:37:55PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> The upcoming xfs_scrub tool will have the ability to warn about
+> suspicious UTF-8 normalization collisions.  We want generic/45[34] to be
+> able to test this functionality, but to do that we have to forcibly set
+> the codeset to UTF-8 via LC_ALL since the rest of xfstests only uses
+> LC_ALL=C.
 
-Changes from v1
-- Separate a patch removing white space
-
-Byungchul Park (4):
-  completion: Add support for initializing completion with lockdep_map
-  lockdep: Remove unnecessary acquisitions wrt workqueue flush
-  genhd.h: Remove trailing white space
-  lockdep: Assign a lock_class per gendisk used for
-    wait_for_completion()
-
- block/bio.c                |  2 +-
- block/genhd.c              | 13 +++++--------
- include/linux/completion.h |  8 ++++++++
- include/linux/genhd.h      | 26 ++++++++++++++++++++++----
- include/linux/workqueue.h  |  4 ++--
- kernel/workqueue.c         | 20 ++++----------------
- 6 files changed, 42 insertions(+), 31 deletions(-)
-
--- 
-1.9.1
-
+Wait.  Where do you want to validate UTF-8 normalization?  There is
+absolutely no guarantee that someone uses UTF-8, so any reliance on
+the character set in the file system is bogus.
