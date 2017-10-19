@@ -1,95 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38595 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:21010 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753733AbdJSSNG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 14:13:06 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9JID570014110
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 18:13:06 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9JID5X1006085
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 18:13:05 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9JID54v004440
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 18:13:05 GMT
-Date: Thu, 19 Oct 2017 11:13:03 -0700
+        with ESMTP id S1751691AbdJSTpe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 15:45:34 -0400
+Date: Thu, 19 Oct 2017 12:45:27 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/17] Add the extra space requirements for parent
- pointer attributes when calculating the minimum log size during mkfs
-Message-ID: <20171019181303.GA4755@magnolia>
+Subject: Re: [PATCH 17/17] Add the parent pointer support to the superblock
+ version 5.
+Message-ID: <20171019194527.GK4755@magnolia>
 References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
- <1508367333-3237-12-git-send-email-allison.henderson@oracle.com>
+ <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1508367333-3237-12-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-On Wed, Oct 18, 2017 at 03:55:27PM -0700, Allison Henderson wrote:
+On Wed, Oct 18, 2017 at 03:55:33PM -0700, Allison Henderson wrote:
+> [dchinner: forward ported and cleaned up]
+> [achender: rebased and added parent pointer attribute to
+>            compatible attributes mask]
+> 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_log_rlimit.c | 34 ++++++++++++++++++++++++++++++++++
->  1 file changed, 34 insertions(+)
+> v2: remove unrelated type clean up in xfs_format.h
 > 
-> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-> index c105979..beec9bf 100644
-> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
-> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-> @@ -39,6 +39,40 @@ xfs_log_calc_max_attrsetm_res(
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h | 7 +++++--
+>  fs/xfs/libxfs/xfs_fs.h     | 1 +
+>  fs/xfs/xfs_fsops.c         | 4 +++-
+>  3 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 121862a..f3e3132 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
+>  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+> +#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
+>  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+> +		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+>  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+>  static inline bool
+>  xfs_sb_has_ro_compat_feature(
+> @@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>  
+>  static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
 >  {
->  	int			size;
->  	int			nblks;
-> +	struct xfs_trans_resv   *resp = M_RES(mp);
-> +
-> +	/* Calculate extra space needed for parent pointer attributes */
-> +	if (!xfs_sb_version_hasparent(&mp->m_sb)) {
+> -	return false; /* We'll enable this at the end of the set */
+> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 8c61f21..b8108f8 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+>  #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+>  #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
+> +#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+>  
+>  /*
+>   * Minimum and maximum sizes need for growth checks.
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 8f22fc5..9a0ce52 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -111,7 +111,9 @@ xfs_fs_geometry(
+>  			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+>  				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+>  			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+> -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+> +				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
+> +			(xfs_sb_version_hasparent(&mp->m_sb) ?
+> +				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
+>  		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+>  				mp->m_sb.sb_logsectsize : BBSIZE;
+>  		geo->rtsectsize = mp->m_sb.sb_blocksize;
 
-Aren't we supposed to be enlarging tr_log{res,count} if hasparent is true?
-
-> +
-> +		/* rename can add/remove/modify 2 parent attributes */
-> +		resp->tr_rename.tr_logres +=
-> +			2 * max(resp->tr_attrsetm.tr_logres,
-> +				resp->tr_attrrm.tr_logres);
-> +		resp->tr_rename.tr_logcount +=
-> +			2 * max(resp->tr_attrsetm.tr_logcount,
-> +				resp->tr_attrrm.tr_logcount);
-> +
-> +		/* create will add 1 parent attribute */
-> +		resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
-> +		resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> +
-> +		/* mkdir will add 1 parent attribute */
-> +		resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
-> +		resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> +
-> +		/* link will add 1 parent attribute */
-> +		resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
-> +		resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> +
-> +		/* symlink will add 1 parent attribute */
-> +		resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
-> +		resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> +
-> +		/* remove will remove 1 parent attribute */
-> +		resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
-> +		resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
-
-+= ?
+xfs_fs_fill_super ought to have a warning about parent pointers being
+experimental.
 
 --D
 
-> +	}
-> +
->  
->  	size = xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize) -
->  	       MAXNAMELEN - 1;
 > -- 
 > 2.7.4
 > 
