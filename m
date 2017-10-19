@@ -1,75 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49393 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:45407 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753241AbdJSOXj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:39 -0400
+        with ESMTP id S1755005AbdJSOXm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:42 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/16] xfs: handle error if xfs_btree_get_bufs fails
-Date: Thu, 19 Oct 2017 16:22:57 +0200
-Message-Id: <20171019142259.20082-15-hch@lst.de>
+Subject: [PATCH 15/16] xfs: cancel dirty pages on invalidation
+Date: Thu, 19 Oct 2017 16:22:58 +0200
+Message-Id: <20171019142259.20082-16-hch@lst.de>
 In-Reply-To: <20171019142259.20082-1-hch@lst.de>
 References: <20171019142259.20082-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Eric Sandeen <sandeen@sandeen.net>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit 93e8befc17f6d6ea92b0aee3741ceac8bca4590f upstream.
+commit 793d7dbe6d82a50b9d14bf992b9eaacb70a11ce6 upstream.
 
-Jason reported that a corrupted filesystem failed to replay
-the log with a metadata block out of bounds warning:
+Recently we've had warnings arise from the vm handing us pages
+without bufferheads attached to them. This should not ever occur
+in XFS, but we don't defend against it properly if it does. The only
+place where we remove bufferheads from a page is in
+xfs_vm_releasepage(), but we can't tell the difference here between
+"page is dirty so don't release" and "page is dirty but is being
+invalidated so release it".
 
-XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000
+In some places that are invalidating pages ask for pages to be
+released and follow up afterward calling ->releasepage by checking
+whether the page was dirty and then aborting the invalidation. This
+is a possible vector for releasing buffers from a page but then
+leaving it in the mapping, so we really do need to avoid dirty pages
+in xfs_vm_releasepage().
 
-_xfs_buf_find() and xfs_btree_get_bufs() return NULL if
-that happens, and then when xfs_alloc_fix_freelist() calls
-xfs_trans_binval() on that NULL bp, we oops with:
+To differentiate between invalidated pages and normal pages, we need
+to clear the page dirty flag when invalidating the pages. This can
+be done through xfs_vm_invalidatepage(), and will result
+xfs_vm_releasepage() seeing the page as clean which matches the
+bufferhead state on the page after calling block_invalidatepage().
 
-BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
+Hence we can re-add the page dirty check in xfs_vm_releasepage to
+catch the case where we might be releasing a page that is actually
+dirty and so should not have the bufferheads on it removed. This
+will remove one possible vector of "dirty page with no bufferheads"
+and so help narrow down the search for the root cause of that
+problem.
 
-We don't handle _xfs_buf_find errors very well, every
-caller higher up the stack gets to guess at why it failed.
-But we should at least handle it somehow, so return
-EFSCORRUPTED here.
-
-Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
+ 1 file changed, 22 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 9f06a211e157..c3702cda010a 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1579,6 +1579,10 @@ xfs_alloc_ag_vextent_small(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2b9d7c5800ee..c2dee43a2994 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -726,6 +726,14 @@ xfs_vm_invalidatepage(
+ {
+ 	trace_xfs_invalidatepage(page->mapping->host, page, offset,
+ 				 length);
++
++	/*
++	 * If we are invalidating the entire page, clear the dirty state from it
++	 * so that we can check for attempts to release dirty cached pages in
++	 * xfs_vm_releasepage().
++	 */
++	if (offset == 0 && length >= PAGE_SIZE)
++		cancel_dirty_page(page);
+ 	block_invalidatepage(page, offset, length);
+ }
  
- 				bp = xfs_btree_get_bufs(args->mp, args->tp,
- 					args->agno, fbno, 0);
-+				if (!bp) {
-+					error = -EFSCORRUPTED;
-+					goto error0;
-+				}
- 				xfs_trans_binval(args->tp, bp);
- 			}
- 			args->len = 1;
-@@ -2136,6 +2140,10 @@ xfs_alloc_fix_freelist(
- 		if (error)
- 			goto out_agbp_relse;
- 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-+		if (!bp) {
-+			error = -EFSCORRUPTED;
-+			goto out_agbp_relse;
-+		}
- 		xfs_trans_binval(tp, bp);
- 	}
+@@ -1181,25 +1189,27 @@ xfs_vm_releasepage(
+ 	 * mm accommodates an old ext3 case where clean pages might not have had
+ 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
+ 	 * ->releasepage() via shrink_active_list(). Conversely,
+-	 * block_invalidatepage() can send pages that are still marked dirty
+-	 * but otherwise have invalidated buffers.
++	 * block_invalidatepage() can send pages that are still marked dirty but
++	 * otherwise have invalidated buffers.
+ 	 *
+ 	 * We want to release the latter to avoid unnecessary buildup of the
+-	 * LRU, skip the former and warn if we've left any lingering
+-	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
+-	 * or unwritten buffers and warn if the page is not dirty. Otherwise
+-	 * try to release the buffers.
++	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
++	 * that are entirely invalidated and need to be released.  Hence the
++	 * only time we should get dirty pages here is through
++	 * shrink_active_list() and so we can simply skip those now.
++	 *
++	 * warn if we've left any lingering delalloc/unwritten buffers on clean
++	 * or invalidated pages we are about to release.
+ 	 */
++	if (PageDirty(page))
++		return 0;
++
+ 	xfs_count_page_state(page, &delalloc, &unwritten);
  
+-	if (delalloc) {
+-		WARN_ON_ONCE(!PageDirty(page));
++	if (WARN_ON_ONCE(delalloc))
+ 		return 0;
+-	}
+-	if (unwritten) {
+-		WARN_ON_ONCE(!PageDirty(page));
++	if (WARN_ON_ONCE(unwritten))
+ 		return 0;
+-	}
+ 
+ 	return try_to_free_buffers(page);
+ }
 -- 
 2.14.2
 
