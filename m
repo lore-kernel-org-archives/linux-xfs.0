@@ -1,49 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39593 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54363 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753847AbdJSOVj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:39 -0400
+        with ESMTP id S1753901AbdJSOVp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:21:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/18] fs/xfs: Use %pS printk format for direct addresses
-Date: Thu, 19 Oct 2017 16:21:09 +0200
-Message-Id: <20171019142123.18109-5-hch@lst.de>
+Subject: [PATCH 06/18] xfs: update i_size after unwritten conversion in dio completion
+Date: Thu, 19 Oct 2017 16:21:11 +0200
+Message-Id: <20171019142123.18109-7-hch@lst.de>
 In-Reply-To: <20171019142123.18109-1-hch@lst.de>
 References: <20171019142123.18109-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Helge Deller <deller@gmx.de>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Helge Deller <deller@gmx.de>
+From: Eryu Guan <eguan@redhat.com>
 
-commit e150dcd459e1b441eaf08f341a986f04e61bf3b8 upstream.
+commit ee70daaba82d70766d0723b743d9fdeb3b06102a upstream.
 
-Use the %pS instead of the %pF printk format specifier for printing symbols
-from direct addresses. This is needed for the ia64, ppc64 and parisc64
-architectures.
+Since commit d531d91d6990 ("xfs: always use unwritten extents for
+direct I/O writes"), we start allocating unwritten extents for all
+direct writes to allow appending aio in XFS.
 
-Signed-off-by: Helge Deller <deller@gmx.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+But for dio writes that could extend file size we update the in-core
+inode size first, then convert the unwritten extents to real
+allocations at dio completion time in xfs_dio_write_end_io(). Thus a
+racing direct read could see the new i_size and find the unwritten
+extents first and read zeros instead of actual data, if the direct
+writer also takes a shared iolock.
+
+Fix it by updating the in-core inode size after the unwritten extent
+conversion. To do this, introduce a new boolean argument to
+xfs_iomap_write_unwritten() to tell if we want to update in-core
+i_size or not.
+
+Suggested-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_error.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_aops.c  |  3 ++-
+ fs/xfs/xfs_file.c  | 33 +++++++++++++++++++--------------
+ fs/xfs/xfs_iomap.c |  7 +++++--
+ fs/xfs/xfs_iomap.h |  2 +-
+ fs/xfs/xfs_pnfs.c  |  2 +-
+ 5 files changed, 28 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 2f4feb959bfb..028e50a36f95 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -344,7 +344,7 @@ xfs_verifier_error(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f9efd67f6fa1..78aee670ad61 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -330,7 +330,8 @@ xfs_end_io(
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 		break;
+ 	case XFS_IO_UNWRITTEN:
+-		error = xfs_iomap_write_unwritten(ip, offset, size);
++		/* writeback should never update isize */
++		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+ 		break;
+ 	default:
+ 		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 812cd17b331f..ad5100ce8c44 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -432,7 +432,6 @@ xfs_dio_write_end_io(
+ 	struct inode		*inode = file_inode(iocb->ki_filp);
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	loff_t			offset = iocb->ki_pos;
+-	bool			update_size = false;
+ 	int			error = 0;
+ 
+ 	trace_xfs_end_io_direct_write(ip, offset, size);
+@@ -443,6 +442,21 @@ xfs_dio_write_end_io(
+ 	if (size <= 0)
+ 		return size;
+ 
++	if (flags & IOMAP_DIO_COW) {
++		error = xfs_reflink_end_cow(ip, offset, size);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * Unwritten conversion updates the in-core isize after extent
++	 * conversion but before updating the on-disk size. Updating isize any
++	 * earlier allows a racing dio read to find unwritten extents before
++	 * they are converted.
++	 */
++	if (flags & IOMAP_DIO_UNWRITTEN)
++		return xfs_iomap_write_unwritten(ip, offset, size, true);
++
+ 	/*
+ 	 * We need to update the in-core inode size here so that we don't end up
+ 	 * with the on-disk inode size being outside the in-core inode size. We
+@@ -457,20 +471,11 @@ xfs_dio_write_end_io(
+ 	spin_lock(&ip->i_flags_lock);
+ 	if (offset + size > i_size_read(inode)) {
+ 		i_size_write(inode, offset + size);
+-		update_size = true;
+-	}
+-	spin_unlock(&ip->i_flags_lock);
+-
+-	if (flags & IOMAP_DIO_COW) {
+-		error = xfs_reflink_end_cow(ip, offset, size);
+-		if (error)
+-			return error;
+-	}
+-
+-	if (flags & IOMAP_DIO_UNWRITTEN)
+-		error = xfs_iomap_write_unwritten(ip, offset, size);
+-	else if (update_size)
++		spin_unlock(&ip->i_flags_lock);
+ 		error = xfs_setfilesize(ip, offset, size);
++	} else {
++		spin_unlock(&ip->i_flags_lock);
++	}
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 813394c62849..2cef389d8955 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -829,7 +829,8 @@ int
+ xfs_iomap_write_unwritten(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+-	xfs_off_t	count)
++	xfs_off_t	count,
++	bool		update_isize)
  {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb;
+@@ -840,6 +841,7 @@ xfs_iomap_write_unwritten(
+ 	xfs_trans_t	*tp;
+ 	xfs_bmbt_irec_t imap;
+ 	struct xfs_defer_ops dfops;
++	struct inode	*inode = VFS_I(ip);
+ 	xfs_fsize_t	i_size;
+ 	uint		resblks;
+ 	int		error;
+@@ -899,7 +901,8 @@ xfs_iomap_write_unwritten(
+ 		i_size = XFS_FSB_TO_B(mp, offset_fsb + count_fsb);
+ 		if (i_size > offset + count)
+ 			i_size = offset + count;
+-
++		if (update_isize && i_size > i_size_read(inode))
++			i_size_write(inode, i_size);
+ 		i_size = xfs_new_eof(ip, i_size);
+ 		if (i_size) {
+ 			ip->i_d.di_size = i_size;
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 00db3ecea084..ee535065c5d0 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -27,7 +27,7 @@ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *, int);
+ int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
+ 			struct xfs_bmbt_irec *);
+-int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
++int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
  
--	xfs_alert(mp, "Metadata %s detected at %pF, %s block 0x%llx",
-+	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
- 		  __return_address, bp->b_ops->name, bp->b_bn);
+ void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+ 		struct xfs_bmbt_irec *);
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 2f2dc3c09ad0..4246876df7b7 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -274,7 +274,7 @@ xfs_fs_commit_blocks(
+ 					(end - 1) >> PAGE_SHIFT);
+ 		WARN_ON_ONCE(error);
  
+-		error = xfs_iomap_write_unwritten(ip, start, length);
++		error = xfs_iomap_write_unwritten(ip, start, length, false);
+ 		if (error)
+ 			goto out_drop_iolock;
+ 	}
 -- 
 2.14.2
 
