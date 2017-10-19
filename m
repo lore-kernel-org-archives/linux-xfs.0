@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34025 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34059 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752606AbdJSNIo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1752660AbdJSNIo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 19 Oct 2017 09:08:44 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
-Date: Thu, 19 Oct 2017 14:58:17 +0200
-Message-Id: <20171019125817.11580-19-jack@suse.cz>
+Subject: [PATCH 15/17] ext4: Simplify error handling in ext4_dax_huge_fault()
+Date: Thu, 19 Oct 2017 14:58:14 +0200
+Message-Id: <20171019125817.11580-16-jack@suse.cz>
 In-Reply-To: <20171019125817.11580-1-jack@suse.cz>
 References: <20171019125817.11580-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,59 +15,43 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Jan Kara <jack@suse.cz>
 
+If transaction starting fails, just bail out of the function immediately
+instead of checking for that condition throughout the function.
+
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- man2/mmap.2 | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ fs/ext4/file.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/man2/mmap.2 b/man2/mmap.2
-index 47c3148653be..598ff0c64f7f 100644
---- a/man2/mmap.2
-+++ b/man2/mmap.2
-@@ -125,6 +125,21 @@ are carried through to the underlying file.
- to the underlying file requires the use of
- .BR msync (2).)
- .TP
-+.B MAP_SHARED_VALIDATE
-+The same as
-+.B MAP_SHARED
-+except that
-+.B MAP_SHARED
-+mappings ignore unknown flags in
-+.IR flags .
-+In contrast when creating mapping of
-+.B MAP_SHARED_VALIDATE
-+mapping type, the kernel verifies all passed flags are known and fails the
-+mapping with
-+.BR EOPNOTSUPP
-+otherwise. This mapping type is also required to be able to use some mapping
-+flags.
-+.TP
- .B MAP_PRIVATE
- Create a private copy-on-write mapping.
- Updates to the mapping are not visible to other processes
-@@ -352,6 +367,21 @@ option.
- Because of the security implications,
- that option is normally enabled only on embedded devices
- (i.e., devices where one has complete control of the contents of user memory).
-+.TP
-+.BR MAP_SYNC " (since Linux 4.15)"
-+This flags is available only with
-+.B MAP_SHARED_VALIDATE
-+mapping type. Mappings of
-+.B MAP_SHARED
-+type will silently ignore this flag.
-+This flag is supported only for files supporting DAX (direct mapping of persistent
-+memory). For other files, creating mapping with this flag results in
-+.B EOPNOTSUPP
-+error. Shared file mappings with this flag provide the guarantee that while
-+some memory is writeably mapped in the address space of the process, it will
-+be visible in the same file at the same offset even after the system crashes or
-+is rebooted. This allows users of such mappings to make data modifications
-+persistent in a more efficient way using appropriate CPU instructions.
- .PP
- Of the above flags, only
- .B MAP_FIXED
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 3cec0b95672f..208adfc3e673 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -302,16 +302,17 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+ 		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+ 					       EXT4_DATA_TRANS_BLOCKS(sb));
++		if (IS_ERR(handle)) {
++			up_read(&EXT4_I(inode)->i_mmap_sem);
++			sb_end_pagefault(sb);
++			return VM_FAULT_SIGBUS;
++		}
+ 	} else {
+ 		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 	}
+-	if (!IS_ERR(handle))
+-		result = dax_iomap_fault(vmf, pe_size, NULL, &ext4_iomap_ops);
+-	else
+-		result = VM_FAULT_SIGBUS;
++	result = dax_iomap_fault(vmf, pe_size, NULL, &ext4_iomap_ops);
+ 	if (write) {
+-		if (!IS_ERR(handle))
+-			ext4_journal_stop(handle);
++		ext4_journal_stop(handle);
+ 		up_read(&EXT4_I(inode)->i_mmap_sem);
+ 		sb_end_pagefault(sb);
+ 	} else {
 -- 
 2.12.3
 
