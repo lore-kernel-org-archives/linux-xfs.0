@@ -1,37 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:23751 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751501AbdJPBiA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Oct 2017 21:38:00 -0400
-Date: Mon, 16 Oct 2017 12:31:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 12/30] xfs: scrub btree keys and records
-Message-ID: <20171016013159.GP3666@dastard>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777252271.1724.14750284606958135759.stgit@magnolia>
+Received: from LGEAMRELO12.lge.com ([156.147.23.52]:48631 "EHLO
+        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdJSB5S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 21:57:18 -0400
+Date: Thu, 19 Oct 2017 10:57:06 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: Fix false positive by LOCKDEP_CROSSRELEASE
+Message-ID: <20171019015705.GD32368@X58A-UD3R>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+ <1508336995.2923.2.camel@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150777252271.1724.14750284606958135759.stgit@magnolia>
+In-Reply-To: <1508336995.2923.2.camel@wdc.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "mingo@kernel.org" <mingo@kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
 
-On Wed, Oct 11, 2017 at 06:42:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 18, 2017 at 02:29:56PM +0000, Bart Van Assche wrote:
+> On Wed, 2017-10-18 at 18:38 +0900, Byungchul Park wrote:
+> > Several false positives were reported, so I tried to fix them.
+> > 
+> > It would be appreciated if you tell me if it works as expected, or let
+> > me know your opinion.
 > 
-> Add to the btree scrubber the ability to check that the keys and
-> records are in the right order and actually call out to our record
-> iterator to do actual checking of the records.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> What I have been wondering about is whether the crosslock checking makes
+> sense from a conceptual point of view. I tried to find documentation for the
+> crosslock checking in Documentation/locking/lockdep-design.txt but
+> couldn't find a description of the crosslock checking. Shouldn't it be
+> documented somewhere what the crosslock checks do and what the theory is
+> behind these checks?
 
-Looks fine.
+Documentation/locking/crossrelease.txt would be helpful.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
