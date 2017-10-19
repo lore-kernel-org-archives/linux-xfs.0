@@ -1,106 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:50416 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751264AbdJSD5F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 23:57:05 -0400
-Received: by mail-yw0-f193.google.com with SMTP id i198so2423875ywe.7
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2017 20:57:05 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:42357 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751836AbdJSTRm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 15:17:42 -0400
+Date: Thu, 19 Oct 2017 12:17:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/17] xfs: get directory offset when removing directory
+ name
+Message-ID: <20171019191735.GF4755@magnolia>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <1508367333-3237-7-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
-References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com> <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 19 Oct 2017 06:57:04 +0300
-Message-ID: <CAOQ4uxiuFqoHAvJrLOds3w2dXE2nPyBh=uZusp5JxfOf_3cq-w@mail.gmail.com>
-Subject: Re: [PATCH 17/17] Add the parent pointer support to the superblock
- version 5.
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1508367333-3237-7-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
-<allison.henderson@oracle.com> wrote:
+On Wed, Oct 18, 2017 at 03:55:22PM -0700, Allison Henderson wrote:
+> From: Mark Tinguely <tinguely@sgi.com>
+> 
+> Return the directory offset information when removing an entry to the
+> directory.
+> 
+> This offset will be used as the parent pointer offset in xfs_remove.
+> 
 > [dchinner: forward ported and cleaned up]
-> [achender: rebased and added parent pointer attribute to
->            compatible attributes mask]
->
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
+> 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
-> v2: remove unrelated type clean up in xfs_format.h
-
-I'm curious how XFS_SB_VERSION2_PARENTBIT fits into the picture?
-old relic?
-
->
+> v2: Changed typedefs to raw struct types
+> 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_format.h | 7 +++++--
->  fs/xfs/libxfs/xfs_fs.h     | 1 +
->  fs/xfs/xfs_fsops.c         | 4 +++-
->  3 files changed, 9 insertions(+), 3 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 121862a..f3e3132 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
->  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)                /* free inode btree */
->  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)                /* reverse map btree */
->  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)                /* reflinked files */
-> +#define XFS_SB_FEAT_RO_COMPAT_PARENT   (1 << 3)        /* parent inode ptr */
->  #define XFS_SB_FEAT_RO_COMPAT_ALL \
->                 (XFS_SB_FEAT_RO_COMPAT_FINOBT | \
->                  XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> -                XFS_SB_FEAT_RO_COMPAT_REFLINK)
-> +                XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-> +                XFS_SB_FEAT_RO_COMPAT_PARENT)
->  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN  ~XFS_SB_FEAT_RO_COMPAT_ALL
->  static inline bool
->  xfs_sb_has_ro_compat_feature(
-> @@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->
->  static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>  fs/xfs/libxfs/xfs_dir2.c       | 15 +++++++++------
+>  fs/xfs/libxfs/xfs_dir2.h       |  4 +++-
+>  fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  |  5 +++--
+>  fs/xfs/libxfs/xfs_dir2_node.c  |  5 +++--
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+>  fs/xfs/xfs_inode.c             |  7 ++++---
+>  7 files changed, 26 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index a1ca460..0511eb9 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -443,13 +443,14 @@ xfs_dir_lookup(
+>   */
+>  int
+>  xfs_dir_removename(
+> -	xfs_trans_t	*tp,
+> -	xfs_inode_t	*dp,
+> -	struct xfs_name	*name,
+> -	xfs_ino_t	ino,
+> -	xfs_fsblock_t	*first,		/* bmap's firstblock */
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*dp,
+> +	struct xfs_name		*name,
+> +	xfs_ino_t		ino,
+> +	xfs_fsblock_t	*first,			/* bmap's firstblock */
+
+Indentation problem?
+
+--D
+
+>  	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+> -	xfs_extlen_t	total)		/* bmap's total block count */
+> +	xfs_extlen_t		total,		/* bmap's total block count */
+> +	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
 >  {
-> -       return false; /* We'll enable this at the end of the set */
-> +       return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> +               (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
->  }
->
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 8c61f21..b8108f8 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_FSOP_GEOM_FLAGS_SPINODES   0x40000 /* sparse inode chunks  */
->  #define XFS_FSOP_GEOM_FLAGS_RMAPBT     0x80000 /* reverse mapping btree */
->  #define XFS_FSOP_GEOM_FLAGS_REFLINK    0x100000 /* files can share blocks */
-> +#define XFS_FSOP_GEOM_FLAGS_PARENT     0x200000 /* parent pointers */
->
->  /*
->   * Minimum and maximum sizes need for growth checks.
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 8f22fc5..9a0ce52 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -111,7 +111,9 @@ xfs_fs_geometry(
->                         (xfs_sb_version_hasrmapbt(&mp->m_sb) ?
->                                 XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
->                         (xfs_sb_version_hasreflink(&mp->m_sb) ?
-> -                               XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-> +                               XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
-> +                       (xfs_sb_version_hasparent(&mp->m_sb) ?
-> +                               XFS_FSOP_GEOM_FLAGS_PARENT : 0);
->                 geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
->                                 mp->m_sb.sb_logsectsize : BBSIZE;
->                 geo->rtsectsize = mp->m_sb.sb_blocksize;
-> --
+>  	struct xfs_da_args *args;
+>  	int		rval;
+> @@ -495,6 +496,8 @@ xfs_dir_removename(
+>  		rval = xfs_dir2_leaf_removename(args);
+>  	else
+>  		rval = xfs_dir2_node_removename(args);
+> +	if (offset)
+> +		*offset = args->offset;
+>  out_free:
+>  	kmem_free(args);
+>  	return rval;
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index e349900..e1bd05d 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -139,7 +139,9 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t ino,
+>  				xfs_fsblock_t *first,
+> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
+> +				struct xfs_defer_ops *dfops,
+> +				xfs_extlen_t tot,
+> +				xfs_dir2_dataptr_t *offset);
+>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t inum,
+>  				xfs_fsblock_t *first,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 79684d5..4dbe2fc 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -791,9 +791,9 @@ xfs_dir2_block_removename(
+>  	/*
+>  	 * Point to the data entry using the leaf entry.
+>  	 */
+> +	args->offset = be32_to_cpu(blp[ent].address);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -			xfs_dir2_dataptr_to_off(args->geo,
+> -						be32_to_cpu(blp[ent].address)));
+> +			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	/*
+>  	 * Mark the data entry's space free.
+>  	 */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 2ac7a7e..197e627 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -1383,9 +1383,10 @@ xfs_dir2_leaf_removename(
+>  	 * Point to the leaf entry, use that to point to the data entry.
+>  	 */
+>  	lep = &ents[index];
+> -	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
+> +	args->offset = be32_to_cpu(lep->address);
+> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -		xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+> +		xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	needscan = needlog = 0;
+>  	oldbest = be16_to_cpu(bf[0].length);
+>  	ltp = xfs_dir2_leaf_tail_p(args->geo, leaf);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 8bc91f8..13d5244 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -1238,9 +1238,10 @@ xfs_dir2_leafn_remove(
+>  	/*
+>  	 * Extract the data block and offset from the entry.
+>  	 */
+> -	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
+> +	args->offset = be32_to_cpu(lep->address);
+> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+>  	ASSERT(dblk->blkno == db);
+> -	off = xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address));
+> +	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
+>  	ASSERT(dblk->index == off);
+>  
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 489bdef..9e90c22 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -919,6 +919,8 @@ xfs_dir2_sf_removename(
+>  								XFS_CMP_EXACT) {
+>  			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
+>  			       args->inumber);
+> +			args->offset = xfs_dir2_byte_to_dataptr(
+> +						xfs_dir2_sf_get_offset(sfep));
+>  			break;
+>  		}
+>  	}
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 3abcb17..358a98a 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2639,8 +2639,8 @@ xfs_remove(
+>  		goto out_trans_cancel;
+>  
+>  	xfs_defer_init(&dfops, &first_block);
+> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
+> -					&first_block, &dfops, resblks);
+> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+> +				   &dfops, resblks, NULL);
+>  	if (error) {
+>  		ASSERT(error != -ENOENT);
+>  		goto out_bmap_cancel;
+> @@ -3150,7 +3150,8 @@ xfs_rename(
+>  					&first_block, &dfops, spaceres);
+>  	} else
+>  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+> -					   &first_block, &dfops, spaceres);
+> +					   &first_block, &dfops, spaceres,
+> +					   NULL);
+>  	if (error)
+>  		goto out_bmap_cancel;
+>  
+> -- 
 > 2.7.4
->
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
