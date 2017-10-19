@@ -1,102 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:50205 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754727AbdJSQs7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 12:48:59 -0400
-Received: by mail-oi0-f67.google.com with SMTP id q4so15924040oic.7
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2017 09:48:59 -0700 (PDT)
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:50416 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751264AbdJSD5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2017 23:57:05 -0400
+Received: by mail-yw0-f193.google.com with SMTP id i198so2423875ywe.7
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2017 20:57:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20171019125817.11580-2-jack@suse.cz>
-References: <20171019125817.11580-1-jack@suse.cz> <20171019125817.11580-2-jack@suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 19 Oct 2017 09:48:58 -0700
-Message-ID: <CAPcyv4jpHVUamGR=JuK4eUUfFDCWzVmiCMr7K-sTJ2U1TX8uzQ@mail.gmail.com>
-Subject: Re: [PATCH 01/17] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
+In-Reply-To: <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com> <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 19 Oct 2017 06:57:04 +0300
+Message-ID: <CAOQ4uxiuFqoHAvJrLOds3w2dXE2nPyBh=uZusp5JxfOf_3cq-w@mail.gmail.com>
+Subject: Re: [PATCH 17/17] Add the parent pointer support to the superblock
+ version 5.
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-On Thu, Oct 19, 2017 at 5:58 AM, Jan Kara <jack@suse.cz> wrote:
+On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
+<allison.henderson@oracle.com> wrote:
+> [dchinner: forward ported and cleaned up]
+> [achender: rebased and added parent pointer attribute to
+>            compatible attributes mask]
 >
-> From: Dan Williams <dan.j.williams@intel.com>
->
-> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
-> unknown flags. However, proposals like MAP_SYNC need a mechanism to
-> define new behavior that is known to fail on older kernels without the
-> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
-> guaranteed to fail on all legacy mmap implementations.
->
-> It is worth noting that the original proposal was for a standalone
-> MAP_VALIDATE flag. However, when that  could not be supported by all
-> archs Linus observed:
->
->     I see why you *think* you want a bitmap. You think you want
->     a bitmap because you want to make MAP_VALIDATE be part of MAP_SYNC
->     etc, so that people can do
->
->     ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED
->                     | MAP_SYNC, fd, 0);
->
->     and "know" that MAP_SYNC actually takes.
->
->     And I'm saying that whole wish is bogus. You're fundamentally
->     depending on special semantics, just make it explicit. It's already
->     not portable, so don't try to make it so.
->
->     Rename that MAP_VALIDATE as MAP_SHARED_VALIDATE, make it have a value
->     of 0x3, and make people do
->
->     ret = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE
->                     | MAP_SYNC, fd, 0);
->
->     and then the kernel side is easier too (none of that random garbage
->     playing games with looking at the "MAP_VALIDATE bit", but just another
->     case statement in that map type thing.
->
->     Boom. Done.
->
-> Similar to ->fallocate() we also want the ability to validate the
-> support for new flags on a per ->mmap() 'struct file_operations'
-> instance basis.  Towards that end arrange for flags to be generically
-> validated against a mmap_supported_flags exported by 'struct
-> file_operations'. By default all existing flags are implicitly
-> supported, but new flags require MAP_SHARED_VALIDATE and
-> per-instance-opt-in.
->
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Andy Lutomirski <luto@kernel.org>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  arch/alpha/include/uapi/asm/mman.h           |  1 +
->  arch/mips/include/uapi/asm/mman.h            |  1 +
->  arch/parisc/include/uapi/asm/mman.h          |  1 +
->  arch/xtensa/include/uapi/asm/mman.h          |  1 +
->  include/linux/fs.h                           |  1 +
->  include/linux/mman.h                         | 39 ++++++++++++++++++++++++++++
->  include/uapi/asm-generic/mman-common.h       |  1 +
->  mm/mmap.c                                    | 21 +++++++++++++++
->  tools/include/uapi/asm-generic/mman-common.h |  1 +
->  9 files changed, 67 insertions(+)
->
-> diff --git a/arch/alpha/include/uapi/asm/mman.h b/arch/alpha/include/uapi/asm/mman.h
-> index 3b26cc62dadb..92823f24890b 100644
-> --- a/arch/alpha/include/uapi/asm/mman.h
-> +++ b/arch/alpha/include/uapi/asm/mman.h
-> @@ -14,6 +14,7 @@
->  #define MAP_TYPE       0x0f            /* Mask for type of mapping (OSF/1 is _wrong_) */
->  #define MAP_FIXED      0x100           /* Interpret addr exactly */
->  #define MAP_ANONYMOUS  0x10            /* don't use a file */
-> +#define MAP_SHARED_VALIDATE 0x3                /* share + validate extension flags */
+> v2: remove unrelated type clean up in xfs_format.h
 
-Looks good, only comment is your original feedback to move this
-definition next to MAP_SHARED a few lines up in the all places where
-we define it.
+I'm curious how XFS_SB_VERSION2_PARENTBIT fits into the picture?
+old relic?
+
+>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h | 7 +++++--
+>  fs/xfs/libxfs/xfs_fs.h     | 1 +
+>  fs/xfs/xfs_fsops.c         | 4 +++-
+>  3 files changed, 9 insertions(+), 3 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 121862a..f3e3132 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
+>  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)                /* free inode btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)                /* reverse map btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)                /* reflinked files */
+> +#define XFS_SB_FEAT_RO_COMPAT_PARENT   (1 << 3)        /* parent inode ptr */
+>  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>                 (XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>                  XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> -                XFS_SB_FEAT_RO_COMPAT_REFLINK)
+> +                XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+> +                XFS_SB_FEAT_RO_COMPAT_PARENT)
+>  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN  ~XFS_SB_FEAT_RO_COMPAT_ALL
+>  static inline bool
+>  xfs_sb_has_ro_compat_feature(
+> @@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>
+>  static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>  {
+> -       return false; /* We'll enable this at the end of the set */
+> +       return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +               (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+>  }
+>
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 8c61f21..b8108f8 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_SPINODES   0x40000 /* sparse inode chunks  */
+>  #define XFS_FSOP_GEOM_FLAGS_RMAPBT     0x80000 /* reverse mapping btree */
+>  #define XFS_FSOP_GEOM_FLAGS_REFLINK    0x100000 /* files can share blocks */
+> +#define XFS_FSOP_GEOM_FLAGS_PARENT     0x200000 /* parent pointers */
+>
+>  /*
+>   * Minimum and maximum sizes need for growth checks.
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 8f22fc5..9a0ce52 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -111,7 +111,9 @@ xfs_fs_geometry(
+>                         (xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+>                                 XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+>                         (xfs_sb_version_hasreflink(&mp->m_sb) ?
+> -                               XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+> +                               XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
+> +                       (xfs_sb_version_hasparent(&mp->m_sb) ?
+> +                               XFS_FSOP_GEOM_FLAGS_PARENT : 0);
+>                 geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+>                                 mp->m_sb.sb_logsectsize : BBSIZE;
+>                 geo->rtsectsize = mp->m_sb.sb_blocksize;
+> --
+> 2.7.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
