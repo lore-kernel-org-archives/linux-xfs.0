@@ -1,312 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29166 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:29284 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752629AbdJSWsR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 18:48:17 -0400
-Date: Thu, 19 Oct 2017 15:48:13 -0700
+        with ESMTP id S1753813AbdJSWsp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 18:48:45 -0400
+Date: Thu, 19 Oct 2017 15:48:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/15] xfs: remove the never fully implemented UUID fork
- format
-Message-ID: <20171019224813.GP4755@magnolia>
+Subject: Re: [PATCH 01/15] xfs: add a xfs_bmap_fork_to_state helper
+Message-ID: <20171019224839.GQ4755@magnolia>
 References: <20171019065942.18813-1-hch@lst.de>
- <20171019065942.18813-7-hch@lst.de>
+ <20171019065942.18813-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171019065942.18813-7-hch@lst.de>
+In-Reply-To: <20171019065942.18813-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 08:59:33AM +0200, Christoph Hellwig wrote:
-> Remove the dead code dealing with the UUID fork format that was never
-> implemented in Linux (and neither in IRIX as far as I know).
-
-I think I need a little more context on this -- for what purpose was the
-UUID format created, and has it ever been used anywhere?  When I was
-working on the ifork verifiers/scrub I noticed that we'd never actually
-accept anything with that format.
-
-(I'm ok with removing it, I just want to know what I'm killing before I
-commit to it.)
-
---D
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c  |  6 +-----
->  fs/xfs/libxfs/xfs_bmap.c       |  4 ----
->  fs/xfs/libxfs/xfs_format.h     |  2 +-
->  fs/xfs/libxfs/xfs_inode_fork.c |  9 ---------
->  fs/xfs/libxfs/xfs_inode_fork.h |  1 -
->  fs/xfs/libxfs/xfs_log_format.h | 20 ++++++++++----------
->  fs/xfs/xfs_inode_item.c        | 25 ++++++-------------------
->  fs/xfs/xfs_itable.c            |  1 -
->  fs/xfs/xfs_log_recover.c       | 10 +---------
->  9 files changed, 19 insertions(+), 59 deletions(-)
+On Thu, Oct 19, 2017 at 08:59:28AM +0200, Christoph Hellwig wrote:
+> This creates the right initial bmap state from the passed in inode
+> fork enum.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 5c16db86b38f..53cc8b986eac 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -397,13 +397,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
->  	/* rounded down */
->  	offset = (XFS_LITINO(mp, dp->i_d.di_version) - bytes) >> 3;
->  
-> -	switch (dp->i_d.di_format) {
-> -	case XFS_DINODE_FMT_DEV:
-> +	if (dp->i_d.di_format == XFS_DINODE_FMT_DEV) {
->  		minforkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
->  		return (offset >= minforkoff) ? minforkoff : 0;
-> -	case XFS_DINODE_FMT_UUID:
-> -		minforkoff = roundup(sizeof(uuid_t), 8) >> 3;
-> -		return (offset >= minforkoff) ? minforkoff : 0;
->  	}
->  
->  	/*
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 45 +++++++++------------------------------------
+>  fs/xfs/libxfs/xfs_bmap.h | 12 ++++++++++++
+>  2 files changed, 21 insertions(+), 36 deletions(-)
+> 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 6431386f4676..22e7578e5696 100644
+> index 6c2ae3011964..676fc8aed67f 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -231,7 +231,6 @@ xfs_bmap_forkoff_reset(
+> @@ -499,12 +499,7 @@ xfs_bmap_trace_exlist(
 >  {
->  	if (whichfork == XFS_ATTR_FORK &&
->  	    ip->i_d.di_format != XFS_DINODE_FMT_DEV &&
-> -	    ip->i_d.di_format != XFS_DINODE_FMT_UUID &&
->  	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE) {
->  		uint	dfl_forkoff = xfs_default_attroffset(ip) >> 3;
->  
-> @@ -1086,9 +1085,6 @@ xfs_bmap_add_attrfork(
->  	case XFS_DINODE_FMT_DEV:
->  		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
->  		break;
-> -	case XFS_DINODE_FMT_UUID:
-> -		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
-> -		break;
->  	case XFS_DINODE_FMT_LOCAL:
->  	case XFS_DINODE_FMT_EXTENTS:
->  	case XFS_DINODE_FMT_BTREE:
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 23229f0c5b15..66f9b9f61d92 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -941,7 +941,7 @@ typedef enum xfs_dinode_fmt {
->  	XFS_DINODE_FMT_LOCAL,		/* bulk data */
->  	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
->  	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
-> -	XFS_DINODE_FMT_UUID		/* uuid_t */
-> +	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
->  } xfs_dinode_fmt_t;
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 31786bad9738..1d003ca21562 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -902,15 +902,6 @@ xfs_iflush_fork(
->  		}
->  		break;
->  
-> -	case XFS_DINODE_FMT_UUID:
-> -		if (iip->ili_fields & XFS_ILOG_UUID) {
-> -			ASSERT(whichfork == XFS_DATA_FORK);
-> -			memcpy(XFS_DFORK_DPTR(dip),
-> -			       &ip->i_df.if_u2.if_uuid,
-> -			       sizeof(uuid_t));
-> -		}
-> -		break;
+>  	xfs_extnum_t	idx;		/* extent record index */
+>  	xfs_ifork_t	*ifp;		/* inode fork pointer */
+> -	int		state = 0;
 > -
->  	default:
->  		ASSERT(0);
->  		break;
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index 6750f0462d21..064babdc373c 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -70,7 +70,6 @@ typedef struct xfs_ifork {
->  		char		if_inline_data[XFS_INLINE_DATA];
->  						/* very small file data */
->  		xfs_dev_t	if_rdev;	/* dev number if special */
-> -		uuid_t		if_uuid;	/* mount point value */
->  	} if_u2;
->  } xfs_ifork_t;
+> -	if (whichfork == XFS_ATTR_FORK)
+> -		state |= BMAP_ATTRFORK;
+> -	else if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
+> +	int		state = xfs_bmap_fork_to_state(whichfork);
 >  
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index 71de185735e0..a7ab6adae7f6 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -274,7 +274,7 @@ typedef struct xfs_inode_log_format {
->  	uint64_t		ilf_ino;	/* inode number */
->  	union {
->  		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-> -		uuid_t		ilfu_uuid;	/* mount point value */
-> +		u8		__pad[16];	/* unused */
->  	} ilf_u;
->  	int64_t			ilf_blkno;	/* blkno of inode buffer */
->  	int32_t			ilf_len;	/* len of inode buffer */
-> @@ -295,7 +295,7 @@ struct xfs_inode_log_format_32 {
->  	uint64_t		ilf_ino;	/* inode number */
->  	union {
->  		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
-> -		uuid_t		ilfu_uuid;	/* mount point value */
-> +		u8		__pad[16];	/* unused */
->  	} ilf_u;
->  	int64_t			ilf_blkno;	/* blkno of inode buffer */
->  	int32_t			ilf_len;	/* len of inode buffer */
-> @@ -311,7 +311,7 @@ struct xfs_inode_log_format_32 {
->  #define	XFS_ILOG_DEXT	0x004	/* log i_df.if_extents */
->  #define	XFS_ILOG_DBROOT	0x008	/* log i_df.i_broot */
->  #define	XFS_ILOG_DEV	0x010	/* log the dev field */
-> -#define	XFS_ILOG_UUID	0x020	/* log the uuid field */
-> +#define	XFS_ILOG_UUID	0x020	/* added long ago, but never used */
->  #define	XFS_ILOG_ADATA	0x040	/* log i_af.if_data */
->  #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
->  #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
-> @@ -329,9 +329,9 @@ struct xfs_inode_log_format_32 {
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	ASSERT(cnt == xfs_iext_count(ifp));
+> @@ -925,8 +920,7 @@ xfs_bmap_local_to_extents(
+>  	rec.br_state = XFS_EXT_NORM;
+>  	xfs_iext_insert(ip, 0, 1, &rec, 0);
 >  
->  #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
->  				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
-> -				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
-> -				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
-> -				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
-> +				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
-> +				 XFS_ILOG_ABROOT | XFS_ILOG_DOWNER | \
-> +				 XFS_ILOG_AOWNER)
+> -	trace_xfs_bmap_post_update(ip, 0,
+> -			whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
+> +	trace_xfs_bmap_post_update(ip, 0, xfs_bmap_fork_to_state(whichfork),
+>  			_THIS_IP_);
+>  	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
+>  	ip->i_d.di_nblocks = 1;
+> @@ -1571,7 +1565,7 @@ xfs_bmap_add_extent_delay_real(
+>  	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+>  					/* left is 0, right is 1, prev is 2 */
+>  	int			rval=0;	/* return value (logging flags) */
+> -	int			state = 0;/* state bits, accessed thru macros */
+> +	int			state = xfs_bmap_fork_to_state(whichfork);
+>  	xfs_filblks_t		da_new; /* new count del alloc blocks used */
+>  	xfs_filblks_t		da_old; /* old count del alloc blocks used */
+>  	xfs_filblks_t		temp=0;	/* value for da_new calculations */
+> @@ -1598,9 +1592,6 @@ xfs_bmap_add_extent_delay_real(
+>  #define	RIGHT		r[1]
+>  #define	PREV		r[2]
 >  
->  #define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
->  				 XFS_ILOG_DBROOT)
-> @@ -341,10 +341,10 @@ struct xfs_inode_log_format_32 {
+> -	if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
+> -
+>  	/*
+>  	 * Set up a bunch of variables to make the tests simpler.
+>  	 */
+> @@ -2108,7 +2099,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+>  					/* left is 0, right is 1, prev is 2 */
+>  	int			rval=0;	/* return value (logging flags) */
+> -	int			state = 0;/* state bits, accessed thru macros */
+> +	int			state = xfs_bmap_fork_to_state(whichfork);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_bmbt_irec	old;
 >  
->  #define	XFS_ILOG_ALL		(XFS_ILOG_CORE | XFS_ILOG_DDATA | \
->  				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
-> -				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
-> -				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
-> -				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP | \
-> -				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
-> +				 XFS_ILOG_DEV | XFS_ILOG_ADATA | \
-> +				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
-> +				 XFS_ILOG_TIMESTAMP | XFS_ILOG_DOWNER | \
-> +				 XFS_ILOG_AOWNER)
+> @@ -2116,8 +2107,6 @@ xfs_bmap_add_extent_unwritten_real(
 >  
->  static inline int xfs_ilog_fbroot(int w)
->  {
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 9bbc2d7cc8cb..bd60ad313173 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -72,7 +72,6 @@ xfs_inode_item_data_fork_size(
->  		break;
+>  	cur = *curp;
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
 >  
->  	case XFS_DINODE_FMT_DEV:
-> -	case XFS_DINODE_FMT_UUID:
->  		break;
->  	default:
->  		ASSERT(0);
-> @@ -156,8 +155,7 @@ xfs_inode_item_format_data_fork(
->  	switch (ip->i_d.di_format) {
->  	case XFS_DINODE_FMT_EXTENTS:
->  		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-> +			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+>  	ASSERT(*idx >= 0);
+>  	ASSERT(*idx <= xfs_iext_count(ifp));
+> @@ -2601,13 +2590,10 @@ xfs_bmap_add_extent_hole_delay(
+>  	xfs_filblks_t		newlen=0;	/* new indirect size */
+>  	xfs_filblks_t		oldlen=0;	/* old indirect size */
+>  	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+> -	int			state;  /* state bits, accessed thru macros */
+> +	int			state = xfs_bmap_fork_to_state(whichfork);
+>  	xfs_filblks_t		temp;	 /* temp for indirect calculations */
 >  
->  		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
->  		    ip->i_d.di_nextents > 0 &&
-> @@ -181,8 +179,7 @@ xfs_inode_item_format_data_fork(
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
->  		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
-> -			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-> +			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT | XFS_ILOG_DEV);
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	state = 0;
+> -	if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
+>  	ASSERT(isnullstartblock(new->br_startblock));
 >  
->  		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
->  		    ip->i_df.if_broot_bytes > 0) {
-> @@ -200,8 +197,7 @@ xfs_inode_item_format_data_fork(
->  		break;
->  	case XFS_DINODE_FMT_LOCAL:
->  		iip->ili_fields &=
-> -			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-> +			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
->  		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
->  		    ip->i_df.if_bytes > 0) {
->  			/*
-> @@ -224,18 +220,10 @@ xfs_inode_item_format_data_fork(
->  		break;
->  	case XFS_DINODE_FMT_DEV:
->  		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEXT | XFS_ILOG_UUID);
-> +			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
->  		if (iip->ili_fields & XFS_ILOG_DEV)
->  			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
->  		break;
-> -	case XFS_DINODE_FMT_UUID:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEXT | XFS_ILOG_DEV);
-> -		if (iip->ili_fields & XFS_ILOG_UUID)
-> -			ilf->ilf_u.ilfu_uuid = ip->i_df.if_u2.if_uuid;
-> -		break;
->  	default:
->  		ASSERT(0);
->  		break;
-> @@ -441,7 +429,7 @@ xfs_inode_item_format(
->  	ilf->ilf_dsize = 0;
->  	ilf->ilf_asize = 0;
->  	ilf->ilf_pad = 0;
-> -	uuid_copy(&ilf->ilf_u.ilfu_uuid, &uuid_null);
-> +	memset(&ilf->ilf_u, 0, sizeof(ilf->ilf_u));
+>  	/*
+> @@ -2760,7 +2746,7 @@ xfs_bmap_add_extent_hole_real(
+>  	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+>  	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+>  	int			rval=0;	/* return value (logging flags) */
+> -	int			state;	/* state bits, accessed thru macros */
+> +	int			state = xfs_bmap_fork_to_state(whichfork);
+>  	struct xfs_bmbt_irec	old;
 >  
->  	xlog_finish_iovec(lv, vecp, sizeof(*ilf));
+>  	ASSERT(*idx >= 0);
+> @@ -2770,12 +2756,6 @@ xfs_bmap_add_extent_hole_real(
 >  
-> @@ -892,8 +880,7 @@ xfs_inode_item_format_convert(
->  	in_f->ilf_asize = in_f32->ilf_asize;
->  	in_f->ilf_dsize = in_f32->ilf_dsize;
->  	in_f->ilf_ino = in_f32->ilf_ino;
-> -	/* copy biggest field of ilf_u */
-> -	uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
-> +	memcpy(&in_f->ilf_u, &in_f32->ilf_u, sizeof(in_f->ilf_u));
->  	in_f->ilf_blkno = in_f32->ilf_blkno;
->  	in_f->ilf_len = in_f32->ilf_len;
->  	in_f->ilf_boffset = in_f32->ilf_boffset;
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index c393a2f6d8c3..23ba69fcc516 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -124,7 +124,6 @@ xfs_bulkstat_one_int(
->  		buf->bs_blocks = 0;
->  		break;
->  	case XFS_DINODE_FMT_LOCAL:
-> -	case XFS_DINODE_FMT_UUID:
->  		buf->bs_rdev = 0;
->  		buf->bs_blksize = mp->m_sb.sb_blocksize;
->  		buf->bs_blocks = 0;
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index ee34899396b2..4e48e0534345 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3163,16 +3163,8 @@ xlog_recover_inode_pass2(
->  	}
+>  	XFS_STATS_INC(mp, xs_add_exlist);
 >  
->  	fields = in_f->ilf_fields;
-> -	switch (fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
-> -	case XFS_ILOG_DEV:
-> +	if (fields & XFS_ILOG_DEV)
->  		xfs_dinode_put_rdev(dip, in_f->ilf_u.ilfu_rdev);
-> -		break;
-> -	case XFS_ILOG_UUID:
-> -		memcpy(XFS_DFORK_DPTR(dip),
-> -		       &in_f->ilf_u.ilfu_uuid,
-> -		       sizeof(uuid_t));
-> -		break;
-> -	}
+> -	state = 0;
+> -	if (whichfork == XFS_ATTR_FORK)
+> -		state |= BMAP_ATTRFORK;
+> -	if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
+> -
+>  	/*
+>  	 * Check and set flags if this segment has a left neighbor.
+>  	 */
+> @@ -4737,7 +4717,8 @@ xfs_bmap_del_extent_delay(
+>  	int64_t			da_old, da_new, da_diff = 0;
+>  	xfs_fileoff_t		del_endoff, got_endoff;
+>  	xfs_filblks_t		got_indlen, new_indlen, stolen;
+> -	int			error = 0, state = 0;
+> +	int			state = xfs_bmap_fork_to_state(whichfork);
+> +	int			error = 0;
+>  	bool			isrt;
 >  
->  	if (in_f->ilf_size == 2)
->  		goto out_owner_change;
+>  	XFS_STATS_INC(mp, xs_del_exlist);
+> @@ -4773,9 +4754,6 @@ xfs_bmap_del_extent_delay(
+>  		return error;
+>  	ip->i_delayed_blks -= del->br_blockcount;
+>  
+> -	if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
+> -
+>  	if (got->br_startoff == del->br_startoff)
+>  		state |= BMAP_LEFT_FILLING;
+>  	if (got_endoff == del_endoff)
+> @@ -4969,17 +4947,12 @@ xfs_bmap_del_extent_real(
+>  	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+>  	/* REFERENCED */
+>  	uint			qfield;	/* quota field to update */
+> -	int			state = 0;
+> +	int			state = xfs_bmap_fork_to_state(whichfork);
+>  	struct xfs_bmbt_irec	old;
+>  
+>  	mp = ip->i_mount;
+>  	XFS_STATS_INC(mp, xs_del_exlist);
+>  
+> -	if (whichfork == XFS_ATTR_FORK)
+> -		state |= BMAP_ATTRFORK;
+> -	else if (whichfork == XFS_COW_FORK)
+> -		state |= BMAP_COWFORK;
+> -
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
+>  	ASSERT(del->br_blockcount > 0);
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 851982a5dfbc..a61c5480b6ad 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -277,4 +277,16 @@ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+>  int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+>  		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+>  
+> +static inline int xfs_bmap_fork_to_state(int whichfork)
+> +{
+> +	switch (whichfork) {
+> +	case XFS_ATTR_FORK:
+> +		return BMAP_ATTRFORK;
+> +	case XFS_COW_FORK:
+> +		return BMAP_COWFORK;
+> +	default:
+> +		return 0;
+> +	}
+> +}
+> +
+>  #endif	/* __XFS_BMAP_H__ */
 > -- 
 > 2.14.1
 > 
