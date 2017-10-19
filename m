@@ -1,49 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28085 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753310AbdJSWoj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 18:44:39 -0400
-Date: Thu, 19 Oct 2017 15:44:31 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH for-4.14] xfs: fix AIM7 regression
-Message-ID: <20171019224431.GO4755@magnolia>
-References: <20171019074705.24827-1-hch@lst.de>
- <20171019113848.GA8911@bfoster.bfoster>
- <20171019131407.GA20645@lst.de>
+Received: from verein.lst.de ([213.95.11.211]:42789 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751023AbdJSNRh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Oct 2017 09:17:37 -0400
+Date: Thu, 19 Oct 2017 15:17:35 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
+Message-ID: <20171019131735.GC20645@lst.de>
+References: <20171019125817.11580-1-jack@suse.cz> <20171019125817.11580-18-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171019131407.GA20645@lst.de>
+In-Reply-To: <20171019125817.11580-18-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Thu, Oct 19, 2017 at 03:14:07PM +0200, Christoph Hellwig wrote:
-> On Thu, Oct 19, 2017 at 07:38:48AM -0400, Brian Foster wrote:
-> > On Thu, Oct 19, 2017 at 09:47:05AM +0200, Christoph Hellwig wrote:
-> > > Apparently our current rwsem code doesn't like doing the trylock, then
-> > > lock for real scheme.  So change our read/write methods to just do the
-> > > trylock for the RWF_NOWAIT case.  This fixes a ~25% regression in
-> > > AIM7.
-> > > 
-> > 
-> > The code looks fine, but this seems really strange. If the trylock
-> > fails, then wouldn't the blocking lock have slept anyways if done
-> > initially? Is there any more background info available on this, or
-> > perhaps a theory on why there is such a significant regression..?
-> 
-> No, unfortunately I don't have a theory, but I agree it is odd
-> behavior in the rwsem code.
+> +#define XFS_MAP_SUPPORTED (LEGACY_MAP_MASK | MAP_SYNC)
 
-<shrug> I want to know a little more about why there's a performance hit
-in the down_read_trylock -> down_read case.  Are we getting penalized
-for that?  Is it some weird interaction with lockdep?
+I'd kill this define.  Also is there any good reason that we have
+to add LEGACY_MAP_MASK instead of assuming it's supported in the
+core?
 
---D
+>  #endif
+>  	.mmap		= xfs_file_mmap,
+> +	.mmap_supported_flags	= XFS_MAP_SUPPORTED,
+>  	.open		= xfs_file_open,
+>  	.release	= xfs_file_release,
+>  	.fsync		= xfs_file_fsync,
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I usually either reformat all members to be aligned again, or if that's
+too much churn (in this case it probably is) just use a single space
+before the = to minimize the alignment differences.
+
+Otherwise your changes look good to me.
