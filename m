@@ -1,69 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35864 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49393 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755005AbdJSOXh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:37 -0400
+        with ESMTP id S1753241AbdJSOXj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:23:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/16] xfs: reinit btree pointer on attr tree inactivation walk
-Date: Thu, 19 Oct 2017 16:22:56 +0200
-Message-Id: <20171019142259.20082-14-hch@lst.de>
+Subject: [PATCH 14/16] xfs: handle error if xfs_btree_get_bufs fails
+Date: Thu, 19 Oct 2017 16:22:57 +0200
+Message-Id: <20171019142259.20082-15-hch@lst.de>
 In-Reply-To: <20171019142259.20082-1-hch@lst.de>
 References: <20171019142259.20082-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 
-commit f35c5e10c6ed6ba52a8dd8573924a80b6a02f03f upstream.
+commit 93e8befc17f6d6ea92b0aee3741ceac8bca4590f upstream.
 
-xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
-associated blocks. xfs_attr3_node_inactive() recursively descends
-from internal blocks to leaf blocks, caching block address values
-along the way to revisit parent blocks, locate the next entry and
-descend down that branch of the tree.
+Jason reported that a corrupted filesystem failed to replay
+the log with a metadata block out of bounds warning:
 
-The code that attempts to reread the parent block is unsafe because
-it assumes that the local xfs_da_node_entry pointer remains valid
-after an xfs_trans_brelse() and re-read of the parent buffer. Under
-heavy memory pressure, it is possible that the buffer has been
-reclaimed and reallocated by the time the parent block is reread.
-This means that 'btree' can point to an invalid memory address, lead
-to a random/garbage value for child_fsb and cause the subsequent
-read of the attr fork to go off the rails and return a NULL buffer
-for an attr fork offset that is most likely not allocated.
+XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000
 
-Note that this problem can be manufactured by setting
-XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
-creating a file with a multi-level attr fork and removing it to
-trigger inactivation.
+_xfs_buf_find() and xfs_btree_get_bufs() return NULL if
+that happens, and then when xfs_alloc_fix_freelist() calls
+xfs_trans_binval() on that NULL bp, we oops with:
 
-To address this problem, reinit the node/btree pointers to the
-parent buffer after it has been re-read. This ensures btree points
-to a valid record and allows the walk to proceed.
+BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+We don't handle _xfs_buf_find errors very well, every
+caller higher up the stack gets to guess at why it failed.
+But we should at least handle it somehow, so return
+EFSCORRUPTED here.
+
+Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_attr_inactive.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/libxfs/xfs_alloc.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index be0b79d8900f..c6643004e583 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -302,6 +302,8 @@ xfs_attr3_node_inactive(
- 						 &bp, XFS_ATTR_FORK);
- 			if (error)
- 				return error;
-+			node = bp->b_addr;
-+			btree = dp->d_ops->node_tree_p(node);
- 			child_fsb = be32_to_cpu(btree[i + 1].before);
- 			xfs_trans_brelse(*trans, bp);
- 		}
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 9f06a211e157..c3702cda010a 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1579,6 +1579,10 @@ xfs_alloc_ag_vextent_small(
+ 
+ 				bp = xfs_btree_get_bufs(args->mp, args->tp,
+ 					args->agno, fbno, 0);
++				if (!bp) {
++					error = -EFSCORRUPTED;
++					goto error0;
++				}
+ 				xfs_trans_binval(args->tp, bp);
+ 			}
+ 			args->len = 1;
+@@ -2136,6 +2140,10 @@ xfs_alloc_fix_freelist(
+ 		if (error)
+ 			goto out_agbp_relse;
+ 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
++		if (!bp) {
++			error = -EFSCORRUPTED;
++			goto out_agbp_relse;
++		}
+ 		xfs_trans_binval(tp, bp);
+ 	}
+ 
 -- 
 2.14.2
 
