@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34073 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34025 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752715AbdJSNIq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Oct 2017 09:08:46 -0400
+        id S1752606AbdJSNIo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Oct 2017 09:08:44 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 12/17] mm: Define MAP_SYNC and VM_SYNC flags
-Date: Thu, 19 Oct 2017 14:58:11 +0200
-Message-Id: <20171019125817.11580-13-jack@suse.cz>
+Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
+Date: Thu, 19 Oct 2017 14:58:17 +0200
+Message-Id: <20171019125817.11580-19-jack@suse.cz>
 In-Reply-To: <20171019125817.11580-1-jack@suse.cz>
 References: <20171019125817.11580-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,90 +15,59 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-Define new MAP_SYNC flag and corresponding VMA VM_SYNC flag. As the
-MAP_SYNC flag is not part of LEGACY_MAP_MASK, currently it will be
-refused by all MAP_SHARED_VALIDATE map attempts and silently ignored for
-everything else.
-
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/proc/task_mmu.c              | 1 +
- include/linux/mm.h              | 1 +
- include/linux/mman.h            | 8 ++++++--
- include/uapi/asm-generic/mman.h | 1 +
- 4 files changed, 9 insertions(+), 2 deletions(-)
+ man2/mmap.2 | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 5589b4bd4b85..ea78b37deeaa 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -664,6 +664,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
- 		[ilog2(VM_ACCOUNT)]	= "ac",
- 		[ilog2(VM_NORESERVE)]	= "nr",
- 		[ilog2(VM_HUGETLB)]	= "ht",
-+		[ilog2(VM_SYNC)]	= "sf",
- 		[ilog2(VM_ARCH_1)]	= "ar",
- 		[ilog2(VM_WIPEONFORK)]	= "wf",
- 		[ilog2(VM_DONTDUMP)]	= "dd",
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ca72b67153d5..5411cb7442de 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -189,6 +189,7 @@ extern unsigned int kobjsize(const void *objp);
- #define VM_ACCOUNT	0x00100000	/* Is a VM accounted object */
- #define VM_NORESERVE	0x00200000	/* should the VM suppress accounting */
- #define VM_HUGETLB	0x00400000	/* Huge TLB Page VM */
-+#define VM_SYNC		0x00800000	/* Synchronous page faults */
- #define VM_ARCH_1	0x01000000	/* Architecture-specific flag */
- #define VM_WIPEONFORK	0x02000000	/* Wipe VMA contents in child. */
- #define VM_DONTDUMP	0x04000000	/* Do not include in the core dump */
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index 94b63b4d71ff..8f7cc87828e6 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -9,7 +9,7 @@
- 
- /*
-  * Arrange for legacy / undefined architecture specific flags to be
-- * ignored by default in LEGACY_MAP_MASK.
-+ * ignored by mmap handling code.
-  */
- #ifndef MAP_32BIT
- #define MAP_32BIT 0
-@@ -23,6 +23,9 @@
- #ifndef MAP_UNINITIALIZED
- #define MAP_UNINITIALIZED 0
- #endif
-+#ifndef MAP_SYNC
-+#define MAP_SYNC 0
-+#endif
- 
- /*
-  * The historical set of flags that all mmap implementations implicitly
-@@ -125,7 +128,8 @@ calc_vm_flag_bits(unsigned long flags)
- {
- 	return _calc_vm_trans(flags, MAP_GROWSDOWN,  VM_GROWSDOWN ) |
- 	       _calc_vm_trans(flags, MAP_DENYWRITE,  VM_DENYWRITE ) |
--	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    );
-+	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    ) |
-+	       _calc_vm_trans(flags, MAP_SYNC,	     VM_SYNC      );
- }
- 
- unsigned long vm_commit_limit(void);
-diff --git a/include/uapi/asm-generic/mman.h b/include/uapi/asm-generic/mman.h
-index 7162cd4cca73..00e55627d2df 100644
---- a/include/uapi/asm-generic/mman.h
-+++ b/include/uapi/asm-generic/mman.h
-@@ -12,6 +12,7 @@
- #define MAP_NONBLOCK	0x10000		/* do not block on IO */
- #define MAP_STACK	0x20000		/* give out an address that is best suited for process/thread stacks */
- #define MAP_HUGETLB	0x40000		/* create a huge page mapping */
-+#define MAP_SYNC	0x80000		/* perform synchronous page faults for the mapping */
- 
- /* Bits [26:31] are reserved, see mman-common.h for MAP_HUGETLB usage */
- 
+diff --git a/man2/mmap.2 b/man2/mmap.2
+index 47c3148653be..598ff0c64f7f 100644
+--- a/man2/mmap.2
++++ b/man2/mmap.2
+@@ -125,6 +125,21 @@ are carried through to the underlying file.
+ to the underlying file requires the use of
+ .BR msync (2).)
+ .TP
++.B MAP_SHARED_VALIDATE
++The same as
++.B MAP_SHARED
++except that
++.B MAP_SHARED
++mappings ignore unknown flags in
++.IR flags .
++In contrast when creating mapping of
++.B MAP_SHARED_VALIDATE
++mapping type, the kernel verifies all passed flags are known and fails the
++mapping with
++.BR EOPNOTSUPP
++otherwise. This mapping type is also required to be able to use some mapping
++flags.
++.TP
+ .B MAP_PRIVATE
+ Create a private copy-on-write mapping.
+ Updates to the mapping are not visible to other processes
+@@ -352,6 +367,21 @@ option.
+ Because of the security implications,
+ that option is normally enabled only on embedded devices
+ (i.e., devices where one has complete control of the contents of user memory).
++.TP
++.BR MAP_SYNC " (since Linux 4.15)"
++This flags is available only with
++.B MAP_SHARED_VALIDATE
++mapping type. Mappings of
++.B MAP_SHARED
++type will silently ignore this flag.
++This flag is supported only for files supporting DAX (direct mapping of persistent
++memory). For other files, creating mapping with this flag results in
++.B EOPNOTSUPP
++error. Shared file mappings with this flag provide the guarantee that while
++some memory is writeably mapped in the address space of the process, it will
++be visible in the same file at the same offset even after the system crashes or
++is rebooted. This allows users of such mappings to make data modifications
++persistent in a more efficient way using appropriate CPU instructions.
+ .PP
+ Of the above flags, only
+ .B MAP_FIXED
 -- 
 2.12.3
 
