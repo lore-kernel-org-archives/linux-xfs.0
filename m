@@ -1,31 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29735 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:30376 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752325AbdJSWu0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 18:50:26 -0400
-Date: Thu, 19 Oct 2017 15:50:22 -0700
+        with ESMTP id S1752475AbdJSWwL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 18:52:11 -0400
+Date: Thu, 19 Oct 2017 15:52:06 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/15] xfs: remove XFS_BMAP_TRACE_EXLIST
-Message-ID: <20171019225022.GU4755@magnolia>
+Subject: Re: [PATCH 07/15] xfs: remove if_rdev
+Message-ID: <20171019225206.GV4755@magnolia>
 References: <20171019065942.18813-1-hch@lst.de>
- <20171019065942.18813-6-hch@lst.de>
+ <20171019065942.18813-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171019065942.18813-6-hch@lst.de>
+In-Reply-To: <20171019065942.18813-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 08:59:32AM +0200, Christoph Hellwig wrote:
-> Instead of looping over all extents in some debug-only helper just
-> insert trace points into the loops that already exist in the calling
-> functions.
-> 
-> Also split the xfs_extlist trace point into one each for reading and
-> writing extents from disk.
+On Thu, Oct 19, 2017 at 08:59:34AM +0200, Christoph Hellwig wrote:
+> We can simply use the i_rdev field in the Linux inode and just convert
+> to and from the XFS dev_t when reading or logging/writing the inode.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
@@ -33,152 +29,260 @@ Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c       | 23 ++---------------------
->  fs/xfs/libxfs/xfs_bmap.h       |  9 ---------
->  fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++++--
->  fs/xfs/xfs_trace.h             |  3 ++-
->  4 files changed, 10 insertions(+), 33 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_fork.c | 38 +++++++++++++++++++++-----------------
+>  fs/xfs/libxfs/xfs_inode_fork.h |  1 -
+>  fs/xfs/xfs_inode.c             |  9 ++++-----
+>  fs/xfs/xfs_inode.h             |  4 ++--
+>  fs/xfs/xfs_inode_item.c        |  2 +-
+>  fs/xfs/xfs_iops.c              | 16 +---------------
+>  fs/xfs/xfs_itable.c            |  2 +-
+>  7 files changed, 30 insertions(+), 42 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index ff9a8e1d4a96..6431386f4676 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -487,26 +487,6 @@ xfs_bmap_check_leaf_extents(
->  	return;
->  }
->  
-> -/*
-> - * Add bmap trace insert entries for all the contents of the extent records.
-> - */
-> -void
-> -xfs_bmap_trace_exlist(
-> -	xfs_inode_t	*ip,		/* incore inode pointer */
-> -	xfs_extnum_t	cnt,		/* count of entries in the list */
-> -	int		whichfork,	/* data or attr or cow fork */
-> -	unsigned long	caller_ip)
-> -{
-> -	xfs_extnum_t	idx;		/* extent record index */
-> -	xfs_ifork_t	*ifp;		/* inode fork pointer */
-> -	int		state = xfs_bmap_fork_to_state(whichfork);
-> -
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	ASSERT(cnt == xfs_iext_count(ifp));
-> -	for (idx = 0; idx < cnt; idx++)
-> -		trace_xfs_extlist(ip, idx, state, caller_ip);
-> -}
-> -
->  /*
->   * Validate that the bmbt_irecs being returned from bmapi are valid
->   * given the caller's original parameters.  Specifically check the
-> @@ -1210,6 +1190,7 @@ xfs_bmap_read_extents(
->  	__be64			*pp;	/* pointer to block address */
->  	/* REFERENCED */
->  	xfs_extnum_t		room;	/* number of entries there's room for */
-> +	int			state = xfs_bmap_fork_to_state(whichfork);
->  
->  	mp = ip->i_mount;
->  	ifp = XFS_IFORK_PTR(ip, whichfork);
-> @@ -1283,6 +1264,7 @@ xfs_bmap_read_extents(
->  						 XFS_ERRLEVEL_LOW, mp);
->  				goto error0;
->  			}
-> +			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  		xfs_trans_brelse(tp, bp);
->  		bno = nextbno;
-> @@ -1300,7 +1282,6 @@ xfs_bmap_read_extents(
->  	if (i != XFS_IFORK_NEXTENTS(ip, whichfork))
->  		return -EFSCORRUPTED;
->  	ASSERT(i == xfs_iext_count(ifp));
-> -	XFS_BMAP_TRACE_EXLIST(ip, i, whichfork);
->  	return 0;
->  error0:
->  	xfs_trans_brelse(tp, bp);
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index a61c5480b6ad..c837e88ba19a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -197,15 +197,6 @@ enum shift_direction {
->  	SHIFT_RIGHT,
->  };
->  
-> -#ifdef DEBUG
-> -void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
-> -		int whichfork, unsigned long caller_ip);
-> -#define	XFS_BMAP_TRACE_EXLIST(ip,c,w)	\
-> -	xfs_bmap_trace_exlist(ip,c,w, _THIS_IP_)
-> -#else
-> -#define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
-> -#endif
-> -
->  void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
->  		xfs_filblks_t len);
->  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
 > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 7f40f53e6c43..31786bad9738 100644
+> index 1d003ca21562..b1e69734c450 100644
 > --- a/fs/xfs/libxfs/xfs_inode_fork.c
 > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -336,6 +336,7 @@ xfs_iformat_extents(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	int			state = xfs_bmap_fork_to_state(whichfork);
->  	int			nex = XFS_DFORK_NEXTENTS(dip, whichfork);
->  	int			size = nex * sizeof(xfs_bmbt_rec_t);
->  	struct xfs_bmbt_rec	*dp;
-> @@ -373,8 +374,8 @@ xfs_iformat_extents(
->  						 XFS_ERRLEVEL_LOW, mp);
->  				return -EFSCORRUPTED;
->  			}
-> +			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
-> -		XFS_BMAP_TRACE_EXLIST(ip, nex, whichfork);
->  	}
->  	ifp->if_flags |= XFS_IFEXTENTS;
->  	return 0;
-> @@ -772,6 +773,7 @@ xfs_iextents_copy(
->  	xfs_bmbt_rec_t		*dp,
->  	int			whichfork)
->  {
-> +	int			state = xfs_bmap_fork_to_state(whichfork);
->  	int			copied;
->  	int			i;
->  	xfs_ifork_t		*ifp;
-> @@ -783,7 +785,6 @@ xfs_iextents_copy(
->  	ASSERT(ifp->if_bytes > 0);
+> @@ -42,21 +42,27 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+>  STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+>  STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
 >  
->  	nrecs = xfs_iext_count(ifp);
-> -	XFS_BMAP_TRACE_EXLIST(ip, nrecs, whichfork);
->  	ASSERT(nrecs > 0);
->  
->  	/*
-> @@ -806,9 +807,12 @@ xfs_iextents_copy(
->  			continue;
->  		}
->  
-> +		trace_xfs_write_extent(ip, i, state, _RET_IP_);
+> +static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
+> +{
+> +	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
+> +}
 > +
->  		/* Translate to on disk format */
->  		put_unaligned_be64(ep->l0, &dp->l0);
->  		put_unaligned_be64(ep->l1, &dp->l1);
-> +
->  		dp++;
->  		copied++;
+>  /*
+> - * Move inode type and inode format specific information from the
+> - * on-disk inode to the in-core inode.  For fifos, devs, and sockets
+> - * this means set if_rdev to the proper value.  For files, directories,
+> - * and symlinks this means to bring in the in-line data or extent
+> - * pointers.  For a file in B-tree format, only the root is immediately
+> - * brought in-core.  The rest will be in-lined in if_extents when it
+> - * is first referenced (see xfs_iread_extents()).
+> + * Copy inode type and data and attr format specific information from the
+> + * on-disk inode to the in-core inode and fork structures.  For fifos, devices,
+> + * and sockets this means set i_rdev to the proper value.  For files,
+> + * directories, and symlinks this means to bring in the in-line data or extent
+> + * pointers as well as the attribute fork.  For a fork in B-tree format, only
+> + * the root is immediately brought in-core.  The rest will be read in later when
+> + * first referenced (see xfs_iread_extents()).
+>   */
+>  int
+>  xfs_iformat_fork(
+> -	xfs_inode_t		*ip,
+> -	xfs_dinode_t		*dip)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip)
+>  {
+> -	xfs_attr_shortform_t	*atp;
+> +	struct inode		*inode = VFS_I(ip);
+> +	struct xfs_attr_shortform *atp;
+>  	int			size;
+>  	int			error = 0;
+>  	xfs_fsize_t             di_size;
+> @@ -95,8 +101,7 @@ xfs_iformat_fork(
+>  		return -EFSCORRUPTED;
 >  	}
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 0a8999a310b9..665ef6cca90c 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -309,7 +309,8 @@ DEFINE_EVENT(xfs_bmap_class, name, \
->  DEFINE_BMAP_EVENT(xfs_iext_remove);
->  DEFINE_BMAP_EVENT(xfs_bmap_pre_update);
->  DEFINE_BMAP_EVENT(xfs_bmap_post_update);
-> -DEFINE_BMAP_EVENT(xfs_extlist);
-> +DEFINE_BMAP_EVENT(xfs_read_extent);
-> +DEFINE_BMAP_EVENT(xfs_write_extent);
 >  
->  DECLARE_EVENT_CLASS(xfs_buf_class,
->  	TP_PROTO(struct xfs_buf *bp, unsigned long caller_ip),
+> -	if (unlikely(xfs_is_reflink_inode(ip) &&
+> -	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
+> +	if (unlikely(xfs_is_reflink_inode(ip) && !S_ISREG(inode->i_mode))) {
+>  		xfs_warn(ip->i_mount,
+>  			"corrupt dinode %llu, wrong file type for reflink.",
+>  			ip->i_ino);
+> @@ -115,7 +120,7 @@ xfs_iformat_fork(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> -	switch (VFS_I(ip)->i_mode & S_IFMT) {
+> +	switch (inode->i_mode & S_IFMT) {
+>  	case S_IFIFO:
+>  	case S_IFCHR:
+>  	case S_IFBLK:
+> @@ -126,7 +131,7 @@ xfs_iformat_fork(
+>  			return -EFSCORRUPTED;
+>  		}
+>  		ip->i_d.di_size = 0;
+> -		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
+> +		inode->i_rdev = xfs_to_linux_dev_t(xfs_dinode_get_rdev(dip));
+>  		break;
+>  
+>  	case S_IFREG:
+> @@ -184,8 +189,7 @@ xfs_iformat_fork(
+>  		return error;
+>  
+>  	/* Check inline dir contents. */
+> -	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> -	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
+> +	if (S_ISDIR(inode->i_mode) && dip->di_format == XFS_DINODE_FMT_LOCAL) {
+>  		error = xfs_dir2_sf_verify(ip);
+>  		if (error) {
+>  			xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> @@ -898,7 +902,7 @@ xfs_iflush_fork(
+>  	case XFS_DINODE_FMT_DEV:
+>  		if (iip->ili_fields & XFS_ILOG_DEV) {
+>  			ASSERT(whichfork == XFS_DATA_FORK);
+> -			xfs_dinode_put_rdev(dip, ip->i_df.if_u2.if_rdev);
+> +			xfs_dinode_put_rdev(dip, sysv_encode_dev(VFS_I(ip)->i_rdev));
+>  		}
+>  		break;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 064babdc373c..e0c42ea9b8d0 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -69,7 +69,6 @@ typedef struct xfs_ifork {
+>  						/* very small file extents */
+>  		char		if_inline_data[XFS_INLINE_DATA];
+>  						/* very small file data */
+> -		xfs_dev_t	if_rdev;	/* dev number if special */
+>  	} if_u2;
+>  } xfs_ifork_t;
+>  
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 4ec5b7f45401..a929ca72fa8e 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -767,7 +767,7 @@ xfs_ialloc(
+>  	xfs_inode_t	*pip,
+>  	umode_t		mode,
+>  	xfs_nlink_t	nlink,
+> -	xfs_dev_t	rdev,
+> +	dev_t		rdev,
+>  	prid_t		prid,
+>  	int		okalloc,
+>  	xfs_buf_t	**ialloc_context,
+> @@ -819,6 +819,7 @@ xfs_ialloc(
+>  	set_nlink(inode, nlink);
+>  	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+>  	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
+> +	inode->i_rdev = rdev;
+>  	xfs_set_projid(ip, prid);
+>  
+>  	if (pip && XFS_INHERIT_GID(pip)) {
+> @@ -867,7 +868,6 @@ xfs_ialloc(
+>  	case S_IFBLK:
+>  	case S_IFSOCK:
+>  		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
+> -		ip->i_df.if_u2.if_rdev = rdev;
+>  		ip->i_df.if_flags = 0;
+>  		flags |= XFS_ILOG_DEV;
+>  		break;
+> @@ -975,7 +975,7 @@ xfs_dir_ialloc(
+>  					   the inode. */
+>  	umode_t		mode,
+>  	xfs_nlink_t	nlink,
+> -	xfs_dev_t	rdev,
+> +	dev_t		rdev,
+>  	prid_t		prid,		/* project id */
+>  	int		okalloc,	/* ok to allocate new space */
+>  	xfs_inode_t	**ipp,		/* pointer to inode; it will be
+> @@ -1147,7 +1147,7 @@ xfs_create(
+>  	xfs_inode_t		*dp,
+>  	struct xfs_name		*name,
+>  	umode_t			mode,
+> -	xfs_dev_t		rdev,
+> +	dev_t			rdev,
+>  	xfs_inode_t		**ipp)
+>  {
+>  	int			is_dir = S_ISDIR(mode);
+> @@ -1183,7 +1183,6 @@ xfs_create(
+>  		return error;
+>  
+>  	if (is_dir) {
+> -		rdev = 0;
+>  		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
+>  		tres = &M_RES(mp)->tr_mkdir;
+>  	} else {
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 0ee453de239a..cc13c3763721 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -391,7 +391,7 @@ void		xfs_inactive(struct xfs_inode *ip);
+>  int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
+>  			   struct xfs_inode **ipp, struct xfs_name *ci_name);
+>  int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
+> -			   umode_t mode, xfs_dev_t rdev, struct xfs_inode **ipp);
+> +			   umode_t mode, dev_t rdev, struct xfs_inode **ipp);
+>  int		xfs_create_tmpfile(struct xfs_inode *dp, struct dentry *dentry,
+>  			   umode_t mode, struct xfs_inode **ipp);
+>  int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
+> @@ -428,7 +428,7 @@ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+>  xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+>  
+>  int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+> -			       xfs_nlink_t, xfs_dev_t, prid_t, int,
+> +			       xfs_nlink_t, dev_t, prid_t, int,
+>  			       struct xfs_inode **, int *);
+>  
+>  /* from xfs_file.c */
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index bd60ad313173..eb6f4f7c9520 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -222,7 +222,7 @@ xfs_inode_item_format_data_fork(
+>  		iip->ili_fields &=
+>  			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
+>  		if (iip->ili_fields & XFS_ILOG_DEV)
+> -			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
+> +			ilf->ilf_u.ilfu_rdev = sysv_encode_dev(VFS_I(ip)->i_rdev);
+>  		break;
+>  	default:
+>  		ASSERT(0);
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 17081c77ef86..8b5676d244ca 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -160,7 +160,6 @@ xfs_generic_create(
+>  	if (S_ISCHR(mode) || S_ISBLK(mode)) {
+>  		if (unlikely(!sysv_valid_dev(rdev) || MAJOR(rdev) & ~0x1ff))
+>  			return -EINVAL;
+> -		rdev = sysv_encode_dev(rdev);
+>  	} else {
+>  		rdev = 0;
+>  	}
+> @@ -535,8 +534,7 @@ xfs_vn_getattr(
+>  	case S_IFBLK:
+>  	case S_IFCHR:
+>  		stat->blksize = BLKDEV_IOSIZE;
+> -		stat->rdev = MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
+> -				   sysv_minor(ip->i_df.if_u2.if_rdev));
+> +		stat->rdev = inode->i_rdev;
+>  		break;
+>  	default:
+>  		if (XFS_IS_REALTIME_INODE(ip)) {
+> @@ -1231,18 +1229,6 @@ xfs_setup_inode(
+>  	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
+>  	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
+>  
+> -	switch (inode->i_mode & S_IFMT) {
+> -	case S_IFBLK:
+> -	case S_IFCHR:
+> -		inode->i_rdev =
+> -			MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
+> -			      sysv_minor(ip->i_df.if_u2.if_rdev));
+> -		break;
+> -	default:
+> -		inode->i_rdev = 0;
+> -		break;
+> -	}
+> -
+>  	i_size_write(inode, ip->i_d.di_size);
+>  	xfs_diflags_to_iflags(inode, ip);
+>  
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 23ba69fcc516..7595baee0c7c 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -119,7 +119,7 @@ xfs_bulkstat_one_int(
+>  
+>  	switch (dic->di_format) {
+>  	case XFS_DINODE_FMT_DEV:
+> -		buf->bs_rdev = ip->i_df.if_u2.if_rdev;
+> +		buf->bs_rdev = sysv_encode_dev(inode->i_rdev);
+>  		buf->bs_blksize = BLKDEV_IOSIZE;
+>  		buf->bs_blocks = 0;
+>  		break;
 > -- 
 > 2.14.1
 > 
