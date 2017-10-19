@@ -1,117 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33748 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37374 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753871AbdJSOWM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:22:12 -0400
+        with ESMTP id S1753984AbdJSOWP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 10:22:15 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/18] xfs: cancel dirty pages on invalidation
-Date: Thu, 19 Oct 2017 16:21:21 +0200
-Message-Id: <20171019142123.18109-17-hch@lst.de>
+Subject: [PATCH 17/18] xfs: trim writepage mapping to within eof
+Date: Thu, 19 Oct 2017 16:21:22 +0200
+Message-Id: <20171019142123.18109-18-hch@lst.de>
 In-Reply-To: <20171019142123.18109-1-hch@lst.de>
 References: <20171019142123.18109-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 793d7dbe6d82a50b9d14bf992b9eaacb70a11ce6 upstream.
+commit 40214d128e07dd21bb07a8ed6a7fe2f911281ab2 upstream.
 
-Recently we've had warnings arise from the vm handing us pages
-without bufferheads attached to them. This should not ever occur
-in XFS, but we don't defend against it properly if it does. The only
-place where we remove bufferheads from a page is in
-xfs_vm_releasepage(), but we can't tell the difference here between
-"page is dirty so don't release" and "page is dirty but is being
-invalidated so release it".
+The writeback rework in commit fbcc02561359 ("xfs: Introduce
+writeback context for writepages") introduced a subtle change in
+behavior with regard to the block mapping used across the
+->writepages() sequence. The previous xfs_cluster_write() code would
+only flush pages up to EOF at the time of the writepage, thus
+ensuring that any pages due to file-extending writes would be
+handled on a separate cycle and with a new, updated block mapping.
 
-In some places that are invalidating pages ask for pages to be
-released and follow up afterward calling ->releasepage by checking
-whether the page was dirty and then aborting the invalidation. This
-is a possible vector for releasing buffers from a page but then
-leaving it in the mapping, so we really do need to avoid dirty pages
-in xfs_vm_releasepage().
+The updated code establishes a block mapping in xfs_writepage_map()
+that could extend beyond EOF if the file has post-eof preallocation.
+Because we now use the generic writeback infrastructure and pass the
+cached mapping to each writepage call, there is no implicit EOF
+limit in place. If eofblocks trimming occurs during ->writepages(),
+any post-eof portion of the cached mapping becomes invalid. The
+eofblocks code has no means to serialize against writeback because
+there are no pages associated with post-eof blocks. Therefore if an
+eofblocks trim occurs and is followed by a file-extending buffered
+write, not only has the mapping become invalid, but we could end up
+writing a page to disk based on the invalid mapping.
 
-To differentiate between invalidated pages and normal pages, we need
-to clear the page dirty flag when invalidating the pages. This can
-be done through xfs_vm_invalidatepage(), and will result
-xfs_vm_releasepage() seeing the page as clean which matches the
-bufferhead state on the page after calling block_invalidatepage().
+Consider the following sequence of events:
 
-Hence we can re-add the page dirty check in xfs_vm_releasepage to
-catch the case where we might be releasing a page that is actually
-dirty and so should not have the bufferheads on it removed. This
-will remove one possible vector of "dirty page with no bufferheads"
-and so help narrow down the search for the root cause of that
-problem.
+- A buffered write creates a delalloc extent and post-eof
+  speculative preallocation.
+- Writeback starts and on the first writepage cycle, the delalloc
+  extent is converted to real blocks (including the post-eof blocks)
+  and the mapping is cached.
+- The file is closed and xfs_release() trims post-eof blocks. The
+  cached writeback mapping is now invalid.
+- Another buffered write appends the file with a delalloc extent.
+- The concurrent writeback cycle picks up the just written page
+  because the writeback range end is LLONG_MAX. xfs_writepage_map()
+  attributes it to the (now invalid) cached mapping and writes the
+  data to an incorrect location on disk (and where the file offset is
+  still backed by a delalloc extent).
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+This problem is reproduced by xfstests test generic/464, which
+triggers racing writes, appends, open/closes and writeback requests.
+
+To address this problem, trim the mapping used during writeback to
+within EOF when the mapping is validated. This ensures the mapping
+is revalidated for any pages encountered beyond EOF as of the time
+the current mapping was cached or last validated.
+
+Reported-by: Eryu Guan <eguan@redhat.com>
+Diagnosed-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 34 ++++++++++++++++++++++------------
- 1 file changed, 22 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 11 +++++++++++
+ fs/xfs/libxfs/xfs_bmap.h |  1 +
+ fs/xfs/xfs_aops.c        | 13 +++++++++++++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 78aee670ad61..f425bbcd49b0 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -722,6 +722,14 @@ xfs_vm_invalidatepage(
- {
- 	trace_xfs_invalidatepage(page->mapping->host, page, offset,
- 				 length);
-+
-+	/*
-+	 * If we are invalidating the entire page, clear the dirty state from it
-+	 * so that we can check for attempts to release dirty cached pages in
-+	 * xfs_vm_releasepage().
-+	 */
-+	if (offset == 0 && length >= PAGE_SIZE)
-+		cancel_dirty_page(page);
- 	block_invalidatepage(page, offset, length);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6f2a5baded76..5c6eb19664f2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3860,6 +3860,17 @@ xfs_trim_extent(
+ 	}
  }
  
-@@ -1177,25 +1185,27 @@ xfs_vm_releasepage(
- 	 * mm accommodates an old ext3 case where clean pages might not have had
- 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
- 	 * ->releasepage() via shrink_active_list(). Conversely,
--	 * block_invalidatepage() can send pages that are still marked dirty
--	 * but otherwise have invalidated buffers.
-+	 * block_invalidatepage() can send pages that are still marked dirty but
-+	 * otherwise have invalidated buffers.
- 	 *
- 	 * We want to release the latter to avoid unnecessary buildup of the
--	 * LRU, skip the former and warn if we've left any lingering
--	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
--	 * or unwritten buffers and warn if the page is not dirty. Otherwise
--	 * try to release the buffers.
-+	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
-+	 * that are entirely invalidated and need to be released.  Hence the
-+	 * only time we should get dirty pages here is through
-+	 * shrink_active_list() and so we can simply skip those now.
-+	 *
-+	 * warn if we've left any lingering delalloc/unwritten buffers on clean
-+	 * or invalidated pages we are about to release.
- 	 */
-+	if (PageDirty(page))
-+		return 0;
++/* trim extent to within eof */
++void
++xfs_trim_extent_eof(
++	struct xfs_bmbt_irec	*irec,
++	struct xfs_inode	*ip)
 +
- 	xfs_count_page_state(page, &delalloc, &unwritten);
++{
++	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
++					      i_size_read(VFS_I(ip))));
++}
++
+ /*
+  * Trim the returned map to the required bounds
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 851982a5dfbc..502e0d8fb4ff 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -208,6 +208,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
  
--	if (delalloc) {
--		WARN_ON_ONCE(!PageDirty(page));
-+	if (WARN_ON_ONCE(delalloc))
- 		return 0;
--	}
--	if (unwritten) {
--		WARN_ON_ONCE(!PageDirty(page));
-+	if (WARN_ON_ONCE(unwritten))
- 		return 0;
--	}
+ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+ 		xfs_filblks_t len);
++void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+ void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f425bbcd49b0..41b767ecfe50 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -433,6 +433,19 @@ xfs_imap_valid(
+ {
+ 	offset >>= inode->i_blkbits;
  
- 	return try_to_free_buffers(page);
++	/*
++	 * We have to make sure the cached mapping is within EOF to protect
++	 * against eofblocks trimming on file release leaving us with a stale
++	 * mapping. Otherwise, a page for a subsequent file extending buffered
++	 * write could get picked up by this writeback cycle and written to the
++	 * wrong blocks.
++	 *
++	 * Note that what we really want here is a generic mapping invalidation
++	 * mechanism to protect us from arbitrary extent modifying contexts, not
++	 * just eofblocks.
++	 */
++	xfs_trim_extent_eof(imap, XFS_I(inode));
++
+ 	return offset >= imap->br_startoff &&
+ 		offset < imap->br_startoff + imap->br_blockcount;
  }
 -- 
 2.14.2
