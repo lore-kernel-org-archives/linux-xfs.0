@@ -1,193 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27171 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751656AbdJTSAz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 14:00:55 -0400
-Date: Fri, 20 Oct 2017 11:00:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
- recovered buffers")
-Message-ID: <20171020180040.GZ4755@magnolia>
-References: <20171013184916.GS7122@magnolia>
- <20171014115550.GB50635@bfoster.bfoster>
- <20171014190530.GA4594@magnolia>
- <20171016212933.GG15067@dastard>
- <20171016221818.GQ4703@magnolia>
- <20171020151610.GD13669@bfoster.bfoster>
- <20171020164406.GW4755@magnolia>
- <20171020165940.GE13669@bfoster.bfoster>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:49915 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752752AbdJTT46 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 15:56:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171020165940.GE13669@bfoster.bfoster>
+In-Reply-To: <20171020170558.GY4755@magnolia>
+References: <CADxRZqwUfeGJOxsdEyaOHHJPmQUp8sNkxQdZPOKjyEejeZXMmA@mail.gmail.com>
+ <20171020170558.GY4755@magnolia>
+From: Anatoly Pugachev <matorola@gmail.com>
+Date: Fri, 20 Oct 2017 22:56:56 +0300
+Message-ID: <CADxRZqx2xitDTYG2cD21mYXFZvNKmNu6VdW+ftfom0wzgr-iUQ@mail.gmail.com>
+Subject: Re: [fstests] hardcoded values in common/rc for xfs (and probably others)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Fri, Oct 20, 2017 at 12:59:41PM -0400, Brian Foster wrote:
-> On Fri, Oct 20, 2017 at 09:44:06AM -0700, Darrick J. Wong wrote:
-> > On Fri, Oct 20, 2017 at 11:16:10AM -0400, Brian Foster wrote:
-> > > On Mon, Oct 16, 2017 at 03:18:18PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Oct 17, 2017 at 08:29:33AM +1100, Dave Chinner wrote:
-> > > > > On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
-> > > > > > On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
-> > > > > > > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
-> > > > > > > > Hi all,
-> > > > > > > > 
-> > > > > > > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
-> > > > > > > > recovered buffers").  I was analyzing a scrub failure on generic/392
-> > > > > > > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
-> > > > > > > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
-> > > > > > > > and signalling error.
-> > > > > > > > 
-> > > > > > > > The pattern I observe is that when log recovery runs on a v4 filesystem,
-> > > > > > > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
-> > > > > > > > buffer therefore gets created and read without any verifiers.
-> > > > > > > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
-> > > > > > > > filesystem we come back and attach verifiers and all is well.  However,
-> > > > > > > > on a v4 filesystem the function returns without doing anything, so the
-> > > > > > > > xfs_buf just sits around in memory with no verifier.  Subsequent
-> > > > > > > > read/log/relse patterns can write anything they want without write
-> > > > > > > > verifiers to check that.
-> > > > > > > > 
-> > > > > > > > If the v4 fs didn't need log recovery, the buffers get created with
-> > > > > > > > b_ops as you'd expect.
-> > > > > > > > 
-> > > > > > > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
-> > > > > > > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
-> > > > > > > > LSN is up to date?
-> > > > > > > > 
-> > > > > > > 
-> > > > > > > Seems reasonable, but I notice that the has_crc() check around
-> > > > > > > _validate_buf_type() comes in sometime after the the original commit
-> > > > > > > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
-> > > > > > > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
-> > > > > > > errors").
-> > > > > > > 
-> > > > > > > IIRC, the problem there is that log recovery had traditionally always
-> > > > > > > unconditionally replayed everything in the log over whatever resides in
-> > > > > > > the fs. This actually meant that recovery could transiently corrupt
-> > > > > > > buffers in certain cases if the target buffer happened to be relogged
-> > > > > > > more than once and was already up to date, which leads to verification
-> > > > > > > failures. This was addressed for v5 filesystems with LSN ordering rules,
-> > > > > > > but the challenge for v4 filesystems was that there is no metadata LSN
-> > > > > > > and thus no means to detect whether a buffer is already up to date with
-> > > > > > > regard to a transaction in the log.
-> > > > > > > 
-> > > > > > > Dave might have more historical context to confirm that... If that is
-> > > > > > > still an open issue, a couple initial ideas come to mind:
-> > > > > > > 
-> > > > > > > 1.) Do something simple/crude like reclaim all buffers after log
-> > > > > > > recovery on v4 filesystems to provide a clean slate going forward.
-> > > > > > > 
-> > > > > > > 2.) Unconditionally attach verifiers during recovery as originally done
-> > > > > > > and wire up something generic that short circuits verifier invocations
-> > > > > > > on v4 filesystems when log recovery is in progress.
-> > > > > > 
-> > > > > > What do you think about 3) add b_ops later if they're missing?
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > > > index 2f97c12..8842a27 100644
-> > > > > > --- a/fs/xfs/xfs_buf.c
-> > > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > > @@ -742,6 +742,15 @@ xfs_buf_read_map(
-> > > > > >         if (bp) {
-> > > > > >                 trace_xfs_buf_read(bp, flags, _RET_IP_);
-> > > > > >  
-> > > > > > +               /*
-> > > > > > +                * If this buffer is up to date and has no verifier, try
-> > > > > > +                * to set one.  This can happen on v4 because log
-> > > > > > +                * recovery reads in the buffers for replay but does not
-> > > > > > +                * set b_ops.
-> > > > > > +                */
-> > > > > > +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
-> > > > > > +                       bp->b_ops = ops;
-> > > > > 
-> > > > > I don't really like this because it will hide bugs in the code.
-> > > > > 
-> > > > > It also doesn't solve the problem because a read with NULL ops will
-> > > > > still leave a buffer with no ops attached.
-> > > > > 
-> > > > > IMO, if we've read/created a buffer without ops, then it is up to
-> > > > > the code that created/read it to either attach the required ops
-> > > > > before the buffer is released or to invalidate the buffer before
-> > > > > anyone else can use it or write it. The buffer write code warns
-> > > > > about writing buffers without verfiers, but we can't warn on read
-> > > > > because read-with-NULL-verifier is a valid thing to do....
-> > > > 
-> > > > Fair 'nuff.  FWIW I'm ok with approach #1 if anyone enthusiastically
-> > > > wants to write it up.
-> > > > 
-> > > 
-> > > What do you guys think about something like this? It runs
-> > > unconditionally, but this is partly as designed to provide a clean cache
-> > > on v5 filesystems as well. It should be mostly unnoticeable if log
-> > > recovery hasn't run, but we could easily add another flag to make it
-> > > conditional on log recovery if desired.
-> > > 
-> > > Brian
-> > > 
-> > > --- 8< ---
-> > > 
-> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > index dc95a49..226d26b 100644
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -780,6 +780,16 @@ xfs_log_mount_finish(
-> > >  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> > >  	evict_inodes(mp->m_super);
-> > >  
-> > > +	/*
-> > > +	 * Drain the buffer LRU after log recovery. This is required for
-> > > +	 * v4 filesystems to avoid leaving around buffers with NULL verifier
-> > > +	 * ops. Do it unconditionally to make sure we're always in a clean cache
-> > > +	 * state after mount.
-> > > +	 */
-> > > +	xfs_log_force(mp, XFS_LOG_SYNC);
-> > > +	xfs_ail_push_all_sync(mp->m_ail);
-> > 
-> > Is it necessary to force the log & push the AIL even if recovery didn't run?
-> > 
-> 
-> Don't think so.. As noted above, I just did this because it's basically
-> unnoticeable if log recovery didn't run and it avoids the need to add a
-> flag. I can add one if that is preferred, or thinking about it again I
-> suppose we could just sample for XLOG_RECOVERY_NEEDED before we call
-> xlog_recover_finish() (which clears it).
-> 
-> > > +	xfs_wait_buftarg(mp->m_ddev_targp);
-> > 
-> > Otherwise, looks ok enough I'll see if it fixes the scrub failures that
-> > inspired my original email. :)
-> > 
-> 
-> Thanks, let me know.
+On Fri, Oct 20, 2017 at 8:05 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Fri, Oct 20, 2017 at 07:52:31PM +0300, Anatoly Pugachev wrote:
+>> Can someone look into this issue?
+>
+> Does the following xfstests patch help?
+>
+> --D
+>
+> diff --git a/common/punch b/common/punch
+> index c4ed261..5648bd8 100644
+> --- a/common/punch
+> +++ b/common/punch
+> @@ -341,13 +341,26 @@ _test_generic_punch()
+>         testfile=$6
+>         multiple=1
+>
+> +       # This routine was originally written for fallocate modes that
+> +       # don't have alignment requirements so the (sort of) hardcoded
+> +       # 4k offsets didn't matter.  fcollapse and finsert require
+> +       # block-aligned arguments, so increase $multiple until we get
+> +       # to the file's minimum data block size.
+> +       case "$zero_cmd" in
+> +       "fcollapse"|"finsert")
+> +               touch $testfile
+> +               bs=$(_get_file_block_size $testfile)
+> +               test "$bs" -gt 4096 && multiple=$((bs / 4096))
+> +               ;;
+> +       esac
+> +
+>         #
+>         # If we are testing collapse range, we increare all the offsets of this
+>         # test by a factor of 4. We do this because unlike punch, collapse
+>         # range also decreases the size of file hence require bigger offsets.
+>         #
+>         if [ "$zero_cmd" == "fcollapse" ]; then
+> -               multiple=4
+> +               multiple=$((multiple * 4))
+>         fi
+>
+>         _4k="$((multiple * 4))k"
+> diff --git a/common/rc b/common/rc
+> index fe68d67..b585016 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2063,8 +2063,8 @@ _require_xfs_io_command()
+>                 param_checked=1
+>                 ;;
+>         "fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare")
+> -               testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+> -                       -c "$command 4k 8k" $testfile 2>&1`
+> +               testio=`$XFS_IO_PROG -F -f -c "pwrite 0 256k" -c "fsync" \
+> +                       -c "$command 64k 128k" $testfile 2>&1`
+>                 ;;
+>         "fiemap")
+>                 testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
 
-This seems to fix the scrub problems running generic/392 xfs/121 xfs/181
-on a v4 filesystem.
+Darrick,
 
-(Note that you have to have built the djwong-devel branches of the
-kernel and xfsprogs in order for xfstests to trip over the verifier-less
-buffers.  The particular patch is "xfs: scrub in-core metadata".)
+I had to change from
+bs=$(_get_file_block_size $testfile)
+to
+bs=$(_get_file_block_size $testdir)
 
---D
+since _get_file_block_size gets directory as a parameter (and i'm
+puzzled why it's called _get_file_block_size, if it really wants a
+directory as a parameter, and there's _get_block_size as well).
 
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > +
-> > >  	if (readonly)
-> > >  		mp->m_flags |= XFS_MOUNT_RDONLY;
-> > >  
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+the patch makes test as passed, but with error.
+
+For example, with the default mkfs.xfs (4k block size), it is executed
+as follows:
+
+root@ttip:xfstests-dev# mkfs.xfs -f /dev/vdiskb1
+specified blocksize 4096 is less than device physical sector size 8192
+switching to logical sector size 512
+meta-data=/dev/vdiskb1           isize=512    agcount=4, agsize=1966016 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0,
+rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=7864064, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=3839, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+root@ttip:xfstests-dev# ./check  generic/012
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/sparc64 ttip 4.14.0-rc5
+MKFS_OPTIONS  -- -f -m reflink=1 /dev/loop0
+MOUNT_OPTIONS -- /dev/loop0 /1/scratch
+
+generic/012 2s ... 1s
+Ran: generic/012
+Passed all 1 tests
+
+
+but if I change block size, it ends with an error:
+
+
+root@ttip:xfstests-dev# mkfs.xfs -f -b size=8192 /dev/vdiskb1
+meta-data=/dev/vdiskb1           isize=512    agcount=4, agsize=983008 blks
+         =                       sectsz=8192  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0,
+rmapbt=0, reflink=0
+data     =                       bsize=8192   blocks=3932032, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=8192   ascii-ci=0 ftype=1
+log      =internal log           bsize=8192   blocks=1919, version=2
+         =                       sectsz=8192  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=8192   blocks=0, rtextents=0
+root@ttip:xfstests-dev# ./check  generic/012
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/sparc64 ttip 4.14.0-rc5
+MKFS_OPTIONS  -- -f -m reflink=1 /dev/loop0
+MOUNT_OPTIONS -- /dev/loop0 /1/scratch
+
+generic/012 1s ... - output mismatch (see
+/1/mator/xfstests-dev/results/generic/012.out.bad)
+    --- tests/generic/012.out   2016-09-24 11:51:48.238890811 +0300
+    +++ /1/mator/xfstests-dev/results/generic/012.out.bad
+2017-10-20 21:54:51.594814663 +0300
+    @@ -1,49 +1,49 @@
+     QA output created by 012
+        1. into a hole
+    -f4f35d60b3cc18aaa6d8d92f0cd3708a
+    +0a9156c4e3c48ef827980639c4d1e263
+        2. into allocated space
+    -0: [0..95]: extent
+    -f1894a71ac539f6f90426d98a4990a47
+    ...
+    (Run 'diff -u tests/generic/012.out
+/1/mator/xfstests-dev/results/generic/012.out.bad'  to see the entire
+diff)
+Ran: generic/012
+Failures: generic/012
+Failed 1 of 1 tests
+
+root@ttip:xfstests-dev# cat results/generic/012.out.bad
+QA output created by 012
+        1. into a hole
+0a9156c4e3c48ef827980639c4d1e263
+        2. into allocated space
+0: [0..191]: extent
+6f1f8907250bdbf673e1e55212b56b82
+        3. into unwritten space
+0: [0..191]: extent
+39bf78f7c676fdcf11558ad3a1a23aef
+        4. hole -> data
+0: [0..127]: extent
+1: [128..191]: hole
+c9a5ea7ad1648eee6202850420432dfc
+        5. hole -> unwritten
+0: [0..127]: extent
+1: [128..191]: hole
+39bf78f7c676fdcf11558ad3a1a23aef
+        6. data -> hole
+0: [0..63]: extent
+1: [64..191]: hole
+39bf78f7c676fdcf11558ad3a1a23aef
+        7. data -> unwritten
+0: [0..127]: extent
+1: [128..191]: hole
+39bf78f7c676fdcf11558ad3a1a23aef
+        8. unwritten -> hole
+0: [0..63]: extent
+1: [64..191]: hole
+39bf78f7c676fdcf11558ad3a1a23aef
+        9. unwritten -> data
+0: [0..127]: extent
+1: [128..191]: hole
+c9a5ea7ad1648eee6202850420432dfc
+        10. hole -> data -> hole
+0: [0..63]: extent
+1: [64..127]: hole
+d5755b0153a84fc6789af22ab8d1bb04
+        11. data -> hole -> data
+0: [0..127]: extent
+27c9068d1b51da575a53ad34c57ca5cc
+        12. unwritten -> data -> unwritten
+0: [0..127]: extent
+d5755b0153a84fc6789af22ab8d1bb04
+        13. data -> unwritten -> data
+0: [0..127]: extent
+27c9068d1b51da575a53ad34c57ca5cc
+        14. data -> hole @ 0
+0: [0..191]: extent
+6f1f8907250bdbf673e1e55212b56b82
+root@ttip:xfstests-dev#
