@@ -1,71 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53833 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752044AbdJTH1I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 03:27:08 -0400
-Date: Fri, 20 Oct 2017 00:27:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/17] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
-Message-ID: <20171020072707.GA18000@infradead.org>
-References: <20171019125817.11580-1-jack@suse.cz>
- <20171019125817.11580-2-jack@suse.cz>
+Received: from verein.lst.de ([213.95.11.211]:47290 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751927AbdJTHrw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Oct 2017 03:47:52 -0400
+Date: Fri, 20 Oct 2017 09:47:50 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove
+        'page-less' support
+Message-ID: <20171020074750.GA13568@lst.de>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171019125817.11580-2-jack@suse.cz>
+In-Reply-To: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, hch@lst.de, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-nvdimm@lists.01.org, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
->  	if (file) {
->  		struct inode *inode = file_inode(file);
-> +		unsigned long flags_mask = file->f_op->mmap_supported_flags;
-> +
-> +		if (!flags_mask)
-> +			flags_mask = LEGACY_MAP_MASK;
->  
->  		switch (flags & MAP_TYPE) {
->  		case MAP_SHARED:
-> +			/*
-> +			 * Silently ignore unsupported flags - MAP_SHARED has
-> +			 * traditionally behaved like that and we don't want
-> +			 * to break compatibility.
-> +			 */
-> +			flags &= flags_mask;
-> +			/*
-> +			 * Force use of MAP_SHARED_VALIDATE with non-legacy
-> +			 * flags. E.g. MAP_SYNC is dangerous to use with
-> +			 * MAP_SHARED as you don't know which consistency model
-> +			 * you will get.
-> +			 */
-> +			flags &= LEGACY_MAP_MASK;
-> +			/* fall through */
-> +		case MAP_SHARED_VALIDATE:
-> +			if (flags & ~flags_mask)
-> +				return -EOPNOTSUPP;
+> The solution presented is not pretty. It creates a stream of leases, one
+> for each get_user_pages() invocation, and polls page reference counts
+> until DMA stops. We're missing a reliable way to not only trap the
+> DMA-idle event, but also block new references being taken on pages while
+> truncate is allowed to progress. "[PATCH v3 12/13] dax: handle truncate of
+> dma-busy pages" presents other options considered, and notes that this
+> solution can only be viewed as a stop-gap.
 
-Hmmm.  I'd expect this to worth more like:
+I'd like to brainstorm how we can do something better.
 
-		case MAP_SHARED:
-			/* Ignore all new flags that need validation: */
-			flags &= LEGACY_MAP_MASK;
-			/*FALLTHROUGH*/
-		case MAP_SHARED_VALIDATE:
-			if (flags & ~file->f_op->mmap_supported_flags)
-				return -EOPNOTSUPP;
+How about:
 
-with the legacy mask always implicitly support as indicated in my
-comment to the XFS patch.
-
-Although even the ignoring in MAP_SHARED seems dangerous, but I guess
-we need that to keep strict backwards compatibility.  In world I'd
-rather do
-
-	case MAP_SHARED:
-		if (flags & ~LEGACY_MAP_MASK)
-			return -EINVAL;
-
-
+If we hit a page with an elevated refcount in truncate / hole puch
+etc for a DAX file system we do not free the blocks in the file system,
+but add it to the extent busy list.  We mark the page as delayed
+free (e.g. page flag?) so that when it finally hits refcount zero we
+call back into the file system to remove it from the busy list.
