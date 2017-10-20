@@ -1,68 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10061 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752653AbdJTXVO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 19:21:14 -0400
-Date: Sat, 21 Oct 2017 10:21:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/5] xfs refcount conversions
-Message-ID: <20171020232111.GT3666@dastard>
-References: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25048 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752498AbdJTXqD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 19:46:03 -0400
+Date: Fri, 20 Oct 2017 16:45:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/17] :xfs: extent transaction reservations for parent
+ attributes
+Message-ID: <20171020234558.GA6624@magnolia>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <1508367333-3237-11-git-send-email-allison.henderson@oracle.com>
+ <20171019182407.GB4755@magnolia>
+ <8680e0c1-ada8-06e3-e397-61a5076030be@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8680e0c1-ada8-06e3-e397-61a5076030be@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, peterz@infradead.org, keescook@chromium.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Fri, Oct 20, 2017 at 02:07:53PM +0300, Elena Reshetova wrote:
-> Note: our previous thread didn't finish in any conclusion, so
-> I am resending this now (rebased at latest linux-next) to revive
-> the discussion. refcount_t is slowly becoming a standard for
-> refcounters and we would really like to make all conversions
-> done where it is applicable.
+On Fri, Oct 20, 2017 at 04:34:38PM -0700, Allison Henderson wrote:
+> On 10/19/2017 11:24 AM, Darrick J. Wong wrote:
+> 
+> >On Wed, Oct 18, 2017 at 03:55:26PM -0700, Allison Henderson wrote:
+> >>From: Dave Chinner<dchinner@redhat.com>
+> >>
+> >>We need to add, remove or modify parent pointer attributes during
+> >>create/link/unlink/rename operations atomically with the dirents in the parent
+> >>directories being modified. This means they need to be modified in the same
+> >>transaction as the parent directories, and so we need to add the required
+> >>space for the attribute modifications to the transaction reservations.
+> >>
+> >>[achender: rebased, added xfs_sb_version_hasparent stub]
+> >>
+> >>Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >>Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+> >>---
+> >>  fs/xfs/libxfs/xfs_format.h     |   5 ++
+> >>  fs/xfs/libxfs/xfs_trans_resv.c | 103 ++++++++++++++++++++++++++++++++---------
+> >>  2 files changed, 85 insertions(+), 23 deletions(-)
+> >>
+> >>diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> >>index b9ea5bf..121862a 100644
+> >>--- a/fs/xfs/libxfs/xfs_format.h
+> >>+++ b/fs/xfs/libxfs/xfs_format.h
+> >>@@ -556,6 +556,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+> >>  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+> >>  }
+> >>+static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+> >>+{
+> >>+	return false; /* We'll enable this at the end of the set */
+> >I think this chunk should just add the proper testing code here.
+> >
+> >You only add RO_COMPAT_PARENT to XFS_SB_FEAT_RO_COMPAT_ALL at the end of
+> >the patch series, so anyone bisecting their way through the series won't
+> >be able to mount such an fs.
+> Ok, there really isn't much more to add in here once we have the feature
+> flags defined.  Maybe we could just do something like:
+> 
+> return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+>         (sbp->sb_features_ro_compat & 0));
+> /* We will turn the 0 into XFS_SB_FEAT_RO_COMPAT_PARENT at the end of the
+> set */
+> 
+> 
+> Is that something like what you meant?
 
-In a separate "replace atomics with refcounts" discussion, the
-ordering guarantees of refcounts was raised:
+I was talking about defining the function once and for all:
 
-https://lkml.org/lkml/2017/9/4/206
+static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+{
+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+}
 
-i.e. refcounts use weak ordering whilst atomics imply a smp_mb()
-operation was performed.
+Since we can't mount any filesystem with XFS_SB_FEAT_RO_COMPAT_PARENT
+set until COMPAT_PARENT gets added to XFS_SB_FEAT_RO_COMPAT_ALL.  The
+practical effect is that hasparent will never return true, but with less
+code changes between patches.
 
-Given these counters in XFS directly define the life cycle states
-rather than being just an object refcount, I'm pretty sure they
-rely on the implied smp_mb() that the atomic operations provide to
-work correctly.
+(Or put another way, please minimize the type of patch series churn
+wherein one adds a function in one patch and then rewrites it a
+subseqeuent patch.)
 
-Let me put it this way: Documentation/memory-barriers.txt breaks my
-brain.
+--D
 
-We know atomics provide the barriers we need for the code to work
-correctly, but using anything else requires understanding the
-ordering of the new code and what Documentation/memory-barriers.txt
-says that means.
-
-IMO, that makes it way too hard to review sanely for code that:
-
-	a) we already know works correctly
-	b) has guards against reference count problems; and
-	c) isn't performance critical, so doesn't need the
-	   complexity of tricky memory ordering and/or barriers.
-
-So, really, it comes down to the fact that we know refcount_t is not
-a straight drop in replacement for atomics, and that actually
-verifying the change is correct requires an in depth understanding
-of Documentation/memory-barriers.txt. IMO, that's way too much of a
-long term maintenance and knowledge burden to add to what is a
-simple set of reference counters...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> >>+}
+> >>+
+> >>  /*
+> >>   * end of superblock version macros
+> >>   */
+> >>diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> >>index 6bd916b..54399e2 100644
+> >>--- a/fs/xfs/libxfs/xfs_trans_resv.c
+> >>+++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> >>@@ -802,29 +802,30 @@ xfs_calc_sb_reservation(
+> >>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+> >>  }
+> >>+/*
+> >>+ * Namespace reservations.
+> >>+ *
+> >>+ * These get tricky when parent pointers are enabled as we have attribute
+> >>+ * modifications occurring from within these transactions. Rather than confuse
+> >>+ * each of these reservation calculations with the conditional attribute
+> >>+ * reservations, add them here in a clear and concise manner. This assumes that
+> >>+ * the attribute reservations have already been calculated.
+> >>+ *
+> >>+ * Note that we only include the static attribute reservation here; the runtime
+> >>+ * reservation will have to be modified by the size of the attributes being
+> >>+ * added/removed/modified. See the comments on the attribute reservation
+> >>+ * calculations for more details.
+> >I don't know that we can properly use a different runtime reservations
+> >than what we statically reserve here, since the static reservations are
+> >used to ensure that the log is of sufficient size given the fs geometry.
+> >
+> ><shrug> Maybe we can figure out how much extra space is allowable given
+> >the actual size of the log?  Or perhaps in the end we'll just end up
+> >restricting the maximum size of what we can log through intents?  Or
+> >just set the reservation to 64k I guess.... :)
+> >
+> >--D
+> >
+> >>+ * Note for rename: rename will vastly overestimate requirements. This will be
+> >>+ * addressed later when modifications are made to ensure parent attribute
+> >>+ * modifications can be done atomically with the rename operation.
+> >>+ */
+> >>  void
+> >>-xfs_trans_resv_calc(
+> >>+xfs_calc_namespace_reservations(
+> >>  	struct xfs_mount	*mp,
+> >>  	struct xfs_trans_resv	*resp)
+> >>  {
+> >>-	/*
+> >>-	 * The following transactions are logged in physical format and
+> >>-	 * require a permanent reservation on space.
+> >>-	 */
+> >>-	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+> >>-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> >>-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+> >>-	else
+> >>-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> >>-	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>-
+> >>-	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+> >>-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> >>-		resp->tr_itruncate.tr_logcount =
+> >>-				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+> >>-	else
+> >>-		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> >>-	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>+	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+> >>  	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+> >>  	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+> >>@@ -846,15 +847,69 @@ xfs_trans_resv_calc(
+> >>  	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+> >>  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>+	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> >>+	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> >>+	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>+
+> >>+	if (!xfs_sb_version_hasparent(&mp->m_sb))
+> >>+		return;
+> >>+
+> >>+	/* rename can add/remove/modify 2 parent attributes */
+> >>+	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
+> >>+					     resp->tr_attrrm.tr_logres);
+> >>+	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
+> >>+					       resp->tr_attrrm.tr_logcount);
+> >>+
+> >>+	/* create will add 1 parent attribute */
+> >>+	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+> >>+	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> >>+
+> >>+	/* mkdir will add 1 parent attribute */
+> >>+	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+> >>+	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> >>+
+> >>+	/* link will add 1 parent attribute */
+> >>+	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+> >>+	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> >>+
+> >>+	/* symlink will add 1 parent attribute */
+> >>+	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+> >>+	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> >>+
+> >>+	/* remove will remove 1 parent attribute */
+> >>+	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+> >>+	resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
+> >>+}
+> >>+
+> >>+void
+> >>+xfs_trans_resv_calc(
+> >>+	struct xfs_mount	*mp,
+> >>+	struct xfs_trans_resv	*resp)
+> >>+{
+> >>+	/*
+> >>+	 * The following transactions are logged in physical format and
+> >>+	 * require a permanent reservation on space.
+> >>+	 */
+> >>+	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+> >>+	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> >>+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+> >>+	else
+> >>+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> >>+	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>+
+> >>+	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+> >>+	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> >>+		resp->tr_itruncate.tr_logcount =
+> >>+				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+> >>+	else
+> >>+		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> >>+	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>+
+> >>  	resp->tr_create_tmpfile.tr_logres =
+> >>  			xfs_calc_create_tmpfile_reservation(mp);
+> >>  	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+> >>  	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>-	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> >>-	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> >>-	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>-
+> >>  	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+> >>  	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+> >>  	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>@@ -886,6 +941,8 @@ xfs_trans_resv_calc(
+> >>  		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+> >>  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >>+	xfs_calc_namespace_reservations(mp, resp);
+> >>+
+> >>  	/*
+> >>  	 * The following transactions are logged in logical format with
+> >>  	 * a default log count.
+> >>-- 
+> >>2.7.4
+> >>
+> >>--
+> >>To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >>the body of a message tomajordomo@vger.kernel.org
+> >>More majordomo info athttp://vger.kernel.org/majordomo-info.html
+> 
