@@ -1,52 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47088 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751895AbdJTHCh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Oct 2017 03:02:37 -0400
-Date: Fri, 20 Oct 2017 09:02:35 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/15] xfs: remove the never fully implemented UUID
-        fork format
-Message-ID: <20171020070235.GB11101@lst.de>
-References: <20171019065942.18813-1-hch@lst.de> <20171019065942.18813-7-hch@lst.de> <20171019224813.GP4755@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:53833 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752044AbdJTH1I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 03:27:08 -0400
+Date: Fri, 20 Oct 2017 00:27:07 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/17] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Message-ID: <20171020072707.GA18000@infradead.org>
+References: <20171019125817.11580-1-jack@suse.cz>
+ <20171019125817.11580-2-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171019224813.GP4755@magnolia>
+In-Reply-To: <20171019125817.11580-2-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 03:48:13PM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 19, 2017 at 08:59:33AM +0200, Christoph Hellwig wrote:
-> > Remove the dead code dealing with the UUID fork format that was never
-> > implemented in Linux (and neither in IRIX as far as I know).
-> 
-> I think I need a little more context on this -- for what purpose was the
-> UUID format created, and has it ever been used anywhere?  When I was
-> working on the ifork verifiers/scrub I noticed that we'd never actually
-> accept anything with that format.
-> 
-> (I'm ok with removing it, I just want to know what I'm killing before I
-> commit to it.)
+>  	if (file) {
+>  		struct inode *inode = file_inode(file);
+> +		unsigned long flags_mask = file->f_op->mmap_supported_flags;
+> +
+> +		if (!flags_mask)
+> +			flags_mask = LEGACY_MAP_MASK;
+>  
+>  		switch (flags & MAP_TYPE) {
+>  		case MAP_SHARED:
+> +			/*
+> +			 * Silently ignore unsupported flags - MAP_SHARED has
+> +			 * traditionally behaved like that and we don't want
+> +			 * to break compatibility.
+> +			 */
+> +			flags &= flags_mask;
+> +			/*
+> +			 * Force use of MAP_SHARED_VALIDATE with non-legacy
+> +			 * flags. E.g. MAP_SYNC is dangerous to use with
+> +			 * MAP_SHARED as you don't know which consistency model
+> +			 * you will get.
+> +			 */
+> +			flags &= LEGACY_MAP_MASK;
+> +			/* fall through */
+> +		case MAP_SHARED_VALIDATE:
+> +			if (flags & ~flags_mask)
+> +				return -EOPNOTSUPP;
 
-For that you'd need to find people that were around at SGI in the 90s..
+Hmmm.  I'd expect this to worth more like:
 
-Note that we already removed it briefly in 2008, but unlike my patch
-that didn't keep the padding so broken log recovery.
+		case MAP_SHARED:
+			/* Ignore all new flags that need validation: */
+			flags &= LEGACY_MAP_MASK;
+			/*FALLTHROUGH*/
+		case MAP_SHARED_VALIDATE:
+			if (flags & ~file->f_op->mmap_supported_flags)
+				return -EOPNOTSUPP;
 
-relevant xfs-import commits:
+with the legacy mask always implicitly support as indicated in my
+comment to the XFS patch.
 
-Commit that adds the di_format values:
-c049a3e8d776a76a1ba3adaf168a406a8ee52172
+Although even the ignoring in MAP_SHARED seems dangerous, but I guess
+we need that to keep strict backwards compatibility.  In world I'd
+rather do
 
-then various commits in early development add UUID inode format
-bits, but none seems to actually ever generate it.
+	case MAP_SHARED:
+		if (flags & ~LEGACY_MAP_MASK)
+			return -EINVAL;
 
-1st removal with minor comments on the history:
-415c805b441845dfc2be7d887f995ea8875358e9
 
-Revert of the above:
-4ddd5953fad77a14f665fefa06899ef9f388b134
