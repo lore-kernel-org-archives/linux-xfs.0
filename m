@@ -1,50 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:49075 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753325AbdJTR1X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 13:27:23 -0400
-Received: by mail-oi0-f65.google.com with SMTP id m198so21119949oig.5
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Oct 2017 10:27:23 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:31671 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753269AbdJTR51 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 13:57:27 -0400
+Date: Fri, 20 Oct 2017 10:56:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5] generic/45[34]: force UTF-8 codeset to enable utf-8
+ namer checks in xfs_scrub
+Message-ID: <20171020175648.GA4741@magnolia>
+References: <150836985024.27213.3715197937819365388.stgit@magnolia>
+ <150836987529.27213.1335818370452284585.stgit@magnolia>
+ <20171019071842.GA28970@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20171020163221.GB26320@lst.de>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150846720244.24336.16885325309403883980.stgit@dwillia2-desk3.amr.corp.intel.com>
- <1508504726.5572.41.camel@kernel.org> <CAPcyv4hXCJYTkUKs6NiOp=8kgExu+bgZnVn_v+Os7fVUc2NxFg@mail.gmail.com>
- <20171020163221.GB26320@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 20 Oct 2017 10:27:22 -0700
-Message-ID: <CAPcyv4iGN6KO_ggJ-vTHCPWanudY3Gq6n=+9sbnMsnTeF56uJA@mail.gmail.com>
-Subject: Re: [PATCH v3 12/13] dax: handle truncate of dma-busy pages
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20171019071842.GA28970@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jeff Layton <jlayton@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Oct 20, 2017 at 9:32 AM, Christoph Hellwig <hch@lst.de> wrote:
-> On Fri, Oct 20, 2017 at 08:42:00AM -0700, Dan Williams wrote:
->> I agree, but it needs quite a bit more thought and restructuring of
->> the truncate path. I also wonder how we reclaim those stranded
->> filesystem blocks, but a first approximation is wait for the
->> administrator to delete them or auto-delete them at the next mount.
->> XFS seems well prepared to reflink-swap these DMA blocks around, but
->> I'm not sure about EXT4.
->
-> reflink still is an optional and experimental feature in XFS.  That
-> being said we should not need to swap block pointers around on disk.
-> We just need to prevent the block allocator from reusing the blocks
-> for new allocations, and we have code for that, both for transactions
-> that haven't been committed to disk yet, and for deleted blocks
-> undergoing discard operations.
->
-> But as mentioned in my second mail from this morning I'm not even
-> sure we need that.  For short-term elevated page counts like normal
-> get_user_pages users I think we can just wait for the page count
-> to reach zero, while for abuses of get_user_pages for long term
-> pinning memory (not sure if anyone but rdma is doing that) we'll need
-> something like FL_LAYOUT leases to release the mapping.
+On Thu, Oct 19, 2017 at 12:18:42AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 18, 2017 at 04:37:55PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > The upcoming xfs_scrub tool will have the ability to warn about
+> > suspicious UTF-8 normalization collisions.  We want generic/45[34] to be
+> > able to test this functionality, but to do that we have to forcibly set
+> > the codeset to UTF-8 via LC_ALL since the rest of xfstests only uses
+> > LC_ALL=C.
+> 
+> Wait.  Where do you want to validate UTF-8 normalization?  There is
+> absolutely no guarantee that someone uses UTF-8, so any reliance on
+> the character set in the file system is bogus.
 
-I'll take a look at hooking this up through a page-idle callback. Can
-I get some breadcrumbs to grep for from XFS folks on how to set/clear
-the busy state of extents?
+I'll start by summarizing a problem statement[1].  In XFS (and nearly
+all the other filesystems), neither the on-disk format nor the kernel
+driver care about the contents of file names or attribute names; they
+treat these as an arbitrary byte sequence.  Userspace can set whatever
+localization and encoding parameters it wants, and the kernel doesn't
+care except for '\0' and '/'.  That doesn't change.
+
+In modern Linux userspace, however, we /do/ care about being able to
+encode Unicode codepoints into byte streams, so we encode them in UTF8.
+Because there's two different normalization methods in Unicode, this
+leads to the funny situation where two unique filename byte sequences
+can render the same but point to totally different files:
+
+$ echo NFC > "$(echo -e "french_caf\xc3\xa9.txt")"
+$ echo NFD > "$(echo -e "french_caf\xcc\x81.txt")"
+$ ls -lai
+133 -rw-r--r-- 1 root root   4 Oct 20 10:40 french_café.txt
+132 -rw-r--r-- 1 root root   4 Oct 20 10:40 french_café.txt
+$ echo $LANG
+en_US.UTF-8
+
+At least on my computer, the two filenames render identically yet point
+to different inodes.  This could be used to mislead people into opening
+a malicious file whose name appears identical to a legitimate file.
+
+xfs_scrub is the (proposed) userspace component of XFS online fsck.  The
+first four phases simply call the in-kernel fsck code and pass status
+back, but the fifth phase walks the directory tree looking for problems.
+
+If xfs_scrub (the userspace component of online fsck) was built with
+libunistring and the LC_MESSAGES string contains "UTF-8", phase 5 will
+warn if it finds multiple filenames in a directory that normalize to the
+same string but point to different inodes.  Similarly, it will warn
+about colliding attribute names.  Warnings in xfs_scrub are for
+situations that warrant administrative review but are not filesystem
+corruptions.
+
+IOWs, if userspace is configured for UTF-8, the userspace part of online
+fsck will flag suspicious-looking uses of Unicode for admin review.  The
+kernel remains uninvolved.
+
+--D
+
+[1] https://eclecticlight.co/2017/04/06/apfs-is-currently-unusable-with-most-non-english-languages/
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
