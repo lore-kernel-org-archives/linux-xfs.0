@@ -1,119 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30872 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751508AbdJSUGg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 16:06:36 -0400
-Date: Thu, 19 Oct 2017 13:06:26 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 17/17] Add the parent pointer support to the superblock
- version 5.
-Message-ID: <20171019200626.GN4755@magnolia>
-References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
- <1508367333-3237-18-git-send-email-allison.henderson@oracle.com>
- <CAOQ4uxiuFqoHAvJrLOds3w2dXE2nPyBh=uZusp5JxfOf_3cq-w@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:47048 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751770AbdJTGzi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Oct 2017 02:55:38 -0400
+Date: Fri, 20 Oct 2017 08:55:36 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH for-4.14] xfs: fix AIM7 regression
+Message-ID: <20171020065536.GA11101@lst.de>
+References: <20171019074705.24827-1-hch@lst.de> <20171019113848.GA8911@bfoster.bfoster> <20171019131407.GA20645@lst.de> <20171019224431.GO4755@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiuFqoHAvJrLOds3w2dXE2nPyBh=uZusp5JxfOf_3cq-w@mail.gmail.com>
+In-Reply-To: <20171019224431.GO4755@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, Ye Xiaolong <xiaolong.ye@intel.com>, linux-xfs@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 06:57:04AM +0300, Amir Goldstein wrote:
-> On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
-> <allison.henderson@oracle.com> wrote:
-> > [dchinner: forward ported and cleaned up]
-> > [achender: rebased and added parent pointer attribute to
-> >            compatible attributes mask]
-> >
-> > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> > v2: remove unrelated type clean up in xfs_format.h
+On Thu, Oct 19, 2017 at 03:44:31PM -0700, Darrick J. Wong wrote:
+> > > The code looks fine, but this seems really strange. If the trylock
+> > > fails, then wouldn't the blocking lock have slept anyways if done
+> > > initially? Is there any more background info available on this, or
+> > > perhaps a theory on why there is such a significant regression..?
+> > 
+> > No, unfortunately I don't have a theory, but I agree it is odd
+> > behavior in the rwsem code.
 > 
-> I'm curious how XFS_SB_VERSION2_PARENTBIT fits into the picture?
-> old relic?
+> <shrug> I want to know a little more about why there's a performance hit
+> in the down_read_trylock -> down_read case.  Are we getting penalized
+> for that?  Is it some weird interaction with lockdep?
 
-A feature bit most probably used by the SGI XFS parent pointer
-implementation.  We don't want to reuse that bit and thereby crash into
-their code.
+I don't think the test bot did run with lockdep.  But feel free to take
+a look at the mail thread titled
 
---D
+[lkp-robot] [fs]  91f9943e1c:  aim7.jobs-per-min -26.6% regression
 
-> >
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h | 7 +++++--
-> >  fs/xfs/libxfs/xfs_fs.h     | 1 +
-> >  fs/xfs/xfs_fsops.c         | 4 +++-
-> >  3 files changed, 9 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index 121862a..f3e3132 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
-> >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)                /* free inode btree */
-> >  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)                /* reverse map btree */
-> >  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)                /* reflinked files */
-> > +#define XFS_SB_FEAT_RO_COMPAT_PARENT   (1 << 3)        /* parent inode ptr */
-> >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
-> >                 (XFS_SB_FEAT_RO_COMPAT_FINOBT | \
-> >                  XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> > -                XFS_SB_FEAT_RO_COMPAT_REFLINK)
-> > +                XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-> > +                XFS_SB_FEAT_RO_COMPAT_PARENT)
-> >  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN  ~XFS_SB_FEAT_RO_COMPAT_ALL
-> >  static inline bool
-> >  xfs_sb_has_ro_compat_feature(
-> > @@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
-> >
-> >  static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
-> >  {
-> > -       return false; /* We'll enable this at the end of the set */
-> > +       return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> > +               (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
-> >  }
-> >
-> >  /*
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 8c61f21..b8108f8 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
-> >  #define XFS_FSOP_GEOM_FLAGS_SPINODES   0x40000 /* sparse inode chunks  */
-> >  #define XFS_FSOP_GEOM_FLAGS_RMAPBT     0x80000 /* reverse mapping btree */
-> >  #define XFS_FSOP_GEOM_FLAGS_REFLINK    0x100000 /* files can share blocks */
-> > +#define XFS_FSOP_GEOM_FLAGS_PARENT     0x200000 /* parent pointers */
-> >
-> >  /*
-> >   * Minimum and maximum sizes need for growth checks.
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 8f22fc5..9a0ce52 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -111,7 +111,9 @@ xfs_fs_geometry(
-> >                         (xfs_sb_version_hasrmapbt(&mp->m_sb) ?
-> >                                 XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
-> >                         (xfs_sb_version_hasreflink(&mp->m_sb) ?
-> > -                               XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-> > +                               XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
-> > +                       (xfs_sb_version_hasparent(&mp->m_sb) ?
-> > +                               XFS_FSOP_GEOM_FLAGS_PARENT : 0);
-> >                 geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
-> >                                 mp->m_sb.sb_logsectsize : BBSIZE;
-> >                 geo->rtsectsize = mp->m_sb.sb_blocksize;
-> > --
-> > 2.7.4
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+on lkml.  Note that synthetic benchmarks on XFS always saw weird
+effects from rwsem details.  I remember that a few years ago I had
+to back to the mainline patch to move the rwsem fastpath out of line
+because thay caused a major performance regressions on CIFS file
+serving benchmarks on a very low end ARM NAS box.
