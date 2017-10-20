@@ -1,68 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20248 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752334AbdJTWmB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 18:42:01 -0400
-Date: Sat, 21 Oct 2017 09:41:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/17] Parent Pointers V3
-Message-ID: <20171020224157.GS3666@dastard>
-References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
- <CAOQ4uxhzZT=5O6PM4Gp=uSwYPFdrO5X9D8UF54f3jEmM2LxK1Q@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22359 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752498AbdJTXee (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 19:34:34 -0400
+Date: Fri, 20 Oct 2017 16:34:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 14/30] xfs: scrub the secondary superblocks
+Message-ID: <20171020233432.GA4755@magnolia>
+References: <150777244315.1724.6916081372861799350.stgit@magnolia>
+ <150777253648.1724.14074690877454400591.stgit@magnolia>
+ <20171016051644.GH3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhzZT=5O6PM4Gp=uSwYPFdrO5X9D8UF54f3jEmM2LxK1Q@mail.gmail.com>
+In-Reply-To: <20171016051644.GH3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 07:11:50AM +0300, Amir Goldstein wrote:
-> On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
-> <allison.henderson@oracle.com> wrote:
-> > Hi all,
-> >
-> > This is the third version of parent pointer attributes for xfs.
-> > I've integrated the suggestions made since v2, mostly moving the
-> > attr buffers in the xfs_attr_log_item to pointers that point to
-> > xfs_attr_item. I've also implementing the recovery routines for
-> > the xfs_attr_log_format.  If I missed anything please point it
-> > out.  As always, comments and feedback are appreciated.  Thank
-> > you!
-> >
+On Mon, Oct 16, 2017 at 04:16:44PM +1100, Dave Chinner wrote:
+> On Wed, Oct 11, 2017 at 06:42:16PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Ensure that the geometry presented in the backup superblocks matches
+> > the primary superblock so that repair can recover the filesystem if
+> > that primary gets corrupted.
 > 
-> A minor comment about the cover letter.
-> All designated reviewers must know exactly what "parent pointers" are for,
-> but it could be useful to add some context in the cover letter about the purpose
-> of this work for the sake of other readers on the list. Useful to refer to the
-> upcoming scrub support patches.
+> I've noticed that scrub on certain fstests will report PREEN for
+> secondary superblocks and repair thinks there is nothing wrong and
+> doesn't fix them. I'm not sure which field it's complaining about,
+> but at this point I don't see this as a blocker. Follow up patches
+> would be fine.
+
+These are the sb fields that currently trigger preen reports:
+
+rootino rbmino rsumino imax_pct uquotino gquotino pquotino unit width
+uuid fname
+
+rootino: This will always be the first inode in the first possible
+inode cluster in the filesystem, right?  mkfs copies rootino to the last
+and the middle superblock, though if the location is fixed then we don't
+strictly need to propagate it, do we?
+
+rbmino/rsumino: have fixed ino numbers (rootino + 1 and + 2,
+respectively) and are always rebuilt by repair.
+
+uquotino/gquotino/pquotino can be totally rebuilt by quotacheck, right?
+So if repair zaps these (and it does) either as part of a secondary ->
+primary rebuild or for any other reason then it doesn't matter.
+
+imax_pct: only set by mkfs and copied to all the other sb's.   This
+might be mislabeled as a preen.
+
+uuid/fname: seems to be set in all sb copies by xfs_db.  Maybe this one
+is mislabeled?
+
+unit/width: will be copied into sb 0 from mount options.  We only lose
+information if repair recovers the primary sb and the mount options
+don't include unit/width information.
+
+Now for sb_versionnum, sb_version2, and the v5 feature bits:
+
+versionnum: quotabit is turned on any time we mount with quota, and
+quota has to be activated with mount options, right?
+
+nlinkbit is always turned on at mount time...
+
+versionnum attrbit: turned on any time we set an attr, and nothing much
+(other than setting attr/attr2 bits in the sb) seem to depend on whether
+or not this is set.
+
+features2 attr2bit: I think the attr2 bit can be controlled by mounting
+with 'attr2' and 'noattr2', right?  So, similar to unit/width we only
+lose information if repair recovers a superblock and the mount options
+don't include attr2 information, and even then XFS seems to like to turn
+it on except in the noattr2 case.
+
+So I get the impression that I might be able to turn uuid/fname/imax_pct
+into regular _corrupt checks since (AFAICT) xfsprogs actually updates
+them correctly, and simply drop the other fields from checking.
+
+--D
+
 > 
-> BTW, not sure if this was mentioned in the previous lifetime of those
-> patches, but parent pointers can be used to implement exportfs operation
-> xfs_fs_fh_to_parent() for "non-connectable" file handles (FILEID_INO32_GEN)
-> and to implement xfs_fs_get_name(), which would make reconnect_path()
-> *much* more efficient.
-
-However, XFS only uses FILEID_INO32_GEN for directories
-because they have known parents. For them, we implement ->get_parent()
-and that means reconnect_path just does ->lookup("..") to find the
-parents and doesn't need anything special.
-
-We use FILEID_INO32_GEN_PARENT for all other types of files to
-encode the ino # + generation of the parent inode into the handle.
-That means for any non-dir file handle, our implemention of
-->fh_to_parent  will get us the parent info as efficiently as
-possible.
-
-IOWs, parent pointers won't actually speed up filehandle ->
-dentry reconnection on XFS at all because we already encode parent
-pointers into the filehandles that need them....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
