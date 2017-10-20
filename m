@@ -1,39 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:55467 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751112AbdJVGka (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 02:40:30 -0400
-Subject: Re: [PATCH 2/2] slab, slub, slob: convert slab_flags_t to 32-bit
-References: <20171021100225.GA22428@avx2> <20171021100635.GA8287@avx2>
-From: Pekka Enberg <penberg@iki.fi>
-Message-ID: <ed694fcb-c1b8-849f-dc5d-145aa8872ad2@iki.fi>
-Date: Sun, 22 Oct 2017 09:40:27 +0300
+Received: from verein.lst.de ([213.95.11.211]:47088 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751895AbdJTHCh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Oct 2017 03:02:37 -0400
+Date: Fri, 20 Oct 2017 09:02:35 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 06/15] xfs: remove the never fully implemented UUID
+        fork format
+Message-ID: <20171020070235.GB11101@lst.de>
+References: <20171019065942.18813-1-hch@lst.de> <20171019065942.18813-7-hch@lst.de> <20171019224813.GP4755@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171021100635.GA8287@avx2>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171019224813.GP4755@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alexey Dobriyan <adobriyan@gmail.com>, akpm@linux-foundation.org
-Cc: linux-mm@kvack.org, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, ecryptfs@vger.kernel.org, linux-xfs@vger.kernel.org, kasan-dev@googlegroups.com, netdev@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-
-
-On 21/10/2017 13.06, Alexey Dobriyan wrote:
-> struct kmem_cache::flags is "unsigned long" which is unnecessary on
-> 64-bit as no flags are defined in the higher bits.
+On Thu, Oct 19, 2017 at 03:48:13PM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 19, 2017 at 08:59:33AM +0200, Christoph Hellwig wrote:
+> > Remove the dead code dealing with the UUID fork format that was never
+> > implemented in Linux (and neither in IRIX as far as I know).
 > 
-> Switch the field to 32-bit and save some space on x86_64 until such
-> flags appear:
+> I think I need a little more context on this -- for what purpose was the
+> UUID format created, and has it ever been used anywhere?  When I was
+> working on the ifork verifiers/scrub I noticed that we'd never actually
+> accept anything with that format.
 > 
-> 	add/remove: 0/0 grow/shrink: 0/107 up/down: 0/-657 (-657)
-> 	function                                     old     new   delta
-> 	sysfs_slab_add                               720     719      -1
-> 				...
-> 	check_object                                 699     676     -23
-> 
-> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+> (I'm ok with removing it, I just want to know what I'm killing before I
+> commit to it.)
 
-Acked-by: Pekka Enberg <penberg@kernel.org>
+For that you'd need to find people that were around at SGI in the 90s..
+
+Note that we already removed it briefly in 2008, but unlike my patch
+that didn't keep the padding so broken log recovery.
+
+relevant xfs-import commits:
+
+Commit that adds the di_format values:
+c049a3e8d776a76a1ba3adaf168a406a8ee52172
+
+then various commits in early development add UUID inode format
+bits, but none seems to actually ever generate it.
+
+1st removal with minor comments on the history:
+415c805b441845dfc2be7d887f995ea8875358e9
+
+Revert of the above:
+4ddd5953fad77a14f665fefa06899ef9f388b134
