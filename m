@@ -1,209 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:49915 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752752AbdJTT46 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 15:56:58 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:3708 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752581AbdJTT67 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 15:58:59 -0400
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
+ completion with lockdep_map
+Date: Fri, 20 Oct 2017 19:58:54 +0000
+Message-ID: <1508529532.3029.15.camel@wdc.com>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+         <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
+         <1508455438.4542.4.camel@wdc.com>
+         <alpine.DEB.2.20.1710200829340.3083@nanos>
+In-Reply-To: <alpine.DEB.2.20.1710200829340.3083@nanos>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <4A4A6AF3E3BC7E488C0D3A7B1918BEFE@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <20171020170558.GY4755@magnolia>
-References: <CADxRZqwUfeGJOxsdEyaOHHJPmQUp8sNkxQdZPOKjyEejeZXMmA@mail.gmail.com>
- <20171020170558.GY4755@magnolia>
-From: Anatoly Pugachev <matorola@gmail.com>
-Date: Fri, 20 Oct 2017 22:56:56 +0300
-Message-ID: <CADxRZqx2xitDTYG2cD21mYXFZvNKmNu6VdW+ftfom0wzgr-iUQ@mail.gmail.com>
-Subject: Re: [fstests] hardcoded values in common/rc for xfs (and probably others)
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: "tglx@linutronix.de" <tglx@linutronix.de>
+Cc: "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "oleg@redhat.com" <oleg@redhat.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "byungchul.park@lge.com" <byungchul.park@lge.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
 
-On Fri, Oct 20, 2017 at 8:05 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Fri, Oct 20, 2017 at 07:52:31PM +0300, Anatoly Pugachev wrote:
->> Can someone look into this issue?
->
-> Does the following xfstests patch help?
->
-> --D
->
-> diff --git a/common/punch b/common/punch
-> index c4ed261..5648bd8 100644
-> --- a/common/punch
-> +++ b/common/punch
-> @@ -341,13 +341,26 @@ _test_generic_punch()
->         testfile=$6
->         multiple=1
->
-> +       # This routine was originally written for fallocate modes that
-> +       # don't have alignment requirements so the (sort of) hardcoded
-> +       # 4k offsets didn't matter.  fcollapse and finsert require
-> +       # block-aligned arguments, so increase $multiple until we get
-> +       # to the file's minimum data block size.
-> +       case "$zero_cmd" in
-> +       "fcollapse"|"finsert")
-> +               touch $testfile
-> +               bs=$(_get_file_block_size $testfile)
-> +               test "$bs" -gt 4096 && multiple=$((bs / 4096))
-> +               ;;
-> +       esac
-> +
->         #
->         # If we are testing collapse range, we increare all the offsets of this
->         # test by a factor of 4. We do this because unlike punch, collapse
->         # range also decreases the size of file hence require bigger offsets.
->         #
->         if [ "$zero_cmd" == "fcollapse" ]; then
-> -               multiple=4
-> +               multiple=$((multiple * 4))
->         fi
->
->         _4k="$((multiple * 4))k"
-> diff --git a/common/rc b/common/rc
-> index fe68d67..b585016 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2063,8 +2063,8 @@ _require_xfs_io_command()
->                 param_checked=1
->                 ;;
->         "fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare")
-> -               testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-> -                       -c "$command 4k 8k" $testfile 2>&1`
-> +               testio=`$XFS_IO_PROG -F -f -c "pwrite 0 256k" -c "fsync" \
-> +                       -c "$command 64k 128k" $testfile 2>&1`
->                 ;;
->         "fiemap")
->                 testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-
-Darrick,
-
-I had to change from
-bs=$(_get_file_block_size $testfile)
-to
-bs=$(_get_file_block_size $testdir)
-
-since _get_file_block_size gets directory as a parameter (and i'm
-puzzled why it's called _get_file_block_size, if it really wants a
-directory as a parameter, and there's _get_block_size as well).
-
-the patch makes test as passed, but with error.
-
-For example, with the default mkfs.xfs (4k block size), it is executed
-as follows:
-
-root@ttip:xfstests-dev# mkfs.xfs -f /dev/vdiskb1
-specified blocksize 4096 is less than device physical sector size 8192
-switching to logical sector size 512
-meta-data=/dev/vdiskb1           isize=512    agcount=4, agsize=1966016 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0,
-rmapbt=0, reflink=0
-data     =                       bsize=4096   blocks=7864064, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=3839, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-root@ttip:xfstests-dev# ./check  generic/012
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/sparc64 ttip 4.14.0-rc5
-MKFS_OPTIONS  -- -f -m reflink=1 /dev/loop0
-MOUNT_OPTIONS -- /dev/loop0 /1/scratch
-
-generic/012 2s ... 1s
-Ran: generic/012
-Passed all 1 tests
-
-
-but if I change block size, it ends with an error:
-
-
-root@ttip:xfstests-dev# mkfs.xfs -f -b size=8192 /dev/vdiskb1
-meta-data=/dev/vdiskb1           isize=512    agcount=4, agsize=983008 blks
-         =                       sectsz=8192  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0,
-rmapbt=0, reflink=0
-data     =                       bsize=8192   blocks=3932032, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=8192   ascii-ci=0 ftype=1
-log      =internal log           bsize=8192   blocks=1919, version=2
-         =                       sectsz=8192  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=8192   blocks=0, rtextents=0
-root@ttip:xfstests-dev# ./check  generic/012
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/sparc64 ttip 4.14.0-rc5
-MKFS_OPTIONS  -- -f -m reflink=1 /dev/loop0
-MOUNT_OPTIONS -- /dev/loop0 /1/scratch
-
-generic/012 1s ... - output mismatch (see
-/1/mator/xfstests-dev/results/generic/012.out.bad)
-    --- tests/generic/012.out   2016-09-24 11:51:48.238890811 +0300
-    +++ /1/mator/xfstests-dev/results/generic/012.out.bad
-2017-10-20 21:54:51.594814663 +0300
-    @@ -1,49 +1,49 @@
-     QA output created by 012
-        1. into a hole
-    -f4f35d60b3cc18aaa6d8d92f0cd3708a
-    +0a9156c4e3c48ef827980639c4d1e263
-        2. into allocated space
-    -0: [0..95]: extent
-    -f1894a71ac539f6f90426d98a4990a47
-    ...
-    (Run 'diff -u tests/generic/012.out
-/1/mator/xfstests-dev/results/generic/012.out.bad'  to see the entire
-diff)
-Ran: generic/012
-Failures: generic/012
-Failed 1 of 1 tests
-
-root@ttip:xfstests-dev# cat results/generic/012.out.bad
-QA output created by 012
-        1. into a hole
-0a9156c4e3c48ef827980639c4d1e263
-        2. into allocated space
-0: [0..191]: extent
-6f1f8907250bdbf673e1e55212b56b82
-        3. into unwritten space
-0: [0..191]: extent
-39bf78f7c676fdcf11558ad3a1a23aef
-        4. hole -> data
-0: [0..127]: extent
-1: [128..191]: hole
-c9a5ea7ad1648eee6202850420432dfc
-        5. hole -> unwritten
-0: [0..127]: extent
-1: [128..191]: hole
-39bf78f7c676fdcf11558ad3a1a23aef
-        6. data -> hole
-0: [0..63]: extent
-1: [64..191]: hole
-39bf78f7c676fdcf11558ad3a1a23aef
-        7. data -> unwritten
-0: [0..127]: extent
-1: [128..191]: hole
-39bf78f7c676fdcf11558ad3a1a23aef
-        8. unwritten -> hole
-0: [0..63]: extent
-1: [64..191]: hole
-39bf78f7c676fdcf11558ad3a1a23aef
-        9. unwritten -> data
-0: [0..127]: extent
-1: [128..191]: hole
-c9a5ea7ad1648eee6202850420432dfc
-        10. hole -> data -> hole
-0: [0..63]: extent
-1: [64..127]: hole
-d5755b0153a84fc6789af22ab8d1bb04
-        11. data -> hole -> data
-0: [0..127]: extent
-27c9068d1b51da575a53ad34c57ca5cc
-        12. unwritten -> data -> unwritten
-0: [0..127]: extent
-d5755b0153a84fc6789af22ab8d1bb04
-        13. data -> unwritten -> data
-0: [0..127]: extent
-27c9068d1b51da575a53ad34c57ca5cc
-        14. data -> hole @ 0
-0: [0..191]: extent
-6f1f8907250bdbf673e1e55212b56b82
-root@ttip:xfstests-dev#
+T24gRnJpLCAyMDE3LTEwLTIwIGF0IDA4OjM0ICswMjAwLCBUaG9tYXMgR2xlaXhuZXIgd3JvdGU6
+DQo+IE9uIFRodSwgMTkgT2N0IDIwMTcsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBBcmUg
+dGhlcmUgYW55IGNvbXBsZXRpb24gb2JqZWN0cyBmb3Igd2hpY2ggdGhlIGNyb3NzLXJlbGVhc2Ug
+Y2hlY2tpbmcgaXMNCj4gPiB1c2VmdWw/DQo+IA0KPiBBbGwgb2YgdGhlbSBieSBkZWZpbml0aW9u
+Lg0KDQpTb3JyeSBidXQgSSdtIG5vdCBzdXJlIHRoYXQncyB0aGUgYmVzdCBwb3NzaWJsZSBhbnN3
+ZXIuIEluIG15IG9waW5pb24NCmF2b2lkaW5nIHRoYXQgY29tcGxldGlvbiBvYmplY3RzIGhhdmUg
+ZGVwZW5kZW5jaWVzIG9uIG90aGVyIGxvY2sgb2JqZWN0cywNCmUuZy4gYnkgYXZvaWRpbmcgdG8g
+d2FpdCBvbiBhIGNvbXBsZXRpb24gb2JqZWN0IHdoaWxlIGhvbGRpbmcgYSBtdXRleCwgaXMgYQ0K
+ZmFyIHN1cGVyaW9yIHN0cmF0ZWd5IG92ZXIgYWRkaW5nIGNyb3NzLXJlbGVhc2UgY2hlY2tpbmcg
+dG8gY29tcGxldGlvbg0Kb2JqZWN0cy4gVGhlIGZvcm1lciBzdHJhdGVneSBuYW1lbHkgbWFrZXMg
+aXQgdW5uZWNlc3NhcnkgdG8gYWRkDQpjcm9zcy1yZWxlYXNlIGNoZWNraW5nIHRvIGNvbXBsZXRp
+b24gb2JqZWN0cyBiZWNhdXNlIHRoYXQgc3RyYXRlZ3kgZW5zdXJlcw0KdGhhdCB0aGVzZSBjb21w
+bGV0aW9uIG9iamVjdHMgY2Fubm90IGdldCBpbnZvbHZlZCBpbiBhIGRlYWRsb2NrLiBUaGUgbGF0
+dGVyDQpzdHJhdGVneSBjYW4gbGVhZCB0byBmYWxzZSBwb3NpdGl2ZSBkZWFkbG9jayByZXBvcnRz
+IGJ5IHRoZSBsb2NrZGVwIGNvZGUsDQpzb21ldGhpbmcgbm9uZSBvZiB1cyB3YW50cy4NCg0KQSBw
+b3NzaWJsZSBhbHRlcm5hdGl2ZSBzdHJhdGVneSBjb3VsZCBiZSB0byBlbmFibGUgY3Jvc3MtcmVs
+ZWFzZSBjaGVja2luZw0Kb25seSBmb3IgdGhvc2UgY29tcGxldGlvbiBvYmplY3RzIGZvciB3aGlj
+aCB3YWl0aW5nIG9jY3VycyBpbnNpZGUgYSBjcml0aWNhbA0Kc2VjdGlvbi4NCg0KPiA+IEFyZSB0
+aGVyZSBhbnkgd2FpdF9mb3JfY29tcGxldGlvbigpIGNhbGxlcnMgdGhhdCBob2xkIGEgbXV0ZXgg
+b3INCj4gPiBvdGhlciBsb2NraW5nIG9iamVjdD8NCj4gDQo+IFllcywgdGhlcmUgYXJlIGFsc28g
+Y3Jvc3MgY29tcGxldGlvbiBkZXBlbmRlbmNpZXMuIFRoZXJlIGhhdmUgYmVlbiBzdWNoDQo+IGJ1
+Z3MgYW5kIEkgZXhwZWN0IG1vcmUgdG8gYmUgdW5lYXJ0aGVkLg0KPiANCj4gSSByZWFsbHkgaGF2
+ZSB0byBhc2sgd2hhdCB5b3VyIG1vdGl2aWF0aW9uIGlzIHRvIGZpZ2h0IHRoZSBsb2NrZGVwIGNv
+dmVyYWdlDQo+IG9mIHN5bmNocm9uaXphdGlvbiBvYmplY3RzIHRvb3RoIGFuZCBuYWlsPw0KDQpB
+cyBleHBsYWluZWQgaW4gYW5vdGhlciBlLW1haWwgdGhyZWFkLCB1bmxpa2UgdGhlIGxvY2sgaW52
+ZXJzaW9uIGNoZWNraW5nDQpwZXJmb3JtZWQgYnkgdGhlIDw9IHY0LjEzIGxvY2tkZXAgY29kZSwg
+Y3Jvc3MtcmVsZWFzZSBjaGVja2luZyBpcyBhIGhldXJpc3RpYw0KdGhhdCBkb2VzIG5vdCBoYXZl
+IGEgc291bmQgdGhlb3JldGljYWwgYmFzaXMuIFRoZSBsb2NrIHZhbGlkYXRvciBpcyBhbg0KaW1w
+b3J0YW50IHRvb2wgZm9yIGtlcm5lbCBkZXZlbG9wZXJzLiBJdCBpcyBpbXBvcnRhbnQgdGhhdCBp
+dCBwcm9kdWNlcyBhcyBmZXcNCmZhbHNlIHBvc2l0aXZlcyBhcyBwb3NzaWJsZS4gU2luY2UgdGhl
+IGNyb3NzLXJlbGVhc2UgY2hlY2tzIGFyZSBlbmFibGVkDQphdXRvbWF0aWNhbGx5IHdoZW4gZW5h
+YmxpbmcgbG9ja2RlcCwgSSB0aGluayBpdCBpcyBub3JtYWwgdGhhdCBJLCBhcyBhIGtlcm5lbA0K
+ZGV2ZWxvcGVyLCBjYXJlIHRoYXQgdGhlIGNyb3NzLXJlbGVhc2UgY2hlY2tzIHByb2R1Y2UgYXMg
+ZmV3IGZhbHNlIHBvc2l0aXZlcw0KYXMgcG9zc2libGUuDQoNCkJhcnQu
