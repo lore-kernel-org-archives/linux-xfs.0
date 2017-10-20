@@ -1,178 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mga09.intel.com ([134.134.136.24]:23820 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750773AbdJTFYM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Oct 2017 01:24:12 -0400
+        id S1750752AbdJTFYL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Oct 2017 01:24:11 -0400
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 2/2] dm log writes: add support for DAX
-Date: Thu, 19 Oct 2017 23:24:04 -0600
-Message-Id: <20171020052404.13762-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
-References: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
+Subject: [PATCH 1/2] dm log writes: Add support for inline data buffers
+Date: Thu, 19 Oct 2017 23:24:03 -0600
+Message-Id: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org, Josef Bacik <jbacik@fb.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-Now that we have the ability log filesystem writes using a flat buffer, add
-support for DAX.  Unfortunately we can't easily track data that has been
-written via mmap() now that the dax_flush() abstraction was removed by this
-commit:
+Currently dm-log-writes supports writing filesystem data via BIOs, and
+writing internal metadata from a flat buffer via write_metadata().
 
-commit c3ca015fab6d ("dax: remove the pmem_dax_ops->flush abstraction")
+For DAX writes, though, we won't have a BIO, but will instead have an
+iterator that we'll want to use to fill a flat data buffer.
 
-Otherwise we could just treat each flush as a big write, and store the data
-that is being synced to media.  It may be worthwhile to add the dax_flush()
-entry point back, just as a notifier so we can do this logging.
-
-The motivation for this support is the need for an xfstest that can test
-the new MAP_SYNC DAX flag.  By logging the filesystem activity with
-dm-log-writes we can show that the MAP_SYNC page faults are writing out
-their metadata as they happen, instead of requiring an explicit
-msync/fsync.
+So, create write_inline_data() which allows us to write filesystem data
+using a flat buffer as a source, and wire it up in log_one_block().
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
-
-Here's a link to Jan's latest MAP_SYNC set, which can be used for the
-fstest:
-
-https://www.spinics.net/lists/linux-xfs/msg11852.html
-
-MAP_SYNC is not needed for basic DAX+dm-log-writes functionality.
-
----
- drivers/md/dm-log-writes.c | 90 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 89 insertions(+), 1 deletion(-)
+ drivers/md/dm-log-writes.c | 90 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 86 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
-index c65f9d1..6a8d352 100644
+index 8b80a9c..c65f9d1 100644
 --- a/drivers/md/dm-log-writes.c
 +++ b/drivers/md/dm-log-writes.c
-@@ -10,9 +10,11 @@
- #include <linux/init.h>
- #include <linux/blkdev.h>
- #include <linux/bio.h>
-+#include <linux/dax.h>
- #include <linux/slab.h>
- #include <linux/kthread.h>
- #include <linux/freezer.h>
-+#include <linux/uio.h>
- 
- #define DM_MSG_PREFIX "log-writes"
- 
-@@ -609,6 +611,50 @@ static int log_mark(struct log_writes_c *lc, char *data)
- 	return 0;
+@@ -246,27 +246,109 @@ static int write_metadata(struct log_writes_c *lc, void *entry,
+ 	return -1;
  }
  
-+static int log_dax(struct log_writes_c *lc, sector_t sector, size_t bytes,
-+		struct iov_iter *i)
++static int write_inline_data(struct log_writes_c *lc, void *entry,
++			  size_t entrylen, void *data, size_t datalen,
++			  sector_t sector)
 +{
-+	struct pending_block *block;
++	int num_pages, bio_pages, pg_datalen, pg_sectorlen, i;
++	struct page *page;
++	struct bio *bio;
++	size_t ret;
++	void *ptr;
 +
-+	if (!bytes)
-+		return 0;
++	while (datalen) {
++		num_pages = ALIGN(datalen, PAGE_SIZE) >> PAGE_SHIFT;
++		bio_pages = min(num_pages, BIO_MAX_PAGES);
 +
-+	block = kzalloc(sizeof(struct pending_block), GFP_KERNEL);
-+	if (!block) {
-+		DMERR("Error allocating dax pending block");
-+		return -ENOMEM;
++		atomic_inc(&lc->io_blocks);
++
++		bio = bio_alloc(GFP_KERNEL, bio_pages);
++		if (!bio) {
++			DMERR("Couldn't alloc inline data bio");
++			goto error;
++		}
++
++		bio->bi_iter.bi_size = 0;
++		bio->bi_iter.bi_sector = sector;
++		bio_set_dev(bio, lc->logdev->bdev);
++		bio->bi_end_io = log_end_io;
++		bio->bi_private = lc;
++		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
++
++		for (i = 0; i < bio_pages; i++) {
++			pg_datalen = min(datalen, PAGE_SIZE);
++			pg_sectorlen = ALIGN(pg_datalen, lc->sectorsize);
++
++			page = alloc_page(GFP_KERNEL);
++			if (!page) {
++				DMERR("Couldn't alloc inline data page");
++				goto error_bio;
++			}
++
++			ptr = kmap_atomic(page);
++			memcpy(ptr, data, pg_datalen);
++			if (pg_sectorlen > pg_datalen)
++				memset(ptr + pg_datalen, 0,
++						pg_sectorlen - pg_datalen);
++			kunmap_atomic(ptr);
++
++			ret = bio_add_page(bio, page, pg_sectorlen, 0);
++			if (ret != pg_sectorlen) {
++				DMERR("Couldn't add page of inline data");
++				__free_page(page);
++				goto error_bio;
++			}
++
++			datalen -= pg_datalen;
++			data	+= pg_datalen;
++		}
++		submit_bio(bio);
++
++		sector += bio_pages * PAGE_SECTORS;
 +	}
-+
-+	block->data = kzalloc(bytes, GFP_KERNEL);
-+	if (!block->data) {
-+		DMERR("Error allocating dax data space");
-+		kfree(block);
-+		return -ENOMEM;
-+	}
-+
-+	/* write data provided via the iterator */
-+	if (!copy_from_iter(block->data, bytes, i)) {
-+		DMERR("Error copying dax data");
-+		kfree(block->data);
-+		kfree(block);
-+		return -EIO;
-+	}
-+
-+	/* rewind the iterator so that the block driver can use it */
-+	iov_iter_revert(i, bytes);
-+
-+	block->datalen = bytes;
-+	block->sector = bio_to_dev_sectors(lc, sector);
-+	block->nr_sectors = ALIGN(bytes, lc->sectorsize) >> lc->sectorshift;
-+
-+	atomic_inc(&lc->pending_blocks);
-+	spin_lock_irq(&lc->blocks_lock);
-+	list_add_tail(&block->list, &lc->unflushed_blocks);
-+	spin_unlock_irq(&lc->blocks_lock);
-+	wake_up_process(lc->log_kthread);
 +	return 0;
++error_bio:
++	bio_free_pages(bio);
++	bio_put(bio);
++error:
++	put_io_block(lc);
++	return -1;
 +}
 +
- static void log_writes_dtr(struct dm_target *ti)
+ static int log_one_block(struct log_writes_c *lc,
+ 			 struct pending_block *block, sector_t sector)
  {
- 	struct log_writes_c *lc = ti->private;
-@@ -874,9 +920,49 @@ static void log_writes_io_hints(struct dm_target *ti, struct queue_limits *limit
- 	limits->io_min = limits->physical_block_size;
- }
+ 	struct bio *bio;
+ 	struct log_write_entry entry;
+-	size_t ret;
++	size_t metadlen, ret;
+ 	int i;
  
-+static long log_writes_dax_direct_access(struct dm_target *ti, pgoff_t pgoff,
-+		long nr_pages, void **kaddr, pfn_t *pfn)
-+{
-+	struct log_writes_c *lc = ti->private;
-+	struct block_device *bdev = lc->dev->bdev;
-+	struct dax_device *dax_dev = lc->dev->dax_dev;
-+	sector_t sector = pgoff * PAGE_SECTORS;
-+	int ret;
+ 	entry.sector = cpu_to_le64(block->sector);
+ 	entry.nr_sectors = cpu_to_le64(block->nr_sectors);
+ 	entry.flags = cpu_to_le64(block->flags);
+ 	entry.data_len = cpu_to_le64(block->datalen);
+-	if (write_metadata(lc, &entry, sizeof(entry), block->data,
+-			   block->datalen, sector)) {
 +
-+	ret = bdev_dax_pgoff(bdev, sector, nr_pages * PAGE_SIZE, &pgoff);
-+	if (ret)
-+		return ret;
-+	return dax_direct_access(dax_dev, pgoff, nr_pages, kaddr, pfn);
-+}
++	metadlen = (block->flags & LOG_MARK_FLAG) ?  block->datalen : 0;
++	if (write_metadata(lc, &entry, sizeof(entry), block->data, metadlen,
++				sector)) {
+ 		free_pending_block(lc, block);
+ 		return -1;
+ 	}
+ 
++	sector += dev_to_bio_sectors(lc, 1);
 +
-+static size_t log_writes_dax_copy_from_iter(struct dm_target *ti,
-+		pgoff_t pgoff, void *addr, size_t bytes, struct iov_iter *i)
-+{
-+	struct log_writes_c *lc = ti->private;
-+	struct block_device *bdev = lc->dev->bdev;
-+	struct dax_device *dax_dev = lc->dev->dax_dev;
-+	sector_t sector = pgoff * PAGE_SECTORS;
-+	int err;
-+
-+	if (bdev_dax_pgoff(bdev, sector, ALIGN(bytes, PAGE_SIZE), &pgoff))
-+		return 0;
-+
-+	/* Don't bother doing anything if logging has been disabled */
-+	if (!lc->logging_enabled)
-+		goto dax_copy;
-+
-+	err = log_dax(lc, sector, bytes, i);
-+	if (err) {
-+		DMWARN("Error %d logging DAX write", err);
-+		return 0;
++	if (block->datalen && metadlen == 0) {
++		if (write_inline_data(lc, &entry, sizeof(entry), block->data,
++					block->datalen, sector)) {
++			free_pending_block(lc, block);
++			return -1;
++		}
++		/* we don't support both inline data & bio data */
++		goto out;
 +	}
-+dax_copy:
-+	return dax_copy_from_iter(dax_dev, pgoff, addr, bytes, i);
-+}
 +
- static struct target_type log_writes_target = {
- 	.name   = "log-writes",
--	.version = {1, 0, 0},
-+	.version = {1, 0, 1},
- 	.module = THIS_MODULE,
- 	.ctr    = log_writes_ctr,
- 	.dtr    = log_writes_dtr,
-@@ -887,6 +973,8 @@ static struct target_type log_writes_target = {
- 	.message = log_writes_message,
- 	.iterate_devices = log_writes_iterate_devices,
- 	.io_hints = log_writes_io_hints,
-+	.direct_access = log_writes_dax_direct_access,
-+	.dax_copy_from_iter = log_writes_dax_copy_from_iter,
- };
+ 	if (!block->vec_cnt)
+ 		goto out;
+-	sector += dev_to_bio_sectors(lc, 1);
  
- static int __init dm_log_writes_init(void)
+ 	atomic_inc(&lc->io_blocks);
+ 	bio = bio_alloc(GFP_KERNEL, min(block->vec_cnt, BIO_MAX_PAGES));
 -- 
 2.9.5
 
