@@ -1,45 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr003msb.fastweb.it ([85.18.95.87]:37162 "EHLO
-        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751688AbdJ3SSx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2017 14:18:53 -0400
-Received: from ceres.assyoma.it (93.63.55.57) by mr003msb.fastweb.it (8.5.140.05)
-        id 59F55C200011C4F7 for linux-xfs@vger.kernel.org; Mon, 30 Oct 2017 19:18:51 +0100
-Subject: Re: XFS and reflink status
+Received: from mga03.intel.com ([134.134.136.65]:11407 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752418AbdJTVrz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Oct 2017 17:47:55 -0400
+Date: Fri, 20 Oct 2017 15:47:53 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
+ MAP_SYNC
+Message-ID: <20171020214753.GA15733@linux.intel.com>
+References: <20171019125817.11580-1-jack@suse.cz>
+ <20171019125817.11580-19-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Mon, 30 Oct 2017 19:18:50 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <196c0ee7f2899dd52c3ea6ca979a8050@assyoma.it>
-References: <196c0ee7f2899dd52c3ea6ca979a8050@assyoma.it>
-Message-ID: <9865ce233e5adb537347621b6f3bf1e4@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171019125817.11580-19-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: g.danti@assyoma.it
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org
 
-Il 22-10-2017 21:13 Gionatan Danti ha scritto:
-> Hi all,
-> I would like to know the current XFS reflink status, especially if it
-> still an experimental feature or not.
+On Thu, Oct 19, 2017 at 02:58:17PM +0200, Jan Kara wrote:
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  man2/mmap.2 | 30 ++++++++++++++++++++++++++++++
+>  1 file changed, 30 insertions(+)
 > 
-> In one of the latest discussion I found [1], reflink is still marked
-> as experimental/not stable. Any changes on that? If not, do you have
-> any ETA on declaring it stable?
-> 
-> [1] https://www.spinics.net/lists/linux-xfs/msg08107.html
+> diff --git a/man2/mmap.2 b/man2/mmap.2
+> index 47c3148653be..598ff0c64f7f 100644
+> --- a/man2/mmap.2
+> +++ b/man2/mmap.2
+> @@ -125,6 +125,21 @@ are carried through to the underlying file.
+>  to the underlying file requires the use of
+>  .BR msync (2).)
+>  .TP
+> +.B MAP_SHARED_VALIDATE
+> +The same as
+> +.B MAP_SHARED
+> +except that
+> +.B MAP_SHARED
+> +mappings ignore unknown flags in
+> +.IR flags .
+> +In contrast when creating mapping of
+> +.B MAP_SHARED_VALIDATE
+> +mapping type, the kernel verifies all passed flags are known and fails the
+> +mapping with
+> +.BR EOPNOTSUPP
+> +otherwise. This mapping type is also required to be able to use some mapping
+> +flags.
+> +.TP
 
-Hi all and sorry for the bump,
-any news on the subject?
+Some small nits:
 
-Thanks.
+I think you should maybe include a "(since Linux 4.15)" type note after the
+MAP_SHARED_VALIDATE header.  You also need to update the following line:
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+       Both of these flags are described in POSIX.1-2001 and POSIX.1-2008.
+
+Which used to refer to MAP_SYNC and MAP_PRIVATE.
