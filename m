@@ -1,49 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47783 "EHLO newverein.lst.de"
+Received: from mga09.intel.com ([134.134.136.24]:35826 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752074AbdJTJbv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Oct 2017 05:31:51 -0400
-Date: Fri, 20 Oct 2017 11:31:48 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove
-        'page-less' support
-Message-ID: <20171020093148.GA20304@lst.de>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com> <20171020074750.GA13568@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171020074750.GA13568@lst.de>
+        id S1752793AbdJTLPz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Oct 2017 07:15:55 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 0/5] xfs refcount conversions
+Date: Fri, 20 Oct 2017 14:07:53 +0300
+Message-Id: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, hch@lst.de, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-nvdimm@lists.01.org, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: darrick.wong@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, peterz@infradead.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>
 
-On Fri, Oct 20, 2017 at 09:47:50AM +0200, Christoph Hellwig wrote:
-> I'd like to brainstorm how we can do something better.
-> 
-> How about:
-> 
-> If we hit a page with an elevated refcount in truncate / hole puch
-> etc for a DAX file system we do not free the blocks in the file system,
-> but add it to the extent busy list.  We mark the page as delayed
-> free (e.g. page flag?) so that when it finally hits refcount zero we
-> call back into the file system to remove it from the busy list.
+Note: our previous thread didn't finish in any conclusion, so
+I am resending this now (rebased at latest linux-next) to revive
+the discussion. refcount_t is slowly becoming a standard for
+refcounters and we would really like to make all conversions
+done where it is applicable.
 
-Brainstorming some more:
+******
 
-Given that on a DAX file there shouldn't be any long-term page
-references after we unmap it from the page table and don't allow
-get_user_pages calls why not wait for the references for all
-DAX pages to go away first?  E.g. if we find a DAX page in
-truncate_inode_pages_range that has an elevated refcount we set
-a new flag to prevent new references from showing up, and then
-simply wait for it to go away.  Instead of a busy way we can
-do this through a few hashed waitqueued in dev_pagemap.  And in
-fact put_zone_device_page already gets called when putting the
-last page so we can handle the wakeup from there.
+This series, for xfs, replaces atomic_t reference
+counters with the new refcount_t type and API (see include/linux/refcount.h).
+By doing this we prevent intentional or accidental
+underflows or overflows that can lead to use-after-free vulnerabilities.
 
-In fact if we can't find a page flag for the stop new callers
-things we could probably come up with a way to do that through
-dev_pagemap somehow, but I'm not sure how efficient that would
-be.
+The patches are fully independent and can be cherry-picked separately.
+If there are no objections to the patches, please merge them via respective trees.
+
+Elena Reshetova (5):
+  fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
+  fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to
+    refcount_t
+
+ fs/xfs/xfs_bmap_item.c     |  6 +++---
+ fs/xfs/xfs_bmap_item.h     |  2 +-
+ fs/xfs/xfs_extfree_item.c  |  6 +++---
+ fs/xfs/xfs_extfree_item.h  |  2 +-
+ fs/xfs/xfs_linux.h         |  1 +
+ fs/xfs/xfs_log.c           | 10 +++++-----
+ fs/xfs/xfs_log_priv.h      |  2 +-
+ fs/xfs/xfs_refcount_item.c |  6 +++---
+ fs/xfs/xfs_refcount_item.h |  2 +-
+ fs/xfs/xfs_rmap_item.c     |  6 +++---
+ fs/xfs/xfs_rmap_item.h     |  2 +-
+ 11 files changed, 23 insertions(+), 22 deletions(-)
+
+-- 
+2.7.4
+
