@@ -1,54 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:43547 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752041AbdJTW36 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 18:29:58 -0400
-Received: by mail-oi0-f66.google.com with SMTP id c77so22475465oig.0
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Oct 2017 15:29:58 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10061 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752653AbdJTXVO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 19:21:14 -0400
+Date: Sat, 21 Oct 2017 10:21:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/5] xfs refcount conversions
+Message-ID: <20171020232111.GT3666@dastard>
+References: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20171020162933.GA26320@lst.de>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150846714747.24336.14704246566580871364.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171020075735.GA14378@lst.de> <CAPcyv4hA1nrhDf=DA6_j7s7ezGOBhvEVZ8cu81DNui_p3bhhaA@mail.gmail.com>
- <20171020162933.GA26320@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 20 Oct 2017 15:29:57 -0700
-Message-ID: <CAPcyv4jP0ws7dcBrXafS7ON+0_J1BTp_LCB6XB3od4d6db071A@mail.gmail.com>
-Subject: Re: [PATCH v3 02/13] dax: require 'struct page' for filesystem dax
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, peterz@infradead.org, keescook@chromium.org
 
-On Fri, Oct 20, 2017 at 9:29 AM, Christoph Hellwig <hch@lst.de> wrote:
-> On Fri, Oct 20, 2017 at 08:23:02AM -0700, Dan Williams wrote:
->> Yes, however it seems these drivers / platforms have been living with
->> the lack of struct page for a long time. So they either don't use DAX,
->> or they have a constrained use case that never triggers
->> get_user_pages(). If it is the latter then they could introduce a new
->> configuration option that bypasses the pfn_t_devmap() check in
->> bdev_dax_supported() and fix up the get_user_pages() paths to fail.
->> So, I'd like to understand how these drivers have been using DAX
->> support without struct page to see if we need a workaround or we can
->> go ahead delete this support. If the usage is limited to
->> execute-in-place perhaps we can do a constrained ->direct_access() for
->> just that case.
->
-> For axonram I doubt anyone is using it any more - it was a very for
-> the IBM Cell blades, which were produce=D1=95 in a rather limited number.
-> And Cell basically seems to be dead as far as I can tell.
->
-> For S/390 Martin might be able to help out what the status of xpram
-> in general and DAX support in particular is.
+On Fri, Oct 20, 2017 at 02:07:53PM +0300, Elena Reshetova wrote:
+> Note: our previous thread didn't finish in any conclusion, so
+> I am resending this now (rebased at latest linux-next) to revive
+> the discussion. refcount_t is slowly becoming a standard for
+> refcounters and we would really like to make all conversions
+> done where it is applicable.
 
-Ok, I'd also like to kill DAX support in the brd driver. It's a source
-of complexity and maintenance burden for zero benefit. It's the only
-->direct_access() implementation that sleeps and it's the only
-implementation where there is a non-linear relationship between
-sectors and pfns. Having a 1:1 sector to pfn relationship will help
-with the dma-extent-busy management since we don't need to keep
-calling into the driver to map pfns back to sectors once we know the
-pfn[0] sector[0] relationship.
+In a separate "replace atomics with refcounts" discussion, the
+ordering guarantees of refcounts was raised:
+
+https://lkml.org/lkml/2017/9/4/206
+
+i.e. refcounts use weak ordering whilst atomics imply a smp_mb()
+operation was performed.
+
+Given these counters in XFS directly define the life cycle states
+rather than being just an object refcount, I'm pretty sure they
+rely on the implied smp_mb() that the atomic operations provide to
+work correctly.
+
+Let me put it this way: Documentation/memory-barriers.txt breaks my
+brain.
+
+We know atomics provide the barriers we need for the code to work
+correctly, but using anything else requires understanding the
+ordering of the new code and what Documentation/memory-barriers.txt
+says that means.
+
+IMO, that makes it way too hard to review sanely for code that:
+
+	a) we already know works correctly
+	b) has guards against reference count problems; and
+	c) isn't performance critical, so doesn't need the
+	   complexity of tricky memory ordering and/or barriers.
+
+So, really, it comes down to the fact that we know refcount_t is not
+a straight drop in replacement for atomics, and that actually
+verifying the change is correct requires an in depth understanding
+of Documentation/memory-barriers.txt. IMO, that's way too much of a
+long term maintenance and knowledge burden to add to what is a
+simple set of reference counters...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
