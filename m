@@ -1,87 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31671 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753269AbdJTR51 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 13:57:27 -0400
-Date: Fri, 20 Oct 2017 10:56:48 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:27171 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751656AbdJTSAz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 14:00:55 -0400
+Date: Fri, 20 Oct 2017 11:00:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/5] generic/45[34]: force UTF-8 codeset to enable utf-8
- namer checks in xfs_scrub
-Message-ID: <20171020175648.GA4741@magnolia>
-References: <150836985024.27213.3715197937819365388.stgit@magnolia>
- <150836987529.27213.1335818370452284585.stgit@magnolia>
- <20171019071842.GA28970@infradead.org>
+Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
+ recovered buffers")
+Message-ID: <20171020180040.GZ4755@magnolia>
+References: <20171013184916.GS7122@magnolia>
+ <20171014115550.GB50635@bfoster.bfoster>
+ <20171014190530.GA4594@magnolia>
+ <20171016212933.GG15067@dastard>
+ <20171016221818.GQ4703@magnolia>
+ <20171020151610.GD13669@bfoster.bfoster>
+ <20171020164406.GW4755@magnolia>
+ <20171020165940.GE13669@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171019071842.GA28970@infradead.org>
+In-Reply-To: <20171020165940.GE13669@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 12:18:42AM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 18, 2017 at 04:37:55PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 20, 2017 at 12:59:41PM -0400, Brian Foster wrote:
+> On Fri, Oct 20, 2017 at 09:44:06AM -0700, Darrick J. Wong wrote:
+> > On Fri, Oct 20, 2017 at 11:16:10AM -0400, Brian Foster wrote:
+> > > On Mon, Oct 16, 2017 at 03:18:18PM -0700, Darrick J. Wong wrote:
+> > > > On Tue, Oct 17, 2017 at 08:29:33AM +1100, Dave Chinner wrote:
+> > > > > On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
+> > > > > > On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
+> > > > > > > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
+> > > > > > > > Hi all,
+> > > > > > > > 
+> > > > > > > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
+> > > > > > > > recovered buffers").  I was analyzing a scrub failure on generic/392
+> > > > > > > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
+> > > > > > > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
+> > > > > > > > and signalling error.
+> > > > > > > > 
+> > > > > > > > The pattern I observe is that when log recovery runs on a v4 filesystem,
+> > > > > > > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
+> > > > > > > > buffer therefore gets created and read without any verifiers.
+> > > > > > > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
+> > > > > > > > filesystem we come back and attach verifiers and all is well.  However,
+> > > > > > > > on a v4 filesystem the function returns without doing anything, so the
+> > > > > > > > xfs_buf just sits around in memory with no verifier.  Subsequent
+> > > > > > > > read/log/relse patterns can write anything they want without write
+> > > > > > > > verifiers to check that.
+> > > > > > > > 
+> > > > > > > > If the v4 fs didn't need log recovery, the buffers get created with
+> > > > > > > > b_ops as you'd expect.
+> > > > > > > > 
+> > > > > > > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
+> > > > > > > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
+> > > > > > > > LSN is up to date?
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Seems reasonable, but I notice that the has_crc() check around
+> > > > > > > _validate_buf_type() comes in sometime after the the original commit
+> > > > > > > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
+> > > > > > > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
+> > > > > > > errors").
+> > > > > > > 
+> > > > > > > IIRC, the problem there is that log recovery had traditionally always
+> > > > > > > unconditionally replayed everything in the log over whatever resides in
+> > > > > > > the fs. This actually meant that recovery could transiently corrupt
+> > > > > > > buffers in certain cases if the target buffer happened to be relogged
+> > > > > > > more than once and was already up to date, which leads to verification
+> > > > > > > failures. This was addressed for v5 filesystems with LSN ordering rules,
+> > > > > > > but the challenge for v4 filesystems was that there is no metadata LSN
+> > > > > > > and thus no means to detect whether a buffer is already up to date with
+> > > > > > > regard to a transaction in the log.
+> > > > > > > 
+> > > > > > > Dave might have more historical context to confirm that... If that is
+> > > > > > > still an open issue, a couple initial ideas come to mind:
+> > > > > > > 
+> > > > > > > 1.) Do something simple/crude like reclaim all buffers after log
+> > > > > > > recovery on v4 filesystems to provide a clean slate going forward.
+> > > > > > > 
+> > > > > > > 2.) Unconditionally attach verifiers during recovery as originally done
+> > > > > > > and wire up something generic that short circuits verifier invocations
+> > > > > > > on v4 filesystems when log recovery is in progress.
+> > > > > > 
+> > > > > > What do you think about 3) add b_ops later if they're missing?
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > > > > index 2f97c12..8842a27 100644
+> > > > > > --- a/fs/xfs/xfs_buf.c
+> > > > > > +++ b/fs/xfs/xfs_buf.c
+> > > > > > @@ -742,6 +742,15 @@ xfs_buf_read_map(
+> > > > > >         if (bp) {
+> > > > > >                 trace_xfs_buf_read(bp, flags, _RET_IP_);
+> > > > > >  
+> > > > > > +               /*
+> > > > > > +                * If this buffer is up to date and has no verifier, try
+> > > > > > +                * to set one.  This can happen on v4 because log
+> > > > > > +                * recovery reads in the buffers for replay but does not
+> > > > > > +                * set b_ops.
+> > > > > > +                */
+> > > > > > +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
+> > > > > > +                       bp->b_ops = ops;
+> > > > > 
+> > > > > I don't really like this because it will hide bugs in the code.
+> > > > > 
+> > > > > It also doesn't solve the problem because a read with NULL ops will
+> > > > > still leave a buffer with no ops attached.
+> > > > > 
+> > > > > IMO, if we've read/created a buffer without ops, then it is up to
+> > > > > the code that created/read it to either attach the required ops
+> > > > > before the buffer is released or to invalidate the buffer before
+> > > > > anyone else can use it or write it. The buffer write code warns
+> > > > > about writing buffers without verfiers, but we can't warn on read
+> > > > > because read-with-NULL-verifier is a valid thing to do....
+> > > > 
+> > > > Fair 'nuff.  FWIW I'm ok with approach #1 if anyone enthusiastically
+> > > > wants to write it up.
+> > > > 
+> > > 
+> > > What do you guys think about something like this? It runs
+> > > unconditionally, but this is partly as designed to provide a clean cache
+> > > on v5 filesystems as well. It should be mostly unnoticeable if log
+> > > recovery hasn't run, but we could easily add another flag to make it
+> > > conditional on log recovery if desired.
+> > > 
+> > > Brian
+> > > 
+> > > --- 8< ---
+> > > 
+> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > index dc95a49..226d26b 100644
+> > > --- a/fs/xfs/xfs_log.c
+> > > +++ b/fs/xfs/xfs_log.c
+> > > @@ -780,6 +780,16 @@ xfs_log_mount_finish(
+> > >  	mp->m_super->s_flags &= ~MS_ACTIVE;
+> > >  	evict_inodes(mp->m_super);
+> > >  
+> > > +	/*
+> > > +	 * Drain the buffer LRU after log recovery. This is required for
+> > > +	 * v4 filesystems to avoid leaving around buffers with NULL verifier
+> > > +	 * ops. Do it unconditionally to make sure we're always in a clean cache
+> > > +	 * state after mount.
+> > > +	 */
+> > > +	xfs_log_force(mp, XFS_LOG_SYNC);
+> > > +	xfs_ail_push_all_sync(mp->m_ail);
 > > 
-> > The upcoming xfs_scrub tool will have the ability to warn about
-> > suspicious UTF-8 normalization collisions.  We want generic/45[34] to be
-> > able to test this functionality, but to do that we have to forcibly set
-> > the codeset to UTF-8 via LC_ALL since the rest of xfstests only uses
-> > LC_ALL=C.
+> > Is it necessary to force the log & push the AIL even if recovery didn't run?
+> > 
 > 
-> Wait.  Where do you want to validate UTF-8 normalization?  There is
-> absolutely no guarantee that someone uses UTF-8, so any reliance on
-> the character set in the file system is bogus.
+> Don't think so.. As noted above, I just did this because it's basically
+> unnoticeable if log recovery didn't run and it avoids the need to add a
+> flag. I can add one if that is preferred, or thinking about it again I
+> suppose we could just sample for XLOG_RECOVERY_NEEDED before we call
+> xlog_recover_finish() (which clears it).
+> 
+> > > +	xfs_wait_buftarg(mp->m_ddev_targp);
+> > 
+> > Otherwise, looks ok enough I'll see if it fixes the scrub failures that
+> > inspired my original email. :)
+> > 
+> 
+> Thanks, let me know.
 
-I'll start by summarizing a problem statement[1].  In XFS (and nearly
-all the other filesystems), neither the on-disk format nor the kernel
-driver care about the contents of file names or attribute names; they
-treat these as an arbitrary byte sequence.  Userspace can set whatever
-localization and encoding parameters it wants, and the kernel doesn't
-care except for '\0' and '/'.  That doesn't change.
+This seems to fix the scrub problems running generic/392 xfs/121 xfs/181
+on a v4 filesystem.
 
-In modern Linux userspace, however, we /do/ care about being able to
-encode Unicode codepoints into byte streams, so we encode them in UTF8.
-Because there's two different normalization methods in Unicode, this
-leads to the funny situation where two unique filename byte sequences
-can render the same but point to totally different files:
-
-$ echo NFC > "$(echo -e "french_caf\xc3\xa9.txt")"
-$ echo NFD > "$(echo -e "french_caf\xcc\x81.txt")"
-$ ls -lai
-133 -rw-r--r-- 1 root root   4 Oct 20 10:40 french_café.txt
-132 -rw-r--r-- 1 root root   4 Oct 20 10:40 french_café.txt
-$ echo $LANG
-en_US.UTF-8
-
-At least on my computer, the two filenames render identically yet point
-to different inodes.  This could be used to mislead people into opening
-a malicious file whose name appears identical to a legitimate file.
-
-xfs_scrub is the (proposed) userspace component of XFS online fsck.  The
-first four phases simply call the in-kernel fsck code and pass status
-back, but the fifth phase walks the directory tree looking for problems.
-
-If xfs_scrub (the userspace component of online fsck) was built with
-libunistring and the LC_MESSAGES string contains "UTF-8", phase 5 will
-warn if it finds multiple filenames in a directory that normalize to the
-same string but point to different inodes.  Similarly, it will warn
-about colliding attribute names.  Warnings in xfs_scrub are for
-situations that warrant administrative review but are not filesystem
-corruptions.
-
-IOWs, if userspace is configured for UTF-8, the userspace part of online
-fsck will flag suspicious-looking uses of Unicode for admin review.  The
-kernel remains uninvolved.
+(Note that you have to have built the djwong-devel branches of the
+kernel and xfsprogs in order for xfstests to trip over the verifier-less
+buffers.  The particular patch is "xfs: scrub in-core metadata".)
 
 --D
 
-[1] https://eclecticlight.co/2017/04/06/apfs-is-currently-unusable-with-most-non-english-languages/
-
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > +
+> > >  	if (readonly)
+> > >  		mp->m_flags |= XFS_MOUNT_RDONLY;
+> > >  
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
