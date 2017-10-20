@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:20154 "EHLO mga06.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:44650 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750964AbdJTCqL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Oct 2017 22:46:11 -0400
-Subject: [PATCH v3 09/13] IB/core: disable memory registration of
- fileystem-dax vmas
+        id S1752617AbdJTCqe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Oct 2017 22:46:34 -0400
+Subject: [PATCH v3 13/13] xfs: wire up FL_ALLOCATED support
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 19 Oct 2017 19:39:45 -0700
-Message-ID: <150846718583.24336.7817353741483230017.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 19 Oct 2017 19:40:08 -0700
+Message-ID: <150846720846.24336.10565514769202466327.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -17,113 +16,224 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: Sean Hefty <sean.hefty@intel.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, hch@lst.de, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-mm@kvack.org, Doug Ledford <dledford@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, hch@lst.de, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Until there is a solution to the dma-to-dax vs truncate problem it is
-not safe to allow RDMA to create long standing memory registrations
-against filesytem-dax vmas. Device-dax vmas do not have this problem and
-are explicitly allowed.
+Before xfs can be sure that it is safe to truncate it needs to hold
+XFS_MMAP_LOCK_EXCL and flush any FL_ALLOCATED leases.  Introduce
+xfs_break_allocated() modeled after xfs_break_layouts() for use in the
+file space deletion path.
 
-This is temporary until a "memory registration with layout-lease"
-mechanism can be implemented, and is limited to non-ODP (On Demand
-Paging) capable RDMA devices.
+We also use a new address_space_operation for the fs/dax core to
+coordinate reaping these leases in the case where there is no active
+truncate process to reap them.
 
-Cc: Sean Hefty <sean.hefty@intel.com>
-Cc: Doug Ledford <dledford@redhat.com>
-Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: Jan Kara <jack@suse.cz>
 Cc: Jeff Moyer <jmoyer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: <linux-rdma@vger.kernel.org>
+Cc: Jeff Layton <jlayton@poochiereds.net>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/infiniband/core/umem.c |   49 +++++++++++++++++++++++++++++++---------
- 1 file changed, 38 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_aops.c  |   24 ++++++++++++++++++++
+ fs/xfs/xfs_file.c  |   64 ++++++++++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_inode.h |    1 +
+ fs/xfs/xfs_ioctl.c |    7 ++----
+ 4 files changed, 86 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/infiniband/core/umem.c b/drivers/infiniband/core/umem.c
-index 21e60b1e2ff4..c30d286c1f24 100644
---- a/drivers/infiniband/core/umem.c
-+++ b/drivers/infiniband/core/umem.c
-@@ -147,19 +147,21 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
- 	umem->hugetlb   = 1;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f18e5932aec4..00da08d0d6db 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1455,6 +1455,29 @@ xfs_vm_set_page_dirty(
+ 	return newly_dirty;
+ }
  
- 	page_list = (struct page **) __get_free_page(GFP_KERNEL);
--	if (!page_list) {
--		put_pid(umem->pid);
--		kfree(umem);
--		return ERR_PTR(-ENOMEM);
--	}
-+	if (!page_list)
-+		goto err_pagelist;
++/*
++ * Reap any in-flight FL_ALLOCATE leases when the pages represented by
++ * that lease are no longer under dma. We hold XFS_MMAPLOCK_EXCL to
++ * synchronize with the file space deletion path that may be doing the
++ * same operation.
++ */
++static void
++xfs_vm_dax_flush_dma(
++	struct inode		*inode)
++{
++	uint			iolock = XFS_MMAPLOCK_EXCL;
++
++	/*
++	 * try to catch cases where the inode dax mode was changed
++	 * without first synchronizing leases
++	 */
++	WARN_ON_ONCE(!IS_DAX(inode));
++
++	xfs_ilock(XFS_I(inode), iolock);
++	xfs_break_allocated(inode, &iolock);
++	xfs_iunlock(XFS_I(inode), iolock);
++}
++
+ const struct address_space_operations xfs_address_space_operations = {
+ 	.readpage		= xfs_vm_readpage,
+ 	.readpages		= xfs_vm_readpages,
+@@ -1468,4 +1491,5 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.migratepage		= buffer_migrate_page,
+ 	.is_partially_uptodate  = block_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
++	.dax_flush_dma		= xfs_vm_dax_flush_dma,
+ };
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c6780743f8ec..5bc72f1da301 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -40,6 +40,7 @@
+ #include "xfs_iomap.h"
+ #include "xfs_reflink.h"
+ 
++#include <linux/dax.h>
+ #include <linux/dcache.h>
+ #include <linux/falloc.h>
+ #include <linux/pagevec.h>
+@@ -746,6 +747,39 @@ xfs_file_write_iter(
+ 	return ret;
+ }
+ 
++/*
++ * DAX breaks the traditional truncate model that assumes in-flight DMA
++ * to a file-backed page can continue until the final put of the page
++ * regardless of that page's relationship to the file. In the case of
++ * DAX the page has 1:1 relationship with filesytem blocks. We need to
++ * hold off truncate while any DMA might be in-flight. This assumes that
++ * all DMA usage is transient, any non-transient usages of
++ * get_user_pages must be disallowed for DAX files.
++ *
++ * This also unlocks FL_LAYOUT leases.
++ */
++int
++xfs_break_allocated(
++	struct inode		*inode,
++	uint			*iolock)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	int			error;
++
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL
++				| XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL));
++
++	while ((error = break_allocated(inode, false) == -EWOULDBLOCK)) {
++		xfs_iunlock(ip, *iolock);
++		error = break_allocated(inode, true);
++		*iolock &= ~XFS_MMAPLOCK_SHARED|XFS_IOLOCK_SHARED;
++		*iolock |= XFS_MMAPLOCK_EXCL|XFS_IOLOCK_EXCL;
++		xfs_ilock(ip, *iolock);
++	}
++
++	return error;
++}
++
+ #define	XFS_FALLOC_FL_SUPPORTED						\
+ 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
+ 		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
+@@ -762,7 +796,7 @@ xfs_file_fallocate(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	long			error;
+ 	enum xfs_prealloc_flags	flags = 0;
+-	uint			iolock = XFS_IOLOCK_EXCL;
++	uint			iolock = XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL;
+ 	loff_t			new_size = 0;
+ 	bool			do_file_insert = 0;
+ 
+@@ -772,13 +806,10 @@ xfs_file_fallocate(
+ 		return -EOPNOTSUPP;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock);
++	error = xfs_break_allocated(inode, &iolock);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
+-
+ 	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		error = xfs_free_file_space(ip, offset, len);
+ 		if (error)
+@@ -1136,6 +1167,28 @@ xfs_file_mmap(
+ 	return 0;
+ }
+ 
++/*
++ * Any manipulation of FL_ALLOCATED leases need to be coordinated with
++ * XFS_MMAPLOCK_EXCL to synchronize get_user_pages() + DMA vs truncate.
++ */
++static int
++xfs_file_setlease(
++	struct file		*filp,
++	long			arg,
++	struct file_lock	**flp,
++	void			**priv)
++{
++	struct inode		*inode = file_inode(filp);
++	struct xfs_inode 	*ip = XFS_I(inode);
++	uint			iolock = XFS_MMAPLOCK_EXCL;
++	int			error;
++
++	xfs_ilock(ip, iolock);
++	error = generic_setlease(filp, arg, flp, priv);
++	xfs_iunlock(ip, iolock);
++	return error;
++}
++
+ const struct file_operations xfs_file_operations = {
+ 	.llseek		= xfs_file_llseek,
+ 	.read_iter	= xfs_file_read_iter,
+@@ -1154,6 +1207,7 @@ const struct file_operations xfs_file_operations = {
+ 	.fallocate	= xfs_file_fallocate,
+ 	.clone_file_range = xfs_file_clone_range,
+ 	.dedupe_file_range = xfs_file_dedupe_range,
++	.setlease	= xfs_file_setlease,
+ };
+ 
+ const struct file_operations xfs_dir_file_operations = {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 0ee453de239a..e0d421884fe4 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -445,6 +445,7 @@ int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
+ 		     xfs_fsize_t isize, bool *did_zeroing);
+ int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
+ 		bool *did_zero);
++int	xfs_break_allocated(struct inode *inode, uint *iolock);
+ 
+ /* from xfs_iops.c */
+ extern void xfs_setup_inode(struct xfs_inode *ip);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index aa75389be8cf..5be60c74bede 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -612,7 +612,7 @@ xfs_ioc_space(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct iattr		iattr;
+ 	enum xfs_prealloc_flags	flags = 0;
+-	uint			iolock = XFS_IOLOCK_EXCL;
++	uint			iolock = XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL;
+ 	int			error;
  
  	/*
--	 * if we can't alloc the vma_list, it's not so bad;
--	 * just assume the memory is not hugetlb memory
-+	 * If DAX is enabled we need the vma to protect against
-+	 * registering filesystem-dax memory. Otherwise we can tolerate
-+	 * a failure to allocate the vma_list and just assume that all
-+	 * vmas are not hugetlb-vmas.
- 	 */
- 	vma_list = (struct vm_area_struct **) __get_free_page(GFP_KERNEL);
--	if (!vma_list)
-+	if (!vma_list) {
-+		if (IS_ENABLED(CONFIG_FS_DAX))
-+			goto err_vmalist;
- 		umem->hugetlb = 0;
-+	}
+@@ -642,13 +642,10 @@ xfs_ioc_space(
+ 		return error;
  
- 	npages = ib_umem_num_pages(umem);
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock);
++	error = xfs_break_allocated(inode, &iolock);
+ 	if (error)
+ 		goto out_unlock;
  
-@@ -199,15 +201,34 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
- 		if (ret < 0)
- 			goto out;
- 
--		umem->npages += ret;
- 		cur_base += ret * PAGE_SIZE;
- 		npages   -= ret;
- 
- 		for_each_sg(sg_list_start, sg, ret, i) {
--			if (vma_list && !is_vm_hugetlb_page(vma_list[i]))
--				umem->hugetlb = 0;
-+			struct vm_area_struct *vma;
-+			struct inode *inode;
- 
- 			sg_set_page(sg, page_list[i], PAGE_SIZE, 0);
-+			umem->npages++;
-+
-+			if (!vma_list)
-+				continue;
-+			vma = vma_list[i];
-+
-+			if (!is_vm_hugetlb_page(vma))
-+				umem->hugetlb = 0;
-+
-+			if (!vma_is_dax(vma))
-+				continue;
-+
-+			/* device-dax is safe for rdma... */
-+			inode = file_inode(vma->vm_file);
-+			if (inode->i_mode == S_IFCHR)
-+				continue;
-+
-+			/* ...filesystem-dax is not. */
-+			ret = -EOPNOTSUPP;
-+			goto out;
- 		}
- 
- 		/* preparing for next loop */
-@@ -242,6 +263,12 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
- 	free_page((unsigned long) page_list);
- 
- 	return ret < 0 ? ERR_PTR(ret) : umem;
-+err_vmalist:
-+	free_page((unsigned long) page_list);
-+err_pagelist:
-+	put_pid(umem->pid);
-+	kfree(umem);
-+	return ERR_PTR(-ENOMEM);
- }
- EXPORT_SYMBOL(ib_umem_get);
- 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
+-
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+ 		break;
 
