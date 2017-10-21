@@ -1,66 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:47183 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbdJUCYB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 22:24:01 -0400
+Received: from bombadil.infradead.org ([65.50.211.133]:46969 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751828AbdJUDUS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 23:20:18 -0400
+Date: Fri, 20 Oct 2017 20:20:08 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v3 02/13] dax: require 'struct page' for filesystem dax
+Message-ID: <20171021032008.GA27694@bombadil.infradead.org>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150846714747.24336.14704246566580871364.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171020075735.GA14378@lst.de>
+ <CAPcyv4hA1nrhDf=DA6_j7s7ezGOBhvEVZ8cu81DNui_p3bhhaA@mail.gmail.com>
+ <20171020162933.GA26320@lst.de>
+ <CAPcyv4jP0ws7dcBrXafS7ON+0_J1BTp_LCB6XB3od4d6db071A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1508529532.3029.15.camel@wdc.com>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
- <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
- <1508455438.4542.4.camel@wdc.com> <alpine.DEB.2.20.1710200829340.3083@nanos> <1508529532.3029.15.camel@wdc.com>
-From: Byungchul Park <max.byungchul.park@gmail.com>
-Date: Sat, 21 Oct 2017 11:23:58 +0900
-Message-ID: <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
-Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
- completion with lockdep_map
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jP0ws7dcBrXafS7ON+0_J1BTp_LCB6XB3od4d6db071A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "tglx@linutronix.de" <tglx@linutronix.de>, "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "oleg@redhat.com" <oleg@redhat.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "byungchul.park@lge.com" <byungchul.park@lge.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 
-On Sat, Oct 21, 2017 at 4:58 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> Sorry but I'm not sure that's the best possible answer. In my opinion
-> avoiding that completion objects have dependencies on other lock objects,
-> e.g. by avoiding to wait on a completion object while holding a mutex, is a
-> far superior strategy over adding cross-release checking to completion
-> objects. The former strategy namely makes it unnecessary to add
-> cross-release checking to completion objects because that strategy ensures
-> that these completion objects cannot get involved in a deadlock. The latter
+On Fri, Oct 20, 2017 at 03:29:57PM -0700, Dan Williams wrote:
+> Ok, I'd also like to kill DAX support in the brd driver. It's a source
+> of complexity and maintenance burden for zero benefit. It's the only
+> ->direct_access() implementation that sleeps and it's the only
+> implementation where there is a non-linear relationship between
+> sectors and pfns. Having a 1:1 sector to pfn relationship will help
+> with the dma-extent-busy management since we don't need to keep
+> calling into the driver to map pfns back to sectors once we know the
+> pfn[0] sector[0] relationship.
 
-It's true if we force it. But do you think it's possible?
+But these are important things that other block devices may / will want.
 
-> strategy can lead to false positive deadlock reports by the lockdep code,
+For example, I think it's entirely sensible to support ->direct_access
+for RAID-0.  Dell are looking at various different options for having
+one pmemX device per DIMM and using RAID to lash them together.
+->direct_access makes no sense for RAID-5 or RAID-1, but RAID-0 makes
+sense to me.
 
-What do you think false positives come from? It comes from assigning
-lock classes falsely where we should more care, rather than lockdep code
-itself. The same is applicable to cross-release.
-
-> something none of us wants.
->
-> A possible alternative strategy could be to enable cross-release checking
-> only for those completion objects for which waiting occurs inside a critical
-> section.
-
-Of course, it already did. Cross-release doesn't consider any waiting
-outside of critical sections at all, and it should do.
-
-> As explained in another e-mail thread, unlike the lock inversion checking
-> performed by the <= v4.13 lockdep code, cross-release checking is a heuristic
-> that does not have a sound theoretical basis. The lock validator is an
-
-It's not heuristic but based on the same theoretical basis as <=4.13
-lockdep. I mean, the key basis is:
-
-   1) What causes deadlock
-   2) What is a dependency
-   3) Build a dependency when identified
-
-> important tool for kernel developers. It is important that it produces as few
-> false positives as possible. Since the cross-release checks are enabled
-> automatically when enabling lockdep, I think it is normal that I, as a kernel
-> developer, care that the cross-release checks produce as few false positives
-> as possible.
-
-No doubt. That's why I proposed these patches.
+Last time we tried to take sleeping out, there were grumblings from people
+with network block devices who thought they'd want to bring pages in
+across the network.  I'm a bit less sympathetic to this because I don't
+know anyone actively working on it, but the RAID-0 case is something I
+think we should care about.
