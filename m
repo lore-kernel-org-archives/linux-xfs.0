@@ -1,33 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52329 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:52338 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751874AbdJUILm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 21 Oct 2017 04:11:42 -0400
-Date: Sat, 21 Oct 2017 10:11:40 +0200
+        id S1752854AbdJUINP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 21 Oct 2017 04:13:15 -0400
+Date: Sat, 21 Oct 2017 10:13:14 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 12/13] dax: handle truncate of dma-busy pages
-Message-ID: <20171021081140.GA21101@lst.de>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com> <150846720244.24336.16885325309403883980.stgit@dwillia2-desk3.amr.corp.intel.com> <1508504726.5572.41.camel@kernel.org> <CAPcyv4hXCJYTkUKs6NiOp=8kgExu+bgZnVn_v+Os7fVUc2NxFg@mail.gmail.com> <20171020163221.GB26320@lst.de> <CAPcyv4iGN6KO_ggJ-vTHCPWanudY3Gq6n=+9sbnMsnTeF56uJA@mail.gmail.com>
+Subject: Re: [PATCH 08/15] xfs: inline xfs_shift_file_space into callers
+Message-ID: <20171021081314.GB21101@lst.de>
+References: <20171019065942.18813-1-hch@lst.de> <20171019065942.18813-9-hch@lst.de> <20171021000720.GB4755@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4iGN6KO_ggJ-vTHCPWanudY3Gq6n=+9sbnMsnTeF56uJA@mail.gmail.com>
+In-Reply-To: <20171021000720.GB4755@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jeff Layton <jlayton@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Fri, Oct 20, 2017 at 10:27:22AM -0700, Dan Williams wrote:
-> I'll take a look at hooking this up through a page-idle callback. Can
-> I get some breadcrumbs to grep for from XFS folks on how to set/clear
-> the busy state of extents?
+> > +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> 
+> So it took me a while of wondering "don't we have to have the
+> MMAPLOCK_EXCL too?" before realizing that yes, the caller actually does
+> grab that too.  I wonder if it's worth checking here, since you're
+> asserting the lock status at all?
 
-As Brian pointed out it's the xfs_extent_busy.c file (and I pointed
-out the same in a reply to the previous series).  Be careful because
-you'll need a refcount or flags now that there are different busy
-reasons.
-
-I still think we'd be better off just blocking on an elevated page
-count directly in truncate as that will avoid all the busy list
-manipulations.
+This just moves the previous code around..  I can send an incremental
+patch if you want, though.
