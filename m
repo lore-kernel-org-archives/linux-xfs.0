@@ -1,60 +1,251 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:11407 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752418AbdJTVrz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Oct 2017 17:47:55 -0400
-Date: Fri, 20 Oct 2017 15:47:53 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
- MAP_SYNC
-Message-ID: <20171020214753.GA15733@linux.intel.com>
-References: <20171019125817.11580-1-jack@suse.cz>
- <20171019125817.11580-19-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31514 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752892AbdJUAML (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 20:12:11 -0400
+Subject: Re: [PATCH 10/17] :xfs: extent transaction reservations for parent
+ attributes
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <1508367333-3237-11-git-send-email-allison.henderson@oracle.com>
+ <20171019182407.GB4755@magnolia>
+ <8680e0c1-ada8-06e3-e397-61a5076030be@oracle.com>
+ <20171020234558.GA6624@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <78fa52d3-f56a-7609-b471-3369d864f867@oracle.com>
+Date: Fri, 20 Oct 2017 17:12:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171019125817.11580-19-jack@suse.cz>
+In-Reply-To: <20171020234558.GA6624@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Thu, Oct 19, 2017 at 02:58:17PM +0200, Jan Kara wrote:
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  man2/mmap.2 | 30 ++++++++++++++++++++++++++++++
->  1 file changed, 30 insertions(+)
+On 10/20/2017 4:45 PM, Darrick J. Wong wrote:
+> On Fri, Oct 20, 2017 at 04:34:38PM -0700, Allison Henderson wrote:
+>> On 10/19/2017 11:24 AM, Darrick J. Wong wrote:
+>>
+>>> On Wed, Oct 18, 2017 at 03:55:26PM -0700, Allison Henderson wrote:
+>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>
+>>>> We need to add, remove or modify parent pointer attributes during
+>>>> create/link/unlink/rename operations atomically with the dirents in the parent
+>>>> directories being modified. This means they need to be modified in the same
+>>>> transaction as the parent directories, and so we need to add the required
+>>>> space for the attribute modifications to the transaction reservations.
+>>>>
+>>>> [achender: rebased, added xfs_sb_version_hasparent stub]
+>>>>
+>>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>>>> ---
+>>>>   fs/xfs/libxfs/xfs_format.h     |   5 ++
+>>>>   fs/xfs/libxfs/xfs_trans_resv.c | 103 ++++++++++++++++++++++++++++++++---------
+>>>>   2 files changed, 85 insertions(+), 23 deletions(-)
+>>>>
+>>>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>>>> index b9ea5bf..121862a 100644
+>>>> --- a/fs/xfs/libxfs/xfs_format.h
+>>>> +++ b/fs/xfs/libxfs/xfs_format.h
+>>>> @@ -556,6 +556,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>>>>   		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+>>>>   }
+>>>> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>>>> +{
+>>>> +	return false; /* We'll enable this at the end of the set */
+>>> I think this chunk should just add the proper testing code here.
+>>>
+>>> You only add RO_COMPAT_PARENT to XFS_SB_FEAT_RO_COMPAT_ALL at the end of
+>>> the patch series, so anyone bisecting their way through the series won't
+>>> be able to mount such an fs.
+>> Ok, there really isn't much more to add in here once we have the feature
+>> flags defined.  Maybe we could just do something like:
+>>
+>> return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+>>          (sbp->sb_features_ro_compat & 0));
+>> /* We will turn the 0 into XFS_SB_FEAT_RO_COMPAT_PARENT at the end of the
+>> set */
+>>
+>>
+>> Is that something like what you meant?
 > 
-> diff --git a/man2/mmap.2 b/man2/mmap.2
-> index 47c3148653be..598ff0c64f7f 100644
-> --- a/man2/mmap.2
-> +++ b/man2/mmap.2
-> @@ -125,6 +125,21 @@ are carried through to the underlying file.
->  to the underlying file requires the use of
->  .BR msync (2).)
->  .TP
-> +.B MAP_SHARED_VALIDATE
-> +The same as
-> +.B MAP_SHARED
-> +except that
-> +.B MAP_SHARED
-> +mappings ignore unknown flags in
-> +.IR flags .
-> +In contrast when creating mapping of
-> +.B MAP_SHARED_VALIDATE
-> +mapping type, the kernel verifies all passed flags are known and fails the
-> +mapping with
-> +.BR EOPNOTSUPP
-> +otherwise. This mapping type is also required to be able to use some mapping
-> +flags.
-> +.TP
+> I was talking about defining the function once and for all:
+> 
+> static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+> {
+> 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+> }
+> 
+> Since we can't mount any filesystem with XFS_SB_FEAT_RO_COMPAT_PARENT
+> set until COMPAT_PARENT gets added to XFS_SB_FEAT_RO_COMPAT_ALL.  The
+> practical effect is that hasparent will never return true, but with less
+> code changes between patches.
+> 
+> (Or put another way, please minimize the type of patch series churn
+> wherein one adds a function in one patch and then rewrites it a
+> subseqeuent patch.)
+> 
+> --D
+Alrighty, got it.  Thank you!
 
-Some small nits:
-
-I think you should maybe include a "(since Linux 4.15)" type note after the
-MAP_SHARED_VALIDATE header.  You also need to update the following line:
-
-       Both of these flags are described in POSIX.1-2001 and POSIX.1-2008.
-
-Which used to refer to MAP_SYNC and MAP_PRIVATE.
+> 
+>>
+>>>> +}
+>>>> +
+>>>>   /*
+>>>>    * end of superblock version macros
+>>>>    */
+>>>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+>>>> index 6bd916b..54399e2 100644
+>>>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+>>>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+>>>> @@ -802,29 +802,30 @@ xfs_calc_sb_reservation(
+>>>>   	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>>>>   }
+>>>> +/*
+>>>> + * Namespace reservations.
+>>>> + *
+>>>> + * These get tricky when parent pointers are enabled as we have attribute
+>>>> + * modifications occurring from within these transactions. Rather than confuse
+>>>> + * each of these reservation calculations with the conditional attribute
+>>>> + * reservations, add them here in a clear and concise manner. This assumes that
+>>>> + * the attribute reservations have already been calculated.
+>>>> + *
+>>>> + * Note that we only include the static attribute reservation here; the runtime
+>>>> + * reservation will have to be modified by the size of the attributes being
+>>>> + * added/removed/modified. See the comments on the attribute reservation
+>>>> + * calculations for more details.
+>>> I don't know that we can properly use a different runtime reservations
+>>> than what we statically reserve here, since the static reservations are
+>>> used to ensure that the log is of sufficient size given the fs geometry.
+>>>
+>>> <shrug> Maybe we can figure out how much extra space is allowable given
+>>> the actual size of the log?  Or perhaps in the end we'll just end up
+>>> restricting the maximum size of what we can log through intents?  Or
+>>> just set the reservation to 64k I guess.... :)
+>>>
+>>> --D
+>>>
+>>>> + * Note for rename: rename will vastly overestimate requirements. This will be
+>>>> + * addressed later when modifications are made to ensure parent attribute
+>>>> + * modifications can be done atomically with the rename operation.
+>>>> + */
+>>>>   void
+>>>> -xfs_trans_resv_calc(
+>>>> +xfs_calc_namespace_reservations(
+>>>>   	struct xfs_mount	*mp,
+>>>>   	struct xfs_trans_resv	*resp)
+>>>>   {
+>>>> -	/*
+>>>> -	 * The following transactions are logged in physical format and
+>>>> -	 * require a permanent reservation on space.
+>>>> -	 */
+>>>> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+>>>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>>>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+>>>> -	else
+>>>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>>>> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> -
+>>>> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+>>>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>>>> -		resp->tr_itruncate.tr_logcount =
+>>>> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+>>>> -	else
+>>>> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>>>> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>>>>   	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+>>>>   	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+>>>> @@ -846,15 +847,69 @@ xfs_trans_resv_calc(
+>>>>   	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+>>>>   	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+>>>> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+>>>> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> +
+>>>> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
+>>>> +		return;
+>>>> +
+>>>> +	/* rename can add/remove/modify 2 parent attributes */
+>>>> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
+>>>> +					     resp->tr_attrrm.tr_logres);
+>>>> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
+>>>> +					       resp->tr_attrrm.tr_logcount);
+>>>> +
+>>>> +	/* create will add 1 parent attribute */
+>>>> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+>>>> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>>>> +
+>>>> +	/* mkdir will add 1 parent attribute */
+>>>> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+>>>> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>>>> +
+>>>> +	/* link will add 1 parent attribute */
+>>>> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+>>>> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>>>> +
+>>>> +	/* symlink will add 1 parent attribute */
+>>>> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+>>>> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>>>> +
+>>>> +	/* remove will remove 1 parent attribute */
+>>>> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+>>>> +	resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
+>>>> +}
+>>>> +
+>>>> +void
+>>>> +xfs_trans_resv_calc(
+>>>> +	struct xfs_mount	*mp,
+>>>> +	struct xfs_trans_resv	*resp)
+>>>> +{
+>>>> +	/*
+>>>> +	 * The following transactions are logged in physical format and
+>>>> +	 * require a permanent reservation on space.
+>>>> +	 */
+>>>> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+>>>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>>>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+>>>> +	else
+>>>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>>>> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> +
+>>>> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+>>>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>>>> +		resp->tr_itruncate.tr_logcount =
+>>>> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+>>>> +	else
+>>>> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>>>> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> +
+>>>>   	resp->tr_create_tmpfile.tr_logres =
+>>>>   			xfs_calc_create_tmpfile_reservation(mp);
+>>>>   	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>>>>   	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+>>>> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+>>>> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> -
+>>>>   	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>>>>   	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>>>>   	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> @@ -886,6 +941,8 @@ xfs_trans_resv_calc(
+>>>>   		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>>>>   	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>>> +	xfs_calc_namespace_reservations(mp, resp);
+>>>> +
+>>>>   	/*
+>>>>   	 * The following transactions are logged in logical format with
+>>>>   	 * a default log count.
+>>>> -- 
+>>>> 2.7.4
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>>> the body of a message tomajordomo@vger.kernel.org
+>>>> More majordomo info athttp://vger.kernel.org/majordomo-info.html
+>>
