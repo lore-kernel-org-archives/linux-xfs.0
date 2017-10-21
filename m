@@ -1,247 +1,307 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25048 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:30478 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752498AbdJTXqD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 19:46:03 -0400
-Date: Fri, 20 Oct 2017 16:45:58 -0700
+        with ESMTP id S1752858AbdJUAHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 20:07:25 -0400
+Date: Fri, 20 Oct 2017 17:07:20 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/17] :xfs: extent transaction reservations for parent
- attributes
-Message-ID: <20171020234558.GA6624@magnolia>
-References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
- <1508367333-3237-11-git-send-email-allison.henderson@oracle.com>
- <20171019182407.GB4755@magnolia>
- <8680e0c1-ada8-06e3-e397-61a5076030be@oracle.com>
+Subject: Re: [PATCH 08/15] xfs: inline xfs_shift_file_space into callers
+Message-ID: <20171021000720.GB4755@magnolia>
+References: <20171019065942.18813-1-hch@lst.de>
+ <20171019065942.18813-9-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <8680e0c1-ada8-06e3-e397-61a5076030be@oracle.com>
+In-Reply-To: <20171019065942.18813-9-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 20, 2017 at 04:34:38PM -0700, Allison Henderson wrote:
-> On 10/19/2017 11:24 AM, Darrick J. Wong wrote:
+On Thu, Oct 19, 2017 at 08:59:35AM +0200, Christoph Hellwig wrote:
+> The code is sufficiently different for the insert vs collapse cases both
+> in xfs_shift_file_space itself and the callers that untangling them will
+> make life a lot easier down the road.
 > 
-> >On Wed, Oct 18, 2017 at 03:55:26PM -0700, Allison Henderson wrote:
-> >>From: Dave Chinner<dchinner@redhat.com>
-> >>
-> >>We need to add, remove or modify parent pointer attributes during
-> >>create/link/unlink/rename operations atomically with the dirents in the parent
-> >>directories being modified. This means they need to be modified in the same
-> >>transaction as the parent directories, and so we need to add the required
-> >>space for the attribute modifications to the transaction reservations.
-> >>
-> >>[achender: rebased, added xfs_sb_version_hasparent stub]
-> >>
-> >>Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >>Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
-> >>---
-> >>  fs/xfs/libxfs/xfs_format.h     |   5 ++
-> >>  fs/xfs/libxfs/xfs_trans_resv.c | 103 ++++++++++++++++++++++++++++++++---------
-> >>  2 files changed, 85 insertions(+), 23 deletions(-)
-> >>
-> >>diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> >>index b9ea5bf..121862a 100644
-> >>--- a/fs/xfs/libxfs/xfs_format.h
-> >>+++ b/fs/xfs/libxfs/xfs_format.h
-> >>@@ -556,6 +556,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
-> >>  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
-> >>  }
-> >>+static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
-> >>+{
-> >>+	return false; /* We'll enable this at the end of the set */
-> >I think this chunk should just add the proper testing code here.
-> >
-> >You only add RO_COMPAT_PARENT to XFS_SB_FEAT_RO_COMPAT_ALL at the end of
-> >the patch series, so anyone bisecting their way through the series won't
-> >be able to mount such an fs.
-> Ok, there really isn't much more to add in here once we have the feature
-> flags defined.  Maybe we could just do something like:
+> We still keep a common helper for flushing all data and COW state to get
+> the inode into the right shape for shifting the extents around.
 > 
-> return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
->         (sbp->sb_features_ro_compat & 0));
-> /* We will turn the 0 into XFS_SB_FEAT_RO_COMPAT_PARENT at the end of the
-> set */
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 192 ++++++++++++++++++++++++++-----------------------
+>  1 file changed, 102 insertions(+), 90 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 0543423651ff..47b53c88de7c 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1260,53 +1260,12 @@ xfs_zero_file_space(
+>  
+>  }
+>  
+> -/*
+> - * @next_fsb will keep track of the extent currently undergoing shift.
+> - * @stop_fsb will keep track of the extent at which we have to stop.
+> - * If we are shifting left, we will start with block (offset + len) and
+> - * shift each extent till last extent.
+> - * If we are shifting right, we will start with last extent inside file space
+> - * and continue until we reach the block corresponding to offset.
+> - */
+>  static int
+> -xfs_shift_file_space(
+> -	struct xfs_inode        *ip,
+> -	xfs_off_t               offset,
+> -	xfs_off_t               len,
+> -	enum shift_direction	direction)
+> +xfs_prepare_shift(
+> +	struct xfs_inode	*ip,
+> +	loff_t			offset)
+>  {
+> -	int			done = 0;
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_trans	*tp;
+>  	int			error;
+> -	struct xfs_defer_ops	dfops;
+> -	xfs_fsblock_t		first_block;
+> -	xfs_fileoff_t		stop_fsb;
+> -	xfs_fileoff_t		next_fsb;
+> -	xfs_fileoff_t		shift_fsb;
+> -	uint			resblks;
+> -
+> -	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+> -
+> -	if (direction == SHIFT_LEFT) {
+> -		/*
+> -		 * Reserve blocks to cover potential extent merges after left
+> -		 * shift operations.
+> -		 */
+> -		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+> -		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+> -		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
+> -	} else {
+> -		/*
+> -		 * If right shift, delegate the work of initialization of
+> -		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
+> -		 */
+> -		resblks = 0;
+> -		next_fsb = NULLFSBLOCK;
+> -		stop_fsb = XFS_B_TO_FSB(mp, offset);
+> -	}
+> -
+> -	shift_fsb = XFS_B_TO_FSB(mp, len);
+>  
+>  	/*
+>  	 * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
+> @@ -1322,8 +1281,7 @@ xfs_shift_file_space(
+>  	 * Writeback and invalidate cache for the remainder of the file as we're
+>  	 * about to shift down every extent from offset to EOF.
+>  	 */
+> -	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> -					     offset, -1);
+> +	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset, -1);
+>  	if (error)
+>  		return error;
+>  	error = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+> @@ -1343,16 +1301,48 @@ xfs_shift_file_space(
+>  			return error;
+>  	}
+>  
+> -	/*
+> -	 * The extent shifting code works on extent granularity. So, if
+> -	 * stop_fsb is not the starting block of extent, we need to split
+> -	 * the extent at stop_fsb.
+> -	 */
+> -	if (direction == SHIFT_RIGHT) {
+> -		error = xfs_bmap_split_extent(ip, stop_fsb);
+> -		if (error)
+> -			return error;
+> -	}
+> +	return 0;
+> +}
+> +
+> +/*
+> + * xfs_collapse_file_space()
+> + *	This routine frees disk space and shift extent for the given file.
+> + *	The first thing we do is to free data blocks in the specified range
+> + *	by calling xfs_free_file_space(). It would also sync dirty data
+> + *	and invalidate page cache over the region on which collapse range
+> + *	is working. And Shift extent records to the left to cover a hole.
+> + * RETURNS:
+> + *	0 on success
+> + *	errno on error
+> + *
+> + */
+> +int
+> +xfs_collapse_file_space(
+> +	struct xfs_inode	*ip,
+> +	xfs_off_t		offset,
+> +	xfs_off_t		len)
+> +{
+> +	int			done = 0;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	int			error;
+> +	struct xfs_defer_ops	dfops;
+> +	xfs_fsblock_t		first_block;
+> +	xfs_fileoff_t		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
+> +	xfs_fileoff_t		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+> +	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
+> +	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+> +
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+
+So it took me a while of wondering "don't we have to have the
+MMAPLOCK_EXCL too?" before realizing that yes, the caller actually does
+grab that too.  I wonder if it's worth checking here, since you're
+asserting the lock status at all?
+
+Aside from that,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> +	trace_xfs_collapse_file_space(ip);
+> +
+> +	error = xfs_free_file_space(ip, offset, len);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_prepare_shift(ip, offset);
+> +	if (error)
+> +		return error;
+>  
+>  	while (!error && !done) {
+>  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+> @@ -1366,7 +1356,6 @@ xfs_shift_file_space(
+>  				XFS_QMOPT_RES_REGBLKS);
+>  		if (error)
+>  			goto out_trans_cancel;
+> -
+>  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  
+>  		xfs_defer_init(&dfops, &first_block);
+> @@ -1377,14 +1366,13 @@ xfs_shift_file_space(
+>  		 */
+>  		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+>  				&done, stop_fsb, &first_block, &dfops,
+> -				direction, XFS_BMAP_MAX_SHIFT_EXTENTS);
+> +				SHIFT_LEFT, XFS_BMAP_MAX_SHIFT_EXTENTS);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+>  		error = xfs_defer_finish(&tp, &dfops);
+>  		if (error)
+>  			goto out_bmap_cancel;
+> -
+>  		error = xfs_trans_commit(tp);
+>  	}
+>  
+> @@ -1397,36 +1385,6 @@ xfs_shift_file_space(
+>  	return error;
+>  }
+>  
+> -/*
+> - * xfs_collapse_file_space()
+> - *	This routine frees disk space and shift extent for the given file.
+> - *	The first thing we do is to free data blocks in the specified range
+> - *	by calling xfs_free_file_space(). It would also sync dirty data
+> - *	and invalidate page cache over the region on which collapse range
+> - *	is working. And Shift extent records to the left to cover a hole.
+> - * RETURNS:
+> - *	0 on success
+> - *	errno on error
+> - *
+> - */
+> -int
+> -xfs_collapse_file_space(
+> -	struct xfs_inode	*ip,
+> -	xfs_off_t		offset,
+> -	xfs_off_t		len)
+> -{
+> -	int error;
+> -
+> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> -	trace_xfs_collapse_file_space(ip);
+> -
+> -	error = xfs_free_file_space(ip, offset, len);
+> -	if (error)
+> -		return error;
+> -
+> -	return xfs_shift_file_space(ip, offset, len, SHIFT_LEFT);
+> -}
+> -
+>  /*
+>   * xfs_insert_file_space()
+>   *	This routine create hole space by shifting extents for the given file.
+> @@ -1445,10 +1403,64 @@ xfs_insert_file_space(
+>  	loff_t			offset,
+>  	loff_t			len)
+>  {
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	int			error;
+> +	struct xfs_defer_ops	dfops;
+> +	xfs_fsblock_t		first_block;
+> +	xfs_fileoff_t		stop_fsb = XFS_B_TO_FSB(mp, offset);
+> +	xfs_fileoff_t		next_fsb = NULLFSBLOCK;
+> +	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
+> +	int			done = 0;
+> +
+>  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+>  	trace_xfs_insert_file_space(ip);
+>  
+> -	return xfs_shift_file_space(ip, offset, len, SHIFT_RIGHT);
+> +	error = xfs_prepare_shift(ip, offset);
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * The extent shifting code works on extent granularity. So, if stop_fsb
+> +	 * is not the starting block of extent, we need to split the extent at
+> +	 * stop_fsb.
+> +	 */
+> +	error = xfs_bmap_split_extent(ip, stop_fsb);
+> +	if (error)
+> +		return error;
+> +
+> +	while (!error && !done) {
+> +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0,
+> +					&tp);
+> +		if (error)
+> +			break;
+> +
+> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> +		xfs_defer_init(&dfops, &first_block);
+> +
+> +		/*
+> +		 * We are using the write transaction in which max 2 bmbt
+> +		 * updates are allowed
+> +		 */
+> +		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+> +				&done, stop_fsb, &first_block, &dfops,
+> +				SHIFT_RIGHT, XFS_BMAP_MAX_SHIFT_EXTENTS);
+> +		if (error)
+> +			goto out_bmap_cancel;
+> +
+> +		error = xfs_defer_finish(&tp, &dfops);
+> +		if (error)
+> +			goto out_bmap_cancel;
+> +		error = xfs_trans_commit(tp);
+> +	}
+> +
+> +	return error;
+> +
+> +out_bmap_cancel:
+> +	xfs_defer_cancel(&dfops);
+> +	xfs_trans_cancel(tp);
+> +	return error;
+>  }
+>  
+>  /*
+> -- 
+> 2.14.1
 > 
-> Is that something like what you meant?
-
-I was talking about defining the function once and for all:
-
-static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
-{
-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
-}
-
-Since we can't mount any filesystem with XFS_SB_FEAT_RO_COMPAT_PARENT
-set until COMPAT_PARENT gets added to XFS_SB_FEAT_RO_COMPAT_ALL.  The
-practical effect is that hasparent will never return true, but with less
-code changes between patches.
-
-(Or put another way, please minimize the type of patch series churn
-wherein one adds a function in one patch and then rewrites it a
-subseqeuent patch.)
-
---D
-
-> 
-> >>+}
-> >>+
-> >>  /*
-> >>   * end of superblock version macros
-> >>   */
-> >>diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> >>index 6bd916b..54399e2 100644
-> >>--- a/fs/xfs/libxfs/xfs_trans_resv.c
-> >>+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> >>@@ -802,29 +802,30 @@ xfs_calc_sb_reservation(
-> >>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
-> >>  }
-> >>+/*
-> >>+ * Namespace reservations.
-> >>+ *
-> >>+ * These get tricky when parent pointers are enabled as we have attribute
-> >>+ * modifications occurring from within these transactions. Rather than confuse
-> >>+ * each of these reservation calculations with the conditional attribute
-> >>+ * reservations, add them here in a clear and concise manner. This assumes that
-> >>+ * the attribute reservations have already been calculated.
-> >>+ *
-> >>+ * Note that we only include the static attribute reservation here; the runtime
-> >>+ * reservation will have to be modified by the size of the attributes being
-> >>+ * added/removed/modified. See the comments on the attribute reservation
-> >>+ * calculations for more details.
-> >I don't know that we can properly use a different runtime reservations
-> >than what we statically reserve here, since the static reservations are
-> >used to ensure that the log is of sufficient size given the fs geometry.
-> >
-> ><shrug> Maybe we can figure out how much extra space is allowable given
-> >the actual size of the log?  Or perhaps in the end we'll just end up
-> >restricting the maximum size of what we can log through intents?  Or
-> >just set the reservation to 64k I guess.... :)
-> >
-> >--D
-> >
-> >>+ * Note for rename: rename will vastly overestimate requirements. This will be
-> >>+ * addressed later when modifications are made to ensure parent attribute
-> >>+ * modifications can be done atomically with the rename operation.
-> >>+ */
-> >>  void
-> >>-xfs_trans_resv_calc(
-> >>+xfs_calc_namespace_reservations(
-> >>  	struct xfs_mount	*mp,
-> >>  	struct xfs_trans_resv	*resp)
-> >>  {
-> >>-	/*
-> >>-	 * The following transactions are logged in physical format and
-> >>-	 * require a permanent reservation on space.
-> >>-	 */
-> >>-	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
-> >>-	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> >>-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
-> >>-	else
-> >>-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-> >>-	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>-
-> >>-	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-> >>-	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> >>-		resp->tr_itruncate.tr_logcount =
-> >>-				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
-> >>-	else
-> >>-		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-> >>-	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>+	ASSERT(resp->tr_attrsetm.tr_logres > 0);
-> >>  	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
-> >>  	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
-> >>@@ -846,15 +847,69 @@ xfs_trans_resv_calc(
-> >>  	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
-> >>  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>+	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
-> >>+	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
-> >>+	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>+
-> >>+	if (!xfs_sb_version_hasparent(&mp->m_sb))
-> >>+		return;
-> >>+
-> >>+	/* rename can add/remove/modify 2 parent attributes */
-> >>+	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
-> >>+					     resp->tr_attrrm.tr_logres);
-> >>+	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
-> >>+					       resp->tr_attrrm.tr_logcount);
-> >>+
-> >>+	/* create will add 1 parent attribute */
-> >>+	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
-> >>+	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> >>+
-> >>+	/* mkdir will add 1 parent attribute */
-> >>+	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
-> >>+	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> >>+
-> >>+	/* link will add 1 parent attribute */
-> >>+	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
-> >>+	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> >>+
-> >>+	/* symlink will add 1 parent attribute */
-> >>+	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
-> >>+	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
-> >>+
-> >>+	/* remove will remove 1 parent attribute */
-> >>+	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
-> >>+	resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
-> >>+}
-> >>+
-> >>+void
-> >>+xfs_trans_resv_calc(
-> >>+	struct xfs_mount	*mp,
-> >>+	struct xfs_trans_resv	*resp)
-> >>+{
-> >>+	/*
-> >>+	 * The following transactions are logged in physical format and
-> >>+	 * require a permanent reservation on space.
-> >>+	 */
-> >>+	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
-> >>+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> >>+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
-> >>+	else
-> >>+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-> >>+	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>+
-> >>+	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-> >>+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> >>+		resp->tr_itruncate.tr_logcount =
-> >>+				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
-> >>+	else
-> >>+		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-> >>+	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>+
-> >>  	resp->tr_create_tmpfile.tr_logres =
-> >>  			xfs_calc_create_tmpfile_reservation(mp);
-> >>  	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
-> >>  	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>-	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
-> >>-	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
-> >>-	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>-
-> >>  	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
-> >>  	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
-> >>  	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>@@ -886,6 +941,8 @@ xfs_trans_resv_calc(
-> >>  		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
-> >>  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> >>+	xfs_calc_namespace_reservations(mp, resp);
-> >>+
-> >>  	/*
-> >>  	 * The following transactions are logged in logical format with
-> >>  	 * a default log count.
-> >>-- 
-> >>2.7.4
-> >>
-> >>--
-> >>To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >>the body of a message tomajordomo@vger.kernel.org
-> >>More majordomo info athttp://vger.kernel.org/majordomo-info.html
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
