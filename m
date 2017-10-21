@@ -1,251 +1,386 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31514 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752892AbdJUAML (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 20:12:11 -0400
-Subject: Re: [PATCH 10/17] :xfs: extent transaction reservations for parent
- attributes
-References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
- <1508367333-3237-11-git-send-email-allison.henderson@oracle.com>
- <20171019182407.GB4755@magnolia>
- <8680e0c1-ada8-06e3-e397-61a5076030be@oracle.com>
- <20171020234558.GA6624@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <78fa52d3-f56a-7609-b471-3369d864f867@oracle.com>
-Date: Fri, 20 Oct 2017 17:12:00 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:38890 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751394AbdJUAWp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 20:22:45 -0400
+Date: Fri, 20 Oct 2017 17:22:40 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/15] xfs: split xfs_bmap_shift_extents
+Message-ID: <20171021002240.GD4755@magnolia>
+References: <20171019065942.18813-1-hch@lst.de>
+ <20171019065942.18813-11-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20171020234558.GA6624@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171019065942.18813-11-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 10/20/2017 4:45 PM, Darrick J. Wong wrote:
-> On Fri, Oct 20, 2017 at 04:34:38PM -0700, Allison Henderson wrote:
->> On 10/19/2017 11:24 AM, Darrick J. Wong wrote:
->>
->>> On Wed, Oct 18, 2017 at 03:55:26PM -0700, Allison Henderson wrote:
->>>> From: Dave Chinner<dchinner@redhat.com>
->>>>
->>>> We need to add, remove or modify parent pointer attributes during
->>>> create/link/unlink/rename operations atomically with the dirents in the parent
->>>> directories being modified. This means they need to be modified in the same
->>>> transaction as the parent directories, and so we need to add the required
->>>> space for the attribute modifications to the transaction reservations.
->>>>
->>>> [achender: rebased, added xfs_sb_version_hasparent stub]
->>>>
->>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
->>>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
->>>> ---
->>>>   fs/xfs/libxfs/xfs_format.h     |   5 ++
->>>>   fs/xfs/libxfs/xfs_trans_resv.c | 103 ++++++++++++++++++++++++++++++++---------
->>>>   2 files changed, 85 insertions(+), 23 deletions(-)
->>>>
->>>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->>>> index b9ea5bf..121862a 100644
->>>> --- a/fs/xfs/libxfs/xfs_format.h
->>>> +++ b/fs/xfs/libxfs/xfs_format.h
->>>> @@ -556,6 +556,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->>>>   		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
->>>>   }
->>>> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
->>>> +{
->>>> +	return false; /* We'll enable this at the end of the set */
->>> I think this chunk should just add the proper testing code here.
->>>
->>> You only add RO_COMPAT_PARENT to XFS_SB_FEAT_RO_COMPAT_ALL at the end of
->>> the patch series, so anyone bisecting their way through the series won't
->>> be able to mount such an fs.
->> Ok, there really isn't much more to add in here once we have the feature
->> flags defined.  Maybe we could just do something like:
->>
->> return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
->>          (sbp->sb_features_ro_compat & 0));
->> /* We will turn the 0 into XFS_SB_FEAT_RO_COMPAT_PARENT at the end of the
->> set */
->>
->>
->> Is that something like what you meant?
+On Thu, Oct 19, 2017 at 08:59:37AM +0200, Christoph Hellwig wrote:
+> Have a separate helper for insert vs collapse, as this prepares us for
+> simplifying the code in the next patches.
 > 
-> I was talking about defining the function once and for all:
+> Also changed the done output argument to a bool intead of int for both
+> new functions.
 > 
-> static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
-> {
-> 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
-> }
-> 
-> Since we can't mount any filesystem with XFS_SB_FEAT_RO_COMPAT_PARENT
-> set until COMPAT_PARENT gets added to XFS_SB_FEAT_RO_COMPAT_ALL.  The
-> practical effect is that hasparent will never return true, but with less
-> code changes between patches.
-> 
-> (Or put another way, please minimize the type of patch series churn
-> wherein one adds a function in one patch and then rewrites it a
-> subseqeuent patch.)
-> 
-> --D
-Alrighty, got it.  Thank you!
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 197 ++++++++++++++++++++++++++++++++---------------
+>  fs/xfs/libxfs/xfs_bmap.h |  10 ++-
+>  fs/xfs/xfs_bmap_util.c   |  14 ++--
+>  3 files changed, 148 insertions(+), 73 deletions(-)
 > 
->>
->>>> +}
->>>> +
->>>>   /*
->>>>    * end of superblock version macros
->>>>    */
->>>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
->>>> index 6bd916b..54399e2 100644
->>>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
->>>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
->>>> @@ -802,29 +802,30 @@ xfs_calc_sb_reservation(
->>>>   	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
->>>>   }
->>>> +/*
->>>> + * Namespace reservations.
->>>> + *
->>>> + * These get tricky when parent pointers are enabled as we have attribute
->>>> + * modifications occurring from within these transactions. Rather than confuse
->>>> + * each of these reservation calculations with the conditional attribute
->>>> + * reservations, add them here in a clear and concise manner. This assumes that
->>>> + * the attribute reservations have already been calculated.
->>>> + *
->>>> + * Note that we only include the static attribute reservation here; the runtime
->>>> + * reservation will have to be modified by the size of the attributes being
->>>> + * added/removed/modified. See the comments on the attribute reservation
->>>> + * calculations for more details.
->>> I don't know that we can properly use a different runtime reservations
->>> than what we statically reserve here, since the static reservations are
->>> used to ensure that the log is of sufficient size given the fs geometry.
->>>
->>> <shrug> Maybe we can figure out how much extra space is allowable given
->>> the actual size of the log?  Or perhaps in the end we'll just end up
->>> restricting the maximum size of what we can log through intents?  Or
->>> just set the reservation to 64k I guess.... :)
->>>
->>> --D
->>>
->>>> + * Note for rename: rename will vastly overestimate requirements. This will be
->>>> + * addressed later when modifications are made to ensure parent attribute
->>>> + * modifications can be done atomically with the rename operation.
->>>> + */
->>>>   void
->>>> -xfs_trans_resv_calc(
->>>> +xfs_calc_namespace_reservations(
->>>>   	struct xfs_mount	*mp,
->>>>   	struct xfs_trans_resv	*resp)
->>>>   {
->>>> -	/*
->>>> -	 * The following transactions are logged in physical format and
->>>> -	 * require a permanent reservation on space.
->>>> -	 */
->>>> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
->>>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
->>>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
->>>> -	else
->>>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
->>>> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> -
->>>> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
->>>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
->>>> -		resp->tr_itruncate.tr_logcount =
->>>> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
->>>> -	else
->>>> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
->>>> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
->>>>   	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
->>>>   	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
->>>> @@ -846,15 +847,69 @@ xfs_trans_resv_calc(
->>>>   	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
->>>>   	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
->>>> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
->>>> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> +
->>>> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
->>>> +		return;
->>>> +
->>>> +	/* rename can add/remove/modify 2 parent attributes */
->>>> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
->>>> +					     resp->tr_attrrm.tr_logres);
->>>> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
->>>> +					       resp->tr_attrrm.tr_logcount);
->>>> +
->>>> +	/* create will add 1 parent attribute */
->>>> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
->>>> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
->>>> +
->>>> +	/* mkdir will add 1 parent attribute */
->>>> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
->>>> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
->>>> +
->>>> +	/* link will add 1 parent attribute */
->>>> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
->>>> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
->>>> +
->>>> +	/* symlink will add 1 parent attribute */
->>>> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
->>>> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
->>>> +
->>>> +	/* remove will remove 1 parent attribute */
->>>> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
->>>> +	resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
->>>> +}
->>>> +
->>>> +void
->>>> +xfs_trans_resv_calc(
->>>> +	struct xfs_mount	*mp,
->>>> +	struct xfs_trans_resv	*resp)
->>>> +{
->>>> +	/*
->>>> +	 * The following transactions are logged in physical format and
->>>> +	 * require a permanent reservation on space.
->>>> +	 */
->>>> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
->>>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
->>>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
->>>> +	else
->>>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
->>>> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> +
->>>> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
->>>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
->>>> +		resp->tr_itruncate.tr_logcount =
->>>> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
->>>> +	else
->>>> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
->>>> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> +
->>>>   	resp->tr_create_tmpfile.tr_logres =
->>>>   			xfs_calc_create_tmpfile_reservation(mp);
->>>>   	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
->>>>   	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
->>>> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
->>>> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> -
->>>>   	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
->>>>   	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
->>>>   	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> @@ -886,6 +941,8 @@ xfs_trans_resv_calc(
->>>>   		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
->>>>   	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>>> +	xfs_calc_namespace_reservations(mp, resp);
->>>> +
->>>>   	/*
->>>>   	 * The following transactions are logged in logical format with
->>>>   	 * a default log count.
->>>> -- 
->>>> 2.7.4
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>>> the body of a message tomajordomo@vger.kernel.org
->>>> More majordomo info athttp://vger.kernel.org/majordomo-info.html
->>
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 89ea8a5235c0..7d3a38e69d28 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5689,57 +5689,151 @@ xfs_bmse_shift_one(
+>  	return xfs_rmap_map_extent(mp, dfops, ip, whichfork, &new);
+>  }
+>  
+> -/*
+> - * Shift extent records to the left/right to cover/create a hole.
+> - *
+> - * @stop_fsb specifies the file offset at which to stop shift and the
+> - * file offset where we've left off is returned in @next_fsb. @offset_shift_fsb
+> - * is the length by which each extent is shifted. If there is no hole to shift
+> - * the extents into, this will be considered invalid operation and we abort
+> - * immediately.
+> - */
+>  int
+> -xfs_bmap_shift_extents(
+> +xfs_bmap_collapse_extents(
+>  	struct xfs_trans	*tp,
+>  	struct xfs_inode	*ip,
+>  	xfs_fileoff_t		*next_fsb,
+>  	xfs_fileoff_t		offset_shift_fsb,
+> -	int			*done,
+> +	bool			*done,
+>  	xfs_fileoff_t		stop_fsb,
+>  	xfs_fsblock_t		*firstblock,
+> -	struct xfs_defer_ops	*dfops,
+> -	enum shift_direction	direction)
+> +	struct xfs_defer_ops	*dfops)
+>  {
+> -	struct xfs_btree_cur		*cur = NULL;
+> -	struct xfs_bmbt_irec            got;
+> -	struct xfs_mount		*mp = ip->i_mount;
+> -	struct xfs_ifork		*ifp;
+> -	xfs_extnum_t			current_ext;
+> -	xfs_extnum_t			total_extents;
+> -	xfs_extnum_t			stop_extent;
+> -	int				error = 0;
+> -	int				whichfork = XFS_DATA_FORK;
+> -	int				logflags = 0;
+> +	int			whichfork = XFS_DATA_FORK;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct xfs_btree_cur	*cur = NULL;
+> +	struct xfs_bmbt_irec	got;
+> +	xfs_extnum_t		current_ext;
+> +	xfs_extnum_t		total_extents;
+> +	xfs_extnum_t		stop_extent;
+> +	int			error = 0;
+> +	int			logflags = 0;
+>  
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+>  	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+>  	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
+> -		XFS_ERROR_REPORT("xfs_bmap_shift_extents",
+> -				 XFS_ERRLEVEL_LOW, mp);
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
+> +
+> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(tp, ip, whichfork);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	if (ifp->if_flags & XFS_IFBROOT) {
+> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+> +		cur->bc_private.b.firstblock = *firstblock;
+> +		cur->bc_private.b.dfops = dfops;
+> +		cur->bc_private.b.flags = 0;
+> +	}
+> +
+> +	/*
+> +	 * There may be delalloc extents in the data fork before the range we
+> +	 * are collapsing out, so we cannot use the count of real extents here.
+> +	 * Instead we have to calculate it from the incore fork.
+> +	 */
+> +	total_extents = xfs_iext_count(ifp);
+> +	if (total_extents == 0) {
+> +		*done = true;
+> +		goto del_cursor;
+> +	}
+> +
+> +	/*
+> +	 * Look up the extent index for the fsb where we start shifting. We can
+> +	 * henceforth iterate with current_ext as extent list changes are locked
+> +	 * out via ilock.
+> +	 *
+> +	 * If next_fsb lies in a hole beyond which there are no extents we are
+> +	 * done.
+> +	 */
+> +	if (!xfs_iext_lookup_extent(ip, ifp, *next_fsb, &current_ext, &got)) {
+> +		*done = true;
+> +		goto del_cursor;
+> +	}
+> +
+> +	stop_extent = total_extents;
+> +	if (current_ext >= stop_extent) {
+> +		error = -EIO;
+> +		goto del_cursor;
+> +	}
+> +
+> +	error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
+> +				   &current_ext, &got, cur, &logflags,
+> +				   SHIFT_LEFT, dfops);
+> +	if (error)
+> +		goto del_cursor;
+> +	/*
+> +	 * If there was an extent merge during the shift, the extent
+> +	 * count can change. Update the total and grade the next record.
+> +	 */
+> +	total_extents = xfs_iext_count(ifp);
+> +	stop_extent = total_extents;
+> +	if (current_ext == stop_extent) {
+> +		*done = true;
+> +		goto del_cursor;
+> +	}
+> +	xfs_iext_get_extent(ifp, current_ext, &got);
+> +
+> +	if (!*done)
+> +		*next_fsb = got.br_startoff;
+> +
+> +del_cursor:
+> +	if (cur)
+> +		xfs_btree_del_cursor(cur,
+> +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> +
+> +	if (logflags)
+> +		xfs_trans_log_inode(tp, ip, logflags);
+> +
+> +	return error;
+> +}
+> +
+> +int
+> +xfs_bmap_insert_extents(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		*next_fsb,
+> +	xfs_fileoff_t		offset_shift_fsb,
+> +	bool			*done,
+> +	xfs_fileoff_t		stop_fsb,
+> +	xfs_fsblock_t		*firstblock,
+> +	struct xfs_defer_ops	*dfops)
+> +{
+> +	int			whichfork = XFS_DATA_FORK;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct xfs_btree_cur	*cur = NULL;
+> +	struct xfs_bmbt_irec	got, s;
+> +	xfs_extnum_t		current_ext;
+> +	xfs_extnum_t		total_extents;
+> +	xfs_extnum_t		stop_extent;
+> +	int			error = 0;
+> +	int			logflags = 0;
+> +
+> +	if (unlikely(XFS_TEST_ERROR(
+> +	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+> +	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return -EIO;
+> +
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
+>  
+> -	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> -		/* Read in all the extents */
+>  		error = xfs_iread_extents(tp, ip, whichfork);
+>  		if (error)
+>  			return error;
+> @@ -5759,7 +5853,7 @@ xfs_bmap_shift_extents(
+>  	 */
+>  	total_extents = xfs_iext_count(ifp);
+>  	if (total_extents == 0) {
+> -		*done = 1;
+> +		*done = true;
+>  		goto del_cursor;
+>  	}
+>  
+> @@ -5767,12 +5861,10 @@ xfs_bmap_shift_extents(
+>  	 * In case of first right shift, we need to initialize next_fsb
+>  	 */
+>  	if (*next_fsb == NULLFSBLOCK) {
+> -		ASSERT(direction == SHIFT_RIGHT);
+> -
+>  		current_ext = total_extents - 1;
+>  		xfs_iext_get_extent(ifp, current_ext, &got);
+>  		if (stop_fsb > got.br_startoff) {
+> -			*done = 1;
+> +			*done = true;
+>  			goto del_cursor;
+>  		}
+>  		*next_fsb = got.br_startoff;
+> @@ -5787,46 +5879,27 @@ xfs_bmap_shift_extents(
+>  		 */
+>  		if (!xfs_iext_lookup_extent(ip, ifp, *next_fsb, &current_ext,
+>  				&got)) {
+> -			*done = 1;
+> +			*done = true;
+>  			goto del_cursor;
+>  		}
+>  	}
+>  
+>  	/* Lookup the extent index at which we have to stop */
+> -	if (direction == SHIFT_RIGHT) {
+> -		struct xfs_bmbt_irec s;
+> -
+> -		xfs_iext_lookup_extent(ip, ifp, stop_fsb, &stop_extent, &s);
+> -		/* Make stop_extent exclusive of shift range */
+> -		stop_extent--;
+> -		if (current_ext <= stop_extent) {
+> -			error = -EIO;
+> -			goto del_cursor;
+> -		}
+> -	} else {
+> -		stop_extent = total_extents;
+> -		if (current_ext >= stop_extent) {
+> -			error = -EIO;
+> -			goto del_cursor;
+> -		}
+> +	xfs_iext_lookup_extent(ip, ifp, stop_fsb, &stop_extent, &s);
+> +	/* Make stop_extent exclusive of shift range */
+> +	stop_extent--;
+> +	if (current_ext <= stop_extent) {
+> +		error = -EIO;
+> +		goto del_cursor;
+>  	}
+>  
+>  	error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
+>  				   &current_ext, &got, cur, &logflags,
+> -				   direction, dfops);
+> +				   SHIFT_RIGHT, dfops);
+>  	if (error)
+>  		goto del_cursor;
+> -	/*
+> -	 * If there was an extent merge during the shift, the extent
+> -	 * count can change. Update the total and grade the next record.
+> -	 */
+> -	if (direction == SHIFT_LEFT) {
+> -		total_extents = xfs_iext_count(ifp);
+> -		stop_extent = total_extents;
+> -	}
+> -
+>  	if (current_ext == stop_extent) {
+> -		*done = 1;
+> +		*done = true;
+>  		goto del_cursor;
+>  	}
+>  	xfs_iext_get_extent(ifp, current_ext, &got);
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 985b1c26566a..f7ccf2de1a8c 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -227,10 +227,14 @@ int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
+>  void	xfs_bmap_del_extent_cow(struct xfs_inode *ip, xfs_extnum_t *idx,
+>  		struct xfs_bmbt_irec *got, struct xfs_bmbt_irec *del);
+>  uint	xfs_default_attroffset(struct xfs_inode *ip);
+> -int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+> +int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+> -		int *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
+> -		struct xfs_defer_ops *dfops, enum shift_direction direction);
+> +		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
+> +		struct xfs_defer_ops *dfops);
+> +int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+> +		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+> +		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
+> +		struct xfs_defer_ops *dfops);
+>  int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
+>  int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+>  		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 3273f083c496..034f3429ca8c 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1322,7 +1322,6 @@ xfs_collapse_file_space(
+>  	xfs_off_t		offset,
+>  	xfs_off_t		len)
+>  {
+> -	int			done = 0;
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_trans	*tp;
+>  	int			error;
+> @@ -1332,6 +1331,7 @@ xfs_collapse_file_space(
+>  	xfs_fileoff_t		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+>  	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
+>  	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+> +	bool			done = false;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+>  	trace_xfs_collapse_file_space(ip);
+> @@ -1359,9 +1359,8 @@ xfs_collapse_file_space(
+>  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  
+>  		xfs_defer_init(&dfops, &first_block);
+> -		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+> -				&done, stop_fsb, &first_block, &dfops,
+> -				SHIFT_LEFT);
+> +		error = xfs_bmap_collapse_extents(tp, ip, &next_fsb, shift_fsb,
+> +				&done, stop_fsb, &first_block, &dfops);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> @@ -1406,7 +1405,7 @@ xfs_insert_file_space(
+>  	xfs_fileoff_t		stop_fsb = XFS_B_TO_FSB(mp, offset);
+>  	xfs_fileoff_t		next_fsb = NULLFSBLOCK;
+>  	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
+> -	int			done = 0;
+> +	bool			done = false;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+>  	trace_xfs_insert_file_space(ip);
+> @@ -1433,9 +1432,8 @@ xfs_insert_file_space(
+>  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  		xfs_defer_init(&dfops, &first_block);
+> -		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+> -				&done, stop_fsb, &first_block, &dfops,
+> -				SHIFT_RIGHT);
+> +		error = xfs_bmap_insert_extents(tp, ip, &next_fsb, shift_fsb,
+> +				&done, stop_fsb, &first_block, &dfops);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
