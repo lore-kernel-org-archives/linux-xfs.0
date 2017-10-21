@@ -1,95 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22359 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:31051 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752498AbdJTXee (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 19:34:34 -0400
-Date: Fri, 20 Oct 2017 16:34:32 -0700
+        with ESMTP id S1752845AbdJUAKc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 20:10:32 -0400
+Date: Fri, 20 Oct 2017 17:10:28 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 14/30] xfs: scrub the secondary superblocks
-Message-ID: <20171020233432.GA4755@magnolia>
-References: <150777244315.1724.6916081372861799350.stgit@magnolia>
- <150777253648.1724.14074690877454400591.stgit@magnolia>
- <20171016051644.GH3666@dastard>
+Subject: Re: [PATCH 09/15] xfs: remove XFS_BMAP_MAX_SHIFT_EXTENTS
+Message-ID: <20171021001028.GC4755@magnolia>
+References: <20171019065942.18813-1-hch@lst.de>
+ <20171019065942.18813-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171016051644.GH3666@dastard>
+In-Reply-To: <20171019065942.18813-10-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 04:16:44PM +1100, Dave Chinner wrote:
-> On Wed, Oct 11, 2017 at 06:42:16PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Ensure that the geometry presented in the backup superblocks matches
-> > the primary superblock so that repair can recover the filesystem if
-> > that primary gets corrupted.
+On Thu, Oct 19, 2017 at 08:59:36AM +0200, Christoph Hellwig wrote:
+> The define was always set to 1, which means looping until we reach is
+> was dead code from the start.
 > 
-> I've noticed that scrub on certain fstests will report PREEN for
-> secondary superblocks and repair thinks there is nothing wrong and
-> doesn't fix them. I'm not sure which field it's complaining about,
-> but at this point I don't see this as a blocker. Follow up patches
-> would be fine.
+> Also remove an initialization of next_fsb for the done case that doesn't
+> fit the new code flow - it was never checked by the caller in the done
+> case to start with.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 47 ++++++++++++++++++++---------------------------
+>  fs/xfs/libxfs/xfs_bmap.h | 12 +-----------
+>  fs/xfs/xfs_bmap_util.c   | 14 ++------------
+>  3 files changed, 23 insertions(+), 50 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 22e7578e5696..89ea8a5235c0 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5692,8 +5692,7 @@ xfs_bmse_shift_one(
+>  /*
+>   * Shift extent records to the left/right to cover/create a hole.
+>   *
+> - * The maximum number of extents to be shifted in a single operation is
+> - * @num_exts. @stop_fsb specifies the file offset at which to stop shift and the
+> + * @stop_fsb specifies the file offset at which to stop shift and the
+>   * file offset where we've left off is returned in @next_fsb. @offset_shift_fsb
+>   * is the length by which each extent is shifted. If there is no hole to shift
+>   * the extents into, this will be considered invalid operation and we abort
+> @@ -5709,14 +5708,12 @@ xfs_bmap_shift_extents(
+>  	xfs_fileoff_t		stop_fsb,
+>  	xfs_fsblock_t		*firstblock,
+>  	struct xfs_defer_ops	*dfops,
+> -	enum shift_direction	direction,
+> -	int			num_exts)
+> +	enum shift_direction	direction)
+>  {
+>  	struct xfs_btree_cur		*cur = NULL;
+>  	struct xfs_bmbt_irec            got;
+>  	struct xfs_mount		*mp = ip->i_mount;
+>  	struct xfs_ifork		*ifp;
+> -	xfs_extnum_t			nexts = 0;
+>  	xfs_extnum_t			current_ext;
+>  	xfs_extnum_t			total_extents;
+>  	xfs_extnum_t			stop_extent;
+> @@ -5814,31 +5811,27 @@ xfs_bmap_shift_extents(
+>  		}
+>  	}
+>  
+> -	while (nexts++ < num_exts) {
+> -		error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
+> -					   &current_ext, &got, cur, &logflags,
+> -					   direction, dfops);
+> -		if (error)
+> -			goto del_cursor;
+> -		/*
+> -		 * If there was an extent merge during the shift, the extent
+> -		 * count can change. Update the total and grade the next record.
+> -		 */
+> -		if (direction == SHIFT_LEFT) {
+> -			total_extents = xfs_iext_count(ifp);
+> -			stop_extent = total_extents;
+> -		}
+> +	error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
+> +				   &current_ext, &got, cur, &logflags,
+> +				   direction, dfops);
+> +	if (error)
+> +		goto del_cursor;
+> +	/*
+> +	 * If there was an extent merge during the shift, the extent
+> +	 * count can change. Update the total and grade the next record.
 
-These are the sb fields that currently trigger preen reports:
-
-rootino rbmino rsumino imax_pct uquotino gquotino pquotino unit width
-uuid fname
-
-rootino: This will always be the first inode in the first possible
-inode cluster in the filesystem, right?  mkfs copies rootino to the last
-and the middle superblock, though if the location is fixed then we don't
-strictly need to propagate it, do we?
-
-rbmino/rsumino: have fixed ino numbers (rootino + 1 and + 2,
-respectively) and are always rebuilt by repair.
-
-uquotino/gquotino/pquotino can be totally rebuilt by quotacheck, right?
-So if repair zaps these (and it does) either as part of a secondary ->
-primary rebuild or for any other reason then it doesn't matter.
-
-imax_pct: only set by mkfs and copied to all the other sb's.   This
-might be mislabeled as a preen.
-
-uuid/fname: seems to be set in all sb copies by xfs_db.  Maybe this one
-is mislabeled?
-
-unit/width: will be copied into sb 0 from mount options.  We only lose
-information if repair recovers the primary sb and the mount options
-don't include unit/width information.
-
-Now for sb_versionnum, sb_version2, and the v5 feature bits:
-
-versionnum: quotabit is turned on any time we mount with quota, and
-quota has to be activated with mount options, right?
-
-nlinkbit is always turned on at mount time...
-
-versionnum attrbit: turned on any time we set an attr, and nothing much
-(other than setting attr/attr2 bits in the sb) seem to depend on whether
-or not this is set.
-
-features2 attr2bit: I think the attr2 bit can be controlled by mounting
-with 'attr2' and 'noattr2', right?  So, similar to unit/width we only
-lose information if repair recovers a superblock and the mount options
-don't include attr2 information, and even then XFS seems to like to turn
-it on except in the noattr2 case.
-
-So I get the impression that I might be able to turn uuid/fname/imax_pct
-into regular _corrupt checks since (AFAICT) xfsprogs actually updates
-them correctly, and simply drop the other fields from checking.
+/me wonders what "grade the next record" means, but afaict this comment
+disappears anyway...
 
 --D
 
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
+> +	 */
+> +	if (direction == SHIFT_LEFT) {
+> +		total_extents = xfs_iext_count(ifp);
+> +		stop_extent = total_extents;
+> +	}
+>  
+> -		if (current_ext == stop_extent) {
+> -			*done = 1;
+> -			*next_fsb = NULLFSBLOCK;
+> -			break;
+> -		}
+> -		xfs_iext_get_extent(ifp, current_ext, &got);
+> +	if (current_ext == stop_extent) {
+> +		*done = 1;
+> +		goto del_cursor;
+>  	}
+> +	xfs_iext_get_extent(ifp, current_ext, &got);
+>  
+> -	if (!*done)
+> -		*next_fsb = got.br_startoff;
+> +	*next_fsb = got.br_startoff;
+>  
+>  del_cursor:
+>  	if (cur)
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index c837e88ba19a..985b1c26566a 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -183,15 +183,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+>  		!isnullstartblock(irec->br_startblock);
+>  }
+>  
+> -/*
+> - * This macro is used to determine how many extents will be shifted
+> - * in one write transaction. We could require two splits,
+> - * an extent move on the first and an extent merge on the second,
+> - * So it is proper that one extent is shifted inside write transaction
+> - * at a time.
+> - */
+> -#define XFS_BMAP_MAX_SHIFT_EXTENTS	1
+> -
+>  enum shift_direction {
+>  	SHIFT_LEFT = 0,
+>  	SHIFT_RIGHT,
+> @@ -239,8 +230,7 @@ uint	xfs_default_attroffset(struct xfs_inode *ip);
+>  int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+>  		int *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
+> -		struct xfs_defer_ops *dfops, enum shift_direction direction,
+> -		int num_exts);
+> +		struct xfs_defer_ops *dfops, enum shift_direction direction);
+>  int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
+>  int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+>  		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 47b53c88de7c..3273f083c496 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1359,14 +1359,9 @@ xfs_collapse_file_space(
+>  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  
+>  		xfs_defer_init(&dfops, &first_block);
+> -
+> -		/*
+> -		 * We are using the write transaction in which max 2 bmbt
+> -		 * updates are allowed
+> -		 */
+>  		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+>  				&done, stop_fsb, &first_block, &dfops,
+> -				SHIFT_LEFT, XFS_BMAP_MAX_SHIFT_EXTENTS);
+> +				SHIFT_LEFT);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> @@ -1438,14 +1433,9 @@ xfs_insert_file_space(
+>  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  		xfs_defer_init(&dfops, &first_block);
+> -
+> -		/*
+> -		 * We are using the write transaction in which max 2 bmbt
+> -		 * updates are allowed
+> -		 */
+>  		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
+>  				&done, stop_fsb, &first_block, &dfops,
+> -				SHIFT_RIGHT, XFS_BMAP_MAX_SHIFT_EXTENTS);
+> +				SHIFT_RIGHT);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.14.1
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
