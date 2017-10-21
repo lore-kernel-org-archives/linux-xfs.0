@@ -1,195 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31051 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752845AbdJUAKc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2017 20:10:32 -0400
-Date: Fri, 20 Oct 2017 17:10:28 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/15] xfs: remove XFS_BMAP_MAX_SHIFT_EXTENTS
-Message-ID: <20171021001028.GC4755@magnolia>
-References: <20171019065942.18813-1-hch@lst.de>
- <20171019065942.18813-10-hch@lst.de>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:49512 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751377AbdJUHeb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Oct 2017 03:34:31 -0400
+Received: by mail-yw0-f193.google.com with SMTP id z195so1743829ywz.6
+        for <linux-xfs@vger.kernel.org>; Sat, 21 Oct 2017 00:34:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171019065942.18813-10-hch@lst.de>
+In-Reply-To: <20171020224157.GS3666@dastard>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <CAOQ4uxhzZT=5O6PM4Gp=uSwYPFdrO5X9D8UF54f3jEmM2LxK1Q@mail.gmail.com> <20171020224157.GS3666@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 21 Oct 2017 10:34:30 +0300
+Message-ID: <CAOQ4uxjQk_82RxzSKWT+UeepkKXtrXbVmNW2wz6Mngq=UX+XZg@mail.gmail.com>
+Subject: Re: [PATCH 00/17] Parent Pointers V3
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 08:59:36AM +0200, Christoph Hellwig wrote:
-> The define was always set to 1, which means looping until we reach is
-> was dead code from the start.
-> 
-> Also remove an initialization of next_fsb for the done case that doesn't
-> fit the new code flow - it was never checked by the caller in the done
-> case to start with.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 47 ++++++++++++++++++++---------------------------
->  fs/xfs/libxfs/xfs_bmap.h | 12 +-----------
->  fs/xfs/xfs_bmap_util.c   | 14 ++------------
->  3 files changed, 23 insertions(+), 50 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 22e7578e5696..89ea8a5235c0 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5692,8 +5692,7 @@ xfs_bmse_shift_one(
->  /*
->   * Shift extent records to the left/right to cover/create a hole.
->   *
-> - * The maximum number of extents to be shifted in a single operation is
-> - * @num_exts. @stop_fsb specifies the file offset at which to stop shift and the
-> + * @stop_fsb specifies the file offset at which to stop shift and the
->   * file offset where we've left off is returned in @next_fsb. @offset_shift_fsb
->   * is the length by which each extent is shifted. If there is no hole to shift
->   * the extents into, this will be considered invalid operation and we abort
-> @@ -5709,14 +5708,12 @@ xfs_bmap_shift_extents(
->  	xfs_fileoff_t		stop_fsb,
->  	xfs_fsblock_t		*firstblock,
->  	struct xfs_defer_ops	*dfops,
-> -	enum shift_direction	direction,
-> -	int			num_exts)
-> +	enum shift_direction	direction)
->  {
->  	struct xfs_btree_cur		*cur = NULL;
->  	struct xfs_bmbt_irec            got;
->  	struct xfs_mount		*mp = ip->i_mount;
->  	struct xfs_ifork		*ifp;
-> -	xfs_extnum_t			nexts = 0;
->  	xfs_extnum_t			current_ext;
->  	xfs_extnum_t			total_extents;
->  	xfs_extnum_t			stop_extent;
-> @@ -5814,31 +5811,27 @@ xfs_bmap_shift_extents(
->  		}
->  	}
->  
-> -	while (nexts++ < num_exts) {
-> -		error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
-> -					   &current_ext, &got, cur, &logflags,
-> -					   direction, dfops);
-> -		if (error)
-> -			goto del_cursor;
-> -		/*
-> -		 * If there was an extent merge during the shift, the extent
-> -		 * count can change. Update the total and grade the next record.
-> -		 */
-> -		if (direction == SHIFT_LEFT) {
-> -			total_extents = xfs_iext_count(ifp);
-> -			stop_extent = total_extents;
-> -		}
-> +	error = xfs_bmse_shift_one(ip, whichfork, offset_shift_fsb,
-> +				   &current_ext, &got, cur, &logflags,
-> +				   direction, dfops);
-> +	if (error)
-> +		goto del_cursor;
-> +	/*
-> +	 * If there was an extent merge during the shift, the extent
-> +	 * count can change. Update the total and grade the next record.
+On Sat, Oct 21, 2017 at 1:41 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Oct 19, 2017 at 07:11:50AM +0300, Amir Goldstein wrote:
+>> On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
+>> <allison.henderson@oracle.com> wrote:
+>> > Hi all,
+>> >
+>> > This is the third version of parent pointer attributes for xfs.
+>> > I've integrated the suggestions made since v2, mostly moving the
+>> > attr buffers in the xfs_attr_log_item to pointers that point to
+>> > xfs_attr_item. I've also implementing the recovery routines for
+>> > the xfs_attr_log_format.  If I missed anything please point it
+>> > out.  As always, comments and feedback are appreciated.  Thank
+>> > you!
+>> >
+>>
+>> A minor comment about the cover letter.
+>> All designated reviewers must know exactly what "parent pointers" are for,
+>> but it could be useful to add some context in the cover letter about the purpose
+>> of this work for the sake of other readers on the list. Useful to refer to the
+>> upcoming scrub support patches.
+>>
+>> BTW, not sure if this was mentioned in the previous lifetime of those
+>> patches, but parent pointers can be used to implement exportfs operation
+>> xfs_fs_fh_to_parent() for "non-connectable" file handles (FILEID_INO32_GEN)
+>> and to implement xfs_fs_get_name(), which would make reconnect_path()
+>> *much* more efficient.
+>
+> However, XFS only uses FILEID_INO32_GEN for directories
+> because they have known parents. For them, we implement ->get_parent()
+> and that means reconnect_path just does ->lookup("..") to find the
+> parents and doesn't need anything special.
+>
+> We use FILEID_INO32_GEN_PARENT for all other types of files to
+> encode the ino # + generation of the parent inode into the handle.
+> That means for any non-dir file handle, our implemention of
+> ->fh_to_parent  will get us the parent info as efficiently as
+> possible.
 
-/me wonders what "grade the next record" means, but afaict this comment
-disappears anyway...
+We only encode FILEID_INO32_GEN_PARENT when we are asked for
+a "connectable" file handle, which is NOT the case with name_to_handle_at(2)
+and is the case with nfsd on when NFS share is exported with subtree_check
+options, which AFAIK, is the less common case.
 
---D
+The question is, when we encode a non-connectable file handle
+(FILEID_INO32_GEN), will nfsd benefit from getting a connected file handle
+after decode? (result may always be connected if dentry is already in cache).
 
-> +	 */
-> +	if (direction == SHIFT_LEFT) {
-> +		total_extents = xfs_iext_count(ifp);
-> +		stop_extent = total_extents;
-> +	}
->  
-> -		if (current_ext == stop_extent) {
-> -			*done = 1;
-> -			*next_fsb = NULLFSBLOCK;
-> -			break;
-> -		}
-> -		xfs_iext_get_extent(ifp, current_ext, &got);
-> +	if (current_ext == stop_extent) {
-> +		*done = 1;
-> +		goto del_cursor;
->  	}
-> +	xfs_iext_get_extent(ifp, current_ext, &got);
->  
-> -	if (!*done)
-> -		*next_fsb = got.br_startoff;
-> +	*next_fsb = got.br_startoff;
->  
->  del_cursor:
->  	if (cur)
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index c837e88ba19a..985b1c26566a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -183,15 +183,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
->  		!isnullstartblock(irec->br_startblock);
->  }
->  
-> -/*
-> - * This macro is used to determine how many extents will be shifted
-> - * in one write transaction. We could require two splits,
-> - * an extent move on the first and an extent merge on the second,
-> - * So it is proper that one extent is shifted inside write transaction
-> - * at a time.
-> - */
-> -#define XFS_BMAP_MAX_SHIFT_EXTENTS	1
-> -
->  enum shift_direction {
->  	SHIFT_LEFT = 0,
->  	SHIFT_RIGHT,
-> @@ -239,8 +230,7 @@ uint	xfs_default_attroffset(struct xfs_inode *ip);
->  int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
->  		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
->  		int *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
-> -		struct xfs_defer_ops *dfops, enum shift_direction direction,
-> -		int num_exts);
-> +		struct xfs_defer_ops *dfops, enum shift_direction direction);
->  int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
->  int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
->  		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 47b53c88de7c..3273f083c496 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1359,14 +1359,9 @@ xfs_collapse_file_space(
->  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
->  
->  		xfs_defer_init(&dfops, &first_block);
-> -
-> -		/*
-> -		 * We are using the write transaction in which max 2 bmbt
-> -		 * updates are allowed
-> -		 */
->  		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
->  				&done, stop_fsb, &first_block, &dfops,
-> -				SHIFT_LEFT, XFS_BMAP_MAX_SHIFT_EXTENTS);
-> +				SHIFT_LEFT);
->  		if (error)
->  			goto out_bmap_cancel;
->  
-> @@ -1438,14 +1433,9 @@ xfs_insert_file_space(
->  		xfs_ilock(ip, XFS_ILOCK_EXCL);
->  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
->  		xfs_defer_init(&dfops, &first_block);
-> -
-> -		/*
-> -		 * We are using the write transaction in which max 2 bmbt
-> -		 * updates are allowed
-> -		 */
->  		error = xfs_bmap_shift_extents(tp, ip, &next_fsb, shift_fsb,
->  				&done, stop_fsb, &first_block, &dfops,
-> -				SHIFT_RIGHT, XFS_BMAP_MAX_SHIFT_EXTENTS);
-> +				SHIFT_RIGHT);
->  		if (error)
->  			goto out_bmap_cancel;
->  
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>
+> IOWs, parent pointers won't actually speed up filehandle ->
+> dentry reconnection on XFS at all because we already encode parent
+> pointers into the filehandles that need them....
+
+Look at default implementation of ->get_name() in expfs.c and you will
+see why I wrote that xfs_fs_get_name() would make reconnect_path()
+*much* more efficient, even for directories.
+
+Cheers,
+Amir.
