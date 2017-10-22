@@ -1,64 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:45501 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751003AbdJVOfE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 10:35:04 -0400
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
- completion with lockdep_map
-Date: Sun, 22 Oct 2017 14:34:56 +0000
-Message-ID: <1508682894.2564.8.camel@wdc.com>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
-         <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
-         <1508455438.4542.4.camel@wdc.com>
-         <alpine.DEB.2.20.1710200829340.3083@nanos>
-         <1508529532.3029.15.camel@wdc.com>
-         <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
-In-Reply-To: <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <B5349D68919D6A4D8481F45A211BEDF9@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Received: from LGEAMRELO11.lge.com ([156.147.23.51]:59030 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932178AbdJVXxq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 19:53:46 -0400
+Date: Mon, 23 Oct 2017 08:53:35 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: [PATCH v2 4/4] lockdep: Assign a lock_class per gendisk used for
+ wait_for_completion()
+Message-ID: <20171022235334.GH3310@X58A-UD3R>
+References: <1508392531-11284-1-git-send-email-byungchul.park@lge.com>
+ <1508396607-25362-1-git-send-email-byungchul.park@lge.com>
+ <1508396607-25362-5-git-send-email-byungchul.park@lge.com>
+ <20171020144451.GA16793@infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171020144451.GA16793@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "max.byungchul.park@gmail.com" <max.byungchul.park@gmail.com>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "byungchul.park@lge.com" <byungchul.park@lge.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: peterz@infradead.org, mingo@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, idryomov@gmail.com, kernel-team@lge.com
 
-T24gU2F0LCAyMDE3LTEwLTIxIGF0IDExOjIzICswOTAwLCBCeXVuZ2NodWwgUGFyayB3cm90ZToN
-Cj4gT24gU2F0LCBPY3QgMjEsIDIwMTcgYXQgNDo1OCBBTSwgQmFydCBWYW4gQXNzY2hlIDxCYXJ0
-LlZhbkFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gPiBBcyBleHBsYWluZWQgaW4gYW5vdGhlciBl
-LW1haWwgdGhyZWFkLCB1bmxpa2UgdGhlIGxvY2sgaW52ZXJzaW9uIGNoZWNraW5nDQo+ID4gcGVy
-Zm9ybWVkIGJ5IHRoZSA8PSB2NC4xMyBsb2NrZGVwIGNvZGUsIGNyb3NzLXJlbGVhc2UgY2hlY2tp
-bmcgaXMgYSBoZXVyaXN0aWMNCj4gPiB0aGF0IGRvZXMgbm90IGhhdmUgYSBzb3VuZCB0aGVvcmV0
-aWNhbCBiYXNpcy4gVGhlIGxvY2sgdmFsaWRhdG9yIGlzIGFuDQo+IA0KPiBJdCdzIG5vdCBoZXVy
-aXN0aWMgYnV0IGJhc2VkIG9uIHRoZSBzYW1lIHRoZW9yZXRpY2FsIGJhc2lzIGFzIDw9NC4xMw0K
-PiBsb2NrZGVwLiBJIG1lYW4sIHRoZSBrZXkgYmFzaXMgaXM6DQo+IA0KPiAgICAxKSBXaGF0IGNh
-dXNlcyBkZWFkbG9jaw0KPiAgICAyKSBXaGF0IGlzIGEgZGVwZW5kZW5jeQ0KPiAgICAzKSBCdWls
-ZCBhIGRlcGVuZGVuY3kgd2hlbiBpZGVudGlmaWVkDQoNClNvcnJ5IGJ1dCBJIGRvdWJ0IHRoYXQg
-dGhhdCBzdGF0ZW1lbnQgaXMgY29ycmVjdC4gVGhlIHB1YmxpY2F0aW9uIFsxXSBjb250YWlucw0K
-YSBwcm9vZiB0aGF0IGFuIGFsZ29yaXRobSB0aGF0IGlzIGNsb3NlbHkgcmVsYXRlZCB0byB0aGUg
-dHJhZGl0aW9uYWwgbG9ja2RlcA0KbG9jayBpbnZlcnNpb24gZGV0ZWN0b3IgaXMgYWJsZSB0byBk
-ZXRlY3QgYWxsIGRlYWRsb2NrcyBhbmQgZG9lcyBub3QgcmVwb3J0DQpmYWxzZSBwb3NpdGl2ZXMg
-Zm9yIHByb2dyYW1zIHRoYXQgb25seSB1c2UgbXV0ZXhlcyBhcyBzeW5jaHJvbml6YXRpb24gb2Jq
-ZWN0cy4NClRoZSBjb21tZW50IG9mIHRoZSBhdXRob3JzIG9mIHRoYXQgcGFwZXIgZm9yIHByb2dy
-YW1zIHRoYXQgdXNlIG11dGV4ZXMsDQpjb25kaXRpb24gdmFyaWFibGVzIGFuZCBzZW1hcGhvcmVz
-IGlzIGFzIGZvbGxvd3M6ICJJdCBpcyB1bmNsZWFyIGhvdyB0byBleHRlbmQNCnRoZSBsb2NrLWdy
-YXBoLWJhc2VkIGFsZ29yaXRobSBpbiBTZWN0aW9uIDMgdG8gZWZmaWNpZW50bHkgY29uc2lkZXIg
-dGhlIGVmZmVjdHMNCm9mIGNvbmRpdGlvbiB2YXJpYWJsZXMgYW5kIHNlbWFwaG9yZXMuIFRoZXJl
-Zm9yZSwgd2hlbiBjb25zaWRlcmluZyBhbGwgdGhyZWUNCnN5bmNocm9uaXphdGlvbiBtZWNoYW5p
-c21zLCB3ZSBjdXJyZW50bHkgdXNlIGEgbmFpdmUgYWxnb3JpdGhtIHRoYXQgY2hlY2tzIGVhY2gN
-CmZlYXNpYmxlIHBlcm11dGF0aW9uIG9mIHRoZSB0cmFjZSBmb3IgZGVhZGxvY2suIiBJbiBvdGhl
-ciB3b3JkcywgaWYgeW91IGhhdmUNCmZvdW5kIGFuIGFwcHJvYWNoIGZvciBkZXRlY3RpbmcgcG90
-ZW50aWFsIGRlYWRsb2NrcyBmb3IgcHJvZ3JhbXMgdGhhdCB1c2UgdGhlc2UNCnRocmVlIGtpbmRz
-IG9mIHN5bmNocm9uaXphdGlvbiBvYmplY3RzIGFuZCB0aGF0IGRvZXMgbm90IHJlcG9ydCBmYWxz
-ZSBwb3NpdGl2ZXMNCnRoZW4gdGhhdCdzIGEgYnJlYWt0aHJvdWdoIHRoYXQncyB3b3J0aCBwdWJs
-aXNoaW5nIGluIGEgam91cm5hbCBvciBpbiB0aGUNCnByb2NlZWRpbmdzIG9mIGEgc2NpZW50aWZp
-YyBjb25mZXJlbmNlLg0KDQpCYXJ0Lg0KDQpbMV0gQWdhcndhbCwgUmFodWwsIGFuZCBTY290dCBE
-LiBTdG9sbGVyLiAiUnVuLXRpbWUgZGV0ZWN0aW9uIG9mIHBvdGVudGlhbA0KZGVhZGxvY2tzIGZv
-ciBwcm9ncmFtcyB3aXRoIGxvY2tzLCBzZW1hcGhvcmVzLCBhbmQgY29uZGl0aW9uIHZhcmlhYmxl
-cy4iIEluDQpQcm9jZWVkaW5ncyBvZiB0aGUgMjAwNiB3b3Jrc2hvcCBvbiBQYXJhbGxlbCBhbmQg
-ZGlzdHJpYnV0ZWQgc3lzdGVtczogdGVzdGluZw0KYW5kIGRlYnVnZ2luZywgcHAuIDUxLTYwLiBB
-Q00sIDIwMDYuDQooaHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2xhci5vcmcvOTMyNC9mYzBiNWQ1
-Y2Q1ZTA1ZDU1MWEzZTk4NzU3MTIyMDM5OTQ2YTIucGRmKS4=
+On Fri, Oct 20, 2017 at 07:44:51AM -0700, Christoph Hellwig wrote:
+> The Subject prefix for this should be "block:".
+> 
+> > @@ -945,7 +945,7 @@ int submit_bio_wait(struct bio *bio)
+> >  {
+> >  	struct submit_bio_ret ret;
+> >  
+> > -	init_completion(&ret.event);
+> > +	init_completion_with_map(&ret.event, &bio->bi_disk->lockdep_map);
+> 
+> FYI, I have an outstanding patch to simplify this a lot, which
+> switches this to DECLARE_COMPLETION_ONSTACK.  I can delay this or let
+> you pick it up with your series, but we'll need a variant of
+> DECLARE_COMPLETION_ONSTACK with the lockdep annotations.
+
+Hello,
+
+I'm sorry for late.
+
+I think your patch makes block code simpler and better. I like it.
+
+But, I just wonder if it's related to my series. Is it proper to add
+your patch into my series?
+
+Thanks,
+Byungchul
+
+> Patch below for reference:
+> 
+> ---
+> >From d65b89843c9f82c0744643515ba51dd10e66e67b Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Thu, 5 Oct 2017 18:31:02 +0200
+> Subject: block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
+> 
+> Simplify the code by getting rid of the submit_bio_ret structure.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/bio.c | 19 +++++--------------
+>  1 file changed, 5 insertions(+), 14 deletions(-)
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index 8338304ea256..4e18e959fc0a 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -917,17 +917,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>  }
+>  EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
+>  
+> -struct submit_bio_ret {
+> -	struct completion event;
+> -	int error;
+> -};
+> -
+>  static void submit_bio_wait_endio(struct bio *bio)
+>  {
+> -	struct submit_bio_ret *ret = bio->bi_private;
+> -
+> -	ret->error = blk_status_to_errno(bio->bi_status);
+> -	complete(&ret->event);
+> +	complete(bio->bi_private);
+>  }
+>  
+>  /**
+> @@ -943,16 +935,15 @@ static void submit_bio_wait_endio(struct bio *bio)
+>   */
+>  int submit_bio_wait(struct bio *bio)
+>  {
+> -	struct submit_bio_ret ret;
+> +	DECLARE_COMPLETION_ONSTACK(done);
+>  
+> -	init_completion(&ret.event);
+> -	bio->bi_private = &ret;
+> +	bio->bi_private = &done;
+>  	bio->bi_end_io = submit_bio_wait_endio;
+>  	bio->bi_opf |= REQ_SYNC;
+>  	submit_bio(bio);
+> -	wait_for_completion_io(&ret.event);
+> +	wait_for_completion_io(&done);
+>  
+> -	return ret.error;
+> +	return blk_status_to_errno(bio->bi_status);
+>  }
+>  EXPORT_SYMBOL(submit_bio_wait);
+>  
+> -- 
+> 2.14.2
