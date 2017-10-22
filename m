@@ -1,71 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO11.lge.com ([156.147.23.51]:51319 "EHLO
-        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750948AbdJYFLZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:11:25 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v4 0/7] cross-release: Enhence performance and fix false positives
-Date: Wed, 25 Oct 2017 14:11:05 +0900
-Message-Id: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:49855 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751112AbdJVGkS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 02:40:18 -0400
+Subject: Re: [PATCH 1/2] slab, slub, slob: add slab_flags_t
+References: <20171021100225.GA22428@avx2>
+From: Pekka Enberg <penberg@iki.fi>
+Message-ID: <f4a10428-c35c-d1d4-1816-5175f88b8962@iki.fi>
+Date: Sun, 22 Oct 2017 09:40:14 +0300
+MIME-Version: 1.0
+In-Reply-To: <20171021100225.GA22428@avx2>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Alexey Dobriyan <adobriyan@gmail.com>, akpm@linux-foundation.org
+Cc: linux-mm@kvack.org, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, ecryptfs@vger.kernel.org, linux-xfs@vger.kernel.org, kasan-dev@googlegroups.com, netdev@vger.kernel.org
 
-There are two things I didn't apply as Ingo suggested, since I didn't
-understand his intention exactly:
 
-   1. Adding 'Analyzed-by' tag at the 2nd patch
-   2. Using a inline function instead #define at the 7th patch
 
-Let me know if the above should still be applied.
+On 21/10/2017 13.02, Alexey Dobriyan wrote:
+> Add sparse-checked slab_flags_t for struct kmem_cache::flags
+> (SLAB_POISON, etc).
+> 
+> SLAB is bloated temporarily by switching to "unsigned long",
+> but only temporarily.
+> 
+> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 
-Changes from v3
-- Exclude a patch removing white space
-- Enhance commit messages as Ingo suggested
-- Re-design patches adding a boot param and a Kconfig allowing unwind
-- Simplify a patch assigning lock classes to genhds as Ingo suggested
-- Add proper tags in commit messages e.g. reported-by and analyzed-by
-
-Changes from v2
-- Combine 2 serises, fixing false positives and enhance performance
-- Add Christoph Hellwig's patch simplifying submit_bio_wait() code
-- Add 2 more 'init with lockdep map' macros for completionm
-- Rename init_completion_with_map() to init_completion_map()
-
-Changes from v1
-- Fix kconfig description as Ingo suggested
-- Fix commit message writing out CONFIG_ variable
-- Introduce a new kernel parameter, crossrelease_fullstack
-- Replace the number with the output of *perf*
-- Separate a patch removing white space
-
-Byungchul Park (6):
-  locking/lockdep: Add a boot parameter allowing unwind in cross-release
-    and disable it by default
-  locking/lockdep: Remove the BROKEN flag from
-    CONFIG_LOCKDEP_CROSSRELEASE and CONFIG_LOCKDEP_COMPLETIONS
-  locking/lockdep: Introduce
-    CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
-  completion: Add support for initializing completion with lockdep_map
-  workqueue: Remove unnecessary acquisitions wrt workqueue flush
-  block: Assign a lock_class per gendisk used for wait_for_completion()
-
-Christoph Hellwig (1):
-  block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
-
- Documentation/admin-guide/kernel-parameters.txt |  3 +++
- block/bio.c                                     | 19 +++++--------------
- block/genhd.c                                   | 10 ++--------
- include/linux/completion.h                      | 14 ++++++++++++++
- include/linux/genhd.h                           | 24 ++++++++++++++++++++++--
- include/linux/workqueue.h                       |  4 ++--
- kernel/locking/lockdep.c                        | 23 +++++++++++++++++++++--
- kernel/workqueue.c                              | 19 +++----------------
- lib/Kconfig.debug                               | 19 +++++++++++++++++--
- 9 files changed, 89 insertions(+), 46 deletions(-)
-
--- 
-1.9.1
-
+Acked-by: Pekka Enberg <penberg@kernel.org>
