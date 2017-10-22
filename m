@@ -1,92 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54082 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751828AbdJSHrJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2017 03:47:09 -0400
-Received: from 212095007233.public.telering.at ([212.95.7.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e55Xo-0008Ij-JM
-        for linux-xfs@vger.kernel.org; Thu, 19 Oct 2017 07:47:09 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH for-4.14] xfs: fix AIM7 regression
-Date: Thu, 19 Oct 2017 09:47:05 +0200
-Message-Id: <20171019074705.24827-1-hch@lst.de>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:45501 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751003AbdJVOfE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 10:35:04 -0400
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
+ completion with lockdep_map
+Date: Sun, 22 Oct 2017 14:34:56 +0000
+Message-ID: <1508682894.2564.8.camel@wdc.com>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+         <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
+         <1508455438.4542.4.camel@wdc.com>
+         <alpine.DEB.2.20.1710200829340.3083@nanos>
+         <1508529532.3029.15.camel@wdc.com>
+         <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
+In-Reply-To: <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <B5349D68919D6A4D8481F45A211BEDF9@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "max.byungchul.park@gmail.com" <max.byungchul.park@gmail.com>
+Cc: "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "byungchul.park@lge.com" <byungchul.park@lge.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
 
-Apparently our current rwsem code doesn't like doing the trylock, then
-lock for real scheme.  So change our read/write methods to just do the
-trylock for the RWF_NOWAIT case.  This fixes a ~25% regression in
-AIM7.
-
-Fixes: 91f9943e ("fs: support RWF_NOWAIT for buffered reads")
-Reported-by: kernel test robot <xiaolong.ye@intel.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 309e26c9dddb..f40b5da5d467 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -237,11 +237,13 @@ xfs_file_dax_read(
- 	if (!count)
- 		return 0; /* skip atime */
- 
--	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
--		if (iocb->ki_flags & IOCB_NOWAIT)
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
- 			return -EAGAIN;
-+	} else {
- 		xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	}
-+
- 	ret = dax_iomap_rw(iocb, to, &xfs_iomap_ops);
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 
-@@ -259,9 +261,10 @@ xfs_file_buffered_aio_read(
- 
- 	trace_xfs_file_buffered_read(ip, iov_iter_count(to), iocb->ki_pos);
- 
--	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
--		if (iocb->ki_flags & IOCB_NOWAIT)
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
- 			return -EAGAIN;
-+	} else {
- 		xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	}
- 	ret = generic_file_read_iter(iocb, to);
-@@ -552,9 +555,10 @@ xfs_file_dio_aio_write(
- 		iolock = XFS_IOLOCK_SHARED;
- 	}
- 
--	if (!xfs_ilock_nowait(ip, iolock)) {
--		if (iocb->ki_flags & IOCB_NOWAIT)
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!xfs_ilock_nowait(ip, iolock))
- 			return -EAGAIN;
-+	} else {
- 		xfs_ilock(ip, iolock);
- 	}
- 
-@@ -606,9 +610,10 @@ xfs_file_dax_write(
- 	size_t			count;
- 	loff_t			pos;
- 
--	if (!xfs_ilock_nowait(ip, iolock)) {
--		if (iocb->ki_flags & IOCB_NOWAIT)
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!xfs_ilock_nowait(ip, iolock))
- 			return -EAGAIN;
-+	} else {
- 		xfs_ilock(ip, iolock);
- 	}
- 
--- 
-2.14.2
-
+T24gU2F0LCAyMDE3LTEwLTIxIGF0IDExOjIzICswOTAwLCBCeXVuZ2NodWwgUGFyayB3cm90ZToN
+Cj4gT24gU2F0LCBPY3QgMjEsIDIwMTcgYXQgNDo1OCBBTSwgQmFydCBWYW4gQXNzY2hlIDxCYXJ0
+LlZhbkFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gPiBBcyBleHBsYWluZWQgaW4gYW5vdGhlciBl
+LW1haWwgdGhyZWFkLCB1bmxpa2UgdGhlIGxvY2sgaW52ZXJzaW9uIGNoZWNraW5nDQo+ID4gcGVy
+Zm9ybWVkIGJ5IHRoZSA8PSB2NC4xMyBsb2NrZGVwIGNvZGUsIGNyb3NzLXJlbGVhc2UgY2hlY2tp
+bmcgaXMgYSBoZXVyaXN0aWMNCj4gPiB0aGF0IGRvZXMgbm90IGhhdmUgYSBzb3VuZCB0aGVvcmV0
+aWNhbCBiYXNpcy4gVGhlIGxvY2sgdmFsaWRhdG9yIGlzIGFuDQo+IA0KPiBJdCdzIG5vdCBoZXVy
+aXN0aWMgYnV0IGJhc2VkIG9uIHRoZSBzYW1lIHRoZW9yZXRpY2FsIGJhc2lzIGFzIDw9NC4xMw0K
+PiBsb2NrZGVwLiBJIG1lYW4sIHRoZSBrZXkgYmFzaXMgaXM6DQo+IA0KPiAgICAxKSBXaGF0IGNh
+dXNlcyBkZWFkbG9jaw0KPiAgICAyKSBXaGF0IGlzIGEgZGVwZW5kZW5jeQ0KPiAgICAzKSBCdWls
+ZCBhIGRlcGVuZGVuY3kgd2hlbiBpZGVudGlmaWVkDQoNClNvcnJ5IGJ1dCBJIGRvdWJ0IHRoYXQg
+dGhhdCBzdGF0ZW1lbnQgaXMgY29ycmVjdC4gVGhlIHB1YmxpY2F0aW9uIFsxXSBjb250YWlucw0K
+YSBwcm9vZiB0aGF0IGFuIGFsZ29yaXRobSB0aGF0IGlzIGNsb3NlbHkgcmVsYXRlZCB0byB0aGUg
+dHJhZGl0aW9uYWwgbG9ja2RlcA0KbG9jayBpbnZlcnNpb24gZGV0ZWN0b3IgaXMgYWJsZSB0byBk
+ZXRlY3QgYWxsIGRlYWRsb2NrcyBhbmQgZG9lcyBub3QgcmVwb3J0DQpmYWxzZSBwb3NpdGl2ZXMg
+Zm9yIHByb2dyYW1zIHRoYXQgb25seSB1c2UgbXV0ZXhlcyBhcyBzeW5jaHJvbml6YXRpb24gb2Jq
+ZWN0cy4NClRoZSBjb21tZW50IG9mIHRoZSBhdXRob3JzIG9mIHRoYXQgcGFwZXIgZm9yIHByb2dy
+YW1zIHRoYXQgdXNlIG11dGV4ZXMsDQpjb25kaXRpb24gdmFyaWFibGVzIGFuZCBzZW1hcGhvcmVz
+IGlzIGFzIGZvbGxvd3M6ICJJdCBpcyB1bmNsZWFyIGhvdyB0byBleHRlbmQNCnRoZSBsb2NrLWdy
+YXBoLWJhc2VkIGFsZ29yaXRobSBpbiBTZWN0aW9uIDMgdG8gZWZmaWNpZW50bHkgY29uc2lkZXIg
+dGhlIGVmZmVjdHMNCm9mIGNvbmRpdGlvbiB2YXJpYWJsZXMgYW5kIHNlbWFwaG9yZXMuIFRoZXJl
+Zm9yZSwgd2hlbiBjb25zaWRlcmluZyBhbGwgdGhyZWUNCnN5bmNocm9uaXphdGlvbiBtZWNoYW5p
+c21zLCB3ZSBjdXJyZW50bHkgdXNlIGEgbmFpdmUgYWxnb3JpdGhtIHRoYXQgY2hlY2tzIGVhY2gN
+CmZlYXNpYmxlIHBlcm11dGF0aW9uIG9mIHRoZSB0cmFjZSBmb3IgZGVhZGxvY2suIiBJbiBvdGhl
+ciB3b3JkcywgaWYgeW91IGhhdmUNCmZvdW5kIGFuIGFwcHJvYWNoIGZvciBkZXRlY3RpbmcgcG90
+ZW50aWFsIGRlYWRsb2NrcyBmb3IgcHJvZ3JhbXMgdGhhdCB1c2UgdGhlc2UNCnRocmVlIGtpbmRz
+IG9mIHN5bmNocm9uaXphdGlvbiBvYmplY3RzIGFuZCB0aGF0IGRvZXMgbm90IHJlcG9ydCBmYWxz
+ZSBwb3NpdGl2ZXMNCnRoZW4gdGhhdCdzIGEgYnJlYWt0aHJvdWdoIHRoYXQncyB3b3J0aCBwdWJs
+aXNoaW5nIGluIGEgam91cm5hbCBvciBpbiB0aGUNCnByb2NlZWRpbmdzIG9mIGEgc2NpZW50aWZp
+YyBjb25mZXJlbmNlLg0KDQpCYXJ0Lg0KDQpbMV0gQWdhcndhbCwgUmFodWwsIGFuZCBTY290dCBE
+LiBTdG9sbGVyLiAiUnVuLXRpbWUgZGV0ZWN0aW9uIG9mIHBvdGVudGlhbA0KZGVhZGxvY2tzIGZv
+ciBwcm9ncmFtcyB3aXRoIGxvY2tzLCBzZW1hcGhvcmVzLCBhbmQgY29uZGl0aW9uIHZhcmlhYmxl
+cy4iIEluDQpQcm9jZWVkaW5ncyBvZiB0aGUgMjAwNiB3b3Jrc2hvcCBvbiBQYXJhbGxlbCBhbmQg
+ZGlzdHJpYnV0ZWQgc3lzdGVtczogdGVzdGluZw0KYW5kIGRlYnVnZ2luZywgcHAuIDUxLTYwLiBB
+Q00sIDIwMDYuDQooaHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2xhci5vcmcvOTMyNC9mYzBiNWQ1
+Y2Q1ZTA1ZDU1MWEzZTk4NzU3MTIyMDM5OTQ2YTIucGRmKS4=
