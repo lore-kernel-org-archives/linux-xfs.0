@@ -1,206 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41428 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750961AbdJUGKU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Oct 2017 02:10:20 -0400
-Date: Fri, 20 Oct 2017 23:10:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
- recovered buffers")
-Message-ID: <20171021061013.GA5483@magnolia>
-References: <20171013184916.GS7122@magnolia>
- <20171014115550.GB50635@bfoster.bfoster>
- <20171014190530.GA4594@magnolia>
- <20171016212933.GG15067@dastard>
- <20171016221818.GQ4703@magnolia>
- <20171020151610.GD13669@bfoster.bfoster>
- <20171020164406.GW4755@magnolia>
- <20171020165940.GE13669@bfoster.bfoster>
- <20171020180040.GZ4755@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:54894 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932120AbdJVX1p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 19:27:45 -0400
+Date: Mon, 23 Oct 2017 10:27:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/17] Parent Pointers V3
+Message-ID: <20171022232741.GU3666@dastard>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <CAOQ4uxhzZT=5O6PM4Gp=uSwYPFdrO5X9D8UF54f3jEmM2LxK1Q@mail.gmail.com>
+ <20171020224157.GS3666@dastard>
+ <CAOQ4uxjQk_82RxzSKWT+UeepkKXtrXbVmNW2wz6Mngq=UX+XZg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171020180040.GZ4755@magnolia>
+In-Reply-To: <CAOQ4uxjQk_82RxzSKWT+UeepkKXtrXbVmNW2wz6Mngq=UX+XZg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 11:00:40AM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 20, 2017 at 12:59:41PM -0400, Brian Foster wrote:
-> > On Fri, Oct 20, 2017 at 09:44:06AM -0700, Darrick J. Wong wrote:
-> > > On Fri, Oct 20, 2017 at 11:16:10AM -0400, Brian Foster wrote:
-> > > > On Mon, Oct 16, 2017 at 03:18:18PM -0700, Darrick J. Wong wrote:
-> > > > > On Tue, Oct 17, 2017 at 08:29:33AM +1100, Dave Chinner wrote:
-> > > > > > On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
-> > > > > > > On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
-> > > > > > > > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
-> > > > > > > > > Hi all,
-> > > > > > > > > 
-> > > > > > > > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
-> > > > > > > > > recovered buffers").  I was analyzing a scrub failure on generic/392
-> > > > > > > > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
-> > > > > > > > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
-> > > > > > > > > and signalling error.
-> > > > > > > > > 
-> > > > > > > > > The pattern I observe is that when log recovery runs on a v4 filesystem,
-> > > > > > > > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
-> > > > > > > > > buffer therefore gets created and read without any verifiers.
-> > > > > > > > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
-> > > > > > > > > filesystem we come back and attach verifiers and all is well.  However,
-> > > > > > > > > on a v4 filesystem the function returns without doing anything, so the
-> > > > > > > > > xfs_buf just sits around in memory with no verifier.  Subsequent
-> > > > > > > > > read/log/relse patterns can write anything they want without write
-> > > > > > > > > verifiers to check that.
-> > > > > > > > > 
-> > > > > > > > > If the v4 fs didn't need log recovery, the buffers get created with
-> > > > > > > > > b_ops as you'd expect.
-> > > > > > > > > 
-> > > > > > > > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
-> > > > > > > > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
-> > > > > > > > > LSN is up to date?
-> > > > > > > > > 
-> > > > > > > > 
-> > > > > > > > Seems reasonable, but I notice that the has_crc() check around
-> > > > > > > > _validate_buf_type() comes in sometime after the the original commit
-> > > > > > > > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
-> > > > > > > > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
-> > > > > > > > errors").
-> > > > > > > > 
-> > > > > > > > IIRC, the problem there is that log recovery had traditionally always
-> > > > > > > > unconditionally replayed everything in the log over whatever resides in
-> > > > > > > > the fs. This actually meant that recovery could transiently corrupt
-> > > > > > > > buffers in certain cases if the target buffer happened to be relogged
-> > > > > > > > more than once and was already up to date, which leads to verification
-> > > > > > > > failures. This was addressed for v5 filesystems with LSN ordering rules,
-> > > > > > > > but the challenge for v4 filesystems was that there is no metadata LSN
-> > > > > > > > and thus no means to detect whether a buffer is already up to date with
-> > > > > > > > regard to a transaction in the log.
-> > > > > > > > 
-> > > > > > > > Dave might have more historical context to confirm that... If that is
-> > > > > > > > still an open issue, a couple initial ideas come to mind:
-> > > > > > > > 
-> > > > > > > > 1.) Do something simple/crude like reclaim all buffers after log
-> > > > > > > > recovery on v4 filesystems to provide a clean slate going forward.
-> > > > > > > > 
-> > > > > > > > 2.) Unconditionally attach verifiers during recovery as originally done
-> > > > > > > > and wire up something generic that short circuits verifier invocations
-> > > > > > > > on v4 filesystems when log recovery is in progress.
-> > > > > > > 
-> > > > > > > What do you think about 3) add b_ops later if they're missing?
-> > > > > > > 
-> > > > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > > > > index 2f97c12..8842a27 100644
-> > > > > > > --- a/fs/xfs/xfs_buf.c
-> > > > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > > > @@ -742,6 +742,15 @@ xfs_buf_read_map(
-> > > > > > >         if (bp) {
-> > > > > > >                 trace_xfs_buf_read(bp, flags, _RET_IP_);
-> > > > > > >  
-> > > > > > > +               /*
-> > > > > > > +                * If this buffer is up to date and has no verifier, try
-> > > > > > > +                * to set one.  This can happen on v4 because log
-> > > > > > > +                * recovery reads in the buffers for replay but does not
-> > > > > > > +                * set b_ops.
-> > > > > > > +                */
-> > > > > > > +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
-> > > > > > > +                       bp->b_ops = ops;
-> > > > > > 
-> > > > > > I don't really like this because it will hide bugs in the code.
-> > > > > > 
-> > > > > > It also doesn't solve the problem because a read with NULL ops will
-> > > > > > still leave a buffer with no ops attached.
-> > > > > > 
-> > > > > > IMO, if we've read/created a buffer without ops, then it is up to
-> > > > > > the code that created/read it to either attach the required ops
-> > > > > > before the buffer is released or to invalidate the buffer before
-> > > > > > anyone else can use it or write it. The buffer write code warns
-> > > > > > about writing buffers without verfiers, but we can't warn on read
-> > > > > > because read-with-NULL-verifier is a valid thing to do....
-> > > > > 
-> > > > > Fair 'nuff.  FWIW I'm ok with approach #1 if anyone enthusiastically
-> > > > > wants to write it up.
-> > > > > 
-> > > > 
-> > > > What do you guys think about something like this? It runs
-> > > > unconditionally, but this is partly as designed to provide a clean cache
-> > > > on v5 filesystems as well. It should be mostly unnoticeable if log
-> > > > recovery hasn't run, but we could easily add another flag to make it
-> > > > conditional on log recovery if desired.
-> > > > 
-> > > > Brian
-> > > > 
-> > > > --- 8< ---
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > > index dc95a49..226d26b 100644
-> > > > --- a/fs/xfs/xfs_log.c
-> > > > +++ b/fs/xfs/xfs_log.c
-> > > > @@ -780,6 +780,16 @@ xfs_log_mount_finish(
-> > > >  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> > > >  	evict_inodes(mp->m_super);
-> > > >  
-> > > > +	/*
-> > > > +	 * Drain the buffer LRU after log recovery. This is required for
-> > > > +	 * v4 filesystems to avoid leaving around buffers with NULL verifier
-> > > > +	 * ops. Do it unconditionally to make sure we're always in a clean cache
-> > > > +	 * state after mount.
-> > > > +	 */
-> > > > +	xfs_log_force(mp, XFS_LOG_SYNC);
-> > > > +	xfs_ail_push_all_sync(mp->m_ail);
-> > > 
-> > > Is it necessary to force the log & push the AIL even if recovery didn't run?
-> > > 
-> > 
-> > Don't think so.. As noted above, I just did this because it's basically
-> > unnoticeable if log recovery didn't run and it avoids the need to add a
-> > flag. I can add one if that is preferred, or thinking about it again I
-> > suppose we could just sample for XLOG_RECOVERY_NEEDED before we call
-> > xlog_recover_finish() (which clears it).
-> > 
-> > > > +	xfs_wait_buftarg(mp->m_ddev_targp);
-> > > 
-> > > Otherwise, looks ok enough I'll see if it fixes the scrub failures that
-> > > inspired my original email. :)
-> > > 
-> > 
-> > Thanks, let me know.
+On Sat, Oct 21, 2017 at 10:34:30AM +0300, Amir Goldstein wrote:
+> On Sat, Oct 21, 2017 at 1:41 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Oct 19, 2017 at 07:11:50AM +0300, Amir Goldstein wrote:
+> >> On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
+> >> <allison.henderson@oracle.com> wrote:
+> >> > Hi all,
+> >> >
+> >> > This is the third version of parent pointer attributes for xfs.
+> >> > I've integrated the suggestions made since v2, mostly moving the
+> >> > attr buffers in the xfs_attr_log_item to pointers that point to
+> >> > xfs_attr_item. I've also implementing the recovery routines for
+> >> > the xfs_attr_log_format.  If I missed anything please point it
+> >> > out.  As always, comments and feedback are appreciated.  Thank
+> >> > you!
+> >> >
+> >>
+> >> A minor comment about the cover letter.
+> >> All designated reviewers must know exactly what "parent pointers" are for,
+> >> but it could be useful to add some context in the cover letter about the purpose
+> >> of this work for the sake of other readers on the list. Useful to refer to the
+> >> upcoming scrub support patches.
+> >>
+> >> BTW, not sure if this was mentioned in the previous lifetime of those
+> >> patches, but parent pointers can be used to implement exportfs operation
+> >> xfs_fs_fh_to_parent() for "non-connectable" file handles (FILEID_INO32_GEN)
+> >> and to implement xfs_fs_get_name(), which would make reconnect_path()
+> >> *much* more efficient.
+> >
+> > However, XFS only uses FILEID_INO32_GEN for directories
+> > because they have known parents. For them, we implement ->get_parent()
+> > and that means reconnect_path just does ->lookup("..") to find the
+> > parents and doesn't need anything special.
+> >
+> > We use FILEID_INO32_GEN_PARENT for all other types of files to
+> > encode the ino # + generation of the parent inode into the handle.
+> > That means for any non-dir file handle, our implemention of
+> > ->fh_to_parent  will get us the parent info as efficiently as
+> > possible.
 > 
-> This seems to fix the scrub problems running generic/392 xfs/121 xfs/181
-> on a v4 filesystem.
+> We only encode FILEID_INO32_GEN_PARENT when we are asked for
+> a "connectable" file handle, which is NOT the case with name_to_handle_at(2)
+> and is the case with nfsd on when NFS share is exported with subtree_check
+> options, which AFAIK, is the less common case.
 > 
-> (Note that you have to have built the djwong-devel branches of the
-> kernel and xfsprogs in order for xfstests to trip over the verifier-less
-> buffers.  The particular patch is "xfs: scrub in-core metadata".)
+> The question is, when we encode a non-connectable file handle
+> (FILEID_INO32_GEN), will nfsd benefit from getting a connected file handle
+> after decode? (result may always be connected if dentry is already in cache).
+> 
+> > IOWs, parent pointers won't actually speed up filehandle ->
+> > dentry reconnection on XFS at all because we already encode parent
+> > pointers into the filehandles that need them....
+> 
+> Look at default implementation of ->get_name() in expfs.c and you will
+> see why I wrote that xfs_fs_get_name() would make reconnect_path()
+> *much* more efficient, even for directories.
 
-Follow-up question: if xlog_recover_finish returns an error, there's no
-point in pushing the log, right?  I think we're basically toast if that
-happens.
+If you think it will be a win, then I'm not going to stop you from
+implementing and benchmarking it to demonstrate how much faster it
+is. Should be pretty simple to benchmark - stat a whole bunch of
+files on an NFS client, drop server caches, stat the files again. If
+it's a win, the server CPU and IO load should be lower, and the
+client side stat rate should be faster....
 
---D
+Cheers,
 
-> 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > +
-> > > >  	if (readonly)
-> > > >  		mp->m_flags |= XFS_MOUNT_RDONLY;
-> > > >  
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
