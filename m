@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54461 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:46984 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbdJWGaa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 02:30:30 -0400
+        with ESMTP id S1751083AbdJWGai (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 02:30:38 -0400
 Received: from [46.125.250.114] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e6WFp-0002nk-EJ
-        for linux-xfs@vger.kernel.org; Mon, 23 Oct 2017 06:30:30 +0000
+        id 1e6WFy-0002s4-1P
+        for linux-xfs@vger.kernel.org; Mon, 23 Oct 2017 06:30:38 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/4] xfs: remove xfs_bmbt_validate_extent
-Date: Mon, 23 Oct 2017 08:30:15 +0200
-Message-Id: <20171023063017.11520-3-hch@lst.de>
+Subject: [PATCH 4/4] xfs: add a new xfs_iext_lookup_extent_before helper
+Date: Mon, 23 Oct 2017 08:30:17 +0200
+Message-Id: <20171023063017.11520-5-hch@lst.de>
 In-Reply-To: <20171023063017.11520-1-hch@lst.de>
 References: <20171023063017.11520-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,91 +18,144 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We have stop supporting file systems without unwritten extent bit support
-a long time ago, so remove the debug code for it which will get in the way
-of future changes.
+This helper looks up the last extent the covers space before the passed
+in block number.  This is useful for truncate and similar operations that
+operate backwards over the extent list.  For xfs_bunmapi it also is
+a slight optimization as we can return early if there are not extents
+at or below the end of the to be truncated range.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |  8 +-------
- fs/xfs/libxfs/xfs_bmap_btree.h | 14 --------------
- fs/xfs/libxfs/xfs_inode_fork.c |  7 -------
- 3 files changed, 1 insertion(+), 28 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       | 27 +++++++--------------------
+ fs/xfs/libxfs/xfs_inode_fork.c | 21 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.h |  4 ++++
+ fs/xfs/xfs_reflink.c           | 19 +++++++------------
+ 4 files changed, 39 insertions(+), 32 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 46813b71dd74..19ec8b1f99dd 100644
+index 53ff6d92b532..b26c4ece7cbe 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1166,8 +1166,7 @@ xfs_bmap_add_attrfork(
- /*
-  * Read in the extents to if_extents.
-  * All inode fields are set up by caller, we just traverse the btree
-- * and copy the records in. If the file system cannot contain unwritten
-- * extents, the records are checked for no "state" flags.
-+ * and copy the records in.
-  */
- int					/* error */
- xfs_bmap_read_extents(
-@@ -1255,11 +1254,6 @@ xfs_bmap_read_extents(
- 			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
- 			trp->l0 = be64_to_cpu(frp->l0);
- 			trp->l1 = be64_to_cpu(frp->l1);
--			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
--				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
--						 XFS_ERRLEVEL_LOW, mp);
--				goto error0;
--			}
- 			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
- 		}
- 		xfs_trans_brelse(tp, bp);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 6f891eeb88f6..82d397de8e00 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -123,18 +123,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
+@@ -1380,17 +1380,8 @@ xfs_bmap_last_before(
+ 			return error;
+ 	}
  
--/*
-- * Check that the extent does not contain an invalid unwritten extent flag.
-- */
--static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
--		struct xfs_bmbt_rec_host *ep)
--{
--	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
--		return true;
--	if (whichfork == XFS_DATA_FORK &&
--	    xfs_sb_version_hasextflgbit(&mp->m_sb))
--		return true;
--	return false;
--}
+-	if (xfs_iext_lookup_extent(ip, ifp, *last_block - 1, &idx, &got)) {
+-		if (got.br_startoff <= *last_block - 1)
+-			return 0;
+-	}
 -
- #endif	/* __XFS_BMAP_BTREE_H__ */
+-	if (xfs_iext_get_extent(ifp, idx - 1, &got)) {
+-		*last_block = got.br_startoff + got.br_blockcount;
+-		return 0;
+-	}
+-
+-	*last_block = 0;
++	if (!xfs_iext_lookup_extent_before(ip, ifp, last_block, &idx, &got))
++		*last_block = 0;
+ 	return 0;
+ }
+ 
+@@ -5154,17 +5145,13 @@ __xfs_bunmapi(
+ 	}
+ 	XFS_STATS_INC(mp, xs_blk_unmap);
+ 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
+-	end = start + len - 1;
++	end = start + len;
+ 
+-	/*
+-	 * Check to see if the given block number is past the end of the
+-	 * file, back up to the last block if so...
+-	 */
+-	if (!xfs_iext_lookup_extent(ip, ifp, end, &lastx, &got)) {
+-		ASSERT(lastx > 0);
+-		xfs_iext_get_extent(ifp, --lastx, &got);
+-		end = got.br_startoff + got.br_blockcount - 1;
++	if (!xfs_iext_lookup_extent_before(ip, ifp, &end, &lastx, &got)) {
++		*rlen = 0;
++		return 0;
+ 	}
++	end--;
+ 
+ 	logflags = 0;
+ 	if (ifp->if_flags & XFS_IFBROOT) {
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index b1e69734c450..48a5dec360cd 100644
+index c70f9ef07b6d..5b90f912e41a 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.c
 +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -373,11 +373,6 @@ xfs_iformat_extents(
- 			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
- 			ep->l0 = get_unaligned_be64(&dp->l0);
- 			ep->l1 = get_unaligned_be64(&dp->l1);
--			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
--				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
--						 XFS_ERRLEVEL_LOW, mp);
--				return -EFSCORRUPTED;
--			}
- 			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
- 		}
- 	}
-@@ -801,8 +796,6 @@ xfs_iextents_copy(
- 	for (i = 0; i < nrecs; i++) {
- 		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+@@ -1960,6 +1960,27 @@ xfs_iext_lookup_extent(
+ 	return true;
+ }
  
--		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
--
- 		start_block = xfs_bmbt_get_startblock(ep);
- 		if (isnullstartblock(start_block)) {
- 			/*
++/*
++ * Returns the last extent before end, and if this extent doesn't cover
++ * end, update end to the end of the extent.
++ */
++bool
++xfs_iext_lookup_extent_before(
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp,
++	xfs_fileoff_t		*end,
++	xfs_extnum_t		*idxp,
++	struct xfs_bmbt_irec	*gotp)
++{
++	if (xfs_iext_lookup_extent(ip, ifp, *end - 1, idxp, gotp) &&
++	    gotp->br_startoff <= *end - 1)
++		return true;
++	if (!xfs_iext_get_extent(ifp, --*idxp, gotp))
++		return false;
++	*end = gotp->br_startoff + gotp->br_blockcount;
++	return true;
++}
++
+ /*
+  * Return true if there is an extent at index idx, and return the expanded
+  * extent structure at idx in that case.  Else return false.
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index e0c42ea9b8d0..113fd42ec36d 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -183,6 +183,10 @@ void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
+ bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
+ 			struct xfs_ifork *ifp, xfs_fileoff_t bno,
+ 			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
++bool		xfs_iext_lookup_extent_before(struct xfs_inode *ip,
++			struct xfs_ifork *ifp, xfs_fileoff_t *end,
++			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
++
+ bool		xfs_iext_get_extent(struct xfs_ifork *ifp, xfs_extnum_t idx,
+ 			struct xfs_bmbt_irec *gotp);
+ void		xfs_iext_update_extent(struct xfs_inode *ip, int state,
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 37e603bf1591..1205747e1409 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -733,18 +733,13 @@ xfs_reflink_end_cow(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	/* If there is a hole at end_fsb - 1 go to the previous extent */
+-	if (!xfs_iext_lookup_extent(ip, ifp, end_fsb - 1, &idx, &got) ||
+-	    got.br_startoff > end_fsb) {
+-		/*
+-		 * In case of racing, overlapping AIO writes no COW extents
+-		 * might be left by the time I/O completes for the loser of
+-		 * the race.  In that case we are done.
+-		 */
+-		if (idx <= 0)
+-			goto out_cancel;
+-		xfs_iext_get_extent(ifp, --idx, &got);
+-	}
++	/*
++	 * In case of racing, overlapping AIO writes no COW extents might be
++	 * left by the time I/O completes for the loser of the race.  In that
++	 * case we are done.
++	 */
++	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &idx, &got))
++		goto out_cancel;
+ 
+ 	/* Walk backwards until we're out of the I/O range... */
+ 	while (got.br_startoff + got.br_blockcount > offset_fsb) {
 -- 
 2.14.2
 
