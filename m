@@ -1,67 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO11.lge.com ([156.147.23.51]:42284 "EHLO
-        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750793AbdJWHEk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 03:04:40 -0400
-Date: Mon, 23 Oct 2017 16:04:33 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [PATCH v2 4/4] lockdep: Assign a lock_class per gendisk used for
- wait_for_completion()
-Message-ID: <20171023070433.GJ3310@X58A-UD3R>
-References: <1508392531-11284-1-git-send-email-byungchul.park@lge.com>
- <1508396607-25362-1-git-send-email-byungchul.park@lge.com>
- <1508396607-25362-5-git-send-email-byungchul.park@lge.com>
- <20171020144451.GA16793@infradead.org>
- <20171022235334.GH3310@X58A-UD3R>
- <20171023063630.GA21280@infradead.org>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:54516 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbdJWIzW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 04:55:22 -0400
+Received: by mail-oi0-f68.google.com with SMTP id a132so29472741oih.11
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 01:55:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171023063630.GA21280@infradead.org>
+In-Reply-To: <20171023071835.67ee5210@mschwideX1>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150846714747.24336.14704246566580871364.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171020075735.GA14378@lst.de> <CAPcyv4hA1nrhDf=DA6_j7s7ezGOBhvEVZ8cu81DNui_p3bhhaA@mail.gmail.com>
+ <20171020162933.GA26320@lst.de> <20171023071835.67ee5210@mschwideX1>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 23 Oct 2017 01:55:20 -0700
+Message-ID: <CAPcyv4hqiV6oHMgFik3MBTw5SJ6hcq4RzngPn2Xtp9kAv1E+Ow@mail.gmail.com>
+Subject: Re: [PATCH v3 02/13] dax: require 'struct page' for filesystem dax
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: peterz@infradead.org, mingo@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, idryomov@gmail.com, kernel-team@lge.com
+To: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 
-On Sun, Oct 22, 2017 at 11:36:30PM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 23, 2017 at 08:53:35AM +0900, Byungchul Park wrote:
-> > On Fri, Oct 20, 2017 at 07:44:51AM -0700, Christoph Hellwig wrote:
-> > > The Subject prefix for this should be "block:".
-> > > 
-> > > > @@ -945,7 +945,7 @@ int submit_bio_wait(struct bio *bio)
-> > > >  {
-> > > >  	struct submit_bio_ret ret;
-> > > >  
-> > > > -	init_completion(&ret.event);
-> > > > +	init_completion_with_map(&ret.event, &bio->bi_disk->lockdep_map);
-> > > 
-> > > FYI, I have an outstanding patch to simplify this a lot, which
-> > > switches this to DECLARE_COMPLETION_ONSTACK.  I can delay this or let
-> > > you pick it up with your series, but we'll need a variant of
-> > > DECLARE_COMPLETION_ONSTACK with the lockdep annotations.
-> > 
-> > Hello,
-> > 
-> > I'm sorry for late.
-> > 
-> > I think your patch makes block code simpler and better. I like it.
-> > 
-> > But, I just wonder if it's related to my series.
-> 
-> Because it shows that we also need a version of DECLARE_COMPLETION_ONSTACK
-> the gets passed an explicit lockdep map.  And because if it was merged
-> through a different tree it would create a conflict.
-> 
-> > Is it proper to add
-> > your patch into my series?
-> 
-> Sure.
+On Sun, Oct 22, 2017 at 10:18 PM, Martin Schwidefsky
+<schwidefsky@de.ibm.com> wrote:
+> On Fri, 20 Oct 2017 18:29:33 +0200
+> Christoph Hellwig <hch@lst.de> wrote:
+>
+>> On Fri, Oct 20, 2017 at 08:23:02AM -0700, Dan Williams wrote:
+>> > Yes, however it seems these drivers / platforms have been living with
+>> > the lack of struct page for a long time. So they either don't use DAX,
+>> > or they have a constrained use case that never triggers
+>> > get_user_pages(). If it is the latter then they could introduce a new
+>> > configuration option that bypasses the pfn_t_devmap() check in
+>> > bdev_dax_supported() and fix up the get_user_pages() paths to fail.
+>> > So, I'd like to understand how these drivers have been using DAX
+>> > support without struct page to see if we need a workaround or we can
+>> > go ahead delete this support. If the usage is limited to
+>> > execute-in-place perhaps we can do a constrained ->direct_access() for
+>> > just that case.
+>>
+>> For axonram I doubt anyone is using it any more - it was a very for
+>> the IBM Cell blades, which were produce=D1=95 in a rather limited number=
+.
+>> And Cell basically seems to be dead as far as I can tell.
+>>
+>> For S/390 Martin might be able to help out what the status of xpram
+>> in general and DAX support in particular is.
+>
+> The goes back to the time where DAX was called XIP. The initial design
+> point has been *not* to have struct pages for a large read-only memory
+> area. There is a block device driver for z/VM that maps a DCSS segment
+> somewhere in memore (no struct page!) with e.g. the complete /usr
+> filesystem. The xpram driver is a different beast and has nothing to
+> do with XIP/DAX.
+>
+> Now, if any there are very few users of the dcssblk driver out there.
+> The idea to save a few megabyte for /usr never really took of.
+>
+> We have to look at our get_user_pages() implementation to see how hard
+> it would be to make it fail if the target address is for an area without
+> struct pages.
 
-I will add yours at the next spin.
-
-Thank you.
-
-BTW, to all...
-
-Any additional opinions about these patches?
+For read-only memory I think we can enable a subset of DAX, and
+explicitly turn off the paths that require get_user_pages(). However,
+I wonder if anyone has tested DAX with dcssblk because fork() requires
+get_user_pages()?
