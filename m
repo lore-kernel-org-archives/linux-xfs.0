@@ -1,104 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38740 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751449AbdJWQyS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Oct 2017 12:54:18 -0400
-Date: Mon, 23 Oct 2017 12:54:17 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: drain the buffer LRU on mount
-Message-ID: <20171023165416.GD45316@bfoster.bfoster>
-References: <20171023144646.50107-1-bfoster@redhat.com>
- <20171023144646.50107-4-bfoster@redhat.com>
- <20171023163940.GE5483@magnolia>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:56354 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751642AbdJWReM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 13:34:12 -0400
+Received: by mail-qk0-f195.google.com with SMTP id l194so22950789qke.13
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 10:34:11 -0700 (PDT)
+Date: Mon, 23 Oct 2017 13:34:09 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH 2/2] dm log writes: add support for DAX
+Message-ID: <20171023173408.z6gog67bdp5s7jzy@destiny>
+References: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
+ <20171020052404.13762-2-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171023163940.GE5483@magnolia>
+In-Reply-To: <20171020052404.13762-2-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Josef Bacik <jbacik@fb.com>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On Mon, Oct 23, 2017 at 09:39:40AM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 23, 2017 at 10:46:45AM -0400, Brian Foster wrote:
-> > Log recovery of v4 filesystems does not use buffer verifiers because
-> > log recovery historically can result in transient buffer corruption
-> > when target buffers might be ahead of the log after a crash. v5
-> > filesystems work around this problem with metadata LSN ordering.
-> > 
-> > While the log recovery behavior is necessary on v4 supers, it
-> > currently can result in leaving buffers around in the LRU without
-> > verifiers attached for a significant amount of time. This can lead
-> > to use of unverified buffers while the filesystem is in active use,
-> > long after recovery has completed.
-> > 
-> > To address this problem and provide a more consistent clean,
-> > post-mount buffer cache state, update the log mount sequence to
-> > unconditionally drain all buffers from the LRU as a final step.
-> > 
-> > Reported-by: Darrick Wong <darrick.wong@oracle.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log.c | 13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index dc95a49..e282fd8 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -744,6 +744,7 @@ xfs_log_mount_finish(
-> >  {
-> >  	int	error = 0;
-> >  	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-> > +	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
-> >  
-> >  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> > @@ -780,6 +781,18 @@ xfs_log_mount_finish(
-> >  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> >  	evict_inodes(mp->m_super);
-> >  
-> > +	/*
-> > +	 * Drain the buffer LRU after log recovery. This is required for v4
-> > +	 * filesystems to avoid leaving around buffers with NULL verifier ops,
-> > +	 * but we do it unconditionally to make sure we're always in a clean
-> > +	 * cache state after mount.
-> > +	 */
-> > +	if (recovered) {
+On Thu, Oct 19, 2017 at 11:24:04PM -0600, Ross Zwisler wrote:
+> Now that we have the ability log filesystem writes using a flat buffer, add
+> support for DAX.  Unfortunately we can't easily track data that has been
+> written via mmap() now that the dax_flush() abstraction was removed by this
+> commit:
 > 
-> if (recovered && !error) { ?
+> commit c3ca015fab6d ("dax: remove the pmem_dax_ops->flush abstraction")
 > 
-> I observed that running xfs/376 on an rmap filesystem fails when it
-> tries to fuzz the high bit of u3.bmx[0].startoff.  That triggers an
-> incorrect freeing of what is now a post-eof extent.  The corresponding
-> rmap free operation fails after the RUI has been logged and shuts down
-> the filesystem, so a subsequent log recovery attempt also fails when it
-> tries to remove an rmap that doesn't exist.  If we then try to force the
-> log we end up deadlocked somehwere... though if we /don't/ then memory
-> gets corrupted and the kernel blows up anyway. :(
+> Otherwise we could just treat each flush as a big write, and store the data
+> that is being synced to media.  It may be worthwhile to add the dax_flush()
+> entry point back, just as a notifier so we can do this logging.
 > 
+> The motivation for this support is the need for an xfstest that can test
+> the new MAP_SYNC DAX flag.  By logging the filesystem activity with
+> dm-log-writes we can show that the MAP_SYNC page faults are writing out
+> their metadata as they happen, instead of requiring an explicit
+> msync/fsync.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
 
-Interesting... do you have a stack trace? I'm curious why forcing the
-log would hang here and not in the subsequent log force in
-xfs_log_unmount() -> xfs_log_quiesce().
+Ok this is just my ignorance of how DAX works shining through, but do we need a
+new flag to indicate this is DAX data?  You are logging it like it's just normal
+data going to a certain sector, is that good enough?  If it is then hooray this
+looks fine to me, I'm just slightly confused.  Thanks,
 
-Brian
-
-> --D
-> 
-> > +		xfs_log_force(mp, XFS_LOG_SYNC);
-> > +		xfs_ail_push_all_sync(mp->m_ail);
-> > +	}
-> > +	xfs_wait_buftarg(mp->m_ddev_targp);
-> > +
-> >  	if (readonly)
-> >  		mp->m_flags |= XFS_MOUNT_RDONLY;
-> >  
-> > -- 
-> > 2.9.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Josef
