@@ -1,65 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40912 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54470 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751282AbdJWOqs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751349AbdJWOqs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 23 Oct 2017 10:46:48 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4F6BFC070133
+        by mx1.redhat.com (Postfix) with ESMTPS id 7D5B480B22
         for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 14:46:48 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3289478DF2
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 60E955DA60
         for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 14:46:48 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/4] xfs: miscellaneous log recovery fixes
-Date: Mon, 23 Oct 2017 10:46:42 -0400
-Message-Id: <20171023144646.50107-1-bfoster@redhat.com>
+Subject: [PATCH RFC 4/4] xfs: enforce a maximum total iclog buffer size
+Date: Mon, 23 Oct 2017 10:46:46 -0400
+Message-Id: <20171023144646.50107-5-bfoster@redhat.com>
+In-Reply-To: <20171023144646.50107-1-bfoster@redhat.com>
+References: <20171023144646.50107-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+Since mkfs has historically had an issue creating a very small
+filesystems with a log smaller than the minimum log size, add an
+extra layer of runtime protection around the log buffer count and
+size parameters. Restrict the total log buffer size to 1/2 of the
+physical log size, otherwise fail the mount.
 
-These are several minor fixes that fell out of both Zorro's[1] and
-Darrick's[2] recent reports. Patches 1 and 2 address the log cycle
-underflow problem on filesystems with logs that are sized too small by
-mfks. Patch 3 drains the lru after log recovery to prevent buffers from
-lingering with NULL verifier ops after log recovery completes (on v4
-fs'). Patch 4 adds a mount time check to enforce that the total log
-buffer size does not exceed 1/2 the physical log size, as suggested by
-Dave[3].
+The default log buffer count and size is 8 and 32k, respectively.
+This total size of 256k results in a minimum log size requirement of
+512k, which is well outside even the smallest logs created by broken
+formats. Therefore, this change should only affect users who
+explicitly attempt to use larger log buffer counts/sizes with such
+filesystems.
 
-Note that patch 4 is RFC for a couple reasons. First, I don't quite grok
-where the 1/2 log size restriction comes from, so I'd like to be able to
-at least include a more descriptive commit log on that. Second, this
-patch causes a couple xfstests failures (xfs/030, xfs/057) when testing
-with larger log buf sizes on filesystems that otherwise have
-sufficiently sized logs (i.e., logbufs=8,logbsize=256k w/ a 3MB log), so
-I'm not totally convinced this restriction is necessary (or 50% is the
-right restriction) without some further feedback on that. For example,
-should we always enforce this restriction as the current patch does, or
-only when the log happens to be under the (expected) minimum size?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Thoughts, reviews, flames appreciated.
-
-Brian
-
-[1] https://marc.info/?l=linux-xfs&m=150674214217044&w=2
-[2] https://marc.info/?l=linux-xfs&m=150792056128414&w=2
-[3] https://marc.info/?l=linux-xfs&m=150819276824933&w=2
-
-Brian Foster (4):
-  xfs: sanity check log record range parameters
-  xfs: fix log block underflow during recovery cycle verification
-  xfs: drain the buffer LRU on mount
-  xfs: enforce a maximum total iclog buffer size
-
- fs/xfs/xfs_log.c         | 21 +++++++++++++++++++++
- fs/xfs/xfs_log_recover.c | 13 ++++++++++---
- 2 files changed, 31 insertions(+), 3 deletions(-)
-
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index e282fd8..5966cab 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1453,6 +1453,14 @@ xlog_alloc_log(
+ 
+ 	xlog_get_iclog_buffer_size(mp, log);
+ 
++	error = -EINVAL;
++	if (log->l_iclog_bufs * log->l_iclog_size > (log->l_logsize >> 1)) {
++		xfs_warn(mp,
++	"total iclog buffer size (logbufs * logbsize) cannot exceed %d bytes",
++			 (log->l_logsize >> 1));
++		goto out_free_log;
++	}
++
+ 	/*
+ 	 * Use a NULL block for the extra log buffer used during splits so that
+ 	 * it will trigger errors if we ever try to do IO on it without first
 -- 
 2.9.5
 
