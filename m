@@ -1,92 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:54894 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932120AbdJVX1p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 19:27:45 -0400
-Date: Mon, 23 Oct 2017 10:27:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/17] Parent Pointers V3
-Message-ID: <20171022232741.GU3666@dastard>
-References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
- <CAOQ4uxhzZT=5O6PM4Gp=uSwYPFdrO5X9D8UF54f3jEmM2LxK1Q@mail.gmail.com>
- <20171020224157.GS3666@dastard>
- <CAOQ4uxjQk_82RxzSKWT+UeepkKXtrXbVmNW2wz6Mngq=UX+XZg@mail.gmail.com>
+Received: from LGEAMRELO13.lge.com ([156.147.23.53]:56039 "EHLO
+        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751017AbdJWCI2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 22:08:28 -0400
+Date: Mon, 23 Oct 2017 11:08:22 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
+ completion with lockdep_map
+Message-ID: <20171023020822.GI3310@X58A-UD3R>
+References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
+ <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
+ <1508455438.4542.4.camel@wdc.com>
+ <alpine.DEB.2.20.1710200829340.3083@nanos>
+ <1508529532.3029.15.camel@wdc.com>
+ <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
+ <1508682894.2564.8.camel@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjQk_82RxzSKWT+UeepkKXtrXbVmNW2wz6Mngq=UX+XZg@mail.gmail.com>
+In-Reply-To: <1508682894.2564.8.camel@wdc.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "max.byungchul.park@gmail.com" <max.byungchul.park@gmail.com>, "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
 
-On Sat, Oct 21, 2017 at 10:34:30AM +0300, Amir Goldstein wrote:
-> On Sat, Oct 21, 2017 at 1:41 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Oct 19, 2017 at 07:11:50AM +0300, Amir Goldstein wrote:
-> >> On Thu, Oct 19, 2017 at 1:55 AM, Allison Henderson
-> >> <allison.henderson@oracle.com> wrote:
-> >> > Hi all,
-> >> >
-> >> > This is the third version of parent pointer attributes for xfs.
-> >> > I've integrated the suggestions made since v2, mostly moving the
-> >> > attr buffers in the xfs_attr_log_item to pointers that point to
-> >> > xfs_attr_item. I've also implementing the recovery routines for
-> >> > the xfs_attr_log_format.  If I missed anything please point it
-> >> > out.  As always, comments and feedback are appreciated.  Thank
-> >> > you!
-> >> >
-> >>
-> >> A minor comment about the cover letter.
-> >> All designated reviewers must know exactly what "parent pointers" are for,
-> >> but it could be useful to add some context in the cover letter about the purpose
-> >> of this work for the sake of other readers on the list. Useful to refer to the
-> >> upcoming scrub support patches.
-> >>
-> >> BTW, not sure if this was mentioned in the previous lifetime of those
-> >> patches, but parent pointers can be used to implement exportfs operation
-> >> xfs_fs_fh_to_parent() for "non-connectable" file handles (FILEID_INO32_GEN)
-> >> and to implement xfs_fs_get_name(), which would make reconnect_path()
-> >> *much* more efficient.
-> >
-> > However, XFS only uses FILEID_INO32_GEN for directories
-> > because they have known parents. For them, we implement ->get_parent()
-> > and that means reconnect_path just does ->lookup("..") to find the
-> > parents and doesn't need anything special.
-> >
-> > We use FILEID_INO32_GEN_PARENT for all other types of files to
-> > encode the ino # + generation of the parent inode into the handle.
-> > That means for any non-dir file handle, our implemention of
-> > ->fh_to_parent  will get us the parent info as efficiently as
-> > possible.
+On Sun, Oct 22, 2017 at 02:34:56PM +0000, Bart Van Assche wrote:
+> On Sat, 2017-10-21 at 11:23 +0900, Byungchul Park wrote:
+> > On Sat, Oct 21, 2017 at 4:58 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> > > As explained in another e-mail thread, unlike the lock inversion checking
+> > > performed by the <= v4.13 lockdep code, cross-release checking is a heuristic
+> > > that does not have a sound theoretical basis. The lock validator is an
+> > 
+> > It's not heuristic but based on the same theoretical basis as <=4.13
+> > lockdep. I mean, the key basis is:
+> > 
+> >    1) What causes deadlock
+> >    2) What is a dependency
+> >    3) Build a dependency when identified
 > 
-> We only encode FILEID_INO32_GEN_PARENT when we are asked for
-> a "connectable" file handle, which is NOT the case with name_to_handle_at(2)
-> and is the case with nfsd on when NFS share is exported with subtree_check
-> options, which AFAIK, is the less common case.
-> 
-> The question is, when we encode a non-connectable file handle
-> (FILEID_INO32_GEN), will nfsd benefit from getting a connected file handle
-> after decode? (result may always be connected if dentry is already in cache).
-> 
-> > IOWs, parent pointers won't actually speed up filehandle ->
-> > dentry reconnection on XFS at all because we already encode parent
-> > pointers into the filehandles that need them....
-> 
-> Look at default implementation of ->get_name() in expfs.c and you will
-> see why I wrote that xfs_fs_get_name() would make reconnect_path()
-> *much* more efficient, even for directories.
+> Sorry but I doubt that that statement is correct. The publication [1] contains
 
-If you think it will be a win, then I'm not going to stop you from
-implementing and benchmarking it to demonstrate how much faster it
-is. Should be pretty simple to benchmark - stat a whole bunch of
-files on an NFS client, drop server caches, stat the files again. If
-it's a win, the server CPU and IO load should be lower, and the
-client side stat rate should be faster....
+IMHO, the paper is talking about totally different things wrt
+deadlocks by wait_for_event/event, that is, lost events.
 
-Cheers,
+Furthermore, it doesn't rely on dependencies itself, but just lock
+ordering 'case by case', which is a subset of the more general concept.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> a proof that an algorithm that is closely related to the traditional lockdep
+> lock inversion detector is able to detect all deadlocks and does not report
+
+I can admit this.
+
+> false positives for programs that only use mutexes as synchronization objects.
+
+I want to ask you. What makes false positives avoidable in the paper?
+
+> The comment of the authors of that paper for programs that use mutexes,
+> condition variables and semaphores is as follows: "It is unclear how to extend
+> the lock-graph-based algorithm in Section 3 to efficiently consider the effects
+> of condition variables and semaphores. Therefore, when considering all three
+> synchronization mechanisms, we currently use a naive algorithm that checks each
+
+Right. The paper seems to use a naive algorigm for that cases, not
+replying on dependencies, which they should.
+
+> feasible permutation of the trace for deadlock." In other words, if you have
+> found an approach for detecting potential deadlocks for programs that use these
+> three kinds of synchronization objects and that does not report false positives
+> then that's a breakthrough that's worth publishing in a journal or in the
+> proceedings of a scientific conference.
+
+Please, point out logical problems of cross-release than saying it's
+impossbile according to the paper. I think you'd better understand how
+cross-release works *first*. I'll do my best to help you do.
+
+> Bart.
+> 
+> [1] Agarwal, Rahul, and Scott D. Stoller. "Run-time detection of potential
+> deadlocks for programs with locks, semaphores, and condition variables." In
+> Proceedings of the 2006 workshop on Parallel and distributed systems: testing
+> and debugging, pp. 51-60. ACM, 2006.
+> (https://pdfs.semanticscholar.org/9324/fc0b5d5cd5e05d551a3e98757122039946a2.pdf).
