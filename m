@@ -1,84 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:56039 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751017AbdJWCI2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 22:08:28 -0400
-Date: Mon, 23 Oct 2017 11:08:22 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
- completion with lockdep_map
-Message-ID: <20171023020822.GI3310@X58A-UD3R>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
- <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
- <1508455438.4542.4.camel@wdc.com>
- <alpine.DEB.2.20.1710200829340.3083@nanos>
- <1508529532.3029.15.camel@wdc.com>
- <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
- <1508682894.2564.8.camel@wdc.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38890 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750756AbdJWFSq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 01:18:46 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9N5EY9N095409
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 01:18:46 -0400
+Received: from e06smtp12.uk.ibm.com (e06smtp12.uk.ibm.com [195.75.94.108])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2drw0cq2ay-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 01:18:45 -0400
+Received: from localhost
+        by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <schwidefsky@de.ibm.com>;
+        Mon, 23 Oct 2017 06:18:43 +0100
+Date: Mon, 23 Oct 2017 07:18:35 +0200
+From: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Subject: Re: [PATCH v3 02/13] dax: require 'struct page' for filesystem dax
+In-Reply-To: <20171020162933.GA26320@lst.de>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <150846714747.24336.14704246566580871364.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <20171020075735.GA14378@lst.de>
+        <CAPcyv4hA1nrhDf=DA6_j7s7ezGOBhvEVZ8cu81DNui_p3bhhaA@mail.gmail.com>
+        <20171020162933.GA26320@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1508682894.2564.8.camel@wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Message-Id: <20171023071835.67ee5210@mschwideX1>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "max.byungchul.park@gmail.com" <max.byungchul.park@gmail.com>, "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 
-On Sun, Oct 22, 2017 at 02:34:56PM +0000, Bart Van Assche wrote:
-> On Sat, 2017-10-21 at 11:23 +0900, Byungchul Park wrote:
-> > On Sat, Oct 21, 2017 at 4:58 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> > > As explained in another e-mail thread, unlike the lock inversion checking
-> > > performed by the <= v4.13 lockdep code, cross-release checking is a heuristic
-> > > that does not have a sound theoretical basis. The lock validator is an
-> > 
-> > It's not heuristic but based on the same theoretical basis as <=4.13
-> > lockdep. I mean, the key basis is:
-> > 
-> >    1) What causes deadlock
-> >    2) What is a dependency
-> >    3) Build a dependency when identified
+On Fri, 20 Oct 2017 18:29:33 +0200
+Christoph Hellwig <hch@lst.de> wrote:
+
+> On Fri, Oct 20, 2017 at 08:23:02AM -0700, Dan Williams wrote:
+> > Yes, however it seems these drivers / platforms have been living with
+> > the lack of struct page for a long time. So they either don't use DAX,
+> > or they have a constrained use case that never triggers
+> > get_user_pages(). If it is the latter then they could introduce a new
+> > configuration option that bypasses the pfn_t_devmap() check in
+> > bdev_dax_supported() and fix up the get_user_pages() paths to fail.
+> > So, I'd like to understand how these drivers have been using DAX
+> > support without struct page to see if we need a workaround or we can
+> > go ahead delete this support. If the usage is limited to
+> > execute-in-place perhaps we can do a constrained ->direct_access() for
+> > just that case.  
 > 
-> Sorry but I doubt that that statement is correct. The publication [1] contains
-
-IMHO, the paper is talking about totally different things wrt
-deadlocks by wait_for_event/event, that is, lost events.
-
-Furthermore, it doesn't rely on dependencies itself, but just lock
-ordering 'case by case', which is a subset of the more general concept.
-
-> a proof that an algorithm that is closely related to the traditional lockdep
-> lock inversion detector is able to detect all deadlocks and does not report
-
-I can admit this.
-
-> false positives for programs that only use mutexes as synchronization objects.
-
-I want to ask you. What makes false positives avoidable in the paper?
-
-> The comment of the authors of that paper for programs that use mutexes,
-> condition variables and semaphores is as follows: "It is unclear how to extend
-> the lock-graph-based algorithm in Section 3 to efficiently consider the effects
-> of condition variables and semaphores. Therefore, when considering all three
-> synchronization mechanisms, we currently use a naive algorithm that checks each
-
-Right. The paper seems to use a naive algorigm for that cases, not
-replying on dependencies, which they should.
-
-> feasible permutation of the trace for deadlock." In other words, if you have
-> found an approach for detecting potential deadlocks for programs that use these
-> three kinds of synchronization objects and that does not report false positives
-> then that's a breakthrough that's worth publishing in a journal or in the
-> proceedings of a scientific conference.
-
-Please, point out logical problems of cross-release than saying it's
-impossbile according to the paper. I think you'd better understand how
-cross-release works *first*. I'll do my best to help you do.
-
-> Bart.
+> For axonram I doubt anyone is using it any more - it was a very for
+> the IBM Cell blades, which were produceѕ in a rather limited number.
+> And Cell basically seems to be dead as far as I can tell.
 > 
-> [1] Agarwal, Rahul, and Scott D. Stoller. "Run-time detection of potential
-> deadlocks for programs with locks, semaphores, and condition variables." In
-> Proceedings of the 2006 workshop on Parallel and distributed systems: testing
-> and debugging, pp. 51-60. ACM, 2006.
-> (https://pdfs.semanticscholar.org/9324/fc0b5d5cd5e05d551a3e98757122039946a2.pdf).
+> For S/390 Martin might be able to help out what the status of xpram
+> in general and DAX support in particular is.
+
+The goes back to the time where DAX was called XIP. The initial design
+point has been *not* to have struct pages for a large read-only memory
+area. There is a block device driver for z/VM that maps a DCSS segment
+somewhere in memore (no struct page!) with e.g. the complete /usr
+filesystem. The xpram driver is a different beast and has nothing to
+do with XIP/DAX.
+
+Now, if any there are very few users of the dcssblk driver out there.
+The idea to save a few megabyte for /usr never really took of.
+
+We have to look at our get_user_pages() implementation to see how hard
+it would be to make it fail if the target address is for an area without
+struct pages.
+
+-- 
+blue skies,
+   Martin.
+
+"Reality continues to ruin my life." - Calvin.
+
