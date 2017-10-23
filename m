@@ -1,111 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:53177 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751396AbdJWLUr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 07:20:47 -0400
-Received: by mail-oi0-f49.google.com with SMTP id c202so30000348oih.9
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 04:20:47 -0700 (PDT)
+Received: from bombadil.infradead.org ([65.50.211.133]:34826 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932093AbdJWNl5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 09:41:57 -0400
+Date: Mon, 23 Oct 2017 15:41:49 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 0/5] xfs refcount conversions
+Message-ID: <20171023134149.GD3165@worktop.lehotels.local>
+References: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
+ <20171020232111.GT3666@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20171023124427.10d15ee3@mschwideX1>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150846714747.24336.14704246566580871364.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171020075735.GA14378@lst.de> <CAPcyv4hA1nrhDf=DA6_j7s7ezGOBhvEVZ8cu81DNui_p3bhhaA@mail.gmail.com>
- <20171020162933.GA26320@lst.de> <20171023071835.67ee5210@mschwideX1>
- <CAPcyv4hqiV6oHMgFik3MBTw5SJ6hcq4RzngPn2Xtp9kAv1E+Ow@mail.gmail.com> <20171023124427.10d15ee3@mschwideX1>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 23 Oct 2017 04:20:46 -0700
-Message-ID: <CAPcyv4jTO7peOJ1zUocZiuqejoZmhtUYZbYcM==U+R-frB+sgA@mail.gmail.com>
-Subject: Re: [PATCH v3 02/13] dax: require 'struct page' for filesystem dax
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171020232111.GT3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Elena Reshetova <elena.reshetova@intel.com>, darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, keescook@chromium.org
 
-On Mon, Oct 23, 2017 at 3:44 AM, Martin Schwidefsky
-<schwidefsky@de.ibm.com> wrote:
-> On Mon, 23 Oct 2017 01:55:20 -0700
-> Dan Williams <dan.j.williams@intel.com> wrote:
->
->> On Sun, Oct 22, 2017 at 10:18 PM, Martin Schwidefsky
->> <schwidefsky@de.ibm.com> wrote:
->> > On Fri, 20 Oct 2017 18:29:33 +0200
->> > Christoph Hellwig <hch@lst.de> wrote:
->> >
->> >> On Fri, Oct 20, 2017 at 08:23:02AM -0700, Dan Williams wrote:
->> >> > Yes, however it seems these drivers / platforms have been living wi=
-th
->> >> > the lack of struct page for a long time. So they either don't use D=
-AX,
->> >> > or they have a constrained use case that never triggers
->> >> > get_user_pages(). If it is the latter then they could introduce a n=
-ew
->> >> > configuration option that bypasses the pfn_t_devmap() check in
->> >> > bdev_dax_supported() and fix up the get_user_pages() paths to fail.
->> >> > So, I'd like to understand how these drivers have been using DAX
->> >> > support without struct page to see if we need a workaround or we ca=
-n
->> >> > go ahead delete this support. If the usage is limited to
->> >> > execute-in-place perhaps we can do a constrained ->direct_access() =
-for
->> >> > just that case.
->> >>
->> >> For axonram I doubt anyone is using it any more - it was a very for
->> >> the IBM Cell blades, which were produce=D1=95 in a rather limited num=
-ber.
->> >> And Cell basically seems to be dead as far as I can tell.
->> >>
->> >> For S/390 Martin might be able to help out what the status of xpram
->> >> in general and DAX support in particular is.
->> >
->> > The goes back to the time where DAX was called XIP. The initial design
->> > point has been *not* to have struct pages for a large read-only memory
->> > area. There is a block device driver for z/VM that maps a DCSS segment
->> > somewhere in memore (no struct page!) with e.g. the complete /usr
->> > filesystem. The xpram driver is a different beast and has nothing to
->> > do with XIP/DAX.
->> >
->> > Now, if any there are very few users of the dcssblk driver out there.
->> > The idea to save a few megabyte for /usr never really took of.
->> >
->> > We have to look at our get_user_pages() implementation to see how hard
->> > it would be to make it fail if the target address is for an area witho=
-ut
->> > struct pages.
->>
->> For read-only memory I think we can enable a subset of DAX, and
->> explicitly turn off the paths that require get_user_pages(). However,
->> I wonder if anyone has tested DAX with dcssblk because fork() requires
->> get_user_pages()?
->
-> I did not test it recently, someone else might have. Gerald?
->
-> Looking at the code I see this in the s390 version of gup_pte_range:
->
->         mask =3D (write ? _PAGE_PROTECT : 0) | _PAGE_INVALID | _PAGE_SPEC=
-IAL;
->         ...
->                 if ((pte_val(pte) & mask) !=3D 0)
->                         return 0;
->         ...
->
-> The XIP code used the pte_mkspecial mechanics to make it work. As far as
-> I can see the pfn_t_devmap returns true for the DAX mappins, yes?
+On Sat, Oct 21, 2017 at 10:21:11AM +1100, Dave Chinner wrote:
+> On Fri, Oct 20, 2017 at 02:07:53PM +0300, Elena Reshetova wrote:
+> > Note: our previous thread didn't finish in any conclusion, so
+> > I am resending this now (rebased at latest linux-next) to revive
+> > the discussion. refcount_t is slowly becoming a standard for
+> > refcounters and we would really like to make all conversions
+> > done where it is applicable.
+> 
+> In a separate "replace atomics with refcounts" discussion, the
+> ordering guarantees of refcounts was raised:
+> 
+> https://lkml.org/lkml/2017/9/4/206
+> 
+> i.e. refcounts use weak ordering whilst atomics imply a smp_mb()
+> operation was performed.
 
-Yes, but that's only for get_user_pages_fast() support.
+_some_ atomics. atomic_inc() does not for example.
 
-> Then I would say that dcssblk and DAX currently do not work together.
+> Given these counters in XFS directly define the life cycle states
+> rather than being just an object refcount, I'm pretty sure they
+> rely on the implied smp_mb() that the atomic operations provide to
+> work correctly.
 
-I think at a minimum we need a new pfn_t flag for the 'special' bit to
-at least indicate that DAX mappings of dcssblk and axonram do not
-support normal get_user_pages(). Then I don't need to explicitly
-disable DAX in the !pfn_t_devmap() case. I think I also want to split
-the "pfn_to_virt()" and the "sector to pfn" operations into distinct
-dax_operations rather than doing both in one ->direct_access(). This
-supports storing pfns in the fs/dax radix rather than sectors.
+If you rely on more ordering than implied by refocunting, it would be
+very good to document that in any case.
 
-In other words, the pfn_t_devmap() requirement was only about making
-get_user_pages() safely fail, and pte_special() fills that
-requirement.
+> Let me put it this way: Documentation/memory-barriers.txt breaks my
+> brain.
+
+It does that.. however,
+
+> IMO, that makes it way too hard to review sanely for code that:
+> 
+> 	a) we already know works correctly
+
+But how do you know if you have unknown ordering requirements?
+
+> So, really, it comes down to the fact that we know refcount_t is not
+> a straight drop in replacement for atomics, and that actually
+> verifying the change is correct requires an in depth understanding
+> of Documentation/memory-barriers.txt. IMO, that's way too much of a
+> long term maintenance and knowledge burden to add to what is a
+> simple set of reference counters...
+
+So I feel that any object should imply the minimal amount of barriers
+required for its correct functioning and no more. We're not adding
+random barriers to spin_lock() either, just because it might 'fix'
+something unrelated.
+
+refcount_t has sufficient barriers for the concept of refcounting, that
+is, refcount_dec_and_test() is a RELEASE, this means that all our object
+accesses happen-before we drop the reference to our object (common
+sense, touching an object after you drop its reference is UAF).
+
+If you rely on anything else; you want that documented.
+
+Note that you can upgrade your refcount_dec_and_test() with
+smp_mb__{before,after}_atomic() where needed.
+
+
