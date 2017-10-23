@@ -1,94 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49431 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:37734 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751277AbdJWQjq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 12:39:46 -0400
-Date: Mon, 23 Oct 2017 09:39:40 -0700
+        with ESMTP id S1751304AbdJWROl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 13:14:41 -0400
+Date: Mon, 23 Oct 2017 10:14:35 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] xfs: drain the buffer LRU on mount
-Message-ID: <20171023163940.GE5483@magnolia>
-References: <20171023144646.50107-1-bfoster@redhat.com>
- <20171023144646.50107-4-bfoster@redhat.com>
+Subject: Re: [PATCH 00/17] Parent Pointers V3
+Message-ID: <20171023171435.GF5483@magnolia>
+References: <1508367333-3237-1-git-send-email-allison.henderson@oracle.com>
+ <CAOQ4uxhzZT=5O6PM4Gp=uSwYPFdrO5X9D8UF54f3jEmM2LxK1Q@mail.gmail.com>
+ <20171020224157.GS3666@dastard>
+ <CAOQ4uxjQk_82RxzSKWT+UeepkKXtrXbVmNW2wz6Mngq=UX+XZg@mail.gmail.com>
+ <20171022232741.GU3666@dastard>
+ <CAOQ4uxhu0ModoKNUQPg03Bc=iTrqwX3xuPH=GuvedAHT-XvzXg@mail.gmail.com>
+ <20171023053236.GV3666@dastard>
+ <CAOQ4uxgH8oza283kL=cUvE7a0SA5wPsD1gyVApBqd2hWHE8y3w@mail.gmail.com>
+ <20171023084032.GW3666@dastard>
+ <CAOQ4uxjCdjRfeJj=YdsL9sEkSvGNJitfHs13hg-tHHsqaP0QNg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171023144646.50107-4-bfoster@redhat.com>
+In-Reply-To: <CAOQ4uxjCdjRfeJj=YdsL9sEkSvGNJitfHs13hg-tHHsqaP0QNg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Oct 23, 2017 at 10:46:45AM -0400, Brian Foster wrote:
-> Log recovery of v4 filesystems does not use buffer verifiers because
-> log recovery historically can result in transient buffer corruption
-> when target buffers might be ahead of the log after a crash. v5
-> filesystems work around this problem with metadata LSN ordering.
+On Mon, Oct 23, 2017 at 12:06:20PM +0300, Amir Goldstein wrote:
+> On Mon, Oct 23, 2017 at 11:40 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Oct 23, 2017 at 09:48:24AM +0300, Amir Goldstein wrote:
+> >> On Mon, Oct 23, 2017 at 8:32 AM, Dave Chinner <david@fromorbit.com> wrote:
+> >> > On Mon, Oct 23, 2017 at 07:30:01AM +0300, Amir Goldstein wrote:
+> >> >> If there is no such reason I would like to propose to store parent
+> >> >> pointers of directory inodes with an xattr name that is diroffset agnostic,
+> >> >> namely:
+> >> >>
+> >> >> struct xfs_dir_parent_name_rec {
+> >> >>       __be64  p_ino;
+> >> >>       __be32  p_gen;
+> >> >> } __attribute__((packed));
+> >> >>
+> >> >> It makes sense for metadata consistency anyway, but the reason I am
+> >> >> proposing this is so xfs_fs_get_name() could be implemented at O(1).
+> >
+> > [...]
+> >
+> >> But you missed my question completely. I understand why diroffset
+> >> is needed for non-dir. But directories are not allowed to have 2 differnt
+> >> parents nor 2 entries in the parent dir, so I was asking if we can
+> >> special case parent pointer stored in *directory inodes*.
+> >
+> > I did answer it - not directly, but the answers are there.
+> >
+> >> Am I missing something?
+> >
+> > Because you are just looking at it from a "reverse lookup"
+> > perspective, I suspect you're not seeing the "detect and
+> > reconstruct" broken directory structure side of the picture.
+> >
+> > The directory offset is redundant information which needed to fully
+> > cross-check and, if necessary, reconstruct broken direcotry
+> > structures. E.g. if a directory is missing a block due to a bad
+> > sector, we can reconstruct that block exactly from the parent
+> > pointer information because we know exactly what inodes had dirents
+> > in the block that was lost, and we know exactly what order they
+> > appeared in the directory block...
+> >
+> > If we don't have that info for all child inodes (directory or
+> > regular file), we can't tell the difference between "lost/stale
+> > child that we should ignore" and "child that was referenced by the
+> > block we lost". So even directories need to have the diroffset in
+> > their parent pointer....
+> >
 > 
-> While the log recovery behavior is necessary on v4 supers, it
-> currently can result in leaving buffers around in the LRU without
-> verifiers attached for a significant amount of time. This can lead
-> to use of unverified buffers while the filesystem is in active use,
-> long after recovery has completed.
-> 
-> To address this problem and provide a more consistent clean,
-> post-mount buffer cache state, update the log mount sequence to
-> unconditionally drain all buffers from the LRU as a final step.
-> 
-> Reported-by: Darrick Wong <darrick.wong@oracle.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_log.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index dc95a49..e282fd8 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -744,6 +744,7 @@ xfs_log_mount_finish(
->  {
->  	int	error = 0;
->  	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-> +	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
->  
->  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
->  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> @@ -780,6 +781,18 @@ xfs_log_mount_finish(
->  	mp->m_super->s_flags &= ~MS_ACTIVE;
->  	evict_inodes(mp->m_super);
->  
-> +	/*
-> +	 * Drain the buffer LRU after log recovery. This is required for v4
-> +	 * filesystems to avoid leaving around buffers with NULL verifier ops,
-> +	 * but we do it unconditionally to make sure we're always in a clean
-> +	 * cache state after mount.
-> +	 */
-> +	if (recovered) {
+> I see. Thanks for explaining that point.
+> In that case, I would like to re-phrase my proposal to store parent
+> diroffset in the value rather than in the key of xattr, i.e.:
+>         name={parent inode #, parent inode generation}
+>         value={dirent filename, dirent offset}
+> OR   value={dirent offset, dirent filename}
 
-if (recovered && !error) { ?
+Not possible, because the attribute name must be unique:
 
-I observed that running xfs/376 on an rmap filesystem fails when it
-tries to fuzz the high bit of u3.bmx[0].startoff.  That triggers an
-incorrect freeing of what is now a post-eof extent.  The corresponding
-rmap free operation fails after the RUI has been logged and shuts down
-the filesystem, so a subsequent log recovery attempt also fails when it
-tries to remove an rmap that doesn't exist.  If we then try to force the
-log we end up deadlocked somehwere... though if we /don't/ then memory
-gets corrupted and the kernel blows up anyway. :(
+$ cd /root
+$ echo hi > a
+$ ln a b
+
+Produces in a:
+
+(rootino, rootinogen) -> (0, 'a')
+(rootino, rootinogen) -> (1, 'b')
+
+We must store both pptrs, but we're not allowed to have duplicate attr
+names.
+
+In reference to where this thread went over the weekend -- I don't look
+favorably on the idea of having two different parent pointer disk
+formats -- there has to be a very good justification for forcing
+everyone to remember which format applies in which cases.
 
 --D
 
-> +		xfs_log_force(mp, XFS_LOG_SYNC);
-> +		xfs_ail_push_all_sync(mp->m_ail);
-> +	}
-> +	xfs_wait_buftarg(mp->m_ddev_targp);
-> +
->  	if (readonly)
->  		mp->m_flags |= XFS_MOUNT_RDONLY;
->  
-> -- 
-> 2.9.5
 > 
+> I guess you do see the value of my proposal to the "reverse lookup"
+> workload. The question is what is the cost (in code complexity/
+> maintainability) of special casing directory parent pointer format
+> and whether it is worth the benefits of "reverse lookup" performance.
+> 
+> Thanks,
+> Amir.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
