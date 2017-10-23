@@ -1,121 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30935 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932126AbdJWPlZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 11:41:25 -0400
-Date: Mon, 23 Oct 2017 08:41:19 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:49431 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751277AbdJWQjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 12:39:46 -0400
+Date: Mon, 23 Oct 2017 09:39:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/4] xfs: remove xfs_bmbt_validate_extent
-Message-ID: <20171023154119.GC5483@magnolia>
-References: <20171023063017.11520-1-hch@lst.de>
- <20171023063017.11520-3-hch@lst.de>
+Subject: Re: [PATCH 3/4] xfs: drain the buffer LRU on mount
+Message-ID: <20171023163940.GE5483@magnolia>
+References: <20171023144646.50107-1-bfoster@redhat.com>
+ <20171023144646.50107-4-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171023063017.11520-3-hch@lst.de>
+In-Reply-To: <20171023144646.50107-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 23, 2017 at 08:30:15AM +0200, Christoph Hellwig wrote:
-> We have stop supporting file systems without unwritten extent bit support
-> a long time ago, so remove the debug code for it which will get in the way
-> of future changes.
+On Mon, Oct 23, 2017 at 10:46:45AM -0400, Brian Foster wrote:
+> Log recovery of v4 filesystems does not use buffer verifiers because
+> log recovery historically can result in transient buffer corruption
+> when target buffers might be ahead of the log after a crash. v5
+> filesystems work around this problem with metadata LSN ordering.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> While the log recovery behavior is necessary on v4 supers, it
+> currently can result in leaving buffers around in the LRU without
+> verifiers attached for a significant amount of time. This can lead
+> to use of unverified buffers while the filesystem is in active use,
+> long after recovery has completed.
+> 
+> To address this problem and provide a more consistent clean,
+> post-mount buffer cache state, update the log mount sequence to
+> unconditionally drain all buffers from the LRU as a final step.
+> 
+> Reported-by: Darrick Wong <darrick.wong@oracle.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c       |  8 +-------
->  fs/xfs/libxfs/xfs_bmap_btree.h | 14 --------------
->  fs/xfs/libxfs/xfs_inode_fork.c |  7 -------
->  3 files changed, 1 insertion(+), 28 deletions(-)
+>  fs/xfs/xfs_log.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 46813b71dd74..19ec8b1f99dd 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1166,8 +1166,7 @@ xfs_bmap_add_attrfork(
->  /*
->   * Read in the extents to if_extents.
->   * All inode fields are set up by caller, we just traverse the btree
-> - * and copy the records in. If the file system cannot contain unwritten
-> - * extents, the records are checked for no "state" flags.
-> + * and copy the records in.
->   */
->  int					/* error */
->  xfs_bmap_read_extents(
-> @@ -1255,11 +1254,6 @@ xfs_bmap_read_extents(
->  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
->  			trp->l0 = be64_to_cpu(frp->l0);
->  			trp->l1 = be64_to_cpu(frp->l1);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
-> -				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
-> -						 XFS_ERRLEVEL_LOW, mp);
-> -				goto error0;
-> -			}
->  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  		xfs_trans_brelse(tp, bp);
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> index 6f891eeb88f6..82d397de8e00 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> @@ -123,18 +123,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
->  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
->  		struct xfs_trans *, struct xfs_inode *, int);
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index dc95a49..e282fd8 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -744,6 +744,7 @@ xfs_log_mount_finish(
+>  {
+>  	int	error = 0;
+>  	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
+> +	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
 >  
-> -/*
-> - * Check that the extent does not contain an invalid unwritten extent flag.
-> - */
-> -static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> -		struct xfs_bmbt_rec_host *ep)
-> -{
-> -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> -		return true;
-> -	if (whichfork == XFS_DATA_FORK &&
-> -	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> -		return true;
-> -	return false;
+>  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+>  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+> @@ -780,6 +781,18 @@ xfs_log_mount_finish(
+>  	mp->m_super->s_flags &= ~MS_ACTIVE;
+>  	evict_inodes(mp->m_super);
+>  
+> +	/*
+> +	 * Drain the buffer LRU after log recovery. This is required for v4
+> +	 * filesystems to avoid leaving around buffers with NULL verifier ops,
+> +	 * but we do it unconditionally to make sure we're always in a clean
+> +	 * cache state after mount.
+> +	 */
+> +	if (recovered) {
 
-By removing this, I think we no longer report corruption if we encounter
-'unwritten' attr fork extents, which (AFAIK) aren't allowed.
+if (recovered && !error) { ?
+
+I observed that running xfs/376 on an rmap filesystem fails when it
+tries to fuzz the high bit of u3.bmx[0].startoff.  That triggers an
+incorrect freeing of what is now a post-eof extent.  The corresponding
+rmap free operation fails after the RUI has been logged and shuts down
+the filesystem, so a subsequent log recovery attempt also fails when it
+tries to remove an rmap that doesn't exist.  If we then try to force the
+log we end up deadlocked somehwere... though if we /don't/ then memory
+gets corrupted and the kernel blows up anyway. :(
 
 --D
 
-> -}
-> -
->  #endif	/* __XFS_BMAP_BTREE_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index b1e69734c450..48a5dec360cd 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -373,11 +373,6 @@ xfs_iformat_extents(
->  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
->  			ep->l0 = get_unaligned_be64(&dp->l0);
->  			ep->l1 = get_unaligned_be64(&dp->l1);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
-> -				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
-> -						 XFS_ERRLEVEL_LOW, mp);
-> -				return -EFSCORRUPTED;
-> -			}
-
-
-
->  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  	}
-> @@ -801,8 +796,6 @@ xfs_iextents_copy(
->  	for (i = 0; i < nrecs; i++) {
->  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+> +		xfs_log_force(mp, XFS_LOG_SYNC);
+> +		xfs_ail_push_all_sync(mp->m_ail);
+> +	}
+> +	xfs_wait_buftarg(mp->m_ddev_targp);
+> +
+>  	if (readonly)
+>  		mp->m_flags |= XFS_MOUNT_RDONLY;
 >  
-> -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
-> -
->  		start_block = xfs_bmbt_get_startblock(ep);
->  		if (isnullstartblock(start_block)) {
->  			/*
 > -- 
-> 2.14.2
+> 2.9.5
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
