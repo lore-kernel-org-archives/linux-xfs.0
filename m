@@ -1,104 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34586 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751266AbdJWKoh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 06:44:37 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9NAiVIU077387
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 06:44:37 -0400
-Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2dsayhj51k-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2017 06:44:36 -0400
-Received: from localhost
-        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <schwidefsky@de.ibm.com>;
-        Mon, 23 Oct 2017 11:44:34 +0100
-Date: Mon, 23 Oct 2017 12:44:27 +0200
-From: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Subject: Re: [PATCH v3 02/13] dax: require 'struct page' for filesystem dax
-In-Reply-To: <CAPcyv4hqiV6oHMgFik3MBTw5SJ6hcq4RzngPn2Xtp9kAv1E+Ow@mail.gmail.com>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <150846714747.24336.14704246566580871364.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <20171020075735.GA14378@lst.de>
-        <CAPcyv4hA1nrhDf=DA6_j7s7ezGOBhvEVZ8cu81DNui_p3bhhaA@mail.gmail.com>
-        <20171020162933.GA26320@lst.de>
-        <20171023071835.67ee5210@mschwideX1>
-        <CAPcyv4hqiV6oHMgFik3MBTw5SJ6hcq4RzngPn2Xtp9kAv1E+Ow@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44180 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751113AbdJWNIZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Oct 2017 09:08:25 -0400
+Date: Mon, 23 Oct 2017 09:08:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Question about 67dc288c ("xfs: ensure verifiers are attached to
+ recovered buffers")
+Message-ID: <20171023130823.GA45316@bfoster.bfoster>
+References: <20171013184916.GS7122@magnolia>
+ <20171014115550.GB50635@bfoster.bfoster>
+ <20171014190530.GA4594@magnolia>
+ <20171016212933.GG15067@dastard>
+ <20171016221818.GQ4703@magnolia>
+ <20171020151610.GD13669@bfoster.bfoster>
+ <20171020164406.GW4755@magnolia>
+ <20171020165940.GE13669@bfoster.bfoster>
+ <20171020180040.GZ4755@magnolia>
+ <20171021061013.GA5483@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Message-Id: <20171023124427.10d15ee3@mschwideX1>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171021061013.GA5483@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 23 Oct 2017 01:55:20 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
-
-> On Sun, Oct 22, 2017 at 10:18 PM, Martin Schwidefsky
-> <schwidefsky@de.ibm.com> wrote:
-> > On Fri, 20 Oct 2017 18:29:33 +0200
-> > Christoph Hellwig <hch@lst.de> wrote:
-> >  
-> >> On Fri, Oct 20, 2017 at 08:23:02AM -0700, Dan Williams wrote:  
-> >> > Yes, however it seems these drivers / platforms have been living with
-> >> > the lack of struct page for a long time. So they either don't use DAX,
-> >> > or they have a constrained use case that never triggers
-> >> > get_user_pages(). If it is the latter then they could introduce a new
-> >> > configuration option that bypasses the pfn_t_devmap() check in
-> >> > bdev_dax_supported() and fix up the get_user_pages() paths to fail.
-> >> > So, I'd like to understand how these drivers have been using DAX
-> >> > support without struct page to see if we need a workaround or we can
-> >> > go ahead delete this support. If the usage is limited to
-> >> > execute-in-place perhaps we can do a constrained ->direct_access() for
-> >> > just that case.  
-> >>
-> >> For axonram I doubt anyone is using it any more - it was a very for
-> >> the IBM Cell blades, which were produceѕ in a rather limited number.
-> >> And Cell basically seems to be dead as far as I can tell.
-> >>
-> >> For S/390 Martin might be able to help out what the status of xpram
-> >> in general and DAX support in particular is.  
-> >
-> > The goes back to the time where DAX was called XIP. The initial design
-> > point has been *not* to have struct pages for a large read-only memory
-> > area. There is a block device driver for z/VM that maps a DCSS segment
-> > somewhere in memore (no struct page!) with e.g. the complete /usr
-> > filesystem. The xpram driver is a different beast and has nothing to
-> > do with XIP/DAX.
-> >
-> > Now, if any there are very few users of the dcssblk driver out there.
-> > The idea to save a few megabyte for /usr never really took of.
-> >
-> > We have to look at our get_user_pages() implementation to see how hard
-> > it would be to make it fail if the target address is for an area without
-> > struct pages.  
+On Fri, Oct 20, 2017 at 11:10:13PM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 20, 2017 at 11:00:40AM -0700, Darrick J. Wong wrote:
+> > On Fri, Oct 20, 2017 at 12:59:41PM -0400, Brian Foster wrote:
+> > > On Fri, Oct 20, 2017 at 09:44:06AM -0700, Darrick J. Wong wrote:
+> > > > On Fri, Oct 20, 2017 at 11:16:10AM -0400, Brian Foster wrote:
+> > > > > On Mon, Oct 16, 2017 at 03:18:18PM -0700, Darrick J. Wong wrote:
+> > > > > > On Tue, Oct 17, 2017 at 08:29:33AM +1100, Dave Chinner wrote:
+> > > > > > > On Sat, Oct 14, 2017 at 12:05:30PM -0700, Darrick J. Wong wrote:
+> > > > > > > > On Sat, Oct 14, 2017 at 07:55:51AM -0400, Brian Foster wrote:
+> > > > > > > > > On Fri, Oct 13, 2017 at 11:49:16AM -0700, Darrick J. Wong wrote:
+> > > > > > > > > > Hi all,
+> > > > > > > > > > 
+> > > > > > > > > > I have a question about 67dc288c ("xfs: ensure verifiers are attached to
+> > > > > > > > > > recovered buffers").  I was analyzing a scrub failure on generic/392
+> > > > > > > > > > with a v4 filesystem which stems from xfs_scrub_buffer_recheck (it's in
+> > > > > > > > > > scrub part 4) being unable to find a b_ops attached to the AGF buffer
+> > > > > > > > > > and signalling error.
+> > > > > > > > > > 
+> > > > > > > > > > The pattern I observe is that when log recovery runs on a v4 filesystem,
+> > > > > > > > > > we call some variant of xfs_buf_read with a NULL ops parameter.  The
+> > > > > > > > > > buffer therefore gets created and read without any verifiers.
+> > > > > > > > > > Eventually, xlog_recover_validate_buf_type gets called, and on a v5
+> > > > > > > > > > filesystem we come back and attach verifiers and all is well.  However,
+> > > > > > > > > > on a v4 filesystem the function returns without doing anything, so the
+> > > > > > > > > > xfs_buf just sits around in memory with no verifier.  Subsequent
+> > > > > > > > > > read/log/relse patterns can write anything they want without write
+> > > > > > > > > > verifiers to check that.
+> > > > > > > > > > 
+> > > > > > > > > > If the v4 fs didn't need log recovery, the buffers get created with
+> > > > > > > > > > b_ops as you'd expect.
+> > > > > > > > > > 
+> > > > > > > > > > My question is, shouldn't xlog_recover_validate_buf_type unconditionally
+> > > > > > > > > > set b_ops and save the "if (hascrc)" bits for the part that ensures the
+> > > > > > > > > > LSN is up to date?
+> > > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > Seems reasonable, but I notice that the has_crc() check around
+> > > > > > > > > _validate_buf_type() comes in sometime after the the original commit
+> > > > > > > > > referenced below (d75afeb3) and commit 67dc288c. It appears to be due to
+> > > > > > > > > commit 9222a9cf86 ("xfs: don't shutdown log recovery on validation
+> > > > > > > > > errors").
+> > > > > > > > > 
+> > > > > > > > > IIRC, the problem there is that log recovery had traditionally always
+> > > > > > > > > unconditionally replayed everything in the log over whatever resides in
+> > > > > > > > > the fs. This actually meant that recovery could transiently corrupt
+> > > > > > > > > buffers in certain cases if the target buffer happened to be relogged
+> > > > > > > > > more than once and was already up to date, which leads to verification
+> > > > > > > > > failures. This was addressed for v5 filesystems with LSN ordering rules,
+> > > > > > > > > but the challenge for v4 filesystems was that there is no metadata LSN
+> > > > > > > > > and thus no means to detect whether a buffer is already up to date with
+> > > > > > > > > regard to a transaction in the log.
+> > > > > > > > > 
+> > > > > > > > > Dave might have more historical context to confirm that... If that is
+> > > > > > > > > still an open issue, a couple initial ideas come to mind:
+> > > > > > > > > 
+> > > > > > > > > 1.) Do something simple/crude like reclaim all buffers after log
+> > > > > > > > > recovery on v4 filesystems to provide a clean slate going forward.
+> > > > > > > > > 
+> > > > > > > > > 2.) Unconditionally attach verifiers during recovery as originally done
+> > > > > > > > > and wire up something generic that short circuits verifier invocations
+> > > > > > > > > on v4 filesystems when log recovery is in progress.
+> > > > > > > > 
+> > > > > > > > What do you think about 3) add b_ops later if they're missing?
+> > > > > > > > 
+> > > > > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > > > > > > index 2f97c12..8842a27 100644
+> > > > > > > > --- a/fs/xfs/xfs_buf.c
+> > > > > > > > +++ b/fs/xfs/xfs_buf.c
+> > > > > > > > @@ -742,6 +742,15 @@ xfs_buf_read_map(
+> > > > > > > >         if (bp) {
+> > > > > > > >                 trace_xfs_buf_read(bp, flags, _RET_IP_);
+> > > > > > > >  
+> > > > > > > > +               /*
+> > > > > > > > +                * If this buffer is up to date and has no verifier, try
+> > > > > > > > +                * to set one.  This can happen on v4 because log
+> > > > > > > > +                * recovery reads in the buffers for replay but does not
+> > > > > > > > +                * set b_ops.
+> > > > > > > > +                */
+> > > > > > > > +               if ((bp->b_flags & XBF_DONE) && !bp->b_ops)
+> > > > > > > > +                       bp->b_ops = ops;
+> > > > > > > 
+> > > > > > > I don't really like this because it will hide bugs in the code.
+> > > > > > > 
+> > > > > > > It also doesn't solve the problem because a read with NULL ops will
+> > > > > > > still leave a buffer with no ops attached.
+> > > > > > > 
+> > > > > > > IMO, if we've read/created a buffer without ops, then it is up to
+> > > > > > > the code that created/read it to either attach the required ops
+> > > > > > > before the buffer is released or to invalidate the buffer before
+> > > > > > > anyone else can use it or write it. The buffer write code warns
+> > > > > > > about writing buffers without verfiers, but we can't warn on read
+> > > > > > > because read-with-NULL-verifier is a valid thing to do....
+> > > > > > 
+> > > > > > Fair 'nuff.  FWIW I'm ok with approach #1 if anyone enthusiastically
+> > > > > > wants to write it up.
+> > > > > > 
+> > > > > 
+> > > > > What do you guys think about something like this? It runs
+> > > > > unconditionally, but this is partly as designed to provide a clean cache
+> > > > > on v5 filesystems as well. It should be mostly unnoticeable if log
+> > > > > recovery hasn't run, but we could easily add another flag to make it
+> > > > > conditional on log recovery if desired.
+> > > > > 
+> > > > > Brian
+> > > > > 
+> > > > > --- 8< ---
+> > > > > 
+> > > > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > > > index dc95a49..226d26b 100644
+> > > > > --- a/fs/xfs/xfs_log.c
+> > > > > +++ b/fs/xfs/xfs_log.c
+> > > > > @@ -780,6 +780,16 @@ xfs_log_mount_finish(
+> > > > >  	mp->m_super->s_flags &= ~MS_ACTIVE;
+> > > > >  	evict_inodes(mp->m_super);
+> > > > >  
+> > > > > +	/*
+> > > > > +	 * Drain the buffer LRU after log recovery. This is required for
+> > > > > +	 * v4 filesystems to avoid leaving around buffers with NULL verifier
+> > > > > +	 * ops. Do it unconditionally to make sure we're always in a clean cache
+> > > > > +	 * state after mount.
+> > > > > +	 */
+> > > > > +	xfs_log_force(mp, XFS_LOG_SYNC);
+> > > > > +	xfs_ail_push_all_sync(mp->m_ail);
+> > > > 
+> > > > Is it necessary to force the log & push the AIL even if recovery didn't run?
+> > > > 
+> > > 
+> > > Don't think so.. As noted above, I just did this because it's basically
+> > > unnoticeable if log recovery didn't run and it avoids the need to add a
+> > > flag. I can add one if that is preferred, or thinking about it again I
+> > > suppose we could just sample for XLOG_RECOVERY_NEEDED before we call
+> > > xlog_recover_finish() (which clears it).
+> > > 
+> > > > > +	xfs_wait_buftarg(mp->m_ddev_targp);
+> > > > 
+> > > > Otherwise, looks ok enough I'll see if it fixes the scrub failures that
+> > > > inspired my original email. :)
+> > > > 
+> > > 
+> > > Thanks, let me know.
+> > 
+> > This seems to fix the scrub problems running generic/392 xfs/121 xfs/181
+> > on a v4 filesystem.
+> > 
+> > (Note that you have to have built the djwong-devel branches of the
+> > kernel and xfsprogs in order for xfstests to trip over the verifier-less
+> > buffers.  The particular patch is "xfs: scrub in-core metadata".)
 > 
-> For read-only memory I think we can enable a subset of DAX, and
-> explicitly turn off the paths that require get_user_pages(). However,
-> I wonder if anyone has tested DAX with dcssblk because fork() requires
-> get_user_pages()?
- 
-I did not test it recently, someone else might have. Gerald?
+> Follow-up question: if xlog_recover_finish returns an error, there's no
+> point in pushing the log, right?  I think we're basically toast if that
+> happens.
+> 
 
-Looking at the code I see this in the s390 version of gup_pte_range:
+I think we want to push the log/ail in any case that we call
+xfs_wait_buftarg() after starting recovery to make sure that all dirty
+buffers can be reclaimed immediately. We could skip the whole thing from
+here in the error case since the mount is going to fail, but I don't
+think it really matters. We'll end up in xfs_log_quiesce() as part of
+the mount unwind anyways, which basically ends up doing the same thing.
 
-        mask = (write ? _PAGE_PROTECT : 0) | _PAGE_INVALID | _PAGE_SPECIAL;
-	...
-                if ((pte_val(pte) & mask) != 0)
-                        return 0;
-	...
+Brian
 
-The XIP code used the pte_mkspecial mechanics to make it work. As far as
-I can see the pfn_t_devmap returns true for the DAX mappins, yes?
-Then I would say that dcssblk and DAX currently do not work together.
-
--- 
-blue skies,
-   Martin.
-
-"Reality continues to ruin my life." - Calvin.
-
+> --D
+> 
+> > 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > --D
+> > > > 
+> > > > > +
+> > > > >  	if (readonly)
+> > > > >  		mp->m_flags |= XFS_MOUNT_RDONLY;
+> > > > >  
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
