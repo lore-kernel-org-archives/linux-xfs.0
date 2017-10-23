@@ -1,243 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49716 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:23277 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751123AbdJWXTX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 19:19:23 -0400
-Date: Mon, 23 Oct 2017 16:19:15 -0700
+        with ESMTP id S1751930AbdJWXtH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 19:49:07 -0400
+Date: Mon, 23 Oct 2017 16:49:03 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] xfs: merge xfs_bmap_read_extents into
- xfs_iread_extents
-Message-ID: <20171023231915.GG5483@magnolia>
-References: <20171023063017.11520-1-hch@lst.de>
- <20171023063017.11520-4-hch@lst.de>
+Subject: Re: [PATCH 1/4] xfs: sanity check log record range parameters
+Message-ID: <20171023234903.GI5483@magnolia>
+References: <20171023144646.50107-1-bfoster@redhat.com>
+ <20171023144646.50107-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171023063017.11520-4-hch@lst.de>
+In-Reply-To: <20171023144646.50107-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 23, 2017 at 08:30:16AM +0200, Christoph Hellwig wrote:
-> xfs_iread_extents is just a trivial wrapper, there is no good reason
-> to keep the two separate.
+On Mon, Oct 23, 2017 at 10:46:43AM -0400, Brian Foster wrote:
+> If a malformatted filesystem is mounted and attempts log recovery,
+> we can end up passing garbage parameter values to
+> xlog_find_verify_log_record(). In turn, the latter can pass a NULL
+> head pointer to xlog_header_check_mount() and cause a kernel panic.
+
+Malformed how?  Is *last_blk some huge value such that i < -1?
+
+I'm trying to figure out how we get passed a NULL head, and (afaict)
+that's one way it can happen...
+
+> Add some parameter sanity checks to both functions. Checks in both
+> places are technically not necessary, but do so to help future proof
+> the code. This prevents a kernel panic and replaces it with a more
+> graceful mount failure.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
+> Reported-by: Zorro Lang <zlang@redhat.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c       | 83 +++++++++++++++++++++++++-----------------
->  fs/xfs/libxfs/xfs_bmap.h       |  2 -
->  fs/xfs/libxfs/xfs_inode_fork.c | 37 -------------------
->  3 files changed, 49 insertions(+), 73 deletions(-)
+>  fs/xfs/xfs_log_recover.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 19ec8b1f99dd..53ff6d92b532 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1164,32 +1164,37 @@ xfs_bmap_add_attrfork(
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index ee34899..80b37a2 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -347,9 +347,12 @@ xlog_header_check_recover(
 >   */
->  
->  /*
-> - * Read in the extents to if_extents.
-> - * All inode fields are set up by caller, we just traverse the btree
-> - * and copy the records in.
-> + * Read in extents from a btree-format inode.
->   */
-> -int					/* error */
-> -xfs_bmap_read_extents(
-> -	xfs_trans_t		*tp,	/* transaction pointer */
-> -	xfs_inode_t		*ip,	/* incore inode */
-> -	int			whichfork) /* data or attr fork */
-> +int
-> +xfs_iread_extents(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	int			whichfork)
+>  STATIC int
+>  xlog_header_check_mount(
+> -	xfs_mount_t		*mp,
+> -	xlog_rec_header_t	*head)
+> +	struct xfs_mount	*mp,
+> +	struct xlog_rec_header	*head)
 >  {
-> -	struct xfs_btree_block	*block;	/* current btree block */
-> -	xfs_fsblock_t		bno;	/* block # of "block" */
-> -	xfs_buf_t		*bp;	/* buffer for "block" */
-> -	int			error;	/* error return value */
-> -	xfs_extnum_t		i, j;	/* index into the extents list */
-> -	xfs_ifork_t		*ifp;	/* fork structure */
-> -	int			level;	/* btree level, for checking */
-> -	xfs_mount_t		*mp;	/* file system mount structure */
-> -	__be64			*pp;	/* pointer to block address */
-> -	/* REFERENCED */
-> -	xfs_extnum_t		room;	/* number of entries there's room for */
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	int			state = xfs_bmap_fork_to_state(whichfork);
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	xfs_extnum_t		nextents = XFS_IFORK_NEXTENTS(ip, whichfork);
-> +	struct xfs_btree_block	*block = ifp->if_broot;
-> +	xfs_fsblock_t		bno;
-> +	struct xfs_buf		*bp;
-> +	xfs_extnum_t		i, j;
-> +	int			level;
-> +	__be64			*pp;
-> +	int			error;
+> +	if (!head)
+> +		return -EINVAL;
 > +
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +
-> +	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	ifp->if_bytes = 0;
-> +	ifp->if_real_bytes = 0;
-> +	xfs_iext_add(ifp, 0, nextents);
+>  	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
 >  
-> -	mp = ip->i_mount;
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	block = ifp->if_broot;
->  	/*
->  	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
->  	 */
-> @@ -1206,21 +1211,22 @@ xfs_bmap_read_extents(
->  		error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
->  				XFS_BMAP_BTREE_REF, &xfs_bmbt_buf_ops);
->  		if (error)
-> -			return error;
-> +			goto out;
->  		block = XFS_BUF_TO_BLOCK(bp);
->  		if (level == 0)
->  			break;
->  		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
->  		bno = be64_to_cpu(*pp);
->  		XFS_WANT_CORRUPTED_GOTO(mp,
-> -			XFS_FSB_SANITY_CHECK(mp, bno), error0);
-> +			XFS_FSB_SANITY_CHECK(mp, bno), out_brelse);
->  		xfs_trans_brelse(tp, bp);
->  	}
-> +
->  	/*
->  	 * Here with bp and block set to the leftmost leaf node in the tree.
->  	 */
-> -	room = xfs_iext_count(ifp);
->  	i = 0;
-> +
->  	/*
->  	 * Loop over all leaf nodes.  Copy information to the extent records.
->  	 */
-> @@ -1230,14 +1236,15 @@ xfs_bmap_read_extents(
->  		xfs_extnum_t	num_recs;
+>  	if (uuid_is_null(&head->h_fs_uuid)) {
+> @@ -533,6 +536,10 @@ xlog_find_verify_log_record(
 >  
->  		num_recs = xfs_btree_get_numrecs(block);
-> -		if (unlikely(i + num_recs > room)) {
-> -			ASSERT(i + num_recs <= room);
-> +		if (unlikely(i + num_recs > nextents)) {
-> +			ASSERT(i + num_recs <= nextents);
->  			xfs_warn(ip->i_mount,
->  				"corrupt dinode %Lu, (btree extents).",
->  				(unsigned long long) ip->i_ino);
-> -			XFS_CORRUPTION_ERROR("xfs_bmap_read_extents(1)",
-> +			XFS_CORRUPTION_ERROR(__func__,
->  				XFS_ERRLEVEL_LOW, ip->i_mount, block);
-> -			goto error0;
-> +			error = -EFSCORRUPTED;
-> +			goto out_brelse;
->  		}
->  		/*
->  		 * Read-ahead the next leaf block, if any.
-> @@ -1266,16 +1273,24 @@ xfs_bmap_read_extents(
->  		error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
->  				XFS_BMAP_BTREE_REF, &xfs_bmbt_buf_ops);
->  		if (error)
-> -			return error;
-> +			goto out;
->  		block = XFS_BUF_TO_BLOCK(bp);
->  	}
-> -	if (i != XFS_IFORK_NEXTENTS(ip, whichfork))
-> -		return -EFSCORRUPTED;
-> +
-> +	if (i != XFS_IFORK_NEXTENTS(ip, whichfork)) {
-> +		error = -EFSCORRUPTED;
-> +		goto out;
-> +	}
->  	ASSERT(i == xfs_iext_count(ifp));
-> +
-> +	ifp->if_flags |= XFS_IFEXTENTS;
->  	return 0;
-> -error0:
-> +
-> +out_brelse:
->  	xfs_trans_brelse(tp, bp);
-> -	return -EFSCORRUPTED;
-> +out:
-> +	xfs_iext_destroy(ifp);
-> +	return error;
->  }
+>  	ASSERT(start_blk != 0 || *last_blk != start_blk);
 >  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 6c426cdfb758..de34bad03c46 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -198,8 +198,6 @@ int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
->  int	xfs_bmap_last_offset(struct xfs_inode *ip, xfs_fileoff_t *unused,
->  		int whichfork);
->  int	xfs_bmap_one_block(struct xfs_inode *ip, int whichfork);
-> -int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
-> -		int whichfork);
->  int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
->  		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
->  		int *nmap, int flags);
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 48a5dec360cd..c70f9ef07b6d 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -443,43 +443,6 @@ xfs_iformat_btree(
->  	return 0;
->  }
->  
-> -/*
-> - * Read in extents from a btree-format inode.
-> - * Allocate and fill in if_extents.  Real work is done in xfs_bmap.c.
-> - */
-> -int
-> -xfs_iread_extents(
-> -	xfs_trans_t	*tp,
-> -	xfs_inode_t	*ip,
-> -	int		whichfork)
-> -{
-> -	int		error;
-> -	xfs_ifork_t	*ifp;
-> -	xfs_extnum_t	nextents;
-> -
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -
-> -	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
-> -		XFS_ERROR_REPORT("xfs_iread_extents", XFS_ERRLEVEL_LOW,
-> -				 ip->i_mount);
-> -		return -EFSCORRUPTED;
-> -	}
-> -	nextents = XFS_IFORK_NEXTENTS(ip, whichfork);
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -
-> -	/*
-> -	 * We know that the size is valid (it's checked in iformat_btree)
-> -	 */
-> -	ifp->if_bytes = ifp->if_real_bytes = 0;
-> -	xfs_iext_add(ifp, 0, nextents);
-> -	error = xfs_bmap_read_extents(tp, ip, whichfork);
-> -	if (error) {
-> -		xfs_iext_destroy(ifp);
-> -		return error;
-> -	}
-> -	ifp->if_flags |= XFS_IFEXTENTS;
-> -	return 0;
-> -}
->  /*
->   * Reallocate the space for if_broot based on the number of records
->   * being added or deleted as indicated in rec_diff.  Move the records
+> +	if (start_blk < 0 || start_blk > log->l_logBBsize ||
+> +	    *last_blk < 0 || *last_blk > log->l_logBBsize)
+> +		return -EINVAL;
+
+/me stumbled over the fact that start_blk and last_blk are offsets (in
+units of basic blocks) within the log, not absolute disk offsets like
+their xfs_daddr_t type implies. :(
+
+Could you add a comment somewhere in this function explaining that these
+two "block" numbers are actually relative logBBstart?  The comment
+implies this, but apparently not strongly enough.
+
+--D
+
+> +
+>  	if (!(bp = xlog_get_bp(log, num_blks))) {
+>  		if (!(bp = xlog_get_bp(log, 1)))
+>  			return -ENOMEM;
 > -- 
-> 2.14.2
+> 2.9.5
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
