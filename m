@@ -1,49 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37318 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752707AbdJaKKA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 06:10:00 -0400
-Date: Tue, 31 Oct 2017 18:09:58 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs: flush the range before zero partial block range on
- truncate down
-Message-ID: <20171031100958.GL17339@eguan.usersys.redhat.com>
-References: <20171027125328.25001-1-eguan@redhat.com>
- <20171028060529.GA29505@infradead.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:52750 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751522AbdJXWX2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 18:23:28 -0400
+Date: Wed, 25 Oct 2017 09:23:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
+Message-ID: <20171024222322.GX3666@dastard>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-18-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171028060529.GA29505@infradead.org>
+In-Reply-To: <20171024152415.22864-18-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
 
-On Fri, Oct 27, 2017 at 11:05:29PM -0700, Christoph Hellwig wrote:
-> On Fri, Oct 27, 2017 at 08:53:28PM +0800, Eryu Guan wrote:
-> > But it's possible that a buffer write overwrites the unwritten
-> > extent, which won't be converted to a normal extent until I/O
-> > completion, and iomap_truncate_page() skips zeroing wrongly because
-> > of the not-converted unwritten extent. This would cause a subsequent
-> > mmap read sees non-zeros beyond EOF.
+On Tue, Oct 24, 2017 at 05:24:14PM +0200, Jan Kara wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> I suspect the right fix is to look at the in-core state im the iomap
-> truncate helpers instead of doing a duplicate flush.
+> Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
+> blocks for writing and the inode is pinned, and has dirty fields other
+> than the timestamps.
 
-I may (and very likely) miss something, but my understanding is that
-iomap_truncate_page() already looks at the in-core extent state provided
-by xfs_file_iomap_begin()
+That's "fdatasync dirty", not "fsync dirty".
 
-xfs_setattr_size()
- iomap_truncate_page()
-  iomap_zero_range()
-   iomap_apply()
-    xfs_file_iomap_begin()	# finds extent according to the range
-    iomap_zero_range_actor() 	# sees iomap->type == IOMAP_UNWRITTEN
+IOMAP_F_DIRTY needs a far better description of it's semantics than
+"/* block mapping is not yet on persistent storage */" so we know
+exactly what filesystems are supposed to be implementing here. I
+suspect that what it really is meant to say is:
 
-And this in-core extent state won't be converted to XFS_EXT_NORM until
-writeback & I/O completion, so I think a flush is required.
+/*
+ * IOMAP_F_DIRTY indicates the inode has uncommitted metadata to
+ * written data and requires fdatasync to commit to persistent storage.
+ */
 
-Thanks,
-Eryu
+[....]
+
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index f179bdf1644d..b43be199fbdf 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -33,6 +33,7 @@
+>  #include "xfs_error.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_trans_space.h"
+> +#include "xfs_inode_item.h"
+>  #include "xfs_iomap.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_icache.h"
+> @@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
+>  		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+>  	}
+>  
+> +	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
+> +	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+> +		iomap->flags |= IOMAP_F_DIRTY;
+
+This is the very definition of an inode that is "fdatasync dirty".
+
+Hmmmm, shouldn't this also be set for read faults, too?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
