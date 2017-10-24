@@ -1,19 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:53231 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752370AbdJXKJD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 06:09:03 -0400
-Date: Tue, 24 Oct 2017 12:08:58 +0200
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:52090 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbdJXKP4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 06:15:56 -0400
+Date: Tue, 24 Oct 2017 12:15:51 +0200
 From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v3 4/8] lockdep: Add a kernel parameter,
- crossrelease_fullstack
-Message-ID: <20171024100858.2rw7wnhtj7d3iyzk@gmail.com>
+Subject: Re: [PATCH v3 8/8] block: Assign a lock_class per gendisk used for
+ wait_for_completion()
+Message-ID: <20171024101551.sftqsy5mk34fxru7@gmail.com>
 References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
- <1508837889-16932-5-git-send-email-byungchul.park@lge.com>
+ <1508837889-16932-9-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1508837889-16932-5-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508837889-16932-9-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -23,105 +23,207 @@ Cc: peterz@infradead.org, axboe@kernel.dk, tglx@linutronix.de, linux-kernel@vger
 
 * Byungchul Park <byungchul.park@lge.com> wrote:
 
-> Make whether to allow recording full stack, in cross-release feature,
-> switchable at boot time via a kernel parameter, 'crossrelease_fullstack'.
-> In case of a splat with no stack trace, one could just reboot and set
-> the kernel parameter to get the full data without having to recompile
-> the kernel.
+> Darrick and Dave Chinner posted the following warning:
 > 
-> Change CONFIG_CROSSRELEASE_STACK_TRACE default from N to Y, and
-> introduce the new kernel parameter.
+> > ======================================================
+> > WARNING: possible circular locking dependency detected
+> > 4.14.0-rc1-fixes #1 Tainted: G        W
+> > ------------------------------------------------------
+> > loop0/31693 is trying to acquire lock:
+> >  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
+> >
+> > but now in release context of a crosslock acquired at the following:
+> >  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
+> >
+> > which lock already depends on the new lock.
+> >
+> > the existing dependency chain (in reverse order) is:
+> >
+> > -> #2 ((complete)&ret.event){+.+.}:
+> >        lock_acquire+0xab/0x200
+> >        wait_for_completion_io+0x4e/0x1a0
+> >        submit_bio_wait+0x7f/0xb0
+> >        blkdev_issue_zeroout+0x71/0xa0
+> >        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
+> >        xfs_bmapi_write+0x374/0x11f0 [xfs]
+> >        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
+> >        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
+> >        iomap_apply+0x43/0xe0
+> >        dax_iomap_rw+0x89/0xf0
+> >        xfs_file_dax_write+0xcc/0x220 [xfs]
+> >        xfs_file_write_iter+0xf0/0x130 [xfs]
+> >        __vfs_write+0xd9/0x150
+> >        vfs_write+0xc8/0x1c0
+> >        SyS_write+0x45/0xa0
+> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
+> >
+> > -> #1 (&xfs_nondir_ilock_class){++++}:
+> >        lock_acquire+0xab/0x200
+> >        down_write_nested+0x4a/0xb0
+> >        xfs_ilock+0x263/0x330 [xfs]
+> >        xfs_setattr_size+0x152/0x370 [xfs]
+> >        xfs_vn_setattr+0x6b/0x90 [xfs]
+> >        notify_change+0x27d/0x3f0
+> >        do_truncate+0x5b/0x90
+> >        path_openat+0x237/0xa90
+> >        do_filp_open+0x8a/0xf0
+> >        do_sys_open+0x11c/0x1f0
+> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
+> >
+> > -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
+> >        up_write+0x1c/0x40
+> >        xfs_iunlock+0x1d0/0x310 [xfs]
+> >        xfs_file_fallocate+0x8a/0x310 [xfs]
+> >        loop_queue_work+0xb7/0x8d0
+> >        kthread_worker_fn+0xb9/0x1f0
+> >
+> > Chain exists of:
+> >   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
+> >
+> >  Possible unsafe locking scenario by crosslock:
+> >
+> >        CPU0                    CPU1
+> >        ----                    ----
+> >   lock(&xfs_nondir_ilock_class);
+> >   lock((complete)&ret.event);
+> >                                lock(&(&ip->i_mmaplock)->mr_lock);
+> >                                unlock((complete)&ret.event);
+> >
+> >                *** DEADLOCK ***
+> 
+> The warning is a false positive, caused by the fact that all
+> wait_for_completion()s in submit_bio_wait() are waiting with the same
+> lock class.
+> 
+> However, some bios have nothing to do with others, for example, the case
+> might happen while using loop devices, between bios of an upper device
+> and a lower device(=loop device).
+> 
+> The safest way to assign different lock classes to different devices is
+> to do it for each gendisk. In other words, this patch assigns a
+> lockdep_map per gendisk and uses it when initializing completion in
+> submit_bio_wait().
+> 
+> Of course, it might be too conservative. But, making it safest for now
+> and extended by block layer experts later is good, atm.
 > 
 > Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 > ---
->  Documentation/admin-guide/kernel-parameters.txt |  3 +++
->  kernel/locking/lockdep.c                        | 18 ++++++++++++++++--
->  lib/Kconfig.debug                               |  5 +++--
->  3 files changed, 22 insertions(+), 4 deletions(-)
+>  block/bio.c           |  2 +-
+>  block/genhd.c         | 13 +++++--------
+>  include/linux/genhd.h | 22 ++++++++++++++++++++--
+>  3 files changed, 26 insertions(+), 11 deletions(-)
 > 
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index ead7f40..4107b01 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -709,6 +709,9 @@
->  			It will be ignored when crashkernel=X,high is not used
->  			or memory reserved is below 4G.
+> diff --git a/block/bio.c b/block/bio.c
+> index 5e901bf..cc60213 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -935,7 +935,7 @@ static void submit_bio_wait_endio(struct bio *bio)
+>   */
+>  int submit_bio_wait(struct bio *bio)
+>  {
+> -	DECLARE_COMPLETION_ONSTACK(done);
+> +	DECLARE_COMPLETION_ONSTACK_MAP(done, bio->bi_disk->lockdep_map);
 >  
-> +	crossrelease_fullstack
-> +			[KNL] Allow to record full stack trace in cross-release
+>  	bio->bi_private = &done;
+>  	bio->bi_end_io = submit_bio_wait_endio;
+> diff --git a/block/genhd.c b/block/genhd.c
+> index dd305c6..f195d22 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -1354,13 +1354,7 @@ dev_t blk_lookup_devt(const char *name, int partno)
+>  }
+>  EXPORT_SYMBOL(blk_lookup_devt);
+>  
+> -struct gendisk *alloc_disk(int minors)
+> -{
+> -	return alloc_disk_node(minors, NUMA_NO_NODE);
+> -}
+> -EXPORT_SYMBOL(alloc_disk);
+> -
+> -struct gendisk *alloc_disk_node(int minors, int node_id)
+> +struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name)
+>  {
+>  	struct gendisk *disk;
+>  	struct disk_part_tbl *ptbl;
+> @@ -1409,9 +1403,12 @@ struct gendisk *alloc_disk_node(int minors, int node_id)
+>  		disk_to_dev(disk)->type = &disk_type;
+>  		device_initialize(disk_to_dev(disk));
+>  	}
 > +
->  	cryptomgr.notests
->                          [KNL] Disable crypto self-tests
+> +	lockdep_init_map(&disk->lockdep_map, lock_name, key, 0);
+
+lockdep_init_map() depends on CONFIG_DEBUG_LOCK_ALLOC IIRC, but the data structure 
+change you made depends on CONFIG_LOCKDEP_COMPLETIONS:
+
+>  	return disk;
+>  }
+> -EXPORT_SYMBOL(alloc_disk_node);
+> +EXPORT_SYMBOL(__alloc_disk_node);
 >  
-> diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-> index 5c2ddf2..feba887 100644
-> --- a/kernel/locking/lockdep.c
-> +++ b/kernel/locking/lockdep.c
-> @@ -76,6 +76,15 @@
->  #define lock_stat 0
->  #endif
+>  struct kobject *get_disk(struct gendisk *disk)
+>  {
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 6d85a75..9832e3c 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -206,6 +206,9 @@ struct gendisk {
+>  #endif	/* CONFIG_BLK_DEV_INTEGRITY */
+>  	int node_id;
+>  	struct badblocks *bb;
+> +#ifdef CONFIG_LOCKDEP_COMPLETIONS
+> +	struct lockdep_map lockdep_map;
+> +#endif
+>  };
+
+Which is risking a future build failure at minimum.
+
+Isn't lockdep_map a zero size structure that is always defined? If yes then 
+there's no need for an #ifdef.
+
+Also:
+
 >  
-> +static int crossrelease_fullstack;
-> +static int __init allow_crossrelease_fullstack(char *str)
-> +{
-> +	crossrelease_fullstack = 1;
-> +	return 0;
-> +}
+>  static inline struct gendisk *part_to_disk(struct hd_struct *part)
+> @@ -590,8 +593,7 @@ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
+>  extern void delete_partition(struct gendisk *, int);
+>  extern void printk_all_partitions(void);
+>  
+> -extern struct gendisk *alloc_disk_node(int minors, int node_id);
+> -extern struct gendisk *alloc_disk(int minors);
+> +extern struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name);
+>  extern struct kobject *get_disk(struct gendisk *disk);
+>  extern void put_disk(struct gendisk *disk);
+>  extern void blk_register_region(dev_t devt, unsigned long range,
+> @@ -615,6 +617,22 @@ extern ssize_t part_fail_store(struct device *dev,
+>  			       const char *buf, size_t count);
+>  #endif /* CONFIG_FAIL_MAKE_REQUEST */
+>  
+> +#ifdef CONFIG_LOCKDEP_COMPLETIONS
+> +#define alloc_disk_node(m, id) \
+> +({									\
+> +	static struct lock_class_key __key;				\
+> +	const char *__lock_name;					\
+> +									\
+> +	__lock_name = "(complete)"#m"("#id")";				\
+> +									\
+> +	__alloc_disk_node(m, id, &__key, __lock_name);			\
+> +})
+> +#else
+> +#define alloc_disk_node(m, id)	__alloc_disk_node(m, id, NULL, NULL)
+> +#endif
 > +
-> +early_param("crossrelease_fullstack", allow_crossrelease_fullstack);
+> +#define alloc_disk(m)		alloc_disk_node(m, NUMA_NO_NODE)
 > +
->  /*
->   * lockdep_lock: protects the lockdep graph, the hashes and the
->   *               class/list/hash allocators.
-> @@ -4864,8 +4873,13 @@ static void add_xhlock(struct held_lock *hlock)
->  	xhlock->trace.max_entries = MAX_XHLOCK_TRACE_ENTRIES;
->  	xhlock->trace.entries = xhlock->trace_entries;
->  #ifdef CONFIG_CROSSRELEASE_STACK_TRACE
-> -	xhlock->trace.skip = 3;
-> -	save_stack_trace(&xhlock->trace);
-> +	if (crossrelease_fullstack) {
-> +		xhlock->trace.skip = 3;
-> +		save_stack_trace(&xhlock->trace);
-> +	} else {
-> +		xhlock->trace.nr_entries = 1;
-> +		xhlock->trace.entries[0] = hlock->acquire_ip;
-> +	}
->  #else
->  	xhlock->trace.nr_entries = 1;
->  	xhlock->trace.entries[0] = hlock->acquire_ip;
-> diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-> index fe8fceb..132536d 100644
-> --- a/lib/Kconfig.debug
-> +++ b/lib/Kconfig.debug
-> @@ -1228,7 +1228,7 @@ config LOCKDEP_COMPLETIONS
->  config CROSSRELEASE_STACK_TRACE
->  	bool "Record more than one entity of stack trace in crossrelease"
->  	depends on LOCKDEP_CROSSRELEASE
-> -	default n
-> +	default y
->  	help
->  	 The lockdep "cross-release" feature needs to record stack traces
->  	 (of calling functions) for all acquisitions, for eventual later
-> @@ -1238,7 +1238,8 @@ config CROSSRELEASE_STACK_TRACE
->  	 full analysis. This option turns on the saving of the full stack
->  	 trace entries.
->  
-> -	 If unsure, say N.
-> +	 To make the feature actually on, set "crossrelease_fullstack"
-> +	 kernel parameter, too.
->  
->  config DEBUG_LOCKDEP
->  	bool "Lock dependency engine debugging"
+>  static inline int hd_ref_init(struct hd_struct *part)
+>  {
+>  	if (percpu_ref_init(&part->ref, __delete_partition, 0,
 
-This is really unnecessarily complex.
+Why is the lockdep_map passed in to the init function? Since it's wrapped in an 
+ugly fashion anyway, why not introduce a clean inline function that calls 
+lockdep_init_map() on the returned structure.
 
-The proper logic is to introduce the crossrelease_fullstack boot parameter, and to 
-also have a Kconfig option that enables it: 
-
-	CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK=y
-
-No #ifdefs please - just an "if ()" branch dependent on the current value of 
-crossrelease_fullstack.
+No #ifdefs required, and no uglification of the alloc_disk_node() interface.
 
 Thanks,
 
