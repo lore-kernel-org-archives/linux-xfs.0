@@ -1,230 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:52090 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752064AbdJXKP4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 06:15:56 -0400
-Date: Tue, 24 Oct 2017 12:15:51 +0200
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v3 8/8] block: Assign a lock_class per gendisk used for
- wait_for_completion()
-Message-ID: <20171024101551.sftqsy5mk34fxru7@gmail.com>
-References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
- <1508837889-16932-9-git-send-email-byungchul.park@lge.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60824 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932196AbdJXLar (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 07:30:47 -0400
+Date: Tue, 24 Oct 2017 07:30:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] xfs: sanity check log record range parameters
+Message-ID: <20171024113045.GA56184@bfoster.bfoster>
+References: <20171023144646.50107-1-bfoster@redhat.com>
+ <20171023144646.50107-2-bfoster@redhat.com>
+ <20171023234903.GI5483@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1508837889-16932-9-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <20171023234903.GI5483@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: peterz@infradead.org, axboe@kernel.dk, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-* Byungchul Park <byungchul.park@lge.com> wrote:
-
-> Darrick and Dave Chinner posted the following warning:
+On Mon, Oct 23, 2017 at 04:49:03PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 23, 2017 at 10:46:43AM -0400, Brian Foster wrote:
+> > If a malformatted filesystem is mounted and attempts log recovery,
+> > we can end up passing garbage parameter values to
+> > xlog_find_verify_log_record(). In turn, the latter can pass a NULL
+> > head pointer to xlog_header_check_mount() and cause a kernel panic.
 > 
-> > ======================================================
-> > WARNING: possible circular locking dependency detected
-> > 4.14.0-rc1-fixes #1 Tainted: G        W
-> > ------------------------------------------------------
-> > loop0/31693 is trying to acquire lock:
-> >  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
-> >
-> > but now in release context of a crosslock acquired at the following:
-> >  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
-> >
-> > which lock already depends on the new lock.
-> >
-> > the existing dependency chain (in reverse order) is:
-> >
-> > -> #2 ((complete)&ret.event){+.+.}:
-> >        lock_acquire+0xab/0x200
-> >        wait_for_completion_io+0x4e/0x1a0
-> >        submit_bio_wait+0x7f/0xb0
-> >        blkdev_issue_zeroout+0x71/0xa0
-> >        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
-> >        xfs_bmapi_write+0x374/0x11f0 [xfs]
-> >        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
-> >        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
-> >        iomap_apply+0x43/0xe0
-> >        dax_iomap_rw+0x89/0xf0
-> >        xfs_file_dax_write+0xcc/0x220 [xfs]
-> >        xfs_file_write_iter+0xf0/0x130 [xfs]
-> >        __vfs_write+0xd9/0x150
-> >        vfs_write+0xc8/0x1c0
-> >        SyS_write+0x45/0xa0
-> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
-> >
-> > -> #1 (&xfs_nondir_ilock_class){++++}:
-> >        lock_acquire+0xab/0x200
-> >        down_write_nested+0x4a/0xb0
-> >        xfs_ilock+0x263/0x330 [xfs]
-> >        xfs_setattr_size+0x152/0x370 [xfs]
-> >        xfs_vn_setattr+0x6b/0x90 [xfs]
-> >        notify_change+0x27d/0x3f0
-> >        do_truncate+0x5b/0x90
-> >        path_openat+0x237/0xa90
-> >        do_filp_open+0x8a/0xf0
-> >        do_sys_open+0x11c/0x1f0
-> >        entry_SYSCALL_64_fastpath+0x1f/0xbe
-> >
-> > -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
-> >        up_write+0x1c/0x40
-> >        xfs_iunlock+0x1d0/0x310 [xfs]
-> >        xfs_file_fallocate+0x8a/0x310 [xfs]
-> >        loop_queue_work+0xb7/0x8d0
-> >        kthread_worker_fn+0xb9/0x1f0
-> >
-> > Chain exists of:
-> >   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
-> >
-> >  Possible unsafe locking scenario by crosslock:
-> >
-> >        CPU0                    CPU1
-> >        ----                    ----
-> >   lock(&xfs_nondir_ilock_class);
-> >   lock((complete)&ret.event);
-> >                                lock(&(&ip->i_mmaplock)->mr_lock);
-> >                                unlock((complete)&ret.event);
-> >
-> >                *** DEADLOCK ***
+> Malformed how?  Is *last_blk some huge value such that i < -1?
 > 
-> The warning is a false positive, caused by the fact that all
-> wait_for_completion()s in submit_bio_wait() are waiting with the same
-> lock class.
+> I'm trying to figure out how we get passed a NULL head, and (afaict)
+> that's one way it can happen...
 > 
-> However, some bios have nothing to do with others, for example, the case
-> might happen while using loop devices, between bios of an upper device
-> and a lower device(=loop device).
+
+Malformatted simply means the log is too small. What happens is that
+start_blk underflows in xlog_find_head() due to:
+
+	start_blk = log_bbnum - (num_scan_bblks - head_blk);
+
+... and the code ends up with a negative head_blk value by the time we
+get to the "validate_head" label. last_blk ends up negative in
+xlog_find_verify_log_record() and passes the NULL head pointer to
+xlog_header_check_mount().
+
+I suppose this might be a bit more obvious if we similarly fixed up
+xlog_find_verify_cycle() to ensure that start_blk is sane, rather than
+let it fall through to the record validation before failing.
+
+> > Add some parameter sanity checks to both functions. Checks in both
+> > places are technically not necessary, but do so to help future proof
+> > the code. This prevents a kernel panic and replaces it with a more
+> > graceful mount failure.
+> > 
+> > Reported-by: Zorro Lang <zlang@redhat.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_log_recover.c | 11 +++++++++--
+> >  1 file changed, 9 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index ee34899..80b37a2 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -347,9 +347,12 @@ xlog_header_check_recover(
+> >   */
+> >  STATIC int
+> >  xlog_header_check_mount(
+> > -	xfs_mount_t		*mp,
+> > -	xlog_rec_header_t	*head)
+> > +	struct xfs_mount	*mp,
+> > +	struct xlog_rec_header	*head)
+> >  {
+> > +	if (!head)
+> > +		return -EINVAL;
+> > +
+> >  	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+> >  
+> >  	if (uuid_is_null(&head->h_fs_uuid)) {
+> > @@ -533,6 +536,10 @@ xlog_find_verify_log_record(
+> >  
+> >  	ASSERT(start_blk != 0 || *last_blk != start_blk);
+> >  
+> > +	if (start_blk < 0 || start_blk > log->l_logBBsize ||
+> > +	    *last_blk < 0 || *last_blk > log->l_logBBsize)
+> > +		return -EINVAL;
 > 
-> The safest way to assign different lock classes to different devices is
-> to do it for each gendisk. In other words, this patch assigns a
-> lockdep_map per gendisk and uses it when initializing completion in
-> submit_bio_wait().
+> /me stumbled over the fact that start_blk and last_blk are offsets (in
+> units of basic blocks) within the log, not absolute disk offsets like
+> their xfs_daddr_t type implies. :(
 > 
-> Of course, it might be too conservative. But, making it safest for now
-> and extended by block layer experts later is good, atm.
+> Could you add a comment somewhere in this function explaining that these
+> two "block" numbers are actually relative logBBstart?  The comment
+> implies this, but apparently not strongly enough.
 > 
-> Signed-off-by: Byungchul Park <byungchul.park@lge.com>
-> ---
->  block/bio.c           |  2 +-
->  block/genhd.c         | 13 +++++--------
->  include/linux/genhd.h | 22 ++++++++++++++++++++--
->  3 files changed, 26 insertions(+), 11 deletions(-)
+
+Sure. I'll add a similar check to the cycle verifier as noted above and
+add a comment in both places to note that we're looking for sane "log
+relative block numbers."
+
+Actually... now that I take a closer look at the code, I'm wondering if
+a more robust solution than these explicit checks would be to push this
+validation down to the log buffer helpers. We already have
+xlog_buf_bbcount_valid() for checking the buffer length. Perhaps we
+should enhance that to a 'xlog_buf_valid()' for sanity checking both the
+log block address and count (and just passing 0 from xlog_get_bp())
+before the blkno converted to a real daddr and actually read. That may
+better protect us from going off the rails anywhere else in the future
+since the read would simply fail. Thoughts?
+
+Brian
+
+> --D
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index 5e901bf..cc60213 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -935,7 +935,7 @@ static void submit_bio_wait_endio(struct bio *bio)
->   */
->  int submit_bio_wait(struct bio *bio)
->  {
-> -	DECLARE_COMPLETION_ONSTACK(done);
-> +	DECLARE_COMPLETION_ONSTACK_MAP(done, bio->bi_disk->lockdep_map);
->  
->  	bio->bi_private = &done;
->  	bio->bi_end_io = submit_bio_wait_endio;
-> diff --git a/block/genhd.c b/block/genhd.c
-> index dd305c6..f195d22 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -1354,13 +1354,7 @@ dev_t blk_lookup_devt(const char *name, int partno)
->  }
->  EXPORT_SYMBOL(blk_lookup_devt);
->  
-> -struct gendisk *alloc_disk(int minors)
-> -{
-> -	return alloc_disk_node(minors, NUMA_NO_NODE);
-> -}
-> -EXPORT_SYMBOL(alloc_disk);
-> -
-> -struct gendisk *alloc_disk_node(int minors, int node_id)
-> +struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name)
->  {
->  	struct gendisk *disk;
->  	struct disk_part_tbl *ptbl;
-> @@ -1409,9 +1403,12 @@ struct gendisk *alloc_disk_node(int minors, int node_id)
->  		disk_to_dev(disk)->type = &disk_type;
->  		device_initialize(disk_to_dev(disk));
->  	}
-> +
-> +	lockdep_init_map(&disk->lockdep_map, lock_name, key, 0);
-
-lockdep_init_map() depends on CONFIG_DEBUG_LOCK_ALLOC IIRC, but the data structure 
-change you made depends on CONFIG_LOCKDEP_COMPLETIONS:
-
->  	return disk;
->  }
-> -EXPORT_SYMBOL(alloc_disk_node);
-> +EXPORT_SYMBOL(__alloc_disk_node);
->  
->  struct kobject *get_disk(struct gendisk *disk)
->  {
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 6d85a75..9832e3c 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -206,6 +206,9 @@ struct gendisk {
->  #endif	/* CONFIG_BLK_DEV_INTEGRITY */
->  	int node_id;
->  	struct badblocks *bb;
-> +#ifdef CONFIG_LOCKDEP_COMPLETIONS
-> +	struct lockdep_map lockdep_map;
-> +#endif
->  };
-
-Which is risking a future build failure at minimum.
-
-Isn't lockdep_map a zero size structure that is always defined? If yes then 
-there's no need for an #ifdef.
-
-Also:
-
->  
->  static inline struct gendisk *part_to_disk(struct hd_struct *part)
-> @@ -590,8 +593,7 @@ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
->  extern void delete_partition(struct gendisk *, int);
->  extern void printk_all_partitions(void);
->  
-> -extern struct gendisk *alloc_disk_node(int minors, int node_id);
-> -extern struct gendisk *alloc_disk(int minors);
-> +extern struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name);
->  extern struct kobject *get_disk(struct gendisk *disk);
->  extern void put_disk(struct gendisk *disk);
->  extern void blk_register_region(dev_t devt, unsigned long range,
-> @@ -615,6 +617,22 @@ extern ssize_t part_fail_store(struct device *dev,
->  			       const char *buf, size_t count);
->  #endif /* CONFIG_FAIL_MAKE_REQUEST */
->  
-> +#ifdef CONFIG_LOCKDEP_COMPLETIONS
-> +#define alloc_disk_node(m, id) \
-> +({									\
-> +	static struct lock_class_key __key;				\
-> +	const char *__lock_name;					\
-> +									\
-> +	__lock_name = "(complete)"#m"("#id")";				\
-> +									\
-> +	__alloc_disk_node(m, id, &__key, __lock_name);			\
-> +})
-> +#else
-> +#define alloc_disk_node(m, id)	__alloc_disk_node(m, id, NULL, NULL)
-> +#endif
-> +
-> +#define alloc_disk(m)		alloc_disk_node(m, NUMA_NO_NODE)
-> +
->  static inline int hd_ref_init(struct hd_struct *part)
->  {
->  	if (percpu_ref_init(&part->ref, __delete_partition, 0,
-
-Why is the lockdep_map passed in to the init function? Since it's wrapped in an 
-ugly fashion anyway, why not introduce a clean inline function that calls 
-lockdep_init_map() on the returned structure.
-
-No #ifdefs required, and no uglification of the alloc_disk_node() interface.
-
-Thanks,
-
-	Ingo
+> > +
+> >  	if (!(bp = xlog_get_bp(log, num_blks))) {
+> >  		if (!(bp = xlog_get_bp(log, 1)))
+> >  			return -ENOMEM;
+> > -- 
+> > 2.9.5
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
