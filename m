@@ -1,43 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:49073 "EHLO
-        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbdJYFLk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:11:40 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v4 3/7] locking/lockdep: Remove the BROKEN flag from CONFIG_LOCKDEP_CROSSRELEASE and CONFIG_LOCKDEP_COMPLETIONS
-Date: Wed, 25 Oct 2017 14:11:08 +0900
-Message-Id: <1508908272-15757-4-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
-References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39974 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751973AbdJXMxi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 08:53:38 -0400
+Date: Tue, 24 Oct 2017 08:53:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: abort extended attribute list operation if btree is
+ obviously weird
+Message-ID: <20171024125336.GB56184@bfoster.bfoster>
+References: <20171024002824.GL5483@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171024002824.GL5483@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Now that the performance regression is fixed, re-enable
-CONFIG_LOCKDEP_CROSSRELEASE=y and CONFIG_LOCKDEP_COMPLETIONS=y.
+On Mon, Oct 23, 2017 at 05:28:24PM -0700, Darrick J. Wong wrote:
+> Abort an attribute list operation if the attr btree has obvious problems
+> like loops back to the root or pointers don't point down the tree.
+> Found by fuzzing btree[0].before to zero in xfs/402.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_attr_list.c |   54 ++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 43 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> index 5816786..9f6fcc6 100644
+> --- a/fs/xfs/xfs_attr_list.c
+> +++ b/fs/xfs/xfs_attr_list.c
+...
+> @@ -302,6 +306,30 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+>  			}
+>  
+>  			dp->d_ops->node_hdr_from_disk(&nodehdr, node);
+> +
+> +			/* Tree taller than we can handle; bail out! */
+> +			if (nodehdr.level >= XFS_DA_NODE_MAXDEPTH) {
+> +				xfs_trans_brelse(context->tp, bp);
+> +				return -EFSCORRUPTED;
+> +			}
+> +
+> +			if (cursor->blkno == 0) {
+> +				/*
+> +				 * This is the root node, set up for the
+> +				 * next level we want to see.
+> +				 */
+> +				expected_level = nodehdr.level - 1;
+> +			} else if (expected_level != nodehdr.level) {
+> +				/*
+> +				 * Not the level we were expecting, which
+> +				 * implies that the tree is bad.
+> +				 */
+> +				xfs_trans_brelse(context->tp, bp);
+> +				return -EFSCORRUPTED;
+> +			} else {
+> +				expected_level--;
+> +			}
+> +
 
-Signed-off-by: Byungchul Park <byungchul.park@lge.com>
----
- lib/Kconfig.debug | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+It looks like we wouldn't catch the case of a two level tree having a
+bad level, since we'd break out on leaf magic check above. Perhaps we
+should check or assert that expected_level reaches 0? Otherwise looks Ok
+to me.
 
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 3db9167..4bef610 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1138,8 +1138,8 @@ config PROVE_LOCKING
- 	select DEBUG_MUTEXES
- 	select DEBUG_RT_MUTEXES if RT_MUTEXES
- 	select DEBUG_LOCK_ALLOC
--	select LOCKDEP_CROSSRELEASE if BROKEN
--	select LOCKDEP_COMPLETIONS if BROKEN
-+	select LOCKDEP_CROSSRELEASE
-+	select LOCKDEP_COMPLETIONS
- 	select TRACE_IRQFLAGS
- 	default n
- 	help
--- 
-1.9.1
+Brian
 
+>  			btree = dp->d_ops->node_tree_p(node);
+>  			for (i = 0; i < nodehdr.count; btree++, i++) {
+>  				if (cursor->hashval
+> @@ -317,6 +345,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+>  				return 0;
+>  			}
+>  			xfs_trans_brelse(context->tp, bp);
+> +
+> +			/* We can't point back to the root. */
+> +			if (cursor->blkno == 0)
+> +				return -EFSCORRUPTED;
+>  		}
+>  	}
+>  	ASSERT(bp != NULL);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
