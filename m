@@ -1,74 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37940 "EHLO mga11.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:36150 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932309AbdJZRzf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 13:55:35 -0400
-Date: Thu, 26 Oct 2017 12:00:14 -0600
-From: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
-Message-ID: <20171026180014.GA27102@localhost.localdomain>
-References: <20171026144131.26885-1-keith.busch@intel.com>
- <20171026162518.GW5483@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171026162518.GW5483@magnolia>
+        id S932431AbdJXPZf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:35 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 17/17] xfs: support for synchronous DAX faults
+Date: Tue, 24 Oct 2017 17:24:14 +0200
+Message-Id: <20171024152415.22864-18-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
 
-On Thu, Oct 26, 2017 at 09:25:18AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 26, 2017 at 08:41:31AM -0600, Keith Busch wrote:
-> > Running mkfs.xfs was discarding the entire capacity in a single range. The
-> > block layer would split these into potentially many smaller requests
-> > and dispatch all of them to the device at roughly the same time.
-> > 
-> > SSD capacities are getting so large that full capacity discards will
-> > take some time to complete. When discards are deeply queued, the block
-> > layer may trigger timeout handling and IO failure, though the device is
-> > operating normally.
-> > 
-> > This patch uses smaller discard ranges in a loop for mkfs to avoid
-> > risking such timeouts. The max discard range is arbitrarilly set to
-> > 128GB in this patch.
-> 
-> I'd have thought devices would set sane blk_queue_max_discard_sectors
-> so that the block layer doesn't send such a huge command that the kernel
-> times out...
+From: Christoph Hellwig <hch@lst.de>
 
-The block limit only specifies the maximum size of a *single* discard
-request as seen by the end device. This single request is not a problem
-for timeouts, as far as I know.
+Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
+blocks for writing and the inode is pinned, and has dirty fields other
+than the timestamps.  In __xfs_filemap_fault() we then detect this case
+and call dax_finish_sync_fault() to make sure all metadata is committed,
+and to insert the page table entry.
 
-The timeouts occur when queueing many of them at the same time: the last
-one in the queue will have very high latency compared to ones ahead of
-it in the queue if the device processes discards serially (many do).
+Note that this will also dirty corresponding radix tree entry which is
+what we want - fsync(2) will still provide data integrity guarantees for
+applications not using userspace flushing. And applications using
+userspace flushing can avoid calling fsync(2) and thus avoid the
+performance overhead.
 
-There's no such limit to say the maximum outstanding number discard
-requests that can be dispatched at the same time; the max number of
-dispatched commands are shard with read and write.
+[JK: Added VM_SYNC flag handling]
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_file.c  | 15 ++++++++++++++-
+ fs/xfs/xfs_iomap.c |  5 +++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 7c6b8def6eed..02093df4b314 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -44,6 +44,7 @@
+ #include <linux/falloc.h>
+ #include <linux/pagevec.h>
+ #include <linux/backing-dev.h>
++#include <linux/mman.h>
  
-> ...but then I actually went and grepped that in the kernel and
-> discovered that nbd, zram, raid0, mtd, and nvme all pass in UINT_MAX,
-> which is 2T.  Frighteningly xen-blkfront passes in get_capacity() (which
-> overflows the unsigned int parameter on big virtual disks, I guess?).
+ static const struct vm_operations_struct xfs_file_vm_ops;
+ 
+@@ -1040,7 +1041,11 @@ __xfs_filemap_fault(
+ 
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	if (IS_DAX(inode)) {
+-		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
++		pfn_t pfn;
++
++		ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
++		if (ret & VM_FAULT_NEEDDSYNC)
++			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
+ 	} else {
+ 		if (write_fault)
+ 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+@@ -1131,6 +1136,13 @@ xfs_file_mmap(
+ 	struct file	*filp,
+ 	struct vm_area_struct *vma)
+ {
++	/*
++	 * We don't support synchronous mappings for non-DAX files. At least
++	 * until someone comes with a sensible use case.
++	 */
++	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
++		return -EOPNOTSUPP;
++
+ 	file_accessed(filp);
+ 	vma->vm_ops = &xfs_file_vm_ops;
+ 	if (IS_DAX(file_inode(filp)))
+@@ -1149,6 +1161,7 @@ const struct file_operations xfs_file_operations = {
+ 	.compat_ioctl	= xfs_file_compat_ioctl,
+ #endif
+ 	.mmap		= xfs_file_mmap,
++	.mmap_supported_flags = MAP_SYNC,
+ 	.open		= xfs_file_open,
+ 	.release	= xfs_file_release,
+ 	.fsync		= xfs_file_fsync,
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index f179bdf1644d..b43be199fbdf 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -33,6 +33,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_space.h"
++#include "xfs_inode_item.h"
+ #include "xfs_iomap.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+@@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
+ 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+ 	}
+ 
++	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
++	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
++		iomap->flags |= IOMAP_F_DIRTY;
++
+ 	xfs_bmbt_to_iomap(ip, iomap, &imap);
+ 
+ 	if (shared)
+-- 
+2.12.3
 
-The block layer will limit a single discard range to 4GB. If the IOCTL
-specifies a larger range, the block layer will split it into multiple
-requests.
-
-> (I still think this is the kernel's problem, not userspace's, but now
-> with an extra layer of OMGWTF sprayed on.)
-> 
-> I dunno.  What kind of device produces these timeouts, and does it go
-> away if max_discards is lowered?
-
-We observe timeouts on capacities above 4TB: a single BLKDISCARD for that
-capacity has the block layer send 1024 discard requests at 4GB each.
-
-Could the drivers do something else to mitigate this? We could set queue
-depths lower to throttle dispatched commands and the problem would go
-away. The depth, though, is set to optimize read and write, and we don't
-want to harm that path to mitigate discard latency spikes.
