@@ -1,73 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:35736 "EHLO
+Received: from LGEAMRELO12.lge.com ([156.147.23.52]:35749 "EHLO
         lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752005AbdJXJjA (ORCPT
+        with ESMTP id S1751888AbdJXJjA (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 05:39:00 -0400
 From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v3 1/8] block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
-Date: Tue, 24 Oct 2017 18:38:02 +0900
-Message-Id: <1508837889-16932-2-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v3 2/8] lockdep: Introduce CROSSRELEASE_STACK_TRACE and make it not unwind as default
+Date: Tue, 24 Oct 2017 18:38:03 +0900
+Message-Id: <1508837889-16932-3-git-send-email-byungchul.park@lge.com>
 In-Reply-To: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
 References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com, Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-From: Christoph Hellwig <hch@lst.de>
+Johan Hovold reported a performance regression by crossrelease like:
 
-Simplify the code by getting rid of the submit_bio_ret structure.
+> Boot time (from "Linux version" to login prompt) had in fact doubled
+> since 4.13 where it took 17 seconds (with my current config) compared to
+> the 35 seconds I now see with 4.14-rc4.
+>
+> I quick bisect pointed to lockdep and specifically the following commit:
+>
+> 	28a903f63ec0 ("locking/lockdep: Handle non(or multi)-acquisition
+> 	               of a crosslock")
+>
+> which I've verified is the commit which doubled the boot time (compared
+> to 28a903f63ec0^) (added by lockdep crossrelease series [1]).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Currently crossrelease performs unwind on every acquisition. But, that
+overloads systems too much. So this patch makes unwind optional and set
+it to N as default. Instead, it records only acquire_ip normally. Of
+course, unwind is sometimes required for full analysis. In that case, we
+can set CROSSRELEASE_STACK_TRACE to Y and use it.
+
+In my qemu ubuntu machin (x86_64, 4 cores, 512M), the regression was
+fixed like, measuring booting times with 'perf stat --null --repeat 10
+$QEMU', where $QEMU launchs a kernel with init=/bin/true:
+
+1. No lockdep enabled
+
+ Performance counter stats for 'qemu_booting_time.sh bzImage' (10 runs):
+
+       2.756558155 seconds time elapsed                    ( +-  0.09% )
+
+2. Lockdep enabled
+
+ Performance counter stats for 'qemu_booting_time.sh bzImage' (10 runs):
+
+       2.968710420 seconds time elapsed                    ( +-  0.12% )
+
+3. Lockdep enabled + crossrelease enabled
+
+ Performance counter stats for 'qemu_booting_time.sh bzImage' (10 runs):
+
+       3.153839636 seconds time elapsed                    ( +-  0.31% )
+
+4. Lockdep enabled + crossrelease enabled + this patch applied
+
+ Performance counter stats for 'qemu_booting_time.sh bzImage' (10 runs):
+
+       2.963669551 seconds time elapsed                    ( +-  0.11% )
+
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- block/bio.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+ include/linux/lockdep.h  |  4 ++++
+ kernel/locking/lockdep.c |  5 +++++
+ lib/Kconfig.debug        | 15 +++++++++++++++
+ 3 files changed, 24 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index 101c2a9..5e901bf 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -917,17 +917,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index bfa8e0b..70358b5 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -278,7 +278,11 @@ struct held_lock {
+ };
+ 
+ #ifdef CONFIG_LOCKDEP_CROSSRELEASE
++#ifdef CONFIG_CROSSRELEASE_STACK_TRACE
+ #define MAX_XHLOCK_TRACE_ENTRIES 5
++#else
++#define MAX_XHLOCK_TRACE_ENTRIES 1
++#endif
+ 
+ /*
+  * This is for keeping locks waiting for commit so that true dependencies
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index e36e652..5c2ddf2 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -4863,8 +4863,13 @@ static void add_xhlock(struct held_lock *hlock)
+ 	xhlock->trace.nr_entries = 0;
+ 	xhlock->trace.max_entries = MAX_XHLOCK_TRACE_ENTRIES;
+ 	xhlock->trace.entries = xhlock->trace_entries;
++#ifdef CONFIG_CROSSRELEASE_STACK_TRACE
+ 	xhlock->trace.skip = 3;
+ 	save_stack_trace(&xhlock->trace);
++#else
++	xhlock->trace.nr_entries = 1;
++	xhlock->trace.entries[0] = hlock->acquire_ip;
++#endif
  }
- EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
  
--struct submit_bio_ret {
--	struct completion event;
--	int error;
--};
--
- static void submit_bio_wait_endio(struct bio *bio)
- {
--	struct submit_bio_ret *ret = bio->bi_private;
--
--	ret->error = blk_status_to_errno(bio->bi_status);
--	complete(&ret->event);
-+	complete(bio->bi_private);
- }
+ static inline int same_context_xhlock(struct hist_lock *xhlock)
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index 3db9167..90ea784 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -1225,6 +1225,21 @@ config LOCKDEP_COMPLETIONS
+ 	 A deadlock caused by wait_for_completion() and complete() can be
+ 	 detected by lockdep using crossrelease feature.
  
- /**
-@@ -943,16 +935,15 @@ static void submit_bio_wait_endio(struct bio *bio)
-  */
- int submit_bio_wait(struct bio *bio)
- {
--	struct submit_bio_ret ret;
-+	DECLARE_COMPLETION_ONSTACK(done);
- 
--	init_completion(&ret.event);
--	bio->bi_private = &ret;
-+	bio->bi_private = &done;
- 	bio->bi_end_io = submit_bio_wait_endio;
- 	bio->bi_opf |= REQ_SYNC;
- 	submit_bio(bio);
--	wait_for_completion_io(&ret.event);
-+	wait_for_completion_io(&done);
- 
--	return ret.error;
-+	return blk_status_to_errno(bio->bi_status);
- }
- EXPORT_SYMBOL(submit_bio_wait);
- 
++config CROSSRELEASE_STACK_TRACE
++	bool "Record more than one entity of stack trace in crossrelease"
++	depends on LOCKDEP_CROSSRELEASE
++	default n
++	help
++	 The lockdep "cross-release" feature needs to record stack traces
++	 (of calling functions) for all acquisitions, for eventual later
++	 use during analysis. By default only a single caller is recorded,
++	 because the unwind operation can be very expensive with deeper
++	 stack chains. However, sometimes deeper traces are required for
++	 full analysis. This option turns on the saving of the full stack
++	 trace entries.
++
++	 If unsure, say N.
++
+ config DEBUG_LOCKDEP
+ 	bool "Lock dependency engine debugging"
+ 	depends on DEBUG_KERNEL && LOCKDEP
 -- 
 1.9.1
 
