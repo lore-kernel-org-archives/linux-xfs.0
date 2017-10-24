@@ -1,80 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:47598 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932467AbdJYI4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 04:56:33 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v5 7/9] completion: Add support for initializing completion with lockdep_map
-Date: Wed, 25 Oct 2017 17:56:03 +0900
-Message-Id: <1508921765-15396-8-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
-References: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
+Received: from mx2.suse.de ([195.135.220.15]:36102 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932197AbdJXPZb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:31 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 06/17] dax: Create local variable for vmf->flags & FAULT_FLAG_WRITE test
+Date: Tue, 24 Oct 2017 17:24:03 +0200
+Message-Id: <20171024152415.22864-7-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-Sometimes, we want to initialize completions with sparate lockdep maps
-to assign lock classes as desired. For example, the workqueue code
-needs to directly manage lockdep maps, since only the code is aware of
-how to classify lockdep maps properly.
+There are already two users and more are coming.
 
-Provide additional macros initializing completions in that way.
-
-Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- include/linux/completion.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ fs/dax.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/completion.h b/include/linux/completion.h
-index 9121803..4da4991 100644
---- a/include/linux/completion.h
-+++ b/include/linux/completion.h
-@@ -49,6 +49,13 @@ static inline void complete_release_commit(struct completion *x)
- 	lock_commit_crosslock((struct lockdep_map *)&x->map);
- }
+diff --git a/fs/dax.c b/fs/dax.c
+index c09465884bbe..5ea71381dba0 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1116,6 +1116,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 	struct iomap iomap = { 0 };
+ 	unsigned flags = IOMAP_FAULT;
+ 	int error, major = 0;
++	bool write = vmf->flags & FAULT_FLAG_WRITE;
+ 	int vmf_ret = 0;
+ 	void *entry;
  
-+#define init_completion_map(x, m)					\
-+do {									\
-+	lockdep_init_map_crosslock((struct lockdep_map *)&(x)->map,	\
-+			(m)->name, (m)->key, 0);				\
-+	__init_completion(x);						\
-+} while (0)
-+
- #define init_completion(x)						\
- do {									\
- 	static struct lock_class_key __key;				\
-@@ -58,6 +65,7 @@ static inline void complete_release_commit(struct completion *x)
- 	__init_completion(x);						\
- } while (0)
- #else
-+#define init_completion_map(x, m) __init_completion(x)
- #define init_completion(x) __init_completion(x)
- static inline void complete_acquire(struct completion *x) {}
- static inline void complete_release(struct completion *x) {}
-@@ -73,6 +81,9 @@ static inline void complete_release_commit(struct completion *x) {}
- 	{ 0, __WAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
- #endif
+@@ -1130,7 +1131,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 		goto out;
+ 	}
  
-+#define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
-+	(*({ init_completion_map(&(work), &(map)); &(work); }))
-+
- #define COMPLETION_INITIALIZER_ONSTACK(work) \
- 	(*({ init_completion(&work); &work; }))
+-	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
++	if (write && !vmf->cow_page)
+ 		flags |= IOMAP_WRITE;
  
-@@ -102,8 +113,11 @@ static inline void complete_release_commit(struct completion *x) {}
- #ifdef CONFIG_LOCKDEP
- # define DECLARE_COMPLETION_ONSTACK(work) \
- 	struct completion work = COMPLETION_INITIALIZER_ONSTACK(work)
-+# define DECLARE_COMPLETION_ONSTACK_MAP(work, map) \
-+	struct completion work = COMPLETION_INITIALIZER_ONSTACK_MAP(work, map)
- #else
- # define DECLARE_COMPLETION_ONSTACK(work) DECLARE_COMPLETION(work)
-+# define DECLARE_COMPLETION_ONSTACK_MAP(work, map) DECLARE_COMPLETION(work)
- #endif
- 
- /**
+ 	entry = grab_mapping_entry(mapping, vmf->pgoff, 0);
+@@ -1207,7 +1208,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 		break;
+ 	case IOMAP_UNWRITTEN:
+ 	case IOMAP_HOLE:
+-		if (!(vmf->flags & FAULT_FLAG_WRITE)) {
++		if (!write) {
+ 			vmf_ret = dax_load_hole(mapping, entry, vmf);
+ 			goto finish_iomap;
+ 		}
 -- 
-1.9.1
+2.12.3
 
