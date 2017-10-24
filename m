@@ -1,48 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:44939 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751513AbdJYGep (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 02:34:45 -0400
-Date: Wed, 25 Oct 2017 15:34:35 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [PATCH v4 7/7] block: Assign a lock_class per gendisk used for
- wait_for_completion()
-Message-ID: <20171025063435.GQ3310@X58A-UD3R>
-References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
- <1508908272-15757-8-git-send-email-byungchul.park@lge.com>
- <20171025060123.6mugpdpje6hx32nx@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171025060123.6mugpdpje6hx32nx@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:36029 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750813AbdJXPZ3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:29 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 03/17] dax: Simplify arguments of dax_insert_mapping()
+Date: Tue, 24 Oct 2017 17:24:00 +0200
+Message-Id: <20171024152415.22864-4-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ingo Molnar <mingo@kernel.org>
-Cc: peterz@infradead.org, axboe@kernel.dk, johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-On Wed, Oct 25, 2017 at 08:01:24AM +0200, Ingo Molnar wrote:
-> Beyond the #ifdef reduction I mentioned in the other thread, there's four other 
-> things I noticed that need to be fixed in this patch:
-> 
->  - Please write out 'minor' instead of the 'm' abbreviation that is meaningless. 
->    'm' is only used for trivial wrappers, but this wrapper is not trivial - so 
->    proper canonical variable names should be used.
-> 
->  - Since __key and __name is already double underscores that is customary for
->    macros to avoid variable name shadowing, why is 'ret' not such a name?
-> 
->  - But, 'ret' is the typical name used for integer returns, not for pointers! 
->    Please check the gendisk code for what the typical name for gendisk pointers
->    is and use that instead of making up new, weird patterns ...
-> 
->  - The "(complete)"#minor"("#id")" generated name is pretty bad. Firstly 
->    "complete" is a verb (or adjective), while lock(dep) symbol names should be 
->    nouns! But even "completion" is pretty opaque, how about "gendisk_completion"?
-> 
-> More careful patches please!
+dax_insert_mapping() has lots of arguments and a lot of them is actuall
+duplicated by passing vm_fault structure as well. Change the function to
+take the same arguments as dax_pmd_insert_mapping().
 
-I am sorry for that. I will do my best not to repeat them.
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-And I re-spined ASAP to make you able to review with the latest version
-only including all your suggestions at the previous version.
+diff --git a/fs/dax.c b/fs/dax.c
+index f001d8c72a06..0bc42ac294ca 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -820,23 +820,30 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ }
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
+ 
+-static int dax_insert_mapping(struct address_space *mapping,
+-		struct block_device *bdev, struct dax_device *dax_dev,
+-		sector_t sector, size_t size, void *entry,
+-		struct vm_area_struct *vma, struct vm_fault *vmf)
++static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
++{
++	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
++}
++
++static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
++			      loff_t pos, void *entry)
+ {
++	const sector_t sector = dax_iomap_sector(iomap, pos);
++	struct vm_area_struct *vma = vmf->vma;
++	struct address_space *mapping = vma->vm_file->f_mapping;
+ 	unsigned long vaddr = vmf->address;
+ 	void *ret, *kaddr;
+ 	pgoff_t pgoff;
+ 	int id, rc;
+ 	pfn_t pfn;
+ 
+-	rc = bdev_dax_pgoff(bdev, sector, size, &pgoff);
++	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
+ 	if (rc)
+ 		return rc;
+ 
+ 	id = dax_read_lock();
+-	rc = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
++	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
++			       &kaddr, &pfn);
+ 	if (rc < 0) {
+ 		dax_read_unlock(id);
+ 		return rc;
+@@ -936,11 +943,6 @@ int __dax_zero_page_range(struct block_device *bdev,
+ }
+ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
+ 
+-static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+-{
+-	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+-}
+-
+ static loff_t
+ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap)
+@@ -1087,7 +1089,6 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 	struct inode *inode = mapping->host;
+ 	unsigned long vaddr = vmf->address;
+ 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+-	sector_t sector;
+ 	struct iomap iomap = { 0 };
+ 	unsigned flags = IOMAP_FAULT;
+ 	int error, major = 0;
+@@ -1140,9 +1141,9 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 		goto error_finish_iomap;
+ 	}
+ 
+-	sector = dax_iomap_sector(&iomap, pos);
+-
+ 	if (vmf->cow_page) {
++		sector_t sector = dax_iomap_sector(&iomap, pos);
++
+ 		switch (iomap.type) {
+ 		case IOMAP_HOLE:
+ 		case IOMAP_UNWRITTEN:
+@@ -1175,8 +1176,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 			count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
+ 			major = VM_FAULT_MAJOR;
+ 		}
+-		error = dax_insert_mapping(mapping, iomap.bdev, iomap.dax_dev,
+-				sector, PAGE_SIZE, entry, vmf->vma, vmf);
++		error = dax_insert_mapping(vmf, &iomap, pos, entry);
+ 		/* -EBUSY is fine, somebody else faulted on the same PTE */
+ 		if (error == -EBUSY)
+ 			error = 0;
+-- 
+2.12.3
+
