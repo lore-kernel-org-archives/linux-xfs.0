@@ -1,155 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36052 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36038 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751559AbdJXPZa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751501AbdJXPZa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 24 Oct 2017 11:25:30 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 04/17] dax: Factor out getting of pfn out of iomap
-Date: Tue, 24 Oct 2017 17:24:01 +0200
-Message-Id: <20171024152415.22864-5-jack@suse.cz>
-In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
+Subject: [PATCH 0/17 v5] dax, ext4, xfs: Synchronous page faults
+Date: Tue, 24 Oct 2017 17:23:57 +0200
+Message-Id: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-Factor out code to get pfn out of iomap that is shared between PTE and
-PMD fault path.
+Hello,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 83 +++++++++++++++++++++++++++++++++-------------------------------
- 1 file changed, 43 insertions(+), 40 deletions(-)
+here is the fifth version of my patches to implement synchronous page faults
+for DAX mappings to make flushing of DAX mappings possible from userspace so
+that they can be flushed on finer than page granularity and also avoid the
+overhead of a syscall.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 0bc42ac294ca..116eef8d6c69 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -825,30 +825,53 @@ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
- 	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
- }
- 
--static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
--			      loff_t pos, void *entry)
-+static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
-+			 pfn_t *pfnp)
- {
- 	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct vm_area_struct *vma = vmf->vma;
--	struct address_space *mapping = vma->vm_file->f_mapping;
--	unsigned long vaddr = vmf->address;
--	void *ret, *kaddr;
- 	pgoff_t pgoff;
-+	void *kaddr;
- 	int id, rc;
--	pfn_t pfn;
-+	long length;
- 
--	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
-+	rc = bdev_dax_pgoff(iomap->bdev, sector, size, &pgoff);
- 	if (rc)
- 		return rc;
--
- 	id = dax_read_lock();
--	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
--			       &kaddr, &pfn);
--	if (rc < 0) {
--		dax_read_unlock(id);
--		return rc;
-+	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
-+				   &kaddr, pfnp);
-+	if (length < 0) {
-+		rc = length;
-+		goto out;
- 	}
-+	rc = -EINVAL;
-+	if (PFN_PHYS(length) < size)
-+		goto out;
-+	if (pfn_t_to_pfn(*pfnp) & (PHYS_PFN(size)-1))
-+		goto out;
-+	/* For larger pages we need devmap */
-+	if (length > 1 && !pfn_t_devmap(*pfnp))
-+		goto out;
-+	rc = 0;
-+out:
- 	dax_read_unlock(id);
-+	return rc;
-+}
-+
-+static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
-+			      loff_t pos, void *entry)
-+{
-+	const sector_t sector = dax_iomap_sector(iomap, pos);
-+	struct vm_area_struct *vma = vmf->vma;
-+	struct address_space *mapping = vma->vm_file->f_mapping;
-+	unsigned long vaddr = vmf->address;
-+	void *ret;
-+	int rc;
-+	pfn_t pfn;
-+
-+	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
-+	if (rc < 0)
-+		return rc;
- 
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
- 	if (IS_ERR(ret))
-@@ -1223,46 +1246,26 @@ static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
- {
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
- 	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct dax_device *dax_dev = iomap->dax_dev;
--	struct block_device *bdev = iomap->bdev;
- 	struct inode *inode = mapping->host;
--	const size_t size = PMD_SIZE;
--	void *ret = NULL, *kaddr;
--	long length = 0;
--	pgoff_t pgoff;
-+	void *ret = NULL;
- 	pfn_t pfn = {};
--	int id;
-+	int rc;
- 
--	if (bdev_dax_pgoff(bdev, sector, size, &pgoff) != 0)
-+	rc = dax_iomap_pfn(iomap, pos, PMD_SIZE, &pfn);
-+	if (rc < 0)
- 		goto fallback;
- 
--	id = dax_read_lock();
--	length = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
--	if (length < 0)
--		goto unlock_fallback;
--	length = PFN_PHYS(length);
--
--	if (length < size)
--		goto unlock_fallback;
--	if (pfn_t_to_pfn(pfn) & PG_PMD_COLOUR)
--		goto unlock_fallback;
--	if (!pfn_t_devmap(pfn))
--		goto unlock_fallback;
--	dax_read_unlock(id);
--
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector,
- 			RADIX_DAX_PMD);
- 	if (IS_ERR(ret))
- 		goto fallback;
- 
--	trace_dax_pmd_insert_mapping(inode, vmf, length, pfn, ret);
-+	trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, ret);
- 	return vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
- 			pfn, vmf->flags & FAULT_FLAG_WRITE);
- 
--unlock_fallback:
--	dax_read_unlock(id);
- fallback:
--	trace_dax_pmd_insert_mapping_fallback(inode, vmf, length, pfn, ret);
-+	trace_dax_pmd_insert_mapping_fallback(inode, vmf, PMD_SIZE, pfn, ret);
- 	return VM_FAULT_FALLBACK;
- }
- 
--- 
-2.12.3
+We use a new mmap flag MAP_SYNC to indicate that page faults for the mapping
+should be synchronous.  The guarantee provided by this flag is: While a block
+is writeably mapped into page tables of this mapping, it is guaranteed to be
+visible in the file at that offset also after a crash.
 
+How I implement this is that ->iomap_begin() indicates by a flag that inode
+block mapping metadata is unstable and may need flushing (use the same test as
+whether fdatasync() has metadata to write). If yes, DAX fault handler refrains
+from inserting / write-enabling the page table entry and returns special flag
+VM_FAULT_NEEDDSYNC together with a PFN to map to the filesystem fault handler.
+The handler then calls fdatasync() (vfs_fsync_range()) for the affected range
+and after that calls DAX code to update the page table entry appropriately.
+
+I did some basic performance testing on the patches over ramdisk - timed
+latency of page faults when faulting 512 pages. I did several tests: with file
+preallocated / with file empty, with background file copying going on / without
+it, with / without MAP_SYNC (so that we get comparison).  The results are
+(numbers are in microseconds):
+
+File preallocated, no background load no MAP_SYNC:
+min=9 avg=10 max=46
+8 - 15 us: 508
+16 - 31 us: 3
+32 - 63 us: 1
+
+File preallocated, no background load, MAP_SYNC:
+min=9 avg=10 max=47
+8 - 15 us: 508
+16 - 31 us: 2
+32 - 63 us: 2
+
+File empty, no background load, no MAP_SYNC:
+min=21 avg=22 max=70
+16 - 31 us: 506
+32 - 63 us: 5
+64 - 127 us: 1
+
+File empty, no background load, MAP_SYNC:
+min=40 avg=124 max=242
+32 - 63 us: 1
+64 - 127 us: 333
+128 - 255 us: 178
+
+File empty, background load, no MAP_SYNC:
+min=21 avg=23 max=67
+16 - 31 us: 507
+32 - 63 us: 4
+64 - 127 us: 1
+
+File empty, background load, MAP_SYNC:
+min=94 avg=112 max=181
+64 - 127 us: 489
+128 - 255 us: 23
+
+So here we can see the difference between MAP_SYNC vs non MAP_SYNC is about
+100-200 us when we need to wait for transaction commit in this setup. 
+
+Anyway, here are the patches and since Ross already posted his patches to test
+the functionality, I think we are ready to get this merged. I've talked with
+Dan and he said he could take the patches through his tree, I'd just like to
+get a final ack from Christoph on the patch modifying mmap(2).  Comments are
+welcome.
+
+Changes since v4:
+* fixed couple of minor things in the manpage
+* make legacy mmap flags always supported, remove them from mask declared
+  to be supported by ext4 and xfs
+
+Changes since v3:
+* updated some changelogs
+* folded fs support for VM_SYNC flag into patches implementing the
+  functionality
+* removed ->mmap_validate, use ->mmap_supported_flags instead
+* added some Reviewed-by tags
+* added manpage patch
+
+Changes since v2:
+* avoid unnecessary flushing of faulted page (Ross) - I've realized it makes no
+  sense to remeasure my benchmark results (after actually doing that and seeing
+  no difference, sigh) since I use ramdisk and not real PMEM HW and so flushes
+  are ignored.
+* handle nojournal mode of ext4
+* other smaller cleanups & fixes (Ross)
+* factor larger part of finishing of synchronous fault into a helper (Christoph)
+* reorder pfnp argument of dax_iomap_fault() (Christoph)
+* add XFS support from Christoph
+* use proper MAP_SYNC support in mmap(2)
+* rebased on top of 4.14-rc4
+
+Changes since v1:
+* switched to using mmap flag MAP_SYNC
+* cleaned up fault handlers to avoid passing pfn in vmf->orig_pte
+* switched to not touching page tables before we are ready to insert final
+  entry as it was unnecessary and not really simplifying anything
+* renamed fault flag to VM_FAULT_NEEDDSYNC
+* other smaller fixes found by reviewers
+
+								Honza
