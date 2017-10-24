@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:44086 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752052AbdJXJjA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 05:39:00 -0400
+Received: from LGEAMRELO12.lge.com ([156.147.23.52]:35768 "EHLO
+        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752026AbdJXJi7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 05:38:59 -0400
 From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v3 6/8] lockdep: Remove unnecessary acquisitions wrt workqueue flush
-Date: Tue, 24 Oct 2017 18:38:07 +0900
-Message-Id: <1508837889-16932-7-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v3 4/8] lockdep: Add a kernel parameter, crossrelease_fullstack
+Date: Tue, 24 Oct 2017 18:38:05 +0900
+Message-Id: <1508837889-16932-5-git-send-email-byungchul.park@lge.com>
 In-Reply-To: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
 References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,89 +15,95 @@ List-Id: xfs
 To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
 Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-The workqueue added manual acquisitions to catch deadlock cases.
-Now crossrelease was introduced, some of those are redundant, since
-wait_for_completion() already includes the acquisition for itself.
-Removed it.
+Make whether to allow recording full stack, in cross-release feature,
+switchable at boot time via a kernel parameter, 'crossrelease_fullstack'.
+In case of a splat with no stack trace, one could just reboot and set
+the kernel parameter to get the full data without having to recompile
+the kernel.
+
+Change CONFIG_CROSSRELEASE_STACK_TRACE default from N to Y, and
+introduce the new kernel parameter.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/workqueue.h |  4 ++--
- kernel/workqueue.c        | 19 +++----------------
- 2 files changed, 5 insertions(+), 18 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt |  3 +++
+ kernel/locking/lockdep.c                        | 18 ++++++++++++++++--
+ lib/Kconfig.debug                               |  5 +++--
+ 3 files changed, 22 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index f3c47a0..1455b5e 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -218,7 +218,7 @@ static inline void destroy_delayed_work_on_stack(struct delayed_work *work) { }
- 									\
- 		__init_work((_work), _onstack);				\
- 		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
--		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0); \
-+		lockdep_init_map(&(_work)->lockdep_map, "(complete)"#_work, &__key, 0); \
- 		INIT_LIST_HEAD(&(_work)->entry);			\
- 		(_work)->func = (_func);				\
- 	} while (0)
-@@ -399,7 +399,7 @@ enum {
- 	static struct lock_class_key __key;				\
- 	const char *__lock_name;					\
- 									\
--	__lock_name = #fmt#args;					\
-+	__lock_name = "(complete)"#fmt#args;				\
- 									\
- 	__alloc_workqueue_key((fmt), (flags), (max_active),		\
- 			      &__key, __lock_name, ##args);		\
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index c77fdf6..ee05d19 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -2496,15 +2496,8 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
- 	INIT_WORK_ONSTACK(&barr->work, wq_barrier_func);
- 	__set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(&barr->work));
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index ead7f40..4107b01 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -709,6 +709,9 @@
+ 			It will be ignored when crashkernel=X,high is not used
+ 			or memory reserved is below 4G.
  
--	/*
--	 * Explicitly init the crosslock for wq_barrier::done, make its lock
--	 * key a subkey of the corresponding work. As a result we won't
--	 * build a dependency between wq_barrier::done and unrelated work.
--	 */
--	lockdep_init_map_crosslock((struct lockdep_map *)&barr->done.map,
--				   "(complete)wq_barr::done",
--				   target->lockdep_map.key, 1);
--	__init_completion(&barr->done);
-+	init_completion_map(&barr->done, &target->lockdep_map);
++	crossrelease_fullstack
++			[KNL] Allow to record full stack trace in cross-release
 +
- 	barr->task = current;
+ 	cryptomgr.notests
+                         [KNL] Disable crypto self-tests
  
- 	/*
-@@ -2610,16 +2603,13 @@ void flush_workqueue(struct workqueue_struct *wq)
- 	struct wq_flusher this_flusher = {
- 		.list = LIST_HEAD_INIT(this_flusher.list),
- 		.flush_color = -1,
--		.done = COMPLETION_INITIALIZER_ONSTACK(this_flusher.done),
-+		.done = COMPLETION_INITIALIZER_ONSTACK_MAP(this_flusher.done, wq->lockdep_map),
- 	};
- 	int next_color;
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 5c2ddf2..feba887 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -76,6 +76,15 @@
+ #define lock_stat 0
+ #endif
  
- 	if (WARN_ON(!wq_online))
- 		return;
++static int crossrelease_fullstack;
++static int __init allow_crossrelease_fullstack(char *str)
++{
++	crossrelease_fullstack = 1;
++	return 0;
++}
++
++early_param("crossrelease_fullstack", allow_crossrelease_fullstack);
++
+ /*
+  * lockdep_lock: protects the lockdep graph, the hashes and the
+  *               class/list/hash allocators.
+@@ -4864,8 +4873,13 @@ static void add_xhlock(struct held_lock *hlock)
+ 	xhlock->trace.max_entries = MAX_XHLOCK_TRACE_ENTRIES;
+ 	xhlock->trace.entries = xhlock->trace_entries;
+ #ifdef CONFIG_CROSSRELEASE_STACK_TRACE
+-	xhlock->trace.skip = 3;
+-	save_stack_trace(&xhlock->trace);
++	if (crossrelease_fullstack) {
++		xhlock->trace.skip = 3;
++		save_stack_trace(&xhlock->trace);
++	} else {
++		xhlock->trace.nr_entries = 1;
++		xhlock->trace.entries[0] = hlock->acquire_ip;
++	}
+ #else
+ 	xhlock->trace.nr_entries = 1;
+ 	xhlock->trace.entries[0] = hlock->acquire_ip;
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index fe8fceb..132536d 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -1228,7 +1228,7 @@ config LOCKDEP_COMPLETIONS
+ config CROSSRELEASE_STACK_TRACE
+ 	bool "Record more than one entity of stack trace in crossrelease"
+ 	depends on LOCKDEP_CROSSRELEASE
+-	default n
++	default y
+ 	help
+ 	 The lockdep "cross-release" feature needs to record stack traces
+ 	 (of calling functions) for all acquisitions, for eventual later
+@@ -1238,7 +1238,8 @@ config CROSSRELEASE_STACK_TRACE
+ 	 full analysis. This option turns on the saving of the full stack
+ 	 trace entries.
  
--	lock_map_acquire(&wq->lockdep_map);
--	lock_map_release(&wq->lockdep_map);
--
- 	mutex_lock(&wq->mutex);
+-	 If unsure, say N.
++	 To make the feature actually on, set "crossrelease_fullstack"
++	 kernel parameter, too.
  
- 	/*
-@@ -2882,9 +2872,6 @@ bool flush_work(struct work_struct *work)
- 	if (WARN_ON(!wq_online))
- 		return false;
- 
--	lock_map_acquire(&work->lockdep_map);
--	lock_map_release(&work->lockdep_map);
--
- 	if (start_flush_work(work, &barr)) {
- 		wait_for_completion(&barr.done);
- 		destroy_work_on_stack(&barr.work);
+ config DEBUG_LOCKDEP
+ 	bool "Lock dependency engine debugging"
 -- 
 1.9.1
 
