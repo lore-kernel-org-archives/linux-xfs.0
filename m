@@ -1,53 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:53874 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752059AbdJYGfQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 02:35:16 -0400
-Date: Wed, 25 Oct 2017 08:35:12 +0200
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v4 6/7] workqueue: Remove unnecessary acquisitions wrt
- workqueue flush
-Message-ID: <20171025063512.qvdwo4q7hakeiwqf@gmail.com>
-References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
- <1508908272-15757-7-git-send-email-byungchul.park@lge.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1508908272-15757-7-git-send-email-byungchul.park@lge.com>
+Received: from mx2.suse.de ([195.135.220.15]:36052 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751559AbdJXPZa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:30 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 04/17] dax: Factor out getting of pfn out of iomap
+Date: Tue, 24 Oct 2017 17:24:01 +0200
+Message-Id: <20171024152415.22864-5-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: peterz@infradead.org, axboe@kernel.dk, johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
+Factor out code to get pfn out of iomap that is shared between PTE and
+PMD fault path.
 
-* Byungchul Park <byungchul.park@lge.com> wrote:
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 83 +++++++++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 43 insertions(+), 40 deletions(-)
 
-> The workqueue added manual acquisitions to catch deadlock cases.
-> Now crossrelease was introduced, some of those are redundant, since
-> wait_for_completion() already includes the acquisition for itself.
-> Removed it.
-> 
-> Signed-off-by: Byungchul Park <byungchul.park@lge.com>
-> ---
->  include/linux/workqueue.h |  4 ++--
->  kernel/workqueue.c        | 19 +++----------------
->  2 files changed, 5 insertions(+), 18 deletions(-)
-> 
-> diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-> index f3c47a0..1455b5e 100644
-> --- a/include/linux/workqueue.h
-> +++ b/include/linux/workqueue.h
-> @@ -218,7 +218,7 @@ static inline void destroy_delayed_work_on_stack(struct delayed_work *work) { }
->  									\
->  		__init_work((_work), _onstack);				\
->  		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
-> -		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0); \
-> +		lockdep_init_map(&(_work)->lockdep_map, "(complete)"#_work, &__key, 0); \
+diff --git a/fs/dax.c b/fs/dax.c
+index 0bc42ac294ca..116eef8d6c69 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -825,30 +825,53 @@ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+ 	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+ }
+ 
+-static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+-			      loff_t pos, void *entry)
++static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
++			 pfn_t *pfnp)
+ {
+ 	const sector_t sector = dax_iomap_sector(iomap, pos);
+-	struct vm_area_struct *vma = vmf->vma;
+-	struct address_space *mapping = vma->vm_file->f_mapping;
+-	unsigned long vaddr = vmf->address;
+-	void *ret, *kaddr;
+ 	pgoff_t pgoff;
++	void *kaddr;
+ 	int id, rc;
+-	pfn_t pfn;
++	long length;
+ 
+-	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
++	rc = bdev_dax_pgoff(iomap->bdev, sector, size, &pgoff);
+ 	if (rc)
+ 		return rc;
+-
+ 	id = dax_read_lock();
+-	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
+-			       &kaddr, &pfn);
+-	if (rc < 0) {
+-		dax_read_unlock(id);
+-		return rc;
++	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
++				   &kaddr, pfnp);
++	if (length < 0) {
++		rc = length;
++		goto out;
+ 	}
++	rc = -EINVAL;
++	if (PFN_PHYS(length) < size)
++		goto out;
++	if (pfn_t_to_pfn(*pfnp) & (PHYS_PFN(size)-1))
++		goto out;
++	/* For larger pages we need devmap */
++	if (length > 1 && !pfn_t_devmap(*pfnp))
++		goto out;
++	rc = 0;
++out:
+ 	dax_read_unlock(id);
++	return rc;
++}
++
++static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
++			      loff_t pos, void *entry)
++{
++	const sector_t sector = dax_iomap_sector(iomap, pos);
++	struct vm_area_struct *vma = vmf->vma;
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	unsigned long vaddr = vmf->address;
++	void *ret;
++	int rc;
++	pfn_t pfn;
++
++	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
++	if (rc < 0)
++		return rc;
+ 
+ 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
+ 	if (IS_ERR(ret))
+@@ -1223,46 +1246,26 @@ static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+ {
+ 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+ 	const sector_t sector = dax_iomap_sector(iomap, pos);
+-	struct dax_device *dax_dev = iomap->dax_dev;
+-	struct block_device *bdev = iomap->bdev;
+ 	struct inode *inode = mapping->host;
+-	const size_t size = PMD_SIZE;
+-	void *ret = NULL, *kaddr;
+-	long length = 0;
+-	pgoff_t pgoff;
++	void *ret = NULL;
+ 	pfn_t pfn = {};
+-	int id;
++	int rc;
+ 
+-	if (bdev_dax_pgoff(bdev, sector, size, &pgoff) != 0)
++	rc = dax_iomap_pfn(iomap, pos, PMD_SIZE, &pfn);
++	if (rc < 0)
+ 		goto fallback;
+ 
+-	id = dax_read_lock();
+-	length = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
+-	if (length < 0)
+-		goto unlock_fallback;
+-	length = PFN_PHYS(length);
+-
+-	if (length < size)
+-		goto unlock_fallback;
+-	if (pfn_t_to_pfn(pfn) & PG_PMD_COLOUR)
+-		goto unlock_fallback;
+-	if (!pfn_t_devmap(pfn))
+-		goto unlock_fallback;
+-	dax_read_unlock(id);
+-
+ 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector,
+ 			RADIX_DAX_PMD);
+ 	if (IS_ERR(ret))
+ 		goto fallback;
+ 
+-	trace_dax_pmd_insert_mapping(inode, vmf, length, pfn, ret);
++	trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, ret);
+ 	return vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
+ 			pfn, vmf->flags & FAULT_FLAG_WRITE);
+ 
+-unlock_fallback:
+-	dax_read_unlock(id);
+ fallback:
+-	trace_dax_pmd_insert_mapping_fallback(inode, vmf, length, pfn, ret);
++	trace_dax_pmd_insert_mapping_fallback(inode, vmf, PMD_SIZE, pfn, ret);
+ 	return VM_FAULT_FALLBACK;
+ }
+ 
+-- 
+2.12.3
 
-This has a similar naming problem as the block bits: should be "wq_completion" or 
-such.
-
-Thanks,
-
-	Ingo
