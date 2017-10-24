@@ -1,104 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36118 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932343AbdJXPZc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Oct 2017 11:25:32 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 12/17] mm: Define MAP_SYNC and VM_SYNC flags
-Date: Tue, 24 Oct 2017 17:24:09 +0200
-Message-Id: <20171024152415.22864-13-jack@suse.cz>
-In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
+Received: from LGEAMRELO13.lge.com ([156.147.23.53]:42805 "EHLO
+        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbdJXXpr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 19:45:47 -0400
+Date: Wed, 25 Oct 2017 08:45:38 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: [PATCH v3 4/8] lockdep: Add a kernel parameter,
+ crossrelease_fullstack
+Message-ID: <20171024234538.GM3310@X58A-UD3R>
+References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
+ <1508837889-16932-5-git-send-email-byungchul.park@lge.com>
+ <20171024100858.2rw7wnhtj7d3iyzk@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171024100858.2rw7wnhtj7d3iyzk@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: peterz@infradead.org, axboe@kernel.dk, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-Define new MAP_SYNC flag and corresponding VMA VM_SYNC flag. As the
-MAP_SYNC flag is not part of LEGACY_MAP_MASK, currently it will be
-refused by all MAP_SHARED_VALIDATE map attempts and silently ignored for
-everything else.
+On Tue, Oct 24, 2017 at 12:08:58PM +0200, Ingo Molnar wrote:
+> This is really unnecessarily complex.
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/proc/task_mmu.c              | 1 +
- include/linux/mm.h              | 1 +
- include/linux/mman.h            | 8 ++++++--
- include/uapi/asm-generic/mman.h | 1 +
- 4 files changed, 9 insertions(+), 2 deletions(-)
+I mis-understood your suggestion. I will change it.
 
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 5589b4bd4b85..ea78b37deeaa 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -664,6 +664,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
- 		[ilog2(VM_ACCOUNT)]	= "ac",
- 		[ilog2(VM_NORESERVE)]	= "nr",
- 		[ilog2(VM_HUGETLB)]	= "ht",
-+		[ilog2(VM_SYNC)]	= "sf",
- 		[ilog2(VM_ARCH_1)]	= "ar",
- 		[ilog2(VM_WIPEONFORK)]	= "wf",
- 		[ilog2(VM_DONTDUMP)]	= "dd",
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ca72b67153d5..5411cb7442de 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -189,6 +189,7 @@ extern unsigned int kobjsize(const void *objp);
- #define VM_ACCOUNT	0x00100000	/* Is a VM accounted object */
- #define VM_NORESERVE	0x00200000	/* should the VM suppress accounting */
- #define VM_HUGETLB	0x00400000	/* Huge TLB Page VM */
-+#define VM_SYNC		0x00800000	/* Synchronous page faults */
- #define VM_ARCH_1	0x01000000	/* Architecture-specific flag */
- #define VM_WIPEONFORK	0x02000000	/* Wipe VMA contents in child. */
- #define VM_DONTDUMP	0x04000000	/* Do not include in the core dump */
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index 94b63b4d71ff..8f7cc87828e6 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -9,7 +9,7 @@
- 
- /*
-  * Arrange for legacy / undefined architecture specific flags to be
-- * ignored by default in LEGACY_MAP_MASK.
-+ * ignored by mmap handling code.
-  */
- #ifndef MAP_32BIT
- #define MAP_32BIT 0
-@@ -23,6 +23,9 @@
- #ifndef MAP_UNINITIALIZED
- #define MAP_UNINITIALIZED 0
- #endif
-+#ifndef MAP_SYNC
-+#define MAP_SYNC 0
-+#endif
- 
- /*
-  * The historical set of flags that all mmap implementations implicitly
-@@ -125,7 +128,8 @@ calc_vm_flag_bits(unsigned long flags)
- {
- 	return _calc_vm_trans(flags, MAP_GROWSDOWN,  VM_GROWSDOWN ) |
- 	       _calc_vm_trans(flags, MAP_DENYWRITE,  VM_DENYWRITE ) |
--	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    );
-+	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    ) |
-+	       _calc_vm_trans(flags, MAP_SYNC,	     VM_SYNC      );
- }
- 
- unsigned long vm_commit_limit(void);
-diff --git a/include/uapi/asm-generic/mman.h b/include/uapi/asm-generic/mman.h
-index 7162cd4cca73..00e55627d2df 100644
---- a/include/uapi/asm-generic/mman.h
-+++ b/include/uapi/asm-generic/mman.h
-@@ -12,6 +12,7 @@
- #define MAP_NONBLOCK	0x10000		/* do not block on IO */
- #define MAP_STACK	0x20000		/* give out an address that is best suited for process/thread stacks */
- #define MAP_HUGETLB	0x40000		/* create a huge page mapping */
-+#define MAP_SYNC	0x80000		/* perform synchronous page faults for the mapping */
- 
- /* Bits [26:31] are reserved, see mman-common.h for MAP_HUGETLB usage */
- 
--- 
-2.12.3
+> The proper logic is to introduce the crossrelease_fullstack boot parameter, and to 
+> also have a Kconfig option that enables it: 
+> 
+> 	CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK=y
+> 
+> No #ifdefs please - just an "if ()" branch dependent on the current value of 
+> crossrelease_fullstack.
 
+Ok. I will.
+
+Thanks,
+Byungchul
+
+> Thanks,
+> 
+> 	Ingo
