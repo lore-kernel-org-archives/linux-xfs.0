@@ -1,74 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28209 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751841AbdJXSSb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 14:18:31 -0400
-Date: Tue, 24 Oct 2017 11:18:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: validate sb_logsunit is a multiple of the fs
- blocksize
-Message-ID: <20171024181827.GO5483@magnolia>
-References: <20171024002844.GM5483@magnolia>
- <20171024125412.GC56184@bfoster.bfoster>
+Received: from mga07.intel.com ([134.134.136.100]:47421 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751883AbdJXV3J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 17:29:09 -0400
+Date: Tue, 24 Oct 2017 15:29:08 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
+Message-ID: <20171024212908.GC1611@linux.intel.com>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-18-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171024125412.GC56184@bfoster.bfoster>
+In-Reply-To: <20171024152415.22864-18-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
 
-On Tue, Oct 24, 2017 at 08:54:13AM -0400, Brian Foster wrote:
-> On Mon, Oct 23, 2017 at 05:28:44PM -0700, Darrick J. Wong wrote:
-> > Make sure the log stripe unit is sane before proceeding with mounting.
-> > AFAICT this means that logsunit has to be 0, 1, or a multiple of the fs
-> > block size.  Found this by setting the LSB of logsunit in xfs/350 and
-> > watching the system crash as soon as we try to write to the log.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_log.c |    6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index d729e00..da4dcab 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -659,6 +659,12 @@ xfs_log_mount(
-> >  			 XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks),
-> >  			 XFS_MAX_LOG_BYTES);
-> >  		error = -EINVAL;
-> > +	} else if (mp->m_sb.sb_logsunit > 1 &&
-> > +		   mp->m_sb.sb_logsunit % mp->m_sb.sb_blocksize) {
-> > +		xfs_warn(mp,
-> > +		"log stripe unit %u bytes must be a multiple of block size",
-> > +			 mp->m_sb.sb_logsunit);
-> > +		error = -EINVAL;
+On Tue, Oct 24, 2017 at 05:24:14PM +0200, Jan Kara wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> Looks fine, but I notice that the error handling just below only fails
-> the mount on v5 filesystems. Otherwise we warn and carry on. I'm not
-> sure why that is.. but is this a crash vector on v4 filesystems as well?
-
-It is a crash vector on v4 as well, so I'll be stricter about failing
-the mount.  I was trying to be cautious about this since there haven't
-been general complaints about v4 filesystems, but ... eh.   A crash is a
-crash. :)
-
---D
-
+> Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
+> blocks for writing and the inode is pinned, and has dirty fields other
+> than the timestamps.  In __xfs_filemap_fault() we then detect this case
+> and call dax_finish_sync_fault() to make sure all metadata is committed,
+> and to insert the page table entry.
 > 
-> Brian
+> Note that this will also dirty corresponding radix tree entry which is
+> what we want - fsync(2) will still provide data integrity guarantees for
+> applications not using userspace flushing. And applications using
+> userspace flushing can avoid calling fsync(2) and thus avoid the
+> performance overhead.
 > 
-> >  	}
-> >  	if (error) {
-> >  		if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> [JK: Added VM_SYNC flag handling]
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+
+I don't know enough about XFS dirty inode handling to be able to comment on
+the changes in xfs_file_iomap_begin(), but the rest looks good.
+
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
