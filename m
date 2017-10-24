@@ -1,73 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:41079 "EHLO
-        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932272AbdJYI4a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 04:56:30 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v5 1/9] block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
-Date: Wed, 25 Oct 2017 17:55:57 +0900
-Message-Id: <1508921765-15396-2-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
-References: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
+Received: from mx2.suse.de ([195.135.220.15]:36113 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932320AbdJXPZc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:32 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 07/17] dax: Inline dax_insert_mapping() into the callsite
+Date: Tue, 24 Oct 2017 17:24:04 +0200
+Message-Id: <20171024152415.22864-8-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-From: Christoph Hellwig <hch@lst.de>
+dax_insert_mapping() has only one callsite and we will need to further
+fine tune what it does for synchronous faults. Just inline it into the
+callsite so that we don't have to pass awkward bools around.
 
-Simplify the code by getting rid of the submit_bio_ret structure.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- block/bio.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+ fs/dax.c | 46 +++++++++++++++++++---------------------------
+ 1 file changed, 19 insertions(+), 27 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 5f5472e..99d0ca5 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -917,17 +917,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+diff --git a/fs/dax.c b/fs/dax.c
+index 5ea71381dba0..5b20c6456926 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -858,32 +858,6 @@ static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
+ 	return rc;
  }
- EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
  
--struct submit_bio_ret {
--	struct completion event;
--	int error;
--};
+-static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+-			      loff_t pos, void *entry)
+-{
+-	const sector_t sector = dax_iomap_sector(iomap, pos);
+-	struct vm_area_struct *vma = vmf->vma;
+-	struct address_space *mapping = vma->vm_file->f_mapping;
+-	unsigned long vaddr = vmf->address;
+-	void *ret;
+-	int rc;
+-	pfn_t pfn;
 -
- static void submit_bio_wait_endio(struct bio *bio)
- {
--	struct submit_bio_ret *ret = bio->bi_private;
+-	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
+-	if (rc < 0)
+-		return rc;
 -
--	ret->error = blk_status_to_errno(bio->bi_status);
--	complete(&ret->event);
-+	complete(bio->bi_private);
- }
+-	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
+-	if (IS_ERR(ret))
+-		return PTR_ERR(ret);
+-
+-	trace_dax_insert_mapping(mapping->host, vmf, ret);
+-	if (vmf->flags & FAULT_FLAG_WRITE)
+-		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+-	else
+-		return vm_insert_mixed(vma, vaddr, pfn);
+-}
+-
+ /*
+  * The user has performed a load from a hole in the file.  Allocating a new
+  * page in the file would cause excessive storage usage for workloads with
+@@ -1119,6 +1093,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
+ 	int vmf_ret = 0;
+ 	void *entry;
++	pfn_t pfn;
  
- /**
-@@ -943,16 +935,15 @@ static void submit_bio_wait_endio(struct bio *bio)
-  */
- int submit_bio_wait(struct bio *bio)
- {
--	struct submit_bio_ret ret;
-+	DECLARE_COMPLETION_ONSTACK(done);
- 
--	init_completion(&ret.event);
--	bio->bi_private = &ret;
-+	bio->bi_private = &done;
- 	bio->bi_end_io = submit_bio_wait_endio;
- 	bio->bi_opf |= REQ_SYNC;
- 	submit_bio(bio);
--	wait_for_completion_io(&ret.event);
-+	wait_for_completion_io(&done);
- 
--	return ret.error;
-+	return blk_status_to_errno(bio->bi_status);
- }
- EXPORT_SYMBOL(submit_bio_wait);
- 
+ 	trace_dax_pte_fault(inode, vmf, vmf_ret);
+ 	/*
+@@ -1201,7 +1176,24 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
+ 			major = VM_FAULT_MAJOR;
+ 		}
+-		error = dax_insert_mapping(vmf, &iomap, pos, entry);
++		error = dax_iomap_pfn(&iomap, pos, PAGE_SIZE, &pfn);
++		if (error < 0)
++			goto error_finish_iomap;
++
++		entry = dax_insert_mapping_entry(mapping, vmf, entry,
++						 dax_iomap_sector(&iomap, pos),
++						 0);
++		if (IS_ERR(entry)) {
++			error = PTR_ERR(entry);
++			goto error_finish_iomap;
++		}
++
++		trace_dax_insert_mapping(inode, vmf, entry);
++		if (write)
++			error = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
++		else
++			error = vm_insert_mixed(vma, vaddr, pfn);
++
+ 		/* -EBUSY is fine, somebody else faulted on the same PTE */
+ 		if (error == -EBUSY)
+ 			error = 0;
 -- 
-1.9.1
+2.12.3
 
