@@ -1,103 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO11.lge.com ([156.147.23.51]:41953 "EHLO
-        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932482AbdJYI4f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 04:56:35 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v5 8/9] workqueue: Remove unnecessary acquisitions wrt workqueue flush
-Date: Wed, 25 Oct 2017 17:56:04 +0900
-Message-Id: <1508921765-15396-9-git-send-email-byungchul.park@lge.com>
-In-Reply-To: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
-References: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
+Received: from mx2.suse.de ([195.135.220.15]:36116 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932334AbdJXPZc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:32 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 10/17] dax: Allow dax_iomap_fault() to return pfn
+Date: Tue, 24 Oct 2017 17:24:07 +0200
+Message-Id: <20171024152415.22864-11-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-The workqueue added manual acquisitions to catch deadlock cases.
-Now crossrelease was introduced, some of those are redundant, since
-wait_for_completion() already includes the acquisition for itself.
-Remove it.
+For synchronous page fault dax_iomap_fault() will need to return PFN
+which will then need to be inserted into page tables after fsync()
+completes. Add necessary parameter to dax_iomap_fault().
 
-Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- include/linux/workqueue.h |  4 ++--
- kernel/workqueue.c        | 19 +++----------------
- 2 files changed, 5 insertions(+), 18 deletions(-)
+ fs/dax.c            | 13 +++++++------
+ fs/ext2/file.c      |  2 +-
+ fs/ext4/file.c      |  2 +-
+ fs/xfs/xfs_file.c   |  4 ++--
+ include/linux/dax.h |  2 +-
+ 5 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index f3c47a0..0544ad3 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -218,7 +218,7 @@ static inline void destroy_delayed_work_on_stack(struct delayed_work *work) { }
- 									\
- 		__init_work((_work), _onstack);				\
- 		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
--		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0); \
-+		lockdep_init_map(&(_work)->lockdep_map, "(work_completion)"#_work, &__key, 0); \
- 		INIT_LIST_HEAD(&(_work)->entry);			\
- 		(_work)->func = (_func);				\
- 	} while (0)
-@@ -399,7 +399,7 @@ enum {
- 	static struct lock_class_key __key;				\
- 	const char *__lock_name;					\
- 									\
--	__lock_name = #fmt#args;					\
-+	__lock_name = "(wq_completion)"#fmt#args;			\
- 									\
- 	__alloc_workqueue_key((fmt), (flags), (max_active),		\
- 			      &__key, __lock_name, ##args);		\
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index c77fdf6..ee05d19 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -2496,15 +2496,8 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
- 	INIT_WORK_ONSTACK(&barr->work, wq_barrier_func);
- 	__set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(&barr->work));
+diff --git a/fs/dax.c b/fs/dax.c
+index 5214ed9ba508..5ddf15161390 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1079,7 +1079,7 @@ static int dax_fault_return(int error)
+ 	return VM_FAULT_SIGBUS;
+ }
  
--	/*
--	 * Explicitly init the crosslock for wq_barrier::done, make its lock
--	 * key a subkey of the corresponding work. As a result we won't
--	 * build a dependency between wq_barrier::done and unrelated work.
--	 */
--	lockdep_init_map_crosslock((struct lockdep_map *)&barr->done.map,
--				   "(complete)wq_barr::done",
--				   target->lockdep_map.key, 1);
--	__init_completion(&barr->done);
-+	init_completion_map(&barr->done, &target->lockdep_map);
-+
- 	barr->task = current;
+-static int dax_iomap_pte_fault(struct vm_fault *vmf,
++static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 			       const struct iomap_ops *ops)
+ {
+ 	struct vm_area_struct *vma = vmf->vma;
+@@ -1280,7 +1280,7 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
+ 	return VM_FAULT_FALLBACK;
+ }
  
- 	/*
-@@ -2610,16 +2603,13 @@ void flush_workqueue(struct workqueue_struct *wq)
- 	struct wq_flusher this_flusher = {
- 		.list = LIST_HEAD_INIT(this_flusher.list),
- 		.flush_color = -1,
--		.done = COMPLETION_INITIALIZER_ONSTACK(this_flusher.done),
-+		.done = COMPLETION_INITIALIZER_ONSTACK_MAP(this_flusher.done, wq->lockdep_map),
- 	};
- 	int next_color;
+-static int dax_iomap_pmd_fault(struct vm_fault *vmf,
++static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 			       const struct iomap_ops *ops)
+ {
+ 	struct vm_area_struct *vma = vmf->vma;
+@@ -1425,7 +1425,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
+ 	return result;
+ }
+ #else
+-static int dax_iomap_pmd_fault(struct vm_fault *vmf,
++static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 			       const struct iomap_ops *ops)
+ {
+ 	return VM_FAULT_FALLBACK;
+@@ -1436,6 +1436,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
+  * dax_iomap_fault - handle a page fault on a DAX file
+  * @vmf: The description of the fault
+  * @pe_size: Size of the page to fault in
++ * @pfnp: PFN to insert for synchronous faults if fsync is required
+  * @ops: Iomap ops passed from the file system
+  *
+  * When a page fault occurs, filesystems may call this helper in
+@@ -1444,13 +1445,13 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
+  * successfully.
+  */
+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+-		    const struct iomap_ops *ops)
++		    pfn_t *pfnp, const struct iomap_ops *ops)
+ {
+ 	switch (pe_size) {
+ 	case PE_SIZE_PTE:
+-		return dax_iomap_pte_fault(vmf, ops);
++		return dax_iomap_pte_fault(vmf, pfnp, ops);
+ 	case PE_SIZE_PMD:
+-		return dax_iomap_pmd_fault(vmf, ops);
++		return dax_iomap_pmd_fault(vmf, pfnp, ops);
+ 	default:
+ 		return VM_FAULT_FALLBACK;
+ 	}
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index ff3a3636a5ca..d2bb7c96307d 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -99,7 +99,7 @@ static int ext2_dax_fault(struct vm_fault *vmf)
+ 	}
+ 	down_read(&ei->dax_sem);
  
- 	if (WARN_ON(!wq_online))
- 		return;
+-	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &ext2_iomap_ops);
++	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &ext2_iomap_ops);
  
--	lock_map_acquire(&wq->lockdep_map);
--	lock_map_release(&wq->lockdep_map);
--
- 	mutex_lock(&wq->mutex);
+ 	up_read(&ei->dax_sem);
+ 	if (vmf->flags & FAULT_FLAG_WRITE)
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index b1da660ac3bc..3cec0b95672f 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -306,7 +306,7 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+ 		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 	}
+ 	if (!IS_ERR(handle))
+-		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops);
++		result = dax_iomap_fault(vmf, pe_size, NULL, &ext4_iomap_ops);
+ 	else
+ 		result = VM_FAULT_SIGBUS;
+ 	if (write) {
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 309e26c9dddb..7c6b8def6eed 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1040,7 +1040,7 @@ __xfs_filemap_fault(
  
- 	/*
-@@ -2882,9 +2872,6 @@ bool flush_work(struct work_struct *work)
- 	if (WARN_ON(!wq_online))
- 		return false;
- 
--	lock_map_acquire(&work->lockdep_map);
--	lock_map_release(&work->lockdep_map);
--
- 	if (start_flush_work(work, &barr)) {
- 		wait_for_completion(&barr.done);
- 		destroy_work_on_stack(&barr.work);
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	if (IS_DAX(inode)) {
+-		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
++		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
+ 	} else {
+ 		if (write_fault)
+ 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+@@ -1111,7 +1111,7 @@ xfs_filemap_pfn_mkwrite(
+ 	if (vmf->pgoff >= size)
+ 		ret = VM_FAULT_SIGBUS;
+ 	else if (IS_DAX(inode))
+-		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
++		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
+ 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
+ 	sb_end_pagefault(inode->i_sb);
+ 	return ret;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 122197124b9d..e7fa4b8f45bc 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -95,7 +95,7 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev);
+ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops);
+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+-		    const struct iomap_ops *ops);
++		    pfn_t *pfnp, const struct iomap_ops *ops);
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
 -- 
-1.9.1
+2.12.3
 
