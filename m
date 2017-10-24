@@ -1,101 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31609 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751412AbdJXRAW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 13:00:22 -0400
-Date: Tue, 24 Oct 2017 10:00:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: abort extended attribute list operation if btree is
- obviously weird
-Message-ID: <20171024170013.GN5483@magnolia>
-References: <20171024002824.GL5483@magnolia>
- <20171024125336.GB56184@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:48604 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751280AbdJXTW0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 15:22:26 -0400
+Date: Tue, 24 Oct 2017 15:22:23 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 2/2] dm log writes: add support for DAX
+Message-ID: <20171024192222.GB22902@redhat.com>
+References: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
+ <20171020052404.13762-2-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171024125336.GB56184@bfoster.bfoster>
+In-Reply-To: <20171020052404.13762-2-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Josef Bacik <jbacik@fb.com>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On Tue, Oct 24, 2017 at 08:53:36AM -0400, Brian Foster wrote:
-> On Mon, Oct 23, 2017 at 05:28:24PM -0700, Darrick J. Wong wrote:
-> > Abort an attribute list operation if the attr btree has obvious problems
-> > like loops back to the root or pointers don't point down the tree.
-> > Found by fuzzing btree[0].before to zero in xfs/402.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_attr_list.c |   54 ++++++++++++++++++++++++++++++++++++++----------
-> >  1 file changed, 43 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> > index 5816786..9f6fcc6 100644
-> > --- a/fs/xfs/xfs_attr_list.c
-> > +++ b/fs/xfs/xfs_attr_list.c
-> ...
-> > @@ -302,6 +306,30 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
-> >  			}
-> >  
-> >  			dp->d_ops->node_hdr_from_disk(&nodehdr, node);
-> > +
-> > +			/* Tree taller than we can handle; bail out! */
-> > +			if (nodehdr.level >= XFS_DA_NODE_MAXDEPTH) {
-> > +				xfs_trans_brelse(context->tp, bp);
-> > +				return -EFSCORRUPTED;
-> > +			}
-> > +
-> > +			if (cursor->blkno == 0) {
-> > +				/*
-> > +				 * This is the root node, set up for the
-> > +				 * next level we want to see.
-> > +				 */
-> > +				expected_level = nodehdr.level - 1;
-> > +			} else if (expected_level != nodehdr.level) {
-> > +				/*
-> > +				 * Not the level we were expecting, which
-> > +				 * implies that the tree is bad.
-> > +				 */
-> > +				xfs_trans_brelse(context->tp, bp);
-> > +				return -EFSCORRUPTED;
-> > +			} else {
-> > +				expected_level--;
-> > +			}
-> > +
+On Fri, Oct 20 2017 at  1:24am -0400,
+Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
+
+> Now that we have the ability log filesystem writes using a flat buffer, add
+> support for DAX.  Unfortunately we can't easily track data that has been
+> written via mmap() now that the dax_flush() abstraction was removed by this
+> commit:
 > 
-> It looks like we wouldn't catch the case of a two level tree having a
-> bad level, since we'd break out on leaf magic check above. Perhaps we
-> should check or assert that expected_level reaches 0? Otherwise looks Ok
-> to me.
-
-Ok, will do.
-
---D
-
+> commit c3ca015fab6d ("dax: remove the pmem_dax_ops->flush abstraction")
 > 
-> Brian
+> Otherwise we could just treat each flush as a big write, and store the data
+> that is being synced to media.  It may be worthwhile to add the dax_flush()
+> entry point back, just as a notifier so we can do this logging.
 > 
-> >  			btree = dp->d_ops->node_tree_p(node);
-> >  			for (i = 0; i < nodehdr.count; btree++, i++) {
-> >  				if (cursor->hashval
-> > @@ -317,6 +345,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
-> >  				return 0;
-> >  			}
-> >  			xfs_trans_brelse(context->tp, bp);
-> > +
-> > +			/* We can't point back to the root. */
-> > +			if (cursor->blkno == 0)
-> > +				return -EFSCORRUPTED;
-> >  		}
-> >  	}
-> >  	ASSERT(bp != NULL);
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The motivation for this support is the need for an xfstest that can test
+> the new MAP_SYNC DAX flag.  By logging the filesystem activity with
+> dm-log-writes we can show that the MAP_SYNC page faults are writing out
+> their metadata as they happen, instead of requiring an explicit
+> msync/fsync.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
+I've picked this up, please see:
+https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-4.15/dm&id=ae613bbb0144e84cb3c0ebfa9f4fd4d1507c2f0e
+
+I tweaked the header and tweaked a couple whitespace nits.  Also
+switched version bump from 1.0.1 to 1.1.0.
+
+Thanks,
+Mike
