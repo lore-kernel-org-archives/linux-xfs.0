@@ -1,76 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:47450 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932290AbdJYI4O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 04:56:14 -0400
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: [PATCH v5 0/9] cross-release: Enhence performance and fix false positives
-Date: Wed, 25 Oct 2017 17:55:56 +0900
-Message-Id: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
+Received: from mx2.suse.de ([195.135.220.15]:36101 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932417AbdJXPZe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:25:34 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
+Date: Tue, 24 Oct 2017 17:24:15 +0200
+Message-Id: <20171024152415.22864-19-jack@suse.cz>
+In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
-Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-Changes from v4
-- Use a prefix "(completion)" instead of "(complete)" for completions
-- Use a prefix "(wq_completion)" instead of "(complete)" for workqueue's map
-- Use a prefix "(work_completion)" instead of "(complete)" for work's map
-- Use a prefix "(gendisk_completion)" instead of "(complete)" for gendisk's map
-- Provide empty lockdep_map structure for !CONFIG_LOCKDEP
-- Remove #ifdef in this series as much as possible
-- Use canocical variable names in all_disk_node() macro
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ man2/mmap.2 | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Changes from v3
-- Exclude a patch removing white space
-- Enhance commit messages as Ingo suggested
-- Re-design patches adding a boot param and a Kconfig allowing unwind
-- Simplify a patch assigning lock classes to genhds as Ingo suggested
-- Add proper tags in commit messages e.g. reported-by and analyzed-by
-
-Changes from v2
-- Combine 2 serises, fixing false positives and enhance performance
-- Add Christoph Hellwig's patch simplifying submit_bio_wait() code
-- Add 2 more 'init with lockdep map' macros for completionm
-- Rename init_completion_with_map() to init_completion_map()
-
-Changes from v1
-- Fix kconfig description as Ingo suggested
-- Fix commit message writing out CONFIG_ variable
-- Introduce a new kernel parameter, crossrelease_fullstack
-- Replace the number with the output of *perf*
-- Separate a patch removing white space
-
-Byungchul Park (8):
-  locking/lockdep: Provide empty lockdep_map structure for
-    !CONFIG_LOCKDEP
-  completion: Change the prefix of lock name for completion variable
-  locking/lockdep: Add a boot parameter allowing unwind in cross-release
-    and disable it by default
-  locking/lockdep: Remove the BROKEN flag from
-    CONFIG_LOCKDEP_CROSSRELEASE and CONFIG_LOCKDEP_COMPLETIONS
-  locking/lockdep: Introduce
-    CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
-  completion: Add support for initializing completion with lockdep_map
-  workqueue: Remove unnecessary acquisitions wrt workqueue flush
-  block: Assign a lock_class per gendisk used for wait_for_completion()
-
-Christoph Hellwig (1):
-  block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
-
- Documentation/admin-guide/kernel-parameters.txt |  3 +++
- block/bio.c                                     | 19 +++++--------------
- block/genhd.c                                   | 10 ++--------
- include/linux/completion.h                      | 18 ++++++++++++++++--
- include/linux/genhd.h                           | 22 ++++++++++++++++++++--
- include/linux/lockdep.h                         |  5 +++++
- include/linux/workqueue.h                       |  4 ++--
- kernel/locking/lockdep.c                        | 23 +++++++++++++++++++++--
- kernel/workqueue.c                              | 19 +++----------------
- lib/Kconfig.debug                               | 19 +++++++++++++++++--
- 10 files changed, 94 insertions(+), 48 deletions(-)
-
+diff --git a/man2/mmap.2 b/man2/mmap.2
+index 47c3148653be..598ff0c64f7f 100644
+--- a/man2/mmap.2
++++ b/man2/mmap.2
+@@ -125,6 +125,21 @@ are carried through to the underlying file.
+ to the underlying file requires the use of
+ .BR msync (2).)
+ .TP
++.B MAP_SHARED_VALIDATE
++The same as
++.B MAP_SHARED
++except that
++.B MAP_SHARED
++mappings ignore unknown flags in
++.IR flags .
++In contrast when creating mapping of
++.B MAP_SHARED_VALIDATE
++mapping type, the kernel verifies all passed flags are known and fails the
++mapping with
++.BR EOPNOTSUPP
++otherwise. This mapping type is also required to be able to use some mapping
++flags.
++.TP
+ .B MAP_PRIVATE
+ Create a private copy-on-write mapping.
+ Updates to the mapping are not visible to other processes
+@@ -352,6 +367,21 @@ option.
+ Because of the security implications,
+ that option is normally enabled only on embedded devices
+ (i.e., devices where one has complete control of the contents of user memory).
++.TP
++.BR MAP_SYNC " (since Linux 4.15)"
++This flags is available only with
++.B MAP_SHARED_VALIDATE
++mapping type. Mappings of
++.B MAP_SHARED
++type will silently ignore this flag.
++This flag is supported only for files supporting DAX (direct mapping of persistent
++memory). For other files, creating mapping with this flag results in
++.B EOPNOTSUPP
++error. Shared file mappings with this flag provide the guarantee that while
++some memory is writeably mapped in the address space of the process, it will
++be visible in the same file at the same offset even after the system crashes or
++is rebooted. This allows users of such mappings to make data modifications
++persistent in a more efficient way using appropriate CPU instructions.
+ .PP
+ Of the above flags, only
+ .B MAP_FIXED
 -- 
-1.9.1
+2.12.3
 
