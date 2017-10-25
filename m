@@ -1,257 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42291 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751437AbdJSKeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Oct 2017 06:34:46 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH] fiemap: Implement ranged query
-Date: Thu, 19 Oct 2017 13:34:41 +0300
-Message-Id: <1508409281-7183-1-git-send-email-nborisov@suse.com>
+Received: from LGEAMRELO11.lge.com ([156.147.23.51]:51493 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751995AbdJYFLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:11:40 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [PATCH v4 7/7] block: Assign a lock_class per gendisk used for wait_for_completion()
+Date: Wed, 25 Oct 2017 14:11:12 +0900
+Message-Id: <1508908272-15757-8-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@sandeen.net, Nikolay Borisov <nborisov@suse.com>
+To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
+Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-Currently the fiemap implementation of xfs_io doesn't support making ranged
-queries. This patch implements two optional arguments which take the starting
-offset and the length of the region to be queried. The impelmentation also
-calculates printed holes as an extent for the purpose of terminating the query.
+Darrick posted the following warning and Dave Chinner analyzed it:
 
-I.e. if we create a file with the following layout :
+> ======================================================
+> WARNING: possible circular locking dependency detected
+> 4.14.0-rc1-fixes #1 Tainted: G        W
+> ------------------------------------------------------
+> loop0/31693 is trying to acquire lock:
+>  (&(&ip->i_mmaplock)->mr_lock){++++}, at: [<ffffffffa00f1b0c>] xfs_ilock+0x23c/0x330 [xfs]
+>
+> but now in release context of a crosslock acquired at the following:
+>  ((complete)&ret.event){+.+.}, at: [<ffffffff81326c1f>] submit_bio_wait+0x7f/0xb0
+>
+> which lock already depends on the new lock.
+>
+> the existing dependency chain (in reverse order) is:
+>
+> -> #2 ((complete)&ret.event){+.+.}:
+>        lock_acquire+0xab/0x200
+>        wait_for_completion_io+0x4e/0x1a0
+>        submit_bio_wait+0x7f/0xb0
+>        blkdev_issue_zeroout+0x71/0xa0
+>        xfs_bmapi_convert_unwritten+0x11f/0x1d0 [xfs]
+>        xfs_bmapi_write+0x374/0x11f0 [xfs]
+>        xfs_iomap_write_direct+0x2ac/0x430 [xfs]
+>        xfs_file_iomap_begin+0x20d/0xd50 [xfs]
+>        iomap_apply+0x43/0xe0
+>        dax_iomap_rw+0x89/0xf0
+>        xfs_file_dax_write+0xcc/0x220 [xfs]
+>        xfs_file_write_iter+0xf0/0x130 [xfs]
+>        __vfs_write+0xd9/0x150
+>        vfs_write+0xc8/0x1c0
+>        SyS_write+0x45/0xa0
+>        entry_SYSCALL_64_fastpath+0x1f/0xbe
+>
+> -> #1 (&xfs_nondir_ilock_class){++++}:
+>        lock_acquire+0xab/0x200
+>        down_write_nested+0x4a/0xb0
+>        xfs_ilock+0x263/0x330 [xfs]
+>        xfs_setattr_size+0x152/0x370 [xfs]
+>        xfs_vn_setattr+0x6b/0x90 [xfs]
+>        notify_change+0x27d/0x3f0
+>        do_truncate+0x5b/0x90
+>        path_openat+0x237/0xa90
+>        do_filp_open+0x8a/0xf0
+>        do_sys_open+0x11c/0x1f0
+>        entry_SYSCALL_64_fastpath+0x1f/0xbe
+>
+> -> #0 (&(&ip->i_mmaplock)->mr_lock){++++}:
+>        up_write+0x1c/0x40
+>        xfs_iunlock+0x1d0/0x310 [xfs]
+>        xfs_file_fallocate+0x8a/0x310 [xfs]
+>        loop_queue_work+0xb7/0x8d0
+>        kthread_worker_fn+0xb9/0x1f0
+>
+> Chain exists of:
+>   &(&ip->i_mmaplock)->mr_lock --> &xfs_nondir_ilock_class --> (complete)&ret.event
+>
+>  Possible unsafe locking scenario by crosslock:
+>
+>        CPU0                    CPU1
+>        ----                    ----
+>   lock(&xfs_nondir_ilock_class);
+>   lock((complete)&ret.event);
+>                                lock(&(&ip->i_mmaplock)->mr_lock);
+>                                unlock((complete)&ret.event);
+>
+>                *** DEADLOCK ***
 
-xfs_io -f -c "falloc 0 32k" -c "fpunch 0 4k" -c "fpunch 8k 4k" \
--c "fpunch 28k 4k" -c "fiemap" fragmented-file
+The warning is a false positive, caused by the fact that all
+wait_for_completion()s in submit_bio_wait() are waiting with the same
+lock class.
 
-       H     D         H           D                    H
-|--------|--------|---------|--------------|-----------------|
-0         4k       8k        12k            28k                32k
+However, some bios have nothing to do with others, for example, the case
+might happen while using loop devices, between bios of an upper device
+and a lower device(=loop device).
 
-Then the output is :
+The safest way to assign different lock classes to different devices is
+to do it for each gendisk. In other words, this patch assigns a
+lockdep_map per gendisk and uses it when initializing completion in
+submit_bio_wait().
 
-xfs_io -c "fiemap 0 10k" fragmented-file
-fragmented-file:
-	0: [0..7]: hole
-	1: [8..15]: 897844104..897844111
-	2: [16..23]: hole
+Of course, it might be too conservative. But, making it safest for now
+and extended by block layer experts later is good, at the moment.
 
-xfs_io -c "fiemap 0" fragmented-file
-fragmented-file:
-	0: [0..7]: hole
-	1: [8..15]: 897844104..897844111
-	2: [16..23]: hole
-	3: [24..55]: 897844120..897844151
-	4: [56..63]: hole
-
-xfs_io -c "fiemap 10k 5k" fragmented-file
-fragmented-file:
-	0: [20..23]: hole
-	1: [24..55]: 897844120..897844151
-
-xfs_io -c "fiemap 10k 18k" fragmented-file
-fragmented-file:
-	0: [20..23]: hole
-	1: [24..55]: 897844120..897844151
-	2: [56..63]: hole
-
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
+Analyzed-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- io/fiemap.c       | 61 ++++++++++++++++++++++++++++++++++++++++++++++---------
- man/man8/xfs_io.8 |  5 +++--
- 2 files changed, 54 insertions(+), 12 deletions(-)
+ block/bio.c           |  2 +-
+ block/genhd.c         | 10 ++--------
+ include/linux/genhd.h | 24 ++++++++++++++++++++++--
+ 3 files changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index e6fd66da753d..844741cb07d3 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -27,6 +27,8 @@
+diff --git a/block/bio.c b/block/bio.c
+index 99d0ca5..a3cb1d1 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -935,7 +935,7 @@ static void submit_bio_wait_endio(struct bio *bio)
+  */
+ int submit_bio_wait(struct bio *bio)
+ {
+-	DECLARE_COMPLETION_ONSTACK(done);
++	DECLARE_COMPLETION_ONSTACK_MAP(done, bio->bi_disk->lockdep_map);
  
- static cmdinfo_t fiemap_cmd;
- static int max_extents = -1;
-+static __u64 covered_length = 0;
-+static bool range_limit = false;
+ 	bio->bi_private = &done;
+ 	bio->bi_end_io = submit_bio_wait_endio;
+diff --git a/block/genhd.c b/block/genhd.c
+index dd305c6..630c0da 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1354,13 +1354,7 @@ dev_t blk_lookup_devt(const char *name, int partno)
+ }
+ EXPORT_SYMBOL(blk_lookup_devt);
  
- static void
- fiemap_help(void)
-@@ -79,7 +81,7 @@ print_hole(
- 		       boff_w, _("hole"), tot_w, lstart - llast);
- 	   }
- 
+-struct gendisk *alloc_disk(int minors)
+-{
+-	return alloc_disk_node(minors, NUMA_NO_NODE);
+-}
+-EXPORT_SYMBOL(alloc_disk);
 -
-+	   covered_length += BBTOB(lstart - llast);
- }
- 
- static int
-@@ -90,7 +92,8 @@ print_verbose(
- 	int			tot_w,
- 	int			flg_w,
- 	int			cur_extent,
--	__u64			last_logical)
-+	__u64			last_logical,
-+	__u64			limit)
+-struct gendisk *alloc_disk_node(int minors, int node_id)
++struct gendisk *__alloc_disk_node(int minors, int node_id)
  {
- 	__u64			lstart;
- 	__u64			llast;
-@@ -122,7 +125,7 @@ print_verbose(
- 		cur_extent++;
+ 	struct gendisk *disk;
+ 	struct disk_part_tbl *ptbl;
+@@ -1411,7 +1405,7 @@ struct gendisk *alloc_disk_node(int minors, int node_id)
  	}
- 
--	if (cur_extent == max_extents)
-+	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
- 		return 1;
- 
- 	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
-@@ -140,7 +143,8 @@ print_plain(
- 	struct fiemap_extent	*extent,
- 	int			lflag,
- 	int			cur_extent,
--	__u64			last_logical)
-+	__u64			last_logical,
-+	__u64			limit)
- {
- 	__u64			lstart;
- 	__u64			llast;
-@@ -157,7 +161,7 @@ print_plain(
- 		cur_extent++;
- 	}
- 
--	if (cur_extent == max_extents)
-+	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
- 		return 1;
- 
- 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
-@@ -211,6 +215,7 @@ calc_print_format(
- 	}
+ 	return disk;
  }
+-EXPORT_SYMBOL(alloc_disk_node);
++EXPORT_SYMBOL(__alloc_disk_node);
  
+ struct kobject *get_disk(struct gendisk *disk)
+ {
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 6d85a75..f6ec6a2 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -206,6 +206,9 @@ struct gendisk {
+ #endif	/* CONFIG_BLK_DEV_INTEGRITY */
+ 	int node_id;
+ 	struct badblocks *bb;
++#ifdef CONFIG_LOCKDEP
++	struct lockdep_map lockdep_map;
++#endif
+ };
+ 
+ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+@@ -590,8 +593,7 @@ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
+ extern void delete_partition(struct gendisk *, int);
+ extern void printk_all_partitions(void);
+ 
+-extern struct gendisk *alloc_disk_node(int minors, int node_id);
+-extern struct gendisk *alloc_disk(int minors);
++extern struct gendisk *__alloc_disk_node(int minors, int node_id);
+ extern struct kobject *get_disk(struct gendisk *disk);
+ extern void put_disk(struct gendisk *disk);
+ extern void blk_register_region(dev_t devt, unsigned long range,
+@@ -615,6 +617,24 @@ extern ssize_t part_fail_store(struct device *dev,
+ 			       const char *buf, size_t count);
+ #endif /* CONFIG_FAIL_MAKE_REQUEST */
+ 
++#define alloc_disk_node(m, id) \
++({									\
++	static struct lock_class_key __key;				\
++	const char *__name;						\
++	struct gendisk *ret;						\
++									\
++	__name = "(complete)"#m"("#id")";				\
++									\
++	ret = __alloc_disk_node(m, id);					\
++									\
++	if (ret)							\
++		lockdep_init_map(&ret->lockdep_map, __name, &__key, 0); \
++									\
++	ret;								\
++})
 +
- int
- fiemap_f(
- 	int		argc,
-@@ -231,8 +236,14 @@ fiemap_f(
- 	int		tot_w = 5;	/* 5 since its just one number */
- 	int		flg_w = 5;
- 	__u64		last_logical = 0;
-+	__u64		len = -1LL;
-+	__u64		stop_offset = -1LL;
-+	off64_t		start_offset = 0;
-+	size_t		fsblocksize, fssectsize;
- 	struct stat	st;
- 
-+	init_cvtnum(&fsblocksize, &fssectsize);
++#define alloc_disk(m)		alloc_disk_node(m, NUMA_NO_NODE)
 +
- 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
- 		switch (c) {
- 		case 'a':
-@@ -252,6 +263,27 @@ fiemap_f(
- 		}
- 	}
- 
-+	if (optind < argc) {
-+		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+		if (start_offset < 0) {
-+			printf("non-numeric offset argument -- %s\n", argv[optind]);
-+			return 0;
-+		}
-+		last_logical = start_offset;
-+		optind++;
-+	}
-+
-+	if (optind < argc) {
-+		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+		if (length < 0) {
-+			printf("non-numeric len argument -- %s\n", argv[optind]);
-+			return 0;
-+		}
-+		len = length;
-+		stop_offset = start_offset + len;
-+		range_limit = true;
-+	}
-+
- 	map_size = sizeof(struct fiemap) +
- 		(EXTENT_BATCH * sizeof(struct fiemap_extent));
- 	fiemap = malloc(map_size);
-@@ -269,7 +301,7 @@ fiemap_f(
- 		memset(fiemap, 0, map_size);
- 		fiemap->fm_flags = fiemap_flags;
- 		fiemap->fm_start = last_logical;
--		fiemap->fm_length = -1LL;
-+		fiemap->fm_length = len;
- 		fiemap->fm_extent_count = EXTENT_BATCH;
- 
- 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-@@ -300,14 +332,18 @@ fiemap_f(
- 				num_printed = print_verbose(extent, foff_w,
- 							    boff_w, tot_w,
- 							    flg_w, cur_extent,
--							    last_logical);
-+							    last_logical,
-+							    stop_offset);
- 			} else
- 				num_printed = print_plain(extent, lflag,
- 							  cur_extent,
--							  last_logical);
-+							  last_logical,
-+							  stop_offset);
- 
- 			cur_extent += num_printed;
- 			last_logical = extent->fe_logical + extent->fe_length;
-+			if (num_printed == 2)
-+				covered_length += extent->fe_length;
- 
- 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
- 				last = 1;
-@@ -316,6 +352,9 @@ fiemap_f(
- 
- 			if (cur_extent == max_extents)
- 				break;
-+
-+			if (range_limit && covered_length >= start_offset + len)
-+				goto out;
- 		}
- 	}
- 
-@@ -331,9 +370,11 @@ fiemap_f(
- 		return 0;
- 	}
- 
--	if (cur_extent && last_logical < st.st_size)
-+	if (cur_extent && last_logical < st.st_size &&
-+	    (!range_limit || covered_length < start_offset + len)) {
- 		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
- 			   BTOBBT(last_logical), BTOBBT(st.st_size));
-+	}
- 
- out:
- 	free(fiemap);
-@@ -348,7 +389,7 @@ fiemap_init(void)
- 	fiemap_cmd.argmin = 0;
- 	fiemap_cmd.argmax = -1;
- 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	fiemap_cmd.args = _("[-alv] [-n nx]");
-+	fiemap_cmd.args = _("[-alv] [-n nx] [start offset [len]]");
- 	fiemap_cmd.oneline = _("print block mapping for a file");
- 	fiemap_cmd.help = fiemap_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 0fd9b951199c..27f1ae163913 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
- .BR xfs_bmap (8)
- manual page for complete documentation.
- .TP
--.BI "fiemap [ \-alv ] [ \-n " nx " ]"
-+.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
- Prints the block mapping for the current open file using the fiemap
- ioctl.  Options behave as described in the
- .BR xfs_bmap (8)
--manual page.
-+manual page. Optionally, this command also supports passing the start offset
-+from where to begin the fiemap and the length of that region.
- .TP
- .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
- Prints the mapping of disk blocks used by the filesystem hosting the current
+ static inline int hd_ref_init(struct hd_struct *part)
+ {
+ 	if (percpu_ref_init(&part->ref, __delete_partition, 0,
 -- 
-2.7.4
+1.9.1
 
