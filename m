@@ -1,113 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36150 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932431AbdJXPZf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Oct 2017 11:25:35 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 17/17] xfs: support for synchronous DAX faults
-Date: Tue, 24 Oct 2017 17:24:14 +0200
-Message-Id: <20171024152415.22864-18-jack@suse.cz>
-In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
+Received: from LGEAMRELO12.lge.com ([156.147.23.52]:43243 "EHLO
+        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbdJYBCF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 21:02:05 -0400
+Date: Wed, 25 Oct 2017 10:01:55 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: [PATCH v3 2/8] lockdep: Introduce CROSSRELEASE_STACK_TRACE and
+ make it not unwind as default
+Message-ID: <20171025010155.GO3310@X58A-UD3R>
+References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
+ <1508837889-16932-3-git-send-email-byungchul.park@lge.com>
+ <20171024100516.f2a2uzknqfum77w2@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171024100516.f2a2uzknqfum77w2@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: peterz@infradead.org, axboe@kernel.dk, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-From: Christoph Hellwig <hch@lst.de>
+On Tue, Oct 24, 2017 at 12:05:16PM +0200, Ingo Molnar wrote:
+> 
+> * Byungchul Park <byungchul.park@lge.com> wrote:
+> 
+> > Johan Hovold reported a performance regression by crossrelease like:
+> 
+> Pplease add Reported-by and Analyzed-by tags - you didn't even Cc: Johan!
 
-Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
-blocks for writing and the inode is pinned, and has dirty fields other
-than the timestamps.  In __xfs_filemap_fault() we then detect this case
-and call dax_finish_sync_fault() to make sure all metadata is committed,
-and to insert the page table entry.
+Excuse me but, I am sure, whom is the issue analyzed by? Me?
 
-Note that this will also dirty corresponding radix tree entry which is
-what we want - fsync(2) will still provide data integrity guarantees for
-applications not using userspace flushing. And applications using
-userspace flushing can avoid calling fsync(2) and thus avoid the
-performance overhead.
-
-[JK: Added VM_SYNC flag handling]
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c  | 15 ++++++++++++++-
- fs/xfs/xfs_iomap.c |  5 +++++
- 2 files changed, 19 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7c6b8def6eed..02093df4b314 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -44,6 +44,7 @@
- #include <linux/falloc.h>
- #include <linux/pagevec.h>
- #include <linux/backing-dev.h>
-+#include <linux/mman.h>
- 
- static const struct vm_operations_struct xfs_file_vm_ops;
- 
-@@ -1040,7 +1041,11 @@ __xfs_filemap_fault(
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
-+		pfn_t pfn;
-+
-+		ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
-+		if (ret & VM_FAULT_NEEDDSYNC)
-+			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
- 	} else {
- 		if (write_fault)
- 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-@@ -1131,6 +1136,13 @@ xfs_file_mmap(
- 	struct file	*filp,
- 	struct vm_area_struct *vma)
- {
-+	/*
-+	 * We don't support synchronous mappings for non-DAX files. At least
-+	 * until someone comes with a sensible use case.
-+	 */
-+	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
-+		return -EOPNOTSUPP;
-+
- 	file_accessed(filp);
- 	vma->vm_ops = &xfs_file_vm_ops;
- 	if (IS_DAX(file_inode(filp)))
-@@ -1149,6 +1161,7 @@ const struct file_operations xfs_file_operations = {
- 	.compat_ioctl	= xfs_file_compat_ioctl,
- #endif
- 	.mmap		= xfs_file_mmap,
-+	.mmap_supported_flags = MAP_SYNC,
- 	.open		= xfs_file_open,
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index f179bdf1644d..b43be199fbdf 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -33,6 +33,7 @@
- #include "xfs_error.h"
- #include "xfs_trans.h"
- #include "xfs_trans_space.h"
-+#include "xfs_inode_item.h"
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-@@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
- 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
- 	}
- 
-+	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-+	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-+		iomap->flags |= IOMAP_F_DIRTY;
-+
- 	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 
- 	if (shared)
--- 
-2.12.3
-
+> Thanks,
+> 
+> 	Ingo
