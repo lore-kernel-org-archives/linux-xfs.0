@@ -1,208 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18399 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932162AbdJYSyf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 14:54:35 -0400
-Date: Wed, 25 Oct 2017 11:54:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/5] common/xfs: refactor xfs_scrub presence testing
-Message-ID: <20171025185430.GC20669@magnolia>
-References: <150836985024.27213.3715197937819365388.stgit@magnolia>
- <150836986275.27213.11426507059309321722.stgit@magnolia>
- <20171025110447.GF3235@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171025110447.GF3235@eguan.usersys.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56302 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932162AbdJYS5H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Oct 2017 14:57:07 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5C90F5F159
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 18:57:07 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 41A8B61F32
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 18:57:07 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 0/3] xfs: miscellaneous log recovery fixes
+Date: Wed, 25 Oct 2017 14:57:02 -0400
+Message-Id: <20171025185705.64983-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 25, 2017 at 07:04:47PM +0800, Eryu Guan wrote:
-> On Wed, Oct 18, 2017 at 04:37:42PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move all the requirements checking for xfs_scrub into a helper function.
-> > Make sure the helper properly detects the presence of the scrub ioctl
-> > and situations where we can't run scrub (e.g. norecovery).
-> > 
-> > Refactor the existing three xfs_scrub call sites to use the helper to
-> > check if it's appropriate to run scrub.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/rc         |    2 +-
-> >  common/xfs        |   40 +++++++++++++++++++++++++++++++++-------
-> >  tests/generic/453 |   11 +----------
-> >  tests/generic/454 |   11 +----------
-> >  4 files changed, 36 insertions(+), 28 deletions(-)
-> > 
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 1a4d81e..83aaced 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -2091,7 +2091,7 @@ _require_xfs_io_command()
-> >  			_notrun "xfs_io $command support is missing"
-> >  		;;
-> >  	"scrub"|"repair")
-> > -		testio=`$XFS_IO_PROG -x -c "$command test 0" $TEST_DIR 2>&1`
-> > +		testio=`$XFS_IO_PROG -x -c "$command probe 0" $TEST_DIR 2>&1`
-> >  		echo $testio | grep -q "Inappropriate ioctl" && \
-> >  			_notrun "xfs_io $command support is missing"
-> >  		;;
-> > diff --git a/common/xfs b/common/xfs
-> > index dff8454..7d8f275 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -298,6 +298,29 @@ _require_xfs_db_command()
-> >  		_notrun "xfs_db $command support is missing"
-> >  }
-> >  
-> > +# Does the filesystem mounted from a particular device support scrub?
-> > +_supports_xfs_scrub()
-> > +{
-> > +	mountpoint="$1"
-> > +	device="$2"
-> > +
-> > +	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
-> > +		echo "Usage: _supports_xfs_scrub mountpoint device"
-> > +		exit 1
-> > +	fi
-> > +
-> > +	test "$FSTYP" = "xfs" || return 1
-> > +	test -x "$XFS_SCRUB_PROG" || return 1
-> > +
-> > +	# Probe for kernel support...
-> > +	$XFS_IO_PROG -x -c "scrub probe 0" "$mountpoint" 2>&1 | grep -q "Inappropriate ioctl" && return 1
-> > +
-> > +	# Scrub can't run on norecovery mounts
-> > +	_fs_options "$device" | grep -q "norecovery" && return 1
-> > +
-> > +	return 0
-> > +}
-> 
-> Hmm, this enables scrub after each test by default, because
-> $TEST_XFS_SCRUB is not checked anymore. Either remove TEST_XFS_SCRUB
-> completely (it's documented in README) or check it in this
-> _supports_xfs_scrub() helper. I'm fine with either way :)
+Hi all,
 
-Ok.  We're moving towards running scrub any time the fs is still mounted,
-and eventually will drop xfs_check^Wxfs_db -c check.
+Here's v2 of the log recovery fixups for filesystems with undersized
+logs and the v4 NULL buffer verifier problem. The most significant
+change is that patch 1 is rewritten to take a different approach to
+sanity check the log block addresses used during log recovery cycle and
+record verification. Specifically, it validates the log block number
+used for each buffer on read or write. Also, I've dropped patch 4 for
+now since I've not heard anything to suggest it's really necessary. 
 
-> > +
-> >  # run xfs_check and friends on a FS.
-> >  _check_xfs_filesystem()
-> >  {
-> > @@ -330,14 +353,17 @@ _check_xfs_filesystem()
-> >  	type=`_fs_type $device`
-> >  	ok=1
-> >  
-> > -	if [ "$type" = "xfs" ]; then
-> > -		if [ -n "$TEST_XFS_SCRUB" ] && [ -x "$XFS_SCRUB_PROG" ]; then
-> > -			"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
-> > -			if [ $? -ne 0 ]; then
-> > -				_log_err "filesystem on $device failed scrub"
-> > -				ok=0
-> > -			fi
-> > +	# Run online scrub if we can.
-> > +	mntpt="$(_is_mounted $device)"
-> > +	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
-> > +		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
-> 
-> Dump stderr to $seqres.full too? I noticed many warning messages printed
-> by xfs_scrub, though the tests didn't fail.
-> 
-> /mnt/testarea/test: Found more data blocks than reported (scrub.c line 382)
-> /mnt/testarea/test: 1 warnings found.
-> generic/450 0s ... 0s
-> /mnt/testarea/test: Found more data blocks than reported (scrub.c line 382)
-> /mnt/testarea/test: 1 warnings found.
-> generic/453 0s ... 0s
-> /mnt/testarea/scratch: Found more data blocks than reported (scrub.c line 382)
-> /mnt/testarea/scratch: 1 warnings found.
-> generic/454 1s ... 0s
-> /mnt/testarea/scratch: Found more data blocks than reported (scrub.c line 382)
-> /mnt/testarea/scratch: 1 warnings found.
-> Ran: generic/450 generic/453 generic/454
-> Passed all 3 tests
+Brian
 
-Will fix, even though as you point out the next patch fixes it anyway.
+v2:
+- Use xlog buffer validation rather than explicit checks.
+- Don't push AIL on log recovery error.
+- Drop patch 4 (rfc).
+- Fix up commit logs.
+v1: https://marc.info/?l=linux-xfs&m=150877001230751&w=2
 
---D
+Brian Foster (3):
+  xfs: more robust recovery xlog buffer validation
+  xfs: fix log block underflow during recovery cycle verification
+  xfs: drain the buffer LRU on mount
 
-> 
-> Thanks,
-> Eryu
-> 
-> > +		if [ $? -ne 0 ]; then
-> > +			_log_err "filesystem on $device failed scrub"
-> > +			ok=0
-> >  		fi
-> > +	fi
-> > +
-> > +	if [ "$type" = "xfs" ]; then
-> >  		# mounted ...
-> >  		mountpoint=`_umount_or_remount_ro $device`
-> >  	fi
-> > diff --git a/tests/generic/453 b/tests/generic/453
-> > index ff29736..40fae91 100755
-> > --- a/tests/generic/453
-> > +++ b/tests/generic/453
-> > @@ -136,10 +136,7 @@ echo "Test XFS online scrub, if applicable"
-> >  
-> >  # Only run this on xfs if xfs_scrub is available and has the unicode checker
-> >  check_xfs_scrub() {
-> > -	# Ignore non-XFS fs or no scrub program...
-> > -	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
-> > -		return 1
-> > -	fi
-> > +	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
-> >  
-> >  	# We only care if xfs_scrub has unicode string support...
-> >  	if ! type ldd > /dev/null 2>&1 || \
-> > @@ -147,12 +144,6 @@ check_xfs_scrub() {
-> >  		return 1
-> >  	fi
-> >  
-> > -	# Does the ioctl work?
-> > -	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
-> > -	   grep -q "Inappropriate ioctl"; then
-> > -		return 1
-> > -	fi
-> > -
-> >  	return 0
-> >  }
-> >  
-> > diff --git a/tests/generic/454 b/tests/generic/454
-> > index 01279ee..462185a 100755
-> > --- a/tests/generic/454
-> > +++ b/tests/generic/454
-> > @@ -132,10 +132,7 @@ echo "Test XFS online scrub, if applicable"
-> >  
-> >  # Only run this on xfs if xfs_scrub is available and has the unicode checker
-> >  check_xfs_scrub() {
-> > -	# Ignore non-XFS fs or no scrub program...
-> > -	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
-> > -		return 1
-> > -	fi
-> > +	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
-> >  
-> >  	# We only care if xfs_scrub has unicode string support...
-> >  	if ! type ldd > /dev/null 2>&1 || \
-> > @@ -143,12 +140,6 @@ check_xfs_scrub() {
-> >  		return 1
-> >  	fi
-> >  
-> > -	# Does the ioctl work?
-> > -	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
-> > -	   grep -q "Inappropriate ioctl"; then
-> > -		return 1
-> > -	fi
-> > -
-> >  	return 0
-> >  }
-> >  
-> > 
+ fs/xfs/xfs_log.c         | 16 ++++++++++++++++
+ fs/xfs/xfs_log_recover.c | 40 +++++++++++++++++++++++++---------------
+ 2 files changed, 41 insertions(+), 15 deletions(-)
+
+-- 
+2.9.5
+
