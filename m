@@ -1,269 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22457 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932399AbdJ0AiW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 20:38:22 -0400
-Date: Thu, 26 Oct 2017 17:38:17 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:18955 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750822AbdJYFJt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:09:49 -0400
+Date: Tue, 24 Oct 2017 22:09:44 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 5/6] misc: add module reloading helpers
-Message-ID: <20171027003817.GC5486@magnolia>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
- <150899712429.18389.5159489339127196469.stgit@magnolia>
+Subject: Re: [PATCH 1/4] xfs: sanity check log record range parameters
+Message-ID: <20171025050943.GP5483@magnolia>
+References: <20171023144646.50107-1-bfoster@redhat.com>
+ <20171023144646.50107-2-bfoster@redhat.com>
+ <20171023234903.GI5483@magnolia>
+ <20171024113045.GA56184@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150899712429.18389.5159489339127196469.stgit@magnolia>
+In-Reply-To: <20171024113045.GA56184@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Add some helper functions to require that we can reload a given module,
-and add a helper to actually do that.  Refactor the existing users to
-use the generics.
+On Tue, Oct 24, 2017 at 07:30:46AM -0400, Brian Foster wrote:
+> On Mon, Oct 23, 2017 at 04:49:03PM -0700, Darrick J. Wong wrote:
+> > On Mon, Oct 23, 2017 at 10:46:43AM -0400, Brian Foster wrote:
+> > > If a malformatted filesystem is mounted and attempts log recovery,
+> > > we can end up passing garbage parameter values to
+> > > xlog_find_verify_log_record(). In turn, the latter can pass a NULL
+> > > head pointer to xlog_header_check_mount() and cause a kernel panic.
+> > 
+> > Malformed how?  Is *last_blk some huge value such that i < -1?
+> > 
+> > I'm trying to figure out how we get passed a NULL head, and (afaict)
+> > that's one way it can happen...
+> > 
+> 
+> Malformatted simply means the log is too small. What happens is that
+> start_blk underflows in xlog_find_head() due to:
+> 
+> 	start_blk = log_bbnum - (num_scan_bblks - head_blk);
+> 
+> ... and the code ends up with a negative head_blk value by the time we
+> get to the "validate_head" label. last_blk ends up negative in
+> xlog_find_verify_log_record() and passes the NULL head pointer to
+> xlog_header_check_mount().
+> 
+> I suppose this might be a bit more obvious if we similarly fixed up
+> xlog_find_verify_cycle() to ensure that start_blk is sane, rather than
+> let it fall through to the record validation before failing.
 
-We need to hoist completely the behaviors of the old btrfs module helper
-because we need to confirm before starting the test that we actually can
-remove the module.
+Agreed.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/btrfs    |   12 --------
- common/module   |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common/overlay  |    1 +
- common/rc       |   11 -------
- tests/btrfs/124 |    9 +++---
- tests/btrfs/125 |    9 +++---
- 6 files changed, 92 insertions(+), 33 deletions(-)
- create mode 100644 common/module
+> > > Add some parameter sanity checks to both functions. Checks in both
+> > > places are technically not necessary, but do so to help future proof
+> > > the code. This prevents a kernel panic and replaces it with a more
+> > > graceful mount failure.
+> > > 
+> > > Reported-by: Zorro Lang <zlang@redhat.com>
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_log_recover.c | 11 +++++++++--
+> > >  1 file changed, 9 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > > index ee34899..80b37a2 100644
+> > > --- a/fs/xfs/xfs_log_recover.c
+> > > +++ b/fs/xfs/xfs_log_recover.c
+> > > @@ -347,9 +347,12 @@ xlog_header_check_recover(
+> > >   */
+> > >  STATIC int
+> > >  xlog_header_check_mount(
+> > > -	xfs_mount_t		*mp,
+> > > -	xlog_rec_header_t	*head)
+> > > +	struct xfs_mount	*mp,
+> > > +	struct xlog_rec_header	*head)
+> > >  {
+> > > +	if (!head)
+> > > +		return -EINVAL;
+> > > +
+> > >  	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+> > >  
+> > >  	if (uuid_is_null(&head->h_fs_uuid)) {
+> > > @@ -533,6 +536,10 @@ xlog_find_verify_log_record(
+> > >  
+> > >  	ASSERT(start_blk != 0 || *last_blk != start_blk);
+> > >  
+> > > +	if (start_blk < 0 || start_blk > log->l_logBBsize ||
+> > > +	    *last_blk < 0 || *last_blk > log->l_logBBsize)
+> > > +		return -EINVAL;
+> > 
+> > /me stumbled over the fact that start_blk and last_blk are offsets (in
+> > units of basic blocks) within the log, not absolute disk offsets like
+> > their xfs_daddr_t type implies. :(
+> > 
+> > Could you add a comment somewhere in this function explaining that these
+> > two "block" numbers are actually relative logBBstart?  The comment
+> > implies this, but apparently not strongly enough.
+> > 
+> 
+> Sure. I'll add a similar check to the cycle verifier as noted above and
+> add a comment in both places to note that we're looking for sane "log
+> relative block numbers."
+> 
+> Actually... now that I take a closer look at the code, I'm wondering if
+> a more robust solution than these explicit checks would be to push this
+> validation down to the log buffer helpers. We already have
+> xlog_buf_bbcount_valid() for checking the buffer length. Perhaps we
+> should enhance that to a 'xlog_buf_valid()' for sanity checking both the
+> log block address and count (and just passing 0 from xlog_get_bp())
+> before the blkno converted to a real daddr and actually read. That may
+> better protect us from going off the rails anywhere else in the future
+> since the read would simply fail. Thoughts?
 
-diff --git a/common/btrfs b/common/btrfs
-index fd762ef..c09206c 100644
---- a/common/btrfs
-+++ b/common/btrfs
-@@ -349,18 +349,6 @@ _btrfs_qgroup_units()
- 	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
- }
- 
--_require_btrfs_loadable()
--{
--	modprobe -r btrfs || _notrun "btrfs unloadable"
--	modprobe btrfs || _notrun "Can't load btrfs"
--}
--
--_reload_btrfs_ko()
--{
--	modprobe -r btrfs || _fail "btrfs unload failed"
--	modprobe btrfs || _fail "btrfs load failed"
--}
--
- _btrfs_compression_algos()
- {
- 	echo zlib
-diff --git a/common/module b/common/module
-new file mode 100644
-index 0000000..59cbd8a
---- /dev/null
-+++ b/common/module
-@@ -0,0 +1,83 @@
-+##/bin/bash
-+
-+# Routines for messing around with loadable kernel modules
-+#
-+#-----------------------------------------------------------------------
-+#  Copyright (c) 2017 Oracle.  All Rights Reserved.
-+#  This program is free software; you can redistribute it and/or modify
-+#  it under the terms of the GNU General Public License as published by
-+#  the Free Software Foundation; either version 2 of the License, or
-+#  (at your option) any later version.
-+#
-+#  This program is distributed in the hope that it will be useful,
-+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+#  GNU General Public License for more details.
-+#
-+#  You should have received a copy of the GNU General Public License
-+#  along with this program; if not, write to the Free Software
-+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
-+#  USA
-+#-----------------------------------------------------------------------
-+
-+# Return the module name for this fs.
-+_module_for_fs()
-+{
-+	echo "$FSTYP"
-+}
-+
-+# Reload a particular module.  This module MUST NOT be the module that
-+# underlies the filesystem.
-+_reload_module()
-+{
-+	module="$1"
-+
-+	modprobe -r "${module}" || _fail "${module} unload failed"
-+	modprobe "${module}" || _fail "${module} load failed"
-+}
-+
-+# Reload the filesystem module.
-+_reload_fs_module()
-+{
-+	module="$1"
-+
-+	# Unload test fs, try to reload module, remount
-+	had_testfs=""
-+	had_scratchfs=""
-+	_check_mounted_on TEST_DEV $TEST_DEV TEST_DIR $TEST_DIR && had_testfs="true"
-+	_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT && had_scratchfs="true"
-+	test -n "$had_testfs" && _test_unmount
-+	test -n "$had_scratchfs" && _scratch_unmount
-+	_reload_module "$module"
-+	test -n "$had_scratchfs" && _scratch_mount 2> /dev/null
-+	test -n "$had_testfs" && _test_mount 2> /dev/null
-+}
-+
-+# Check that we have a module that can be loaded.  This module MUST NOT
-+# be the module that underlies the filesystem.
-+_require_loadable_module()
-+{
-+	module="$1"
-+
-+	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-+	_reload_module "$module"
-+}
-+
-+# Check that the module for FSTYP can be loaded.
-+_require_loadable_fs_module()
-+{
-+	module="$1"
-+
-+	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-+	_reload_fs_module "$module"
-+}
-+
-+# Print the value of a filesystem module parameter
-+# at /sys/module/$FSTYP/parameters/$PARAM
-+#
-+# Usage example (FSTYP=overlay):
-+#   _get_fs_module_param index
-+_get_fs_module_param()
-+{
-+	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
-+}
-diff --git a/common/overlay b/common/overlay
-index 79097ba..1da4ab1 100644
---- a/common/overlay
-+++ b/common/overlay
-@@ -1,6 +1,7 @@
- #
- # overlayfs specific common functions.
- #
-+. ./common/module
- 
- # helper function to do the actual overlayfs mount operation
- _overlay_mount_dirs()
-diff --git a/common/rc b/common/rc
-index 83aaced..c708bfa 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3554,16 +3554,6 @@ _get_fs_sysfs_attr()
- 	cat /sys/fs/${FSTYP}/${dname}/${attr}
- }
- 
--# Print the value of a filesystem module parameter
--# at /sys/module/$FSTYP/parameters/$PARAM
--#
--# Usage example (FSTYP=overlay):
--#   _get_fs_module_param index
--_get_fs_module_param()
--{
--	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
--}
--
- # Generic test for specific filesystem feature.
- # Currently only implemented to test overlayfs features.
- _require_scratch_feature()
-diff --git a/tests/btrfs/124 b/tests/btrfs/124
-index 7206094..a648627 100755
---- a/tests/btrfs/124
-+++ b/tests/btrfs/124
-@@ -55,6 +55,7 @@ _cleanup()
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/module
- 
- # remove previous $seqres.full before test
- rm -f $seqres.full
-@@ -64,10 +65,8 @@ rm -f $seqres.full
- _supported_fs btrfs
- _supported_os Linux
- _require_scratch_dev_pool 2
--
--# the mounted test dir prevent btrfs unload, we need to unmount
- _test_unmount
--_require_btrfs_loadable
-+_require_loadable_fs_module "btrfs"
- 
- _scratch_dev_pool_get 2
- 
-@@ -102,7 +101,7 @@ echo "clean btrfs ko" >> $seqres.full
- _scratch_unmount
- 
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- 
- echo >> $seqres.full
- echo "-----Write degraded mount fill upto $max_fs_sz bytes-----" >> $seqres.full
-@@ -141,7 +140,7 @@ echo
- echo "Mount degraded with the other dev"
- _scratch_unmount
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- _mount -o degraded $dev2 $SCRATCH_MNT >>$seqres.full 2>&1
- _run_btrfs_util_prog filesystem show
- checkpoint3=`md5sum $SCRATCH_MNT/tf2`
-diff --git a/tests/btrfs/125 b/tests/btrfs/125
-index 91aa8d8..19961a1 100755
---- a/tests/btrfs/125
-+++ b/tests/btrfs/125
-@@ -54,6 +54,7 @@ _cleanup()
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/module
- 
- # remove previous $seqres.full before test
- rm -f $seqres.full
-@@ -63,10 +64,8 @@ rm -f $seqres.full
- _supported_fs btrfs
- _supported_os Linux
- _require_scratch_dev_pool 3
--
--# we need btrfs to unload, need test dir unmounted
- _test_unmount
--_require_btrfs_loadable
-+_require_loadable_fs_module "btrfs"
- 
- _scratch_dev_pool_get 3
- 
-@@ -118,7 +117,7 @@ echo "unmount" >> $seqres.full
- _scratch_unmount
- echo "clean btrfs ko" >> $seqres.full
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- _mount -o degraded,device=$dev2 $dev1 $SCRATCH_MNT >>$seqres.full 2>&1
- dd if=/dev/zero of="$SCRATCH_MNT"/tf2 bs=$bs count=$count \
- 					>>$seqres.full 2>&1
-@@ -154,7 +153,7 @@ echo "Mount degraded but with other dev"
- 
- _scratch_unmount
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- 
- _mount -o degraded,device=${dev2} $dev3 $SCRATCH_MNT >>$seqres.full 2>&1
- 
+Sounds like a good idea.
+
+xfs_verify_logbno?  In keeping with the xfs_verify_{agbno,fsbno,agino,ino,
+dir_ino} that are getting added in 4.15?
+
+--D
+
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > +
+> > >  	if (!(bp = xlog_get_bp(log, num_blks))) {
+> > >  		if (!(bp = xlog_get_bp(log, 1)))
+> > >  			return -ENOMEM;
+> > > -- 
+> > > 2.9.5
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
