@@ -1,284 +1,293 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40386 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751798AbdJaGqV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 02:46:21 -0400
-Date: Tue, 31 Oct 2017 14:46:17 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: test for umount hang caused by the pending
- dquota log item in AIL
-Message-ID: <20171031064617.GH17339@eguan.usersys.redhat.com>
-References: <1509003472-24191-1-git-send-email-houtao1@huawei.com>
- <1509003472-24191-2-git-send-email-houtao1@huawei.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20752 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932273AbdJYHBI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 03:01:08 -0400
+Date: Wed, 25 Oct 2017 00:00:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] fiemap: Implement ranged query
+Message-ID: <20171025070001.GR5483@magnolia>
+References: <1508409281-7183-1-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1509003472-24191-2-git-send-email-houtao1@huawei.com>
+In-Reply-To: <1508409281-7183-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Thu, Oct 26, 2017 at 03:37:52PM +0800, Hou Tao wrote:
-> When the first writeback and the retried writeback of dquota buffer get
-> the same IO error, XFS will let xfsaild to restart the writeback and
-> xfs_qm_dqflush_done() will not be invoked. xfsaild will try to re-push
-> the quota log item in AIL, the push will return early everytime after
-> checking xfs_dqflock_nowait(), and xfsaild will try to push it again.
+On Thu, Oct 19, 2017 at 01:34:41PM +0300, Nikolay Borisov wrote:
+> Currently the fiemap implementation of xfs_io doesn't support making ranged
+> queries. This patch implements two optional arguments which take the starting
+> offset and the length of the region to be queried. The impelmentation also
+> calculates printed holes as an extent for the purpose of terminating the query.
 > 
-> IOWs, AIL will never be empty, and the umount process will wait for the
-> drain of AIL, so the umount process hangs.
+> I.e. if we create a file with the following layout :
 > 
-> Signed-off-by: Hou Tao <houtao1@huawei.com>
-
-Sorry for the late review. Is there a specific patch or patchset fixed
-this bug? I tested on v4.14-rc2 kernel and for-next branch on Darrick's
-tree, test survivied multiple runs on both kernels.
-
+> xfs_io -f -c "falloc 0 32k" -c "fpunch 0 4k" -c "fpunch 8k 4k" \
+> -c "fpunch 28k 4k" -c "fiemap" fragmented-file
+> 
+>        H     D         H           D                    H
+> |--------|--------|---------|--------------|-----------------|
+> 0         4k       8k        12k            28k                32k
+> 
+> Then the output is :
+> 
+> xfs_io -c "fiemap 0 10k" fragmented-file
+> fragmented-file:
+> 	0: [0..7]: hole
+> 	1: [8..15]: 897844104..897844111
+> 	2: [16..23]: hole
+> 
+> xfs_io -c "fiemap 0" fragmented-file
+> fragmented-file:
+> 	0: [0..7]: hole
+> 	1: [8..15]: 897844104..897844111
+> 	2: [16..23]: hole
+> 	3: [24..55]: 897844120..897844151
+> 	4: [56..63]: hole
+> 
+> xfs_io -c "fiemap 10k 5k" fragmented-file
+> fragmented-file:
+> 	0: [20..23]: hole
+> 	1: [24..55]: 897844120..897844151
+> 
+> xfs_io -c "fiemap 10k 18k" fragmented-file
+> fragmented-file:
+> 	0: [20..23]: hole
+> 	1: [24..55]: 897844120..897844151
+> 	2: [56..63]: hole
+> 
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 > ---
->  tests/xfs/999     | 169 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out |   2 +
->  tests/xfs/group   |   1 +
->  3 files changed, 172 insertions(+)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
+>  io/fiemap.c       | 61 ++++++++++++++++++++++++++++++++++++++++++++++---------
+>  man/man8/xfs_io.8 |  5 +++--
+>  2 files changed, 54 insertions(+), 12 deletions(-)
 > 
-> diff --git a/tests/xfs/999 b/tests/xfs/999
-> new file mode 100755
-> index 0000000..4b89899
-> --- /dev/null
-> +++ b/tests/xfs/999
-> @@ -0,0 +1,169 @@
-> +#! /bin/bash
-> +# FS QA Test No. 999
-> +#
-> +# Test for XFS umount hang problem caused by the unceasing push
-> +# of dquot log item in AIL. Because xfs_qm_dqflush_done() will
-> +# not be invoked, so each time xfsaild initiates the push,
-> +# the push will return early after checking xfs_dqflock_nowait().
-> +#
-> +# xfs_qm_dqflush_done() should be invoked by xfs_buf_do_callbacks().
-> +# However after the first write and the retried write of dquota buffer
-> +# get the same IO error, XFS will let xfsaild to restart the write and
-> +# xfs_buf_do_callbacks() will not be inovked.
-> +#
-> +# This test emulates the write error by using dm-flakey. The log
-> +# area of the XFS filesystem is excluded from the range covered by
-> +# dm-flakey, so the XFS will not be shutdown prematurely.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Huawei Technologies Co., Ltd. All Rights Reserved.
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	sysctl -w fs.xfs.xfssyncd_centisecs=3000 >/dev/null 2>&1
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index e6fd66da753d..844741cb07d3 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -27,6 +27,8 @@
+>  
+>  static cmdinfo_t fiemap_cmd;
+>  static int max_extents = -1;
+> +static __u64 covered_length = 0;
+> +static bool range_limit = false;
+>  
+>  static void
+>  fiemap_help(void)
+> @@ -79,7 +81,7 @@ print_hole(
+>  		       boff_w, _("hole"), tot_w, lstart - llast);
+>  	   }
+>  
+> -
+> +	   covered_length += BBTOB(lstart - llast);
+>  }
+>  
+>  static int
+> @@ -90,7 +92,8 @@ print_verbose(
+>  	int			tot_w,
+>  	int			flg_w,
+>  	int			cur_extent,
+> -	__u64			last_logical)
+> +	__u64			last_logical,
+> +	__u64			limit)
+>  {
+>  	__u64			lstart;
+>  	__u64			llast;
+> @@ -122,7 +125,7 @@ print_verbose(
+>  		cur_extent++;
+>  	}
+>  
+> -	if (cur_extent == max_extents)
+> +	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+>  		return 1;
+>  
+>  	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+> @@ -140,7 +143,8 @@ print_plain(
+>  	struct fiemap_extent	*extent,
+>  	int			lflag,
+>  	int			cur_extent,
+> -	__u64			last_logical)
+> +	__u64			last_logical,
+> +	__u64			limit)
+>  {
+>  	__u64			lstart;
+>  	__u64			llast;
+> @@ -157,7 +161,7 @@ print_plain(
+>  		cur_extent++;
+>  	}
+>  
+> -	if (cur_extent == max_extents)
+> +	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
 
-Save the original value in a variable before test and restore it in
-_cleanup.
+As mentioned on IRC, I don't think it's correct to compare
+covered_length against limit here.   If we want to fiemap blocks 200-300
+we'd issue the command "fiemap 200k 100k", after which start_offset =
+200, len = 100, and stop_offset = 300.  We start the loop and
+covered_length = 0, and at this point we end up comparing
+(range_limit && covered_length >= limit) => (true && 0 >= 300)....
 
-> +	_unmount_flakey >/dev/null 2>&1
-> +	_cleanup_flakey > /dev/null 2>&1
-> +}
+>  		return 1;
+>  
+>  	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+> @@ -211,6 +215,7 @@ calc_print_format(
+>  	}
+>  }
+>  
 > +
-> +_get_xfs_scratch_sb_field()
+>  int
+>  fiemap_f(
+>  	int		argc,
+> @@ -231,8 +236,14 @@ fiemap_f(
+>  	int		tot_w = 5;	/* 5 since its just one number */
+>  	int		flg_w = 5;
+>  	__u64		last_logical = 0;
+> +	__u64		len = -1LL;
+> +	__u64		stop_offset = -1LL;
+> +	off64_t		start_offset = 0;
+> +	size_t		fsblocksize, fssectsize;
+>  	struct stat	st;
+>  
+> +	init_cvtnum(&fsblocksize, &fssectsize);
+> +
+>  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+> @@ -252,6 +263,27 @@ fiemap_f(
+>  		}
+>  	}
+>  
+> +	if (optind < argc) {
+> +		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> +		if (start_offset < 0) {
+> +			printf("non-numeric offset argument -- %s\n", argv[optind]);
+> +			return 0;
+> +		}
+> +		last_logical = start_offset;
+> +		optind++;
+> +	}
+> +
+> +	if (optind < argc) {
+> +		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> +		if (length < 0) {
+> +			printf("non-numeric len argument -- %s\n", argv[optind]);
+> +			return 0;
+> +		}
+> +		len = length;
+> +		stop_offset = start_offset + len;
+> +		range_limit = true;
+> +	}
+> +
+>  	map_size = sizeof(struct fiemap) +
+>  		(EXTENT_BATCH * sizeof(struct fiemap_extent));
+>  	fiemap = malloc(map_size);
+> @@ -269,7 +301,7 @@ fiemap_f(
+>  		memset(fiemap, 0, map_size);
+>  		fiemap->fm_flags = fiemap_flags;
+>  		fiemap->fm_start = last_logical;
+> -		fiemap->fm_length = -1LL;
+> +		fiemap->fm_length = len;
 
-Please name local functions without the leading underscore, usually
-that's for common helpers :)
+Need to shorten len as we go around the loop.
 
-> +{
-> +	local field=$1
+>  		fiemap->fm_extent_count = EXTENT_BATCH;
+>  
+>  		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+> @@ -300,14 +332,18 @@ fiemap_f(
+>  				num_printed = print_verbose(extent, foff_w,
+>  							    boff_w, tot_w,
+>  							    flg_w, cur_extent,
+> -							    last_logical);
+> +							    last_logical,
+> +							    stop_offset);
+>  			} else
+>  				num_printed = print_plain(extent, lflag,
+>  							  cur_extent,
+> -							  last_logical);
+> +							  last_logical,
+> +							  stop_offset);
+>  
+>  			cur_extent += num_printed;
+>  			last_logical = extent->fe_logical + extent->fe_length;
+> +			if (num_printed == 2)
+> +				covered_length += extent->fe_length;
+>  
+>  			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+>  				last = 1;
+> @@ -316,6 +352,9 @@ fiemap_f(
+>  
+>  			if (cur_extent == max_extents)
+>  				break;
 > +
-> +	echo $(_scratch_xfs_db -r -c "sb 0" -c "print $field" | \
-> +		awk -v field=$field '$0 ~ field {print $3}')
-> +}
+> +			if (range_limit && covered_length >= start_offset + len)
+> +				goto out;
+>  		}
+>  	}
+>  
+> @@ -331,9 +370,11 @@ fiemap_f(
+>  		return 0;
+>  	}
+>  
+> -	if (cur_extent && last_logical < st.st_size)
+> +	if (cur_extent && last_logical < st.st_size &&
+> +	    (!range_limit || covered_length < start_offset + len)) {
 
-Seems we can make this helper a common function in common/xfs, so other
-tests could take use of it too. Right now I only see xfs/098 could be a
-potential user.
+covered_length < stop_offset?
 
-> +
-> +# inject IO write error for the XFS filesystem except its log section
-> +_make_xfs_scratch_flakey_table()
-> +{
-> +	local opt="0 1 1 error_writes"
-> +	local dev=${SCRATCH_DEV}
-> +	local dev_sz=$(blockdev --getsz $dev)
-> +
-> +	if [ "${USE_EXTERNAL}" = "yes" -a ! -z "$SCRATCH_LOGDEV" ]; then
-> +		echo "0 ${dev_sz} flakey $dev 0 ${opt}"
-> +		return
-> +	fi
-> +
-> +	local blk_sz=$(_get_xfs_scratch_sb_field blocksize)
-> +	local log_ofs=$(_get_xfs_scratch_sb_field logstart)
-> +	local log_sz=$(_get_xfs_scratch_sb_field logblocks)
-> +	local table=""
-> +	local ofs=0
-> +	local sz
-> +
-> +	let "log_ofs *= blk_sz / 512"
-> +	let "log_sz *= blk_sz / 512"
-> +
-> +	if [ "$ofs" -lt "${log_ofs}" ]; then
-> +		let "sz = log_ofs - ofs"
-> +		table="$ofs $sz flakey $dev $ofs ${opt}"
-> +	fi
-> +
-> +	table="$table\n${log_ofs} ${log_sz} linear $dev ${log_ofs}"
-> +
-> +	let "ofs = log_ofs + log_sz"
-> +	if [ "$ofs" -lt "${dev_sz}" ]; then
-> +		let "sz = dev_sz - ofs"
-> +		table="$table\n$ofs $sz flakey $dev $ofs ${opt}"
-> +	fi
-> +
-> +	echo -e $table
-> +}
+>  		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
+>  			   BTOBBT(last_logical), BTOBBT(st.st_size));
+> +	}
+>  
+>  out:
+>  	free(fiemap);
+> @@ -348,7 +389,7 @@ fiemap_init(void)
+>  	fiemap_cmd.argmin = 0;
+>  	fiemap_cmd.argmax = -1;
+>  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> -	fiemap_cmd.args = _("[-alv] [-n nx]");
+> +	fiemap_cmd.args = _("[-alv] [-n nx] [start offset [len]]");
 
-Not sure if it's worth converting this into a common helper too. I'm
-fine with it being a local function too, I guess it's not a commonly
-used function anyway.
+[offset [len]]
 
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/dmflakey
-> +. ./common/xfs
+Otherwise it sounds like fiemap takes three parameters.
 
-No need to source common/xfs in individual test case, common/rc will do
-it based on $FSTYP
+>  	fiemap_cmd.oneline = _("print block mapping for a file");
+>  	fiemap_cmd.help = fiemap_help;
+>  
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 0fd9b951199c..27f1ae163913 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
+>  .BR xfs_bmap (8)
+>  manual page for complete documentation.
+>  .TP
+> -.BI "fiemap [ \-alv ] [ \-n " nx " ]"
+> +.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+>  Prints the block mapping for the current open file using the fiemap
+>  ioctl.  Options behave as described in the
+>  .BR xfs_bmap (8)
+> -manual page.
+> +manual page. Optionally, this command also supports passing the start offset
+> +from where to begin the fiemap and the length of that region.
 
-> +. ./common/quota
-> +
-> +_supported_fs xfs
-> +_supported_os Linux
-> +
-> +# due to the injection of write IO error, the fs will be inconsistent
-> +_require_scratch_nocheck
-> +_require_dm_target linear
-> +_require_dm_target flakey
-> +_require_user
-> +_require_xfs_quota
-> +_require_freeze
-> +
-> +rm -f $seqres.full
-> +
-> +echo "Silence is golden"
-> +
-> +_scratch_mkfs_xfs >/dev/null 2>&1
+New sentences should start on their own line, per linux-manpages custom.
 
-_scratch_mkfs should be fine, better to dump the mkfs output to
-$seqres.full for debug purpose.
+(Or maybe not; we violate that plenty in xfsprogs land...)
 
-> +
-> +_init_flakey
-> +
-> +# no error will be injected
-> +FLAKEY_TABLE="0 $(blockdev --getsz $SCRATCH_DEV) linear $SCRATCH_DEV 0"
-> +_load_flakey_table $FLAKEY_ALLOW_WRITES
+Also, fstests testcases needed.
 
-It looks like to me that this FLAKEY_TABLE and _load_flakey_table are
-not necessary, the default FLAKEY_TABLE won't drop or error any writes
-too.
+--D
 
-> +$DMSETUP_PROG info >> $seqres.full
-> +$DMSETUP_PROG table >> $seqres.full
-> +
-> +# shorten the time waiting for the push of ail items
-> +sysctl -w fs.xfs.xfssyncd_centisecs=100 >/dev/null 2>&1
-> +
-> +_qmount_option "usrquota"
-> +_mount_flakey
-> +
-> +# We need to set the quota limitation twice, and inject the write error
-> +# after the second setting. If we try to inject the write error after
-> +# the first setting, the initialization of the dquota buffer will get
-> +# IO error and also be retried, and during the umount process the
-> +# write will be ended, and xfs_qm_dqflush_done() will be inovked, and
-> +# the umount will exit normally.
-> +$XFS_QUOTA_PROG -x -c "limit -u isoft=500 fsgqa" $SCRATCH_MNT
-> +$XFS_QUOTA_PROG -x -c "report -ih" $SCRATCH_MNT >> $seqres.full
-> +
-> +# ensure the initialization of the dquota buffer is done
-> +xfs_freeze -f $SCRATCH_MNT
-> +xfs_freeze -u $SCRATCH_MNT
-> +
-> +$XFS_QUOTA_PROG -x -c "limit -u isoft=400 fsgqa" $SCRATCH_MNT
-> +$XFS_QUOTA_PROG -x -c "report -ih" $SCRATCH_MNT >> $seqres.full
-> +
-> +# inject write IO error
-> +FLAKEY_TABLE=$(_make_xfs_scratch_flakey_table)
-> +_load_flakey_table $FLAKEY_ALLOW_WRITES
-
-Set FLAKEY_TABLE_DROP here and call _load_flakey_table with
-$FLAKEY_DROP_WRITES
-
-> +$DMSETUP_PROG info >> $seqres.full
-> +$DMSETUP_PROG table >> $seqres.full
-> +
-> +sync
-> +# wait for the push of the dquota log item in AIL and
-> +# the completion of the retried write of dquota buffer
-> +sleep 2
-> +
-> +_unmount_flakey
-> +
-> +_cleanup_flakey
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> new file mode 100644
-> index 0000000..3b276ca
-> --- /dev/null
-> +++ b/tests/xfs/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index b439842..d11cbfd 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -431,3 +431,4 @@
->  431 auto quick dangerous
->  432 auto quick dir metadata
->  433 auto quick attr
-> +999 quota dangerous
-
-Should be in 'auto' and 'quick' group too?
-
-Thanks,
-Eryu
-
+>  .TP
+>  .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+>  Prints the mapping of disk blocks used by the filesystem hosting the current
 > -- 
-> 2.7.5
+> 2.7.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
