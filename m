@@ -1,139 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:61773 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752185AbdJIAmn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2017 20:42:43 -0400
-Date: Mon, 9 Oct 2017 11:42:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [GIT PULL] xfsprogs: mkfs refactor
-Message-ID: <20171009004240.GZ3666@dastard>
-References: <20171003080607.GM15067@dastard>
- <eca367b2-03de-517d-9ef5-5400e8a4739e@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <eca367b2-03de-517d-9ef5-5400e8a4739e@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:48999 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932278AbdJYS5H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Oct 2017 14:57:07 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 646DDC059755
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 18:57:07 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4996C4DA2C
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 18:57:07 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 1/3] xfs: more robust recovery xlog buffer validation
+Date: Wed, 25 Oct 2017 14:57:03 -0400
+Message-Id: <20171025185705.64983-2-bfoster@redhat.com>
+In-Reply-To: <20171025185705.64983-1-bfoster@redhat.com>
+References: <20171025185705.64983-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Oct 06, 2017 at 01:01:39PM -0500, Eric Sandeen wrote:
-> On 10/3/17 3:06 AM, Dave Chinner wrote:
-> > Hi Eric,
-> > 
-> > I've put the latest mkfs refactor code that I have up in place
-> > you can pull it from. I've rebased it against the current for-next
-> > tree (4.13.1 release) and fixed all the problems that xfstests
-> > exposes. The only thing I haven't fixed is xfs/191 that does mkfs
-> > command line behaviour verification because the refactored version
-> > fixes several problems that the old mkfs didn't handle correctly
-> > (e.g. being able to specify certain things like agsize in blocks or
-> > sectors).
-> > 
-> > There's a small filter patch needed for xfstests that I'll post in
-> > a reply to this pull request that will filter out the new "defaults
-> > sourced from ..." output and so prevent spurious xfstests failures.
-> > 
-> > If you want I can tag the branch with a signed tag for you to pull
-> > from (same process as Linus prefers) rather than just a branch in a
-> > tree. If you'd prefer that I post this as patches instead, then let
-> > me know and I'll bomb the list instead.
-> 
-> Thanks Dave.  Trying to un-swamp from other things.
-> 
-> Only advantage to patchbombing is having a permanent record of discussions,
-> but maybe it can happen in reference to patches as follows.... mostly
-> minor nits.
+mkfs has a historical problem where it can format very small
+filesystems with too small of a physical log. Under certain
+conditions, log recovery of an associated filesystem can end up
+passing garbage parameter values to some of the cycle and log record
+verification functions due to bugs in log recovery not dealing with
+such filesystems properly. This results in attempts to read from
+bogus/underflowed log block addresses.
 
-Yup, but when it's been posted before, multiple ppl have said
-"tested ok" but nobody is looking like they are going to review it,
-I'm going to send a pull request rather than another patchbomb. :/
+Since the buffer read may ultimately succeed, log recovery can
+proceed with bogus data and otherwise go off the rails and crash.
+One example of this is a negative last_blk being passed to
+xlog_find_verify_log_record() causing us to skip the loop, pass a
+NULL head pointer to xlog_header_check_mount() and crash.
 
-> 
-> > mkfs: can't specify sector size of internal log
-> 
-> commit log is a bit vague/misleading; I think you mean that
-> it should be /disallowed/ because it must match the filesystem's
-> /sector/ size when it's internal?  It's not actually clear to me why
-> an external log can have a "mismatched" sector size but internal can't.
+Improve the xlog buffer verification to address this problem. We
+already verify xlog buffer length, so update this mechanism to also
+sanity check for a valid log relative block address and otherwise
+return an error. Pass a fixed, valid log block address from
+xlog_get_bp() since the target address will be validated when the
+buffer is read. This ensures that any bogus log block address/length
+calculations lead to graceful mount failure rather than risking a
+crash or worse if recovery proceeds with bogus data.
 
-I thought that was obvious.  If we have a 512 byte data device (e.g.
-HDD) but a 4k sector external log device (e.g. pmem) then we'll have
-the situation where the log device requires a different sector size
-to the data device.  And we allow this, because the on disk log
-format is only dependent on the underlying sector size, not the
-configuration of the filesystem.
+Reported-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 38 ++++++++++++++++++++++++--------------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
 
-However, if the log is on the data device (i.e. internal) then it
-should match the sector size the data device is using, otherwise
-one or the other doesn't have atomic sector writes. Not to mention
-that it's simply wrong to have two different sector sizes for the
-same device.
-
-If you need to change the write size (i.e. padding) characteristics
-of the log for an internal/external, then use the log stripe unit
-because that's exactly what it does...
-
-> > mkfs: introduce a structure to hold CLI options
-> 
-> "between th einput"  (the input)
-> 
-> Comment mentions initialization to -1 or 0 but I don't see that this
-> gets done, at least not in this patch? (Am I missing it?)  I took
-> this to mean that before anything happens this would be initialized
-> so we know what was and was not specified after everything was parsed...
-
-Stale comment, updated. We initialise it all to zero, if we need
-flags to see if the option was set we look at the option table
-"seen" value.
-
-> > mkfs: introduce a structure to hold CLI options
-> 
-> +/* quick way of checking is a parameter was set on the CLI */
->                          "if"
-> 
-> > mkfs: factor naming subopts parser
-> 
-> no "nvflag" in "temp don't break" code?  Oh, nice - write-only var.  Ok.
-> do we still test it for respec, or care?  Will check later.
-
-I was only making the code build with the temp code. Stuff like
-crappy write-only vars got dropped at the first point they were
-found to be crap.
-
-And, FYI, with code that does this:
-
-	nvflag = nlflag = foo = bar = 0;
-
-gcc does not report set-but-unused or other such warnings because
-it seems to stop checking the moment there's a multiple assignment
-statement like the above. Hence shit code like in mkfs basically
-prevented gcc from warning about how the shit code was dead code....
-
-
-> > mkfs: Introduce mkfs configuration structure
-> 
-> would be nice to proofread commit log a bit ;)
-
-Seriously, after several hours of tedious, boring patch splitting
-I only cared that the code was correct. Commit logs were write once,
-read never. :/
-
-Fixed.
-
-> > mkfs: Introduce mkfs configuration structure
-> 
-> s/teh/the/
-> 
-> <ok stopping here for now, will send more later>
-
-Thanks!
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ee34899..54494ab 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -85,17 +85,21 @@ struct xfs_buf_cancel {
+  */
+ 
+ /*
+- * Verify the given count of basic blocks is valid number of blocks
+- * to specify for an operation involving the given XFS log buffer.
+- * Returns nonzero if the count is valid, 0 otherwise.
++ * Verify the log-relative block number and length in basic blocks are valid for
++ * an operation involving the given XFS log buffer. Returns true if the fields
++ * are valid, false otherwise.
+  */
+-
+-static inline int
+-xlog_buf_bbcount_valid(
++static inline bool
++xlog_verify_bp(
+ 	struct xlog	*log,
++	xfs_daddr_t	blk_no,
+ 	int		bbcount)
+ {
+-	return bbcount > 0 && bbcount <= log->l_logBBsize;
++	if (blk_no < 0 || blk_no >= log->l_logBBsize)
++		return false;
++	if (bbcount <= 0 || bbcount > log->l_logBBsize)
++		return false;
++	return true;
+ }
+ 
+ /*
+@@ -110,7 +114,11 @@ xlog_get_bp(
+ {
+ 	struct xfs_buf	*bp;
+ 
+-	if (!xlog_buf_bbcount_valid(log, nbblks)) {
++	/*
++	 * Pass log block 0 since we don't have an addr yet, buffer will be
++	 * verified on read.
++	 */
++	if (!xlog_verify_bp(log, 0, nbblks)) {
+ 		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+ 			nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+@@ -180,9 +188,10 @@ xlog_bread_noalign(
+ {
+ 	int		error;
+ 
+-	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+-			nbblks);
++	if (!xlog_verify_bp(log, blk_no, nbblks)) {
++		xfs_warn(log->l_mp,
++			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
++			 blk_no, nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -265,9 +274,10 @@ xlog_bwrite(
+ {
+ 	int		error;
+ 
+-	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+-			nbblks);
++	if (!xlog_verify_bp(log, blk_no, nbblks)) {
++		xfs_warn(log->l_mp,
++			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
++			 blk_no, nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return -EFSCORRUPTED;
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
+
