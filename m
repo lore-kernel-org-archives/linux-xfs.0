@@ -1,59 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36102 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932197AbdJXPZb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Oct 2017 11:25:31 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 06/17] dax: Create local variable for vmf->flags & FAULT_FLAG_WRITE test
-Date: Tue, 24 Oct 2017 17:24:03 +0200
-Message-Id: <20171024152415.22864-7-jack@suse.cz>
-In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
+Received: from LGEAMRELO11.lge.com ([156.147.23.51]:41933 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932453AbdJYI4d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 04:56:33 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [PATCH v5 6/9] locking/lockdep: Introduce CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
+Date: Wed, 25 Oct 2017 17:56:02 +0900
+Message-Id: <1508921765-15396-7-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
+References: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
+To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
+Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-There are already two users and more are coming.
+The boot parameter, crossrelease_fullstack, was introduced to control
+whether to enable unwind in cross-release or not. Add a Kconfig doing
+the same thing.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
+Suggested-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- fs/dax.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ kernel/locking/lockdep.c |  4 ++++
+ lib/Kconfig.debug        | 15 +++++++++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index c09465884bbe..5ea71381dba0 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1116,6 +1116,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 	struct iomap iomap = { 0 };
- 	unsigned flags = IOMAP_FAULT;
- 	int error, major = 0;
-+	bool write = vmf->flags & FAULT_FLAG_WRITE;
- 	int vmf_ret = 0;
- 	void *entry;
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 160b5d6..db933d0 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -76,7 +76,11 @@
+ #define lock_stat 0
+ #endif
  
-@@ -1130,7 +1131,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 		goto out;
- 	}
++#ifdef CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
++static int crossrelease_fullstack = 1;
++#else
+ static int crossrelease_fullstack;
++#endif
+ static int __init allow_crossrelease_fullstack(char *str)
+ {
+ 	crossrelease_fullstack = 1;
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index 4bef610..e4b54a5 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -1225,6 +1225,21 @@ config LOCKDEP_COMPLETIONS
+ 	 A deadlock caused by wait_for_completion() and complete() can be
+ 	 detected by lockdep using crossrelease feature.
  
--	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
-+	if (write && !vmf->cow_page)
- 		flags |= IOMAP_WRITE;
- 
- 	entry = grab_mapping_entry(mapping, vmf->pgoff, 0);
-@@ -1207,7 +1208,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 		break;
- 	case IOMAP_UNWRITTEN:
- 	case IOMAP_HOLE:
--		if (!(vmf->flags & FAULT_FLAG_WRITE)) {
-+		if (!write) {
- 			vmf_ret = dax_load_hole(mapping, entry, vmf);
- 			goto finish_iomap;
- 		}
++config BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
++	bool "Enable the boot parameter, crossrelease_fullstack"
++	depends on LOCKDEP_CROSSRELEASE
++	default n
++	help
++	 The lockdep "cross-release" feature needs to record stack traces
++	 (of calling functions) for all acquisitions, for eventual later
++	 use during analysis. By default only a single caller is recorded,
++	 because the unwind operation can be very expensive with deeper
++	 stack chains.
++
++	 However a boot parameter, crossrelease_fullstack, was
++	 introduced since sometimes deeper traces are required for full
++	 analysis. This option turns on the boot parameter.
++
+ config DEBUG_LOCKDEP
+ 	bool "Lock dependency engine debugging"
+ 	depends on DEBUG_KERNEL && LOCKDEP
 -- 
-2.12.3
+1.9.1
 
