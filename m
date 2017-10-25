@@ -1,116 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36114 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932322AbdJXPZc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Oct 2017 11:25:32 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 08/17] dax: Inline dax_pmd_insert_mapping() into the callsite
-Date: Tue, 24 Oct 2017 17:24:05 +0200
-Message-Id: <20171024152415.22864-9-jack@suse.cz>
-In-Reply-To: <20171024152415.22864-1-jack@suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
+Received: from LGEAMRELO13.lge.com ([156.147.23.53]:58418 "EHLO
+        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751937AbdJYFLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:11:40 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [PATCH v4 4/7] locking/lockdep: Introduce CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
+Date: Wed, 25 Oct 2017 14:11:09 +0900
+Message-Id: <1508908272-15757-5-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
+To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
+Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-dax_pmd_insert_mapping() has only one callsite and we will need to
-further fine tune what it does for synchronous faults. Just inline it
-into the callsite so that we don't have to pass awkward bools around.
+The boot parameter, crossrelease_fullstack, was introduced to control
+whether to enable unwind in cross-release or not. Add a Kconfig doing
+the same thing.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
+Suggested-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- fs/dax.c                      | 47 +++++++++++++++++--------------------------
- include/trace/events/fs_dax.h |  1 -
- 2 files changed, 19 insertions(+), 29 deletions(-)
+ kernel/locking/lockdep.c |  4 ++++
+ lib/Kconfig.debug        | 15 +++++++++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5b20c6456926..675fab8ec41f 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1235,33 +1235,11 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- }
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 160b5d6..db933d0 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -76,7 +76,11 @@
+ #define lock_stat 0
+ #endif
  
- #ifdef CONFIG_FS_DAX_PMD
--static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
--		loff_t pos, void *entry)
--{
--	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
--	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct inode *inode = mapping->host;
--	void *ret = NULL;
--	pfn_t pfn = {};
--	int rc;
--
--	rc = dax_iomap_pfn(iomap, pos, PMD_SIZE, &pfn);
--	if (rc < 0)
--		goto fallback;
--
--	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector,
--			RADIX_DAX_PMD);
--	if (IS_ERR(ret))
--		goto fallback;
--
--	trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, ret);
--	return vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
--			pfn, vmf->flags & FAULT_FLAG_WRITE);
--
--fallback:
--	trace_dax_pmd_insert_mapping_fallback(inode, vmf, PMD_SIZE, pfn, ret);
--	return VM_FAULT_FALLBACK;
--}
-+/*
-+ * The 'colour' (ie low bits) within a PMD of a page offset.  This comes up
-+ * more often than one might expect in the below functions.
-+ */
-+#define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
++#ifdef CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
++static int crossrelease_fullstack = 1;
++#else
+ static int crossrelease_fullstack;
++#endif
+ static int __init allow_crossrelease_fullstack(char *str)
+ {
+ 	crossrelease_fullstack = 1;
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index 4bef610..e4b54a5 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -1225,6 +1225,21 @@ config LOCKDEP_COMPLETIONS
+ 	 A deadlock caused by wait_for_completion() and complete() can be
+ 	 detected by lockdep using crossrelease feature.
  
- static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- 		void *entry)
-@@ -1317,6 +1295,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- 	void *entry;
- 	loff_t pos;
- 	int error;
-+	pfn_t pfn;
- 
- 	/*
- 	 * Check whether offset isn't beyond end of file now. Caller is
-@@ -1394,7 +1373,19 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- 
- 	switch (iomap.type) {
- 	case IOMAP_MAPPED:
--		result = dax_pmd_insert_mapping(vmf, &iomap, pos, entry);
-+		error = dax_iomap_pfn(&iomap, pos, PMD_SIZE, &pfn);
-+		if (error < 0)
-+			goto finish_iomap;
++config BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
++	bool "Enable the boot parameter, crossrelease_fullstack"
++	depends on LOCKDEP_CROSSRELEASE
++	default n
++	help
++	 The lockdep "cross-release" feature needs to record stack traces
++	 (of calling functions) for all acquisitions, for eventual later
++	 use during analysis. By default only a single caller is recorded,
++	 because the unwind operation can be very expensive with deeper
++	 stack chains.
 +
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry,
-+						dax_iomap_sector(&iomap, pos),
-+						RADIX_DAX_PMD);
-+		if (IS_ERR(entry))
-+			goto finish_iomap;
++	 However a boot parameter, crossrelease_fullstack, was
++	 introduced since sometimes deeper traces are required for full
++	 analysis. This option turns on the boot parameter.
 +
-+		trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, entry);
-+		result = vmf_insert_pfn_pmd(vma, vmf->address, vmf->pmd, pfn,
-+					    write);
- 		break;
- 	case IOMAP_UNWRITTEN:
- 	case IOMAP_HOLE:
-diff --git a/include/trace/events/fs_dax.h b/include/trace/events/fs_dax.h
-index fbc4a06f7310..88a9d19b8ff8 100644
---- a/include/trace/events/fs_dax.h
-+++ b/include/trace/events/fs_dax.h
-@@ -148,7 +148,6 @@ DEFINE_EVENT(dax_pmd_insert_mapping_class, name, \
- 	TP_ARGS(inode, vmf, length, pfn, radix_entry))
- 
- DEFINE_PMD_INSERT_MAPPING_EVENT(dax_pmd_insert_mapping);
--DEFINE_PMD_INSERT_MAPPING_EVENT(dax_pmd_insert_mapping_fallback);
- 
- DECLARE_EVENT_CLASS(dax_pte_fault_class,
- 	TP_PROTO(struct inode *inode, struct vm_fault *vmf, int result),
+ config DEBUG_LOCKDEP
+ 	bool "Lock dependency engine debugging"
+ 	depends on DEBUG_KERNEL && LOCKDEP
 -- 
-2.12.3
+1.9.1
 
