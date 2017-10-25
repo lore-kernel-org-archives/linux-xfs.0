@@ -1,44 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:42805 "EHLO
+Received: from LGEAMRELO13.lge.com ([156.147.23.53]:58404 "EHLO
         lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751623AbdJXXpr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 19:45:47 -0400
-Date: Wed, 25 Oct 2017 08:45:38 +0900
+        with ESMTP id S1751980AbdJYFLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:11:40 -0400
 From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [PATCH v3 4/8] lockdep: Add a kernel parameter,
- crossrelease_fullstack
-Message-ID: <20171024234538.GM3310@X58A-UD3R>
-References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
- <1508837889-16932-5-git-send-email-byungchul.park@lge.com>
- <20171024100858.2rw7wnhtj7d3iyzk@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171024100858.2rw7wnhtj7d3iyzk@gmail.com>
+Subject: [PATCH v4 1/7] block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
+Date: Wed, 25 Oct 2017 14:11:06 +0900
+Message-Id: <1508908272-15757-2-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ingo Molnar <mingo@kernel.org>
-Cc: peterz@infradead.org, axboe@kernel.dk, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
+Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com, Christoph Hellwig <hch@lst.de>
 
-On Tue, Oct 24, 2017 at 12:08:58PM +0200, Ingo Molnar wrote:
-> This is really unnecessarily complex.
+From: Christoph Hellwig <hch@lst.de>
 
-I mis-understood your suggestion. I will change it.
+Simplify the code by getting rid of the submit_bio_ret structure.
 
-> The proper logic is to introduce the crossrelease_fullstack boot parameter, and to 
-> also have a Kconfig option that enables it: 
-> 
-> 	CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK=y
-> 
-> No #ifdefs please - just an "if ()" branch dependent on the current value of 
-> crossrelease_fullstack.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bio.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
 
-Ok. I will.
+diff --git a/block/bio.c b/block/bio.c
+index 5f5472e..99d0ca5 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -917,17 +917,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ }
+ EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
+ 
+-struct submit_bio_ret {
+-	struct completion event;
+-	int error;
+-};
+-
+ static void submit_bio_wait_endio(struct bio *bio)
+ {
+-	struct submit_bio_ret *ret = bio->bi_private;
+-
+-	ret->error = blk_status_to_errno(bio->bi_status);
+-	complete(&ret->event);
++	complete(bio->bi_private);
+ }
+ 
+ /**
+@@ -943,16 +935,15 @@ static void submit_bio_wait_endio(struct bio *bio)
+  */
+ int submit_bio_wait(struct bio *bio)
+ {
+-	struct submit_bio_ret ret;
++	DECLARE_COMPLETION_ONSTACK(done);
+ 
+-	init_completion(&ret.event);
+-	bio->bi_private = &ret;
++	bio->bi_private = &done;
+ 	bio->bi_end_io = submit_bio_wait_endio;
+ 	bio->bi_opf |= REQ_SYNC;
+ 	submit_bio(bio);
+-	wait_for_completion_io(&ret.event);
++	wait_for_completion_io(&done);
+ 
+-	return ret.error;
++	return blk_status_to_errno(bio->bi_status);
+ }
+ EXPORT_SYMBOL(submit_bio_wait);
+ 
+-- 
+1.9.1
 
-Thanks,
-Byungchul
-
-> Thanks,
-> 
-> 	Ingo
