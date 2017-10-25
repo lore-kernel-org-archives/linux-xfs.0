@@ -1,313 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:40150 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751775AbdJYUrY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Oct 2017 16:47:24 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
-Date: Wed, 25 Oct 2017 14:47:04 -0600
-Message-Id: <20171025204704.3382-1-ross.zwisler@linux.intel.com>
-In-Reply-To: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
+Received: from welcomes-you.com ([144.76.218.113]:41456 "EHLO
+        smtp.welcomes-you.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751407AbdJYH1A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 03:27:00 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by smtp.welcomes-you.com (Postfix) with ESMTP id DE2B531A3743
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 09:20:05 +0200 (CEST)
+From: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+Subject: Possible to mount this XFS at least temporarily to retrieve files?
+Message-ID: <dd004707-cd48-adb8-1429-37867360594e@aei.mpg.de>
+Date: Wed, 25 Oct 2017 09:20:03 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
 
-Add a test that exercises DAX's new MAP_SYNC flag.
+Hi
 
-This test creates a file and writes to it via an mmap(), but never syncs
-via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
+after some hiatus, back on this list with an incident which happened
+yesterday:
 
-If MAP_SYNC is working the dm-log-writes replay will show the test file
-with 1MiB of on-media block allocations.  This is because each allocating
-page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-(which you can test by fiddling with the parameters to mmap()) the file
-will be smaller or missing entirely.
+On a Debian Jessie machine installed back in October 2016 there a re a
+bunch of 3TB disks behind an Adaptec ASR-6405[1] in RAID6 configuration.
+Yesterday, one of the disks failed and was subsequently replace. About
+an hour into the rebuild the 28TB xfs on this block device gave up:
 
-Note that dm-log-writes doesn't track the data that we write via the
-mmap(), so we can't do any data integrity checking.  We can only verify
-that the metadata writes for the page faults happened.
+Oct 24 12:39:15 atlas8 kernel: [526440.956408] XFS (sdc1):
+xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
+Oct 24 12:39:15 atlas8 kernel: [526440.956452] XFS (sdc1):
+xfs_do_force_shutdown(0x8) called from line 3242 of file
+/build/linux-byISom/linux-3.16.43/fs/xfs/xfs_inode.c.  Return address =
+0xffffffffa02c0b76
+Oct 24 12:39:45 atlas8 kernel: [526471.029957] XFS (sdc1):
+xfs_log_force: error 5 returned.
+Oct 24 12:40:15 atlas8 kernel: [526501.154991] XFS (sdc1):
+xfs_log_force: error 5 returned.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+(mount options were probably (99% confidence)
+rw,relatime,attr2,inode64,noquota
+)
 
----
+As we had several bind mounts as well as NFS clients on this one, I was
+not able to clear all pending mounts - xfs_check/xfs_repair constantly
+complaint about the file system still being mounted even though
+/proc/self/mounts as well as fuser/lsof disagreed.
 
-Changes since v2:
- - Fixed _require_log_writes() so that DAX will be disallowed if the
-   version of the dm-log-writes target is older than v1.1.0.  (Amir)
+Anyway, we rebooted the system, tried to manually mount the file system
+to replay any pending log but no luck as the primary superblock was not
+found.
 
----
- .gitignore            |  1 +
- common/dmlogwrites    |  4 ++-
- common/rc             |  6 ++--
- src/Makefile          |  3 +-
- src/t_map_sync.c      | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/466     | 76 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/466.out |  3 ++
- tests/generic/group   |  1 +
- 8 files changed, 182 insertions(+), 4 deletions(-)
- create mode 100644 src/t_map_sync.c
- create mode 100755 tests/generic/466
- create mode 100644 tests/generic/466.out
+Running xfs_repair (from xfsprogs 3.2.1) on this first started looking
+for a secondary superblock which apparently it found after about two
+hours as it never again search for it afterwards.
 
-diff --git a/.gitignore b/.gitignore
-index 2014c08..9fc0695 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -119,6 +119,7 @@
- /src/t_getcwd
- /src/t_holes
- /src/t_immutable
-+/src/t_map_sync
- /src/t_mmap_cow_race
- /src/t_mmap_dio
- /src/t_mmap_fallocate
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index 247c744..71d008d 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -23,8 +23,10 @@ _require_log_writes()
- 	[ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
- 		_notrun "This test requires a valid \$LOGWRITES_DEV"
- 
--	_exclude_scratch_mount_option dax
- 	_require_dm_target log-writes
-+	if [[ ${DMTARGET_VER[0]} == 1 && ${DMTARGET_VER[1]} < 1 ]]; then
-+		_exclude_scratch_mount_option dax
-+	fi
- 	_require_test_program "log-writes/replay-log"
- }
- 
-diff --git a/common/rc b/common/rc
-index e2a8229..df438c3 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1792,8 +1792,10 @@ _require_dm_target()
- 
- 	modprobe dm-$_target >/dev/null 2>&1
- 
--	$DMSETUP_PROG targets 2>&1 | grep -q ^$_target
--	if [ $? -ne 0 ]; then
-+	_version=$($DMSETUP_PROG targets 2>&1 | grep ^$_target)
-+	if [[ $_version =~ .*v([0-9]+).([0-9]+).([0-9]+) ]]; then
-+		DMTARGET_VER=(${BASH_REMATCH[@]:1})
-+	else
- 		_notrun "This test requires dm $_target support"
- 	fi
- }
-diff --git a/src/Makefile b/src/Makefile
-index 3eb25b1..af7e7e9 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -13,7 +13,8 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
- 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
- 	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
--	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro
-+	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro \
-+	t_map_sync
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/t_map_sync.c b/src/t_map_sync.c
-new file mode 100644
-index 0000000..29b546a
---- /dev/null
-+++ b/src/t_map_sync.c
-@@ -0,0 +1,92 @@
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <sys/stat.h>
-+#include <sys/types.h>
-+#include <unistd.h>
-+
-+#define MiB(a) ((a)*1024*1024)
-+
-+/*
-+ * These two defines were added to the kernel via commits entitled
-+ * "mm: Define MAP_SYNC and VM_SYNC flags" and
-+ * "mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap
-+ * flags", respectively.
-+ */
-+#ifndef MAP_SYNC
-+#define MAP_SYNC 0x80000
-+#endif
-+
-+#ifndef MAP_SHARED_VALIDATE
-+#define MAP_SHARED_VALIDATE 0x3
-+#endif
-+
-+void err_exit(char *op)
-+{
-+	fprintf(stderr, "%s: %s\n", op, strerror(errno));
-+	exit(1);
-+}
-+
-+void mark_log(char *logwrites_name, char *mark_name)
-+{
-+	char command[256];
-+
-+	snprintf(command, 256, "dmsetup message %s 0 mark %s",
-+			logwrites_name, mark_name);
-+
-+	if (system(command))
-+		err_exit("mark_log");
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int page_size = getpagesize();
-+	int len = MiB(1);
-+	int i, fd, err;
-+	char *data;
-+
-+	if (argc < 4) {
-+		printf("Usage: %s <file> <logwrites_name> <mark_name>\n",
-+				basename(argv[0]));
-+		exit(0);
-+	}
-+
-+	fd = open(argv[1], O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
-+	if (fd < 0)
-+		err_exit("fd");
-+
-+	ftruncate(fd, len);
-+
-+	data = mmap(NULL, len, PROT_READ|PROT_WRITE,
-+			MAP_SHARED_VALIDATE|MAP_SYNC, fd, 0);
-+	if (data == MAP_FAILED)
-+		err_exit("mmap");
-+
-+	/*
-+	 * We intentionally don't sync 'fd' manually.  If MAP_SYNC is working
-+	 * these allocating page faults will cause the filesystem to sync its
-+	 * metadata so that when we replay the dm-log-writes log the test file
-+	 * will have 1 MiB worth of block allocations.
-+	 *
-+	 * dm-log-writes doesn't track the data that we write via the mmap(),
-+	 * so we can't check that, we can only verify that the metadata writes
-+	 * happened.
-+	 */
-+	for (i = 0; i < len; i+=page_size)
-+		data[i] = 0xff;
-+
-+	mark_log(argv[2], argv[3]);
-+
-+	err = munmap(data, len);
-+	if (err < 0)
-+		err_exit("munmap");
-+
-+	err = close(fd);
-+	if (err < 0)
-+		err_exit("close");
-+
-+	return 0;
-+}
-diff --git a/tests/generic/466 b/tests/generic/466
-new file mode 100755
-index 0000000..592213f
---- /dev/null
-+++ b/tests/generic/466
-@@ -0,0 +1,76 @@
-+#! /bin/bash
-+# FS QA Test No. 466
-+#
-+# Use md_log_writes to verify that MAP_SYNC actually syncs metadata during
-+# page faults.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	_log_writes_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmlogwrites
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_log_writes
-+_require_scratch_dax
-+_require_test_program "t_map_sync"
-+
-+_log_writes_init
-+_log_writes_mkfs >> $seqres.full 2>&1
-+_log_writes_mount -o dax
-+
-+src/t_map_sync $SCRATCH_MNT/test $LOGWRITES_NAME pre_unmap
-+
-+# Unmount the scratch dir and tear down the log writes target
-+_log_writes_unmount
-+_log_writes_remove
-+_check_scratch_fs
-+
-+# check pre-unmap state
-+_log_writes_replay_log pre_unmap
-+_scratch_mount
-+
-+# We should see $SCRATCH_MNT/test as having 1MiB in block allocations
-+du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-+
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/generic/466.out b/tests/generic/466.out
-new file mode 100644
-index 0000000..4c54d7a
---- /dev/null
-+++ b/tests/generic/466.out
-@@ -0,0 +1,3 @@
-+QA output created by 466
-+1.0M SCRATCH_MNT/test
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index fbe0a7f..65328c6 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -468,3 +468,4 @@
- 463 auto quick clone dangerous
- 464 auto rw
- 465 auto rw quick aio
-+466 auto quick dax
+However, after this running xfs_repait with and without the -L switch
+stopped dead in phase 6 with the error that lost+found ran out of disk
+space.
+
+We then upgraded xfsprogs to 4.9.0+nmu1 and tried again and it failed
+with the same error.
+
+Another shot in the dark was rebooting the system with a more recent
+kernel, this time 4.9.30-2+deb9u5~bpo8+1 instead of 3.16.43-2+deb8u5
+which indeed changed the behaviour of xfs_repair:
+
+# xfs_repair /dev/sdc1
+Phase 1 - find and verify superblock...
+sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
+calculated value 128
+resetting superblock root inode pointer to 128
+sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
+with calculated value 129
+resetting superblock realtime bitmap ino pointer to 129
+sb realtime summary inode 18446744073709551615 (NULLFSINO) inconsistent
+with calculated value 130
+resetting superblock realtime summary ino pointer to 130
+Phase 2 - using internal log
+        - zero log...
+Log inconsistent (didn't find previous header)
+failed to find log head
+zero_log: cannot find log head/tail (xlog_find_tail=5)
+ERROR: The log head and/or tail cannot be discovered. Attempt to mount the
+filesystem to replay the log or use the -L option to destroy the log and
+attempt a repair.
+
+xfs_repair -L /dev/sdc1
+Phase 1 - find and verify superblock...
+sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
+calculated value 128
+resetting superblock root inode pointer to 128
+sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
+with calculated value 129
+resetting superblock realtime bitmap ino pointer to 129
+sb realtime summary inode 18446744073709551615 (NULLFSINO) inconsistent
+with calculated value 130
+resetting superblock realtime summary ino pointer to 130
+Phase 2 - using internal log
+        - zero log...
+Log inconsistent (didn't find previous header)
+failed to find log head
+zero_log: cannot find log head/tail (xlog_find_tail=5)
+
+an occasional trial mount fails with
+
+# mount -vvv /dev/sdc1 /mnt
+mount: /dev/sdc1: can't read superblock
+
+and dmesg:
+[46098.224814] XFS (sdc1): Mounting V4 Filesystem
+[46098.340251] XFS (sdc1): Log inconsistent (didn't find previous header)
+[46098.340290] XFS (sdc1): failed to find log head
+[46098.340311] XFS (sdc1): log mount/recovery failed: error -5
+[46098.340365] XFS (sdc1): log mount failed
+
+I've run xfs_metadump just in case someone would be interested in this,
+however this stops with
+
+[...]
+xfs_metadump: invalid magic in dir inode 95523308418 block 2669
+xfs_metadump: invalid magic in dir inode 95523308418 block 2682
+Copied 28488832 of 0 inodes (23 of 28 AGs)
+xfs_metadump: suspicious count 2032 in bmap extent 84 in dir2 ino
+98836491893
+Copied 30292672 of 0 inodes (24 of 28 AGs)
+xfs_metadump: suspicious count 1341 in bmap extent 249 in dir2 ino
+103419978691
+Copying log                                                Log
+inconsistent (didn't find previous header)
+failed to find log head
+xlog_is_dirty: cannot find log head/tail (xlog_find_tail=5)
+
+(but return value of 0)
+
+So, I don't know if this is helpful at all or not - and it's quite large
+1.7GB gzipped, about 12GB uncompressed.
+
+Some more "random" output:
+
+# xfs_db -r -c "sb 0" -c "p" -c "freesp" /dev/sdc1
+
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 7313814267
+rblocks = 0
+rextents = 0
+uuid = 9be23871-60a4-4deb-83bf-65e6e1efaf98
+logstart = 3758096388
+rootino = null
+rbmino = null
+rsumino = null
+rextsize = 1
+agblocks = 268435455
+agcount = 28
+rbmblocks = 0
+logblocks = 521728
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 28
+rextslog = 0
+inprogress = 0
+imax_pct = 5
+icount = 0
+ifree = 0
+fdblocks = 7313292427
+frextents = 0
+uquotino = null
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0x8a
+bad_features2 = 0x8a
+features_compat = 0
+features_ro_compat = 0
+features_incompat = 0
+features_log_incompat = 0
+crc = 0 (unchecked)
+spino_align = 0
+pquotino = 0
+lsn = 0
+meta_uuid = 00000000-0000-0000-0000-000000000000
+   from      to extents  blocks    pct
+      1       1    7326    7326   0.00
+      2       3   10132   21624   0.00
+      4       7   61789  251318   0.01
+      8      15   54927  494942   0.01
+     16      31   20357  399672   0.01
+     32      63    6928  290701   0.01
+     64     127    2956  254315   0.01
+    128     255    1027  186825   0.00
+    256     511    1054  402182   0.01
+    512    1023    3980 3235959   0.07
+   1024    2047     634  942129   0.02
+   2048    4095     451 1340993   0.03
+   4096    8191     267 1559353   0.04
+   8192   16383     190 2332137   0.05
+  16384   32767     114 2810123   0.07
+  32768   65535      89 4339005   0.10
+  65536  131071      46 4382290   0.10
+ 131072  262143      14 2596831   0.06
+ 262144  524287      12 4632120   0.11
+ 524288 1048575       8 6391289   0.15
+1048576 2097151       9 14059493   0.33
+2097152 4194303       8 20104228   0.47
+4194304 8388607      16 103605889   2.40
+8388608 16777215       1 10074277   0.23
+16777216 33554431       1 20576975   0.48
+33554432 67108863       2 109236674   2.53
+67108864 134217727       2 212839297   4.92
+134217728 268435455      21 3794702496  87.80
+
+Now my "final" question: Is there a chance to get some/most files from
+this hosed file system or am I just wasting my time[2]?
+
+Any information I can share to help the issue?
+
+Cheers
+
+Carsten
+
+[1] https://storage.microsemi.com/de-de/support/raid/sas_raid/sas-6405/
+[2] The file system officially is used as "scratch" space, i.e. not
+backed up. But eventually vital user data may end up there, thus the
+quest of trying to restore whatever is possible.
+
 -- 
-2.9.5
-
+Dr. Carsten Aulbert, Max Planck Institute for Gravitational Physics,
+Callinstraße 38, 30167 Hannover, Germany
+Phone: +49 511 762 17185
