@@ -1,82 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:1087 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751477AbdJXVKS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Oct 2017 17:10:18 -0400
-Date: Tue, 24 Oct 2017 15:10:07 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
- MAP_SYNC
-Message-ID: <20171024211007.GA1611@linux.intel.com>
-References: <20171024152415.22864-1-jack@suse.cz>
- <20171024152415.22864-19-jack@suse.cz>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:53874 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752059AbdJYGfQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 02:35:16 -0400
+Date: Wed, 25 Oct 2017 08:35:12 +0200
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH v4 6/7] workqueue: Remove unnecessary acquisitions wrt
+ workqueue flush
+Message-ID: <20171025063512.qvdwo4q7hakeiwqf@gmail.com>
+References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+ <1508908272-15757-7-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171024152415.22864-19-jack@suse.cz>
+In-Reply-To: <1508908272-15757-7-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
+To: Byungchul Park <byungchul.park@lge.com>
+Cc: peterz@infradead.org, axboe@kernel.dk, johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-On Tue, Oct 24, 2017 at 05:24:15PM +0200, Jan Kara wrote:
-> Signed-off-by: Jan Kara <jack@suse.cz>
 
-This looks unchanged since the previous version?
+* Byungchul Park <byungchul.park@lge.com> wrote:
 
+> The workqueue added manual acquisitions to catch deadlock cases.
+> Now crossrelease was introduced, some of those are redundant, since
+> wait_for_completion() already includes the acquisition for itself.
+> Removed it.
+> 
+> Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 > ---
->  man2/mmap.2 | 30 ++++++++++++++++++++++++++++++
->  1 file changed, 30 insertions(+)
+>  include/linux/workqueue.h |  4 ++--
+>  kernel/workqueue.c        | 19 +++----------------
+>  2 files changed, 5 insertions(+), 18 deletions(-)
 > 
-> diff --git a/man2/mmap.2 b/man2/mmap.2
-> index 47c3148653be..598ff0c64f7f 100644
-> --- a/man2/mmap.2
-> +++ b/man2/mmap.2
-> @@ -125,6 +125,21 @@ are carried through to the underlying file.
->  to the underlying file requires the use of
->  .BR msync (2).)
->  .TP
-> +.B MAP_SHARED_VALIDATE
-> +The same as
-> +.B MAP_SHARED
-> +except that
-> +.B MAP_SHARED
-> +mappings ignore unknown flags in
-> +.IR flags .
-> +In contrast when creating mapping of
-> +.B MAP_SHARED_VALIDATE
-> +mapping type, the kernel verifies all passed flags are known and fails the
-> +mapping with
-> +.BR EOPNOTSUPP
-> +otherwise. This mapping type is also required to be able to use some mapping
-> +flags.
-> +.TP
->  .B MAP_PRIVATE
->  Create a private copy-on-write mapping.
->  Updates to the mapping are not visible to other processes
-> @@ -352,6 +367,21 @@ option.
->  Because of the security implications,
->  that option is normally enabled only on embedded devices
->  (i.e., devices where one has complete control of the contents of user memory).
-> +.TP
-> +.BR MAP_SYNC " (since Linux 4.15)"
-> +This flags is available only with
-> +.B MAP_SHARED_VALIDATE
-> +mapping type. Mappings of
-> +.B MAP_SHARED
-> +type will silently ignore this flag.
-> +This flag is supported only for files supporting DAX (direct mapping of persistent
-> +memory). For other files, creating mapping with this flag results in
-> +.B EOPNOTSUPP
-> +error. Shared file mappings with this flag provide the guarantee that while
-> +some memory is writeably mapped in the address space of the process, it will
-> +be visible in the same file at the same offset even after the system crashes or
-> +is rebooted. This allows users of such mappings to make data modifications
-> +persistent in a more efficient way using appropriate CPU instructions.
->  .PP
->  Of the above flags, only
->  .B MAP_FIXED
-> -- 
-> 2.12.3
-> 
+> diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+> index f3c47a0..1455b5e 100644
+> --- a/include/linux/workqueue.h
+> +++ b/include/linux/workqueue.h
+> @@ -218,7 +218,7 @@ static inline void destroy_delayed_work_on_stack(struct delayed_work *work) { }
+>  									\
+>  		__init_work((_work), _onstack);				\
+>  		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
+> -		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0); \
+> +		lockdep_init_map(&(_work)->lockdep_map, "(complete)"#_work, &__key, 0); \
+
+This has a similar naming problem as the block bits: should be "wq_completion" or 
+such.
+
+Thanks,
+
+	Ingo
