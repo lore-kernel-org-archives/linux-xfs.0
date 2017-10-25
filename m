@@ -1,129 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO12.lge.com ([156.147.23.52]:38951 "EHLO
-        lgeamrelo12.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932189AbdJYA0V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 20:26:21 -0400
-Date: Wed, 25 Oct 2017 09:26:12 +0900
+Received: from LGEAMRELO13.lge.com ([156.147.23.53]:44939 "EHLO
+        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751513AbdJYGep (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 02:34:45 -0400
+Date: Wed, 25 Oct 2017 15:34:35 +0900
 From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [PATCH v3 8/8] block: Assign a lock_class per gendisk used for
+Subject: Re: [PATCH v4 7/7] block: Assign a lock_class per gendisk used for
  wait_for_completion()
-Message-ID: <20171025002612.GN3310@X58A-UD3R>
-References: <1508837889-16932-1-git-send-email-byungchul.park@lge.com>
- <1508837889-16932-9-git-send-email-byungchul.park@lge.com>
- <20171024101551.sftqsy5mk34fxru7@gmail.com>
+Message-ID: <20171025063435.GQ3310@X58A-UD3R>
+References: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
+ <1508908272-15757-8-git-send-email-byungchul.park@lge.com>
+ <20171025060123.6mugpdpje6hx32nx@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171024101551.sftqsy5mk34fxru7@gmail.com>
+In-Reply-To: <20171025060123.6mugpdpje6hx32nx@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Ingo Molnar <mingo@kernel.org>
-Cc: peterz@infradead.org, axboe@kernel.dk, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+Cc: peterz@infradead.org, axboe@kernel.dk, johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-On Tue, Oct 24, 2017 at 12:15:51PM +0200, Ingo Molnar wrote:
-> > @@ -1409,9 +1403,12 @@ struct gendisk *alloc_disk_node(int minors, int node_id)
-> >  		disk_to_dev(disk)->type = &disk_type;
-> >  		device_initialize(disk_to_dev(disk));
-> >  	}
-> > +
-> > +	lockdep_init_map(&disk->lockdep_map, lock_name, key, 0);
+On Wed, Oct 25, 2017 at 08:01:24AM +0200, Ingo Molnar wrote:
+> Beyond the #ifdef reduction I mentioned in the other thread, there's four other 
+> things I noticed that need to be fixed in this patch:
 > 
-> lockdep_init_map() depends on CONFIG_DEBUG_LOCK_ALLOC IIRC, but the data structure 
-> change you made depends on CONFIG_LOCKDEP_COMPLETIONS:
-
-OMG, my mistake! I am very sorry. I will fix it.
-
-BTW, lockdep_init_map() seems to decide whether using lockdep_map or
-ignoring it, depending on CONFIG_LOCKDEP than CONFIG_DEBUG_LOCK_ALLOC.
-
-> >  	return disk;
-> >  }
-> > -EXPORT_SYMBOL(alloc_disk_node);
-> > +EXPORT_SYMBOL(__alloc_disk_node);
-> >  
-> >  struct kobject *get_disk(struct gendisk *disk)
-> >  {
-> > diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> > index 6d85a75..9832e3c 100644
-> > --- a/include/linux/genhd.h
-> > +++ b/include/linux/genhd.h
-> > @@ -206,6 +206,9 @@ struct gendisk {
-> >  #endif	/* CONFIG_BLK_DEV_INTEGRITY */
-> >  	int node_id;
-> >  	struct badblocks *bb;
-> > +#ifdef CONFIG_LOCKDEP_COMPLETIONS
-> > +	struct lockdep_map lockdep_map;
-> > +#endif
-> >  };
+>  - Please write out 'minor' instead of the 'm' abbreviation that is meaningless. 
+>    'm' is only used for trivial wrappers, but this wrapper is not trivial - so 
+>    proper canonical variable names should be used.
 > 
-> Which is risking a future build failure at minimum.
+>  - Since __key and __name is already double underscores that is customary for
+>    macros to avoid variable name shadowing, why is 'ret' not such a name?
 > 
-> Isn't lockdep_map a zero size structure that is always defined? If yes then 
-> there's no need for an #ifdef.
-
-No, a zero size structure for lockdep_map is not provided yet.
-There are two options I can do:
-
-1. Add a zero size structure for lockdep_map and remove #ifdef
-2. Replace CONFIG_LOCKDEP_COMPLETIONS with CONFIG_LOCKDEP here.
-
-Or something else?
-
-Which one do you prefer?
-
-> Also:
+>  - But, 'ret' is the typical name used for integer returns, not for pointers! 
+>    Please check the gendisk code for what the typical name for gendisk pointers
+>    is and use that instead of making up new, weird patterns ...
 > 
-> >  
-> >  static inline struct gendisk *part_to_disk(struct hd_struct *part)
-> > @@ -590,8 +593,7 @@ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
-> >  extern void delete_partition(struct gendisk *, int);
-> >  extern void printk_all_partitions(void);
-> >  
-> > -extern struct gendisk *alloc_disk_node(int minors, int node_id);
-> > -extern struct gendisk *alloc_disk(int minors);
-> > +extern struct gendisk *__alloc_disk_node(int minors, int node_id, struct lock_class_key *key, const char *lock_name);
-> >  extern struct kobject *get_disk(struct gendisk *disk);
-> >  extern void put_disk(struct gendisk *disk);
-> >  extern void blk_register_region(dev_t devt, unsigned long range,
-> > @@ -615,6 +617,22 @@ extern ssize_t part_fail_store(struct device *dev,
-> >  			       const char *buf, size_t count);
-> >  #endif /* CONFIG_FAIL_MAKE_REQUEST */
-> >  
-> > +#ifdef CONFIG_LOCKDEP_COMPLETIONS
-> > +#define alloc_disk_node(m, id) \
-> > +({									\
-> > +	static struct lock_class_key __key;				\
-> > +	const char *__lock_name;					\
-> > +									\
-> > +	__lock_name = "(complete)"#m"("#id")";				\
-> > +									\
-> > +	__alloc_disk_node(m, id, &__key, __lock_name);			\
-> > +})
-> > +#else
-> > +#define alloc_disk_node(m, id)	__alloc_disk_node(m, id, NULL, NULL)
-> > +#endif
-> > +
-> > +#define alloc_disk(m)		alloc_disk_node(m, NUMA_NO_NODE)
-> > +
-> >  static inline int hd_ref_init(struct hd_struct *part)
-> >  {
-> >  	if (percpu_ref_init(&part->ref, __delete_partition, 0,
+>  - The "(complete)"#minor"("#id")" generated name is pretty bad. Firstly 
+>    "complete" is a verb (or adjective), while lock(dep) symbol names should be 
+>    nouns! But even "completion" is pretty opaque, how about "gendisk_completion"?
 > 
-> Why is the lockdep_map passed in to the init function? Since it's wrapped in an 
-> ugly fashion anyway, why not introduce a clean inline function that calls 
+> More careful patches please!
 
-This is the way workqueue adopted for that purpose. BTW, can I make
-a lock_class_key distinguishable from another of a different gendisk,
-using inline function?
+I am sorry for that. I will do my best not to repeat them.
 
-> lockdep_init_map() on the returned structure.
-
-Ok. I will make it work on the returned structre instead of passing it.
-
-> No #ifdefs required, and no uglification of the alloc_disk_node() interface.
-
-Ok. I will remove this #ifdef.
-
-Thank you very much.
-
+And I re-spined ASAP to make you able to review with the latest version
+only including all your suggestions at the previous version.
