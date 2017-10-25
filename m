@@ -1,55 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37680 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751113AbdJXA2w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2017 20:28:52 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9O0Sp5b022640
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Oct 2017 00:28:52 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9O0SpZx008568
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Oct 2017 00:28:51 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9O0SoCk008628
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Oct 2017 00:28:50 GMT
-Date: Mon, 23 Oct 2017 17:28:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: validate sb_logsunit is a multiple of the fs blocksize
-Message-ID: <20171024002844.GM5483@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from LGEAMRELO11.lge.com ([156.147.23.51]:51319 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750948AbdJYFLZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 01:11:25 -0400
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [PATCH v4 0/7] cross-release: Enhence performance and fix false positives
+Date: Wed, 25 Oct 2017 14:11:05 +0900
+Message-Id: <1508908272-15757-1-git-send-email-byungchul.park@lge.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: peterz@infradead.org, mingo@kernel.org, axboe@kernel.dk
+Cc: johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
 
-Make sure the log stripe unit is sane before proceeding with mounting.
-AFAICT this means that logsunit has to be 0, 1, or a multiple of the fs
-block size.  Found this by setting the LSB of logsunit in xfs/350 and
-watching the system crash as soon as we try to write to the log.
+There are two things I didn't apply as Ingo suggested, since I didn't
+understand his intention exactly:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_log.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+   1. Adding 'Analyzed-by' tag at the 2nd patch
+   2. Using a inline function instead #define at the 7th patch
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index d729e00..da4dcab 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -659,6 +659,12 @@ xfs_log_mount(
- 			 XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks),
- 			 XFS_MAX_LOG_BYTES);
- 		error = -EINVAL;
-+	} else if (mp->m_sb.sb_logsunit > 1 &&
-+		   mp->m_sb.sb_logsunit % mp->m_sb.sb_blocksize) {
-+		xfs_warn(mp,
-+		"log stripe unit %u bytes must be a multiple of block size",
-+			 mp->m_sb.sb_logsunit);
-+		error = -EINVAL;
- 	}
- 	if (error) {
- 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+Let me know if the above should still be applied.
+
+Changes from v3
+- Exclude a patch removing white space
+- Enhance commit messages as Ingo suggested
+- Re-design patches adding a boot param and a Kconfig allowing unwind
+- Simplify a patch assigning lock classes to genhds as Ingo suggested
+- Add proper tags in commit messages e.g. reported-by and analyzed-by
+
+Changes from v2
+- Combine 2 serises, fixing false positives and enhance performance
+- Add Christoph Hellwig's patch simplifying submit_bio_wait() code
+- Add 2 more 'init with lockdep map' macros for completionm
+- Rename init_completion_with_map() to init_completion_map()
+
+Changes from v1
+- Fix kconfig description as Ingo suggested
+- Fix commit message writing out CONFIG_ variable
+- Introduce a new kernel parameter, crossrelease_fullstack
+- Replace the number with the output of *perf*
+- Separate a patch removing white space
+
+Byungchul Park (6):
+  locking/lockdep: Add a boot parameter allowing unwind in cross-release
+    and disable it by default
+  locking/lockdep: Remove the BROKEN flag from
+    CONFIG_LOCKDEP_CROSSRELEASE and CONFIG_LOCKDEP_COMPLETIONS
+  locking/lockdep: Introduce
+    CONFIG_BOOTPARAM_LOCKDEP_CROSSRELEASE_FULLSTACK
+  completion: Add support for initializing completion with lockdep_map
+  workqueue: Remove unnecessary acquisitions wrt workqueue flush
+  block: Assign a lock_class per gendisk used for wait_for_completion()
+
+Christoph Hellwig (1):
+  block: use DECLARE_COMPLETION_ONSTACK in submit_bio_wait
+
+ Documentation/admin-guide/kernel-parameters.txt |  3 +++
+ block/bio.c                                     | 19 +++++--------------
+ block/genhd.c                                   | 10 ++--------
+ include/linux/completion.h                      | 14 ++++++++++++++
+ include/linux/genhd.h                           | 24 ++++++++++++++++++++++--
+ include/linux/workqueue.h                       |  4 ++--
+ kernel/locking/lockdep.c                        | 23 +++++++++++++++++++++--
+ kernel/workqueue.c                              | 19 +++----------------
+ lib/Kconfig.debug                               | 19 +++++++++++++++++--
+ 9 files changed, 89 insertions(+), 46 deletions(-)
+
+-- 
+1.9.1
+
