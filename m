@@ -1,43 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO11.lge.com ([156.147.23.51]:39310 "EHLO
-        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750823AbdJYLtl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 07:49:41 -0400
-Date: Wed, 25 Oct 2017 20:49:38 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [RESEND PATCH 1/3] completion: Add support for initializing
- completion with lockdep_map
-Message-ID: <20171025114938.GA3223@X58A-UD3R>
-References: <1508319532-24655-1-git-send-email-byungchul.park@lge.com>
- <1508319532-24655-2-git-send-email-byungchul.park@lge.com>
- <1508455438.4542.4.camel@wdc.com>
- <alpine.DEB.2.20.1710200829340.3083@nanos>
- <1508529532.3029.15.camel@wdc.com>
- <CANrsvRNnOp_rgEWG2FGg7qaEQi=yEyhiZkpWSW62w21BvJ9Shg@mail.gmail.com>
- <1508682894.2564.8.camel@wdc.com>
- <20171023020822.GI3310@X58A-UD3R>
- <1508915222.2947.15.camel@wdc.com>
+Received: from welcomes-you.com ([144.76.218.113]:32780 "EHLO
+        smtp.welcomes-you.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750798AbdJYLvR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 07:51:17 -0400
+Subject: Re: Possible to mount this XFS at least temporarily to retrieve
+ files?
+References: <dd004707-cd48-adb8-1429-37867360594e@aei.mpg.de>
+ <CAAxjCEwEH-OsH_z=OWg0R7XoOzyWeUQsmTp1r8Fdp-JU11eX4Q@mail.gmail.com>
+From: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+Message-ID: <8d15394e-1dd6-ced0-7af1-fb538c60bb58@aei.mpg.de>
+Date: Wed, 25 Oct 2017 13:51:13 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1508915222.2947.15.camel@wdc.com>
+In-Reply-To: <CAAxjCEwEH-OsH_z=OWg0R7XoOzyWeUQsmTp1r8Fdp-JU11eX4Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "hch@infradead.org" <hch@infradead.org>, "amir73il@gmail.com" <amir73il@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "oleg@redhat.com" <oleg@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "johannes.berg@intel.com" <johannes.berg@intel.com>, "max.byungchul.park@gmail.com" <max.byungchul.park@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "idryomov@gmail.com" <idryomov@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "kernel-team@lge.com" <kernel-team@lge.com>, "david@fromorbit.com" <david@fromorbit.com>
+To: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
 
-On Wed, Oct 25, 2017 at 07:07:06AM +0000, Bart Van Assche wrote:
-> > Please, point out logical problems of cross-release than saying it's
-> > impossbile according to the paper.
+Hi
+
+On 10/25/17 13:32, Stefan Ring wrote:
+> Did the RAID rebuild complete at least?
 > 
-> Isn't that the same? If it's impossible to use lock-graphs for detecting deadlocks
-> in programs that use mutexes, semaphores and condition variables without triggering
-> false positives that means that every approach that tries to detect deadlocks and
-> that is based on lock graphs, including cross-release, must report false positives
-> for certain programs.
 
-Right. That's why I'm currently trying to assign lock classes properly
-where false positives were reported. You seems to say there is another
-cause of false positives. If yes, please let me know what it is. If you
-do with an example, it would be more helpful for me to understand you.
+sorry, forgot to mention. Yes, the rebuild finished and the controller
+did not mention anything wrong during the rebuild - only after it now
+tells us about a fan failure and a dead battery:
+
+* Rebuild done at Tue Oct 24 18:08:57 UTC 2017
+
+* Fan failure at Tue Oct 24 18:16:33 UTC 2017
+
+* Battery failure at Tue Oct 24 18:16:44 UTC 2017
+
+So yes, this controller should probably be exchanged as well.
+
+But on the other hand, given that this was a single disk rebuild in a
+RAID6 (10+2) in theory it should not impact anything working on the
+block device level or above except for timeouts/slowness ;)
+
+Cheers
+
+Carsten
