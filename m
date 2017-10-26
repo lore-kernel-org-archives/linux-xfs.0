@@ -1,44 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53686 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752346AbdJ0Mzq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 08:55:46 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 1/2] ltp/fsx: allow comments when reading operations from logs
-Date: Fri, 27 Oct 2017 20:53:56 +0800
-Message-Id: <20171027125357.25222-1-eguan@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27348 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932326AbdJZWtp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:49:45 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9QMniUa013454
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9QMniCn025947
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:44 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9QMnipQ031306
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:44 GMT
+Subject: [PATCH 3/3] xfs: compare btree block keys to parent block's keys
+ during scrub
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 26 Oct 2017 15:49:42 -0700
+Message-ID: <150905818254.20365.11230568576888160838.stgit@magnolia>
+In-Reply-To: <150905816454.20365.10479338108395001494.stgit@magnolia>
+References: <150905816454.20365.10479338108395001494.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-We use '--replay-ops' option to replay operations in the specified
-operation log file, but we're not allowed to add comments for the
-operations in the log, which might be useful when writing regression
-tests that replay a given sequence of operations.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now treat lines starting with '#' as comments and skip them when
-reading operations.
+When we're done checking all the records/keys in a btree block, compute
+the low and high key of the block and compare them to the associated key
+in the parent btree block.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_btree.c |    4 ++--
+ fs/xfs/libxfs/xfs_btree.h |    4 ++++
+ fs/xfs/scrub/btree.c      |   46 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 52 insertions(+), 2 deletions(-)
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 863d536e5a7b..9c358f27bd92 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -1391,7 +1391,7 @@ read_op(struct log_entry *log_entry)
- 				goto fail;
- 			}
- 			str = strtok(line, " \t\n");
--		} while (!str);
-+		} while (!str || str[0] == '#');
+
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index b3cd82a..848f371 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2027,7 +2027,7 @@ xfs_btree_lookup(
+ }
  
- 		if (strcmp(str, "skip") == 0) {
- 			log_entry->flags |= FL_SKIPPED;
--- 
-2.13.6
+ /* Find the high key storage area from a regular key. */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_high_key_from_key(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+@@ -2101,7 +2101,7 @@ xfs_btree_get_node_keys(
+ }
+ 
+ /* Derive the keys for any btree block. */
+-STATIC void
++void
+ xfs_btree_get_keys(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_btree_block	*block,
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index be82f41..b57501c 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -541,5 +541,9 @@ int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
+ void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
+ 			   struct xfs_btree_block *block,
+ 			   union xfs_btree_ptr *ptr, int lr);
++void xfs_btree_get_keys(struct xfs_btree_cur *cur,
++		struct xfs_btree_block *block, union xfs_btree_key *key);
++union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
++		union xfs_btree_key *key);
+ 
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 9ccf763..9e8b67a 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -358,6 +358,50 @@ xfs_scrub_btree_get_block(
+ }
+ 
+ /*
++ * Check that the low and high keys of this block match the keys stored
++ * in the parent block.
++ */
++STATIC void
++xfs_scrub_btree_block_keys(
++	struct xfs_scrub_btree		*bs,
++	int				level,
++	struct xfs_btree_block		*block)
++{
++	union xfs_btree_key		block_keys;
++	struct xfs_btree_cur		*cur = bs->cur;
++	union xfs_btree_key		*high_bk;
++	union xfs_btree_key		*parent_keys;
++	union xfs_btree_key		*high_pk;
++	struct xfs_btree_block		*parent_block;
++	struct xfs_buf			*bp;
++
++	if (level >= cur->bc_nlevels - 1)
++		return;
++
++	/* Calculate the keys for this block. */
++	xfs_btree_get_keys(cur, block, &block_keys);
++
++	/* Obtain the parent's copy of the keys for this block. */
++	parent_block = xfs_btree_get_block(cur, level + 1, &bp);
++	parent_keys = xfs_btree_key_addr(cur, cur->bc_ptrs[level + 1],
++			parent_block);
++
++	if (cur->bc_ops->diff_two_keys(cur, &block_keys, parent_keys) != 0)
++		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
++
++	if (!(cur->bc_flags & XFS_BTREE_OVERLAPPING))
++		return;
++
++	/* Get high keys */
++	high_bk = xfs_btree_high_key_from_key(cur, &block_keys);
++	high_pk = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level + 1],
++			parent_block);
++
++	if (cur->bc_ops->diff_two_keys(cur, high_bk, high_pk) != 0)
++		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
++}
++
++/*
+  * Visit all nodes and leaves of a btree.  Check that all pointers and
+  * records are in order, that the keys reflect the records, and use a callback
+  * so that the caller can verify individual records.
+@@ -418,6 +462,7 @@ xfs_scrub_btree(
+ 			/* End of leaf, pop back towards the root. */
+ 			if (cur->bc_ptrs[level] >
+ 			    be16_to_cpu(block->bb_numrecs)) {
++				xfs_scrub_btree_block_keys(&bs, level, block);
+ 				if (level < cur->bc_nlevels - 1)
+ 					cur->bc_ptrs[level + 1]++;
+ 				level++;
+@@ -442,6 +487,7 @@ xfs_scrub_btree(
+ 
+ 		/* End of node, pop back towards the root. */
+ 		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
++			xfs_scrub_btree_block_keys(&bs, level, block);
+ 			if (level < cur->bc_nlevels - 1)
+ 				cur->bc_ptrs[level + 1]++;
+ 			level++;
 
