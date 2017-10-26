@@ -1,28 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18310 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:51279 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751228AbdJZWYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:24:11 -0400
-Date: Thu, 26 Oct 2017 15:24:07 -0700
+        with ESMTP id S1751584AbdJZWPt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:49 -0400
+Subject: [PATCH 08/10] misc: enable gcc/clang address sanitizer
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 08/10] misc: enable gcc/clang address sanitizer
-Message-ID: <20171026222407.GD5483@magnolia>
+Date: Thu, 26 Oct 2017 15:15:43 -0700
+Message-ID: <150905614361.28563.9247533518481627005.stgit@magnolia>
+In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
 References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905614361.28563.9247533518481627005.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150905614361.28563.9247533518481627005.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Enable AddressSanitizer to look for memory usage errors if the builder
-asks for it and it's available.
+Enable AddressSanitizer to look for memory usage errors if requested.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
@@ -32,17 +30,18 @@ Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
  m4/package_sanitizer.m4 |   20 ++++++++++++++++++++
  4 files changed, 37 insertions(+), 4 deletions(-)
 
+
 diff --git a/configure.ac b/configure.ac
-index 5838e08..764b22b 100644
+index a5b2c65..b101e05 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -78,6 +78,12 @@ AC_ARG_ENABLE(ubsan,
  	enable_ubsan=no)
  AC_SUBST(enable_ubsan)
  
-+# Enable ADDRSAN; set enable_addrsan=probe below to enable autoprobe.
++# Enable ADDRSAN; set enable_addrsan=yesdefault to enable autoprobe.
 +AC_ARG_ENABLE(addrsan,
-+[ --enable-addrsan=[yes/no] Enable Address Sanitizer (ADDRSAN) [default=no]],,
++[ --enable-addrsan=[yes/no] Enable Address Sanitizer (ADDRSAN) [default=yes]],,
 +	enable_addrsan=no)
 +AC_SUBST(enable_addrsan)
 +
@@ -53,7 +52,7 @@ index 5838e08..764b22b 100644
          AC_MSG_ERROR([UBSAN not supported by compiler.])
  fi
  
-+if test "$enable_addrsan" = "yes" || test "$enable_addrsan" = "probe"; then
++if test "$enable_addrsan" = "yes" || test "$enable_addrsan" = "yesdefault"; then
 +        AC_PACKAGE_CHECK_ADDRSAN
 +fi
 +if test "$enable_addrsan" = "yes" && test "$have_addrsan" != "yes"; then
@@ -122,3 +121,4 @@ index a6673f3..06031ad 100644
 +    AC_SUBST(addrsan_cflags)
 +    AC_SUBST(addrsan_ldflags)
 +  ])
+
