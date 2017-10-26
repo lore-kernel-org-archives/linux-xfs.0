@@ -1,13 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49779 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750884AbdJZFvo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 01:51:44 -0400
-Subject: [PATCH 1/6] quota: clear speculative delalloc when checking quota
- usage
+Received: from aserp1040.oracle.com ([141.146.126.69]:32820 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750919AbdJZFvz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 01:51:55 -0400
+Subject: [PATCH 3/6] common/xfs: standardize the xfs_scrub output that gets
+ recorded to $seqres.full
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 25 Oct 2017 22:51:39 -0700
-Message-ID: <150899709935.18389.17266737014565285073.stgit@magnolia>
+Date: Wed, 25 Oct 2017 22:51:51 -0700
+Message-ID: <150899711189.18389.16271824732883945941.stgit@magnolia>
+In-Reply-To: <150899709935.18389.17266737014565285073.stgit@magnolia>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -19,51 +21,35 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Occasionally speculative preallocation kicks in when writing files to a
-filesystem under test.  These preallocations consume quota and /usually/
-aren't around after we drop_caches, but there's nothing to guarantee
-that they actually have, so the quota reports will be different before
-and after the fs remount, causing sporadic test failures in
-generic/{23[123],270}.
-
-We now have xfs_spaceman which can instruct XFS to forcibly remove the
-speculative preallocations.  This fixes the sporadic failures, at
-least for XFS.
+Make the xfs_scrub output that gets recorded to $seqres.full follow the
+format of xfs_repair checks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config |    1 +
- common/quota  |    6 ++++++
- 2 files changed, 7 insertions(+)
+ common/xfs |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 
-diff --git a/common/config b/common/config
-index 8844173..96503c6 100644
---- a/common/config
-+++ b/common/config
-@@ -149,6 +149,7 @@ export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
- export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
- export XFS_DB_PROG="`set_prog_path xfs_db`"
- export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
-+export XFS_SPACEMAN_PROG="`set_prog_path xfs_spaceman`"
- export XFS_SCRUB_PROG="`set_prog_path xfs_scrub`"
- export XFS_PARALLEL_REPAIR_PROG="`set_prog_path xfs_prepair`"
- export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
-diff --git a/common/quota b/common/quota
-index d027a8c..2611c48 100644
---- a/common/quota
-+++ b/common/quota
-@@ -267,6 +267,12 @@ _check_quota_usage()
- 		VFS_QUOTA=1
- 		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
- 		;;
-+	xfs)
-+		# Clear out speculative preallocations to eliminate them
-+		# as a source of intermittent orig/checked differences.
-+		test -x "$XFS_SPACEMAN_PROG" && \
-+			"$XFS_SPACEMAN_PROG" -c 'prealloc -s' $SCRATCH_MNT
-+		;;
- 	*)
- 		;;
- 	esac
+diff --git a/common/xfs b/common/xfs
+index df7d029..25c2ce9 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -356,11 +356,15 @@ _check_xfs_filesystem()
+ 	# Run online scrub if we can.
+ 	mntpt="$(_is_mounted $device)"
+ 	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
+-		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full 2>&1
++		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device > $tmp.scrub 2>&1
+ 		if [ $? -ne 0 ]; then
+-			_log_err "filesystem on $device failed scrub"
++			_log_err "_check_xfs_filesystem: filesystem on $device failed scrub"
++			echo "*** xfs_scrub $scrubflag -v -d -n output ***" >> $seqres.full
++			cat $tmp.scrub >> $seqres.full
++			echo "*** end xfs_scrub output" >> $serqres.full
+ 			ok=0
+ 		fi
++		rm -f $tmp.scrub
+ 	fi
+ 
+ 	if [ "$type" = "xfs" ]; then
 
