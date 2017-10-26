@@ -1,148 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47028 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:58589 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750884AbdJZKVJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 06:21:09 -0400
-Date: Thu, 26 Oct 2017 06:21:07 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 1/3] xfs: more robust recovery xlog buffer validation
-Message-ID: <20171026102107.GA3063@bfoster.bfoster>
-References: <20171025185705.64983-1-bfoster@redhat.com>
- <20171025185705.64983-2-bfoster@redhat.com>
- <20171025221208.GS5483@magnolia>
+        id S932141AbdJZK66 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 06:58:58 -0400
+Date: Thu, 26 Oct 2017 12:58:50 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove 'page-less'
+ support
+Message-ID: <20171026105850.GA31161@quack2.suse.cz>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171020074750.GA13568@lst.de>
+ <20171020093148.GA20304@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171025221208.GS5483@magnolia>
+In-Reply-To: <20171020093148.GA20304@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-nvdimm@lists.01.org, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Wed, Oct 25, 2017 at 03:12:08PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 25, 2017 at 02:57:03PM -0400, Brian Foster wrote:
-> > mkfs has a historical problem where it can format very small
-> > filesystems with too small of a physical log. Under certain
-> > conditions, log recovery of an associated filesystem can end up
-> > passing garbage parameter values to some of the cycle and log record
-> > verification functions due to bugs in log recovery not dealing with
-> > such filesystems properly. This results in attempts to read from
-> > bogus/underflowed log block addresses.
+On Fri 20-10-17 11:31:48, Christoph Hellwig wrote:
+> On Fri, Oct 20, 2017 at 09:47:50AM +0200, Christoph Hellwig wrote:
+> > I'd like to brainstorm how we can do something better.
 > > 
-> > Since the buffer read may ultimately succeed, log recovery can
-> > proceed with bogus data and otherwise go off the rails and crash.
-> > One example of this is a negative last_blk being passed to
-> > xlog_find_verify_log_record() causing us to skip the loop, pass a
-> > NULL head pointer to xlog_header_check_mount() and crash.
+> > How about:
 > > 
-> > Improve the xlog buffer verification to address this problem. We
-> > already verify xlog buffer length, so update this mechanism to also
-> > sanity check for a valid log relative block address and otherwise
-> > return an error. Pass a fixed, valid log block address from
-> > xlog_get_bp() since the target address will be validated when the
-> > buffer is read. This ensures that any bogus log block address/length
-> > calculations lead to graceful mount failure rather than risking a
-> > crash or worse if recovery proceeds with bogus data.
-> > 
-> > Reported-by: Zorro Lang <zlang@redhat.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log_recover.c | 38 ++++++++++++++++++++++++--------------
-> >  1 file changed, 24 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index ee34899..54494ab 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -85,17 +85,21 @@ struct xfs_buf_cancel {
-> >   */
-> >  
-> >  /*
-> > - * Verify the given count of basic blocks is valid number of blocks
-> > - * to specify for an operation involving the given XFS log buffer.
-> > - * Returns nonzero if the count is valid, 0 otherwise.
-> > + * Verify the log-relative block number and length in basic blocks are valid for
-> > + * an operation involving the given XFS log buffer. Returns true if the fields
-> > + * are valid, false otherwise.
-> >   */
-> > -
-> > -static inline int
-> > -xlog_buf_bbcount_valid(
-> > +static inline bool
-> > +xlog_verify_bp(
-> >  	struct xlog	*log,
-> > +	xfs_daddr_t	blk_no,
-> >  	int		bbcount)
-> >  {
-> > -	return bbcount > 0 && bbcount <= log->l_logBBsize;
-> > +	if (blk_no < 0 || blk_no >= log->l_logBBsize)
-> > +		return false;
-> > +	if (bbcount <= 0 || bbcount > log->l_logBBsize)
-> > +		return false;
+> > If we hit a page with an elevated refcount in truncate / hole puch
+> > etc for a DAX file system we do not free the blocks in the file system,
+> > but add it to the extent busy list.  We mark the page as delayed
+> > free (e.g. page flag?) so that when it finally hits refcount zero we
+> > call back into the file system to remove it from the busy list.
 > 
-> Shouldn't this be (blk_no + bbcount) > log->l_logBBsize, since the
-> blk_no/bbcount parameters identify an extent within the log?
+> Brainstorming some more:
 > 
-
-Yes, I suppose we can do that since we pass blk_no = 0 from the get_bp()
-case. The new invocations pass the blockcount of the requested I/O
-operation (as opposed to the buffer size, which is probably what I was
-thinking), so that seems reasonable to me.
-
-Brian
-
-> --D
+> Given that on a DAX file there shouldn't be any long-term page
+> references after we unmap it from the page table and don't allow
+> get_user_pages calls why not wait for the references for all
+> DAX pages to go away first?  E.g. if we find a DAX page in
+> truncate_inode_pages_range that has an elevated refcount we set
+> a new flag to prevent new references from showing up, and then
+> simply wait for it to go away.  Instead of a busy way we can
+> do this through a few hashed waitqueued in dev_pagemap.  And in
+> fact put_zone_device_page already gets called when putting the
+> last page so we can handle the wakeup from there.
 > 
-> > +	return true;
-> >  }
-> >  
-> >  /*
-> > @@ -110,7 +114,11 @@ xlog_get_bp(
-> >  {
-> >  	struct xfs_buf	*bp;
-> >  
-> > -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> > +	/*
-> > +	 * Pass log block 0 since we don't have an addr yet, buffer will be
-> > +	 * verified on read.
-> > +	 */
-> > +	if (!xlog_verify_bp(log, 0, nbblks)) {
-> >  		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> >  			nbblks);
-> >  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
-> > @@ -180,9 +188,10 @@ xlog_bread_noalign(
-> >  {
-> >  	int		error;
-> >  
-> > -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> > -		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> > -			nbblks);
-> > +	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-> > +		xfs_warn(log->l_mp,
-> > +			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-> > +			 blk_no, nbblks);
-> >  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> > @@ -265,9 +274,10 @@ xlog_bwrite(
-> >  {
-> >  	int		error;
-> >  
-> > -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> > -		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> > -			nbblks);
-> > +	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-> > +		xfs_warn(log->l_mp,
-> > +			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-> > +			 blk_no, nbblks);
-> >  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> > -- 
-> > 2.9.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> In fact if we can't find a page flag for the stop new callers
+> things we could probably come up with a way to do that through
+> dev_pagemap somehow, but I'm not sure how efficient that would
+> be.
+
+We were talking about this yesterday with Dan so some more brainstorming
+from us. We can implement the solution with extent busy list in ext4
+relatively easily - we already have such list currently similarly to XFS.
+There would be some modifications needed but nothing too complex. The
+biggest downside of this solution I see is that it requires per-filesystem
+solution for busy extents - ext4 and XFS are reasonably fine, however btrfs
+may have problems and ext2 definitely will need some modifications.
+Invisible used blocks may be surprising to users at times although given
+page refs should be relatively short term, that should not be a big issue.
+But are we guaranteed page refs are short term? E.g. if someone creates
+v4l2 videobuf in MAP_SHARED mapping of a file on DAX filesystem, page refs
+can be rather long-term similarly as in RDMA case. Also freeing of blocks
+on page reference drop is another async entry point into the filesystem
+which could unpleasantly surprise us but I guess workqueues would solve
+that reasonably fine.
+
+WRT waiting for page refs to be dropped before proceeding with truncate (or
+punch hole for that matter - that case is even nastier since we don't have
+i_size to guard us). What I like about this solution is that it is very
+visible there's something unusual going on with the file being truncated /
+punched and so problems are easier to diagnose / fix from the admin side.
+So far we have guarded hole punching from concurrent faults (and
+get_user_pages() does fault once you do unmap_mapping_range()) with
+I_MMAP_LOCK (or its equivalent in ext4). We cannot easily wait for page
+refs to be dropped under I_MMAP_LOCK as that could deadlock - the most
+obvious case Dan came up with is when GUP obtains ref to page A, then hole
+punch comes grabbing I_MMAP_LOCK and waiting for page ref on A to be
+dropped, and then GUP blocks on trying to fault in another page.
+
+I think we cannot easily prevent new page references to be grabbed as you
+write above since nobody expects stuff like get_page() to fail. But I 
+think that unmapping relevant pages and then preventing them to be faulted
+in again is workable and stops GUP as well. The problem with that is though
+what to do with page faults to such pages - you cannot just fail them for
+hole punch, and you cannot easily allocate new blocks either. So we are
+back at a situation where we need to detach blocks from the inode and then
+wait for page refs to be dropped - so some form of busy extents. Am I
+missing something?
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
