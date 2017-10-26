@@ -1,140 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17537 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932309AbdJZP70 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 11:59:26 -0400
-Date: Thu, 26 Oct 2017 08:59:21 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] xfs: more robust recovery xlog buffer validation
-Message-ID: <20171026155921.GU5483@magnolia>
-References: <20171025185705.64983-2-bfoster@redhat.com>
- <20171026132744.6282-1-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171026132744.6282-1-bfoster@redhat.com>
+Received: from mga14.intel.com ([192.55.52.115]:6457 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932336AbdJZOgy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 10:36:54 -0400
+From: Keith Busch <keith.busch@intel.com>
+Subject: [PATCH] xfsprogs: Issue smaller discards at mkfs
+Date: Thu, 26 Oct 2017 08:41:31 -0600
+Message-Id: <20171026144131.26885-1-keith.busch@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Keith Busch <keith.busch@intel.com>
 
-On Thu, Oct 26, 2017 at 09:27:44AM -0400, Brian Foster wrote:
-> mkfs has a historical problem where it can format very small
-> filesystems with too small of a physical log. Under certain
-> conditions, log recovery of an associated filesystem can end up
-> passing garbage parameter values to some of the cycle and log record
-> verification functions due to bugs in log recovery not dealing with
-> such filesystems properly. This results in attempts to read from
-> bogus/underflowed log block addresses.
-> 
-> Since the buffer read may ultimately succeed, log recovery can
-> proceed with bogus data and otherwise go off the rails and crash.
-> One example of this is a negative last_blk being passed to
-> xlog_find_verify_log_record() causing us to skip the loop, pass a
-> NULL head pointer to xlog_header_check_mount() and crash.
-> 
-> Improve the xlog buffer verification to address this problem. We
-> already verify xlog buffer length, so update this mechanism to also
-> sanity check for a valid log relative block address and otherwise
-> return an error. Pass a fixed, valid log block address from
-> xlog_get_bp() since the target address will be validated when the
-> buffer is read. This ensures that any bogus log block address/length
-> calculations lead to graceful mount failure rather than risking a
-> crash or worse if recovery proceeds with bogus data.
-> 
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Running mkfs.xfs was discarding the entire capacity in a single range. The
+block layer would split these into potentially many smaller requests
+and dispatch all of them to the device at roughly the same time.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+SSD capacities are getting so large that full capacity discards will
+take some time to complete. When discards are deeply queued, the block
+layer may trigger timeout handling and IO failure, though the device is
+operating normally.
 
-> ---
-> 
-> v3:
-> - Verify log buf I/O range is within log boundary.
-> 
->  fs/xfs/xfs_log_recover.c | 38 ++++++++++++++++++++++++--------------
->  1 file changed, 24 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index ee34899..1074b5f 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -85,17 +85,21 @@ struct xfs_buf_cancel {
->   */
->  
->  /*
-> - * Verify the given count of basic blocks is valid number of blocks
-> - * to specify for an operation involving the given XFS log buffer.
-> - * Returns nonzero if the count is valid, 0 otherwise.
-> + * Verify the log-relative block number and length in basic blocks are valid for
-> + * an operation involving the given XFS log buffer. Returns true if the fields
-> + * are valid, false otherwise.
->   */
-> -
-> -static inline int
-> -xlog_buf_bbcount_valid(
-> +static inline bool
-> +xlog_verify_bp(
->  	struct xlog	*log,
-> +	xfs_daddr_t	blk_no,
->  	int		bbcount)
->  {
-> -	return bbcount > 0 && bbcount <= log->l_logBBsize;
-> +	if (blk_no < 0 || blk_no >= log->l_logBBsize)
-> +		return false;
-> +	if (bbcount <= 0 || (blk_no + bbcount) > log->l_logBBsize)
-> +		return false;
-> +	return true;
->  }
->  
->  /*
-> @@ -110,7 +114,11 @@ xlog_get_bp(
->  {
->  	struct xfs_buf	*bp;
->  
-> -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> +	/*
-> +	 * Pass log block 0 since we don't have an addr yet, buffer will be
-> +	 * verified on read.
-> +	 */
-> +	if (!xlog_verify_bp(log, 0, nbblks)) {
->  		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
->  			nbblks);
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
-> @@ -180,9 +188,10 @@ xlog_bread_noalign(
->  {
->  	int		error;
->  
-> -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> -		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> -			nbblks);
-> +	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-> +		xfs_warn(log->l_mp,
-> +			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-> +			 blk_no, nbblks);
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
-> @@ -265,9 +274,10 @@ xlog_bwrite(
->  {
->  	int		error;
->  
-> -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> -		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> -			nbblks);
-> +	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-> +		xfs_warn(log->l_mp,
-> +			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-> +			 blk_no, nbblks);
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch uses smaller discard ranges in a loop for mkfs to avoid
+risking such timeouts. The max discard range is arbitrarilly set to
+128GB in this patch.
+
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ include/linux.h | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux.h b/include/linux.h
+index 6ce344c5..702aee0c 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -132,10 +132,17 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+ static __inline__ int
+ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ {
+-	uint64_t range[2] = { start, len };
++	uint64_t end = start + len;
++	uint64_t size = 128ULL * 1024ULL * 1024ULL * 1024ULL;
+ 
+-	if (ioctl(fd, BLKDISCARD, &range) < 0)
+-		return errno;
++	for (; start < end; start += size) {
++		uint64_t range[2] = { start, MIN(len, size) };
++
++		len -= range[1];
++		if (ioctl(fd, BLKDISCARD, &range) < 0)
++			return errno;
++
++	}
+ 	return 0;
+ }
+ 
+-- 
+2.13.6
+
