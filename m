@@ -1,110 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:45003 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751668AbdJYV36 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 17:29:58 -0400
-Date: Thu, 26 Oct 2017 08:29:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Possible to mount this XFS at least temporarily to retrieve
- files?
-Message-ID: <20171025212955.GZ3666@dastard>
-References: <dd004707-cd48-adb8-1429-37867360594e@aei.mpg.de>
+Received: from sandeen.net ([63.231.237.45]:39258 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932331AbdJZRtz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 13:49:55 -0400
+Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
+References: <20171026144131.26885-1-keith.busch@intel.com>
+ <20171026162518.GW5483@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3ad1751a-a4df-b0ee-d2c5-d1ac4deb5b46@sandeen.net>
+Date: Thu, 26 Oct 2017 12:49:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dd004707-cd48-adb8-1429-37867360594e@aei.mpg.de>
+In-Reply-To: <20171026162518.GW5483@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Keith Busch <keith.busch@intel.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 25, 2017 at 09:20:03AM +0200, Carsten Aulbert wrote:
-> Hi
+On 10/26/17 11:25 AM, Darrick J. Wong wrote:
+> On Thu, Oct 26, 2017 at 08:41:31AM -0600, Keith Busch wrote:
+>> Running mkfs.xfs was discarding the entire capacity in a single range. The
+>> block layer would split these into potentially many smaller requests
+>> and dispatch all of them to the device at roughly the same time.
+>>
+>> SSD capacities are getting so large that full capacity discards will
+>> take some time to complete. When discards are deeply queued, the block
+>> layer may trigger timeout handling and IO failure, though the device is
+>> operating normally.
+>>
+>> This patch uses smaller discard ranges in a loop for mkfs to avoid
+>> risking such timeouts. The max discard range is arbitrarilly set to
+>> 128GB in this patch.
 > 
-> after some hiatus, back on this list with an incident which happened
-> yesterday:
+> I'd have thought devices would set sane blk_queue_max_discard_sectors
+> so that the block layer doesn't send such a huge command that the kernel
+> times out...
 > 
-> On a Debian Jessie machine installed back in October 2016 there a re a
-> bunch of 3TB disks behind an Adaptec ASR-6405[1] in RAID6 configuration.
-> Yesterday, one of the disks failed and was subsequently replace. About
-> an hour into the rebuild the 28TB xfs on this block device gave up:
+> ...but then I actually went and grepped that in the kernel and
+> discovered that nbd, zram, raid0, mtd, and nvme all pass in UINT_MAX,
+> which is 2T.  Frighteningly xen-blkfront passes in get_capacity() (which
+> overflows the unsigned int parameter on big virtual disks, I guess?).
 > 
-> Oct 24 12:39:15 atlas8 kernel: [526440.956408] XFS (sdc1):
-> xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
-> Oct 24 12:39:15 atlas8 kernel: [526440.956452] XFS (sdc1):
-> xfs_do_force_shutdown(0x8) called from line 3242 of file
-> /build/linux-byISom/linux-3.16.43/fs/xfs/xfs_inode.c.  Return address =
-> 0xffffffffa02c0b76
-> Oct 24 12:39:45 atlas8 kernel: [526471.029957] XFS (sdc1):
-> xfs_log_force: error 5 returned.
-> Oct 24 12:40:15 atlas8 kernel: [526501.154991] XFS (sdc1):
-> xfs_log_force: error 5 returned.
-
-That's a pretty good indication that th rebuild has gone
-catastrophically wrong....
-
-[....]
-
-> Another shot in the dark was rebooting the system with a more recent
-> kernel, this time 4.9.30-2+deb9u5~bpo8+1 instead of 3.16.43-2+deb8u5
-> which indeed changed the behaviour of xfs_repair:
+> (I still think this is the kernel's problem, not userspace's, but now
+> with an extra layer of OMGWTF sprayed on.)
 > 
-> # xfs_repair /dev/sdc1
-> Phase 1 - find and verify superblock...
-> sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
-> calculated value 128
+> I dunno.  What kind of device produces these timeouts, and does it go
+> away if max_discards is lowered?
 
-Which tends to indicate it found a secondary superblock in the place
-of the primary superblock.....
+Yeah, lots of devices are unhappy with large discards.  And yeah, in the
+end I think this papers over a kernel and/or hardware problem.
 
-> Phase 2 - using internal log
->         - zero log...
-> Log inconsistent (didn't find previous header)
-> failed to find log head
-> zero_log: cannot find log head/tail (xlog_find_tail=5)
+But sometimes we do that, if only to keep things working reasonably
+well with older kernels or hardware that'll never get fixed...
 
-And the log isn't where it's supposed to be. 
+(TBH sometimes I regret putting mkfs-time discard in by default in the
+first place.)
 
-> Some more "random" output:
+-Eric
+
+
+
+> --D
 > 
-> # xfs_db -r -c "sb 0" -c "p" -c "freesp" /dev/sdc1
-
-[...]
-
-> rootino = null
-> rbmino = null
-> rsumino = null
-
-These null inode pointers, and
-
-[...]
-
-> icount = 0
-> ifree = 0
-> fdblocks = 7313292427
-
-this (inode counts zero and free blocks at 28TB) indicate we're
-looking at a secondary superblock as written by mkfs.
-
-This is a pretty good indication that the RAID rebuild has
-completely jumbled up the disks and the data on the disks during
-the rebuild.
-
-> Now my "final" question: Is there a chance to get some/most files from
-> this hosed file system or am I just wasting my time[2]?
-
-It's a hardware raid controller that is having hardware problems
-during a rebuild.  I'd say your filesystem is completely screwed
-because the rebuild went wrong and you have no way of knowing what
-blocks are good and what aren't, nor even whether the RAID has been
-assembled correctly after the failure. Hence even if you could mount
-it, the data in the files is likely to be corrupt/incorrect
-anyway...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>> Signed-off-by: Keith Busch <keith.busch@intel.com>
+>> ---
+>>  include/linux.h | 13 ++++++++++---
+>>  1 file changed, 10 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/include/linux.h b/include/linux.h
+>> index 6ce344c5..702aee0c 100644
+>> --- a/include/linux.h
+>> +++ b/include/linux.h
+>> @@ -132,10 +132,17 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+>>  static __inline__ int
+>>  platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+>>  {
+>> -	uint64_t range[2] = { start, len };
+>> +	uint64_t end = start + len;
+>> +	uint64_t size = 128ULL * 1024ULL * 1024ULL * 1024ULL;
+>>  
+>> -	if (ioctl(fd, BLKDISCARD, &range) < 0)
+>> -		return errno;
+>> +	for (; start < end; start += size) {
+>> +		uint64_t range[2] = { start, MIN(len, size) };
+>> +
+>> +		len -= range[1];
+>> +		if (ioctl(fd, BLKDISCARD, &range) < 0)
+>> +			return errno;
+>> +
+>> +	}
+>>  	return 0;
+>>  }
+>>  
+>> -- 
+>> 2.13.6
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
