@@ -1,76 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50512 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50784 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932231AbdJZNQu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 09:16:50 -0400
-Date: Thu, 26 Oct 2017 09:16:49 -0400
+        id S932231AbdJZNQ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 09:16:58 -0400
+Date: Thu, 26 Oct 2017 09:16:56 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: validate sb_logsunit is a multiple of the fs
- blocksize
-Message-ID: <20171026131648.GC3450@bfoster.bfoster>
+Subject: Re: [PATCH 4/4] xfs: compare btree block keys to parent block's keys
+ during scrub
+Message-ID: <20171026131656.GD3450@bfoster.bfoster>
 References: <150899696463.18095.9642473908739425678.stgit@magnolia>
- <150899697674.18095.8949507524525909891.stgit@magnolia>
+ <150899698291.18095.5640109148216105105.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150899697674.18095.8949507524525909891.stgit@magnolia>
+In-Reply-To: <150899698291.18095.5640109148216105105.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 25, 2017 at 10:49:36PM -0700, Darrick J. Wong wrote:
+On Wed, Oct 25, 2017 at 10:49:43PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Make sure the log stripe unit is sane before proceeding with mounting.
-> AFAICT this means that logsunit has to be 0, 1, or a multiple of the fs
-> block size.  Found this by setting the LSB of logsunit in xfs/350 and
-> watching the system crash as soon as we try to write to the log.
+> When we're done checking all the records/keys in a btree block, compute
+> the low and high key of the block and compare them to the associated key
+> in the parent btree block.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I guess this one should be stacked on top of a scrub series.. (or the
+associated code merged)? Doesn't apply to for-next..
 
->  fs/xfs/xfs_log.c |   14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
+Brian
+
+>  fs/xfs/libxfs/xfs_btree.c |    4 ++--
+>  fs/xfs/libxfs/xfs_btree.h |    4 ++++
+>  fs/xfs/scrub/btree.c      |   46 +++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 52 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index dc95a49..4edb36f 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -608,6 +608,7 @@ xfs_log_mount(
->  	xfs_daddr_t	blk_offset,
->  	int		num_bblks)
->  {
-> +	bool		fatal = xfs_sb_version_hascrc(&mp->m_sb);
->  	int		error = 0;
->  	int		min_logfsbs;
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index b3cd82a..848f371 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -2027,7 +2027,7 @@ xfs_btree_lookup(
+>  }
 >  
-> @@ -659,9 +660,20 @@ xfs_log_mount(
->  			 XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks),
->  			 XFS_MAX_LOG_BYTES);
->  		error = -EINVAL;
-> +	} else if (mp->m_sb.sb_logsunit > 1 &&
-> +		   mp->m_sb.sb_logsunit % mp->m_sb.sb_blocksize) {
-> +		xfs_warn(mp,
-> +		"log stripe unit %u bytes must be a multiple of block size",
-> +			 mp->m_sb.sb_logsunit);
-> +		error = -EINVAL;
-> +		fatal = true;
->  	}
->  	if (error) {
-> -		if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		/*
-> +		 * Log check errors are always fatal on v5; or whenever bad
-> +		 * metadata leads to a crash.
-> +		 */
-> +		if (fatal) {
->  			xfs_crit(mp, "AAIEEE! Log failed size checks. Abort!");
->  			ASSERT(0);
->  			goto out_free_log;
+>  /* Find the high key storage area from a regular key. */
+> -STATIC union xfs_btree_key *
+> +union xfs_btree_key *
+>  xfs_btree_high_key_from_key(
+>  	struct xfs_btree_cur	*cur,
+>  	union xfs_btree_key	*key)
+> @@ -2101,7 +2101,7 @@ xfs_btree_get_node_keys(
+>  }
+>  
+>  /* Derive the keys for any btree block. */
+> -STATIC void
+> +void
+>  xfs_btree_get_keys(
+>  	struct xfs_btree_cur	*cur,
+>  	struct xfs_btree_block	*block,
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index be82f41..b57501c 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -541,5 +541,9 @@ int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
+>  void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
+>  			   struct xfs_btree_block *block,
+>  			   union xfs_btree_ptr *ptr, int lr);
+> +void xfs_btree_get_keys(struct xfs_btree_cur *cur,
+> +		struct xfs_btree_block *block, union xfs_btree_key *key);
+> +union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
+> +		union xfs_btree_key *key);
+>  
+>  #endif	/* __XFS_BTREE_H__ */
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index 9ccf763..9e8b67a 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -358,6 +358,50 @@ xfs_scrub_btree_get_block(
+>  }
+>  
+>  /*
+> + * Check that the low and high keys of this block match the keys stored
+> + * in the parent block.
+> + */
+> +STATIC void
+> +xfs_scrub_btree_block_keys(
+> +	struct xfs_scrub_btree		*bs,
+> +	int				level,
+> +	struct xfs_btree_block		*block)
+> +{
+> +	union xfs_btree_key		block_keys;
+> +	struct xfs_btree_cur		*cur = bs->cur;
+> +	union xfs_btree_key		*high_bk;
+> +	union xfs_btree_key		*parent_keys;
+> +	union xfs_btree_key		*high_pk;
+> +	struct xfs_btree_block		*parent_block;
+> +	struct xfs_buf			*bp;
+> +
+> +	if (level >= cur->bc_nlevels - 1)
+> +		return;
+> +
+> +	/* Calculate the keys for this block. */
+> +	xfs_btree_get_keys(cur, block, &block_keys);
+> +
+> +	/* Obtain the parent's copy of the keys for this block. */
+> +	parent_block = xfs_btree_get_block(cur, level + 1, &bp);
+> +	parent_keys = xfs_btree_key_addr(cur, cur->bc_ptrs[level + 1],
+> +			parent_block);
+> +
+> +	if (cur->bc_ops->diff_two_keys(cur, &block_keys, parent_keys) != 0)
+> +		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
+> +
+> +	if (!(cur->bc_flags & XFS_BTREE_OVERLAPPING))
+> +		return;
+> +
+> +	/* Get high keys */
+> +	high_bk = xfs_btree_high_key_from_key(cur, &block_keys);
+> +	high_pk = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level + 1],
+> +			parent_block);
+> +
+> +	if (cur->bc_ops->diff_two_keys(cur, high_bk, high_pk) != 0)
+> +		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
+> +}
+> +
+> +/*
+>   * Visit all nodes and leaves of a btree.  Check that all pointers and
+>   * records are in order, that the keys reflect the records, and use a callback
+>   * so that the caller can verify individual records.
+> @@ -418,6 +462,7 @@ xfs_scrub_btree(
+>  			/* End of leaf, pop back towards the root. */
+>  			if (cur->bc_ptrs[level] >
+>  			    be16_to_cpu(block->bb_numrecs)) {
+> +				xfs_scrub_btree_block_keys(&bs, level, block);
+>  				if (level < cur->bc_nlevels - 1)
+>  					cur->bc_ptrs[level + 1]++;
+>  				level++;
+> @@ -442,6 +487,7 @@ xfs_scrub_btree(
+>  
+>  		/* End of node, pop back towards the root. */
+>  		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
+> +			xfs_scrub_btree_block_keys(&bs, level, block);
+>  			if (level < cur->bc_nlevels - 1)
+>  				cur->bc_ptrs[level + 1]++;
+>  			level++;
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
