@@ -1,153 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27348 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932326AbdJZWtp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:49:45 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9QMniUa013454
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:45 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9QMniCn025947
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:44 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9QMnipQ031306
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:44 GMT
-Subject: [PATCH 3/3] xfs: compare btree block keys to parent block's keys
- during scrub
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 26 Oct 2017 15:49:42 -0700
-Message-ID: <150905818254.20365.11230568576888160838.stgit@magnolia>
-In-Reply-To: <150905816454.20365.10479338108395001494.stgit@magnolia>
-References: <150905816454.20365.10479338108395001494.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:35604 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932351AbdJZXsy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 19:48:54 -0400
+Subject: Re: [RFC] xfs_repair: clear file / directory attribute on symlinks
+References: <20171026225053.10263-1-mcgrof@kernel.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b52bcf80-6848-c3f3-c8bc-68e69054267c@sandeen.net>
+Date: Thu, 26 Oct 2017 18:48:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20171026225053.10263-1-mcgrof@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Laurent Bonnaud <Laurent.Bonnaud@inpg.fr>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 10/26/17 5:50 PM, Luis R. Rodriguez wrote:
+> symlinks with the attribute append set cannot be removed as they are
+> treated as if a file was set with the immutable flag set. Standard
+> tools however cannot remove *any* attribute flag:
+> 
+> 	chattr -a symlink
+> 	chattr: Operation not supported while reading flags on b
+> 
+> Furthermore one cannot list attributes on symlinks using lsattr either:
+> 
+> 	# touch a
+> 	# ln -s a b
+> 	# lsattr b
+> 	lsattr: Operation not supported While reading flags on b
 
-When we're done checking all the records/keys in a btree block, compute
-the low and high key of the block and compare them to the associated key
-in the parent btree block.
+ok, so tools in e2fsprogs won't clear/set... which is one datapoint...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_btree.c |    4 ++--
- fs/xfs/libxfs/xfs_btree.h |    4 ++++
- fs/xfs/scrub/btree.c      |   46 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 52 insertions(+), 2 deletions(-)
+> This means that if you end up with an append attribute on a symlink
+> you need special tools to try to remove it. This begs the question of
+> whether or not XFS should also disallow attributes on symlinks.
 
+http://begthequestion.info/ ;)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index b3cd82a..848f371 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2027,7 +2027,7 @@ xfs_btree_lookup(
- }
- 
- /* Find the high key storage area from a regular key. */
--STATIC union xfs_btree_key *
-+union xfs_btree_key *
- xfs_btree_high_key_from_key(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*key)
-@@ -2101,7 +2101,7 @@ xfs_btree_get_node_keys(
- }
- 
- /* Derive the keys for any btree block. */
--STATIC void
-+void
- xfs_btree_get_keys(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_btree_block	*block,
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index be82f41..b57501c 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -541,5 +541,9 @@ int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
- void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
- 			   struct xfs_btree_block *block,
- 			   union xfs_btree_ptr *ptr, int lr);
-+void xfs_btree_get_keys(struct xfs_btree_cur *cur,
-+		struct xfs_btree_block *block, union xfs_btree_key *key);
-+union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
-+		union xfs_btree_key *key);
- 
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 9ccf763..9e8b67a 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -358,6 +358,50 @@ xfs_scrub_btree_get_block(
- }
- 
- /*
-+ * Check that the low and high keys of this block match the keys stored
-+ * in the parent block.
-+ */
-+STATIC void
-+xfs_scrub_btree_block_keys(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	struct xfs_btree_block		*block)
-+{
-+	union xfs_btree_key		block_keys;
-+	struct xfs_btree_cur		*cur = bs->cur;
-+	union xfs_btree_key		*high_bk;
-+	union xfs_btree_key		*parent_keys;
-+	union xfs_btree_key		*high_pk;
-+	struct xfs_btree_block		*parent_block;
-+	struct xfs_buf			*bp;
-+
-+	if (level >= cur->bc_nlevels - 1)
-+		return;
-+
-+	/* Calculate the keys for this block. */
-+	xfs_btree_get_keys(cur, block, &block_keys);
-+
-+	/* Obtain the parent's copy of the keys for this block. */
-+	parent_block = xfs_btree_get_block(cur, level + 1, &bp);
-+	parent_keys = xfs_btree_key_addr(cur, cur->bc_ptrs[level + 1],
-+			parent_block);
-+
-+	if (cur->bc_ops->diff_two_keys(cur, &block_keys, parent_keys) != 0)
-+		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
-+
-+	if (!(cur->bc_flags & XFS_BTREE_OVERLAPPING))
-+		return;
-+
-+	/* Get high keys */
-+	high_bk = xfs_btree_high_key_from_key(cur, &block_keys);
-+	high_pk = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level + 1],
-+			parent_block);
-+
-+	if (cur->bc_ops->diff_two_keys(cur, high_bk, high_pk) != 0)
-+		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
-+}
-+
-+/*
-  * Visit all nodes and leaves of a btree.  Check that all pointers and
-  * records are in order, that the keys reflect the records, and use a callback
-  * so that the caller can verify individual records.
-@@ -418,6 +462,7 @@ xfs_scrub_btree(
- 			/* End of leaf, pop back towards the root. */
- 			if (cur->bc_ptrs[level] >
- 			    be16_to_cpu(block->bb_numrecs)) {
-+				xfs_scrub_btree_block_keys(&bs, level, block);
- 				if (level < cur->bc_nlevels - 1)
- 					cur->bc_ptrs[level + 1]++;
- 				level++;
-@@ -442,6 +487,7 @@ xfs_scrub_btree(
- 
- 		/* End of node, pop back towards the root. */
- 		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-+			xfs_scrub_btree_block_keys(&bs, level, block);
- 			if (level < cur->bc_nlevels - 1)
- 				cur->bc_ptrs[level + 1]++;
- 			level++;
+> I can trace the lsattr change back down to commit 023d111e92195
+> ("chattr.1.in: Document the compression attribute flags E, X, and ...")
+> on e2fsprogs since August 2002. That commit just refers to the fact
+> that attributes were only allowed after that commit for directories
+> and regular files due to Debian bug 152029 [0]. This bug was filed since
+> lsattr used to enable attributes even on special files and lsattr would
+> segfault when used against them since when used against some old DRM
+> buggy driver the ioctl seem to have worked bug crashed lsattr. The bug
+> report doesn't list any specific reasoning for not allowing attributes
+> on symlinks though.
 
+Super.
+
+> Although in XFS you could end up in a situation where attributes
+> are set on a symlink this is ather hard to do, likewie for clearing
+> them.
+> 
+> Its unclear if XFS purposely supports attributes on symlinks or
+> if this was unintentional.
+> 
+> The ways in which you can end up to setting / unsetting / getting attributes
+> on symlinks on XFS are:
+> 
+> 	a) corruption
+> 	b) xfsctl()
+> 	c) xfs_db [1] [2] - only when umounted
+> 
+> POSIX doesn't seem to actually have a position on this.
+> 
+> These are not extended attributes, however xattr(7) does have
+> a little nugget worth considering regarding this, and for which
+> it was decided to at least not support extended attributes on
+> symlinks or special files:
+> 
+> 	The file permissions of symbolic links are not used in
+>         access checks. These differences would allow users to consume
+> 	filesystem resources in a way not controllable by disk quotas
+> 	for group or world writable special files and directories.
+> 
+> 	For this reason, extended user attributes are allowed only for
+> 	regular files and directories.
+
+Hm, that seems like a different issue/rationale, no?
+
+> For these reasons, and since corruption is the only current valid
+> case where these seem to have popped up -- apply the same logic on
+> XFS, otherwise we'd be going against the e2fsprogs chattr convention
+> set since August 2002, and which folks likely are used to.
+> 
+> This fixes filesystems which have these attributes set where clearly
+> they were set by corruption.
+
+OK but hang on, I think a core question is:
+
+Does the kernel allow us to set attributes on symlinks?
+
+If not, repair should clear them.  But if it does, chattr's refusal
+to clear them is a quirk of that specific tool, not something that
+xfs_repair needs to worry about ...
+
+If the kernel provides an interface (xfsctl?) to set/clear these attributes,
+I don't think xfs_repair should be classifying their presence as
+corruption, right?
+
+If no, really, these should never be set, then the kernel (including
+the xfsctl route) should reject it - and at that point, I'd be ok
+with xfs_repair clearing them as "corruption."
+
+-Eric
+
+> [0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
+> [1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
+> [2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
+> 
+> Cc: "Laurent Bonnaud" <Laurent.Bonnaud@inpg.fr>
+> Cc: Tso Ted <tytso@mit.edu>
+> Cc: Nikolay Borisov <nborisov@suse.com>
+> Cc: Flex Liu <fliu@suse.com>
+> Cc: Jake Norris <jake.norris@suse.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+> 
+> Otherwise if we *do* wish to support some of these we should
+> document the semantics. Otherwise this seems just odd and users
+> can end up with unexpected situations not being able to easily
+> clear this type of corruption.
+> 
+> The append attribute is particularly annoying given you can't
+> remove these symlinks at all, and the first thing naturally a
+> user could do is try 'lsattr' or 'chattr'. Obviously this won't
+> help and the user will just get frustrated.
+> 
+>  repair/dinode.c | 35 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 35 insertions(+)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 15ba8cc22b39..03e93a6e17c0 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2482,6 +2482,41 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  						FS_XFLAG_EXTSIZE);
+>  			}
+>  		}
+> +		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC |
+> +			     XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
+> +			     XFS_DIFLAG_SYNC | XFS_DIFLAG_NOATIME |
+> +			     XFS_DIFLAG_NODUMP | XFS_DIFLAG_RTINHERIT |
+> +			     XFS_DIFLAG_PROJINHERIT | XFS_DIFLAG_NOSYMLINKS |
+> +			     XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT |
+> +			     XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM |
+> +			     XFS_DIFLAG2_DAX | XFS_DIFLAG2_COWEXTSIZE)) {
+> +			/* chattr cannot clear append on symlink */
+> +			if (di_mode && S_ISLNK(di_mode) &&
+> +			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
+> +				if (!uncertain) {
+> +					do_warn(
+> +	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
+> +						lino);
+> +				}
+> +				flags &= ~(XFS_DIFLAG_REALTIME |
+> +					   XFS_DIFLAG_PREALLOC |
+> +					   XFS_DIFLAG_IMMUTABLE |
+> +					   XFS_DIFLAG_APPEND |
+> +					   XFS_DIFLAG_SYNC |
+> +					   XFS_DIFLAG_NOATIME |
+> +					   XFS_DIFLAG_NODUMP |
+> +					   XFS_DIFLAG_RTINHERIT |
+> +					   XFS_DIFLAG_PROJINHERIT |
+> +					   XFS_DIFLAG_NOSYMLINKS |
+> +					   XFS_DIFLAG_EXTSIZE |
+> +					   XFS_DIFLAG_EXTSZINHERIT |
+> +					   XFS_DIFLAG_NODEFRAG |
+> +					   XFS_DIFLAG_FILESTREAM |
+> +					   XFS_DIFLAG2_DAX |
+> +					   XFS_DIFLAG2_COWEXTSIZE);
+> +			}
+> +		}
+> +
+>  		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
+>  			if (!no_modify) {
+>  				do_warn(_("fixing bad flags.\n"));
+> 
