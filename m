@@ -1,67 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:55219 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751931AbdJZLaY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 07:30:24 -0400
-Received: by mail-yw0-f193.google.com with SMTP id w5so2581416ywg.11
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 04:30:23 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:49926 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932231AbdJZNQi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 09:16:38 -0400
+Date: Thu, 26 Oct 2017 09:16:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] xfs: refactor extended attribute list operation
+Message-ID: <20171026131636.GA3450@bfoster.bfoster>
+References: <150899696463.18095.9642473908739425678.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171026083322.20428-15-david@fromorbit.com>
-References: <20171026083322.20428-1-david@fromorbit.com> <20171026083322.20428-15-david@fromorbit.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 26 Oct 2017 14:30:22 +0300
-Message-ID: <CAOQ4uxik=-cXCdsdU03xN-y1YELYpTSng63shWMF2qg-fgVG8A@mail.gmail.com>
-Subject: Re: [PATCH 14/14] xfs: add growfs support for changing usable blocks
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150899696463.18095.9642473908739425678.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 11:33 AM, Dave Chinner <david@fromorbit.com> wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Now that we have persistent usable block counts, we need to be able
-> to change them. This allows us to control thin provisioned
-> filesystem space usage at the filesystem level, not the block device
-> level.
->
-> If the grow operation grows the usable space beyond the current
-> LBA size of the filesystem, then we also need to physically grow the
-> filesystem to match the new size of the underlying device. Hence
-> grow behaves like it always has, expect for the fact that it wont'
-> grow physically until usable space would exceed the LBA size.
->
-> Being able to modify usable space also allows us to shrink the
-> filesystem on thin devices as easily as growing it. We simply reduce
-> the usable space and the free space, and we're done. The user then
-> needs to run a fstrim pass to ensure all the unused space in the
-> filesystem LBA is marked as unused by the underlying device. No data
-> or metadata movement is required as the underlying LBA space has not
-> changed.
->
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Wed, Oct 25, 2017 at 10:49:24PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When we're iterating the attribute list and we can't find our previous
+> location based off the attribute cursor, we'll instead walk down the
+> attribute btree from the root trying to find where we left off.  Move
+> this code into a separate function for later cleanups.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_attr_list.c |  136 ++++++++++++++++++++++++++++++------------------
+>  1 file changed, 84 insertions(+), 52 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> index 5816786..48423eb 100644
+> --- a/fs/xfs/xfs_attr_list.c
+> +++ b/fs/xfs/xfs_attr_list.c
+> @@ -204,19 +204,89 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * We didn't find the block & hash mentioned in the cursor state, so
+> + * walk down the attr btree looking for the hash.
+> + */
+>  STATIC int
+> -xfs_attr_node_list(xfs_attr_list_context_t *context)
+> +xfs_attr_node_list_lookup(
+> +	struct xfs_attr_list_context	*context,
+> +	struct attrlist_cursor_kern	*cursor,
+> +	struct xfs_buf			**pbp)
 
-With this change, behavior of userspace program that tried to shrink filesystem
-size will change from -EINVAL to success for filesystems that were configured
-to allow that. But unmodified userspace program may still be caught by surprise
-from this success return code that was never excersized in the past.
+Looks Ok, but the label usage at the bottom seems a bit gratuitous...
 
-I have also argued elsewhere that the fact that the request to shrink the
-"virtual" size vs. physical size is implicit and not explicit, that would hinder
-future attempts to use the API as it was intended to implement physical shrink.
+>  {
+> -	attrlist_cursor_kern_t *cursor;
+> -	xfs_attr_leafblock_t *leaf;
+> -	xfs_da_intnode_t *node;
+> -	struct xfs_attr3_icleaf_hdr leafhdr;
+> -	struct xfs_da3_icnode_hdr nodehdr;
+> -	struct xfs_da_node_entry *btree;
+> -	int error, i;
+> -	struct xfs_buf *bp;
+> -	struct xfs_inode	*dp = context->dp;
+> -	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_da3_icnode_hdr	nodehdr;
+> +	struct xfs_da_intnode		*node;
+> +	struct xfs_da_node_entry	*btree;
+> +	struct xfs_inode		*dp = context->dp;
+> +	struct xfs_mount		*mp = dp->i_mount;
+> +	struct xfs_trans		*tp = context->tp;
+> +	int				i;
+> +	int				error = 0;
+> +	uint16_t			magic;
+> +
+> +	ASSERT(*pbp == NULL);
+> +	cursor->blkno = 0;
+> +	for (;;) {
+> +		error = xfs_da3_node_read(tp, dp, cursor->blkno, -1, pbp,
+> +				XFS_ATTR_FORK);
+> +		if (error)
+> +			return error;
+> +		node = (*pbp)->b_addr;
+> +		magic = be16_to_cpu(node->hdr.info.magic);
+> +		switch (magic) {
+> +		case XFS_ATTR_LEAF_MAGIC:
+> +		case XFS_ATTR3_LEAF_MAGIC:
+> +			goto found_leaf;
 
-Suggestion:
-Let userspace opt-in for the new "virtual grow" API by using the 3 upper
-bytes in (struct xfs_growfs_data){.imaxpct}.
-Those byes are guarantied to be zeroed by old application due to value
-range check in current code, so there is plenty of room to add flags byte
-and use it to request to grow USABLE_DBLOCK explicitly.
+The label after the loop suggests a break should be sufficient, but the
+switch statement conflicts with that. So why not just use the if logic
+from the original code and kill that label?
 
-All the logic in your code stays the same (i.e. grow physical to accomodate
-for growing virtual) only we stir away from being called by old apps by
-mistake.
+> +		case XFS_DA_NODE_MAGIC:
+> +		case XFS_DA3_NODE_MAGIC:
+> +			/* process btree node below */
+> +			break;
+> +		default:
+> +			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+> +					node);
+> +			goto out_corruptbuf;
+> +		}
+> +
+> +		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
+> +
+> +		btree = dp->d_ops->node_tree_p(node);
+> +		for (i = 0; i < nodehdr.count; btree++, i++) {
+> +			if (cursor->hashval <= be32_to_cpu(btree->hashval)) {
+> +				cursor->blkno = be32_to_cpu(btree->before);
+> +				trace_xfs_attr_list_node_descend(context,
+> +						btree);
+> +				break;
+> +			}
+> +		}
+> +		if (i == nodehdr.count)
+> +			goto out_buf;
 
-Cheers,
-Amir.
+We can move this after the line below to pick up the brelse(). Also, if
+we use a local bp pointer and assign pbp = &bp in the one case we know
+we found something, that eliminates the need to clear pbp in the
+multiple other cases. It also means we can now just return directly from
+any checks after the brelse() in the loop.
+
+> +
+> +		xfs_trans_brelse(tp, *pbp);
+> +	}
+> +
+> +found_leaf:
+> +	return error;
+> +
+> +out_corruptbuf:
+> +	error = -EFSCORRUPTED;
+
+Might as well just return -EFSCORRUPTED. We already return directly from
+the only place error is potentially assigned anything else.
+
+> +out_buf:
+> +	xfs_trans_brelse(tp, *pbp);
+> +	*pbp = NULL;
+> +	return error;
+
+With all of that and from taking a quick look at the next patch, I think
+we should be able to end up with something like the following logic with
+only a single label for the corrupted buf case, which is now common
+between the existing magic val corruption check and the new level
+checks.
+
+		...
+	}
+
+	if (expected_level != 0)
+		goto out_corruptbp;
+	*pbp = bp;
+	return 0;
+
+out_corruptbp:
+	xfs_trans_brelse(tp, bp);
+	return -EFSCORRUPTED;
+}
+
+Brian
+
+> +}
+> +
+> +STATIC int
+> +xfs_attr_node_list(
+> +	struct xfs_attr_list_context	*context)
+> +{
+> +	struct xfs_attr3_icleaf_hdr	leafhdr;
+> +	struct attrlist_cursor_kern	*cursor;
+> +	struct xfs_attr_leafblock	*leaf;
+> +	struct xfs_da_intnode		*node;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_inode		*dp = context->dp;
+> +	struct xfs_mount		*mp = dp->i_mount;
+> +	int				error;
+>  
+>  	trace_xfs_attr_node_list(context);
+>  
+> @@ -277,47 +347,9 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+>  	 * Note that start of node block is same as start of leaf block.
+>  	 */
+>  	if (bp == NULL) {
+> -		cursor->blkno = 0;
+> -		for (;;) {
+> -			uint16_t magic;
+> -
+> -			error = xfs_da3_node_read(context->tp, dp,
+> -						      cursor->blkno, -1, &bp,
+> -						      XFS_ATTR_FORK);
+> -			if (error)
+> -				return error;
+> -			node = bp->b_addr;
+> -			magic = be16_to_cpu(node->hdr.info.magic);
+> -			if (magic == XFS_ATTR_LEAF_MAGIC ||
+> -			    magic == XFS_ATTR3_LEAF_MAGIC)
+> -				break;
+> -			if (magic != XFS_DA_NODE_MAGIC &&
+> -			    magic != XFS_DA3_NODE_MAGIC) {
+> -				XFS_CORRUPTION_ERROR("xfs_attr_node_list(3)",
+> -						     XFS_ERRLEVEL_LOW,
+> -						     context->dp->i_mount,
+> -						     node);
+> -				xfs_trans_brelse(context->tp, bp);
+> -				return -EFSCORRUPTED;
+> -			}
+> -
+> -			dp->d_ops->node_hdr_from_disk(&nodehdr, node);
+> -			btree = dp->d_ops->node_tree_p(node);
+> -			for (i = 0; i < nodehdr.count; btree++, i++) {
+> -				if (cursor->hashval
+> -						<= be32_to_cpu(btree->hashval)) {
+> -					cursor->blkno = be32_to_cpu(btree->before);
+> -					trace_xfs_attr_list_node_descend(context,
+> -									 btree);
+> -					break;
+> -				}
+> -			}
+> -			if (i == nodehdr.count) {
+> -				xfs_trans_brelse(context->tp, bp);
+> -				return 0;
+> -			}
+> -			xfs_trans_brelse(context->tp, bp);
+> -		}
+> +		error = xfs_attr_node_list_lookup(context, cursor, &bp);
+> +		if (error || !bp)
+> +			return error;
+>  	}
+>  	ASSERT(bp != NULL);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
