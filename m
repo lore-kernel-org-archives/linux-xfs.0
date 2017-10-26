@@ -1,43 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23627 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:51107 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932402AbdJ0AnQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 20:43:16 -0400
-Date: Thu, 26 Oct 2017 17:43:12 -0700
+        with ESMTP id S1751236AbdJZWPa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:30 -0400
+Subject: [PATCH 05/10] xfs_repair: clear DAX flag from non-file inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 7/6] common/fuzzy: online re-scrub should not preen
-Message-ID: <20171027004312.GE5486@magnolia>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+Date: Thu, 26 Oct 2017 15:15:25 -0700
+Message-ID: <150905612541.28563.17883126104053106652.stgit@magnolia>
+In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150899709935.18389.17266737014565285073.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-When we're doing the second online scrub (to figure out if the repair
-did any good) we shouldn't let that second scrub preen the filesystem in
-any way.  If scrub finds things it can't/won't preen that turns into a
-nonzero return code which gets reported (incorrectly) as a failure.
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+The DAX flag should only be set for files and directories.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/fuzzy |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ repair/dinode.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/common/fuzzy b/common/fuzzy
-index 7a4b03a..87f7acc 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -275,7 +275,7 @@ __scratch_xfs_fuzz_field_test() {
- 		# which scrub doesn't know how to fix.
- 		echo "++ Online scrub"
- 		if [ "$1" != "sb 0" ]; then
--			_scratch_scrub -e continue 2>&1
-+			_scratch_scrub -n -e continue 2>&1
- 			res=$?
- 			test $res -ne 0 && \
- 				(>&2 echo "online re-scrub ($res) with ${field} = ${fuzzverb}.")
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index e7de6d4..e62ec33 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2510,6 +2510,18 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			flags2 &= XFS_DIFLAG2_ANY;
+ 		}
+ 
++		if (flags2 & XFS_DIFLAG2_DAX) {
++			/* must be a file or dir */
++			if (di_mode && !(S_ISREG(di_mode) || S_ISDIR(di_mode))) {
++				if (!uncertain) {
++					do_warn(
++	_("DAX flag set on special inode %" PRIu64 "\n"),
++						lino);
++				}
++				flags2 &= ~XFS_DIFLAG2_DAX;
++			}
++		}
++
+ 		if ((flags2 & XFS_DIFLAG2_REFLINK) &&
+ 		    !xfs_sb_version_hasreflink(&mp->m_sb)) {
+ 			if (!uncertain) {
+
