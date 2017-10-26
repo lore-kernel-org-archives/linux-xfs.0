@@ -1,243 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46966 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752629AbdJ0MhU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 08:37:20 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH 1/2] initial fiemap test
-Date: Fri, 27 Oct 2017 15:37:10 +0300
-Message-Id: <1509107832-22286-3-git-send-email-nborisov@suse.com>
-In-Reply-To: <1509107832-22286-1-git-send-email-nborisov@suse.com>
-References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51315 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751639AbdJZWPy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:54 -0400
+Subject: [PATCH 09/10] misc: enable thread
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 26 Oct 2017 15:15:49 -0700
+Message-ID: <150905614967.28563.13207982162984486911.stgit@magnolia>
+In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Test various range queries of fiemap and ensure they produce expected output. 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+
 ---
- tests/xfs/900     |  96 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/900.out | 118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 214 insertions(+)
- create mode 100755 tests/xfs/900
- create mode 100644 tests/xfs/900.out
+ configure.ac            |   17 +++++++++++++++++
+ debian/rules            |    4 ++--
+ include/builddefs.in    |    4 ++--
+ m4/package_sanitizer.m4 |   20 ++++++++++++++++++++
+ 4 files changed, 41 insertions(+), 4 deletions(-)
 
-diff --git a/tests/xfs/900 b/tests/xfs/900
-new file mode 100755
-index 0000000..e535820
---- /dev/null
-+++ b/tests/xfs/900
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# FS QA Test No. 900
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 SUSE Linux Products GmbH.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
+
+diff --git a/configure.ac b/configure.ac
+index b101e05..947392c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -84,6 +84,12 @@ AC_ARG_ENABLE(addrsan,
+ 	enable_addrsan=no)
+ AC_SUBST(enable_addrsan)
+ 
++# Enable THREADSAN; set enable_threadsan=yesdefault to enable autoprobe.
++AC_ARG_ENABLE(threadsan,
++[ --enable-threadsan=[yes/no] Enable Thread Sanitizer (THREADSAN) [default=no]],,
++	enable_threadsan=no)
++AC_SUBST(enable_threadsan)
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
+ #
+ # If the user specified a libdir ending in lib64 do not append another
+ # 64 to the library names.
+@@ -174,6 +180,17 @@ if test "$enable_addrsan" = "yes" && test "$have_addrsan" != "yes"; then
+         AC_MSG_ERROR([ADDRSAN not supported by compiler.])
+ fi
+ 
++if test "$enable_threadsan" = "yes" || test "$enable_threadsan" = "yesdefault"; then
++        AC_PACKAGE_CHECK_THREADSAN
++fi
++if test "$enable_threadsan" = "yes" && test "$have_threadsan" != "yes"; then
++        AC_MSG_ERROR([THREADSAN not supported by compiler.])
++fi
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
++if test "$have_threadsan" = "yes" && test "$have_addrsan" = "yes"; then
++        AC_MSG_WARN([ADDRSAN and THREADSAN are not known to work together.])
++fi
 +
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+ AC_TYPE_UMODE_T
+diff --git a/debian/rules b/debian/rules
+index 6b6f45b..f186d79 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -20,9 +20,9 @@ stdenv = @GZIP=-q; export GZIP;
+ 
+ options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+ 	  INSTALL_USER=root INSTALL_GROUP=root \
+-	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan" ;
++	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan" ;
+ diopts  = $(options) \
+-	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan" ;
++	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan" ;
+ checkdir = test -f debian/rules
+ 
+ build: built
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 7c78d4b..2df12a7 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -155,8 +155,8 @@ ifeq ($(HAVE_GETFSMAP),yes)
+ PCFLAGS+= -DHAVE_GETFSMAP
+ endif
+ 
+-SANITIZER_CFLAGS += @addrsan_cflags@ @ubsan_cflags@
+-SANITIZER_LDFLAGS += @addrsan_ldflags@ @ubsan_ldflags@
++SANITIZER_CFLAGS += @addrsan_cflags@ @threadsan_cflags@ @ubsan_cflags@
++SANITIZER_LDFLAGS += @addrsan_ldflags@ @threadsan_ldflags@ @ubsan_ldflags@
+ 
+ GCFLAGS = $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+diff --git a/m4/package_sanitizer.m4 b/m4/package_sanitizer.m4
+index 06031ad..41b7299 100644
+--- a/m4/package_sanitizer.m4
++++ b/m4/package_sanitizer.m4
+@@ -37,3 +37,23 @@ AC_DEFUN([AC_PACKAGE_CHECK_ADDRSAN],
+     AC_SUBST(addrsan_cflags)
+     AC_SUBST(addrsan_ldflags)
+   ])
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/punch
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fiemap"
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount || _fail "mount failure"
-+
-+file=$SCRATCH_MNT/testfile
-+$XFS_IO_PROG -f -c "falloc 0 256k" $file 
-+for i in {0..31}; do $XFS_IO_PROG -c "fpunch $(($i*8))k 4k" $file; done
-+
-+# Query 1 data extent between 4k..8k range
-+echo "Basic data extent"
-+$XFS_IO_PROG -c "fiemap -v 4k 4k" $file | _filter_fiemap 
-+
-+# Query data and hole extent
-+echo "Data + Hole"
-+$XFS_IO_PROG -c "fiemap -v 4k 5k" $file | _filter_fiemap
-+
-+echo "Hole + Data + Hole"
-+$XFS_IO_PROG -c "fiemap -v 8k 10k" $file | _filter_fiemap
-+
-+echo "Beginning with a hole"
-+$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
-+
-+# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
-+echo "Query more than 32 extents" 
-+$XFS_IO_PROG -c "fiemap -v 0 160k" $file | _filter_fiemap
-+
-+echo "Larger query than file size"
-+$XFS_IO_PROG -c "fiemap -v 0 300k" $file | _filter_fiemap
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/900.out b/tests/xfs/900.out
-new file mode 100644
-index 0000000..acd309e
---- /dev/null
-+++ b/tests/xfs/900.out
-@@ -0,0 +1,118 @@
-+QA output created by 900
-+Basic data extent
-+0: [8..15]: unwritten
-+Data + Hole
-+0: [8..15]: unwritten
-+1: [16..23]: hole
-+Hole + Data + Hole
-+0: [16..23]: hole
-+1: [24..31]: unwritten
-+2: [32..39]: hole
-+Beginning with a hole
-+0: [0..7]: hole
-+Query more than 32 extents
-+0: [0..7]: hole
-+1: [8..15]: unwritten
-+2: [16..23]: hole
-+3: [24..31]: unwritten
-+4: [32..39]: hole
-+5: [40..47]: unwritten
-+6: [48..55]: hole
-+7: [56..63]: unwritten
-+8: [64..71]: hole
-+9: [72..79]: unwritten
-+10: [80..87]: hole
-+11: [88..95]: unwritten
-+12: [96..103]: hole
-+13: [104..111]: unwritten
-+14: [112..119]: hole
-+15: [120..127]: unwritten
-+16: [128..135]: hole
-+17: [136..143]: unwritten
-+18: [144..151]: hole
-+19: [152..159]: unwritten
-+20: [160..167]: hole
-+21: [168..175]: unwritten
-+22: [176..183]: hole
-+23: [184..191]: unwritten
-+24: [192..199]: hole
-+25: [200..207]: unwritten
-+26: [208..215]: hole
-+27: [216..223]: unwritten
-+28: [224..231]: hole
-+29: [232..239]: unwritten
-+30: [240..247]: hole
-+31: [248..255]: unwritten
-+32: [256..263]: hole
-+33: [264..271]: unwritten
-+34: [272..279]: hole
-+35: [280..287]: unwritten
-+36: [288..295]: hole
-+37: [296..303]: unwritten
-+38: [304..311]: hole
-+39: [312..319]: unwritten
-+Larger query than file size
-+0: [0..7]: hole
-+1: [8..15]: unwritten
-+2: [16..23]: hole
-+3: [24..31]: unwritten
-+4: [32..39]: hole
-+5: [40..47]: unwritten
-+6: [48..55]: hole
-+7: [56..63]: unwritten
-+8: [64..71]: hole
-+9: [72..79]: unwritten
-+10: [80..87]: hole
-+11: [88..95]: unwritten
-+12: [96..103]: hole
-+13: [104..111]: unwritten
-+14: [112..119]: hole
-+15: [120..127]: unwritten
-+16: [128..135]: hole
-+17: [136..143]: unwritten
-+18: [144..151]: hole
-+19: [152..159]: unwritten
-+20: [160..167]: hole
-+21: [168..175]: unwritten
-+22: [176..183]: hole
-+23: [184..191]: unwritten
-+24: [192..199]: hole
-+25: [200..207]: unwritten
-+26: [208..215]: hole
-+27: [216..223]: unwritten
-+28: [224..231]: hole
-+29: [232..239]: unwritten
-+30: [240..247]: hole
-+31: [248..255]: unwritten
-+32: [256..263]: hole
-+33: [264..271]: unwritten
-+34: [272..279]: hole
-+35: [280..287]: unwritten
-+36: [288..295]: hole
-+37: [296..303]: unwritten
-+38: [304..311]: hole
-+39: [312..319]: unwritten
-+40: [320..327]: hole
-+41: [328..335]: unwritten
-+42: [336..343]: hole
-+43: [344..351]: unwritten
-+44: [352..359]: hole
-+45: [360..367]: unwritten
-+46: [368..375]: hole
-+47: [376..383]: unwritten
-+48: [384..391]: hole
-+49: [392..399]: unwritten
-+50: [400..407]: hole
-+51: [408..415]: unwritten
-+52: [416..423]: hole
-+53: [424..431]: unwritten
-+54: [432..439]: hole
-+55: [440..447]: unwritten
-+56: [448..455]: hole
-+57: [456..463]: unwritten
-+58: [464..471]: hole
-+59: [472..479]: unwritten
-+60: [480..487]: hole
-+61: [488..495]: unwritten
-+62: [496..503]: hole
-+63: [504..511]: unwritten
--- 
-2.7.4
++AC_DEFUN([AC_PACKAGE_CHECK_THREADSAN],
++  [ AC_MSG_CHECKING([if C compiler supports THREADSAN])
++    OLD_CFLAGS="$CFLAGS"
++    OLD_LDFLAGS="$LDFLAGS"
++    THREADSAN_FLAGS="-fsanitize=thread"
++    CFLAGS="$CFLAGS $THREADSAN_FLAGS"
++    LDFLAGS="$LDFLAGS $ADRSAN_FLAGS"
++    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
++        [AC_MSG_RESULT([yes])]
++        [threadsan_cflags=$THREADSAN_FLAGS]
++        [threadsan_ldflags=$THREADSAN_FLAGS]
++        [have_threadsan=yes],
++        [AC_MSG_RESULT([no])])
++    CFLAGS="${OLD_CFLAGS}"
++    LDFLAGS="${OLD_LDFLAGS}"
++    AC_SUBST(have_threadsan)
++    AC_SUBST(threadsan_cflags)
++    AC_SUBST(threadsan_ldflags)
++  ])
 
