@@ -1,130 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:14480 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932185AbdJZMfx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 08:35:53 -0400
-Date: Thu, 26 Oct 2017 23:35:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171026123548.GA3666@dastard>
-References: <20171026083322.20428-1-david@fromorbit.com>
- <CAOQ4uxi9K+3M95VgiPLHRr9cQC6bEzRiddKnAxEgJ3H4Ea+AoQ@mail.gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:55055 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932340AbdJZS1j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 14:27:39 -0400
+Date: Thu, 26 Oct 2017 12:32:17 -0600
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
+Message-ID: <20171026183216.GA27317@localhost.localdomain>
+References: <20171026144131.26885-1-keith.busch@intel.com>
+ <20171026162518.GW5483@magnolia>
+ <3ad1751a-a4df-b0ee-d2c5-d1ac4deb5b46@sandeen.net>
+ <0d50ca3b-0b27-8ac1-c102-9ea656f3f926@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi9K+3M95VgiPLHRr9cQC6bEzRiddKnAxEgJ3H4Ea+AoQ@mail.gmail.com>
+In-Reply-To: <0d50ca3b-0b27-8ac1-c102-9ea656f3f926@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 02:09:26PM +0300, Amir Goldstein wrote:
-> On Thu, Oct 26, 2017 at 11:33 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > This patchset is aimed at filesystems that are installed on sparse
-> > block devices, a.k.a thin provisioned devices. The aim of the
-> > patchset is to bring the space management aspect of the storage
-> > stack up into the filesystem rather than keeping it below the
-> > filesystem where users and the filesystem have no clue they are
-> > about to run out of space.
-.....
-> > I've smoke tested the non-thinspace code paths (running auto tests
-> > on a scrub enabled kernel+userspace right now) as I haven't updated
-> > the userspace code to exercise the thinp code paths yet. I know the
-> > concept works, but my userspace code has an older on-disk format
-> > from the prototype so it will take me a couple of days to update and
-> > work out how to get fstests to integrate it reliably. So this is
-> > mainly a heads-up RFC patchset....
-> >
-> > Comments, thoughts, flames all welcome....
-> >
+On Thu, Oct 26, 2017 at 01:01:29PM -0500, Eric Sandeen wrote:
+> On 10/26/17 12:49 PM, Eric Sandeen wrote:
+> > Yeah, lots of devices are unhappy with large discards.  And yeah, in the
+> > end I think this papers over a kernel and/or hardware problem.
+> > 
+> > But sometimes we do that, if only to keep things working reasonably
+> > well with older kernels or hardware that'll never get fixed...
+> > 
+> > (TBH sometimes I regret putting mkfs-time discard in by default in the
+> > first place.)
 > 
-> This proposal is very interesting outside the scope of xfs, so I hope you
-> don't mind I've CC'ed fsdevel.
-> 
-> I am thinking how a slightly similar approach could be used to online shrink
-> the physical size for filesystems that are not on thin provisioned devices:
-> 
-> - Set/get a geometry variable of "agsoftlimit" (better names are welcome)
->   which is <= agcount.
-> - agsoftlimit < agcount means that free space of AG > agsoftlimit is zero,
->   so total disk space usage will not show this space as available user space.
-> - inode and block allocators will avoid dipping into the high AG pool,
->   expect for metadata block needed for freeing high AG inodes/blocks.
-> - A variant of xfs_fsr (or e4defrag for that matter) could "migrate" inodes
->   and/or blocks from high to low AGs.
-> - Migrating directories is quite different than migrating files, but doable.
-> - Finally, on XFS_IOC_FSGROWFSDATA, if shrinking filesystem size and
->   high AG usage counters are zero, then physical size can be shrunk
->   as down as agsoftlimit instead of reducing usable_blocks.
+> I think I left this on a too-positive note.  It seems pretty clear that there
+> is no way to fix all of userspace to not issue "too big" discards, when
+> "too big" isn't even well-defined, or specified by anything at all.
 
-Yup, you've just described all the craziness that a physical shrink
-requires on XFS. Lots of new user APIs, new tools to move data
-around, new code to transparently migrate directories and other
-metadata (like xattrs), etc.
+Yeah, I totally get this proposal is just a bandaid, and other user
+space programs may suffer when used with devices behaving this way. XFS
+is just very popular, so it's frequently reported as problematic against
+large capacity devices.
+ 
+> I'm not wise in the ways of queueing and throttling, but from my naiive
+> perspective, it seems like something to be fixed in the kernel, or if it
+> can't, export some new "maximum discard request size" which can be trusted?
 
-Also, the log is placed half way through the XFS filesystem, so
-unless we add code to allocate and switch to a new journal (in a
-crash safe and recoverable way!) we can't shrink by more than 50%.
-
-Also, none of the growfs code touches existing AGs - they'll have to
-be scanned to determine they really are empty before they get
-removed from the filesystem, and then there's the other issues like
-we can't shrink to less than 2 AGs, which puts a significant minimum
-shrink size on filesystems (again there's that "shrink more than 50%
-requires a lot more work" problem for filesystems < 4TB).
-
-And to do it efficiently, we really need rmap support in filesystems
-so the fs can tell us what files and metadata need to be moved,
-rather than having to do brute force scans to work out what needs
-moving. Especially as the brute force scans can't find all the
-metadata that we might need to relocate before we've emptied the
-space we need to stop using.
-
-IOWs, it's a *lot* of work, and IMO there's more work in
-verification and proving that everything is crash safe, recoverable
-and restartable. We've known how much work it is for years - why do
-you think it hasn't been implemented? See:
-
-http://xfs.org/index.php/Shrinking_Support
-
-And:
-
-http://xfs.org/index.php/Unfinished_work#The_xfs_reno_tool
-
-And specifically follow the reference to a discussion in 2007:
-
-https://marc.info/?l=linux-xfs&m=119131697224361&w=2
-
-> With this, xfs can gain physical shrink support and ext4 can gain online
-> (and safe) shrink support.
-
-Yes, I estimate it'll probably take about a man-year's worth of work
-to get xfs shrink to production ready from all the pieces we have
-sitting around today.
-
-> Assuming that this idea is not shot down on sight, the only implication
-> I can think of w.r.t your current patches is leaving enough room in new APIs
-> to accomodate this prospect functionality.
-
-I'm not introducing any new APIs. XFS_IOC_FSGROWFSDATA already
-supports shrinking and resizing/moving the log, they just aren't
-implemented.
-
-> You have already reserved 15 u64 in geometry V5 ioctl struct, so that's good.
-> You have not changed XFS_IOC_FSGROWFSDATA at all, so going forward
-> the ambiguity of physical shrink vs. virtual shrink could either be determined
-> by heuristics
-
-No heuristics at all. filesystems on thin devices will have a
-feature bit in the superblock indicating they are thin filesystems.
-If the "thinspace" bit is set, shrink is just an accounting
-operation. If it's not set, then it needs to physically change the
-geometry of the filesystem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The problem isn't really that a discard sent to the device was "too
+big". It's that "too many" are issued at the same time, and there isn't
+a way for a driver to limit the number of outstanding discards without
+affecting read/write.
