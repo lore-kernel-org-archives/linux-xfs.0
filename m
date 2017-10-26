@@ -1,251 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39744 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:36924 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932127AbdJZRRa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 13:17:30 -0400
-Date: Thu, 26 Oct 2017 13:17:28 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] tests/generic: test writepage cached mapping validity
-Message-ID: <20171026171727.GB6259@bfoster.bfoster>
-References: <20171026144816.9259-1-bfoster@redhat.com>
- <20171026153402.GQ3235@eguan.usersys.redhat.com>
- <20171026161247.GA6259@bfoster.bfoster>
- <20171026164017.GR3235@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171026164017.GR3235@eguan.usersys.redhat.com>
+        id S932127AbdJZR3B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 13:29:01 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
+Date: Thu, 26 Oct 2017 10:28:57 -0700
+Message-Id: <20171026172857.8683-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Fri, Oct 27, 2017 at 12:40:17AM +0800, Eryu Guan wrote:
-> On Thu, Oct 26, 2017 at 12:12:47PM -0400, Brian Foster wrote:
-> > On Thu, Oct 26, 2017 at 11:34:02PM +0800, Eryu Guan wrote:
-> > > On Thu, Oct 26, 2017 at 10:48:16AM -0400, Brian Foster wrote:
-> > > > XFS has a bug where page writeback can end up sending data to the
-> > > > wrong location due to a stale, cached file mapping. Add a test to
-> > > > trigger this problem by racing background writeback with a
-> > > > truncate/rewrite of the final page of the file.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > 
-> > > Thanks a lot for the new test!
-> > > 
-> > > > ---
-> > > > 
-> > > > Here's a new version of the writepages test I previously posted as RFC.
-> > > > This variant does not require an artificial delay to reproduce, so I've
-> > > > dropped the need for the error injection tag.
-> > > > 
-> > > > I have been playing a bit with the file size and iteration count of the
-> > > > test. I started with something that ran a decent bit longer (~2m) as was
-> > > > necessary to reproduce on my dev/debug vm, but recently trimmed the file
-> > > > size and iteration count to something that runs much quicker (~10s) and
-> > > > reproduces nearly 100% of the time on my actual test hardware. The
-> > > > tradeoff is the reproducibility is much lower on my debug vm (~20-25%
-> > > > perhaps). The test still does reproduce when run over 10-15 iters, so I
-> > > > opted for the quicker test.
-> > > > 
-> > > > In all, I am a bit curious about whether this reproduces reliably on
-> > > > others' test setups. If not, does tweaking the size/iterations improve
-> > > > the reproducibility?
-> > > 
-> > > On my test vm, with the default size/iteration numbers, the
-> > > reproducibility is around 40%, run time is 3s. Then I doubled the
-> > > ineration number, and it's 100% reproduced, run time is 7s.
-> > > 
-> > > On my real hardware, I have to double both file size and iteration
-> > > numbers to reproduce, reproducibility is ~20%, run time 35s.
-> > > 
-> > > Note that the vm is running v4.14-rc5 based 'xfs-4.14-fixes-7' tag from
-> > > Darric's tree and the real hardware is running v4.14-rc6.
-> > > 
-> > 
-> > Thanks for testing this... It's interesting that you don't seem to
-> > reproduce at all on the real hardware with the current values. What do
-> > you have for storage on both of these setups? My VM is a slow, single
-> > spindle while the hardware is also spinning rust but on a hardware raid.
-> 
-> My vm is a kvm guest with 4 vcpus and 8G mem running on RHEL6 host, the
-> underlying storage hosting the OS image is hardware raid (HP smart
-> array). The real hardware is an IBM box with 8 logical cpus and 8G mem,
-> and 4 sata disks connected to MegaRAID, but configured as JBOD, I used
-> two partitions of one of the four disks.
-> 
+./configure will leave traces of a complaint on config.log when
+_BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
+deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
 
-It's still only 15s or so on my test box with that change. I generally
-don't do full xfstests runs on my vm anyways because it's so damn slow
-;P. So I'm Ok with upping both the size and iters if that helps
-reproducibility, but I'll wait a bit before posting v2 to see if anybody
-else chimes in with more data.
+>From config.log:
+/usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
 
-I should note that I'm not terribly concerned with having 100%
-reproducibility as opposed to something reasonable (i.e., 1 in 4 tries
-is not so bad when we consider that some of our bugs have required
-hundreds of iterations of certain tests to reproduce). Any prospective
-fix should probably be tested against multiple iterations of this test.
-Further, any regressions that may arise down the road would most likely
-crop up as failures at some point between all of us running xfstests on
-our various setups. Thanks again.
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ m4/package_libcdev.m4 | 1 +
+ 1 file changed, 1 insertion(+)
 
-Brian
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index fa5b63978797..af2a9631b8ba 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -137,6 +137,7 @@ AC_DEFUN([AC_HAVE_PREADV],
+   [ AC_MSG_CHECKING([for preadv])
+     AC_TRY_LINK([
+ #define _BSD_SOURCE
++#define _DEFAULT_SOURCE
+ #include <sys/uio.h>
+     ], [
+          preadv(0, 0, 0, 0);
+-- 
+2.14.2
 
-> Thanks,
-> Eryu
-> 
-> > 
-> > If I run with 64MB, 32 iters, I'm at ~48 seconds on the VM. I can check
-> > on bare metal as soon as the test run I have currently running
-> > completes.
-> > 
-> > Brian
-> > 
-> > > Thanks,
-> > > Eryu
-> > > 
-> > > > 
-> > > > Brian
-> > > > 
-> > > > v1:
-> > > > - New test algorithm that does not require artificial delay.
-> > > > - Created as generic test.
-> > > > rfc: https://marc.info/?l=linux-xfs&m=150886719725497&w=2
-> > > > 
-> > > >  tests/generic/999     | 94 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  tests/generic/999.out |  2 ++
-> > > >  tests/generic/group   |  1 +
-> > > >  3 files changed, 97 insertions(+)
-> > > >  create mode 100755 tests/generic/999
-> > > >  create mode 100644 tests/generic/999.out
-> > > > 
-> > > > diff --git a/tests/generic/999 b/tests/generic/999
-> > > > new file mode 100755
-> > > > index 0000000..9e56a1e
-> > > > --- /dev/null
-> > > > +++ b/tests/generic/999
-> > > > @@ -0,0 +1,94 @@
-> > > > +#! /bin/bash
-> > > > +# FS QA Test 999
-> > > > +#
-> > > > +# Test XFS page writeback code for races with the cached file mapping. XFS
-> > > > +# caches the file -> block mapping for a full extent once it is initially looked
-> > > > +# up. The cached mapping is used for all subsequent pages in the same writeback
-> > > > +# cycle that cover the associated extent. Under certain conditions, it is
-> > > > +# possible for concurrent operations on the file to invalidate the cached
-> > > > +# mapping without the knowledge of writeback. Writeback ends up sending I/O to a
-> > > > +# partly stale mapping and potentially leaving delalloc blocks in the current
-> > > > +# mapping unconverted.
-> > > > +#
-> > > > +#-----------------------------------------------------------------------
-> > > > +# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-> > > > +#
-> > > > +# This program is free software; you can redistribute it and/or
-> > > > +# modify it under the terms of the GNU General Public License as
-> > > > +# published by the Free Software Foundation.
-> > > > +#
-> > > > +# This program is distributed in the hope that it would be useful,
-> > > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > > +# GNU General Public License for more details.
-> > > > +#
-> > > > +# You should have received a copy of the GNU General Public License
-> > > > +# along with this program; if not, write the Free Software Foundation,
-> > > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > > > +#-----------------------------------------------------------------------
-> > > > +#
-> > > > +
-> > > > +seq=`basename $0`
-> > > > +seqres=$RESULT_DIR/$seq
-> > > > +echo "QA output created by $seq"
-> > > > +
-> > > > +here=`pwd`
-> > > > +tmp=/tmp/$$
-> > > > +status=1	# failure is the default!
-> > > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > > +
-> > > > +_cleanup()
-> > > > +{
-> > > > +	cd /
-> > > > +	rm -f $tmp.*
-> > > > +}
-> > > > +
-> > > > +# get standard environment, filters and checks
-> > > > +. ./common/rc
-> > > > +
-> > > > +# remove previous $seqres.full before test
-> > > > +rm -f $seqres.full
-> > > > +
-> > > > +# real QA test starts here
-> > > > +
-> > > > +# Modify as appropriate.
-> > > > +_supported_fs generic
-> > > > +_supported_os Linux
-> > > > +_require_scratch
-> > > > +_require_test_program "feature"
-> > > > +
-> > > > +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> > > > +_scratch_mount || _fail "mount failed"
-> > > > +
-> > > > +file=$SCRATCH_MNT/file
-> > > > +filesize=$((1024 * 1024 * 32))
-> > > > +pagesize=`src/feature -s`
-> > > > +truncsize=$((filesize - pagesize))
-> > > > +
-> > > > +for i in $(seq 0 15); do
-> > > > +	# Truncate the file and fsync to persist the final size on-disk. This is
-> > > > +	# required so the subsequent truncate will not wait on writeback.
-> > > > +	$XFS_IO_PROG -fc "truncate 0" $file
-> > > > +	$XFS_IO_PROG -c "truncate $filesize" -c fsync $file
-> > > > +
-> > > > +	# create a small enough delalloc extent to likely be contiguous
-> > > > +	$XFS_IO_PROG -c "pwrite 0 $filesize" $file >> $seqres.full 2>&1
-> > > > +
-> > > > +	# Start writeback and a racing truncate and rewrite of the final page.
-> > > > +	$XFS_IO_PROG -c "sync_range -w 0 0" $file &
-> > > > +	sync_pid=$!
-> > > > +	$XFS_IO_PROG -c "truncate $truncsize" \
-> > > > +		     -c "pwrite $truncsize $pagesize" $file >> $seqres.full 2>&1
-> > > > +
-> > > > +	# If the test fails, the most likely outcome is an sb_fdblocks mismatch
-> > > > +	# and/or an associated delalloc assert failure on inode reclaim. Cycle
-> > > > +	# the mount to trigger detection.
-> > > > +	wait $sync_pid
-> > > > +	_scratch_cycle_mount || _fail "mount failed"
-> > > > +done
-> > > > +
-> > > > +echo Silence is golden
-> > > > +
-> > > > +# success, all done
-> > > > +status=0
-> > > > +exit
-> > > > diff --git a/tests/generic/999.out b/tests/generic/999.out
-> > > > new file mode 100644
-> > > > index 0000000..3b276ca
-> > > > --- /dev/null
-> > > > +++ b/tests/generic/999.out
-> > > > @@ -0,0 +1,2 @@
-> > > > +QA output created by 999
-> > > > +Silence is golden
-> > > > diff --git a/tests/generic/group b/tests/generic/group
-> > > > index fbe0a7f..89342da 100644
-> > > > --- a/tests/generic/group
-> > > > +++ b/tests/generic/group
-> > > > @@ -468,3 +468,4 @@
-> > > >  463 auto quick clone dangerous
-> > > >  464 auto rw
-> > > >  465 auto rw quick aio
-> > > > +999 auto quick
-> > > > -- 
-> > > > 2.9.5
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
