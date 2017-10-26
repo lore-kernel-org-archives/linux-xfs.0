@@ -1,30 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35456 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751199AbdJ1GF3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Oct 2017 02:05:29 -0400
-Date: Fri, 27 Oct 2017 23:05:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: flush the range before zero partial block range on
- truncate down
-Message-ID: <20171028060529.GA29505@infradead.org>
-References: <20171027125328.25001-1-eguan@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27312 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751553AbdJZWtj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:49:39 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9QMncjt013395
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:39 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v9QMncYd010388
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:38 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v9QMncYR001594
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 22:49:38 GMT
+Subject: [PATCH 2/3] xfs: abort dir/attr btree operation if btree is
+ obviously weird
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 26 Oct 2017 15:49:36 -0700
+Message-ID: <150905817655.20365.5192555326576354285.stgit@magnolia>
+In-Reply-To: <150905816454.20365.10479338108395001494.stgit@magnolia>
+References: <150905816454.20365.10479338108395001494.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171027125328.25001-1-eguan@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Fri, Oct 27, 2017 at 08:53:28PM +0800, Eryu Guan wrote:
-> But it's possible that a buffer write overwrites the unwritten
-> extent, which won't be converted to a normal extent until I/O
-> completion, and iomap_truncate_page() skips zeroing wrongly because
-> of the not-converted unwritten extent. This would cause a subsequent
-> mmap read sees non-zeros beyond EOF.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I suspect the right fix is to look at the in-core state im the iomap
-truncate helpers instead of doing a duplicate flush.
+Abort an dir/attr btree operation if the attr btree has obvious problems
+like loops back to the root or pointers don't point down the tree.
+Found by fuzzing btree[0].before to zero in xfs/402, which livelocks on
+the cycle in the attr btree.
+
+Apply the same checks to xfs_da3_node_lookup_int.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_da_btree.c |   22 +++++++++++++++++++++-
+ fs/xfs/xfs_attr_list.c       |   20 ++++++++++++++++++++
+ 2 files changed, 41 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 6d43358..6516115 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -1466,6 +1466,7 @@ xfs_da3_node_lookup_int(
+ 	int			max;
+ 	int			error;
+ 	int			retval;
++	unsigned int		expected_level = 0;
+ 	struct xfs_inode	*dp = state->args->dp;
+ 
+ 	args = state->args;
+@@ -1474,7 +1475,7 @@ xfs_da3_node_lookup_int(
+ 	 * Descend thru the B-tree searching each level for the right
+ 	 * node to use, until the right hashval is found.
+ 	 */
+-	blkno = (args->whichfork == XFS_DATA_FORK)? args->geo->leafblk : 0;
++	blkno = args->geo->leafblk;
+ 	for (blk = &state->path.blk[0], state->path.active = 1;
+ 			 state->path.active <= XFS_DA_NODE_MAXDEPTH;
+ 			 blk++, state->path.active++) {
+@@ -1517,6 +1518,18 @@ xfs_da3_node_lookup_int(
+ 		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
+ 		btree = dp->d_ops->node_tree_p(node);
+ 
++		/* Tree taller than we can handle; bail out! */
++		if (nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
++			return -EFSCORRUPTED;
++
++		/* Check the level from the root. */
++		if (blkno == args->geo->leafblk)
++			expected_level = nodehdr.level - 1;
++		else if (expected_level != nodehdr.level)
++			return -EFSCORRUPTED;
++		else
++			expected_level--;
++
+ 		max = nodehdr.count;
+ 		blk->hashval = be32_to_cpu(btree[max - 1].hashval);
+ 
+@@ -1562,8 +1575,15 @@ xfs_da3_node_lookup_int(
+ 			blk->index = probe;
+ 			blkno = be32_to_cpu(btree[probe].before);
+ 		}
++
++		/* We can't point back to the root. */
++		if (blkno == args->geo->leafblk)
++			return -EFSCORRUPTED;
+ 	}
+ 
++	if (expected_level != 0)
++		return -EFSCORRUPTED;
++
+ 	/*
+ 	 * A leaf block that ends in the hashval that we are interested in
+ 	 * (final hashval == search hashval) means that the next block may
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 021ec5a..a360310 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -223,6 +223,7 @@ xfs_attr_node_list_lookup(
+ 	struct xfs_buf			*bp;
+ 	int				i;
+ 	int				error = 0;
++	unsigned int			expected_level = 0;
+ 	uint16_t			magic;
+ 
+ 	ASSERT(*pbp == NULL);
+@@ -246,6 +247,18 @@ xfs_attr_node_list_lookup(
+ 
+ 		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
+ 
++		/* Tree taller than we can handle; bail out! */
++		if (nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
++			goto out_corruptbuf;
++
++		/* Check the level from the root node. */
++		if (cursor->blkno == 0)
++			expected_level = nodehdr.level - 1;
++		else if (expected_level != nodehdr.level)
++			goto out_corruptbuf;
++		else
++			expected_level--;
++
+ 		btree = dp->d_ops->node_tree_p(node);
+ 		for (i = 0; i < nodehdr.count; btree++, i++) {
+ 			if (cursor->hashval <= be32_to_cpu(btree->hashval)) {
+@@ -259,8 +272,15 @@ xfs_attr_node_list_lookup(
+ 
+ 		if (i == nodehdr.count)
+ 			return 0;
++
++		/* We can't point back to the root. */
++		if (cursor->blkno == 0)
++			return -EFSCORRUPTED;
+ 	}
+ 
++	if (expected_level != 0)
++		goto out_corruptbuf;
++
+ 	*pbp = bp;
+ 	return 0;
+ 
+
