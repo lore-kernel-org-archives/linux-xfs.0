@@ -1,138 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41391 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751668AbdJYWMS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 18:12:18 -0400
-Date: Wed, 25 Oct 2017 15:12:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/3] xfs: more robust recovery xlog buffer validation
-Message-ID: <20171025221208.GS5483@magnolia>
-References: <20171025185705.64983-1-bfoster@redhat.com>
- <20171025185705.64983-2-bfoster@redhat.com>
+Received: from mail.kernel.org ([198.145.29.99]:43012 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751943AbdJZAdA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Oct 2017 20:33:00 -0400
+Date: Wed, 25 Oct 2017 17:32:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.14-rc7
+Message-ID: <20171026003258.GT5483@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171025185705.64983-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Wed, Oct 25, 2017 at 02:57:03PM -0400, Brian Foster wrote:
-> mkfs has a historical problem where it can format very small
-> filesystems with too small of a physical log. Under certain
-> conditions, log recovery of an associated filesystem can end up
-> passing garbage parameter values to some of the cycle and log record
-> verification functions due to bugs in log recovery not dealing with
-> such filesystems properly. This results in attempts to read from
-> bogus/underflowed log block addresses.
-> 
-> Since the buffer read may ultimately succeed, log recovery can
-> proceed with bogus data and otherwise go off the rails and crash.
-> One example of this is a negative last_blk being passed to
-> xlog_find_verify_log_record() causing us to skip the loop, pass a
-> NULL head pointer to xlog_header_check_mount() and crash.
-> 
-> Improve the xlog buffer verification to address this problem. We
-> already verify xlog buffer length, so update this mechanism to also
-> sanity check for a valid log relative block address and otherwise
-> return an error. Pass a fixed, valid log block address from
-> xlog_get_bp() since the target address will be validated when the
-> buffer is read. This ensures that any bogus log block address/length
-> calculations lead to graceful mount failure rather than risking a
-> crash or worse if recovery proceeds with bogus data.
-> 
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_log_recover.c | 38 ++++++++++++++++++++++++--------------
->  1 file changed, 24 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index ee34899..54494ab 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -85,17 +85,21 @@ struct xfs_buf_cancel {
->   */
->  
->  /*
-> - * Verify the given count of basic blocks is valid number of blocks
-> - * to specify for an operation involving the given XFS log buffer.
-> - * Returns nonzero if the count is valid, 0 otherwise.
-> + * Verify the log-relative block number and length in basic blocks are valid for
-> + * an operation involving the given XFS log buffer. Returns true if the fields
-> + * are valid, false otherwise.
->   */
-> -
-> -static inline int
-> -xlog_buf_bbcount_valid(
-> +static inline bool
-> +xlog_verify_bp(
->  	struct xlog	*log,
-> +	xfs_daddr_t	blk_no,
->  	int		bbcount)
->  {
-> -	return bbcount > 0 && bbcount <= log->l_logBBsize;
-> +	if (blk_no < 0 || blk_no >= log->l_logBBsize)
-> +		return false;
-> +	if (bbcount <= 0 || bbcount > log->l_logBBsize)
-> +		return false;
+Hi Linus,
 
-Shouldn't this be (blk_no + bbcount) > log->l_logBBsize, since the
-blk_no/bbcount parameters identify an extent within the log?
+Here's (hopefully) the last bugfix for 4.14.
 
 --D
 
-> +	return true;
->  }
->  
->  /*
-> @@ -110,7 +114,11 @@ xlog_get_bp(
->  {
->  	struct xfs_buf	*bp;
->  
-> -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> +	/*
-> +	 * Pass log block 0 since we don't have an addr yet, buffer will be
-> +	 * verified on read.
-> +	 */
-> +	if (!xlog_verify_bp(log, 0, nbblks)) {
->  		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
->  			nbblks);
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
-> @@ -180,9 +188,10 @@ xlog_bread_noalign(
->  {
->  	int		error;
->  
-> -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> -		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> -			nbblks);
-> +	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-> +		xfs_warn(log->l_mp,
-> +			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-> +			 blk_no, nbblks);
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
-> @@ -265,9 +274,10 @@ xlog_bwrite(
->  {
->  	int		error;
->  
-> -	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-> -		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
-> -			nbblks);
-> +	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-> +		xfs_warn(log->l_mp,
-> +			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-> +			 blk_no, nbblks);
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following changes since commit 785545c8982604fe3ba79d16409e83993be77d5e:
+
+  xfs: move two more RT specific functions into CONFIG_XFS_RT (2017-10-16 12:26:50 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.14-fixes-7
+
+for you to fetch changes up to 942491c9e6d631c012f3c4ea8e7777b0b02edeab:
+
+  xfs: fix AIM7 regression (2017-10-23 18:31:50 -0700)
+
+----------------------------------------------------------------
+Changes since last time:
+- Rework nowait locking code to reduce locking overhead penalty
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: fix AIM7 regression
+
+ fs/xfs/xfs_file.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
