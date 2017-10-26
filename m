@@ -1,184 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46218 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.99]:45308 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751472AbdJ0RDl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 13:03:41 -0400
-Date: Fri, 27 Oct 2017 19:03:39 +0200
+        id S1751483AbdJZWu4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 18:50:56 -0400
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [RFC] xfs_repair: clear file / directory attribute on symlinks
-Message-ID: <20171027170339.GA22894@wotan.suse.de>
-References: <20171026225053.10263-1-mcgrof@kernel.org>
- <b52bcf80-6848-c3f3-c8bc-68e69054267c@sandeen.net>
- <20171027001118.GF5483@magnolia>
- <20171027002812.GV17331@wotan.suse.de>
- <7281013b-835e-031c-6ed0-dd0c220b271c@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7281013b-835e-031c-6ed0-dd0c220b271c@suse.com>
+Subject: [RFC] xfs_repair: clear file / directory attribute on symlinks
+Date: Thu, 26 Oct 2017 15:50:53 -0700
+Message-Id: <20171026225053.10263-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, Laurent Bonnaud <Laurent.Bonnaud@inpg.fr>, Tso Ted <tytso@mit.edu>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Laurent Bonnaud <Laurent.Bonnaud@inpg.fr>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-On Fri, Oct 27, 2017 at 09:18:07AM +0300, Nikolay Borisov wrote:
-> 
-> 
-> On 27.10.2017 03:28, Luis R. Rodriguez wrote:
-> > On Thu, Oct 26, 2017 at 05:11:18PM -0700, Darrick J. Wong wrote:
-> >> On Thu, Oct 26, 2017 at 06:48:53PM -0500, Eric Sandeen wrote:
-> >>>> 	b) xfsctl()
-> >>
-> >> Requires an open file descriptor, path argument not used.  Returns EBADF if
-> >> you opened a symlink with O_PATH|O_NOFOLLOW, which AFAIK is the only way to
-> >> do that.
-> > 
-> > Hrm, were you suggesting you didn't think its possible to use xfsctl to
-> > set some attributes? Because I was able to:
-> > 
-> > #include <xfs/xfs.h>
-> > #include <stdlib.h>
-> > #include <string.h>
-> > #include <sys/stat.h>
-> > #include <fcntl.h>
-> > 
-> > char *prog;
-> > 
-> > static void usage(void)
-> > {
-> > 		printf("Usage: %s [set|get] <file>\n", prog);
-> > 		exit(1);
-> > }
-> > 
-> > int main(int argc, char *argv[])
-> > {
-> > 	int ret = 0;
-> > 	struct stat sb;
-> > 	char *cmd_str, *file;
-> > 	int cmd = 0;
-> > 	int open_flags = 0;
-> > 	int fd;
-> > 	struct fsxattr fsx;
-> > 
-> > 	prog = argv[0];
-> > 
-> > 	if (argc != 3)
-> > 		usage();
-> > 
-> > 	memset(&fsx, 0, sizeof(fsx));
-> > 
-> > 	/* First run is get to get old values */
-> > 	cmd = FS_IOC_FSGETXATTR;
-> > 
-> > 	if ((strncmp("get", argv[1], 3) == 0))
-> > 		open_flags = O_RDONLY;
-> > 	else if (strncmp("set", argv[1], 3) == 0) {
-> > 		cmd = FS_IOC_FSGETXATTR;
-> > 		open_flags = O_RDWR | O_APPEND;
-> > 	}
-> > 
+symlinks with the attribute append set cannot be removed as they are
+treated as if a file was set with the immutable flag set. Standard
+tools however cannot remove *any* attribute flag:
 
-Remove the following chunk:
+	chattr -a symlink
+	chattr: Operation not supported while reading flags on b
 
-> > 	if (!open_flags)
-> > 		usage();
+Furthermore one cannot list attributes on symlinks using lsattr either:
 
-Instead add an:
+	# touch a
+	# ln -s a b
+	# lsattr b
+	lsattr: Operation not supported While reading flags on b
 
-	else
-		usage();
+This means that if you end up with an append attribute on a symlink
+you need special tools to try to remove it. This begs the question of
+whether or not XFS should also disallow attributes on symlinks.
 
-Given O_RDONLY is 0.
+I can trace the lsattr change back down to commit 023d111e92195
+("chattr.1.in: Document the compression attribute flags E, X, and ...")
+on e2fsprogs since August 2002. That commit just refers to the fact
+that attributes were only allowed after that commit for directories
+and regular files due to Debian bug 152029 [0]. This bug was filed since
+lsattr used to enable attributes even on special files and lsattr would
+segfault when used against them since when used against some old DRM
+buggy driver the ioctl seem to have worked bug crashed lsattr. The bug
+report doesn't list any specific reasoning for not allowing attributes
+on symlinks though.
 
-> > 
-> > 	cmd_str = argv[1];
-> > 
-> > 	ret = stat(argv[2], &sb);
-> > 	if (ret) {
-> > 		printf("File may not be present or readable\n");
-> > 		usage();
-> > 	}
+Although in XFS you could end up in a situation where attributes
+are set on a symlink this is ather hard to do, likewie for clearing
+them.
 
-As per testing stat() won't work on a dangling sylink.
+Its unclear if XFS purposely supports attributes on symlinks or
+if this was unintentional.
 
-> > 
-> > 	file = argv[2];
-> > 
-> > 	fd = open(file, open_flags);
-> > 	if (!fd) {
-> > 		printf("Could not open file for operation: %s\n", cmd_str);
-> > 		usage();
-> > 	}
+The ways in which you can end up to setting / unsetting / getting attributes
+on symlinks on XFS are:
 
-This open() will though.
+	a) corruption
+	b) xfsctl()
+	c) xfs_db [1] [2] - only when umounted
 
-> > 	ret = xfsctl(file, fd, cmd, &fsx);
-> > 	if (ret < 0) {
-> > 		printf("Could not issue xfsctl GET flags\n");
-> > 		exit(1);
-> > 	}
+POSIX doesn't seem to actually have a position on this.
 
-And this xfsctl() won't work either.
+These are not extended attributes, however xattr(7) does have
+a little nugget worth considering regarding this, and for which
+it was decided to at least not support extended attributes on
+symlinks or special files:
 
-> > 	if (strncmp("get", argv[1], 3) == 0)
-> > 		goto out;
-> > 
-> > 	/* Now do the setting */
-> > 	cmd = FS_IOC_FSSETXATTR;
-> > 	fsx.fsx_xflags |= XFS_XFLAG_APPEND;
-> > 
-> > 	ret = xfsctl(file, fd, cmd, &fsx);
-> > 	if (ret < 0) {
-> > 		printf("Could not issue xfsctl SET flags\n");
-> > 		exit(1);
-> > 	}
-> > 
-> > out:
-> > 	printf("fsxattr.xflags = 0x%x\n", fsx.fsx_xflags);
-> > 
-> > 	return 0;
-> > }
-> 
-> 
-> I think this program is not really working on the symlink but rather on
-> the file it points to.
+	The file permissions of symbolic links are not used in
+        access checks. These differences would allow users to consume
+	filesystem resources in a way not controllable by disk quotas
+	for group or world writable special files and directories.
 
-I've confirmed this, thanks! Not only does xfsctl() fail on a symlink alone,
-but also stat(). I'll run some more test but indeed it does not see we currently
-allow symlinks alone to get user attributes. This however is important
-information for the commit log so will add it.
+	For this reason, extended user attributes are allowed only for
+	regular files and directories.
 
-> If you have a dangling symlin then the open() call would just return ENOENT.
+For these reasons, and since corruption is the only current valid
+case where these seem to have popped up -- apply the same logic on
+XFS, otherwise we'd be going against the e2fsprogs chattr convention
+set since August 2002, and which folks likely are used to.
 
-Actually open() seems to work just fine on a dangling symlink as per my tests.
+This fixes filesystems which have these attributes set where clearly
+they were set by corruption.
 
-> On the other hand, if the file exists when you open the symlink you will have
-> actually opened the file it points to, not the symlink itself. And this
-> behavior is actually controlled by the vfs traversal code. in path_lookupat:
-> 
->         while (!(err = link_path_walk(s, nd))
-> 
->                 && ((err = lookup_last(nd)) > 0)) {
-> 
->                 s = trailing_symlink(nd);
->                 if (IS_ERR(s)) {
-> 
->                         err = PTR_ERR(s);
-> 
->                         break;
-> 
->                 }
-> 
->         }
-> 
-> In order to be able to set ioctl-xattr (as per Darick's convetion :D)
-> you need to get a reference to a struct file with it's f_op set to
-> xfs_file_operations, since that's where the unlocked_ioctl handler is.
-> And for symlink that's forbidden by the vfs traversal code.
+[0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
+[1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
+[2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
 
-Unless someone slipped magic mushrooms on my coffee today open() seems to work.
-I'll unravel this a bit and add the explanation to why this is not possible on
-the next patch iteration.
+Cc: "Laurent Bonnaud" <Laurent.Bonnaud@inpg.fr>
+Cc: Tso Ted <tytso@mit.edu>
+Cc: Nikolay Borisov <nborisov@suse.com>
+Cc: Flex Liu <fliu@suse.com>
+Cc: Jake Norris <jake.norris@suse.com>
+Cc: Jan Kara <jack@suse.cz>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
 
-  Luis
+Otherwise if we *do* wish to support some of these we should
+document the semantics. Otherwise this seems just odd and users
+can end up with unexpected situations not being able to easily
+clear this type of corruption.
+
+The append attribute is particularly annoying given you can't
+remove these symlinks at all, and the first thing naturally a
+user could do is try 'lsattr' or 'chattr'. Obviously this won't
+help and the user will just get frustrated.
+
+ repair/dinode.c | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 15ba8cc22b39..03e93a6e17c0 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2482,6 +2482,41 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 						FS_XFLAG_EXTSIZE);
+ 			}
+ 		}
++		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC |
++			     XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
++			     XFS_DIFLAG_SYNC | XFS_DIFLAG_NOATIME |
++			     XFS_DIFLAG_NODUMP | XFS_DIFLAG_RTINHERIT |
++			     XFS_DIFLAG_PROJINHERIT | XFS_DIFLAG_NOSYMLINKS |
++			     XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT |
++			     XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM |
++			     XFS_DIFLAG2_DAX | XFS_DIFLAG2_COWEXTSIZE)) {
++			/* chattr cannot clear append on symlink */
++			if (di_mode && S_ISLNK(di_mode) &&
++			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
++				if (!uncertain) {
++					do_warn(
++	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
++						lino);
++				}
++				flags &= ~(XFS_DIFLAG_REALTIME |
++					   XFS_DIFLAG_PREALLOC |
++					   XFS_DIFLAG_IMMUTABLE |
++					   XFS_DIFLAG_APPEND |
++					   XFS_DIFLAG_SYNC |
++					   XFS_DIFLAG_NOATIME |
++					   XFS_DIFLAG_NODUMP |
++					   XFS_DIFLAG_RTINHERIT |
++					   XFS_DIFLAG_PROJINHERIT |
++					   XFS_DIFLAG_NOSYMLINKS |
++					   XFS_DIFLAG_EXTSIZE |
++					   XFS_DIFLAG_EXTSZINHERIT |
++					   XFS_DIFLAG_NODEFRAG |
++					   XFS_DIFLAG_FILESTREAM |
++					   XFS_DIFLAG2_DAX |
++					   XFS_DIFLAG2_COWEXTSIZE);
++			}
++		}
++
+ 		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
+ 			if (!no_modify) {
+ 				do_warn(_("fixing bad flags.\n"));
+-- 
+2.14.2
+
