@@ -1,201 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52872 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932137AbdJZPeE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 11:34:04 -0400
-Date: Thu, 26 Oct 2017 23:34:02 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] tests/generic: test writepage cached mapping validity
-Message-ID: <20171026153402.GQ3235@eguan.usersys.redhat.com>
-References: <20171026144816.9259-1-bfoster@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:61169 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932345AbdJZVQe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 17:16:34 -0400
+Date: Fri, 27 Oct 2017 08:16:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
+Message-ID: <20171026211611.GC3666@dastard>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-18-jack@suse.cz>
+ <20171024222322.GX3666@dastard>
+ <20171026154804.GF31161@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171026144816.9259-1-bfoster@redhat.com>
+In-Reply-To: <20171026154804.GF31161@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
 
-On Thu, Oct 26, 2017 at 10:48:16AM -0400, Brian Foster wrote:
-> XFS has a bug where page writeback can end up sending data to the
-> wrong location due to a stale, cached file mapping. Add a test to
-> trigger this problem by racing background writeback with a
-> truncate/rewrite of the final page of the file.
+On Thu, Oct 26, 2017 at 05:48:04PM +0200, Jan Kara wrote:
+> On Wed 25-10-17 09:23:22, Dave Chinner wrote:
+> > On Tue, Oct 24, 2017 at 05:24:14PM +0200, Jan Kara wrote:
+> > > From: Christoph Hellwig <hch@lst.de>
+> > > 
+> > > Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
+> > > blocks for writing and the inode is pinned, and has dirty fields other
+> > > than the timestamps.
+> > 
+> > That's "fdatasync dirty", not "fsync dirty".
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Correct.
+> 
+> > IOMAP_F_DIRTY needs a far better description of it's semantics than
+> > "/* block mapping is not yet on persistent storage */" so we know
+> > exactly what filesystems are supposed to be implementing here. I
+> > suspect that what it really is meant to say is:
+> > 
+> > /*
+> >  * IOMAP_F_DIRTY indicates the inode has uncommitted metadata to
+> >  * written data and requires fdatasync to commit to persistent storage.
+> >  */
+> 
+> I'll update the comment. Thanks!
+> 
+> > [....]
+> > 
+> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > > index f179bdf1644d..b43be199fbdf 100644
+> > > --- a/fs/xfs/xfs_iomap.c
+> > > +++ b/fs/xfs/xfs_iomap.c
+> > > @@ -33,6 +33,7 @@
+> > >  #include "xfs_error.h"
+> > >  #include "xfs_trans.h"
+> > >  #include "xfs_trans_space.h"
+> > > +#include "xfs_inode_item.h"
+> > >  #include "xfs_iomap.h"
+> > >  #include "xfs_trace.h"
+> > >  #include "xfs_icache.h"
+> > > @@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
+> > >  		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+> > >  	}
+> > >  
+> > > +	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
+> > > +	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+> > > +		iomap->flags |= IOMAP_F_DIRTY;
+> > 
+> > This is the very definition of an inode that is "fdatasync dirty".
+> > 
+> > Hmmmm, shouldn't this also be set for read faults, too?
+> 
+> No, read faults don't need to set IOMAP_F_DIRTY since user cannot write any
+> data to the page which he'd then like to be persistent. The only reason why
+> I thought it could be useful for a while was that it would be nice to make
+> MAP_SYNC mapping provide the guarantee that data you see now is the data
+> you'll see after a crash
 
-Thanks a lot for the new test!
+Isn't that the entire point of MAP_SYNC? i.e. That when we return
+from a page fault, the app knows that the data and it's underlying
+extent is on persistent storage?
 
-> ---
-> 
-> Here's a new version of the writepages test I previously posted as RFC.
-> This variant does not require an artificial delay to reproduce, so I've
-> dropped the need for the error injection tag.
-> 
-> I have been playing a bit with the file size and iteration count of the
-> test. I started with something that ran a decent bit longer (~2m) as was
-> necessary to reproduce on my dev/debug vm, but recently trimmed the file
-> size and iteration count to something that runs much quicker (~10s) and
-> reproduces nearly 100% of the time on my actual test hardware. The
-> tradeoff is the reproducibility is much lower on my debug vm (~20-25%
-> perhaps). The test still does reproduce when run over 10-15 iters, so I
-> opted for the quicker test.
-> 
-> In all, I am a bit curious about whether this reproduces reliably on
-> others' test setups. If not, does tweaking the size/iterations improve
-> the reproducibility?
+> but we cannot provide that guarantee for RO
+> mapping anyway if someone else has the page mapped as well. So I just
+> decided not to return IOMAP_F_DIRTY for read faults.
 
-On my test vm, with the default size/iteration numbers, the
-reproducibility is around 40%, run time is 3s. Then I doubled the
-ineration number, and it's 100% reproduced, run time is 7s.
+If there are multiple MAP_SYNC mappings to the inode, I would have
+expected that they all sync all of the data/metadata on every page
+fault, regardless of who dirtied the inode. An RO mapping doesn't
+mean the data/metadata on the inode can't change, it just means it
+can't change through that mapping.  Running fsync() to guarantee the
+persistence of that data/metadata doesn't actually changing any
+data....
 
-On my real hardware, I have to double both file size and iteration
-numbers to reproduce, reproducibility is ~20%, run time 35s.
+IOWs, if read faults don't guarantee the mapped range has stable
+extents on a MAP_SYNC mapping, then I think MAP_SYNC is broken
+because it's not giving consistent guarantees to userspace. Yes, it
+works fine when only one MAP_SYNC mapping is modifying the inode,
+but the moment we have concurrent operations on the inode that
+aren't MAP_SYNC or O_SYNC this goes out the window....
 
-Note that the vm is running v4.14-rc5 based 'xfs-4.14-fixes-7' tag from
-Darric's tree and the real hardware is running v4.14-rc6.
+Cheers,
 
-Thanks,
-Eryu
-
-> 
-> Brian
-> 
-> v1:
-> - New test algorithm that does not require artificial delay.
-> - Created as generic test.
-> rfc: https://marc.info/?l=linux-xfs&m=150886719725497&w=2
-> 
->  tests/generic/999     | 94 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  2 ++
->  tests/generic/group   |  1 +
->  3 files changed, 97 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 0000000..9e56a1e
-> --- /dev/null
-> +++ b/tests/generic/999
-> @@ -0,0 +1,94 @@
-> +#! /bin/bash
-> +# FS QA Test 999
-> +#
-> +# Test XFS page writeback code for races with the cached file mapping. XFS
-> +# caches the file -> block mapping for a full extent once it is initially looked
-> +# up. The cached mapping is used for all subsequent pages in the same writeback
-> +# cycle that cover the associated extent. Under certain conditions, it is
-> +# possible for concurrent operations on the file to invalidate the cached
-> +# mapping without the knowledge of writeback. Writeback ends up sending I/O to a
-> +# partly stale mapping and potentially leaving delalloc blocks in the current
-> +# mapping unconverted.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +_require_test_program "feature"
-> +
-> +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> +_scratch_mount || _fail "mount failed"
-> +
-> +file=$SCRATCH_MNT/file
-> +filesize=$((1024 * 1024 * 32))
-> +pagesize=`src/feature -s`
-> +truncsize=$((filesize - pagesize))
-> +
-> +for i in $(seq 0 15); do
-> +	# Truncate the file and fsync to persist the final size on-disk. This is
-> +	# required so the subsequent truncate will not wait on writeback.
-> +	$XFS_IO_PROG -fc "truncate 0" $file
-> +	$XFS_IO_PROG -c "truncate $filesize" -c fsync $file
-> +
-> +	# create a small enough delalloc extent to likely be contiguous
-> +	$XFS_IO_PROG -c "pwrite 0 $filesize" $file >> $seqres.full 2>&1
-> +
-> +	# Start writeback and a racing truncate and rewrite of the final page.
-> +	$XFS_IO_PROG -c "sync_range -w 0 0" $file &
-> +	sync_pid=$!
-> +	$XFS_IO_PROG -c "truncate $truncsize" \
-> +		     -c "pwrite $truncsize $pagesize" $file >> $seqres.full 2>&1
-> +
-> +	# If the test fails, the most likely outcome is an sb_fdblocks mismatch
-> +	# and/or an associated delalloc assert failure on inode reclaim. Cycle
-> +	# the mount to trigger detection.
-> +	wait $sync_pid
-> +	_scratch_cycle_mount || _fail "mount failed"
-> +done
-> +
-> +echo Silence is golden
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 0000000..3b276ca
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index fbe0a7f..89342da 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -468,3 +468,4 @@
->  463 auto quick clone dangerous
->  464 auto rw
->  465 auto rw quick aio
-> +999 auto quick
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
