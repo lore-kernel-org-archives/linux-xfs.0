@@ -1,89 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36584 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751489AbdJ0ADQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 20:03:16 -0400
-Subject: Re: [PATCH 01/10] db: increase metadump's default overly long extent
- discard threshold
+Received: from aserp1040.oracle.com ([141.146.126.69]:51016 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751236AbdJZWPR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:17 -0400
+Subject: [PATCH 03/10] xfs_io: add new error injection knobs to inject
+ command
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 26 Oct 2017 15:15:13 -0700
+Message-ID: <150905611328.28563.9043969796286227381.stgit@magnolia>
+In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
 References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905609902.28563.7772086766206671184.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8bee15b9-ada9-902c-e378-510f39f933e6@sandeen.net>
-Date: Thu, 26 Oct 2017 19:03:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <150905609902.28563.7772086766206671184.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 10/26/17 5:14 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
-> metadump grew the ability to ignore a directory extent if it was longer
-> than 20 blocks.  Presumably this was to protect metadump from dumping
-> absurdly long extents resulting from bmbt corruption, but it's certainly
-> possible to create a directory with an extent longer than 20 blocks.
-> Hilariously, the discards happen with no warning unless the caller
-> explicitly set -w.
-> 
-> This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
-> extent size for xfs_metadump when copying..."), but it's still possible
-> to create a directory with an extent longer than 1000 blocks.
-> 
-> Increase the threshold to MAXEXTLEN blocks because it's totally valid
-> for the filesystem to create extents up to that length.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks, I'll pull this in.
+Bring xfs_io's inject command up to date with the newest knobs.
 
-Should we fix the noisiness so it doesn't require -w for 
-warnings as well?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ io/inject.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
--Eric
 
-> ---
->  db/metadump.c           |    2 +-
->  man/man8/xfs_metadump.8 |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 6dd06c3..8ffb90f 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -32,7 +32,7 @@
->  #include "field.h"
->  #include "dir2.h"
->  
-> -#define DEFAULT_MAX_EXT_SIZE	1000
-> +#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
->  
->  /*
->   * It's possible that multiple files in a directory (or attributes
-> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
-> index 3731d6a..7207c20 100644
-> --- a/man/man8/xfs_metadump.8
-> +++ b/man/man8/xfs_metadump.8
-> @@ -114,7 +114,7 @@ copied.
->  .B \-m
->  Set the maximum size of an allowed metadata extent.  Extremely large metadata
->  extents are likely to be corrupt, and will be skipped if they exceed
-> -this value.  The default size is 1000 blocks.
-> +this value.  The default size is 2097151 blocks.
->  .TP
->  .B \-o
->  Disables obfuscation of file names and extended attributes.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/io/inject.c b/io/inject.c
+index 25c7021..964ebfe 100644
+--- a/io/inject.c
++++ b/io/inject.c
+@@ -86,7 +86,13 @@ error_tag(char *name)
+ 		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
+ #define XFS_ERRTAG_AG_RESV_CRITICAL			27
+ 		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
+-#define XFS_ERRTAG_MAX                                  28
++#define XFS_ERRTAG_DROP_WRITES				28
++		{ XFS_ERRTAG_DROP_WRITES,		"drop_writes" },
++#define XFS_ERRTAG_LOG_BAD_CRC				29
++		{ XFS_ERRTAG_LOG_BAD_CRC,		"log_bad_crc" },
++#define XFS_ERRTAG_LOG_ITEM_PIN				30
++		{ XFS_ERRTAG_LOG_ITEM_PIN,		"log_item_pin" },
++#define XFS_ERRTAG_MAX                                  31
+ 		{ XFS_ERRTAG_MAX,			NULL }
+ 	};
+ 	int	count;
+
