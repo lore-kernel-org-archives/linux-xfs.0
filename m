@@ -1,60 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from LGEAMRELO13.lge.com ([156.147.23.53]:48444 "EHLO
-        lgeamrelo13.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750919AbdJZF66 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 01:58:58 -0400
-Date: Thu, 26 Oct 2017 14:58:50 +0900
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [PATCH v5 9/9] block: Assign a lock_class per gendisk used for
- wait_for_completion()
-Message-ID: <20171026055850.GA5594@X58A-UD3R>
-References: <1508921765-15396-1-git-send-email-byungchul.park@lge.com>
- <1508921765-15396-10-git-send-email-byungchul.park@lge.com>
- <20171025101328.b6fg32m2oazh3zro@gmail.com>
- <89864125-688d-d3df-a24c-7f335b9a144e@kernel.dk>
- <20171026055046.wjbbua4kx6lw5l2r@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50408 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750974AbdJZGnP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 02:43:15 -0400
+Date: Thu, 26 Oct 2017 14:43:13 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 5/6] misc: add module reloading helpers
+Message-ID: <20171026064313.GJ3235@eguan.usersys.redhat.com>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <150899712429.18389.5159489339127196469.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171026055046.wjbbua4kx6lw5l2r@gmail.com>
+In-Reply-To: <150899712429.18389.5159489339127196469.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, peterz@infradead.org, johan@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org, tj@kernel.org, johannes.berg@intel.com, oleg@redhat.com, amir73il@gmail.com, david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, idryomov@gmail.com, kernel-team@lge.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 07:50:46AM +0200, Ingo Molnar wrote:
+On Wed, Oct 25, 2017 at 10:52:04PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> * Jens Axboe <axboe@kernel.dk> wrote:
+> Add some helper functions to require that we can reload a given module,
+> and add a helper to actually do that.  Refactor the existing users to
+> use the generics.
 > 
-> > On 10/25/2017 03:13 AM, Ingo Molnar wrote:
-> > > 
-> > > * Byungchul Park <byungchul.park@lge.com> wrote:
-> > > 
-> > >> Darrick posted the following warning and Dave Chinner analyzed it:
-> > >>
-> > >>> ======================================================
-> > >>> WARNING: possible circular locking dependency detected
-> > >>> 4.14.0-rc1-fixes #1 Tainted: G        W
-> > > 
-> > >> Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > >> Analyzed-by: Dave Chinner <david@fromorbit.com>
-> > >> Signed-off-by: Byungchul Park <byungchul.park@lge.com>
-> > >> ---
-> > >>  block/bio.c           |  2 +-
-> > >>  block/genhd.c         | 10 ++--------
-> > >>  include/linux/genhd.h | 22 ++++++++++++++++++++--
-> > >>  3 files changed, 23 insertions(+), 11 deletions(-)
-> > > 
-> > > Ok, this patch looks good to me now, I'll wait to get an Ack or Nak from Jens for 
-> > > these changes.
-> > > 
-> > > Jens: this patch has some dependencies in prior lockdep changes, so I'd like to 
-> > > carry it in the locking tree for a v4.15 merge.
-> > 
-> > Looks fine to me, you can add my reviewed-by and carry it in your tree.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/btrfs    |   12 ------------
+>  common/rc       |   15 +++++++++++++++
+>  tests/btrfs/124 |    9 +++------
+>  tests/btrfs/125 |    9 +++------
+>  4 files changed, 21 insertions(+), 24 deletions(-)
 > 
-> Thanks Jens!
+> 
+> diff --git a/common/btrfs b/common/btrfs
+> index fd762ef..c09206c 100644
+> --- a/common/btrfs
+> +++ b/common/btrfs
+> @@ -349,18 +349,6 @@ _btrfs_qgroup_units()
+>  	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
+>  }
+>  
+> -_require_btrfs_loadable()
+> -{
+> -	modprobe -r btrfs || _notrun "btrfs unloadable"
+> -	modprobe btrfs || _notrun "Can't load btrfs"
+> -}
+> -
+> -_reload_btrfs_ko()
+> -{
+> -	modprobe -r btrfs || _fail "btrfs unload failed"
+> -	modprobe btrfs || _fail "btrfs load failed"
+> -}
+> -
+>  _btrfs_compression_algos()
+>  {
+>  	echo zlib
+> diff --git a/common/rc b/common/rc
+> index 83aaced..5375f7b 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3580,6 +3580,21 @@ _require_scratch_feature()
+>  	esac
+>  }
+>  
+> +# Check that we have a module that can be loaded.
+> +_require_loadable_module()
+> +{
+> +	module="$1"
+> +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
 
-Thanks all of you.
+I think we should try to unload the given module too to see if we really
+could unload it, otherwise a later _reload_module() still fails if
+rootfs is mounted as $module type, even if we already umounted TEST_DEV
+and SCRATCH_DEV.
 
+> +}
+> +
+> +# Reload a particular module.
+> +_reload_module()
+> +{
+> +	module="$1"
+> +
+> +	modprobe -r "${module}" || _fail "${module} unload failed"
+> +	modprobe "${module}" || _fail "${module} load failed"
+> +}
+>  
+>  init_rc
+>  
+> diff --git a/tests/btrfs/124 b/tests/btrfs/124
+> index 7206094..1b6cb24 100755
+> --- a/tests/btrfs/124
+> +++ b/tests/btrfs/124
+> @@ -64,10 +64,7 @@ rm -f $seqres.full
+>  _supported_fs btrfs
+>  _supported_os Linux
+>  _require_scratch_dev_pool 2
+> -
+> -# the mounted test dir prevent btrfs unload, we need to unmount
+> -_test_unmount
+> -_require_btrfs_loadable
+> +_require_loadable_module "btrfs"
+
+Then keep the above comments and _test_unmount?
+
+Thanks,
+Eryu
+
+>  
+>  _scratch_dev_pool_get 2
+>  
+> @@ -102,7 +99,7 @@ echo "clean btrfs ko" >> $seqres.full
+>  _scratch_unmount
+>  
+>  # un-scan the btrfs devices
+> -_reload_btrfs_ko
+> +_reload_module "btrfs"
+>  
+>  echo >> $seqres.full
+>  echo "-----Write degraded mount fill upto $max_fs_sz bytes-----" >> $seqres.full
+> @@ -141,7 +138,7 @@ echo
+>  echo "Mount degraded with the other dev"
+>  _scratch_unmount
+>  # un-scan the btrfs devices
+> -_reload_btrfs_ko
+> +_reload_module "btrfs"
+>  _mount -o degraded $dev2 $SCRATCH_MNT >>$seqres.full 2>&1
+>  _run_btrfs_util_prog filesystem show
+>  checkpoint3=`md5sum $SCRATCH_MNT/tf2`
+> diff --git a/tests/btrfs/125 b/tests/btrfs/125
+> index 91aa8d8..dbb226c 100755
+> --- a/tests/btrfs/125
+> +++ b/tests/btrfs/125
+> @@ -63,10 +63,7 @@ rm -f $seqres.full
+>  _supported_fs btrfs
+>  _supported_os Linux
+>  _require_scratch_dev_pool 3
+> -
+> -# we need btrfs to unload, need test dir unmounted
+> -_test_unmount
+> -_require_btrfs_loadable
+> +_require_loadable_module "btrfs"
+>  
+>  _scratch_dev_pool_get 3
+>  
+> @@ -118,7 +115,7 @@ echo "unmount" >> $seqres.full
+>  _scratch_unmount
+>  echo "clean btrfs ko" >> $seqres.full
+>  # un-scan the btrfs devices
+> -_reload_btrfs_ko
+> +_reload_module "btrfs"
+>  _mount -o degraded,device=$dev2 $dev1 $SCRATCH_MNT >>$seqres.full 2>&1
+>  dd if=/dev/zero of="$SCRATCH_MNT"/tf2 bs=$bs count=$count \
+>  					>>$seqres.full 2>&1
+> @@ -154,7 +151,7 @@ echo "Mount degraded but with other dev"
+>  
+>  _scratch_unmount
+>  # un-scan the btrfs devices
+> -_reload_btrfs_ko
+> +_reload_module "btrfs"
+>  
+>  _mount -o degraded,device=${dev2} $dev3 $SCRATCH_MNT >>$seqres.full 2>&1
+>  
+> 
