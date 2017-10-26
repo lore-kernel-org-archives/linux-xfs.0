@@ -1,130 +1,280 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:22504 "EHLO
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:65339 "EHLO
         ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932375AbdJZIdd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 04:33:33 -0400
+        by vger.kernel.org with ESMTP id S932443AbdJZIdr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 04:33:47 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1e7dbS-0003CV-EK
+        id 1e7dbS-0003Ch-Jv
         for linux-xfs@vger.kernel.org; Thu, 26 Oct 2017 19:33:26 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1e7dbS-0005MA-B3
+        id 1e7dbS-0005MR-If
         for linux-xfs@vger.kernel.org; Thu, 26 Oct 2017 19:33:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Date: Thu, 26 Oct 2017 19:33:08 +1100
-Message-Id: <20171026083322.20428-1-david@fromorbit.com>
+Subject: [PATCH 06/14] xfs: separate secondary sb update in growfs
+Date: Thu, 26 Oct 2017 19:33:14 +1100
+Message-Id: <20171026083322.20428-7-david@fromorbit.com>
+In-Reply-To: <20171026083322.20428-1-david@fromorbit.com>
+References: <20171026083322.20428-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patchset is aimed at filesystems that are installed on sparse
-block devices, a.k.a thin provisioned devices. The aim of the
-patchset is to bring the space management aspect of the storage
-stack up into the filesystem rather than keeping it below the
-filesystem where users and the filesystem have no clue they are
-about to run out of space.
+From: Dave Chinner <dchinner@redhat.com>
 
-The idea is that thin block devices will be massively
-over-provisioned giving the filesystem a large block device address
-space to manage, but the filesystem presents itself as a much
-smaller filesystem. That is, the space the filesystem presents the
-users is much lower than the what the address space teh block device
-provides.
+This happens after all the transactions to update the superblock
+occur, and errors need to be handled slightly differently. Seperate
+out the code into it's own function, and clean up the error goto
+stack in the core growfs code as it is now much simpler.
 
-This somewhat turns traditional thin provisioning on it's head.
-Admins are used to lying through their teeth to users about how much
-space they have available, and then they hope to hell that users
-never try to store as much data as they've been "provisioned" with.
-As a result, the traditional failure case is the block device
-running out of space all of a sudden and the filesystem and
-users wondering WTF just went wrong with their system.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 152 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 86 insertions(+), 66 deletions(-)
 
-Moving the space management up into the filesystem by itself doesn't
-solve this problem - the thin storage pools can still be
-over-committed - but it does allow a new way of managing the space.
-Essentially, growing or shrinking a thin filesystem is an
-operation that only takes a couple of milliseconds to do because
-it's just an accounting trick. It's far less complex than creating
-a new file, or even reading data from a file.
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 9f8877388645..a4da710521f5 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -478,9 +478,8 @@ xfs_growfs_data_private(
+ {
+ 	xfs_agf_t		*agf;
+ 	xfs_agi_t		*agi;
+-	xfs_agnumber_t		agno;
+ 	xfs_buf_t		*bp;
+-	int			error, saved_error = 0;
++	int			error;
+ 	xfs_agnumber_t		nagcount;
+ 	xfs_agnumber_t		nagimax = 0;
+ 	xfs_rfsblock_t		nb, nb_mod;
+@@ -552,12 +551,12 @@ xfs_growfs_data_private(
+ 		error = xfs_grow_ag_headers(mp, &id);
+ 		if (error) {
+ 			xfs_buf_delwri_cancel(&id.buffer_list);
+-			goto error0;
++			goto out_trans_cancel;
+ 		}
+ 	}
+ 	error = xfs_buf_delwri_submit(&id.buffer_list);
+ 	if (error)
+-		goto error0;
++		goto out_trans_cancel;
+ 
+ 	xfs_trans_agblocks_delta(tp, id.nfree);
+ 
+@@ -571,22 +570,23 @@ xfs_growfs_data_private(
+ 		 * Change the agi length.
+ 		 */
+ 		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+-		if (error) {
+-			goto error0;
+-		}
++		if (error)
++			goto out_trans_cancel;
++
+ 		ASSERT(bp);
+ 		agi = XFS_BUF_TO_AGI(bp);
+ 		be32_add_cpu(&agi->agi_length, new);
+ 		ASSERT(nagcount == oagcount ||
+ 		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+ 		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
++
+ 		/*
+ 		 * Change agf length.
+ 		 */
+ 		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+-		if (error) {
+-			goto error0;
+-		}
++		if (error)
++			goto out_trans_cancel;
++
+ 		ASSERT(bp);
+ 		agf = XFS_BUF_TO_AGF(bp);
+ 		be32_add_cpu(&agf->agf_length, new);
+@@ -607,7 +607,7 @@ xfs_growfs_data_private(
+ 					be32_to_cpu(agf->agf_length) - new),
+ 				new, &oinfo, XFS_AG_RESV_NONE);
+ 		if (error)
+-			goto error0;
++			goto out_trans_cancel;
+ 	}
+ 
+ 	/*
+@@ -644,16 +644,79 @@ xfs_growfs_data_private(
+ 		error = xfs_ag_resv_free(pag);
+ 		xfs_perag_put(pag);
+ 		if (error)
+-			goto out;
++			return error;
+ 	}
+ 
+ 	/* Reserve AG metadata blocks. */
+-	error = xfs_fs_reserve_ag_blocks(mp);
+-	if (error && error != -ENOSPC)
+-		goto out;
++	return xfs_fs_reserve_ag_blocks(mp);
++
++out_trans_cancel:
++	xfs_trans_cancel(tp);
++	return error;
++}
++
++static int
++xfs_growfs_log_private(
++	xfs_mount_t		*mp,	/* mount point for filesystem */
++	xfs_growfs_log_t	*in)	/* growfs log input struct */
++{
++	xfs_extlen_t		nb;
++
++	nb = in->newblocks;
++	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
++		return -EINVAL;
++	if (nb == mp->m_sb.sb_logblocks &&
++	    in->isint == (mp->m_sb.sb_logstart != 0))
++		return -EINVAL;
++	/*
++	 * Moving the log is hard, need new interfaces to sync
++	 * the log first, hold off all activity while moving it.
++	 * Can have shorter or longer log in the same space,
++	 * or transform internal to external log or vice versa.
++	 */
++	return -ENOSYS;
++}
++
++static int
++xfs_growfs_imaxpct(
++	struct xfs_mount	*mp,
++	__u32			imaxpct)
++{
++	struct xfs_trans	*tp;
++	int			dpct;
++	int			error;
++
++	if (imaxpct > 100)
++		return -EINVAL;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
++			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
++	if (error)
++		return error;
++
++	dpct = imaxpct - mp->m_sb.sb_imax_pct;
++	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
++	xfs_trans_set_sync(tp);
++	return xfs_trans_commit(tp);
++}
++
++/*
++ * After a grow operation, we need to update all the secondary superblocks
++ * to match the new state of the primary. Read/init the superblocks and update
++ * them appropriately.
++ */
++static int
++xfs_growfs_update_superblocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		oagcount)
++{
++	struct xfs_buf		*bp;
++	xfs_agnumber_t		agno;
++	int			saved_error = 0;
++	int			error = 0;
+ 
+ 	/* update secondary superblocks. */
+-	for (agno = 1; agno < nagcount; agno++) {
++	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+ 		error = 0;
+ 		/*
+ 		 * new secondary superblocks need to be zeroed, not read from
+@@ -703,57 +766,7 @@ xfs_growfs_data_private(
+ 		}
+ 	}
+ 
+- out:
+ 	return saved_error ? saved_error : error;
+-
+- error0:
+-	xfs_trans_cancel(tp);
+-	return error;
+-}
+-
+-static int
+-xfs_growfs_log_private(
+-	xfs_mount_t		*mp,	/* mount point for filesystem */
+-	xfs_growfs_log_t	*in)	/* growfs log input struct */
+-{
+-	xfs_extlen_t		nb;
+-
+-	nb = in->newblocks;
+-	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
+-		return -EINVAL;
+-	if (nb == mp->m_sb.sb_logblocks &&
+-	    in->isint == (mp->m_sb.sb_logstart != 0))
+-		return -EINVAL;
+-	/*
+-	 * Moving the log is hard, need new interfaces to sync
+-	 * the log first, hold off all activity while moving it.
+-	 * Can have shorter or longer log in the same space,
+-	 * or transform internal to external log or vice versa.
+-	 */
+-	return -ENOSYS;
+-}
+-
+-static int
+-xfs_growfs_imaxpct(
+-	struct xfs_mount	*mp,
+-	__u32			imaxpct)
+-{
+-	struct xfs_trans	*tp;
+-	int64_t			dpct;
+-	int			error;
+-
+-	if (imaxpct > 100)
+-		return -EINVAL;
+-
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+-			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+-	if (error)
+-		return error;
+-
+-	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
+-	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+-	xfs_trans_set_sync(tp);
+-	return xfs_trans_commit(tp);
+ }
+ 
+ /*
+@@ -766,6 +779,7 @@ xfs_growfs_data(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_growfs_data	*in)
+ {
++	xfs_agnumber_t		oagcount;
+ 	int			error = 0;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -780,6 +794,7 @@ xfs_growfs_data(
+ 			goto out_error;
+ 	}
+ 
++	oagcount = mp->m_sb.sb_agcount;
+ 	error = xfs_growfs_data_private(mp, in);
+ 	if (error)
+ 		goto out_error;
+@@ -794,6 +809,11 @@ xfs_growfs_data(
+ 	} else
+ 		mp->m_maxicount = 0;
+ 
++	/*
++	 * Update secondary superblocks now the physical grow has completed
++	 */
++	error = xfs_growfs_update_superblocks(mp, oagcount);
++
+ out_error:
+ 	/*
+ 	 * Increment the generation unconditionally, the error could be from
+-- 
+2.15.0.rc0
 
-Freeing unused space from the filesystem isn't done during a shrink
-operation. It is done through discard operations, either dynamically
-via the discard mount option or, preferrably, by an fstrim
-invocation. This means freeing space in the thin pool is not in any
-way related to the management of the filesystem size and space
-enforcement even during a grow or shrink operation.
-
-What it means is that the filesystem controls the amount of active
-data the user can have in the thin pool. The thin pool usage may be
-more or less, depending on snapshots, deduplication,
-freed-but-not-discarded space, etc. And because of how low the
-overhead of changing the accounting is, users don't need to be given
-a filesystem with all the space they might need once in a blue moon.
-It is trivial to expand when need, and shrink and release when the
-data is removed.
-
-Yes, the underlying thin device that the filesystem sits on gets
-provisioned at the "once in a blue moon" size that is requested,
-but until that space is needed the filesystem can run at low amounts
-of reported free space and so prevent the likelyhood of sudden
-thin device pool depletion.
-
-Normally, running a filesysetm for low periods of time at low
-amounts of free space is a bad thing. However, for a thin
-filesystem, a low amount of usable free space doesn't mean the
-filesystem is running near full. The filesystem still has the full
-block device address to work with, so has oodles of contiguous free
-space hidden from the user. hence it's not until the thin filesystem
-grows to be near "non-thin" and is near full that the traditional
-"running near ENOSPC" problems arise.
-
-How to stop that from ever happening? e.g. Some one needs 100GB of
-space now, but maybe much more than that in a year. So provision a
-10TB thin block device and put a 100GB thin filesystem on it.
-Problems won't arise until it's been grown to 100x it's original
-size.
-
-Yeah, it all requires thinking about the way storage is provisioned
-and managed a little bit differently, but the key point to realise
-is that grow and shrink effectively become free operations on
-thin devices if the filesystem is aware that it's on a thin device.
-
-The patchset has several parts to it. It is built on a 4.14-rc5
-kernel with for-next and Darrick's scrub tree from a couple of days
-ago merged into it.
-
-The first part of teh series is a growfs refactoring. This can
-probably stand alone, and the idea is to move the refactored
-infrastructure into libxfs so it can be shared with mkfs. This also
-cleans up a lot of the cruft in growfs and so makes it much easier
-to add the changes later in the series.
-
-The second part of the patchset moves the functionality of
-sb_dblocks into the struct xfs_mount. This provides the separation
-of address space checks and capacty related calculations that the
-thinspace mods require. This also fixes the problem of freshly made,
-empty filesystems reporting 2% of the space as used.
-
-The XFS_IOC_FSGEOMETRY ioctl needed to be bumped to a new version
-because the structure needed growing.
-
-Finally, there's the patches that provide thinspace support and the
-growfs mods needed to grow and shrink.
-
-I've smoke tested the non-thinspace code paths (running auto tests
-on a scrub enabled kernel+userspace right now) as I haven't updated
-the userspace code to exercise the thinp code paths yet. I know the
-concept works, but my userspace code has an older on-disk format
-from the prototype so it will take me a couple of days to update and
-work out how to get fstests to integrate it reliably. So this is
-mainly a heads-up RFC patchset....
-
-Comments, thoughts, flames all welcome....
-
-Cheers,
-
-Dave.
