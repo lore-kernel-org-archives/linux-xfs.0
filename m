@@ -1,121 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40200 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:44378 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932217AbdJZNYE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 09:24:04 -0400
-Date: Thu, 26 Oct 2017 15:24:02 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
- MAP_SYNC
-Message-ID: <20171026132402.GB31161@quack2.suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
- <20171024152415.22864-19-jack@suse.cz>
- <20171024211007.GA1611@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="GvXjxJ+pjyke8COw"
-Content-Disposition: inline
-In-Reply-To: <20171024211007.GA1611@linux.intel.com>
+        id S932228AbdJZN1q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 09:27:46 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EED4025C4D
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 13:27:45 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D32F36F80A
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 13:27:45 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3] xfs: more robust recovery xlog buffer validation
+Date: Thu, 26 Oct 2017 09:27:44 -0400
+Message-Id: <20171026132744.6282-1-bfoster@redhat.com>
+In-Reply-To: <20171025185705.64983-2-bfoster@redhat.com>
+References: <20171025185705.64983-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org
 
+mkfs has a historical problem where it can format very small
+filesystems with too small of a physical log. Under certain
+conditions, log recovery of an associated filesystem can end up
+passing garbage parameter values to some of the cycle and log record
+verification functions due to bugs in log recovery not dealing with
+such filesystems properly. This results in attempts to read from
+bogus/underflowed log block addresses.
 
---GvXjxJ+pjyke8COw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Since the buffer read may ultimately succeed, log recovery can
+proceed with bogus data and otherwise go off the rails and crash.
+One example of this is a negative last_blk being passed to
+xlog_find_verify_log_record() causing us to skip the loop, pass a
+NULL head pointer to xlog_header_check_mount() and crash.
 
-On Tue 24-10-17 15:10:07, Ross Zwisler wrote:
-> On Tue, Oct 24, 2017 at 05:24:15PM +0200, Jan Kara wrote:
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> 
-> This looks unchanged since the previous version?
+Improve the xlog buffer verification to address this problem. We
+already verify xlog buffer length, so update this mechanism to also
+sanity check for a valid log relative block address and otherwise
+return an error. Pass a fixed, valid log block address from
+xlog_get_bp() since the target address will be validated when the
+buffer is read. This ensures that any bogus log block address/length
+calculations lead to graceful mount failure rather than risking a
+crash or worse if recovery proceeds with bogus data.
 
-Ah, thanks for checking. I forgot to commit modifications. Attached is
-really updated patch.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
-
---GvXjxJ+pjyke8COw
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-mmap.2-Add-description-of-MAP_SHARED_VALIDATE-and-MA.patch"
-
->From 59eeec2998ed9b3840aab951f213148cb1d053a5 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Thu, 19 Oct 2017 14:44:55 +0200
-Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
-
-Signed-off-by: Jan Kara <jack@suse.cz>
+Reported-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- man2/mmap.2 | 35 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
 
-diff --git a/man2/mmap.2 b/man2/mmap.2
-index 47c3148653be..b38ee6809327 100644
---- a/man2/mmap.2
-+++ b/man2/mmap.2
-@@ -125,6 +125,21 @@ are carried through to the underlying file.
- to the underlying file requires the use of
- .BR msync (2).)
- .TP
-+.BR MAP_SHARED_VALIDATE " (since Linux 4.15)"
-+The same as
-+.B MAP_SHARED
-+except that
-+.B MAP_SHARED
-+mappings ignore unknown flags in
-+.IR flags .
-+In contrast when creating mapping of
-+.B MAP_SHARED_VALIDATE
-+mapping type, the kernel verifies all passed flags are known and fails the
-+mapping with
-+.BR EOPNOTSUPP
-+otherwise. This mapping type is also required to be able to use some mapping
-+flags.
-+.TP
- .B MAP_PRIVATE
- Create a private copy-on-write mapping.
- Updates to the mapping are not visible to other processes
-@@ -134,7 +149,10 @@ It is unspecified whether changes made to the file after the
- .BR mmap ()
- call are visible in the mapped region.
- .PP
--Both of these flags are described in POSIX.1-2001 and POSIX.1-2008.
-+.B MAP_SHARED
-+and
-+.B MAP_PRIVATE
-+are described in POSIX.1-2001 and POSIX.1-2008.
- .PP
- In addition, zero or more of the following values can be ORed in
- .IR flags :
-@@ -352,6 +370,21 @@ option.
- Because of the security implications,
- that option is normally enabled only on embedded devices
- (i.e., devices where one has complete control of the contents of user memory).
-+.TP
-+.BR MAP_SYNC " (since Linux 4.15)"
-+This flags is available only with
-+.B MAP_SHARED_VALIDATE
-+mapping type. Mappings of
-+.B MAP_SHARED
-+type will silently ignore this flag.
-+This flag is supported only for files supporting DAX (direct mapping of persistent
-+memory). For other files, creating mapping with this flag results in
-+.B EOPNOTSUPP
-+error. Shared file mappings with this flag provide the guarantee that while
-+some memory is writeably mapped in the address space of the process, it will
-+be visible in the same file at the same offset even after the system crashes or
-+is rebooted. This allows users of such mappings to make data modifications
-+persistent in a more efficient way using appropriate CPU instructions.
- .PP
- Of the above flags, only
- .B MAP_FIXED
+v3:
+- Verify log buf I/O range is within log boundary.
+
+ fs/xfs/xfs_log_recover.c | 38 ++++++++++++++++++++++++--------------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ee34899..1074b5f 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -85,17 +85,21 @@ struct xfs_buf_cancel {
+  */
+ 
+ /*
+- * Verify the given count of basic blocks is valid number of blocks
+- * to specify for an operation involving the given XFS log buffer.
+- * Returns nonzero if the count is valid, 0 otherwise.
++ * Verify the log-relative block number and length in basic blocks are valid for
++ * an operation involving the given XFS log buffer. Returns true if the fields
++ * are valid, false otherwise.
+  */
+-
+-static inline int
+-xlog_buf_bbcount_valid(
++static inline bool
++xlog_verify_bp(
+ 	struct xlog	*log,
++	xfs_daddr_t	blk_no,
+ 	int		bbcount)
+ {
+-	return bbcount > 0 && bbcount <= log->l_logBBsize;
++	if (blk_no < 0 || blk_no >= log->l_logBBsize)
++		return false;
++	if (bbcount <= 0 || (blk_no + bbcount) > log->l_logBBsize)
++		return false;
++	return true;
+ }
+ 
+ /*
+@@ -110,7 +114,11 @@ xlog_get_bp(
+ {
+ 	struct xfs_buf	*bp;
+ 
+-	if (!xlog_buf_bbcount_valid(log, nbblks)) {
++	/*
++	 * Pass log block 0 since we don't have an addr yet, buffer will be
++	 * verified on read.
++	 */
++	if (!xlog_verify_bp(log, 0, nbblks)) {
+ 		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+ 			nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+@@ -180,9 +188,10 @@ xlog_bread_noalign(
+ {
+ 	int		error;
+ 
+-	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+-			nbblks);
++	if (!xlog_verify_bp(log, blk_no, nbblks)) {
++		xfs_warn(log->l_mp,
++			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
++			 blk_no, nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -265,9 +274,10 @@ xlog_bwrite(
+ {
+ 	int		error;
+ 
+-	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+-			nbblks);
++	if (!xlog_verify_bp(log, blk_no, nbblks)) {
++		xfs_warn(log->l_mp,
++			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
++			 blk_no, nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return -EFSCORRUPTED;
+ 	}
 -- 
-2.12.3
+2.9.5
 
-
---GvXjxJ+pjyke8COw--
