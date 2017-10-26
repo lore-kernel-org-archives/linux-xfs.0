@@ -1,86 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46963 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752624AbdJ0MhU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 08:37:20 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH 1/2] fiemap: Factor out actual fiemap call code
-Date: Fri, 27 Oct 2017 15:37:09 +0300
-Message-Id: <1509107832-22286-2-git-send-email-nborisov@suse.com>
-In-Reply-To: <1509107832-22286-1-git-send-email-nborisov@suse.com>
-References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:28918 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932346AbdJZWPf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:35 -0400
+Subject: [PATCH 06/10] xfs_repair: fix cowextsize field checking and
+ repairing
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 26 Oct 2017 15:15:31 -0700
+Message-ID: <150905613147.28563.3642613984403228295.stgit@magnolia>
+In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-This will be needed to in a subsequent patch to avoid code duplication. No 
-functional changes
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+Make sure that we never leave the filesystem with a zero cowextsize hint
+while the cowextsize inode flag is set.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/fiemap.c | 38 +++++++++++++++++++++++++++-----------
- 1 file changed, 27 insertions(+), 11 deletions(-)
+ repair/dinode.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index e6fd66da753d..4a52bff974e8 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -211,6 +211,30 @@ calc_print_format(
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index e62ec33..32cc769 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2694,6 +2694,7 @@ _("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ",
+ 					be32_to_cpu(dino->di_cowextsize), lino);
+ 			if (!no_modify)  {
+ 				do_warn(_("resetting to zero\n"));
++				dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
+ 				dino->di_cowextsize = 0;
+ 				*dirty = 1;
+ 			} else
+@@ -2702,6 +2703,24 @@ _("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ",
  	}
- }
  
-+static int
-+__fiemap(struct fiemap * fiemap,
-+	 int		 mapsize,
-+	 __u32		 flags,
-+	 __u64		 start,
-+	 __u64		 length) {
-+
-+	int ret;
-+
-+	memset(fiemap, 0, mapsize);
-+        fiemap->fm_flags = flags;
-+        fiemap->fm_start = start;
-+        fiemap->fm_length = length;
-+        fiemap->fm_extent_count = EXTENT_BATCH;
-+	ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+	if (ret < 0) {
-+	        fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-+	                "%s\n", progname, file->name, strerror(errno));
-+	        return ret;
+ 	/*
++	 * Can't have the COWEXTSIZE flag set with no hint.
++	 */
++	if (dino->di_version >= 3 &&
++	    be32_to_cpu(dino->di_cowextsize) == 0 &&
++	    (be64_to_cpu(dino->di_flags2) & XFS_DIFLAG2_COWEXTSIZE)) {
++		do_warn(
++_("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
++				lino);
++		if (!no_modify)  {
++			do_warn(_("clearing cowextsize flag\n"));
++			dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
++			*dirty = 1;
++		} else {
++			do_warn(_("would clear cowextsize flag\n"));
++		}
 +	}
 +
-+	return 0;
-+}
-+
- int
- fiemap_f(
- 	int		argc,
-@@ -266,19 +290,11 @@ fiemap_f(
- 
- 	while (!last && (cur_extent != max_extents)) {
- 
--		memset(fiemap, 0, map_size);
--		fiemap->fm_flags = fiemap_flags;
--		fiemap->fm_start = last_logical;
--		fiemap->fm_length = -1LL;
--		fiemap->fm_extent_count = EXTENT_BATCH;
--
--		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
-+			       len - covered_length);
- 		if (ret < 0) {
--			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
--				"%s\n", progname, file->name, strerror(errno));
--			free(fiemap);
- 			exitcode = 1;
--			return 0;
-+			goto out;
- 		}
- 
- 		/* No more extents to map, exit */
--- 
-2.7.4
++	/*
+ 	 * general size/consistency checks:
+ 	 */
+ 	if (process_check_inode_sizes(mp, dino, lino, type) != 0)
 
