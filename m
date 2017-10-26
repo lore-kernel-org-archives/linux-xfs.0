@@ -1,138 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:48745 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751682AbdJYA7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 20:59:46 -0400
-Date: Wed, 25 Oct 2017 11:59:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Message-ID: <20171025005932.GY3666@dastard>
-References: <20170829235052.21050-1-david@fromorbit.com>
- <6cb1a1fa-15b2-6280-ba58-af39f496eb56@sandeen.net>
+Received: from mga11.intel.com ([192.55.52.93]:37940 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932309AbdJZRzf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 13:55:35 -0400
+Date: Thu, 26 Oct 2017 12:00:14 -0600
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
+Message-ID: <20171026180014.GA27102@localhost.localdomain>
+References: <20171026144131.26885-1-keith.busch@intel.com>
+ <20171026162518.GW5483@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6cb1a1fa-15b2-6280-ba58-af39f496eb56@sandeen.net>
+In-Reply-To: <20171026162518.GW5483@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 23, 2017 at 10:00:26PM -0500, Eric Sandeen wrote:
-> Ok more review, sorry this is so dispersed.
+On Thu, Oct 26, 2017 at 09:25:18AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 26, 2017 at 08:41:31AM -0600, Keith Busch wrote:
+> > Running mkfs.xfs was discarding the entire capacity in a single range. The
+> > block layer would split these into potentially many smaller requests
+> > and dispatch all of them to the device at roughly the same time.
+> > 
+> > SSD capacities are getting so large that full capacity discards will
+> > take some time to complete. When discards are deeply queued, the block
+> > layer may trigger timeout handling and IO failure, though the device is
+> > operating normally.
+> > 
+> > This patch uses smaller discard ranges in a loop for mkfs to avoid
+> > risking such timeouts. The max discard range is arbitrarilly set to
+> > 128GB in this patch.
 > 
-> [PATCH 14/42] mkfs: factor printing of mkfs config
+> I'd have thought devices would set sane blk_queue_max_discard_sectors
+> so that the block layer doesn't send such a huge command that the kernel
+> times out...
+
+The block limit only specifies the maximum size of a *single* discard
+request as seen by the end device. This single request is not a problem
+for timeouts, as far as I know.
+
+The timeouts occur when queueing many of them at the same time: the last
+one in the queue will have very high latency compared to ones ahead of
+it in the queue if the device processes discards serially (many do).
+
+There's no such limit to say the maximum outstanding number discard
+requests that can be dispatched at the same time; the max number of
+dispatched commands are shard with read and write.
+ 
+> ...but then I actually went and grepped that in the kernel and
+> discovered that nbd, zram, raid0, mtd, and nvme all pass in UINT_MAX,
+> which is 2T.  Frighteningly xen-blkfront passes in get_capacity() (which
+> overflows the unsigned int parameter on big virtual disks, I guess?).
+
+The block layer will limit a single discard range to 4GB. If the IOCTL
+specifies a larger range, the block layer will split it into multiple
+requests.
+
+> (I still think this is the kernel's problem, not userspace's, but now
+> with an extra layer of OMGWTF sprayed on.)
 > 
-> Oh good.  :)
-> 
-> [PATCH 15/42] mkfs: factor in memory superblock setup
-> 
-> Heh, I read that as factor in vs factor out ;)
-> 
-> This seems to change logic slightly, is it intentional?
-> 
-> from:
-> 
-> -	if (sb_feat.inode_align) {
-> -		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
-> -		if (sb_feat.crcs_enabled)
-> -			cluster_size *= isize / XFS_DINODE_MIN_SIZE;
-> -		sbp->sb_inoalignmt = cluster_size >> blocklog;
-> -		sb_feat.inode_align = sbp->sb_inoalignmt != 0;
-> -	}
-> 
-> to
-> 
-> +	if (cfg->sb_feat.inode_align) {
-> +		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
-> +		if (cfg->sb_feat.crcs_enabled)
-> +			cluster_size *= cfg->inodesize / XFS_DINODE_MIN_SIZE;
-> +		sbp->sb_inoalignmt = cluster_size >> cfg->blocklog;
-> +	}
-> 
-> it loses the test for inalignmt being 0 and turning off inode_align...
+> I dunno.  What kind of device produces these timeouts, and does it go
+> away if max_discards is lowered?
 
-Ok, so there's a few things here. When you look at the kernel and
-it decides on inode alignment, it does:
+We observe timeouts on capacities above 4TB: a single BLKDISCARD for that
+capacity has the block layer send 1024 discard requests at 4GB each.
 
-int
-xfs_ialloc_cluster_alignment(
-        struct xfs_mount        *mp)
-{
-        if (xfs_sb_version_hasalign(&mp->m_sb) &&
-            mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
-                return mp->m_sb.sb_inoalignmt;
-        return 1;
-}
-
-xfs_set_inoalignment() has a similar check before using
-sb_inoalignmt to create the alignment mask, so the kernel doesn't
-actually care that the alignment is 0 because it doesn't align
-inodes if it's less than the cluster buffer size....
-
-The tricky one is sparse inodes, because it requires sb_inoalignmt
-to be equal to the size of the chunk. The kernel does this at mount
-time:
-
-        /*
-         * Full inode chunks must be aligned to inode chunk size when
-         * sparse inodes are enabled to support the sparse chunk
-         * allocation algorithm and prevent overlapping inode records.
-         */
-        if (xfs_sb_version_hassparseinodes(sbp)) {
-                uint32_t        align;
-
-                align = XFS_INODES_PER_CHUNK * sbp->sb_inodesize
-                                >> sbp->sb_blocklog;
-                if (sbp->sb_inoalignmt != align) {
-                        xfs_warn(mp,
-"Inode block alignment (%u) must match chunk size (%u) for sparse inodes.",
-                                 sbp->sb_inoalignmt, align);
-                        return -EINVAL;
-                }
-        }
-
-
-If we take the case of 64k block size, we have blocklog = 16, and so:
-
-	align	= (64 * 512) >> 16
-		= 2^15 >> 16
-		= 0
-
-So sparse inodes requires sbp->sb_inoalignmt == 0 when a 64k block
-size is in use. It doesn't care about the align feature bit, though.
-
-What I just noticed is this in xfs_align_sparse_ino():
-
-        agbno = XFS_AGINO_TO_AGBNO(mp, *startino);
-        mod = agbno % mp->m_sb.sb_inoalignmt;
-        if (!mod)
-                return;
-
-if sb_inoalignmt is zero - and it will be for 64k block sizes and
-inode sizes <= 512 bytes - then the result here should be a divide
-by zero error. The only reason we haven't seen this is that we
-can't allocate a sparse inode cluster on 64k block size filesystems
-when the inode size <= 1k.....
-
-So AFAICT, the inode alignment feature bit just doesn't matter when
-the alignment is set to zero because the block size is larger than
-the inode cluster size.
-
-> if you deemed that impossible, a commit log comment would be helpful.
-> If not, maybe it's a bug.  :)  The test & set goes back to the mists
-> of time, so I'm not sure of its purpose.
-
-Oh, and of course, I forgot the simple reason: we always use aligned
-inodes on v5 filesystems, and we've defaulted to setting it on v4 fs
-for donkey's years, so AFAIC there's no reason it should ever not be
-set because the kernel has to handle alignment < cluster size sanely
-anyway....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Could the drivers do something else to mitigate this? We could set queue
+depths lower to throttle dispatched commands and the problem would go
+away. The depth, though, is set to optimize read and write, and we don't
+want to harm that path to mitigate discard latency spikes.
