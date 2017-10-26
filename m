@@ -1,86 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17494 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:21756 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932339AbdJZQZW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 12:25:22 -0400
-Date: Thu, 26 Oct 2017 09:25:18 -0700
+        with ESMTP id S932365AbdJZQbh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 12:31:37 -0400
+Date: Thu, 26 Oct 2017 09:31:32 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
-Message-ID: <20171026162518.GW5483@magnolia>
-References: <20171026144131.26885-1-keith.busch@intel.com>
+Subject: Re: [PATCH v2 3/3] xfs: drain the buffer LRU on mount
+Message-ID: <20171026163132.GX5483@magnolia>
+References: <20171025185705.64983-1-bfoster@redhat.com>
+ <20171025185705.64983-4-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171026144131.26885-1-keith.busch@intel.com>
+In-Reply-To: <20171025185705.64983-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Keith Busch <keith.busch@intel.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 08:41:31AM -0600, Keith Busch wrote:
-> Running mkfs.xfs was discarding the entire capacity in a single range. The
-> block layer would split these into potentially many smaller requests
-> and dispatch all of them to the device at roughly the same time.
+On Wed, Oct 25, 2017 at 02:57:05PM -0400, Brian Foster wrote:
+> Log recovery of v4 filesystems does not use buffer verifiers because
+> log recovery historically can result in transient buffer corruption
+> when target buffers might be ahead of the log after a crash. v5
+> filesystems work around this problem with metadata LSN ordering.
 > 
-> SSD capacities are getting so large that full capacity discards will
-> take some time to complete. When discards are deeply queued, the block
-> layer may trigger timeout handling and IO failure, though the device is
-> operating normally.
+> While this log recovery verifier behavior is necessary on v4 supers,
+> it can result in leaving buffers around in the LRU without verifiers
+> attached for a significant amount of time. This leads to use of
+> unverified buffers while the filesystem is in active use, long after
+> recovery has completed.
 > 
-> This patch uses smaller discard ranges in a loop for mkfs to avoid
-> risking such timeouts. The max discard range is arbitrarilly set to
-> 128GB in this patch.
+> To address this problem, drain all buffers from the LRU as a final
+> step of the log mount sequence. Note that this is done
+> unconditionally to provide a consistently clean cache footprint,
+> regardless of superblock version or log state. As a side effect,
+> this ensures that all cache resident, unverified buffers are
+> reclaimed after log recovery and therefore must be recreated with
+> verifiers on subsequent use.
+> 
+> Reported-by: Darrick Wong <darrick.wong@oracle.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-I'd have thought devices would set sane blk_queue_max_discard_sectors
-so that the block layer doesn't send such a huge command that the kernel
-times out...
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-...but then I actually went and grepped that in the kernel and
-discovered that nbd, zram, raid0, mtd, and nvme all pass in UINT_MAX,
-which is 2T.  Frighteningly xen-blkfront passes in get_capacity() (which
-overflows the unsigned int parameter on big virtual disks, I guess?).
-
-(I still think this is the kernel's problem, not userspace's, but now
-with an extra layer of OMGWTF sprayed on.)
-
-I dunno.  What kind of device produces these timeouts, and does it go
-away if max_discards is lowered?
-
---D
-
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
 > ---
->  include/linux.h | 13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_log.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> diff --git a/include/linux.h b/include/linux.h
-> index 6ce344c5..702aee0c 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -132,10 +132,17 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
->  static __inline__ int
->  platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index dc95a49..ab59e78 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -744,6 +744,7 @@ xfs_log_mount_finish(
 >  {
-> -	uint64_t range[2] = { start, len };
-> +	uint64_t end = start + len;
-> +	uint64_t size = 128ULL * 1024ULL * 1024ULL * 1024ULL;
+>  	int	error = 0;
+>  	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
+> +	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
 >  
-> -	if (ioctl(fd, BLKDISCARD, &range) < 0)
-> -		return errno;
-> +	for (; start < end; start += size) {
-> +		uint64_t range[2] = { start, MIN(len, size) };
-> +
-> +		len -= range[1];
-> +		if (ioctl(fd, BLKDISCARD, &range) < 0)
-> +			return errno;
-> +
+>  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+>  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+> @@ -780,6 +781,21 @@ xfs_log_mount_finish(
+>  	mp->m_super->s_flags &= ~MS_ACTIVE;
+>  	evict_inodes(mp->m_super);
+>  
+> +	/*
+> +	 * Drain the buffer LRU after log recovery. This is required for v4
+> +	 * filesystems to avoid leaving around buffers with NULL verifier ops,
+> +	 * but we do it unconditionally to make sure we're always in a clean
+> +	 * cache state after mount.
+> +	 *
+> +	 * Don't push in the error case because the AIL may have pending intents
+> +	 * that aren't removed until recovery is cancelled.
+> +	 */
+> +	if (!error && recovered) {
+> +		xfs_log_force(mp, XFS_LOG_SYNC);
+> +		xfs_ail_push_all_sync(mp->m_ail);
 > +	}
->  	return 0;
->  }
+> +	xfs_wait_buftarg(mp->m_ddev_targp);
+> +
+>  	if (readonly)
+>  		mp->m_flags |= XFS_MOUNT_RDONLY;
 >  
 > -- 
-> 2.13.6
+> 2.9.5
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
