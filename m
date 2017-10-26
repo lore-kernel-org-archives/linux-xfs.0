@@ -1,134 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56966 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752473AbdJaVwE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 17:52:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH] xfs_repair: clear extra file attributes on symlinks
-Date: Tue, 31 Oct 2017 14:51:56 -0700
-Message-Id: <20171031215156.12544-1-mcgrof@kernel.org>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:55831 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932365AbdJZIdc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 04:33:32 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1e7dbS-0003D1-O7
+        for linux-xfs@vger.kernel.org; Thu, 26 Oct 2017 19:33:26 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1e7dbS-0005Md-Me
+        for linux-xfs@vger.kernel.org; Thu, 26 Oct 2017 19:33:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 10/14] xfs: hide reserved metadata space from users
+Date: Thu, 26 Oct 2017 19:33:18 +1100
+Message-Id: <20171026083322.20428-11-david@fromorbit.com>
+In-Reply-To: <20171026083322.20428-1-david@fromorbit.com>
+References: <20171026083322.20428-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
+To: linux-xfs@vger.kernel.org
 
-Linux filesystems cannot set extra file attributes (stx_attributes as per
-statx(2)) on a symbolic link as ioctl(2) with FS_IOC_SETFLAGS is used for
-this purpose, and *all* ioctl(2) calls on a symbolic link yield EBADF.
-This is because ioctl(2) tries to obtain struct fd from the symbolic link
-file descriptor passed using fdget(), fdget() in turn always returns no
-file set when a file descriptor is open with O_PATH. As per symlink(2)
-O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
-descriptor of a symbolic link, and this holds true for Linux, as such extra
-file attributes cannot possibly be set on symbolic links on Linux.
+From: Dave Chinner <dchinner@redhat.com>
 
-Given this Linux filesystems should treat extra file attributes set on
-symbolic links as corruption and fix them.
+One of the major user-visible issues with the new rmap and reflink
+code is that it has to reserve worst case allocation space for it's
+per-AG btrees. The reservation isn't small, either - it's ~2% of
+total space - and so is very noticable. Indeed, a freshly mkfs'd,
+empty 500TB filesystem reports:
 
-   The TL;DR:
+$ df -h /mnt/scratch
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdc        500T  9.6T  491T   2% /mnt/scratch
 
-How I discovered this was finding a corrupted filesystem with symbolic
-links with the extra file attribute append (STATX_ATTR_APPEND) set. Symbolic
-links with the attribute append set cannot be removed as they are treated as
-if a file was set with the immutable flag set. Standard tools however cannot
-remove *any* attribute flag:
+That 10TB of space has already be used, before the user even writes
+a byte of data to it. This space can never be used by the user, so
+reporting it as free space is sub-optimal. At minimum, it's going to
+cause issues with space usage reporting tools that admins use.
 
-	# chattr -a symlink
-	chattr: Operation not supported while reading flags on b
+However, now that we can track usable space seperately to the block
+device size, we can make this space disappear from the filesystem
+completely. That is, if the reservation also drops the maximum
+usable space available to the filesystem, the above freeshly made
+filesystem on the 500TB device now reports as:
 
-If you end up with these symbolic links userspace cannot remove them.
+$ df -h /mnt/scratch
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdc        491T   62M  491T   1% /mnt/scratch
 
-Likewise one cannot use the same tool to *set* this extra file attribute on
-a symbolic link using chattr:
-	# rm -f y z
-	# ln -s y z
-	# chattr +a z
-	chattr: Operation not supported while reading flags on z
+A 491TB filesystem with just 62MB used in it.
 
-What makes this puzzling was one cannot even list attributes on symlinks
-using lsattr either:
+The filesystem no longer reports the reservation as used space and
+the filesystem now reports exactly what the users and admins expect:
+that it is completely empty.
 
-	# rm -f a b
-	# ln -s a b
-	# lsattr b
-	lsattr: Operation not supported While reading flags on b
-
-The above was due to commit 023d111e92195 ("chattr.1.in: Document the
-compression attribute flags E, X, and ...") merged on e2fsprogs v1.28 since
-August 2002. That commit just refers to the fact that attributes were only
-allowed after that commit for directories and regular files due to Debian
-bug 152029 [0]. This bug was filed since lsattr lsattr would segfault when
-used against a special file of an old DRM buggy driver, the ioctl seem to
-have worked but crashed lsattr with its information. The bug report doesn't
-list any specific reasoning for not allowing attributes on symlinks though.
-
-Crafting your own tool to query the extra file attributes with the new
-shiny statx(2) works, and if a symbolic link has the extra attribute
-flag set statx(2) would inform userspace of this. statx(2) is only used
-for getting file information, not for setting them.
-
-This all meant that if you end up with the append extra file attribute
-set on a symlink you need special tools to try to remove it and currently
-that's only possible on XFS with xfs_db [1] [2].
-
-Fix XFS filesystems which have these extra file attributes set as the only
-way they could have been set was through corruption.
-
-[0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
-[1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
-[2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
-
-Cc: Tso Ted <tytso@mit.edu>
-Cc: Nikolay Borisov <nborisov@suse.com>
-Cc: Flex Liu <fliu@suse.com>
-Cc: Jake Norris <jake.norris@suse.com>
-Cc: Jan Kara <jack@suse.cz>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
+ fs/xfs/libxfs/xfs_ag_resv.c | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
 
-On this v2 I've provided a much better explanation as to why these
-extra file attributes don't make sense on Linux, and trimmed the flags
-we venture out to clear to *only* match what statx defines. It may be
-possible to clear more dino->di_flags and maybe even dino->di_flags2
-for symbolic links however that those be determined separately as the
-other flags' semantics are clarified for setting.
-
- repair/dinode.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 15ba8cc22b39..6288e42de15e 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2482,6 +2482,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 						FS_XFLAG_EXTSIZE);
- 			}
- 		}
-+		if (flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
-+			     XFS_DIFLAG_NODUMP)) {
-+			/*
-+			 * ioctl(fd, *) and so ioctl(fd, FS_IOC_SETFLAGS)
-+			 * yields EBADF on symlinks as they have O_PATH set.
-+			 * "Extra file attributes", stx_attributes, as per
-+			 * statx(2) cannot be set on symlinks on Linux.
-+			 */
-+			if (di_mode && S_ISLNK(di_mode) &&
-+			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
-+				if (!uncertain) {
-+					do_warn(
-+	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
-+						lino);
-+				}
-+				flags &= ~(XFS_DIFLAG_IMMUTABLE |
-+					   XFS_DIFLAG_APPEND |
-+					   XFS_DIFLAG_NODUMP);
-+			}
-+		}
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index df3e600835e8..475512d54a0a 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -143,6 +143,28 @@ xfs_ag_resv_needed(
+ 	return len;
+ }
+ 
++/*
++ * xfs_ag_resv_update_space() hides the reservations from userspace by modifying
++ * the maximum usable space in the filesystem as well as the free blocks
++ * available.  This means a truly empty filesystem will report that it's truly
++ * empty rather than reporting that it has some significant amount of free space
++ * used that the user cannot free.
++ */
++static int
++xfs_ag_resv_update_space(
++	struct xfs_mount	*mp,
++	int64_t			resv)
++{
++	int			error;
 +
- 		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
- 			if (!no_modify) {
- 				do_warn(_("fixing bad flags.\n"));
++	error = xfs_mod_fdblocks(mp, resv, true);
++	if (error)
++		return error;
++
++	mp->m_usable_blocks += resv;
++	return 0;
++}
++
+ /* Clean out a reservation */
+ static int
+ __xfs_ag_resv_free(
+@@ -166,7 +188,8 @@ __xfs_ag_resv_free(
+ 		oldresv = resv->ar_orig_reserved;
+ 	else
+ 		oldresv = resv->ar_reserved;
+-	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
++
++	error = xfs_ag_resv_update_space(pag->pag_mount, (int64_t)oldresv);
+ 	resv->ar_reserved = 0;
+ 	resv->ar_asked = 0;
+ 
+@@ -207,7 +230,7 @@ __xfs_ag_resv_init(
+ 		ask = used;
+ 	reserved = ask - used;
+ 
+-	error = xfs_mod_fdblocks(mp, -(int64_t)reserved, true);
++	error = xfs_ag_resv_update_space(pag->pag_mount, -(int64_t)reserved);
+ 	if (error) {
+ 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
+ 				error, _RET_IP_);
 -- 
-2.14.2
+2.15.0.rc0
 
