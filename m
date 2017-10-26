@@ -1,155 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50784 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:40200 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932231AbdJZNQ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 09:16:58 -0400
-Date: Thu, 26 Oct 2017 09:16:56 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: compare btree block keys to parent block's keys
- during scrub
-Message-ID: <20171026131656.GD3450@bfoster.bfoster>
-References: <150899696463.18095.9642473908739425678.stgit@magnolia>
- <150899698291.18095.5640109148216105105.stgit@magnolia>
+        id S932217AbdJZNYE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 09:24:04 -0400
+Date: Thu, 26 Oct 2017 15:24:02 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
+ MAP_SYNC
+Message-ID: <20171026132402.GB31161@quack2.suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-19-jack@suse.cz>
+ <20171024211007.GA1611@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="GvXjxJ+pjyke8COw"
 Content-Disposition: inline
-In-Reply-To: <150899698291.18095.5640109148216105105.stgit@magnolia>
+In-Reply-To: <20171024211007.GA1611@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Oct 25, 2017 at 10:49:43PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we're done checking all the records/keys in a btree block, compute
-> the low and high key of the block and compare them to the associated key
-> in the parent btree block.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
 
-I guess this one should be stacked on top of a scrub series.. (or the
-associated code merged)? Doesn't apply to for-next..
+--GvXjxJ+pjyke8COw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Brian
+On Tue 24-10-17 15:10:07, Ross Zwisler wrote:
+> On Tue, Oct 24, 2017 at 05:24:15PM +0200, Jan Kara wrote:
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> 
+> This looks unchanged since the previous version?
 
->  fs/xfs/libxfs/xfs_btree.c |    4 ++--
->  fs/xfs/libxfs/xfs_btree.h |    4 ++++
->  fs/xfs/scrub/btree.c      |   46 +++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 52 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index b3cd82a..848f371 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -2027,7 +2027,7 @@ xfs_btree_lookup(
->  }
->  
->  /* Find the high key storage area from a regular key. */
-> -STATIC union xfs_btree_key *
-> +union xfs_btree_key *
->  xfs_btree_high_key_from_key(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_key	*key)
-> @@ -2101,7 +2101,7 @@ xfs_btree_get_node_keys(
->  }
->  
->  /* Derive the keys for any btree block. */
-> -STATIC void
-> +void
->  xfs_btree_get_keys(
->  	struct xfs_btree_cur	*cur,
->  	struct xfs_btree_block	*block,
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index be82f41..b57501c 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -541,5 +541,9 @@ int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
->  void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
->  			   struct xfs_btree_block *block,
->  			   union xfs_btree_ptr *ptr, int lr);
-> +void xfs_btree_get_keys(struct xfs_btree_cur *cur,
-> +		struct xfs_btree_block *block, union xfs_btree_key *key);
-> +union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
-> +		union xfs_btree_key *key);
->  
->  #endif	/* __XFS_BTREE_H__ */
-> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-> index 9ccf763..9e8b67a 100644
-> --- a/fs/xfs/scrub/btree.c
-> +++ b/fs/xfs/scrub/btree.c
-> @@ -358,6 +358,50 @@ xfs_scrub_btree_get_block(
->  }
->  
->  /*
-> + * Check that the low and high keys of this block match the keys stored
-> + * in the parent block.
-> + */
-> +STATIC void
-> +xfs_scrub_btree_block_keys(
-> +	struct xfs_scrub_btree		*bs,
-> +	int				level,
-> +	struct xfs_btree_block		*block)
-> +{
-> +	union xfs_btree_key		block_keys;
-> +	struct xfs_btree_cur		*cur = bs->cur;
-> +	union xfs_btree_key		*high_bk;
-> +	union xfs_btree_key		*parent_keys;
-> +	union xfs_btree_key		*high_pk;
-> +	struct xfs_btree_block		*parent_block;
-> +	struct xfs_buf			*bp;
-> +
-> +	if (level >= cur->bc_nlevels - 1)
-> +		return;
-> +
-> +	/* Calculate the keys for this block. */
-> +	xfs_btree_get_keys(cur, block, &block_keys);
-> +
-> +	/* Obtain the parent's copy of the keys for this block. */
-> +	parent_block = xfs_btree_get_block(cur, level + 1, &bp);
-> +	parent_keys = xfs_btree_key_addr(cur, cur->bc_ptrs[level + 1],
-> +			parent_block);
-> +
-> +	if (cur->bc_ops->diff_two_keys(cur, &block_keys, parent_keys) != 0)
-> +		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
-> +
-> +	if (!(cur->bc_flags & XFS_BTREE_OVERLAPPING))
-> +		return;
-> +
-> +	/* Get high keys */
-> +	high_bk = xfs_btree_high_key_from_key(cur, &block_keys);
-> +	high_pk = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level + 1],
-> +			parent_block);
-> +
-> +	if (cur->bc_ops->diff_two_keys(cur, high_bk, high_pk) != 0)
-> +		xfs_scrub_btree_set_corrupt(bs->sc, cur, 1);
-> +}
-> +
-> +/*
->   * Visit all nodes and leaves of a btree.  Check that all pointers and
->   * records are in order, that the keys reflect the records, and use a callback
->   * so that the caller can verify individual records.
-> @@ -418,6 +462,7 @@ xfs_scrub_btree(
->  			/* End of leaf, pop back towards the root. */
->  			if (cur->bc_ptrs[level] >
->  			    be16_to_cpu(block->bb_numrecs)) {
-> +				xfs_scrub_btree_block_keys(&bs, level, block);
->  				if (level < cur->bc_nlevels - 1)
->  					cur->bc_ptrs[level + 1]++;
->  				level++;
-> @@ -442,6 +487,7 @@ xfs_scrub_btree(
->  
->  		/* End of node, pop back towards the root. */
->  		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-> +			xfs_scrub_btree_block_keys(&bs, level, block);
->  			if (level < cur->bc_nlevels - 1)
->  				cur->bc_ptrs[level + 1]++;
->  			level++;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ah, thanks for checking. I forgot to commit modifications. Attached is
+really updated patch.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
+
+--GvXjxJ+pjyke8COw
+Content-Type: text/x-patch; charset=us-ascii
+Content-Disposition: attachment; filename="0001-mmap.2-Add-description-of-MAP_SHARED_VALIDATE-and-MA.patch"
+
+>From 59eeec2998ed9b3840aab951f213148cb1d053a5 Mon Sep 17 00:00:00 2001
+From: Jan Kara <jack@suse.cz>
+Date: Thu, 19 Oct 2017 14:44:55 +0200
+Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
+
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ man2/mmap.2 | 35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
+
+diff --git a/man2/mmap.2 b/man2/mmap.2
+index 47c3148653be..b38ee6809327 100644
+--- a/man2/mmap.2
++++ b/man2/mmap.2
+@@ -125,6 +125,21 @@ are carried through to the underlying file.
+ to the underlying file requires the use of
+ .BR msync (2).)
+ .TP
++.BR MAP_SHARED_VALIDATE " (since Linux 4.15)"
++The same as
++.B MAP_SHARED
++except that
++.B MAP_SHARED
++mappings ignore unknown flags in
++.IR flags .
++In contrast when creating mapping of
++.B MAP_SHARED_VALIDATE
++mapping type, the kernel verifies all passed flags are known and fails the
++mapping with
++.BR EOPNOTSUPP
++otherwise. This mapping type is also required to be able to use some mapping
++flags.
++.TP
+ .B MAP_PRIVATE
+ Create a private copy-on-write mapping.
+ Updates to the mapping are not visible to other processes
+@@ -134,7 +149,10 @@ It is unspecified whether changes made to the file after the
+ .BR mmap ()
+ call are visible in the mapped region.
+ .PP
+-Both of these flags are described in POSIX.1-2001 and POSIX.1-2008.
++.B MAP_SHARED
++and
++.B MAP_PRIVATE
++are described in POSIX.1-2001 and POSIX.1-2008.
+ .PP
+ In addition, zero or more of the following values can be ORed in
+ .IR flags :
+@@ -352,6 +370,21 @@ option.
+ Because of the security implications,
+ that option is normally enabled only on embedded devices
+ (i.e., devices where one has complete control of the contents of user memory).
++.TP
++.BR MAP_SYNC " (since Linux 4.15)"
++This flags is available only with
++.B MAP_SHARED_VALIDATE
++mapping type. Mappings of
++.B MAP_SHARED
++type will silently ignore this flag.
++This flag is supported only for files supporting DAX (direct mapping of persistent
++memory). For other files, creating mapping with this flag results in
++.B EOPNOTSUPP
++error. Shared file mappings with this flag provide the guarantee that while
++some memory is writeably mapped in the address space of the process, it will
++be visible in the same file at the same offset even after the system crashes or
++is rebooted. This allows users of such mappings to make data modifications
++persistent in a more efficient way using appropriate CPU instructions.
+ .PP
+ Of the above flags, only
+ .B MAP_FIXED
+-- 
+2.12.3
+
+
+--GvXjxJ+pjyke8COw--
