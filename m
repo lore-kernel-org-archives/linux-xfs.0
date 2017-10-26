@@ -1,72 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40084 "EHLO sandeen.net"
+Received: from mga02.intel.com ([134.134.136.20]:25376 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932340AbdJZSBa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 14:01:30 -0400
-Subject: Re: [PATCH] xfsprogs: Issue smaller discards at mkfs
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <20171026144131.26885-1-keith.busch@intel.com>
- <20171026162518.GW5483@magnolia>
- <3ad1751a-a4df-b0ee-d2c5-d1ac4deb5b46@sandeen.net>
-Message-ID: <0d50ca3b-0b27-8ac1-c102-9ea656f3f926@sandeen.net>
-Date: Thu, 26 Oct 2017 13:01:29 -0500
+        id S932275AbdJZSWI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 14:22:08 -0400
+Date: Thu, 26 Oct 2017 12:22:05 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
+ MAP_SYNC
+Message-ID: <20171026182205.GA8048@linux.intel.com>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-19-jack@suse.cz>
+ <20171024211007.GA1611@linux.intel.com>
+ <20171026132402.GB31161@quack2.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <3ad1751a-a4df-b0ee-d2c5-d1ac4deb5b46@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171026132402.GB31161@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Keith Busch <keith.busch@intel.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
 
-On 10/26/17 12:49 PM, Eric Sandeen wrote:
-> On 10/26/17 11:25 AM, Darrick J. Wong wrote:
->> On Thu, Oct 26, 2017 at 08:41:31AM -0600, Keith Busch wrote:
->>> Running mkfs.xfs was discarding the entire capacity in a single range. The
->>> block layer would split these into potentially many smaller requests
->>> and dispatch all of them to the device at roughly the same time.
->>>
->>> SSD capacities are getting so large that full capacity discards will
->>> take some time to complete. When discards are deeply queued, the block
->>> layer may trigger timeout handling and IO failure, though the device is
->>> operating normally.
->>>
->>> This patch uses smaller discard ranges in a loop for mkfs to avoid
->>> risking such timeouts. The max discard range is arbitrarilly set to
->>> 128GB in this patch.
->>
->> I'd have thought devices would set sane blk_queue_max_discard_sectors
->> so that the block layer doesn't send such a huge command that the kernel
->> times out...
->>
->> ...but then I actually went and grepped that in the kernel and
->> discovered that nbd, zram, raid0, mtd, and nvme all pass in UINT_MAX,
->> which is 2T.  Frighteningly xen-blkfront passes in get_capacity() (which
->> overflows the unsigned int parameter on big virtual disks, I guess?).
->>
->> (I still think this is the kernel's problem, not userspace's, but now
->> with an extra layer of OMGWTF sprayed on.)
->>
->> I dunno.  What kind of device produces these timeouts, and does it go
->> away if max_discards is lowered?
+On Thu, Oct 26, 2017 at 03:24:02PM +0200, Jan Kara wrote:
+> On Tue 24-10-17 15:10:07, Ross Zwisler wrote:
+> > On Tue, Oct 24, 2017 at 05:24:15PM +0200, Jan Kara wrote:
+> > > Signed-off-by: Jan Kara <jack@suse.cz>
+> > 
+> > This looks unchanged since the previous version?
 > 
-> Yeah, lots of devices are unhappy with large discards.  And yeah, in the
-> end I think this papers over a kernel and/or hardware problem.
+> Ah, thanks for checking. I forgot to commit modifications. Attached is
+> really updated patch.
 > 
-> But sometimes we do that, if only to keep things working reasonably
-> well with older kernels or hardware that'll never get fixed...
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+
+> From 59eeec2998ed9b3840aab951f213148cb1d053a5 Mon Sep 17 00:00:00 2001
+> From: Jan Kara <jack@suse.cz>
+> Date: Thu, 19 Oct 2017 14:44:55 +0200
+> Subject: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
 > 
-> (TBH sometimes I regret putting mkfs-time discard in by default in the
-> first place.)
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-I think I left this on a too-positive note.  It seems pretty clear that there
-is no way to fix all of userspace to not issue "too big" discards, when
-"too big" isn't even well-defined, or specified by anything at all.
+Looks good, you can add: 
 
-I'm not wise in the ways of queueing and throttling, but from my naiive
-perspective, it seems like something to be fixed in the kernel, or if it
-can't, export some new "maximum discard request size" which can be trusted?
-
--Eric
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
