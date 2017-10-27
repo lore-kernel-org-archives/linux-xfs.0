@@ -1,280 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37496 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:46970 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750827AbdJ0ElO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 00:41:14 -0400
-Date: Fri, 27 Oct 2017 12:41:12 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 5/6] misc: add module reloading helpers
-Message-ID: <20171027044112.GT3235@eguan.usersys.redhat.com>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
- <150899712429.18389.5159489339127196469.stgit@magnolia>
- <20171027003817.GC5486@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171027003817.GC5486@magnolia>
+        id S1752589AbdJ0MhU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 08:37:20 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH 2/2] fiemap: Implement ranged query
+Date: Fri, 27 Oct 2017 15:37:11 +0300
+Message-Id: <1509107832-22286-4-git-send-email-nborisov@suse.com>
+In-Reply-To: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
 
-On Thu, Oct 26, 2017 at 05:38:17PM -0700, Darrick J. Wong wrote:
-> Add some helper functions to require that we can reload a given module,
-> and add a helper to actually do that.  Refactor the existing users to
-> use the generics.
-> 
-> We need to hoist completely the behaviors of the old btrfs module helper
-> because we need to confirm before starting the test that we actually can
-> remove the module.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/btrfs    |   12 --------
->  common/module   |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  common/overlay  |    1 +
->  common/rc       |   11 -------
->  tests/btrfs/124 |    9 +++---
->  tests/btrfs/125 |    9 +++---
->  6 files changed, 92 insertions(+), 33 deletions(-)
->  create mode 100644 common/module
-> 
-> diff --git a/common/btrfs b/common/btrfs
-> index fd762ef..c09206c 100644
-> --- a/common/btrfs
-> +++ b/common/btrfs
-> @@ -349,18 +349,6 @@ _btrfs_qgroup_units()
->  	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
->  }
->  
-> -_require_btrfs_loadable()
-> -{
-> -	modprobe -r btrfs || _notrun "btrfs unloadable"
-> -	modprobe btrfs || _notrun "Can't load btrfs"
-> -}
-> -
-> -_reload_btrfs_ko()
-> -{
-> -	modprobe -r btrfs || _fail "btrfs unload failed"
-> -	modprobe btrfs || _fail "btrfs load failed"
-> -}
-> -
->  _btrfs_compression_algos()
->  {
->  	echo zlib
-> diff --git a/common/module b/common/module
-> new file mode 100644
-> index 0000000..59cbd8a
-> --- /dev/null
-> +++ b/common/module
-> @@ -0,0 +1,83 @@
-> +##/bin/bash
-> +
-> +# Routines for messing around with loadable kernel modules
-> +#
-> +#-----------------------------------------------------------------------
-> +#  Copyright (c) 2017 Oracle.  All Rights Reserved.
-> +#  This program is free software; you can redistribute it and/or modify
-> +#  it under the terms of the GNU General Public License as published by
-> +#  the Free Software Foundation; either version 2 of the License, or
-> +#  (at your option) any later version.
-> +#
-> +#  This program is distributed in the hope that it will be useful,
-> +#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +#  GNU General Public License for more details.
-> +#
-> +#  You should have received a copy of the GNU General Public License
-> +#  along with this program; if not, write to the Free Software
-> +#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
-> +#  USA
-> +#-----------------------------------------------------------------------
-> +
-> +# Return the module name for this fs.
-> +_module_for_fs()
-> +{
-> +	echo "$FSTYP"
-> +}
-> +
-> +# Reload a particular module.  This module MUST NOT be the module that
-> +# underlies the filesystem.
-> +_reload_module()
-> +{
-> +	module="$1"
-> +
-> +	modprobe -r "${module}" || _fail "${module} unload failed"
-> +	modprobe "${module}" || _fail "${module} load failed"
-> +}
-> +
-> +# Reload the filesystem module.
-> +_reload_fs_module()
-> +{
-> +	module="$1"
-> +
-> +	# Unload test fs, try to reload module, remount
-> +	had_testfs=""
-> +	had_scratchfs=""
-> +	_check_mounted_on TEST_DEV $TEST_DEV TEST_DIR $TEST_DIR && had_testfs="true"
-> +	_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT && had_scratchfs="true"
-> +	test -n "$had_testfs" && _test_unmount
-> +	test -n "$had_scratchfs" && _scratch_unmount
-> +	_reload_module "$module"
-> +	test -n "$had_scratchfs" && _scratch_mount 2> /dev/null
-> +	test -n "$had_testfs" && _test_mount 2> /dev/null
-> +}
-> +
-> +# Check that we have a module that can be loaded.  This module MUST NOT
-> +# be the module that underlies the filesystem.
-> +_require_loadable_module()
-> +{
-> +	module="$1"
-> +
-> +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-> +	_reload_module "$module"
-> +}
-> +
-> +# Check that the module for FSTYP can be loaded.
-> +_require_loadable_fs_module()
-> +{
-> +	module="$1"
-> +
-> +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-> +	_reload_fs_module "$module"
+Currently the fiemap implementation of xfs_io doesn't support making ranged
+queries. This patch implements two optional arguments which take the starting
+offset and the length of the region to be queried. This also requires changing
+of how the final hole range is calculated. Namely, it's now being done as
+[last_logical, logical addres of next extent] rather than being statically
+determined by [last_logical, filesize]. Also now fiemap explicitly 
+prints if a file consists of only a hole rather than staying silent.
 
-_reload_module() or _reload_fs_module() fails the test directly if the
-module is still in use. IMHO we should _notrun in this case.
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c       | 72 +++++++++++++++++++++++++++++++++++++++++++++++--------
+ man/man8/xfs_io.8 |  5 ++--
+ 2 files changed, 65 insertions(+), 12 deletions(-)
 
-Currently xfs/70[345] still fail if rootfs is xfs.
+diff --git a/io/fiemap.c b/io/fiemap.c
+index 4a52bff974e8..56bfb1a5f2d5 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -27,6 +27,9 @@
+ 
+ static cmdinfo_t fiemap_cmd;
+ static int max_extents = -1;
++static __u64 covered_length = 0;
++static __u64 len = -1LL;
++static bool range_limit = false;
+ 
+ static void
+ fiemap_help(void)
+@@ -79,7 +82,7 @@ print_hole(
+ 		       boff_w, _("hole"), tot_w, lstart - llast);
+ 	   }
+ 
+-
++	   covered_length += BBTOB(lstart - llast);
+ }
+ 
+ static int
+@@ -90,7 +93,8 @@ print_verbose(
+ 	int			tot_w,
+ 	int			flg_w,
+ 	int			cur_extent,
+-	__u64			last_logical)
++	__u64			last_logical,
++	__u64			limit)
+ {
+ 	__u64			lstart;
+ 	__u64			llast;
+@@ -122,7 +126,7 @@ print_verbose(
+ 		cur_extent++;
+ 	}
+ 
+-	if (cur_extent == max_extents)
++	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+ 		return 1;
+ 
+ 	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+@@ -140,7 +144,8 @@ print_plain(
+ 	struct fiemap_extent	*extent,
+ 	int			lflag,
+ 	int			cur_extent,
+-	__u64			last_logical)
++	__u64			last_logical,
++	__u64			limit)
+ {
+ 	__u64			lstart;
+ 	__u64			llast;
+@@ -157,7 +162,7 @@ print_plain(
+ 		cur_extent++;
+ 	}
+ 
+-	if (cur_extent == max_extents)
++	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+ 		return 1;
+ 
+ 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+@@ -255,8 +260,11 @@ fiemap_f(
+ 	int		tot_w = 5;	/* 5 since its just one number */
+ 	int		flg_w = 5;
+ 	__u64		last_logical = 0;
++	size_t		fsblocksize, fssectsize;
+ 	struct stat	st;
+ 
++	init_cvtnum(&fsblocksize, &fssectsize);
++
+ 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+@@ -276,6 +284,26 @@ fiemap_f(
+ 		}
+ 	}
+ 
++	if (optind < argc) {
++		off64_t start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start_offset < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++		optind++;
++	}
++
++	if (optind < argc) {
++		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (length < 0) {
++			printf("non-numeric len argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		len = length;
++		range_limit = true;
++	}
++
+ 	map_size = sizeof(struct fiemap) +
+ 		(EXTENT_BATCH * sizeof(struct fiemap_extent));
+ 	fiemap = malloc(map_size);
+@@ -316,14 +344,18 @@ fiemap_f(
+ 				num_printed = print_verbose(extent, foff_w,
+ 							    boff_w, tot_w,
+ 							    flg_w, cur_extent,
+-							    last_logical);
++							    last_logical,
++							    len);
+ 			} else
+ 				num_printed = print_plain(extent, lflag,
+ 							  cur_extent,
+-							  last_logical);
++							  last_logical,
++							  len);
+ 
+ 			cur_extent += num_printed;
+ 			last_logical = extent->fe_logical + extent->fe_length;
++			if (num_printed == 2)
++				covered_length += extent->fe_length;
+ 
+ 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+ 				last = 1;
+@@ -332,6 +364,9 @@ fiemap_f(
+ 
+ 			if (cur_extent == max_extents)
+ 				break;
++
++			if (range_limit && covered_length >= len)
++				goto out;
+ 		}
+ 	}
+ 
+@@ -347,9 +382,26 @@ fiemap_f(
+ 		return 0;
+ 	}
+ 
+-	if (cur_extent && last_logical < st.st_size)
++	if (last_logical < st.st_size &&
++	    (!range_limit || covered_length < len)) {
++		int end;
++
++		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
++			       st.st_size);
++		if (ret < 0) {
++			exitcode = 1;
++			goto out;
++		}
++
++		if (!fiemap->fm_mapped_extents)
++			end = BTOBBT(st.st_size);
++		else
++			end = BTOBBT(fiemap->fm_extents[0].fe_logical);
++
++
+ 		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
+-			   BTOBBT(last_logical), BTOBBT(st.st_size));
++			   BTOBBT(last_logical), end);
++	}
+ 
+ out:
+ 	free(fiemap);
+@@ -364,7 +416,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx]");
++	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 0fd9b951199c..27f1ae163913 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
+ .BR xfs_bmap (8)
+ manual page for complete documentation.
+ .TP
+-.BI "fiemap [ \-alv ] [ \-n " nx " ]"
++.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+ Prints the block mapping for the current open file using the fiemap
+ ioctl.  Options behave as described in the
+ .BR xfs_bmap (8)
+-manual page.
++manual page. Optionally, this command also supports passing the start offset
++from where to begin the fiemap and the length of that region.
+ .TP
+ .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+ Prints the mapping of disk blocks used by the filesystem hosting the current
+-- 
+2.7.4
 
-Thanks,
-Eryu
-
-> +}
-> +
-> +# Print the value of a filesystem module parameter
-> +# at /sys/module/$FSTYP/parameters/$PARAM
-> +#
-> +# Usage example (FSTYP=overlay):
-> +#   _get_fs_module_param index
-> +_get_fs_module_param()
-> +{
-> +	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
-> +}
-> diff --git a/common/overlay b/common/overlay
-> index 79097ba..1da4ab1 100644
-> --- a/common/overlay
-> +++ b/common/overlay
-> @@ -1,6 +1,7 @@
->  #
->  # overlayfs specific common functions.
->  #
-> +. ./common/module
->  
->  # helper function to do the actual overlayfs mount operation
->  _overlay_mount_dirs()
-> diff --git a/common/rc b/common/rc
-> index 83aaced..c708bfa 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -3554,16 +3554,6 @@ _get_fs_sysfs_attr()
->  	cat /sys/fs/${FSTYP}/${dname}/${attr}
->  }
->  
-> -# Print the value of a filesystem module parameter
-> -# at /sys/module/$FSTYP/parameters/$PARAM
-> -#
-> -# Usage example (FSTYP=overlay):
-> -#   _get_fs_module_param index
-> -_get_fs_module_param()
-> -{
-> -	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
-> -}
-> -
->  # Generic test for specific filesystem feature.
->  # Currently only implemented to test overlayfs features.
->  _require_scratch_feature()
-> diff --git a/tests/btrfs/124 b/tests/btrfs/124
-> index 7206094..a648627 100755
-> --- a/tests/btrfs/124
-> +++ b/tests/btrfs/124
-> @@ -55,6 +55,7 @@ _cleanup()
->  # get standard environment, filters and checks
->  . ./common/rc
->  . ./common/filter
-> +. ./common/module
->  
->  # remove previous $seqres.full before test
->  rm -f $seqres.full
-> @@ -64,10 +65,8 @@ rm -f $seqres.full
->  _supported_fs btrfs
->  _supported_os Linux
->  _require_scratch_dev_pool 2
-> -
-> -# the mounted test dir prevent btrfs unload, we need to unmount
->  _test_unmount
-> -_require_btrfs_loadable
-> +_require_loadable_fs_module "btrfs"
->  
->  _scratch_dev_pool_get 2
->  
-> @@ -102,7 +101,7 @@ echo "clean btrfs ko" >> $seqres.full
->  _scratch_unmount
->  
->  # un-scan the btrfs devices
-> -_reload_btrfs_ko
-> +_reload_fs_module "btrfs"
->  
->  echo >> $seqres.full
->  echo "-----Write degraded mount fill upto $max_fs_sz bytes-----" >> $seqres.full
-> @@ -141,7 +140,7 @@ echo
->  echo "Mount degraded with the other dev"
->  _scratch_unmount
->  # un-scan the btrfs devices
-> -_reload_btrfs_ko
-> +_reload_fs_module "btrfs"
->  _mount -o degraded $dev2 $SCRATCH_MNT >>$seqres.full 2>&1
->  _run_btrfs_util_prog filesystem show
->  checkpoint3=`md5sum $SCRATCH_MNT/tf2`
-> diff --git a/tests/btrfs/125 b/tests/btrfs/125
-> index 91aa8d8..19961a1 100755
-> --- a/tests/btrfs/125
-> +++ b/tests/btrfs/125
-> @@ -54,6 +54,7 @@ _cleanup()
->  # get standard environment, filters and checks
->  . ./common/rc
->  . ./common/filter
-> +. ./common/module
->  
->  # remove previous $seqres.full before test
->  rm -f $seqres.full
-> @@ -63,10 +64,8 @@ rm -f $seqres.full
->  _supported_fs btrfs
->  _supported_os Linux
->  _require_scratch_dev_pool 3
-> -
-> -# we need btrfs to unload, need test dir unmounted
->  _test_unmount
-> -_require_btrfs_loadable
-> +_require_loadable_fs_module "btrfs"
->  
->  _scratch_dev_pool_get 3
->  
-> @@ -118,7 +117,7 @@ echo "unmount" >> $seqres.full
->  _scratch_unmount
->  echo "clean btrfs ko" >> $seqres.full
->  # un-scan the btrfs devices
-> -_reload_btrfs_ko
-> +_reload_fs_module "btrfs"
->  _mount -o degraded,device=$dev2 $dev1 $SCRATCH_MNT >>$seqres.full 2>&1
->  dd if=/dev/zero of="$SCRATCH_MNT"/tf2 bs=$bs count=$count \
->  					>>$seqres.full 2>&1
-> @@ -154,7 +153,7 @@ echo "Mount degraded but with other dev"
->  
->  _scratch_unmount
->  # un-scan the btrfs devices
-> -_reload_btrfs_ko
-> +_reload_fs_module "btrfs"
->  
->  _mount -o degraded,device=${dev2} $dev3 $SCRATCH_MNT >>$seqres.full 2>&1
->  
