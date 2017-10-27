@@ -1,78 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6278 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750729AbdJNWm1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Oct 2017 18:42:27 -0400
-Date: Sun, 15 Oct 2017 09:42:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: agcount for 2TB, 4TB and 8TB drives
-Message-ID: <20171014224224.GD15067@dastard>
-References: <8e6fd742-8767-e786-746d-2b9f2929b98c@sandeen.net>
- <20171006222031.GU3666@dastard>
- <b97b41f5-76dc-b2d7-3b34-02a331b0d8de@sandeen.net>
- <1b5b6410-b1d9-8519-7032-8ea0ca46f5b5@scylladb.com>
- <20171009112306.GM3666@dastard>
- <89a7ae9a-9960-ae37-f6ca-0c1f2e33f65f@scylladb.com>
- <20171009220332.GP3666@dastard>
- <38bd7785-174d-fd09-fc1f-50a2d4e1dd69@scylladb.com>
- <20171010225524.GV3666@dastard>
- <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
+Received: from sandeen.net ([63.231.237.45]:45922 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751975AbdJ0QYx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 12:24:53 -0400
+Subject: Re: [PATCH 10/10] misc: fix ubsan warnings
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905615569.28563.17233201567221670601.stgit@magnolia>
+ <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
+ <20171027161433.GH5483@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a70d6f9a-cee6-1d06-6637-cea07feefae7@sandeen.net>
+Date: Fri, 27 Oct 2017 11:24:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86635b89-5016-5cd1-53a2-bf21b842ae04@scylladb.com>
+In-Reply-To: <20171027161433.GH5483@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 11:13:24AM +0300, Avi Kivity wrote:
-> On 10/11/2017 01:55 AM, Dave Chinner wrote:
-> >On Tue, Oct 10, 2017 at 12:07:42PM +0300, Avi Kivity wrote:
-> >>On 10/10/2017 01:03 AM, Dave Chinner wrote:
-> >>>>On 10/09/2017 02:23 PM, Dave Chinner wrote:
-> >>>>>On Mon, Oct 09, 2017 at 11:05:56AM +0300, Avi Kivity wrote:
-> >>>>>Sure, that might be the IO concurrency the SSD sees and handles, but
-> >>>>>you very rarely require that much allocation parallelism in the
-> >>>>>workload. Only a small amount of the IO submission path is actually
-> >>>>>allocation work, so a single AG can provide plenty of async IO
-> >>>>>parallelism before an AG is the limiting factor.
-> >>>>Sure. Can a single AG issue multiple I/Os, or is it single-threaded?
-> >>>AGs don't issue IO. Applications issue IO, the filesystem allocates
-> >>>space from AGs according to the write IO that passes through it.
-> >>What I meant was I/O in order to satisfy an allocation (read from
-> >>the free extent btree or whatever), not the application's I/O.
-> >Once you're in the per-AG allocator context, it is single threaded
-> >until the allocation is complete. We do things like btree block
-> >readahead to minimise IO wait times, but we can't completely hide
-> >things like metadata read Io wait time when it is required to make
-> >progress.
+On 10/27/17 11:14 AM, Darrick J. Wong wrote:
+> On Fri, Oct 27, 2017 at 08:48:07AM -0500, Eric Sandeen wrote:
+
+...
+
+>>> diff --git a/include/command.h b/include/command.h
+>>> index fb3f5c7..59eab96 100644
+>>> --- a/include/command.h
+>>> +++ b/include/command.h
+>>> @@ -25,7 +25,7 @@
+>>>   * not iterate the command args function callout and so can be used
+>>>   * for functions like "help" that should only ever be run once.
+>>>   */
+>>> -#define CMD_FLAG_ONESHOT	(1<<31)
+>>> +#define CMD_FLAG_ONESHOT	(1U<<31)
+>>>  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+>>>  #define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
+>>
+>> What complained about this?  cmd flags is a signed int, right, so why is
+>> this a problem?  (And why are we only using the top 3 bits?  And let's just do 1U
+>> on every flag if it's really needed, but why is it needed?  I must be missing
+>> something.)
 > 
-> I see, thanks. Will RWF_NOWAIT detect the need to do I/O for the
-> free space btree, or just contention? (I expect the latter from the
-> patches I've seen, but perhaps I missed something).
+> I think the complaint is that "1" is signed int, and ubsan doesn't like
+> us shifting a value bit into the sign bit.
 
-No, it checks at a high level whether allocation is needed (i.e. IO
-into a hole) and if allocation is needed, it punts the IO
-immediately to the background thread and returns to userspace. i.e.
-it never gets near the allocator to begin with....
+Oh right, duh.
 
-Like I said before, RWF_NOWAIT prevents entire classes of
-AIO submission blocking issues from occuring. Use it and almost all
-filesystem blocking concerns go away....
+> But yeah, I suppose if we 'U'ize one of them we could do it for all.
+> 
+> (Though really, why not start with the lower bits?)
 
-> The vast majority of the time XFS AIO works very well. The problem
-> is that when problems do happen, performance drops of sharply, and
-> it's often in a situation that's hard to debug.
+Heh, so:
 
-Yes, and that's made worse by there being relatively few people
-around with the knowledge to be able to find the the root cause when
-it does happen. :/
+io/init.h:
 
-Cheers,
+#define CMD_NOFILE_OK   (1<<0)  /* command doesn't need an open file    */
+#define CMD_NOMAP_OK    (1<<1)  /* command doesn't need a mapped region */
+#define CMD_FOREIGN_OK  CMD_FLAG_FOREIGN_OK
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+include/command.h:
+
+#define CMD_FLAG_ONESHOT        (1<<31)
+#define CMD_FLAG_FOREIGN_OK     (1<<30) /* command not restricted to XFS */
+#define CMD_FLAG_LIBRARY        (1<<29) /* command provided by libxcmd */
+
+What could possibly go wrong?
+
+-Eric
