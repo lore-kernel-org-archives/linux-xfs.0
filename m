@@ -1,88 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36004 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751975AbdJ0QTk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:19:40 -0400
-Date: Fri, 27 Oct 2017 09:19:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 10/10] misc: fix ubsan warnings
-Message-ID: <20171027161935.GJ5483@magnolia>
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905615569.28563.17233201567221670601.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150905615569.28563.17233201567221670601.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:46966 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752629AbdJ0MhU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 08:37:20 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH 1/2] initial fiemap test
+Date: Fri, 27 Oct 2017 15:37:10 +0300
+Message-Id: <1509107832-22286-3-git-send-email-nborisov@suse.com>
+In-Reply-To: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
 
-Fix all the things ubsan warned about.
+Test various range queries of fiemap and ensure they produce expected output. 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 ---
- include/bitops.h   |    8 ++++----
- include/command.h  |    6 +++---
- include/xfs_arch.h |    2 +-
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ tests/xfs/900     |  96 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/900.out | 118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 214 insertions(+)
+ create mode 100755 tests/xfs/900
+ create mode 100644 tests/xfs/900.out
 
-diff --git a/include/bitops.h b/include/bitops.h
-index 44599a7..7774950 100644
---- a/include/bitops.h
-+++ b/include/bitops.h
-@@ -13,19 +13,19 @@ static inline int fls(int x)
- 	if (!x)
- 		return 0;
- 	if (!(x & 0xffff0000u)) {
--		x <<= 16;
-+		x = (x & 0xffffu) << 16;
- 		r -= 16;
- 	}
- 	if (!(x & 0xff000000u)) {
--		x <<= 8;
-+		x = (x & 0xffffffu) << 8;
- 		r -= 8;
- 	}
- 	if (!(x & 0xf0000000u)) {
--		x <<= 4;
-+		x = (x & 0xfffffffu) << 4;
- 		r -= 4;
- 	}
- 	if (!(x & 0xc0000000u)) {
--		x <<= 2;
-+		x = (x & 0x3fffffffu) << 2;
- 		r -= 2;
- 	}
- 	if (!(x & 0x80000000u)) {
-diff --git a/include/command.h b/include/command.h
-index fb3f5c7..a7fe6eb 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -25,9 +25,9 @@
-  * not iterate the command args function callout and so can be used
-  * for functions like "help" that should only ever be run once.
-  */
--#define CMD_FLAG_ONESHOT	(1<<31)
--#define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
--#define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
-+#define CMD_FLAG_ONESHOT	(1u << 31)
-+#define CMD_FLAG_FOREIGN_OK	(1u << 30) /* command not restricted to XFS */
-+#define CMD_FLAG_LIBRARY	(1u << 29) /* command provided by libxcmd */
- 
- typedef int (*cfunc_t)(int argc, char **argv);
- typedef void (*helpfunc_t)(void);
-diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-index 186cadb..34fcd4d 100644
---- a/include/xfs_arch.h
-+++ b/include/xfs_arch.h
-@@ -253,7 +253,7 @@ static inline uint16_t get_unaligned_be16(void *p)
- static inline uint32_t get_unaligned_be32(void *p)
- {
- 	uint8_t *__p = p;
--        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-+        return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
- }
- 
- static inline uint64_t get_unaligned_be64(void *p)
+diff --git a/tests/xfs/900 b/tests/xfs/900
+new file mode 100755
+index 0000000..e535820
+--- /dev/null
++++ b/tests/xfs/900
+@@ -0,0 +1,96 @@
++#! /bin/bash
++# FS QA Test No. 900
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 SUSE Linux Products GmbH.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/punch
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "fiemap"
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount || _fail "mount failure"
++
++file=$SCRATCH_MNT/testfile
++$XFS_IO_PROG -f -c "falloc 0 256k" $file 
++for i in {0..31}; do $XFS_IO_PROG -c "fpunch $(($i*8))k 4k" $file; done
++
++# Query 1 data extent between 4k..8k range
++echo "Basic data extent"
++$XFS_IO_PROG -c "fiemap -v 4k 4k" $file | _filter_fiemap 
++
++# Query data and hole extent
++echo "Data + Hole"
++$XFS_IO_PROG -c "fiemap -v 4k 5k" $file | _filter_fiemap
++
++echo "Hole + Data + Hole"
++$XFS_IO_PROG -c "fiemap -v 8k 10k" $file | _filter_fiemap
++
++echo "Beginning with a hole"
++$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
++
++# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
++echo "Query more than 32 extents" 
++$XFS_IO_PROG -c "fiemap -v 0 160k" $file | _filter_fiemap
++
++echo "Larger query than file size"
++$XFS_IO_PROG -c "fiemap -v 0 300k" $file | _filter_fiemap
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/900.out b/tests/xfs/900.out
+new file mode 100644
+index 0000000..acd309e
+--- /dev/null
++++ b/tests/xfs/900.out
+@@ -0,0 +1,118 @@
++QA output created by 900
++Basic data extent
++0: [8..15]: unwritten
++Data + Hole
++0: [8..15]: unwritten
++1: [16..23]: hole
++Hole + Data + Hole
++0: [16..23]: hole
++1: [24..31]: unwritten
++2: [32..39]: hole
++Beginning with a hole
++0: [0..7]: hole
++Query more than 32 extents
++0: [0..7]: hole
++1: [8..15]: unwritten
++2: [16..23]: hole
++3: [24..31]: unwritten
++4: [32..39]: hole
++5: [40..47]: unwritten
++6: [48..55]: hole
++7: [56..63]: unwritten
++8: [64..71]: hole
++9: [72..79]: unwritten
++10: [80..87]: hole
++11: [88..95]: unwritten
++12: [96..103]: hole
++13: [104..111]: unwritten
++14: [112..119]: hole
++15: [120..127]: unwritten
++16: [128..135]: hole
++17: [136..143]: unwritten
++18: [144..151]: hole
++19: [152..159]: unwritten
++20: [160..167]: hole
++21: [168..175]: unwritten
++22: [176..183]: hole
++23: [184..191]: unwritten
++24: [192..199]: hole
++25: [200..207]: unwritten
++26: [208..215]: hole
++27: [216..223]: unwritten
++28: [224..231]: hole
++29: [232..239]: unwritten
++30: [240..247]: hole
++31: [248..255]: unwritten
++32: [256..263]: hole
++33: [264..271]: unwritten
++34: [272..279]: hole
++35: [280..287]: unwritten
++36: [288..295]: hole
++37: [296..303]: unwritten
++38: [304..311]: hole
++39: [312..319]: unwritten
++Larger query than file size
++0: [0..7]: hole
++1: [8..15]: unwritten
++2: [16..23]: hole
++3: [24..31]: unwritten
++4: [32..39]: hole
++5: [40..47]: unwritten
++6: [48..55]: hole
++7: [56..63]: unwritten
++8: [64..71]: hole
++9: [72..79]: unwritten
++10: [80..87]: hole
++11: [88..95]: unwritten
++12: [96..103]: hole
++13: [104..111]: unwritten
++14: [112..119]: hole
++15: [120..127]: unwritten
++16: [128..135]: hole
++17: [136..143]: unwritten
++18: [144..151]: hole
++19: [152..159]: unwritten
++20: [160..167]: hole
++21: [168..175]: unwritten
++22: [176..183]: hole
++23: [184..191]: unwritten
++24: [192..199]: hole
++25: [200..207]: unwritten
++26: [208..215]: hole
++27: [216..223]: unwritten
++28: [224..231]: hole
++29: [232..239]: unwritten
++30: [240..247]: hole
++31: [248..255]: unwritten
++32: [256..263]: hole
++33: [264..271]: unwritten
++34: [272..279]: hole
++35: [280..287]: unwritten
++36: [288..295]: hole
++37: [296..303]: unwritten
++38: [304..311]: hole
++39: [312..319]: unwritten
++40: [320..327]: hole
++41: [328..335]: unwritten
++42: [336..343]: hole
++43: [344..351]: unwritten
++44: [352..359]: hole
++45: [360..367]: unwritten
++46: [368..375]: hole
++47: [376..383]: unwritten
++48: [384..391]: hole
++49: [392..399]: unwritten
++50: [400..407]: hole
++51: [408..415]: unwritten
++52: [416..423]: hole
++53: [424..431]: unwritten
++54: [432..439]: hole
++55: [440..447]: unwritten
++56: [448..455]: hole
++57: [456..463]: unwritten
++58: [464..471]: hole
++59: [472..479]: unwritten
++60: [480..487]: hole
++61: [488..495]: unwritten
++62: [496..503]: hole
++63: [504..511]: unwritten
+-- 
+2.7.4
+
