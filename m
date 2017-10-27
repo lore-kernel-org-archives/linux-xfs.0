@@ -1,66 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49193 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:46942 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdJ0QVT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:21:19 -0400
-Date: Fri, 27 Oct 2017 09:21:15 -0700
+        with ESMTP id S1750882AbdJ0QRo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:17:44 -0400
+Date: Fri, 27 Oct 2017 09:17:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix unused variable warning in xfs_buf_set_ref()
-Message-ID: <20171027162115.GK5483@magnolia>
-References: <201710271527.DFIgRssJ%fengguang.wu@intel.com>
- <20171027102248.61771-1-bfoster@redhat.com>
+Subject: Re: [PATCH 06/10] xfs_repair: fix cowextsize field checking and
+ repairing
+Message-ID: <20171027161739.GI5483@magnolia>
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905613147.28563.3642613984403228295.stgit@magnolia>
+ <b57f41c8-ce22-043a-ba04-b1692530a4de@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171027102248.61771-1-bfoster@redhat.com>
+In-Reply-To: <b57f41c8-ce22-043a-ba04-b1692530a4de@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, Oct 27, 2017 at 06:22:48AM -0400, Brian Foster wrote:
-> Fix an unused variable warning on non-DEBUG builds introduced by
-> commit 7561d27e90 ("xfs: buffer lru reference count error injection
-> tag").
+On Thu, Oct 26, 2017 at 09:06:10PM -0500, Eric Sandeen wrote:
+> On 10/26/17 5:15 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Make sure that we never leave the filesystem with a zero cowextsize hint
+> > while the cowextsize inode flag is set.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Ok.  Is there anything that catches cowextsize set on di_version < 3?
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+No, because the inode core structure isn't large enough to have
+cowextsize if version < 3.
 
-> ---
+--D
+
 > 
-> Sigh, sorry for the noise..
-> 
-> Brian
-> 
->  fs/xfs/xfs_buf.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index d481dd2..db786bc 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -2133,14 +2133,13 @@ xfs_buf_terminate(void)
->  
->  void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
->  {
-> -	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> -
->  	/*
->  	 * Set the lru reference count to 0 based on the error injection tag.
->  	 * This allows userspace to disrupt buffer caching for debug/testing
->  	 * purposes.
->  	 */
-> -	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BUF_LRU_REF))
-> +	if (XFS_TEST_ERROR(false, bp->b_target->bt_mount,
-> +			   XFS_ERRTAG_BUF_LRU_REF))
->  		lru_ref = 0;
->  
->  	atomic_set(&bp->b_lru_ref, lru_ref);
-> -- 
-> 2.9.5
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
