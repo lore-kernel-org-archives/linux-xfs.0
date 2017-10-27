@@ -1,178 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21957 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751523AbdJ0Afs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 20:35:48 -0400
-Date: Thu, 26 Oct 2017 17:35:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/6] misc: add module reloading helpers
-Message-ID: <20171027003542.GB5486@magnolia>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
- <150899712429.18389.5159489339127196469.stgit@magnolia>
- <20171026064313.GJ3235@eguan.usersys.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:49578 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751070AbdJ0Gp3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 02:45:29 -0400
+Date: Fri, 27 Oct 2017 08:45:27 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove
+        'page-less' support
+Message-ID: <20171027064526.GD22931@lst.de>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com> <20171020074750.GA13568@lst.de> <20171020093148.GA20304@lst.de> <20171026105850.GA31161@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171026064313.GJ3235@eguan.usersys.redhat.com>
+In-Reply-To: <20171026105850.GA31161@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-nvdimm@lists.01.org, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Thu, Oct 26, 2017 at 02:43:13PM +0800, Eryu Guan wrote:
-> On Wed, Oct 25, 2017 at 10:52:04PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add some helper functions to require that we can reload a given module,
-> > and add a helper to actually do that.  Refactor the existing users to
-> > use the generics.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/btrfs    |   12 ------------
-> >  common/rc       |   15 +++++++++++++++
-> >  tests/btrfs/124 |    9 +++------
-> >  tests/btrfs/125 |    9 +++------
-> >  4 files changed, 21 insertions(+), 24 deletions(-)
-> > 
-> > 
-> > diff --git a/common/btrfs b/common/btrfs
-> > index fd762ef..c09206c 100644
-> > --- a/common/btrfs
-> > +++ b/common/btrfs
-> > @@ -349,18 +349,6 @@ _btrfs_qgroup_units()
-> >  	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
-> >  }
-> >  
-> > -_require_btrfs_loadable()
-> > -{
-> > -	modprobe -r btrfs || _notrun "btrfs unloadable"
-> > -	modprobe btrfs || _notrun "Can't load btrfs"
-> > -}
-> > -
-> > -_reload_btrfs_ko()
-> > -{
-> > -	modprobe -r btrfs || _fail "btrfs unload failed"
-> > -	modprobe btrfs || _fail "btrfs load failed"
-> > -}
-> > -
-> >  _btrfs_compression_algos()
-> >  {
-> >  	echo zlib
-> > diff --git a/common/rc b/common/rc
-> > index 83aaced..5375f7b 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3580,6 +3580,21 @@ _require_scratch_feature()
-> >  	esac
-> >  }
-> >  
-> > +# Check that we have a module that can be loaded.
-> > +_require_loadable_module()
-> > +{
-> > +	module="$1"
-> > +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-> 
-> I think we should try to unload the given module too to see if we really
-> could unload it, otherwise a later _reload_module() still fails if
-> rootfs is mounted as $module type, even if we already umounted TEST_DEV
-> and SCRATCH_DEV.
+On Thu, Oct 26, 2017 at 12:58:50PM +0200, Jan Kara wrote:
+> But are we guaranteed page refs are short term? E.g. if someone creates
+> v4l2 videobuf in MAP_SHARED mapping of a file on DAX filesystem, page refs
+> can be rather long-term similarly as in RDMA case. Also freeing of blocks
+> on page reference drop is another async entry point into the filesystem
+> which could unpleasantly surprise us but I guess workqueues would solve
+> that reasonably fine.
 
-Yeah, ok.  While I'm at it I'll drag all the module helpers out into a
-separate file too.
-
---D
-
-> > +}
-> > +
-> > +# Reload a particular module.
-> > +_reload_module()
-> > +{
-> > +	module="$1"
-> > +
-> > +	modprobe -r "${module}" || _fail "${module} unload failed"
-> > +	modprobe "${module}" || _fail "${module} load failed"
-> > +}
-> >  
-> >  init_rc
-> >  
-> > diff --git a/tests/btrfs/124 b/tests/btrfs/124
-> > index 7206094..1b6cb24 100755
-> > --- a/tests/btrfs/124
-> > +++ b/tests/btrfs/124
-> > @@ -64,10 +64,7 @@ rm -f $seqres.full
-> >  _supported_fs btrfs
-> >  _supported_os Linux
-> >  _require_scratch_dev_pool 2
-> > -
-> > -# the mounted test dir prevent btrfs unload, we need to unmount
-> > -_test_unmount
-> > -_require_btrfs_loadable
-> > +_require_loadable_module "btrfs"
-> 
-> Then keep the above comments and _test_unmount?
-> 
-> Thanks,
-> Eryu
-> 
-> >  
-> >  _scratch_dev_pool_get 2
-> >  
-> > @@ -102,7 +99,7 @@ echo "clean btrfs ko" >> $seqres.full
-> >  _scratch_unmount
-> >  
-> >  # un-scan the btrfs devices
-> > -_reload_btrfs_ko
-> > +_reload_module "btrfs"
-> >  
-> >  echo >> $seqres.full
-> >  echo "-----Write degraded mount fill upto $max_fs_sz bytes-----" >> $seqres.full
-> > @@ -141,7 +138,7 @@ echo
-> >  echo "Mount degraded with the other dev"
-> >  _scratch_unmount
-> >  # un-scan the btrfs devices
-> > -_reload_btrfs_ko
-> > +_reload_module "btrfs"
-> >  _mount -o degraded $dev2 $SCRATCH_MNT >>$seqres.full 2>&1
-> >  _run_btrfs_util_prog filesystem show
-> >  checkpoint3=`md5sum $SCRATCH_MNT/tf2`
-> > diff --git a/tests/btrfs/125 b/tests/btrfs/125
-> > index 91aa8d8..dbb226c 100755
-> > --- a/tests/btrfs/125
-> > +++ b/tests/btrfs/125
-> > @@ -63,10 +63,7 @@ rm -f $seqres.full
-> >  _supported_fs btrfs
-> >  _supported_os Linux
-> >  _require_scratch_dev_pool 3
-> > -
-> > -# we need btrfs to unload, need test dir unmounted
-> > -_test_unmount
-> > -_require_btrfs_loadable
-> > +_require_loadable_module "btrfs"
-> >  
-> >  _scratch_dev_pool_get 3
-> >  
-> > @@ -118,7 +115,7 @@ echo "unmount" >> $seqres.full
-> >  _scratch_unmount
-> >  echo "clean btrfs ko" >> $seqres.full
-> >  # un-scan the btrfs devices
-> > -_reload_btrfs_ko
-> > +_reload_module "btrfs"
-> >  _mount -o degraded,device=$dev2 $dev1 $SCRATCH_MNT >>$seqres.full 2>&1
-> >  dd if=/dev/zero of="$SCRATCH_MNT"/tf2 bs=$bs count=$count \
-> >  					>>$seqres.full 2>&1
-> > @@ -154,7 +151,7 @@ echo "Mount degraded but with other dev"
-> >  
-> >  _scratch_unmount
-> >  # un-scan the btrfs devices
-> > -_reload_btrfs_ko
-> > +_reload_module "btrfs"
-> >  
-> >  _mount -o degraded,device=${dev2} $dev3 $SCRATCH_MNT >>$seqres.full 2>&1
-> >  
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The point is that we need to prohibit long term elevated page counts
+with DAX anyway - we can't just let people grab allocated blocks forever
+while ignoring file system operations.  For stage 1 we'll just need to
+fail those, and in the long run they will have to use a mechanism
+similar to FL_LAYOUT locks to deal with file system allocation changes.
