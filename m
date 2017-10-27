@@ -1,104 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35694 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:56207 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750851AbdJ0NsL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 09:48:11 -0400
-Subject: Re: [PATCH 10/10] misc: fix ubsan warnings
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905615569.28563.17233201567221670601.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
-Date: Fri, 27 Oct 2017 08:48:07 -0500
+        id S1752139AbdJ0JNE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 05:13:04 -0400
+Date: Fri, 27 Oct 2017 11:13:01 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
+Message-ID: <20171027091301.GG31161@quack2.suse.cz>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-18-jack@suse.cz>
+ <20171024222322.GX3666@dastard>
+ <20171026154804.GF31161@quack2.suse.cz>
+ <20171027064301.GC22931@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <150905615569.28563.17233201567221670601.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027064301.GC22931@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
 
-On 10/26/17 5:15 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri 27-10-17 08:43:01, Christoph Hellwig wrote:
+> On Thu, Oct 26, 2017 at 05:48:04PM +0200, Jan Kara wrote:
+> > But now that I look at XFS implementation again, it misses handling
+> > of VM_FAULT_NEEDSYNC in xfs_filemap_pfn_mkwrite() (ext4 gets this right).
+> > I'll fix this by using __xfs_filemap_fault() for xfs_filemap_pfn_mkwrite()
+> > as well since it mostly duplicates it anyway... Thanks for inquiring!
 > 
-> Fix all the things ubsan warned about.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  include/bitops.h   |    8 ++++----
->  include/command.h  |    2 +-
->  include/xfs_arch.h |    2 +-
->  3 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> 
-> diff --git a/include/bitops.h b/include/bitops.h
-> index 44599a7..53a5aa0 100644
-> --- a/include/bitops.h
-> +++ b/include/bitops.h
-> @@ -13,19 +13,19 @@ static inline int fls(int x)
->  	if (!x)
->  		return 0;
->  	if (!(x & 0xffff0000u)) {
-> -		x <<= 16;
-> +		x = (x & 0xFFFFU) << 16;
+> My first patches move xfs_filemap_pfn_mkwrite to use __xfs_filemap_fault,
+> but that didn't work.  Wish I'd remember why, though.
 
-xfsprogs almost exclusively uses lowercase hex - as it does in the line
-above your new code.  ;)  I can change it on the way in unless you object.
+Maybe due to the additional check on IS_DAX(inode) in __xfs_filemap_fault()
+which could do the wrong thing if per-inode DAX flag is switched? Because
+otherwise __xfs_filemap_fault(vmf, PE_SIZE_PTE, true) does exactly the same
+thing as xfs_filemap_pfn_mkwrite() did.
 
->  		r -= 16;
->  	}
->  	if (!(x & 0xff000000u)) {
-> -		x <<= 8;
-> +		x = (x & 0xFFFFFFU) << 8;
->  		r -= 8;
->  	}
->  	if (!(x & 0xf0000000u)) {
-> -		x <<= 4;
-> +		x = (x & 0xFFFFFFFU) << 4;
->  		r -= 4;
->  	}
->  	if (!(x & 0xc0000000u)) {
-> -		x <<= 2;
-> +		x = (x & 0x3FFFFFFFU) << 2;
->  		r -= 2;
->  	}
->  	if (!(x & 0x80000000u)) {
-> diff --git a/include/command.h b/include/command.h
-> index fb3f5c7..59eab96 100644
-> --- a/include/command.h
-> +++ b/include/command.h
-> @@ -25,7 +25,7 @@
->   * not iterate the command args function callout and so can be used
->   * for functions like "help" that should only ever be run once.
->   */
-> -#define CMD_FLAG_ONESHOT	(1<<31)
-> +#define CMD_FLAG_ONESHOT	(1U<<31)
->  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
->  #define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
+If we do care about per-inode DAX flag switching, I can just fixup
+xfs_filemap_pfn_mkwrite() but my understanding was that we ditched the idea
+at least until someone comes up with a reliable way to implement that...
 
-What complained about this?  cmd flags is a signed int, right, so why is
-this a problem?  (And why are we only using the top 3 bits?  And let's just do 1U
-on every flag if it's really needed, but why is it needed?  I must be missing
-something.)
-
-> diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-> index 186cadb..34fcd4d 100644
-> --- a/include/xfs_arch.h
-> +++ b/include/xfs_arch.h
-> @@ -253,7 +253,7 @@ static inline uint16_t get_unaligned_be16(void *p)
->  static inline uint32_t get_unaligned_be32(void *p)
->  {
->  	uint8_t *__p = p;
-> -        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-> +        return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
->  }
->  
->  static inline uint64_t get_unaligned_be64(void *p)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+							Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
