@@ -1,187 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35604 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:29723 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932351AbdJZXsy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 19:48:54 -0400
-Subject: Re: [RFC] xfs_repair: clear file / directory attribute on symlinks
-References: <20171026225053.10263-1-mcgrof@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b52bcf80-6848-c3f3-c8bc-68e69054267c@sandeen.net>
-Date: Thu, 26 Oct 2017 18:48:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171026225053.10263-1-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1752624AbdJ0Mzs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 08:55:48 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 2/2] generic: ensure that mmap read doesn't see non-zero past EOF
+Date: Fri, 27 Oct 2017 20:53:57 +0800
+Message-Id: <20171027125357.25222-2-eguan@redhat.com>
+In-Reply-To: <20171027125357.25222-1-eguan@redhat.com>
+References: <20171027125357.25222-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Laurent Bonnaud <Laurent.Bonnaud@inpg.fr>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On 10/26/17 5:50 PM, Luis R. Rodriguez wrote:
-> symlinks with the attribute append set cannot be removed as they are
-> treated as if a file was set with the immutable flag set. Standard
-> tools however cannot remove *any* attribute flag:
-> 
-> 	chattr -a symlink
-> 	chattr: Operation not supported while reading flags on b
-> 
-> Furthermore one cannot list attributes on symlinks using lsattr either:
-> 
-> 	# touch a
-> 	# ln -s a b
-> 	# lsattr b
-> 	lsattr: Operation not supported While reading flags on b
+>From mmap(2) manpage, "a file is mapped in multiples of the page
+size. For a file that is not a multiple of the page size, the
+remaining memory is zeroed when mapped", this test is to test this
+behavior.
 
-ok, so tools in e2fsprogs won't clear/set... which is one datapoint...
+This is inspired by an XFS bug that truncate down fails to zero
+partial block beyond new EOF because it sees unwritten extent and
+skipped zeroing wrongly. But the fact is the unwritten extent has
+been overwritten by a buffer write, just hasn't been converted to
+real allocation yet.
 
-> This means that if you end up with an append attribute on a symlink
-> you need special tools to try to remove it. This begs the question of
-> whether or not XFS should also disallow attributes on symlinks.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/generic/466     | 121 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/466.out |   9 ++++
+ tests/generic/group   |   1 +
+ 3 files changed, 131 insertions(+)
+ create mode 100755 tests/generic/466
+ create mode 100644 tests/generic/466.out
 
-http://begthequestion.info/ ;)
+diff --git a/tests/generic/466 b/tests/generic/466
+new file mode 100755
+index 000000000000..0c67bbd27484
+--- /dev/null
++++ b/tests/generic/466
+@@ -0,0 +1,121 @@
++#! /bin/bash
++# FS QA Test 466
++#
++# Test that mmap read doesn't see non-zero data past EOF.
++#
++# This is inspired by an XFS bug that truncate down fails to zero partial block
++# beyond new EOF because it sees unwritten extent and skipped zeroing wrongly.
++# But the fact is the unwritten extent has been overwritten by a buffer write,
++# just hasn't been converted to real allocation yet.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat Inc., All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_test
++
++# run fsx with and without fsync(2) after write to get more coverage
++do_fsx()
++{
++	echo "fsx --replay-ops ${1#*.}"
++	run_fsx --replay-ops $1 >>$seqres.full
++	echo "fsx -y --replay-ops ${1#*.}"
++	run_fsx -y --replay-ops $1 >>$seqres.full
++}
++
++# simplified fsx operations that work on small and not blocksize-aligned
++# offsets, so filesystems with small block size could reproduce too
++cat >$tmp.fsxops.0 <<EOF
++# create file with unwritten extent, KEEP_SIZE flag is required, otherwise page
++# straddles i_size in the writeback triggered by truncate, range [i_size,
++# page_boundary] will be zeroed there, and bug won't be reproduced
++fallocate 0x0 0x1000 0x0 keep_size
++
++# overwrite the unwritten extents with non-zeros, but extent will stay in
++# unwritten till I/O completion
++write 0x0 0x1000 0x0
++
++# truncate down the file, which should zero range [0x10, blocksize_boundary]
++# but a buggy kernel won't, because it sees unwritten extent and skip zeroing
++truncate 0x0 0x10 0x1000
++
++# unmap the file and invalidate the pagecache of the block
++punch_hole 0x0 0x10 0x10
++
++# mmap reads the whole block from disk, and fsx will check page range beyond
++# EOF to make sure we only see zeros there
++mapread 0x0 0x10 0x10
++EOF
++
++# to get a bit more test coverage, try other operation combinations too
++# same as fsxops.0, but skip punch_hole to keep the pagecache before mapread
++cat >$tmp.fsxops.1 <<EOF
++fallocate 0x0 0x1000 0x0 keep_size
++write 0x0 0x1000 0x0
++truncate 0x0 0x10 0x1000
++mapread 0x0 0x10 0x10
++EOF
++
++# same as fsxops.0, but fallocate without KEEP_SIZE flag
++cat >$tmp.fsxops.2 <<EOF
++fallocate 0x0 0x1000 0x0
++write 0x0 0x1000 0x0
++truncate 0x0 0x10 0x1000
++mapread 0x0 0x10 0x10
++EOF
++
++# this is from the original fsxops when bug was first hit
++cat >$tmp.fsxops.3 <<EOF
++fallocate 0x35870 0xa790 0x0 keep_size
++write 0x2aa50 0xc37f 0x0
++truncate 0x0 0x36dcd 0x36dcf
++zero_range 0x35849 0x1584 0x36dcd
++mapread 0x361c8 0xc05 0x36dcd
++EOF
++
++for i in 0 1 2 3; do
++	do_fsx $tmp.fsxops.$i
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/466.out b/tests/generic/466.out
+new file mode 100644
+index 000000000000..8430bb462ad1
+--- /dev/null
++++ b/tests/generic/466.out
+@@ -0,0 +1,9 @@
++QA output created by 466
++fsx --replay-ops fsxops.0
++fsx -y --replay-ops fsxops.0
++fsx --replay-ops fsxops.1
++fsx -y --replay-ops fsxops.1
++fsx --replay-ops fsxops.2
++fsx -y --replay-ops fsxops.2
++fsx --replay-ops fsxops.3
++fsx -y --replay-ops fsxops.3
+diff --git a/tests/generic/group b/tests/generic/group
+index fbe0a7f4a717..b71644008b55 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -468,3 +468,4 @@
+ 463 auto quick clone dangerous
+ 464 auto rw
+ 465 auto rw quick aio
++466 auto quick
+-- 
+2.13.6
 
-> I can trace the lsattr change back down to commit 023d111e92195
-> ("chattr.1.in: Document the compression attribute flags E, X, and ...")
-> on e2fsprogs since August 2002. That commit just refers to the fact
-> that attributes were only allowed after that commit for directories
-> and regular files due to Debian bug 152029 [0]. This bug was filed since
-> lsattr used to enable attributes even on special files and lsattr would
-> segfault when used against them since when used against some old DRM
-> buggy driver the ioctl seem to have worked bug crashed lsattr. The bug
-> report doesn't list any specific reasoning for not allowing attributes
-> on symlinks though.
-
-Super.
-
-> Although in XFS you could end up in a situation where attributes
-> are set on a symlink this is ather hard to do, likewie for clearing
-> them.
-> 
-> Its unclear if XFS purposely supports attributes on symlinks or
-> if this was unintentional.
-> 
-> The ways in which you can end up to setting / unsetting / getting attributes
-> on symlinks on XFS are:
-> 
-> 	a) corruption
-> 	b) xfsctl()
-> 	c) xfs_db [1] [2] - only when umounted
-> 
-> POSIX doesn't seem to actually have a position on this.
-> 
-> These are not extended attributes, however xattr(7) does have
-> a little nugget worth considering regarding this, and for which
-> it was decided to at least not support extended attributes on
-> symlinks or special files:
-> 
-> 	The file permissions of symbolic links are not used in
->         access checks. These differences would allow users to consume
-> 	filesystem resources in a way not controllable by disk quotas
-> 	for group or world writable special files and directories.
-> 
-> 	For this reason, extended user attributes are allowed only for
-> 	regular files and directories.
-
-Hm, that seems like a different issue/rationale, no?
-
-> For these reasons, and since corruption is the only current valid
-> case where these seem to have popped up -- apply the same logic on
-> XFS, otherwise we'd be going against the e2fsprogs chattr convention
-> set since August 2002, and which folks likely are used to.
-> 
-> This fixes filesystems which have these attributes set where clearly
-> they were set by corruption.
-
-OK but hang on, I think a core question is:
-
-Does the kernel allow us to set attributes on symlinks?
-
-If not, repair should clear them.  But if it does, chattr's refusal
-to clear them is a quirk of that specific tool, not something that
-xfs_repair needs to worry about ...
-
-If the kernel provides an interface (xfsctl?) to set/clear these attributes,
-I don't think xfs_repair should be classifying their presence as
-corruption, right?
-
-If no, really, these should never be set, then the kernel (including
-the xfsctl route) should reject it - and at that point, I'd be ok
-with xfs_repair clearing them as "corruption."
-
--Eric
-
-> [0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
-> [1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
-> [2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
-> 
-> Cc: "Laurent Bonnaud" <Laurent.Bonnaud@inpg.fr>
-> Cc: Tso Ted <tytso@mit.edu>
-> Cc: Nikolay Borisov <nborisov@suse.com>
-> Cc: Flex Liu <fliu@suse.com>
-> Cc: Jake Norris <jake.norris@suse.com>
-> Cc: Jan Kara <jack@suse.cz>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
-> 
-> Otherwise if we *do* wish to support some of these we should
-> document the semantics. Otherwise this seems just odd and users
-> can end up with unexpected situations not being able to easily
-> clear this type of corruption.
-> 
-> The append attribute is particularly annoying given you can't
-> remove these symlinks at all, and the first thing naturally a
-> user could do is try 'lsattr' or 'chattr'. Obviously this won't
-> help and the user will just get frustrated.
-> 
->  repair/dinode.c | 35 +++++++++++++++++++++++++++++++++++
->  1 file changed, 35 insertions(+)
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 15ba8cc22b39..03e93a6e17c0 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2482,6 +2482,41 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  						FS_XFLAG_EXTSIZE);
->  			}
->  		}
-> +		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC |
-> +			     XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
-> +			     XFS_DIFLAG_SYNC | XFS_DIFLAG_NOATIME |
-> +			     XFS_DIFLAG_NODUMP | XFS_DIFLAG_RTINHERIT |
-> +			     XFS_DIFLAG_PROJINHERIT | XFS_DIFLAG_NOSYMLINKS |
-> +			     XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT |
-> +			     XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM |
-> +			     XFS_DIFLAG2_DAX | XFS_DIFLAG2_COWEXTSIZE)) {
-> +			/* chattr cannot clear append on symlink */
-> +			if (di_mode && S_ISLNK(di_mode) &&
-> +			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
-> +				if (!uncertain) {
-> +					do_warn(
-> +	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
-> +						lino);
-> +				}
-> +				flags &= ~(XFS_DIFLAG_REALTIME |
-> +					   XFS_DIFLAG_PREALLOC |
-> +					   XFS_DIFLAG_IMMUTABLE |
-> +					   XFS_DIFLAG_APPEND |
-> +					   XFS_DIFLAG_SYNC |
-> +					   XFS_DIFLAG_NOATIME |
-> +					   XFS_DIFLAG_NODUMP |
-> +					   XFS_DIFLAG_RTINHERIT |
-> +					   XFS_DIFLAG_PROJINHERIT |
-> +					   XFS_DIFLAG_NOSYMLINKS |
-> +					   XFS_DIFLAG_EXTSIZE |
-> +					   XFS_DIFLAG_EXTSZINHERIT |
-> +					   XFS_DIFLAG_NODEFRAG |
-> +					   XFS_DIFLAG_FILESTREAM |
-> +					   XFS_DIFLAG2_DAX |
-> +					   XFS_DIFLAG2_COWEXTSIZE);
-> +			}
-> +		}
-> +
->  		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
->  			if (!no_modify) {
->  				do_warn(_("fixing bad flags.\n"));
-> 
