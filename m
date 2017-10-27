@@ -1,81 +1,244 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42600 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:46973 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750790AbdJ0GET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 02:04:19 -0400
-Date: Fri, 27 Oct 2017 14:04:18 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 8/6] xfs/333: fix errors with new inode pointer verifiers
-Message-ID: <20171027060418.GV3235@eguan.usersys.redhat.com>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
- <20171027004401.GF5486@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171027004401.GF5486@magnolia>
+        id S1752631AbdJ0MhV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 08:37:21 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH 2/2] generic: Adjust generic test ouputs for new fiemap implementation
+Date: Fri, 27 Oct 2017 15:37:12 +0300
+Message-Id: <1509107832-22286-5-git-send-email-nborisov@suse.com>
+In-Reply-To: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
 
-On Thu, Oct 26, 2017 at 05:44:01PM -0700, Darrick J. Wong wrote:
-> Fix test failures with new inode pointer verifiers... and also make sure
-> that the running xfs actually supports realtime rmap.  (This should stop
-> the current crop of weird test failures since nobody has rtrmap yet
-> anyway...)
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/333     |    4 +++-
->  tests/xfs/333.out |    4 +++-
->  2 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tests/xfs/333 b/tests/xfs/333
-> index f7f233d..af52373 100755
-> --- a/tests/xfs/333
-> +++ b/tests/xfs/333
-> @@ -51,6 +51,8 @@ unset SCRATCH_RTDEV
->  
->  echo "Format and mount"
->  _scratch_mkfs > "$seqres.full" 2>&1
-> +rrmapino="$(_scratch_xfs_db -c 'sb 0' -c 'p rrmapino' 2>&1)"
-> +test "${rrmapino}" = "field rrmapino not found" && _notrun "realtime rmapbt not supported"
->  _scratch_mount
->  
->  echo "Create some files"
-> @@ -62,7 +64,7 @@ _scratch_unmount
->  
->  echo "Corrupt fs"
->  _scratch_xfs_db -x -c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
-> -_scratch_mount
-> +_scratch_mount 2>&1 | _filter_scratch
->  
->  echo "Check files"
->  md5sum $SCRATCH_MNT/f1 2>&1 | _filter_scratch
-> diff --git a/tests/xfs/333.out b/tests/xfs/333.out
-> index bee9bbc..9f81ba4 100644
-> --- a/tests/xfs/333.out
-> +++ b/tests/xfs/333.out
-> @@ -2,8 +2,10 @@ QA output created by 333
->  Format and mount
->  Create some files
->  Corrupt fs
-> +mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Structure needs cleaning
+ Since xfs_io's fiemap implementation was changed to explicitly show a whole
+ when a file consists only of it adjust the output of various test accordingly. 
+ Essentially only test 1 and 10 of _test_generic_punch require changes
 
-So kernel refuses to mount the corrupted fs now, then all the subsequent
-test steps before _repair_scratch_fs seem meaningless now, e.g. check
-md5sum of the file, and since SCRATCH_DEV is not mounted, "Trying to
-create more files" is actually writing to rootfs. All these don't seem
-right and look confusing to me..
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ tests/generic/012.out | 1 +
+ tests/generic/016.out | 1 +
+ tests/generic/021.out | 2 ++
+ tests/generic/022.out | 2 ++
+ tests/generic/058.out | 1 +
+ tests/generic/060.out | 1 +
+ tests/generic/061.out | 1 +
+ tests/generic/063.out | 1 +
+ tests/generic/255.out | 6 ++++++
+ tests/generic/316.out | 6 ++++++
+ 10 files changed, 22 insertions(+)
 
-Thanks,
-Eryu
+diff --git a/tests/generic/012.out b/tests/generic/012.out
+index ffbf8a3..8045471 100644
+--- a/tests/generic/012.out
++++ b/tests/generic/012.out
+@@ -1,5 +1,6 @@
+ QA output created by 012
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+diff --git a/tests/generic/016.out b/tests/generic/016.out
+index c45a44a..1371ce7 100644
+--- a/tests/generic/016.out
++++ b/tests/generic/016.out
+@@ -1,5 +1,6 @@
+ QA output created by 016
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+diff --git a/tests/generic/021.out b/tests/generic/021.out
+index 1137741..791b78a 100644
+--- a/tests/generic/021.out
++++ b/tests/generic/021.out
+@@ -1,5 +1,6 @@
+ QA output created by 021
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+@@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 1: [64..95]: hole
+ d8f51c20223dbce5c7c90db87bc221b0
+ 	10. hole -> data -> hole
++0: [0..63]: hole
+ bb7df04e1b0a2570657527a7e108ae23
+ 	11. data -> hole -> data
+ 0: [0..63]: extent
+diff --git a/tests/generic/022.out b/tests/generic/022.out
+index fbffa59..6dbc192 100644
+--- a/tests/generic/022.out
++++ b/tests/generic/022.out
+@@ -1,5 +1,6 @@
+ QA output created by 022
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+@@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 1: [64..95]: hole
+ d8f51c20223dbce5c7c90db87bc221b0
+ 	10. hole -> data -> hole
++0: [0..63]: hole
+ bb7df04e1b0a2570657527a7e108ae23
+ 	11. data -> hole -> data
+ 0: [0..63]: extent
+diff --git a/tests/generic/058.out b/tests/generic/058.out
+index b15308d..3bbc2a4 100644
+--- a/tests/generic/058.out
++++ b/tests/generic/058.out
+@@ -1,5 +1,6 @@
+ QA output created by 058
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/060.out b/tests/generic/060.out
+index 909b578..210af74 100644
+--- a/tests/generic/060.out
++++ b/tests/generic/060.out
+@@ -1,5 +1,6 @@
+ QA output created by 060
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/061.out b/tests/generic/061.out
+index 78d6c6d..6d95680 100644
+--- a/tests/generic/061.out
++++ b/tests/generic/061.out
+@@ -1,5 +1,6 @@
+ QA output created by 061
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/063.out b/tests/generic/063.out
+index d828ff6..10db43f 100644
+--- a/tests/generic/063.out
++++ b/tests/generic/063.out
+@@ -1,5 +1,6 @@
+ QA output created by 063
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/255.out b/tests/generic/255.out
+index 217ef3e..441fde8 100644
+--- a/tests/generic/255.out
++++ b/tests/generic/255.out
+@@ -1,5 +1,6 @@
+ QA output created by 255
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -42,6 +43,7 @@ daa100df6e6711906b61c9ab5aa16032
+ 3: [32..39]: hole
+ cc63069677939f69a6e8f68cae6a6dac
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -79,6 +81,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -121,6 +124,7 @@ daa100df6e6711906b61c9ab5aa16032
+ 3: [32..39]: hole
+ cc63069677939f69a6e8f68cae6a6dac
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -158,6 +162,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -240,6 +245,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/316.out b/tests/generic/316.out
+index 383f0d1..5506198 100644
+--- a/tests/generic/316.out
++++ b/tests/generic/316.out
+@@ -1,5 +1,6 @@
+ QA output created by 316
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -16,6 +17,7 @@ cc63069677939f69a6e8f68cae6a6dac
+ 1: [8..39]: hole
+ 1b3779878366498b28c702ef88c4a773
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -43,6 +45,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -59,6 +62,7 @@ cc63069677939f69a6e8f68cae6a6dac
+ 1: [8..39]: hole
+ 1b3779878366498b28c702ef88c4a773
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -86,6 +90,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -133,6 +138,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+-- 
+2.7.4
 
->  Check files
-> -8f27047948255cb84872e2dd7c0bc56d  SCRATCH_MNT/f1
-> +md5sum: SCRATCH_MNT/f1: No such file or directory
->  Try to create more files
->  Repair fs
-> +umount: SCRATCH_DEV: not mounted
->  Try to create more files (again)
