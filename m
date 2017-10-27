@@ -1,106 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:45584 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932198AbdJZNcW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 09:32:22 -0400
-Received: by mail-yw0-f194.google.com with SMTP id j4so2906657ywb.2
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2017 06:32:21 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:36584 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751489AbdJ0ADQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 20:03:16 -0400
+Subject: Re: [PATCH 01/10] db: increase metadump's default overly long extent
+ discard threshold
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905609902.28563.7772086766206671184.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8bee15b9-ada9-902c-e378-510f39f933e6@sandeen.net>
+Date: Thu, 26 Oct 2017 19:03:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <20171026124844.GB3666@dastard>
-References: <20171026083322.20428-1-david@fromorbit.com> <20171026083322.20428-15-david@fromorbit.com>
- <CAOQ4uxik=-cXCdsdU03xN-y1YELYpTSng63shWMF2qg-fgVG8A@mail.gmail.com> <20171026124844.GB3666@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 26 Oct 2017 16:32:20 +0300
-Message-ID: <CAOQ4uxgyirP4EiCmu48b8sE6wic9FU_5-M32eWCe8TD0Nknt7w@mail.gmail.com>
-Subject: Re: [PATCH 14/14] xfs: add growfs support for changing usable blocks
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <150905609902.28563.7772086766206671184.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
 
-On Thu, Oct 26, 2017 at 3:48 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Oct 26, 2017 at 02:30:22PM +0300, Amir Goldstein wrote:
->> On Thu, Oct 26, 2017 at 11:33 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > From: Dave Chinner <dchinner@redhat.com>
->> >
->> > Now that we have persistent usable block counts, we need to be able
->> > to change them. This allows us to control thin provisioned
->> > filesystem space usage at the filesystem level, not the block device
->> > level.
->> >
->> > If the grow operation grows the usable space beyond the current
->> > LBA size of the filesystem, then we also need to physically grow the
->> > filesystem to match the new size of the underlying device. Hence
->> > grow behaves like it always has, expect for the fact that it wont'
->> > grow physically until usable space would exceed the LBA size.
->> >
->> > Being able to modify usable space also allows us to shrink the
->> > filesystem on thin devices as easily as growing it. We simply reduce
->> > the usable space and the free space, and we're done. The user then
->> > needs to run a fstrim pass to ensure all the unused space in the
->> > filesystem LBA is marked as unused by the underlying device. No data
->> > or metadata movement is required as the underlying LBA space has not
->> > changed.
->> >
->> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
->>
->> With this change, behavior of userspace program that tried to shrink filesystem
->> size will change from -EINVAL to success for filesystems that were configured
->> to allow that. But unmodified userspace program may still be caught by surprise
->> from this success return code that was never excersized in the past.
->
-> What userspace program would be trying to shrink XFS filesystems
-> that doesn't already handle grow operations from the same ioctl call
-> returning success? Hell, I'd like to know what app is even trying to
-> shrink XFS filesystems...
->
+On 10/26/17 5:14 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
+> metadump grew the ability to ignore a directory extent if it was longer
+> than 20 blocks.  Presumably this was to protect metadump from dumping
+> absurdly long extents resulting from bmbt corruption, but it's certainly
+> possible to create a directory with an extent longer than 20 blocks.
+> Hilariously, the discards happen with no warning unless the caller
+> explicitly set -w.
+> 
+> This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
+> extent size for xfs_metadump when copying..."), but it's still possible
+> to create a directory with an extent longer than 1000 blocks.
+> 
+> Increase the threshold to MAXEXTLEN blocks because it's totally valid
+> for the filesystem to create extents up to that length.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-A buggy program of course ;-)
+Thanks, I'll pull this in.
 
->> I have also argued elsewhere that the fact that the request to shrink the
->> "virtual" size vs. physical size is implicit and not explicit, that would hinder
->> future attempts to use the API as it was intended to implement physical shrink.
->
-> No, feature bits decide the action to take without any ambiguity.
->
+Should we fix the noisiness so it doesn't require -w for 
+warnings as well?
 
-The ambiguity I was referring to was of the user program's intent.
-Did it request to the set filesystem size to N or filesystem usable size to N.
-When growing, the difference in intent doesn't change the result.
-When shrinking AND feature bit is set, the intent makes a difference.
+-Eric
 
->> Suggestion:
->> Let userspace opt-in for the new "virtual grow" API by using the 3 upper
->> bytes in (struct xfs_growfs_data){.imaxpct}.
->> Those byes are guarantied to be zeroed by old application due to value
->> range check in current code, so there is plenty of room to add flags byte
->> and use it to request to grow USABLE_DBLOCK explicitly.
->
-> What's the point of adding this complexity? AFAICT it's a solution
-> for a problem that doesn't exist....
->
-
-AFAICT you are right, but API review is a bit like legal contract review -
-picking to problem that don't seem to exist - until one day we realize
-that they do...
-
->> All the logic in your code stays the same (i.e. grow physical to accomodate
->> for growing virtual) only we stir away from being called by old apps by
->> mistake.
->
-> My care factor about old 3rd party apps that have never been able to
-> test that shrink code path actually succeeded because the kernel
-> didn't support it is pretty damn close to zero.
->
-> Actually, wait ..... Ahhhhh. I have just reached the state of Care
-> Factor Zero. :)
->
-
-Look to your right. I am right there with you :)
-Anyway, I think that the cost of being wrong on this one is not so high
-(famous last words)
-
-Cheers,
-Amir.
+> ---
+>  db/metadump.c           |    2 +-
+>  man/man8/xfs_metadump.8 |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 6dd06c3..8ffb90f 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -32,7 +32,7 @@
+>  #include "field.h"
+>  #include "dir2.h"
+>  
+> -#define DEFAULT_MAX_EXT_SIZE	1000
+> +#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
+>  
+>  /*
+>   * It's possible that multiple files in a directory (or attributes
+> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+> index 3731d6a..7207c20 100644
+> --- a/man/man8/xfs_metadump.8
+> +++ b/man/man8/xfs_metadump.8
+> @@ -114,7 +114,7 @@ copied.
+>  .B \-m
+>  Set the maximum size of an allowed metadata extent.  Extremely large metadata
+>  extents are likely to be corrupt, and will be skipped if they exceed
+> -this value.  The default size is 1000 blocks.
+> +this value.  The default size is 2097151 blocks.
+>  .TP
+>  .B \-o
+>  Disables obfuscation of file names and extended attributes.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
