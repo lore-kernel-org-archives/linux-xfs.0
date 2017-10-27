@@ -1,191 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29723 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:35694 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752624AbdJ0Mzs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 08:55:48 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 2/2] generic: ensure that mmap read doesn't see non-zero past EOF
-Date: Fri, 27 Oct 2017 20:53:57 +0800
-Message-Id: <20171027125357.25222-2-eguan@redhat.com>
-In-Reply-To: <20171027125357.25222-1-eguan@redhat.com>
-References: <20171027125357.25222-1-eguan@redhat.com>
+        id S1750851AbdJ0NsL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 09:48:11 -0400
+Subject: Re: [PATCH 10/10] misc: fix ubsan warnings
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905615569.28563.17233201567221670601.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
+Date: Fri, 27 Oct 2017 08:48:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <150905615569.28563.17233201567221670601.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
->From mmap(2) manpage, "a file is mapped in multiples of the page
-size. For a file that is not a multiple of the page size, the
-remaining memory is zeroed when mapped", this test is to test this
-behavior.
+On 10/26/17 5:15 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fix all the things ubsan warned about.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  include/bitops.h   |    8 ++++----
+>  include/command.h  |    2 +-
+>  include/xfs_arch.h |    2 +-
+>  3 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> 
+> diff --git a/include/bitops.h b/include/bitops.h
+> index 44599a7..53a5aa0 100644
+> --- a/include/bitops.h
+> +++ b/include/bitops.h
+> @@ -13,19 +13,19 @@ static inline int fls(int x)
+>  	if (!x)
+>  		return 0;
+>  	if (!(x & 0xffff0000u)) {
+> -		x <<= 16;
+> +		x = (x & 0xFFFFU) << 16;
 
-This is inspired by an XFS bug that truncate down fails to zero
-partial block beyond new EOF because it sees unwritten extent and
-skipped zeroing wrongly. But the fact is the unwritten extent has
-been overwritten by a buffer write, just hasn't been converted to
-real allocation yet.
+xfsprogs almost exclusively uses lowercase hex - as it does in the line
+above your new code.  ;)  I can change it on the way in unless you object.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- tests/generic/466     | 121 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/466.out |   9 ++++
- tests/generic/group   |   1 +
- 3 files changed, 131 insertions(+)
- create mode 100755 tests/generic/466
- create mode 100644 tests/generic/466.out
+>  		r -= 16;
+>  	}
+>  	if (!(x & 0xff000000u)) {
+> -		x <<= 8;
+> +		x = (x & 0xFFFFFFU) << 8;
+>  		r -= 8;
+>  	}
+>  	if (!(x & 0xf0000000u)) {
+> -		x <<= 4;
+> +		x = (x & 0xFFFFFFFU) << 4;
+>  		r -= 4;
+>  	}
+>  	if (!(x & 0xc0000000u)) {
+> -		x <<= 2;
+> +		x = (x & 0x3FFFFFFFU) << 2;
+>  		r -= 2;
+>  	}
+>  	if (!(x & 0x80000000u)) {
+> diff --git a/include/command.h b/include/command.h
+> index fb3f5c7..59eab96 100644
+> --- a/include/command.h
+> +++ b/include/command.h
+> @@ -25,7 +25,7 @@
+>   * not iterate the command args function callout and so can be used
+>   * for functions like "help" that should only ever be run once.
+>   */
+> -#define CMD_FLAG_ONESHOT	(1<<31)
+> +#define CMD_FLAG_ONESHOT	(1U<<31)
+>  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+>  #define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
 
-diff --git a/tests/generic/466 b/tests/generic/466
-new file mode 100755
-index 000000000000..0c67bbd27484
---- /dev/null
-+++ b/tests/generic/466
-@@ -0,0 +1,121 @@
-+#! /bin/bash
-+# FS QA Test 466
-+#
-+# Test that mmap read doesn't see non-zero data past EOF.
-+#
-+# This is inspired by an XFS bug that truncate down fails to zero partial block
-+# beyond new EOF because it sees unwritten extent and skipped zeroing wrongly.
-+# But the fact is the unwritten extent has been overwritten by a buffer write,
-+# just hasn't been converted to real allocation yet.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat Inc., All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_test
-+
-+# run fsx with and without fsync(2) after write to get more coverage
-+do_fsx()
-+{
-+	echo "fsx --replay-ops ${1#*.}"
-+	run_fsx --replay-ops $1 >>$seqres.full
-+	echo "fsx -y --replay-ops ${1#*.}"
-+	run_fsx -y --replay-ops $1 >>$seqres.full
-+}
-+
-+# simplified fsx operations that work on small and not blocksize-aligned
-+# offsets, so filesystems with small block size could reproduce too
-+cat >$tmp.fsxops.0 <<EOF
-+# create file with unwritten extent, KEEP_SIZE flag is required, otherwise page
-+# straddles i_size in the writeback triggered by truncate, range [i_size,
-+# page_boundary] will be zeroed there, and bug won't be reproduced
-+fallocate 0x0 0x1000 0x0 keep_size
-+
-+# overwrite the unwritten extents with non-zeros, but extent will stay in
-+# unwritten till I/O completion
-+write 0x0 0x1000 0x0
-+
-+# truncate down the file, which should zero range [0x10, blocksize_boundary]
-+# but a buggy kernel won't, because it sees unwritten extent and skip zeroing
-+truncate 0x0 0x10 0x1000
-+
-+# unmap the file and invalidate the pagecache of the block
-+punch_hole 0x0 0x10 0x10
-+
-+# mmap reads the whole block from disk, and fsx will check page range beyond
-+# EOF to make sure we only see zeros there
-+mapread 0x0 0x10 0x10
-+EOF
-+
-+# to get a bit more test coverage, try other operation combinations too
-+# same as fsxops.0, but skip punch_hole to keep the pagecache before mapread
-+cat >$tmp.fsxops.1 <<EOF
-+fallocate 0x0 0x1000 0x0 keep_size
-+write 0x0 0x1000 0x0
-+truncate 0x0 0x10 0x1000
-+mapread 0x0 0x10 0x10
-+EOF
-+
-+# same as fsxops.0, but fallocate without KEEP_SIZE flag
-+cat >$tmp.fsxops.2 <<EOF
-+fallocate 0x0 0x1000 0x0
-+write 0x0 0x1000 0x0
-+truncate 0x0 0x10 0x1000
-+mapread 0x0 0x10 0x10
-+EOF
-+
-+# this is from the original fsxops when bug was first hit
-+cat >$tmp.fsxops.3 <<EOF
-+fallocate 0x35870 0xa790 0x0 keep_size
-+write 0x2aa50 0xc37f 0x0
-+truncate 0x0 0x36dcd 0x36dcf
-+zero_range 0x35849 0x1584 0x36dcd
-+mapread 0x361c8 0xc05 0x36dcd
-+EOF
-+
-+for i in 0 1 2 3; do
-+	do_fsx $tmp.fsxops.$i
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/466.out b/tests/generic/466.out
-new file mode 100644
-index 000000000000..8430bb462ad1
---- /dev/null
-+++ b/tests/generic/466.out
-@@ -0,0 +1,9 @@
-+QA output created by 466
-+fsx --replay-ops fsxops.0
-+fsx -y --replay-ops fsxops.0
-+fsx --replay-ops fsxops.1
-+fsx -y --replay-ops fsxops.1
-+fsx --replay-ops fsxops.2
-+fsx -y --replay-ops fsxops.2
-+fsx --replay-ops fsxops.3
-+fsx -y --replay-ops fsxops.3
-diff --git a/tests/generic/group b/tests/generic/group
-index fbe0a7f4a717..b71644008b55 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -468,3 +468,4 @@
- 463 auto quick clone dangerous
- 464 auto rw
- 465 auto rw quick aio
-+466 auto quick
--- 
-2.13.6
+What complained about this?  cmd flags is a signed int, right, so why is
+this a problem?  (And why are we only using the top 3 bits?  And let's just do 1U
+on every flag if it's really needed, but why is it needed?  I must be missing
+something.)
 
+> diff --git a/include/xfs_arch.h b/include/xfs_arch.h
+> index 186cadb..34fcd4d 100644
+> --- a/include/xfs_arch.h
+> +++ b/include/xfs_arch.h
+> @@ -253,7 +253,7 @@ static inline uint16_t get_unaligned_be16(void *p)
+>  static inline uint32_t get_unaligned_be32(void *p)
+>  {
+>  	uint8_t *__p = p;
+> -        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+> +        return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+>  }
+>  
+>  static inline uint64_t get_unaligned_be64(void *p)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
