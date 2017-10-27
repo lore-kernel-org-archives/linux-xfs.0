@@ -1,35 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44688 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751548AbdJ0CBR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 22:01:17 -0400
-Subject: Re: [PATCH 05/10] xfs_repair: clear DAX flag from non-file inodes
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905612541.28563.17883126104053106652.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <766b4cf0-f6ba-732a-8095-5391281ac8c9@sandeen.net>
-Date: Thu, 26 Oct 2017 21:01:15 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:43960 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751179AbdJ0QdZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:33:25 -0400
+Date: Fri, 27 Oct 2017 09:33:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] fiemap: Factor out actual fiemap call code
+Message-ID: <20171027163320.GL5483@magnolia>
+References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+ <1509107832-22286-2-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <150905612541.28563.17883126104053106652.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1509107832-22286-2-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 10/26/17 5:15 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 27, 2017 at 03:37:09PM +0300, Nikolay Borisov wrote:
+> This will be needed to in a subsequent patch to avoid code duplication. No 
+> functional changes
 > 
-> The DAX flag should only be set for files and directories.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 > ---
->  repair/dinode.c |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
+>  io/fiemap.c | 38 +++++++++++++++++++++++++++-----------
+>  1 file changed, 27 insertions(+), 11 deletions(-)
 > 
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index e6fd66da753d..4a52bff974e8 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -211,6 +211,30 @@ calc_print_format(
+>  	}
+>  }
+>  
+> +static int
+> +__fiemap(struct fiemap * fiemap,
 
+Function parameter should be on a separate line.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> +	 int		 mapsize,
+> +	 __u32		 flags,
+> +	 __u64		 start,
+> +	 __u64		 length) {
+> +
+> +	int ret;
+> +
+> +	memset(fiemap, 0, mapsize);
+> +        fiemap->fm_flags = flags;
+
+Space/tab indent problems.
+
+> +        fiemap->fm_start = start;
+> +        fiemap->fm_length = length;
+> +        fiemap->fm_extent_count = EXTENT_BATCH;
+> +	ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+
+Do we still need the unsigned long cast?
+
+--D
+
+> +	if (ret < 0) {
+> +	        fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+> +	                "%s\n", progname, file->name, strerror(errno));
+> +	        return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  int
+>  fiemap_f(
+>  	int		argc,
+> @@ -266,19 +290,11 @@ fiemap_f(
+>  
+>  	while (!last && (cur_extent != max_extents)) {
+>  
+> -		memset(fiemap, 0, map_size);
+> -		fiemap->fm_flags = fiemap_flags;
+> -		fiemap->fm_start = last_logical;
+> -		fiemap->fm_length = -1LL;
+> -		fiemap->fm_extent_count = EXTENT_BATCH;
+> -
+> -		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+> +		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
+> +			       len - covered_length);
+>  		if (ret < 0) {
+> -			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+> -				"%s\n", progname, file->name, strerror(errno));
+> -			free(fiemap);
+>  			exitcode = 1;
+> -			return 0;
+> +			goto out;
+>  		}
+>  
+>  		/* No more extents to map, exit */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
