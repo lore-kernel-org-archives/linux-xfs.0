@@ -1,87 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51353 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751646AbdJZWQA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:16:00 -0400
-Subject: [PATCH 10/10] misc: fix ubsan warnings
+Received: from userp1040.oracle.com ([156.151.31.81]:28410 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751489AbdJ0AMv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 20:12:51 -0400
+Date: Thu, 26 Oct 2017 17:12:44 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 26 Oct 2017 15:15:55 -0700
-Message-ID: <150905615569.28563.17233201567221670601.stgit@magnolia>
-In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
+Subject: Re: [PATCH 01/10] db: increase metadump's default overly long extent
+ discard threshold
+Message-ID: <20171027001244.GG5483@magnolia>
 References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905609902.28563.7772086766206671184.stgit@magnolia>
+ <8bee15b9-ada9-902c-e378-510f39f933e6@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8bee15b9-ada9-902c-e378-510f39f933e6@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 26, 2017 at 07:03:15PM -0500, Eric Sandeen wrote:
+> On 10/26/17 5:14 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Back in 88b8e1d6d7 ("Make xfs_metadump more robust against bad data"),
+> > metadump grew the ability to ignore a directory extent if it was longer
+> > than 20 blocks.  Presumably this was to protect metadump from dumping
+> > absurdly long extents resulting from bmbt corruption, but it's certainly
+> > possible to create a directory with an extent longer than 20 blocks.
+> > Hilariously, the discards happen with no warning unless the caller
+> > explicitly set -w.
+> > 
+> > This was raised to 1000 blocks in 7431d134fe8 ("Increase default maximum
+> > extent size for xfs_metadump when copying..."), but it's still possible
+> > to create a directory with an extent longer than 1000 blocks.
+> > 
+> > Increase the threshold to MAXEXTLEN blocks because it's totally valid
+> > for the filesystem to create extents up to that length.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Thanks, I'll pull this in.
+> 
+> Should we fix the noisiness so it doesn't require -w for 
+> warnings as well?
 
-Fix all the things ubsan warned about.
+Yeah.  Seeing as we can't have an extent that long anyway we could
+possibly promote it to a flat out error message, at least if it's
+set to 2097151.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/bitops.h   |    8 ++++----
- include/command.h  |    2 +-
- include/xfs_arch.h |    2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+--D
 
-
-diff --git a/include/bitops.h b/include/bitops.h
-index 44599a7..53a5aa0 100644
---- a/include/bitops.h
-+++ b/include/bitops.h
-@@ -13,19 +13,19 @@ static inline int fls(int x)
- 	if (!x)
- 		return 0;
- 	if (!(x & 0xffff0000u)) {
--		x <<= 16;
-+		x = (x & 0xFFFFU) << 16;
- 		r -= 16;
- 	}
- 	if (!(x & 0xff000000u)) {
--		x <<= 8;
-+		x = (x & 0xFFFFFFU) << 8;
- 		r -= 8;
- 	}
- 	if (!(x & 0xf0000000u)) {
--		x <<= 4;
-+		x = (x & 0xFFFFFFFU) << 4;
- 		r -= 4;
- 	}
- 	if (!(x & 0xc0000000u)) {
--		x <<= 2;
-+		x = (x & 0x3FFFFFFFU) << 2;
- 		r -= 2;
- 	}
- 	if (!(x & 0x80000000u)) {
-diff --git a/include/command.h b/include/command.h
-index fb3f5c7..59eab96 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -25,7 +25,7 @@
-  * not iterate the command args function callout and so can be used
-  * for functions like "help" that should only ever be run once.
-  */
--#define CMD_FLAG_ONESHOT	(1<<31)
-+#define CMD_FLAG_ONESHOT	(1U<<31)
- #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
- #define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
- 
-diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-index 186cadb..34fcd4d 100644
---- a/include/xfs_arch.h
-+++ b/include/xfs_arch.h
-@@ -253,7 +253,7 @@ static inline uint16_t get_unaligned_be16(void *p)
- static inline uint32_t get_unaligned_be32(void *p)
- {
- 	uint8_t *__p = p;
--        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-+        return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
- }
- 
- static inline uint64_t get_unaligned_be64(void *p)
-
+> -Eric
+> 
+> > ---
+> >  db/metadump.c           |    2 +-
+> >  man/man8/xfs_metadump.8 |    2 +-
+> >  2 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/db/metadump.c b/db/metadump.c
+> > index 6dd06c3..8ffb90f 100644
+> > --- a/db/metadump.c
+> > +++ b/db/metadump.c
+> > @@ -32,7 +32,7 @@
+> >  #include "field.h"
+> >  #include "dir2.h"
+> >  
+> > -#define DEFAULT_MAX_EXT_SIZE	1000
+> > +#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
+> >  
+> >  /*
+> >   * It's possible that multiple files in a directory (or attributes
+> > diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+> > index 3731d6a..7207c20 100644
+> > --- a/man/man8/xfs_metadump.8
+> > +++ b/man/man8/xfs_metadump.8
+> > @@ -114,7 +114,7 @@ copied.
+> >  .B \-m
+> >  Set the maximum size of an allowed metadata extent.  Extremely large metadata
+> >  extents are likely to be corrupt, and will be skipped if they exceed
+> > -this value.  The default size is 1000 blocks.
+> > +this value.  The default size is 2097151 blocks.
+> >  .TP
+> >  .B \-o
+> >  Disables obfuscation of file names and extended attributes.
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
