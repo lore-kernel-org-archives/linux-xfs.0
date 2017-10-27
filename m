@@ -1,90 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45228 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753051AbdJaOW6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:58 -0400
-Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e9XRR-0007cK-Oz
-        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:58 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/18] xfs: treat idx as a cursor in xfs_bmap_collapse_extents
-Date: Tue, 31 Oct 2017 16:22:20 +0200
-Message-Id: <20171031142230.11755-9-hch@lst.de>
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:24449 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751417AbdJ0UVv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 16:21:51 -0400
+Date: Fri, 27 Oct 2017 13:21:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/6] common/xfs: refactor xfs_scrub presence testing
+Message-ID: <20171027202146.GH5486@magnolia>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <150899710564.18389.16849719285455223701.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150899710564.18389.16849719285455223701.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Stop poking before and after the index and just increment or decrement
-it while doing our operations on it to prepare for a new extent list
-implementation.
+Move all the requirements checking for xfs_scrub into a helper function.
+Make sure the helper properly detects the presence of the scrub ioctl
+and situations where we can't run scrub (e.g. norecovery).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Refactor the existing three xfs_scrub call sites to use the helper to
+check if it's appropriate to run scrub.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+v2: make sure xfs_io has a scrub/probe command at all...
+---
+ README            |    6 +++---
+ common/rc         |    2 +-
+ common/xfs        |   41 ++++++++++++++++++++++++++++++++++-------
+ tests/generic/453 |   11 +----------
+ tests/generic/454 |   11 +----------
+ 5 files changed, 40 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5ba0c0368629..14428d72cf33 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5516,7 +5516,7 @@ xfs_bmse_merge(
- 	struct xfs_inode		*ip,
- 	int				whichfork,
- 	xfs_fileoff_t			shift,		/* shift fsb */
--	int				current_ext,	/* idx of gotp */
-+	int				*current_ext,	/* idx of gotp */
- 	struct xfs_bmbt_irec		*got,		/* extent to shift */
- 	struct xfs_bmbt_irec		*left,		/* preceding extent */
- 	struct xfs_btree_cur		*cur,
-@@ -5571,9 +5571,10 @@ xfs_bmse_merge(
- 		return error;
+diff --git a/README b/README
+index 4963d28..a9da4f0 100644
+--- a/README
++++ b/README
+@@ -88,9 +88,9 @@ Preparing system for tests:
+                run xfs_repair -n to check the filesystem; xfs_repair to rebuild
+                metadata indexes; and xfs_repair -n (a third time) to check the
+                results of the rebuilding.
+-             - set TEST_XFS_SCRUB=1 to have _check_xfs_filesystem run
+-               xfs_scrub -vd to scrub the filesystem metadata online before
+-               unmounting to run the offline check.
++             - xfs_scrub, if present, will always check the test and scratch
++               filesystems if they are still online at the end of the test.
++               It is no longer necessary to set TEST_XFS_SCRUB.
+              - setenv LOGWRITES_DEV to a block device to use for power fail
+                testing.
  
- done:
-+	xfs_iext_remove(ip, *current_ext, 1, 0);
-+	--*current_ext;
- 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork),
--			current_ext - 1, &new);
--	xfs_iext_remove(ip, current_ext, 1, 0);
-+			*current_ext, &new);
+diff --git a/common/rc b/common/rc
+index 1a4d81e..83aaced 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2091,7 +2091,7 @@ _require_xfs_io_command()
+ 			_notrun "xfs_io $command support is missing"
+ 		;;
+ 	"scrub"|"repair")
+-		testio=`$XFS_IO_PROG -x -c "$command test 0" $TEST_DIR 2>&1`
++		testio=`$XFS_IO_PROG -x -c "$command probe 0" $TEST_DIR 2>&1`
+ 		echo $testio | grep -q "Inappropriate ioctl" && \
+ 			_notrun "xfs_io $command support is missing"
+ 		;;
+diff --git a/common/xfs b/common/xfs
+index dff8454..de3c560 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -298,6 +298,30 @@ _require_xfs_db_command()
+ 		_notrun "xfs_db $command support is missing"
+ }
  
- 	/* update reverse mapping. rmap functions merge the rmaps for us */
- 	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, got);
-@@ -5687,16 +5688,10 @@ xfs_bmap_collapse_extents(
++# Does the filesystem mounted from a particular device support scrub?
++_supports_xfs_scrub()
++{
++	mountpoint="$1"
++	device="$2"
++
++	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
++		echo "Usage: _supports_xfs_scrub mountpoint device"
++		exit 1
++	fi
++
++	test "$FSTYP" = "xfs" || return 1
++	test -x "$XFS_SCRUB_PROG" || return 1
++
++	# Probe for kernel support...
++	$XFS_IO_PROG -c 'help scrub' 2>&1 | grep -q 'types are:.*probe' || return 1
++	$XFS_IO_PROG -c "scrub probe 0" "$mountpoint" 2>&1 | grep -q "Inappropriate ioctl" && return 1
++
++	# Scrub can't run on norecovery mounts
++	_fs_options "$device" | grep -q "norecovery" && return 1
++
++	return 0
++}
++
+ # run xfs_check and friends on a FS.
+ _check_xfs_filesystem()
+ {
+@@ -330,14 +354,17 @@ _check_xfs_filesystem()
+ 	type=`_fs_type $device`
+ 	ok=1
  
- 		if (xfs_bmse_can_merge(&prev, &got, offset_shift_fsb)) {
- 			error = xfs_bmse_merge(ip, whichfork, offset_shift_fsb,
--					current_ext, &got, &prev, cur,
-+					&current_ext, &got, &prev, cur,
- 					&logflags, dfops);
- 			if (error)
- 				goto del_cursor;
+-	if [ "$type" = "xfs" ]; then
+-		if [ -n "$TEST_XFS_SCRUB" ] && [ -x "$XFS_SCRUB_PROG" ]; then
+-			"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
+-			if [ $? -ne 0 ]; then
+-				_log_err "filesystem on $device failed scrub"
+-				ok=0
+-			fi
++	# Run online scrub if we can.
++	mntpt="$(_is_mounted $device)"
++	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
++		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full 2>&1
++		if [ $? -ne 0 ]; then
++			_log_err "filesystem on $device failed scrub"
++			ok=0
+ 		fi
++	fi
++
++	if [ "$type" = "xfs" ]; then
+ 		# mounted ...
+ 		mountpoint=`_umount_or_remount_ro $device`
+ 	fi
+diff --git a/tests/generic/453 b/tests/generic/453
+index ff29736..40fae91 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -136,10 +136,7 @@ echo "Test XFS online scrub, if applicable"
+ 
+ # Only run this on xfs if xfs_scrub is available and has the unicode checker
+ check_xfs_scrub() {
+-	# Ignore non-XFS fs or no scrub program...
+-	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+-		return 1
+-	fi
++	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+@@ -147,12 +144,6 @@ check_xfs_scrub() {
+ 		return 1
+ 	fi
+ 
+-	# Does the ioctl work?
+-	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+-	   grep -q "Inappropriate ioctl"; then
+-		return 1
+-	fi
 -
--			/* update got after merge */
--			if (!xfs_iext_get_extent(ifp, current_ext, &got)) {
--				*done = true;
--				goto del_cursor;
--			}
- 			goto done;
- 		}
- 	} else {
-@@ -5711,12 +5706,12 @@ xfs_bmap_collapse_extents(
- 	if (error)
- 		goto del_cursor;
+ 	return 0
+ }
  
-+done:
- 	if (!xfs_iext_get_extent(ifp, ++current_ext, &got)) {
- 		 *done = true;
- 		 goto del_cursor;
- 	}
+diff --git a/tests/generic/454 b/tests/generic/454
+index 01279ee..462185a 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -132,10 +132,7 @@ echo "Test XFS online scrub, if applicable"
  
--done:
- 	*next_fsb = got.br_startoff;
- del_cursor:
- 	if (cur)
--- 
-2.14.2
-
+ # Only run this on xfs if xfs_scrub is available and has the unicode checker
+ check_xfs_scrub() {
+-	# Ignore non-XFS fs or no scrub program...
+-	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+-		return 1
+-	fi
++	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+@@ -143,12 +140,6 @@ check_xfs_scrub() {
+ 		return 1
+ 	fi
+ 
+-	# Does the ioctl work?
+-	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+-	   grep -q "Inappropriate ioctl"; then
+-		return 1
+-	fi
+-
+ 	return 0
+ }
+ 
