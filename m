@@ -1,126 +1,238 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46356 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751749AbdJ3LUx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2017 07:20:53 -0400
-Date: Mon, 30 Oct 2017 22:20:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove 'page-less'
- support
-Message-ID: <20171030112048.GA4133@dastard>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171020074750.GA13568@lst.de>
- <20171020093148.GA20304@lst.de>
- <20171026105850.GA31161@quack2.suse.cz>
- <CAA9_cmeiT2CU8Nue-HMCv+AyuDmSzXoCVxD1bebt2+cBDRTWog@mail.gmail.com>
- <20171030020023.GG3666@dastard>
- <20171030083807.GA23278@quack2.suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:32216 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932342AbdJ0UjJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 16:39:09 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9RKd8J9013991
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2017 20:39:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9RKd6RP001621
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2017 20:39:07 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v9RKd6Ls019454
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2017 20:39:06 GMT
+Date: Fri, 27 Oct 2017 13:39:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-linux: xfs-4.15-merge updated to 4eadcf9
+Message-ID: <20171027203903.GR5483@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171030083807.GA23278@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@gmail.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@suse.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm <linux-mm@kvack.org>, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Oct 30, 2017 at 09:38:07AM +0100, Jan Kara wrote:
-> Hi,
-> 
-> On Mon 30-10-17 13:00:23, Dave Chinner wrote:
-> > On Sun, Oct 29, 2017 at 04:46:44PM -0700, Dan Williams wrote:
-> > > Coming back to this since Dave has made clear that new locking to
-> > > coordinate get_user_pages() is a no-go.
-> > > 
-> > > We can unmap to force new get_user_pages() attempts to block on the
-> > > per-fs mmap lock, but if punch-hole finds any elevated pages it needs
-> > > to drop the mmap lock and wait. We need this lock dropped to get
-> > > around the problem that the driver will not start to drop page
-> > > references until it has elevated the page references on all the pages
-> > > in the I/O. If we need to drop the mmap lock that makes it impossible
-> > > to coordinate this unlock/retry loop within truncate_inode_pages_range
-> > > which would otherwise be the natural place to land this code.
-> > > 
-> > > Would it be palatable to unmap and drain dma in any path that needs to
-> > > detach blocks from an inode? Something like the following that builds
-> > > on dax_wait_dma() tried to achieve, but does not introduce a new lock
-> > > for the fs to manage:
-> > > 
-> > > retry:
-> > >     per_fs_mmap_lock(inode);
-> > >     unmap_mapping_range(mapping, start, end); /* new page references
-> > > cannot be established */
-> > >     if ((dax_page = dax_dma_busy_page(mapping, start, end)) != NULL) {
-> > >         per_fs_mmap_unlock(inode); /* new page references can happen,
-> > > so we need to start over */
-> > >         wait_for_page_idle(dax_page);
-> > >         goto retry;
-> > >     }
-> > >     truncate_inode_pages_range(mapping, start, end);
-> > >     per_fs_mmap_unlock(inode);
-> > 
-> > These retry loops you keep proposing are just bloody horrible.  They
-> > are basically just a method for blocking an operation until whatever
-> > condition is preventing the invalidation goes away. IMO, that's an
-> > ugly solution no matter how much lipstick you dress it up with.
-> > 
-> > i.e. the blocking loops mean the user process is going to be blocked
-> > for arbitrary lengths of time. That's not a solution, it's just
-> > passing the buck - now the userspace developers need to work around
-> > truncate/hole punch being randomly blocked for arbitrary lengths of
-> > time.
-> 
-> So I see substantial difference between how you and Christoph think this
-> should be handled. Christoph writes in [1]:
-> 
-> The point is that we need to prohibit long term elevated page counts
-> with DAX anyway - we can't just let people grab allocated blocks forever
-> while ignoring file system operations.  For stage 1 we'll just need to
-> fail those, and in the long run they will have to use a mechanism
-> similar to FL_LAYOUT locks to deal with file system allocation changes.
-> 
-> So Christoph wants to block truncate until references are released, forbid
-> long term references until userspace acquiring them supports some kind of
-> lease-breaking. OTOH you suggest truncate should just proceed leaving
-> blocks allocated until references are released.
+Hi folks,
 
-I don't see what I'm suggesting is a solution to long term elevated
-page counts. Just something that can park extents until layout
-leases are broken and references released. That's a few tens of
-seconds at most.
+The xfs-4.15-merge branch of the xfs-linux repository at:
 
-> We cannot have both... I'm leaning more towards the approach
-> Christoph suggests as it puts the burned to the place which is
-> causing it - the application having long term references - and
-> applications needing this should be sufficiently rare that we
-> don't have to devise a general mechanism in the kernel for this.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-I have no problems with blocking truncate forever if that's the
-desired solution for an elevated page count due to a DMA reference
-to a page. But that has absolutely nothing to do with the filesystem
-though - it's a page reference vs mapping invalidation problem, not
-a filesystem/inode problem.
+has just been updated.
 
-Perhaps pages with active DAX DMA mapping references need a page
-flag to indicate that invalidation must block on the page similar to
-the writeback flag...
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  (Keep in mind we're probably still a couple of weeks
+from the merge window opening...)
 
-> If the solution Christoph suggests is acceptable to you, I think
-> we should first write a patch to forbid acquiring long term
-> references to DAX blocks.  On top of that we can implement
-> mechanism to block truncate while there are short term references
-> pending (and for that retry loops would be IMHO acceptable).
+The new head of the korg/xfs-4.15-merge branch is commit:
 
-The problem with retry loops is that they are making a mess of an
-already complex set of locking contraints on the indoe IO path. It's
-rapidly descending into an unmaintainable mess - falling off the
-locking cliff only make sthe code harder to maintain - please look
-for solutions that don't require new locks or lock retry loops.
+4eadcf9 xfs: fix unused variable warning in xfs_buf_set_ref()
 
-Cheers,
+New Commits:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Brian Foster (6):
+      [a53efbd] xfs: fail if xattr inactivation hits a hole
+      [7561d27] xfs: buffer lru reference count error injection tag
+      [99c2659] xfs: more robust recovery xlog buffer validation
+      [9f2a450] xfs: fix log block underflow during recovery cycle verification
+      [f1b92bbc] xfs: drain the buffer LRU on mount
+      [4eadcf9] xfs: fix unused variable warning in xfs_buf_set_ref()
+
+Christoph Hellwig (39):
+      [abbf9e8] xfs: rewrite getbmap using the xfs_iext_* helpers
+      [232b5194] xfs: simplify the xfs_getbmap interface
+      [5e422f5] xfs: fix incorrect extent state in xfs_bmap_add_extent_unwritten_real
+      [e3f0f75] xfs: use xfs_iext_get_extent instead of open coding it
+      [b213d69] xfs: don't set XFS_BTCUR_BPRV_WASDEL in xfs_bunmapi
+      [8280f6e] xfs: rename bno to end in __xfs_bunmapi
+      [e1d7553] xfs: use xfs_bmap_del_extent_delay for the data fork as well
+      [1b24b63] xfs: move some more code into xfs_bmap_del_extent_real
+      [0173c68] xfs: use correct state defines in xfs_bmap_del_extent_{cow,delay}
+      [491f6f8a] xfs: use the state defines in xfs_bmap_del_extent_real
+      [48fd52b] xfs: refactor xfs_del_extent_real
+      [3ffc18e] xfs: refactor xfs_bmap_add_extent_hole_delay
+      [1abb9e5] xfs: refactor xfs_bmap_add_extent_hole_real
+      [4dcb8869] xfs: refactor xfs_bmap_add_extent_delay_real
+      [ca1862b] xfs: refactor delalloc accounting in xfs_bmap_add_extent_delay_real
+      [79fa614] xfs: refactor xfs_bmap_add_extent_unwritten_real
+      [a67d00a] xfs: pass a struct xfs_bmbt_irec to xfs_bmbt_update
+      [e16cf9b] xfs: pass a struct xfs_bmbt_irec to xfs_bmbt_lookup_eq
+      [b5cfbc2] xfs: replace xfs_bmbt_lookup_ge with xfs_bmbt_lookup_first
+      [9b15070] xfs: remove all xfs_bmbt_set_* helpers except for xfs_bmbt_set_all
+      [f038750] xfs: remove xfs_bmbt_get_state
+      [060ea65] xfs: add a xfs_bmap_fork_to_state helper
+      [35e62da] xfs: make better use of the 'state' variable in xfs_bmap_del_extent_real
+      [d138604] xfs: remove post-bmap tracing in xfs_bmap_local_to_extents
+      [ca5d8e5] xfs: move pre/post-bmap tracing into xfs_iext_update_extent
+      [e8e0e17] xfs: remove XFS_BMAP_TRACE_EXLIST
+      [42b67dc] xfs: remove the never fully implemented UUID fork format
+      [66f3646] xfs: remove if_rdev
+      [4ed36c6] xfs: inline xfs_shift_file_space into callers
+      [6b18af0] xfs: remove XFS_BMAP_MAX_SHIFT_EXTENTS
+      [ecfea3f] xfs: split xfs_bmap_shift_extents
+      [bf80628] xfs: remove xfs_bmse_shift_one
+      [11f75b3] xfs: update got in xfs_bmap_shift_update_extent
+      [40591bd] xfs: don't rely on extent indices in xfs_bmap_collapse_extents
+      [5936dc5] xfs: don't rely on extent indices in xfs_bmap_insert_extents
+      [29b3e94] xfs: rewrite xfs_bmap_first_unused to make better use of xfs_iext_get_extent
+      [9ad1a23a] xfs: add asserts for the mmap lock in xfs_{insert,collapse}_file_space
+      [211e95b] xfs: merge xfs_bmap_read_extents into xfs_iread_extents
+      [dc56015] xfs: add a new xfs_iext_lookup_extent_before helper
+
+Darrick J. Wong (34):
+      [ed438b4] xfs: return a distinct error code value for IGET_INCORE cache misses
+      [21ec541] xfs: create block pointer check functions
+      [f135761] xfs: refactor btree pointer checks
+      [52c732e] xfs: refactor btree block header checking functions
+      [91fb9af] xfs: create inode pointer verifiers
+      [36fd6e8] xfs: create an ioctl to scrub AG metadata
+      [a563718] xfs: dispatch metadata scrub subcommands
+      [dcb660f] xfs: probe the scrub ioctl
+      [4700d22] xfs: create helpers to record and deal with scrub problems
+      [537964b] xfs: create helpers to scrub a metadata btree
+      [cc3e094] xfs: scrub the shape of a metadata btree
+      [37f3fa7] xfs: scrub btree keys and records
+      [b6c1beb] xfs: create helpers to scan an allocation group
+      [21fb4cb] xfs: scrub the secondary superblocks
+      [ab9d5dc] xfs: scrub AGF and AGFL
+      [a12890a] xfs: scrub the AGI
+      [efa7a99] xfs: scrub free space btrees
+      [3daa664] xfs: scrub inode btrees
+      [c7e693d] xfs: scrub rmap btrees
+      [edc09b5] xfs: scrub refcount btrees
+      [80e4e12] xfs: scrub inodes
+      [99d9d8d] xfs: scrub inode block mappings
+      [7c4a07a] xfs: scrub directory/attribute btrees
+      [a5c46e5] xfs: scrub directory metadata
+      [df48196] xfs: scrub directory freespace
+      [eec0482] xfs: scrub extended attributes
+      [2a721db] xfs: scrub symbolic links
+      [0f28b25] xfs: scrub directory parent pointers
+      [29b0767] xfs: scrub realtime bitmap/summary
+      [c2fc338] xfs: scrub quota information
+      [9c92ee2] xfs: validate sb_logsunit is a multiple of the fs blocksize
+      [bdaac93] xfs: refactor extended attribute list operation
+      [8210f4d] xfs: abort dir/attr btree operation if btree is obviously weird
+      [2fdbec5] xfs: compare btree block keys to parent block's keys during scrub
+
+Hou Tao (1):
+      [0bd8967] xfs: check kthread_should_stop() after the setting of task state
+
+
+Code Diffstat:
+
+ fs/xfs/Kconfig                 |   17 +
+ fs/xfs/Makefile                |   28 +
+ fs/xfs/libxfs/xfs_alloc.c      |   49 ++
+ fs/xfs/libxfs/xfs_alloc.h      |    4 +
+ fs/xfs/libxfs/xfs_attr_leaf.c  |    6 +-
+ fs/xfs/libxfs/xfs_bmap.c       | 1773 +++++++++++++++-------------------------
+ fs/xfs/libxfs/xfs_bmap.h       |   48 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c |  171 +---
+ fs/xfs/libxfs/xfs_bmap_btree.h |   11 +-
+ fs/xfs/libxfs/xfs_btree.c      |  258 +++---
+ fs/xfs/libxfs/xfs_btree.h      |   32 +-
+ fs/xfs/libxfs/xfs_da_btree.c   |   22 +-
+ fs/xfs/libxfs/xfs_dir2.c       |   23 +-
+ fs/xfs/libxfs/xfs_dir2.h       |   17 +
+ fs/xfs/libxfs/xfs_format.h     |    9 +-
+ fs/xfs/libxfs/xfs_fs.h         |   77 ++
+ fs/xfs/libxfs/xfs_ialloc.c     |   90 ++
+ fs/xfs/libxfs/xfs_ialloc.h     |    7 +
+ fs/xfs/libxfs/xfs_inode_fork.c |  120 ++-
+ fs/xfs/libxfs/xfs_inode_fork.h |   10 +-
+ fs/xfs/libxfs/xfs_log_format.h |   20 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c   |   12 +
+ fs/xfs/libxfs/xfs_types.h      |    6 +
+ fs/xfs/scrub/agheader.c        |  599 ++++++++++++++
+ fs/xfs/scrub/alloc.c           |  102 +++
+ fs/xfs/scrub/attr.c            |  260 ++++++
+ fs/xfs/scrub/bmap.c            |  366 +++++++++
+ fs/xfs/scrub/btree.c           |  516 ++++++++++++
+ fs/xfs/scrub/btree.h           |   57 ++
+ fs/xfs/scrub/common.c          |  572 +++++++++++++
+ fs/xfs/scrub/common.h          |  143 ++++
+ fs/xfs/scrub/dabtree.c         |  588 +++++++++++++
+ fs/xfs/scrub/dabtree.h         |   58 ++
+ fs/xfs/scrub/dir.c             |  826 +++++++++++++++++++
+ fs/xfs/scrub/ialloc.c          |  337 ++++++++
+ fs/xfs/scrub/inode.c           |  611 ++++++++++++++
+ fs/xfs/scrub/parent.c          |  317 +++++++
+ fs/xfs/scrub/quota.c           |  304 +++++++
+ fs/xfs/scrub/refcount.c        |   99 +++
+ fs/xfs/scrub/rmap.c            |  138 ++++
+ fs/xfs/scrub/rtbitmap.c        |  108 +++
+ fs/xfs/scrub/scrub.c           |  392 +++++++++
+ fs/xfs/scrub/scrub.h           |  115 +++
+ fs/xfs/scrub/symlink.c         |   92 +++
+ fs/xfs/scrub/trace.c           |   59 ++
+ fs/xfs/scrub/trace.h           |  499 +++++++++++
+ fs/xfs/scrub/xfs_scrub.h       |   29 +
+ fs/xfs/xfs_attr.h              |    5 +-
+ fs/xfs/xfs_attr_inactive.c     |   69 +-
+ fs/xfs/xfs_attr_list.c         |  157 ++--
+ fs/xfs/xfs_bmap_util.c         |  725 +++++++---------
+ fs/xfs/xfs_bmap_util.h         |   10 +-
+ fs/xfs/xfs_buf.c               |   15 +
+ fs/xfs/xfs_buf.h               |    5 +-
+ fs/xfs/xfs_dir2_readdir.c      |    2 +-
+ fs/xfs/xfs_error.c             |    3 +
+ fs/xfs/xfs_error.h             |    4 +-
+ fs/xfs/xfs_file.c              |    2 +-
+ fs/xfs/xfs_icache.c            |    2 +-
+ fs/xfs/xfs_inode.c             |    9 +-
+ fs/xfs/xfs_inode.h             |    4 +-
+ fs/xfs/xfs_inode_item.c        |   27 +-
+ fs/xfs/xfs_ioctl.c             |  154 ++--
+ fs/xfs/xfs_ioctl32.c           |    1 +
+ fs/xfs/xfs_iops.c              |   16 +-
+ fs/xfs/xfs_itable.c            |   13 +-
+ fs/xfs/xfs_itable.h            |    2 -
+ fs/xfs/xfs_linux.h             |    7 +
+ fs/xfs/xfs_log.c               |   30 +-
+ fs/xfs/xfs_log_recover.c       |   50 +-
+ fs/xfs/xfs_reflink.c           |   19 +-
+ fs/xfs/xfs_rtalloc.h           |    2 +
+ fs/xfs/xfs_trace.h             |    5 +-
+ fs/xfs/xfs_trans_ail.c         |   21 +-
+ 74 files changed, 9174 insertions(+), 2182 deletions(-)
+ create mode 100644 fs/xfs/scrub/agheader.c
+ create mode 100644 fs/xfs/scrub/alloc.c
+ create mode 100644 fs/xfs/scrub/attr.c
+ create mode 100644 fs/xfs/scrub/bmap.c
+ create mode 100644 fs/xfs/scrub/btree.c
+ create mode 100644 fs/xfs/scrub/btree.h
+ create mode 100644 fs/xfs/scrub/common.c
+ create mode 100644 fs/xfs/scrub/common.h
+ create mode 100644 fs/xfs/scrub/dabtree.c
+ create mode 100644 fs/xfs/scrub/dabtree.h
+ create mode 100644 fs/xfs/scrub/dir.c
+ create mode 100644 fs/xfs/scrub/ialloc.c
+ create mode 100644 fs/xfs/scrub/inode.c
+ create mode 100644 fs/xfs/scrub/parent.c
+ create mode 100644 fs/xfs/scrub/quota.c
+ create mode 100644 fs/xfs/scrub/refcount.c
+ create mode 100644 fs/xfs/scrub/rmap.c
+ create mode 100644 fs/xfs/scrub/rtbitmap.c
+ create mode 100644 fs/xfs/scrub/scrub.c
+ create mode 100644 fs/xfs/scrub/scrub.h
+ create mode 100644 fs/xfs/scrub/symlink.c
+ create mode 100644 fs/xfs/scrub/trace.c
+ create mode 100644 fs/xfs/scrub/trace.h
+ create mode 100644 fs/xfs/scrub/xfs_scrub.h
