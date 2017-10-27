@@ -1,34 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49578 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751070AbdJ0Gp3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 02:45:29 -0400
-Date: Fri, 27 Oct 2017 08:45:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove
-        'page-less' support
-Message-ID: <20171027064526.GD22931@lst.de>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com> <20171020074750.GA13568@lst.de> <20171020093148.GA20304@lst.de> <20171026105850.GA31161@quack2.suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:45088 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751447AbdJ0QOk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:14:40 -0400
+Date: Fri, 27 Oct 2017 09:14:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/10] misc: fix ubsan warnings
+Message-ID: <20171027161433.GH5483@magnolia>
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905615569.28563.17233201567221670601.stgit@magnolia>
+ <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171026105850.GA31161@quack2.suse.cz>
+In-Reply-To: <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-nvdimm@lists.01.org, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 12:58:50PM +0200, Jan Kara wrote:
-> But are we guaranteed page refs are short term? E.g. if someone creates
-> v4l2 videobuf in MAP_SHARED mapping of a file on DAX filesystem, page refs
-> can be rather long-term similarly as in RDMA case. Also freeing of blocks
-> on page reference drop is another async entry point into the filesystem
-> which could unpleasantly surprise us but I guess workqueues would solve
-> that reasonably fine.
+On Fri, Oct 27, 2017 at 08:48:07AM -0500, Eric Sandeen wrote:
+> On 10/26/17 5:15 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Fix all the things ubsan warned about.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  include/bitops.h   |    8 ++++----
+> >  include/command.h  |    2 +-
+> >  include/xfs_arch.h |    2 +-
+> >  3 files changed, 6 insertions(+), 6 deletions(-)
+> > 
+> > 
+> > diff --git a/include/bitops.h b/include/bitops.h
+> > index 44599a7..53a5aa0 100644
+> > --- a/include/bitops.h
+> > +++ b/include/bitops.h
+> > @@ -13,19 +13,19 @@ static inline int fls(int x)
+> >  	if (!x)
+> >  		return 0;
+> >  	if (!(x & 0xffff0000u)) {
+> > -		x <<= 16;
+> > +		x = (x & 0xFFFFU) << 16;
+> 
+> xfsprogs almost exclusively uses lowercase hex - as it does in the line
+> above your new code.  ;)  I can change it on the way in unless you object.
 
-The point is that we need to prohibit long term elevated page counts
-with DAX anyway - we can't just let people grab allocated blocks forever
-while ignoring file system operations.  For stage 1 we'll just need to
-fail those, and in the long run they will have to use a mechanism
-similar to FL_LAYOUT locks to deal with file system allocation changes.
+Ok, sounds good to me.
+
+> >  		r -= 16;
+> >  	}
+> >  	if (!(x & 0xff000000u)) {
+> > -		x <<= 8;
+> > +		x = (x & 0xFFFFFFU) << 8;
+> >  		r -= 8;
+> >  	}
+> >  	if (!(x & 0xf0000000u)) {
+> > -		x <<= 4;
+> > +		x = (x & 0xFFFFFFFU) << 4;
+> >  		r -= 4;
+> >  	}
+> >  	if (!(x & 0xc0000000u)) {
+> > -		x <<= 2;
+> > +		x = (x & 0x3FFFFFFFU) << 2;
+> >  		r -= 2;
+> >  	}
+> >  	if (!(x & 0x80000000u)) {
+> > diff --git a/include/command.h b/include/command.h
+> > index fb3f5c7..59eab96 100644
+> > --- a/include/command.h
+> > +++ b/include/command.h
+> > @@ -25,7 +25,7 @@
+> >   * not iterate the command args function callout and so can be used
+> >   * for functions like "help" that should only ever be run once.
+> >   */
+> > -#define CMD_FLAG_ONESHOT	(1<<31)
+> > +#define CMD_FLAG_ONESHOT	(1U<<31)
+> >  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+> >  #define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
+> 
+> What complained about this?  cmd flags is a signed int, right, so why is
+> this a problem?  (And why are we only using the top 3 bits?  And let's just do 1U
+> on every flag if it's really needed, but why is it needed?  I must be missing
+> something.)
+
+I think the complaint is that "1" is signed int, and ubsan doesn't like
+us shifting a value bit into the sign bit.
+
+But yeah, I suppose if we 'U'ize one of them we could do it for all.
+
+(Though really, why not start with the lower bits?)
+
+--D
+
+> > diff --git a/include/xfs_arch.h b/include/xfs_arch.h
+> > index 186cadb..34fcd4d 100644
+> > --- a/include/xfs_arch.h
+> > +++ b/include/xfs_arch.h
+> > @@ -253,7 +253,7 @@ static inline uint16_t get_unaligned_be16(void *p)
+> >  static inline uint32_t get_unaligned_be32(void *p)
+> >  {
+> >  	uint8_t *__p = p;
+> > -        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+> > +        return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+> >  }
+> >  
+> >  static inline uint64_t get_unaligned_be64(void *p)
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
