@@ -1,193 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38982 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751176AbdJ0KvK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 06:51:10 -0400
-Date: Fri, 27 Oct 2017 06:51:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: refactor extended attribute list operation
-Message-ID: <20171027105108.GA12642@bfoster.bfoster>
-References: <150905816454.20365.10479338108395001494.stgit@magnolia>
- <150905817055.20365.4909470444810149179.stgit@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23627 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932402AbdJ0AnQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 20:43:16 -0400
+Date: Thu, 26 Oct 2017 17:43:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 7/6] common/fuzzy: online re-scrub should not preen
+Message-ID: <20171027004312.GE5486@magnolia>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150905817055.20365.4909470444810149179.stgit@magnolia>
+In-Reply-To: <150899709935.18389.17266737014565285073.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 03:49:30PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we're iterating the attribute list and we can't find our previous
-> location based off the attribute cursor, we'll instead walk down the
-> attribute btree from the root trying to find where we left off.  Move
-> this code into a separate function for later cleanups.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+When we're doing the second online scrub (to figure out if the repair
+did any good) we shouldn't let that second scrub preen the filesystem in
+any way.  If scrub finds things it can't/won't preen that turns into a
+nonzero return code which gets reported (incorrectly) as a failure.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/fuzzy |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  fs/xfs/xfs_attr_list.c |  130 +++++++++++++++++++++++++++++-------------------
->  1 file changed, 78 insertions(+), 52 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 5816786..021ec5a 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -204,19 +204,83 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
->  	return 0;
->  }
->  
-> +/*
-> + * We didn't find the block & hash mentioned in the cursor state, so
-> + * walk down the attr btree looking for the hash.
-> + */
->  STATIC int
-> -xfs_attr_node_list(xfs_attr_list_context_t *context)
-> +xfs_attr_node_list_lookup(
-> +	struct xfs_attr_list_context	*context,
-> +	struct attrlist_cursor_kern	*cursor,
-> +	struct xfs_buf			**pbp)
->  {
-> -	attrlist_cursor_kern_t *cursor;
-> -	xfs_attr_leafblock_t *leaf;
-> -	xfs_da_intnode_t *node;
-> -	struct xfs_attr3_icleaf_hdr leafhdr;
-> -	struct xfs_da3_icnode_hdr nodehdr;
-> -	struct xfs_da_node_entry *btree;
-> -	int error, i;
-> -	struct xfs_buf *bp;
-> -	struct xfs_inode	*dp = context->dp;
-> -	struct xfs_mount	*mp = dp->i_mount;
-> +	struct xfs_da3_icnode_hdr	nodehdr;
-> +	struct xfs_da_intnode		*node;
-> +	struct xfs_da_node_entry	*btree;
-> +	struct xfs_inode		*dp = context->dp;
-> +	struct xfs_mount		*mp = dp->i_mount;
-> +	struct xfs_trans		*tp = context->tp;
-> +	struct xfs_buf			*bp;
-> +	int				i;
-> +	int				error = 0;
-> +	uint16_t			magic;
-> +
-> +	ASSERT(*pbp == NULL);
-> +	cursor->blkno = 0;
-> +	for (;;) {
-> +		error = xfs_da3_node_read(tp, dp, cursor->blkno, -1, &bp,
-> +				XFS_ATTR_FORK);
-> +		if (error)
-> +			return error;
-> +		node = bp->b_addr;
-> +		magic = be16_to_cpu(node->hdr.info.magic);
-> +		if (magic == XFS_ATTR_LEAF_MAGIC ||
-> +		    magic == XFS_ATTR3_LEAF_MAGIC)
-> +			break;
-> +		if (magic != XFS_DA_NODE_MAGIC &&
-> +		    magic != XFS_DA3_NODE_MAGIC) {
-> +			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-> +					node);
-> +			goto out_corruptbuf;
-> +		}
-> +
-> +		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
-> +
-> +		btree = dp->d_ops->node_tree_p(node);
-> +		for (i = 0; i < nodehdr.count; btree++, i++) {
-> +			if (cursor->hashval <= be32_to_cpu(btree->hashval)) {
-> +				cursor->blkno = be32_to_cpu(btree->before);
-> +				trace_xfs_attr_list_node_descend(context,
-> +						btree);
-> +				break;
-> +			}
-> +		}
-> +		xfs_trans_brelse(tp, bp);
-> +
-> +		if (i == nodehdr.count)
-> +			return 0;
-> +	}
-> +
-> +	*pbp = bp;
-> +	return 0;
-> +
-> +out_corruptbuf:
-> +	xfs_trans_brelse(tp, bp);
-> +	return -EFSCORRUPTED;
-> +}
-> +
-> +STATIC int
-> +xfs_attr_node_list(
-> +	struct xfs_attr_list_context	*context)
-> +{
-> +	struct xfs_attr3_icleaf_hdr	leafhdr;
-> +	struct attrlist_cursor_kern	*cursor;
-> +	struct xfs_attr_leafblock	*leaf;
-> +	struct xfs_da_intnode		*node;
-> +	struct xfs_buf			*bp;
-> +	struct xfs_inode		*dp = context->dp;
-> +	struct xfs_mount		*mp = dp->i_mount;
-> +	int				error;
->  
->  	trace_xfs_attr_node_list(context);
->  
-> @@ -277,47 +341,9 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  	 * Note that start of node block is same as start of leaf block.
->  	 */
->  	if (bp == NULL) {
-> -		cursor->blkno = 0;
-> -		for (;;) {
-> -			uint16_t magic;
-> -
-> -			error = xfs_da3_node_read(context->tp, dp,
-> -						      cursor->blkno, -1, &bp,
-> -						      XFS_ATTR_FORK);
-> -			if (error)
-> -				return error;
-> -			node = bp->b_addr;
-> -			magic = be16_to_cpu(node->hdr.info.magic);
-> -			if (magic == XFS_ATTR_LEAF_MAGIC ||
-> -			    magic == XFS_ATTR3_LEAF_MAGIC)
-> -				break;
-> -			if (magic != XFS_DA_NODE_MAGIC &&
-> -			    magic != XFS_DA3_NODE_MAGIC) {
-> -				XFS_CORRUPTION_ERROR("xfs_attr_node_list(3)",
-> -						     XFS_ERRLEVEL_LOW,
-> -						     context->dp->i_mount,
-> -						     node);
-> -				xfs_trans_brelse(context->tp, bp);
-> -				return -EFSCORRUPTED;
-> -			}
-> -
-> -			dp->d_ops->node_hdr_from_disk(&nodehdr, node);
-> -			btree = dp->d_ops->node_tree_p(node);
-> -			for (i = 0; i < nodehdr.count; btree++, i++) {
-> -				if (cursor->hashval
-> -						<= be32_to_cpu(btree->hashval)) {
-> -					cursor->blkno = be32_to_cpu(btree->before);
-> -					trace_xfs_attr_list_node_descend(context,
-> -									 btree);
-> -					break;
-> -				}
-> -			}
-> -			if (i == nodehdr.count) {
-> -				xfs_trans_brelse(context->tp, bp);
-> -				return 0;
-> -			}
-> -			xfs_trans_brelse(context->tp, bp);
-> -		}
-> +		error = xfs_attr_node_list_lookup(context, cursor, &bp);
-> +		if (error || !bp)
-> +			return error;
->  	}
->  	ASSERT(bp != NULL);
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/common/fuzzy b/common/fuzzy
+index 7a4b03a..87f7acc 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -275,7 +275,7 @@ __scratch_xfs_fuzz_field_test() {
+ 		# which scrub doesn't know how to fix.
+ 		echo "++ Online scrub"
+ 		if [ "$1" != "sb 0" ]; then
+-			_scratch_scrub -e continue 2>&1
++			_scratch_scrub -n -e continue 2>&1
+ 			res=$?
+ 			test $res -ne 0 && \
+ 				(>&2 echo "online re-scrub ($res) with ${field} = ${fuzzverb}.")
