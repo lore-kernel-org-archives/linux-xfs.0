@@ -1,64 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58211 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751620AbdJaOWt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:49 -0400
-Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e9XRJ-0007bP-0q
-        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:49 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/18] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_real
-Date: Tue, 31 Oct 2017 16:22:17 +0200
-Message-Id: <20171031142230.11755-6-hch@lst.de>
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:49193 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751145AbdJ0QVT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:21:19 -0400
+Date: Fri, 27 Oct 2017 09:21:15 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix unused variable warning in xfs_buf_set_ref()
+Message-ID: <20171027162115.GK5483@magnolia>
+References: <201710271527.DFIgRssJ%fengguang.wu@intel.com>
+ <20171027102248.61771-1-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027102248.61771-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Stop poking before and after the index and just increment or decrement
-it while doing our operations on it to prepare for a new extent list
-implementation.
+On Fri, Oct 27, 2017 at 06:22:48AM -0400, Brian Foster wrote:
+> Fix an unused variable warning on non-DEBUG builds introduced by
+> commit 7561d27e90 ("xfs: buffer lru reference count error injection
+> tag").
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6358b30b70f9..7bd27c08981f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2741,11 +2741,11 @@ xfs_bmap_add_extent_hole_real(
- 		 * left and on the right.
- 		 * Merge all three into a single extent record.
- 		 */
--		--*idx;
- 		left.br_blockcount += new->br_blockcount + right.br_blockcount;
--		xfs_iext_update_extent(ip, state, *idx, &left);
- 
--		xfs_iext_remove(ip, *idx + 1, 1, state);
-+		xfs_iext_remove(ip, *idx, 1, state);
-+		--*idx;
-+		xfs_iext_update_extent(ip, state, *idx, &left);
- 
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
- 			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-@@ -2777,10 +2777,10 @@ xfs_bmap_add_extent_hole_real(
- 		 * on the left.
- 		 * Merge the new allocation with the left neighbor.
- 		 */
--		--*idx;
- 		old = left;
--
- 		left.br_blockcount += new->br_blockcount;
-+
-+		--*idx;
- 		xfs_iext_update_extent(ip, state, *idx, &left);
- 
- 		if (cur == NULL) {
--- 
-2.14.2
-
+> ---
+> 
+> Sigh, sorry for the noise..
+> 
+> Brian
+> 
+>  fs/xfs/xfs_buf.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d481dd2..db786bc 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -2133,14 +2133,13 @@ xfs_buf_terminate(void)
+>  
+>  void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+>  {
+> -	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> -
+>  	/*
+>  	 * Set the lru reference count to 0 based on the error injection tag.
+>  	 * This allows userspace to disrupt buffer caching for debug/testing
+>  	 * purposes.
+>  	 */
+> -	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BUF_LRU_REF))
+> +	if (XFS_TEST_ERROR(false, bp->b_target->bt_mount,
+> +			   XFS_ERRTAG_BUF_LRU_REF))
+>  		lru_ref = 0;
+>  
+>  	atomic_set(&bp->b_lru_ref, lru_ref);
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
