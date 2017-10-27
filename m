@@ -1,64 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37118 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:55342 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751489AbdJ0AJs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 20:09:48 -0400
-Subject: Re: [PATCH 03/10] xfs_io: add new error injection knobs to inject
- command
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905611328.28563.9043969796286227381.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f4cab9d0-74f4-948b-1d44-9202960205d8@sandeen.net>
-Date: Thu, 26 Oct 2017 19:09:47 -0500
+        id S1751523AbdJ0A2O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 20:28:14 -0400
+Date: Fri, 27 Oct 2017 02:28:12 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [RFC] xfs_repair: clear file / directory attribute on symlinks
+Message-ID: <20171027002812.GV17331@wotan.suse.de>
+References: <20171026225053.10263-1-mcgrof@kernel.org>
+ <b52bcf80-6848-c3f3-c8bc-68e69054267c@sandeen.net>
+ <20171027001118.GF5483@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <150905611328.28563.9043969796286227381.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027001118.GF5483@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, Laurent Bonnaud <Laurent.Bonnaud@inpg.fr>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-On 10/26/17 5:15 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 26, 2017 at 05:11:18PM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 26, 2017 at 06:48:53PM -0500, Eric Sandeen wrote:
+> > > 	b) xfsctl()
 > 
-> Bring xfs_io's inject command up to date with the newest knobs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Requires an open file descriptor, path argument not used.  Returns EBADF if
+> you opened a symlink with O_PATH|O_NOFOLLOW, which AFAIK is the only way to
+> do that.
 
-Ok, but should we get this into shared libxfs files eventually?
+Hrm, were you suggesting you didn't think its possible to use xfsctl to
+set some attributes? Because I was able to:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+#include <xfs/xfs.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-> ---
->  io/inject.c |    8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
+char *prog;
+
+static void usage(void)
+{
+		printf("Usage: %s [set|get] <file>\n", prog);
+		exit(1);
+}
+
+int main(int argc, char *argv[])
+{
+	int ret = 0;
+	struct stat sb;
+	char *cmd_str, *file;
+	int cmd = 0;
+	int open_flags = 0;
+	int fd;
+	struct fsxattr fsx;
+
+	prog = argv[0];
+
+	if (argc != 3)
+		usage();
+
+	memset(&fsx, 0, sizeof(fsx));
+
+	/* First run is get to get old values */
+	cmd = FS_IOC_FSGETXATTR;
+
+	if ((strncmp("get", argv[1], 3) == 0))
+		open_flags = O_RDONLY;
+	else if (strncmp("set", argv[1], 3) == 0) {
+		cmd = FS_IOC_FSGETXATTR;
+		open_flags = O_RDWR | O_APPEND;
+	}
+
+	if (!open_flags)
+		usage();
+
+	cmd_str = argv[1];
+
+	ret = stat(argv[2], &sb);
+	if (ret) {
+		printf("File may not be present or readable\n");
+		usage();
+	}
+
+	file = argv[2];
+
+	fd = open(file, open_flags);
+	if (!fd) {
+		printf("Could not open file for operation: %s\n", cmd_str);
+		usage();
+	}
+
+	ret = xfsctl(file, fd, cmd, &fsx);
+	if (ret < 0) {
+		printf("Could not issue xfsctl GET flags\n");
+		exit(1);
+	}
+
+	if (strncmp("get", argv[1], 3) == 0)
+		goto out;
+
+	/* Now do the setting */
+	cmd = FS_IOC_FSSETXATTR;
+	fsx.fsx_xflags |= XFS_XFLAG_APPEND;
+
+	ret = xfsctl(file, fd, cmd, &fsx);
+	if (ret < 0) {
+		printf("Could not issue xfsctl SET flags\n");
+		exit(1);
+	}
+
+out:
+	printf("fsxattr.xflags = 0x%x\n", fsx.fsx_xflags);
+
+	return 0;
+}
+
+However, its unclear if we intentionally supported this.
+
+> > > 	c) xfs_db [1] [2] - only when umounted
 > 
+> Fuzzing and corruption aren't all that dissimilar. :)
+
+Agreed.
+
+> > > POSIX doesn't seem to actually have a position on this.
+> > > 
+> > > These are not extended attributes, however xattr(7) does have
+> > > a little nugget worth considering regarding this, and for which
+> > > it was decided to at least not support extended attributes on
+> > > symlinks or special files:
+> > > 
+> > > 	The file permissions of symbolic links are not used in
+> > >         access checks. These differences would allow users to consume
+> > > 	filesystem resources in a way not controllable by disk quotas
+> > > 	for group or world writable special files and directories.
+> > > 
+> > > 	For this reason, extended user attributes are allowed only for
+> > > 	regular files and directories.
 > 
-> diff --git a/io/inject.c b/io/inject.c
-> index 25c7021..964ebfe 100644
-> --- a/io/inject.c
-> +++ b/io/inject.c
-> @@ -86,7 +86,13 @@ error_tag(char *name)
->  		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
->  #define XFS_ERRTAG_AG_RESV_CRITICAL			27
->  		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
-> -#define XFS_ERRTAG_MAX                                  28
-> +#define XFS_ERRTAG_DROP_WRITES				28
-> +		{ XFS_ERRTAG_DROP_WRITES,		"drop_writes" },
-> +#define XFS_ERRTAG_LOG_BAD_CRC				29
-> +		{ XFS_ERRTAG_LOG_BAD_CRC,		"log_bad_crc" },
-> +#define XFS_ERRTAG_LOG_ITEM_PIN				30
-> +		{ XFS_ERRTAG_LOG_ITEM_PIN,		"log_item_pin" },
-> +#define XFS_ERRTAG_MAX                                  31
->  		{ XFS_ERRTAG_MAX,			NULL }
->  	};
->  	int	count;
+> Yet lsetxattr() sets extended attributes on a symlink, right?
+
+True...
+
+> > Hm, that seems like a different issue/rationale, no?
+> > 
+> > > For these reasons, and since corruption is the only current valid
+> > > case where these seem to have popped up -- apply the same logic on
+> > > XFS, otherwise we'd be going against the e2fsprogs chattr convention
+> > > set since August 2002, and which folks likely are used to.
+> > > 
+> > > This fixes filesystems which have these attributes set where clearly
+> > > they were set by corruption.
+> > 
+> > OK but hang on, I think a core question is:
+> > 
+> > Does the kernel allow us to set attributes on symlinks?
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I don't think it should, I can't figure out how userspace would set them
+> in the first place, 
+
+It seems we currently allow for it though :(
+
+Perhaps another consideration to take, but I didn't test, should attributes set
+with SETFLAGS be preserved across filesystems? If so this may be an issue.
+
+> but repair (and now scrub) don't actually check those flags.
+
+Right, given we seem to be rather loose on SETFLAGS, its unclear
+really what is the right thing to do should be.
+
+> > > diff --git a/repair/dinode.c b/repair/dinode.c
+> > > index 15ba8cc22b39..03e93a6e17c0 100644
+> > > --- a/repair/dinode.c
+> > > +++ b/repair/dinode.c
+> > > @@ -2482,6 +2482,41 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+> > >  						FS_XFLAG_EXTSIZE);
+> > >  			}
+> > >  		}
+> > > +		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC |
+> > > +			     XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
+> > > +			     XFS_DIFLAG_SYNC | XFS_DIFLAG_NOATIME |
+> > > +			     XFS_DIFLAG_NODUMP | XFS_DIFLAG_RTINHERIT |
+> > > +			     XFS_DIFLAG_PROJINHERIT | XFS_DIFLAG_NOSYMLINKS |
+> > > +			     XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT |
+> > > +			     XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM |
+> > > +			     XFS_DIFLAG2_DAX | XFS_DIFLAG2_COWEXTSIZE)) {
 > 
+> Do not mix DIFLAG and DIFLAG2.
+> 
+> Also probably easier on the eyes if you don't write this huge OR list
+> twice.
+
+Great, I thought it wasn't done before due to some reason, but that
+is indeed the approach I prefer.
+
+  Luis
