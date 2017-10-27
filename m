@@ -1,126 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51315 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751639AbdJZWPy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:54 -0400
-Subject: [PATCH 09/10] misc: enable thread
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 26 Oct 2017 15:15:49 -0700
-Message-ID: <150905614967.28563.13207982162984486911.stgit@magnolia>
-In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:42600 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750790AbdJ0GET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Oct 2017 02:04:19 -0400
+Date: Fri, 27 Oct 2017 14:04:18 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 8/6] xfs/333: fix errors with new inode pointer verifiers
+Message-ID: <20171027060418.GV3235@eguan.usersys.redhat.com>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <20171027004401.GF5486@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027004401.GF5486@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 26, 2017 at 05:44:01PM -0700, Darrick J. Wong wrote:
+> Fix test failures with new inode pointer verifiers... and also make sure
+> that the running xfs actually supports realtime rmap.  (This should stop
+> the current crop of weird test failures since nobody has rtrmap yet
+> anyway...)
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/333     |    4 +++-
+>  tests/xfs/333.out |    4 +++-
+>  2 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/xfs/333 b/tests/xfs/333
+> index f7f233d..af52373 100755
+> --- a/tests/xfs/333
+> +++ b/tests/xfs/333
+> @@ -51,6 +51,8 @@ unset SCRATCH_RTDEV
+>  
+>  echo "Format and mount"
+>  _scratch_mkfs > "$seqres.full" 2>&1
+> +rrmapino="$(_scratch_xfs_db -c 'sb 0' -c 'p rrmapino' 2>&1)"
+> +test "${rrmapino}" = "field rrmapino not found" && _notrun "realtime rmapbt not supported"
+>  _scratch_mount
+>  
+>  echo "Create some files"
+> @@ -62,7 +64,7 @@ _scratch_unmount
+>  
+>  echo "Corrupt fs"
+>  _scratch_xfs_db -x -c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
+> -_scratch_mount
+> +_scratch_mount 2>&1 | _filter_scratch
+>  
+>  echo "Check files"
+>  md5sum $SCRATCH_MNT/f1 2>&1 | _filter_scratch
+> diff --git a/tests/xfs/333.out b/tests/xfs/333.out
+> index bee9bbc..9f81ba4 100644
+> --- a/tests/xfs/333.out
+> +++ b/tests/xfs/333.out
+> @@ -2,8 +2,10 @@ QA output created by 333
+>  Format and mount
+>  Create some files
+>  Corrupt fs
+> +mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Structure needs cleaning
 
+So kernel refuses to mount the corrupted fs now, then all the subsequent
+test steps before _repair_scratch_fs seem meaningless now, e.g. check
+md5sum of the file, and since SCRATCH_DEV is not mounted, "Trying to
+create more files" is actually writing to rootfs. All these don't seem
+right and look confusing to me..
 
----
- configure.ac            |   17 +++++++++++++++++
- debian/rules            |    4 ++--
- include/builddefs.in    |    4 ++--
- m4/package_sanitizer.m4 |   20 ++++++++++++++++++++
- 4 files changed, 41 insertions(+), 4 deletions(-)
+Thanks,
+Eryu
 
-
-diff --git a/configure.ac b/configure.ac
-index b101e05..947392c 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -84,6 +84,12 @@ AC_ARG_ENABLE(addrsan,
- 	enable_addrsan=no)
- AC_SUBST(enable_addrsan)
- 
-+# Enable THREADSAN; set enable_threadsan=yesdefault to enable autoprobe.
-+AC_ARG_ENABLE(threadsan,
-+[ --enable-threadsan=[yes/no] Enable Thread Sanitizer (THREADSAN) [default=no]],,
-+	enable_threadsan=no)
-+AC_SUBST(enable_threadsan)
-+
- #
- # If the user specified a libdir ending in lib64 do not append another
- # 64 to the library names.
-@@ -174,6 +180,17 @@ if test "$enable_addrsan" = "yes" && test "$have_addrsan" != "yes"; then
-         AC_MSG_ERROR([ADDRSAN not supported by compiler.])
- fi
- 
-+if test "$enable_threadsan" = "yes" || test "$enable_threadsan" = "yesdefault"; then
-+        AC_PACKAGE_CHECK_THREADSAN
-+fi
-+if test "$enable_threadsan" = "yes" && test "$have_threadsan" != "yes"; then
-+        AC_MSG_ERROR([THREADSAN not supported by compiler.])
-+fi
-+
-+if test "$have_threadsan" = "yes" && test "$have_addrsan" = "yes"; then
-+        AC_MSG_WARN([ADDRSAN and THREADSAN are not known to work together.])
-+fi
-+
- AC_CHECK_SIZEOF([long])
- AC_CHECK_SIZEOF([char *])
- AC_TYPE_UMODE_T
-diff --git a/debian/rules b/debian/rules
-index 6b6f45b..f186d79 100755
---- a/debian/rules
-+++ b/debian/rules
-@@ -20,9 +20,9 @@ stdenv = @GZIP=-q; export GZIP;
- 
- options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
- 	  INSTALL_USER=root INSTALL_GROUP=root \
--	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan" ;
-+	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan" ;
- diopts  = $(options) \
--	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan" ;
-+	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan" ;
- checkdir = test -f debian/rules
- 
- build: built
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7c78d4b..2df12a7 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -155,8 +155,8 @@ ifeq ($(HAVE_GETFSMAP),yes)
- PCFLAGS+= -DHAVE_GETFSMAP
- endif
- 
--SANITIZER_CFLAGS += @addrsan_cflags@ @ubsan_cflags@
--SANITIZER_LDFLAGS += @addrsan_ldflags@ @ubsan_ldflags@
-+SANITIZER_CFLAGS += @addrsan_cflags@ @threadsan_cflags@ @ubsan_cflags@
-+SANITIZER_LDFLAGS += @addrsan_ldflags@ @threadsan_ldflags@ @ubsan_ldflags@
- 
- GCFLAGS = $(DEBUG) \
- 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
-diff --git a/m4/package_sanitizer.m4 b/m4/package_sanitizer.m4
-index 06031ad..41b7299 100644
---- a/m4/package_sanitizer.m4
-+++ b/m4/package_sanitizer.m4
-@@ -37,3 +37,23 @@ AC_DEFUN([AC_PACKAGE_CHECK_ADDRSAN],
-     AC_SUBST(addrsan_cflags)
-     AC_SUBST(addrsan_ldflags)
-   ])
-+
-+AC_DEFUN([AC_PACKAGE_CHECK_THREADSAN],
-+  [ AC_MSG_CHECKING([if C compiler supports THREADSAN])
-+    OLD_CFLAGS="$CFLAGS"
-+    OLD_LDFLAGS="$LDFLAGS"
-+    THREADSAN_FLAGS="-fsanitize=thread"
-+    CFLAGS="$CFLAGS $THREADSAN_FLAGS"
-+    LDFLAGS="$LDFLAGS $ADRSAN_FLAGS"
-+    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
-+        [AC_MSG_RESULT([yes])]
-+        [threadsan_cflags=$THREADSAN_FLAGS]
-+        [threadsan_ldflags=$THREADSAN_FLAGS]
-+        [have_threadsan=yes],
-+        [AC_MSG_RESULT([no])])
-+    CFLAGS="${OLD_CFLAGS}"
-+    LDFLAGS="${OLD_LDFLAGS}"
-+    AC_SUBST(have_threadsan)
-+    AC_SUBST(threadsan_cflags)
-+    AC_SUBST(threadsan_ldflags)
-+  ])
-
+>  Check files
+> -8f27047948255cb84872e2dd7c0bc56d  SCRATCH_MNT/f1
+> +md5sum: SCRATCH_MNT/f1: No such file or directory
+>  Try to create more files
+>  Repair fs
+> +umount: SCRATCH_DEV: not mounted
+>  Try to create more files (again)
