@@ -1,289 +1,242 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28769 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbdJZWPM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 18:15:12 -0400
-Subject: [PATCH 02/10] xfsprogs: explicitly cast troublesome types to match
- printf format specifiers
+Received: from aserp1040.oracle.com ([141.146.126.69]:19912 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751688AbdJ0SEO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 14:04:14 -0400
+Date: Fri, 27 Oct 2017 11:04:08 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 26 Oct 2017 15:15:07 -0700
-Message-ID: <150905610714.28563.8771464764994644220.stgit@magnolia>
-In-Reply-To: <150905608689.28563.9670731739870415773.stgit@magnolia>
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+Subject: Re: [PATCH 2/6] common/xfs: refactor xfs_scrub presence testing
+Message-ID: <20171027180408.GN5483@magnolia>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <150899710564.18389.16849719285455223701.stgit@magnolia>
+ <20171027043715.GS3235@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027043715.GS3235@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 27, 2017 at 12:37:15PM +0800, Eryu Guan wrote:
+> On Wed, Oct 25, 2017 at 10:51:45PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Move all the requirements checking for xfs_scrub into a helper function.
+> > Make sure the helper properly detects the presence of the scrub ioctl
+> > and situations where we can't run scrub (e.g. norecovery).
+> > 
+> > Refactor the existing three xfs_scrub call sites to use the helper to
+> > check if it's appropriate to run scrub.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  README            |    6 +++---
+> >  common/rc         |    2 +-
+> >  common/xfs        |   40 +++++++++++++++++++++++++++++++++-------
+> >  tests/generic/453 |   11 +----------
+> >  tests/generic/454 |   11 +----------
+> >  5 files changed, 39 insertions(+), 31 deletions(-)
+> > 
+> > 
+> > diff --git a/README b/README
+> > index 4963d28..a9da4f0 100644
+> > --- a/README
+> > +++ b/README
+> > @@ -88,9 +88,9 @@ Preparing system for tests:
+> >                 run xfs_repair -n to check the filesystem; xfs_repair to rebuild
+> >                 metadata indexes; and xfs_repair -n (a third time) to check the
+> >                 results of the rebuilding.
+> > -             - set TEST_XFS_SCRUB=1 to have _check_xfs_filesystem run
+> > -               xfs_scrub -vd to scrub the filesystem metadata online before
+> > -               unmounting to run the offline check.
+> > +             - xfs_scrub, if present, will always check the test and scratch
+> > +               filesystems if they are still online at the end of the test.
+> > +               It is no longer necessary to set TEST_XFS_SCRUB.
+> >               - setenv LOGWRITES_DEV to a block device to use for power fail
+> >                 testing.
+> 
+> With xfs_scrub check enabled by default, I always see scrub failures
+> like this:
+> 
+> _check_xfs_filesystem: filesystem on /dev/vda5 failed scrub
+> (see /root/xfstests/results//check.full for details)
+> xfs_growfs: /mnt/testarea/test is not a mounted XFS filesystem
+> generic/445 1s ... 1s
+> _check_xfs_filesystem: filesystem on /dev/vda5 failed scrub
+> (see /root/xfstests/results//xfs_4k_crc/generic/445.full for details)
+> xfs_growfs: /mnt/testarea/test is not a mounted XFS filesystem
+> Ran: generic/445
+> Passed all 1 tests
+> 
+> And in check.full or 445.full:
+> *** xfs_scrub  -v -d -n output ***
+> Phase 1: Find filesystem geometry.
+> Info: /mnt/testarea/test: Kernel metadata scrub is required. (ioctl.c line 946)
+> Info: /mnt/testarea/test: Scrub aborted after phase 1. (scrub.c line 801)
+> 
+> And this happens to all tests and all test configs. Is this a known
+> issue of scrub?
 
-Certain system-defined types (__u64, __s64, __nlink_t, __ino64_t,
-__off64_t, __blkcnt64_t) don't have a consistent definition across
-different architectures, so wherever we use a printf format specifier on
-such a variable, we have to typecast the variable or else the compiler
-will complain.
+It shouldn't be... but we /did/ change the name of the "does this kernel
+support scrub" xfs_io command to 'probe' from 'test', so if you have an
+old branch of djwong-dev sitting around that might be why it fails to
+notice that the running kernel doesn't support scrub.
 
-IOWs this fixes build warnings on ppc64le.
+Ok, I should test that xfs_io has a scrub command and that it has a
+probe subcommand.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- io/fiemap.c          |   37 +++++++++++++++++++++----------------
- io/open.c            |    4 ++--
- io/stat.c            |   26 +++++++++++++-------------
- repair/attr_repair.c |    6 ++++--
- repair/dinode.c      |    3 ++-
- repair/phase6.c      |    4 ++--
- repair/scan.c        |    9 ++++++---
- 7 files changed, 50 insertions(+), 39 deletions(-)
+> The xfs_growfs message probably comes from _check_xfs_test_fs(), stderr
+> of xfs_growfs should go to the pipe too.
 
+The xfs_growfs error happens because we fail scrub, which sets ok=0.
+Then we unmount the filesystem to run repair, but we don't remount the
+filesystem after that because ok=0.  _check_xfs_test_fs doesn't check
+the return value of _check_xfs_filesystem, so it blindly assumes that
+the testfs is still mounted and runs xfs_info, which fails as you
+describe.  That whole thing is pointless anyway because we don't support
+"inode-paths" (i.e. IRIX parent pointers) so we might as well rip it out.
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index e6fd66d..bdcfacd 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -67,16 +67,18 @@ print_hole(
- 
- 	   if (plain) {
- 		printf("\t%d: [%llu..%llu]: hole", cur_extent,
--		       llast, lstart - 1ULL);
-+		       (unsigned long long)llast, lstart - 1ULL);
- 		if (lflag)
--			printf(_(" %llu blocks\n"), lstart - llast);
-+			printf(_(" %llu blocks\n"),
-+			       (unsigned long long)lstart - llast);
- 		else
- 			printf("\n");
- 	   } else {
--		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
--			 lstart - 1ULL);
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
-+			 (unsigned long long)llast, lstart - 1ULL);
- 		printf("%4d: %-*s %-*s %*llu\n", cur_extent, foff_w, lbuf,
--		       boff_w, _("hole"), tot_w, lstart - llast);
-+		       boff_w, _("hole"), tot_w,
-+		       (unsigned long long)lstart - llast);
- 	   }
- 
- 
-@@ -125,12 +127,13 @@ print_verbose(
- 	if (cur_extent == max_extents)
- 		return 1;
- 
--	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
--		 lstart + len - 1ULL);
--	snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block, block + len - 1ULL);
-+	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
-+		 (unsigned long long)lstart, lstart + len - 1ULL);
-+	snprintf(bbuf, sizeof(bbuf), "%llu..%llu",
-+		 (unsigned long long)block, block + len - 1ULL);
- 	snprintf(flgbuf, sizeof(flgbuf), "0x%x", extent->fe_flags);
- 	printf("%4d: %-*s %-*s %*llu %*s\n", cur_extent, foff_w, lbuf,
--	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
-+	       boff_w, bbuf, tot_w, (unsigned long long)len, flg_w, flgbuf);
- 
- 	return 2;
- }
-@@ -161,11 +164,11 @@ print_plain(
- 		return 1;
- 
- 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
--	       lstart, lstart + len - 1ULL, block,
--	       block + len - 1ULL);
-+	       (unsigned long long)lstart, lstart + len - 1ULL,
-+	       (unsigned long long)block, block + len - 1ULL);
- 
- 	if (lflag)
--		printf(_(" %llu blocks\n"), len);
-+		printf(_(" %llu blocks\n"), (unsigned long long)len);
- 	else
- 		printf("\n");
- 	return 2;
-@@ -198,10 +201,12 @@ calc_print_format(
- 		len = BTOBBT(extent->fe_length);
- 		block = BTOBBT(extent->fe_physical);
- 
--		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
--			 logical + len - 1);
--		snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
--			 block + len - 1);
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]",
-+			 (unsigned long long)logical,
-+			 (unsigned long long)logical + len - 1);
-+		snprintf(bbuf, sizeof(bbuf), "%llu..%llu",
-+			 (unsigned long long)block,
-+			 (unsigned long long)block + len - 1);
- 		*foff_w = max(*foff_w, strlen(lbuf));
- 		*boff_w = max(*boff_w, strlen(bbuf));
- 		*tot_w = max(*tot_w, numlen(len, 10));
-diff --git a/io/open.c b/io/open.c
-index f2ea7c3..2cce045 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -762,14 +762,14 @@ inode_f(
- 
- 	if (verbose && result_ino) {
- 		/* Requested verbose and we have an answer */
--		printf("%llu:%d\n", result_ino,
-+		printf("%llu:%d\n", (unsigned long long)result_ino,
- 			result_ino > XFS_MAXINUMBER_32 ? 64 : 32);
- 	} else if (userino == NULLFSINO) {
- 		/* Just checking 32 or 64 bit presence, non-verbose */
- 		printf("%d\n", result_ino > XFS_MAXINUMBER_32 ? 1 : 0);
- 	} else {
- 		/* We asked about a specific inode, non-verbose */
--		printf("%llu\n", result_ino);
-+		printf("%llu\n", (unsigned long long)result_ino);
- 	}
- 
- 	return 0;
-diff --git a/io/stat.c b/io/stat.c
-index 060ff83..b97cced 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -69,14 +69,14 @@ filetype(mode_t mode)
- static int
- dump_raw_stat(struct stat *st)
- {
--	printf("stat.blksize = %lu\n", st->st_blksize);
--	printf("stat.nlink = %lu\n", st->st_nlink);
-+	printf("stat.blksize = %lu\n", (unsigned long)st->st_blksize);
-+	printf("stat.nlink = %lu\n", (unsigned long)st->st_nlink);
- 	printf("stat.uid = %u\n", st->st_uid);
- 	printf("stat.gid = %u\n", st->st_gid);
- 	printf("stat.mode: 0%o\n", st->st_mode);
--	printf("stat.ino = %lu\n", st->st_ino);
--	printf("stat.size = %lu\n", st->st_size);
--	printf("stat.blocks = %lu\n", st->st_blocks);
-+	printf("stat.ino = %llu\n", (unsigned long long)st->st_ino);
-+	printf("stat.size = %lld\n", (long long)st->st_size);
-+	printf("stat.blocks = %lld\n", (long long)st->st_blocks);
- 	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
- 	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
- 	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
-@@ -273,21 +273,21 @@ dump_raw_statx(struct statx *stx)
- {
- 	printf("stat.mask = 0x%x\n", stx->stx_mask);
- 	printf("stat.blksize = %u\n", stx->stx_blksize);
--	printf("stat.attributes = 0x%llx\n", stx->stx_attributes);
-+	printf("stat.attributes = 0x%llx\n", (unsigned long long)stx->stx_attributes);
- 	printf("stat.nlink = %u\n", stx->stx_nlink);
- 	printf("stat.uid = %u\n", stx->stx_uid);
- 	printf("stat.gid = %u\n", stx->stx_gid);
- 	printf("stat.mode: 0%o\n", stx->stx_mode);
--	printf("stat.ino = %llu\n", stx->stx_ino);
--	printf("stat.size = %llu\n", stx->stx_size);
--	printf("stat.blocks = %llu\n", stx->stx_blocks);
--	printf("stat.atime.tv_sec = %lld\n", stx->stx_atime.tv_sec);
-+	printf("stat.ino = %llu\n", (unsigned long long)stx->stx_ino);
-+	printf("stat.size = %llu\n", (unsigned long long)stx->stx_size);
-+	printf("stat.blocks = %llu\n", (unsigned long long)stx->stx_blocks);
-+	printf("stat.atime.tv_sec = %lld\n", (long long)stx->stx_atime.tv_sec);
- 	printf("stat.atime.tv_nsec = %d\n", stx->stx_atime.tv_nsec);
--	printf("stat.btime.tv_sec = %lld\n", stx->stx_btime.tv_sec);
-+	printf("stat.btime.tv_sec = %lld\n", (long long)stx->stx_btime.tv_sec);
- 	printf("stat.btime.tv_nsec = %d\n", stx->stx_btime.tv_nsec);
--	printf("stat.ctime.tv_sec = %lld\n", stx->stx_ctime.tv_sec);
-+	printf("stat.ctime.tv_sec = %lld\n", (long long)stx->stx_ctime.tv_sec);
- 	printf("stat.ctime.tv_nsec = %d\n", stx->stx_ctime.tv_nsec);
--	printf("stat.mtime.tv_sec = %lld\n", stx->stx_mtime.tv_sec);
-+	printf("stat.mtime.tv_sec = %lld\n", (long long)stx->stx_mtime.tv_sec);
- 	printf("stat.mtime.tv_nsec = %d\n", stx->stx_mtime.tv_nsec);
- 	printf("stat.rdev_major = %u\n", stx->stx_rdev_major);
- 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 9ec2231..8b1b8a7 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -943,14 +943,16 @@ __check_attr_header(
- 	if (be64_to_cpu(info->owner) != ino) {
- 		do_warn(
- _("expected owner inode %" PRIu64 ", got %llu, attr block %" PRIu64 "\n"),
--			ino, be64_to_cpu(info->owner), bp->b_bn);
-+			ino, (unsigned long long)be64_to_cpu(info->owner),
-+			bp->b_bn);
- 		return 1;
- 	}
- 	/* verify block number */
- 	if (be64_to_cpu(info->blkno) != bp->b_bn) {
- 		do_warn(
- _("expected block %" PRIu64 ", got %llu, inode %" PRIu64 "attr block\n"),
--			bp->b_bn, be64_to_cpu(info->blkno), ino);
-+			bp->b_bn, (unsigned long long)be64_to_cpu(info->blkno),
-+			ino);
- 		return 1;
- 	}
- 	/* verify uuid */
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 15ba8cc..e7de6d4 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2330,7 +2330,8 @@ process_dinode_int(xfs_mount_t *mp,
- 			if (!uncertain)
- 				do_warn(
- _("inode identifier %llu mismatch on inode %" PRIu64 "\n"),
--					be64_to_cpu(dino->di_ino), lino);
-+					(unsigned long long)be64_to_cpu(dino->di_ino),
-+					lino);
- 			if (verify_mode)
- 				return 1;
- 			goto clear_bad_out;
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 4279d2a..37505a8 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1917,14 +1917,14 @@ __check_dir3_header(
- 	if (be64_to_cpu(owner) != ino) {
- 		do_warn(
- _("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
--			ino, be64_to_cpu(owner), bp->b_bn);
-+			ino, (unsigned long long)be64_to_cpu(owner), bp->b_bn);
- 		return 1;
- 	}
- 	/* verify block number */
- 	if (be64_to_cpu(blkno) != bp->b_bn) {
- 		do_warn(
- _("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
--			bp->b_bn, be64_to_cpu(blkno), ino);
-+			bp->b_bn, (unsigned long long)be64_to_cpu(blkno), ino);
- 		return 1;
- 	}
- 	/* verify uuid */
-diff --git a/repair/scan.c b/repair/scan.c
-index 9c0f2d6..22c7331 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -227,7 +227,9 @@ _("expected level %d got %d in inode %" PRIu64 ", (%s fork) bmbt block %" PRIu64
- 		if (be64_to_cpu(block->bb_u.l.bb_owner) != ino) {
- 			do_warn(
- _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
--				ino, be64_to_cpu(block->bb_u.l.bb_owner), bno);
-+				ino,
-+				(unsigned long long)be64_to_cpu(block->bb_u.l.bb_owner),
-+				bno);
- 			return 1;
- 		}
- 		/* verify block number */
-@@ -236,7 +238,8 @@ _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
- 			do_warn(
- _("expected block %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
- 				XFS_FSB_TO_DADDR(mp, bno),
--				be64_to_cpu(block->bb_u.l.bb_blkno), bno);
-+				(unsigned long long)be64_to_cpu(block->bb_u.l.bb_blkno),
-+				bno);
- 			return 1;
- 		}
- 		/* verify uuid */
-@@ -1587,7 +1590,7 @@ import_single_ino_chunk(
- _("ir_holemask/ir_free mismatch, %s chunk %d/%u, holemask 0x%x free 0x%llx\n"),
- 					inobt_name, agno, ino,
- 					be16_to_cpu(rp->ir_u.sp.ir_holemask),
--					be64_to_cpu(rp->ir_free));
-+					(unsigned long long)be64_to_cpu(rp->ir_free));
- 				suspect++;
- 			}
- 			if (!suspect && ino_rec)
+--D
 
+> Thanks,
+> Eryu
+> 
+> >  
+> > diff --git a/common/rc b/common/rc
+> > index 1a4d81e..83aaced 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -2091,7 +2091,7 @@ _require_xfs_io_command()
+> >  			_notrun "xfs_io $command support is missing"
+> >  		;;
+> >  	"scrub"|"repair")
+> > -		testio=`$XFS_IO_PROG -x -c "$command test 0" $TEST_DIR 2>&1`
+> > +		testio=`$XFS_IO_PROG -x -c "$command probe 0" $TEST_DIR 2>&1`
+> >  		echo $testio | grep -q "Inappropriate ioctl" && \
+> >  			_notrun "xfs_io $command support is missing"
+> >  		;;
+> > diff --git a/common/xfs b/common/xfs
+> > index dff8454..df7d029 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -298,6 +298,29 @@ _require_xfs_db_command()
+> >  		_notrun "xfs_db $command support is missing"
+> >  }
+> >  
+> > +# Does the filesystem mounted from a particular device support scrub?
+> > +_supports_xfs_scrub()
+> > +{
+> > +	mountpoint="$1"
+> > +	device="$2"
+> > +
+> > +	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
+> > +		echo "Usage: _supports_xfs_scrub mountpoint device"
+> > +		exit 1
+> > +	fi
+> > +
+> > +	test "$FSTYP" = "xfs" || return 1
+> > +	test -x "$XFS_SCRUB_PROG" || return 1
+> > +
+> > +	# Probe for kernel support...
+> > +	$XFS_IO_PROG -x -c "scrub probe 0" "$mountpoint" 2>&1 | grep -q "Inappropriate ioctl" && return 1
+> > +
+> > +	# Scrub can't run on norecovery mounts
+> > +	_fs_options "$device" | grep -q "norecovery" && return 1
+> > +
+> > +	return 0
+> > +}
+> > +
+> >  # run xfs_check and friends on a FS.
+> >  _check_xfs_filesystem()
+> >  {
+> > @@ -330,14 +353,17 @@ _check_xfs_filesystem()
+> >  	type=`_fs_type $device`
+> >  	ok=1
+> >  
+> > -	if [ "$type" = "xfs" ]; then
+> > -		if [ -n "$TEST_XFS_SCRUB" ] && [ -x "$XFS_SCRUB_PROG" ]; then
+> > -			"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
+> > -			if [ $? -ne 0 ]; then
+> > -				_log_err "filesystem on $device failed scrub"
+> > -				ok=0
+> > -			fi
+> > +	# Run online scrub if we can.
+> > +	mntpt="$(_is_mounted $device)"
+> > +	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
+> > +		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full 2>&1
+> > +		if [ $? -ne 0 ]; then
+> > +			_log_err "filesystem on $device failed scrub"
+> > +			ok=0
+> >  		fi
+> > +	fi
+> > +
+> > +	if [ "$type" = "xfs" ]; then
+> >  		# mounted ...
+> >  		mountpoint=`_umount_or_remount_ro $device`
+> >  	fi
+> > diff --git a/tests/generic/453 b/tests/generic/453
+> > index ff29736..40fae91 100755
+> > --- a/tests/generic/453
+> > +++ b/tests/generic/453
+> > @@ -136,10 +136,7 @@ echo "Test XFS online scrub, if applicable"
+> >  
+> >  # Only run this on xfs if xfs_scrub is available and has the unicode checker
+> >  check_xfs_scrub() {
+> > -	# Ignore non-XFS fs or no scrub program...
+> > -	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+> > -		return 1
+> > -	fi
+> > +	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+> >  
+> >  	# We only care if xfs_scrub has unicode string support...
+> >  	if ! type ldd > /dev/null 2>&1 || \
+> > @@ -147,12 +144,6 @@ check_xfs_scrub() {
+> >  		return 1
+> >  	fi
+> >  
+> > -	# Does the ioctl work?
+> > -	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+> > -	   grep -q "Inappropriate ioctl"; then
+> > -		return 1
+> > -	fi
+> > -
+> >  	return 0
+> >  }
+> >  
+> > diff --git a/tests/generic/454 b/tests/generic/454
+> > index 01279ee..462185a 100755
+> > --- a/tests/generic/454
+> > +++ b/tests/generic/454
+> > @@ -132,10 +132,7 @@ echo "Test XFS online scrub, if applicable"
+> >  
+> >  # Only run this on xfs if xfs_scrub is available and has the unicode checker
+> >  check_xfs_scrub() {
+> > -	# Ignore non-XFS fs or no scrub program...
+> > -	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+> > -		return 1
+> > -	fi
+> > +	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+> >  
+> >  	# We only care if xfs_scrub has unicode string support...
+> >  	if ! type ldd > /dev/null 2>&1 || \
+> > @@ -143,12 +140,6 @@ check_xfs_scrub() {
+> >  		return 1
+> >  	fi
+> >  
+> > -	# Does the ioctl work?
+> > -	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+> > -	   grep -q "Inappropriate ioctl"; then
+> > -		return 1
+> > -	fi
+> > -
+> >  	return 0
+> >  }
+> >  
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
