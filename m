@@ -1,47 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56207 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:45000 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752139AbdJ0JNE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 05:13:04 -0400
-Date: Fri, 27 Oct 2017 11:13:01 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
-Message-ID: <20171027091301.GG31161@quack2.suse.cz>
-References: <20171024152415.22864-1-jack@suse.cz>
- <20171024152415.22864-18-jack@suse.cz>
- <20171024222322.GX3666@dastard>
- <20171026154804.GF31161@quack2.suse.cz>
- <20171027064301.GC22931@lst.de>
+        id S1751915AbdJ0CGL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Oct 2017 22:06:11 -0400
+Subject: Re: [PATCH 06/10] xfs_repair: fix cowextsize field checking and
+ repairing
+References: <150905608689.28563.9670731739870415773.stgit@magnolia>
+ <150905613147.28563.3642613984403228295.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b57f41c8-ce22-043a-ba04-b1692530a4de@sandeen.net>
+Date: Thu, 26 Oct 2017 21:06:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171027064301.GC22931@lst.de>
+In-Reply-To: <150905613147.28563.3642613984403228295.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 27-10-17 08:43:01, Christoph Hellwig wrote:
-> On Thu, Oct 26, 2017 at 05:48:04PM +0200, Jan Kara wrote:
-> > But now that I look at XFS implementation again, it misses handling
-> > of VM_FAULT_NEEDSYNC in xfs_filemap_pfn_mkwrite() (ext4 gets this right).
-> > I'll fix this by using __xfs_filemap_fault() for xfs_filemap_pfn_mkwrite()
-> > as well since it mostly duplicates it anyway... Thanks for inquiring!
+On 10/26/17 5:15 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> My first patches move xfs_filemap_pfn_mkwrite to use __xfs_filemap_fault,
-> but that didn't work.  Wish I'd remember why, though.
+> Make sure that we never leave the filesystem with a zero cowextsize hint
+> while the cowextsize inode flag is set.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Maybe due to the additional check on IS_DAX(inode) in __xfs_filemap_fault()
-which could do the wrong thing if per-inode DAX flag is switched? Because
-otherwise __xfs_filemap_fault(vmf, PE_SIZE_PTE, true) does exactly the same
-thing as xfs_filemap_pfn_mkwrite() did.
+Ok.  Is there anything that catches cowextsize set on di_version < 3?
 
-If we do care about per-inode DAX flag switching, I can just fixup
-xfs_filemap_pfn_mkwrite() but my understanding was that we ditched the idea
-at least until someone comes up with a reliable way to implement that...
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-							Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
