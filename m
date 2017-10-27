@@ -1,114 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752190AbdJ0Mxi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Oct 2017 08:53:38 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D4630C034E16
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2017 12:53:37 +0000 (UTC)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfs: flush the range before zero partial block range on truncate down
-Date: Fri, 27 Oct 2017 20:53:28 +0800
-Message-Id: <20171027125328.25001-1-eguan@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48975 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751070AbdJ0Gs7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 02:48:59 -0400
+Date: Fri, 27 Oct 2017 17:48:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove 'page-less'
+ support
+Message-ID: <20171027064854.GE3666@dastard>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171020074750.GA13568@lst.de>
+ <20171020093148.GA20304@lst.de>
+ <20171026105850.GA31161@quack2.suse.cz>
+ <1509061831.25213.2.camel@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1509061831.25213.2.camel@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "hch@lst.de" <hch@lst.de>, "jack@suse.cz" <jack@suse.cz>, "schwidefsky@de.ibm.com" <schwidefsky@de.ibm.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "dledford@redhat.com" <dledford@redhat.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "bfields@fieldses.org" <bfields@fieldses.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "heiko.carstens@de.ibm.com" <heiko.carstens@de.ibm.com>, "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Hefty, Sean" <sean.hefty@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "jlayton@poochiereds.net" <jlayton@poochiereds.net>, "mawilcox@microsoft.com" <mawilcox@microsoft.com>, "mhocko@suse.com" <mhocko@suse.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "gerald.schaefer@de.ibm.com" <gerald.schaefer@de.ibm.com>, "jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>, "hal.rosenstock@gmail.com" <hal.rosenstock@gmail.com>, "benh@kernel.crashing.org" <benh@kernel.crashing.org>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>, "paulus@samba.org" <paulus@samba.org>
 
-On truncate down, if new size is not block size aligned, we zero the
-rest of block via iomap_truncate_page() to avoid exposing stale data
-to user, and iomap_truncate_page() skips zeroing if the range is
-already in unwritten status or a hole.
+On Thu, Oct 26, 2017 at 11:51:04PM +0000, Williams, Dan J wrote:
+> On Thu, 2017-10-26 at 12:58 +0200, Jan Kara wrote:
+> > On Fri 20-10-17 11:31:48, Christoph Hellwig wrote:
+> > > On Fri, Oct 20, 2017 at 09:47:50AM +0200, Christoph Hellwig wrote:
+> > > > I'd like to brainstorm how we can do something better.
+> > > > 
+> > > > How about:
+> > > > 
+> > > > If we hit a page with an elevated refcount in truncate / hole puch
+> > > > etc for a DAX file system we do not free the blocks in the file system,
+> > > > but add it to the extent busy list.  We mark the page as delayed
+> > > > free (e.g. page flag?) so that when it finally hits refcount zero we
+> > > > call back into the file system to remove it from the busy list.
+> > > 
+> > > Brainstorming some more:
+> > > 
+> > > Given that on a DAX file there shouldn't be any long-term page
+> > > references after we unmap it from the page table and don't allow
+> > > get_user_pages calls why not wait for the references for all
+> > > DAX pages to go away first?  E.g. if we find a DAX page in
+> > > truncate_inode_pages_range that has an elevated refcount we set
+> > > a new flag to prevent new references from showing up, and then
+> > > simply wait for it to go away.  Instead of a busy way we can
+> > > do this through a few hashed waitqueued in dev_pagemap.  And in
+> > > fact put_zone_device_page already gets called when putting the
+> > > last page so we can handle the wakeup from there.
+> > > 
+> > > In fact if we can't find a page flag for the stop new callers
+> > > things we could probably come up with a way to do that through
+> > > dev_pagemap somehow, but I'm not sure how efficient that would
+> > > be.
+> > 
+> > We were talking about this yesterday with Dan so some more brainstorming
+> > from us. We can implement the solution with extent busy list in ext4
+> > relatively easily - we already have such list currently similarly to XFS.
+> > There would be some modifications needed but nothing too complex. The
+> > biggest downside of this solution I see is that it requires per-filesystem
+> > solution for busy extents - ext4 and XFS are reasonably fine, however btrfs
+> > may have problems and ext2 definitely will need some modifications.
+> > Invisible used blocks may be surprising to users at times although given
+> > page refs should be relatively short term, that should not be a big issue.
+> > But are we guaranteed page refs are short term? E.g. if someone creates
+> > v4l2 videobuf in MAP_SHARED mapping of a file on DAX filesystem, page refs
+> > can be rather long-term similarly as in RDMA case. Also freeing of blocks
+> > on page reference drop is another async entry point into the filesystem
+> > which could unpleasantly surprise us but I guess workqueues would solve
+> > that reasonably fine.
+> > 
+> > WRT waiting for page refs to be dropped before proceeding with truncate (or
+> > punch hole for that matter - that case is even nastier since we don't have
+> > i_size to guard us). What I like about this solution is that it is very
+> > visible there's something unusual going on with the file being truncated /
+> > punched and so problems are easier to diagnose / fix from the admin side.
+> > So far we have guarded hole punching from concurrent faults (and
+> > get_user_pages() does fault once you do unmap_mapping_range()) with
+> > I_MMAP_LOCK (or its equivalent in ext4). We cannot easily wait for page
+> > refs to be dropped under I_MMAP_LOCK as that could deadlock - the most
+> > obvious case Dan came up with is when GUP obtains ref to page A, then hole
+> > punch comes grabbing I_MMAP_LOCK and waiting for page ref on A to be
+> > dropped, and then GUP blocks on trying to fault in another page.
+> > 
+> > I think we cannot easily prevent new page references to be grabbed as you
+> > write above since nobody expects stuff like get_page() to fail. But I 
+> > think that unmapping relevant pages and then preventing them to be faulted
+> > in again is workable and stops GUP as well. The problem with that is though
+> > what to do with page faults to such pages - you cannot just fail them for
+> > hole punch, and you cannot easily allocate new blocks either. So we are
+> > back at a situation where we need to detach blocks from the inode and then
+> > wait for page refs to be dropped - so some form of busy extents. Am I
+> > missing something?
+> > 
+> 
+> No, that's a good summary of what we talked about. However, I did go
+> back and give the new lock approach a try and was able to get my test
+> to pass. The new locking is not pretty especially since you need to
+> drop and reacquire the lock so that get_user_pages() can finish
+> grabbing all the pages it needs. Here are the two primary patches in
+> the series, do you think the extent-busy approach would be cleaner?
 
-But it's possible that a buffer write overwrites the unwritten
-extent, which won't be converted to a normal extent until I/O
-completion, and iomap_truncate_page() skips zeroing wrongly because
-of the not-converted unwritten extent. This would cause a subsequent
-mmap read sees non-zeros beyond EOF.
+The XFS_DAXDMA.... 
 
-I occasionally see this in fsx runs in fstests generic/112, a
-simplified fsx operation sequence is like (assuming 4k block size
-xfs):
+$DEITY that patch is so ugly I can't even bring myself to type it.
 
-  fallocate 0x0 0x1000 0x0 keep_size
-  write 0x0 0x1000 0x0
-  truncate 0x0 0x800 0x1000
-  punch_hole 0x0 0x800 0x800
-  mapread 0x0 0x800 0x800
-
-This is introduced along with the switch to iomap based buffer write
-support, commit 68a9f5e7007c ("xfs: implement iomap based buffered
-write path"), because previously, block_truncate_page() did fs block
-based check and only skipped holes.
-
-Fix it by flushing the range we're going to zero to ensure
-iomap_truncate_page() sees the final extent state and zeros the
-range correctly.
-
-Also fixed the wrong 'end' param of filemap_write_and_wait_range()
-call while we're at it, the 'end' is inclusive and should be
-'newsize - 1'.
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-
-An fstests test case followed, I've verified it could reproduce the
-bug reliably and quickly.
-
- fs/xfs/xfs_iops.c | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 17081c77ef86..cd4c612cc23c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -824,6 +824,7 @@ xfs_setattr_size(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
-+	struct address_space	*mapping = inode->i_mapping;
- 	xfs_off_t		oldsize, newsize;
- 	struct xfs_trans	*tp;
- 	int			error;
-@@ -878,8 +879,22 @@ xfs_setattr_size(
- 	if (newsize > oldsize) {
- 		error = xfs_zero_eof(ip, newsize, oldsize, &did_zeroing);
- 	} else {
--		error = iomap_truncate_page(inode, newsize, &did_zeroing,
--				&xfs_iomap_ops);
-+		/*
-+		 * Firstly write out the range that will be zeroed, otherwise
-+		 * iomap_truncate_page() may skip zeroing this range wrongly.
-+		 * Because the range could still be dirty after buffer writes
-+		 * over unwritten extents, and the extent still stays in
-+		 * UNWRITTEN state, because the conversion only happens at I/O
-+		 * completion.
-+		 */
-+		unsigned int blocksize = i_blocksize(inode);
-+		unsigned int off = newsize & (blocksize - 1);
-+		if (off && mapping->nrpages)
-+			error = filemap_write_and_wait_range(mapping, newsize,
-+					newsize + (blocksize - off) - 1);
-+		if (!error)
-+			error = iomap_truncate_page(inode, newsize,
-+					&did_zeroing, &xfs_iomap_ops);
- 	}
- 
- 	if (error)
-@@ -895,8 +910,8 @@ xfs_setattr_size(
- 	 */
- 	if (did_zeroing ||
- 	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
--		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
--						      ip->i_d.di_size, newsize);
-+		error = filemap_write_and_wait_range(mapping, ip->i_d.di_size,
-+							newsize - 1);
- 		if (error)
- 			return error;
- 	}
+-Dave.
 -- 
-2.13.6
-
+Dave Chinner
+david@fromorbit.com
