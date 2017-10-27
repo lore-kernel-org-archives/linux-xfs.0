@@ -1,156 +1,296 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45308 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751483AbdJZWu4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 18:50:56 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC] xfs_repair: clear file / directory attribute on symlinks
-Date: Thu, 26 Oct 2017 15:50:53 -0700
-Message-Id: <20171026225053.10263-1-mcgrof@kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40022 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751167AbdJ0STG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 14:19:06 -0400
+Date: Fri, 27 Oct 2017 11:18:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 5/6] misc: add module reloading helpers
+Message-ID: <20171027181859.GO5483@magnolia>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <150899712429.18389.5159489339127196469.stgit@magnolia>
+ <20171027003817.GC5486@magnolia>
+ <20171027044112.GT3235@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027044112.GT3235@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Laurent Bonnaud <Laurent.Bonnaud@inpg.fr>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-symlinks with the attribute append set cannot be removed as they are
-treated as if a file was set with the immutable flag set. Standard
-tools however cannot remove *any* attribute flag:
+On Fri, Oct 27, 2017 at 12:41:12PM +0800, Eryu Guan wrote:
+> On Thu, Oct 26, 2017 at 05:38:17PM -0700, Darrick J. Wong wrote:
+> > Add some helper functions to require that we can reload a given module,
+> > and add a helper to actually do that.  Refactor the existing users to
+> > use the generics.
+> > 
+> > We need to hoist completely the behaviors of the old btrfs module helper
+> > because we need to confirm before starting the test that we actually can
+> > remove the module.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  common/btrfs    |   12 --------
+> >  common/module   |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  common/overlay  |    1 +
+> >  common/rc       |   11 -------
+> >  tests/btrfs/124 |    9 +++---
+> >  tests/btrfs/125 |    9 +++---
+> >  6 files changed, 92 insertions(+), 33 deletions(-)
+> >  create mode 100644 common/module
+> > 
+> > diff --git a/common/btrfs b/common/btrfs
+> > index fd762ef..c09206c 100644
+> > --- a/common/btrfs
+> > +++ b/common/btrfs
+> > @@ -349,18 +349,6 @@ _btrfs_qgroup_units()
+> >  	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
+> >  }
+> >  
+> > -_require_btrfs_loadable()
+> > -{
+> > -	modprobe -r btrfs || _notrun "btrfs unloadable"
+> > -	modprobe btrfs || _notrun "Can't load btrfs"
+> > -}
+> > -
+> > -_reload_btrfs_ko()
+> > -{
+> > -	modprobe -r btrfs || _fail "btrfs unload failed"
+> > -	modprobe btrfs || _fail "btrfs load failed"
+> > -}
+> > -
+> >  _btrfs_compression_algos()
+> >  {
+> >  	echo zlib
+> > diff --git a/common/module b/common/module
+> > new file mode 100644
+> > index 0000000..59cbd8a
+> > --- /dev/null
+> > +++ b/common/module
+> > @@ -0,0 +1,83 @@
+> > +##/bin/bash
+> > +
+> > +# Routines for messing around with loadable kernel modules
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +#  Copyright (c) 2017 Oracle.  All Rights Reserved.
+> > +#  This program is free software; you can redistribute it and/or modify
+> > +#  it under the terms of the GNU General Public License as published by
+> > +#  the Free Software Foundation; either version 2 of the License, or
+> > +#  (at your option) any later version.
+> > +#
+> > +#  This program is distributed in the hope that it will be useful,
+> > +#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +#  GNU General Public License for more details.
+> > +#
+> > +#  You should have received a copy of the GNU General Public License
+> > +#  along with this program; if not, write to the Free Software
+> > +#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+> > +#  USA
+> > +#-----------------------------------------------------------------------
+> > +
+> > +# Return the module name for this fs.
+> > +_module_for_fs()
+> > +{
+> > +	echo "$FSTYP"
+> > +}
+> > +
+> > +# Reload a particular module.  This module MUST NOT be the module that
+> > +# underlies the filesystem.
+> > +_reload_module()
+> > +{
+> > +	module="$1"
+> > +
+> > +	modprobe -r "${module}" || _fail "${module} unload failed"
+> > +	modprobe "${module}" || _fail "${module} load failed"
+> > +}
+> > +
+> > +# Reload the filesystem module.
+> > +_reload_fs_module()
+> > +{
+> > +	module="$1"
+> > +
+> > +	# Unload test fs, try to reload module, remount
+> > +	had_testfs=""
+> > +	had_scratchfs=""
+> > +	_check_mounted_on TEST_DEV $TEST_DEV TEST_DIR $TEST_DIR && had_testfs="true"
+> > +	_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT && had_scratchfs="true"
+> > +	test -n "$had_testfs" && _test_unmount
+> > +	test -n "$had_scratchfs" && _scratch_unmount
+> > +	_reload_module "$module"
+> > +	test -n "$had_scratchfs" && _scratch_mount 2> /dev/null
+> > +	test -n "$had_testfs" && _test_mount 2> /dev/null
+> > +}
+> > +
+> > +# Check that we have a module that can be loaded.  This module MUST NOT
+> > +# be the module that underlies the filesystem.
+> > +_require_loadable_module()
+> > +{
+> > +	module="$1"
+> > +
+> > +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
+> > +	_reload_module "$module"
+> > +}
+> > +
+> > +# Check that the module for FSTYP can be loaded.
+> > +_require_loadable_fs_module()
+> > +{
+> > +	module="$1"
+> > +
+> > +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
+> > +	_reload_fs_module "$module"
+> 
+> _reload_module() or _reload_fs_module() fails the test directly if the
+> module is still in use. IMHO we should _notrun in this case.
 
-	chattr -a symlink
-	chattr: Operation not supported while reading flags on b
+Ok, will fix.
 
-Furthermore one cannot list attributes on symlinks using lsattr either:
+> Currently xfs/70[345] still fail if rootfs is xfs.
 
-	# touch a
-	# ln -s a b
-	# lsattr b
-	lsattr: Operation not supported While reading flags on b
+I don't consider it a good idea to store xfsprogs/xfstests on a $FSTYP
+filesystem because you're depending on the reliability of the same
+filesystem whose reliability you're trying to prove.
 
-This means that if you end up with an append attribute on a symlink
-you need special tools to try to remove it. This begs the question of
-whether or not XFS should also disallow attributes on symlinks.
+That said, I suppose that pretty much requires nfsroot or a giant initramfs...
 
-I can trace the lsattr change back down to commit 023d111e92195
-("chattr.1.in: Document the compression attribute flags E, X, and ...")
-on e2fsprogs since August 2002. That commit just refers to the fact
-that attributes were only allowed after that commit for directories
-and regular files due to Debian bug 152029 [0]. This bug was filed since
-lsattr used to enable attributes even on special files and lsattr would
-segfault when used against them since when used against some old DRM
-buggy driver the ioctl seem to have worked bug crashed lsattr. The bug
-report doesn't list any specific reasoning for not allowing attributes
-on symlinks though.
+--D
 
-Although in XFS you could end up in a situation where attributes
-are set on a symlink this is ather hard to do, likewie for clearing
-them.
-
-Its unclear if XFS purposely supports attributes on symlinks or
-if this was unintentional.
-
-The ways in which you can end up to setting / unsetting / getting attributes
-on symlinks on XFS are:
-
-	a) corruption
-	b) xfsctl()
-	c) xfs_db [1] [2] - only when umounted
-
-POSIX doesn't seem to actually have a position on this.
-
-These are not extended attributes, however xattr(7) does have
-a little nugget worth considering regarding this, and for which
-it was decided to at least not support extended attributes on
-symlinks or special files:
-
-	The file permissions of symbolic links are not used in
-        access checks. These differences would allow users to consume
-	filesystem resources in a way not controllable by disk quotas
-	for group or world writable special files and directories.
-
-	For this reason, extended user attributes are allowed only for
-	regular files and directories.
-
-For these reasons, and since corruption is the only current valid
-case where these seem to have popped up -- apply the same logic on
-XFS, otherwise we'd be going against the e2fsprogs chattr convention
-set since August 2002, and which folks likely are used to.
-
-This fixes filesystems which have these attributes set where clearly
-they were set by corruption.
-
-[0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
-[1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
-[2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
-
-Cc: "Laurent Bonnaud" <Laurent.Bonnaud@inpg.fr>
-Cc: Tso Ted <tytso@mit.edu>
-Cc: Nikolay Borisov <nborisov@suse.com>
-Cc: Flex Liu <fliu@suse.com>
-Cc: Jake Norris <jake.norris@suse.com>
-Cc: Jan Kara <jack@suse.cz>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
-
-Otherwise if we *do* wish to support some of these we should
-document the semantics. Otherwise this seems just odd and users
-can end up with unexpected situations not being able to easily
-clear this type of corruption.
-
-The append attribute is particularly annoying given you can't
-remove these symlinks at all, and the first thing naturally a
-user could do is try 'lsattr' or 'chattr'. Obviously this won't
-help and the user will just get frustrated.
-
- repair/dinode.c | 35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 15ba8cc22b39..03e93a6e17c0 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2482,6 +2482,41 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 						FS_XFLAG_EXTSIZE);
- 			}
- 		}
-+		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC |
-+			     XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
-+			     XFS_DIFLAG_SYNC | XFS_DIFLAG_NOATIME |
-+			     XFS_DIFLAG_NODUMP | XFS_DIFLAG_RTINHERIT |
-+			     XFS_DIFLAG_PROJINHERIT | XFS_DIFLAG_NOSYMLINKS |
-+			     XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT |
-+			     XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM |
-+			     XFS_DIFLAG2_DAX | XFS_DIFLAG2_COWEXTSIZE)) {
-+			/* chattr cannot clear append on symlink */
-+			if (di_mode && S_ISLNK(di_mode) &&
-+			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
-+				if (!uncertain) {
-+					do_warn(
-+	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
-+						lino);
-+				}
-+				flags &= ~(XFS_DIFLAG_REALTIME |
-+					   XFS_DIFLAG_PREALLOC |
-+					   XFS_DIFLAG_IMMUTABLE |
-+					   XFS_DIFLAG_APPEND |
-+					   XFS_DIFLAG_SYNC |
-+					   XFS_DIFLAG_NOATIME |
-+					   XFS_DIFLAG_NODUMP |
-+					   XFS_DIFLAG_RTINHERIT |
-+					   XFS_DIFLAG_PROJINHERIT |
-+					   XFS_DIFLAG_NOSYMLINKS |
-+					   XFS_DIFLAG_EXTSIZE |
-+					   XFS_DIFLAG_EXTSZINHERIT |
-+					   XFS_DIFLAG_NODEFRAG |
-+					   XFS_DIFLAG_FILESTREAM |
-+					   XFS_DIFLAG2_DAX |
-+					   XFS_DIFLAG2_COWEXTSIZE);
-+			}
-+		}
-+
- 		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
- 			if (!no_modify) {
- 				do_warn(_("fixing bad flags.\n"));
--- 
-2.14.2
-
+> Thanks,
+> Eryu
+> 
+> > +}
+> > +
+> > +# Print the value of a filesystem module parameter
+> > +# at /sys/module/$FSTYP/parameters/$PARAM
+> > +#
+> > +# Usage example (FSTYP=overlay):
+> > +#   _get_fs_module_param index
+> > +_get_fs_module_param()
+> > +{
+> > +	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
+> > +}
+> > diff --git a/common/overlay b/common/overlay
+> > index 79097ba..1da4ab1 100644
+> > --- a/common/overlay
+> > +++ b/common/overlay
+> > @@ -1,6 +1,7 @@
+> >  #
+> >  # overlayfs specific common functions.
+> >  #
+> > +. ./common/module
+> >  
+> >  # helper function to do the actual overlayfs mount operation
+> >  _overlay_mount_dirs()
+> > diff --git a/common/rc b/common/rc
+> > index 83aaced..c708bfa 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -3554,16 +3554,6 @@ _get_fs_sysfs_attr()
+> >  	cat /sys/fs/${FSTYP}/${dname}/${attr}
+> >  }
+> >  
+> > -# Print the value of a filesystem module parameter
+> > -# at /sys/module/$FSTYP/parameters/$PARAM
+> > -#
+> > -# Usage example (FSTYP=overlay):
+> > -#   _get_fs_module_param index
+> > -_get_fs_module_param()
+> > -{
+> > -	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
+> > -}
+> > -
+> >  # Generic test for specific filesystem feature.
+> >  # Currently only implemented to test overlayfs features.
+> >  _require_scratch_feature()
+> > diff --git a/tests/btrfs/124 b/tests/btrfs/124
+> > index 7206094..a648627 100755
+> > --- a/tests/btrfs/124
+> > +++ b/tests/btrfs/124
+> > @@ -55,6 +55,7 @@ _cleanup()
+> >  # get standard environment, filters and checks
+> >  . ./common/rc
+> >  . ./common/filter
+> > +. ./common/module
+> >  
+> >  # remove previous $seqres.full before test
+> >  rm -f $seqres.full
+> > @@ -64,10 +65,8 @@ rm -f $seqres.full
+> >  _supported_fs btrfs
+> >  _supported_os Linux
+> >  _require_scratch_dev_pool 2
+> > -
+> > -# the mounted test dir prevent btrfs unload, we need to unmount
+> >  _test_unmount
+> > -_require_btrfs_loadable
+> > +_require_loadable_fs_module "btrfs"
+> >  
+> >  _scratch_dev_pool_get 2
+> >  
+> > @@ -102,7 +101,7 @@ echo "clean btrfs ko" >> $seqres.full
+> >  _scratch_unmount
+> >  
+> >  # un-scan the btrfs devices
+> > -_reload_btrfs_ko
+> > +_reload_fs_module "btrfs"
+> >  
+> >  echo >> $seqres.full
+> >  echo "-----Write degraded mount fill upto $max_fs_sz bytes-----" >> $seqres.full
+> > @@ -141,7 +140,7 @@ echo
+> >  echo "Mount degraded with the other dev"
+> >  _scratch_unmount
+> >  # un-scan the btrfs devices
+> > -_reload_btrfs_ko
+> > +_reload_fs_module "btrfs"
+> >  _mount -o degraded $dev2 $SCRATCH_MNT >>$seqres.full 2>&1
+> >  _run_btrfs_util_prog filesystem show
+> >  checkpoint3=`md5sum $SCRATCH_MNT/tf2`
+> > diff --git a/tests/btrfs/125 b/tests/btrfs/125
+> > index 91aa8d8..19961a1 100755
+> > --- a/tests/btrfs/125
+> > +++ b/tests/btrfs/125
+> > @@ -54,6 +54,7 @@ _cleanup()
+> >  # get standard environment, filters and checks
+> >  . ./common/rc
+> >  . ./common/filter
+> > +. ./common/module
+> >  
+> >  # remove previous $seqres.full before test
+> >  rm -f $seqres.full
+> > @@ -63,10 +64,8 @@ rm -f $seqres.full
+> >  _supported_fs btrfs
+> >  _supported_os Linux
+> >  _require_scratch_dev_pool 3
+> > -
+> > -# we need btrfs to unload, need test dir unmounted
+> >  _test_unmount
+> > -_require_btrfs_loadable
+> > +_require_loadable_fs_module "btrfs"
+> >  
+> >  _scratch_dev_pool_get 3
+> >  
+> > @@ -118,7 +117,7 @@ echo "unmount" >> $seqres.full
+> >  _scratch_unmount
+> >  echo "clean btrfs ko" >> $seqres.full
+> >  # un-scan the btrfs devices
+> > -_reload_btrfs_ko
+> > +_reload_fs_module "btrfs"
+> >  _mount -o degraded,device=$dev2 $dev1 $SCRATCH_MNT >>$seqres.full 2>&1
+> >  dd if=/dev/zero of="$SCRATCH_MNT"/tf2 bs=$bs count=$count \
+> >  					>>$seqres.full 2>&1
+> > @@ -154,7 +153,7 @@ echo "Mount degraded but with other dev"
+> >  
+> >  _scratch_unmount
+> >  # un-scan the btrfs devices
+> > -_reload_btrfs_ko
+> > +_reload_fs_module "btrfs"
+> >  
+> >  _mount -o degraded,device=${dev2} $dev3 $SCRATCH_MNT >>$seqres.full 2>&1
+> >  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
