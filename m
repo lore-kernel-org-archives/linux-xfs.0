@@ -1,118 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51538 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753051AbdJaOXE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:23:04 -0400
-Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e9XRX-0007dj-L2
-        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:23:04 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/18] xfs: iterate over extents in xfs_iextents_copy
-Date: Tue, 31 Oct 2017 16:22:22 +0200
-Message-Id: <20171031142230.11755-11-hch@lst.de>
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56072 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750788AbdJ1FrS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 28 Oct 2017 01:47:18 -0400
+Date: Sat, 28 Oct 2017 13:47:15 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 5/6] misc: add module reloading helpers
+Message-ID: <20171028054715.GA3235@eguan.usersys.redhat.com>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <150899712429.18389.5159489339127196469.stgit@magnolia>
+ <20171027003817.GC5486@magnolia>
+ <20171027044112.GT3235@eguan.usersys.redhat.com>
+ <20171027181859.GO5483@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027181859.GO5483@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-This actually makes the function very slightly less efficient for now as we
-detour through the expanded irect format between the in-core extent format
-and the on-disk one instead of just endian swapping them.  But with the
-incore extent btree the in-core one will use a different format and the
-representation will be entirely hidden.  It also happens to make the
-function a whole more readable.
+On Fri, Oct 27, 2017 at 11:18:59AM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 27, 2017 at 12:41:12PM +0800, Eryu Guan wrote:
+> > On Thu, Oct 26, 2017 at 05:38:17PM -0700, Darrick J. Wong wrote:
+> > > Add some helper functions to require that we can reload a given module,
+> > > and add a helper to actually do that.  Refactor the existing users to
+> > > use the generics.
+> > > 
+> > > We need to hoist completely the behaviors of the old btrfs module helper
+> > > because we need to confirm before starting the test that we actually can
+> > > remove the module.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  common/btrfs    |   12 --------
+> > >  common/module   |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  common/overlay  |    1 +
+> > >  common/rc       |   11 -------
+> > >  tests/btrfs/124 |    9 +++---
+> > >  tests/btrfs/125 |    9 +++---
+> > >  6 files changed, 92 insertions(+), 33 deletions(-)
+> > >  create mode 100644 common/module
+> > > 
+> > > diff --git a/common/btrfs b/common/btrfs
+> > > index fd762ef..c09206c 100644
+> > > --- a/common/btrfs
+> > > +++ b/common/btrfs
+> > > @@ -349,18 +349,6 @@ _btrfs_qgroup_units()
+> > >  	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
+> > >  }
+> > >  
+> > > -_require_btrfs_loadable()
+> > > -{
+> > > -	modprobe -r btrfs || _notrun "btrfs unloadable"
+> > > -	modprobe btrfs || _notrun "Can't load btrfs"
+> > > -}
+> > > -
+> > > -_reload_btrfs_ko()
+> > > -{
+> > > -	modprobe -r btrfs || _fail "btrfs unload failed"
+> > > -	modprobe btrfs || _fail "btrfs load failed"
+> > > -}
+> > > -
+> > >  _btrfs_compression_algos()
+> > >  {
+> > >  	echo zlib
+> > > diff --git a/common/module b/common/module
+> > > new file mode 100644
+> > > index 0000000..59cbd8a
+> > > --- /dev/null
+> > > +++ b/common/module
+> > > @@ -0,0 +1,83 @@
+> > > +##/bin/bash
+> > > +
+> > > +# Routines for messing around with loadable kernel modules
+> > > +#
+> > > +#-----------------------------------------------------------------------
+> > > +#  Copyright (c) 2017 Oracle.  All Rights Reserved.
+> > > +#  This program is free software; you can redistribute it and/or modify
+> > > +#  it under the terms of the GNU General Public License as published by
+> > > +#  the Free Software Foundation; either version 2 of the License, or
+> > > +#  (at your option) any later version.
+> > > +#
+> > > +#  This program is distributed in the hope that it will be useful,
+> > > +#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > +#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > +#  GNU General Public License for more details.
+> > > +#
+> > > +#  You should have received a copy of the GNU General Public License
+> > > +#  along with this program; if not, write to the Free Software
+> > > +#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+> > > +#  USA
+> > > +#-----------------------------------------------------------------------
+> > > +
+> > > +# Return the module name for this fs.
+> > > +_module_for_fs()
+> > > +{
+> > > +	echo "$FSTYP"
+> > > +}
+> > > +
+> > > +# Reload a particular module.  This module MUST NOT be the module that
+> > > +# underlies the filesystem.
+> > > +_reload_module()
+> > > +{
+> > > +	module="$1"
+> > > +
+> > > +	modprobe -r "${module}" || _fail "${module} unload failed"
+> > > +	modprobe "${module}" || _fail "${module} load failed"
+> > > +}
+> > > +
+> > > +# Reload the filesystem module.
+> > > +_reload_fs_module()
+> > > +{
+> > > +	module="$1"
+> > > +
+> > > +	# Unload test fs, try to reload module, remount
+> > > +	had_testfs=""
+> > > +	had_scratchfs=""
+> > > +	_check_mounted_on TEST_DEV $TEST_DEV TEST_DIR $TEST_DIR && had_testfs="true"
+> > > +	_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT && had_scratchfs="true"
+> > > +	test -n "$had_testfs" && _test_unmount
+> > > +	test -n "$had_scratchfs" && _scratch_unmount
+> > > +	_reload_module "$module"
+> > > +	test -n "$had_scratchfs" && _scratch_mount 2> /dev/null
+> > > +	test -n "$had_testfs" && _test_mount 2> /dev/null
+> > > +}
+> > > +
+> > > +# Check that we have a module that can be loaded.  This module MUST NOT
+> > > +# be the module that underlies the filesystem.
+> > > +_require_loadable_module()
+> > > +{
+> > > +	module="$1"
+> > > +
+> > > +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
+> > > +	_reload_module "$module"
+> > > +}
+> > > +
+> > > +# Check that the module for FSTYP can be loaded.
+> > > +_require_loadable_fs_module()
+> > > +{
+> > > +	module="$1"
+> > > +
+> > > +	modinfo "$module" > /dev/null 2>&1 || _notrun "${module}: must be a module."
+> > > +	_reload_fs_module "$module"
+> > 
+> > _reload_module() or _reload_fs_module() fails the test directly if the
+> > module is still in use. IMHO we should _notrun in this case.
+> 
+> Ok, will fix.
+> 
+> > Currently xfs/70[345] still fail if rootfs is xfs.
+> 
+> I don't consider it a good idea to store xfsprogs/xfstests on a $FSTYP
+> filesystem because you're depending on the reliability of the same
+> filesystem whose reliability you're trying to prove.
+> 
+> That said, I suppose that pretty much requires nfsroot or a giant initramfs...
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_inode_fork.c | 53 +++++++++++-------------------------------
- 1 file changed, 13 insertions(+), 40 deletions(-)
+So I have two test vms, one with ext4 rootfs to test xfs, one with xfs
+rootfs to test ext4, I didn't use btrfs root because RHEL dropped btrfs
+support :)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index abe601b48c9c..7dd77b497fc2 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -725,9 +725,6 @@ xfs_iext_count(struct xfs_ifork *ifp)
- /*
-  * Convert in-core extents to on-disk form
-  *
-- * For either the data or attr fork in extent format, we need to endian convert
-- * the in-core extent as we place them into the on-disk inode.
-- *
-  * In the case of the data fork, the in-core and on-disk fork sizes can be
-  * different due to delayed allocation extents. We only copy on-disk extents
-  * here, so callers must always use the physical fork size to determine the
-@@ -736,55 +733,31 @@ xfs_iext_count(struct xfs_ifork *ifp)
-  */
- int
- xfs_iextents_copy(
--	xfs_inode_t		*ip,
--	xfs_bmbt_rec_t		*dp,
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_rec	*dp,
- 	int			whichfork)
- {
- 	int			state = xfs_bmap_fork_to_state(whichfork);
--	int			copied;
--	int			i;
--	xfs_ifork_t		*ifp;
--	int			nrecs;
--	xfs_fsblock_t		start_block;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_bmbt_irec	rec;
-+	int			copied = 0, i = 0;
- 
--	ifp = XFS_IFORK_PTR(ip, whichfork);
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(ifp->if_bytes > 0);
- 
--	nrecs = xfs_iext_count(ifp);
--	ASSERT(nrecs > 0);
--
--	/*
--	 * There are some delayed allocation extents in the
--	 * inode, so copy the extents one at a time and skip
--	 * the delayed ones.  There must be at least one
--	 * non-delayed extent.
--	 */
--	copied = 0;
--	for (i = 0; i < nrecs; i++) {
--		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
--
--		start_block = xfs_bmbt_get_startblock(ep);
--		if (isnullstartblock(start_block)) {
--			/*
--			 * It's a delayed allocation extent, so skip it.
--			 */
-+	while (xfs_iext_get_extent(ifp, i++, &rec)) {
-+		if (isnullstartblock(rec.br_startblock))
- 			continue;
--		}
--
-+		xfs_bmbt_disk_set_all(dp, &rec);
- 		trace_xfs_write_extent(ip, i, state, _RET_IP_);
--
--		/* Translate to on disk format */
--		put_unaligned_be64(ep->l0, &dp->l0);
--		put_unaligned_be64(ep->l1, &dp->l1);
- 		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
--
-+		copied += sizeof(struct xfs_bmbt_rec);
- 		dp++;
--		copied++;
- 	}
--	ASSERT(copied != 0);
- 
--	return (copied * (uint)sizeof(xfs_bmbt_rec_t));
-+	ASSERT(copied > 0);
-+	ASSERT(copied <= ifp->if_bytes);
-+	return copied;
- }
- 
- /*
--- 
-2.14.2
+BTW, I took patch 1, 4 and 7 for this week's update, the other patches
+probably will go in next week. Thanks a lot for all the updates!
 
+Eryu
