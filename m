@@ -1,78 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36636 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753056AbdJaOWk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:40 -0400
-Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e9XRA-0007Zm-6N
-        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:40 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/18] xfs: don't create overlapping extents in xfs_bmap_add_extent_delay_real
-Date: Tue, 31 Oct 2017 16:22:14 +0200
-Message-Id: <20171031142230.11755-3-hch@lst.de>
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:3822 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750928AbdJ2Vwy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Oct 2017 17:52:54 -0400
+Date: Mon, 30 Oct 2017 08:52:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove 'page-less'
+ support
+Message-ID: <20171029215233.GF3666@dastard>
+References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171020074750.GA13568@lst.de>
+ <20171020093148.GA20304@lst.de>
+ <20171026105850.GA31161@quack2.suse.cz>
+ <1509061831.25213.2.camel@intel.com>
+ <20171027064854.GE3666@dastard>
+ <CAA9_cmdx7T2jnfw6TvL0_3ytfs-h-X06uF3_7Ex-YP12YKpwng@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAA9_cmdx7T2jnfw6TvL0_3ytfs-h-X06uF3_7Ex-YP12YKpwng@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "mhocko@suse.com" <mhocko@suse.com>, "jack@suse.cz" <jack@suse.cz>, "benh@kernel.crashing.org" <benh@kernel.crashing.org>, "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>, "heiko.carstens@de.ibm.com" <heiko.carstens@de.ibm.com>, "bfields@fieldses.org" <bfields@fieldses.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "paulus@samba.org" <paulus@samba.org>, "Hefty, Sean" <sean.hefty@intel.com>, "jlayton@poochiereds.net" <jlayton@poochiereds.net>, "mawilcox@microsoft.com" <mawilcox@microsoft.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>, "dledford@redhat.com" <dledford@redhat.com>, "hch@lst.de" <hch@lst.de>, "jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>, "hal.rosenstock@gmail.com" <hal.rosenstock@gmail.com>, "schwidefsky@de.ibm.com" <schwidefsky@de.ibm.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "gerald.schaefer@de.ibm.com" <gerald.schaefer@de.ibm.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
 
-Two cases in xfs_bmap_add_extent_delay_real currently insert a new
-extent before updating the existing one that is being split.  While
-this works fine with a simple extent list, a more complex tree can't
-easily cope with overlapping extent.  Reshuffle the code a bit to update
-the slot of the existing delalloc extent to the new real extent before
-inserting the shortened delalloc extent before or after it.  This
-avoids the overlapping extents while still allowing to update the
-br_startblock field of the delalloc extent with the updated indirect
-block reservation.
+On Fri, Oct 27, 2017 at 01:42:16PM +0200, Dan Williams wrote:
+> [replying from my phone, please forgive formatting]
+> 
+> On Friday, October 27, 2017, Dave Chinner <david@fromorbit.com> wrote:
+> 
+> 
+> > > Here are the two primary patches in
+> > > the series, do you think the extent-busy approach would be cleaner?
+> >
+> > The XFS_DAXDMA....
+> >
+> > $DEITY that patch is so ugly I can't even bring myself to type it.
+> 
+> 
+> Right, and so is the problem it's trying to solve. So where do you want to
+> go from here?
+> 
+> I could go back to the FL_ALLOCATED approach, but use page idle callbacks
+> instead of polling for the lease end notification. Or do we want to try
+> busy extents? My concern with busy extents is that it requires more per-fs
+> code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I don't care if it takes more per-fs code to solve the problem -
+dumping butt-ugly, nasty locking crap into filesystems that
+filesystem developers are completely unable to test is about the
+worst possible solution you can come up with.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b2b6832b9e6b..0eda6892b9d0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1790,7 +1790,7 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the first part of a previous delayed allocation.
- 		 * The left neighbor is not contiguous.
- 		 */
--		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, new);
- 		(*nextents)++;
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
-@@ -1823,7 +1823,7 @@ xfs_bmap_add_extent_delay_real(
- 		PREV.br_startoff = new_endoff;
- 		PREV.br_blockcount = temp;
- 		PREV.br_startblock = nullstartblock(da_new);
--		xfs_iext_update_extent(bma->ip, state, bma->idx + 1, &PREV);
-+		xfs_iext_insert(bma->ip, bma->idx + 1, 1, &PREV, state);
- 		break;
- 
- 	case BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
-@@ -1866,7 +1866,7 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the last part of a previous delayed allocation.
- 		 * The right neighbor is not contiguous.
- 		 */
--		xfs_iext_insert(bma->ip, bma->idx + 1, 1, new, state);
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, new);
- 		(*nextents)++;
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
-@@ -1898,7 +1898,7 @@ xfs_bmap_add_extent_delay_real(
- 
- 		PREV.br_startblock = nullstartblock(da_new);
- 		PREV.br_blockcount = temp;
--		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
-+		xfs_iext_insert(bma->ip, bma->idx, 1, &PREV, state);
- 
- 		bma->idx++;
- 		break;
+Cheers,
+
+Dave.
 -- 
-2.14.2
-
+Dave Chinner
+david@fromorbit.com
