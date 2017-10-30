@@ -1,33 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:49855 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751112AbdJVGkS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2017 02:40:18 -0400
-Subject: Re: [PATCH 1/2] slab, slub, slob: add slab_flags_t
-References: <20171021100225.GA22428@avx2>
-From: Pekka Enberg <penberg@iki.fi>
-Message-ID: <f4a10428-c35c-d1d4-1816-5175f88b8962@iki.fi>
-Date: Sun, 22 Oct 2017 09:40:14 +0300
+Received: from mr003msb.fastweb.it ([85.18.95.87]:37162 "EHLO
+        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751688AbdJ3SSx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2017 14:18:53 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr003msb.fastweb.it (8.5.140.05)
+        id 59F55C200011C4F7 for linux-xfs@vger.kernel.org; Mon, 30 Oct 2017 19:18:51 +0100
+Subject: Re: XFS and reflink status
 MIME-Version: 1.0
-In-Reply-To: <20171021100225.GA22428@avx2>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date: Mon, 30 Oct 2017 19:18:50 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <196c0ee7f2899dd52c3ea6ca979a8050@assyoma.it>
+References: <196c0ee7f2899dd52c3ea6ca979a8050@assyoma.it>
+Message-ID: <9865ce233e5adb537347621b6f3bf1e4@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alexey Dobriyan <adobriyan@gmail.com>, akpm@linux-foundation.org
-Cc: linux-mm@kvack.org, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, ecryptfs@vger.kernel.org, linux-xfs@vger.kernel.org, kasan-dev@googlegroups.com, netdev@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-
-
-On 21/10/2017 13.02, Alexey Dobriyan wrote:
-> Add sparse-checked slab_flags_t for struct kmem_cache::flags
-> (SLAB_POISON, etc).
+Il 22-10-2017 21:13 Gionatan Danti ha scritto:
+> Hi all,
+> I would like to know the current XFS reflink status, especially if it
+> still an experimental feature or not.
 > 
-> SLAB is bloated temporarily by switching to "unsigned long",
-> but only temporarily.
+> In one of the latest discussion I found [1], reflink is still marked
+> as experimental/not stable. Any changes on that? If not, do you have
+> any ETA on declaring it stable?
 > 
-> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+> [1] https://www.spinics.net/lists/linux-xfs/msg08107.html
 
-Acked-by: Pekka Enberg <penberg@kernel.org>
+Hi all and sorry for the bump,
+any news on the subject?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
