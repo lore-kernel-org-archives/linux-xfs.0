@@ -1,122 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60321 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751324AbdJaRxN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 13:53:13 -0400
-Date: Tue, 31 Oct 2017 13:53:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/18] xfs: pass an on-disk extent to
- xfs_bmbt_validate_extent
-Message-ID: <20171031175311.GC7093@bfoster.bfoster>
-References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-2-hch@lst.de>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:49446 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932771AbdJ3V4E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2017 17:56:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171031142230.11755-2-hch@lst.de>
+From: Cong Wang <xiyou.wangcong@gmail.com>
+Date: Mon, 30 Oct 2017 14:55:43 -0700
+Message-ID: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
+Subject: xfs: list corruption in xfs_setup_inode()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <dchinner@redhat.com>, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Tue, Oct 31, 2017 at 04:22:13PM +0200, Christoph Hellwig wrote:
-> This prepares for getting rid of the current in-memory extent format.
-> 
+Hello,
 
-Couldn't we port this function over to use whatever the new in-memory
-extent format is? IOW, just have the helper check for XFS_EXT_UNWRITTEN
-rather than the associated bit in the on-disk format..?
+We triggered a list corruption (double add) warning below on our 4.9
+kernel (the 4.9 kernel we use is based on -stable release, with only a
+few unrelated networking backports):
 
-Brian
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
->  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
->  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
->  3 files changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index f45f05c45e15..b2b6832b9e6b 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1259,14 +1259,14 @@ xfs_iread_extents(
->  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
->  		for (j = 0; j < num_recs; j++, i++, frp++) {
->  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
-> -			trp->l0 = be64_to_cpu(frp->l0);
-> -			trp->l1 = be64_to_cpu(frp->l1);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
-> +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
->  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
->  						 XFS_ERRLEVEL_LOW, mp);
->  				error = -EFSCORRUPTED;
->  				goto out_brelse;
->  			}
-> +			trp->l0 = be64_to_cpu(frp->l0);
-> +			trp->l1 = be64_to_cpu(frp->l1);
->  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  		xfs_trans_brelse(tp, bp);
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> index 6f891eeb88f6..2fbfe2a24b15 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
->   * Check that the extent does not contain an invalid unwritten extent flag.
->   */
->  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> -		struct xfs_bmbt_rec_host *ep)
-> +		struct xfs_bmbt_rec *ep)
->  {
-> -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
->  		return true;
->  	if (whichfork == XFS_DATA_FORK &&
->  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index bb63f38b97cc..abe601b48c9c 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -371,13 +371,13 @@ xfs_iformat_extents(
->  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
->  		for (i = 0; i < nex; i++, dp++) {
->  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> -			ep->l0 = get_unaligned_be64(&dp->l0);
-> -			ep->l1 = get_unaligned_be64(&dp->l1);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
-> +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
->  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
->  						 XFS_ERRLEVEL_LOW, mp);
->  				return -EFSCORRUPTED;
->  			}
-> +			ep->l0 = get_unaligned_be64(&dp->l0);
-> +			ep->l1 = get_unaligned_be64(&dp->l1);
->  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  	}
-> @@ -764,8 +764,6 @@ xfs_iextents_copy(
->  	for (i = 0; i < nrecs; i++) {
->  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
->  
-> -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
-> -
->  		start_block = xfs_bmbt_get_startblock(ep);
->  		if (isnullstartblock(start_block)) {
->  			/*
-> @@ -779,6 +777,7 @@ xfs_iextents_copy(
->  		/* Translate to on disk format */
->  		put_unaligned_be64(ep->l0, &dp->l0);
->  		put_unaligned_be64(ep->l1, &dp->l1);
-> +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
->  
->  		dp++;
->  		copied++;
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+WARNING: CPU: 5 PID: 628 at lib/list_debug.c:36 __list_add+0xac/0xb0
+list_add double add: new=ffff8d9d691e0aa0, prev=ffff8d9d7a716608,
+next=ffff8d9d691e0aa0.
+Modules linked in: raid0 tcp_diag inet_diag intel_rapl
+x86_pkg_temp_thermal coretemp iTCO_wdt iTCO_vendor_support
+crct10dif_pclmul crc32_pclmul ghash_clmulni_intel mpt3sas raid_class
+scsi_transport_sas i2c_i801 i2c_smbus i2c_core ie31200_edac lpc_ich
+shpchp edac_core video ipmi_si ipmi_devintf ipmi_msghandler
+acpi_cpufreq sch_fq_codel xfs libcrc32c crc32c_intel e1000e ptp
+pps_core
+CPU: 5 PID: 628 Comm: systemd-tmpfile Tainted: G        W
+4.9.34.el7.x86_64 #1
+Hardware name: TYAN S5512/S5512, BIOS V8.B13 03/20/2014
+ ffffb0d48a0abb30 ffffffff8e389f47 ffffb0d48a0abb80 0000000000000000
+ ffffb0d48a0abb70 ffffffff8e08989b 0000002400000000 ffff8d9d691e0aa0
+ ffff8d9d7a716608 ffff8d9d691e0aa0 0000000000004000 ffff8d9d7de6d800
+Call Trace:
+ [<ffffffff8e389f47>] dump_stack+0x4d/0x66
+ [<ffffffff8e08989b>] __warn+0xcb/0xf0
+ [<ffffffff8e08991f>] warn_slowpath_fmt+0x5f/0x80
+ [<ffffffff8e3a979c>] __list_add+0xac/0xb0
+ [<ffffffff8e2355bb>] inode_sb_list_add+0x3b/0x50
+ [<ffffffffc040157c>] xfs_setup_inode+0x2c/0x170 [xfs]
+ [<ffffffffc0402097>] xfs_ialloc+0x317/0x5c0 [xfs]
+ [<ffffffffc0404347>] xfs_dir_ialloc+0x77/0x220 [xfs]
+ [<ffffffff8e74cf32>] ? down_write+0x12/0x40
+ [<ffffffffc0404972>] xfs_create+0x482/0x760 [xfs]
+ [<ffffffffc04019ae>] xfs_generic_create+0x21e/0x2c0 [xfs]
+ [<ffffffffc0401a84>] xfs_vn_mknod+0x14/0x20 [xfs]
+ [<ffffffffc0401aa6>] xfs_vn_mkdir+0x16/0x20 [xfs]
+ [<ffffffff8e226698>] vfs_mkdir+0xe8/0x140
+ [<ffffffff8e22aa4a>] SyS_mkdir+0x7a/0xf0
+ [<ffffffff8e74f8e0>] entry_SYSCALL_64_fastpath+0x13/0x94
+
+_Without_ looking deeper, it seems this warning could be shut up by:
+
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1138,6 +1138,8 @@ xfs_reclaim_inode(
+        xfs_iunlock(ip, XFS_ILOCK_EXCL);
+
+        XFS_STATS_INC(ip->i_mount, xs_ig_reclaims);
++
++       inode_sb_list_del(VFS_I(ip));
+
+with properly exporting inode_sb_list_del(). Does this make any sense?
+I don't want to pretend I understand XFS code at all.
+
+BTW, there is a same bug report here, on 3.10 CentOS 7 kernel:
+https://bugs.centos.org/print_bug_page.php?bug_id=10254
+
+Please let me know if I can provide any other information.
+
+Thanks!
