@@ -1,74 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36534 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753309AbdJaOWq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:46 -0400
-Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e9XRG-0007aq-3N
-        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:46 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/18] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_delay
-Date: Tue, 31 Oct 2017 16:22:16 +0200
-Message-Id: <20171031142230.11755-5-hch@lst.de>
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:41624 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751199AbdJ3FAK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Oct 2017 01:00:10 -0400
+Date: Mon, 30 Oct 2017 13:00:08 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 10/6] common/xfs: remove inode-paths cruft
+Message-ID: <20171030050007.GC17339@eguan.usersys.redhat.com>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <20171027202550.GL5486@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171027202550.GL5486@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Stop poking before and after the index and just increment or decrement
-it while doing our operations on it to prepare for a new extent list
-implementation.
+On Fri, Oct 27, 2017 at 01:25:50PM -0700, Darrick J. Wong wrote:
+> Remove the inode-paths check from _check_xfs_test_fs because we don't
+> support inode paths, xfsprogs doesn't have a xfs_{check,repair}_ipaths
+> tool, and it's broken anyway because we ignore _check_xfs_filesystem
+> (which tells whether or not the filesystem is even still mounted).
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/xfs |    7 -------
+>  1 file changed, 7 deletions(-)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 5643adf..79efb78 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -471,13 +471,6 @@ _check_xfs_test_fs()
+>  		TEST_RT="$TEST_RTDEV"
+>  
+>  	_check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT
+> -
+> -	# check for ipath consistency
+> -	if $XFS_GROWFS_PROG -n $TEST_DIR | grep -q 'inode-paths=1'; then
+> -		# errors go to stderr
+> -		xfs_check_ipaths $TEST_DIR >/dev/null
+> -		xfs_repair_ipaths -n $TEST_DIR >/dev/null
+> -	fi
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+I added a "return $?" here to report _check_xfs_filesystem result to the
+caller, otherwise test was reported as a PASS even _check_xfs_filesystem
+found something and printed out the error messages.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 83f5a503dce1..6358b30b70f9 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2583,7 +2583,6 @@ xfs_bmap_add_extent_hole_delay(
- 		 * on the left and on the right.
- 		 * Merge all three into a single extent record.
- 		 */
--		--*idx;
- 		temp = left.br_blockcount + new->br_blockcount +
- 			right.br_blockcount;
- 
-@@ -2594,9 +2593,10 @@ xfs_bmap_add_extent_hole_delay(
- 					 oldlen);
- 		left.br_startblock = nullstartblock(newlen);
- 		left.br_blockcount = temp;
--		xfs_iext_update_extent(ip, state, *idx, &left);
- 
--		xfs_iext_remove(ip, *idx + 1, 1, state);
-+		xfs_iext_remove(ip, *idx, 1, state);
-+		--*idx;
-+		xfs_iext_update_extent(ip, state, *idx, &left);
- 		break;
- 
- 	case BMAP_LEFT_CONTIG:
-@@ -2605,7 +2605,6 @@ xfs_bmap_add_extent_hole_delay(
- 		 * on the left.
- 		 * Merge the new allocation with the left neighbor.
- 		 */
--		--*idx;
- 		temp = left.br_blockcount + new->br_blockcount;
- 
- 		oldlen = startblockval(left.br_startblock) +
-@@ -2614,6 +2613,8 @@ xfs_bmap_add_extent_hole_delay(
- 					 oldlen);
- 		left.br_blockcount = temp;
- 		left.br_startblock = nullstartblock(newlen);
-+
-+		--*idx;
- 		xfs_iext_update_extent(ip, state, *idx, &left);
- 		break;
- 
--- 
-2.14.2
+Thanks,
+Eryu
 
+>  }
+>  
+>  _require_xfs_test_rmapbt()
