@@ -1,251 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58713 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753518AbdJaOX2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:23:28 -0400
-Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1e9XRv-0007hw-Mg
-        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:23:28 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/18] xfs: remove the nr_extents argument to xfs_iext_remove
-Date: Tue, 31 Oct 2017 16:22:30 +0200
-Message-Id: <20171031142230.11755-19-hch@lst.de>
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56374 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751532AbdJ3NbS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Oct 2017 09:31:18 -0400
+Date: Mon, 30 Oct 2017 09:31:17 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Message-ID: <20171030133117.GA3535@bfoster.bfoster>
+References: <20171026083322.20428-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171026083322.20428-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-We only have two places that remove 2 extents at the same time, so unroll
-the loop there.
+On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+> This patchset is aimed at filesystems that are installed on sparse
+> block devices, a.k.a thin provisioned devices. The aim of the
+> patchset is to bring the space management aspect of the storage
+> stack up into the filesystem rather than keeping it below the
+> filesystem where users and the filesystem have no clue they are
+> about to run out of space.
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c       | 31 ++++++++++++++-----------------
- fs/xfs/libxfs/xfs_iext_tree.c  | 40 ++++++++++++----------------------------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- 3 files changed, 27 insertions(+), 46 deletions(-)
+Just a few high level comments/thoughts after a very quick pass..
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b832dc402f40..ce3cedd3f636 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1196,11 +1196,6 @@ xfs_iread_extents(
- 		return -EFSCORRUPTED;
- 	}
- 
--	ifp->if_bytes = 0;
--	ifp->if_real_bytes = 0;
--	ifp->if_u1.if_root = NULL;
--	ifp->if_height = 0;
--
- 	/*
- 	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
- 	 */
-@@ -1649,7 +1644,8 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
- 
--		xfs_iext_remove(bma->ip, &bma->ext, 2, state);
-+		xfs_iext_remove(bma->ip, &bma->ext, state);
-+		xfs_iext_remove(bma->ip, &bma->ext, state);
- 		xfs_iext_prev(ifp, &bma->ext);
- 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &LEFT);
- 		(*nextents)--;
-@@ -1684,7 +1680,7 @@ xfs_bmap_add_extent_delay_real(
- 		old = LEFT;
- 		LEFT.br_blockcount += PREV.br_blockcount;
- 
--		xfs_iext_remove(bma->ip, &bma->ext, 1, state);
-+		xfs_iext_remove(bma->ip, &bma->ext, state);
- 		xfs_iext_prev(ifp, &bma->ext);
- 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &LEFT);
- 
-@@ -1711,7 +1707,7 @@ xfs_bmap_add_extent_delay_real(
- 		PREV.br_blockcount += RIGHT.br_blockcount;
- 
- 		xfs_iext_next(ifp, &bma->ext);
--		xfs_iext_remove(bma->ip, &bma->ext, 1, state);
-+		xfs_iext_remove(bma->ip, &bma->ext, state);
- 		xfs_iext_prev(ifp, &bma->ext);
- 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &PREV);
- 
-@@ -2148,7 +2144,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		 */
- 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
- 
--		xfs_iext_remove(ip, ext, 2, state);
-+		xfs_iext_remove(ip, ext, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		xfs_iext_update_extent(ip, state, ext, &LEFT);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
-@@ -2186,7 +2183,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		 */
- 		LEFT.br_blockcount += PREV.br_blockcount;
- 
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		xfs_iext_update_extent(ip, state, ext, &LEFT);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
-@@ -2220,7 +2217,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		PREV.br_state = new->br_state;
- 
- 		xfs_iext_next(ifp, ext);
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		xfs_iext_update_extent(ip, state, ext, &PREV);
- 
-@@ -2587,7 +2584,7 @@ xfs_bmap_add_extent_hole_delay(
- 		left.br_startblock = nullstartblock(newlen);
- 		left.br_blockcount = temp;
- 
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		xfs_iext_update_extent(ip, state, ext, &left);
- 		break;
-@@ -2732,7 +2729,7 @@ xfs_bmap_add_extent_hole_real(
- 		 */
- 		left.br_blockcount += new->br_blockcount + right.br_blockcount;
- 
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		xfs_iext_update_extent(ip, state, ext, &left);
- 
-@@ -4690,7 +4687,7 @@ xfs_bmap_del_extent_delay(
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		break;
- 	case BMAP_LEFT_FILLING:
-@@ -4791,7 +4788,7 @@ xfs_bmap_del_extent_cow(
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		break;
- 	case BMAP_LEFT_FILLING:
-@@ -4931,7 +4928,7 @@ xfs_bmap_del_extent_real(
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
--		xfs_iext_remove(ip, ext, 1, state);
-+		xfs_iext_remove(ip, ext, state);
- 		xfs_iext_prev(ifp, ext);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
- 			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-@@ -5557,7 +5554,7 @@ xfs_bmse_merge(
- 		return error;
- 
- done:
--	xfs_iext_remove(ip, ext, 1, 0);
-+	xfs_iext_remove(ip, ext, 0);
- 	xfs_iext_prev(XFS_IFORK_PTR(ip, whichfork), ext);
- 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork), ext,
- 			&new);
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index c109526e52c5..c18d344d46cd 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -162,12 +162,10 @@ static inline struct xfs_iext_rec *cur_rec(struct xfs_iext_cursor *cur)
- static noinline bool xfs_iext_valid(struct xfs_ifork *ifp,
- 		struct xfs_iext_cursor *cur)
- {
--	if (cur->pos < 0)
--		return false;
--	if (cur->pos >= xfs_iext_max_recs(ifp))
--		return false;
- 	if (!cur->leaf)
- 		return false;
-+	if (cur->pos < 0 || cur->pos >= xfs_iext_max_recs(ifp))
-+		return false;
- 	if (xfs_iext_rec_is_empty(cur_rec(cur)))
- 		return false;
- 	return true;
-@@ -256,8 +254,8 @@ xfs_iext_next(
- 	ASSERT(cur->pos < xfs_iext_max_recs(ifp));
- 
- 	cur->pos++;
--	if (!xfs_iext_valid(ifp, cur) && ifp->if_height > 1 &&
--	    cur->leaf && cur->leaf->next) {
-+	if (ifp->if_height > 1 && !xfs_iext_valid(ifp, cur) &&
-+	    cur->leaf->next) {
- 		cur->leaf = cur->leaf->next;
- 		cur->pos = 0;
- 	}
-@@ -826,15 +824,19 @@ xfs_iext_free_last_leaf(
- 	kmem_free(ifp->if_u1.if_root);
- }
- 
--static void
--__xfs_iext_remove(
--	struct xfs_ifork	*ifp,
--	struct xfs_iext_cursor	*cur)
-+void
-+xfs_iext_remove(
-+	struct xfs_inode	*ip,
-+	struct xfs_iext_cursor	*cur,
-+	int			state)
- {
-+	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
- 	struct xfs_iext_leaf	*leaf = cur->leaf;
- 	xfs_fileoff_t		offset = xfs_iext_leaf_key(leaf, 0);
- 	int			i, nr_entries;
- 
-+	trace_xfs_iext_remove(ip, cur, state, _RET_IP_);
-+
- 	ASSERT(ifp->if_height > 0);
- 	ASSERT(ifp->if_u1.if_root != NULL);
- 	ASSERT(xfs_iext_valid(ifp, cur));
-@@ -866,24 +868,6 @@ __xfs_iext_remove(
- 		xfs_iext_free_last_leaf(ifp);
- }
- 
--void
--xfs_iext_remove(
--	struct xfs_inode	*ip,
--	struct xfs_iext_cursor	*cur,
--	int			nr_extents,
--	int			state)
--{
--	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
--	int			i;
--
--	ASSERT(nr_extents > 0);
--
--	for (i = 0; i < nr_extents; i++) {
--		trace_xfs_iext_remove(ip, cur, state, _RET_IP_);
--		__xfs_iext_remove(ifp, cur);
--	}
--}
--
- /*
-  * Lookup the extent covering bno.
-  *
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index cc73fea4e37e..58da2ec262e3 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -116,7 +116,7 @@ xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
- void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
- 			struct xfs_bmbt_irec *, int);
- void		xfs_iext_remove(struct xfs_inode *, struct xfs_iext_cursor *,
--			int, int);
-+			int);
- void		xfs_iext_destroy(struct xfs_ifork *);
- 
- bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
--- 
-2.14.2
+...
+> The patchset has several parts to it. It is built on a 4.14-rc5
+> kernel with for-next and Darrick's scrub tree from a couple of days
+> ago merged into it.
+> 
+> The first part of teh series is a growfs refactoring. This can
+> probably stand alone, and the idea is to move the refactored
+> infrastructure into libxfs so it can be shared with mkfs. This also
+> cleans up a lot of the cruft in growfs and so makes it much easier
+> to add the changes later in the series.
+> 
 
+It'd be nice to see this as a separate patchset. It does indeed seem
+like it could be applied before all of the other bits are worked out.
+
+> The second part of the patchset moves the functionality of
+> sb_dblocks into the struct xfs_mount. This provides the separation
+> of address space checks and capacty related calculations that the
+> thinspace mods require. This also fixes the problem of freshly made,
+> empty filesystems reporting 2% of the space as used.
+> 
+
+This all seems mostly sane to me. FWIW, the in-core fields (particularly
+->m_LBA_size) strike me as oddly named. "LBA size" strikes me as the
+addressable range of the underlying device, regardless of fs size (but I
+understand that's not how it's used here). If we have ->m_usable_blocks,
+why not name the other something like ->m_total_blocks or just
+->m_blocks? That suggests to me that the fields are related, mutable,
+accounted in units of blocks, etc. Just a nit, though.
+
+That aside, it also seems like this part could technically stand as an
+independent change. 
+
+> The XFS_IOC_FSGEOMETRY ioctl needed to be bumped to a new version
+> because the structure needed growing.
+> 
+> Finally, there's the patches that provide thinspace support and the
+> growfs mods needed to grow and shrink.
+> 
+
+I still think there's a gap related to fs and bdev block size that needs
+to be addressed with regard to preventing pool depletion, but I think
+that can ultimately be handled with documentation. I also wonder a bit
+about consistency between online modifications to usable blocks and fs
+blocks that might have been allocated but not yet written (i.e.,
+unwritten extents and the log on freshly created filesystems). IOW,
+shrinking the filesystem in such cases may not limit pool allocation in
+the way a user might expect.
+
+Did we ever end up with support for bdev fallocate? If so, I wonder if
+for example it would be useful to fallocate the physical log at mount or
+mkfs time for thin enabled fs'. The unwritten extent case may just be a
+matter of administration sanity since the filesystem shrink will
+consider those as allocated blocks and thus imply that the fs expects
+the ability to write them.
+
+Finally, I tend to agree with Amir's comment with regard to
+shrink/growfs... at least infosar as I understand his concern. If we do
+support physical shrink in the future, what do we expect the interface
+to look like in light of this change? FWIW, I also think there's an
+element of design/interface consistency to the argument (aside from the
+concern over the future of the physical shrink api). We've separated
+total blocks from usable blocks in other userspace interfaces
+(geometry). Not doing so for growfs is somewhat inconsistent, and also
+creates confusion over the meaning of newblocks in different contexts.
+
+Given that this already requires on-disk changes and the addition of a
+feature bit, it seems prudent to me to update the growfs API
+accordingly. Isn't a growfs new_usable_blocks field or some such all we
+really need to address that concern?
+
+Brian
+
+> I've smoke tested the non-thinspace code paths (running auto tests
+> on a scrub enabled kernel+userspace right now) as I haven't updated
+> the userspace code to exercise the thinp code paths yet. I know the
+> concept works, but my userspace code has an older on-disk format
+> from the prototype so it will take me a couple of days to update and
+> work out how to get fstests to integrate it reliably. So this is
+> mainly a heads-up RFC patchset....
+> 
+> Comments, thoughts, flames all welcome....
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
