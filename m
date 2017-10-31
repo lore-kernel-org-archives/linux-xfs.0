@@ -1,96 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58589 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:58044 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932141AbdJZK66 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Oct 2017 06:58:58 -0400
-Date: Thu, 26 Oct 2017 12:58:50 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 00/13] dax: fix dma vs truncate and remove 'page-less'
- support
-Message-ID: <20171026105850.GA31161@quack2.suse.cz>
-References: <150846713528.24336.4459262264611579791.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171020074750.GA13568@lst.de>
- <20171020093148.GA20304@lst.de>
+        id S1751539AbdJaHAd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 03:00:33 -0400
+Date: Tue, 31 Oct 2017 15:00:27 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: test for umount hang caused by the pending
+ dquota log item in AIL
+Message-ID: <20171031070027.GI17339@eguan.usersys.redhat.com>
+References: <1509003472-24191-1-git-send-email-houtao1@huawei.com>
+ <1509003472-24191-2-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171020093148.GA20304@lst.de>
+In-Reply-To: <1509003472-24191-2-git-send-email-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-nvdimm@lists.01.org, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-On Fri 20-10-17 11:31:48, Christoph Hellwig wrote:
-> On Fri, Oct 20, 2017 at 09:47:50AM +0200, Christoph Hellwig wrote:
-> > I'd like to brainstorm how we can do something better.
-> > 
-> > How about:
-> > 
-> > If we hit a page with an elevated refcount in truncate / hole puch
-> > etc for a DAX file system we do not free the blocks in the file system,
-> > but add it to the extent busy list.  We mark the page as delayed
-> > free (e.g. page flag?) so that when it finally hits refcount zero we
-> > call back into the file system to remove it from the busy list.
+On Thu, Oct 26, 2017 at 03:37:52PM +0800, Hou Tao wrote:
+> When the first writeback and the retried writeback of dquota buffer get
+> the same IO error, XFS will let xfsaild to restart the writeback and
+> xfs_qm_dqflush_done() will not be invoked. xfsaild will try to re-push
+> the quota log item in AIL, the push will return early everytime after
+> checking xfs_dqflock_nowait(), and xfsaild will try to push it again.
 > 
-> Brainstorming some more:
+> IOWs, AIL will never be empty, and the umount process will wait for the
+> drain of AIL, so the umount process hangs.
 > 
-> Given that on a DAX file there shouldn't be any long-term page
-> references after we unmap it from the page table and don't allow
-> get_user_pages calls why not wait for the references for all
-> DAX pages to go away first?  E.g. if we find a DAX page in
-> truncate_inode_pages_range that has an elevated refcount we set
-> a new flag to prevent new references from showing up, and then
-> simply wait for it to go away.  Instead of a busy way we can
-> do this through a few hashed waitqueued in dev_pagemap.  And in
-> fact put_zone_device_page already gets called when putting the
-> last page so we can handle the wakeup from there.
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> ---
+>  tests/xfs/999     | 169 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |   2 +
+>  tests/xfs/group   |   1 +
+>  3 files changed, 172 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
 > 
-> In fact if we can't find a page flag for the stop new callers
-> things we could probably come up with a way to do that through
-> dev_pagemap somehow, but I'm not sure how efficient that would
-> be.
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 0000000..4b89899
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,169 @@
+> +#! /bin/bash
+> +# FS QA Test No. 999
+> +#
+> +# Test for XFS umount hang problem caused by the unceasing push
+> +# of dquot log item in AIL. Because xfs_qm_dqflush_done() will
+> +# not be invoked, so each time xfsaild initiates the push,
+> +# the push will return early after checking xfs_dqflock_nowait().
+> +#
+> +# xfs_qm_dqflush_done() should be invoked by xfs_buf_do_callbacks().
+> +# However after the first write and the retried write of dquota buffer
+> +# get the same IO error, XFS will let xfsaild to restart the write and
+> +# xfs_buf_do_callbacks() will not be inovked.
+> +#
+> +# This test emulates the write error by using dm-flakey. The log
+> +# area of the XFS filesystem is excluded from the range covered by
+> +# dm-flakey, so the XFS will not be shutdown prematurely.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Huawei Technologies Co., Ltd. All Rights Reserved.
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	sysctl -w fs.xfs.xfssyncd_centisecs=3000 >/dev/null 2>&1
+> +	_unmount_flakey >/dev/null 2>&1
+> +	_cleanup_flakey > /dev/null 2>&1
+> +}
+> +
+> +_get_xfs_scratch_sb_field()
+> +{
+> +	local field=$1
+> +
+> +	echo $(_scratch_xfs_db -r -c "sb 0" -c "print $field" | \
+> +		awk -v field=$field '$0 ~ field {print $3}')
+> +}
+> +
+> +# inject IO write error for the XFS filesystem except its log section
+> +_make_xfs_scratch_flakey_table()
+> +{
+> +	local opt="0 1 1 error_writes"
 
-We were talking about this yesterday with Dan so some more brainstorming
-from us. We can implement the solution with extent busy list in ext4
-relatively easily - we already have such list currently similarly to XFS.
-There would be some modifications needed but nothing too complex. The
-biggest downside of this solution I see is that it requires per-filesystem
-solution for busy extents - ext4 and XFS are reasonably fine, however btrfs
-may have problems and ext2 definitely will need some modifications.
-Invisible used blocks may be surprising to users at times although given
-page refs should be relatively short term, that should not be a big issue.
-But are we guaranteed page refs are short term? E.g. if someone creates
-v4l2 videobuf in MAP_SHARED mapping of a file on DAX filesystem, page refs
-can be rather long-term similarly as in RDMA case. Also freeing of blocks
-on page reference drop is another async entry point into the filesystem
-which could unpleasantly surprise us but I guess workqueues would solve
-that reasonably fine.
+More comments about this error_writes.
 
-WRT waiting for page refs to be dropped before proceeding with truncate (or
-punch hole for that matter - that case is even nastier since we don't have
-i_size to guard us). What I like about this solution is that it is very
-visible there's something unusual going on with the file being truncated /
-punched and so problems are easier to diagnose / fix from the admin side.
-So far we have guarded hole punching from concurrent faults (and
-get_user_pages() does fault once you do unmap_mapping_range()) with
-I_MMAP_LOCK (or its equivalent in ext4). We cannot easily wait for page
-refs to be dropped under I_MMAP_LOCK as that could deadlock - the most
-obvious case Dan came up with is when GUP obtains ref to page A, then hole
-punch comes grabbing I_MMAP_LOCK and waiting for page ref on A to be
-dropped, and then GUP blocks on trying to fault in another page.
+error_writes is only there after v4.10-rc1, we need to have a require
+rule to test if current kernel supports error_writes or not, and _notrun
+if not.
 
-I think we cannot easily prevent new page references to be grabbed as you
-write above since nobody expects stuff like get_page() to fail. But I 
-think that unmapping relevant pages and then preventing them to be faulted
-in again is workable and stops GUP as well. The problem with that is though
-what to do with page faults to such pages - you cannot just fail them for
-hole punch, and you cannot easily allocate new blocks either. So we are
-back at a situation where we need to detach blocks from the inode and then
-wait for page refs to be dropped - so some form of busy extents. Am I
-missing something?
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks,
+Eryu
