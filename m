@@ -1,121 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41946 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751402AbdJaJcr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 05:32:47 -0400
-Date: Tue, 31 Oct 2017 17:32:45 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 1/2] initial fiemap test
-Message-ID: <20171031093245.GK17339@eguan.usersys.redhat.com>
-References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
- <1509107832-22286-3-git-send-email-nborisov@suse.com>
- <20171027124414.GX3235@eguan.usersys.redhat.com>
- <ff61b10a-4284-ccd3-2f1d-40d3683fe611@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ff61b10a-4284-ccd3-2f1d-40d3683fe611@suse.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:51538 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753051AbdJaOXE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:23:04 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRX-0007dj-L2
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:23:04 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 10/18] xfs: iterate over extents in xfs_iextents_copy
+Date: Tue, 31 Oct 2017 16:22:22 +0200
+Message-Id: <20171031142230.11755-11-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2017 at 11:22:48AM +0200, Nikolay Borisov wrote:
-> 
-> 
-> On 27.10.2017 15:44, Eryu Guan wrote:
-> > On Fri, Oct 27, 2017 at 03:37:10PM +0300, Nikolay Borisov wrote:
-> >> Test various range queries of fiemap and ensure they produce expected output. 
-> >>
-> >> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> >> ---
-> >>  tests/xfs/900     |  96 ++++++++++++++++++++++++++++++++++++++++++++
-> >>  tests/xfs/900.out | 118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >>  2 files changed, 214 insertions(+)
-> >>  create mode 100755 tests/xfs/900
-> >>  create mode 100644 tests/xfs/900.out
-> >>
-> >> diff --git a/tests/xfs/900 b/tests/xfs/900
-> >> new file mode 100755
-> >> index 0000000..e535820
-> >> --- /dev/null
-> >> +++ b/tests/xfs/900
-> >> @@ -0,0 +1,96 @@
-> >> +#! /bin/bash
-> >> +# FS QA Test No. 900
-> >> +#
-> >> +#-----------------------------------------------------------------------
-> >> +# Copyright (c) 2017 SUSE Linux Products GmbH.  All Rights Reserved.
-> >> +#
-> >> +# This program is free software; you can redistribute it and/or
-> >> +# modify it under the terms of the GNU General Public License as
-> >> +# published by the Free Software Foundation.
-> >> +#
-> >> +# This program is distributed in the hope that it would be useful,
-> >> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> >> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> >> +# GNU General Public License for more details.
-> >> +#
-> >> +# You should have received a copy of the GNU General Public License
-> >> +# along with this program; if not, write the Free Software Foundation,
-> >> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> >> +#-----------------------------------------------------------------------
-> >> +#
-> >> +
-> >> +seq=`basename $0`
-> >> +seqres=$RESULT_DIR/$seq
-> >> +echo "QA output created by $seq"
-> >> +
-> >> +here=`pwd`
-> >> +tmp=/tmp/$$
-> >> +status=1	# failure is the default!
-> >> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> >> +
-> >> +_cleanup()
-> >> +{
-> >> +	cd /
-> >> +	rm -f $tmp.*
-> >> +}
-> >> +
-> >> +# get standard environment, filters and checks
-> >> +. ./common/rc
-> >> +. ./common/punch
-> >> +
-> >> +# remove previous $seqres.full before test
-> >> +rm -f $seqres.full
-> >> +
-> >> +# real QA test starts here
-> >> +
-> >> +# Modify as appropriate.
-> >> +_supported_fs generic
-> >> +_supported_os Linux
-> >> +_require_scratch
-> >> +_require_xfs_io_command "falloc"
-> >> +_require_xfs_io_command "fiemap"
-> > 
-> > I haven't run the test yet, but from a quick look, it looks like test
-> > fails with old xfs_io without fiemap range support. Not sure adding
-> > range param to _require_xfs_io_command helps, e.g.
-> > 
-> > _require_xfs_io_command "fiemap" "0 4k"
-> 
-> Apparently it doesn't :
-> ./io/xfs_io -c "fiemap 0 2k" ../xfstests-dev/trace.dat
-> ../xfstests-dev/trace.dat:
-> 	0: [0..6095]: 18477056..18483151
+This actually makes the function very slightly less efficient for now as we
+detour through the expanded irect format between the in-core extent format
+and the on-disk one instead of just endian swapping them.  But with the
+incore extent btree the in-core one will use a different format and the
+representation will be entirely hidden.  It also happens to make the
+function a whole more readable.
 
-Looks like fiemap ignores all non-option arguments..
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 53 +++++++++++-------------------------------
+ 1 file changed, 13 insertions(+), 40 deletions(-)
 
-> 
-> 
-> the xfs_io is just v4.13.1 HEAD. One other things that comes to mind is
-> to play tricks with the xfs_io -c "help fiemap" invocation and parse the
-> first line. If the range param is supported then it will be present in
-> the one-line help if not, it won't be. Do you think that's acceptable ?
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index abe601b48c9c..7dd77b497fc2 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -725,9 +725,6 @@ xfs_iext_count(struct xfs_ifork *ifp)
+ /*
+  * Convert in-core extents to on-disk form
+  *
+- * For either the data or attr fork in extent format, we need to endian convert
+- * the in-core extent as we place them into the on-disk inode.
+- *
+  * In the case of the data fork, the in-core and on-disk fork sizes can be
+  * different due to delayed allocation extents. We only copy on-disk extents
+  * here, so callers must always use the physical fork size to determine the
+@@ -736,55 +733,31 @@ xfs_iext_count(struct xfs_ifork *ifp)
+  */
+ int
+ xfs_iextents_copy(
+-	xfs_inode_t		*ip,
+-	xfs_bmbt_rec_t		*dp,
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_rec	*dp,
+ 	int			whichfork)
+ {
+ 	int			state = xfs_bmap_fork_to_state(whichfork);
+-	int			copied;
+-	int			i;
+-	xfs_ifork_t		*ifp;
+-	int			nrecs;
+-	xfs_fsblock_t		start_block;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	struct xfs_bmbt_irec	rec;
++	int			copied = 0, i = 0;
+ 
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 	ASSERT(ifp->if_bytes > 0);
+ 
+-	nrecs = xfs_iext_count(ifp);
+-	ASSERT(nrecs > 0);
+-
+-	/*
+-	 * There are some delayed allocation extents in the
+-	 * inode, so copy the extents one at a time and skip
+-	 * the delayed ones.  There must be at least one
+-	 * non-delayed extent.
+-	 */
+-	copied = 0;
+-	for (i = 0; i < nrecs; i++) {
+-		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+-
+-		start_block = xfs_bmbt_get_startblock(ep);
+-		if (isnullstartblock(start_block)) {
+-			/*
+-			 * It's a delayed allocation extent, so skip it.
+-			 */
++	while (xfs_iext_get_extent(ifp, i++, &rec)) {
++		if (isnullstartblock(rec.br_startblock))
+ 			continue;
+-		}
+-
++		xfs_bmbt_disk_set_all(dp, &rec);
+ 		trace_xfs_write_extent(ip, i, state, _RET_IP_);
+-
+-		/* Translate to on disk format */
+-		put_unaligned_be64(ep->l0, &dp->l0);
+-		put_unaligned_be64(ep->l1, &dp->l1);
+ 		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
+-
++		copied += sizeof(struct xfs_bmbt_rec);
+ 		dp++;
+-		copied++;
+ 	}
+-	ASSERT(copied != 0);
+ 
+-	return (copied * (uint)sizeof(xfs_bmbt_rec_t));
++	ASSERT(copied > 0);
++	ASSERT(copied <= ifp->if_bytes);
++	return copied;
+ }
+ 
+ /*
+-- 
+2.14.2
 
-I'm fine with it, we do have similar code to do such check on help
-message.
-
-Thanks,
-Eryu
