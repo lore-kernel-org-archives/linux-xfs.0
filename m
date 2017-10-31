@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:37126 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:59931 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933163AbdJaX3B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 19:29:01 -0400
-Subject: [PATCH 11/15] [media] v4l2: disable filesystem-dax mapping support
+        id S933163AbdJaX2r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 19:28:47 -0400
+Subject: [PATCH 03/15] dax: require 'struct page' by default for filesystem
+ dax
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 31 Oct 2017 16:22:35 -0700
-Message-ID: <150949215507.24061.16244906635037694605.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Tue, 31 Oct 2017 16:21:50 -0700
+Message-ID: <150949211070.24061.16943730658658180030.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,92 +17,147 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, Mauro Carvalho Chehab <mchehab@kernel.org>, hch@lst.de, linux-media@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, akpm@linux-foundation.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, hch@lst.de, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 
-V4L2 memory registrations are incompatible with filesystem-dax that
-needs the ability to revoke dma access to a mapping at will, or
-otherwise allow the kernel to wait for completion of DMA. The
-filesystem-dax implementation breaks the traditional solution of
-truncate of active file backed mappings since there is no page-cache
-page we can orphan to sustain ongoing DMA.
+If a dax buffer from a device that does not map pages is passed to
+read(2) or write(2) as a target for direct-I/O it triggers SIGBUS. If
+gdb attempts to examine the contents of a dax buffer from a device that
+does not map pages it triggers SIGBUS. If fork(2) is called on a process
+with a dax mapping from a device that does not map pages it triggers
+SIGBUS. 'struct page' is required otherwise several kernel code paths
+break in surprising ways. Disable filesystem-dax on devices that do not
+map pages.
 
-If v4l2 wants to support long lived DMA mappings it needs to arrange to
-hold a file lease or use some other mechanism so that the kernel can
-coordinate revoking DMA access when the filesystem needs to truncate
-mappings.
+In addition to needing pfn_to_page() to be valid we also require devmap
+pages.  We need this to detect dax pages in the get_user_pages_fast()
+path and so that we can stop managing the VM_MIXEDMAP flag. For DAX
+drivers that have not supported get_user_pages() to date we allow them
+to opt-in to supporting DAX with the CONFIG_FS_DAX_LIMITED configuration
+option which requires ->direct_access() to return pfn_t_special() pfns.
+This leaves DAX support in brd disabled and scheduled for removal.
 
-Reported-by: Jan Kara <jack@suse.cz>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: linux-media@vger.kernel.org
-Cc: <stable@vger.kernel.org>
+Note that when the initial dax support was being merged a few years back
+there was concern that struct page was unsuitable for use with next
+generation persistent memory devices. The theoretical concern was that
+struct page access, being such a hotly used data structure in the
+kernel, would lead to media wear out. While that was a reasonable
+conservative starting position it has not held true in practice. We have
+long since committed to using devm_memremap_pages() to support higher
+order kernel functionality that needs get_user_pages() and
+pfn_to_page().
+
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/media/v4l2-core/videobuf-dma-sg.c |   39 ++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/Kconfig |    1 +
+ arch/powerpc/sysdev/axonram.c  |    1 +
+ drivers/dax/super.c            |   10 ++++++++++
+ drivers/s390/block/Kconfig     |    1 +
+ drivers/s390/block/dcssblk.c   |    1 +
+ fs/Kconfig                     |    7 +++++++
+ 6 files changed, 21 insertions(+)
 
-diff --git a/drivers/media/v4l2-core/videobuf-dma-sg.c b/drivers/media/v4l2-core/videobuf-dma-sg.c
-index 0b5c43f7e020..37a4ae61b2c0 100644
---- a/drivers/media/v4l2-core/videobuf-dma-sg.c
-+++ b/drivers/media/v4l2-core/videobuf-dma-sg.c
-@@ -155,8 +155,9 @@ static int videobuf_dma_init_user_locked(struct videobuf_dmabuf *dma,
- 			int direction, unsigned long data, unsigned long size)
- {
- 	unsigned long first, last;
--	int err, rw = 0;
-+	int err, rw = 0, i, nr_pages;
- 	unsigned int flags = FOLL_FORCE;
-+	struct vm_area_struct **vmas = NULL;
+diff --git a/arch/powerpc/platforms/Kconfig b/arch/powerpc/platforms/Kconfig
+index 4fd64d3f5c44..031313968f9a 100644
+--- a/arch/powerpc/platforms/Kconfig
++++ b/arch/powerpc/platforms/Kconfig
+@@ -296,6 +296,7 @@ config AXON_RAM
+ 	tristate "Axon DDR2 memory device driver"
+ 	depends on PPC_IBM_CELL_BLADE && BLOCK
+ 	select DAX
++	select FS_DAX_LIMITED
+ 	default m
+ 	help
+ 	  It registers one block device per Axon's DDR2 memory bank found
+diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
+index aaf540efb92c..c1abd443836f 100644
+--- a/arch/powerpc/sysdev/axonram.c
++++ b/arch/powerpc/sysdev/axonram.c
+@@ -172,6 +172,7 @@ static size_t axon_ram_copy_from_iter(struct dax_device *dax_dev, pgoff_t pgoff,
  
- 	dma->direction = direction;
- 	switch (dma->direction) {
-@@ -179,6 +180,16 @@ static int videobuf_dma_init_user_locked(struct videobuf_dmabuf *dma,
- 	if (NULL == dma->pages)
- 		return -ENOMEM;
+ static const struct dax_operations axon_ram_dax_ops = {
+ 	.direct_access = axon_ram_dax_direct_access,
++
+ 	.copy_from_iter = axon_ram_copy_from_iter,
+ };
  
-+	if (IS_ENABLED(CONFIG_FS_DAX)) {
-+		vmas = kmalloc(dma->nr_pages * sizeof(struct vm_area_struct *),
-+				GFP_KERNEL);
-+		if (NULL == vmas) {
-+			kfree(dma->pages);
-+			dma->pages = NULL;
-+			return -ENOMEM;
-+		}
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index b0cc8117eebe..66bcdf42c413 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -15,6 +15,7 @@
+ #include <linux/mount.h>
+ #include <linux/magic.h>
+ #include <linux/genhd.h>
++#include <linux/pfn_t.h>
+ #include <linux/cdev.h>
+ #include <linux/hash.h>
+ #include <linux/slab.h>
+@@ -123,6 +124,15 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ 		return len < 0 ? len : -EIO;
+ 	}
+ 
++	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
++			|| pfn_t_devmap(pfn))
++		/* pass */;
++	else {
++		pr_debug("VFS (%s): error: dax support not enabled\n",
++				sb->s_id);
++		return -EOPNOTSUPP;
 +	}
 +
- 	if (rw == READ)
- 		flags |= FOLL_WRITE;
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(__bdev_dax_supported);
+diff --git a/drivers/s390/block/Kconfig b/drivers/s390/block/Kconfig
+index 31f014b57bfc..594ae5fc8e9d 100644
+--- a/drivers/s390/block/Kconfig
++++ b/drivers/s390/block/Kconfig
+@@ -15,6 +15,7 @@ config BLK_DEV_XPRAM
+ config DCSSBLK
+ 	def_tristate m
+ 	select DAX
++	select FS_DAX_LIMITED
+ 	prompt "DCSSBLK support"
+ 	depends on S390 && BLOCK
+ 	help
+diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
+index 87756e28c29b..dbe07ab71e32 100644
+--- a/drivers/s390/block/dcssblk.c
++++ b/drivers/s390/block/dcssblk.c
+@@ -52,6 +52,7 @@ static size_t dcssblk_dax_copy_from_iter(struct dax_device *dax_dev,
  
-@@ -186,7 +197,31 @@ static int videobuf_dma_init_user_locked(struct videobuf_dmabuf *dma,
- 		data, size, dma->nr_pages);
+ static const struct dax_operations dcssblk_dax_ops = {
+ 	.direct_access = dcssblk_dax_direct_access,
++
+ 	.copy_from_iter = dcssblk_dax_copy_from_iter,
+ };
  
- 	err = get_user_pages(data & PAGE_MASK, dma->nr_pages,
--			     flags, dma->pages, NULL);
-+			     flags, dma->pages, vmas);
-+	nr_pages = err;
-+
-+	for (i = 0; vmas && i < nr_pages; i++) {
-+		struct vm_area_struct *vma = vmas[i];
-+		struct inode *inode;
-+
-+		if (!vma_is_dax(vma))
-+			continue;
-+
-+		/* device-dax is safe for long-lived v4l2 mappings... */
-+		inode = file_inode(vma->vm_file);
-+		if (inode->i_mode == S_IFCHR)
-+			continue;
-+
-+		/* ...filesystem-dax is not. */
-+		err = -EOPNOTSUPP;
-+		break;
-+
-+		/*
-+		 * FIXME: add a 'with lease' mechanism for v4l2 to
-+		 * obtain time bounded access to filesytem-dax mappings
-+		 */
-+	}
-+	kfree(vmas);
+diff --git a/fs/Kconfig b/fs/Kconfig
+index 7aee6d699fd6..b40128bf6d1a 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -58,6 +58,13 @@ config FS_DAX_PMD
+ 	depends on ZONE_DEVICE
+ 	depends on TRANSPARENT_HUGEPAGE
  
- 	if (err != dma->nr_pages) {
- 		dma->nr_pages = (err >= 0) ? err : 0;
++# Selected by DAX drivers that do not expect filesystem DAX to support
++# get_user_pages() of DAX mappings. I.e. "limited" indicates no support
++# for fork() of processes with MAP_SHARED mappings or support for
++# direct-I/O to a DAX mapping.
++config FS_DAX_LIMITED
++	bool
++
+ endif # BLOCK
+ 
+ # Posix ACL utility routines
 
