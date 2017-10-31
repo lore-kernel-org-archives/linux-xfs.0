@@ -1,90 +1,251 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48987 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752209AbdJaOKR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 10:10:17 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH v2 1/2] fiemap: Factor out actual fiemap call code
-Date: Tue, 31 Oct 2017 16:10:10 +0200
-Message-Id: <1509459011-7398-1-git-send-email-nborisov@suse.com>
-In-Reply-To: <1509107832-22286-1-git-send-email-nborisov@suse.com>
-References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:58713 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753518AbdJaOX2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:23:28 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRv-0007hw-Mg
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:23:28 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 18/18] xfs: remove the nr_extents argument to xfs_iext_remove
+Date: Tue, 31 Oct 2017 16:22:30 +0200
+Message-Id: <20171031142230.11755-19-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, darrick.wong@oracle.com, Nikolay Borisov <nborisov@suse.com>
 
-This will be needed to in a subsequent patch to avoid code duplication
+We only have two places that remove 2 extents at the same time, so unroll
+the loop there.
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-v2:
- * Incorporated Daricks feedback - removed variables which weren't introduced
- until the next patch as a result the build with this patch was broken. This is 
- fixed now
- io/fiemap.c | 39 ++++++++++++++++++++++++++++-----------
- 1 file changed, 28 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       | 31 ++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_iext_tree.c  | 40 ++++++++++++----------------------------
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ 3 files changed, 27 insertions(+), 46 deletions(-)
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index e6fd66da753d..08391f69d9bd 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -211,6 +211,31 @@ calc_print_format(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b832dc402f40..ce3cedd3f636 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1196,11 +1196,6 @@ xfs_iread_extents(
+ 		return -EFSCORRUPTED;
  	}
+ 
+-	ifp->if_bytes = 0;
+-	ifp->if_real_bytes = 0;
+-	ifp->if_u1.if_root = NULL;
+-	ifp->if_height = 0;
+-
+ 	/*
+ 	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+ 	 */
+@@ -1649,7 +1644,8 @@ xfs_bmap_add_extent_delay_real(
+ 		 */
+ 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
+ 
+-		xfs_iext_remove(bma->ip, &bma->ext, 2, state);
++		xfs_iext_remove(bma->ip, &bma->ext, state);
++		xfs_iext_remove(bma->ip, &bma->ext, state);
+ 		xfs_iext_prev(ifp, &bma->ext);
+ 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &LEFT);
+ 		(*nextents)--;
+@@ -1684,7 +1680,7 @@ xfs_bmap_add_extent_delay_real(
+ 		old = LEFT;
+ 		LEFT.br_blockcount += PREV.br_blockcount;
+ 
+-		xfs_iext_remove(bma->ip, &bma->ext, 1, state);
++		xfs_iext_remove(bma->ip, &bma->ext, state);
+ 		xfs_iext_prev(ifp, &bma->ext);
+ 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &LEFT);
+ 
+@@ -1711,7 +1707,7 @@ xfs_bmap_add_extent_delay_real(
+ 		PREV.br_blockcount += RIGHT.br_blockcount;
+ 
+ 		xfs_iext_next(ifp, &bma->ext);
+-		xfs_iext_remove(bma->ip, &bma->ext, 1, state);
++		xfs_iext_remove(bma->ip, &bma->ext, state);
+ 		xfs_iext_prev(ifp, &bma->ext);
+ 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &PREV);
+ 
+@@ -2148,7 +2144,8 @@ xfs_bmap_add_extent_unwritten_real(
+ 		 */
+ 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
+ 
+-		xfs_iext_remove(ip, ext, 2, state);
++		xfs_iext_remove(ip, ext, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		xfs_iext_update_extent(ip, state, ext, &LEFT);
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+@@ -2186,7 +2183,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 		 */
+ 		LEFT.br_blockcount += PREV.br_blockcount;
+ 
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		xfs_iext_update_extent(ip, state, ext, &LEFT);
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+@@ -2220,7 +2217,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 		PREV.br_state = new->br_state;
+ 
+ 		xfs_iext_next(ifp, ext);
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		xfs_iext_update_extent(ip, state, ext, &PREV);
+ 
+@@ -2587,7 +2584,7 @@ xfs_bmap_add_extent_hole_delay(
+ 		left.br_startblock = nullstartblock(newlen);
+ 		left.br_blockcount = temp;
+ 
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		xfs_iext_update_extent(ip, state, ext, &left);
+ 		break;
+@@ -2732,7 +2729,7 @@ xfs_bmap_add_extent_hole_real(
+ 		 */
+ 		left.br_blockcount += new->br_blockcount + right.br_blockcount;
+ 
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		xfs_iext_update_extent(ip, state, ext, &left);
+ 
+@@ -4690,7 +4687,7 @@ xfs_bmap_del_extent_delay(
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		break;
+ 	case BMAP_LEFT_FILLING:
+@@ -4791,7 +4788,7 @@ xfs_bmap_del_extent_cow(
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		break;
+ 	case BMAP_LEFT_FILLING:
+@@ -4931,7 +4928,7 @@ xfs_bmap_del_extent_real(
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+-		xfs_iext_remove(ip, ext, 1, state);
++		xfs_iext_remove(ip, ext, state);
+ 		xfs_iext_prev(ifp, ext);
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+@@ -5557,7 +5554,7 @@ xfs_bmse_merge(
+ 		return error;
+ 
+ done:
+-	xfs_iext_remove(ip, ext, 1, 0);
++	xfs_iext_remove(ip, ext, 0);
+ 	xfs_iext_prev(XFS_IFORK_PTR(ip, whichfork), ext);
+ 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork), ext,
+ 			&new);
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index c109526e52c5..c18d344d46cd 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -162,12 +162,10 @@ static inline struct xfs_iext_rec *cur_rec(struct xfs_iext_cursor *cur)
+ static noinline bool xfs_iext_valid(struct xfs_ifork *ifp,
+ 		struct xfs_iext_cursor *cur)
+ {
+-	if (cur->pos < 0)
+-		return false;
+-	if (cur->pos >= xfs_iext_max_recs(ifp))
+-		return false;
+ 	if (!cur->leaf)
+ 		return false;
++	if (cur->pos < 0 || cur->pos >= xfs_iext_max_recs(ifp))
++		return false;
+ 	if (xfs_iext_rec_is_empty(cur_rec(cur)))
+ 		return false;
+ 	return true;
+@@ -256,8 +254,8 @@ xfs_iext_next(
+ 	ASSERT(cur->pos < xfs_iext_max_recs(ifp));
+ 
+ 	cur->pos++;
+-	if (!xfs_iext_valid(ifp, cur) && ifp->if_height > 1 &&
+-	    cur->leaf && cur->leaf->next) {
++	if (ifp->if_height > 1 && !xfs_iext_valid(ifp, cur) &&
++	    cur->leaf->next) {
+ 		cur->leaf = cur->leaf->next;
+ 		cur->pos = 0;
+ 	}
+@@ -826,15 +824,19 @@ xfs_iext_free_last_leaf(
+ 	kmem_free(ifp->if_u1.if_root);
  }
  
-+static int
-+__fiemap(
-+	 struct fiemap * fiemap,
-+	 int		 mapsize,
-+	 __u32		 flags,
-+	 __u64		 start,
-+	 __u64		 length) {
-+
-+	int ret;
-+
-+	memset(fiemap, 0, mapsize);
-+	fiemap->fm_flags = flags;
-+	fiemap->fm_start = start;
-+	fiemap->fm_length = length;
-+	fiemap->fm_extent_count = EXTENT_BATCH;
-+	ret = ioctl(file->fd, FS_IOC_FIEMAP, fiemap);
-+	if (ret < 0) {
-+	        fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-+	                "%s\n", progname, file->name, strerror(errno));
-+	        return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int
- fiemap_f(
- 	int		argc,
-@@ -266,19 +291,11 @@ fiemap_f(
+-static void
+-__xfs_iext_remove(
+-	struct xfs_ifork	*ifp,
+-	struct xfs_iext_cursor	*cur)
++void
++xfs_iext_remove(
++	struct xfs_inode	*ip,
++	struct xfs_iext_cursor	*cur,
++	int			state)
+ {
++	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
+ 	struct xfs_iext_leaf	*leaf = cur->leaf;
+ 	xfs_fileoff_t		offset = xfs_iext_leaf_key(leaf, 0);
+ 	int			i, nr_entries;
  
- 	while (!last && (cur_extent != max_extents)) {
++	trace_xfs_iext_remove(ip, cur, state, _RET_IP_);
++
+ 	ASSERT(ifp->if_height > 0);
+ 	ASSERT(ifp->if_u1.if_root != NULL);
+ 	ASSERT(xfs_iext_valid(ifp, cur));
+@@ -866,24 +868,6 @@ __xfs_iext_remove(
+ 		xfs_iext_free_last_leaf(ifp);
+ }
  
--		memset(fiemap, 0, map_size);
--		fiemap->fm_flags = fiemap_flags;
--		fiemap->fm_start = last_logical;
--		fiemap->fm_length = -1LL;
--		fiemap->fm_extent_count = EXTENT_BATCH;
+-void
+-xfs_iext_remove(
+-	struct xfs_inode	*ip,
+-	struct xfs_iext_cursor	*cur,
+-	int			nr_extents,
+-	int			state)
+-{
+-	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
+-	int			i;
 -
--		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
-+			       -1LL);
- 		if (ret < 0) {
--			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
--				"%s\n", progname, file->name, strerror(errno));
--			free(fiemap);
- 			exitcode = 1;
--			return 0;
-+			goto out;
- 		}
+-	ASSERT(nr_extents > 0);
+-
+-	for (i = 0; i < nr_extents; i++) {
+-		trace_xfs_iext_remove(ip, cur, state, _RET_IP_);
+-		__xfs_iext_remove(ifp, cur);
+-	}
+-}
+-
+ /*
+  * Lookup the extent covering bno.
+  *
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index cc73fea4e37e..58da2ec262e3 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -116,7 +116,7 @@ xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
+ void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
+ 			struct xfs_bmbt_irec *, int);
+ void		xfs_iext_remove(struct xfs_inode *, struct xfs_iext_cursor *,
+-			int, int);
++			int);
+ void		xfs_iext_destroy(struct xfs_ifork *);
  
- 		/* No more extents to map, exit */
+ bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
 -- 
-2.7.4
+2.14.2
 
