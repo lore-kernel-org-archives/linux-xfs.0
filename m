@@ -1,72 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:52750 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751522AbdJXWX2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2017 18:23:28 -0400
-Date: Wed, 25 Oct 2017 09:23:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
-Message-ID: <20171024222322.GX3666@dastard>
-References: <20171024152415.22864-1-jack@suse.cz>
- <20171024152415.22864-18-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25964 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751324AbdJaTad (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 15:30:33 -0400
+Date: Tue, 31 Oct 2017 12:30:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: remove inode log format typedef
+Message-ID: <20171031193026.GF4911@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171024152415.22864-18-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-On Tue, Oct 24, 2017 at 05:24:14PM +0200, Jan Kara wrote:
-> From: Christoph Hellwig <hch@lst.de>
-> 
-> Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
-> blocks for writing and the inode is pinned, and has dirty fields other
-> than the timestamps.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-That's "fdatasync dirty", not "fsync dirty".
+Remove xfs_inode_log_format_t now that xfs_inode_log_format is
+explicitly padded and therefore is a real on-disk structure.  This
+enables xfs/122 to check the size of the structure.
 
-IOMAP_F_DIRTY needs a far better description of it's semantics than
-"/* block mapping is not yet on persistent storage */" so we know
-exactly what filesystems are supposed to be implementing here. I
-suspect that what it really is meant to say is:
+(No functional changes, this is for benefit of xfsprogs)
 
-/*
- * IOMAP_F_DIRTY indicates the inode has uncommitted metadata to
- * written data and requires fdatasync to commit to persistent storage.
- */
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_log_format.h |    4 ++--
+ fs/xfs/xfs_inode_item.h        |    2 +-
+ fs/xfs/xfs_log_recover.c       |   10 +++++-----
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-[....]
-
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index f179bdf1644d..b43be199fbdf 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -33,6 +33,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trans.h"
->  #include "xfs_trans_space.h"
-> +#include "xfs_inode_item.h"
->  #include "xfs_iomap.h"
->  #include "xfs_trace.h"
->  #include "xfs_icache.h"
-> @@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
->  		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
->  	}
->  
-> +	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-> +	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-> +		iomap->flags |= IOMAP_F_DIRTY;
-
-This is the very definition of an inode that is "fdatasync dirty".
-
-Hmmmm, shouldn't this also be set for read faults, too?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index a7ab6ad..996f035 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -264,7 +264,7 @@ typedef struct xfs_trans_header {
+  * (if any) is indicated in the ilf_dsize field.  Changes to this structure
+  * must be added on to the end.
+  */
+-typedef struct xfs_inode_log_format {
++struct xfs_inode_log_format {
+ 	uint16_t		ilf_type;	/* inode log item type */
+ 	uint16_t		ilf_size;	/* size of this item */
+ 	uint32_t		ilf_fields;	/* flags for fields logged */
+@@ -279,7 +279,7 @@ typedef struct xfs_inode_log_format {
+ 	int64_t			ilf_blkno;	/* blkno of inode buffer */
+ 	int32_t			ilf_len;	/* len of inode buffer */
+ 	int32_t			ilf_boffset;	/* off of inode in buffer */
+-} xfs_inode_log_format_t;
++};
+ 
+ /*
+  * Old 32 bit systems will log in this format without the 64 bit
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index 4c7722e..b72373a 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -48,7 +48,7 @@ extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
+ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+ extern void xfs_iflush_abort(struct xfs_inode *, bool);
+ extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
+-					 xfs_inode_log_format_t *);
++					 struct xfs_inode_log_format *);
+ 
+ extern struct kmem_zone	*xfs_ili_zone;
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index f809dee..6e0e38b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2985,7 +2985,7 @@ xlog_recover_inode_pass2(
+ 	struct xlog_recover_item	*item,
+ 	xfs_lsn_t			current_lsn)
+ {
+-	xfs_inode_log_format_t	*in_f;
++	struct xfs_inode_log_format	*in_f;
+ 	xfs_mount_t		*mp = log->l_mp;
+ 	xfs_buf_t		*bp;
+ 	xfs_dinode_t		*dip;
+@@ -2999,10 +2999,10 @@ xlog_recover_inode_pass2(
+ 	uint			isize;
+ 	int			need_free = 0;
+ 
+-	if (item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t)) {
++	if (item->ri_buf[0].i_len == sizeof(struct xfs_inode_log_format)) {
+ 		in_f = item->ri_buf[0].i_addr;
+ 	} else {
+-		in_f = kmem_alloc(sizeof(xfs_inode_log_format_t), KM_SLEEP);
++		in_f = kmem_alloc(sizeof(struct xfs_inode_log_format), KM_SLEEP);
+ 		need_free = 1;
+ 		error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
+ 		if (error)
+@@ -4299,7 +4299,7 @@ xlog_recover_add_to_trans(
+ 	char			*dp,
+ 	int			len)
+ {
+-	xfs_inode_log_format_t	*in_f;			/* any will do */
++	struct xfs_inode_log_format	*in_f;			/* any will do */
+ 	xlog_recover_item_t	*item;
+ 	char			*ptr;
+ 
+@@ -4333,7 +4333,7 @@ xlog_recover_add_to_trans(
+ 
+ 	ptr = kmem_alloc(len, KM_SLEEP);
+ 	memcpy(ptr, dp, len);
+-	in_f = (xfs_inode_log_format_t *)ptr;
++	in_f = (struct xfs_inode_log_format *)ptr;
+ 
+ 	/* take the tail entry */
+ 	item = list_entry(trans->r_itemq.prev, xlog_recover_item_t, ri_list);
