@@ -1,14 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:52245 "EHLO mga03.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:30565 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932971AbdJaX2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 19:28:22 -0400
-Subject: [PATCH 04/15] brd: remove dax support
+        id S932449AbdJaX2A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 19:28:00 -0400
+Subject: [PATCH 00/15] dax: prep work for fixing dax-dma vs truncate
+ collisions
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 31 Oct 2017 16:21:57 -0700
-Message-ID: <150949211688.24061.1197869674847507598.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Tue, 31 Oct 2017 16:21:33 -0700
+Message-ID: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,168 +15,113 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@kernel.dk>, akpm@linux-foundation.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, hch@lst.de
+Cc: Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Peter Zijlstra <peterz@infradead.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-mm@kvack.org, Paul Mackerras <paulus@samba.org>, Sean Hefty <sean.hefty@intel.com>, hch@lst.de, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Doug Ledford <dledford@redhat.com>, Ingo Molnar <mingo@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, linux-media@vger.kernel.org, linux-fsdevel@vger.kernel.org, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, akpm@linux-foundation.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-DAX support in brd is awkward because its backing page frames are
-distinct from the ones provided by pmem, dcssblk, or axonram. We need
-pfn_t_devmap() entries to fully support DAX, and the limited DAX support
-for pfn_t_special() page frames is not interesting for brd when pmem is
-already a superset of brd.  Lastly, brd is the only dax capable driver
-that may sleep in its ->direct_access() implementation. So it causes a
-global burden with no net gain of kernel functionality.
+This is hopefully the uncontroversial lead-in set of changes that lay
+the groundwork for solving the dax-dma vs truncate problem. The overview
+of the changes is:
 
-For all these reasons, remove DAX support.
+1/ Disable DAX when we do not have struct page entries backing dax
+   mappings, or otherwise allow limited DAX support for axonram and
+   dcssblk. Is anyone actually using the DAX capability of axonram
+   dcssblk?
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+2/ Disable code paths that establish potentially long lived DMA
+   access to a filesystem-dax memory mapping, i.e. RDMA and V4L2. In the
+   4.16 timeframe the plan is to introduce a "register memory for DMA
+   with a lease" mechanism for userspace to establish mappings but also
+   be responsible for tearing down the mapping when the kernel needs to
+   invalidate the mapping due to truncate or hole-punch.
+
+3/ Add a wakeup mechanism for awaiting for DAX pages to be released
+   from DMA access.
+
+This overall effort started when Christoph noted during the review of
+the MAP_DIRECT proposal:
+
+    get_user_pages on DAX doesn't give the same guarantees as on
+    pagecache or anonymous memory, and that is the problem we need to
+    fix. In fact I'm pretty sure if we try hard enough (and we might
+    have to try very hard) we can see the same problem with plain direct
+    I/O and without any RDMA involved, e.g. do a larger direct I/O write
+    to memory that is mmap()ed from a DAX file, then truncate the DAX
+    file and reallocate the blocks, and we might corrupt that new file.
+    We'll probably need a special setup where there is little other
+    chance but to reallocate those used blocks.
+
+    So what we need to do first is to fix get_user_pages vs unmapping
+    DAX mmap()ed blocks, be that from a hole punch, truncate, COW
+    operation, etc.
+
+Included in the changes is a nfit_test mechanism to trivially trigger
+this collision by delaying the put_page() that the block layer performs
+after performing direct-I/O to a filesystem-DAX page.
+
+Given the ongoing coordination of this set across multiple sub-systems
+and the dax core my proposal is to manage this as a branch in the nvdimm
+tree with acks from mm, rdma, v4l2, ext4, and xfs.
+
 ---
- drivers/block/Kconfig |   12 ---------
- drivers/block/brd.c   |   65 -------------------------------------------------
- 2 files changed, 77 deletions(-)
 
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index 2dfe99b328f8..da8bf0268ade 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -297,7 +297,6 @@ config BLK_DEV_SX8
- 
- config BLK_DEV_RAM
- 	tristate "RAM block device support"
--	select DAX if BLK_DEV_RAM_DAX
- 	---help---
- 	  Saying Y here will allow you to use a portion of your RAM memory as
- 	  a block device, so that you can make file systems on it, read and
-@@ -333,17 +332,6 @@ config BLK_DEV_RAM_SIZE
- 	  The default value is 4096 kilobytes. Only change this if you know
- 	  what you are doing.
- 
--config BLK_DEV_RAM_DAX
--	bool "Support Direct Access (DAX) to RAM block devices"
--	depends on BLK_DEV_RAM && FS_DAX
--	default n
--	help
--	  Support filesystems using DAX to access RAM block devices.  This
--	  avoids double-buffering data in the page cache before copying it
--	  to the block device.  Answering Y will slightly enlarge the kernel,
--	  and will prevent RAM block device backing store memory from being
--	  allocated from highmem (only a problem for highmem systems).
--
- config CDROM_PKTCDVD
- 	tristate "Packet writing on CD/DVD media (DEPRECATED)"
- 	depends on !UML
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index 2d7178f7754e..b2391bbd7e5a 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -20,11 +20,6 @@
- #include <linux/radix-tree.h>
- #include <linux/fs.h>
- #include <linux/slab.h>
--#ifdef CONFIG_BLK_DEV_RAM_DAX
--#include <linux/pfn_t.h>
--#include <linux/dax.h>
--#include <linux/uio.h>
--#endif
- 
- #include <linux/uaccess.h>
- 
-@@ -44,9 +39,6 @@ struct brd_device {
- 
- 	struct request_queue	*brd_queue;
- 	struct gendisk		*brd_disk;
--#ifdef CONFIG_BLK_DEV_RAM_DAX
--	struct dax_device	*dax_dev;
--#endif
- 	struct list_head	brd_list;
- 
- 	/*
-@@ -112,9 +104,6 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
- 	 * restriction might be able to be lifted.
- 	 */
- 	gfp_flags = GFP_NOIO | __GFP_ZERO;
--#ifndef CONFIG_BLK_DEV_RAM_DAX
--	gfp_flags |= __GFP_HIGHMEM;
--#endif
- 	page = alloc_page(gfp_flags);
- 	if (!page)
- 		return NULL;
-@@ -334,43 +323,6 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
- 	return err;
- }
- 
--#ifdef CONFIG_BLK_DEV_RAM_DAX
--static long __brd_direct_access(struct brd_device *brd, pgoff_t pgoff,
--		long nr_pages, void **kaddr, pfn_t *pfn)
--{
--	struct page *page;
--
--	if (!brd)
--		return -ENODEV;
--	page = brd_insert_page(brd, (sector_t)pgoff << PAGE_SECTORS_SHIFT);
--	if (!page)
--		return -ENOSPC;
--	*kaddr = page_address(page);
--	*pfn = page_to_pfn_t(page);
--
--	return 1;
--}
--
--static long brd_dax_direct_access(struct dax_device *dax_dev,
--		pgoff_t pgoff, long nr_pages, void **kaddr, pfn_t *pfn)
--{
--	struct brd_device *brd = dax_get_private(dax_dev);
--
--	return __brd_direct_access(brd, pgoff, nr_pages, kaddr, pfn);
--}
--
--static size_t brd_dax_copy_from_iter(struct dax_device *dax_dev, pgoff_t pgoff,
--		void *addr, size_t bytes, struct iov_iter *i)
--{
--	return copy_from_iter(addr, bytes, i);
--}
--
--static const struct dax_operations brd_dax_ops = {
--	.direct_access = brd_dax_direct_access,
--	.copy_from_iter = brd_dax_copy_from_iter,
--};
--#endif
--
- static const struct block_device_operations brd_fops = {
- 	.owner =		THIS_MODULE,
- 	.rw_page =		brd_rw_page,
-@@ -450,21 +402,8 @@ static struct brd_device *brd_alloc(int i)
- 	sprintf(disk->disk_name, "ram%d", i);
- 	set_capacity(disk, rd_size * 2);
- 
--#ifdef CONFIG_BLK_DEV_RAM_DAX
--	queue_flag_set_unlocked(QUEUE_FLAG_DAX, brd->brd_queue);
--	brd->dax_dev = alloc_dax(brd, disk->disk_name, &brd_dax_ops);
--	if (!brd->dax_dev)
--		goto out_free_inode;
--#endif
--
--
- 	return brd;
- 
--#ifdef CONFIG_BLK_DEV_RAM_DAX
--out_free_inode:
--	kill_dax(brd->dax_dev);
--	put_dax(brd->dax_dev);
--#endif
- out_free_queue:
- 	blk_cleanup_queue(brd->brd_queue);
- out_free_dev:
-@@ -504,10 +443,6 @@ static struct brd_device *brd_init_one(int i, bool *new)
- static void brd_del_one(struct brd_device *brd)
- {
- 	list_del(&brd->brd_list);
--#ifdef CONFIG_BLK_DEV_RAM_DAX
--	kill_dax(brd->dax_dev);
--	put_dax(brd->dax_dev);
--#endif
- 	del_gendisk(brd->brd_disk);
- 	brd_free(brd);
- }
+Dan Williams (15):
+      dax: quiet bdev_dax_supported()
+      mm, dax: introduce pfn_t_special()
+      dax: require 'struct page' by default for filesystem dax
+      brd: remove dax support
+      dax: stop using VM_MIXEDMAP for dax
+      dax: stop using VM_HUGEPAGE for dax
+      dax: stop requiring a live device for dax_flush()
+      dax: store pfns in the radix
+      tools/testing/nvdimm: add 'bio_delay' mechanism
+      IB/core: disable memory registration of fileystem-dax vmas
+      [media] v4l2: disable filesystem-dax mapping support
+      mm, dax: enable filesystems to trigger page-idle callbacks
+      mm, devmap: introduce CONFIG_DEVMAP_MANAGED_PAGES
+      dax: associate mappings with inodes, and warn if dma collides with truncate
+      wait_bit: introduce {wait_on,wake_up}_devmap_idle
 
+
+ arch/powerpc/platforms/Kconfig            |    1 
+ arch/powerpc/sysdev/axonram.c             |    3 -
+ drivers/block/Kconfig                     |   12 ---
+ drivers/block/brd.c                       |   65 --------------
+ drivers/dax/device.c                      |    1 
+ drivers/dax/super.c                       |  113 +++++++++++++++++++++----
+ drivers/infiniband/core/umem.c            |   49 ++++++++---
+ drivers/media/v4l2-core/videobuf-dma-sg.c |   39 ++++++++-
+ drivers/nvdimm/pmem.c                     |   13 +++
+ drivers/s390/block/Kconfig                |    1 
+ drivers/s390/block/dcssblk.c              |    4 +
+ fs/Kconfig                                |    8 ++
+ fs/dax.c                                  |  131 +++++++++++++++++++----------
+ fs/ext2/file.c                            |    1 
+ fs/ext2/super.c                           |    6 +
+ fs/ext4/file.c                            |    1 
+ fs/ext4/super.c                           |    6 +
+ fs/xfs/xfs_file.c                         |    2 
+ fs/xfs/xfs_super.c                        |   20 ++--
+ include/linux/dax.h                       |   17 ++--
+ include/linux/memremap.h                  |   24 +++++
+ include/linux/mm.h                        |   47 ++++++----
+ include/linux/mm_types.h                  |   20 +++-
+ include/linux/pfn_t.h                     |   13 +++
+ include/linux/vma.h                       |   33 +++++++
+ include/linux/wait_bit.h                  |   10 ++
+ kernel/memremap.c                         |   36 ++++++--
+ kernel/sched/wait_bit.c                   |   64 ++++++++++++--
+ mm/Kconfig                                |    5 +
+ mm/hmm.c                                  |   13 ---
+ mm/huge_memory.c                          |    8 +-
+ mm/ksm.c                                  |    3 +
+ mm/madvise.c                              |    2 
+ mm/memory.c                               |   22 ++++-
+ mm/migrate.c                              |    3 -
+ mm/mlock.c                                |    5 +
+ mm/mmap.c                                 |    8 +-
+ mm/swap.c                                 |    3 -
+ tools/testing/nvdimm/Kbuild               |    1 
+ tools/testing/nvdimm/test/iomap.c         |   62 ++++++++++++++
+ tools/testing/nvdimm/test/nfit.c          |   34 ++++++++
+ tools/testing/nvdimm/test/nfit_test.h     |    1 
+ 42 files changed, 650 insertions(+), 260 deletions(-)
+ create mode 100644 include/linux/vma.h
