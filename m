@@ -1,153 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34341 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751366AbdJaM1s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 08:27:48 -0400
-Subject: Re: [PATCH 1/2] initial fiemap test
-References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
- <1509107832-22286-3-git-send-email-nborisov@suse.com>
- <20171027124414.GX3235@eguan.usersys.redhat.com>
- <ff61b10a-4284-ccd3-2f1d-40d3683fe611@suse.com>
- <20171031093245.GK17339@eguan.usersys.redhat.com>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <c7949854-d71b-a262-3bea-d42be2667486@suse.com>
-Date: Tue, 31 Oct 2017 14:27:44 +0200
-MIME-Version: 1.0
-In-Reply-To: <20171031093245.GK17339@eguan.usersys.redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:36636 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753056AbdJaOWk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:40 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRA-0007Zm-6N
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:40 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/18] xfs: don't create overlapping extents in xfs_bmap_add_extent_delay_real
+Date: Tue, 31 Oct 2017 16:22:14 +0200
+Message-Id: <20171031142230.11755-3-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+Two cases in xfs_bmap_add_extent_delay_real currently insert a new
+extent before updating the existing one that is being split.  While
+this works fine with a simple extent list, a more complex tree can't
+easily cope with overlapping extent.  Reshuffle the code a bit to update
+the slot of the existing delalloc extent to the new real extent before
+inserting the shortened delalloc extent before or after it.  This
+avoids the overlapping extents while still allowing to update the
+br_startblock field of the delalloc extent with the updated indirect
+block reservation.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-On 31.10.2017 11:32, Eryu Guan wrote:
-> On Tue, Oct 31, 2017 at 11:22:48AM +0200, Nikolay Borisov wrote:
->>
->>
->> On 27.10.2017 15:44, Eryu Guan wrote:
->>> On Fri, Oct 27, 2017 at 03:37:10PM +0300, Nikolay Borisov wrote:
->>>> Test various range queries of fiemap and ensure they produce expected output. 
->>>>
->>>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
->>>> ---
->>>>  tests/xfs/900     |  96 ++++++++++++++++++++++++++++++++++++++++++++
->>>>  tests/xfs/900.out | 118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>>  2 files changed, 214 insertions(+)
->>>>  create mode 100755 tests/xfs/900
->>>>  create mode 100644 tests/xfs/900.out
->>>>
->>>> diff --git a/tests/xfs/900 b/tests/xfs/900
->>>> new file mode 100755
->>>> index 0000000..e535820
->>>> --- /dev/null
->>>> +++ b/tests/xfs/900
->>>> @@ -0,0 +1,96 @@
->>>> +#! /bin/bash
->>>> +# FS QA Test No. 900
->>>> +#
->>>> +#-----------------------------------------------------------------------
->>>> +# Copyright (c) 2017 SUSE Linux Products GmbH.  All Rights Reserved.
->>>> +#
->>>> +# This program is free software; you can redistribute it and/or
->>>> +# modify it under the terms of the GNU General Public License as
->>>> +# published by the Free Software Foundation.
->>>> +#
->>>> +# This program is distributed in the hope that it would be useful,
->>>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->>>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>>> +# GNU General Public License for more details.
->>>> +#
->>>> +# You should have received a copy of the GNU General Public License
->>>> +# along with this program; if not, write the Free Software Foundation,
->>>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->>>> +#-----------------------------------------------------------------------
->>>> +#
->>>> +
->>>> +seq=`basename $0`
->>>> +seqres=$RESULT_DIR/$seq
->>>> +echo "QA output created by $seq"
->>>> +
->>>> +here=`pwd`
->>>> +tmp=/tmp/$$
->>>> +status=1	# failure is the default!
->>>> +trap "_cleanup; exit \$status" 0 1 2 3 15
->>>> +
->>>> +_cleanup()
->>>> +{
->>>> +	cd /
->>>> +	rm -f $tmp.*
->>>> +}
->>>> +
->>>> +# get standard environment, filters and checks
->>>> +. ./common/rc
->>>> +. ./common/punch
->>>> +
->>>> +# remove previous $seqres.full before test
->>>> +rm -f $seqres.full
->>>> +
->>>> +# real QA test starts here
->>>> +
->>>> +# Modify as appropriate.
->>>> +_supported_fs generic
->>>> +_supported_os Linux
->>>> +_require_scratch
->>>> +_require_xfs_io_command "falloc"
->>>> +_require_xfs_io_command "fiemap"
->>>
->>> I haven't run the test yet, but from a quick look, it looks like test
->>> fails with old xfs_io without fiemap range support. Not sure adding
->>> range param to _require_xfs_io_command helps, e.g.
->>>
->>> _require_xfs_io_command "fiemap" "0 4k"
->>
->> Apparently it doesn't :
->> ./io/xfs_io -c "fiemap 0 2k" ../xfstests-dev/trace.dat
->> ../xfstests-dev/trace.dat:
->> 	0: [0..6095]: 18477056..18483151
-> 
-> Looks like fiemap ignores all non-option arguments..
-> 
->>
->>
->> the xfs_io is just v4.13.1 HEAD. One other things that comes to mind is
->> to play tricks with the xfs_io -c "help fiemap" invocation and parse the
->> first line. If the range param is supported then it will be present in
->> the one-line help if not, it won't be. Do you think that's acceptable ?
-> 
-> I'm fine with it, we do have similar code to do such check on help
-> message.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b2b6832b9e6b..0eda6892b9d0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1790,7 +1790,7 @@ xfs_bmap_add_extent_delay_real(
+ 		 * Filling in the first part of a previous delayed allocation.
+ 		 * The left neighbor is not contiguous.
+ 		 */
+-		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
++		xfs_iext_update_extent(bma->ip, state, bma->idx, new);
+ 		(*nextents)++;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+@@ -1823,7 +1823,7 @@ xfs_bmap_add_extent_delay_real(
+ 		PREV.br_startoff = new_endoff;
+ 		PREV.br_blockcount = temp;
+ 		PREV.br_startblock = nullstartblock(da_new);
+-		xfs_iext_update_extent(bma->ip, state, bma->idx + 1, &PREV);
++		xfs_iext_insert(bma->ip, bma->idx + 1, 1, &PREV, state);
+ 		break;
+ 
+ 	case BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
+@@ -1866,7 +1866,7 @@ xfs_bmap_add_extent_delay_real(
+ 		 * Filling in the last part of a previous delayed allocation.
+ 		 * The right neighbor is not contiguous.
+ 		 */
+-		xfs_iext_insert(bma->ip, bma->idx + 1, 1, new, state);
++		xfs_iext_update_extent(bma->ip, state, bma->idx, new);
+ 		(*nextents)++;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+@@ -1898,7 +1898,7 @@ xfs_bmap_add_extent_delay_real(
+ 
+ 		PREV.br_startblock = nullstartblock(da_new);
+ 		PREV.br_blockcount = temp;
+-		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
++		xfs_iext_insert(bma->ip, bma->idx, 1, &PREV, state);
+ 
+ 		bma->idx++;
+ 		break;
+-- 
+2.14.2
 
-This is what I got I just want to run it past you before resending the whole series with the fixes incorporated: 
-
-diff --git a/common/rc b/common/rc
-index e2a8229..673f9ef 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2053,8 +2053,15 @@ _require_xfs_io_command()
-                        -c "$command 4k 8k" $testfile 2>&1`
-                ;;
-        "fiemap")
-+               if [ ! -z "$param" ]
-+               then
-+                       $XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]" || \
-+                               _notrun "xfs_io $command range param support is missing"
-+               fi
-+
-                testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-                        -c "fiemap -v $param" $testfile 2>&1`
-+
-                param_checked=1
-                ;;
-        "flink" )
-
-
-
-> 
-> Thanks,
-> Eryu
-> 
