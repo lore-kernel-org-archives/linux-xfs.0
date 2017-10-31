@@ -1,130 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48999 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:56966 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932278AbdJYS5H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Oct 2017 14:57:07 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 646DDC059755
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 18:57:07 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4996C4DA2C
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2017 18:57:07 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 1/3] xfs: more robust recovery xlog buffer validation
-Date: Wed, 25 Oct 2017 14:57:03 -0400
-Message-Id: <20171025185705.64983-2-bfoster@redhat.com>
-In-Reply-To: <20171025185705.64983-1-bfoster@redhat.com>
-References: <20171025185705.64983-1-bfoster@redhat.com>
+        id S1752473AbdJaVwE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 17:52:04 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH] xfs_repair: clear extra file attributes on symlinks
+Date: Tue, 31 Oct 2017 14:51:56 -0700
+Message-Id: <20171031215156.12544-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-mkfs has a historical problem where it can format very small
-filesystems with too small of a physical log. Under certain
-conditions, log recovery of an associated filesystem can end up
-passing garbage parameter values to some of the cycle and log record
-verification functions due to bugs in log recovery not dealing with
-such filesystems properly. This results in attempts to read from
-bogus/underflowed log block addresses.
+Linux filesystems cannot set extra file attributes (stx_attributes as per
+statx(2)) on a symbolic link as ioctl(2) with FS_IOC_SETFLAGS is used for
+this purpose, and *all* ioctl(2) calls on a symbolic link yield EBADF.
+This is because ioctl(2) tries to obtain struct fd from the symbolic link
+file descriptor passed using fdget(), fdget() in turn always returns no
+file set when a file descriptor is open with O_PATH. As per symlink(2)
+O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
+descriptor of a symbolic link, and this holds true for Linux, as such extra
+file attributes cannot possibly be set on symbolic links on Linux.
 
-Since the buffer read may ultimately succeed, log recovery can
-proceed with bogus data and otherwise go off the rails and crash.
-One example of this is a negative last_blk being passed to
-xlog_find_verify_log_record() causing us to skip the loop, pass a
-NULL head pointer to xlog_header_check_mount() and crash.
+Given this Linux filesystems should treat extra file attributes set on
+symbolic links as corruption and fix them.
 
-Improve the xlog buffer verification to address this problem. We
-already verify xlog buffer length, so update this mechanism to also
-sanity check for a valid log relative block address and otherwise
-return an error. Pass a fixed, valid log block address from
-xlog_get_bp() since the target address will be validated when the
-buffer is read. This ensures that any bogus log block address/length
-calculations lead to graceful mount failure rather than risking a
-crash or worse if recovery proceeds with bogus data.
+   The TL;DR:
 
-Reported-by: Zorro Lang <zlang@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+How I discovered this was finding a corrupted filesystem with symbolic
+links with the extra file attribute append (STATX_ATTR_APPEND) set. Symbolic
+links with the attribute append set cannot be removed as they are treated as
+if a file was set with the immutable flag set. Standard tools however cannot
+remove *any* attribute flag:
+
+	# chattr -a symlink
+	chattr: Operation not supported while reading flags on b
+
+If you end up with these symbolic links userspace cannot remove them.
+
+Likewise one cannot use the same tool to *set* this extra file attribute on
+a symbolic link using chattr:
+	# rm -f y z
+	# ln -s y z
+	# chattr +a z
+	chattr: Operation not supported while reading flags on z
+
+What makes this puzzling was one cannot even list attributes on symlinks
+using lsattr either:
+
+	# rm -f a b
+	# ln -s a b
+	# lsattr b
+	lsattr: Operation not supported While reading flags on b
+
+The above was due to commit 023d111e92195 ("chattr.1.in: Document the
+compression attribute flags E, X, and ...") merged on e2fsprogs v1.28 since
+August 2002. That commit just refers to the fact that attributes were only
+allowed after that commit for directories and regular files due to Debian
+bug 152029 [0]. This bug was filed since lsattr lsattr would segfault when
+used against a special file of an old DRM buggy driver, the ioctl seem to
+have worked but crashed lsattr with its information. The bug report doesn't
+list any specific reasoning for not allowing attributes on symlinks though.
+
+Crafting your own tool to query the extra file attributes with the new
+shiny statx(2) works, and if a symbolic link has the extra attribute
+flag set statx(2) would inform userspace of this. statx(2) is only used
+for getting file information, not for setting them.
+
+This all meant that if you end up with the append extra file attribute
+set on a symlink you need special tools to try to remove it and currently
+that's only possible on XFS with xfs_db [1] [2].
+
+Fix XFS filesystems which have these extra file attributes set as the only
+way they could have been set was through corruption.
+
+[0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
+[1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
+[2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
+
+Cc: Tso Ted <tytso@mit.edu>
+Cc: Nikolay Borisov <nborisov@suse.com>
+Cc: Flex Liu <fliu@suse.com>
+Cc: Jake Norris <jake.norris@suse.com>
+Cc: Jan Kara <jack@suse.cz>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- fs/xfs/xfs_log_recover.c | 38 ++++++++++++++++++++++++--------------
- 1 file changed, 24 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ee34899..54494ab 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -85,17 +85,21 @@ struct xfs_buf_cancel {
-  */
- 
- /*
-- * Verify the given count of basic blocks is valid number of blocks
-- * to specify for an operation involving the given XFS log buffer.
-- * Returns nonzero if the count is valid, 0 otherwise.
-+ * Verify the log-relative block number and length in basic blocks are valid for
-+ * an operation involving the given XFS log buffer. Returns true if the fields
-+ * are valid, false otherwise.
-  */
--
--static inline int
--xlog_buf_bbcount_valid(
-+static inline bool
-+xlog_verify_bp(
- 	struct xlog	*log,
-+	xfs_daddr_t	blk_no,
- 	int		bbcount)
- {
--	return bbcount > 0 && bbcount <= log->l_logBBsize;
-+	if (blk_no < 0 || blk_no >= log->l_logBBsize)
-+		return false;
-+	if (bbcount <= 0 || bbcount > log->l_logBBsize)
-+		return false;
-+	return true;
- }
- 
- /*
-@@ -110,7 +114,11 @@ xlog_get_bp(
- {
- 	struct xfs_buf	*bp;
- 
--	if (!xlog_buf_bbcount_valid(log, nbblks)) {
-+	/*
-+	 * Pass log block 0 since we don't have an addr yet, buffer will be
-+	 * verified on read.
-+	 */
-+	if (!xlog_verify_bp(log, 0, nbblks)) {
- 		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
- 			nbblks);
- 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
-@@ -180,9 +188,10 @@ xlog_bread_noalign(
- {
- 	int		error;
- 
--	if (!xlog_buf_bbcount_valid(log, nbblks)) {
--		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
--			nbblks);
-+	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-+		xfs_warn(log->l_mp,
-+			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-+			 blk_no, nbblks);
- 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
- 		return -EFSCORRUPTED;
- 	}
-@@ -265,9 +274,10 @@ xlog_bwrite(
- {
- 	int		error;
- 
--	if (!xlog_buf_bbcount_valid(log, nbblks)) {
--		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
--			nbblks);
-+	if (!xlog_verify_bp(log, blk_no, nbblks)) {
-+		xfs_warn(log->l_mp,
-+			 "Invalid log block/length (0x%llx, 0x%x) for buffer",
-+			 blk_no, nbblks);
- 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
- 		return -EFSCORRUPTED;
- 	}
+On this v2 I've provided a much better explanation as to why these
+extra file attributes don't make sense on Linux, and trimmed the flags
+we venture out to clear to *only* match what statx defines. It may be
+possible to clear more dino->di_flags and maybe even dino->di_flags2
+for symbolic links however that those be determined separately as the
+other flags' semantics are clarified for setting.
+
+ repair/dinode.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 15ba8cc22b39..6288e42de15e 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2482,6 +2482,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 						FS_XFLAG_EXTSIZE);
+ 			}
+ 		}
++		if (flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
++			     XFS_DIFLAG_NODUMP)) {
++			/*
++			 * ioctl(fd, *) and so ioctl(fd, FS_IOC_SETFLAGS)
++			 * yields EBADF on symlinks as they have O_PATH set.
++			 * "Extra file attributes", stx_attributes, as per
++			 * statx(2) cannot be set on symlinks on Linux.
++			 */
++			if (di_mode && S_ISLNK(di_mode) &&
++			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
++				if (!uncertain) {
++					do_warn(
++	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
++						lino);
++				}
++				flags &= ~(XFS_DIFLAG_IMMUTABLE |
++					   XFS_DIFLAG_APPEND |
++					   XFS_DIFLAG_NODUMP);
++			}
++		}
++
+ 		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
+ 			if (!no_modify) {
+ 				do_warn(_("fixing bad flags.\n"));
 -- 
-2.9.5
+2.14.2
 
