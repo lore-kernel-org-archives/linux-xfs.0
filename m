@@ -1,295 +1,249 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20752 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932273AbdJYHBI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2017 03:01:08 -0400
-Date: Wed, 25 Oct 2017 00:00:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fiemap: Implement ranged query
-Message-ID: <20171025070001.GR5483@magnolia>
-References: <1508409281-7183-1-git-send-email-nborisov@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1508409281-7183-1-git-send-email-nborisov@suse.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:49681 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932182AbdJaOXZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:23:25 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRs-0007hP-Qy
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:23:25 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 17/18] xfs: remove the nr_extents argument to xfs_iext_insert
+Date: Tue, 31 Oct 2017 16:22:29 +0200
+Message-Id: <20171031142230.11755-18-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: linux-xfs@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 01:34:41PM +0300, Nikolay Borisov wrote:
-> Currently the fiemap implementation of xfs_io doesn't support making ranged
-> queries. This patch implements two optional arguments which take the starting
-> offset and the length of the region to be queried. The impelmentation also
-> calculates printed holes as an extent for the purpose of terminating the query.
-> 
-> I.e. if we create a file with the following layout :
-> 
-> xfs_io -f -c "falloc 0 32k" -c "fpunch 0 4k" -c "fpunch 8k 4k" \
-> -c "fpunch 28k 4k" -c "fiemap" fragmented-file
-> 
->        H     D         H           D                    H
-> |--------|--------|---------|--------------|-----------------|
-> 0         4k       8k        12k            28k                32k
-> 
-> Then the output is :
-> 
-> xfs_io -c "fiemap 0 10k" fragmented-file
-> fragmented-file:
-> 	0: [0..7]: hole
-> 	1: [8..15]: 897844104..897844111
-> 	2: [16..23]: hole
-> 
-> xfs_io -c "fiemap 0" fragmented-file
-> fragmented-file:
-> 	0: [0..7]: hole
-> 	1: [8..15]: 897844104..897844111
-> 	2: [16..23]: hole
-> 	3: [24..55]: 897844120..897844151
-> 	4: [56..63]: hole
-> 
-> xfs_io -c "fiemap 10k 5k" fragmented-file
-> fragmented-file:
-> 	0: [20..23]: hole
-> 	1: [24..55]: 897844120..897844151
-> 
-> xfs_io -c "fiemap 10k 18k" fragmented-file
-> fragmented-file:
-> 	0: [20..23]: hole
-> 	1: [24..55]: 897844120..897844151
-> 	2: [56..63]: hole
-> 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
->  io/fiemap.c       | 61 ++++++++++++++++++++++++++++++++++++++++++++++---------
->  man/man8/xfs_io.8 |  5 +++--
->  2 files changed, 54 insertions(+), 12 deletions(-)
-> 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index e6fd66da753d..844741cb07d3 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -27,6 +27,8 @@
->  
->  static cmdinfo_t fiemap_cmd;
->  static int max_extents = -1;
-> +static __u64 covered_length = 0;
-> +static bool range_limit = false;
->  
->  static void
->  fiemap_help(void)
-> @@ -79,7 +81,7 @@ print_hole(
->  		       boff_w, _("hole"), tot_w, lstart - llast);
->  	   }
->  
-> -
-> +	   covered_length += BBTOB(lstart - llast);
->  }
->  
->  static int
-> @@ -90,7 +92,8 @@ print_verbose(
->  	int			tot_w,
->  	int			flg_w,
->  	int			cur_extent,
-> -	__u64			last_logical)
-> +	__u64			last_logical,
-> +	__u64			limit)
->  {
->  	__u64			lstart;
->  	__u64			llast;
-> @@ -122,7 +125,7 @@ print_verbose(
->  		cur_extent++;
->  	}
->  
-> -	if (cur_extent == max_extents)
-> +	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
->  		return 1;
->  
->  	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
-> @@ -140,7 +143,8 @@ print_plain(
->  	struct fiemap_extent	*extent,
->  	int			lflag,
->  	int			cur_extent,
-> -	__u64			last_logical)
-> +	__u64			last_logical,
-> +	__u64			limit)
->  {
->  	__u64			lstart;
->  	__u64			llast;
-> @@ -157,7 +161,7 @@ print_plain(
->  		cur_extent++;
->  	}
->  
-> -	if (cur_extent == max_extents)
-> +	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+We only have two places that insert 2 extents at the same time, so unroll
+the loop there.
 
-As mentioned on IRC, I don't think it's correct to compare
-covered_length against limit here.   If we want to fiemap blocks 200-300
-we'd issue the command "fiemap 200k 100k", after which start_offset =
-200, len = 100, and stop_offset = 300.  We start the loop and
-covered_length = 0, and at this point we end up comparing
-(range_limit && covered_length >= limit) => (true && 0 >= 300)....
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c       | 31 ++++++++++++++++---------------
+ fs/xfs/libxfs/xfs_iext_tree.c  | 31 ++++++++-----------------------
+ fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ 4 files changed, 26 insertions(+), 40 deletions(-)
 
->  		return 1;
->  
->  	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
-> @@ -211,6 +215,7 @@ calc_print_format(
->  	}
->  }
->  
-> +
->  int
->  fiemap_f(
->  	int		argc,
-> @@ -231,8 +236,14 @@ fiemap_f(
->  	int		tot_w = 5;	/* 5 since its just one number */
->  	int		flg_w = 5;
->  	__u64		last_logical = 0;
-> +	__u64		len = -1LL;
-> +	__u64		stop_offset = -1LL;
-> +	off64_t		start_offset = 0;
-> +	size_t		fsblocksize, fssectsize;
->  	struct stat	st;
->  
-> +	init_cvtnum(&fsblocksize, &fssectsize);
-> +
->  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
->  		switch (c) {
->  		case 'a':
-> @@ -252,6 +263,27 @@ fiemap_f(
->  		}
->  	}
->  
-> +	if (optind < argc) {
-> +		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +		if (start_offset < 0) {
-> +			printf("non-numeric offset argument -- %s\n", argv[optind]);
-> +			return 0;
-> +		}
-> +		last_logical = start_offset;
-> +		optind++;
-> +	}
-> +
-> +	if (optind < argc) {
-> +		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +		if (length < 0) {
-> +			printf("non-numeric len argument -- %s\n", argv[optind]);
-> +			return 0;
-> +		}
-> +		len = length;
-> +		stop_offset = start_offset + len;
-> +		range_limit = true;
-> +	}
-> +
->  	map_size = sizeof(struct fiemap) +
->  		(EXTENT_BATCH * sizeof(struct fiemap_extent));
->  	fiemap = malloc(map_size);
-> @@ -269,7 +301,7 @@ fiemap_f(
->  		memset(fiemap, 0, map_size);
->  		fiemap->fm_flags = fiemap_flags;
->  		fiemap->fm_start = last_logical;
-> -		fiemap->fm_length = -1LL;
-> +		fiemap->fm_length = len;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 46bda00dca79..b832dc402f40 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -900,7 +900,7 @@ xfs_bmap_local_to_extents(
+ 	rec.br_blockcount = 1;
+ 	rec.br_state = XFS_EXT_NORM;
+ 	xfs_iext_first(ifp, &ext);
+-	xfs_iext_insert(ip, &ext, 1, &rec, 0);
++	xfs_iext_insert(ip, &ext, &rec, 0);
+ 
+ 	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
+ 	ip->i_d.di_nblocks = 1;
+@@ -1272,7 +1272,7 @@ xfs_iread_extents(
+ 				goto out_brelse;
+ 			}
+ 			xfs_bmbt_disk_get_all(frp, &new);
+-			xfs_iext_insert(ip, &ext, 1, &new, state);
++			xfs_iext_insert(ip, &ext, &new, state);
+ 			trace_xfs_read_extent(ip, &ext, state, _THIS_IP_);
+ 			xfs_iext_next(ifp, &ext);
+ 		}
+@@ -1828,7 +1828,7 @@ xfs_bmap_add_extent_delay_real(
+ 		PREV.br_blockcount = temp;
+ 		PREV.br_startblock = nullstartblock(da_new);
+ 		xfs_iext_next(ifp, &bma->ext);
+-		xfs_iext_insert(bma->ip, &bma->ext, 1, &PREV, state);
++		xfs_iext_insert(bma->ip, &bma->ext, &PREV, state);
+ 		xfs_iext_prev(ifp, &bma->ext);
+ 		break;
+ 
+@@ -1904,7 +1904,7 @@ xfs_bmap_add_extent_delay_real(
+ 
+ 		PREV.br_startblock = nullstartblock(da_new);
+ 		PREV.br_blockcount = temp;
+-		xfs_iext_insert(bma->ip, &bma->ext, 1, &PREV, state);
++		xfs_iext_insert(bma->ip, &bma->ext, &PREV, state);
+ 		xfs_iext_next(ifp, &bma->ext);
+ 		break;
+ 
+@@ -1950,9 +1950,9 @@ xfs_bmap_add_extent_delay_real(
+ 					PREV.br_blockcount));
+ 		xfs_iext_update_extent(bma->ip, state, &bma->ext, &PREV);
+ 
+-		/* insert LEFT (r[0]) and RIGHT (r[1]) at the same time */
+ 		xfs_iext_next(ifp, &bma->ext);
+-		xfs_iext_insert(bma->ip, &bma->ext, 2, &LEFT, state);
++		xfs_iext_insert(bma->ip, &bma->ext, &RIGHT, state);
++		xfs_iext_insert(bma->ip, &bma->ext, &LEFT, state);
+ 		(*nextents)++;
+ 
+ 		if (bma->cur == NULL)
+@@ -2316,7 +2316,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 		PREV.br_blockcount -= new->br_blockcount;
+ 
+ 		xfs_iext_update_extent(ip, state, ext, &PREV);
+-		xfs_iext_insert(ip, ext, 1, new, state);
++		xfs_iext_insert(ip, ext, new, state);
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+ 		if (cur == NULL)
+@@ -2383,7 +2383,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 
+ 		xfs_iext_update_extent(ip, state, ext, &PREV);
+ 		xfs_iext_next(ifp, ext);
+-		xfs_iext_insert(ip, ext, 1, new, state);
++		xfs_iext_insert(ip, ext, new, state);
+ 
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+@@ -2426,7 +2426,8 @@ xfs_bmap_add_extent_unwritten_real(
+ 
+ 		xfs_iext_update_extent(ip, state, ext, &PREV);
+ 		xfs_iext_next(ifp, ext);
+-		xfs_iext_insert(ip, ext, 2, &r[0], state);
++		xfs_iext_insert(ip, ext, &r[1], state);
++		xfs_iext_insert(ip, ext, &r[0], state);
+ 
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 				XFS_IFORK_NEXTENTS(ip, whichfork) + 2);
+@@ -2634,7 +2635,7 @@ xfs_bmap_add_extent_hole_delay(
+ 		 * Insert a new entry.
+ 		 */
+ 		oldlen = newlen = 0;
+-		xfs_iext_insert(ip, ext, 1, new, state);
++		xfs_iext_insert(ip, ext, new, state);
+ 		break;
+ 	}
+ 	if (oldlen != newlen) {
+@@ -2818,7 +2819,7 @@ xfs_bmap_add_extent_hole_real(
+ 		 * real allocation.
+ 		 * Insert a new entry.
+ 		 */
+-		xfs_iext_insert(ip, ext, 1, new, state);
++		xfs_iext_insert(ip, ext, new, state);
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+ 		if (cur == NULL) {
+@@ -4741,7 +4742,7 @@ xfs_bmap_del_extent_delay(
+ 
+ 		xfs_iext_update_extent(ip, state, ext, got);
+ 		xfs_iext_next(ifp, ext);
+-		xfs_iext_insert(ip, ext, 1, &new, state);
++		xfs_iext_insert(ip, ext, &new, state);
+ 
+ 		da_new = got_indlen + new_indlen - stolen;
+ 		del->br_blockcount -= stolen;
+@@ -4822,7 +4823,7 @@ xfs_bmap_del_extent_cow(
+ 
+ 		xfs_iext_update_extent(ip, state, ext, got);
+ 		xfs_iext_next(ifp, ext);
+-		xfs_iext_insert(ip, ext, 1, &new, state);
++		xfs_iext_insert(ip, ext, &new, state);
+ 		break;
+ 	}
+ }
+@@ -5035,7 +5036,7 @@ xfs_bmap_del_extent_real(
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+ 		xfs_iext_next(ifp, ext);
+-		xfs_iext_insert(ip, ext, 1, &new, state);
++		xfs_iext_insert(ip, ext, &new, state);
+ 		break;
+ 	}
+ 
+@@ -5896,7 +5897,7 @@ xfs_bmap_split_extent_at(
+ 
+ 	/* Add new extent */
+ 	xfs_iext_next(ifp, &ext);
+-	xfs_iext_insert(ip, &ext, 1, &new, 0);
++	xfs_iext_insert(ip, &ext, &new, 0);
+ 	XFS_IFORK_NEXT_SET(ip, whichfork,
+ 			   XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+ 
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index acb66c0677e7..c109526e52c5 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -627,16 +627,20 @@ xfs_iext_realloc_root(
+ 	cur->leaf = new;
+ }
+ 
+-static void
+-__xfs_iext_insert(
+-	struct xfs_ifork	*ifp,
++void
++xfs_iext_insert(
++	struct xfs_inode	*ip,
+ 	struct xfs_iext_cursor	*cur,
+-	struct xfs_bmbt_irec	*irec)
++	struct xfs_bmbt_irec	*irec,
++	int			state)
+ {
++	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
+ 	xfs_fileoff_t		offset = irec->br_startoff;
+ 	struct xfs_iext_leaf	*new = NULL;
+ 	int			nr_entries, i;
+ 
++	trace_xfs_iext_insert(ip, cur, state, _RET_IP_);
++
+ 	if (ifp->if_height == 0)
+ 		xfs_iext_alloc_root(ifp, cur);
+ 	else if (ifp->if_height == 1)
+@@ -664,25 +668,6 @@ __xfs_iext_insert(
+ 		xfs_iext_insert_node(ifp, xfs_iext_leaf_key(new, 0), new, 2);
+ }
+ 
+-void
+-xfs_iext_insert(
+-	struct xfs_inode	*ip,
+-	struct xfs_iext_cursor	*cur,
+-	xfs_extnum_t		nr_extents,
+-	struct xfs_bmbt_irec	*new,
+-	int			state)
+-{
+-	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
+-	int			i;
+-
+-	ASSERT(nr_extents > 0);
+-
+-	for (i = nr_extents - 1; i >= 0; i--) {
+-		__xfs_iext_insert(ifp, cur, new + i);
+-		trace_xfs_iext_insert(ip, cur, state, _RET_IP_);
+-	}
+-}
+-
+ static struct xfs_iext_node *
+ xfs_iext_rebalance_node(
+ 	struct xfs_iext_node	*parent,
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 2711ff6ab2b3..dca5dcec2cd4 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -362,7 +362,7 @@ xfs_iformat_extents(
+ 			}
+ 
+ 			xfs_bmbt_disk_get_all(dp, &new);
+-			xfs_iext_insert(ip, &ext, 1, &new, state);
++			xfs_iext_insert(ip, &ext, &new, state);
+ 			trace_xfs_read_extent(ip, &ext, state, _THIS_IP_);
+ 			xfs_iext_next(ifp, &ext);
+ 		}
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 015872caaab4..cc73fea4e37e 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -114,7 +114,7 @@ void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int);
+ 
+ xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
+ void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
+-			xfs_extnum_t, struct xfs_bmbt_irec *, int);
++			struct xfs_bmbt_irec *, int);
+ void		xfs_iext_remove(struct xfs_inode *, struct xfs_iext_cursor *,
+ 			int, int);
+ void		xfs_iext_destroy(struct xfs_ifork *);
+-- 
+2.14.2
 
-Need to shorten len as we go around the loop.
-
->  		fiemap->fm_extent_count = EXTENT_BATCH;
->  
->  		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> @@ -300,14 +332,18 @@ fiemap_f(
->  				num_printed = print_verbose(extent, foff_w,
->  							    boff_w, tot_w,
->  							    flg_w, cur_extent,
-> -							    last_logical);
-> +							    last_logical,
-> +							    stop_offset);
->  			} else
->  				num_printed = print_plain(extent, lflag,
->  							  cur_extent,
-> -							  last_logical);
-> +							  last_logical,
-> +							  stop_offset);
->  
->  			cur_extent += num_printed;
->  			last_logical = extent->fe_logical + extent->fe_length;
-> +			if (num_printed == 2)
-> +				covered_length += extent->fe_length;
->  
->  			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
->  				last = 1;
-> @@ -316,6 +352,9 @@ fiemap_f(
->  
->  			if (cur_extent == max_extents)
->  				break;
-> +
-> +			if (range_limit && covered_length >= start_offset + len)
-> +				goto out;
->  		}
->  	}
->  
-> @@ -331,9 +370,11 @@ fiemap_f(
->  		return 0;
->  	}
->  
-> -	if (cur_extent && last_logical < st.st_size)
-> +	if (cur_extent && last_logical < st.st_size &&
-> +	    (!range_limit || covered_length < start_offset + len)) {
-
-covered_length < stop_offset?
-
->  		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
->  			   BTOBBT(last_logical), BTOBBT(st.st_size));
-> +	}
->  
->  out:
->  	free(fiemap);
-> @@ -348,7 +389,7 @@ fiemap_init(void)
->  	fiemap_cmd.argmin = 0;
->  	fiemap_cmd.argmax = -1;
->  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> -	fiemap_cmd.args = _("[-alv] [-n nx]");
-> +	fiemap_cmd.args = _("[-alv] [-n nx] [start offset [len]]");
-
-[offset [len]]
-
-Otherwise it sounds like fiemap takes three parameters.
-
->  	fiemap_cmd.oneline = _("print block mapping for a file");
->  	fiemap_cmd.help = fiemap_help;
->  
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 0fd9b951199c..27f1ae163913 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
->  .BR xfs_bmap (8)
->  manual page for complete documentation.
->  .TP
-> -.BI "fiemap [ \-alv ] [ \-n " nx " ]"
-> +.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
->  Prints the block mapping for the current open file using the fiemap
->  ioctl.  Options behave as described in the
->  .BR xfs_bmap (8)
-> -manual page.
-> +manual page. Optionally, this command also supports passing the start offset
-> +from where to begin the fiemap and the length of that region.
-
-New sentences should start on their own line, per linux-manpages custom.
-
-(Or maybe not; we violate that plenty in xfsprogs land...)
-
-Also, fstests testcases needed.
-
---D
-
->  .TP
->  .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
->  Prints the mapping of disk blocks used by the filesystem hosting the current
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
