@@ -1,66 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41561 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752079AbdJ0SWK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 14:22:10 -0400
-Date: Fri, 27 Oct 2017 11:22:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 9/6] generic/459: fix test running errors
-Message-ID: <20171027182205.GQ5483@magnolia>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
- <20171027004446.GG5486@magnolia>
- <20171027044201.GU3235@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171027044201.GU3235@eguan.usersys.redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:45228 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753051AbdJaOW6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:58 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRR-0007cK-Oz
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:58 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/18] xfs: treat idx as a cursor in xfs_bmap_collapse_extents
+Date: Tue, 31 Oct 2017 16:22:20 +0200
+Message-Id: <20171031142230.11755-9-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Oct 27, 2017 at 12:42:01PM +0800, Eryu Guan wrote:
-> On Thu, Oct 26, 2017 at 05:44:46PM -0700, Darrick J. Wong wrote:
-> > If the DISCARD of the thin device somehow fails with this message:
-> > 
-> > device-mapper: thin: Data device (dm-1) discard unsupported: Disabling discard passdown.
-> > 
-> > Then we can end up with arbitrary gunk in the thin device.  This causes
-> > mkfs to fail because it's afraid to format the device.  Don't be afraid,
-> > just zap it.  FWIW mkfs.xfs thinks that the thinp device has an xfs
-> > external log because sometimes the thinp device just happen to be backed
-> > by the log of the previous test's scratch fs.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/generic/459 |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/tests/generic/459 b/tests/generic/459
-> > index 7c10c2a..3dd3681 100755
-> > --- a/tests/generic/459
-> > +++ b/tests/generic/459
-> > @@ -92,7 +92,7 @@ $LVM_PROG lvcreate  --virtualsize $virtsize \
-> >  		    -T $vgname/$poolname \
-> >  		    -n $lvname >>$seqres.full 2>&1
-> >  
-> > -_mkfs_dev /dev/mapper/$vgname-$lvname >>$seqres.full 2>&1
-> > +_mkfs_dev -f /dev/mapper/$vgname-$lvname >>$seqres.full 2>&1
-> 
-> I think we should fix it in _mkfs_dev, add a new switch entry for xfs.
+Stop poking before and after the index and just increment or decrement
+it while doing our operations on it to prepare for a new extent list
+implementation.
 
-Will do.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5ba0c0368629..14428d72cf33 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5516,7 +5516,7 @@ xfs_bmse_merge(
+ 	struct xfs_inode		*ip,
+ 	int				whichfork,
+ 	xfs_fileoff_t			shift,		/* shift fsb */
+-	int				current_ext,	/* idx of gotp */
++	int				*current_ext,	/* idx of gotp */
+ 	struct xfs_bmbt_irec		*got,		/* extent to shift */
+ 	struct xfs_bmbt_irec		*left,		/* preceding extent */
+ 	struct xfs_btree_cur		*cur,
+@@ -5571,9 +5571,10 @@ xfs_bmse_merge(
+ 		return error;
+ 
+ done:
++	xfs_iext_remove(ip, *current_ext, 1, 0);
++	--*current_ext;
+ 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork),
+-			current_ext - 1, &new);
+-	xfs_iext_remove(ip, current_ext, 1, 0);
++			*current_ext, &new);
+ 
+ 	/* update reverse mapping. rmap functions merge the rmaps for us */
+ 	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, got);
+@@ -5687,16 +5688,10 @@ xfs_bmap_collapse_extents(
+ 
+ 		if (xfs_bmse_can_merge(&prev, &got, offset_shift_fsb)) {
+ 			error = xfs_bmse_merge(ip, whichfork, offset_shift_fsb,
+-					current_ext, &got, &prev, cur,
++					&current_ext, &got, &prev, cur,
+ 					&logflags, dfops);
+ 			if (error)
+ 				goto del_cursor;
+-
+-			/* update got after merge */
+-			if (!xfs_iext_get_extent(ifp, current_ext, &got)) {
+-				*done = true;
+-				goto del_cursor;
+-			}
+ 			goto done;
+ 		}
+ 	} else {
+@@ -5711,12 +5706,12 @@ xfs_bmap_collapse_extents(
+ 	if (error)
+ 		goto del_cursor;
+ 
++done:
+ 	if (!xfs_iext_get_extent(ifp, ++current_ext, &got)) {
+ 		 *done = true;
+ 		 goto del_cursor;
+ 	}
+ 
+-done:
+ 	*next_fsb = got.br_startoff;
+ del_cursor:
+ 	if (cur)
+-- 
+2.14.2
 
-> Thanks,
-> Eryu
-> 
-> >  
-> >  
-> >  # Running the test over the original volume doesn't reproduce the problem
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
