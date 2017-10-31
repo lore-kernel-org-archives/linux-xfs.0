@@ -1,241 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49723 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753368AbdJaOMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 10:12:32 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH v2 3/4] generic: Adjust generic test ouputs for new fiemap implementation
-Date: Tue, 31 Oct 2017 16:11:35 +0200
-Message-Id: <1509459096-7585-3-git-send-email-nborisov@suse.com>
-In-Reply-To: <1509459096-7585-1-git-send-email-nborisov@suse.com>
-References: <1509459011-7398-1-git-send-email-nborisov@suse.com>
- <1509459096-7585-1-git-send-email-nborisov@suse.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:7173 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753612AbdJaXEq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 19:04:46 -0400
+Date: Wed, 1 Nov 2017 10:03:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: flush the range before zero partial block range on
+ truncate down
+Message-ID: <20171031230301.GG5858@dastard>
+References: <20171027125328.25001-1-eguan@redhat.com>
+ <20171028060529.GA29505@infradead.org>
+ <20171031100958.GL17339@eguan.usersys.redhat.com>
+ <20171031171131.GE4911@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171031171131.GE4911@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, darrick.wong@oracle.com, eguan@redhat.com, Nikolay Borisov <nborisov@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
- tests/generic/012.out | 1 +
- tests/generic/016.out | 1 +
- tests/generic/021.out | 2 ++
- tests/generic/022.out | 2 ++
- tests/generic/058.out | 1 +
- tests/generic/060.out | 1 +
- tests/generic/061.out | 1 +
- tests/generic/063.out | 1 +
- tests/generic/255.out | 6 ++++++
- tests/generic/316.out | 6 ++++++
- 10 files changed, 22 insertions(+)
+On Tue, Oct 31, 2017 at 10:11:31AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 31, 2017 at 06:09:58PM +0800, Eryu Guan wrote:
+> > On Fri, Oct 27, 2017 at 11:05:29PM -0700, Christoph Hellwig wrote:
+> > > On Fri, Oct 27, 2017 at 08:53:28PM +0800, Eryu Guan wrote:
+> > > > But it's possible that a buffer write overwrites the unwritten
+> > > > extent, which won't be converted to a normal extent until I/O
+> > > > completion, and iomap_truncate_page() skips zeroing wrongly because
+> > > > of the not-converted unwritten extent. This would cause a subsequent
+> > > > mmap read sees non-zeros beyond EOF.
+> > > 
+> > > I suspect the right fix is to look at the in-core state im the iomap
+> > > truncate helpers instead of doing a duplicate flush.
+> > 
+> > I may (and very likely) miss something, but my understanding is that
+> > iomap_truncate_page() already looks at the in-core extent state provided
+> > by xfs_file_iomap_begin()
+> > 
+> > xfs_setattr_size()
+> >  iomap_truncate_page()
+> >   iomap_zero_range()
+> >    iomap_apply()
+> >     xfs_file_iomap_begin()	# finds extent according to the range
+> >     iomap_zero_range_actor() 	# sees iomap->type == IOMAP_UNWRITTEN
+> > 
+> > And this in-core extent state won't be converted to XFS_EXT_NORM until
+> > writeback & I/O completion, so I think a flush is required.
+> 
+> If we get to iomap_zero_range_actor & type == UNWRITTEN, can we ask the
+> pagecache if there's a page backing the (unwritten) range and if so zero
+> the appropriate parts of that page?
 
-diff --git a/tests/generic/012.out b/tests/generic/012.out
-index ffbf8a3..8045471 100644
---- a/tests/generic/012.out
-+++ b/tests/generic/012.out
-@@ -1,5 +1,6 @@
- QA output created by 012
- 	1. into a hole
-+0: [0..95]: hole
- f4f35d60b3cc18aaa6d8d92f0cd3708a
- 	2. into allocated space
- 0: [0..95]: extent
-diff --git a/tests/generic/016.out b/tests/generic/016.out
-index c45a44a..1371ce7 100644
---- a/tests/generic/016.out
-+++ b/tests/generic/016.out
-@@ -1,5 +1,6 @@
- QA output created by 016
- 	1. into a hole
-+0: [0..95]: hole
- f4f35d60b3cc18aaa6d8d92f0cd3708a
- 	2. into allocated space
- 0: [0..95]: extent
-diff --git a/tests/generic/021.out b/tests/generic/021.out
-index 1137741..791b78a 100644
---- a/tests/generic/021.out
-+++ b/tests/generic/021.out
-@@ -1,5 +1,6 @@
- QA output created by 021
- 	1. into a hole
-+0: [0..95]: hole
- f4f35d60b3cc18aaa6d8d92f0cd3708a
- 	2. into allocated space
- 0: [0..95]: extent
-@@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
- 1: [64..95]: hole
- d8f51c20223dbce5c7c90db87bc221b0
- 	10. hole -> data -> hole
-+0: [0..63]: hole
- bb7df04e1b0a2570657527a7e108ae23
- 	11. data -> hole -> data
- 0: [0..63]: extent
-diff --git a/tests/generic/022.out b/tests/generic/022.out
-index fbffa59..6dbc192 100644
---- a/tests/generic/022.out
-+++ b/tests/generic/022.out
-@@ -1,5 +1,6 @@
- QA output created by 022
- 	1. into a hole
-+0: [0..95]: hole
- f4f35d60b3cc18aaa6d8d92f0cd3708a
- 	2. into allocated space
- 0: [0..95]: extent
-@@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
- 1: [64..95]: hole
- d8f51c20223dbce5c7c90db87bc221b0
- 	10. hole -> data -> hole
-+0: [0..63]: hole
- bb7df04e1b0a2570657527a7e108ae23
- 	11. data -> hole -> data
- 0: [0..63]: extent
-diff --git a/tests/generic/058.out b/tests/generic/058.out
-index b15308d..3bbc2a4 100644
---- a/tests/generic/058.out
-+++ b/tests/generic/058.out
-@@ -1,5 +1,6 @@
- QA output created by 058
- 	1. into a hole
-+0: [0..55]: hole
- cf845a781c107ec1346e849c9dd1b7e8
- 	2. into allocated space
- 0: [0..7]: extent
-diff --git a/tests/generic/060.out b/tests/generic/060.out
-index 909b578..210af74 100644
---- a/tests/generic/060.out
-+++ b/tests/generic/060.out
-@@ -1,5 +1,6 @@
- QA output created by 060
- 	1. into a hole
-+0: [0..55]: hole
- cf845a781c107ec1346e849c9dd1b7e8
- 	2. into allocated space
- 0: [0..7]: extent
-diff --git a/tests/generic/061.out b/tests/generic/061.out
-index 78d6c6d..6d95680 100644
---- a/tests/generic/061.out
-+++ b/tests/generic/061.out
-@@ -1,5 +1,6 @@
- QA output created by 061
- 	1. into a hole
-+0: [0..55]: hole
- cf845a781c107ec1346e849c9dd1b7e8
- 	2. into allocated space
- 0: [0..7]: extent
-diff --git a/tests/generic/063.out b/tests/generic/063.out
-index d828ff6..10db43f 100644
---- a/tests/generic/063.out
-+++ b/tests/generic/063.out
-@@ -1,5 +1,6 @@
- QA output created by 063
- 	1. into a hole
-+0: [0..55]: hole
- cf845a781c107ec1346e849c9dd1b7e8
- 	2. into allocated space
- 0: [0..7]: extent
-diff --git a/tests/generic/255.out b/tests/generic/255.out
-index 217ef3e..441fde8 100644
---- a/tests/generic/255.out
-+++ b/tests/generic/255.out
-@@ -1,5 +1,6 @@
- QA output created by 255
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-@@ -42,6 +43,7 @@ daa100df6e6711906b61c9ab5aa16032
- 3: [32..39]: hole
- cc63069677939f69a6e8f68cae6a6dac
- 	10. hole -> data -> hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	11. data -> hole -> data
- 0: [0..7]: extent
-@@ -79,6 +81,7 @@ eecb7aa303d121835de05028751d301c
- 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
- *
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-@@ -121,6 +124,7 @@ daa100df6e6711906b61c9ab5aa16032
- 3: [32..39]: hole
- cc63069677939f69a6e8f68cae6a6dac
- 	10. hole -> data -> hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	11. data -> hole -> data
- 0: [0..7]: extent
-@@ -158,6 +162,7 @@ eecb7aa303d121835de05028751d301c
- 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
- *
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-@@ -240,6 +245,7 @@ eecb7aa303d121835de05028751d301c
- 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
- *
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-diff --git a/tests/generic/316.out b/tests/generic/316.out
-index 383f0d1..5506198 100644
---- a/tests/generic/316.out
-+++ b/tests/generic/316.out
-@@ -1,5 +1,6 @@
- QA output created by 316
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-@@ -16,6 +17,7 @@ cc63069677939f69a6e8f68cae6a6dac
- 1: [8..39]: hole
- 1b3779878366498b28c702ef88c4a773
- 	10. hole -> data -> hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	11. data -> hole -> data
- 0: [0..7]: extent
-@@ -43,6 +45,7 @@ eecb7aa303d121835de05028751d301c
- 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
- *
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-@@ -59,6 +62,7 @@ cc63069677939f69a6e8f68cae6a6dac
- 1: [8..39]: hole
- 1b3779878366498b28c702ef88c4a773
- 	10. hole -> data -> hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	11. data -> hole -> data
- 0: [0..7]: extent
-@@ -86,6 +90,7 @@ eecb7aa303d121835de05028751d301c
- 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
- *
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
-@@ -133,6 +138,7 @@ eecb7aa303d121835de05028751d301c
- 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
- *
- 	1. into a hole
-+0: [0..39]: hole
- daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: extent
+The partial page zeroing in the page cache should be taken care of
+by
+
+truncate_setsize
+  truncate_pagecache()
+    truncate_inode_pages()
+      truncate_inode_pages_range()
+
+that follows up the on-disk EOF zeroing. See the partial page
+zeroing in that function....
+
+Cheers,
+
+Dave.
+
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
