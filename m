@@ -1,48 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49733 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752768AbdJ0UZ4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 16:25:56 -0400
-Date: Fri, 27 Oct 2017 13:25:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 10/6] common/xfs: remove inode-paths cruft
-Message-ID: <20171027202550.GL5486@magnolia>
-References: <150899709935.18389.17266737014565285073.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150899709935.18389.17266737014565285073.stgit@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:59117 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753051AbdJaOXB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:23:01 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRU-0007dC-Md
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:23:01 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/18] xfs: allow unaligned extent records in xfs_bmbt_disk_set_all
+Date: Tue, 31 Oct 2017 16:22:21 +0200
+Message-Id: <20171031142230.11755-10-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Remove the inode-paths check from _check_xfs_test_fs because we don't
-support inode paths, xfsprogs doesn't have a xfs_{check,repair}_ipaths
-tool, and it's broken anyway because we ignore _check_xfs_filesystem
-(which tells whether or not the filesystem is even still mounted).
+To make life a little simpler make xfs_bmbt_set_all unaligned access
+aware so that we can use it directly on the destination buffer.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- common/xfs |    7 -------
- 1 file changed, 7 deletions(-)
+ fs/xfs/libxfs/xfs_bmap_btree.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/common/xfs b/common/xfs
-index 5643adf..79efb78 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -471,13 +471,6 @@ _check_xfs_test_fs()
- 		TEST_RT="$TEST_RTDEV"
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 086e6fc8e4fc..89260972a0f6 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -199,14 +199,14 @@ xfs_bmbt_disk_set_all(
+ 	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
+ 	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
  
- 	_check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT
--
--	# check for ipath consistency
--	if $XFS_GROWFS_PROG -n $TEST_DIR | grep -q 'inode-paths=1'; then
--		# errors go to stderr
--		xfs_check_ipaths $TEST_DIR >/dev/null
--		xfs_repair_ipaths -n $TEST_DIR >/dev/null
--	fi
+-	r->l0 = cpu_to_be64(
++	put_unaligned_be64(
+ 		((xfs_bmbt_rec_base_t)extent_flag << 63) |
+ 		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
+-		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43));
+-	r->l1 = cpu_to_be64(
++		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43), &r->l0);
++	put_unaligned_be64(
+ 		((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
+ 		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
+-		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
++		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)), &r->l1);
  }
  
- _require_xfs_test_rmapbt()
+ /*
+-- 
+2.14.2
+
