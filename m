@@ -1,125 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6397 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754644AbdJIWhZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2017 18:37:25 -0400
-Date: Tue, 10 Oct 2017 09:37:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
-Message-ID: <20171009223714.GS3666@dastard>
-References: <20170929130035.24760-1-rgoldwyn@suse.de>
- <20170929130035.24760-2-rgoldwyn@suse.de>
- <20171009171953.GR7122@magnolia>
- <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4e15ed18-b30c-1fb1-56ee-9bf5b0c6a73f@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:48986 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752341AbdJaOKR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 10:10:17 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH v2 2/2] fiemap: Implement ranged query
+Date: Tue, 31 Oct 2017 16:10:11 +0200
+Message-Id: <1509459011-7398-2-git-send-email-nborisov@suse.com>
+In-Reply-To: <1509459011-7398-1-git-send-email-nborisov@suse.com>
+References: <1509107832-22286-1-git-send-email-nborisov@suse.com>
+ <1509459011-7398-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, darrick.wong@oracle.com, Nikolay Borisov <nborisov@suse.com>
 
-On Mon, Oct 09, 2017 at 04:11:17PM -0500, Goldwyn Rodrigues wrote:
-> 
-> 
-> On 10/09/2017 12:19 PM, Darrick J. Wong wrote:
-> > On Fri, Sep 29, 2017 at 08:00:34AM -0500, Goldwyn Rodrigues wrote:
-> >> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> >>
-> >> This allows to make pwritev2() calls with RWF_NOWAIT,
-> >> which would fail in case the call blocks.
-> >>
-> >> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> >> ---
-> >>  io/pwrite.c       | 8 +++++++-
-> >>  man/man8/xfs_io.8 | 6 ++++++
-> >>  2 files changed, 13 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/io/pwrite.c b/io/pwrite.c
-> >> index e7d411bb..2b85a528 100644
-> >> --- a/io/pwrite.c
-> >> +++ b/io/pwrite.c
-> >> @@ -52,6 +52,9 @@ pwrite_help(void)
-> >>  "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
-> >>  #ifdef HAVE_PWRITEV
-> >>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
-> >> +#ifdef HAVE_PWRITEV2
-> >> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
-> >> +#endif
-> > 
-> > Separate these two? i.e.
-> > 
-> > #ifdef HAVE_PWRITEV
-> > " -V N..."
-> > #endif
-> > #ifdef HAVE_PWRITEV2
-> > " -N ..."
-> > #endif
-> > 
-> > They're tested separately in configure, so the ifdefs needn't be nested.
-> > 
-> >>  #endif
-> >>  "\n"));
-> >>  }
-> >> @@ -276,7 +279,7 @@ pwrite_f(
-> >>  	init_cvtnum(&fsblocksize, &fssectsize);
-> >>  	bsize = fsblocksize;
-> >>  
-> >> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
-> >> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
-> >>  		switch (c) {
-> >>  		case 'b':
-> >>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-> >> @@ -305,6 +308,9 @@ pwrite_f(
-> >>  		case 'i':
-> >>  			infile = optarg;
-> >>  			break;
-> >> +		case 'N':
-> >> +			pwritev2_flags |= RWF_NOWAIT;
-> >> +			break;
-> > 
-> > Needs #ifdef HAVE_PWRITEV2.
-> > 
-> > If you feel the need to be extra cautious, you could also put:
-> > 
-> > #ifndef HAVE_PWRITEV2
-> > 	assert(pwritev2_flags == 0);
-> > #endif
-> > 
-> > ...just after the getopt parsing to make sure that we never silently
-> > drop RWF_* flags due to code bugs.
-> > 
-> 
-> Instead I am planning to put an #else to #ifdef in the case 'N' to make
-> sure that people who do not have pwritev2() get the proper message
-> instead of the command failing without reason.
-> 
-> +               case 'N':
-> +#ifdef HAVE_PWRITEV2
-> +                       pwritev2_flags |= RWF_NOWAIT;
-> +                       break;
-> +#else
-> +                       printf(_("-N: Kernel does not support
-> pwritev2()\n"));
-> +                       return 0;
-> +#endif
+Currently the fiemap implementation of xfs_io doesn't support making ranged
+queries. This patch implements two optional arguments which take the starting
+offset and the length of the region to be queried. This also requires changing
+of the final hole range is calculated. Namely, it's now being done as
+[last_logical, logical addres of next extent] rather than being statically
+determined by [last_logical, filesize].
 
-Why add support for a command only to say "command not supported"?
-The error message is also incorrect - the build environment didn't
-support pwritev2, not the kernel the xfs_io binary is currently
-running on.
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c       | 72 +++++++++++++++++++++++++++++++++++++++++++++++--------
+ man/man8/xfs_io.8 |  5 ++--
+ 2 files changed, 65 insertions(+), 12 deletions(-)
 
-As it is, I really don't like this sort of ifdef pattern because it
-means over time we'll end up with an ifdef mess in the option
-parsing as more flags are added. Just make the default case say
-"command -%c not supported", and that removes the need for any of
-these else cases.
-
-Cheers,
-
-Dave.
+diff --git a/io/fiemap.c b/io/fiemap.c
+index 08391f69d9bd..668f8fe4e732 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -27,6 +27,9 @@
+ 
+ static cmdinfo_t fiemap_cmd;
+ static int max_extents = -1;
++static __u64 covered_length = 0;
++static __u64 len = -1LL;
++static bool range_limit = false;
+ 
+ static void
+ fiemap_help(void)
+@@ -79,7 +82,7 @@ print_hole(
+ 		       boff_w, _("hole"), tot_w, lstart - llast);
+ 	   }
+ 
+-
++	   covered_length += BBTOB(lstart - llast);
+ }
+ 
+ static int
+@@ -90,7 +93,8 @@ print_verbose(
+ 	int			tot_w,
+ 	int			flg_w,
+ 	int			cur_extent,
+-	__u64			last_logical)
++	__u64			last_logical,
++	__u64			limit)
+ {
+ 	__u64			lstart;
+ 	__u64			llast;
+@@ -122,7 +126,7 @@ print_verbose(
+ 		cur_extent++;
+ 	}
+ 
+-	if (cur_extent == max_extents)
++	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+ 		return 1;
+ 
+ 	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+@@ -140,7 +144,8 @@ print_plain(
+ 	struct fiemap_extent	*extent,
+ 	int			lflag,
+ 	int			cur_extent,
+-	__u64			last_logical)
++	__u64			last_logical,
++	__u64			limit)
+ {
+ 	__u64			lstart;
+ 	__u64			llast;
+@@ -157,7 +162,7 @@ print_plain(
+ 		cur_extent++;
+ 	}
+ 
+-	if (cur_extent == max_extents)
++	if (cur_extent == max_extents || (range_limit && covered_length >= limit))
+ 		return 1;
+ 
+ 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+@@ -256,8 +261,11 @@ fiemap_f(
+ 	int		tot_w = 5;	/* 5 since its just one number */
+ 	int		flg_w = 5;
+ 	__u64		last_logical = 0;
++	size_t		fsblocksize, fssectsize;
+ 	struct stat	st;
+ 
++	init_cvtnum(&fsblocksize, &fssectsize);
++
+ 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+@@ -277,6 +285,26 @@ fiemap_f(
+ 		}
+ 	}
+ 
++	if (optind < argc) {
++		off64_t start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start_offset < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++		optind++;
++	}
++
++	if (optind < argc) {
++		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (length < 0) {
++			printf("non-numeric len argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		len = length;
++		range_limit = true;
++	}
++
+ 	map_size = sizeof(struct fiemap) +
+ 		(EXTENT_BATCH * sizeof(struct fiemap_extent));
+ 	fiemap = malloc(map_size);
+@@ -317,14 +345,18 @@ fiemap_f(
+ 				num_printed = print_verbose(extent, foff_w,
+ 							    boff_w, tot_w,
+ 							    flg_w, cur_extent,
+-							    last_logical);
++							    last_logical,
++							    len);
+ 			} else
+ 				num_printed = print_plain(extent, lflag,
+ 							  cur_extent,
+-							  last_logical);
++							  last_logical,
++							  len);
+ 
+ 			cur_extent += num_printed;
+ 			last_logical = extent->fe_logical + extent->fe_length;
++			if (num_printed == 2)
++				covered_length += extent->fe_length;
+ 
+ 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+ 				last = 1;
+@@ -333,6 +365,9 @@ fiemap_f(
+ 
+ 			if (cur_extent == max_extents)
+ 				break;
++
++			if (range_limit && covered_length >= len)
++				goto out;
+ 		}
+ 	}
+ 
+@@ -348,9 +383,26 @@ fiemap_f(
+ 		return 0;
+ 	}
+ 
+-	if (cur_extent && last_logical < st.st_size)
++	if (last_logical < st.st_size &&
++	    (!range_limit || covered_length < len)) {
++		int end;
++
++		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
++			       st.st_size);
++		if (ret < 0) {
++			exitcode = 1;
++			goto out;
++		}
++
++		if (!fiemap->fm_mapped_extents)
++			end = BTOBBT(st.st_size);
++		else
++			end = BTOBBT(fiemap->fm_extents[0].fe_logical);
++
++
+ 		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
+-			   BTOBBT(last_logical), BTOBBT(st.st_size));
++			   BTOBBT(last_logical), end);
++	}
+ 
+ out:
+ 	free(fiemap);
+@@ -365,7 +417,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx]");
++	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 0fd9b951199c..27f1ae163913 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
+ .BR xfs_bmap (8)
+ manual page for complete documentation.
+ .TP
+-.BI "fiemap [ \-alv ] [ \-n " nx " ]"
++.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+ Prints the block mapping for the current open file using the fiemap
+ ioctl.  Options behave as described in the
+ .BR xfs_bmap (8)
+-manual page.
++manual page. Optionally, this command also supports passing the start offset
++from where to begin the fiemap and the length of that region.
+ .TP
+ .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+ Prints the mapping of disk blocks used by the filesystem hosting the current
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
