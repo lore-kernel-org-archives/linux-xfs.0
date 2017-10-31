@@ -1,63 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:19389 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932449AbdJaXXN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 19:23:13 -0400
-Date: Wed, 1 Nov 2017 10:22:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: move error injection tags into their own file
-Message-ID: <20171031232233.GI5858@dastard>
-References: <20171031193128.GG4911@magnolia>
+Received: from mga14.intel.com ([192.55.52.115]:42896 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932449AbdJaX2c (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 19:28:32 -0400
+Subject: [PATCH 06/15] dax: stop using VM_HUGEPAGE for dax
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 31 Oct 2017 16:22:07 -0700
+Message-ID: <150949212762.24061.2965035436338634199.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171031193128.GG4911@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: linux-nvdimm@lists.01.org
+Cc: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, hch@lst.de
 
-On Tue, Oct 31, 2017 at 12:31:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move the error injection tag names into a libxfs header so that we can
-> share it between kernel and userspace.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This flag is deprecated in favor of the vma_is_dax() check in
+transparent_hugepage_enabled() added in commit baabda261424 "mm: always
+enable thp for dax mappings"
 
-Simple enough, but there's an admin problem with this patch.
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/dax/device.c |    1 -
+ fs/ext4/file.c       |    1 -
+ fs/xfs/xfs_file.c    |    2 --
+ 3 files changed, 4 deletions(-)
 
-> new file mode 100644
-> index 0000000..0cc1c05
-> --- /dev/null
-> +++ b/fs/xfs/libxfs/xfs_errortag.h
-> @@ -0,0 +1,106 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+diff --git a/drivers/dax/device.c b/drivers/dax/device.c
+index ed79d006026e..74a35eb5e6d3 100644
+--- a/drivers/dax/device.c
++++ b/drivers/dax/device.c
+@@ -450,7 +450,6 @@ static int dax_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		return rc;
+ 
+ 	vma->vm_ops = &dax_vm_ops;
+-	vma->vm_flags |= VM_HUGEPAGE;
+ 	return 0;
+ }
+ 
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 0cc9d205bd96..a54e1b4c49f9 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -352,7 +352,6 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 	file_accessed(file);
+ 	if (IS_DAX(file_inode(file))) {
+ 		vma->vm_ops = &ext4_dax_vm_ops;
+-		vma->vm_flags |= VM_HUGEPAGE;
+ 	} else {
+ 		vma->vm_ops = &ext4_file_vm_ops;
+ 	}
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c419c6fdb769..c6780743f8ec 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1133,8 +1133,6 @@ xfs_file_mmap(
+ {
+ 	file_accessed(filp);
+ 	vma->vm_ops = &xfs_file_vm_ops;
+-	if (IS_DAX(file_inode(filp)))
+-		vma->vm_flags |= VM_HUGEPAGE;
+ 	return 0;
+ }
+ 
 
-This isn't actually true. You're moving a bunch of code from
-fs/xfs/xfs_error.h that is under:
-
- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
- * All Rights Reserved.
-
-Moving code into a new file does not reassign the copyright on the
-code to a new owner. Hence I think this is the appropriate way to
-record the copyrights on this new file:
-
- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
- * Copyright (C) 2017 Oracle.
- * All Rights Reserved.
-
-And there's no real need for author tags as we've got that
-information in the git repo....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
