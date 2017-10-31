@@ -1,51 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr001msb.fastweb.it ([85.18.95.85]:38451 "EHLO
-        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbdJaJge (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 05:36:34 -0400
-Subject: Re: XFS and reflink status
-References: <196c0ee7f2899dd52c3ea6ca979a8050@assyoma.it>
- <9865ce233e5adb537347621b6f3bf1e4@assyoma.it>
- <20171030184045.GC4911@magnolia>
-From: Gionatan Danti <g.danti@assyoma.it>
-Message-ID: <2e64d152-dffc-08a9-7fd8-4c61ec1d050e@assyoma.it>
-Date: Tue, 31 Oct 2017 10:36:28 +0100
+Received: from userp1040.oracle.com ([156.151.31.81]:28699 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753868AbdJaRMQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 13:12:16 -0400
+Date: Tue, 31 Oct 2017 10:11:31 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: flush the range before zero partial block range on
+ truncate down
+Message-ID: <20171031171131.GE4911@magnolia>
+References: <20171027125328.25001-1-eguan@redhat.com>
+ <20171028060529.GA29505@infradead.org>
+ <20171031100958.GL17339@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20171030184045.GC4911@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171031100958.GL17339@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Gionatan Danti <g.danti@assyoma.it>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On 30/10/2017 19:40, Darrick J. Wong wrote:
-> On Mon, Oct 30, 2017 at 07:18:50PM +0100, Gionatan Danti wrote:
->> Il 22-10-2017 21:13 Gionatan Danti ha scritto:
->>> Hi all,
->>> I would like to know the current XFS reflink status, especially if it
->>> still an experimental feature or not.
->>>
->>> In one of the latest discussion I found [1], reflink is still marked
->>> as experimental/not stable. Any changes on that?
+On Tue, Oct 31, 2017 at 06:09:58PM +0800, Eryu Guan wrote:
+> On Fri, Oct 27, 2017 at 11:05:29PM -0700, Christoph Hellwig wrote:
+> > On Fri, Oct 27, 2017 at 08:53:28PM +0800, Eryu Guan wrote:
+> > > But it's possible that a buffer write overwrites the unwritten
+> > > extent, which won't be converted to a normal extent until I/O
+> > > completion, and iomap_truncate_page() skips zeroing wrongly because
+> > > of the not-converted unwritten extent. This would cause a subsequent
+> > > mmap read sees non-zeros beyond EOF.
+> > 
+> > I suspect the right fix is to look at the in-core state im the iomap
+> > truncate helpers instead of doing a duplicate flush.
 > 
-> No.
+> I may (and very likely) miss something, but my understanding is that
+> iomap_truncate_page() already looks at the in-core extent state provided
+> by xfs_file_iomap_begin()
 > 
->>> If not, do you have
->>> any ETA on declaring it stable?
+> xfs_setattr_size()
+>  iomap_truncate_page()
+>   iomap_zero_range()
+>    iomap_apply()
+>     xfs_file_iomap_begin()	# finds extent according to the range
+>     iomap_zero_range_actor() 	# sees iomap->type == IOMAP_UNWRITTEN
 > 
-> When it's ready.
-> 
-> --D
-> 
-Fair enough ;)
-Thanks for reporting.
+> And this in-core extent state won't be converted to XFS_EXT_NORM until
+> writeback & I/O completion, so I think a flush is required.
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+If we get to iomap_zero_range_actor & type == UNWRITTEN, can we ask the
+pagecache if there's a page backing the (unwritten) range and if so zero
+the appropriate parts of that page?
+
+--D
+
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
