@@ -1,120 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45088 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751447AbdJ0QOk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2017 12:14:40 -0400
-Date: Fri, 27 Oct 2017 09:14:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/10] misc: fix ubsan warnings
-Message-ID: <20171027161433.GH5483@magnolia>
-References: <150905608689.28563.9670731739870415773.stgit@magnolia>
- <150905615569.28563.17233201567221670601.stgit@magnolia>
- <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <046b0083-1065-c5cf-28ed-765e316383c9@sandeen.net>
+Received: from bombadil.infradead.org ([65.50.211.133]:58211 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751620AbdJaOWt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 10:22:49 -0400
+Received: from bzq-164-168-31-210.red.bezeqint.net ([31.168.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1e9XRJ-0007bP-0q
+        for linux-xfs@vger.kernel.org; Tue, 31 Oct 2017 14:22:49 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/18] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_real
+Date: Tue, 31 Oct 2017 16:22:17 +0200
+Message-Id: <20171031142230.11755-6-hch@lst.de>
+In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+References: <20171031142230.11755-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Oct 27, 2017 at 08:48:07AM -0500, Eric Sandeen wrote:
-> On 10/26/17 5:15 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Fix all the things ubsan warned about.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  include/bitops.h   |    8 ++++----
-> >  include/command.h  |    2 +-
-> >  include/xfs_arch.h |    2 +-
-> >  3 files changed, 6 insertions(+), 6 deletions(-)
-> > 
-> > 
-> > diff --git a/include/bitops.h b/include/bitops.h
-> > index 44599a7..53a5aa0 100644
-> > --- a/include/bitops.h
-> > +++ b/include/bitops.h
-> > @@ -13,19 +13,19 @@ static inline int fls(int x)
-> >  	if (!x)
-> >  		return 0;
-> >  	if (!(x & 0xffff0000u)) {
-> > -		x <<= 16;
-> > +		x = (x & 0xFFFFU) << 16;
-> 
-> xfsprogs almost exclusively uses lowercase hex - as it does in the line
-> above your new code.  ;)  I can change it on the way in unless you object.
+Stop poking before and after the index and just increment or decrement
+it while doing our operations on it to prepare for a new extent list
+implementation.
 
-Ok, sounds good to me.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-> >  		r -= 16;
-> >  	}
-> >  	if (!(x & 0xff000000u)) {
-> > -		x <<= 8;
-> > +		x = (x & 0xFFFFFFU) << 8;
-> >  		r -= 8;
-> >  	}
-> >  	if (!(x & 0xf0000000u)) {
-> > -		x <<= 4;
-> > +		x = (x & 0xFFFFFFFU) << 4;
-> >  		r -= 4;
-> >  	}
-> >  	if (!(x & 0xc0000000u)) {
-> > -		x <<= 2;
-> > +		x = (x & 0x3FFFFFFFU) << 2;
-> >  		r -= 2;
-> >  	}
-> >  	if (!(x & 0x80000000u)) {
-> > diff --git a/include/command.h b/include/command.h
-> > index fb3f5c7..59eab96 100644
-> > --- a/include/command.h
-> > +++ b/include/command.h
-> > @@ -25,7 +25,7 @@
-> >   * not iterate the command args function callout and so can be used
-> >   * for functions like "help" that should only ever be run once.
-> >   */
-> > -#define CMD_FLAG_ONESHOT	(1<<31)
-> > +#define CMD_FLAG_ONESHOT	(1U<<31)
-> >  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
-> >  #define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
-> 
-> What complained about this?  cmd flags is a signed int, right, so why is
-> this a problem?  (And why are we only using the top 3 bits?  And let's just do 1U
-> on every flag if it's really needed, but why is it needed?  I must be missing
-> something.)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6358b30b70f9..7bd27c08981f 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2741,11 +2741,11 @@ xfs_bmap_add_extent_hole_real(
+ 		 * left and on the right.
+ 		 * Merge all three into a single extent record.
+ 		 */
+-		--*idx;
+ 		left.br_blockcount += new->br_blockcount + right.br_blockcount;
+-		xfs_iext_update_extent(ip, state, *idx, &left);
+ 
+-		xfs_iext_remove(ip, *idx + 1, 1, state);
++		xfs_iext_remove(ip, *idx, 1, state);
++		--*idx;
++		xfs_iext_update_extent(ip, state, *idx, &left);
+ 
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+@@ -2777,10 +2777,10 @@ xfs_bmap_add_extent_hole_real(
+ 		 * on the left.
+ 		 * Merge the new allocation with the left neighbor.
+ 		 */
+-		--*idx;
+ 		old = left;
+-
+ 		left.br_blockcount += new->br_blockcount;
++
++		--*idx;
+ 		xfs_iext_update_extent(ip, state, *idx, &left);
+ 
+ 		if (cur == NULL) {
+-- 
+2.14.2
 
-I think the complaint is that "1" is signed int, and ubsan doesn't like
-us shifting a value bit into the sign bit.
-
-But yeah, I suppose if we 'U'ize one of them we could do it for all.
-
-(Though really, why not start with the lower bits?)
-
---D
-
-> > diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-> > index 186cadb..34fcd4d 100644
-> > --- a/include/xfs_arch.h
-> > +++ b/include/xfs_arch.h
-> > @@ -253,7 +253,7 @@ static inline uint16_t get_unaligned_be16(void *p)
-> >  static inline uint32_t get_unaligned_be32(void *p)
-> >  {
-> >  	uint8_t *__p = p;
-> > -        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-> > +        return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-> >  }
-> >  
-> >  static inline uint64_t get_unaligned_be64(void *p)
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
