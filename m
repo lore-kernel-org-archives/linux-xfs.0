@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48091 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751961AbdJaVfP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 17:35:15 -0400
-Date: Tue, 31 Oct 2017 14:35:11 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:23170 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751796AbdJaVfk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 17:35:40 -0400
+Date: Tue, 31 Oct 2017 14:35:36 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/18] xfs: treat idx as a cursor in
- xfs_bmap_add_extent_delay_real
-Message-ID: <20171031213511.GL4911@magnolia>
+Subject: Re: [PATCH 04/18] xfs: treat idx as a cursor in
+ xfs_bmap_add_extent_hole_delay
+Message-ID: <20171031213536.GM4911@magnolia>
 References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-4-hch@lst.de>
+ <20171031142230.11755-5-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171031142230.11755-4-hch@lst.de>
+In-Reply-To: <20171031142230.11755-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2017 at 04:22:15PM +0200, Christoph Hellwig wrote:
+On Tue, Oct 31, 2017 at 04:22:16PM +0200, Christoph Hellwig wrote:
 > Stop poking before and after the index and just increment or decrement
 > it while doing our operations on it to prepare for a new extent list
 > implementation.
@@ -31,105 +31,51 @@ Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 27 ++++++++++++++++-----------
->  1 file changed, 16 insertions(+), 11 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 0eda6892b9d0..83f5a503dce1 100644
+> index 83f5a503dce1..6358b30b70f9 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1647,12 +1647,13 @@ xfs_bmap_add_extent_delay_real(
->  		 * Filling in all of a previously delayed allocation extent.
->  		 * The left and right neighbors are both contiguous with new.
+> @@ -2583,7 +2583,6 @@ xfs_bmap_add_extent_hole_delay(
+>  		 * on the left and on the right.
+>  		 * Merge all three into a single extent record.
 >  		 */
-> -		bma->idx--;
->  		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
-> -		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+> -		--*idx;
+>  		temp = left.br_blockcount + new->br_blockcount +
+>  			right.br_blockcount;
 >  
-> -		xfs_iext_remove(bma->ip, bma->idx + 1, 2, state);
-> +		xfs_iext_remove(bma->ip, bma->idx, 2, state);
-> +		bma->idx--;
-> +		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
->  		(*nextents)--;
-> +
->  		if (bma->cur == NULL)
->  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
->  		else {
-> @@ -1680,13 +1681,13 @@ xfs_bmap_add_extent_delay_real(
->  		 * Filling in all of a previously delayed allocation extent.
->  		 * The left neighbor is contiguous, the right is not.
->  		 */
-> -		bma->idx--;
-> -
->  		old = LEFT;
->  		LEFT.br_blockcount += PREV.br_blockcount;
-> +
-> +		xfs_iext_remove(bma->ip, bma->idx, 1, state);
-> +		bma->idx--;
->  		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+> @@ -2594,9 +2593,10 @@ xfs_bmap_add_extent_hole_delay(
+>  					 oldlen);
+>  		left.br_startblock = nullstartblock(newlen);
+>  		left.br_blockcount = temp;
+> -		xfs_iext_update_extent(ip, state, *idx, &left);
 >  
-> -		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
->  		if (bma->cur == NULL)
->  			rval = XFS_ILOG_DEXT;
->  		else {
-> @@ -1708,9 +1709,12 @@ xfs_bmap_add_extent_delay_real(
->  		 */
->  		PREV.br_startblock = new->br_startblock;
->  		PREV.br_blockcount += RIGHT.br_blockcount;
-> +
-> +		bma->idx++;
-> +		xfs_iext_remove(bma->ip, bma->idx, 1, state);
-> +		bma->idx--;
->  		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
->  
-> -		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
->  		if (bma->cur == NULL)
->  			rval = XFS_ILOG_DEXT;
->  		else {
-> @@ -1762,12 +1766,14 @@ xfs_bmap_add_extent_delay_real(
->  				startblockval(PREV.br_startblock));
->  
->  		LEFT.br_blockcount += new->br_blockcount;
-> -		xfs_iext_update_extent(bma->ip, state, bma->idx - 1, &LEFT);
->  
->  		PREV.br_blockcount = temp = PREV.br_blockcount - new->br_blockcount;
->  		PREV.br_startoff += new->br_blockcount;
->  		PREV.br_startblock = nullstartblock(da_new);
-> +
->  		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
-> +		bma->idx--;
-> +		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
->  
->  		if (bma->cur == NULL)
->  			rval = XFS_ILOG_DEXT;
-> @@ -1782,7 +1788,6 @@ xfs_bmap_add_extent_delay_real(
->  				goto done;
->  		}
->  
-> -		bma->idx--;
+> -		xfs_iext_remove(ip, *idx + 1, 1, state);
+> +		xfs_iext_remove(ip, *idx, 1, state);
+> +		--*idx;
+> +		xfs_iext_update_extent(ip, state, *idx, &left);
 >  		break;
 >  
->  	case BMAP_LEFT_FILLING:
-> @@ -1835,7 +1840,6 @@ xfs_bmap_add_extent_delay_real(
->  		RIGHT.br_startoff = new->br_startoff;
->  		RIGHT.br_startblock = new->br_startblock;
->  		RIGHT.br_blockcount += new->br_blockcount;
-> -		xfs_iext_update_extent(bma->ip, state, bma->idx + 1, &RIGHT);
+>  	case BMAP_LEFT_CONTIG:
+> @@ -2605,7 +2605,6 @@ xfs_bmap_add_extent_hole_delay(
+>  		 * on the left.
+>  		 * Merge the new allocation with the left neighbor.
+>  		 */
+> -		--*idx;
+>  		temp = left.br_blockcount + new->br_blockcount;
 >  
->  		if (bma->cur == NULL)
->  			rval = XFS_ILOG_DEXT;
-> @@ -1856,9 +1860,10 @@ xfs_bmap_add_extent_delay_real(
->  
->  		PREV.br_blockcount = temp;
->  		PREV.br_startblock = nullstartblock(da_new);
-> -		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
->  
-> +		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
->  		bma->idx++;
-> +		xfs_iext_update_extent(bma->ip, state, bma->idx, &RIGHT);
+>  		oldlen = startblockval(left.br_startblock) +
+> @@ -2614,6 +2613,8 @@ xfs_bmap_add_extent_hole_delay(
+>  					 oldlen);
+>  		left.br_blockcount = temp;
+>  		left.br_startblock = nullstartblock(newlen);
+> +
+> +		--*idx;
+>  		xfs_iext_update_extent(ip, state, *idx, &left);
 >  		break;
 >  
->  	case BMAP_RIGHT_FILLING:
 > -- 
 > 2.14.2
 > 
