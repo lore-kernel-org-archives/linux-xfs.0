@@ -1,126 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27865 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932449AbdJaWUt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 18:20:49 -0400
-Date: Tue, 31 Oct 2017 15:20:45 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:39323 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753619AbdJaW1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 18:27:30 -0400
+Date: Tue, 31 Oct 2017 15:27:23 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 14/18] xfs: simplify xfs_reflink_convert_cow
-Message-ID: <20171031222045.GW4911@magnolia>
-References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-15-hch@lst.de>
+Subject: Re: [RFC] xfs: fix reporting supported extra file attributes for
+ statx()
+Message-ID: <20171031222723.GX4911@magnolia>
+References: <20171031221305.12908-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171031142230.11755-15-hch@lst.de>
+In-Reply-To: <20171031221305.12908-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 31, 2017 at 04:22:26PM +0200, Christoph Hellwig wrote:
-> Instead of looking up extents to convert and calling xfs_bmapi_write on
-> each of them just let xfs_bmapi_write handle the full range.  To make
-> this robust add a new XFS_BMAPI_CONVERT_ONLY that only converts ranges
-> and never allocates blocks.
+On Tue, Oct 31, 2017 at 03:13:05PM -0700, Luis R. Rodriguez wrote:
+> statx(2) notes that any attribute that is not indicated as supported by
+> stx_attributes_mask has no usable value. Commit 5f955f26f3d42d ("xfs: report
+> crtime and attribute flags to statx") added support for informing userspace
+> of extra file attributes but forgot to list these flags as supported
+> making reporting them rather useless for the pedantic userspace author.
+
+Maybe the vfs should WARN_ON(stat->attributes & ~stat->attributes_mask); to
+prevent us from screwing this up further?
+
+> $ git describe --contains 5f955f26f3d42d04aba65590a32eb70eedb7f37d
+> v4.11-rc6~5^2^2~2
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Fixes: 5f955f26f3d42d ("xfs: report crtime and attribute flags to statx")
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c |  3 ++-
->  fs/xfs/libxfs/xfs_bmap.h |  3 +++
->  fs/xfs/xfs_reflink.c     | 29 +++++++++++------------------
->  3 files changed, 16 insertions(+), 19 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 453dc1ae76ab..e020bd3f8717 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4330,7 +4330,8 @@ xfs_bmapi_write(
->  		 * First, deal with the hole before the allocated space
->  		 * that we found, if any.
->  		 */
-> -		if (need_alloc || wasdelay) {
-> +		if ((need_alloc || wasdelay) &&
-> +		    !(flags & XFS_BMAPI_CONVERT_ONLY)) {
->  			bma.eof = eof;
->  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
->  			bma.wasdel = wasdelay;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 195f335f4615..fba60ed7aea5 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -113,6 +113,9 @@ struct xfs_extent_free_item
->  /* Only convert delalloc space, don't allocate entirely new extents */
->  #define XFS_BMAPI_DELALLOC	0x400
->  
-> +/* Only convert unwritten extents, don't allocate new hotels */
+> Its unclear why David left these out or if it was just a mistake, I checked
+> the original patch thread [0] but it was not clear in the end. David?
+> 
+> Also, I posted a patch to add support to clearing these flags through
+> xfs_repair on symlinks [1] due to the pain this can cause as you have no option
+> but to use xfs_db to fix these otherwise. Since we *didn't* list these extra
+> file attributes as supported, it begs the question if instead we should only
+> set them *and* this mask if !S_ISLNK(inode->i_mode)).
+> 
+> If so, that also begs the question if we should add further sanity check
+> on the xfs setattr to ensure these are never set on symbolic links, despite the
+> fact that FS_IOC_FSSETXATTR ioctl won't be able to set them...
 
-New ... blocks?
-
-> +#define XFS_BMAPI_CONVERT_ONLY	0x800
-
-I wonder if this and XFS_BMAPI_DELALLOC could be solved with a single
-flag that means "don't fill in any holes; only touch pre-existing
-extents" ?
-
-(Though I guess Dave is still working on getting /rid/ of BMAPI_DELALLOC
-so maybe that doesn't matter...)
-
->  #define XFS_BMAPI_FLAGS \
->  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-
-If you do end up adding a new BMAPI flag, this needs updating so the
-tracepoints keep working.
+Sure.
 
 --D
 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 43bec0def51d..99c5d4dbc5d3 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -353,29 +353,22 @@ xfs_reflink_convert_cow(
->  	xfs_off_t		offset,
->  	xfs_off_t		count)
->  {
-> -	struct xfs_bmbt_irec	got;
-> -	struct xfs_defer_ops	dfops;
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> -	struct xfs_iext_cursor	ext;
-> -	bool			found;
-> -	int			error = 0;
-> -
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
-> +	struct xfs_bmbt_irec	imap;
-> +	struct xfs_defer_ops	dfops;
-> +	xfs_fsblock_t		first_block = NULLFSBLOCK;
-> +	int			nimaps = 1, error = 0;
+> A long shot question in terms of semantics is if all the above is rather
+> generic for Linux, is if the VFS should even be checking for immutable or
+> append flags on unlink for symbolic links.
+> 
+> [0] https://patchwork.kernel.org/patch/9607879/
+> [1] https://lkml.kernel.org/r/20171031215156.12544-1-mcgrof@kernel.org
+> 
+>  fs/xfs/xfs_iops.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 17081c77ef86..6b7d293a4aab 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -531,6 +531,10 @@ xfs_vn_getattr(
+>  	if (ip->i_d.di_flags & XFS_DIFLAG_NODUMP)
+>  		stat->attributes |= STATX_ATTR_NODUMP;
 >  
-> -	/* Convert all the extents to real from unwritten. */
-> -	for (found = xfs_iext_lookup_extent(ip, ifp, offset_fsb, &ext, &got);
-> -	     found && got.br_startoff < end_fsb;
-> -	     found = xfs_iext_next_extent(ifp, &ext, &got)) {
-> -		error = xfs_reflink_convert_cow_extent(ip, &got, offset_fsb,
-> -				end_fsb - offset_fsb, &dfops);
-> -		if (error)
-> -			break;
-> -	}
-> +	ASSERT(count != 0);
->  
-> -	/* Finish up. */
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
-> +			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
-> +			XFS_BMAPI_CONVERT_ONLY, &first_block, 0, &imap, &nimaps,
-> +			&dfops);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
->  }
+> +	stat->attributes_mask |= (STATX_ATTR_IMMUTABLE |
+> +				  STATX_ATTR_APPEND |
+> +				  STATX_ATTR_NODUMP);
+> +
+>  	switch (inode->i_mode & S_IFMT) {
+>  	case S_IFBLK:
+>  	case S_IFCHR:
 > -- 
 > 2.14.2
 > 
