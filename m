@@ -1,61 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34210 "EHLO mail.kernel.org"
+Received: from ozlabs.org ([103.22.144.67]:40317 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754004AbdJaWiy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 18:38:54 -0400
+        id S932781AbdJaWmz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 18:42:55 -0400
+Date: Wed, 1 Nov 2017 09:42:52 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: build warning after merge of the xfs tree
+Message-ID: <20171101093957.1d1c45d9@canb.auug.org.au>
 MIME-Version: 1.0
-In-Reply-To: <20171031222723.GX4911@magnolia>
-References: <20171031221305.12908-1-mcgrof@kernel.org> <20171031222723.GX4911@magnolia>
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Date: Tue, 31 Oct 2017 15:38:32 -0700
-Message-ID: <CAB=NE6X=ey2Uu1Uwm6CjU4CLqwUpkvAEHahmug0bci-f4nt8fw@mail.gmail.com>
-Subject: Re: [RFC] xfs: fix reporting supported extra file attributes for statx()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: David Howells <dhowells@redhat.com>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Oct 31, 2017 at 3:27 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Tue, Oct 31, 2017 at 03:13:05PM -0700, Luis R. Rodriguez wrote:
->> statx(2) notes that any attribute that is not indicated as supported by
->> stx_attributes_mask has no usable value. Commit 5f955f26f3d42d ("xfs: report
->> crtime and attribute flags to statx") added support for informing userspace
->> of extra file attributes but forgot to list these flags as supported
->> making reporting them rather useless for the pedantic userspace author.
->
-> Maybe the vfs should WARN_ON(stat->attributes & ~stat->attributes_mask); to
-> prevent us from screwing this up further?
+Hi all,
 
-Its unclear, what was the mask devised for then, was it envisioned
-that there will be filesystems that will set some values but yet
-purposely list them as unsupported?
+After merging the xfs tree, today's linux-next build (powerpc
+ppc64_defconfig) produced this warning:
 
->> $ git describe --contains 5f955f26f3d42d04aba65590a32eb70eedb7f37d
->> v4.11-rc6~5^2^2~2
->>
->> Fixes: 5f955f26f3d42d ("xfs: report crtime and attribute flags to statx")
->> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
->> ---
->>
->> Its unclear why David left these out or if it was just a mistake, I checked
->> the original patch thread [0] but it was not clear in the end. David?
->>
->> Also, I posted a patch to add support to clearing these flags through
->> xfs_repair on symlinks [1] due to the pain this can cause as you have no option
->> but to use xfs_db to fix these otherwise. Since we *didn't* list these extra
->> file attributes as supported, it begs the question if instead we should only
->> set them *and* this mask if !S_ISLNK(inode->i_mode)).
->>
->> If so, that also begs the question if we should add further sanity check
->> on the xfs setattr to ensure these are never set on symbolic links, despite the
->> fact that FS_IOC_FSSETXATTR ioctl won't be able to set them...
->
-> Sure.
+fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_delay':
+fs/xfs/libxfs/xfs_bmap.c:4648:20: warning: unused variable 'ifp' [-Wunused-variable]
+  struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
+                    ^
+fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_cow':
+fs/xfs/libxfs/xfs_bmap.c:4776:20: warning: unused variable 'ifp' [-Wunused-variable]
+  struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+                    ^
 
-Alright, I'll let things wind down and if I don't hear otherwise back
-will make the change.
+Introduced by commit
 
-  Luis
+  ca5d8e5b7b90 ("xfs: move pre/post-bmap tracing into xfs_iext_update_extent")
+
+-- 
+Cheers,
+Stephen Rothwell
