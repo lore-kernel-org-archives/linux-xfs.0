@@ -1,163 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33642 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933106AbdJaWnd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 18:43:33 -0400
-Date: Tue, 31 Oct 2017 15:43:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_repair: clear extra file attributes on symlinks
-Message-ID: <20171031224320.GB4911@magnolia>
-References: <20171031215156.12544-1-mcgrof@kernel.org>
- <20171031221253.GV4911@magnolia>
- <CAB=NE6WusGvGYVBokMOup9snofncCm9gXopM7BaUukp9N3zbRQ@mail.gmail.com>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:50460 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752376AbdJaEtD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 00:49:03 -0400
+Received: by mail-yw0-f195.google.com with SMTP id i198so13660479ywe.7
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2017 21:49:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAB=NE6WusGvGYVBokMOup9snofncCm9gXopM7BaUukp9N3zbRQ@mail.gmail.com>
+In-Reply-To: <20171030210941.GA5858@dastard>
+References: <20171026083322.20428-1-david@fromorbit.com> <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 31 Oct 2017 06:49:01 +0200
+Message-ID: <CAOQ4uxjidk5T=g+uUooqXVunOCf2n2mfKXPGXnSzPEqFYJ=LFQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, David Howells <dhowells@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Oct 31, 2017 at 03:19:00PM -0700, Luis R. Rodriguez wrote:
-> On Tue, Oct 31, 2017 at 3:12 PM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Tue, Oct 31, 2017 at 02:51:56PM -0700, Luis R. Rodriguez wrote:
-> >> Linux filesystems cannot set extra file attributes (stx_attributes as per
-> >> statx(2)) on a symbolic link as ioctl(2) with FS_IOC_SETFLAGS is used for
-> >> this purpose, and *all* ioctl(2) calls on a symbolic link yield EBADF.
-> >> This is because ioctl(2) tries to obtain struct fd from the symbolic link
-> >> file descriptor passed using fdget(), fdget() in turn always returns no
-> >> file set when a file descriptor is open with O_PATH. As per symlink(2)
-> >> O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
-> >> descriptor of a symbolic link, and this holds true for Linux, as such extra
-> >> file attributes cannot possibly be set on symbolic links on Linux.
-> >>
-> >> Given this Linux filesystems should treat extra file attributes set on
-> >> symbolic links as corruption and fix them.
-> >>
-> >>    The TL;DR:
-> >>
-> >> How I discovered this was finding a corrupted filesystem with symbolic
-> >> links with the extra file attribute append (STATX_ATTR_APPEND) set. Symbolic
-> >> links with the attribute append set cannot be removed as they are treated as
-> >> if a file was set with the immutable flag set. Standard tools however cannot
-> >> remove *any* attribute flag:
-> >>
-> >>       # chattr -a symlink
-> >>       chattr: Operation not supported while reading flags on b
-> >>
-> >> If you end up with these symbolic links userspace cannot remove them.
-> >>
-> >> Likewise one cannot use the same tool to *set* this extra file attribute on
-> >> a symbolic link using chattr:
-> >>       # rm -f y z
-> >>       # ln -s y z
-> >>       # chattr +a z
-> >>       chattr: Operation not supported while reading flags on z
-> >>
-> >> What makes this puzzling was one cannot even list attributes on symlinks
-> >> using lsattr either:
-> >>
-> >>       # rm -f a b
-> >>       # ln -s a b
-> >>       # lsattr b
-> >>       lsattr: Operation not supported While reading flags on b
-> >>
-> >> The above was due to commit 023d111e92195 ("chattr.1.in: Document the
-> >> compression attribute flags E, X, and ...") merged on e2fsprogs v1.28 since
-> >> August 2002. That commit just refers to the fact that attributes were only
-> >> allowed after that commit for directories and regular files due to Debian
-> >> bug 152029 [0]. This bug was filed since lsattr lsattr would segfault when
-> >> used against a special file of an old DRM buggy driver, the ioctl seem to
-> >> have worked but crashed lsattr with its information. The bug report doesn't
-> >> list any specific reasoning for not allowing attributes on symlinks though.
-> >>
-> >> Crafting your own tool to query the extra file attributes with the new
-> >> shiny statx(2) works, and if a symbolic link has the extra attribute
-> >> flag set statx(2) would inform userspace of this. statx(2) is only used
-> >> for getting file information, not for setting them.
-> >>
-> >> This all meant that if you end up with the append extra file attribute
-> >> set on a symlink you need special tools to try to remove it and currently
-> >> that's only possible on XFS with xfs_db [1] [2].
-> >>
-> >> Fix XFS filesystems which have these extra file attributes set as the only
-> >> way they could have been set was through corruption.
-> >>
-> >> [0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
-> >> [1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
-> >> [2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
-> >>
-> >> Cc: Tso Ted <tytso@mit.edu>
-> >> Cc: Nikolay Borisov <nborisov@suse.com>
-> >> Cc: Flex Liu <fliu@suse.com>
-> >> Cc: Jake Norris <jake.norris@suse.com>
-> >> Cc: Jan Kara <jack@suse.cz>
-> >> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> >> ---
-> >>
-> >> On this v2 I've provided a much better explanation as to why these
-> >> extra file attributes don't make sense on Linux, and trimmed the flags
-> >> we venture out to clear to *only* match what statx defines. It may be
-> >> possible to clear more dino->di_flags and maybe even dino->di_flags2
-> >> for symbolic links however that those be determined separately as the
-> >> other flags' semantics are clarified for setting.
-> >>
-> >>  repair/dinode.c | 21 +++++++++++++++++++++
-> >>  1 file changed, 21 insertions(+)
-> >>
-> >> diff --git a/repair/dinode.c b/repair/dinode.c
-> >> index 15ba8cc22b39..6288e42de15e 100644
-> >> --- a/repair/dinode.c
-> >> +++ b/repair/dinode.c
-> >> @@ -2482,6 +2482,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
-> >>                                               FS_XFLAG_EXTSIZE);
-> >>                       }
-> >>               }
-> >> +             if (flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
-> >> +                          XFS_DIFLAG_NODUMP)) {
-> >> +                     /*
-> >> +                      * ioctl(fd, *) and so ioctl(fd, FS_IOC_SETFLAGS)
-> >> +                      * yields EBADF on symlinks as they have O_PATH set.
-> >> +                      * "Extra file attributes", stx_attributes, as per
-> >> +                      * statx(2) cannot be set on symlinks on Linux.
-> >> +                      */
-> >> +                     if (di_mode && S_ISLNK(di_mode) &&
-> >> +                         !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
-> >
-> > I don't think we can be a link and a file at the same time, right?
-> 
-> True, the check should be much simpler with just S_ISLNK().
-> 
-> > Does this DIFLAG clearing applies to bdev/cdev/fifo/socket files too?
-> 
-> Not at the moment given the semantics I hunted down and tested for
-> were for O_PATH only.  The validation I hunted down applies to any
-> file descriptors which we open via O_PATH only.
+On Mon, Oct 30, 2017 at 11:09 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
+>> On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+...
+>> Finally, I tend to agree with Amir's comment with regard to
+>> shrink/growfs... at least infosar as I understand his concern. If we do
+>> support physical shrink in the future, what do we expect the interface
+>> to look like in light of this change?
+>
+> I don't expect it to look any different. It's exactly the same as
+> growfs - thinspace filesystem will simply do a logical grow/shrink,
+> fat filesystems will need to do a physical grow/shrink
+> adding/removing AGs.
+>
+> I suspect Amir is worried about the fact that I put "LBA_size"
+> in geom.datablocks instead of "usable_space" for thin-aware
+> filesystems (i.e. I just screwed up writing the new patch). Like I
+> said, I haven't updated the userspace stuff yet, so the thinspace
+> side of that hasn't been tested yet. If I screwed up xfs_growfs (and
+> I have because some of the tests are reporting incorrect
+> post-grow sizes on fat filesytsems) I tend to find out as soon as I
+> run it.
+>
+> Right now I think using m_LBA_size and m_usable_space in the geom
+> structure was a mistake - they should remain the superblock values
+> because otherwise the hidden metadata reservations can affect what
+> is reported to userspace, and that's where I think the test failures
+> are coming from....
+>
 
-iirc when you open one of those special files you end up with a fd that
-points to an inode on a special bdevfs/pipefs/etc., not an inode linked
-to the underlying filesystem containing the special file.  Therefore,
-you shouldn't be able to set any DIFLAG/DIFLAG2 flags on special files.
+I see. I suppose you intend to expose m_LBA_size in a new V5 geom value.
+(geom.LBA_blocks?)
+Does it make sense to expose the underlying bdev size in the same V5 geom
+value for fat fs?
+Does it make sense to expose yet another geom value for "total_blocks"?
 
-# mknod block b 8 0 ; mknod char c 1 3 ; mknod fifo p
-# lsattr block char fifo
-lsattr: Operation not supported While reading flags on block
-lsattr: Operation not supported While reading flags on char
-lsattr: Operation not supported While reading flags on fifo
+The interpretation of former geom.datablocks will be "dblocks soft limit"
+The interpretation of new geom.LBA_blocks will be "dblocks hard limit"
+The interpretation of existing growfs will be "increase dblock soft limit",
+but only up to dblocks hard limit.
+This interpretation would be consistent for both thin and fat fs.
 
---D
+A future API for physical shrink/grow can be deployed to change
+"dblocks hard limit", which may involve communicating with blockdev
+(e.g. LVM) via standard interface (i.e. truncate()/fallocate()) to shrink
+or grow it if volume is fat and to allocate/punch it if volume is thin.
 
->  Recall that the Debian bug that Ted had fixed in userspace was a work
-> around for userspace querying the file extra attributes via ioctl onto
-> a buggy DRM driver, so a special file. The *setting* via ioctl() can
-> certainly be ruled out for O_PATH files, but for other types of files
-> other types of evaluations would be needed.
-> 
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>> FWIW, I also think there's an
+>> element of design/interface consistency to the argument (aside from the
+>> concern over the future of the physical shrink api). We've separated
+>> total blocks from usable blocks in other userspace interfaces
+>> (geometry). Not doing so for growfs is somewhat inconsistent, and also
+>> creates confusion over the meaning of newblocks in different contexts.
+>
+> It has to be done for the geometry info so that xfs_info can report
+> the thinspace size of the filesytem in addition to the physical
+> size. It does not need to be done to make growfs work correctly.
+>
+>> Given that this already requires on-disk changes and the addition of a
+>> feature bit, it seems prudent to me to update the growfs API
+>> accordingly. Isn't a growfs new_usable_blocks field or some such all we
+>> really need to address that concern?
+>
+> I really do not see any reason for changing the growfs interface
+> right now. If there's a problem in future that physical shrink
+> introduces, we can rev the interface when the problem arises.
+>
+
+At the moment, I don't see a problem either.
+I just feel like there may be opportunities to improve fs/volume management
+integration for fat fs/volumes as well, so we need to keep them in mind when
+designing the new APIs.
+
+Cheers,
+Amir.
