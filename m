@@ -1,80 +1,376 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34464 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdJaWrb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 18:47:31 -0400
-Date: Tue, 31 Oct 2017 15:47:26 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:45889 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752473AbdJaWze (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 18:55:34 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v9VMtXFT029429
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Oct 2017 22:55:33 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v9VMtXlS026331
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Oct 2017 22:55:33 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v9VMtXx0005855
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Oct 2017 22:55:33 GMT
+Date: Tue, 31 Oct 2017 15:55:32 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] xfs: fix reporting supported extra file attributes for
- statx()
-Message-ID: <20171031224726.GC4911@magnolia>
-References: <20171031221305.12908-1-mcgrof@kernel.org>
- <20171031222723.GX4911@magnolia>
- <CAB=NE6X=ey2Uu1Uwm6CjU4CLqwUpkvAEHahmug0bci-f4nt8fw@mail.gmail.com>
+Subject: [PATCH] xfs: scrub extended attribute leaf space
+Message-ID: <20171031225532.GD4911@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAB=NE6X=ey2Uu1Uwm6CjU4CLqwUpkvAEHahmug0bci-f4nt8fw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: David Howells <dhowells@redhat.com>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Oct 31, 2017 at 03:38:32PM -0700, Luis R. Rodriguez wrote:
-> On Tue, Oct 31, 2017 at 3:27 PM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Tue, Oct 31, 2017 at 03:13:05PM -0700, Luis R. Rodriguez wrote:
-> >> statx(2) notes that any attribute that is not indicated as supported by
-> >> stx_attributes_mask has no usable value. Commit 5f955f26f3d42d ("xfs: report
-> >> crtime and attribute flags to statx") added support for informing userspace
-> >> of extra file attributes but forgot to list these flags as supported
-> >> making reporting them rather useless for the pedantic userspace author.
-> >
-> > Maybe the vfs should WARN_ON(stat->attributes & ~stat->attributes_mask); to
-> > prevent us from screwing this up further?
-> 
-> Its unclear, what was the mask devised for then, was it envisioned
-> that there will be filesystems that will set some values but yet
-> purposely list them as unsupported?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's for flags like ENCRYPTED so userspace can distinguish between the
-bit being unset meaning that the file is plaintext vs. the filesystem
-not knowing what encrypted files are at all.
+As we walk the attribute btree, explicitly check the structure of the
+attribute leaves to make sure the pointers make sense and the freemap is
+sensible.
 
-(Well ok it'd probably be more useful for a NOCOW bit so that you can
-distinguish a COW file vs. a filesystem that doesn't COW at all, but
-evidently that isn't wired up.)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/attr.c    |  233 ++++++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/scrub/dabtree.c |    4 +
+ fs/xfs/scrub/dabtree.h |    3 -
+ fs/xfs/scrub/dir.c     |    2 
+ 4 files changed, 218 insertions(+), 24 deletions(-)
 
---D
-
-> >> $ git describe --contains 5f955f26f3d42d04aba65590a32eb70eedb7f37d
-> >> v4.11-rc6~5^2^2~2
-> >>
-> >> Fixes: 5f955f26f3d42d ("xfs: report crtime and attribute flags to statx")
-> >> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> >> ---
-> >>
-> >> Its unclear why David left these out or if it was just a mistake, I checked
-> >> the original patch thread [0] but it was not clear in the end. David?
-> >>
-> >> Also, I posted a patch to add support to clearing these flags through
-> >> xfs_repair on symlinks [1] due to the pain this can cause as you have no option
-> >> but to use xfs_db to fix these otherwise. Since we *didn't* list these extra
-> >> file attributes as supported, it begs the question if instead we should only
-> >> set them *and* this mask if !S_ISLNK(inode->i_mode)).
-> >>
-> >> If so, that also begs the question if we should add further sanity check
-> >> on the xfs setattr to ensure these are never set on symbolic links, despite the
-> >> fact that FS_IOC_FSSETXATTR ioctl won't be able to set them...
-> >
-> > Sure.
-> 
-> Alright, I'll let things wind down and if I don't hear otherwise back
-> will make the change.
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index a70cd9b..5d624ca 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -50,8 +50,17 @@ xfs_scrub_setup_xattr(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	/* Allocate the buffer without the inode lock held. */
+-	sc->buf = kmem_zalloc_large(XATTR_SIZE_MAX, KM_SLEEP);
++	size_t				sz;
++
++	/*
++	 * Allocate the buffer without the inode lock held.  We need enough
++	 * space to read every xattr value in the file and enough space to
++	 * hold three copies of the xattr free space bitmap.  (Not both at
++	 * the same time.)
++	 */
++	sz = max_t(size_t, XATTR_SIZE_MAX, 3 * sizeof(long) *
++			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize));
++	sc->buf = kmem_zalloc_large(sz, KM_SLEEP);
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+@@ -122,6 +131,197 @@ xfs_scrub_xattr_listent(
+ 	return;
+ }
+ 
++/*
++ * Mark a range [start, start+len) in this map.  Returns true if the
++ * region was free, and false if there's a conflict or a problem.
++ *
++ * Within a char, the lowest bit of the char represents the byte with
++ * the smallest address
++ */
++STATIC bool
++xfs_scrub_xattr_set_map(
++	struct xfs_scrub_context	*sc,
++	unsigned long			*map,
++	unsigned int			start,
++	unsigned int			len)
++{
++	unsigned int			mapsize = sc->mp->m_attr_geo->blksize;
++	bool				ret = true;
++
++	if (start >= mapsize)
++		return false;
++	if (start + len > mapsize) {
++		len = mapsize - start;
++		ret = false;
++	}
++
++	ret &= find_next_bit(map, mapsize, start) >= (start + len);
++	bitmap_set(map, start, len);
++
++	return ret;
++}
++
++/*
++ * Check the leaf freemap from the usage bitmap.  Returns false if the
++ * attr freemap has problems or points to used space.
++ */
++STATIC bool
++xfs_scrub_xattr_check_freemap(
++	struct xfs_scrub_context	*sc,
++	unsigned long			*map,
++	struct xfs_attr3_icleaf_hdr	*leafhdr)
++{
++	unsigned long			*freemap;
++	unsigned long			*dstmap;
++	unsigned int			mapsize = sc->mp->m_attr_geo->blksize;
++	int				i;
++
++	/* Construct bitmap of freemap contents. */
++	freemap = (unsigned long *)sc->buf + BITS_TO_LONGS(mapsize);
++	bitmap_zero(freemap, mapsize);
++	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
++		if (!xfs_scrub_xattr_set_map(sc, freemap,
++				leafhdr->freemap[i].base,
++				leafhdr->freemap[i].size))
++			return false;
++	}
++
++	/* Look for bits that are set in freemap and are marked in use. */
++	dstmap = freemap + BITS_TO_LONGS(mapsize);
++	return bitmap_and(dstmap, freemap, map, mapsize) == 0;
++}
++
++/* Scrub an attribute leaf. */
++STATIC int
++xfs_scrub_xattr_block(
++	struct xfs_scrub_da_btree	*ds,
++	int				level)
++{
++	struct xfs_attr3_icleaf_hdr	leafhdr;
++	struct xfs_mount		*mp = ds->state->mp;
++	struct xfs_da_state_blk		*blk = &ds->state->path.blk[level];
++	struct xfs_buf			*bp = blk->bp;
++	xfs_dablk_t			*last_checked = ds->private;
++	struct xfs_attr_leafblock	*leaf = bp->b_addr;
++	struct xfs_attr_leaf_entry	*ent;
++	struct xfs_attr_leaf_entry	*entries;
++	struct xfs_attr_leaf_name_local	*lentry;
++	struct xfs_attr_leaf_name_remote	*rentry;
++	unsigned long			*usedmap = ds->sc->buf;
++	char				*name_end;
++	char				*buf_end;
++	__u32				last_hashval = 0;
++	unsigned int			usedbytes = 0;
++	unsigned int			nameidx;
++	unsigned int			hdrsize;
++	unsigned int			namesize;
++	int				i;
++
++	if (*last_checked == blk->blkno)
++		return 0;
++	*last_checked = blk->blkno;
++	bitmap_zero(usedmap, mp->m_attr_geo->blksize);
++
++	/* Check all the padding. */
++	if (xfs_sb_version_hascrc(&ds->sc->mp->m_sb)) {
++		struct xfs_attr3_leafblock	*leaf = bp->b_addr;
++
++		if (leaf->hdr.pad1 != 0 ||
++		    leaf->hdr.pad2 != cpu_to_be32(0) ||
++		    leaf->hdr.info.hdr.pad != cpu_to_be16(0))
++			xfs_scrub_da_set_corrupt(ds, level);
++	} else {
++		if (leaf->hdr.pad1 != 0 ||
++		    leaf->hdr.info.pad != cpu_to_be16(0))
++			xfs_scrub_da_set_corrupt(ds, level);
++	}
++
++	/* Check the leaf header */
++	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
++
++	if (leafhdr.usedbytes > mp->m_attr_geo->blksize)
++		xfs_scrub_da_set_corrupt(ds, level);
++	if (leafhdr.firstused > mp->m_attr_geo->blksize)
++		xfs_scrub_da_set_corrupt(ds, level);
++	hdrsize = xfs_attr3_leaf_hdr_size(leaf);
++	if (leafhdr.firstused < hdrsize)
++		xfs_scrub_da_set_corrupt(ds, level);
++
++	if (!xfs_scrub_xattr_set_map(ds->sc, usedmap, 0, hdrsize)) {
++		xfs_scrub_da_set_corrupt(ds, level);
++		goto out;
++	}
++
++	entries = xfs_attr3_leaf_entryp(leaf);
++	if ((char *)&entries[leafhdr.count] > (char *)leaf + leafhdr.firstused)
++		xfs_scrub_da_set_corrupt(ds, level);
++
++	/* Check the entries' relations to each other */
++	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
++	for (i = 0, ent = entries; i < leafhdr.count; ent++, i++) {
++		if (!xfs_scrub_xattr_set_map(ds->sc, usedmap,
++				(char *)ent - (char *)leaf,
++				sizeof(xfs_attr_leaf_entry_t))) {
++			xfs_scrub_da_set_corrupt(ds, level);
++			goto out;
++		}
++
++		if (ent->pad2 != cpu_to_be32(0))
++			xfs_scrub_da_set_corrupt(ds, level);
++
++		if (be32_to_cpu(ent->hashval) < last_hashval)
++			xfs_scrub_da_set_corrupt(ds, level);
++		last_hashval = be32_to_cpu(ent->hashval);
++
++		nameidx = be16_to_cpu(ent->nameidx);
++		if (nameidx < hdrsize ||
++		    nameidx < leafhdr.firstused ||
++		    nameidx >= mp->m_attr_geo->blksize) {
++			xfs_scrub_da_set_corrupt(ds, level);
++			goto out;
++		}
++
++		if (ent->flags & XFS_ATTR_LOCAL) {
++			lentry = xfs_attr3_leaf_name_local(leaf, i);
++			if (lentry->namelen <= 0)
++				xfs_scrub_da_set_corrupt(ds, level);
++			name_end = (char *)lentry->nameval + lentry->namelen +
++					be16_to_cpu(lentry->valuelen);
++			if (name_end > buf_end)
++				xfs_scrub_da_set_corrupt(ds, level);
++			namesize = xfs_attr_leaf_entsize_local(
++					lentry->namelen,
++					be16_to_cpu(lentry->valuelen));
++		} else {
++			rentry = xfs_attr3_leaf_name_remote(leaf, i);
++			if (rentry->namelen <= 0)
++				xfs_scrub_da_set_corrupt(ds, level);
++			name_end = (char *)rentry->name + rentry->namelen;
++			if (name_end > buf_end)
++				xfs_scrub_da_set_corrupt(ds, level);
++			namesize = xfs_attr_leaf_entsize_remote(
++						rentry->namelen);
++			if (rentry->valueblk == cpu_to_be32(0))
++				xfs_scrub_da_set_corrupt(ds, level);
++		}
++		usedbytes += namesize;
++		if (!xfs_scrub_xattr_set_map(ds->sc, usedmap, nameidx,
++				namesize)) {
++			xfs_scrub_da_set_corrupt(ds, level);
++			goto out;
++		}
++	}
++
++	if (!xfs_scrub_xattr_check_freemap(ds->sc, usedmap, &leafhdr))
++		xfs_scrub_da_set_corrupt(ds, level);
++
++	if (leafhdr.usedbytes != usedbytes)
++		xfs_scrub_da_set_corrupt(ds, level);
++
++out:
++	return 0;
++}
++
+ /* Scrub a attribute btree record. */
+ STATIC int
+ xfs_scrub_xattr_rec(
+@@ -144,6 +344,13 @@ xfs_scrub_xattr_rec(
+ 
+ 	blk = &ds->state->path.blk[level];
+ 
++	/* Check the whole block, if necessary. */
++	error = xfs_scrub_xattr_block(ds, level);
++	if (error)
++		goto out;
++	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out;
++
+ 	/* Check the hash of the entry. */
+ 	error = xfs_scrub_da_btree_hash(ds, level, &ent->hashval);
+ 	if (error)
+@@ -158,24 +365,6 @@ xfs_scrub_xattr_rec(
+ 		goto out;
+ 	}
+ 
+-	/* Check all the padding. */
+-	if (xfs_sb_version_hascrc(&ds->sc->mp->m_sb)) {
+-		struct xfs_attr3_leafblock	*leaf = bp->b_addr;
+-
+-		if (leaf->hdr.pad1 != 0 ||
+-		    leaf->hdr.pad2 != cpu_to_be32(0) ||
+-		    leaf->hdr.info.hdr.pad != cpu_to_be16(0))
+-			xfs_scrub_da_set_corrupt(ds, level);
+-	} else {
+-		struct xfs_attr_leafblock	*leaf = bp->b_addr;
+-
+-		if (leaf->hdr.pad1 != 0 ||
+-		    leaf->hdr.info.pad != cpu_to_be16(0))
+-			xfs_scrub_da_set_corrupt(ds, level);
+-	}
+-	if (ent->pad2 != 0)
+-		xfs_scrub_da_set_corrupt(ds, level);
+-
+ 	/* Retrieve the entry and check it. */
+ 	hash = be32_to_cpu(ent->hashval);
+ 	badflags = ~(XFS_ATTR_LOCAL | XFS_ATTR_ROOT | XFS_ATTR_SECURE |
+@@ -213,6 +402,7 @@ xfs_scrub_xattr(
+ {
+ 	struct xfs_scrub_xattr		sx = { 0 };
+ 	struct attrlist_cursor_kern	cursor = { 0 };
++	xfs_dablk_t			last_checked = -1U;
+ 	int				error = 0;
+ 
+ 	if (!xfs_inode_hasattr(sc->ip))
+@@ -220,7 +410,8 @@ xfs_scrub_xattr(
+ 
+ 	memset(&sx, 0, sizeof(sx));
+ 	/* Check attribute tree structure */
+-	error = xfs_scrub_da_btree(sc, XFS_ATTR_FORK, xfs_scrub_xattr_rec);
++	error = xfs_scrub_da_btree(sc, XFS_ATTR_FORK, xfs_scrub_xattr_rec,
++			&last_checked);
+ 	if (error)
+ 		goto out;
+ 
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index 4a93cf1..c21c528 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -467,7 +467,8 @@ int
+ xfs_scrub_da_btree(
+ 	struct xfs_scrub_context	*sc,
+ 	int				whichfork,
+-	xfs_scrub_da_btree_rec_fn	scrub_fn)
++	xfs_scrub_da_btree_rec_fn	scrub_fn,
++	void				*private)
+ {
+ 	struct xfs_scrub_da_btree	ds = {};
+ 	struct xfs_mount		*mp = sc->mp;
+@@ -492,6 +493,7 @@ xfs_scrub_da_btree(
+ 	ds.state->args = &ds.dargs;
+ 	ds.state->mp = mp;
+ 	ds.sc = sc;
++	ds.private = private;
+ 	if (whichfork == XFS_ATTR_FORK) {
+ 		ds.dargs.geo = mp->m_attr_geo;
+ 		ds.lowest = 0;
+diff --git a/fs/xfs/scrub/dabtree.h b/fs/xfs/scrub/dabtree.h
+index 2a766de1f..d31468d 100644
+--- a/fs/xfs/scrub/dabtree.h
++++ b/fs/xfs/scrub/dabtree.h
+@@ -28,6 +28,7 @@ struct xfs_scrub_da_btree {
+ 	int				maxrecs[XFS_DA_NODE_MAXDEPTH];
+ 	struct xfs_da_state		*state;
+ 	struct xfs_scrub_context	*sc;
++	void				*private;
+ 
+ 	/*
+ 	 * Lowest and highest directory block address in which we expect
+@@ -53,6 +54,6 @@ void xfs_scrub_da_set_corrupt(struct xfs_scrub_da_btree *ds, int level);
+ int xfs_scrub_da_btree_hash(struct xfs_scrub_da_btree *ds, int level,
+ 			    __be32 *hashp);
+ int xfs_scrub_da_btree(struct xfs_scrub_context *sc, int whichfork,
+-		       xfs_scrub_da_btree_rec_fn scrub_fn);
++		       xfs_scrub_da_btree_rec_fn scrub_fn, void *private);
+ 
+ #endif /* __XFS_SCRUB_DABTREE_H__ */
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 169fb10..c61362f 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -770,7 +770,7 @@ xfs_scrub_directory(
+ 	}
+ 
+ 	/* Check directory tree structure */
+-	error = xfs_scrub_da_btree(sc, XFS_DATA_FORK, xfs_scrub_dir_rec);
++	error = xfs_scrub_da_btree(sc, XFS_DATA_FORK, xfs_scrub_dir_rec, NULL);
+ 	if (error)
+ 		return error;
+ 
