@@ -1,121 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56374 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:49723 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751532AbdJ3NbS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Oct 2017 09:31:18 -0400
-Date: Mon, 30 Oct 2017 09:31:17 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171030133117.GA3535@bfoster.bfoster>
-References: <20171026083322.20428-1-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171026083322.20428-1-david@fromorbit.com>
+        id S1753368AbdJaOMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 10:12:32 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH v2 3/4] generic: Adjust generic test ouputs for new fiemap implementation
+Date: Tue, 31 Oct 2017 16:11:35 +0200
+Message-Id: <1509459096-7585-3-git-send-email-nborisov@suse.com>
+In-Reply-To: <1509459096-7585-1-git-send-email-nborisov@suse.com>
+References: <1509459011-7398-1-git-send-email-nborisov@suse.com>
+ <1509459096-7585-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, darrick.wong@oracle.com, eguan@redhat.com, Nikolay Borisov <nborisov@suse.com>
 
-On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
-> This patchset is aimed at filesystems that are installed on sparse
-> block devices, a.k.a thin provisioned devices. The aim of the
-> patchset is to bring the space management aspect of the storage
-> stack up into the filesystem rather than keeping it below the
-> filesystem where users and the filesystem have no clue they are
-> about to run out of space.
-> 
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ tests/generic/012.out | 1 +
+ tests/generic/016.out | 1 +
+ tests/generic/021.out | 2 ++
+ tests/generic/022.out | 2 ++
+ tests/generic/058.out | 1 +
+ tests/generic/060.out | 1 +
+ tests/generic/061.out | 1 +
+ tests/generic/063.out | 1 +
+ tests/generic/255.out | 6 ++++++
+ tests/generic/316.out | 6 ++++++
+ 10 files changed, 22 insertions(+)
 
-Just a few high level comments/thoughts after a very quick pass..
+diff --git a/tests/generic/012.out b/tests/generic/012.out
+index ffbf8a3..8045471 100644
+--- a/tests/generic/012.out
++++ b/tests/generic/012.out
+@@ -1,5 +1,6 @@
+ QA output created by 012
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+diff --git a/tests/generic/016.out b/tests/generic/016.out
+index c45a44a..1371ce7 100644
+--- a/tests/generic/016.out
++++ b/tests/generic/016.out
+@@ -1,5 +1,6 @@
+ QA output created by 016
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+diff --git a/tests/generic/021.out b/tests/generic/021.out
+index 1137741..791b78a 100644
+--- a/tests/generic/021.out
++++ b/tests/generic/021.out
+@@ -1,5 +1,6 @@
+ QA output created by 021
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+@@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 1: [64..95]: hole
+ d8f51c20223dbce5c7c90db87bc221b0
+ 	10. hole -> data -> hole
++0: [0..63]: hole
+ bb7df04e1b0a2570657527a7e108ae23
+ 	11. data -> hole -> data
+ 0: [0..63]: extent
+diff --git a/tests/generic/022.out b/tests/generic/022.out
+index fbffa59..6dbc192 100644
+--- a/tests/generic/022.out
++++ b/tests/generic/022.out
+@@ -1,5 +1,6 @@
+ QA output created by 022
+ 	1. into a hole
++0: [0..95]: hole
+ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 	2. into allocated space
+ 0: [0..95]: extent
+@@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+ 1: [64..95]: hole
+ d8f51c20223dbce5c7c90db87bc221b0
+ 	10. hole -> data -> hole
++0: [0..63]: hole
+ bb7df04e1b0a2570657527a7e108ae23
+ 	11. data -> hole -> data
+ 0: [0..63]: extent
+diff --git a/tests/generic/058.out b/tests/generic/058.out
+index b15308d..3bbc2a4 100644
+--- a/tests/generic/058.out
++++ b/tests/generic/058.out
+@@ -1,5 +1,6 @@
+ QA output created by 058
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/060.out b/tests/generic/060.out
+index 909b578..210af74 100644
+--- a/tests/generic/060.out
++++ b/tests/generic/060.out
+@@ -1,5 +1,6 @@
+ QA output created by 060
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/061.out b/tests/generic/061.out
+index 78d6c6d..6d95680 100644
+--- a/tests/generic/061.out
++++ b/tests/generic/061.out
+@@ -1,5 +1,6 @@
+ QA output created by 061
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/063.out b/tests/generic/063.out
+index d828ff6..10db43f 100644
+--- a/tests/generic/063.out
++++ b/tests/generic/063.out
+@@ -1,5 +1,6 @@
+ QA output created by 063
+ 	1. into a hole
++0: [0..55]: hole
+ cf845a781c107ec1346e849c9dd1b7e8
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/255.out b/tests/generic/255.out
+index 217ef3e..441fde8 100644
+--- a/tests/generic/255.out
++++ b/tests/generic/255.out
+@@ -1,5 +1,6 @@
+ QA output created by 255
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -42,6 +43,7 @@ daa100df6e6711906b61c9ab5aa16032
+ 3: [32..39]: hole
+ cc63069677939f69a6e8f68cae6a6dac
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -79,6 +81,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -121,6 +124,7 @@ daa100df6e6711906b61c9ab5aa16032
+ 3: [32..39]: hole
+ cc63069677939f69a6e8f68cae6a6dac
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -158,6 +162,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -240,6 +245,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+diff --git a/tests/generic/316.out b/tests/generic/316.out
+index 383f0d1..5506198 100644
+--- a/tests/generic/316.out
++++ b/tests/generic/316.out
+@@ -1,5 +1,6 @@
+ QA output created by 316
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -16,6 +17,7 @@ cc63069677939f69a6e8f68cae6a6dac
+ 1: [8..39]: hole
+ 1b3779878366498b28c702ef88c4a773
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -43,6 +45,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -59,6 +62,7 @@ cc63069677939f69a6e8f68cae6a6dac
+ 1: [8..39]: hole
+ 1b3779878366498b28c702ef88c4a773
+ 	10. hole -> data -> hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	11. data -> hole -> data
+ 0: [0..7]: extent
+@@ -86,6 +90,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+@@ -133,6 +138,7 @@ eecb7aa303d121835de05028751d301c
+ 0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+ *
+ 	1. into a hole
++0: [0..39]: hole
+ daa100df6e6711906b61c9ab5aa16032
+ 	2. into allocated space
+ 0: [0..7]: extent
+-- 
+2.7.4
 
-...
-> The patchset has several parts to it. It is built on a 4.14-rc5
-> kernel with for-next and Darrick's scrub tree from a couple of days
-> ago merged into it.
-> 
-> The first part of teh series is a growfs refactoring. This can
-> probably stand alone, and the idea is to move the refactored
-> infrastructure into libxfs so it can be shared with mkfs. This also
-> cleans up a lot of the cruft in growfs and so makes it much easier
-> to add the changes later in the series.
-> 
-
-It'd be nice to see this as a separate patchset. It does indeed seem
-like it could be applied before all of the other bits are worked out.
-
-> The second part of the patchset moves the functionality of
-> sb_dblocks into the struct xfs_mount. This provides the separation
-> of address space checks and capacty related calculations that the
-> thinspace mods require. This also fixes the problem of freshly made,
-> empty filesystems reporting 2% of the space as used.
-> 
-
-This all seems mostly sane to me. FWIW, the in-core fields (particularly
-->m_LBA_size) strike me as oddly named. "LBA size" strikes me as the
-addressable range of the underlying device, regardless of fs size (but I
-understand that's not how it's used here). If we have ->m_usable_blocks,
-why not name the other something like ->m_total_blocks or just
-->m_blocks? That suggests to me that the fields are related, mutable,
-accounted in units of blocks, etc. Just a nit, though.
-
-That aside, it also seems like this part could technically stand as an
-independent change. 
-
-> The XFS_IOC_FSGEOMETRY ioctl needed to be bumped to a new version
-> because the structure needed growing.
-> 
-> Finally, there's the patches that provide thinspace support and the
-> growfs mods needed to grow and shrink.
-> 
-
-I still think there's a gap related to fs and bdev block size that needs
-to be addressed with regard to preventing pool depletion, but I think
-that can ultimately be handled with documentation. I also wonder a bit
-about consistency between online modifications to usable blocks and fs
-blocks that might have been allocated but not yet written (i.e.,
-unwritten extents and the log on freshly created filesystems). IOW,
-shrinking the filesystem in such cases may not limit pool allocation in
-the way a user might expect.
-
-Did we ever end up with support for bdev fallocate? If so, I wonder if
-for example it would be useful to fallocate the physical log at mount or
-mkfs time for thin enabled fs'. The unwritten extent case may just be a
-matter of administration sanity since the filesystem shrink will
-consider those as allocated blocks and thus imply that the fs expects
-the ability to write them.
-
-Finally, I tend to agree with Amir's comment with regard to
-shrink/growfs... at least infosar as I understand his concern. If we do
-support physical shrink in the future, what do we expect the interface
-to look like in light of this change? FWIW, I also think there's an
-element of design/interface consistency to the argument (aside from the
-concern over the future of the physical shrink api). We've separated
-total blocks from usable blocks in other userspace interfaces
-(geometry). Not doing so for growfs is somewhat inconsistent, and also
-creates confusion over the meaning of newblocks in different contexts.
-
-Given that this already requires on-disk changes and the addition of a
-feature bit, it seems prudent to me to update the growfs API
-accordingly. Isn't a growfs new_usable_blocks field or some such all we
-really need to address that concern?
-
-Brian
-
-> I've smoke tested the non-thinspace code paths (running auto tests
-> on a scrub enabled kernel+userspace right now) as I haven't updated
-> the userspace code to exercise the thinp code paths yet. I know the
-> concept works, but my userspace code has an older on-disk format
-> from the prototype so it will take me a couple of days to update and
-> work out how to get fstests to integrate it reliably. So this is
-> mainly a heads-up RFC patchset....
-> 
-> Comments, thoughts, flames all welcome....
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
