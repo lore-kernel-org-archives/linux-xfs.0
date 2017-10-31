@@ -1,161 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f180.google.com ([209.85.161.180]:49320 "EHLO
-        mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932194AbdJZLJ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2017 07:09:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <20171026083322.20428-1-david@fromorbit.com>
-References: <20171026083322.20428-1-david@fromorbit.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 26 Oct 2017 14:09:26 +0300
-Message-ID: <CAOQ4uxi9K+3M95VgiPLHRr9cQC6bEzRiddKnAxEgJ3H4Ea+AoQ@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41016 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751050AbdJaLYe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 07:24:34 -0400
+Date: Tue, 31 Oct 2017 07:24:32 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20171031112432.GA7093@bfoster.bfoster>
+References: <20171026083322.20428-1-david@fromorbit.com>
+ <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171030210941.GA5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 11:33 AM, Dave Chinner <david@fromorbit.com> wrote:
-> This patchset is aimed at filesystems that are installed on sparse
-> block devices, a.k.a thin provisioned devices. The aim of the
-> patchset is to bring the space management aspect of the storage
-> stack up into the filesystem rather than keeping it below the
-> filesystem where users and the filesystem have no clue they are
-> about to run out of space.
->
-> The idea is that thin block devices will be massively
-> over-provisioned giving the filesystem a large block device address
-> space to manage, but the filesystem presents itself as a much
-> smaller filesystem. That is, the space the filesystem presents the
-> users is much lower than the what the address space teh block device
-> provides.
->
-> This somewhat turns traditional thin provisioning on it's head.
-> Admins are used to lying through their teeth to users about how much
-> space they have available, and then they hope to hell that users
-> never try to store as much data as they've been "provisioned" with.
-> As a result, the traditional failure case is the block device
-> running out of space all of a sudden and the filesystem and
-> users wondering WTF just went wrong with their system.
->
-> Moving the space management up into the filesystem by itself doesn't
-> solve this problem - the thin storage pools can still be
-> over-committed - but it does allow a new way of managing the space.
-> Essentially, growing or shrinking a thin filesystem is an
-> operation that only takes a couple of milliseconds to do because
-> it's just an accounting trick. It's far less complex than creating
-> a new file, or even reading data from a file.
->
-> Freeing unused space from the filesystem isn't done during a shrink
-> operation. It is done through discard operations, either dynamically
-> via the discard mount option or, preferrably, by an fstrim
-> invocation. This means freeing space in the thin pool is not in any
-> way related to the management of the filesystem size and space
-> enforcement even during a grow or shrink operation.
->
-> What it means is that the filesystem controls the amount of active
-> data the user can have in the thin pool. The thin pool usage may be
-> more or less, depending on snapshots, deduplication,
-> freed-but-not-discarded space, etc. And because of how low the
-> overhead of changing the accounting is, users don't need to be given
-> a filesystem with all the space they might need once in a blue moon.
-> It is trivial to expand when need, and shrink and release when the
-> data is removed.
->
-> Yes, the underlying thin device that the filesystem sits on gets
-> provisioned at the "once in a blue moon" size that is requested,
-> but until that space is needed the filesystem can run at low amounts
-> of reported free space and so prevent the likelyhood of sudden
-> thin device pool depletion.
->
-> Normally, running a filesysetm for low periods of time at low
-> amounts of free space is a bad thing. However, for a thin
-> filesystem, a low amount of usable free space doesn't mean the
-> filesystem is running near full. The filesystem still has the full
-> block device address to work with, so has oodles of contiguous free
-> space hidden from the user. hence it's not until the thin filesystem
-> grows to be near "non-thin" and is near full that the traditional
-> "running near ENOSPC" problems arise.
->
-> How to stop that from ever happening? e.g. Some one needs 100GB of
-> space now, but maybe much more than that in a year. So provision a
-> 10TB thin block device and put a 100GB thin filesystem on it.
-> Problems won't arise until it's been grown to 100x it's original
-> size.
->
-> Yeah, it all requires thinking about the way storage is provisioned
-> and managed a little bit differently, but the key point to realise
-> is that grow and shrink effectively become free operations on
-> thin devices if the filesystem is aware that it's on a thin device.
->
-> The patchset has several parts to it. It is built on a 4.14-rc5
-> kernel with for-next and Darrick's scrub tree from a couple of days
-> ago merged into it.
->
-> The first part of teh series is a growfs refactoring. This can
-> probably stand alone, and the idea is to move the refactored
-> infrastructure into libxfs so it can be shared with mkfs. This also
-> cleans up a lot of the cruft in growfs and so makes it much easier
-> to add the changes later in the series.
->
-> The second part of the patchset moves the functionality of
-> sb_dblocks into the struct xfs_mount. This provides the separation
-> of address space checks and capacty related calculations that the
-> thinspace mods require. This also fixes the problem of freshly made,
-> empty filesystems reporting 2% of the space as used.
->
-> The XFS_IOC_FSGEOMETRY ioctl needed to be bumped to a new version
-> because the structure needed growing.
->
-> Finally, there's the patches that provide thinspace support and the
-> growfs mods needed to grow and shrink.
->
-> I've smoke tested the non-thinspace code paths (running auto tests
-> on a scrub enabled kernel+userspace right now) as I haven't updated
-> the userspace code to exercise the thinp code paths yet. I know the
-> concept works, but my userspace code has an older on-disk format
-> from the prototype so it will take me a couple of days to update and
-> work out how to get fstests to integrate it reliably. So this is
-> mainly a heads-up RFC patchset....
->
-> Comments, thoughts, flames all welcome....
->
+On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
+> On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
+> > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+> > > This patchset is aimed at filesystems that are installed on sparse
+> > > block devices, a.k.a thin provisioned devices. The aim of the
+> > > patchset is to bring the space management aspect of the storage
+> > > stack up into the filesystem rather than keeping it below the
+> > > filesystem where users and the filesystem have no clue they are
+> > > about to run out of space.
+> > > 
+> > 
+> > Just a few high level comments/thoughts after a very quick pass..
+> > 
+> > ...
+> > > The patchset has several parts to it. It is built on a 4.14-rc5
+> > > kernel with for-next and Darrick's scrub tree from a couple of days
+> > > ago merged into it.
+> > > 
+> > > The first part of teh series is a growfs refactoring. This can
+> > > probably stand alone, and the idea is to move the refactored
+> > > infrastructure into libxfs so it can be shared with mkfs. This also
+> > > cleans up a lot of the cruft in growfs and so makes it much easier
+> > > to add the changes later in the series.
+> > > 
+> > 
+> > It'd be nice to see this as a separate patchset. It does indeed seem
+> > like it could be applied before all of the other bits are worked out.
+> 
+> Yes, i plan to do that, and with it separated also get it into shape
+> where it can be shared with mkfs via libxfs.
+> 
+> > > The second part of the patchset moves the functionality of
+> > > sb_dblocks into the struct xfs_mount. This provides the separation
+> > > of address space checks and capacty related calculations that the
+> > > thinspace mods require. This also fixes the problem of freshly made,
+> > > empty filesystems reporting 2% of the space as used.
+> > > 
+> > 
+> > This all seems mostly sane to me. FWIW, the in-core fields (particularly
+> > ->m_LBA_size) strike me as oddly named. "LBA size" strikes me as the
+> > addressable range of the underlying device, regardless of fs size (but I
+> > understand that's not how it's used here). If we have ->m_usable_blocks,
+> > why not name the other something like ->m_total_blocks or just
+> > ->m_blocks? That suggests to me that the fields are related, mutable,
+> > accounted in units of blocks, etc. Just a nit, though.
+> 
+> Yeah, I couldn't think of a better pair of names - the point I was
+> trying to get across is that what we call "dblocks" is actually an
+> assumption about the structure of the block device address space
+> we are working on. i.e. that it's a contiguous, linear address space
+> from 0 to "dblocks".
+> 
+> I get that "total_blocks" sounds better, but to me that's a capacity
+> measurement, not an indication of the size of the underlying address
+> space the block device has provided. m_usable_blocks is obviously a
+> capacity measurement, but I was trying to convey that m_LBA_size is
+> not a capacity measurement but an externally imposed addressing
+> limit.
+> 
+> <shrug>
+> 
+> I guess if I document it well enough m_total_blocks will work.
+> 
 
-This proposal is very interesting outside the scope of xfs, so I hope you
-don't mind I've CC'ed fsdevel.
+Hmm, yeah I see what you mean. Unfortunately I can't really think of
+anything aside from m_total_blocks or perhaps m_phys_blocks at the
+moment.
 
-I am thinking how a slightly similar approach could be used to online shrink
-the physical size for filesystems that are not on thin provisioned devices:
+> 
+> > That aside, it also seems like this part could technically stand as an
+> > independent change. 
+> 
+> *nod*
+> 
+> > > The XFS_IOC_FSGEOMETRY ioctl needed to be bumped to a new version
+> > > because the structure needed growing.
+> > > 
+> > > Finally, there's the patches that provide thinspace support and the
+> > > growfs mods needed to grow and shrink.
+> > > 
+> > 
+> > I still think there's a gap related to fs and bdev block size that needs
+> > to be addressed with regard to preventing pool depletion, but I think
+> > that can ultimately be handled with documentation. I also wonder a bit
+> > about consistency between online modifications to usable blocks and fs
+> > blocks that might have been allocated but not yet written (i.e.,
+> > unwritten extents and the log on freshly created filesystems). IOW,
+> > shrinking the filesystem in such cases may not limit pool allocation in
+> > the way a user might expect.
+> > 
+> > Did we ever end up with support for bdev fallocate?
+> 
+> Yes, we do have that.
+> 
+> > If so, I wonder if
+> > for example it would be useful to fallocate the physical log at mount or
+> > mkfs time for thin enabled fs'.
+> 
+> We zero the log and stamp it with cycle headers, so it will already
+> be fully allocated in th eunderlying device after running mkfs.
+> 
 
-- Set/get a geometry variable of "agsoftlimit" (better names are welcome)
-  which is <= agcount.
-- agsoftlimit < agcount means that free space of AG > agsoftlimit is zero,
-  so total disk space usage will not show this space as available user space.
-- inode and block allocators will avoid dipping into the high AG pool,
-  expect for metadata block needed for freeing high AG inodes/blocks.
-- A variant of xfs_fsr (or e4defrag for that matter) could "migrate" inodes
-  and/or blocks from high to low AGs.
-- Migrating directories is quite different than migrating files, but doable.
-- Finally, on XFS_IOC_FSGROWFSDATA, if shrinking filesystem size and
-  high AG usage counters are zero, then physical size can be shrunk
-  as down as agsoftlimit instead of reducing usable_blocks.
+Ok. Taking a quick look... I see that we do zero the log, but note that
+we don't stamp the entire log in the mkfs case. It's enough to set the
+LSN of a single record for the kernel to detect the log has been reset.
 
-With this, xfs can gain physical shrink support and ext4 can gain online
-(and safe) shrink support.
+Either way, that probably means the log is allocated or the thin device
+doesn't survive mkfs. I still think it might be wise to fallocate at
+mount time via that log reset/zeroed case to ensure we catch any corner
+cases or landmines in the future, fwiw, but not critical.
 
-Assuming that this idea is not shot down on sight, the only implication
-I can think of w.r.t your current patches is leaving enough room in new APIs
-to accomodate this prospect functionality.
+> > The unwritten extent case may just be a
+> > matter of administration sanity since the filesystem shrink will
+> > consider those as allocated blocks and thus imply that the fs expects
+> > the ability to write them.
+> 
+> Yes, that is correct. To make things work as expected, we'll need
+> to propagating fallocate calls to the block device from the
+> filesystem when mounted. There's a bunch of stuff there that we can
+> add once the core "this is a thin filesystem" awareness has been
+> added.
+> 
 
-You have already reserved 15 u64 in geometry V5 ioctl struct, so that's good.
-You have not changed XFS_IOC_FSGROWFSDATA at all, so going forward
-the ambiguity of physical shrink vs. virtual shrink could either be determined
-by heuristics (shrink physical if usable == physical > agsoftlimit) or a new
-ioctl would be introduced to disambiguate the intention.
-I have a suggestion for 3rd option, but I'll post it on the relevant patch.
+*nod*
 
+> > Finally, I tend to agree with Amir's comment with regard to
+> > shrink/growfs... at least infosar as I understand his concern. If we do
+> > support physical shrink in the future, what do we expect the interface
+> > to look like in light of this change?
+> 
+> I don't expect it to look any different. It's exactly the same as
+> growfs - thinspace filesystem will simply do a logical grow/shrink,
+> fat filesystems will need to do a physical grow/shrink
+> adding/removing AGs.
+> 
 
-Thanks,
-Amir.
+How would you physically shrink a thin filesystem?
+
+> I suspect Amir is worried about the fact that I put "LBA_size"
+> in geom.datablocks instead of "usable_space" for thin-aware
+> filesystems (i.e. I just screwed up writing the new patch). Like I
+> said, I haven't updated the userspace stuff yet, so the thinspace
+> side of that hasn't been tested yet. If I screwed up xfs_growfs (and
+> I have because some of the tests are reporting incorrect
+> post-grow sizes on fat filesytsems) I tend to find out as soon as I
+> run it.
+> 
+> Right now I think using m_LBA_size and m_usable_space in the geom
+> structure was a mistake - they should remain the superblock values
+> because otherwise the hidden metadata reservations can affect what
+> is reported to userspace, and that's where I think the test failures
+> are coming from....
+> 
+> 
+> > FWIW, I also think there's an
+> > element of design/interface consistency to the argument (aside from the
+> > concern over the future of the physical shrink api). We've separated
+> > total blocks from usable blocks in other userspace interfaces
+> > (geometry). Not doing so for growfs is somewhat inconsistent, and also
+> > creates confusion over the meaning of newblocks in different contexts.
+> 
+> It has to be done for the geometry info so that xfs_info can report
+> the thinspace size of the filesytem in addition to the physical
+> size. It does not need to be done to make growfs work correctly.
+> 
+
+It's not a question of needing it to work correctly. It's a question of
+design/interface consistency. Perhaps this loses relevance after your
+changes noted above..
+
+> > Given that this already requires on-disk changes and the addition of a
+> > feature bit, it seems prudent to me to update the growfs API
+> > accordingly. Isn't a growfs new_usable_blocks field or some such all we
+> > really need to address that concern?
+> 
+> I really do not see any reason for changing the growfs interface
+> right now. If there's a problem in future that physical shrink
+> introduces, we can rev the interface when the problem arises.
+> 
+
+Indeed. I'm not terribly concerned about the growfs interface, but in
+the interest of trying to make sure the point is clear... does that mean
+we'd add a new usable_blocks field to the growfs structure if/when
+physical shrink is supported? If so, doesn't that mean we'd have two
+fields that are used to logically shrink the fs, depending on interface
+version, or that we'd have some kernels that logically shrink based on
+'newblocks' and some that don't?
+
+The larger question I have is what do we save by not just adding
+usable_blocks to growfs_data now so the interface remains
+self-explanatory? That seems relatively minor with respect to the
+on-disk changes.
+
+Brian
+
+> Cheers
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
