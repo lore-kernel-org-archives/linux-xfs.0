@@ -1,117 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21385 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754278AbdKADrJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 23:47:09 -0400
-Date: Tue, 31 Oct 2017 21:47:07 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
-Message-ID: <20171101034707.GA1662@linux.intel.com>
-References: <20171024152415.22864-1-jack@suse.cz>
- <20171024152415.22864-18-jack@suse.cz>
- <20171024222322.GX3666@dastard>
- <20171026154804.GF31161@quack2.suse.cz>
- <20171026211611.GC3666@dastard>
- <20171027100834.GH31161@quack2.suse.cz>
- <20171031151907.GB26128@quack2.suse.cz>
- <CAPcyv4gBVyZ8KhB2s1M0BdhC1=HAean6Mb6oV7zsJBx0-t3bhw@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25791 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753612AbdJaWNK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 18:13:10 -0400
+Date: Tue, 31 Oct 2017 15:12:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_repair: clear extra file attributes on symlinks
+Message-ID: <20171031221253.GV4911@magnolia>
+References: <20171031215156.12544-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gBVyZ8KhB2s1M0BdhC1=HAean6Mb6oV7zsJBx0-t3bhw@mail.gmail.com>
+In-Reply-To: <20171031215156.12544-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4 <linux-ext4@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Christoph Hellwig <hch@lst.de>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: sandeen@sandeen.net, dhowells@redhat.com, linux-xfs@vger.kernel.org, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-On Tue, Oct 31, 2017 at 02:50:01PM -0700, Dan Williams wrote:
-> On Tue, Oct 31, 2017 at 8:19 AM, Jan Kara <jack@suse.cz> wrote:
-> > On Fri 27-10-17 12:08:34, Jan Kara wrote:
-> >> On Fri 27-10-17 08:16:11, Dave Chinner wrote:
-> >> > On Thu, Oct 26, 2017 at 05:48:04PM +0200, Jan Kara wrote:
-> >> > > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> >> > > > > index f179bdf1644d..b43be199fbdf 100644
-> >> > > > > --- a/fs/xfs/xfs_iomap.c
-> >> > > > > +++ b/fs/xfs/xfs_iomap.c
-> >> > > > > @@ -33,6 +33,7 @@
-> >> > > > >  #include "xfs_error.h"
-> >> > > > >  #include "xfs_trans.h"
-> >> > > > >  #include "xfs_trans_space.h"
-> >> > > > > +#include "xfs_inode_item.h"
-> >> > > > >  #include "xfs_iomap.h"
-> >> > > > >  #include "xfs_trace.h"
-> >> > > > >  #include "xfs_icache.h"
-> >> > > > > @@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
-> >> > > > >               trace_xfs_iomap_found(ip, offset, length, 0, &imap);
-> >> > > > >       }
-> >> > > > >
-> >> > > > > +     if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-> >> > > > > +         (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-> >> > > > > +             iomap->flags |= IOMAP_F_DIRTY;
-> >> > > >
-> >> > > > This is the very definition of an inode that is "fdatasync dirty".
-> >> > > >
-> >> > > > Hmmmm, shouldn't this also be set for read faults, too?
-> >> > >
-> >> > > No, read faults don't need to set IOMAP_F_DIRTY since user cannot write any
-> >> > > data to the page which he'd then like to be persistent. The only reason why
-> >> > > I thought it could be useful for a while was that it would be nice to make
-> >> > > MAP_SYNC mapping provide the guarantee that data you see now is the data
-> >> > > you'll see after a crash
-> >> >
-> >> > Isn't that the entire point of MAP_SYNC? i.e. That when we return
-> >> > from a page fault, the app knows that the data and it's underlying
-> >> > extent is on persistent storage?
-> >> >
-> >> > > but we cannot provide that guarantee for RO
-> >> > > mapping anyway if someone else has the page mapped as well. So I just
-> >> > > decided not to return IOMAP_F_DIRTY for read faults.
-> >> >
-> >> > If there are multiple MAP_SYNC mappings to the inode, I would have
-> >> > expected that they all sync all of the data/metadata on every page
-> >> > fault, regardless of who dirtied the inode. An RO mapping doesn't
-> >>
-> >> Well, they all do sync regardless of who dirtied the inode on every *write*
-> >> fault.
-> >>
-> >> > mean the data/metadata on the inode can't change, it just means it
-> >> > can't change through that mapping.  Running fsync() to guarantee the
-> >> > persistence of that data/metadata doesn't actually changing any
-> >> > data....
-> >> >
-> >> > IOWs, if read faults don't guarantee the mapped range has stable
-> >> > extents on a MAP_SYNC mapping, then I think MAP_SYNC is broken
-> >> > because it's not giving consistent guarantees to userspace. Yes, it
-> >> > works fine when only one MAP_SYNC mapping is modifying the inode,
-> >> > but the moment we have concurrent operations on the inode that
-> >> > aren't MAP_SYNC or O_SYNC this goes out the window....
-> >>
-> >> MAP_SYNC as I've implemented it provides guarantees only for data the
-> >> process has actually written. I agree with that and it was a conscious
-> >> decision. In my opinion that covers most usecases, provides reasonably
-> >> simple semantics (i.e., if you write data through MAP_SYNC mapping, you can
-> >> persist it just using CPU instructions), and reasonable performance.
-> >>
-> >> Now you seem to suggest the semantics should be: "Data you have read from or
-> >> written to a MAP_SYNC mapping can be persisted using CPU instructions." And
-> >> from implementation POV we can do that rather easily (just rip out the
-> >> IOMAP_WRITE checks). But I'm unsure whether this additional guarantee would
-> >> be useful enough to justify the slowdown of read faults? I was not able to
-> >> come up with a good usecase and so I've decided for current semantics. What
-> >> do other people think?
-> >
-> > Nobody commented on this for couple of days so how do we proceed? I would
-> > prefer to go just with a guarantee for data written and we can always make
-> > the guarantee stronger (i.e. apply it also for read data) when some user
-> > comes with a good usecase?
+On Tue, Oct 31, 2017 at 02:51:56PM -0700, Luis R. Rodriguez wrote:
+> Linux filesystems cannot set extra file attributes (stx_attributes as per
+> statx(2)) on a symbolic link as ioctl(2) with FS_IOC_SETFLAGS is used for
+> this purpose, and *all* ioctl(2) calls on a symbolic link yield EBADF.
+> This is because ioctl(2) tries to obtain struct fd from the symbolic link
+> file descriptor passed using fdget(), fdget() in turn always returns no
+> file set when a file descriptor is open with O_PATH. As per symlink(2)
+> O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
+> descriptor of a symbolic link, and this holds true for Linux, as such extra
+> file attributes cannot possibly be set on symbolic links on Linux.
 > 
-> I think it is easier to strengthen the guarantee than loosen it later
-> especially since it is not yet clear that we have a use case for the
-> stronger semantic. At least the initial motivation for MAP_SYNC was
-> for writers.
+> Given this Linux filesystems should treat extra file attributes set on
+> symbolic links as corruption and fix them.
+> 
+>    The TL;DR:
+> 
+> How I discovered this was finding a corrupted filesystem with symbolic
+> links with the extra file attribute append (STATX_ATTR_APPEND) set. Symbolic
+> links with the attribute append set cannot be removed as they are treated as
+> if a file was set with the immutable flag set. Standard tools however cannot
+> remove *any* attribute flag:
+> 
+> 	# chattr -a symlink
+> 	chattr: Operation not supported while reading flags on b
+> 
+> If you end up with these symbolic links userspace cannot remove them.
+> 
+> Likewise one cannot use the same tool to *set* this extra file attribute on
+> a symbolic link using chattr:
+> 	# rm -f y z
+> 	# ln -s y z
+> 	# chattr +a z
+> 	chattr: Operation not supported while reading flags on z
+> 
+> What makes this puzzling was one cannot even list attributes on symlinks
+> using lsattr either:
+> 
+> 	# rm -f a b
+> 	# ln -s a b
+> 	# lsattr b
+> 	lsattr: Operation not supported While reading flags on b
+> 
+> The above was due to commit 023d111e92195 ("chattr.1.in: Document the
+> compression attribute flags E, X, and ...") merged on e2fsprogs v1.28 since
+> August 2002. That commit just refers to the fact that attributes were only
+> allowed after that commit for directories and regular files due to Debian
+> bug 152029 [0]. This bug was filed since lsattr lsattr would segfault when
+> used against a special file of an old DRM buggy driver, the ioctl seem to
+> have worked but crashed lsattr with its information. The bug report doesn't
+> list any specific reasoning for not allowing attributes on symlinks though.
+> 
+> Crafting your own tool to query the extra file attributes with the new
+> shiny statx(2) works, and if a symbolic link has the extra attribute
+> flag set statx(2) would inform userspace of this. statx(2) is only used
+> for getting file information, not for setting them.
+> 
+> This all meant that if you end up with the append extra file attribute
+> set on a symlink you need special tools to try to remove it and currently
+> that's only possible on XFS with xfs_db [1] [2].
+> 
+> Fix XFS filesystems which have these extra file attributes set as the only
+> way they could have been set was through corruption.
+> 
+> [0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
+> [1] xfs_db -x -c 'inode inode-number' -c 'write core.append 1' /dev/device
+> [2] xfs_db -x -c 'inode inode-number' -c 'write core.append 0' /dev/device
+> 
+> Cc: Tso Ted <tytso@mit.edu>
+> Cc: Nikolay Borisov <nborisov@suse.com>
+> Cc: Flex Liu <fliu@suse.com>
+> Cc: Jake Norris <jake.norris@suse.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+> 
+> On this v2 I've provided a much better explanation as to why these
+> extra file attributes don't make sense on Linux, and trimmed the flags
+> we venture out to clear to *only* match what statx defines. It may be
+> possible to clear more dino->di_flags and maybe even dino->di_flags2
+> for symbolic links however that those be determined separately as the
+> other flags' semantics are clarified for setting.
+> 
+>  repair/dinode.c | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 15ba8cc22b39..6288e42de15e 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2482,6 +2482,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  						FS_XFLAG_EXTSIZE);
+>  			}
+>  		}
+> +		if (flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
+> +			     XFS_DIFLAG_NODUMP)) {
+> +			/*
+> +			 * ioctl(fd, *) and so ioctl(fd, FS_IOC_SETFLAGS)
+> +			 * yields EBADF on symlinks as they have O_PATH set.
+> +			 * "Extra file attributes", stx_attributes, as per
+> +			 * statx(2) cannot be set on symlinks on Linux.
+> +			 */
+> +			if (di_mode && S_ISLNK(di_mode) &&
+> +			    !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
 
-I agree.  It seems like all threads/processes in a given application need to
-use MAP_SYNC consistently so they can be sure that data that is written (and
-then possibly read) will be durable on media.  I think what you have is a good
-starting point, and we can adjust later if necessary.
+I don't think we can be a link and a file at the same time, right?
+
+Does this DIFLAG clearing applies to bdev/cdev/fifo/socket files too?
+
+--D
+
+> +				if (!uncertain) {
+> +					do_warn(
+> +	_("file or directory attributes set on symlink inode %" PRIu64 "\n"),
+> +						lino);
+> +				}
+> +				flags &= ~(XFS_DIFLAG_IMMUTABLE |
+> +					   XFS_DIFLAG_APPEND |
+> +					   XFS_DIFLAG_NODUMP);
+> +			}
+> +		}
+> +
+>  		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
+>  			if (!no_modify) {
+>  				do_warn(_("fixing bad flags.\n"));
+> -- 
+> 2.14.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
