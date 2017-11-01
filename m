@@ -1,71 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:58469 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755772AbdKBLL7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 07:11:59 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 2/2] xfs: fix unused variable warnings
-Date: Thu,  2 Nov 2017 12:11:13 +0100
-Message-Id: <20171102111137.3062126-2-arnd@arndb.de>
-In-Reply-To: <20171102111137.3062126-1-arnd@arndb.de>
-References: <20171102111137.3062126-1-arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:39522 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751511AbdKAN64 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 09:58:56 -0400
+Date: Wed, 1 Nov 2017 09:58:55 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/18] xfs: pass an on-disk extent to
+ xfs_bmbt_validate_extent
+Message-ID: <20171101135855.GA11709@bfoster.bfoster>
+References: <20171031142230.11755-1-hch@lst.de>
+ <20171031142230.11755-2-hch@lst.de>
+ <20171031175311.GC7093@bfoster.bfoster>
+ <20171031211520.GI4911@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171031211520.GI4911@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_delay':
-fs/xfs/libxfs/xfs_bmap.c:4648:20: error: unused variable 'ifp' [-Werror=unused-variable]
-  struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
-                    ^~~
-fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_cow':
-fs/xfs/libxfs/xfs_bmap.c:4776:20: error: unused variable 'ifp' [-Werror=unused-variable]
+On Tue, Oct 31, 2017 at 02:15:20PM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 31, 2017 at 01:53:12PM -0400, Brian Foster wrote:
+> > On Tue, Oct 31, 2017 at 04:22:13PM +0200, Christoph Hellwig wrote:
+> > > This prepares for getting rid of the current in-memory extent format.
+> > > 
+> > 
+> > Couldn't we port this function over to use whatever the new in-memory
+> > extent format is? IOW, just have the helper check for XFS_EXT_UNWRITTEN
+> > rather than the associated bit in the on-disk format..?
+> 
+> It's certainly possible, but in general verifiers are supposed to check
+> on-disk metadata before they end up in-core, and this would seem to get
+> us closer to that, right?
+> 
 
-Fixes: ca5d8e5b7b90 ("xfs: move pre/post-bmap tracing into xfs_iext_update_extent")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Yeah, but are any of these calls actually made in a buffer verifier
+path?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f45f05c45e15..fa85b08b8fe2 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4645,7 +4645,6 @@ xfs_bmap_del_extent_delay(
- 	struct xfs_bmbt_irec	*del)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
- 	struct xfs_bmbt_irec	new;
- 	int64_t			da_old, da_new, da_diff = 0;
- 	xfs_fileoff_t		del_endoff, got_endoff;
-@@ -4663,7 +4662,7 @@ xfs_bmap_del_extent_delay(
- 	da_new = 0;
- 
- 	ASSERT(*idx >= 0);
--	ASSERT(*idx <= xfs_iext_count(ifp));
-+	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, whichfork)));
- 	ASSERT(del->br_blockcount > 0);
- 	ASSERT(got->br_startoff <= del->br_startoff);
- 	ASSERT(got_endoff >= del_endoff);
-@@ -4773,7 +4772,6 @@ xfs_bmap_del_extent_cow(
- 	struct xfs_bmbt_irec	*del)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	new;
- 	xfs_fileoff_t		del_endoff, got_endoff;
- 	int			state = BMAP_COWFORK;
-@@ -4784,7 +4782,7 @@ xfs_bmap_del_extent_cow(
- 	got_endoff = got->br_startoff + got->br_blockcount;
- 
- 	ASSERT(*idx >= 0);
--	ASSERT(*idx <= xfs_iext_count(ifp));
-+	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, XFS_COW_FORK)));
- 	ASSERT(del->br_blockcount > 0);
- 	ASSERT(got->br_startoff <= del->br_startoff);
- 	ASSERT(got_endoff >= del_endoff);
--- 
-2.9.0
+Brian
 
+> --D
+> 
+> > Brian
+> > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
+> > >  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
+> > >  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
+> > >  3 files changed, 9 insertions(+), 10 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > > index f45f05c45e15..b2b6832b9e6b 100644
+> > > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > > @@ -1259,14 +1259,14 @@ xfs_iread_extents(
+> > >  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+> > >  		for (j = 0; j < num_recs; j++, i++, frp++) {
+> > >  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
+> > > -			trp->l0 = be64_to_cpu(frp->l0);
+> > > -			trp->l1 = be64_to_cpu(frp->l1);
+> > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
+> > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
+> > >  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
+> > >  						 XFS_ERRLEVEL_LOW, mp);
+> > >  				error = -EFSCORRUPTED;
+> > >  				goto out_brelse;
+> > >  			}
+> > > +			trp->l0 = be64_to_cpu(frp->l0);
+> > > +			trp->l1 = be64_to_cpu(frp->l1);
+> > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
+> > >  		}
+> > >  		xfs_trans_brelse(tp, bp);
+> > > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+> > > index 6f891eeb88f6..2fbfe2a24b15 100644
+> > > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
+> > > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+> > > @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+> > >   * Check that the extent does not contain an invalid unwritten extent flag.
+> > >   */
+> > >  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
+> > > -		struct xfs_bmbt_rec_host *ep)
+> > > +		struct xfs_bmbt_rec *ep)
+> > >  {
+> > > -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
+> > > +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
+> > >  		return true;
+> > >  	if (whichfork == XFS_DATA_FORK &&
+> > >  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
+> > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > index bb63f38b97cc..abe601b48c9c 100644
+> > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > @@ -371,13 +371,13 @@ xfs_iformat_extents(
+> > >  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
+> > >  		for (i = 0; i < nex; i++, dp++) {
+> > >  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+> > > -			ep->l0 = get_unaligned_be64(&dp->l0);
+> > > -			ep->l1 = get_unaligned_be64(&dp->l1);
+> > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
+> > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
+> > >  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+> > >  						 XFS_ERRLEVEL_LOW, mp);
+> > >  				return -EFSCORRUPTED;
+> > >  			}
+> > > +			ep->l0 = get_unaligned_be64(&dp->l0);
+> > > +			ep->l1 = get_unaligned_be64(&dp->l1);
+> > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
+> > >  		}
+> > >  	}
+> > > @@ -764,8 +764,6 @@ xfs_iextents_copy(
+> > >  	for (i = 0; i < nrecs; i++) {
+> > >  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+> > >  
+> > > -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
+> > > -
+> > >  		start_block = xfs_bmbt_get_startblock(ep);
+> > >  		if (isnullstartblock(start_block)) {
+> > >  			/*
+> > > @@ -779,6 +777,7 @@ xfs_iextents_copy(
+> > >  		/* Translate to on disk format */
+> > >  		put_unaligned_be64(ep->l0, &dp->l0);
+> > >  		put_unaligned_be64(ep->l1, &dp->l1);
+> > > +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
+> > >  
+> > >  		dp++;
+> > >  		copied++;
+> > > -- 
+> > > 2.14.2
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
