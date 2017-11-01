@@ -1,159 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42368 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54714 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752300AbdKFNHJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Nov 2017 08:07:09 -0500
-Date: Mon, 6 Nov 2017 08:07:08 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171106130708.GB30884@bfoster.bfoster>
-References: <20171030133117.GA3535@bfoster.bfoster>
- <20171030210941.GA5858@dastard>
- <20171031112432.GA7093@bfoster.bfoster>
- <20171101004513.GK5858@dastard>
- <20171101141720.GB11709@bfoster.bfoster>
- <20171101235300.GT5858@dastard>
- <20171102112533.GA15748@bfoster.bfoster>
- <20171102233017.GX5858@dastard>
- <20171103112626.GA19974@bfoster.bfoster>
- <20171105235104.GF4094@dastard>
+        id S1752066AbdKAMGt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 08:06:49 -0400
+Date: Wed, 1 Nov 2017 20:06:47 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs: flush the range before zero partial block range on
+ truncate down
+Message-ID: <20171101120647.GR17339@eguan.usersys.redhat.com>
+References: <20171027125328.25001-1-eguan@redhat.com>
+ <20171031225804.GF5858@dastard>
+ <20171101034639.GP17339@eguan.usersys.redhat.com>
+ <20171101044451.GO5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171105235104.GF4094@dastard>
+In-Reply-To: <20171101044451.GO5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 06, 2017 at 10:51:04AM +1100, Dave Chinner wrote:
-> On Fri, Nov 03, 2017 at 07:26:27AM -0400, Brian Foster wrote:
-> > On Fri, Nov 03, 2017 at 10:30:17AM +1100, Dave Chinner wrote:
-> > > On Thu, Nov 02, 2017 at 07:25:33AM -0400, Brian Foster wrote:
-> > > > On Thu, Nov 02, 2017 at 10:53:00AM +1100, Dave Chinner wrote:
-> > > > > On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
-> > > > > > On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
-> > > > > > > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
-> > > > > > > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
-> > > > > > > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
-> > > > > > > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
-> > ...
-> > > > > > BTW, was there ever any kind of solution to the metadata block
-> > > > > > reservation issue in the thin case? We now hide metadata reservation
-> > > > > > from the user via the m_usable_blocks account. If m_phys_blocks
-> > > > > > represents a thin volume, how exactly do we prevent those metadata
-> > > > > > allocations/writes from overrunning what the admin has specified as
-> > > > > > "usable" with respect to the thin volume?
-> > > > > 
-> > > > > The reserved metadata blocks are not accounted from free space when
-> > > > > they are allocated - they are pulled from the reserved space that
-> > > > > has already been removed from the free space.
-> > > > > 
-> > > > 
-> > > > Ok, so the user can set a usable blocks value of something less than the
-> > > > fs geometry, then the reservation is pulled from that, reducing the
-> > > > reported "usable" value further. Hence, what ends up reported to the
-> > > > user is actually something less than the value set by the user, which
-> > > > means that the filesystem overall respects how much space the admin says
-> > > > it can use in the underlying volume.
-> > > > 
-> > > > For example, the user creates a 100T thin volume with 10T of usable
-> > > > space. The fs reserves a further 2T out of that for metadata, so then
-> > > > what the user sees is 8T of writeable space.  The filesystem itself
-> > > > cannot use more than 10T out of the volume, as instructed. Am I
-> > > > following that correctly? If so, that sounds reasonable to me from the
-> > > > "don't overflow my thin volume" perspective.
+On Wed, Nov 01, 2017 at 03:44:51PM +1100, Dave Chinner wrote:
+> On Wed, Nov 01, 2017 at 11:46:39AM +0800, Eryu Guan wrote:
+> > On Wed, Nov 01, 2017 at 09:58:04AM +1100, Dave Chinner wrote:
+> > > On Fri, Oct 27, 2017 at 08:53:28PM +0800, Eryu Guan wrote:
+> > > > On truncate down, if new size is not block size aligned, we zero the
+> > > > rest of block via iomap_truncate_page() to avoid exposing stale data
+> > > > to user, and iomap_truncate_page() skips zeroing if the range is
+> > > > already in unwritten status or a hole.
 > > > 
-> > > No, that's not what happens. For thick filesystems, the 100TB volume
-> > > gets 2TB pulled from it so it appears as a 98TB filesystem. This is
-> > > done by modifying the free block counts and m_usable_space when the
-> > > reservations are made.
+> > > Unless the page is in the page cache already, and then it gets
+> > > zeroed in memory as part of truncate_setsize() call.
 > > > 
-> > 
-> > Ok..
-> > 
-> > > For thin filesystems, we've already got 90TB of space "reserved",
-> > > and so the metadata reservations and allocations come from that.
-> > > i.e. we skip the modification of free block counts and m_usable
-> > > space in the case of a thinspace filesystem, and so the user still
-> > > sees 10TB of usable space that they asked to have.
+> > > > But it's possible that a buffer write overwrites the unwritten
+> > > > extent, which won't be converted to a normal extent until I/O
+> > > > completion, and iomap_truncate_page() skips zeroing wrongly because
+> > > > of the not-converted unwritten extent. This would cause a subsequent
+> > > > mmap read sees non-zeros beyond EOF.
 > > > 
-> > 
-> > Hmm.. so then I'm slightly confused regarding the thin use case
-> > regarding prevention of pool depletion. The usable blocks value that the
-> > user settles on is likely based on how much space the filesystem should
-> > use to safely avoid pool depletion.
-> 
-> I did say up front that the user data thinspace accounting would not
-> be an exact reflection of underlying storage pool usage. Things like
-> partially written blocks in the underlying storage pool mean write
-> amplification factors would need to be considered, but that's
-> something the admin already has to deal with in thinly provisioned
-> storage.
-> 
-
-Ok, I recall this coming up one way or another. For some reason I
-thought something might have changed in the implementation since then
-and/or managed to confuse myself over the current behavior.
-
-> > If a usable value of 10T means the
-> > filesystem can write to the usable 10T + some amount of metadata
-> > reservation, how does the user determine a sane usable value based on
-> > the current pool geometry?
-> 
-> From an admin POV it's damn easy to document in admin guides that
-> actual space usage of a thinspace filesysetm is going to be in the
-> order of 2% greater than the space given to the filesystem for user
-> data. Use an overhead of 2-5% for internal management and the "small
-> amount of extra space for internal metadata" issue can be ignored.
-> 
-
-It's easy to document whatever we want. :) I'm not convinced that is as
-effective as a hard limit based on the fs features, but the latter is
-more complex and may be overkill in most cases. So, documentation works
-for me until/unless testing or real usage shows otherwise.
-
-If it does come up, perhaps a script or userspace tool that somehow
-presents the current internal reservation calculations (combined with
-whatever geometry information is relevant) as something consumable for
-the user (whether it be a simple dump of the active reservations, the
-worst case consumption of a thin fs, etc.) might be a nice compromise.
-
-> > > > The best I can read into the response here is that you think physical
-> > > > shrink is unlikely enough to not need to care very much what kind of
-> > > > interface confusion could result from needing to rev the current growfs
-> > > > interface to support physical shrink on thin filesystems in the future.
-> > > > Is that a fair assessment..?
+> > > Yes, it should skip the zeroing on disk. The page in the page cache
+> > > over the unwritten extent will be zeroed on read.
 > > > 
-> > > Not really. I understand just how complex a physical shrink
-> > > implementation is going to be, and have a fair idea of the sorts of
-> > > craziness we'll need to add to xfs_growfs to support/co-ordinate a
-> > > physical shrink operation.  From that perspective, I don't see a
-> > > physical shrink working with an unchanged growfs interface. The
-> > > discussion about whether or not we should physically shrink
-> > > thinspace filesystems is almost completely irrelevant to the
-> > > interface requirements of a physical shrink....
+> > > The real question is this: where are the zeros in the page that fsx
+> > > is complaining about?
 > > 
-> > So it's not so much about the likelihood of realizing physical shrink,
-> > but rather the likelihood that physical shrink would require to rev the
-> > growfs structure anyways (regardless of this feature).
+> > The partial block that iomap_truncate_page() skipped zeroing was latter
+> > written back to disk, and the punch_hole before mmap read invalidated
+> > the page cache so mmap read from disk and saw non-zeros.  This is a
+> > hard-to-hit sequence, it took me almost 2000 iterations of generic/112
+> > runs to hit one failure. I'll provide more details below.
 > 
-> Yup, pretty much.
-> 
+> Oh, ok, so they weren't close together operations but far apart in
+> the trace. I usually indicate that by showing [....] lines between
+> the operations if there's stuff that occurred between them.
 
-Ok. I don't agree, but at least I understand your perspective. ;)
+They are not strictly one-by-one operations in the original fsxops log,
+but are close enough. Then I tailored the ops into a minimal
+step-by-step reproducer.
 
-Brian
+> 
+> > > > simplified fsx operation sequence is like (assuming 4k block size
+> > > > xfs):
+> > > 
+> > > What should have is:
+> > > 
+> > > >   fallocate 0x0 0x1000 0x0 keep_size
+> > > 
+> > > Unwritten, no data.
+> > 
+> > Yes, assuming 4k block size and 4k page size, unwritten extent with 1
+> > block allocated, i_size stays 0.
+> > 
+> > > 
+> > > >   write 0x0 0x1000 0x0
+> > > 
+> > > Unwritten, contains data in page cache.
+> > 
+> > Exactly, and in-core i_size is 4k now, but on-disk di_size is still 0.
+> > 
+> > > 
+> > > >   truncate 0x0 0x800 0x1000
+> > > 
+> > > Unwritten, page contains data 0-0x800, zeros 0x800-0x1000
+> > 
+> > Yes, the page cache after truncate is correct. But before we zero the
+> > page cache (in truncate_setsize()), we skipped zeroing the partial block
+> > range 0x800-0x1000 and then triggered a writeback on range
+> > [di_size, newsize], which was 0-0x800, and 0x800-0x1000 was written back
+> > to disk too, which contained non-zeros.
+> > 
+> > (newsize(2k) > di_size(0) && oldsize(4k) != di_size(0)) was true.
+> > 
+> >         if (did_zeroing ||
+> >             (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
+> >                 error = filemap_write_and_wait_range(mapping, ip->i_d.di_size,
+> >                                                         newsize - 1);
+> >                 if (error)
+> >                         return error;
+> >         }
+> 
+> Ok, so we're writing data between di_size and newsize before
+> removing the page cache beyond newsize. As such, the page of data
+> that newsize lies in has not been zeroed by page cache invalidation
+> before it is written.
+> 
+> Ok, that explains why the EOF page zeroing in xfs_do_writepage()
+> isn't catching this - we haven't updated the inode size yet.
+> 
+> IOWs, the /three places/ where we normally catch this and zero the
+> partial tail page beyond EOF are not doing it because:
+> 
+> 	1. iomap_truncate_page() sees unwritten and skips.
+> 	2. truncate_setsize() has not yet been called so can't
+> 	   zero the tail of the page.
+> 	3. we haven't changed where EOF is yet, so
+> 	   xfs_do_writepage() hasn't triggered it's "zero data
+> 	   beyond EOF" case before it sends the page to disk. 
+> 
+> So, we have three options here:
+> 
+> 	1. iomap_truncate_page() always zeros
+> 	2. update inode size before writeback after zeroing so the
+> 	   xfs_do_writepage() zeros the tail page, or
+> 	3. move truncate_setsize() to before writeback so the page
+> 	   cache invalidation zeros the part page at the new EOF.
 
-> Cheers,
+This really helps summarize the problem and solution, thanks!
+
+Yeah, I started to realize moving the order of writeback vs setsize
+around might be a fix when I was writing my last reply - explaining the
+problem to someone else really helps understand the problem itself :)
+
 > 
-> Dave.
+> I think 1) is a no-go for performance reasons. 2) is better, but
+> I don't like the idea of separating the page cache invalidation
+> from the size truncation. That leaves 3) - moving
+> truncate_setsize().
 > 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think I prefer 3) because it triggers multiple layers of defense
+> against writing stale data past EOF, and from an crash behaviour
+> point of view it makes no difference whether we truncate the page
+> cache before or after triggering writeback because it will just make
+> the result the same as if we were zeroing a written extent....
+
+I'm testing an updated patch based on option 3 now, the finished tests
+look good. I'll send the new version out for review soon. Thanks a lot
+for the suggestion and review!
+
+Eryu
