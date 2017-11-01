@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43328 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:43373 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934228AbdKAVrR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:47:17 -0400
-Subject: [PATCH 07/14] generic/459: explicitly require thin_check
+        with ESMTP id S933912AbdKAVrW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:47:22 -0400
+Subject: [PATCH 08/14] common/xfs: remove inode-paths cruft
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 01 Nov 2017 14:47:11 -0700
-Message-ID: <150957283171.18388.10837345130257598513.stgit@magnolia>
+Date: Wed, 01 Nov 2017 14:47:17 -0700
+Message-ID: <150957283781.18388.9309616767855804002.stgit@magnolia>
 In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
 References: <150957278824.18388.17975162441125293654.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,39 +20,33 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The lvm command can invoke the thin pool utilities as part of managing
-a thin volume.  It'll fail if the thin provisioning utilities are not
-installed, so we need to check for its presence before running a test.
+Remove the inode-paths check from _check_xfs_test_fs because we don't
+support inode paths, xfsprogs doesn't have a xfs_{check,repair}_ipaths
+tool, and it's broken anyway because we ignore _check_xfs_filesystem
+(which tells whether or not the filesystem is even still mounted).
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config     |    1 +
- tests/generic/459 |    1 +
- 2 files changed, 2 insertions(+)
+ common/xfs |    7 -------
+ 1 file changed, 7 deletions(-)
 
 
-diff --git a/common/config b/common/config
-index 96503c6..eea8669 100644
---- a/common/config
-+++ b/common/config
-@@ -196,6 +196,7 @@ export MAN_PROG="`set_prog_path man`"
- export NFS4_SETFACL_PROG="`set_prog_path nfs4_setfacl`"
- export NFS4_GETFACL_PROG="`set_prog_path nfs4_getfacl`"
- export UBIUPDATEVOL_PROG="`set_prog_path ubiupdatevol`"
-+THIN_CHECK_PROG="$(set_prog_path thin_check)"
+diff --git a/common/xfs b/common/xfs
+index 5643adf..79efb78 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -471,13 +471,6 @@ _check_xfs_test_fs()
+ 		TEST_RT="$TEST_RTDEV"
  
- # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
- # newer systems have udevadm command but older systems like RHEL5 don't.
-diff --git a/tests/generic/459 b/tests/generic/459
-index 7c10c2a..d1ad372 100755
---- a/tests/generic/459
-+++ b/tests/generic/459
-@@ -63,6 +63,7 @@ _supported_os Linux
- _require_scratch_nocheck
- _require_dm_target thin-pool
- _require_command $LVM_PROG lvm
-+_require_command "$THIN_CHECK_PROG" thin_check
- _require_freeze
+ 	_check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT
+-
+-	# check for ipath consistency
+-	if $XFS_GROWFS_PROG -n $TEST_DIR | grep -q 'inode-paths=1'; then
+-		# errors go to stderr
+-		xfs_check_ipaths $TEST_DIR >/dev/null
+-		xfs_repair_ipaths -n $TEST_DIR >/dev/null
+-	fi
+ }
  
- # remove previous $seqres.full before test
+ _require_xfs_test_rmapbt()
 
