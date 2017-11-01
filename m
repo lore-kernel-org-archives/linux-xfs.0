@@ -1,152 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44078 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754716AbdKAPhB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:37:01 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 10/18] dax: Allow dax_iomap_fault() to return pfn
-Date: Wed,  1 Nov 2017 16:36:39 +0100
-Message-Id: <20171101153648.30166-11-jack@suse.cz>
-In-Reply-To: <20171101153648.30166-1-jack@suse.cz>
-References: <20171101153648.30166-1-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19736 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933891AbdKAVqj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:46:39 -0400
+Subject: [PATCH 01/14] common/xfs: refactor xfs_scrub presence testing
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 01 Nov 2017 14:46:34 -0700
+Message-ID: <150957279473.18388.16116724960221536771.stgit@magnolia>
+In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-For synchronous page fault dax_iomap_fault() will need to return PFN
-which will then need to be inserted into page tables after fsync()
-completes. Add necessary parameter to dax_iomap_fault().
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
+Move all the requirements checking for xfs_scrub into a helper function.
+Make sure the helper properly detects the presence of the scrub ioctl
+and situations where we can't run scrub (e.g. norecovery).
+
+Refactor the existing three xfs_scrub call sites to use the helper to
+check if it's appropriate to run scrub.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/dax.c            | 13 +++++++------
- fs/ext2/file.c      |  2 +-
- fs/ext4/file.c      |  2 +-
- fs/xfs/xfs_file.c   |  4 ++--
- include/linux/dax.h |  2 +-
- 5 files changed, 12 insertions(+), 11 deletions(-)
+ README            |    6 +++---
+ common/rc         |    2 +-
+ common/xfs        |   41 ++++++++++++++++++++++++++++++++++-------
+ tests/generic/453 |   11 +----------
+ tests/generic/454 |   11 +----------
+ 5 files changed, 40 insertions(+), 31 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5214ed9ba508..5ddf15161390 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1079,7 +1079,7 @@ static int dax_fault_return(int error)
- 	return VM_FAULT_SIGBUS;
+
+diff --git a/README b/README
+index 4963d28..a9da4f0 100644
+--- a/README
++++ b/README
+@@ -88,9 +88,9 @@ Preparing system for tests:
+                run xfs_repair -n to check the filesystem; xfs_repair to rebuild
+                metadata indexes; and xfs_repair -n (a third time) to check the
+                results of the rebuilding.
+-             - set TEST_XFS_SCRUB=1 to have _check_xfs_filesystem run
+-               xfs_scrub -vd to scrub the filesystem metadata online before
+-               unmounting to run the offline check.
++             - xfs_scrub, if present, will always check the test and scratch
++               filesystems if they are still online at the end of the test.
++               It is no longer necessary to set TEST_XFS_SCRUB.
+              - setenv LOGWRITES_DEV to a block device to use for power fail
+                testing.
+ 
+diff --git a/common/rc b/common/rc
+index 1a4d81e..83aaced 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2091,7 +2091,7 @@ _require_xfs_io_command()
+ 			_notrun "xfs_io $command support is missing"
+ 		;;
+ 	"scrub"|"repair")
+-		testio=`$XFS_IO_PROG -x -c "$command test 0" $TEST_DIR 2>&1`
++		testio=`$XFS_IO_PROG -x -c "$command probe 0" $TEST_DIR 2>&1`
+ 		echo $testio | grep -q "Inappropriate ioctl" && \
+ 			_notrun "xfs_io $command support is missing"
+ 		;;
+diff --git a/common/xfs b/common/xfs
+index dff8454..de3c560 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -298,6 +298,30 @@ _require_xfs_db_command()
+ 		_notrun "xfs_db $command support is missing"
  }
  
--static int dax_iomap_pte_fault(struct vm_fault *vmf,
-+static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 			       const struct iomap_ops *ops)
++# Does the filesystem mounted from a particular device support scrub?
++_supports_xfs_scrub()
++{
++	mountpoint="$1"
++	device="$2"
++
++	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
++		echo "Usage: _supports_xfs_scrub mountpoint device"
++		exit 1
++	fi
++
++	test "$FSTYP" = "xfs" || return 1
++	test -x "$XFS_SCRUB_PROG" || return 1
++
++	# Probe for kernel support...
++	$XFS_IO_PROG -c 'help scrub' 2>&1 | grep -q 'types are:.*probe' || return 1
++	$XFS_IO_PROG -c "scrub probe 0" "$mountpoint" 2>&1 | grep -q "Inappropriate ioctl" && return 1
++
++	# Scrub can't run on norecovery mounts
++	_fs_options "$device" | grep -q "norecovery" && return 1
++
++	return 0
++}
++
+ # run xfs_check and friends on a FS.
+ _check_xfs_filesystem()
  {
- 	struct vm_area_struct *vma = vmf->vma;
-@@ -1280,7 +1280,7 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- 	return VM_FAULT_FALLBACK;
+@@ -330,14 +354,17 @@ _check_xfs_filesystem()
+ 	type=`_fs_type $device`
+ 	ok=1
+ 
+-	if [ "$type" = "xfs" ]; then
+-		if [ -n "$TEST_XFS_SCRUB" ] && [ -x "$XFS_SCRUB_PROG" ]; then
+-			"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full
+-			if [ $? -ne 0 ]; then
+-				_log_err "filesystem on $device failed scrub"
+-				ok=0
+-			fi
++	# Run online scrub if we can.
++	mntpt="$(_is_mounted $device)"
++	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
++		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $device >>$seqres.full 2>&1
++		if [ $? -ne 0 ]; then
++			_log_err "filesystem on $device failed scrub"
++			ok=0
+ 		fi
++	fi
++
++	if [ "$type" = "xfs" ]; then
+ 		# mounted ...
+ 		mountpoint=`_umount_or_remount_ro $device`
+ 	fi
+diff --git a/tests/generic/453 b/tests/generic/453
+index bda1112..16589d1 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -136,10 +136,7 @@ echo "Test XFS online scrub, if applicable"
+ 
+ # Only run this on xfs if xfs_scrub is available and has the unicode checker
+ check_xfs_scrub() {
+-	# Ignore non-XFS fs or no scrub program...
+-	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+-		return 1
+-	fi
++	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+@@ -147,12 +144,6 @@ check_xfs_scrub() {
+ 		return 1
+ 	fi
+ 
+-	# Does the ioctl work?
+-	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+-	   grep -q "Inappropriate ioctl"; then
+-		return 1
+-	fi
+-
+ 	return 0
  }
  
--static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-+static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 			       const struct iomap_ops *ops)
- {
- 	struct vm_area_struct *vma = vmf->vma;
-@@ -1425,7 +1425,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- 	return result;
+diff --git a/tests/generic/454 b/tests/generic/454
+index d1f93b2..efac860 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -132,10 +132,7 @@ echo "Test XFS online scrub, if applicable"
+ 
+ # Only run this on xfs if xfs_scrub is available and has the unicode checker
+ check_xfs_scrub() {
+-	# Ignore non-XFS fs or no scrub program...
+-	if [ "${FSTYP}" != "xfs" ] || [ ! -x "${XFS_SCRUB_PROG}" ]; then
+-		return 1
+-	fi
++	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV" || return 1
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+@@ -143,12 +140,6 @@ check_xfs_scrub() {
+ 		return 1
+ 	fi
+ 
+-	# Does the ioctl work?
+-	if $XFS_IO_PROG -x -c "scrub probe 0" $SCRATCH_MNT 2>&1 | \
+-	   grep -q "Inappropriate ioctl"; then
+-		return 1
+-	fi
+-
+ 	return 0
  }
- #else
--static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-+static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 			       const struct iomap_ops *ops)
- {
- 	return VM_FAULT_FALLBACK;
-@@ -1436,6 +1436,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-  * dax_iomap_fault - handle a page fault on a DAX file
-  * @vmf: The description of the fault
-  * @pe_size: Size of the page to fault in
-+ * @pfnp: PFN to insert for synchronous faults if fsync is required
-  * @ops: Iomap ops passed from the file system
-  *
-  * When a page fault occurs, filesystems may call this helper in
-@@ -1444,13 +1445,13 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-  * successfully.
-  */
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
--		    const struct iomap_ops *ops)
-+		    pfn_t *pfnp, const struct iomap_ops *ops)
- {
- 	switch (pe_size) {
- 	case PE_SIZE_PTE:
--		return dax_iomap_pte_fault(vmf, ops);
-+		return dax_iomap_pte_fault(vmf, pfnp, ops);
- 	case PE_SIZE_PMD:
--		return dax_iomap_pmd_fault(vmf, ops);
-+		return dax_iomap_pmd_fault(vmf, pfnp, ops);
- 	default:
- 		return VM_FAULT_FALLBACK;
- 	}
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index ff3a3636a5ca..d2bb7c96307d 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -99,7 +99,7 @@ static int ext2_dax_fault(struct vm_fault *vmf)
- 	}
- 	down_read(&ei->dax_sem);
  
--	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &ext2_iomap_ops);
-+	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &ext2_iomap_ops);
- 
- 	up_read(&ei->dax_sem);
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index b1da660ac3bc..3cec0b95672f 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -306,7 +306,7 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
- 		down_read(&EXT4_I(inode)->i_mmap_sem);
- 	}
- 	if (!IS_ERR(handle))
--		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops);
-+		result = dax_iomap_fault(vmf, pe_size, NULL, &ext4_iomap_ops);
- 	else
- 		result = VM_FAULT_SIGBUS;
- 	if (write) {
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 309e26c9dddb..7c6b8def6eed 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1040,7 +1040,7 @@ __xfs_filemap_fault(
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
- 	} else {
- 		if (write_fault)
- 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-@@ -1111,7 +1111,7 @@ xfs_filemap_pfn_mkwrite(
- 	if (vmf->pgoff >= size)
- 		ret = VM_FAULT_SIGBUS;
- 	else if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
- 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 122197124b9d..e7fa4b8f45bc 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -95,7 +95,7 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev);
- ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops);
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
--		    const struct iomap_ops *ops);
-+		    pfn_t *pfnp, const struct iomap_ops *ops);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
--- 
-2.12.3
 
