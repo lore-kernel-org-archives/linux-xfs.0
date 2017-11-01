@@ -1,91 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38799 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752771AbdKADIm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 23:08:42 -0400
-Date: Tue, 31 Oct 2017 20:08:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: b+tree for the incore extent list
-Message-ID: <20171101030836.GH4911@magnolia>
-References: <20171031142230.11755-1-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:1506 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754282AbdKAEoy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 00:44:54 -0400
+Date: Wed, 1 Nov 2017 15:44:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: flush the range before zero partial block range on
+ truncate down
+Message-ID: <20171101044451.GO5858@dastard>
+References: <20171027125328.25001-1-eguan@redhat.com>
+ <20171031225804.GF5858@dastard>
+ <20171101034639.GP17339@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171031142230.11755-1-hch@lst.de>
+In-Reply-To: <20171101034639.GP17339@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Eryu Guan <eguan@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2017 at 04:22:12PM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Wed, Nov 01, 2017 at 11:46:39AM +0800, Eryu Guan wrote:
+> On Wed, Nov 01, 2017 at 09:58:04AM +1100, Dave Chinner wrote:
+> > On Fri, Oct 27, 2017 at 08:53:28PM +0800, Eryu Guan wrote:
+> > > On truncate down, if new size is not block size aligned, we zero the
+> > > rest of block via iomap_truncate_page() to avoid exposing stale data
+> > > to user, and iomap_truncate_page() skips zeroing if the range is
+> > > already in unwritten status or a hole.
+> > 
+> > Unless the page is in the page cache already, and then it gets
+> > zeroed in memory as part of truncate_setsize() call.
+> > 
+> > > But it's possible that a buffer write overwrites the unwritten
+> > > extent, which won't be converted to a normal extent until I/O
+> > > completion, and iomap_truncate_page() skips zeroing wrongly because
+> > > of the not-converted unwritten extent. This would cause a subsequent
+> > > mmap read sees non-zeros beyond EOF.
+> > 
+> > Yes, it should skip the zeroing on disk. The page in the page cache
+> > over the unwritten extent will be zeroed on read.
+> > 
+> > The real question is this: where are the zeros in the page that fsx
+> > is complaining about?
 > 
-> this series first updates the incore extent list iteration to use
-> a cursor based scheme that hides the implementation details, and then
-> switch to use a b+tree to implement the in-core extent list.  This
-> reduces the need for a large contiguous allocation that the current
-> indirection array requires, and thus avoids stalls during workloads
-> using giant extent lists, especially on systems that are long running.
-> 
-> The algorithms also should be better in general, but due to the fact
-> the the operations on the on-disk b+tree have such a high overhead
-> not much that effect is seen on the usual benchmarks.
-> 
-> I also have a git tree available at:
-> 
->     git://git.infradead.org/users/hch/xfs.git xfs-incore-btree
+> The partial block that iomap_truncate_page() skipped zeroing was latter
+> written back to disk, and the punch_hole before mmap read invalidated
+> the page cache so mmap read from disk and saw non-zeros.  This is a
+> hard-to-hit sequence, it took me almost 2000 iterations of generic/112
+> runs to hit one failure. I'll provide more details below.
 
-FWIW I started xfstesting this but encountered numerous xfs_repair
-problems with a -m crc=0 filesystem:
+Oh, ok, so they weren't close together operations but far apart in
+the trace. I usually indicate that by showing [....] lines between
+the operations if there's stuff that occurred between them.
 
-[ 5483.480991] XFS (pmem4): Injecting error (false) at file /raid/home/djwong/cdev/work/linux-dgc/fs/xfs/xfs_trans_ail.c, line 338, on filesystem "pmem4"
-[ 5483.483600] XFS (pmem4): Injecting error (false) at file /raid/home/djwong/cdev/work/linux-dgc/fs/xfs/xfs_trans_ail.c, line 338, on filesystem "pmem4"
-[ 5485.671575] XFS (pmem4): Intentionally corrupted log record at LSN 0x1a000016f0. Shutdown imminent.
-[ 5485.673555] XFS (pmem4): metadata I/O error: block 0x7e728 ("xlog_iodone") error 0 numblks 64
-[ 5485.675230] XFS (pmem4): xfs_do_force_shutdown(0x2) called from line 1261 of file /raid/home/djwong/cdev/work/linux-dgc/fs/xfs/xfs_log.c.  Return address = 0xffffffffa0157edb
-[ 5485.691317] XFS (pmem4): Log I/O Error Detected.  Shutting down filesystem
-[ 5485.691820] XFS (pmem4): xfs_do_force_shutdown(0x1) called from line 236 of file /raid/home/djwong/cdev/work/linux-dgc/fs/xfs/libxfs/xfs_defer.c.  Return address = 0xffffffffa00ea49e
-[ 5485.691916] XFS (pmem4): xfs_inactive_ifree: xfs_defer_finish returned error -5
-[ 5485.692001] XFS (pmem4): xfs_inactive_ifree: xfs_trans_commit returned error -5
-[ 5485.698093] XFS (pmem4): Please umount the filesystem and rectify the problem(s)
-[ 5486.628228] XFS (pmem4): Unmounting Filesystem
-[ 5589.882261] INFO: task umount:28106 blocked for more than 60 seconds.
-[ 5589.883320]       Tainted: G        W       4.14.0-rc6-dgc #2
-[ 5589.884473] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[ 5589.886103] umount          D    0 28106  27867 0x00000000
-[ 5589.887491] Call Trace:
-[ 5589.888158]  ? __schedule+0x3fd/0xb10
-[ 5589.889002]  ? __xfs_iflock+0x9f/0x100 [xfs]
-[ 5589.889645]  schedule+0x40/0x90
-[ 5589.890013]  io_schedule+0x16/0x40
-[ 5589.890537]  __xfs_iflock+0xf8/0x100 [xfs]
-[ 5589.891124]  ? bit_waitqueue+0x40/0x40
-[ 5589.891565]  xfs_reclaim_inode+0x147/0x410 [xfs]
-[ 5589.892117]  xfs_reclaim_inodes_ag+0x247/0x400 [xfs]
-[ 5589.892683]  xfs_reclaim_inodes+0x1b/0x20 [xfs]
-[ 5589.893223]  xfs_unmountfs+0xc0/0x2c0 [xfs]
-[ 5589.893734]  xfs_fs_put_super+0x2c/0x90 [xfs]
-[ 5589.894299]  generic_shutdown_super+0x64/0x110
-[ 5589.895218]  kill_block_super+0x21/0x50
-[ 5589.895867]  deactivate_locked_super+0x34/0x60
-[ 5589.896377]  cleanup_mnt+0x3b/0x70
-[ 5589.896774]  task_work_run+0x79/0xb0
-[ 5589.897193]  exit_to_usermode_loop+0x93/0xa0
-[ 5589.897703]  syscall_return_slowpath+0xd7/0x100
-[ 5589.898312]  entry_SYSCALL_64_fastpath+0xbc/0xbe
-[ 5589.899263] RIP: 0033:0x7f7e8b933447
-
-And for whatever reason on the -m rmapbt=1,reflink=1 -i sparse
-filesystem with 1k block size xfs_repair blew up all over the place.
-
---D
-
+> > > simplified fsx operation sequence is like (assuming 4k block size
+> > > xfs):
+> > 
+> > What should have is:
+> > 
+> > >   fallocate 0x0 0x1000 0x0 keep_size
+> > 
+> > Unwritten, no data.
 > 
-> Gitweb:
+> Yes, assuming 4k block size and 4k page size, unwritten extent with 1
+> block allocated, i_size stays 0.
 > 
->     http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-incore-btree
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > >   write 0x0 0x1000 0x0
+> > 
+> > Unwritten, contains data in page cache.
+> 
+> Exactly, and in-core i_size is 4k now, but on-disk di_size is still 0.
+> 
+> > 
+> > >   truncate 0x0 0x800 0x1000
+> > 
+> > Unwritten, page contains data 0-0x800, zeros 0x800-0x1000
+> 
+> Yes, the page cache after truncate is correct. But before we zero the
+> page cache (in truncate_setsize()), we skipped zeroing the partial block
+> range 0x800-0x1000 and then triggered a writeback on range
+> [di_size, newsize], which was 0-0x800, and 0x800-0x1000 was written back
+> to disk too, which contained non-zeros.
+> 
+> (newsize(2k) > di_size(0) && oldsize(4k) != di_size(0)) was true.
+> 
+>         if (did_zeroing ||                                                                                                                                                                                                       
+>             (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {                                                                                                                                                         
+>                 error = filemap_write_and_wait_range(mapping, ip->i_d.di_size,                                                                                                                                                   
+>                                                         newsize - 1);                                                                                                                                                            
+>                 if (error)                                                                                                                                                                                                       
+>                         return error;                                                                                                                                                                                            
+>         }
+
+Ok, so we're writing data between di_size and newsize before
+removing the page cache beyond newsize. As such, the page of data
+that newsize lies in has not been zeroed by page cache invalidation
+before it is written.
+
+Ok, that explains why the EOF page zeroing in xfs_do_writepage()
+isn't catching this - we haven't updated the inode size yet.
+
+IOWs, the /three places/ where we normally catch this and zero the
+partial tail page beyond EOF are not doing it because:
+
+	1. iomap_truncate_page() sees unwritten and skips.
+	2. truncate_setsize() has not yet been called so can't
+	   zero the tail of the page.
+	3. we haven't changed where EOF is yet, so
+	   xfs_do_writepage() hasn't triggered it's "zero data
+	   beyond EOF" case before it sends the page to disk. 
+
+So, we have three options here:
+
+	1. iomap_truncate_page() always zeros
+	2. update inode size before writeback after zeroing so the
+	   xfs_do_writepage() zeros the tail page, or
+	3. move truncate_setsize() to before writeback so the page
+	   cache invalidation zeros the part page at the new EOF.
+
+I think 1) is a no-go for performance reasons. 2) is better, but
+I don't like the idea of separating the page cache invalidation
+from the size truncation. That leaves 3) - moving
+truncate_setsize().
+
+I think I prefer 3) because it triggers multiple layers of defense
+against writing stale data past EOF, and from an crash behaviour
+point of view it makes no difference whether we truncate the page
+cache before or after triggering writeback because it will just make
+the result the same as if we were zeroing a written extent....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
