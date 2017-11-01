@@ -1,80 +1,435 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26473 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:27272 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdKAAQ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 20:16:29 -0400
-Date: Tue, 31 Oct 2017 17:16:23 -0700
+        with ESMTP id S1750764AbdKAAS4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 20:18:56 -0400
+Date: Tue, 31 Oct 2017 17:18:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: move error injection tags into their own file
-Message-ID: <20171101001623.GE4911@magnolia>
+Subject: [PATCH v2] xfs: move error injection tags into their own file
+Message-ID: <20171101001850.GF4911@magnolia>
 References: <20171031193128.GG4911@magnolia>
- <20171031232233.GI5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171031232233.GI5858@dastard>
+In-Reply-To: <20171031193128.GG4911@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-On Wed, Nov 01, 2017 at 10:22:33AM +1100, Dave Chinner wrote:
-> On Tue, Oct 31, 2017 at 12:31:28PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move the error injection tag names into a libxfs header so that we can
-> > share it between kernel and userspace.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Simple enough, but there's an admin problem with this patch.
-> 
-> > new file mode 100644
-> > index 0000000..0cc1c05
-> > --- /dev/null
-> > +++ b/fs/xfs/libxfs/xfs_errortag.h
-> > @@ -0,0 +1,106 @@
-> > +/*
-> > + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> > + *
-> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> This isn't actually true. You're moving a bunch of code from
-> fs/xfs/xfs_error.h that is under:
-> 
->  * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
->  * All Rights Reserved.
-> 
-> Moving code into a new file does not reassign the copyright on the
-> code to a new owner. Hence I think this is the appropriate way to
-> record the copyrights on this new file:
-> 
->  * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
->  * Copyright (C) 2017 Oracle.
->  * All Rights Reserved.
-> 
-> And there's no real need for author tags as we've got that
-> information in the git repo....
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Works for me.  I wasn't really sure whose copyright really applied to
-changes like this -- the one in the source file?  The person who creates
-the new file?  Every last person who ever touched it?  etc.
+Move the error injection tag names into a libxfs header so that we can
+share it between kernel and userspace.
 
-They don't teach this stuff in maintainer school. :/
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix copyright statement
+---
+ fs/xfs/libxfs/xfs_ag_resv.c   |    1 
+ fs/xfs/libxfs/xfs_alloc.c     |    1 
+ fs/xfs/libxfs/xfs_bmap.c      |    1 
+ fs/xfs/libxfs/xfs_btree.c     |    1 
+ fs/xfs/libxfs/xfs_dir2.c      |    1 
+ fs/xfs/libxfs/xfs_errortag.h  |  106 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.c    |    1 
+ fs/xfs/libxfs/xfs_inode_buf.c |    1 
+ fs/xfs/libxfs/xfs_refcount.c  |    1 
+ fs/xfs/libxfs/xfs_rmap.c      |    1 
+ fs/xfs/xfs_buf.c              |    1 
+ fs/xfs/xfs_error.c            |    1 
+ fs/xfs/xfs_error.h            |   83 --------------------------------
+ fs/xfs/xfs_inode.c            |    1 
+ fs/xfs/xfs_iomap.c            |    1 
+ fs/xfs/xfs_log.c              |    1 
+ fs/xfs/xfs_trans_ail.c        |    1 
+ 17 files changed, 121 insertions(+), 83 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_errortag.h
 
-Will repost w/ revised copyright notice.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index df3e600..2291f42 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -27,6 +27,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_defer.h"
+ #include "xfs_alloc.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 11c01e2..0da8001 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -31,6 +31,7 @@
+ #include "xfs_alloc_btree.h"
+ #include "xfs_alloc.h"
+ #include "xfs_extent_busy.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f45f05c..ebb5958 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -38,6 +38,7 @@
+ #include "xfs_bmap_util.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_rtalloc.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
+ #include "xfs_trans_space.h"
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 848f371..994fc1c 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -29,6 +29,7 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_btree.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 41ea6d4..e10778c 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -31,6 +31,7 @@
+ #include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_ialloc.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ 
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+new file mode 100644
+index 0000000..bc1789d
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -0,0 +1,106 @@
++/*
++ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
++ * Copyright (C) 2017 Oracle.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_ERRORTAG_H_
++#define __XFS_ERRORTAG_H_
++
++/*
++ * error injection tags - the labels can be anything you want
++ * but each tag should have its own unique number
++ */
++
++#define XFS_ERRTAG_NOERROR				0
++#define XFS_ERRTAG_IFLUSH_1				1
++#define XFS_ERRTAG_IFLUSH_2				2
++#define XFS_ERRTAG_IFLUSH_3				3
++#define XFS_ERRTAG_IFLUSH_4				4
++#define XFS_ERRTAG_IFLUSH_5				5
++#define XFS_ERRTAG_IFLUSH_6				6
++#define XFS_ERRTAG_DA_READ_BUF				7
++#define XFS_ERRTAG_BTREE_CHECK_LBLOCK			8
++#define XFS_ERRTAG_BTREE_CHECK_SBLOCK			9
++#define XFS_ERRTAG_ALLOC_READ_AGF			10
++#define XFS_ERRTAG_IALLOC_READ_AGI			11
++#define XFS_ERRTAG_ITOBP_INOTOBP			12
++#define XFS_ERRTAG_IUNLINK				13
++#define XFS_ERRTAG_IUNLINK_REMOVE			14
++#define XFS_ERRTAG_DIR_INO_VALIDATE			15
++#define XFS_ERRTAG_BULKSTAT_READ_CHUNK			16
++#define XFS_ERRTAG_IODONE_IOERR				17
++#define XFS_ERRTAG_STRATREAD_IOERR			18
++#define XFS_ERRTAG_STRATCMPL_IOERR			19
++#define XFS_ERRTAG_DIOWRITE_IOERR			20
++#define XFS_ERRTAG_BMAPIFORMAT				21
++#define XFS_ERRTAG_FREE_EXTENT				22
++#define XFS_ERRTAG_RMAP_FINISH_ONE			23
++#define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
++#define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
++#define XFS_ERRTAG_BMAP_FINISH_ONE			26
++#define XFS_ERRTAG_AG_RESV_CRITICAL			27
++/*
++ * DEBUG mode instrumentation to test and/or trigger delayed allocation
++ * block killing in the event of failed writes. When enabled, all
++ * buffered writes are silenty dropped and handled as if they failed.
++ * All delalloc blocks in the range of the write (including pre-existing
++ * delalloc blocks!) are tossed as part of the write failure error
++ * handling sequence.
++ */
++#define XFS_ERRTAG_DROP_WRITES				28
++#define XFS_ERRTAG_LOG_BAD_CRC				29
++#define XFS_ERRTAG_LOG_ITEM_PIN				30
++#define XFS_ERRTAG_BUF_LRU_REF				31
++#define XFS_ERRTAG_MAX					32
++
++/*
++ * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
++ */
++#define XFS_RANDOM_DEFAULT				100
++#define XFS_RANDOM_IFLUSH_1				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IFLUSH_2				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IFLUSH_3				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IFLUSH_4				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IFLUSH_5				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IFLUSH_6				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_DA_READ_BUF				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_BTREE_CHECK_LBLOCK			(XFS_RANDOM_DEFAULT/4)
++#define XFS_RANDOM_BTREE_CHECK_SBLOCK			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_ALLOC_READ_AGF			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IALLOC_READ_AGI			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_ITOBP_INOTOBP			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IUNLINK				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IUNLINK_REMOVE			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_DIR_INO_VALIDATE			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_BULKSTAT_READ_CHUNK			XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_IODONE_IOERR				(XFS_RANDOM_DEFAULT/10)
++#define XFS_RANDOM_STRATREAD_IOERR			(XFS_RANDOM_DEFAULT/10)
++#define XFS_RANDOM_STRATCMPL_IOERR			(XFS_RANDOM_DEFAULT/10)
++#define XFS_RANDOM_DIOWRITE_IOERR			(XFS_RANDOM_DEFAULT/10)
++#define XFS_RANDOM_BMAPIFORMAT				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_FREE_EXTENT				1
++#define XFS_RANDOM_RMAP_FINISH_ONE			1
++#define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
++#define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
++#define XFS_RANDOM_BMAP_FINISH_ONE			1
++#define XFS_RANDOM_AG_RESV_CRITICAL			4
++#define XFS_RANDOM_DROP_WRITES				1
++#define XFS_RANDOM_LOG_BAD_CRC				1
++#define XFS_RANDOM_LOG_ITEM_PIN				1
++#define XFS_RANDOM_BUF_LRU_REF				2
++
++#endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index e11f8af..de3f04a 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -31,6 +31,7 @@
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_alloc.h"
+ #include "xfs_rtalloc.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_bmap.h"
+ #include "xfs_cksum.h"
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 378f8fb..6b79890 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -24,6 +24,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_defer.h"
+ #include "xfs_inode.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_cksum.h"
+ #include "xfs_icache.h"
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 9d5406b..585b35d 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -30,6 +30,7 @@
+ #include "xfs_bmap.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_alloc.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 55c88a7..dd019ce 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -34,6 +34,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_trace.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_extent_busy.h"
+ #include "xfs_bmap.h"
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index db786bc..4db6e8d 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -42,6 +42,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ 
+ static kmem_zone_t *xfs_buf_zone;
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 6732b0a..92396d5 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -21,6 +21,7 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_sysfs.h"
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 78a7f43..ea816c1 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -63,89 +63,6 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ 		} \
+ 	}
+ 
+-/*
+- * error injection tags - the labels can be anything you want
+- * but each tag should have its own unique number
+- */
+-
+-#define XFS_ERRTAG_NOERROR				0
+-#define XFS_ERRTAG_IFLUSH_1				1
+-#define XFS_ERRTAG_IFLUSH_2				2
+-#define XFS_ERRTAG_IFLUSH_3				3
+-#define XFS_ERRTAG_IFLUSH_4				4
+-#define XFS_ERRTAG_IFLUSH_5				5
+-#define XFS_ERRTAG_IFLUSH_6				6
+-#define	XFS_ERRTAG_DA_READ_BUF				7
+-#define	XFS_ERRTAG_BTREE_CHECK_LBLOCK			8
+-#define	XFS_ERRTAG_BTREE_CHECK_SBLOCK			9
+-#define	XFS_ERRTAG_ALLOC_READ_AGF			10
+-#define	XFS_ERRTAG_IALLOC_READ_AGI			11
+-#define	XFS_ERRTAG_ITOBP_INOTOBP			12
+-#define	XFS_ERRTAG_IUNLINK				13
+-#define	XFS_ERRTAG_IUNLINK_REMOVE			14
+-#define	XFS_ERRTAG_DIR_INO_VALIDATE			15
+-#define XFS_ERRTAG_BULKSTAT_READ_CHUNK			16
+-#define XFS_ERRTAG_IODONE_IOERR				17
+-#define XFS_ERRTAG_STRATREAD_IOERR			18
+-#define XFS_ERRTAG_STRATCMPL_IOERR			19
+-#define XFS_ERRTAG_DIOWRITE_IOERR			20
+-#define XFS_ERRTAG_BMAPIFORMAT				21
+-#define XFS_ERRTAG_FREE_EXTENT				22
+-#define XFS_ERRTAG_RMAP_FINISH_ONE			23
+-#define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
+-#define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
+-#define XFS_ERRTAG_BMAP_FINISH_ONE			26
+-#define XFS_ERRTAG_AG_RESV_CRITICAL			27
+-/*
+- * DEBUG mode instrumentation to test and/or trigger delayed allocation
+- * block killing in the event of failed writes. When enabled, all
+- * buffered writes are silenty dropped and handled as if they failed.
+- * All delalloc blocks in the range of the write (including pre-existing
+- * delalloc blocks!) are tossed as part of the write failure error
+- * handling sequence.
+- */
+-#define XFS_ERRTAG_DROP_WRITES				28
+-#define XFS_ERRTAG_LOG_BAD_CRC				29
+-#define XFS_ERRTAG_LOG_ITEM_PIN				30
+-#define XFS_ERRTAG_BUF_LRU_REF				31
+-#define XFS_ERRTAG_MAX					32
+-
+-/*
+- * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+- */
+-#define XFS_RANDOM_DEFAULT				100
+-#define XFS_RANDOM_IFLUSH_1				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IFLUSH_2				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IFLUSH_3				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IFLUSH_4				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IFLUSH_5				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IFLUSH_6				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_DA_READ_BUF				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_BTREE_CHECK_LBLOCK			(XFS_RANDOM_DEFAULT/4)
+-#define XFS_RANDOM_BTREE_CHECK_SBLOCK			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_ALLOC_READ_AGF			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IALLOC_READ_AGI			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_ITOBP_INOTOBP			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IUNLINK				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IUNLINK_REMOVE			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_DIR_INO_VALIDATE			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_BULKSTAT_READ_CHUNK			XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_IODONE_IOERR				(XFS_RANDOM_DEFAULT/10)
+-#define XFS_RANDOM_STRATREAD_IOERR			(XFS_RANDOM_DEFAULT/10)
+-#define XFS_RANDOM_STRATCMPL_IOERR			(XFS_RANDOM_DEFAULT/10)
+-#define XFS_RANDOM_DIOWRITE_IOERR			(XFS_RANDOM_DEFAULT/10)
+-#define	XFS_RANDOM_BMAPIFORMAT				XFS_RANDOM_DEFAULT
+-#define XFS_RANDOM_FREE_EXTENT				1
+-#define XFS_RANDOM_RMAP_FINISH_ONE			1
+-#define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
+-#define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
+-#define XFS_RANDOM_BMAP_FINISH_ONE			1
+-#define XFS_RANDOM_AG_RESV_CRITICAL			4
+-#define XFS_RANDOM_DROP_WRITES				1
+-#define XFS_RANDOM_LOG_BAD_CRC				1
+-#define XFS_RANDOM_LOG_ITEM_PIN				1
+-#define XFS_RANDOM_BUF_LRU_REF				2
+-
+ #ifdef DEBUG
+ extern int xfs_errortag_init(struct xfs_mount *mp);
+ extern void xfs_errortag_del(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index a929ca7..0249782 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -39,6 +39,7 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
+ #include "xfs_filestream.h"
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index f179bdf..da0abc8 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -30,6 +30,7 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_space.h"
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 0c4c9ad..3ce44e6 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -22,6 +22,7 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 4b1669f..cef89f7 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -25,6 +25,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_trace.h"
++#include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_log.h"
+ 
