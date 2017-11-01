@@ -1,85 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47904 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42224 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932868AbdKBMoH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 08:44:07 -0400
-Date: Thu, 2 Nov 2017 08:44:03 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: fix unused variable warnings
-Message-ID: <20171102124403.GC16645@bfoster.bfoster>
-References: <20171102111137.3062126-1-arnd@arndb.de>
- <20171102111137.3062126-2-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171102111137.3062126-2-arnd@arndb.de>
+        id S1752254AbdKAOGN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 10:06:13 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 44E91356DD
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2017 14:06:13 +0000 (UTC)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH v2] xfs: truncate pagecache before writeback in xfs_setattr_size()
+Date: Wed,  1 Nov 2017 22:05:40 +0800
+Message-Id: <20171101140540.21542-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>
 
-On Thu, Nov 02, 2017 at 12:11:13PM +0100, Arnd Bergmann wrote:
-> fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_delay':
-> fs/xfs/libxfs/xfs_bmap.c:4648:20: error: unused variable 'ifp' [-Werror=unused-variable]
->   struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
->                     ^~~
-> fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_cow':
-> fs/xfs/libxfs/xfs_bmap.c:4776:20: error: unused variable 'ifp' [-Werror=unused-variable]
-> 
-> Fixes: ca5d8e5b7b90 ("xfs: move pre/post-bmap tracing into xfs_iext_update_extent")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
+On truncate down, if new size is not block size aligned, we zero the
+rest of block to avoid exposing stale data to user, and
+iomap_truncate_page() skips zeroing if the range is already in
+unwritten state or a hole. Then we writeback from on-disk i_size to
+the new size if this range hasn't been written to disk yet, and
+truncate page cache beyond new EOF and set in-core i_size.
 
-Thanks for sending this:
+The problem is that we could write data between di_size and newsize
+before removing the page cache beyond newsize, as the extents may
+still be in unwritten state right after a buffer write. As such, the
+page of data that newsize lies in has not been zeroed by page cache
+invalidation before it is written, and xfs_do_writepage() hasn't
+triggered it's "zero data beyond EOF" case because we haven't
+updated in-core i_size yet. Then a subsequent mmap read could see
+non-zeros past EOF.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I occasionally see this in fsx runs in fstests generic/112, a
+simplified fsx operation sequence is like (assuming 4k block size
+xfs):
 
->  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index f45f05c45e15..fa85b08b8fe2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4645,7 +4645,6 @@ xfs_bmap_del_extent_delay(
->  	struct xfs_bmbt_irec	*del)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
->  	struct xfs_bmbt_irec	new;
->  	int64_t			da_old, da_new, da_diff = 0;
->  	xfs_fileoff_t		del_endoff, got_endoff;
-> @@ -4663,7 +4662,7 @@ xfs_bmap_del_extent_delay(
->  	da_new = 0;
->  
->  	ASSERT(*idx >= 0);
-> -	ASSERT(*idx <= xfs_iext_count(ifp));
-> +	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, whichfork)));
->  	ASSERT(del->br_blockcount > 0);
->  	ASSERT(got->br_startoff <= del->br_startoff);
->  	ASSERT(got_endoff >= del_endoff);
-> @@ -4773,7 +4772,6 @@ xfs_bmap_del_extent_cow(
->  	struct xfs_bmbt_irec	*del)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  	struct xfs_bmbt_irec	new;
->  	xfs_fileoff_t		del_endoff, got_endoff;
->  	int			state = BMAP_COWFORK;
-> @@ -4784,7 +4782,7 @@ xfs_bmap_del_extent_cow(
->  	got_endoff = got->br_startoff + got->br_blockcount;
->  
->  	ASSERT(*idx >= 0);
-> -	ASSERT(*idx <= xfs_iext_count(ifp));
-> +	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, XFS_COW_FORK)));
->  	ASSERT(del->br_blockcount > 0);
->  	ASSERT(got->br_startoff <= del->br_startoff);
->  	ASSERT(got_endoff >= del_endoff);
-> -- 
-> 2.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  fallocate 0x0 0x1000 0x0 keep_size
+  write 0x0 0x1000 0x0
+  truncate 0x0 0x800 0x1000
+  punch_hole 0x0 0x800 0x800
+  mapread 0x0 0x800 0x800
+
+where fallocate allocates unwritten extent but doesn't update
+i_size, buffer write populates the page cache and extent is still
+unwritten, truncate skips zeroing page past new EOF and writes the
+page to disk, punch_hole invalidates the page cache, at last mapread
+reads the block back and sees non-zero beyond EOF.
+
+Fix it by moving truncate_setsize() to before writeback so the page
+cache invalidation zeros the partial page at the new EOF. This also
+triggers "zero data beyond EOF" in xfs_do_writepage() at writeback
+time, because newsize has been set and page straddles the newsize.
+
+Also fixed the wrong 'end' param of filemap_write_and_wait_range()
+call while we're at it, the 'end' is inclusive and should be
+'newsize - 1'.
+
+Suggested-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+
+v2:
+- fix the bug by moving truncate_setsize() before writeback as suggested
+  by Dave
+- update summary and commit log accordingly, with some words stolen from
+  Dave :)
+
+v1: https://www.spinics.net/lists/linux-xfs/msg12321.html
+
+ fs/xfs/xfs_iops.c | 36 ++++++++++++++++++++----------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 17081c77ef86..f24e5b6cfc86 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -886,22 +886,6 @@ xfs_setattr_size(
+ 		return error;
+ 
+ 	/*
+-	 * We are going to log the inode size change in this transaction so
+-	 * any previous writes that are beyond the on disk EOF and the new
+-	 * EOF that have not been written out need to be written here.  If we
+-	 * do not write the data out, we expose ourselves to the null files
+-	 * problem. Note that this includes any block zeroing we did above;
+-	 * otherwise those blocks may not be zeroed after a crash.
+-	 */
+-	if (did_zeroing ||
+-	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
+-		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-						      ip->i_d.di_size, newsize);
+-		if (error)
+-			return error;
+-	}
+-
+-	/*
+ 	 * We've already locked out new page faults, so now we can safely remove
+ 	 * pages from the page cache knowing they won't get refaulted until we
+ 	 * drop the XFS_MMAP_EXCL lock after the extent manipulations are
+@@ -917,9 +901,29 @@ xfs_setattr_size(
+ 	 * user visible changes). There's not much we can do about this, except
+ 	 * to hope that the caller sees ENOMEM and retries the truncate
+ 	 * operation.
++	 *
++	 * And we update in-core i_size and truncate page cache beyond newsize
++	 * before writeback the [di_size, newsize] range, so we're guaranteed
++	 * not to write stale data past the new EOF on truncate down.
+ 	 */
+ 	truncate_setsize(inode, newsize);
+ 
++	/*
++	 * We are going to log the inode size change in this transaction so
++	 * any previous writes that are beyond the on disk EOF and the new
++	 * EOF that have not been written out need to be written here.  If we
++	 * do not write the data out, we expose ourselves to the null files
++	 * problem. Note that this includes any block zeroing we did above;
++	 * otherwise those blocks may not be zeroed after a crash.
++	 */
++	if (did_zeroing ||
++	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
++		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++						ip->i_d.di_size, newsize - 1);
++		if (error)
++			return error;
++	}
++
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+ 	if (error)
+ 		return error;
+-- 
+2.13.6
+
