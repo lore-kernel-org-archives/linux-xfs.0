@@ -1,47 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43173 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751597AbdKNGBe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2017 01:01:34 -0500
-Date: Mon, 13 Nov 2017 22:01:29 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fs, dax: unify IOMAP_F_DIRTY read vs write handling
- policy in the dax core
-Message-ID: <20171114060129.GB15810@infradead.org>
-References: <151062258598.8554.8157038002895095232.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171114041228.GA4094@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171114041228.GA4094@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:44105 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754780AbdKAPhB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 11:37:01 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 02/18] mm: Remove VM_FAULT_HWPOISON_LARGE_MASK
+Date: Wed,  1 Nov 2017 16:36:31 +0100
+Message-Id: <20171101153648.30166-3-jack@suse.cz>
+In-Reply-To: <20171101153648.30166-1-jack@suse.cz>
+References: <20171101153648.30166-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-On Tue, Nov 14, 2017 at 03:12:28PM +1100, Dave Chinner wrote:
-> On Mon, Nov 13, 2017 at 05:27:54PM -0800, Dan Williams wrote:
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index b43be199fbdf..888b60189983 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1087,9 +1087,9 @@ xfs_file_iomap_begin(
-> >  		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
-> >  	}
-> >  
-> > -	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-> > -	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-> > -		iomap->flags |= IOMAP_F_DIRTY;
-> > +	if (xfs_ipincount(ip))
-> > +		if (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP)
-> > +			iomap->flags |= IOMAP_F_DIRTY;
-> 
-> Please make a helper for this, and use it in xfs_file_fsync() where
-> the same dirty checks are done. e.g.
+It is unused.
 
-Let's keep that sort of cleanup separate.  I initially considered
-it when doing the MAP_SYNC work, but fsync works a little different
-in that it looks at ili_last_lsn, so your little helper below won't
-work as-is.  You can send it as an incremental patch later and we
-can see if we can come up with something workable.
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ include/linux/mm.h | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 065d99deb847..ca72b67153d5 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1182,8 +1182,6 @@ static inline void clear_page_pfmemalloc(struct page *page)
+ #define VM_FAULT_FALLBACK 0x0800	/* huge page fault failed, fall back to small */
+ #define VM_FAULT_DONE_COW   0x1000	/* ->fault has fully handled COW */
+ 
+-#define VM_FAULT_HWPOISON_LARGE_MASK 0xf000 /* encodes hpage index for large hwpoison */
+-
+ #define VM_FAULT_ERROR	(VM_FAULT_OOM | VM_FAULT_SIGBUS | VM_FAULT_SIGSEGV | \
+ 			 VM_FAULT_HWPOISON | VM_FAULT_HWPOISON_LARGE | \
+ 			 VM_FAULT_FALLBACK)
+-- 
+2.12.3
+
