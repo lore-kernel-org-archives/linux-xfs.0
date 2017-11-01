@@ -1,88 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25268 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbdJaVlg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2017 17:41:36 -0400
-Date: Tue, 31 Oct 2017 14:41:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/18] xfs: iterate over extents in
- xfs_bmap_extents_to_btree
-Message-ID: <20171031214132.GS4911@magnolia>
-References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-12-hch@lst.de>
+Received: from mga09.intel.com ([134.134.136.24]:21385 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754278AbdKADrJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Oct 2017 23:47:09 -0400
+Date: Tue, 31 Oct 2017 21:47:07 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 17/17] xfs: support for synchronous DAX faults
+Message-ID: <20171101034707.GA1662@linux.intel.com>
+References: <20171024152415.22864-1-jack@suse.cz>
+ <20171024152415.22864-18-jack@suse.cz>
+ <20171024222322.GX3666@dastard>
+ <20171026154804.GF31161@quack2.suse.cz>
+ <20171026211611.GC3666@dastard>
+ <20171027100834.GH31161@quack2.suse.cz>
+ <20171031151907.GB26128@quack2.suse.cz>
+ <CAPcyv4gBVyZ8KhB2s1M0BdhC1=HAean6Mb6oV7zsJBx0-t3bhw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171031142230.11755-12-hch@lst.de>
+In-Reply-To: <CAPcyv4gBVyZ8KhB2s1M0BdhC1=HAean6Mb6oV7zsJBx0-t3bhw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-ext4 <linux-ext4@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Oct 31, 2017 at 04:22:23PM +0200, Christoph Hellwig wrote:
-> This actually makes the function very slightly less efficient for now as we
-> detour through the expanded irect format between the in-core extent format
-> and the on-disk one instead of just endian swapping them.  But with the
-> incore extent btree the in-core one will use a different format and the
-> representation will be entirely hidden.
+On Tue, Oct 31, 2017 at 02:50:01PM -0700, Dan Williams wrote:
+> On Tue, Oct 31, 2017 at 8:19 AM, Jan Kara <jack@suse.cz> wrote:
+> > On Fri 27-10-17 12:08:34, Jan Kara wrote:
+> >> On Fri 27-10-17 08:16:11, Dave Chinner wrote:
+> >> > On Thu, Oct 26, 2017 at 05:48:04PM +0200, Jan Kara wrote:
+> >> > > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> >> > > > > index f179bdf1644d..b43be199fbdf 100644
+> >> > > > > --- a/fs/xfs/xfs_iomap.c
+> >> > > > > +++ b/fs/xfs/xfs_iomap.c
+> >> > > > > @@ -33,6 +33,7 @@
+> >> > > > >  #include "xfs_error.h"
+> >> > > > >  #include "xfs_trans.h"
+> >> > > > >  #include "xfs_trans_space.h"
+> >> > > > > +#include "xfs_inode_item.h"
+> >> > > > >  #include "xfs_iomap.h"
+> >> > > > >  #include "xfs_trace.h"
+> >> > > > >  #include "xfs_icache.h"
+> >> > > > > @@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
+> >> > > > >               trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+> >> > > > >       }
+> >> > > > >
+> >> > > > > +     if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
+> >> > > > > +         (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+> >> > > > > +             iomap->flags |= IOMAP_F_DIRTY;
+> >> > > >
+> >> > > > This is the very definition of an inode that is "fdatasync dirty".
+> >> > > >
+> >> > > > Hmmmm, shouldn't this also be set for read faults, too?
+> >> > >
+> >> > > No, read faults don't need to set IOMAP_F_DIRTY since user cannot write any
+> >> > > data to the page which he'd then like to be persistent. The only reason why
+> >> > > I thought it could be useful for a while was that it would be nice to make
+> >> > > MAP_SYNC mapping provide the guarantee that data you see now is the data
+> >> > > you'll see after a crash
+> >> >
+> >> > Isn't that the entire point of MAP_SYNC? i.e. That when we return
+> >> > from a page fault, the app knows that the data and it's underlying
+> >> > extent is on persistent storage?
+> >> >
+> >> > > but we cannot provide that guarantee for RO
+> >> > > mapping anyway if someone else has the page mapped as well. So I just
+> >> > > decided not to return IOMAP_F_DIRTY for read faults.
+> >> >
+> >> > If there are multiple MAP_SYNC mappings to the inode, I would have
+> >> > expected that they all sync all of the data/metadata on every page
+> >> > fault, regardless of who dirtied the inode. An RO mapping doesn't
+> >>
+> >> Well, they all do sync regardless of who dirtied the inode on every *write*
+> >> fault.
+> >>
+> >> > mean the data/metadata on the inode can't change, it just means it
+> >> > can't change through that mapping.  Running fsync() to guarantee the
+> >> > persistence of that data/metadata doesn't actually changing any
+> >> > data....
+> >> >
+> >> > IOWs, if read faults don't guarantee the mapped range has stable
+> >> > extents on a MAP_SYNC mapping, then I think MAP_SYNC is broken
+> >> > because it's not giving consistent guarantees to userspace. Yes, it
+> >> > works fine when only one MAP_SYNC mapping is modifying the inode,
+> >> > but the moment we have concurrent operations on the inode that
+> >> > aren't MAP_SYNC or O_SYNC this goes out the window....
+> >>
+> >> MAP_SYNC as I've implemented it provides guarantees only for data the
+> >> process has actually written. I agree with that and it was a conscious
+> >> decision. In my opinion that covers most usecases, provides reasonably
+> >> simple semantics (i.e., if you write data through MAP_SYNC mapping, you can
+> >> persist it just using CPU instructions), and reasonable performance.
+> >>
+> >> Now you seem to suggest the semantics should be: "Data you have read from or
+> >> written to a MAP_SYNC mapping can be persisted using CPU instructions." And
+> >> from implementation POV we can do that rather easily (just rip out the
+> >> IOMAP_WRITE checks). But I'm unsure whether this additional guarantee would
+> >> be useful enough to justify the slowdown of read faults? I was not able to
+> >> come up with a good usecase and so I've decided for current semantics. What
+> >> do other people think?
+> >
+> > Nobody commented on this for couple of days so how do we proceed? I would
+> > prefer to go just with a guarantee for data written and we can always make
+> > the guarantee stronger (i.e. apply it also for read data) when some user
+> > comes with a good usecase?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I think it is easier to strengthen the guarantee than loosen it later
+> especially since it is not yet clear that we have a use case for the
+> stronger semantic. At least the initial motivation for MAP_SYNC was
+> for writers.
 
-Looks good enough to test,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 20 ++++++++------------
->  1 file changed, 8 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 14428d72cf33..56482bf6280d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -666,14 +666,13 @@ xfs_bmap_extents_to_btree(
->  	xfs_bmbt_rec_t		*arp;		/* child record pointer */
->  	struct xfs_btree_block	*block;		/* btree root block */
->  	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
-> -	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
->  	int			error;		/* error return value */
-> -	xfs_extnum_t		i, cnt;		/* extent record index */
->  	xfs_ifork_t		*ifp;		/* inode fork pointer */
->  	xfs_bmbt_key_t		*kp;		/* root block key pointer */
->  	xfs_mount_t		*mp;		/* mount structure */
-> -	xfs_extnum_t		nextents;	/* number of file extents */
->  	xfs_bmbt_ptr_t		*pp;		/* root block address pointer */
-> +	struct xfs_bmbt_irec	rec;
-> +	xfs_extnum_t		i = 0, cnt = 0;
->  
->  	mp = ip->i_mount;
->  	ASSERT(whichfork != XFS_COW_FORK);
-> @@ -752,15 +751,12 @@ xfs_bmap_extents_to_btree(
->  				XFS_BTNUM_BMAP, 0, 0, ip->i_ino,
->  				XFS_BTREE_LONG_PTRS);
->  
-> -	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
-> -	nextents =  xfs_iext_count(ifp);
-> -	for (cnt = i = 0; i < nextents; i++) {
-> -		ep = xfs_iext_get_ext(ifp, i);
-> -		if (!isnullstartblock(xfs_bmbt_get_startblock(ep))) {
-> -			arp->l0 = cpu_to_be64(ep->l0);
-> -			arp->l1 = cpu_to_be64(ep->l1);
-> -			arp++; cnt++;
-> -		}
-> +	while (xfs_iext_get_extent(ifp, i++, &rec)) {
-> +		if (isnullstartblock(rec.br_startblock))
-> +			continue;
-> +		arp = XFS_BMBT_REC_ADDR(mp, ablock, 1 + cnt);
-> +		xfs_bmbt_disk_set_all(arp, &rec);
-> +		cnt++;
->  	}
->  	ASSERT(cnt == XFS_IFORK_NEXTENTS(ip, whichfork));
->  	xfs_btree_set_numrecs(ablock, cnt);
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I agree.  It seems like all threads/processes in a given application need to
+use MAP_SYNC consistently so they can be sure that data that is written (and
+then possibly read) will be durable on media.  I think what you have is a good
+starting point, and we can adjust later if necessary.
