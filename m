@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44094 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:44098 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754776AbdKAPhB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1754779AbdKAPhB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 1 Nov 2017 11:37:01 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 11/18] dax: Allow tuning whether dax_insert_mapping_entry() dirties entry
-Date: Wed,  1 Nov 2017 16:36:40 +0100
-Message-Id: <20171101153648.30166-12-jack@suse.cz>
+Subject: [PATCH 04/18] dax: Factor out getting of pfn out of iomap
+Date: Wed,  1 Nov 2017 16:36:33 +0100
+Message-Id: <20171101153648.30166-5-jack@suse.cz>
 In-Reply-To: <20171101153648.30166-1-jack@suse.cz>
 References: <20171101153648.30166-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,83 +15,140 @@ List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-Currently we dirty radix tree entry whenever dax_insert_mapping_entry()
-gets called for a write fault. With synchronous page faults we would
-like to insert clean radix tree entry and dirty it only once we call
-fdatasync() and update page tables to save some unnecessary cache
-flushing. Add 'dirty' argument to dax_insert_mapping_entry() for that.
+Factor out code to get pfn out of iomap that is shared between PTE and
+PMD fault path.
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/dax.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ fs/dax.c | 83 +++++++++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 43 insertions(+), 40 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index 5ddf15161390..efc210ff6665 100644
+index 0bc42ac294ca..116eef8d6c69 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -526,13 +526,13 @@ static int copy_user_dax(struct block_device *bdev, struct dax_device *dax_dev,
- static void *dax_insert_mapping_entry(struct address_space *mapping,
- 				      struct vm_fault *vmf,
- 				      void *entry, sector_t sector,
--				      unsigned long flags)
-+				      unsigned long flags, bool dirty)
+@@ -825,30 +825,53 @@ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+ 	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+ }
+ 
+-static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+-			      loff_t pos, void *entry)
++static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
++			 pfn_t *pfnp)
  {
- 	struct radix_tree_root *page_tree = &mapping->page_tree;
- 	void *new_entry;
- 	pgoff_t index = vmf->pgoff;
+ 	const sector_t sector = dax_iomap_sector(iomap, pos);
+-	struct vm_area_struct *vma = vmf->vma;
+-	struct address_space *mapping = vma->vm_file->f_mapping;
+-	unsigned long vaddr = vmf->address;
+-	void *ret, *kaddr;
+ 	pgoff_t pgoff;
++	void *kaddr;
+ 	int id, rc;
+-	pfn_t pfn;
++	long length;
  
--	if (vmf->flags & FAULT_FLAG_WRITE)
-+	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
- 
- 	if (dax_is_zero_entry(entry) && !(flags & RADIX_DAX_ZERO_PAGE)) {
-@@ -569,7 +569,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 		entry = new_entry;
+-	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
++	rc = bdev_dax_pgoff(iomap->bdev, sector, size, &pgoff);
+ 	if (rc)
+ 		return rc;
+-
+ 	id = dax_read_lock();
+-	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
+-			       &kaddr, &pfn);
+-	if (rc < 0) {
+-		dax_read_unlock(id);
+-		return rc;
++	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
++				   &kaddr, pfnp);
++	if (length < 0) {
++		rc = length;
++		goto out;
  	}
++	rc = -EINVAL;
++	if (PFN_PHYS(length) < size)
++		goto out;
++	if (pfn_t_to_pfn(*pfnp) & (PHYS_PFN(size)-1))
++		goto out;
++	/* For larger pages we need devmap */
++	if (length > 1 && !pfn_t_devmap(*pfnp))
++		goto out;
++	rc = 0;
++out:
+ 	dax_read_unlock(id);
++	return rc;
++}
++
++static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
++			      loff_t pos, void *entry)
++{
++	const sector_t sector = dax_iomap_sector(iomap, pos);
++	struct vm_area_struct *vma = vmf->vma;
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	unsigned long vaddr = vmf->address;
++	void *ret;
++	int rc;
++	pfn_t pfn;
++
++	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
++	if (rc < 0)
++		return rc;
  
--	if (vmf->flags & FAULT_FLAG_WRITE)
-+	if (dirty)
- 		radix_tree_tag_set(page_tree, index, PAGECACHE_TAG_DIRTY);
+ 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
+ 	if (IS_ERR(ret))
+@@ -1223,46 +1246,26 @@ static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+ {
+ 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+ 	const sector_t sector = dax_iomap_sector(iomap, pos);
+-	struct dax_device *dax_dev = iomap->dax_dev;
+-	struct block_device *bdev = iomap->bdev;
+ 	struct inode *inode = mapping->host;
+-	const size_t size = PMD_SIZE;
+-	void *ret = NULL, *kaddr;
+-	long length = 0;
+-	pgoff_t pgoff;
++	void *ret = NULL;
+ 	pfn_t pfn = {};
+-	int id;
++	int rc;
  
- 	spin_unlock_irq(&mapping->tree_lock);
-@@ -881,7 +881,7 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
- 	}
- 
- 	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, 0,
--			RADIX_DAX_ZERO_PAGE);
-+			RADIX_DAX_ZERO_PAGE, false);
- 	if (IS_ERR(entry2)) {
- 		ret = VM_FAULT_SIGBUS;
- 		goto out;
-@@ -1182,7 +1182,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 
- 		entry = dax_insert_mapping_entry(mapping, vmf, entry,
- 						 dax_iomap_sector(&iomap, pos),
--						 0);
-+						 0, write);
- 		if (IS_ERR(entry)) {
- 			error = PTR_ERR(entry);
- 			goto error_finish_iomap;
-@@ -1258,7 +1258,7 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
+-	if (bdev_dax_pgoff(bdev, sector, size, &pgoff) != 0)
++	rc = dax_iomap_pfn(iomap, pos, PMD_SIZE, &pfn);
++	if (rc < 0)
  		goto fallback;
  
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, 0,
--			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE);
-+			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE, false);
+-	id = dax_read_lock();
+-	length = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
+-	if (length < 0)
+-		goto unlock_fallback;
+-	length = PFN_PHYS(length);
+-
+-	if (length < size)
+-		goto unlock_fallback;
+-	if (pfn_t_to_pfn(pfn) & PG_PMD_COLOUR)
+-		goto unlock_fallback;
+-	if (!pfn_t_devmap(pfn))
+-		goto unlock_fallback;
+-	dax_read_unlock(id);
+-
+ 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector,
+ 			RADIX_DAX_PMD);
  	if (IS_ERR(ret))
  		goto fallback;
  
-@@ -1379,7 +1379,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+-	trace_dax_pmd_insert_mapping(inode, vmf, length, pfn, ret);
++	trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, ret);
+ 	return vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
+ 			pfn, vmf->flags & FAULT_FLAG_WRITE);
  
- 		entry = dax_insert_mapping_entry(mapping, vmf, entry,
- 						dax_iomap_sector(&iomap, pos),
--						RADIX_DAX_PMD);
-+						RADIX_DAX_PMD, write);
- 		if (IS_ERR(entry))
- 			goto finish_iomap;
+-unlock_fallback:
+-	dax_read_unlock(id);
+ fallback:
+-	trace_dax_pmd_insert_mapping_fallback(inode, vmf, length, pfn, ret);
++	trace_dax_pmd_insert_mapping_fallback(inode, vmf, PMD_SIZE, pfn, ret);
+ 	return VM_FAULT_FALLBACK;
+ }
  
 -- 
 2.12.3
