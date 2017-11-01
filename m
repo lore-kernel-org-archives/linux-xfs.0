@@ -1,47 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56317 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932571AbdKBSvj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 14:51:39 -0400
-Date: Thu, 2 Nov 2017 19:51:38 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 12/18] xfs: introduce the xfs_iext_cursor abstraction
-Message-ID: <20171102185138.GC4244@lst.de>
-References: <20171031142230.11755-1-hch@lst.de> <20171031142230.11755-13-hch@lst.de> <20171102171437.GH16645@bfoster.bfoster>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43092 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933207AbdKAVNe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:13:34 -0400
+Date: Wed, 1 Nov 2017 14:13:28 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 8/6] xfs/333: fix errors with new inode pointer
+ verifiers
+Message-ID: <20171101211328.GA1233@magnolia>
+References: <150899709935.18389.17266737014565285073.stgit@magnolia>
+ <20171027004401.GF5486@magnolia>
+ <20171027202407.GJ5486@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171102171437.GH16645@bfoster.bfoster>
+In-Reply-To: <20171027202407.GJ5486@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Nov 02, 2017 at 01:14:37PM -0400, Brian Foster wrote:
-> Can we just open code ext->idx here rather than maintain two counters,
-> or will that go away later?
-
-This area will change quite a bit.  Please take a look at the end result.
-
-> > -	ASSERT(bma->idx >= 0);
-> > -	ASSERT(bma->idx <= xfs_iext_count(ifp));
+On Fri, Oct 27, 2017 at 01:24:07PM -0700, Darrick J. Wong wrote:
+> Fix test failures with new inode pointer verifiers... and also make sure
+> that the running xfs actually supports realtime rmap.
 > 
-> I think it might be useful to encapsulate this check (which is also part
-> of xfs_iext_get_extent()) into a cursor validation helper so we can
-> preserve these asserts (here and in the other bmap functions). E.g.,
-> something like:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: remove the rest of the test after the mount failure
+> ---
+>  tests/xfs/333     |   18 ++++--------------
+>  tests/xfs/333.out |    7 ++-----
+>  2 files changed, 6 insertions(+), 19 deletions(-)
 > 
-> 	ASSERT(xfs_iext_valid(&bma->ext));
+> diff --git a/tests/xfs/333 b/tests/xfs/333
+> index f7f233d..bf0c811 100755
+> --- a/tests/xfs/333
+> +++ b/tests/xfs/333
+> @@ -51,6 +51,8 @@ unset SCRATCH_RTDEV
+>  
+>  echo "Format and mount"
+>  _scratch_mkfs > "$seqres.full" 2>&1
+> +rrmapino="$(_scratch_xfs_db -c 'sb 0' -c 'p rrmapino' 2>&1)"
+> +test "${rrmapino}" = "field rrmapino not found" && _notrun "realtime rmapbt not supported"
+>  _scratch_mount
+>  
+>  echo "Create some files"
+> @@ -62,21 +64,9 @@ _scratch_unmount
+>  
+>  echo "Corrupt fs"
+>  _scratch_xfs_db -x -c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
+> -_scratch_mount
+> -
+> -echo "Check files"
+> -md5sum $SCRATCH_MNT/f1 2>&1 | _filter_scratch
+> -
+> -echo "Try to create more files"
+> -$XFS_IO_PROG -f -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f3 >> $seqres.full 2>&1
+> +_scratch_mount 2>&1 | _filter_scratch
+>  
+> -echo "Repair fs"
+> -_scratch_unmount 2>&1 | _filter_scratch
+> -_repair_scratch_fs >> $seqres.full 2>&1
+> -
+> -echo "Try to create more files (again)"
+> -_scratch_mount
+> -$XFS_IO_PROG -f -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f4 >> $seqres.full
+> +echo "Test done, mount should have failed"
 
-I'll take a look at that.
+Hmm, we ought to repair the filesystem to make sure that repair actually
+knows how to deal with rrmapino problems.
 
-> 1.) Why do we place these new cursors directly on the stack as opposed
-> to dynamic allocation?
+(I already fixed this; will be sending a rollup of this week's patches
+shortly.)
 
-Why would be do a dynamic allocation?
+--D
 
-> 2.) Why not encode the fork/inode in the cursor rather than passing them
-> around throughout the helper functions?
-
-We could do that, but I'm not sure it's really worth the effort.
+>  
+>  # success, all done
+>  status=0
+> diff --git a/tests/xfs/333.out b/tests/xfs/333.out
+> index bee9bbc..f7518f4 100644
+> --- a/tests/xfs/333.out
+> +++ b/tests/xfs/333.out
+> @@ -2,8 +2,5 @@ QA output created by 333
+>  Format and mount
+>  Create some files
+>  Corrupt fs
+> -Check files
+> -8f27047948255cb84872e2dd7c0bc56d  SCRATCH_MNT/f1
+> -Try to create more files
+> -Repair fs
+> -Try to create more files (again)
+> +mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Structure needs cleaning
+> +Test done, mount should have failed
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
