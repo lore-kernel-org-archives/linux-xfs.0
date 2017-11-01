@@ -1,66 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:56756 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933000AbdKAVzo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:55:44 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:44382 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933354AbdKAVQq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:16:46 -0400
+Date: Wed, 1 Nov 2017 14:16:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [RFC PATCH] xfs: account for per-AG reservation in statfs f_blocks
+Message-ID: <20171101211642.GK4911@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171101213230.GR5858@dastard>
-References: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
- <20171031003358.GD5858@dastard> <CAM_iQpUD5ffaKS7TQ5n9A67TWqrVm8AVKf6ERz3pSFu7rL2rbg@mail.gmail.com>
- <20171101030536.GN5858@dastard> <CAM_iQpVOmNj6aDNr-Z5owAxS0o0+1j7P3=qzzUWci0f2wVnvaw@mail.gmail.com>
- <20171101050701.GP5858@dastard> <20171101213230.GR5858@dastard>
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Date: Wed, 1 Nov 2017 14:55:23 -0700
-Message-ID: <CAM_iQpWi7=4C1M-a3TROU-EE88FYRSbgDabQUS+nzzMZk9CEHQ@mail.gmail.com>
-Subject: Re: xfs: list corruption in xfs_setup_inode()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Chinner <dchinner@redhat.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>
 
-On Wed, Nov 1, 2017 at 2:32 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Nov 01, 2017 at 04:07:01PM +1100, Dave Chinner wrote:
->> On Tue, Oct 31, 2017 at 09:43:03PM -0700, Cong Wang wrote:
->> > On Tue, Oct 31, 2017 at 8:05 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > > On Tue, Oct 31, 2017 at 06:51:08PM -0700, Cong Wang wrote:
->> > >> >> Please let me know if I can provide any other information.
->> > >> >
->> > >> > How do you reproduce the problem?
->> > >>
->> > >> The warning is reported via ABRT email, we don't know what was
->> > >> happening at the time of crash.
->> > >
->> > > Which makes it even harder to track down. Perhaps you should
->> > > configure the box to crashdump on such a failure and then we
->> > > can do some post-failure forensic analysis...
->> >
->> > Yeah.
->> >
->> > We are trying to make kdump working, but even if kdump works
->> > we still can't turn on panic_on_warn since this is production
->> > machine.
->>
->> Hmmm. Ok, maybe you could leave a trace of the xfs_iget* trace
->> points running and check the log tail for unusual events around the
->> time of the next crash. e.g. xfs_iget_reclaim_fail events. That
->> might point us to a potential interaction we can look at more
->> closely. I'd also suggest slab poisoning as well, as that will
->> catch other lifecycle problems that could be causing list
->> corruptions such as use-after-free.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Not sure if I can use trace, because this stack trace was triggered
-by systemd-tmpfile during boot (before login).
+Since the blocks reserved by the per-AG reservation mechanism are never
+available to userspace, there's no point in reporting them via statfs.
+Reduce the number of blocks reported by statfs so our space accounting
+works the way it did in the old days -- f_blocks is the theoretical
+upper bound on the amount of space that user programs could allocate,
+and f_blocks is the current maximum.
 
->
-> FWIW, I note that you are reporting another memory
-> corruption/use-after-free related crash in the pipe_inode_info
-> structure on these same machines.  I'd suggest that you start with
-> the premise that this list corruption has the same root cause...
+This eliminates the regression where you format a 100T XFS and df
+reports 2T are already "used".  Now it reports that you have a 98T
+filesystem.
 
-That's impossible. First of all, the machine triggered xfs warning
-is different from the machines triggered free_pipe_info() crashes.
-Secondly, this one is on 4.9 kernel while the other one is on 4.1.
+(Dave's thinp rfc might very well fix this whole problem; this is
+purely a bandaid to shut down the complaints.)
 
-Thanks.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c |    3 +++
+ fs/xfs/xfs_mount.h          |    1 +
+ fs/xfs/xfs_super.c          |    2 +-
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 2291f42..1c23b9f 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -150,6 +150,7 @@ __xfs_ag_resv_free(
+ 	struct xfs_perag		*pag,
+ 	enum xfs_ag_resv_type		type)
+ {
++	struct xfs_mount		*mp = pag->pag_mount;
+ 	struct xfs_ag_resv		*resv;
+ 	xfs_extlen_t			oldresv;
+ 	int				error;
+@@ -167,6 +168,7 @@ __xfs_ag_resv_free(
+ 		oldresv = resv->ar_orig_reserved;
+ 	else
+ 		oldresv = resv->ar_reserved;
++	mp->m_ag_resv -= oldresv;
+ 	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
+ 	resv->ar_reserved = 0;
+ 	resv->ar_asked = 0;
+@@ -217,6 +219,7 @@ __xfs_ag_resv_init(
+ 				pag->pag_agno);
+ 		return error;
+ 	}
++	mp->m_ag_resv += reserved;
+ 
+ 	/*
+ 	 * Reduce the maximum per-AG allocation length by however much we're
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index e0792d0..04ceefa 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -152,6 +152,7 @@ typedef struct xfs_mount {
+ 	uint64_t		m_resblks;	/* total reserved blocks */
+ 	uint64_t		m_resblks_avail;/* available reserved blocks */
+ 	uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
++	uint64_t		m_ag_resv;	/* per-ag reserved blocks */
+ 	int			m_dalign;	/* stripe unit */
+ 	int			m_swidth;	/* stripe width */
+ 	int			m_sinoalign;	/* stripe unit inode alignment */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f663022..5bfbf05 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1126,7 +1126,7 @@ xfs_fs_statfs(
+ 	spin_lock(&mp->m_sb_lock);
+ 	statp->f_bsize = sbp->sb_blocksize;
+ 	lsize = sbp->sb_logstart ? sbp->sb_logblocks : 0;
+-	statp->f_blocks = sbp->sb_dblocks - lsize;
++	statp->f_blocks = sbp->sb_dblocks - lsize - mp->m_ag_resv;
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+ 	statp->f_bfree = fdblocks - mp->m_alloc_set_aside;
