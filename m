@@ -1,172 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:56174 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752434AbdKMVpB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 16:45:01 -0500
-Date: Tue, 14 Nov 2017 08:44:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 2/2] fiemap: Implement ranged query
-Message-ID: <20171113214457.GX4094@dastard>
-References: <1510588073-5665-1-git-send-email-nborisov@suse.com>
- <1510588073-5665-2-git-send-email-nborisov@suse.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33749 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932190AbdKAWbU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 18:31:20 -0400
+Date: Wed, 1 Nov 2017 15:31:15 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Message-ID: <20171101223115.GL4911@magnolia>
+References: <20171026083322.20428-1-david@fromorbit.com>
+ <CAOQ4uxi9K+3M95VgiPLHRr9cQC6bEzRiddKnAxEgJ3H4Ea+AoQ@mail.gmail.com>
+ <20171026123548.GA3666@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1510588073-5665-2-git-send-email-nborisov@suse.com>
+In-Reply-To: <20171026123548.GA3666@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, Nov 13, 2017 at 05:47:53PM +0200, Nikolay Borisov wrote:
-> Currently the fiemap implementation of xfs_io doesn't support making ranged
-> queries. This patch implements the '-r' parameter, taking up to 2 arguments - 
-> the starting offset and the length of the region to be queried. This also 
-> requires changing of the final hole range is calculated. Namely, it's now being
-> done as [last_logical, logical addres of next extent] rather than being
-> statically determined by [last_logical, filesize].
+On Thu, Oct 26, 2017 at 11:35:48PM +1100, Dave Chinner wrote:
+> On Thu, Oct 26, 2017 at 02:09:26PM +0300, Amir Goldstein wrote:
+> > On Thu, Oct 26, 2017 at 11:33 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > > This patchset is aimed at filesystems that are installed on sparse
+> > > block devices, a.k.a thin provisioned devices. The aim of the
+> > > patchset is to bring the space management aspect of the storage
+> > > stack up into the filesystem rather than keeping it below the
+> > > filesystem where users and the filesystem have no clue they are
+> > > about to run out of space.
+> .....
+> > > I've smoke tested the non-thinspace code paths (running auto tests
+> > > on a scrub enabled kernel+userspace right now) as I haven't updated
+> > > the userspace code to exercise the thinp code paths yet. I know the
+> > > concept works, but my userspace code has an older on-disk format
+> > > from the prototype so it will take me a couple of days to update and
+> > > work out how to get fstests to integrate it reliably. So this is
+> > > mainly a heads-up RFC patchset....
+> > >
+> > > Comments, thoughts, flames all welcome....
+> > >
+> > 
+> > This proposal is very interesting outside the scope of xfs, so I hope you
+> > don't mind I've CC'ed fsdevel.
+> > 
+> > I am thinking how a slightly similar approach could be used to online shrink
+> > the physical size for filesystems that are not on thin provisioned devices:
+> > 
+> > - Set/get a geometry variable of "agsoftlimit" (better names are welcome)
+> >   which is <= agcount.
+> > - agsoftlimit < agcount means that free space of AG > agsoftlimit is zero,
+> >   so total disk space usage will not show this space as available user space.
+> > - inode and block allocators will avoid dipping into the high AG pool,
+> >   expect for metadata block needed for freeing high AG inodes/blocks.
+> > - A variant of xfs_fsr (or e4defrag for that matter) could "migrate" inodes
+> >   and/or blocks from high to low AGs.
+> > - Migrating directories is quite different than migrating files, but doable.
+> > - Finally, on XFS_IOC_FSGROWFSDATA, if shrinking filesystem size and
+> >   high AG usage counters are zero, then physical size can be shrunk
+> >   as down as agsoftlimit instead of reducing usable_blocks.
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
-> V3: 
->  * Fixed a bug where incorrect extent index was shown if we didn't print a 
->  hole. This was due to statically returning 2 at the end of print_(plain|verbose)
->  Now, the actual number of printed extents inside the 2 functions is used. 
->  This bug is visible only with the -r parameter
+> Yup, you've just described all the craziness that a physical shrink
+> requires on XFS. Lots of new user APIs, new tools to move data
+> around, new code to transparently migrate directories and other
+> metadata (like xattrs), etc.
 > 
->  * Fixed a bug where 1 additional extent would be printed. This was a result of 
->  the aforementioned bug fix, since now printing function can return 1 and still
->  have printed an extent and no hole. This can happen when you use -r parameter,
->  this is now fixed and a comment explaining it is put. 
+> Also, the log is placed half way through the XFS filesystem, so
+> unless we add code to allocate and switch to a new journal (in a
+> crash safe and recoverable way!) we can't shrink by more than 50%.
 > 
->  * Reworked the handling of the new params by making them arguments to the 
->  -r parameter. 
+> Also, none of the growfs code touches existing AGs - they'll have to
+> be scanned to determine they really are empty before they get
+> removed from the filesystem, and then there's the other issues like
+> we can't shrink to less than 2 AGs, which puts a significant minimum
+> shrink size on filesystems (again there's that "shrink more than 50%
+> requires a lot more work" problem for filesystems < 4TB).
 > 
-> V2:
->  * Incorporated Daricks feedback - removed variables which weren't introduced
->   until the next patch as a result the build with this patch was broken. This is 
->   fixed now
-.....
+> And to do it efficiently, we really need rmap support in filesystems
+> so the fs can tell us what files and metadata need to be moved,
+> rather than having to do brute force scans to work out what needs
+> moving. Especially as the brute force scans can't find all the
+> metadata that we might need to relocate before we've emptied the
+> space we need to stop using.
+> 
+> IOWs, it's a *lot* of work, and IMO there's more work in
+> verification and proving that everything is crash safe, recoverable
+> and restartable. We've known how much work it is for years - why do
+> you think it hasn't been implemented? See:
+> 
+> http://xfs.org/index.php/Shrinking_Support
+> 
+> And:
+> 
+> http://xfs.org/index.php/Unfinished_work#The_xfs_reno_tool
+> 
+> And specifically follow the reference to a discussion in 2007:
+> 
+> https://marc.info/?l=linux-xfs&m=119131697224361&w=2
+> 
+> > With this, xfs can gain physical shrink support and ext4 can gain online
+> > (and safe) shrink support.
+> 
+> Yes, I estimate it'll probably take about a man-year's worth of work
+> to get xfs shrink to production ready from all the pieces we have
+> sitting around today.
 
-> @@ -256,9 +269,12 @@ fiemap_f(
->  	int		tot_w = 5;	/* 5 since its just one number */
->  	int		flg_w = 5;
->  	__u64		last_logical = 0;
-> +	size_t		fsblocksize, fssectsize;
->  	struct stat	st;
->  
-> -	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
-> +	init_cvtnum(&fsblocksize, &fssectsize);
-> +
-> +	while ((c = getopt(argc, argv, "aln:vr")) != EOF) {
+Ewww, physical shrink.  Maybe that becomes feasible after parent pointer
+support lands, both from a "making the directory rewrite easier" and a
+"do the reviewers have time for this?" perspective. :)
 
-Ok, you're not telling gotopt that "-r" has parameters, so....
+I've worked on bashing resize2fs into better shape for shrink support;
+the things you have to do (even on ext4, which doesn't share extents) to
+the fs are pretty awful.  Ideally you'd move whole extents (or just
+defrag the file into the space that will be left) but once reflink comes
+into play you /have/ to have a strategy for maintaining the sharedness
+across the migration or else you run the risk of blowing up the space
+usage.
 
->  		switch (c) {
->  		case 'a':
->  			fiemap_flags |= FIEMAP_FLAG_XATTR;
-> @@ -272,6 +288,50 @@ fiemap_f(
->  		case 'v':
->  			vflag++;
->  			break;
-> +		case 'r':
-> +			/* Parse the first option which is mandatory */
-> +			if (optind < argc && argv[optind][0] != '-') {
-> +				off64_t start_offset = cvtnum(fsblocksize,
-> +							      fssectsize,
-> +							      argv[optind]);
-> +				if (start_offset < 0) {
-> +					printf("non-numeric offset argument -- "
-> +					       "%s\n", argv[optind]);
-> +					return 0;
-> +				}
-> +				last_logical = start_offset;
-> +				optind++;
-> +			} else {
-> +				fprintf(stderr, _("Invalid offset argument for"
-> +						  " -r\n"));
-> +				exitcode = 1;
-> +				return 0;
-> +			}
-> +
-> +			if (optind < argc) {
-> +				/* first check if what follows doesn't begin
-> +				 * with '-' which means it would be a param and
-> +				 * not an argument
-> +				 */
-> +				if (argv[optind][0] == '-') {
-> +					optind--;
-> +					break;
-> +
-> +				}
-> +
-> +				off64_t length = cvtnum(fsblocksize,
-> +							fssectsize,
-> +							argv[optind]);
-> +				if (length < 0) {
-> +					printf("non-numeric len argument --"
-> +					       " %s\n", argv[optind]);
-> +					return 0;
-> +				}
-> +				len = length;
-> +				range_limit = true;
-> +			}
-> +			break;
+That's a lot to review, even if the strategy is "bail out with ENOSPC
+having potentially done a ton of work and/or fragmented the fs".
 
-.... this is pretty nasty because you're having to check if the next
-option should be parsed by the main loop or not. This assumes that
-getopt is giving us the options in the order they were presented on
-the command line, which is not a good assumption to make as glibc
-can mutate the order as it parses the listi of know options and
-arguments.
+--D
 
-Given that "-r" is the only option that has parameters, then this
-can be massively simplified just by noting we've seen the rflag, and
-leaving the non-arg parameter parsing to after the end of the loop.
-i.e.:
-
-
-		case 'r':
-			range_limit = true;
-			break;
-......
-
-	if (!range_limit) {
-		/* no extra parameters */
-		if (optind != argc)
-			usage();
-	} else if (optind != argc - 2) {
-		/* wrong number of parameters for rflag */
-		usage();
-	} else {
-		/* parse range variables */
-		offset = cvtnum(fsblocksize, fssectsize, argv[optind++]);
-		length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-		if (offset < 0 || length < 0) {
-			/* invalid options */
-			usage();
-		}
-	}
-
-
-
->  
->  			cur_extent += num_printed;
->  			last_logical = extent->fe_logical + extent->fe_length;
-> +			/* If num_printed > 0 then we dunno if we have printed
-> +			 * a hole or an extent and a hole but we don't really
-> +			 * care. Termination of the loop is still going to be
-> +			 * correct
-> +			 */
-
-/*
- * Please use the standard comment format.
- */
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > Assuming that this idea is not shot down on sight, the only implication
+> > I can think of w.r.t your current patches is leaving enough room in new APIs
+> > to accomodate this prospect functionality.
+> 
+> I'm not introducing any new APIs. XFS_IOC_FSGROWFSDATA already
+> supports shrinking and resizing/moving the log, they just aren't
+> implemented.
+> 
+> > You have already reserved 15 u64 in geometry V5 ioctl struct, so that's good.
+> > You have not changed XFS_IOC_FSGROWFSDATA at all, so going forward
+> > the ambiguity of physical shrink vs. virtual shrink could either be determined
+> > by heuristics
+> 
+> No heuristics at all. filesystems on thin devices will have a
+> feature bit in the superblock indicating they are thin filesystems.
+> If the "thinspace" bit is set, shrink is just an accounting
+> operation. If it's not set, then it needs to physically change the
+> geometry of the filesystem....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
