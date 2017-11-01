@@ -1,211 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48777 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755205AbdKGHUm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 02:20:42 -0500
-Date: Mon, 6 Nov 2017 23:20:40 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171107072040.GB4586@infradead.org>
-References: <20171107020607.GA26910@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:41312 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932114AbdKAXuJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 19:50:09 -0400
+Date: Thu, 2 Nov 2017 00:50:07 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs_repair: clear extra file attributes on symlinks
+Message-ID: <20171101235007.GF22894@wotan.suse.de>
+References: <20171031215156.12544-1-mcgrof@kernel.org>
+ <20171031221253.GV4911@magnolia>
+ <CAB=NE6WusGvGYVBokMOup9snofncCm9gXopM7BaUukp9N3zbRQ@mail.gmail.com>
+ <20171031224320.GB4911@magnolia>
+ <20171031231022.GD22894@wotan.suse.de>
+ <659d0936-f2a0-5604-b72c-6b3ded3da4f7@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171107020607.GA26910@magnolia>
+In-Reply-To: <659d0936-f2a0-5604-b72c-6b3ded3da4f7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-NAK, for both the libxfs patch and the kernel one.  I wrote the
-file and it has no copyright header because it conatians trivial,
-non-copyrightable code.  I don't know why people think they can touch
-license information on files I've written without even asking me.
+On Tue, Oct 31, 2017 at 06:12:30PM -0500, Eric Sandeen wrote:
+> 
+> 
+> On 10/31/17 6:10 PM, Luis R. Rodriguez wrote:
+> > On Tue, Oct 31, 2017 at 03:43:20PM -0700, Darrick J. Wong wrote:
+> >> On Tue, Oct 31, 2017 at 03:19:00PM -0700, Luis R. Rodriguez wrote:
+> >>> On Tue, Oct 31, 2017 at 3:12 PM, Darrick J. Wong
+> >>> <darrick.wong@oracle.com> wrote:
+> >>>> On Tue, Oct 31, 2017 at 02:51:56PM -0700, Luis R. Rodriguez wrote:
+> >>>>> diff --git a/repair/dinode.c b/repair/dinode.c
+> >>>>> index 15ba8cc22b39..6288e42de15e 100644
+> >>>>> --- a/repair/dinode.c
+> >>>>> +++ b/repair/dinode.c
+> >>>>> @@ -2482,6 +2482,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+> >>>>>                                               FS_XFLAG_EXTSIZE);
+> >>>>>                       }
+> >>>>>               }
+> >>>>> +             if (flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
+> >>>>> +                          XFS_DIFLAG_NODUMP)) {
+> >>>>> +                     /*
+> >>>>> +                      * ioctl(fd, *) and so ioctl(fd, FS_IOC_SETFLAGS)
+> >>>>> +                      * yields EBADF on symlinks as they have O_PATH set.
+> >>>>> +                      * "Extra file attributes", stx_attributes, as per
+> >>>>> +                      * statx(2) cannot be set on symlinks on Linux.
+> >>>>> +                      */
+> >>>>> +                     if (di_mode && S_ISLNK(di_mode) &&
+> >>>>> +                         !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
+> >>>>
+> >>>> Does this DIFLAG clearing applies to bdev/cdev/fifo/socket files too?
+> >>>
+> >>> Not at the moment given the semantics I hunted down and tested for
+> >>> were for O_PATH only.  The validation I hunted down applies to any
+> >>> file descriptors which we open via O_PATH only.
+> >>
+> >> iirc when you open one of those special files you end up with a fd that
+> >> points to an inode on a special bdevfs/pipefs/etc., not an inode linked
+> >> to the underlying filesystem containing the special file.
+> > 
+> > That seems to fit the O_PATH intent, however its unclear if O_PATH was needed,
+> > as per my testing on /dev/loop0 I don't need O_PATH set for it.
+> > 
+> >> Therefore you shouldn't be able to set any DIFLAG/DIFLAG2 flags on special files.
+> > 
+> > That would be great if we can verify.
+> > 
+> >> # mknod block b 8 0 ; mknod char c 1 3 ; mknod fifo p
+> >> # lsattr block char fifo
+> >> lsattr: Operation not supported While reading flags on block
+> >> lsattr: Operation not supported While reading flags on char
+> >> lsattr: Operation not supported While reading flags on fifo
+> > 
+> > I'm afraid e2fsprogs has a special check for these, ie, userspace is barred
+> > from actually toying with special files purposely because of the Debian bug I
+> > named.
+> > 
+> > strace should reveal the respective ioctl() was not actually issued.
+> 
+> That's very easy to short-circuit in e2fsprogs if you'd like to test what
+> the kernel does today.
 
-Seems like this happened to various other files as well.
+I meant that *I know* that the ioctl() is not issued, as it is a guard implemented
+on e2fsprogs to avoid potentially interfacing with buggy kernel drivers.
 
-Greg: why do you think you can add licensing information to other
-peoples files without even talking to them?
+One however can write a program which does the raw ioctl() call to really test.
 
+For all the above: block char fifo, ioctl() with FS_IOC_FSGETXATTR and
+FS_IOC_FSSETXATTR fails with: -1 an errno is set to ENOTTY (Inappropriate ioctl
+for device). Reason is that vfs_ioctl() is used, and on XFS we'll hit the goto
+out here as no f_op callbacks are set for these special  devices:
 
-On Mon, Nov 06, 2017 at 06:06:07PM -0800, Darrick J. Wong wrote:
-> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> Source kernel commit: b24413180f5600bcb3bb70fbed5cf186b60864bd
-> 
-> Many source files in the tree are missing licensing information, which
-> makes it harder for compliance tools to determine the correct license.
-> 
-> By default all files without license information are under the default
-> license of the kernel, which is GPL version 2.
-> 
-> Update the files which contain no license information with the 'GPL-2.0'
-> SPDX license identifier.  The SPDX identifier is a legally binding
-> shorthand, which can be used instead of the full boiler plate text.
-> 
-> This patch is based on work done by Thomas Gleixner and Kate Stewart and
-> Philippe Ombredanne.
-> 
-> How this work was done:
-> 
-> Patches were generated and checked against linux-4.14-rc6 for a subset of
-> the use cases:
-> - file had no licensing information it it.
-> - file was a */uapi/* one with no licensing information in it,
-> - file was a */uapi/* one with existing licensing information,
-> 
-> Further patches will be generated in subsequent months to fix up cases
-> where non-standard license headers were used, and references to license
-> had to be inferred by heuristics based on keywords.
-> 
-> The analysis to determine which SPDX License Identifier to be applied to
-> a file was done in a spreadsheet of side by side results from of the
-> output of two independent scanners (ScanCode & Windriver) producing SPDX
-> tag:value files created by Philippe Ombredanne.  Philippe prepared the
-> base worksheet, and did an initial spot review of a few 1000 files.
-> 
-> The 4.13 kernel was the starting point of the analysis with 60,537 files
-> assessed.  Kate Stewart did a file by file comparison of the scanner
-> results in the spreadsheet to determine which SPDX license identifier(s)
-> to be applied to the file. She confirmed any determination that was not
-> immediately clear with lawyers working with the Linux Foundation.
-> 
-> Criteria used to select files for SPDX license identifier tagging was:
-> - Files considered eligible had to be source code files.
-> - Make and config files were included as candidates if they contained >5
-> lines of source
-> - File already had some variant of a license header in it (even if <5
-> lines).
-> 
-> All documentation files were explicitly excluded.
-> 
-> The following heuristics were used to determine which SPDX license
-> identifiers to apply.
-> 
-> - when both scanners couldn't find any license traces, file was
-> considered to have no license information in it, and the top level
-> COPYING file license applied.
-> 
-> For non */uapi/* files that summary was:
-> 
-> SPDX license identifier                            # files
-> ---------------------------------------------------|-------
-> GPL-2.0                                              11139
-> 
-> and resulted in the first patch in this series.
-> 
-> If that file was a */uapi/* path one, it was "GPL-2.0 WITH
-> Linux-syscall-note" otherwise it was "GPL-2.0".  Results of that was:
-> 
-> SPDX license identifier                            # files
-> ---------------------------------------------------|-------
-> GPL-2.0 WITH Linux-syscall-note                        930
-> 
-> and resulted in the second patch in this series.
-> 
-> - if a file had some form of licensing information in it, and was one
-> of the */uapi/* ones, it was denoted with the Linux-syscall-note if
-> any GPL family license was found in the file or had no licensing in
-> it (per prior point).  Results summary:
-> 
-> SPDX license identifier                            # files
-> ---------------------------------------------------|------
-> GPL-2.0 WITH Linux-syscall-note                       270
-> GPL-2.0+ WITH Linux-syscall-note                      169
-> ((GPL-2.0 WITH Linux-syscall-note) OR BSD-2-Clause)    21
-> ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause)    17
-> LGPL-2.1+ WITH Linux-syscall-note                      15
-> GPL-1.0+ WITH Linux-syscall-note                       14
-> ((GPL-2.0+ WITH Linux-syscall-note) OR BSD-3-Clause)    5
-> LGPL-2.0+ WITH Linux-syscall-note                       4
-> LGPL-2.1 WITH Linux-syscall-note                        3
-> ((GPL-2.0 WITH Linux-syscall-note) OR MIT)              3
-> ((GPL-2.0 WITH Linux-syscall-note) AND MIT)             1
-> 
-> and that resulted in the third patch in this series.
-> 
-> - when the two scanners agreed on the detected license(s), that became
-> the concluded license(s).
-> 
-> - when there was disagreement between the two scanners (one detected a
-> license but the other didn't, or they both detected different
-> licenses) a manual inspection of the file occurred.
-> 
-> - In most cases a manual inspection of the information in the file
-> resulted in a clear resolution of the license that should apply (and
-> which scanner probably needed to revisit its heuristics).
-> 
-> - When it was not immediately clear, the license identifier was
-> confirmed with lawyers working with the Linux Foundation.
-> 
-> - If there was any question as to the appropriate license identifier,
-> the file was flagged for further research and to be revisited later
-> in time.
-> 
-> In total, over 70 hours of logged manual review was done on the
-> spreadsheet to determine the SPDX license identifiers to apply to the
-> source files by Kate, Philippe, Thomas and, in some cases, confirmation
-> by lawyers working with the Linux Foundation.
-> 
-> Kate also obtained a third independent scan of the 4.13 code base from
-> FOSSology, and compared selected files where the other two scanners
-> disagreed against that SPDX file, to see if there was new insights.  The
-> Windriver scanner is based on an older version of FOSSology in part, so
-> they are related.
-> 
-> Thomas did random spot checks in about 500 files from the spreadsheets
-> for the uapi headers and agreed with SPDX license identifier in the
-> files he inspected. For the non-uapi files Thomas did random spot checks
-> in about 15000 files.
-> 
-> In initial set of patches against 4.14-rc6, 3 files were found to have
-> copy/paste license identifier errors, and have been fixed to reflect the
-> correct identifier.
-> 
-> Additionally Philippe spent 10 hours this week doing a detailed manual
-> inspection and review of the 12,461 patched files from the initial patch
-> version early this week with:
-> - a full scancode scan run, collecting the matched texts, detected
-> license ids and scores
-> - reviewing anything where there was a license detected (about 500+
-> files) to ensure that the applied SPDX license was correct
-> - reviewing anything where there was no detection but the patch license
-> was not GPL-2.0 WITH Linux-syscall-note to ensure that the applied
-> SPDX license was correct
-> 
-> This produced a worksheet with 20 files needing minor correction.  This
-> worksheet was then exported into 3 different .csv files for the
-> different types of files to be modified.
-> 
-> These .csv files were then reviewed by Greg.  Thomas wrote a script to
-> parse the csv files and add the proper SPDX tag to the file, in the
-> format that the file expected.  This script was further refined by Greg
-> based on the output to detect more types of files automatically and to
-> distinguish between header and source .c files (which need different
-> comment types.)  Finally Greg ran the script using the .csv files to
-> generate the patches.
-> 
-> Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-> Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-> Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->  libxfs/xfs_cksum.h |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/libxfs/xfs_cksum.h b/libxfs/xfs_cksum.h
-> index 8211f48..999a290 100644
-> --- a/libxfs/xfs_cksum.h
-> +++ b/libxfs/xfs_cksum.h
-> @@ -1,3 +1,4 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
->  #ifndef _XFS_CKSUM_H
->  #define _XFS_CKSUM_H 1
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+long vfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+        int error = -ENOTTY;                                                    
+                                                                                
+        if (!filp->f_op->unlocked_ioctl)                                        
+                goto out;                                                       
+                                                                                
+        error = filp->f_op->unlocked_ioctl(filp, cmd, arg);                     
+        if (error == -ENOIOCTLCMD)                                              
+                error = -ENOTTY;                                                
+ out:                                                                           
+        return error;                                                           
+}
+
+My point also was that the above logic is different than for symlink. I'd  much
+prefer to address these as a secondary patch given the logic is different.
+
+PF_LOCAL named sockets are also represented on the filesystem, and same situation
+with them, so I can bunch up a check for them as well. Are you OK with these
+going in as separate patches or do you want me to mesh this all together along
+with the new explanation for these?
+
+  Luis
