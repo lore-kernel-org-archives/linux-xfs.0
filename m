@@ -1,34 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48576 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:44144 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753119AbdKAPBh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:01:37 -0400
-Date: Wed, 1 Nov 2017 16:01:36 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: xfs: list corruption in xfs_setup_inode()
-Message-ID: <20171101150136.GA26080@lst.de>
-References: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com> <20171031003358.GD5858@dastard> <CAM_iQpUD5ffaKS7TQ5n9A67TWqrVm8AVKf6ERz3pSFu7rL2rbg@mail.gmail.com> <20171101030536.GN5858@dastard> <CAM_iQpVOmNj6aDNr-Z5owAxS0o0+1j7P3=qzzUWci0f2wVnvaw@mail.gmail.com> <20171101050701.GP5858@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171101050701.GP5858@dastard>
+        id S1754694AbdKAPhF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 11:37:05 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 0/18 v6] dax, ext4, xfs: Synchronous page faults
+Date: Wed,  1 Nov 2017 16:36:29 +0100
+Message-Id: <20171101153648.30166-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Cong Wang <xiyou.wangcong@gmail.com>, Dave Chinner <dchinner@redhat.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-On Wed, Nov 01, 2017 at 04:07:01PM +1100, Dave Chinner wrote:
-> > We are trying to make kdump working, but even if kdump works
-> > we still can't turn on panic_on_warn since this is production
-> > machine.
-> 
-> Hmmm. Ok, maybe you could leave a trace of the xfs_iget* trace
-> points running and check the log tail for unusual events around the
-> time of the next crash. e.g. xfs_iget_reclaim_fail events. That
-> might point us to a potential interaction we can look at more
-> closely. I'd also suggest slab poisoning as well, as that will
-> catch other lifecycle problems that could be causing list
-> corruptions such as use-after-free.
+Hello,
 
-KASAN has also been really useful for these kinds of issues.
+here is the sixth version of my patches to implement synchronous page faults
+for DAX mappings to make flushing of DAX mappings possible from userspace so
+that they can be flushed on finer than page granularity and also avoid the
+overhead of a syscall.
+
+I think we are ready to get this merged - I've talked to Dan and he said he
+could take the patches through his tree. It would just be nice to get final
+ack from Christoph for the first patch implementing MAP_VALIDATE and someone
+from XFS folks to check patch 17 (make xfs_filemap_pfn_mkwrite use
+__xfs_filemap_fault()).
+
+---
+
+We use a new mmap flag MAP_SYNC to indicate that page faults for the mapping
+should be synchronous.  The guarantee provided by this flag is: While a block
+is writeably mapped into page tables of this mapping, it is guaranteed to be
+visible in the file at that offset also after a crash.
+
+How I implement this is that ->iomap_begin() indicates by a flag that inode
+block mapping metadata is unstable and may need flushing (use the same test as
+whether fdatasync() has metadata to write). If yes, DAX fault handler refrains
+from inserting / write-enabling the page table entry and returns special flag
+VM_FAULT_NEEDDSYNC together with a PFN to map to the filesystem fault handler.
+The handler then calls fdatasync() (vfs_fsync_range()) for the affected range
+and after that calls DAX code to update the page table entry appropriately.
+
+I did some basic performance testing on the patches over ramdisk - timed
+latency of page faults when faulting 512 pages. I did several tests: with file
+preallocated / with file empty, with background file copying going on / without
+it, with / without MAP_SYNC (so that we get comparison).  The results are
+(numbers are in microseconds):
+
+File preallocated, no background load no MAP_SYNC:
+min=9 avg=10 max=46
+8 - 15 us: 508
+16 - 31 us: 3
+32 - 63 us: 1
+
+File preallocated, no background load, MAP_SYNC:
+min=9 avg=10 max=47
+8 - 15 us: 508
+16 - 31 us: 2
+32 - 63 us: 2
+
+File empty, no background load, no MAP_SYNC:
+min=21 avg=22 max=70
+16 - 31 us: 506
+32 - 63 us: 5
+64 - 127 us: 1
+
+File empty, no background load, MAP_SYNC:
+min=40 avg=124 max=242
+32 - 63 us: 1
+64 - 127 us: 333
+128 - 255 us: 178
+
+File empty, background load, no MAP_SYNC:
+min=21 avg=23 max=67
+16 - 31 us: 507
+32 - 63 us: 4
+64 - 127 us: 1
+
+File empty, background load, MAP_SYNC:
+min=94 avg=112 max=181
+64 - 127 us: 489
+128 - 255 us: 23
+
+So here we can see the difference between MAP_SYNC vs non MAP_SYNC is about
+100-200 us when we need to wait for transaction commit in this setup. 
+
+Changes since v5:
+* really updated the manpage
+* improved comment describing IOMAP_F_DIRTY
+* fixed XFS handling of VM_FAULT_NEEDSYNC in xfs_filemap_pfn_mkwrite()
+
+Changes since v4:
+* fixed couple of minor things in the manpage
+* make legacy mmap flags always supported, remove them from mask declared
+  to be supported by ext4 and xfs
+
+Changes since v3:
+* updated some changelogs
+* folded fs support for VM_SYNC flag into patches implementing the
+  functionality
+* removed ->mmap_validate, use ->mmap_supported_flags instead
+* added some Reviewed-by tags
+* added manpage patch
+
+Changes since v2:
+* avoid unnecessary flushing of faulted page (Ross) - I've realized it makes no
+  sense to remeasure my benchmark results (after actually doing that and seeing
+  no difference, sigh) since I use ramdisk and not real PMEM HW and so flushes
+  are ignored.
+* handle nojournal mode of ext4
+* other smaller cleanups & fixes (Ross)
+* factor larger part of finishing of synchronous fault into a helper (Christoph)
+* reorder pfnp argument of dax_iomap_fault() (Christoph)
+* add XFS support from Christoph
+* use proper MAP_SYNC support in mmap(2)
+* rebased on top of 4.14-rc4
+
+Changes since v1:
+* switched to using mmap flag MAP_SYNC
+* cleaned up fault handlers to avoid passing pfn in vmf->orig_pte
+* switched to not touching page tables before we are ready to insert final
+  entry as it was unnecessary and not really simplifying anything
+* renamed fault flag to VM_FAULT_NEEDDSYNC
+* other smaller fixes found by reviewers
+
+								Honza
