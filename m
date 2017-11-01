@@ -1,89 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44201 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754813AbdKAPhD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:37:03 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 17/18] xfs: Implement xfs_filemap_pfn_mkwrite() using __xfs_filemap_fault()
-Date: Wed,  1 Nov 2017 16:36:46 +0100
-Message-Id: <20171101153648.30166-18-jack@suse.cz>
-In-Reply-To: <20171101153648.30166-1-jack@suse.cz>
-References: <20171101153648.30166-1-jack@suse.cz>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:34388 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932114AbdKAXxD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 19:53:03 -0400
+Date: Thu, 2 Nov 2017 10:53:00 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Message-ID: <20171101235300.GT5858@dastard>
+References: <20171026083322.20428-1-david@fromorbit.com>
+ <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard>
+ <20171031112432.GA7093@bfoster.bfoster>
+ <20171101004513.GK5858@dastard>
+ <20171101141720.GB11709@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171101141720.GB11709@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-xfs_filemap_pfn_mkwrite() duplicates a lot of __xfs_filemap_fault().
-It will also need to handle flushing for synchronous page faults. So
-just make that function use __xfs_filemap_fault().
+On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
+> On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
+> > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
+> > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
+> > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
+> > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+> > > > > > This patchset is aimed at filesystems that are installed on sparse
+> > > > > > block devices, a.k.a thin provisioned devices. The aim of the
+> > > > > > patchset is to bring the space management aspect of the storage
+> > > > > > stack up into the filesystem rather than keeping it below the
+> > > > > > filesystem where users and the filesystem have no clue they are
+> > > > > > about to run out of space.
+> > ....
+> > > > I get that "total_blocks" sounds better, but to me that's a capacity
+> > > > measurement, not an indication of the size of the underlying address
+> > > > space the block device has provided. m_usable_blocks is obviously a
+> > > > capacity measurement, but I was trying to convey that m_LBA_size is
+> > > > not a capacity measurement but an externally imposed addressing
+> > > > limit.
+> > > > 
+> > > > <shrug>
+> > > > 
+> > > > I guess if I document it well enough m_total_blocks will work.
+> > > > 
+> > > 
+> > > Hmm, yeah I see what you mean. Unfortunately I can't really think of
+> > > anything aside from m_total_blocks or perhaps m_phys_blocks at the
+> > > moment.
+> > 
+> > m_phys_blocks seems closer to the intent. If that's acceptible I'll
+> > change the code to that.
+> > 
+> 
+> That works for me, thanks..
+> 
+> BTW, was there ever any kind of solution to the metadata block
+> reservation issue in the thin case? We now hide metadata reservation
+> from the user via the m_usable_blocks account. If m_phys_blocks
+> represents a thin volume, how exactly do we prevent those metadata
+> allocations/writes from overrunning what the admin has specified as
+> "usable" with respect to the thin volume?
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c  | 29 ++++-------------------------
- fs/xfs/xfs_trace.h |  2 --
- 2 files changed, 4 insertions(+), 27 deletions(-)
+The reserved metadata blocks are not accounted from free space when
+they are allocated - they are pulled from the reserved space that
+has already been removed from the free space.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7c6b8def6eed..4496b45678de 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1085,37 +1085,16 @@ xfs_filemap_page_mkwrite(
- }
- 
- /*
-- * pfn_mkwrite was originally inteneded to ensure we capture time stamp
-- * updates on write faults. In reality, it's need to serialise against
-- * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
-- * to ensure we serialise the fault barrier in place.
-+ * pfn_mkwrite was originally intended to ensure we capture time stamp updates
-+ * on write faults. In reality, it needs to serialise against truncate and
-+ * prepare memory for writing so handle is as standard write fault.
-  */
- static int
- xfs_filemap_pfn_mkwrite(
- 	struct vm_fault		*vmf)
- {
- 
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	struct xfs_inode	*ip = XFS_I(inode);
--	int			ret = VM_FAULT_NOPAGE;
--	loff_t			size;
--
--	trace_xfs_filemap_pfn_mkwrite(ip);
--
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vmf->vma->vm_file);
--
--	/* check if the faulting page hasn't raced with truncate */
--	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
--	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
--	if (vmf->pgoff >= size)
--		ret = VM_FAULT_SIGBUS;
--	else if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
--	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
--	sb_end_pagefault(inode->i_sb);
--	return ret;
--
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
- }
- 
- static const struct vm_operations_struct xfs_file_vm_ops = {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bb5514688d47..6333ad09e0f3 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -688,8 +688,6 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
- 
--DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
--
- TRACE_EVENT(xfs_filemap_fault,
- 	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
- 		 bool write_fault),
+i.e. we can use as much or as little of the reserved space as we
+want, but it doesn't affect the free/used space reported to
+userspace at all.
+
+> > > > > Finally, I tend to agree with Amir's comment with regard to
+> > > > > shrink/growfs... at least infosar as I understand his concern. If we do
+> > > > > support physical shrink in the future, what do we expect the interface
+> > > > > to look like in light of this change?
+> > > > 
+> > > > I don't expect it to look any different. It's exactly the same as
+> > > > growfs - thinspace filesystem will simply do a logical grow/shrink,
+> > > > fat filesystems will need to do a physical grow/shrink
+> > > > adding/removing AGs.
+> > > > 
+> > > 
+> > > How would you physically shrink a thin filesystem?
+> > 
+> > You wouldn't. There should never be a need to do this because it a
+> > thinspace shrink doesn't actually free any space - it's just a usage
+> > limit. fstrim is what actually shrinks the storage space used,
+> > regardless of the current maximum capcity of the thin filesystem.
+> 
+> In other words, the answer is that we can't physically shrink a thin fs
+> because of a limitation on the growfs interface due to how we've used it
+> here.
+
+No, that is not the what I said. To paraphrase, what I said was "we
+aren't going to support physically shrinking thin filesystems at
+this point in time". That has nothing to do with the growfs API -
+it's an implementation choice that reflects the fact we can't
+physically shrink filesystems and that functionality is no closer to
+being implemented than it was 10+ years ago.
+
+i.e. we don't need to rev the interface to support shrink on thin
+filesystems, so there's no need to rev the interface at this point
+in time.
+
+*If* we implement physical shrink, *then* we can rev the growfs
+interface to allow users to run a physical shrink on thin
+filesystems.
+
+Cheers,
+
+Dave.
 -- 
-2.12.3
-
+Dave Chinner
+david@fromorbit.com
