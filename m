@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43373 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933912AbdKAVrW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:47:22 -0400
-Subject: [PATCH 08/14] common/xfs: remove inode-paths cruft
+Received: from aserp1040.oracle.com ([141.146.126.69]:20051 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933631AbdKAVr2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:47:28 -0400
+Subject: [PATCH 09/14] xfs/348: dir->symlink corruption must not be allowed
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 01 Nov 2017 14:47:17 -0700
-Message-ID: <150957283781.18388.9309616767855804002.stgit@magnolia>
+Date: Wed, 01 Nov 2017 14:47:23 -0700
+Message-ID: <150957284389.18388.370732842906149356.stgit@magnolia>
 In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
 References: <150957278824.18388.17975162441125293654.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,33 +20,26 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Remove the inode-paths check from _check_xfs_test_fs because we don't
-support inode paths, xfsprogs doesn't have a xfs_{check,repair}_ipaths
-tool, and it's broken anyway because we ignore _check_xfs_filesystem
-(which tells whether or not the filesystem is even still mounted).
+A directory corrupted into a symlink will be caught by the upcoming
+local format ifork verifiers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/xfs |    7 -------
- 1 file changed, 7 deletions(-)
+ tests/xfs/348.out |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/common/xfs b/common/xfs
-index 5643adf..79efb78 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -471,13 +471,6 @@ _check_xfs_test_fs()
- 		TEST_RT="$TEST_RTDEV"
- 
- 	_check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT
--
--	# check for ipath consistency
--	if $XFS_GROWFS_PROG -n $TEST_DIR | grep -q 'inode-paths=1'; then
--		# errors go to stderr
--		xfs_check_ipaths $TEST_DIR >/dev/null
--		xfs_repair_ipaths -n $TEST_DIR >/dev/null
--	fi
- }
- 
- _require_xfs_test_rmapbt()
+diff --git a/tests/xfs/348.out b/tests/xfs/348.out
+index f4a7a71..17d9be2 100644
+--- a/tests/xfs/348.out
++++ b/tests/xfs/348.out
+@@ -239,7 +239,7 @@ would have junked entry "DATA" in directory PARENT_INO
+ would have junked entry "DIR" in directory PARENT_INO
+ would have junked entry "EMPTY" in directory PARENT_INO
+ would have junked entry "FIFO" in directory PARENT_INO
+-stat: 'SCRATCH_MNT/test/DIR' is a symbolic link
++stat: cannot stat 'SCRATCH_MNT/test/DIR': Structure needs cleaning
+ stat: 'SCRATCH_MNT/test/DATA' is a symbolic link
+ stat: cannot stat 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
+ stat: 'SCRATCH_MNT/test/SYMLINK' is a symbolic link
 
