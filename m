@@ -1,69 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:55915 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933025AbdKBSLY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 14:11:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <20171102163953.GT4911@magnolia>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
- <150957284389.18388.370732842906149356.stgit@magnolia> <20171102124214.GY17339@eguan.usersys.redhat.com>
- <CAOQ4uxjJD+r5uvQ4=F5zaL5uUkLQu3sW2nVcWqsUS2YP3hxrUQ@mail.gmail.com> <20171102163953.GT4911@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 2 Nov 2017 20:11:22 +0200
-Message-ID: <CAOQ4uxjkzabQMViRmysJgj9Hk0K3T7rtmqyuM=v-pzuKmxZ+pA@mail.gmail.com>
-Subject: Re: [PATCH 09/14] xfs/348: dir->symlink corruption must not be allowed
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:44173 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754791AbdKAPhD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 11:37:03 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 07/18] dax: Inline dax_insert_mapping() into the callsite
+Date: Wed,  1 Nov 2017 16:36:36 +0100
+Message-Id: <20171101153648.30166-8-jack@suse.cz>
+In-Reply-To: <20171101153648.30166-1-jack@suse.cz>
+References: <20171101153648.30166-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
 
-On Thu, Nov 2, 2017 at 6:39 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Thu, Nov 02, 2017 at 03:14:45PM +0200, Amir Goldstein wrote:
->> On Thu, Nov 2, 2017 at 2:42 PM, Eryu Guan <eguan@redhat.com> wrote:
->> > On Wed, Nov 01, 2017 at 02:47:23PM -0700, Darrick J. Wong wrote:
->> >> From: Darrick J. Wong <darrick.wong@oracle.com>
->> >>
->> >> A directory corrupted into a symlink will be caught by the upcoming
->> >> local format ifork verifiers.
->> >>
->> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->> >> ---
->> >>  tests/xfs/348.out |    2 +-
->> >>  1 file changed, 1 insertion(+), 1 deletion(-)
->> >>
->> >>
->> >> diff --git a/tests/xfs/348.out b/tests/xfs/348.out
->> >> index f4a7a71..17d9be2 100644
->> >> --- a/tests/xfs/348.out
->> >> +++ b/tests/xfs/348.out
->> >> @@ -239,7 +239,7 @@ would have junked entry "DATA" in directory PARENT_INO
->> >>  would have junked entry "DIR" in directory PARENT_INO
->> >>  would have junked entry "EMPTY" in directory PARENT_INO
->> >>  would have junked entry "FIFO" in directory PARENT_INO
->> >> -stat: 'SCRATCH_MNT/test/DIR' is a symbolic link
->> >> +stat: cannot stat 'SCRATCH_MNT/test/DIR': Structure needs cleaning
->> >
->> > But this breaks tests on old kernels. Or with the new ifork verifiers,
->> > old kernels can be considered as buggy?
->> >
->>
->> Can filter new and old error into canonicalized string.
->> Dodgy, bug we've done it before.
->> See:
->> git grep sed | grep 'Operation not permitted\|Permission denied'
->
-> I tried that, but the "stat: XXX is a symbolic link" message comes from
-> a different path in the test file code.
->
-> Unless... you're suggesting that I should sed the error output to make
-> it look like the previous (broken) output?
->
+dax_insert_mapping() has only one callsite and we will need to further
+fine tune what it does for synchronous faults. Just inline it into the
+callsite so that we don't have to pass awkward bools around.
 
-Let's say I am not *suggesting* this, but I have seen tests that do that
-See generic/160 and other tests that show in this grep output:
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 46 +++++++++++++++++++---------------------------
+ 1 file changed, 19 insertions(+), 27 deletions(-)
 
-git grep sed | grep 'Operation not permitted\|Permission denied'
+diff --git a/fs/dax.c b/fs/dax.c
+index 5ea71381dba0..5b20c6456926 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -858,32 +858,6 @@ static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
+ 	return rc;
+ }
+ 
+-static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+-			      loff_t pos, void *entry)
+-{
+-	const sector_t sector = dax_iomap_sector(iomap, pos);
+-	struct vm_area_struct *vma = vmf->vma;
+-	struct address_space *mapping = vma->vm_file->f_mapping;
+-	unsigned long vaddr = vmf->address;
+-	void *ret;
+-	int rc;
+-	pfn_t pfn;
+-
+-	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
+-	if (rc < 0)
+-		return rc;
+-
+-	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
+-	if (IS_ERR(ret))
+-		return PTR_ERR(ret);
+-
+-	trace_dax_insert_mapping(mapping->host, vmf, ret);
+-	if (vmf->flags & FAULT_FLAG_WRITE)
+-		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+-	else
+-		return vm_insert_mixed(vma, vaddr, pfn);
+-}
+-
+ /*
+  * The user has performed a load from a hole in the file.  Allocating a new
+  * page in the file would cause excessive storage usage for workloads with
+@@ -1119,6 +1093,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
+ 	int vmf_ret = 0;
+ 	void *entry;
++	pfn_t pfn;
+ 
+ 	trace_dax_pte_fault(inode, vmf, vmf_ret);
+ 	/*
+@@ -1201,7 +1176,24 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
+ 			major = VM_FAULT_MAJOR;
+ 		}
+-		error = dax_insert_mapping(vmf, &iomap, pos, entry);
++		error = dax_iomap_pfn(&iomap, pos, PAGE_SIZE, &pfn);
++		if (error < 0)
++			goto error_finish_iomap;
++
++		entry = dax_insert_mapping_entry(mapping, vmf, entry,
++						 dax_iomap_sector(&iomap, pos),
++						 0);
++		if (IS_ERR(entry)) {
++			error = PTR_ERR(entry);
++			goto error_finish_iomap;
++		}
++
++		trace_dax_insert_mapping(inode, vmf, entry);
++		if (write)
++			error = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
++		else
++			error = vm_insert_mixed(vma, vaddr, pfn);
++
+ 		/* -EBUSY is fine, somebody else faulted on the same PTE */
+ 		if (error == -EBUSY)
+ 			error = 0;
+-- 
+2.12.3
 
-Amir.
