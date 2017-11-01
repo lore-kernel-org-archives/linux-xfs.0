@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43157 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:43192 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933516AbdKAVqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:46:52 -0400
-Subject: [PATCH 03/14] misc: add module reloading helpers
+        with ESMTP id S933451AbdKAVq7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 17:46:59 -0400
+Subject: [PATCH 04/14] xfs: test that we don't leak inodes and dquots during
+ failed cow recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 01 Nov 2017 14:46:47 -0700
-Message-ID: <150957280703.18388.13585846336171471679.stgit@magnolia>
+Date: Wed, 01 Nov 2017 14:46:53 -0700
+Message-ID: <150957281322.18388.9449663804159748710.stgit@magnolia>
 In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
 References: <150957278824.18388.17975162441125293654.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,277 +21,413 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add some helper functions to require that we can reload a given module,
-and add a helper to actually do that.  Refactor the existing users to
-use the generics.
-
-We need to hoist completely the behaviors of the old btrfs module helper
-because we need to confirm before starting the test that we actually can
-remove the module.
+Add a couple of tests to check that we don't leak inodes or dquots
+if CoW recovery fails and therefore the mount fails.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/btrfs    |   12 -------
- common/module   |   99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common/overlay  |    1 +
- common/rc       |   11 ------
- tests/btrfs/124 |    9 ++---
- tests/btrfs/125 |    9 ++---
- 6 files changed, 108 insertions(+), 33 deletions(-)
- create mode 100644 common/module
+ common/rc         |    1 
+ tests/xfs/703     |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/703.out |    9 ++++
+ tests/xfs/704     |   89 ++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/704.out |    5 ++
+ tests/xfs/705     |  105 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/705.out |    9 ++++
+ tests/xfs/group   |    3 +
+ 8 files changed, 332 insertions(+)
+ create mode 100755 tests/xfs/703
+ create mode 100644 tests/xfs/703.out
+ create mode 100755 tests/xfs/704
+ create mode 100644 tests/xfs/704.out
+ create mode 100755 tests/xfs/705
+ create mode 100644 tests/xfs/705.out
 
 
-diff --git a/common/btrfs b/common/btrfs
-index fd762ef..c09206c 100644
---- a/common/btrfs
-+++ b/common/btrfs
-@@ -349,18 +349,6 @@ _btrfs_qgroup_units()
- 	$BTRFS_UTIL_PROG qgroup show --help 2>&1 | grep -q -- --raw && echo "--raw"
- }
- 
--_require_btrfs_loadable()
--{
--	modprobe -r btrfs || _notrun "btrfs unloadable"
--	modprobe btrfs || _notrun "Can't load btrfs"
--}
--
--_reload_btrfs_ko()
--{
--	modprobe -r btrfs || _fail "btrfs unload failed"
--	modprobe btrfs || _fail "btrfs load failed"
--}
--
- _btrfs_compression_algos()
- {
- 	echo zlib
-diff --git a/common/module b/common/module
-new file mode 100644
-index 0000000..7473d20
---- /dev/null
-+++ b/common/module
-@@ -0,0 +1,99 @@
-+##/bin/bash
-+
-+# Routines for messing around with loadable kernel modules
-+#
-+#-----------------------------------------------------------------------
-+#  Copyright (c) 2017 Oracle.  All Rights Reserved.
-+#  This program is free software; you can redistribute it and/or modify
-+#  it under the terms of the GNU General Public License as published by
-+#  the Free Software Foundation; either version 2 of the License, or
-+#  (at your option) any later version.
-+#
-+#  This program is distributed in the hope that it will be useful,
-+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+#  GNU General Public License for more details.
-+#
-+#  You should have received a copy of the GNU General Public License
-+#  along with this program; if not, write to the Free Software
-+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
-+#  USA
-+#-----------------------------------------------------------------------
-+
-+# Return the module name for this fs.
-+_module_for_fs()
-+{
-+	echo "${FSTYP}"
-+}
-+
-+# Reload a particular module.  This module MUST NOT be the module that
-+# underlies the filesystem.
-+_reload_module()
-+{
-+	module="$1"
-+
-+	modprobe -r "${module}" || _fail "${module} unload failed"
-+	modprobe "${module}" || _fail "${module} load failed"
-+}
-+
-+# Reload the filesystem module.
-+_reload_fs_module()
-+{
-+	module="$1"
-+
-+	# Unload test fs, try to reload module, remount
-+	had_testfs=""
-+	had_scratchfs=""
-+	_check_mounted_on TEST_DEV $TEST_DEV TEST_DIR $TEST_DIR && had_testfs="true"
-+	_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT && had_scratchfs="true"
-+	test -n "${had_testfs}" && _test_unmount
-+	test -n "${had_scratchfs}" && _scratch_unmount
-+	_reload_module "${module}"
-+	test -n "${had_scratchfs}" && _scratch_mount 2> /dev/null
-+	test -n "${had_testfs}" && _test_mount 2> /dev/null
-+}
-+
-+# Check that we have a module that can be loaded.  This module MUST NOT
-+# be the module that underlies the filesystem.
-+_require_loadable_module()
-+{
-+	module="$1"
-+
-+	modinfo "${module}" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-+	modprobe -r "${module}" || _notrun "${module} unload failed"
-+	modprobe "${module}" || _notrun "${module} load failed"
-+}
-+
-+# Check that the module for FSTYP can be loaded.
-+_require_loadable_fs_module()
-+{
-+	module="$1"
-+
-+	modinfo "${module}" > /dev/null 2>&1 || _notrun "${module}: must be a module."
-+
-+	# Unload test fs, try to reload module, remount
-+	had_testfs=""
-+	had_scratchfs=""
-+	_check_mounted_on TEST_DEV $TEST_DEV TEST_DIR $TEST_DIR && had_testfs="true"
-+	_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT && had_scratchfs="true"
-+	test -n "${had_testfs}" && _test_unmount
-+	test -n "${had_scratchfs}" && _scratch_unmount
-+	unload_ok=""
-+	load_ok=""
-+	modprobe -r "${module}" || unload_ok=0
-+	modprobe "${module}" || load_ok=0
-+	test -n "${had_scratchfs}" && _scratch_mount 2> /dev/null
-+	test -n "${had_testfs}" && _test_mount 2> /dev/null
-+	test -z "${unload_ok}" || _notrun "${module} unload failed"
-+	test -z "${load_ok}" || _notrun "${module} load failed"
-+}
-+
-+# Print the value of a filesystem module parameter
-+# at /sys/module/$FSTYP/parameters/$PARAM
-+#
-+# Usage example (FSTYP=overlay):
-+#   _get_fs_module_param index
-+_get_fs_module_param()
-+{
-+	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
-+}
-diff --git a/common/overlay b/common/overlay
-index 79097ba..1da4ab1 100644
---- a/common/overlay
-+++ b/common/overlay
-@@ -1,6 +1,7 @@
- #
- # overlayfs specific common functions.
- #
-+. ./common/module
- 
- # helper function to do the actual overlayfs mount operation
- _overlay_mount_dirs()
 diff --git a/common/rc b/common/rc
-index 83aaced..c708bfa 100644
+index c708bfa..7e453e0 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -3554,16 +3554,6 @@ _get_fs_sysfs_attr()
- 	cat /sys/fs/${FSTYP}/${dname}/${attr}
- }
- 
--# Print the value of a filesystem module parameter
--# at /sys/module/$FSTYP/parameters/$PARAM
--#
--# Usage example (FSTYP=overlay):
--#   _get_fs_module_param index
--_get_fs_module_param()
--{
--	cat /sys/module/${FSTYP}/parameters/${1} 2>/dev/null
--}
--
- # Generic test for specific filesystem feature.
- # Currently only implemented to test overlayfs features.
- _require_scratch_feature()
-@@ -3580,7 +3570,6 @@ _require_scratch_feature()
- 	esac
- }
- 
--
- init_rc
- 
- ################################################################################
-diff --git a/tests/btrfs/124 b/tests/btrfs/124
-index 7206094..a648627 100755
---- a/tests/btrfs/124
-+++ b/tests/btrfs/124
-@@ -55,6 +55,7 @@ _cleanup()
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
+@@ -3324,6 +3324,7 @@ _check_dmesg()
+ 	     -e "(INFO|ERR): suspicious RCU usage" \
+ 	     -e "INFO: possible circular locking dependency detected" \
+ 	     -e "general protection fault:" \
++	     -e "BUG .* remaining" \
+ 	     $seqres.dmesg
+ 	if [ $? -eq 0 ]; then
+ 		_dump_err "_check_dmesg: something found in dmesg (see $seqres.dmesg)"
+diff --git a/tests/xfs/703 b/tests/xfs/703
+new file mode 100755
+index 0000000..b2e37e6
+--- /dev/null
++++ b/tests/xfs/703
+@@ -0,0 +1,111 @@
++#! /bin/bash
++# FS QA Test No. 703
++#
++# Ensure that we don't leak quota inodes when CoW recovery fails.
++#
++# Use xfs_fsr to inject bmap redo items in the log for a linked file and
++# an unlinked file; enable quota so that we always mount with the quota
++# inodes; and then corrupt the refcount btree to ensure that the CoW
++# garbage collection (and therefore the mount) fail.
++#
++# On a subsequent mount attempt, we should be able to replay the bmap
++# items for the linked and unlinked files without prematurely truncating
++# the unlinked inode and without leaking the linked inode, and we should
++# be able to release the quota inodes when we're aborting the mount.  We
++# also should not leak dquots.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -rf "$tmp".*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++. ./common/inject
++. ./common/quota
 +. ./common/module
- 
- # remove previous $seqres.full before test
- rm -f $seqres.full
-@@ -64,10 +65,8 @@ rm -f $seqres.full
- _supported_fs btrfs
- _supported_os Linux
- _require_scratch_dev_pool 2
--
--# the mounted test dir prevent btrfs unload, we need to unmount
- _test_unmount
--_require_btrfs_loadable
-+_require_loadable_fs_module "btrfs"
- 
- _scratch_dev_pool_get 2
- 
-@@ -102,7 +101,7 @@ echo "clean btrfs ko" >> $seqres.full
- _scratch_unmount
- 
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- 
- echo >> $seqres.full
- echo "-----Write degraded mount fill upto $max_fs_sz bytes-----" >> $seqres.full
-@@ -141,7 +140,7 @@ echo
- echo "Mount degraded with the other dev"
- _scratch_unmount
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- _mount -o degraded $dev2 $SCRATCH_MNT >>$seqres.full 2>&1
- _run_btrfs_util_prog filesystem show
- checkpoint3=`md5sum $SCRATCH_MNT/tf2`
-diff --git a/tests/btrfs/125 b/tests/btrfs/125
-index 91aa8d8..19961a1 100755
---- a/tests/btrfs/125
-+++ b/tests/btrfs/125
-@@ -54,6 +54,7 @@ _cleanup()
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_loadable_fs_module "xfs"
++_require_quota
++_require_scratch_reflink
++_require_cp_reflink
++_require_command "$XFS_FSR_PROG" "xfs_fsr"
++_require_xfs_io_error_injection "bmap_finish_one"
++_require_xfs_scratch_rmapbt
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount -o noquota >> "$seqres.full" 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++blksz=65536
++blks=3
++mkdir "$testdir"
++
++echo "Create a many-block file"
++_pwrite_byte 0x62 0 $((blksz * blks)) $testdir/file1 >> $seqres.full
++_pwrite_byte 0x63 0 $blksz $testdir/file2 >> $seqres.full
++_reflink_range $testdir/file2 0 $testdir/file1 $blksz $blksz >> $seqres.full
++_scratch_cycle_mount noquota
++
++echo "Inject error"
++_scratch_inject_error "bmap_finish_one"
++
++echo "Defrag the file"
++$XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full 2>&1
++
++echo "FS should be shut down, touch will fail"
++touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
++
++echo "Remount to replay log" | tee /dev/ttyprintk
++_scratch_unmount
++_scratch_dump_log >> $seqres.full
++_scratch_xfs_db -x -c 'agf 0' -c 'addr refcntroot' -c 'fuzz -d recs[1].startblock ones' >> $seqres.full
++_scratch_xfs_db -x -c 'agf 0' -c 'addr refcntroot' -c p >> $seqres.full
++
++# Suddenly enable quota to test if we can leak the quotacheck dquots!
++_scratch_mount -o quota >> $seqres.full 2>&1
++_scratch_unmount 2> /dev/null
++rm -f ${RESULT_DIR}/require_scratch
++
++echo "See if we leak"
++_reload_fs_module "xfs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/703.out b/tests/xfs/703.out
+new file mode 100644
+index 0000000..d811880
+--- /dev/null
++++ b/tests/xfs/703.out
+@@ -0,0 +1,9 @@
++QA output created by 703
++Format and mount
++Create a many-block file
++Inject error
++Defrag the file
++FS should be shut down, touch will fail
++touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
++Remount to replay log
++See if we leak
+diff --git a/tests/xfs/704 b/tests/xfs/704
+new file mode 100755
+index 0000000..3f4d704
+--- /dev/null
++++ b/tests/xfs/704
+@@ -0,0 +1,89 @@
++#! /bin/bash
++# FS QA Test No. 704
++#
++# Ensure that we don't leak dquots when CoW recovery fails.
++#
++# Corrupt the refcount btree to ensure that the CoW garbage collection
++# (and therefore the mount) fail.
++#
++# On a subsequent mount attempt, we should be able to release the quota
++# inodes when we're aborting the mount.  We also should not leak dquots.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -rf "$tmp".*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++. ./common/quota
 +. ./common/module
- 
- # remove previous $seqres.full before test
- rm -f $seqres.full
-@@ -63,10 +64,8 @@ rm -f $seqres.full
- _supported_fs btrfs
- _supported_os Linux
- _require_scratch_dev_pool 3
--
--# we need btrfs to unload, need test dir unmounted
- _test_unmount
--_require_btrfs_loadable
-+_require_loadable_fs_module "btrfs"
- 
- _scratch_dev_pool_get 3
- 
-@@ -118,7 +117,7 @@ echo "unmount" >> $seqres.full
- _scratch_unmount
- echo "clean btrfs ko" >> $seqres.full
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- _mount -o degraded,device=$dev2 $dev1 $SCRATCH_MNT >>$seqres.full 2>&1
- dd if=/dev/zero of="$SCRATCH_MNT"/tf2 bs=$bs count=$count \
- 					>>$seqres.full 2>&1
-@@ -154,7 +153,7 @@ echo "Mount degraded but with other dev"
- 
- _scratch_unmount
- # un-scan the btrfs devices
--_reload_btrfs_ko
-+_reload_fs_module "btrfs"
- 
- _mount -o degraded,device=${dev2} $dev3 $SCRATCH_MNT >>$seqres.full 2>&1
- 
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_loadable_fs_module "xfs"
++_require_quota
++_require_scratch_reflink
++_require_cp_reflink
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount -o quota >> "$seqres.full" 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++blksz=65536
++blks=3
++mkdir "$testdir"
++
++echo "Create a many-block file"
++_pwrite_byte 0x62 0 $((blksz * blks)) $testdir/file1 >> $seqres.full
++_pwrite_byte 0x63 0 $blksz $testdir/file2 >> $seqres.full
++_reflink_range $testdir/file2 0 $testdir/file1 $blksz $blksz >> $seqres.full
++
++echo "Remount to check recovery" | tee /dev/ttyprintk
++_scratch_unmount
++_scratch_xfs_db -x -c 'agf 0' -c 'addr refcntroot' -c 'fuzz -d recs[1].startblock ones' >> $seqres.full
++_scratch_xfs_db -x -c 'agf 0' -c 'addr refcntroot' -c p >> $seqres.full
++_scratch_mount -o quota >> $seqres.full 2>&1
++_scratch_unmount 2> /dev/null
++rm -f ${RESULT_DIR}/require_scratch
++
++echo "See if we leak"
++_reload_fs_module "xfs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/704.out b/tests/xfs/704.out
+new file mode 100644
+index 0000000..b237b2d
+--- /dev/null
++++ b/tests/xfs/704.out
+@@ -0,0 +1,5 @@
++QA output created by 704
++Format and mount
++Create a many-block file
++Remount to check recovery
++See if we leak
+diff --git a/tests/xfs/705 b/tests/xfs/705
+new file mode 100755
+index 0000000..6019a4e
+--- /dev/null
++++ b/tests/xfs/705
+@@ -0,0 +1,105 @@
++#! /bin/bash
++# FS QA Test No. 705
++#
++# Ensure that we don't leak inodes when CoW recovery fails.
++#
++# Use xfs_fsr to inject bmap redo items in the log for a linked file and
++# an unlinked file; and then corrupt the refcount btree to ensure that
++# the CoW garbage collection (and therefore the mount) fail.
++#
++# On a subsequent mount attempt, we should be able to replay the bmap
++# items for the linked and unlinked files without prematurely truncating
++# the unlinked inode and without leaking the linked inode, and we should
++# be able to release all the inodes when we're aborting the mount.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -rf "$tmp".*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++. ./common/inject
++. ./common/module
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_loadable_fs_module "xfs"
++_require_scratch_reflink
++_require_cp_reflink
++_require_command "$XFS_FSR_PROG" "xfs_fsr"
++_require_xfs_io_error_injection "bmap_finish_one"
++_require_xfs_scratch_rmapbt
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount -o noquota >> "$seqres.full" 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++blksz=65536
++blks=3
++mkdir "$testdir"
++
++echo "Create a many-block file"
++_pwrite_byte 0x62 0 $((blksz * blks)) $testdir/file1 >> $seqres.full
++_pwrite_byte 0x63 0 $blksz $testdir/file2 >> $seqres.full
++_reflink_range $testdir/file2 0 $testdir/file1 $blksz $blksz >> $seqres.full
++_scratch_cycle_mount noquota
++
++echo "Inject error"
++_scratch_inject_error "bmap_finish_one"
++
++echo "Defrag the file"
++$XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full 2>&1
++
++echo "FS should be shut down, touch will fail"
++touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
++
++echo "Remount to replay log" | tee /dev/ttyprintk
++_scratch_unmount
++_scratch_dump_log >> $seqres.full
++_scratch_xfs_db -x -c 'agf 0' -c 'addr refcntroot' -c 'fuzz -d recs[1].startblock ones' >> $seqres.full
++_scratch_xfs_db -x -c 'agf 0' -c 'addr refcntroot' -c p >> $seqres.full
++_scratch_mount -o noquota >> $seqres.full 2>&1
++_scratch_unmount 2> /dev/null
++rm -f ${RESULT_DIR}/require_scratch
++
++echo "See if we leak"
++_reload_fs_module "xfs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/705.out b/tests/xfs/705.out
+new file mode 100644
+index 0000000..0bcd9ab
+--- /dev/null
++++ b/tests/xfs/705.out
+@@ -0,0 +1,9 @@
++QA output created by 705
++Format and mount
++Create a many-block file
++Inject error
++Defrag the file
++FS should be shut down, touch will fail
++touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
++Remount to replay log
++See if we leak
+diff --git a/tests/xfs/group b/tests/xfs/group
+index b439842..e56666b 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -431,3 +431,6 @@
+ 431 auto quick dangerous
+ 432 auto quick dir metadata
+ 433 auto quick attr
++703 auto quick clone fsr
++704 auto quick clone
++705 auto quick clone fsr
 
