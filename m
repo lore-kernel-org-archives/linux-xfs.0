@@ -1,127 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46042 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55864 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932196AbdKBNyz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 09:54:55 -0400
-Date: Thu, 2 Nov 2017 09:54:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 10/18] xfs: iterate over extents in xfs_iextents_copy
-Message-ID: <20171102135453.GE16645@bfoster.bfoster>
-References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-11-hch@lst.de>
+        id S1752688AbdKBOXu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 10:23:50 -0400
+Date: Thu, 2 Nov 2017 22:23:48 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 12/14] generic/204: break out of fs-filling loop early if
+ we ENOSPC
+Message-ID: <20171102142348.GZ17339@eguan.usersys.redhat.com>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+ <150957286222.18388.3253654888670864191.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171031142230.11755-11-hch@lst.de>
+In-Reply-To: <150957286222.18388.3253654888670864191.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Oct 31, 2017 at 04:22:22PM +0200, Christoph Hellwig wrote:
-> This actually makes the function very slightly less efficient for now as we
-> detour through the expanded irect format between the in-core extent format
-> and the on-disk one instead of just endian swapping them.  But with the
-> incore extent btree the in-core one will use a different format and the
-> representation will be entirely hidden.  It also happens to make the
-> function a whole more readable.
+On Wed, Nov 01, 2017 at 02:47:42PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> If filling up the filesystem causes us to hit ENOSPC earlier than we
+> thought we would (the sizing estimates become less and less accurate as
+> we add more metadata) then just bail out -- we're checking that the fs
+> is robust enough to cut us off before we actually run out of space for
+> writing metadata and crash the fs.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_inode_fork.c | 53 +++++++++++-------------------------------
->  1 file changed, 13 insertions(+), 40 deletions(-)
+>  tests/generic/204 |   11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index abe601b48c9c..7dd77b497fc2 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -725,9 +725,6 @@ xfs_iext_count(struct xfs_ifork *ifp)
->  /*
->   * Convert in-core extents to on-disk form
->   *
-> - * For either the data or attr fork in extent format, we need to endian convert
-> - * the in-core extent as we place them into the on-disk inode.
-> - *
->   * In the case of the data fork, the in-core and on-disk fork sizes can be
->   * different due to delayed allocation extents. We only copy on-disk extents
->   * here, so callers must always use the physical fork size to determine the
-> @@ -736,55 +733,31 @@ xfs_iext_count(struct xfs_ifork *ifp)
->   */
->  int
->  xfs_iextents_copy(
-> -	xfs_inode_t		*ip,
-> -	xfs_bmbt_rec_t		*dp,
-> +	struct xfs_inode	*ip,
-> +	struct xfs_bmbt_rec	*dp,
->  	int			whichfork)
->  {
->  	int			state = xfs_bmap_fork_to_state(whichfork);
-> -	int			copied;
-> -	int			i;
-> -	xfs_ifork_t		*ifp;
-> -	int			nrecs;
-> -	xfs_fsblock_t		start_block;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	struct xfs_bmbt_irec	rec;
-> +	int			copied = 0, i = 0;
->  
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
->  	ASSERT(ifp->if_bytes > 0);
->  
-> -	nrecs = xfs_iext_count(ifp);
-> -	ASSERT(nrecs > 0);
-> -
-> -	/*
-> -	 * There are some delayed allocation extents in the
-> -	 * inode, so copy the extents one at a time and skip
-> -	 * the delayed ones.  There must be at least one
-> -	 * non-delayed extent.
-> -	 */
-> -	copied = 0;
-> -	for (i = 0; i < nrecs; i++) {
-> -		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> -
-> -		start_block = xfs_bmbt_get_startblock(ep);
-> -		if (isnullstartblock(start_block)) {
-> -			/*
-> -			 * It's a delayed allocation extent, so skip it.
-> -			 */
-> +	while (xfs_iext_get_extent(ifp, i++, &rec)) {
-> +		if (isnullstartblock(rec.br_startblock))
->  			continue;
-> -		}
-> -
-> +		xfs_bmbt_disk_set_all(dp, &rec);
->  		trace_xfs_write_extent(ip, i, state, _RET_IP_);
-> -
-> -		/* Translate to on disk format */
-> -		put_unaligned_be64(ep->l0, &dp->l0);
-> -		put_unaligned_be64(ep->l1, &dp->l1);
->  		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
-> -
-> +		copied += sizeof(struct xfs_bmbt_rec);
->  		dp++;
-> -		copied++;
->  	}
-> -	ASSERT(copied != 0);
->  
-> -	return (copied * (uint)sizeof(xfs_bmbt_rec_t));
-> +	ASSERT(copied > 0);
-> +	ASSERT(copied <= ifp->if_bytes);
-> +	return copied;
->  }
->  
->  /*
-> -- 
-> 2.14.2
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/tests/generic/204 b/tests/generic/204
+> index 4c203a2..1e2c1e1 100755
+> --- a/tests/generic/204
+> +++ b/tests/generic/204
+> @@ -82,8 +82,15 @@ echo files $files, resvblks $resv_blks >> $seqres.full
+>  _scratch_resvblks $resv_blks >> $seqres.full 2>&1
+>  
+>  for i in `seq 1 $files`; do
+> -    echo -n > $SCRATCH_MNT/$i
+> -    echo XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX > $SCRATCH_MNT/$i
+> +	# Open/truncate file, write stuff.  If we run out of space early,
+> +	# we can bail out of the loop.
+> +	out="$($XFS_IO_PROG \
+> +		-c "open -f -t $SCRATCH_MNT/$i" \
+> +		-c 'close' \
+> +		-c "open -f -t $SCRATCH_MNT/$i" \
+> +		-c 'pwrite -q -S 0x58 0 36' 2>&1 | _filter_scratch)"
+> +	echo "${out}" | grep -q 'No space left on device' && break
+
+This doesn't look correct to me. This test is meant to catch spurious
+ENOSPC, it's designed to be a "delayed allocation ENOSPC test"[1] by
+"writing lots of single block files" and catch early ENOSPC. IMHO, this
+change ignores ENOSPC, which defeats the test purpose. And I don't quite
+understand the purpose of truncate open/close/truncate open/write
+sequence..
+
+Also this significantly increases the test time, 4s -> ~120s for me.
+
+Thanks,
+Eryu
+
+[1] commit 143368a047ea ("xfstests: add test 204, a simple delayed
+allocation ENOSPC test")
+
+> +	test -n "${out}" && echo "${out}"
+>  done
+>  
+>  # success, all done
+> 
