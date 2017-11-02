@@ -1,72 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:47825 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934269AbdKPTZR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 14:25:17 -0500
-Date: Thu, 16 Nov 2017 20:25:10 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [patch V2 00/11] LICENSES: Add documentation and initial License
- files
-In-Reply-To: <20171116183306.103584007@linutronix.de>
-Message-ID: <alpine.DEB.2.20.1711162023120.2109@nanos>
-References: <20171116183306.103584007@linutronix.de>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:55161 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934362AbdKBVG6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 17:06:58 -0400
+Received: by mail-oi0-f46.google.com with SMTP id a132so682358oih.11
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Nov 2017 14:06:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20171102201356.GD5732@lst.de>
+References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150949214929.24061.10464887309708944817.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171102201356.GD5732@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 2 Nov 2017 14:06:57 -0700
+Message-ID: <CAPcyv4g0-kXCXzGo6=3fwaRJTM_4N8BFp+-W71t4Vd_to7LDBA@mail.gmail.com>
+Subject: Re: [PATCH 10/15] IB/core: disable memory registration of
+ fileystem-dax vmas
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Sean Hefty <sean.hefty@intel.com>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Linux MM <linux-mm@kvack.org>, Doug Ledford <dledford@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>
 
-On Thu, 16 Nov 2017, Thomas Gleixner wrote:
+On Thu, Nov 2, 2017 at 1:13 PM, Christoph Hellwig <hch@lst.de> wrote:
+> Any chance we could add a new get_user_pages_longerm or similar
+> helper instead of opencoding this in the various callers?
 
-Sorry, I was too stupid to fixup Kate's e-mail address after Joe pointed it
-out. My apologies. Please remove 'kate@linuxfoundation.org' from the CC
-list and replace it with 'kstewart@linuxfoundation.org'
-
-/me goes off to rumage for brown paperbags
-
-> This is the second version of the licensing rules documentation.
-> 
-> Changes since v1 [1]:
-> 
->  - Addressing the review comments from Jon, Joe and Jonas:
-> 
->    - Moved the documentation file into Documentation/process, but kept the
->      topic entry in the top level index file so it stands out. (Joe)
-> 
->    - Changed the license file metatags so they are not overloading
->      SPDX-License-Identifier (Jonas)
-> 
->    - Cleaned up the inconsistencies in the document (Jon, Joe)
-> 
->    - Added the comment style fior .rst files (Jon)
-> 
->  - Added a few more links and cursed restructured text to make it render
->    halfways sensible.
-> 
->  - Added the license files for the SPDX tags which are already in tree and
->    moved GPL-1.0 to the 'other' directory as it really does not belong into
->    the preferrred category.
-> 
->  - Removed the Reviewed-by tags as they not longer apply. 
-> 
-> Please go over it with a fine comb again. I'm sure that I screwed up
-> something on the way, but me staring more at it doesn't help.
-> 
-> Thanks to everyone who provided input!
-> 
-> It turned out that the original approach was incidentaly close to what the
-> FSFE REUSE initiative docuemented and I think we are now nearing the point
-> where we can wear the REUSE sticker if Jonas does not find any other holes
-> in it. :)
-> 
-> Thanks,
-> 
-> 	tglx
-> 
-> 
-> [1] https://lkml.kernel.org/r/20171112191821.240484206@linutronix.de
-> 
-> 
-> 
+Sounds like a great idea to me, I'll take a look...
