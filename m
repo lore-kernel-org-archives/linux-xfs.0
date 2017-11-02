@@ -1,80 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:32990 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932812AbdKCOpq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:45:46 -0400
-Received: from [94.72.11.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdE8-0001j6-SB
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:45:45 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/21] xfs: don't create overlapping extents in xfs_bmap_add_extent_delay_real
-Date: Fri,  3 Nov 2017 17:45:19 +0300
-Message-Id: <20171103144539.2187-2-hch@lst.de>
-In-Reply-To: <20171103144539.2187-1-hch@lst.de>
-References: <20171103144539.2187-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:60194 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751587AbdKBINq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 04:13:46 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH v3] common: Check for fiemap range argument support
+Date: Thu,  2 Nov 2017 10:13:41 +0200
+Message-Id: <1509610421-16716-1-git-send-email-nborisov@suse.com>
+In-Reply-To: <20171102031622.GV17339@eguan.usersys.redhat.com>
+References: <20171102031622.GV17339@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Nikolay Borsiov <nborisov@suse.com>
 
-Two cases in xfs_bmap_add_extent_delay_real currently insert a new
-extent before updating the existing one that is being split.  While
-this works fine with a simple extent list, a more complex tree can't
-easily cope with overlapping extent.  Reshuffle the code a bit to update
-the slot of the existing delalloc extent to the new real extent before
-inserting the shortened delalloc extent before or after it.  This
-avoids the overlapping extents while still allowing to update the
-br_startblock field of the delalloc extent with the updated indirect
-block reservation.
+From: Nikolay Borsiov <nborisov@suse.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+v3:
+ * Changed the way we detect ranged args. Now use a regexp which checks 
+ explicitly for the ranged args
+ common/rc | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ebb5958f1c5c..db369653eb50 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1791,7 +1791,7 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the first part of a previous delayed allocation.
- 		 * The left neighbor is not contiguous.
- 		 */
--		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, new);
- 		(*nextents)++;
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
-@@ -1824,7 +1824,7 @@ xfs_bmap_add_extent_delay_real(
- 		PREV.br_startoff = new_endoff;
- 		PREV.br_blockcount = temp;
- 		PREV.br_startblock = nullstartblock(da_new);
--		xfs_iext_update_extent(bma->ip, state, bma->idx + 1, &PREV);
-+		xfs_iext_insert(bma->ip, bma->idx + 1, 1, &PREV, state);
- 		break;
- 
- 	case BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
-@@ -1867,7 +1867,7 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the last part of a previous delayed allocation.
- 		 * The right neighbor is not contiguous.
- 		 */
--		xfs_iext_insert(bma->ip, bma->idx + 1, 1, new, state);
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, new);
- 		(*nextents)++;
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
-@@ -1899,7 +1899,7 @@ xfs_bmap_add_extent_delay_real(
- 
- 		PREV.br_startblock = nullstartblock(da_new);
- 		PREV.br_blockcount = temp;
--		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
-+		xfs_iext_insert(bma->ip, bma->idx, 1, &PREV, state);
- 
- 		bma->idx++;
- 		break;
+diff --git a/common/rc b/common/rc
+index e2a8229..f7a5fe9 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2053,8 +2053,15 @@ _require_xfs_io_command()
+ 			-c "$command 4k 8k" $testfile 2>&1`
+ 		;;
+ 	"fiemap")
++		if echo "$param" | egrep -q "[[:digit:]]+[bskmgtpe]? [[:digit:]]+[bskmgtpe]?$"
++		then
++			$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]" || \
++				_notrun "xfs_io $command range param support is missing"
++		fi
++
+ 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+ 			-c "fiemap -v $param" $testfile 2>&1`
++
+ 		param_checked=1
+ 		;;
+ 	"flink" )
 -- 
-2.14.2
+2.7.4
 
