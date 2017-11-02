@@ -1,49 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:59371 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755224AbdKBLLr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 07:11:47 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/2] xfs: scrub: avoid uninitialized return code
-Date: Thu,  2 Nov 2017 12:11:12 +0100
-Message-Id: <20171102111137.3062126-1-arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:7950 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754131AbdKBL5M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 07:57:12 -0400
+Date: Thu, 2 Nov 2017 07:57:11 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/18] xfs: pass an on-disk extent to
+ xfs_bmbt_validate_extent
+Message-ID: <20171102115710.GB15748@bfoster.bfoster>
+References: <20171031142230.11755-1-hch@lst.de>
+ <20171031142230.11755-2-hch@lst.de>
+ <20171031175311.GC7093@bfoster.bfoster>
+ <20171031211520.GI4911@magnolia>
+ <20171101135855.GA11709@bfoster.bfoster>
+ <20171101230024.GF4922@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171101230024.GF4922@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-The newly added xfs_scrub_da_btree_block() function has one code path
-that returns the 'error' variable without initializing it first, as
-shown by this compiler warning:
+On Wed, Nov 01, 2017 at 04:00:24PM -0700, Darrick J. Wong wrote:
+> On Wed, Nov 01, 2017 at 09:58:55AM -0400, Brian Foster wrote:
+> > On Tue, Oct 31, 2017 at 02:15:20PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Oct 31, 2017 at 01:53:12PM -0400, Brian Foster wrote:
+> > > > On Tue, Oct 31, 2017 at 04:22:13PM +0200, Christoph Hellwig wrote:
+> > > > > This prepares for getting rid of the current in-memory extent format.
+> > > > > 
+> > > > 
+> > > > Couldn't we port this function over to use whatever the new in-memory
+> > > > extent format is? IOW, just have the helper check for XFS_EXT_UNWRITTEN
+> > > > rather than the associated bit in the on-disk format..?
+> > > 
+> > > It's certainly possible, but in general verifiers are supposed to check
+> > > on-disk metadata before they end up in-core, and this would seem to get
+> > > us closer to that, right?
+> > > 
+> > 
+> > Yeah, but are any of these calls actually made in a buffer verifier
+> > path?
+> 
+> No.  They probably ought to be -- we can add them to the bmbt verifier and
+> the inode fork verifier (in the magical future when those exist :P), but
+> for now I think xfs_iread_extents is the closest we come to an "obvious"
+> place where we load disk data into/out of its in-core representation.
+> 
 
-fs/xfs/scrub/dabtree.c: In function 'xfs_scrub_da_btree_block':
-fs/xfs/scrub/dabtree.c:462:9: error: 'error' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+Ok.. I agree that verifiers are intended to check on-disk format, but I
+still don't see how that design aspect of buffer verifiers really has
+much bearing on this function given how it is currently used. This
+particular block has already passed the associated buffer verifier.
+Also, do we have any verifiers that consider fork state?
 
-Returning -EINVAL might be an appropriate return code in this case.
+If the goal is to check the on-disk record, perhaps at least that part
+of this check (associated with the extent flag bit(s)) should be moved
+to the verifier? Even with doing that, it seems there still may be a
+need for a higher level sanity check based on the fork, and I don't see
+any reason why that necessarily needs to use the on-disk value as
+opposed to the in-core value. *shrug* Not that big of a deal though..
 
-Fixes: 7c4a07a424c1 ("xfs: scrub directory/attribute btrees")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- fs/xfs/scrub/dabtree.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Brian
 
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index 4a93cf1753d3..971566388c9a 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -349,8 +349,10 @@ xfs_scrub_da_btree_block(
- 
- 	/* Check the pointer. */
- 	blk->blkno = blkno;
--	if (!xfs_scrub_da_btree_ptr_ok(ds, level, blkno))
-+	if (!xfs_scrub_da_btree_ptr_ok(ds, level, blkno)) {
-+		error = -EINVAL;
- 		goto out_nobuf;
-+	}
- 
- 	/* Read the buffer. */
- 	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
--- 
-2.9.0
-
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > > > ---
+> > > > >  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
+> > > > >  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
+> > > > >  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
+> > > > >  3 files changed, 9 insertions(+), 10 deletions(-)
+> > > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > > > > index f45f05c45e15..b2b6832b9e6b 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > > > > @@ -1259,14 +1259,14 @@ xfs_iread_extents(
+> > > > >  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+> > > > >  		for (j = 0; j < num_recs; j++, i++, frp++) {
+> > > > >  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
+> > > > > -			trp->l0 = be64_to_cpu(frp->l0);
+> > > > > -			trp->l1 = be64_to_cpu(frp->l1);
+> > > > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
+> > > > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
+> > > > >  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
+> > > > >  						 XFS_ERRLEVEL_LOW, mp);
+> > > > >  				error = -EFSCORRUPTED;
+> > > > >  				goto out_brelse;
+> > > > >  			}
+> > > > > +			trp->l0 = be64_to_cpu(frp->l0);
+> > > > > +			trp->l1 = be64_to_cpu(frp->l1);
+> > > > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
+> > > > >  		}
+> > > > >  		xfs_trans_brelse(tp, bp);
+> > > > > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+> > > > > index 6f891eeb88f6..2fbfe2a24b15 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
+> > > > > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+> > > > > @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+> > > > >   * Check that the extent does not contain an invalid unwritten extent flag.
+> > > > >   */
+> > > > >  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
+> > > > > -		struct xfs_bmbt_rec_host *ep)
+> > > > > +		struct xfs_bmbt_rec *ep)
+> > > > >  {
+> > > > > -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
+> > > > > +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
+> > > > >  		return true;
+> > > > >  	if (whichfork == XFS_DATA_FORK &&
+> > > > >  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
+> > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > > > index bb63f38b97cc..abe601b48c9c 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > > > @@ -371,13 +371,13 @@ xfs_iformat_extents(
+> > > > >  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
+> > > > >  		for (i = 0; i < nex; i++, dp++) {
+> > > > >  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+> > > > > -			ep->l0 = get_unaligned_be64(&dp->l0);
+> > > > > -			ep->l1 = get_unaligned_be64(&dp->l1);
+> > > > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
+> > > > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
+> > > > >  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+> > > > >  						 XFS_ERRLEVEL_LOW, mp);
+> > > > >  				return -EFSCORRUPTED;
+> > > > >  			}
+> > > > > +			ep->l0 = get_unaligned_be64(&dp->l0);
+> > > > > +			ep->l1 = get_unaligned_be64(&dp->l1);
+> > > > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
+> > > > >  		}
+> > > > >  	}
+> > > > > @@ -764,8 +764,6 @@ xfs_iextents_copy(
+> > > > >  	for (i = 0; i < nrecs; i++) {
+> > > > >  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+> > > > >  
+> > > > > -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
+> > > > > -
+> > > > >  		start_block = xfs_bmbt_get_startblock(ep);
+> > > > >  		if (isnullstartblock(start_block)) {
+> > > > >  			/*
+> > > > > @@ -779,6 +777,7 @@ xfs_iextents_copy(
+> > > > >  		/* Translate to on disk format */
+> > > > >  		put_unaligned_be64(ep->l0, &dp->l0);
+> > > > >  		put_unaligned_be64(ep->l1, &dp->l1);
+> > > > > +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
+> > > > >  
+> > > > >  		dp++;
+> > > > >  		copied++;
+> > > > > -- 
+> > > > > 2.14.2
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
