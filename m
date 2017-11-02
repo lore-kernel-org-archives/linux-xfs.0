@@ -1,118 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58984 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751885AbdKTSNm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Nov 2017 13:13:42 -0500
-Subject: Re: [PATCH 2/2] xfs_io: stat: treat statfs.f_flags as optional
-References: <20171117195457.16218-1-jeffm@suse.com>
- <20171117195457.16218-2-jeffm@suse.com>
- <eb6a3a1c-3d0b-e266-b2af-cde661b65b7a@sandeen.net>
- <b6e0865f-5528-c7c9-9663-1a14e660c243@sandeen.net>
-From: Jeff Mahoney <jeffm@suse.com>
-Message-ID: <671af24c-77d7-7826-5067-8349a5835170@suse.com>
-Date: Mon, 20 Nov 2017 13:13:38 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:16701 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933120AbdKBQwa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 12:52:30 -0400
+Date: Thu, 2 Nov 2017 09:52:23 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: fix unused variable warnings
+Message-ID: <20171102165223.GX4911@magnolia>
+References: <20171102111137.3062126-1-arnd@arndb.de>
+ <20171102111137.3062126-2-arnd@arndb.de>
+ <20171102124403.GC16645@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <b6e0865f-5528-c7c9-9663-1a14e660c243@sandeen.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="xHx3x4DP2FqTTWBwUiVQwfSk6GkSjVme8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171102124403.GC16645@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---xHx3x4DP2FqTTWBwUiVQwfSk6GkSjVme8
-Content-Type: multipart/mixed; boundary="mVhTwfuPw83u07A9UOGmlqBm4jJrpLgRa";
- protected-headers="v1"
-From: Jeff Mahoney <jeffm@suse.com>
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Message-ID: <671af24c-77d7-7826-5067-8349a5835170@suse.com>
-Subject: Re: [PATCH 2/2] xfs_io: stat: treat statfs.f_flags as optional
-References: <20171117195457.16218-1-jeffm@suse.com>
- <20171117195457.16218-2-jeffm@suse.com>
- <eb6a3a1c-3d0b-e266-b2af-cde661b65b7a@sandeen.net>
- <b6e0865f-5528-c7c9-9663-1a14e660c243@sandeen.net>
-In-Reply-To: <b6e0865f-5528-c7c9-9663-1a14e660c243@sandeen.net>
+On Thu, Nov 02, 2017 at 08:44:03AM -0400, Brian Foster wrote:
+> On Thu, Nov 02, 2017 at 12:11:13PM +0100, Arnd Bergmann wrote:
+> > fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_delay':
+> > fs/xfs/libxfs/xfs_bmap.c:4648:20: error: unused variable 'ifp' [-Werror=unused-variable]
+> >   struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
+> >                     ^~~
+> > fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_cow':
+> > fs/xfs/libxfs/xfs_bmap.c:4776:20: error: unused variable 'ifp' [-Werror=unused-variable]
+> > 
 
---mVhTwfuPw83u07A9UOGmlqBm4jJrpLgRa
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Christoph's subsequent patch series to reimplement the incore extent map
+starts using ifp for more than just the ASSERT, so I'll take this patch
+if that rework doesn't land in time for 4.15.
 
-On 11/20/17 1:10 PM, Eric Sandeen wrote:
->=20
->=20
-> On 11/20/17 11:54 AM, Eric Sandeen wrote:
->>
->>
->> On 11/17/17 1:54 PM, jeffm@suse.com wrote:
->>> From: Jeff Mahoney <jeffm@suse.com>
->>>
->>> Kernels prior to 2.6.36 didn't contain statfs.f_flags.  Distros with
->>> initial releases with kernels prior to this may not have updated
->>> headers with this member.
->>
->> You all are brave ;)
->>
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->=20
-> Oops, but not tested-by!  This also needs:
->=20
-> diff --git a/io/Makefile b/io/Makefile
-> index 050d6bd..6725936 100644
-> --- a/io/Makefile
-> +++ b/io/Makefile
-> @@ -110,6 +110,10 @@ ifeq ($(PKG_PLATFORM),linux)
->  CFILES +=3D fsmap.c
->  endif
-> =20
-> +ifeq ($(HAVE_STATFS_FLAGS),yes)
-> +LCFLAGS +=3D -DHAVE_STATFS_FLAGS
-> +endif
-> +
->  default: depend $(LTCOMMAND)
-> =20
->  include $(BUILDRULES)
->=20
->=20
-> but I can add it on the way in.
+--D
 
-Ah, right.  My build tests all succeeded because it was just skipping
-f_flags.
-
-Thanks,
-
--Jeff
-
---=20
-Jeff Mahoney
-SUSE Labs
-
-
---mVhTwfuPw83u07A9UOGmlqBm4jJrpLgRa--
-
---xHx3x4DP2FqTTWBwUiVQwfSk6GkSjVme8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQJDBAEBCAAtFiEE8wzgbmZ74SnKPwtDHntLYyF55bIFAloTG1IPHGplZmZtQHN1
-c2UuY29tAAoJEB57S2MheeWyyHwP/1oSRZXCto3hHuY14yyxi+vu2Eiprn75JJ/5
-2gNW79CisxwrbIk9dpXYEmEc5fzuT2FVAJKd4BwsZTYODffoPCBpzQuW8+mXL4yH
-hKao0hAn32YOjwempsROHp4DmjwR+Bwr6vSbWU9T1ww3FAadX3ClBX+A5N2eUo5V
-zonR7KsjCCfgI2USeplXvAe9ZZ1k/MYWCk3wgQJKxX721OsvMurVoUaVBgTw0NXo
-hwof+ym6hNTDQLc7Qi43m0UX8vs3qTbXCnEicSjw51ifNP9P/sJCl9TdZa1cRa6j
-DzvqOl7ChSKRdPrJPBBXqpo8idvu3dPRaOUhXML0bzYbjyO2ScDFXd6bR056+Aed
-gmofUWM5ftGpuhnGcISoMnQWtKj1WAgv7ITOwrac1DatR40v9HkGuJBnJFp/8SQb
-6GHyRC+3moA9xAKJQCsmggH2IrZ2k1Ue6ZpWVTKS2Jggn3HWkHzHyoz0ry/SSAdW
-Janr7vXt21QBp01YC3prwKYdjeKTpJDbavx2ye/f35KuQmoTIX37mfRD1LYipn+g
-kVcCJF5DxNUBpKGVjOxDXKkyitpLP9dBYEi5tmUZ9jo3+6Qu+8h76kScVAjfhugT
-+oe5+S4A5CM4pQLZl/K1CoDIFO6w722TFGID9WNrew7TXRMY8DNG9O7sGJ7iaZGo
-Y1h7GsU3
-=ex2q
------END PGP SIGNATURE-----
-
---xHx3x4DP2FqTTWBwUiVQwfSk6GkSjVme8--
+> > Fixes: ca5d8e5b7b90 ("xfs: move pre/post-bmap tracing into xfs_iext_update_extent")
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> 
+> Thanks for sending this:
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index f45f05c45e15..fa85b08b8fe2 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -4645,7 +4645,6 @@ xfs_bmap_del_extent_delay(
+> >  	struct xfs_bmbt_irec	*del)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> >  	struct xfs_bmbt_irec	new;
+> >  	int64_t			da_old, da_new, da_diff = 0;
+> >  	xfs_fileoff_t		del_endoff, got_endoff;
+> > @@ -4663,7 +4662,7 @@ xfs_bmap_del_extent_delay(
+> >  	da_new = 0;
+> >  
+> >  	ASSERT(*idx >= 0);
+> > -	ASSERT(*idx <= xfs_iext_count(ifp));
+> > +	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, whichfork)));
+> >  	ASSERT(del->br_blockcount > 0);
+> >  	ASSERT(got->br_startoff <= del->br_startoff);
+> >  	ASSERT(got_endoff >= del_endoff);
+> > @@ -4773,7 +4772,6 @@ xfs_bmap_del_extent_cow(
+> >  	struct xfs_bmbt_irec	*del)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> >  	struct xfs_bmbt_irec	new;
+> >  	xfs_fileoff_t		del_endoff, got_endoff;
+> >  	int			state = BMAP_COWFORK;
+> > @@ -4784,7 +4782,7 @@ xfs_bmap_del_extent_cow(
+> >  	got_endoff = got->br_startoff + got->br_blockcount;
+> >  
+> >  	ASSERT(*idx >= 0);
+> > -	ASSERT(*idx <= xfs_iext_count(ifp));
+> > +	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, XFS_COW_FORK)));
+> >  	ASSERT(del->br_blockcount > 0);
+> >  	ASSERT(got->br_startoff <= del->br_startoff);
+> >  	ASSERT(got_endoff >= del_endoff);
+> > -- 
+> > 2.9.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
