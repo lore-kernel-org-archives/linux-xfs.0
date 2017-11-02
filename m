@@ -1,98 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:40119 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750794AbdKUPtN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 10:49:13 -0500
-Received: by mail-wm0-f50.google.com with SMTP id b189so4323473wmd.5
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2017 07:49:12 -0800 (PST)
-Date: Tue, 21 Nov 2017 16:49:09 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v3 0/4] test for XFS umount hang caused by the pending
- dquota log item in AIL
-Message-ID: <20171121154909.2acusmt3nfdonttw@odin.localdomain>
-References: <20171109073252.36001-1-houtao1@huawei.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1933 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932433AbdKBAqm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 20:46:42 -0400
+Date: Thu, 2 Nov 2017 11:46:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: truncate pagecache before writeback in
+ xfs_setattr_size()
+Message-ID: <20171102004624.GU5858@dastard>
+References: <20171101140540.21542-1-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171109073252.36001-1-houtao1@huawei.com>
+In-Reply-To: <20171101140540.21542-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 09, 2017 at 03:32:48PM +0800, Hou Tao wrote:
-> Hi,
+On Wed, Nov 01, 2017 at 10:05:40PM +0800, Eryu Guan wrote:
+> On truncate down, if new size is not block size aligned, we zero the
+> rest of block to avoid exposing stale data to user, and
+> iomap_truncate_page() skips zeroing if the range is already in
+> unwritten state or a hole. Then we writeback from on-disk i_size to
+> the new size if this range hasn't been written to disk yet, and
+> truncate page cache beyond new EOF and set in-core i_size.
 > 
-> This is the v3 patchset for testing the XFS umount hang problem caused by
-> the pending dquota log item in AIL. The problem has not been fixed in
-> XFS yet, and Carlos Maiolino is working on it [1].
+> The problem is that we could write data between di_size and newsize
+> before removing the page cache beyond newsize, as the extents may
+> still be in unwritten state right after a buffer write. As such, the
+> page of data that newsize lies in has not been zeroed by page cache
+> invalidation before it is written, and xfs_do_writepage() hasn't
+> triggered it's "zero data beyond EOF" case because we haven't
+> updated in-core i_size yet. Then a subsequent mmap read could see
+> non-zeros past EOF.
 > 
-> The bug that the test case can not reproduced on a 15GB scratch device
-> has been fixed, and many thanks to Eryu Guan. I had tested it on 4.14-rc8,
-> and the problem can be reproduced reliably now.
+> I occasionally see this in fsx runs in fstests generic/112, a
+> simplified fsx operation sequence is like (assuming 4k block size
+> xfs):
 > 
-> Comments and questions are welcome.
+>   fallocate 0x0 0x1000 0x0 keep_size
+>   write 0x0 0x1000 0x0
+>   truncate 0x0 0x800 0x1000
+>   punch_hole 0x0 0x800 0x800
+>   mapread 0x0 0x800 0x800
 > 
+> where fallocate allocates unwritten extent but doesn't update
+> i_size, buffer write populates the page cache and extent is still
+> unwritten, truncate skips zeroing page past new EOF and writes the
+> page to disk, punch_hole invalidates the page cache, at last mapread
+> reads the block back and sees non-zero beyond EOF.
+> 
+> Fix it by moving truncate_setsize() to before writeback so the page
+> cache invalidation zeros the partial page at the new EOF. This also
+> triggers "zero data beyond EOF" in xfs_do_writepage() at writeback
+> time, because newsize has been set and page straddles the newsize.
+> 
+> Also fixed the wrong 'end' param of filemap_write_and_wait_range()
+> call while we're at it, the 'end' is inclusive and should be
+> 'newsize - 1'.
+> 
+> Suggested-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 
-Thanks, I'm testing my patch against this test, it might take a few more time to
-properly work on that patch, but with the test it is better.
+Looks sane, but I haven't tested it yet.
 
-I didn't review the test yet, but I tried it once, and at least the result is
-what I expected, I'll get some time to review it.
-
-> Regards,
-> Tao
-> 
-> ---
-> Changes since v2:
-> 
-> v3:
-> * dmflakey: support error_writes feature for dm-flakey
-> 	* check the availability of error_writes by trial instead of version number
-> 
-> * xfs: test for umount hang caused by the pending dquota log item in AIL
-> 	* calculate log_ofs correctly by using convert cmd in xfs_db
-> 
-> * common/rc: factor out _scratch_xfs_[get|set]_sb_field
-> 	* reimplement _scratch_xfs_[get|set]_sb_field based on
-> 	  _scratch_xfs_[get|set]_metadata_field.
-> 
-> v2:
-> 	* http://www.spinics.net/lists/fstests/msg07792.html
-> 
-> v1:
-> 	* https://www.spinics.net/lists/fstests/msg07622.html
-> 
-> [1]: https://www.spinics.net/lists/linux-xfs/msg11614.html
-> 
-> Hou Tao (4):
->   dmflakey: support multiple dm targets for a dm-flakey device
->   dmflakey: support error_writes feature for dm-flakey
->   xfs: test for umount hang caused by the pending dquota log item in AIL
->   common/rc: factor out _scratch_xfs_[get|set]_sb_field
-> 
->  common/dmflakey   |  29 +++++++++-
->  common/fuzzy      |  33 -----------
->  common/xfs        |  47 ++++++++++++++++
->  tests/xfs/007     |   6 +-
->  tests/xfs/098     |   4 +-
->  tests/xfs/186     |   3 +-
->  tests/xfs/199     |  13 ++---
->  tests/xfs/307     |  11 +---
->  tests/xfs/308     |  11 +---
->  tests/xfs/339     |   6 +-
->  tests/xfs/340     |   2 +-
->  tests/xfs/999     | 163 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out |   2 +
->  tests/xfs/group   |   1 +
->  14 files changed, 257 insertions(+), 74 deletions(-)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
-> 
-> -- 
-> 2.9.5
-> 
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
