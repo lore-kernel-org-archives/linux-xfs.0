@@ -1,176 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7950 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41414 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754131AbdKBL5M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 07:57:12 -0400
-Date: Thu, 2 Nov 2017 07:57:11 -0400
+        id S1752688AbdKBMjO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 08:39:14 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B5C4D81DF7
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2017 12:39:14 +0000 (UTC)
+Date: Thu, 2 Nov 2017 08:39:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/18] xfs: pass an on-disk extent to
- xfs_bmbt_validate_extent
-Message-ID: <20171102115710.GB15748@bfoster.bfoster>
-References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-2-hch@lst.de>
- <20171031175311.GC7093@bfoster.bfoster>
- <20171031211520.GI4911@magnolia>
- <20171101135855.GA11709@bfoster.bfoster>
- <20171101230024.GF4922@magnolia>
+Subject: Re: [PATCH v2] xfs: truncate pagecache before writeback in
+ xfs_setattr_size()
+Message-ID: <20171102123912.GA16645@bfoster.bfoster>
+References: <20171101140540.21542-1-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171101230024.GF4922@magnolia>
+In-Reply-To: <20171101140540.21542-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 01, 2017 at 04:00:24PM -0700, Darrick J. Wong wrote:
-> On Wed, Nov 01, 2017 at 09:58:55AM -0400, Brian Foster wrote:
-> > On Tue, Oct 31, 2017 at 02:15:20PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Oct 31, 2017 at 01:53:12PM -0400, Brian Foster wrote:
-> > > > On Tue, Oct 31, 2017 at 04:22:13PM +0200, Christoph Hellwig wrote:
-> > > > > This prepares for getting rid of the current in-memory extent format.
-> > > > > 
-> > > > 
-> > > > Couldn't we port this function over to use whatever the new in-memory
-> > > > extent format is? IOW, just have the helper check for XFS_EXT_UNWRITTEN
-> > > > rather than the associated bit in the on-disk format..?
-> > > 
-> > > It's certainly possible, but in general verifiers are supposed to check
-> > > on-disk metadata before they end up in-core, and this would seem to get
-> > > us closer to that, right?
-> > > 
-> > 
-> > Yeah, but are any of these calls actually made in a buffer verifier
-> > path?
+On Wed, Nov 01, 2017 at 10:05:40PM +0800, Eryu Guan wrote:
+> On truncate down, if new size is not block size aligned, we zero the
+> rest of block to avoid exposing stale data to user, and
+> iomap_truncate_page() skips zeroing if the range is already in
+> unwritten state or a hole. Then we writeback from on-disk i_size to
+> the new size if this range hasn't been written to disk yet, and
+> truncate page cache beyond new EOF and set in-core i_size.
 > 
-> No.  They probably ought to be -- we can add them to the bmbt verifier and
-> the inode fork verifier (in the magical future when those exist :P), but
-> for now I think xfs_iread_extents is the closest we come to an "obvious"
-> place where we load disk data into/out of its in-core representation.
+> The problem is that we could write data between di_size and newsize
+> before removing the page cache beyond newsize, as the extents may
+> still be in unwritten state right after a buffer write. As such, the
+> page of data that newsize lies in has not been zeroed by page cache
+> invalidation before it is written, and xfs_do_writepage() hasn't
+> triggered it's "zero data beyond EOF" case because we haven't
+> updated in-core i_size yet. Then a subsequent mmap read could see
+> non-zeros past EOF.
+> 
+> I occasionally see this in fsx runs in fstests generic/112, a
+> simplified fsx operation sequence is like (assuming 4k block size
+> xfs):
+> 
+>   fallocate 0x0 0x1000 0x0 keep_size
+>   write 0x0 0x1000 0x0
+>   truncate 0x0 0x800 0x1000
+>   punch_hole 0x0 0x800 0x800
+>   mapread 0x0 0x800 0x800
+> 
+> where fallocate allocates unwritten extent but doesn't update
+> i_size, buffer write populates the page cache and extent is still
+> unwritten, truncate skips zeroing page past new EOF and writes the
+> page to disk, punch_hole invalidates the page cache, at last mapread
+> reads the block back and sees non-zero beyond EOF.
+> 
+> Fix it by moving truncate_setsize() to before writeback so the page
+> cache invalidation zeros the partial page at the new EOF. This also
+> triggers "zero data beyond EOF" in xfs_do_writepage() at writeback
+> time, because newsize has been set and page straddles the newsize.
+> 
+> Also fixed the wrong 'end' param of filemap_write_and_wait_range()
+> call while we're at it, the 'end' is inclusive and should be
+> 'newsize - 1'.
+> 
+> Suggested-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
 > 
 
-Ok.. I agree that verifiers are intended to check on-disk format, but I
-still don't see how that design aspect of buffer verifiers really has
-much bearing on this function given how it is currently used. This
-particular block has already passed the associated buffer verifier.
-Also, do we have any verifiers that consider fork state?
+Thanks for the nice explanation. This looks Ok to me:
 
-If the goal is to check the on-disk record, perhaps at least that part
-of this check (associated with the extent flag bit(s)) should be moved
-to the verifier? Even with doing that, it seems there still may be a
-need for a higher level sanity check based on the fork, and I don't see
-any reason why that necessarily needs to use the on-disk value as
-opposed to the in-core value. *shrug* Not that big of a deal though..
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Brian
-
-> --D
+> v2:
+> - fix the bug by moving truncate_setsize() before writeback as suggested
+>   by Dave
+> - update summary and commit log accordingly, with some words stolen from
+>   Dave :)
 > 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > Brian
-> > > > 
-> > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > > ---
-> > > > >  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
-> > > > >  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
-> > > > >  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
-> > > > >  3 files changed, 9 insertions(+), 10 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > index f45f05c45e15..b2b6832b9e6b 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > @@ -1259,14 +1259,14 @@ xfs_iread_extents(
-> > > > >  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
-> > > > >  		for (j = 0; j < num_recs; j++, i++, frp++) {
-> > > > >  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
-> > > > > -			trp->l0 = be64_to_cpu(frp->l0);
-> > > > > -			trp->l1 = be64_to_cpu(frp->l1);
-> > > > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
-> > > > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
-> > > > >  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
-> > > > >  						 XFS_ERRLEVEL_LOW, mp);
-> > > > >  				error = -EFSCORRUPTED;
-> > > > >  				goto out_brelse;
-> > > > >  			}
-> > > > > +			trp->l0 = be64_to_cpu(frp->l0);
-> > > > > +			trp->l1 = be64_to_cpu(frp->l1);
-> > > > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
-> > > > >  		}
-> > > > >  		xfs_trans_brelse(tp, bp);
-> > > > > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > > > > index 6f891eeb88f6..2fbfe2a24b15 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> > > > > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > > > > @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
-> > > > >   * Check that the extent does not contain an invalid unwritten extent flag.
-> > > > >   */
-> > > > >  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> > > > > -		struct xfs_bmbt_rec_host *ep)
-> > > > > +		struct xfs_bmbt_rec *ep)
-> > > > >  {
-> > > > > -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> > > > > +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> > > > >  		return true;
-> > > > >  	if (whichfork == XFS_DATA_FORK &&
-> > > > >  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > index bb63f38b97cc..abe601b48c9c 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > @@ -371,13 +371,13 @@ xfs_iformat_extents(
-> > > > >  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
-> > > > >  		for (i = 0; i < nex; i++, dp++) {
-> > > > >  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> > > > > -			ep->l0 = get_unaligned_be64(&dp->l0);
-> > > > > -			ep->l1 = get_unaligned_be64(&dp->l1);
-> > > > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
-> > > > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
-> > > > >  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
-> > > > >  						 XFS_ERRLEVEL_LOW, mp);
-> > > > >  				return -EFSCORRUPTED;
-> > > > >  			}
-> > > > > +			ep->l0 = get_unaligned_be64(&dp->l0);
-> > > > > +			ep->l1 = get_unaligned_be64(&dp->l1);
-> > > > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
-> > > > >  		}
-> > > > >  	}
-> > > > > @@ -764,8 +764,6 @@ xfs_iextents_copy(
-> > > > >  	for (i = 0; i < nrecs; i++) {
-> > > > >  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> > > > >  
-> > > > > -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
-> > > > > -
-> > > > >  		start_block = xfs_bmbt_get_startblock(ep);
-> > > > >  		if (isnullstartblock(start_block)) {
-> > > > >  			/*
-> > > > > @@ -779,6 +777,7 @@ xfs_iextents_copy(
-> > > > >  		/* Translate to on disk format */
-> > > > >  		put_unaligned_be64(ep->l0, &dp->l0);
-> > > > >  		put_unaligned_be64(ep->l1, &dp->l1);
-> > > > > +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
-> > > > >  
-> > > > >  		dp++;
-> > > > >  		copied++;
-> > > > > -- 
-> > > > > 2.14.2
-> > > > > 
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> v1: https://www.spinics.net/lists/linux-xfs/msg12321.html
+> 
+>  fs/xfs/xfs_iops.c | 36 ++++++++++++++++++++----------------
+>  1 file changed, 20 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 17081c77ef86..f24e5b6cfc86 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -886,22 +886,6 @@ xfs_setattr_size(
+>  		return error;
+>  
+>  	/*
+> -	 * We are going to log the inode size change in this transaction so
+> -	 * any previous writes that are beyond the on disk EOF and the new
+> -	 * EOF that have not been written out need to be written here.  If we
+> -	 * do not write the data out, we expose ourselves to the null files
+> -	 * problem. Note that this includes any block zeroing we did above;
+> -	 * otherwise those blocks may not be zeroed after a crash.
+> -	 */
+> -	if (did_zeroing ||
+> -	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
+> -		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> -						      ip->i_d.di_size, newsize);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+> -	/*
+>  	 * We've already locked out new page faults, so now we can safely remove
+>  	 * pages from the page cache knowing they won't get refaulted until we
+>  	 * drop the XFS_MMAP_EXCL lock after the extent manipulations are
+> @@ -917,9 +901,29 @@ xfs_setattr_size(
+>  	 * user visible changes). There's not much we can do about this, except
+>  	 * to hope that the caller sees ENOMEM and retries the truncate
+>  	 * operation.
+> +	 *
+> +	 * And we update in-core i_size and truncate page cache beyond newsize
+> +	 * before writeback the [di_size, newsize] range, so we're guaranteed
+> +	 * not to write stale data past the new EOF on truncate down.
+>  	 */
+>  	truncate_setsize(inode, newsize);
+>  
+> +	/*
+> +	 * We are going to log the inode size change in this transaction so
+> +	 * any previous writes that are beyond the on disk EOF and the new
+> +	 * EOF that have not been written out need to be written here.  If we
+> +	 * do not write the data out, we expose ourselves to the null files
+> +	 * problem. Note that this includes any block zeroing we did above;
+> +	 * otherwise those blocks may not be zeroed after a crash.
+> +	 */
+> +	if (did_zeroing ||
+> +	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
+> +		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> +						ip->i_d.di_size, newsize - 1);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+>  	if (error)
+>  		return error;
+> -- 
+> 2.13.6
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
