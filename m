@@ -1,441 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60188 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752827AbdKCOqc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:32 -0400
-Received: from [94.72.11.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdEu-00023v-75
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:32 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/21] xfs: remove support for inlining data/extents into the inode fork
-Date: Fri,  3 Nov 2017 17:45:33 +0300
-Message-Id: <20171103144539.2187-16-hch@lst.de>
-In-Reply-To: <20171103144539.2187-1-hch@lst.de>
-References: <20171103144539.2187-1-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.99]:48966 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932241AbdKBUXU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 16:23:20 -0400
+Received: from mail-io0-f174.google.com (mail-io0-f174.google.com [209.85.223.174])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DC05E21923
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2017 20:23:19 +0000 (UTC)
+Received: by mail-io0-f174.google.com with SMTP id i38so1750096iod.2
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Nov 2017 13:23:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net>
+References: <20171026172857.8683-1-mcgrof@kernel.org> <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Date: Thu, 2 Nov 2017 13:22:58 -0700
+Message-ID: <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
+Subject: Re: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Supporting a small bit of data inside the inode fork blows up the fork size
-a lot, removing the 32 bytes of inline data halves the effective size of
-the inode fork (and it still has a lot of unused padding left), and the
-performance of a single kmalloc doesn't show up compared to the size to read
-an inode or create one.
+On Thu, Nov 2, 2017 at 1:04 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 10/26/17 12:28 PM, Luis R. Rodriguez wrote:
+>> ./configure will leave traces of a complaint on config.log when
+>> _BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
+>> deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
+>>
+>> From config.log:
+>> /usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
+>
+> Ok.  Or perhaps a more clear rationale is the preadv(5) manpage
+> itself:
+>
+> preadv(), pwritev():
+>         since glibc 2.19:
+>                 _DEFAULT_SOURCE
+>         Glibc 2.19 and earlier:
+>                 _BSD_SOURCE
+>
+> But this is just a feature test macro in a configure script.
+>
+> What about the code itself, how do we handle this when we
+> actually use preadv() in the codebase?
 
-It also simplifies the fork management code a lot.
+Its not clear to me what the issue would be by defining this extra
+_DEFAULT_SOURCE when _BSD_SOURCE is defined.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_inode_fork.c | 185 +++--------------------------------------
- fs/xfs/libxfs/xfs_inode_fork.h |  11 ---
- fs/xfs/xfs_bmap_util.c         |  15 ----
- 3 files changed, 13 insertions(+), 198 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 1e28532ff551..1f888fcbd873 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -269,19 +269,14 @@ xfs_init_local_fork(
- 	if (zero_terminate)
- 		mem_size++;
- 
--	if (size == 0)
--		ifp->if_u1.if_data = NULL;
--	else if (mem_size <= sizeof(ifp->if_u2.if_inline_data))
--		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
--	else {
-+	if (size) {
- 		real_size = roundup(mem_size, 4);
- 		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP | KM_NOFS);
--	}
--
--	if (size) {
- 		memcpy(ifp->if_u1.if_data, data, size);
- 		if (zero_terminate)
- 			ifp->if_u1.if_data[size] = '\0';
-+	} else {
-+		ifp->if_u1.if_data = NULL;
- 	}
- 
- 	ifp->if_bytes = size;
-@@ -292,13 +287,6 @@ xfs_init_local_fork(
- 
- /*
-  * The file is in-lined in the on-disk inode.
-- * If it fits into if_inline_data, then copy
-- * it there, otherwise allocate a buffer for it
-- * and copy the data there.  Either way, set
-- * if_data to point at the data.
-- * If we allocate a buffer for the data, make
-- * sure that its size is a multiple of 4 and
-- * record the real size in i_real_bytes.
-  */
- STATIC int
- xfs_iformat_local(
-@@ -328,9 +316,7 @@ xfs_iformat_local(
- 
- /*
-  * The file consists of a set of extents all of which fit into the on-disk
-- * inode.  If there are few enough extents to fit into the if_inline_ext, then
-- * copy them there.  Otherwise allocate a buffer for them and copy them into it.
-- * Either way, set if_extents to point at the extents.
-+ * inode.
-  */
- STATIC int
- xfs_iformat_extents(
-@@ -362,8 +348,6 @@ xfs_iformat_extents(
- 	ifp->if_real_bytes = 0;
- 	if (nex == 0)
- 		ifp->if_u1.if_extents = NULL;
--	else if (nex <= XFS_INLINE_EXTS)
--		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
- 	else
- 		xfs_iext_add(ifp, 0, nex);
- 
-@@ -618,26 +602,9 @@ xfs_idata_realloc(
- 	ASSERT(new_size >= 0);
- 
- 	if (new_size == 0) {
--		if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
--			kmem_free(ifp->if_u1.if_data);
--		}
-+		kmem_free(ifp->if_u1.if_data);
- 		ifp->if_u1.if_data = NULL;
- 		real_size = 0;
--	} else if (new_size <= sizeof(ifp->if_u2.if_inline_data)) {
--		/*
--		 * If the valid extents/data can fit in if_inline_ext/data,
--		 * copy them from the malloc'd vector and free it.
--		 */
--		if (ifp->if_u1.if_data == NULL) {
--			ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
--		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
--			ASSERT(ifp->if_real_bytes != 0);
--			memcpy(ifp->if_u2.if_inline_data, ifp->if_u1.if_data,
--			      new_size);
--			kmem_free(ifp->if_u1.if_data);
--			ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
--		}
--		real_size = 0;
- 	} else {
- 		/*
- 		 * Stuck with malloc/realloc.
-@@ -651,7 +618,7 @@ xfs_idata_realloc(
- 			ASSERT(ifp->if_real_bytes == 0);
- 			ifp->if_u1.if_data = kmem_alloc(real_size,
- 							KM_SLEEP | KM_NOFS);
--		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
-+		} else {
- 			/*
- 			 * Only do the realloc if the underlying size
- 			 * is really changing.
-@@ -662,12 +629,6 @@ xfs_idata_realloc(
- 							real_size,
- 							KM_SLEEP | KM_NOFS);
- 			}
--		} else {
--			ASSERT(ifp->if_real_bytes == 0);
--			ifp->if_u1.if_data = kmem_alloc(real_size,
--							KM_SLEEP | KM_NOFS);
--			memcpy(ifp->if_u1.if_data, ifp->if_u2.if_inline_data,
--				ifp->if_bytes);
- 		}
- 	}
- 	ifp->if_real_bytes = real_size;
-@@ -695,8 +656,7 @@ xfs_idestroy_fork(
- 	 * so check and free it up if we do.
- 	 */
- 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
--		if ((ifp->if_u1.if_data != ifp->if_u2.if_inline_data) &&
--		    (ifp->if_u1.if_data != NULL)) {
-+		if (ifp->if_u1.if_data != NULL) {
- 			ASSERT(ifp->if_real_bytes != 0);
- 			kmem_free(ifp->if_u1.if_data);
- 			ifp->if_u1.if_data = NULL;
-@@ -704,13 +664,11 @@ xfs_idestroy_fork(
- 		}
- 	} else if ((ifp->if_flags & XFS_IFEXTENTS) &&
- 		   ((ifp->if_flags & XFS_IFEXTIREC) ||
--		    ((ifp->if_u1.if_extents != NULL) &&
--		     (ifp->if_u1.if_extents != ifp->if_u2.if_inline_ext)))) {
-+		    (ifp->if_u1.if_extents != NULL))) {
- 		ASSERT(ifp->if_real_bytes != 0);
- 		xfs_iext_destroy(ifp);
- 	}
--	ASSERT(ifp->if_u1.if_extents == NULL ||
--	       ifp->if_u1.if_extents == ifp->if_u2.if_inline_ext);
-+	ASSERT(ifp->if_u1.if_extents == NULL);
- 	ASSERT(ifp->if_real_bytes == 0);
- 	if (whichfork == XFS_ATTR_FORK) {
- 		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
-@@ -943,28 +901,14 @@ xfs_iext_add(
- 	ASSERT((idx >= 0) && (idx <= nextents));
- 	byte_diff = ext_diff * sizeof(xfs_bmbt_rec_t);
- 	new_size = ifp->if_bytes + byte_diff;
-+
- 	/*
--	 * If the new number of extents (nextents + ext_diff)
--	 * fits inside the inode, then continue to use the inline
--	 * extent buffer.
--	 */
--	if (nextents + ext_diff <= XFS_INLINE_EXTS) {
--		if (idx < nextents) {
--			memmove(&ifp->if_u2.if_inline_ext[idx + ext_diff],
--				&ifp->if_u2.if_inline_ext[idx],
--				(nextents - idx) * sizeof(xfs_bmbt_rec_t));
--			memset(&ifp->if_u2.if_inline_ext[idx], 0, byte_diff);
--		}
--		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
--		ifp->if_real_bytes = 0;
--	}
--	/*
--	 * Otherwise use a linear (direct) extent list.
-+	 * Use a linear (direct) extent list.
- 	 * If the extents are currently inside the inode,
- 	 * xfs_iext_realloc_direct will switch us from
- 	 * inline to direct extent allocation mode.
- 	 */
--	else if (nextents + ext_diff <= XFS_LINEAR_EXTS) {
-+	if (nextents + ext_diff <= XFS_LINEAR_EXTS) {
- 		xfs_iext_realloc_direct(ifp, new_size);
- 		if (idx < nextents) {
- 			memmove(&ifp->if_u1.if_extents[idx + ext_diff],
-@@ -1172,43 +1116,10 @@ xfs_iext_remove(
- 		xfs_iext_remove_indirect(ifp, cur->idx, ext_diff);
- 	} else if (ifp->if_real_bytes) {
- 		xfs_iext_remove_direct(ifp, cur->idx, ext_diff);
--	} else {
--		xfs_iext_remove_inline(ifp, cur->idx, ext_diff);
- 	}
- 	ifp->if_bytes = new_size;
- }
- 
--/*
-- * This removes ext_diff extents from the inline buffer, beginning
-- * at extent index idx.
-- */
--void
--xfs_iext_remove_inline(
--	xfs_ifork_t	*ifp,		/* inode fork pointer */
--	xfs_extnum_t	idx,		/* index to begin removing exts */
--	int		ext_diff)	/* number of extents to remove */
--{
--	int		nextents;	/* number of extents in file */
--
--	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
--	ASSERT(idx < XFS_INLINE_EXTS);
--	nextents = xfs_iext_count(ifp);
--	ASSERT(((nextents - ext_diff) > 0) &&
--		(nextents - ext_diff) < XFS_INLINE_EXTS);
--
--	if (idx + ext_diff < nextents) {
--		memmove(&ifp->if_u2.if_inline_ext[idx],
--			&ifp->if_u2.if_inline_ext[idx + ext_diff],
--			(nextents - (idx + ext_diff)) *
--			 sizeof(xfs_bmbt_rec_t));
--		memset(&ifp->if_u2.if_inline_ext[nextents - ext_diff],
--			0, ext_diff * sizeof(xfs_bmbt_rec_t));
--	} else {
--		memset(&ifp->if_u2.if_inline_ext[idx], 0,
--			ext_diff * sizeof(xfs_bmbt_rec_t));
--	}
--}
--
- /*
-  * This removes ext_diff extents from a linear (direct) extent list,
-  * beginning at extent index idx. If the extents are being removed
-@@ -1351,16 +1262,7 @@ xfs_iext_realloc_direct(
- 	/* Free extent records */
- 	if (new_size == 0) {
- 		xfs_iext_destroy(ifp);
--	}
--	/* Resize direct extent list and zero any new bytes */
--	else if (ifp->if_real_bytes) {
--		/* Check if extents will fit inside the inode */
--		if (new_size <= XFS_INLINE_EXTS * sizeof(xfs_bmbt_rec_t)) {
--			xfs_iext_direct_to_inline(ifp, new_size /
--				(uint)sizeof(xfs_bmbt_rec_t));
--			ifp->if_bytes = new_size;
--			return;
--		}
-+	} else {
- 		if (!is_power_of_2(new_size)){
- 			rnew_size = roundup_pow_of_two(new_size);
- 		}
-@@ -1375,63 +1277,10 @@ xfs_iext_realloc_direct(
- 				rnew_size - ifp->if_real_bytes);
- 		}
- 	}
--	/* Switch from the inline extent buffer to a direct extent list */
--	else {
--		if (!is_power_of_2(new_size)) {
--			rnew_size = roundup_pow_of_two(new_size);
--		}
--		xfs_iext_inline_to_direct(ifp, rnew_size);
--	}
- 	ifp->if_real_bytes = rnew_size;
- 	ifp->if_bytes = new_size;
- }
- 
--/*
-- * Switch from linear (direct) extent records to inline buffer.
-- */
--void
--xfs_iext_direct_to_inline(
--	xfs_ifork_t	*ifp,		/* inode fork pointer */
--	xfs_extnum_t	nextents)	/* number of extents in file */
--{
--	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
--	ASSERT(nextents <= XFS_INLINE_EXTS);
--	/*
--	 * The inline buffer was zeroed when we switched
--	 * from inline to direct extent allocation mode,
--	 * so we don't need to clear it here.
--	 */
--	memcpy(ifp->if_u2.if_inline_ext, ifp->if_u1.if_extents,
--		nextents * sizeof(xfs_bmbt_rec_t));
--	kmem_free(ifp->if_u1.if_extents);
--	ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
--	ifp->if_real_bytes = 0;
--}
--
--/*
-- * Switch from inline buffer to linear (direct) extent records.
-- * new_size should already be rounded up to the next power of 2
-- * by the caller (when appropriate), so use new_size as it is.
-- * However, since new_size may be rounded up, we can't update
-- * if_bytes here. It is the caller's responsibility to update
-- * if_bytes upon return.
-- */
--void
--xfs_iext_inline_to_direct(
--	xfs_ifork_t	*ifp,		/* inode fork pointer */
--	int		new_size)	/* number of extents in file */
--{
--	ifp->if_u1.if_extents = kmem_alloc(new_size, KM_NOFS);
--	memset(ifp->if_u1.if_extents, 0, new_size);
--	if (ifp->if_bytes) {
--		memcpy(ifp->if_u1.if_extents, ifp->if_u2.if_inline_ext,
--			ifp->if_bytes);
--		memset(ifp->if_u2.if_inline_ext, 0, XFS_INLINE_EXTS *
--			sizeof(xfs_bmbt_rec_t));
--	}
--	ifp->if_real_bytes = new_size;
--}
--
- /*
-  * Resize an extent indirection array to new_size bytes.
-  */
-@@ -1511,9 +1360,6 @@ xfs_iext_destroy(
- 		xfs_iext_irec_remove_all(ifp);
- 	} else if (ifp->if_real_bytes) {
- 		kmem_free(ifp->if_u1.if_extents);
--	} else if (ifp->if_bytes) {
--		memset(ifp->if_u2.if_inline_ext, 0, XFS_INLINE_EXTS *
--			sizeof(xfs_bmbt_rec_t));
- 	}
- 	ifp->if_u1.if_extents = NULL;
- 	ifp->if_real_bytes = 0;
-@@ -1708,8 +1554,6 @@ xfs_iext_irec_init(
- 
- 	if (nextents == 0) {
- 		ifp->if_u1.if_extents = kmem_alloc(XFS_IEXT_BUFSZ, KM_NOFS);
--	} else if (!ifp->if_real_bytes) {
--		xfs_iext_inline_to_direct(ifp, XFS_IEXT_BUFSZ);
- 	} else if (ifp->if_real_bytes < XFS_IEXT_BUFSZ) {
- 		xfs_iext_realloc_direct(ifp, XFS_IEXT_BUFSZ);
- 	}
-@@ -1829,9 +1673,6 @@ xfs_iext_irec_compact(
- 
- 	if (nextents == 0) {
- 		xfs_iext_destroy(ifp);
--	} else if (nextents <= XFS_INLINE_EXTS) {
--		xfs_iext_indirect_to_direct(ifp);
--		xfs_iext_direct_to_inline(ifp, nextents);
- 	} else if (nextents <= XFS_LINEAR_EXTS) {
- 		xfs_iext_indirect_to_direct(ifp);
- 	} else if (nextents < (nlists * XFS_LINEAR_EXTS) >> 1) {
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 7065544f446a..cc7ca255ec98 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -51,8 +51,6 @@ typedef struct xfs_ext_irec {
-  */
- #define	XFS_IEXT_BUFSZ		4096
- #define	XFS_LINEAR_EXTS		(XFS_IEXT_BUFSZ / (uint)sizeof(xfs_bmbt_rec_t))
--#define	XFS_INLINE_EXTS		2
--#define	XFS_INLINE_DATA		32
- typedef struct xfs_ifork {
- 	int			if_bytes;	/* bytes in if_u1 */
- 	int			if_real_bytes;	/* bytes allocated in if_u1 */
-@@ -64,12 +62,6 @@ typedef struct xfs_ifork {
- 		xfs_ext_irec_t	*if_ext_irec;	/* irec map file exts */
- 		char		*if_data;	/* inline file data */
- 	} if_u1;
--	union {
--		xfs_bmbt_rec_host_t if_inline_ext[XFS_INLINE_EXTS];
--						/* very small file extents */
--		char		if_inline_data[XFS_INLINE_DATA];
--						/* very small file data */
--	} if_u2;
- } xfs_ifork_t;
- 
- /*
-@@ -158,12 +150,9 @@ void		xfs_iext_add_indirect_multi(struct xfs_ifork *, int,
- 					    xfs_extnum_t, int);
- void		xfs_iext_remove(struct xfs_inode *, struct xfs_iext_cursor *,
- 			int, int);
--void		xfs_iext_remove_inline(struct xfs_ifork *, xfs_extnum_t, int);
- void		xfs_iext_remove_direct(struct xfs_ifork *, xfs_extnum_t, int);
- void		xfs_iext_remove_indirect(struct xfs_ifork *, xfs_extnum_t, int);
- void		xfs_iext_realloc_direct(struct xfs_ifork *, int);
--void		xfs_iext_direct_to_inline(struct xfs_ifork *, xfs_extnum_t);
--void		xfs_iext_inline_to_direct(struct xfs_ifork *, int);
- void		xfs_iext_destroy(struct xfs_ifork *);
- struct xfs_bmbt_rec_host *
- 		xfs_iext_bno_to_ext(struct xfs_ifork *, xfs_fileoff_t, int *);
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 515eec004971..893763cee691 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1709,7 +1709,6 @@ xfs_swap_extent_forks(
- 	xfs_filblks_t		aforkblks = 0;
- 	xfs_filblks_t		taforkblks = 0;
- 	xfs_extnum_t		junk;
--	xfs_extnum_t		nextents;
- 	uint64_t		tmp;
- 	int			error;
- 
-@@ -1784,13 +1783,6 @@ xfs_swap_extent_forks(
- 
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
--		/*
--		 * If the extents fit in the inode, fix the pointer.  Otherwise
--		 * it's already NULL or pointing to the extent.
--		 */
--		nextents = xfs_iext_count(&ip->i_df);
--		if (nextents <= XFS_INLINE_EXTS)
--			ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
- 		(*src_log_flags) |= XFS_ILOG_DEXT;
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
-@@ -1802,13 +1794,6 @@ xfs_swap_extent_forks(
- 
- 	switch (tip->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
--		/*
--		 * If the extents fit in the inode, fix the pointer.  Otherwise
--		 * it's already NULL or pointing to the extent.
--		 */
--		nextents = xfs_iext_count(&tip->i_df);
--		if (nextents <= XFS_INLINE_EXTS)
--			tifp->if_u1.if_extents = tifp->if_u2.if_inline_ext;
- 		(*target_log_flags) |= XFS_ILOG_DEXT;
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
--- 
-2.14.2
-
+ Luis
