@@ -1,110 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52582 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933219AbdKCOqO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:14 -0400
-Received: from [94.72.11.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdEb-0001w7-Li
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:14 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/21] xfs: pass an on-disk extent to xfs_bmbt_validate_extent
-Date: Fri,  3 Nov 2017 17:45:27 +0300
-Message-Id: <20171103144539.2187-10-hch@lst.de>
-In-Reply-To: <20171103144539.2187-1-hch@lst.de>
-References: <20171103144539.2187-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:58828 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964798AbdKBUER (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 16:04:17 -0400
+Subject: Re: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
+References: <20171026172857.8683-1-mcgrof@kernel.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net>
+Date: Thu, 2 Nov 2017 15:04:16 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171026172857.8683-1-mcgrof@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-This prepares for getting rid of the current in-memory extent format.
-At the end of the series we will change the calling convention again
-to pass the xfs_bmbt_irec structure once it is available everywhere.
+On 10/26/17 12:28 PM, Luis R. Rodriguez wrote:
+> ./configure will leave traces of a complaint on config.log when
+> _BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
+> deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
+> 
+> From config.log:
+> /usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
- fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
- fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
- 3 files changed, 9 insertions(+), 10 deletions(-)
+Ok.  Or perhaps a more clear rationale is the preadv(5) manpage
+itself:
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 62270b871d06..8ce7bf19916f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1260,14 +1260,14 @@ xfs_iread_extents(
- 		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
- 		for (j = 0; j < num_recs; j++, i++, frp++) {
- 			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
--			trp->l0 = be64_to_cpu(frp->l0);
--			trp->l1 = be64_to_cpu(frp->l1);
--			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
-+			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
- 				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
- 						 XFS_ERRLEVEL_LOW, mp);
- 				error = -EFSCORRUPTED;
- 				goto out_brelse;
- 			}
-+			trp->l0 = be64_to_cpu(frp->l0);
-+			trp->l1 = be64_to_cpu(frp->l1);
- 			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
- 		}
- 		xfs_trans_brelse(tp, bp);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 6f891eeb88f6..2fbfe2a24b15 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
-  * Check that the extent does not contain an invalid unwritten extent flag.
-  */
- static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
--		struct xfs_bmbt_rec_host *ep)
-+		struct xfs_bmbt_rec *ep)
- {
--	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-+	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
- 		return true;
- 	if (whichfork == XFS_DATA_FORK &&
- 	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index bb63f38b97cc..abe601b48c9c 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -371,13 +371,13 @@ xfs_iformat_extents(
- 		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
- 		for (i = 0; i < nex; i++, dp++) {
- 			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
--			ep->l0 = get_unaligned_be64(&dp->l0);
--			ep->l1 = get_unaligned_be64(&dp->l1);
--			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
-+			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
- 				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
- 						 XFS_ERRLEVEL_LOW, mp);
- 				return -EFSCORRUPTED;
- 			}
-+			ep->l0 = get_unaligned_be64(&dp->l0);
-+			ep->l1 = get_unaligned_be64(&dp->l1);
- 			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
- 		}
- 	}
-@@ -764,8 +764,6 @@ xfs_iextents_copy(
- 	for (i = 0; i < nrecs; i++) {
- 		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
- 
--		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
--
- 		start_block = xfs_bmbt_get_startblock(ep);
- 		if (isnullstartblock(start_block)) {
- 			/*
-@@ -779,6 +777,7 @@ xfs_iextents_copy(
- 		/* Translate to on disk format */
- 		put_unaligned_be64(ep->l0, &dp->l0);
- 		put_unaligned_be64(ep->l1, &dp->l1);
-+		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
- 
- 		dp++;
- 		copied++;
--- 
-2.14.2
+preadv(), pwritev():
+	since glibc 2.19:
+		_DEFAULT_SOURCE
+	Glibc 2.19 and earlier:
+		_BSD_SOURCE
 
+But this is just a feature test macro in a configure script.
+
+What about the code itself, how do we handle this when we
+actually use preadv() in the codebase?
+
+-Eric
+
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  m4/package_libcdev.m4 | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index fa5b63978797..af2a9631b8ba 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -137,6 +137,7 @@ AC_DEFUN([AC_HAVE_PREADV],
+>    [ AC_MSG_CHECKING([for preadv])
+>      AC_TRY_LINK([
+>  #define _BSD_SOURCE
+> +#define _DEFAULT_SOURCE
+>  #include <sys/uio.h>
+>      ], [
+>           preadv(0, 0, 0, 0);
+> 
