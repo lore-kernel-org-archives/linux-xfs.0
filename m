@@ -1,200 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40461 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932280AbdKBQFR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 12:05:17 -0400
-Date: Thu, 2 Nov 2017 09:05:05 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:45140 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932166AbdKBQj6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 12:39:58 -0400
+Date: Thu, 2 Nov 2017 09:39:53 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/18] xfs: pass an on-disk extent to
- xfs_bmbt_validate_extent
-Message-ID: <20171102160505.GR4911@magnolia>
-References: <20171031142230.11755-1-hch@lst.de>
- <20171031142230.11755-2-hch@lst.de>
- <20171031175311.GC7093@bfoster.bfoster>
- <20171031211520.GI4911@magnolia>
- <20171101135855.GA11709@bfoster.bfoster>
- <20171101230024.GF4922@magnolia>
- <20171102115710.GB15748@bfoster.bfoster>
+Subject: Re: [PATCH 09/14] xfs/348: dir->symlink corruption must not be
+ allowed
+Message-ID: <20171102163953.GT4911@magnolia>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+ <150957284389.18388.370732842906149356.stgit@magnolia>
+ <20171102124214.GY17339@eguan.usersys.redhat.com>
+ <CAOQ4uxjJD+r5uvQ4=F5zaL5uUkLQu3sW2nVcWqsUS2YP3hxrUQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171102115710.GB15748@bfoster.bfoster>
+In-Reply-To: <CAOQ4uxjJD+r5uvQ4=F5zaL5uUkLQu3sW2nVcWqsUS2YP3hxrUQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Thu, Nov 02, 2017 at 07:57:11AM -0400, Brian Foster wrote:
-> On Wed, Nov 01, 2017 at 04:00:24PM -0700, Darrick J. Wong wrote:
-> > On Wed, Nov 01, 2017 at 09:58:55AM -0400, Brian Foster wrote:
-> > > On Tue, Oct 31, 2017 at 02:15:20PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Oct 31, 2017 at 01:53:12PM -0400, Brian Foster wrote:
-> > > > > On Tue, Oct 31, 2017 at 04:22:13PM +0200, Christoph Hellwig wrote:
-> > > > > > This prepares for getting rid of the current in-memory extent format.
-> > > > > > 
-> > > > > 
-> > > > > Couldn't we port this function over to use whatever the new in-memory
-> > > > > extent format is? IOW, just have the helper check for XFS_EXT_UNWRITTEN
-> > > > > rather than the associated bit in the on-disk format..?
-> > > > 
-> > > > It's certainly possible, but in general verifiers are supposed to check
-> > > > on-disk metadata before they end up in-core, and this would seem to get
-> > > > us closer to that, right?
-> > > > 
-> > > 
-> > > Yeah, but are any of these calls actually made in a buffer verifier
-> > > path?
-> > 
-> > No.  They probably ought to be -- we can add them to the bmbt verifier and
-> > the inode fork verifier (in the magical future when those exist :P), but
-> > for now I think xfs_iread_extents is the closest we come to an "obvious"
-> > place where we load disk data into/out of its in-core representation.
-> > 
+On Thu, Nov 02, 2017 at 03:14:45PM +0200, Amir Goldstein wrote:
+> On Thu, Nov 2, 2017 at 2:42 PM, Eryu Guan <eguan@redhat.com> wrote:
+> > On Wed, Nov 01, 2017 at 02:47:23PM -0700, Darrick J. Wong wrote:
+> >> From: Darrick J. Wong <darrick.wong@oracle.com>
+> >>
+> >> A directory corrupted into a symlink will be caught by the upcoming
+> >> local format ifork verifiers.
+> >>
+> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> ---
+> >>  tests/xfs/348.out |    2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >>
+> >> diff --git a/tests/xfs/348.out b/tests/xfs/348.out
+> >> index f4a7a71..17d9be2 100644
+> >> --- a/tests/xfs/348.out
+> >> +++ b/tests/xfs/348.out
+> >> @@ -239,7 +239,7 @@ would have junked entry "DATA" in directory PARENT_INO
+> >>  would have junked entry "DIR" in directory PARENT_INO
+> >>  would have junked entry "EMPTY" in directory PARENT_INO
+> >>  would have junked entry "FIFO" in directory PARENT_INO
+> >> -stat: 'SCRATCH_MNT/test/DIR' is a symbolic link
+> >> +stat: cannot stat 'SCRATCH_MNT/test/DIR': Structure needs cleaning
+> >
+> > But this breaks tests on old kernels. Or with the new ifork verifiers,
+> > old kernels can be considered as buggy?
+> >
 > 
-> Ok.. I agree that verifiers are intended to check on-disk format, but I
-> still don't see how that design aspect of buffer verifiers really has
-> much bearing on this function given how it is currently used. This
-> particular block has already passed the associated buffer verifier.
-> Also, do we have any verifiers that consider fork state?
+> Can filter new and old error into canonicalized string.
+> Dodgy, bug we've done it before.
+> See:
+> git grep sed | grep 'Operation not permitted\|Permission denied'
 
-Nope.  Thinking about this a little more, the only check we care about
-wrt the bmbt records is that the unwritten flag can't be set on an attr
-fork.  We don't have enough context to know that in the buffer verifier,
-but we do know that when we're loading up the incore extent map, so we
-can at least catch that problem there.
+I tried that, but the "stat: XXX is a symbolic link" message comes from
+a different path in the test file code.
 
-(Similarly, the bmbt btree code has a similar layering violation in that
-we can only check bb_owner from xfs_btree_cursor context, but since we
-also have no way to push such context through to the buffer layer we're
-stuck with that for now.)
-
-> If the goal is to check the on-disk record, perhaps at least that part
-> of this check (associated with the extent flag bit(s)) should be moved
-> to the verifier? Even with doing that, it seems there still may be a
-> need for a higher level sanity check based on the fork, and I don't see
-> any reason why that necessarily needs to use the on-disk value as
-> opposed to the in-core value. *shrug* Not that big of a deal though..
-
-<shrug> Same feeling here.  TBH I wonder about how costly those
-unaligned be64 accesses are on things like sparc such that we should
-minimize the number of calls and just check the (probably aligned)
-incore version instead...
+Unless... you're suggesting that I should sed the error output to make
+it look like the previous (broken) output?
 
 --D
 
-> Brian
 > 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > Brian
-> > > > > 
-> > > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > > > ---
-> > > > > >  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
-> > > > > >  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
-> > > > > >  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
-> > > > > >  3 files changed, 9 insertions(+), 10 deletions(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > > index f45f05c45e15..b2b6832b9e6b 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > > @@ -1259,14 +1259,14 @@ xfs_iread_extents(
-> > > > > >  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
-> > > > > >  		for (j = 0; j < num_recs; j++, i++, frp++) {
-> > > > > >  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
-> > > > > > -			trp->l0 = be64_to_cpu(frp->l0);
-> > > > > > -			trp->l1 = be64_to_cpu(frp->l1);
-> > > > > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
-> > > > > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
-> > > > > >  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
-> > > > > >  						 XFS_ERRLEVEL_LOW, mp);
-> > > > > >  				error = -EFSCORRUPTED;
-> > > > > >  				goto out_brelse;
-> > > > > >  			}
-> > > > > > +			trp->l0 = be64_to_cpu(frp->l0);
-> > > > > > +			trp->l1 = be64_to_cpu(frp->l1);
-> > > > > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
-> > > > > >  		}
-> > > > > >  		xfs_trans_brelse(tp, bp);
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > > > > > index 6f891eeb88f6..2fbfe2a24b15 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> > > > > > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > > > > > @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
-> > > > > >   * Check that the extent does not contain an invalid unwritten extent flag.
-> > > > > >   */
-> > > > > >  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> > > > > > -		struct xfs_bmbt_rec_host *ep)
-> > > > > > +		struct xfs_bmbt_rec *ep)
-> > > > > >  {
-> > > > > > -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> > > > > > +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> > > > > >  		return true;
-> > > > > >  	if (whichfork == XFS_DATA_FORK &&
-> > > > > >  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > > index bb63f38b97cc..abe601b48c9c 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > > @@ -371,13 +371,13 @@ xfs_iformat_extents(
-> > > > > >  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
-> > > > > >  		for (i = 0; i < nex; i++, dp++) {
-> > > > > >  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> > > > > > -			ep->l0 = get_unaligned_be64(&dp->l0);
-> > > > > > -			ep->l1 = get_unaligned_be64(&dp->l1);
-> > > > > > -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
-> > > > > > +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
-> > > > > >  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
-> > > > > >  						 XFS_ERRLEVEL_LOW, mp);
-> > > > > >  				return -EFSCORRUPTED;
-> > > > > >  			}
-> > > > > > +			ep->l0 = get_unaligned_be64(&dp->l0);
-> > > > > > +			ep->l1 = get_unaligned_be64(&dp->l1);
-> > > > > >  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
-> > > > > >  		}
-> > > > > >  	}
-> > > > > > @@ -764,8 +764,6 @@ xfs_iextents_copy(
-> > > > > >  	for (i = 0; i < nrecs; i++) {
-> > > > > >  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> > > > > >  
-> > > > > > -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
-> > > > > > -
-> > > > > >  		start_block = xfs_bmbt_get_startblock(ep);
-> > > > > >  		if (isnullstartblock(start_block)) {
-> > > > > >  			/*
-> > > > > > @@ -779,6 +777,7 @@ xfs_iextents_copy(
-> > > > > >  		/* Translate to on disk format */
-> > > > > >  		put_unaligned_be64(ep->l0, &dp->l0);
-> > > > > >  		put_unaligned_be64(ep->l1, &dp->l1);
-> > > > > > +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
-> > > > > >  
-> > > > > >  		dp++;
-> > > > > >  		copied++;
-> > > > > > -- 
-> > > > > > 2.14.2
-> > > > > > 
-> > > > > > --
-> > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Amir.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
