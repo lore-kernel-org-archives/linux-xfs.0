@@ -1,92 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55635 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:32892 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754686AbdKGVnD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Nov 2017 16:43:03 -0500
-Date: Tue, 7 Nov 2017 22:42:59 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171107214259.GC16026@wotan.suse.de>
-References: <20171107020607.GA26910@magnolia>
- <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com>
- <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org>
- <20171107192846.GA24617@infradead.org>
- <20171107202648.GB10679@kroah.com>
+        id S1750758AbdKBLZf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 07:25:35 -0400
+Date: Thu, 2 Nov 2017 07:25:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Message-ID: <20171102112533.GA15748@bfoster.bfoster>
+References: <20171026083322.20428-1-david@fromorbit.com>
+ <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard>
+ <20171031112432.GA7093@bfoster.bfoster>
+ <20171101004513.GK5858@dastard>
+ <20171101141720.GB11709@bfoster.bfoster>
+ <20171101235300.GT5858@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171107202648.GB10679@kroah.com>
+In-Reply-To: <20171101235300.GT5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Richard Fontana <fontana@sharpeleven.org>, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 07, 2017 at 09:26:48PM +0100, Greg Kroah-Hartman wrote:
-> On Tue, Nov 07, 2017 at 11:28:46AM -0800, Christoph Hellwig wrote:
-> > On Tue, Nov 07, 2017 at 02:15:26PM -0500, Theodore Ts'o wrote:
-> > > On Tue, Nov 07, 2017 at 06:46:58PM +0000, Alan Cox wrote:
-> > > > > Given that it had no license text on it at all, it "defaults" to GPLv2,
-> > > > > so the GPLv2 SPDX identifier was added to it.
+On Thu, Nov 02, 2017 at 10:53:00AM +1100, Dave Chinner wrote:
+> On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
+> > On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
+> > > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
+> > > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
+> > > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
+> > > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+> > > > > > > This patchset is aimed at filesystems that are installed on sparse
+> > > > > > > block devices, a.k.a thin provisioned devices. The aim of the
+> > > > > > > patchset is to bring the space management aspect of the storage
+> > > > > > > stack up into the filesystem rather than keeping it below the
+> > > > > > > filesystem where users and the filesystem have no clue they are
+> > > > > > > about to run out of space.
+> > > ....
+> > > > > I get that "total_blocks" sounds better, but to me that's a capacity
+> > > > > measurement, not an indication of the size of the underlying address
+> > > > > space the block device has provided. m_usable_blocks is obviously a
+> > > > > capacity measurement, but I was trying to convey that m_LBA_size is
+> > > > > not a capacity measurement but an externally imposed addressing
+> > > > > limit.
 > > > > > 
-> > > > > No copyright was changed, nothing at all happened except we explicitly
-> > > > > list the license of the file, instead of it being "implicit" before.
+> > > > > <shrug>
+> > > > > 
+> > > > > I guess if I document it well enough m_total_blocks will work.
+> > > > > 
 > > > > 
-> > > > Well if Christoph owns the copyright (if there is one) and he has stated
-> > > > he believes it is too trivial to copyright then it needs an SPDX tag that
-> > > > indicates the rightsholder has stated it's too trivial to copyright and
-> > > > (by estoppel) revoked any right they might have to pursue a claim.
+> > > > Hmm, yeah I see what you mean. Unfortunately I can't really think of
+> > > > anything aside from m_total_blocks or perhaps m_phys_blocks at the
+> > > > moment.
 > > > 
-> > > If Cristoph has revoked any right to pursue a claim, then he's also
-> > > legally given up the right to complain if, say, Bradley Kuhn starting
-> > > distributing a version with a GPLv3 permission statement --- or if Greg
-> > > K-H adds a GPLv2 SPDX identifier.  :-)
+> > > m_phys_blocks seems closer to the intent. If that's acceptible I'll
+> > > change the code to that.
+> > > 
 > > 
+> > That works for me, thanks..
 > > 
-> > First Christoph really appreciateѕ spelling his name right.
-> > 
-> > Second Christoph really appreciates talking to him when trying to slap
-> > on licensing bits on his code.  I'm not evil, but I'd really like to
-> > understand what you are doing and why, and I might be fairly agreeable
-> > if that makes sense.
+> > BTW, was there ever any kind of solution to the metadata block
+> > reservation issue in the thin case? We now hide metadata reservation
+> > from the user via the m_usable_blocks account. If m_phys_blocks
+> > represents a thin volume, how exactly do we prevent those metadata
+> > allocations/writes from overrunning what the admin has specified as
+> > "usable" with respect to the thin volume?
 > 
-> I already described it in the pull request, and in this patch itself,
+> The reserved metadata blocks are not accounted from free space when
+> they are allocated - they are pulled from the reserved space that
+> has already been removed from the free space.
+> 
 
-The upstream commit b24413180f5600 ("License cleanup: add SPDX GPL-2.0 license
-identifier to files with no license") mentions:
+Ok, so the user can set a usable blocks value of something less than the
+fs geometry, then the reservation is pulled from that, reducing the
+reported "usable" value further. Hence, what ends up reported to the
+user is actually something less than the value set by the user, which
+means that the filesystem overall respects how much space the admin says
+it can use in the underlying volume.
 
-    Many source files in the tree are missing licensing information, which
-    makes it harder for compliance tools to determine the correct license.
+For example, the user creates a 100T thin volume with 10T of usable
+space. The fs reserves a further 2T out of that for metadata, so then
+what the user sees is 8T of writeable space. The filesystem itself
+cannot use more than 10T out of the volume, as instructed. Am I
+following that correctly? If so, that sounds reasonable to me from the
+"don't overflow my thin volume" perspective.
 
-We typically have not cared bout this, what has changed for us to want
-to actually go ahead and do all this work?
+> i.e. we can use as much or as little of the reserved space as we
+> want, but it doesn't affect the free/used space reported to
+> userspace at all.
+> 
+> > > > > > Finally, I tend to agree with Amir's comment with regard to
+> > > > > > shrink/growfs... at least infosar as I understand his concern. If we do
+> > > > > > support physical shrink in the future, what do we expect the interface
+> > > > > > to look like in light of this change?
+> > > > > 
+> > > > > I don't expect it to look any different. It's exactly the same as
+> > > > > growfs - thinspace filesystem will simply do a logical grow/shrink,
+> > > > > fat filesystems will need to do a physical grow/shrink
+> > > > > adding/removing AGs.
+> > > > > 
+> > > > 
+> > > > How would you physically shrink a thin filesystem?
+> > > 
+> > > You wouldn't. There should never be a need to do this because it a
+> > > thinspace shrink doesn't actually free any space - it's just a usage
+> > > limit. fstrim is what actually shrinks the storage space used,
+> > > regardless of the current maximum capcity of the thin filesystem.
+> > 
+> > In other words, the answer is that we can't physically shrink a thin fs
+> > because of a limitation on the growfs interface due to how we've used it
+> > here.
+> 
+> No, that is not the what I said. To paraphrase, what I said was "we
+> aren't going to support physically shrinking thin filesystems at
+> this point in time". That has nothing to do with the growfs API -
+> it's an implementation choice that reflects the fact we can't
+> physically shrink filesystems and that functionality is no closer to
+> being implemented than it was 10+ years ago.
+> 
 
-What happened?
+And I'm attempting to examine the ramifications of the decision to reuse
+the physical shrink interface for logical shrink. IOW, we can decide
+whether or not to allow physical shrink of a thin fs independent from
+designing an interface that is capable of supporting it. Just like we
+already have an interface that supports physical shrink, even though it
+obviously doesn't work.
 
-It further states:
+> i.e. we don't need to rev the interface to support shrink on thin
+> filesystems, so there's no need to rev the interface at this point
+> in time.
+> 
+> *If* we implement physical shrink, *then* we can rev the growfs
+> interface to allow users to run a physical shrink on thin
+> filesystems.
+> 
 
-    By default all files without license information are under the default
-    license of the kernel, which is GPL version 2.
-    
-    Update the files which contain no license information with the 'GPL-2.0'
-    SPDX license identifier.  The SPDX identifier is a legally binding
-    shorthand, which can be used instead of the full boiler plate text.
+Subsequently, pretty much the remainder of my last mail is based on the
+following predicates:
 
-It says a bit about legally binding stuff, that's strong language, however its
-unclear to me about what it could mean for dual licensed stuff where the goal
-is for the GPL to apply say on Linux but another license outside of Linux.
-So what type of legally binding definition was being concocted here, how did such
-consensus get reached and why did we turn around and decide to embrace it all
-of a sudden whereas we had not done so before?
+- We've incorporated this change to use growfs->newblocks for logical
+  shrink.
+- We've implemented physical shrink.
+- We've revved the growfs interface to support physical shrink on thin
+  filesystems.
 
-If you had already described this please let me know, I really tried looking and
-could not find it on commit b24413180f5600 ("License cleanup: add SPDX GPL-2.0
-license identifier to files with no license"), a pointer would help.
+I'm not going to repeat all of the previous points... suffice it to say
+that asserting that we only have to rev the interface if/when we support
+physical shrink in response is a circular argument. I understand that
+and I agree. I'm attempting to review how that would look due to the
+implementation of this feature, particularly with respect to backwards
+compatibility of the existing interface.
 
-  Luis
+IOW, you're using the argument that we can rev the growfs interface in
+response to the initial argument regarding the the inability to
+physically shrink a thin fs. As a result, I'm claiming that revving the
+interface in the future for physical shrink may create more interface
+clumsiness than it's worth compared to just revving it now for logical
+shrink. In response to the points I attempt to make around that, you
+argue above that we aren't any closer to physical shrink than we were 10
+years ago and that we don't have to rev the interface unless we support
+physical shrink. Round and round... ;P
+
+The best I can read into the response here is that you think physical
+shrink is unlikely enough to not need to care very much what kind of
+interface confusion could result from needing to rev the current growfs
+interface to support physical shrink on thin filesystems in the future.
+Is that a fair assessment..?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
