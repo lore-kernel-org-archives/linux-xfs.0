@@ -1,64 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35604 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:24037 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751974AbdKBMoB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 08:44:01 -0400
-Date: Thu, 2 Nov 2017 08:44:00 -0400
+        id S933223AbdKBNy6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 09:54:58 -0400
+Date: Thu, 2 Nov 2017 09:54:57 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: scrub: avoid uninitialized return code
-Message-ID: <20171102124359.GB16645@bfoster.bfoster>
-References: <20171102111137.3062126-1-arnd@arndb.de>
+Subject: Re: [PATCH 11/18] xfs: iterate over extents in
+ xfs_bmap_extents_to_btree
+Message-ID: <20171102135457.GF16645@bfoster.bfoster>
+References: <20171031142230.11755-1-hch@lst.de>
+ <20171031142230.11755-12-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171102111137.3062126-1-arnd@arndb.de>
+In-Reply-To: <20171031142230.11755-12-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 02, 2017 at 12:11:12PM +0100, Arnd Bergmann wrote:
-> The newly added xfs_scrub_da_btree_block() function has one code path
-> that returns the 'error' variable without initializing it first, as
-> shown by this compiler warning:
+On Tue, Oct 31, 2017 at 04:22:23PM +0200, Christoph Hellwig wrote:
+> This actually makes the function very slightly less efficient for now as we
+> detour through the expanded irect format between the in-core extent format
+> and the on-disk one instead of just endian swapping them.  But with the
+> incore extent btree the in-core one will use a different format and the
+> representation will be entirely hidden.
 > 
-> fs/xfs/scrub/dabtree.c: In function 'xfs_scrub_da_btree_block':
-> fs/xfs/scrub/dabtree.c:462:9: error: 'error' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> 
-> Returning -EINVAL might be an appropriate return code in this case.
-> 
-> Fixes: 7c4a07a424c1 ("xfs: scrub directory/attribute btrees")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/scrub/dabtree.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_bmap.c | 20 ++++++++------------
+>  1 file changed, 8 insertions(+), 12 deletions(-)
 > 
-> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> index 4a93cf1753d3..971566388c9a 100644
-> --- a/fs/xfs/scrub/dabtree.c
-> +++ b/fs/xfs/scrub/dabtree.c
-> @@ -349,8 +349,10 @@ xfs_scrub_da_btree_block(
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 14428d72cf33..56482bf6280d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -666,14 +666,13 @@ xfs_bmap_extents_to_btree(
+>  	xfs_bmbt_rec_t		*arp;		/* child record pointer */
+>  	struct xfs_btree_block	*block;		/* btree root block */
+>  	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+> -	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
+>  	int			error;		/* error return value */
+> -	xfs_extnum_t		i, cnt;		/* extent record index */
+>  	xfs_ifork_t		*ifp;		/* inode fork pointer */
+>  	xfs_bmbt_key_t		*kp;		/* root block key pointer */
+>  	xfs_mount_t		*mp;		/* mount structure */
+> -	xfs_extnum_t		nextents;	/* number of file extents */
+>  	xfs_bmbt_ptr_t		*pp;		/* root block address pointer */
+> +	struct xfs_bmbt_irec	rec;
+> +	xfs_extnum_t		i = 0, cnt = 0;
 >  
->  	/* Check the pointer. */
->  	blk->blkno = blkno;
-> -	if (!xfs_scrub_da_btree_ptr_ok(ds, level, blkno))
-> +	if (!xfs_scrub_da_btree_ptr_ok(ds, level, blkno)) {
-> +		error = -EINVAL;
->  		goto out_nobuf;
-> +	}
-
-Hmm.. is an error really the right thing to do here vs. setting the
-context corrupt and returning 0? (Darrick..?) If the latter, perhaps
-error should just be initialized to 0.
-
-Brian
-
+>  	mp = ip->i_mount;
+>  	ASSERT(whichfork != XFS_COW_FORK);
+> @@ -752,15 +751,12 @@ xfs_bmap_extents_to_btree(
+>  				XFS_BTNUM_BMAP, 0, 0, ip->i_ino,
+>  				XFS_BTREE_LONG_PTRS);
 >  
->  	/* Read the buffer. */
->  	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
+> -	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
+> -	nextents =  xfs_iext_count(ifp);
+> -	for (cnt = i = 0; i < nextents; i++) {
+> -		ep = xfs_iext_get_ext(ifp, i);
+> -		if (!isnullstartblock(xfs_bmbt_get_startblock(ep))) {
+> -			arp->l0 = cpu_to_be64(ep->l0);
+> -			arp->l1 = cpu_to_be64(ep->l1);
+> -			arp++; cnt++;
+> -		}
+> +	while (xfs_iext_get_extent(ifp, i++, &rec)) {
+> +		if (isnullstartblock(rec.br_startblock))
+> +			continue;
+> +		arp = XFS_BMBT_REC_ADDR(mp, ablock, 1 + cnt);
+> +		xfs_bmbt_disk_set_all(arp, &rec);
+> +		cnt++;
+>  	}
+>  	ASSERT(cnt == XFS_IFORK_NEXTENTS(ip, whichfork));
+>  	xfs_btree_set_numrecs(ablock, cnt);
 > -- 
-> 2.9.0
+> 2.14.2
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
