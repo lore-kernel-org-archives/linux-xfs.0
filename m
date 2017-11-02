@@ -1,201 +1,201 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51011 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750769AbdKEWet (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Nov 2017 17:34:49 -0500
-Date: Mon, 6 Nov 2017 09:34:45 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:2835 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934385AbdKBXaV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 19:30:21 -0400
+Date: Fri, 3 Nov 2017 10:30:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Bug? or normal behavior? if bug, then where? overlay, vfs, xfs,
- or ????
-Message-ID: <20171105223445.GA5858@dastard>
-References: <59FA4499.2030502@tlinx.org>
- <CAOQ4uxg-bkYnpV146kBgdbgCK9On+=jM1gCe1975J8HKkWxcNg@mail.gmail.com>
- <59FEC912.4000005@tlinx.org>
- <CAOQ4uxjDbNiZiUUzNZEHTt8SQW-1trC6dSF=c28bD8EuWLWFrw@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Message-ID: <20171102233017.GX5858@dastard>
+References: <20171026083322.20428-1-david@fromorbit.com>
+ <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard>
+ <20171031112432.GA7093@bfoster.bfoster>
+ <20171101004513.GK5858@dastard>
+ <20171101141720.GB11709@bfoster.bfoster>
+ <20171101235300.GT5858@dastard>
+ <20171102112533.GA15748@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjDbNiZiUUzNZEHTt8SQW-1trC6dSF=c28bD8EuWLWFrw@mail.gmail.com>
+In-Reply-To: <20171102112533.GA15748@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: L A Walsh <lkml@tlinx.org>, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Nov 05, 2017 at 10:55:40AM +0200, Amir Goldstein wrote:
-> [adding cc: linux-xfs]
+On Thu, Nov 02, 2017 at 07:25:33AM -0400, Brian Foster wrote:
+> On Thu, Nov 02, 2017 at 10:53:00AM +1100, Dave Chinner wrote:
+> > On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
+> > > On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
+> > > > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
+> > > > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
+> > > > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
+> > > > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+> > > > > > > > This patchset is aimed at filesystems that are installed on sparse
+> > > > > > > > block devices, a.k.a thin provisioned devices. The aim of the
+> > > > > > > > patchset is to bring the space management aspect of the storage
+> > > > > > > > stack up into the filesystem rather than keeping it below the
+> > > > > > > > filesystem where users and the filesystem have no clue they are
+> > > > > > > > about to run out of space.
+> > > > ....
+> > > > > > I get that "total_blocks" sounds better, but to me that's a capacity
+> > > > > > measurement, not an indication of the size of the underlying address
+> > > > > > space the block device has provided. m_usable_blocks is obviously a
+> > > > > > capacity measurement, but I was trying to convey that m_LBA_size is
+> > > > > > not a capacity measurement but an externally imposed addressing
+> > > > > > limit.
+> > > > > > 
+> > > > > > <shrug>
+> > > > > > 
+> > > > > > I guess if I document it well enough m_total_blocks will work.
+> > > > > > 
+> > > > > 
+> > > > > Hmm, yeah I see what you mean. Unfortunately I can't really think of
+> > > > > anything aside from m_total_blocks or perhaps m_phys_blocks at the
+> > > > > moment.
+> > > > 
+> > > > m_phys_blocks seems closer to the intent. If that's acceptible I'll
+> > > > change the code to that.
+> > > > 
+> > > 
+> > > That works for me, thanks..
+> > > 
+> > > BTW, was there ever any kind of solution to the metadata block
+> > > reservation issue in the thin case? We now hide metadata reservation
+> > > from the user via the m_usable_blocks account. If m_phys_blocks
+> > > represents a thin volume, how exactly do we prevent those metadata
+> > > allocations/writes from overrunning what the admin has specified as
+> > > "usable" with respect to the thin volume?
+> > 
+> > The reserved metadata blocks are not accounted from free space when
+> > they are allocated - they are pulled from the reserved space that
+> > has already been removed from the free space.
+> > 
 > 
-> On Sun, Nov 5, 2017 at 10:17 AM, L A Walsh <lkml@tlinx.org> wrote:
-> > Amir Goldstein wrote:
-> >>
-> >>
-> >>
-> >>>
-> >>> I then created a new xfs file system and mounted it on '/edge';
-> >>>
-> >>>    Ishtar:/edge> xfs_info .
-> >>>    meta-data=/dev/Data/Edge     isize=256    agcount=32,
-> >>>    agsize=16777200 blks     =                   sectsz=4096  attr=2
-> >>>    data     =                   bsize=4096   blocks=536870400, imaxpct=5
-> >>>             =                   sunit=16     swidth=64 blks
-> >>>    naming   =version 2          bsize=4096   ascii-ci=0
-> >>>    log      =internal           bsize=4096   blocks=262143, version=2
-> >>>             =                   sectsz=4096  sunit=1 blks, lazy-count=1
-> >>>    realtime =none               extsz=4096   blocks=0, rtextents=0
-> >>>
-> >>>
-> >>
-> >>
-> >> Your problem is that you do not have "ftype" feature in directory
-> >> name format, like this:
-> >>
-> >> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> >>
-> >> Perhaps you have an old version of mkfs.xfs, not sure when
-> >> ftype=1 became the default format, but you can try to
-> >>   mkfs.xfs -n ftype=1
-> >>
-> >
-> > ----  Ah... no .. last I was told, if you turned on ftype=1,
-> > you had to also pull in crc'ing of all the meta-info.
-> > That has problems -- causes errors where there would be no
-> > problem, and was never tested on mature file systems that were
-> > already fragmented.
-> >
-> >
-> > Do you know if it was separated from crc32 -- for some inexplicable reason,
-> > if you wanted ftype, then the crc option would be forced on for you.
-
-Are you still getting all worked up about how metadata CRCs and
-the v5 on-disk format is going to make the sky fall, Linda? It's
-time to give in and come join us on the dark side...
-
-> I don't know if there was a specific reason, but that's the way it is.
-
-ftype was implemented as part of the format changes for the v5
-format so it's always enabled for v5 filesystems.  It was introduced
-as a mkfs option for the v4 format in early 2014, and since mid-2015
-it's been the default for non-crc filesystems:
-
-# mkfs.xfs -f -m crc=0 /dev/vdb
-.....
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-.....
-
-Users should try to keep your userspace tools up to date with the
-kernel being run.... :)
-
-> > I didn't want it as I didn't want it to flag errors in metadata that
-> > wasn't crucial and didn't want the speed slowdown.  Sigh.
-> >
-> > The problem on crc'ing the meta data, is that there is ALOT more meta
-> > data where detecting it will do more harm than good (like what nanosecond
-> > the file was last changed, for example).  I first ran into it
-> > taking the disk offline when I changed the guid on a newly formatted disk.
-> > That was fixed, but that was a warning shot...   How annoying.
-> >
+> Ok, so the user can set a usable blocks value of something less than the
+> fs geometry, then the reservation is pulled from that, reducing the
+> reported "usable" value further. Hence, what ends up reported to the
+> user is actually something less than the value set by the user, which
+> means that the filesystem overall respects how much space the admin says
+> it can use in the underlying volume.
 > 
-> I have never heard about those issues that you raise.
-> It sounds like a myth about XFS metadata CRC that should be debunked
-> so forwarding your message on to XFS list.
+> For example, the user creates a 100T thin volume with 10T of usable
+> space. The fs reserves a further 2T out of that for metadata, so then
+> what the user sees is 8T of writeable space.  The filesystem itself
+> cannot use more than 10T out of the volume, as instructed. Am I
+> following that correctly? If so, that sounds reasonable to me from the
+> "don't overflow my thin volume" perspective.
 
-FYI, Amir.
+No, that's not what happens. For thick filesystems, the 100TB volume
+gets 2TB pulled from it so it appears as a 98TB filesystem. This is
+done by modifying the free block counts and m_usable_space when the
+reservations are made.
 
-Keep in mind that a lot of people didn't like the concept of
-metadata CRCs in XFS because .... reasons.  There has been a history
-of people jumping on bugs and/or not-yet-implemented feature as
-justification for their opposition to the change. Call it the nature
-of the vocal minority - most users haven't noticed and don't care
-that their new install of their distro of choice is now using CRC
-enabled filesystems by default....
+For thin filesystems, we've already got 90TB of space "reserved",
+and so the metadata reservations and allocations come from that.
+i.e. we skip the modification of free block counts and m_usable
+space in the case of a thinspace filesystem, and so the user still
+sees 10TB of usable space that they asked to have.
 
-As to the issue that Linda raised, yes, it *did* exist.  We baked
-the UUID into the metadata format so we knew what filesystem owns a
-specific metadata block. Handy for detecting stale metadata on a
-reused device as well as misdirected writes.  We knew about it from
-the start (all the tools had to be modified to disallow changing
-UUIDS on v5 filesystems!) but it just wasn't an important enough
-requirement to have this functionality up front for CRC enabled
-filesystems.
+> > i.e. we don't need to rev the interface to support shrink on thin
+> > filesystems, so there's no need to rev the interface at this point
+> > in time.
+> > 
+> > *If* we implement physical shrink, *then* we can rev the growfs
+> > interface to allow users to run a physical shrink on thin
+> > filesystems.
+> > 
+> 
+> Subsequently, pretty much the remainder of my last mail is based on the
+> following predicates:
+> 
+> - We've incorporated this change to use growfs->newblocks for logical
+>   shrink.
+> - We've implemented physical shrink.
+> - We've revved the growfs interface to support physical shrink on thin
+>   filesystems.
+> 
+> I'm not going to repeat all of the previous points... suffice it to say
+> that asserting that we only have to rev the interface if/when we support
+> physical shrink in response is a circular argument.
 
-However, it wasn't clear what the solution was to the "change UUID"
-problem when CRCs were ready, and we also needed to understand the
-behaviour of cloned v5 filesystems on COW based snapshots before we
-made any sort of change that could require rewriting all the
-metadata in the filesystem. So it took some time for the issue to
-come to the top of the "remaining problems to solve" and when it did
-we had already built up enough knowledge about v5 filesystem
-behaviour to determine the best way to solve the problem.
+No, it's not.
 
-IOWs, it was always the plan to support it so that tools like
-xfs_copy worked properly with v5 filesystems, but it wasn't a
-primary concern compared to making CRCs robust. It was fixed
-a couple of years ago:
+History tells us that every time someone does this sort of "future
+planning" for a fixed ABI interface they don't get it right. Hence
+when that new functionality comes along the interface has to be
+changed /again/ to fix whatever previous assumptions or requirements
+were found to be invalid when development of the feature was
+actually done.
 
-commit 9c4e12fb60c15dc9c5e54041c9679454b42cb23e
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Mon Aug 3 10:45:00 2015 +1000
+The syscall and ioctl APIs are littered with examples and we should
+pay heed to the lessons those mistakes teach us. i.e. don't
+speculate about future API requirements for functionality that may
+not exist or may change substantially from what it is envisiaged to
+need right now.
 
-    xfsprogs: Add new sb_meta_uuid field, update userspace tools to manipulate it
-    
-    This adds a new superblock field, sb_meta_uuid.  This allows us to
-    change the use-visible UUID on crc-enabled filesytems from userspace
-    if desired, by copying the existing UUID to the new location for
-    metadata comparisons.  If this is done, an incompat flag must be
-    set to prevent older filesystems from mounting the filesystem, but
-    the original UUID can be restored, and the incompat flag removed,
-    with a new xfs_db / xfs_admin UUID command, "restore."
-    
-    Much of this patch mirrors the kernel patch in simply renaming
-    the field used for metadata uuid comparison; other bits:
-    
-    * Teach xfs_db to print the new meta_uuid field
-    * Allow xfs_db to generate a new UUID for CRC-enabled filesystems
-    * Allow xfs_db to revert to the original UUID and clear the flag
-    * Fix up xfs_copy to work with CRC-enabled filesystems
-    * Update the xfs_admin manpage to show the UUID "restore" command
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+> I understand that
+> and I agree. I'm attempting to review how that would look due to the
+> implementation of this feature, particularly with respect to backwards
+> compatibility of the existing interface.
+> 
+> IOW, you're using the argument that we can rev the growfs interface in
+> response to the initial argument regarding the the inability to
+> physically shrink a thin fs.
 
-> See also https://www.spinics.net/lists/xfs/msg19079.html
+Yes, because when we get physical shrink it is likely that the
+growfs interface is going to need more than just a new set of flags.
 
-Yeah, that was in reaction to the loud claims that "CRCs are going
-to slow everything down". Late last year we significantly reduced
-the CPU overhead of CRC calculation on the write side , so it drops
-off the CPU profiles in the workloads described in that like above
-almost entirely. This was the commit:
+Off the top of my head, we're going to new user-kernel co-ordination
+requirements such as read-only AGs while we move data out of them in
+a failsafe manner, interleave this with a whole new set of new
+"cannot perform operation" cases, handle new partial failure cases,
+restarting an interrupted shrink, and maybe even a need to ignore
+partial state to complete a previously failed shrink.
 
-commit cae028df53449905c944603df624ac94bc619661
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Dec 5 14:40:32 2016 +1100
+And there's even the possibility that we're going to have to limit
+physical shrink to rmap enabled filesystems (e.g. how do you find the
+owner of that bmbt block that is pinning the AG we need to remove
+without rmap?). At whcih point, a user might want to "force shrink"
+and then take the filesystem down and run repair....
 
-    xfs: optimise CRC updates
-    
-    Nick Piggin reported that the CRC overhead in an fsync heavy
-    workload was higher than expected on a Power8 machine. Part of this
-    was to do with the fact that the power8 CRC implementation is not
-    efficient for CRC lengths of less than 512 bytes, and so the way we
-    split the CRCs over the CRC field means a lot of the CRCs are
-    reduced to being less than than optimal size.
-    
-    To optimise this, change the CRC update mechanism to zero the CRC
-    field first, and then compute the CRC in one pass over the buffer
-    and write the result back into the buffer. We can do this safely
-    because anything writing a CRC has exclusive access to the buffer
-    the CRC is being calculated over.
-    
-    We leave the CRC verify code the same - it still splits the CRC
-    calculation - because we do not want read-only operations modifying
-    the underlying buffer. This is because read-only operations may not
-    have an exclusive access to the buffer guaranteed, and so temporary
-    modifications could leak out to to other processes accessing the
-    buffer concurrently.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+IOWs, to say all we are going to need from the growfs ioctl for a
+physical shrink interface is a flag to to tell thin filesystems to
+do a physical shrink is assuming an awful lot about the physical
+shrinking implementation and how users will want to interact with
+the operation. Until we've done all the design work and are well
+into the implementation, we're not going to have a clue about what
+we actually need in way of grwofs interface changes for the physical
+shrink.
+
+As such, trying to determine a future proof growfs interface change
+right now is simply a waste of time because we're not going to get
+it right.
+
+> As a result, I'm claiming that revving the
+> interface in the future for physical shrink may create more interface
+> clumsiness than it's worth compared to just revving it now for logical
+> shrink. In response to the points I attempt to make around that, you
+> argue above that we aren't any closer to physical shrink than we were 10
+> years ago and that we don't have to rev the interface unless we support
+> physical shrink. Round and round... ;P
+> 
+> The best I can read into the response here is that you think physical
+> shrink is unlikely enough to not need to care very much what kind of
+> interface confusion could result from needing to rev the current growfs
+> interface to support physical shrink on thin filesystems in the future.
+> Is that a fair assessment..?
+
+Not really. I understand just how complex a physical shrink
+implementation is going to be, and have a fair idea of the sorts of
+craziness we'll need to add to xfs_growfs to support/co-ordinate a
+physical shrink operation.  From that perspective, I don't see a
+physical shrink working with an unchanged growfs interface. The
+discussion about whether or not we should physically shrink
+thinspace filesystems is almost completely irrelevant to the
+interface requirements of a physical shrink....
 
 Cheers,
 
