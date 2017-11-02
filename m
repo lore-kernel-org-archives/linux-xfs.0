@@ -1,54 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54532 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60196 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933888AbdKBDGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Nov 2017 23:06:03 -0400
-Date: Thu, 2 Nov 2017 11:06:01 +0800
+        id S1751428AbdKBDQY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Nov 2017 23:16:24 -0400
+Date: Thu, 2 Nov 2017 11:16:22 +0800
 From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 00/14] rollup of fstests fixes
-Message-ID: <20171102030601.GU17339@eguan.usersys.redhat.com>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+Subject: Re: [PATCH v2 1/4] common: Check for fiemap range argument support
+Message-ID: <20171102031622.GV17339@eguan.usersys.redhat.com>
+References: <1509459011-7398-1-git-send-email-nborisov@suse.com>
+ <1509459096-7585-1-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
+In-Reply-To: <1509459096-7585-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Nov 01, 2017 at 02:46:28PM -0700, Darrick J. Wong wrote:
-> This is a rollup of all the patches I've been sending to the list,
-> because the previous thread is a mess of resent patches and patch
-> series cramming.
+On Tue, Oct 31, 2017 at 04:11:33PM +0200, Nikolay Borisov wrote:
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  common/rc | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> Patches 1-2,4,6,8 are unchanged from last week.  They've possibly even
-> gone in already, but I can't tell what's in Eryu's private branch. :/
-> 
-> Patch 3 is the same as "PATCH v3 5/6" from the last series.
+> diff --git a/common/rc b/common/rc
+> index e2a8229..673f9ef 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2053,8 +2053,15 @@ _require_xfs_io_command()
+>  			-c "$command 4k 8k" $testfile 2>&1`
+>  		;;
+>  	"fiemap")
+> +		if [ ! -z "$param" ]
+> +		then
+> +			$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]" || \
+                                                                            ^^^^^^^^^^^^^^^^
+this doesn't look correct to me, the "bracket expression" is a
+"Character Classes", grep matches any single char in the char set. A
+quick test shows it only matches the last two chars, that's "n]"
 
-Yeah, I've queued above patches in my staging branch, a user-visible
-change I've made on commit is in patch 8 "common/xfs: remove inode-paths
-cruft", I added a "return $?" at the end of _check_xfs_test_fs(), as I
-replied to you earlier this week. So I'd just leave my queued patches
-untouched, that might be easier for me :)
+$ echo "[offset len]" | grep  "[offset [len]]"
+[offset len]
+          ^^ highlighted
 
-> 
-> Patch 5 now checks that repair can fix the corruption introduced.
+fgrep should work, or grep -q "\[offset \[len\]\]"
 
-It was in my queue too, but I'll drop it and take the new version if
-the change looks sane.
-
-> 
-> Patch 7 is new, it checks for /usr/sbin/thin_check before running
-> generic/459 per an earlier discussion on the list.
-> 
-> Patches 9-14 are new; I've been trying to clean up all the minor test
-> failures in preparation for 4.15 madness.
-
-Thanks a lot for the cleanups! I'll look at them, maybe tommorrow, I'll
-be out for a few hours today..
+But now the fiemap check in _require_xfs_io_command checks range support
+on whatever $param it takes, even the '[-al] [-n nx]' param that have
+nothing to do with range.
 
 Thanks,
 Eryu
+
+> +				_notrun "xfs_io $command range param support is missing"
+> +		fi
+> +
+>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+>  			-c "fiemap -v $param" $testfile 2>&1`
+> +
+>  		param_checked=1
+>  		;;
+>  	"flink" )
+> -- 
+> 2.7.4
+> 
