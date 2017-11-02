@@ -1,121 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33549 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751381AbdKCQd6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 12:33:58 -0400
-Date: Fri, 3 Nov 2017 09:33:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/21] xfs: pass an on-disk extent to
- xfs_bmbt_validate_extent
-Message-ID: <20171103163354.GK4911@magnolia>
-References: <20171103144539.2187-1-hch@lst.de>
- <20171103144539.2187-10-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171103144539.2187-10-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:42482 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751507AbdKBWvF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 18:51:05 -0400
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
+Date: Thu, 2 Nov 2017 17:51:03 -0500
+Content-Transfer-Encoding: 8BIT
+Message-Id: <D31D5414-876E-4251-B029-CD90FE4EB70E@sandeen.net>
+References: <20171026172857.8683-1-mcgrof@kernel.org> <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net> <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 03, 2017 at 05:45:27PM +0300, Christoph Hellwig wrote:
-> This prepares for getting rid of the current in-memory extent format.
-> At the end of the series we will change the calling convention again
-> to pass the xfs_bmbt_irec structure once it is available everywhere.
+On Nov 2, 2017, at 3:22 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> On Thu, Nov 2, 2017 at 1:04 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>> On 10/26/17 12:28 PM, Luis R. Rodriguez wrote:
+>>> ./configure will leave traces of a complaint on config.log when
+>>> _BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
+>>> deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
+>>> 
+>>> From config.log:
+>>> /usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
+>> 
+>> Ok.  Or perhaps a more clear rationale is the preadv(5) manpage
+>> itself:
+>> 
+>> preadv(), pwritev():
+>>        since glibc 2.19:
+>>                _DEFAULT_SOURCE
+>>        Glibc 2.19 and earlier:
+>>                _BSD_SOURCE
+>> 
+>> But this is just a feature test macro in a configure script.
+>> 
+>> What about the code itself, how do we handle this when we
+>> actually use preadv() in the codebase?
+> 
+> Its not clear to me what the issue would be by defining this extra
+> _DEFAULT_SOURCE when _BSD_SOURCE is defined.
+> 
+That's not the issue I was raising; I'm fine with defining both.  I pointed out the man page because it clearly describes the change.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+What I'm asking is this: one or the other of these defines is /required/ for preadv use, per the man page.  You are fixing one in the config test.  What about the actual use of preadv in the code itself?  Why does the issue exist only in the config test?
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
->  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
->  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
->  3 files changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 62270b871d06..8ce7bf19916f 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1260,14 +1260,14 @@ xfs_iread_extents(
->  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
->  		for (j = 0; j < num_recs; j++, i++, frp++) {
->  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
-> -			trp->l0 = be64_to_cpu(frp->l0);
-> -			trp->l1 = be64_to_cpu(frp->l1);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
-> +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
->  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
->  						 XFS_ERRLEVEL_LOW, mp);
->  				error = -EFSCORRUPTED;
->  				goto out_brelse;
->  			}
-> +			trp->l0 = be64_to_cpu(frp->l0);
-> +			trp->l1 = be64_to_cpu(frp->l1);
->  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  		xfs_trans_brelse(tp, bp);
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> index 6f891eeb88f6..2fbfe2a24b15 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
->   * Check that the extent does not contain an invalid unwritten extent flag.
->   */
->  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> -		struct xfs_bmbt_rec_host *ep)
-> +		struct xfs_bmbt_rec *ep)
->  {
-> -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
-> +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
->  		return true;
->  	if (whichfork == XFS_DATA_FORK &&
->  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index bb63f38b97cc..abe601b48c9c 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -371,13 +371,13 @@ xfs_iformat_extents(
->  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
->  		for (i = 0; i < nex; i++, dp++) {
->  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
-> -			ep->l0 = get_unaligned_be64(&dp->l0);
-> -			ep->l1 = get_unaligned_be64(&dp->l1);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
-> +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
->  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
->  						 XFS_ERRLEVEL_LOW, mp);
->  				return -EFSCORRUPTED;
->  			}
-> +			ep->l0 = get_unaligned_be64(&dp->l0);
-> +			ep->l1 = get_unaligned_be64(&dp->l1);
->  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
->  		}
->  	}
-> @@ -764,8 +764,6 @@ xfs_iextents_copy(
->  	for (i = 0; i < nrecs; i++) {
->  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
->  
-> -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
-> -
->  		start_block = xfs_bmbt_get_startblock(ep);
->  		if (isnullstartblock(start_block)) {
->  			/*
-> @@ -779,6 +777,7 @@ xfs_iextents_copy(
->  		/* Translate to on disk format */
->  		put_unaligned_be64(ep->l0, &dp->l0);
->  		put_unaligned_be64(ep->l1, &dp->l1);
-> +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
->  
->  		dp++;
->  		copied++;
-> -- 
-> 2.14.2
-> 
+Eric
+
+> Luis
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
