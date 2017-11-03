@@ -1,214 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46295 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754474AbdKCOqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:45 -0400
-Received: from [94.72.11.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdF6-00026U-Jn
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:45 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/21] xfs: remove the nr_extents argument to xfs_iext_remove
-Date: Fri,  3 Nov 2017 17:45:37 +0300
-Message-Id: <20171103144539.2187-20-hch@lst.de>
-In-Reply-To: <20171103144539.2187-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:48648 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751387AbdKCPSZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 11:18:25 -0400
+Date: Fri, 3 Nov 2017 11:18:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 09/21] xfs: pass an on-disk extent to
+ xfs_bmbt_validate_extent
+Message-ID: <20171103151823.GB20279@bfoster.bfoster>
 References: <20171103144539.2187-1-hch@lst.de>
+ <20171103144539.2187-10-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171103144539.2187-10-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-We only have two places that remove 2 extents at the same time, so unroll
-the loop there.
+On Fri, Nov 03, 2017 at 05:45:27PM +0300, Christoph Hellwig wrote:
+> This prepares for getting rid of the current in-memory extent format.
+> At the end of the series we will change the calling convention again
+> to pass the xfs_bmbt_irec structure once it is available everywhere.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c       | 26 ++++++++++++++------------
- fs/xfs/libxfs/xfs_iext_tree.c  | 30 ++++++++----------------------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- 3 files changed, 23 insertions(+), 35 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c12620f57de5..57c974fea3a9 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1645,7 +1645,8 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
- 
--		xfs_iext_remove(bma->ip, &bma->icur, 2, state);
-+		xfs_iext_remove(bma->ip, &bma->icur, state);
-+		xfs_iext_remove(bma->ip, &bma->icur, state);
- 		xfs_iext_prev(ifp, &bma->icur);
- 		xfs_iext_update_extent(bma->ip, state, &bma->icur, &LEFT);
- 		(*nextents)--;
-@@ -1680,7 +1681,7 @@ xfs_bmap_add_extent_delay_real(
- 		old = LEFT;
- 		LEFT.br_blockcount += PREV.br_blockcount;
- 
--		xfs_iext_remove(bma->ip, &bma->icur, 1, state);
-+		xfs_iext_remove(bma->ip, &bma->icur, state);
- 		xfs_iext_prev(ifp, &bma->icur);
- 		xfs_iext_update_extent(bma->ip, state, &bma->icur, &LEFT);
- 
-@@ -1707,7 +1708,7 @@ xfs_bmap_add_extent_delay_real(
- 		PREV.br_blockcount += RIGHT.br_blockcount;
- 
- 		xfs_iext_next(ifp, &bma->icur);
--		xfs_iext_remove(bma->ip, &bma->icur, 1, state);
-+		xfs_iext_remove(bma->ip, &bma->icur, state);
- 		xfs_iext_prev(ifp, &bma->icur);
- 		xfs_iext_update_extent(bma->ip, state, &bma->icur, &PREV);
- 
-@@ -2144,7 +2145,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		 */
- 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
- 
--		xfs_iext_remove(ip, icur, 2, state);
-+		xfs_iext_remove(ip, icur, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		xfs_iext_update_extent(ip, state, icur, &LEFT);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
-@@ -2182,7 +2184,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		 */
- 		LEFT.br_blockcount += PREV.br_blockcount;
- 
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		xfs_iext_update_extent(ip, state, icur, &LEFT);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
-@@ -2216,7 +2218,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		PREV.br_state = new->br_state;
- 
- 		xfs_iext_next(ifp, icur);
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		xfs_iext_update_extent(ip, state, icur, &PREV);
- 
-@@ -2583,7 +2585,7 @@ xfs_bmap_add_extent_hole_delay(
- 		left.br_startblock = nullstartblock(newlen);
- 		left.br_blockcount = temp;
- 
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		xfs_iext_update_extent(ip, state, icur, &left);
- 		break;
-@@ -2728,7 +2730,7 @@ xfs_bmap_add_extent_hole_real(
- 		 */
- 		left.br_blockcount += new->br_blockcount + right.br_blockcount;
- 
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		xfs_iext_update_extent(ip, state, icur, &left);
- 
-@@ -4686,7 +4688,7 @@ xfs_bmap_del_extent_delay(
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		break;
- 	case BMAP_LEFT_FILLING:
-@@ -4787,7 +4789,7 @@ xfs_bmap_del_extent_cow(
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		break;
- 	case BMAP_LEFT_FILLING:
-@@ -4927,7 +4929,7 @@ xfs_bmap_del_extent_real(
- 		/*
- 		 * Matches the whole extent.  Delete the entry.
- 		 */
--		xfs_iext_remove(ip, icur, 1, state);
-+		xfs_iext_remove(ip, icur, state);
- 		xfs_iext_prev(ifp, icur);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
- 			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-@@ -5553,7 +5555,7 @@ xfs_bmse_merge(
- 		return error;
- 
- done:
--	xfs_iext_remove(ip, icur, 1, 0);
-+	xfs_iext_remove(ip, icur, 0);
- 	xfs_iext_prev(XFS_IFORK_PTR(ip, whichfork), icur);
- 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork), icur,
- 			&new);
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index da3b6d727748..a35c4e51fedc 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -818,15 +818,19 @@ xfs_iext_free_last_leaf(
- 	kmem_free(ifp->if_u1.if_root);
- }
- 
--static void
--__xfs_iext_remove(
--	struct xfs_ifork	*ifp,
--	struct xfs_iext_cursor	*cur)
-+void
-+xfs_iext_remove(
-+	struct xfs_inode	*ip,
-+	struct xfs_iext_cursor	*cur,
-+	int			state)
- {
-+	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
- 	struct xfs_iext_leaf	*leaf = cur->leaf;
- 	xfs_fileoff_t		offset = xfs_iext_leaf_key(leaf, 0);
- 	int			i, nr_entries;
- 
-+	trace_xfs_iext_remove(ip, cur, state, _RET_IP_);
-+
- 	ASSERT(ifp->if_height > 0);
- 	ASSERT(ifp->if_u1.if_root != NULL);
- 	ASSERT(xfs_iext_valid(ifp, cur));
-@@ -858,24 +862,6 @@ __xfs_iext_remove(
- 		xfs_iext_free_last_leaf(ifp);
- }
- 
--void
--xfs_iext_remove(
--	struct xfs_inode	*ip,
--	struct xfs_iext_cursor	*cur,
--	int			nr_extents,
--	int			state)
--{
--	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
--	int			i;
--
--	ASSERT(nr_extents > 0);
--
--	for (i = 0; i < nr_extents; i++) {
--		trace_xfs_iext_remove(ip, cur, state, _RET_IP_);
--		__xfs_iext_remove(ifp, cur);
--	}
--}
--
- /*
-  * Lookup the extent covering bno.
-  *
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 4859db42fef8..98e46c6666a5 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -116,7 +116,7 @@ xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
- void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
- 			struct xfs_bmbt_irec *, int);
- void		xfs_iext_remove(struct xfs_inode *, struct xfs_iext_cursor *,
--			int, int);
-+			int);
- void		xfs_iext_destroy(struct xfs_ifork *);
- 
- bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
--- 
-2.14.2
-
+>  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
+>  fs/xfs/libxfs/xfs_bmap_btree.h | 4 ++--
+>  fs/xfs/libxfs/xfs_inode_fork.c | 9 ++++-----
+>  3 files changed, 9 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 62270b871d06..8ce7bf19916f 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1260,14 +1260,14 @@ xfs_iread_extents(
+>  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+>  		for (j = 0; j < num_recs; j++, i++, frp++) {
+>  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
+> -			trp->l0 = be64_to_cpu(frp->l0);
+> -			trp->l1 = be64_to_cpu(frp->l1);
+> -			if (!xfs_bmbt_validate_extent(mp, whichfork, trp)) {
+> +			if (!xfs_bmbt_validate_extent(mp, whichfork, frp)) {
+>  				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
+>  						 XFS_ERRLEVEL_LOW, mp);
+>  				error = -EFSCORRUPTED;
+>  				goto out_brelse;
+>  			}
+> +			trp->l0 = be64_to_cpu(frp->l0);
+> +			trp->l1 = be64_to_cpu(frp->l1);
+>  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
+>  		}
+>  		xfs_trans_brelse(tp, bp);
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+> index 6f891eeb88f6..2fbfe2a24b15 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+> @@ -127,9 +127,9 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+>   * Check that the extent does not contain an invalid unwritten extent flag.
+>   */
+>  static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
+> -		struct xfs_bmbt_rec_host *ep)
+> +		struct xfs_bmbt_rec *ep)
+>  {
+> -	if (ep->l0 >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
+> +	if (get_unaligned_be64(&ep->l0) >> (64 - BMBT_EXNTFLAG_BITLEN) == 0)
+>  		return true;
+>  	if (whichfork == XFS_DATA_FORK &&
+>  	    xfs_sb_version_hasextflgbit(&mp->m_sb))
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index bb63f38b97cc..abe601b48c9c 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -371,13 +371,13 @@ xfs_iformat_extents(
+>  		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
+>  		for (i = 0; i < nex; i++, dp++) {
+>  			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+> -			ep->l0 = get_unaligned_be64(&dp->l0);
+> -			ep->l1 = get_unaligned_be64(&dp->l1);
+> -			if (!xfs_bmbt_validate_extent(mp, whichfork, ep)) {
+> +			if (!xfs_bmbt_validate_extent(mp, whichfork, dp)) {
+>  				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+>  						 XFS_ERRLEVEL_LOW, mp);
+>  				return -EFSCORRUPTED;
+>  			}
+> +			ep->l0 = get_unaligned_be64(&dp->l0);
+> +			ep->l1 = get_unaligned_be64(&dp->l1);
+>  			trace_xfs_read_extent(ip, i, state, _THIS_IP_);
+>  		}
+>  	}
+> @@ -764,8 +764,6 @@ xfs_iextents_copy(
+>  	for (i = 0; i < nrecs; i++) {
+>  		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+>  
+> -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, ep));
+> -
+>  		start_block = xfs_bmbt_get_startblock(ep);
+>  		if (isnullstartblock(start_block)) {
+>  			/*
+> @@ -779,6 +777,7 @@ xfs_iextents_copy(
+>  		/* Translate to on disk format */
+>  		put_unaligned_be64(ep->l0, &dp->l0);
+>  		put_unaligned_be64(ep->l1, &dp->l1);
+> +		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, dp));
+>  
+>  		dp++;
+>  		copied++;
+> -- 
+> 2.14.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
