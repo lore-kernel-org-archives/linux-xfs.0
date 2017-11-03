@@ -1,85 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38506 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752315AbdKFOfD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 09:35:03 -0500
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eBiUR-0000tc-Cc
-        for linux-xfs@vger.kernel.org; Mon, 06 Nov 2017 14:35:03 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/8] xfs: always define STATIC to static noinline
-Date: Mon,  6 Nov 2017 15:34:49 +0100
-Message-Id: <20171106143456.13567-2-hch@lst.de>
-In-Reply-To: <20171106143456.13567-1-hch@lst.de>
-References: <20171106143456.13567-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:51710 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750707AbdKCEa2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 00:30:28 -0400
+Date: Fri, 3 Nov 2017 12:30:22 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 09/14] xfs/348: dir->symlink corruption must not be
+ allowed
+Message-ID: <20171103043022.GC17339@eguan.usersys.redhat.com>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+ <150957284389.18388.370732842906149356.stgit@magnolia>
+ <20171102124214.GY17339@eguan.usersys.redhat.com>
+ <20171102163754.GS4911@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171102163754.GS4911@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Ever since we added the noinline tag there is no good reason to define
-away the static for debug builds - we'll get just as good debug
-information with our without it, so don't mess up sparse and other
-checkers due to it.
+On Thu, Nov 02, 2017 at 09:37:54AM -0700, Darrick J. Wong wrote:
+> On Thu, Nov 02, 2017 at 08:42:14PM +0800, Eryu Guan wrote:
+> > On Wed, Nov 01, 2017 at 02:47:23PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > A directory corrupted into a symlink will be caught by the upcoming
+> > > local format ifork verifiers.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  tests/xfs/348.out |    2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/tests/xfs/348.out b/tests/xfs/348.out
+> > > index f4a7a71..17d9be2 100644
+> > > --- a/tests/xfs/348.out
+> > > +++ b/tests/xfs/348.out
+> > > @@ -239,7 +239,7 @@ would have junked entry "DATA" in directory PARENT_INO
+> > >  would have junked entry "DIR" in directory PARENT_INO
+> > >  would have junked entry "EMPTY" in directory PARENT_INO
+> > >  would have junked entry "FIFO" in directory PARENT_INO
+> > > -stat: 'SCRATCH_MNT/test/DIR' is a symbolic link
+> > > +stat: cannot stat 'SCRATCH_MNT/test/DIR': Structure needs cleaning
+> > 
+> > But this breaks tests on old kernels. Or with the new ifork verifiers,
+> > old kernels can be considered as buggy?
+> 
+> Yes, they're buggy since we shouldn't be interpreting directory entries
+> as a link target given that the zero bytes in the "link target" will
+> screw things up.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs.h       |  1 -
- fs/xfs/xfs_linux.h | 14 ++------------
- 2 files changed, 2 insertions(+), 13 deletions(-)
+Then I'm fine with taking it, and probably will edit the commit log a
+bit to reflect that we were missing a error case previously. Thanks!
 
-diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
-index 80cd0fd86783..5ff7f228d616 100644
---- a/fs/xfs/xfs.h
-+++ b/fs/xfs/xfs.h
-@@ -19,7 +19,6 @@
- #define __XFS_H__
- 
- #ifdef CONFIG_XFS_DEBUG
--#define STATIC
- #define DEBUG 1
- #define XFS_BUF_LOCK_TRACKING 1
- #endif
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 00a5efeec496..6282bfc1afa9 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -250,10 +250,6 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- #define ASSERT(expr)	\
- 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
- 
--#ifndef STATIC
--# define STATIC noinline
--#endif
--
- #else	/* !DEBUG */
- 
- #ifdef XFS_WARN
-@@ -261,21 +257,15 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- #define ASSERT(expr)	\
- 	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
- 
--#ifndef STATIC
--# define STATIC static noinline
--#endif
--
- #else	/* !DEBUG && !XFS_WARN */
- 
- #define ASSERT(expr)	((void)0)
- 
--#ifndef STATIC
--# define STATIC static noinline
--#endif
--
- #endif /* XFS_WARN */
- #endif /* DEBUG */
- 
-+#define STATIC static noinline
-+
- #ifdef CONFIG_XFS_RT
- 
- /*
--- 
-2.14.2
-
+Eryu
