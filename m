@@ -1,49 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44498 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:46076 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753378AbdKCOpm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:45:42 -0400
+        with ESMTP id S932620AbdKCOqC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:02 -0400
 Received: from [94.72.11.11] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdE5-0001ip-KA
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:45:42 +0000
+        id 1eAdEP-0001oO-08
+        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:02 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: b+tree for the incore extent list V2
-Date: Fri,  3 Nov 2017 17:45:18 +0300
-Message-Id: <20171103144539.2187-1-hch@lst.de>
+Subject: [PATCH 05/21] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_real
+Date: Fri,  3 Nov 2017 17:45:23 +0300
+Message-Id: <20171103144539.2187-6-hch@lst.de>
+In-Reply-To: <20171103144539.2187-1-hch@lst.de>
+References: <20171103144539.2187-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+Stop poking before and after the index and just increment or decrement
+it while doing our operations on it to prepare for a new extent list
+implementation.
 
-this series first updates the incore extent list iteration to use
-a cursor based scheme that hides the implementation details, and then
-switch to use a b+tree to implement the in-core extent list.  This
-reduces the need for a large contiguous allocation that the current
-indirection array requires, and thus avoids stalls during workloads
-using giant extent lists, especially on systems that are long running.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-The algorithms also should be better in general, but due to the fact
-the the operations on the on-disk b+tree have such a high overhead
-not much that effect is seen on the usual benchmarks.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index e2d8cbd054fe..117083b1d1ae 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2742,11 +2742,11 @@ xfs_bmap_add_extent_hole_real(
+ 		 * left and on the right.
+ 		 * Merge all three into a single extent record.
+ 		 */
+-		--*idx;
+ 		left.br_blockcount += new->br_blockcount + right.br_blockcount;
+-		xfs_iext_update_extent(ip, state, *idx, &left);
+ 
+-		xfs_iext_remove(ip, *idx + 1, 1, state);
++		xfs_iext_remove(ip, *idx, 1, state);
++		--*idx;
++		xfs_iext_update_extent(ip, state, *idx, &left);
+ 
+ 		XFS_IFORK_NEXT_SET(ip, whichfork,
+ 			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+@@ -2778,10 +2778,10 @@ xfs_bmap_add_extent_hole_real(
+ 		 * on the left.
+ 		 * Merge the new allocation with the left neighbor.
+ 		 */
+-		--*idx;
+ 		old = left;
+-
+ 		left.br_blockcount += new->br_blockcount;
++
++		--*idx;
+ 		xfs_iext_update_extent(ip, state, *idx, &left);
+ 
+ 		if (cur == NULL) {
+-- 
+2.14.2
 
-I also have a git tree available at:
-
-    git://git.infradead.org/users/hch/xfs.git xfs-incore-btree
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-incore-btree
-
-Changes from V1:
- - various spelling and indentation fixes
- - renamed various variables from ext to icur
- - add trace define for XFS_BMAPI_CONVERT_ONLY
- - move a few misplaced hunks into the right patch
- - fix encoding of the in-core extent format (Darrick J. Wong)
- - pass a xfs_bmbt_irec to xfs_validate_extent
- - move xfs_bmbt_irec to xfs_types.h
- - use a fixed 256 byte node size
- - use correct node entry numbers for 32-bit architectures
