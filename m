@@ -1,92 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25246 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752712AbdK1BsX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 20:48:23 -0500
-Date: Mon, 27 Nov 2017 17:47:46 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: Don't trim file extents during iomap
-Message-ID: <20171128014746.GC21412@magnolia>
-References: <1511437203-4329-1-git-send-email-nborisov@suse.com>
- <20171127174434.GB19379@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171127174434.GB19379@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:50754 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932620AbdKCOp5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:45:57 -0400
+Received: from [94.72.11.11] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1eAdEG-0001mc-68
+        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:45:52 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/21] xfs: treat idx as a cursor in xfs_bmap_add_extent_delay_real
+Date: Fri,  3 Nov 2017 17:45:21 +0300
+Message-Id: <20171103144539.2187-4-hch@lst.de>
+In-Reply-To: <20171103144539.2187-1-hch@lst.de>
+References: <20171103144539.2187-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, sandeen@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 27, 2017 at 09:44:34AM -0800, Darrick J. Wong wrote:
-> On Thu, Nov 23, 2017 at 01:40:03PM +0200, Nikolay Borisov wrote:
-> > For file extents xfs currently calls xfs_bmapi_read with flag set to 0,
-> > meaning extents are going to be truncated to the requested range. Since the
-> > same codepath is used for fiemap this means xfs is special in that regard, since
-> > other filesystems (ext4/btrfs) do not trim extents for fiemap. Make the behavior
-> > consistent by always passing XFS_BMAPI_ENTIRE. A full xfstest run validated that
-> > this doesn't regress on ordinary read/write IO.
-> > 
-> > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> 
-> Looks ok, will also test...
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Stop poking before and after the index and just increment or decrement
+it while doing our operations on it to prepare for a new extent list
+implementation.
 
-...and now withdrawn.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
 
-Looking at iomap_apply, it seems we call ->iomap_begin, and at line 73 we
-trim an iomap that is longer than the range we requested:
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index e1d61face277..c0216e9e2af8 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1648,12 +1648,13 @@ xfs_bmap_add_extent_delay_real(
+ 		 * Filling in all of a previously delayed allocation extent.
+ 		 * The left and right neighbors are both contiguous with new.
+ 		 */
+-		bma->idx--;
+ 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
+-		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+ 
+-		xfs_iext_remove(bma->ip, bma->idx + 1, 2, state);
++		xfs_iext_remove(bma->ip, bma->idx, 2, state);
++		bma->idx--;
++		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+ 		(*nextents)--;
++
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+ 		else {
+@@ -1681,13 +1682,13 @@ xfs_bmap_add_extent_delay_real(
+ 		 * Filling in all of a previously delayed allocation extent.
+ 		 * The left neighbor is contiguous, the right is not.
+ 		 */
+-		bma->idx--;
+-
+ 		old = LEFT;
+ 		LEFT.br_blockcount += PREV.br_blockcount;
++
++		xfs_iext_remove(bma->ip, bma->idx, 1, state);
++		bma->idx--;
+ 		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+ 
+-		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_DEXT;
+ 		else {
+@@ -1709,9 +1710,12 @@ xfs_bmap_add_extent_delay_real(
+ 		 */
+ 		PREV.br_startblock = new->br_startblock;
+ 		PREV.br_blockcount += RIGHT.br_blockcount;
++
++		bma->idx++;
++		xfs_iext_remove(bma->ip, bma->idx, 1, state);
++		bma->idx--;
+ 		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
+ 
+-		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_DEXT;
+ 		else {
+@@ -1763,12 +1767,14 @@ xfs_bmap_add_extent_delay_real(
+ 				startblockval(PREV.br_startblock));
+ 
+ 		LEFT.br_blockcount += new->br_blockcount;
+-		xfs_iext_update_extent(bma->ip, state, bma->idx - 1, &LEFT);
+ 
+ 		PREV.br_blockcount = temp;
+ 		PREV.br_startoff += new->br_blockcount;
+ 		PREV.br_startblock = nullstartblock(da_new);
++
+ 		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
++		bma->idx--;
++		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+ 
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_DEXT;
+@@ -1783,7 +1789,6 @@ xfs_bmap_add_extent_delay_real(
+ 				goto done;
+ 		}
+ 
+-		bma->idx--;
+ 		break;
+ 
+ 	case BMAP_LEFT_FILLING:
+@@ -1836,7 +1841,6 @@ xfs_bmap_add_extent_delay_real(
+ 		RIGHT.br_startoff = new->br_startoff;
+ 		RIGHT.br_startblock = new->br_startblock;
+ 		RIGHT.br_blockcount += new->br_blockcount;
+-		xfs_iext_update_extent(bma->ip, state, bma->idx + 1, &RIGHT);
+ 
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_DEXT;
+@@ -1857,9 +1861,10 @@ xfs_bmap_add_extent_delay_real(
+ 
+ 		PREV.br_blockcount = temp;
+ 		PREV.br_startblock = nullstartblock(da_new);
+-		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
+ 
++		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
+ 		bma->idx++;
++		xfs_iext_update_extent(bma->ip, state, bma->idx, &RIGHT);
+ 		break;
+ 
+ 	case BMAP_RIGHT_FILLING:
+-- 
+2.14.2
 
-/*
- * Cut down the length to the one actually provided by the filesystem,
- * as it might not be able to give us the whole size that we requested.
- */
-if (iomap.offset + iomap.length < pos + length)
-	length = iomap.offset + iomap.length - pos;
-
-However, we do not trim the beginning off an iomap that starts before
-the 'pos' we passed to ->iomap_begin, so we're left with an iomap that
-can begin before the range.
-
-FWIW I ran xfstests (like I told you to on IRC) and saw regressions
-in a whole bunch of tests:
-
-generic/170 generic/287 generic/295 generic/326 generic/330 generic/333
-generic/372 xfs/214 xfs/237 xfs/249 xfs/258 xfs/346 xfs/420 xfs/421
-
->From a brief glance it looks as though most of the iomap_apply'ers
-try to trim the iomap before using it, but clearly there's something
-wrong here.
-
---D
-
-> 
-> > ---
-> >  fs/xfs/xfs_iomap.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index f179bdf1644d..8942324a4d3d 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1008,7 +1008,7 @@ xfs_file_iomap_begin(
-> >  	end_fsb = XFS_B_TO_FSB(mp, offset + length);
-> >  
-> >  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
-> > -			       &nimaps, 0);
-> > +			       &nimaps, XFS_BMAPI_ENTIRE);
-> >  	if (error)
-> >  		goto out_unlock;
-> >  
-> > -- 
-> > 2.7.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
