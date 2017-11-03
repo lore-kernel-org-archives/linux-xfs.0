@@ -1,43 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43697 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965178AbdKQTwh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 14:52:37 -0500
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 2C627AC9D
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 19:52:36 +0000 (UTC)
-From: jeffm@suse.com
-Subject: [PATCH 1/2] xfs_io: stat: fix typo in statfs->f_flags
-Date: Fri, 17 Nov 2017 14:54:56 -0500
-Message-Id: <20171117195457.16218-1-jeffm@suse.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31030 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbdKCE2W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 00:28:22 -0400
+Date: Thu, 2 Nov 2017 21:28:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 15/14] xfs/020: check that we have enough space to write out
+ a huge fs
+Message-ID: <20171103042802.GD1233@magnolia>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jeff Mahoney <jeffm@suse.com>
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Jeff Mahoney <jeffm@suse.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The field name is f_flags.
+Make sure that we have enough free space on the test fs to create a
+60t sparse filesystem.
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/stat.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/xfs/020 |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/io/stat.c b/io/stat.c
-index 060ff833..6ab10abf 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -199,7 +199,7 @@ statfs_f(
- 		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
- 		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
- 		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
--		printf(_("statfs.f_fflags = 0x%llx\n"), (long long) st.f_flags);
-+		printf(_("statfs.f_flags = 0x%llx\n"), (long long) st.f_flags);
- 	}
- 	if (file->flags & IO_FOREIGN)
- 		return 0;
--- 
-2.14.2
-
+diff --git a/tests/xfs/020 b/tests/xfs/020
+index 120492d..b037369 100755
+--- a/tests/xfs/020
++++ b/tests/xfs/020
+@@ -49,6 +49,10 @@ _supported_fs xfs
+ _supported_os Linux
+ _require_test
+ 
++# Writing a 60t fs requires about 2GB of space, so make sure
++# we have plenty of space to do that.
++_require_fs_space $TEST_DIR 2500000
++
+ echo "Silence is golden"
+ 
+ fsfile=$TEST_DIR/fsfile.$seq
