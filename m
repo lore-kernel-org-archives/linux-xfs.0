@@ -1,52 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42982 "EHLO mx1.redhat.com"
+Received: from imap.thunk.org ([74.207.234.97]:34796 "EHLO imap.thunk.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750707AbdKCPSV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Nov 2017 11:18:21 -0400
-Date: Fri, 3 Nov 2017 11:18:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/21] xfs: remove a duplicate assignment in
- xfs_bmap_add_extent_delay_real
-Message-ID: <20171103151819.GA20279@bfoster.bfoster>
-References: <20171103144539.2187-1-hch@lst.de>
- <20171103144539.2187-3-hch@lst.de>
+        id S1754648AbdKCQPC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 12:15:02 -0400
+Date: Fri, 3 Nov 2017 12:14:48 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 09/14] xfs/348: dir->symlink corruption must not be
+ allowed
+Message-ID: <20171103161448.gqx3odbsoppsjrld@thunk.org>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+ <150957284389.18388.370732842906149356.stgit@magnolia>
+ <20171102124214.GY17339@eguan.usersys.redhat.com>
+ <20171102163754.GS4911@magnolia>
+ <20171103043022.GC17339@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171103144539.2187-3-hch@lst.de>
+In-Reply-To: <20171103043022.GC17339@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Nov 03, 2017 at 05:45:20PM +0300, Christoph Hellwig wrote:
-> Reported-by: Brian Foster <bfoster@redhat.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_bmap.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, Nov 03, 2017 at 12:30:22PM +0800, Eryu Guan wrote:
+> > Yes, they're buggy since we shouldn't be interpreting directory entries
+> > as a link target given that the zero bytes in the "link target" will
+> > screw things up.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index db369653eb50..e1d61face277 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1765,7 +1765,7 @@ xfs_bmap_add_extent_delay_real(
->  		LEFT.br_blockcount += new->br_blockcount;
->  		xfs_iext_update_extent(bma->ip, state, bma->idx - 1, &LEFT);
->  
-> -		PREV.br_blockcount = temp = PREV.br_blockcount - new->br_blockcount;
-> +		PREV.br_blockcount = temp;
->  		PREV.br_startoff += new->br_blockcount;
->  		PREV.br_startblock = nullstartblock(da_new);
->  		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Then I'm fine with taking it, and probably will edit the commit log a
+> bit to reflect that we were missing a error case previously. Thanks!
+
+Darrick, can we add a note indicating what commit needs to be
+backported to make the failure go away?
+
+					- Ted
