@@ -1,89 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20666 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934407AbdKBVCC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 17:02:02 -0400
-Date: Thu, 2 Nov 2017 14:01:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/14] generic/204: break out of fs-filling loop early if
- we ENOSPC
-Message-ID: <20171102210157.GB4911@magnolia>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
- <150957286222.18388.3253654888670864191.stgit@magnolia>
- <20171102142348.GZ17339@eguan.usersys.redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:36956 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755972AbdKCOFk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 10:05:40 -0400
+Subject: Re: [PATCH v3] common: Check for fiemap range argument support
+References: <20171102031622.GV17339@eguan.usersys.redhat.com>
+ <1509610421-16716-1-git-send-email-nborisov@suse.com>
+ <20171102211259.GE4094@dastard>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <4a351be1-a6a7-7be0-f139-a2e3aa1c648d@suse.com>
+Date: Fri, 3 Nov 2017 16:05:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171102142348.GZ17339@eguan.usersys.redhat.com>
+In-Reply-To: <20171102211259.GE4094@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Nov 02, 2017 at 10:23:48PM +0800, Eryu Guan wrote:
-> On Wed, Nov 01, 2017 at 02:47:42PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If filling up the filesystem causes us to hit ENOSPC earlier than we
-> > thought we would (the sizing estimates become less and less accurate as
-> > we add more metadata) then just bail out -- we're checking that the fs
-> > is robust enough to cut us off before we actually run out of space for
-> > writing metadata and crash the fs.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/generic/204 |   11 +++++++++--
-> >  1 file changed, 9 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/tests/generic/204 b/tests/generic/204
-> > index 4c203a2..1e2c1e1 100755
-> > --- a/tests/generic/204
-> > +++ b/tests/generic/204
-> > @@ -82,8 +82,15 @@ echo files $files, resvblks $resv_blks >> $seqres.full
-> >  _scratch_resvblks $resv_blks >> $seqres.full 2>&1
-> >  
-> >  for i in `seq 1 $files`; do
-> > -    echo -n > $SCRATCH_MNT/$i
-> > -    echo XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX > $SCRATCH_MNT/$i
-> > +	# Open/truncate file, write stuff.  If we run out of space early,
-> > +	# we can bail out of the loop.
-> > +	out="$($XFS_IO_PROG \
-> > +		-c "open -f -t $SCRATCH_MNT/$i" \
-> > +		-c 'close' \
-> > +		-c "open -f -t $SCRATCH_MNT/$i" \
-> > +		-c 'pwrite -q -S 0x58 0 36' 2>&1 | _filter_scratch)"
-> > +	echo "${out}" | grep -q 'No space left on device' && break
+
+
+On  2.11.2017 23:12, Dave Chinner wrote:
+> On Thu, Nov 02, 2017 at 10:13:41AM +0200, Nikolay Borisov wrote:
+>> From: Nikolay Borsiov <nborisov@suse.com>
+>>
+>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+>> ---
+>> v3:
+>>  * Changed the way we detect ranged args. Now use a regexp which checks 
+>>  explicitly for the ranged args
+>>  common/rc | 7 +++++++
+>>  1 file changed, 7 insertions(+)
+>>
+>> diff --git a/common/rc b/common/rc
+>> index e2a8229..f7a5fe9 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -2053,8 +2053,15 @@ _require_xfs_io_command()
+>>  			-c "$command 4k 8k" $testfile 2>&1`
+>>  		;;
+>>  	"fiemap")
+>> +		if echo "$param" | egrep -q "[[:digit:]]+[bskmgtpe]? [[:digit:]]+[bskmgtpe]?$"
 > 
-> This doesn't look correct to me. This test is meant to catch spurious
-> ENOSPC, it's designed to be a "delayed allocation ENOSPC test"[1] by
-> "writing lots of single block files" and catch early ENOSPC. IMHO, this
-> change ignores ENOSPC, which defeats the test purpose. And I don't quite
-> understand the purpose of truncate open/close/truncate open/write
-> sequence..
+> What is that for?
 > 
-> Also this significantly increases the test time, 4s -> ~120s for me.
+> If you're going to dump crazy complex regexes to match something,
+> you need comments to explain it in both the commit message and the
+> code.
+> 
+> And, really, if we need to add complex or tricky code to check a
+> command exists, we've done somethign wrong. Don't make the "fiemap
+> range" command by triggered/detected by an optional parameter, add a
+> specific option instead e.g. "-r" for "range query":
+> 
+> $ xfs_io -c "fiemap -r 0 10k" /mnt/foo
 
-Hmm, you're right, this one /is/ trying to test ENOSPC.  It would seem
-that a better fix for this test would be to set space= based on the
-available blocks count instead of hardcoding 97920000.
-
---D
+Do you mean having the range params as arguments to the -r option (which
+would be a bitch to parse since getopt doesn't support multiple args to
+an options). Or having the -r serve as a boolean indicating we'd need to
+parse the final 2 args (as it's done currently)?
 
 > 
-> Thanks,
-> Eryu
+> Then you can test it like the falloc command tests it's different
+> parameters....
 > 
-> [1] commit 143368a047ea ("xfstests: add test 204, a simple delayed
-> allocation ENOSPC test")
+> -Dave.
 > 
-> > +	test -n "${out}" && echo "${out}"
-> >  done
-> >  
-> >  # success, all done
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
