@@ -1,223 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48503 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934708AbdKCCrz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 22:47:55 -0400
-Date: Thu, 2 Nov 2017 19:47:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171103024740.GE4911@magnolia>
-References: <20171026083322.20428-1-david@fromorbit.com>
- <20171030133117.GA3535@bfoster.bfoster>
- <20171030210941.GA5858@dastard>
- <20171031112432.GA7093@bfoster.bfoster>
- <20171101004513.GK5858@dastard>
- <20171101141720.GB11709@bfoster.bfoster>
- <20171101235300.GT5858@dastard>
- <20171102112533.GA15748@bfoster.bfoster>
- <20171102233017.GX5858@dastard>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:45330 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756141AbdKCMTR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 08:19:17 -0400
+Received: by mail-yw0-f193.google.com with SMTP id j4so2225228ywb.2
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Nov 2017 05:19:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171102233017.GX5858@dastard>
+In-Reply-To: <20171103112626.GA19974@bfoster.bfoster>
+References: <20171026083322.20428-1-david@fromorbit.com> <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard> <20171031112432.GA7093@bfoster.bfoster>
+ <20171101004513.GK5858@dastard> <20171101141720.GB11709@bfoster.bfoster>
+ <20171101235300.GT5858@dastard> <20171102112533.GA15748@bfoster.bfoster>
+ <20171102233017.GX5858@dastard> <20171103112626.GA19974@bfoster.bfoster>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 3 Nov 2017 14:19:15 +0200
+Message-ID: <CAOQ4uxjEUAR1-1ikZSN2e99gK4k_mEMnhGGYvw=2Zj6oLOPVuQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 03, 2017 at 10:30:17AM +1100, Dave Chinner wrote:
-> On Thu, Nov 02, 2017 at 07:25:33AM -0400, Brian Foster wrote:
-> > On Thu, Nov 02, 2017 at 10:53:00AM +1100, Dave Chinner wrote:
-> > > On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
-> > > > On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
-> > > > > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
-> > > > > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
-> > > > > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
-> > > > > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
-> > > > > > > > > This patchset is aimed at filesystems that are installed on sparse
-> > > > > > > > > block devices, a.k.a thin provisioned devices. The aim of the
-> > > > > > > > > patchset is to bring the space management aspect of the storage
-> > > > > > > > > stack up into the filesystem rather than keeping it below the
-> > > > > > > > > filesystem where users and the filesystem have no clue they are
-> > > > > > > > > about to run out of space.
-> > > > > ....
-> > > > > > > I get that "total_blocks" sounds better, but to me that's a capacity
-> > > > > > > measurement, not an indication of the size of the underlying address
-> > > > > > > space the block device has provided. m_usable_blocks is obviously a
-> > > > > > > capacity measurement, but I was trying to convey that m_LBA_size is
-> > > > > > > not a capacity measurement but an externally imposed addressing
-> > > > > > > limit.
-> > > > > > > 
-> > > > > > > <shrug>
-> > > > > > > 
-> > > > > > > I guess if I document it well enough m_total_blocks will work.
-> > > > > > > 
-> > > > > > 
-> > > > > > Hmm, yeah I see what you mean. Unfortunately I can't really think of
-> > > > > > anything aside from m_total_blocks or perhaps m_phys_blocks at the
-> > > > > > moment.
-> > > > > 
-> > > > > m_phys_blocks seems closer to the intent. If that's acceptible I'll
-> > > > > change the code to that.
-> > > > > 
-> > > > 
-> > > > That works for me, thanks..
-> > > > 
-> > > > BTW, was there ever any kind of solution to the metadata block
-> > > > reservation issue in the thin case? We now hide metadata reservation
-> > > > from the user via the m_usable_blocks account. If m_phys_blocks
-> > > > represents a thin volume, how exactly do we prevent those metadata
-> > > > allocations/writes from overrunning what the admin has specified as
-> > > > "usable" with respect to the thin volume?
-> > > 
-> > > The reserved metadata blocks are not accounted from free space when
-> > > they are allocated - they are pulled from the reserved space that
-> > > has already been removed from the free space.
-> > > 
-> > 
-> > Ok, so the user can set a usable blocks value of something less than the
-> > fs geometry, then the reservation is pulled from that, reducing the
-> > reported "usable" value further. Hence, what ends up reported to the
-> > user is actually something less than the value set by the user, which
-> > means that the filesystem overall respects how much space the admin says
-> > it can use in the underlying volume.
-> > 
-> > For example, the user creates a 100T thin volume with 10T of usable
-> > space. The fs reserves a further 2T out of that for metadata, so then
-> > what the user sees is 8T of writeable space.  The filesystem itself
-> > cannot use more than 10T out of the volume, as instructed. Am I
-> > following that correctly? If so, that sounds reasonable to me from the
-> > "don't overflow my thin volume" perspective.
-> 
-> No, that's not what happens. For thick filesystems, the 100TB volume
-> gets 2TB pulled from it so it appears as a 98TB filesystem. This is
-> done by modifying the free block counts and m_usable_space when the
-> reservations are made.
-> 
-> For thin filesystems, we've already got 90TB of space "reserved",
-> and so the metadata reservations and allocations come from that.
-> i.e. we skip the modification of free block counts and m_usable
-> space in the case of a thinspace filesystem, and so the user still
-> sees 10TB of usable space that they asked to have.
-> 
-> > > i.e. we don't need to rev the interface to support shrink on thin
-> > > filesystems, so there's no need to rev the interface at this point
-> > > in time.
-> > > 
-> > > *If* we implement physical shrink, *then* we can rev the growfs
-> > > interface to allow users to run a physical shrink on thin
-> > > filesystems.
-> > > 
-> > 
-> > Subsequently, pretty much the remainder of my last mail is based on the
-> > following predicates:
-> > 
-> > - We've incorporated this change to use growfs->newblocks for logical
-> >   shrink.
-> > - We've implemented physical shrink.
-> > - We've revved the growfs interface to support physical shrink on thin
-> >   filesystems.
-> > 
-> > I'm not going to repeat all of the previous points... suffice it to say
-> > that asserting that we only have to rev the interface if/when we support
-> > physical shrink in response is a circular argument.
-> 
-> No, it's not.
-> 
-> History tells us that every time someone does this sort of "future
-> planning" for a fixed ABI interface they don't get it right. Hence
-> when that new functionality comes along the interface has to be
-> changed /again/ to fix whatever previous assumptions or requirements
-> were found to be invalid when development of the feature was
-> actually done.
-> 
-> The syscall and ioctl APIs are littered with examples and we should
-> pay heed to the lessons those mistakes teach us. i.e. don't
-> speculate about future API requirements for functionality that may
-> not exist or may change substantially from what it is envisiaged to
-> need right now.
-> 
-> > I understand that
-> > and I agree. I'm attempting to review how that would look due to the
-> > implementation of this feature, particularly with respect to backwards
-> > compatibility of the existing interface.
-> > 
-> > IOW, you're using the argument that we can rev the growfs interface in
-> > response to the initial argument regarding the the inability to
-> > physically shrink a thin fs.
-> 
-> Yes, because when we get physical shrink it is likely that the
-> growfs interface is going to need more than just a new set of flags.
-> 
-> Off the top of my head, we're going to new user-kernel co-ordination
-> requirements such as read-only AGs while we move data out of them in
-> a failsafe manner, interleave this with a whole new set of new
-> "cannot perform operation" cases, handle new partial failure cases,
-> restarting an interrupted shrink, and maybe even a need to ignore
-> partial state to complete a previously failed shrink.
-> 
-> And there's even the possibility that we're going to have to limit
-> physical shrink to rmap enabled filesystems (e.g. how do you find the
-> owner of that bmbt block that is pinning the AG we need to remove
-> without rmap?). At whcih point, a user might want to "force shrink"
-> and then take the filesystem down and run repair....
-> 
-> IOWs, to say all we are going to need from the growfs ioctl for a
-> physical shrink interface is a flag to to tell thin filesystems to
-> do a physical shrink is assuming an awful lot about the physical
-> shrinking implementation and how users will want to interact with
-> the operation. Until we've done all the design work and are well
-> into the implementation, we're not going to have a clue about what
-> we actually need in way of grwofs interface changes for the physical
-> shrink.
-> 
-> As such, trying to determine a future proof growfs interface change
-> right now is simply a waste of time because we're not going to get
-> it right.
-> 
-> > As a result, I'm claiming that revving the
-> > interface in the future for physical shrink may create more interface
-> > clumsiness than it's worth compared to just revving it now for logical
-> > shrink. In response to the points I attempt to make around that, you
-> > argue above that we aren't any closer to physical shrink than we were 10
-> > years ago and that we don't have to rev the interface unless we support
-> > physical shrink. Round and round... ;P
-> > 
-> > The best I can read into the response here is that you think physical
-> > shrink is unlikely enough to not need to care very much what kind of
-> > interface confusion could result from needing to rev the current growfs
-> > interface to support physical shrink on thin filesystems in the future.
-> > Is that a fair assessment..?
-> 
-> Not really. I understand just how complex a physical shrink
-> implementation is going to be, and have a fair idea of the sorts of
-> craziness we'll need to add to xfs_growfs to support/co-ordinate a
-> physical shrink operation.  From that perspective, I don't see a
-> physical shrink working with an unchanged growfs interface. The
-> discussion about whether or not we should physically shrink
-> thinspace filesystems is almost completely irrelevant to the
-> interface requirements of a physical shrink....
+On Fri, Nov 3, 2017 at 1:26 PM, Brian Foster <bfoster@redhat.com> wrote:
+> On Fri, Nov 03, 2017 at 10:30:17AM +1100, Dave Chinner wrote:
+>> On Thu, Nov 02, 2017 at 07:25:33AM -0400, Brian Foster wrote:
+...
+>>
+>> As such, trying to determine a future proof growfs interface change
+>> right now is simply a waste of time because we're not going to get
+>> it right.
+>>
+>
+> I'm not sure where the flags proposal thing came from, but regardless...
+> I'm not trying to future proof/design a shrink interface. Rather, just
+> reviewing the (use of the) interface as it already exists. I suppose I
+> am kind of assuming that the current interface would enable some form of
+> functionality in that hypothetical future world where physical shrink
+> exists. Perhaps that is not so realistic, however, as you suggest.
+>
 
-FWIW the way I've been modelling this patch series in my head is that we
-format an arbitrarily large filesystem (m_LBA_size) address space on a
-thinp, feed statfs an "adjusted" size (m_usable_size)i which restricts
-how much space we can allocate, and now growfs increases or decreases
-the adjusted size without having to relocate anything or mess with the
-address space.  If the adjusted size ever exceeds the address space
-size, then we tack on more AGs like we've always done.  From that POV,
-there's no need to physically shrink (i.e. relocate) anything (and we
-can leave that for later/never).
+Guys,
 
---D
+Can we PLEASE stop talking about physical shrink?
+I get it, it's unlikely to happen, I sorry I brought up this example
+in the first place.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Whether or not we implement physical shirk is not the main issue.
+The main issue is implicitly changing the meaning of an existing API.
+What can go wrong? I don't know and I rather not give examples,
+because then people address the examples and not the conceptual flaw.
+
+This is how I propose to smooth in the new API with as little pain as
+possible for existing deployments, yet making sure that "usable block"
+is only modified by new programs that intend to modify it:
+
+----------------------
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 8f22fc579dbb..922798ebf3e8 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -171,10 +171,25 @@ xfs_growfs_data_private(
+        xfs_rfsblock_t          nfree;
+        xfs_agnumber_t          oagcount;
+        int                     pct;
++       unsigned                ver;
+        xfs_trans_t             *tp;
+
+        nb = in->newblocks;
+-       pct = in->imaxpct;
++       pct = in->imaxpct & 0xff;
++       ver = in->imaxpct >> 8;
++       if (ver > 1)
++               return -EINVAL;
++
++       /*
++        * V0 API is only allowed to grow sb_usable_dblocks along with
++        * sb_dblocks.  Any other change to sb_usable_dblocks requires
++        * V1 API to prove that userspace is aware of usable_dblocks.
++        */
++       if (ver == 0 && xfs_sb_version_hasthinspace(mp->m_sb) &&
++           (mp->m_sb.sb_usable_dblocks != mp->m_sb.sb_dblocks ||
++            nb < mp->m_sb.sb_dblocks))
++               return -EINVAL;
++
+        if (nb < mp->m_sb.sb_dblocks || pct < 0 || pct > 100)
+                return -EINVAL;
+
+----------------
+
+When xfs_grow WANTS to change size of fs known to be thin, it should set
+in->imaxpct |= 1 << 8;
+
+Dave,
+
+Is that the complication of implementation you were talking about?
+Really?
+
+Don't you see that this is the right thing to do w.r.t. API design?
+If it were you on the other side of review, I bet you would argued the
+same as Brian and myself and use the argument that "The syscall and ioctl
+APIs are littered with examples and we should pay heed to the lessons those
+mistakes teach us." to oppose implicit API change.
+
+Seriously, my opinion does not carry enough weight in the xfs community
+to out weight your opinion and if it weren't for Brian who stepped in to
+argue in favor of my claims, I would have given up trying to convince you.
+
+Sorry if this is coming off as too harsh of a response.
+The sole motivation behind this argument is to prevent pain in the future.
+And you are right, we can never predict the future correctly, except for one
+thing - that we WILL encounter use cases that none of us can see right now.
+
+Cheers,
+Amir
