@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46015 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60405 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933187AbdKCOqL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:11 -0400
+        with ESMTP id S933219AbdKCOq0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:26 -0400
 Received: from [94.72.11.11] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdEY-0001vn-M3
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:11 +0000
+        id 1eAdEo-0001yP-9T
+        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:26 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/21] xfs: treat idx as a cursor in xfs_bmap_collapse_extents
-Date: Fri,  3 Nov 2017 17:45:26 +0300
-Message-Id: <20171103144539.2187-9-hch@lst.de>
+Subject: [PATCH 13/21] xfs: iterate backwards in xfs_reflink_cancel_cow_blocks
+Date: Fri,  3 Nov 2017 17:45:31 +0300
+Message-Id: <20171103144539.2187-14-hch@lst.de>
 In-Reply-To: <20171103144539.2187-1-hch@lst.de>
 References: <20171103144539.2187-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,75 +18,55 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Stop poking before and after the index and just increment or decrement
-it while doing our operations on it to prepare for a new extent list
-implementation.
+Match the iteration order for extent deletion in the truncate and
+reflink I/O completion path.
+
+This also happens to make implementing the new incore extent list
+a lot easier.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_reflink.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f64b6b74daa9..62270b871d06 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5517,7 +5517,7 @@ xfs_bmse_merge(
- 	struct xfs_inode		*ip,
- 	int				whichfork,
- 	xfs_fileoff_t			shift,		/* shift fsb */
--	int				current_ext,	/* idx of gotp */
-+	int				*current_ext,	/* idx of gotp */
- 	struct xfs_bmbt_irec		*got,		/* extent to shift */
- 	struct xfs_bmbt_irec		*left,		/* preceding extent */
- 	struct xfs_btree_cur		*cur,
-@@ -5572,9 +5572,10 @@ xfs_bmse_merge(
- 		return error;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index d86c4378facf..cf976ed65260 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -569,12 +569,20 @@ xfs_reflink_cancel_cow_blocks(
  
- done:
-+	xfs_iext_remove(ip, *current_ext, 1, 0);
-+	--*current_ext;
- 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork),
--			current_ext - 1, &new);
--	xfs_iext_remove(ip, current_ext, 1, 0);
-+			*current_ext, &new);
+ 	if (!xfs_is_reflink_inode(ip))
+ 		return 0;
+-	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
++	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+ 		return 0;
  
- 	/* update reverse mapping. rmap functions merge the rmaps for us */
- 	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, got);
-@@ -5688,16 +5689,10 @@ xfs_bmap_collapse_extents(
+-	while (got.br_startoff < end_fsb) {
++	/* Walk backwards until we're out of the I/O range... */
++	while (got.br_startoff + got.br_blockcount > offset_fsb) {
+ 		del = got;
+ 		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
++
++		/* Extent delete may have bumped ext forward */
++		if (!del.br_blockcount) {
++			xfs_iext_prev(ifp, &icur);
++			goto next_extent;
++		}
++
+ 		trace_xfs_reflink_cancel_cow(ip, &del);
  
- 		if (xfs_bmse_can_merge(&prev, &got, offset_shift_fsb)) {
- 			error = xfs_bmse_merge(ip, whichfork, offset_shift_fsb,
--					current_ext, &got, &prev, cur,
-+					&current_ext, &got, &prev, cur,
- 					&logflags, dfops);
- 			if (error)
- 				goto del_cursor;
--
--			/* update got after merge */
--			if (!xfs_iext_get_extent(ifp, current_ext, &got)) {
--				*done = true;
--				goto del_cursor;
--			}
- 			goto done;
+ 		if (isnullstartblock(del.br_startblock)) {
+@@ -612,8 +620,8 @@ xfs_reflink_cancel_cow_blocks(
+ 			/* Remove the mapping from the CoW fork. */
+ 			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
  		}
- 	} else {
-@@ -5712,12 +5707,12 @@ xfs_bmap_collapse_extents(
- 	if (error)
- 		goto del_cursor;
- 
-+done:
- 	if (!xfs_iext_get_extent(ifp, ++current_ext, &got)) {
- 		 *done = true;
- 		 goto del_cursor;
+-
+-		if (!xfs_iext_next_extent(ifp, &icur, &got))
++next_extent:
++		if (!xfs_iext_get_extent(ifp, &icur, &got))
+ 			break;
  	}
  
--done:
- 	*next_fsb = got.br_startoff;
- del_cursor:
- 	if (cur)
 -- 
 2.14.2
 
