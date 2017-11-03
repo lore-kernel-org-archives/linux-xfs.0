@@ -1,27 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.esgimtas.com.tr ([95.0.84.145]:40730 "EHLO
-        surgate.teskomb.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752175AbdKCHf0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 03:35:26 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:46568 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbdKCE0Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 00:26:24 -0400
+Date: Thu, 2 Nov 2017 21:26:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 12/14] generic/204: use available blocks to determine the
+ number of files to create
+Message-ID: <20171103042619.GB1233@magnolia>
+References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+ <150957286222.18388.3253654888670864191.stgit@magnolia>
 MIME-Version: 1.0
-Subject: =?UTF-8?Q?Administrateur_du_syst=C3=A8me?=
-From: "Ms. Ella Golan" <vicemindefensa@mdn.gov.py>
-Date: Fri, 03 Nov 2017 02:41:50 -0400
-Message-Id: <20171103064139.713828A3506@mail.teskomb.org.tr>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
-Content-Description: Mail message body
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150957286222.18388.3253654888670864191.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Recipients <vicemindefensa@mdn.gov.py>
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Votre boîte aux lettres a dépassé la limite de stockage définie par l'administrateur et ne peut pas
-Envoyer ou recevoir de nouveaux messages jusqu'à ce que vous validez votre courrier électronique
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cliquez sur le lien suivant pour confirmer votre email
+Use the available block count to compute the number of files we think
+we can create, rather than hardcoding a particular size.  This fixes
+the ENOSPC failures for xfs filesystems with rmap/reflink support.
 
-http://zimbraupgradelink.my-free.website/
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/204 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Je vous remercie
-Administrateur du système
+diff --git a/tests/generic/204 b/tests/generic/204
+index 4c203a2..ac417a7 100755
+--- a/tests/generic/204
++++ b/tests/generic/204
+@@ -69,7 +69,7 @@ _scratch_mount
+ # work out correctly. Space usages is based 22500 files and 1024 reserved blocks
+ # on a 4k block size 256 byte inode size filesystem.
+ resv_blks=1024
+-space=97920000
++space=$(stat -f -c '%f * %S' $SCRATCH_MNT | $BC_PROG)
+ 
+ # decrease files for inode size.
+ #	22500 * (256 + 4k) = ~97MB
