@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35621 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:46015 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752966AbdKCOqI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:08 -0400
+        with ESMTP id S933187AbdKCOqL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:11 -0400
 Received: from [94.72.11.11] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdEV-0001sX-Qx
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:08 +0000
+        id 1eAdEY-0001vn-M3
+        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:11 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/21] xfs: treat idx as a cursor in xfs_bmap_del_extent_*
-Date: Fri,  3 Nov 2017 17:45:25 +0300
-Message-Id: <20171103144539.2187-8-hch@lst.de>
+Subject: [PATCH 08/21] xfs: treat idx as a cursor in xfs_bmap_collapse_extents
+Date: Fri,  3 Nov 2017 17:45:26 +0300
+Message-Id: <20171103144539.2187-9-hch@lst.de>
 In-Reply-To: <20171103144539.2187-1-hch@lst.de>
 References: <20171103144539.2187-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -26,52 +26,67 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3667fb1f3961..f64b6b74daa9 100644
+index f64b6b74daa9..62270b871d06 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4750,12 +4750,12 @@ xfs_bmap_del_extent_delay(
- 						       del->br_blockcount);
+@@ -5517,7 +5517,7 @@ xfs_bmse_merge(
+ 	struct xfs_inode		*ip,
+ 	int				whichfork,
+ 	xfs_fileoff_t			shift,		/* shift fsb */
+-	int				current_ext,	/* idx of gotp */
++	int				*current_ext,	/* idx of gotp */
+ 	struct xfs_bmbt_irec		*got,		/* extent to shift */
+ 	struct xfs_bmbt_irec		*left,		/* preceding extent */
+ 	struct xfs_btree_cur		*cur,
+@@ -5572,9 +5572,10 @@ xfs_bmse_merge(
+ 		return error;
  
- 		got->br_startblock = nullstartblock((int)got_indlen);
--		xfs_iext_update_extent(ip, state, *idx, got);
+ done:
++	xfs_iext_remove(ip, *current_ext, 1, 0);
++	--*current_ext;
+ 	xfs_iext_update_extent(ip, xfs_bmap_fork_to_state(whichfork),
+-			current_ext - 1, &new);
+-	xfs_iext_remove(ip, current_ext, 1, 0);
++			*current_ext, &new);
  
- 		new.br_startoff = del_endoff;
- 		new.br_state = got->br_state;
- 		new.br_startblock = nullstartblock((int)new_indlen);
+ 	/* update reverse mapping. rmap functions merge the rmaps for us */
+ 	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, got);
+@@ -5688,16 +5689,10 @@ xfs_bmap_collapse_extents(
  
-+		xfs_iext_update_extent(ip, state, *idx, got);
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 1, &new, state);
+ 		if (xfs_bmse_can_merge(&prev, &got, offset_shift_fsb)) {
+ 			error = xfs_bmse_merge(ip, whichfork, offset_shift_fsb,
+-					current_ext, &got, &prev, cur,
++					&current_ext, &got, &prev, cur,
+ 					&logflags, dfops);
+ 			if (error)
+ 				goto del_cursor;
+-
+-			/* update got after merge */
+-			if (!xfs_iext_get_extent(ifp, current_ext, &got)) {
+-				*done = true;
+-				goto del_cursor;
+-			}
+ 			goto done;
+ 		}
+ 	} else {
+@@ -5712,12 +5707,12 @@ xfs_bmap_collapse_extents(
+ 	if (error)
+ 		goto del_cursor;
  
-@@ -4832,13 +4832,13 @@ xfs_bmap_del_extent_cow(
- 		 * Deleting the middle of the extent.
- 		 */
- 		got->br_blockcount = del->br_startoff - got->br_startoff;
--		xfs_iext_update_extent(ip, state, *idx, got);
- 
- 		new.br_startoff = del_endoff;
- 		new.br_blockcount = got_endoff - del_endoff;
- 		new.br_state = got->br_state;
- 		new.br_startblock = del->br_startblock + del->br_blockcount;
- 
-+		xfs_iext_update_extent(ip, state, *idx, got);
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 1, &new, state);
- 		break;
-@@ -5054,8 +5054,8 @@ xfs_bmap_del_extent_real(
- 			flags |= xfs_ilog_fext(whichfork);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
- 			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
--		xfs_iext_insert(ip, *idx + 1, 1, &new, state);
- 		++*idx;
-+		xfs_iext_insert(ip, *idx, 1, &new, state);
- 		break;
++done:
+ 	if (!xfs_iext_get_extent(ifp, ++current_ext, &got)) {
+ 		 *done = true;
+ 		 goto del_cursor;
  	}
  
+-done:
+ 	*next_fsb = got.br_startoff;
+ del_cursor:
+ 	if (cur)
 -- 
 2.14.2
 
