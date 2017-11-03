@@ -1,89 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45919 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754823AbdKCQ3c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 12:29:32 -0400
-Date: Fri, 3 Nov 2017 09:28:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] common: Check for fiemap range argument support
-Message-ID: <20171103162823.GG4911@magnolia>
-References: <20171102031622.GV17339@eguan.usersys.redhat.com>
- <1509610421-16716-1-git-send-email-nborisov@suse.com>
- <20171102211259.GE4094@dastard>
- <4a351be1-a6a7-7be0-f139-a2e3aa1c648d@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4a351be1-a6a7-7be0-f139-a2e3aa1c648d@suse.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:44498 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753378AbdKCOpm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:45:42 -0400
+Received: from [94.72.11.11] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1eAdE5-0001ip-KA
+        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:45:42 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: b+tree for the incore extent list V2
+Date: Fri,  3 Nov 2017 17:45:18 +0300
+Message-Id: <20171103144539.2187-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: Dave Chinner <david@fromorbit.com>, eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Nov 03, 2017 at 04:05:37PM +0200, Nikolay Borisov wrote:
-> 
-> 
-> On  2.11.2017 23:12, Dave Chinner wrote:
-> > On Thu, Nov 02, 2017 at 10:13:41AM +0200, Nikolay Borisov wrote:
-> >> From: Nikolay Borsiov <nborisov@suse.com>
-> >>
-> >> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> >> ---
-> >> v3:
-> >>  * Changed the way we detect ranged args. Now use a regexp which checks 
-> >>  explicitly for the ranged args
-> >>  common/rc | 7 +++++++
-> >>  1 file changed, 7 insertions(+)
-> >>
-> >> diff --git a/common/rc b/common/rc
-> >> index e2a8229..f7a5fe9 100644
-> >> --- a/common/rc
-> >> +++ b/common/rc
-> >> @@ -2053,8 +2053,15 @@ _require_xfs_io_command()
-> >>  			-c "$command 4k 8k" $testfile 2>&1`
-> >>  		;;
-> >>  	"fiemap")
-> >> +		if echo "$param" | egrep -q "[[:digit:]]+[bskmgtpe]? [[:digit:]]+[bskmgtpe]?$"
-> > 
-> > What is that for?
-> > 
-> > If you're going to dump crazy complex regexes to match something,
-> > you need comments to explain it in both the commit message and the
-> > code.
-> > 
-> > And, really, if we need to add complex or tricky code to check a
-> > command exists, we've done somethign wrong. Don't make the "fiemap
-> > range" command by triggered/detected by an optional parameter, add a
-> > specific option instead e.g. "-r" for "range query":
-> > 
-> > $ xfs_io -c "fiemap -r 0 10k" /mnt/foo
-> 
-> Do you mean having the range params as arguments to the -r option (which
-> would be a bitch to parse since getopt doesn't support multiple args to
-> an options). Or having the -r serve as a boolean indicating we'd need to
-> parse the final 2 args (as it's done currently)?
+Hi all,
 
-That wouldn't be a bad way to proceed -- -r tells fiemap to look for two
-range arguments; lack of -r tells it to expect zero arguments.  Apparently
-we don't really validate the freeform arguments...
+this series first updates the incore extent list iteration to use
+a cursor based scheme that hides the implementation details, and then
+switch to use a b+tree to implement the in-core extent list.  This
+reduces the need for a large contiguous allocation that the current
+indirection array requires, and thus avoids stalls during workloads
+using giant extent lists, especially on systems that are long running.
 
-$ xfs_io -c 'fiemap mugga wugga fribba gribba ding dong' VERSION
-VERSION:
-        0: [0..7]: 287903056..287903063
+The algorithms also should be better in general, but due to the fact
+the the operations on the on-disk b+tree have such a high overhead
+not much that effect is seen on the usual benchmarks.
 
-Heh.
+I also have a git tree available at:
 
---D
+    git://git.infradead.org/users/hch/xfs.git xfs-incore-btree
 
-> 
-> > 
-> > Then you can test it like the falloc command tests it's different
-> > parameters....
-> > 
-> > -Dave.
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-incore-btree
+
+Changes from V1:
+ - various spelling and indentation fixes
+ - renamed various variables from ext to icur
+ - add trace define for XFS_BMAPI_CONVERT_ONLY
+ - move a few misplaced hunks into the right patch
+ - fix encoding of the in-core extent format (Darrick J. Wong)
+ - pass a xfs_bmbt_irec to xfs_validate_extent
+ - move xfs_bmbt_irec to xfs_types.h
+ - use a fixed 256 byte node size
+ - use correct node entry numbers for 32-bit architectures
