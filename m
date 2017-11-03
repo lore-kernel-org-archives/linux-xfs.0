@@ -1,111 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60720 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:56537 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751507AbdKCDKp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 23:10:45 -0400
-Subject: Re: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
-References: <20171026172857.8683-1-mcgrof@kernel.org>
- <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net>
- <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
- <D31D5414-876E-4251-B029-CD90FE4EB70E@sandeen.net>
- <CAB=NE6XWiUEOhTn_XqDSifL2KK4a2+bdGaYzWBFVqqyAW2aMbQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <873fe2cb-15fa-9bc6-8262-e67a7394de80@sandeen.net>
-Date: Thu, 2 Nov 2017 22:10:43 -0500
+        id S1753775AbdKCL02 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 07:26:28 -0400
+Date: Fri, 3 Nov 2017 07:26:27 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Message-ID: <20171103112626.GA19974@bfoster.bfoster>
+References: <20171026083322.20428-1-david@fromorbit.com>
+ <20171030133117.GA3535@bfoster.bfoster>
+ <20171030210941.GA5858@dastard>
+ <20171031112432.GA7093@bfoster.bfoster>
+ <20171101004513.GK5858@dastard>
+ <20171101141720.GB11709@bfoster.bfoster>
+ <20171101235300.GT5858@dastard>
+ <20171102112533.GA15748@bfoster.bfoster>
+ <20171102233017.GX5858@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XWiUEOhTn_XqDSifL2KK4a2+bdGaYzWBFVqqyAW2aMbQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171102233017.GX5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 11/2/17 5:59 PM, Luis R. Rodriguez wrote:
-> On Thu, Nov 2, 2017 at 3:51 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On Nov 2, 2017, at 3:22 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
->>>
->>>> On Thu, Nov 2, 2017 at 1:04 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->>>>> On 10/26/17 12:28 PM, Luis R. Rodriguez wrote:
->>>>> ./configure will leave traces of a complaint on config.log when
->>>>> _BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
->>>>> deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
->>>>>
->>>>> From config.log:
->>>>> /usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
->>>>
->>>> Ok.  Or perhaps a more clear rationale is the preadv(5) manpage
->>>> itself:
->>>>
->>>> preadv(), pwritev():
->>>>        since glibc 2.19:
->>>>                _DEFAULT_SOURCE
->>>>        Glibc 2.19 and earlier:
->>>>                _BSD_SOURCE
->>>>
->>>> But this is just a feature test macro in a configure script.
->>>>
->>>> What about the code itself, how do we handle this when we
->>>> actually use preadv() in the codebase?
->>>
->>> Its not clear to me what the issue would be by defining this extra
->>> _DEFAULT_SOURCE when _BSD_SOURCE is defined.
->>>
->> That's not the issue I was raising; I'm fine with defining both.  I pointed out the man page because it clearly describes the change.
->>
->> What I'm asking is this: one or the other of these defines is /required/ for preadv use, per the man page.  You are fixing one in the config test.  What about the actual use of preadv in the code itself?  Why does the issue exist only in the config test?
+On Fri, Nov 03, 2017 at 10:30:17AM +1100, Dave Chinner wrote:
+> On Thu, Nov 02, 2017 at 07:25:33AM -0400, Brian Foster wrote:
+> > On Thu, Nov 02, 2017 at 10:53:00AM +1100, Dave Chinner wrote:
+> > > On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
+> > > > On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
+> > > > > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
+> > > > > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
+> > > > > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
+> > > > > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
+...
+> > > > BTW, was there ever any kind of solution to the metadata block
+> > > > reservation issue in the thin case? We now hide metadata reservation
+> > > > from the user via the m_usable_blocks account. If m_phys_blocks
+> > > > represents a thin volume, how exactly do we prevent those metadata
+> > > > allocations/writes from overrunning what the admin has specified as
+> > > > "usable" with respect to the thin volume?
+> > > 
+> > > The reserved metadata blocks are not accounted from free space when
+> > > they are allocated - they are pulled from the reserved space that
+> > > has already been removed from the free space.
+> > > 
+> > 
+> > Ok, so the user can set a usable blocks value of something less than the
+> > fs geometry, then the reservation is pulled from that, reducing the
+> > reported "usable" value further. Hence, what ends up reported to the
+> > user is actually something less than the value set by the user, which
+> > means that the filesystem overall respects how much space the admin says
+> > it can use in the underlying volume.
+> > 
+> > For example, the user creates a 100T thin volume with 10T of usable
+> > space. The fs reserves a further 2T out of that for metadata, so then
+> > what the user sees is 8T of writeable space.  The filesystem itself
+> > cannot use more than 10T out of the volume, as instructed. Am I
+> > following that correctly? If so, that sounds reasonable to me from the
+> > "don't overflow my thin volume" perspective.
 > 
-> Beats me really, I ran into this pesky warning with modern compilers
-> and on old releases, and on old releases the complaint is actually on
-> most of the C files it compiles, with new code for some reason it only
-> complains on the configuration.
+> No, that's not what happens. For thick filesystems, the 100TB volume
+> gets 2TB pulled from it so it appears as a 98TB filesystem. This is
+> done by modifying the free block counts and m_usable_space when the
+> reservations are made.
+> 
 
-I'm asking you to look into it, like this:
+Ok..
 
-The config snippet is simply a tiny bit of C code, generated from the m4:
+> For thin filesystems, we've already got 90TB of space "reserved",
+> and so the metadata reservations and allocations come from that.
+> i.e. we skip the modification of free block counts and m_usable
+> space in the case of a thinspace filesystem, and so the user still
+> sees 10TB of usable space that they asked to have.
+> 
 
-#define _BSD_SOURCE
-#include <sys/uio.h>
+Hmm.. so then I'm slightly confused regarding the thin use case
+regarding prevention of pool depletion. The usable blocks value that the
+user settles on is likely based on how much space the filesystem should
+use to safely avoid pool depletion. If a usable value of 10T means the
+filesystem can write to the usable 10T + some amount of metadata
+reservation, how does the user determine a sane usable value based on
+the current pool geometry?
 
-int
-main ()
-{
+> > > i.e. we don't need to rev the interface to support shrink on thin
+> > > filesystems, so there's no need to rev the interface at this point
+> > > in time.
+> > > 
+> > > *If* we implement physical shrink, *then* we can rev the growfs
+> > > interface to allow users to run a physical shrink on thin
+> > > filesystems.
+> > > 
+> > 
+> > Subsequently, pretty much the remainder of my last mail is based on the
+> > following predicates:
+> > 
+> > - We've incorporated this change to use growfs->newblocks for logical
+> >   shrink.
+> > - We've implemented physical shrink.
+> > - We've revved the growfs interface to support physical shrink on thin
+> >   filesystems.
+> > 
+> > I'm not going to repeat all of the previous points... suffice it to say
+> > that asserting that we only have to rev the interface if/when we support
+> > physical shrink in response is a circular argument.
+> 
+> No, it's not.
+> 
+> History tells us that every time someone does this sort of "future
+> planning" for a fixed ABI interface they don't get it right. Hence
+> when that new functionality comes along the interface has to be
+> changed /again/ to fix whatever previous assumptions or requirements
+> were found to be invalid when development of the feature was
+> actually done.
+> 
+> The syscall and ioctl APIs are littered with examples and we should
+> pay heed to the lessons those mistakes teach us. i.e. don't
+> speculate about future API requirements for functionality that may
+> not exist or may change substantially from what it is envisiaged to
+> need right now.
+> 
 
-         preadv(0, 0, 0, 0);
+Sure, that makes sense...
 
-  ;
-  return 0;
-}
+> > I understand that
+> > and I agree. I'm attempting to review how that would look due to the
+> > implementation of this feature, particularly with respect to backwards
+> > compatibility of the existing interface.
+> > 
+> > IOW, you're using the argument that we can rev the growfs interface in
+> > response to the initial argument regarding the the inability to
+> > physically shrink a thin fs.
+> 
+> Yes, because when we get physical shrink it is likely that the
+> growfs interface is going to need more than just a new set of flags.
+> 
+> Off the top of my head, we're going to new user-kernel co-ordination
+> requirements such as read-only AGs while we move data out of them in
+> a failsafe manner, interleave this with a whole new set of new
+> "cannot perform operation" cases, handle new partial failure cases,
+> restarting an interrupted shrink, and maybe even a need to ignore
+> partial state to complete a previously failed shrink.
+> 
+> And there's even the possibility that we're going to have to limit
+> physical shrink to rmap enabled filesystems (e.g. how do you find the
+> owner of that bmbt block that is pinning the AG we need to remove
+> without rmap?). At whcih point, a user might want to "force shrink"
+> and then take the filesystem down and run repair....
+> 
+> IOWs, to say all we are going to need from the growfs ioctl for a
+> physical shrink interface is a flag to to tell thin filesystems to
+> do a physical shrink is assuming an awful lot about the physical
+> shrinking implementation and how users will want to interact with
+> the operation. Until we've done all the design work and are well
+> into the implementation, we're not going to have a clue about what
+> we actually need in way of grwofs interface changes for the physical
+> shrink.
+> 
+> As such, trying to determine a future proof growfs interface change
+> right now is simply a waste of time because we're not going to get
+> it right.
+> 
 
-you're telling me that _BSD_SOURCE is deprecated and should now be
-_DEFAULT_SOURCE - which is fine.  The preadv manpage says one or the other
-is required, to get the definition.  Defining both is fine, for older glibcs.
-In fact this is what the feature_test_macros(7) manpage says to do.
+I'm not sure where the flags proposal thing came from, but regardless...
+I'm not trying to future proof/design a shrink interface. Rather, just
+reviewing the (use of the) interface as it already exists. I suppose I
+am kind of assuming that the current interface would enable some form of
+functionality in that hypothetical future world where physical shrink
+exists. Perhaps that is not so realistic, however, as you suggest.
 
-But the whole point of a config test for preadv is so that we can /use/
-it in the code, right?  So surely if this were a problem in the
-preadv /test/ it is likely to be a problem in the preadv /use/ within
-the code as well, right?
+I'm not totally convinced of that that based on a dump of the challenges
+the implementation would have to deal with, but I'm also not spending
+much time thinking about the design/implementation of shrink. So I think
+that's a reasonable enough argument to allow this feature to creep in on
+the interface.
 
-In other words, don't just paper over a warning with a spot-fix; look
-at what the warning is telling you, and fix things across the project
-in a consistent manner.
+> > As a result, I'm claiming that revving the
+> > interface in the future for physical shrink may create more interface
+> > clumsiness than it's worth compared to just revving it now for logical
+> > shrink. In response to the points I attempt to make around that, you
+> > argue above that we aren't any closer to physical shrink than we were 10
+> > years ago and that we don't have to rev the interface unless we support
+> > physical shrink. Round and round... ;P
+> > 
+> > The best I can read into the response here is that you think physical
+> > shrink is unlikely enough to not need to care very much what kind of
+> > interface confusion could result from needing to rev the current growfs
+> > interface to support physical shrink on thin filesystems in the future.
+> > Is that a fair assessment..?
+> 
+> Not really. I understand just how complex a physical shrink
+> implementation is going to be, and have a fair idea of the sorts of
+> craziness we'll need to add to xfs_growfs to support/co-ordinate a
+> physical shrink operation.  From that perspective, I don't see a
+> physical shrink working with an unchanged growfs interface. The
+> discussion about whether or not we should physically shrink
+> thinspace filesystems is almost completely irrelevant to the
+> interface requirements of a physical shrink....
+> 
 
-preadv() is called in io/pread.c - if the config test passes.  Oddly, it
-doesn't use either of the #defines before including <sys/uio.h>, despite
-the manpage listing this as a requirement.  Apparently it's a happy
-accident that it still works.
+So it's not so much about the likelihood of realizing physical shrink,
+but rather the likelihood that physical shrink would require to rev the
+growfs structure anyways (regardless of this feature).
 
-So now that the code in configure has highlighted this problem for you,  
-look at everywhere preadv and/or _BSD_SOURCE is used, and add the proper
-#defines per the manpage there as well. 
+Brian
 
-If you can send a V2 that also adds proper #defines for the preadv use in
-io/pread.c, I'd appreciate it.
-
-Thanks,
--Eric
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
