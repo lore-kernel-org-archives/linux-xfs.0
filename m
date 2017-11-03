@@ -1,62 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42482 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751507AbdKBWvF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 18:51:05 -0400
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
-Date: Thu, 2 Nov 2017 17:51:03 -0500
-Content-Transfer-Encoding: 8BIT
-Message-Id: <D31D5414-876E-4251-B029-CD90FE4EB70E@sandeen.net>
-References: <20171026172857.8683-1-mcgrof@kernel.org> <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net> <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:59559 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754004AbdKCOqf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:35 -0400
+Received: from [94.72.11.11] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1eAdEx-000251-5t
+        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:35 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 16/21] xfs: allow unaligned extent records in xfs_bmbt_disk_set_all
+Date: Fri,  3 Nov 2017 17:45:34 +0300
+Message-Id: <20171103144539.2187-17-hch@lst.de>
+In-Reply-To: <20171103144539.2187-1-hch@lst.de>
+References: <20171103144539.2187-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Nov 2, 2017, at 3:22 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> 
->> On Thu, Nov 2, 2017 at 1:04 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->>> On 10/26/17 12:28 PM, Luis R. Rodriguez wrote:
->>> ./configure will leave traces of a complaint on config.log when
->>> _BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
->>> deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
->>> 
->>> From config.log:
->>> /usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
->> 
->> Ok.  Or perhaps a more clear rationale is the preadv(5) manpage
->> itself:
->> 
->> preadv(), pwritev():
->>        since glibc 2.19:
->>                _DEFAULT_SOURCE
->>        Glibc 2.19 and earlier:
->>                _BSD_SOURCE
->> 
->> But this is just a feature test macro in a configure script.
->> 
->> What about the code itself, how do we handle this when we
->> actually use preadv() in the codebase?
-> 
-> Its not clear to me what the issue would be by defining this extra
-> _DEFAULT_SOURCE when _BSD_SOURCE is defined.
-> 
-That's not the issue I was raising; I'm fine with defining both.  I pointed out the man page because it clearly describes the change.
+To make life a little simpler make xfs_bmbt_set_all unaligned access
+aware so that we can use it directly on the destination buffer.
 
-What I'm asking is this: one or the other of these defines is /required/ for preadv use, per the man page.  You are fixing one in the config test.  What about the actual use of preadv in the code itself?  Why does the issue exist only in the config test?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap_btree.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Eric
-
-> Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 086e6fc8e4fc..89260972a0f6 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -199,14 +199,14 @@ xfs_bmbt_disk_set_all(
+ 	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
+ 	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
+ 
+-	r->l0 = cpu_to_be64(
++	put_unaligned_be64(
+ 		((xfs_bmbt_rec_base_t)extent_flag << 63) |
+ 		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
+-		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43));
+-	r->l1 = cpu_to_be64(
++		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43), &r->l0);
++	put_unaligned_be64(
+ 		((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
+ 		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
+-		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
++		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)), &r->l1);
+ }
+ 
+ /*
+-- 
+2.14.2
 
