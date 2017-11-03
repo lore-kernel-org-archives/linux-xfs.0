@@ -1,56 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59559 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754004AbdKCOqf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:46:35 -0400
-Received: from [94.72.11.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdEx-000251-5t
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:46:35 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/21] xfs: allow unaligned extent records in xfs_bmbt_disk_set_all
-Date: Fri,  3 Nov 2017 17:45:34 +0300
-Message-Id: <20171103144539.2187-17-hch@lst.de>
-In-Reply-To: <20171103144539.2187-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:42982 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750707AbdKCPSV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 11:18:21 -0400
+Date: Fri, 3 Nov 2017 11:18:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 02/21] xfs: remove a duplicate assignment in
+ xfs_bmap_add_extent_delay_real
+Message-ID: <20171103151819.GA20279@bfoster.bfoster>
 References: <20171103144539.2187-1-hch@lst.de>
+ <20171103144539.2187-3-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171103144539.2187-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-To make life a little simpler make xfs_bmbt_set_all unaligned access
-aware so that we can use it directly on the destination buffer.
+On Fri, Nov 03, 2017 at 05:45:20PM +0300, Christoph Hellwig wrote:
+> Reported-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap_btree.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 086e6fc8e4fc..89260972a0f6 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -199,14 +199,14 @@ xfs_bmbt_disk_set_all(
- 	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
- 	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
- 
--	r->l0 = cpu_to_be64(
-+	put_unaligned_be64(
- 		((xfs_bmbt_rec_base_t)extent_flag << 63) |
- 		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
--		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43));
--	r->l1 = cpu_to_be64(
-+		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43), &r->l0);
-+	put_unaligned_be64(
- 		((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
- 		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
--		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
-+		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)), &r->l1);
- }
- 
- /*
--- 
-2.14.2
-
+>  fs/xfs/libxfs/xfs_bmap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index db369653eb50..e1d61face277 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1765,7 +1765,7 @@ xfs_bmap_add_extent_delay_real(
+>  		LEFT.br_blockcount += new->br_blockcount;
+>  		xfs_iext_update_extent(bma->ip, state, bma->idx - 1, &LEFT);
+>  
+> -		PREV.br_blockcount = temp = PREV.br_blockcount - new->br_blockcount;
+> +		PREV.br_blockcount = temp;
+>  		PREV.br_startoff += new->br_blockcount;
+>  		PREV.br_startblock = nullstartblock(da_new);
+>  		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
+> -- 
+> 2.14.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
