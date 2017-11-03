@@ -1,133 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22802 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756170AbdKCQzM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 12:55:12 -0400
-Date: Fri, 3 Nov 2017 09:55:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 14/21] xfs: simplify xfs_reflink_convert_cow
-Message-ID: <20171103165507.GO4911@magnolia>
-References: <20171103144539.2187-1-hch@lst.de>
- <20171103144539.2187-15-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:60720 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751507AbdKCDKp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Nov 2017 23:10:45 -0400
+Subject: Re: [PATCH] build: define _DEFAULT_SOURCE if _BSD_SOURCE
+References: <20171026172857.8683-1-mcgrof@kernel.org>
+ <d1635f9c-dcc7-66fe-268d-2aece2d44ba8@sandeen.net>
+ <CAB=NE6XMwuNsu3YB71cxeKTEyiqME1TwFimT1q3o2LnGZR8zMA@mail.gmail.com>
+ <D31D5414-876E-4251-B029-CD90FE4EB70E@sandeen.net>
+ <CAB=NE6XWiUEOhTn_XqDSifL2KK4a2+bdGaYzWBFVqqyAW2aMbQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <873fe2cb-15fa-9bc6-8262-e67a7394de80@sandeen.net>
+Date: Thu, 2 Nov 2017 22:10:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171103144539.2187-15-hch@lst.de>
+In-Reply-To: <CAB=NE6XWiUEOhTn_XqDSifL2KK4a2+bdGaYzWBFVqqyAW2aMbQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 03, 2017 at 05:45:32PM +0300, Christoph Hellwig wrote:
-> Instead of looking up extents to convert and calling xfs_bmapi_write on
-> each of them just let xfs_bmapi_write handle the full range.  To make
-> this robust add a new XFS_BMAPI_CONVERT_ONLY that only converts ranges
-> and never allocates blocks.
+
+
+On 11/2/17 5:59 PM, Luis R. Rodriguez wrote:
+> On Thu, Nov 2, 2017 at 3:51 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On Nov 2, 2017, at 3:22 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+>>>
+>>>> On Thu, Nov 2, 2017 at 1:04 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>>>> On 10/26/17 12:28 PM, Luis R. Rodriguez wrote:
+>>>>> ./configure will leave traces of a complaint on config.log when
+>>>>> _BSD_SOURCE is defined but not _DEFAULT_SOURCE. _BSD_SOURCE is
+>>>>> deprecated so if defining _BSD_SOURCE also define _DEFAULT_SOURCE.
+>>>>>
+>>>>> From config.log:
+>>>>> /usr/include/features.h:183:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
+>>>>
+>>>> Ok.  Or perhaps a more clear rationale is the preadv(5) manpage
+>>>> itself:
+>>>>
+>>>> preadv(), pwritev():
+>>>>        since glibc 2.19:
+>>>>                _DEFAULT_SOURCE
+>>>>        Glibc 2.19 and earlier:
+>>>>                _BSD_SOURCE
+>>>>
+>>>> But this is just a feature test macro in a configure script.
+>>>>
+>>>> What about the code itself, how do we handle this when we
+>>>> actually use preadv() in the codebase?
+>>>
+>>> Its not clear to me what the issue would be by defining this extra
+>>> _DEFAULT_SOURCE when _BSD_SOURCE is defined.
+>>>
+>> That's not the issue I was raising; I'm fine with defining both.  I pointed out the man page because it clearly describes the change.
+>>
+>> What I'm asking is this: one or the other of these defines is /required/ for preadv use, per the man page.  You are fixing one in the config test.  What about the actual use of preadv in the code itself?  Why does the issue exist only in the config test?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c |  3 ++-
->  fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
->  fs/xfs/xfs_reflink.c     | 29 +++++++++++------------------
->  3 files changed, 18 insertions(+), 20 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index b08c4863c2af..8fcb186341ce 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4331,7 +4331,8 @@ xfs_bmapi_write(
->  		 * First, deal with the hole before the allocated space
->  		 * that we found, if any.
->  		 */
-> -		if (need_alloc || wasdelay) {
-> +		if ((need_alloc || wasdelay) &&
-> +		    !(flags & XFS_BMAPI_CONVERT_ONLY)) {
->  			bma.eof = eof;
->  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
->  			bma.wasdel = wasdelay;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index b6a395949d0c..eaf975eb35f8 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -113,6 +113,9 @@ struct xfs_extent_free_item
->  /* Only convert delalloc space, don't allocate entirely new extents */
->  #define XFS_BMAPI_DELALLOC	0x400
->  
-> +/* Only convert unwritten extents, don't allocate new blocks */
-> +#define XFS_BMAPI_CONVERT_ONLY	0x800
-> +
->  #define XFS_BMAPI_FLAGS \
->  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-> @@ -124,7 +127,8 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
->  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
->  	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
-> -	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
-> +	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
-> +	{ XFS_BMAPI_CONVERT_ONLY, "XFS_BMAPI_CONVERT_ONLY" }
+> Beats me really, I ran into this pesky warning with modern compilers
+> and on old releases, and on old releases the complaint is actually on
+> most of the C files it compiles, with new code for some reason it only
+> complains on the configuration.
 
-"CONVERT_ONLY" to be consistent with the other flag strings?
-I can fix this on the way in.
+I'm asking you to look into it, like this:
 
-Otherwise,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The config snippet is simply a tiny bit of C code, generated from the m4:
 
---D
+#define _BSD_SOURCE
+#include <sys/uio.h>
 
->  
->  
->  static inline int xfs_bmapi_aflag(int w)
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index cf976ed65260..cc041a29eb70 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -353,29 +353,22 @@ xfs_reflink_convert_cow(
->  	xfs_off_t		offset,
->  	xfs_off_t		count)
->  {
-> -	struct xfs_bmbt_irec	got;
-> -	struct xfs_defer_ops	dfops;
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> -	struct xfs_iext_cursor	icur;
-> -	bool			found;
-> -	int			error = 0;
-> -
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
-> +	struct xfs_bmbt_irec	imap;
-> +	struct xfs_defer_ops	dfops;
-> +	xfs_fsblock_t		first_block = NULLFSBLOCK;
-> +	int			nimaps = 1, error = 0;
->  
-> -	/* Convert all the extents to real from unwritten. */
-> -	for (found = xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
-> -	     found && got.br_startoff < end_fsb;
-> -	     found = xfs_iext_next_extent(ifp, &icur, &got)) {
-> -		error = xfs_reflink_convert_cow_extent(ip, &got, offset_fsb,
-> -				end_fsb - offset_fsb, &dfops);
-> -		if (error)
-> -			break;
-> -	}
-> +	ASSERT(count != 0);
->  
-> -	/* Finish up. */
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
-> +			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
-> +			XFS_BMAPI_CONVERT_ONLY, &first_block, 0, &imap, &nimaps,
-> +			&dfops);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
->  }
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+int
+main ()
+{
+
+         preadv(0, 0, 0, 0);
+
+  ;
+  return 0;
+}
+
+you're telling me that _BSD_SOURCE is deprecated and should now be
+_DEFAULT_SOURCE - which is fine.  The preadv manpage says one or the other
+is required, to get the definition.  Defining both is fine, for older glibcs.
+In fact this is what the feature_test_macros(7) manpage says to do.
+
+But the whole point of a config test for preadv is so that we can /use/
+it in the code, right?  So surely if this were a problem in the
+preadv /test/ it is likely to be a problem in the preadv /use/ within
+the code as well, right?
+
+In other words, don't just paper over a warning with a spot-fix; look
+at what the warning is telling you, and fix things across the project
+in a consistent manner.
+
+preadv() is called in io/pread.c - if the config test passes.  Oddly, it
+doesn't use either of the #defines before including <sys/uio.h>, despite
+the manpage listing this as a requirement.  Apparently it's a happy
+accident that it still works.
+
+So now that the code in configure has highlighted this problem for you,  
+look at everywhere preadv and/or _BSD_SOURCE is used, and add the proper
+#defines per the manpage there as well. 
+
+If you can send a V2 that also adds proper #defines for the preadv use in
+io/pread.c, I'd appreciate it.
+
+Thanks,
+-Eric
