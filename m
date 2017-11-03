@@ -1,173 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35362 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:59099 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751968AbdKCFdK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Nov 2017 01:33:10 -0400
-Date: Fri, 3 Nov 2017 13:33:07 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 14/14] generic: test IO at maximum file offset
-Message-ID: <20171103053307.GD17339@eguan.usersys.redhat.com>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
- <150957287448.18388.6362701157489515704.stgit@magnolia>
- <20171103042717.GC1233@magnolia>
+        id S1752749AbdKCH07 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 03:26:59 -0400
+Date: Fri, 3 Nov 2017 08:26:57 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 12/18] xfs: introduce the xfs_iext_cursor abstraction
+Message-ID: <20171103072657.GA17606@lst.de>
+References: <20171031142230.11755-1-hch@lst.de> <20171031142230.11755-13-hch@lst.de> <20171102171437.GH16645@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171103042717.GC1233@magnolia>
+In-Reply-To: <20171102171437.GH16645@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Nov 02, 2017 at 09:27:17PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+> > @@ -1553,8 +1558,6 @@ xfs_bmap_add_extent_delay_real(
+> >  	nextents = (whichfork == XFS_COW_FORK ? &bma->ip->i_cnextents :
+> >  						&bma->ip->i_d.di_nextents);
+
+> > -	ASSERT(bma->idx >= 0);
+> > -	ASSERT(bma->idx <= xfs_iext_count(ifp));
 > 
-> Make sure we can write to and read from the highest possible offset
-> that Linux will allow.  Format the filesystem with a variety of
-> possible blocksizes to stress the filesystem.
+> I think it might be useful to encapsulate this check (which is also part
+> of xfs_iext_get_extent()) into a cursor validation helper so we can
+> preserve these asserts (here and in the other bmap functions). E.g.,
+> something like:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: fixes suggested by eryu
-> ---
->  tests/generic/705     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/705.out |    2 +
->  tests/generic/group   |    1 +
->  3 files changed, 101 insertions(+)
->  create mode 100755 tests/generic/705
->  create mode 100644 tests/generic/705.out
+> 	ASSERT(xfs_iext_valid(&bma->ext));
+
+The bug problem here is that we don not check if it is valid, it just
+is a plausability check.  bma->idx == xfs_iext_count(ifp) is not a
+a valid index, but one beyond valid, a fact that the whole code
+relies on.
+
+But we do check for validity and plausability in the actual btree code,
+so I don't think the additional checks here add much value.
+
+> > - * Return true if there is an extent at index idx, and return the expanded
+> > - * extent structure at idx in that case.  Else return false.
+> > + * Return true if there is an extent at cursor cur and return the expanded
+> > + * extent structure at cur in gotp in that case.  Else return false.
 > 
-> diff --git a/tests/generic/705 b/tests/generic/705
-> new file mode 100755
-> index 0000000..18916c3
-> --- /dev/null
-> +++ b/tests/generic/705
-> @@ -0,0 +1,98 @@
-> +#! /bin/bash
-> +# FS QA Test No. 705
-> +#
-> +# Check that high-offset reads and writes work.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -rf $tmp.*
+> "Return true if the cursor points at an extent and return the extent
+> structure in gotp. Else return false."
 
-I did some minor edits, removed 'r' from rm.
+Fixed.
 
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_os Linux
+> >  bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
+> >  			struct xfs_ifork *ifp, xfs_fileoff_t bno,
+> > -			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
+> > +			struct xfs_iext_cursor *cur,
+> > +			 struct xfs_bmbt_irec *gotp);
+> 
+> Indentation looks off here.
 
-Added _supported_fs generic
+Fixed.
 
-> +_require_scratch_nocheck
-> +
-> +rm -f $seqres.full
-> +
-> +echo "Silence is golden"
-> +
-> +echo "Starting test" > $seqres.full
-> +devsize=$(blockdev --getsize64 $SCRATCH_DEV)
-> +for blocksize in 512 1024 2048 4096 8192 16384 32768 65536; do
-> +	echo "+ Format blocksize $blocksize and mount" >> $seqres.full
-> +	_scratch_unmount > /dev/null 2>&1
-> +	# Try to format and mount with the given blocksize.  If they don't
-> +	# succeed, move on to the next block size.
-> +	unset MKFS_OPTIONS
-
-Moved this unset out of the for loop.
-
-Thanks,
-Eryu
-
-> +	if ! _scratch_mkfs_sized $devsize $blocksize >> $seqres.full 2>&1 ||
-> +	   ! _scratch_mount >> $seqres.full 2>&1 ||
-> +	   test "$(stat -f -c '%S' $SCRATCH_MNT)" -ne "$blocksize"; then
-> +		echo "+++ Format and mount failed" >> $seqres.full
-> +		continue
-> +	fi
-> +
-> +	testdir=$SCRATCH_MNT/test-$seq
-> +	mkdir $testdir
-> +
-> +	echo "++ Create the original files" >> $seqres.full
-> +	bigoff=$(echo "2^63 - 2" | $BC_PROG)
-> +	len=$(echo "2^63 - 1" | $BC_PROG)
-> +	$XFS_IO_PROG -f -c "truncate $len" $testdir/file0 >> $seqres.full 2>&1
-> +	if [ ! -s $testdir/file0 ]; then
-> +		# If we can't set a large file size then don't bother
-> +		# with this blocksize because the fs doesn't support it.
-> +		echo "+++ High offset ftruncate failed" >> $seqres.full
-> +		continue
-> +	fi
-> +	_pwrite_byte 0x61 $bigoff 1 $testdir/file1 >> $seqres.full
-> +
-> +	echo "++ Check file creation" >> $seqres.full
-> +	_scratch_cycle_mount
-> +
-> +	expected="7ffffffffffffffe:  61  a"
-> +	actual="$($XFS_IO_PROG -c "pread -v -q $bigoff 1" $testdir/file1)"
-> +	if [ "$expected" = "$actual" ]; then
-> +		echo "+++ Success!" >> $seqres.full
-> +	else
-> +		echo "+++ Discrepancy @ blocksize $blocksize" >> $seqres.full
-> +		echo "Discrepancy @ blocksize $blocksize"
-> +	fi
-> +
-> +	echo "++ Check scratchfs" >> $seqres.full
-> +	_check_scratch_fs
-> +done
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/705.out b/tests/generic/705.out
-> new file mode 100644
-> index 0000000..6fcdec0
-> --- /dev/null
-> +++ b/tests/generic/705.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 705
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index fbe0a7f..2c55b93 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -468,3 +468,4 @@
->  463 auto quick clone dangerous
->  464 auto rw
->  465 auto rw quick aio
-> +705 auto quick rw
