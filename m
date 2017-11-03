@@ -1,62 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59099 "EHLO newverein.lst.de"
+Received: from mga07.intel.com ([134.134.136.100]:61700 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752749AbdKCH07 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Nov 2017 03:26:59 -0400
-Date: Fri, 3 Nov 2017 08:26:57 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 12/18] xfs: introduce the xfs_iext_cursor abstraction
-Message-ID: <20171103072657.GA17606@lst.de>
-References: <20171031142230.11755-1-hch@lst.de> <20171031142230.11755-13-hch@lst.de> <20171102171437.GH16645@bfoster.bfoster>
+        id S1751960AbdKCITb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Nov 2017 04:19:31 -0400
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [PATCH 0/5] xfs refcount conversions
+Date: Fri, 3 Nov 2017 08:19:27 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B802B90AE@IRSMSX102.ger.corp.intel.com>
+References: <1508497678-10508-1-git-send-email-elena.reshetova@intel.com>
+ <20171020232111.GT3666@dastard>
+ <20171023134149.GD3165@worktop.lehotels.local>
+ <20171103002305.GZ5858@dastard>
+In-Reply-To: <20171103002305.GZ5858@dastard>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171102171437.GH16645@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Peter Zijlstra <peterz@infradead.org>
+Cc: "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>
 
-> > @@ -1553,8 +1558,6 @@ xfs_bmap_add_extent_delay_real(
-> >  	nextents = (whichfork == XFS_COW_FORK ? &bma->ip->i_cnextents :
-> >  						&bma->ip->i_d.di_nextents);
 
-> > -	ASSERT(bma->idx >= 0);
-> > -	ASSERT(bma->idx <= xfs_iext_count(ifp));
+
+> [I missed this followup, other stuff]
 > 
-> I think it might be useful to encapsulate this check (which is also part
-> of xfs_iext_get_extent()) into a cursor validation helper so we can
-> preserve these asserts (here and in the other bmap functions). E.g.,
-> something like:
+> On Mon, Oct 23, 2017 at 03:41:49PM +0200, Peter Zijlstra wrote:
+> > On Sat, Oct 21, 2017 at 10:21:11AM +1100, Dave Chinner wrote:
+> > > On Fri, Oct 20, 2017 at 02:07:53PM +0300, Elena Reshetova wrote:
+> > > IMO, that makes it way too hard to review sanely for code that:
+> > >
+> > > 	a) we already know works correctly
+> >
+> > But how do you know if you have unknown ordering requirements?
 > 
-> 	ASSERT(xfs_iext_valid(&bma->ext));
-
-The bug problem here is that we don not check if it is valid, it just
-is a plausability check.  bma->idx == xfs_iext_count(ifp) is not a
-a valid index, but one beyond valid, a fact that the whole code
-relies on.
-
-But we do check for validity and plausability in the actual btree code,
-so I don't think the additional checks here add much value.
-
-> > - * Return true if there is an extent at index idx, and return the expanded
-> > - * extent structure at idx in that case.  Else return false.
-> > + * Return true if there is an extent at cursor cur and return the expanded
-> > + * extent structure at cur in gotp in that case.  Else return false.
+> Because back when it was converted to atomic-based object reference
+> counts, I went through all the memory-barriers.txt stuff to make
+> sure it was OK. That was years ago, and I've forgotten it all and
+> the life-cycle constaints that lead us to use atomics in this
+> manner.
 > 
-> "Return true if the cursor points at an extent and return the extent
-> structure in gotp. Else return false."
-
-Fixed.
-
-> >  bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
-> >  			struct xfs_ifork *ifp, xfs_fileoff_t bno,
-> > -			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
-> > +			struct xfs_iext_cursor *cur,
-> > +			 struct xfs_bmbt_irec *gotp);
+> Now, I've got to go determine what the difference between atomic and
+> refcounts are and work them out myself because nobody has documented
+> it. And I have to go look at all the commit logs to work out in that
+> has any effect on the objects using the atomics, because that's no
+> longer in my head. There probably isn't an issue here, but such
+> changes are not done without review, and that's what is needed to
+> review the change.
 > 
-> Indentation looks off here.
+> That's the problem here - I have to work out what the differences in
+> ordering constraints between refcounts and atomics are myself
+> because it's not actually documented anywhere for reviewiers to
+> understand.  That's a significant burden to put on a reviewer for
+> what is supposed to be a "no-op" change.
 
-Fixed.
+The memory ordering changes are currently documented in refcount.c
+file itself, but I agree that we should try to provide more information. 
+That's why we are having this separate thread now going and searching
+for suitable examples and more elaborate explanation. 
 
+So, hopefully very soon we will end up with having what you are asking for. 
+
+Best Regards,
+Elena.
+
+
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
