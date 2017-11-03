@@ -1,53 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:65280 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S964867AbdKBVWU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 17:22:20 -0400
-Date: Fri, 3 Nov 2017 08:22:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: clear extra file attributes on symlinks
-Message-ID: <20171102212217.GV5858@dastard>
-References: <20171031215156.12544-1-mcgrof@kernel.org>
- <20171031221253.GV4911@magnolia>
- <CAB=NE6WusGvGYVBokMOup9snofncCm9gXopM7BaUukp9N3zbRQ@mail.gmail.com>
- <20171031224320.GB4911@magnolia>
- <20171102003948.GG22894@wotan.suse.de>
- <20171102052306.GQ4911@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42846 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754486AbdKCQwm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 12:52:42 -0400
+Date: Fri, 3 Nov 2017 09:52:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 13/21] xfs: iterate backwards in
+ xfs_reflink_cancel_cow_blocks
+Message-ID: <20171103165236.GN4911@magnolia>
+References: <20171103144539.2187-1-hch@lst.de>
+ <20171103144539.2187-14-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171102052306.GQ4911@magnolia>
+In-Reply-To: <20171103144539.2187-14-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, David Howells <dhowells@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 01, 2017 at 10:23:06PM -0700, Darrick J. Wong wrote:
-> On Thu, Nov 02, 2017 at 01:39:48AM +0100, Luis R. Rodriguez wrote:
-> > On Tue, Oct 31, 2017 at 03:43:20PM -0700, Darrick J. Wong wrote:
-> > > you shouldn't be able to set any DIFLAG/DIFLAG2 flags on special files.
-> > 
-> > Do we know for certain *all* DIFLAG/DIFLAG2 flags can *only* be set via
-> > an ioctl()?
+On Fri, Nov 03, 2017 at 05:45:31PM +0300, Christoph Hellwig wrote:
+> Match the iteration order for extent deletion in the truncate and
+> reflink I/O completion path.
 > 
-> I'm fairly sure that inode flags get set via ioctl, via inheritance at
-> creation time with only two exceptions*, but could you please take a look
-> at all the places we set inode di_flags/di_flags2 and report back?
+> This also happens to make implementing the new incore extent list
+> a lot easier.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-*users* can only set/clear inode flags through ioctls. The kernel
-can set/clear inode flags at any time, and they may be flags that
-users cannot change (e.g. the reflink flag, or the prealloc flag
-which is set during fallocate() calls to tell the kernel not to
-remove preallocations beyond EOF).
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Write up a set of masks that state what flags are valid on what
-type of inode. We can review that for correctness, then we can
-work out how to handle bad flags in repair...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  fs/xfs/xfs_reflink.c | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index d86c4378facf..cf976ed65260 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -569,12 +569,20 @@ xfs_reflink_cancel_cow_blocks(
+>  
+>  	if (!xfs_is_reflink_inode(ip))
+>  		return 0;
+> -	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
+> +	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+>  		return 0;
+>  
+> -	while (got.br_startoff < end_fsb) {
+> +	/* Walk backwards until we're out of the I/O range... */
+> +	while (got.br_startoff + got.br_blockcount > offset_fsb) {
+>  		del = got;
+>  		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
+> +
+> +		/* Extent delete may have bumped ext forward */
+> +		if (!del.br_blockcount) {
+> +			xfs_iext_prev(ifp, &icur);
+> +			goto next_extent;
+> +		}
+> +
+>  		trace_xfs_reflink_cancel_cow(ip, &del);
+>  
+>  		if (isnullstartblock(del.br_startblock)) {
+> @@ -612,8 +620,8 @@ xfs_reflink_cancel_cow_blocks(
+>  			/* Remove the mapping from the CoW fork. */
+>  			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+>  		}
+> -
+> -		if (!xfs_iext_next_extent(ifp, &icur, &got))
+> +next_extent:
+> +		if (!xfs_iext_get_extent(ifp, &icur, &got))
+>  			break;
+>  	}
+>  
+> -- 
+> 2.14.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
