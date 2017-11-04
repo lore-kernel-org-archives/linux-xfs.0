@@ -1,54 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45082 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750750AbdKDFZH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 4 Nov 2017 01:25:07 -0400
-Date: Sat, 4 Nov 2017 13:25:04 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 12/14] generic/204: use available blocks to determine
- the number of files to create
-Message-ID: <20171104052504.GG17339@eguan.usersys.redhat.com>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
- <150957286222.18388.3253654888670864191.stgit@magnolia>
- <20171103042619.GB1233@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:46459 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752185AbdKDICu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Nov 2017 04:02:50 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA482odU017180
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Nov 2017 08:02:50 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vA482n9o010829
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Nov 2017 08:02:49 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vA482nHZ009105
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Nov 2017 08:02:49 GMT
+Date: Sat, 4 Nov 2017 11:02:43 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] xfs: scrub inodes
+Message-ID: <20171104080243.b5gchkmrofmkdbdf@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171103042619.GB1233@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 02, 2017 at 09:26:19PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Use the available block count to compute the number of files we think
-> we can create, rather than hardcoding a particular size.  This fixes
-> the ENOSPC failures for xfs filesystems with rmap/reflink support.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/generic/204 |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/tests/generic/204 b/tests/generic/204
-> index 4c203a2..ac417a7 100755
-> --- a/tests/generic/204
-> +++ b/tests/generic/204
-> @@ -69,7 +69,7 @@ _scratch_mount
->  # work out correctly. Space usages is based 22500 files and 1024 reserved blocks
->  # on a 4k block size 256 byte inode size filesystem.
->  resv_blks=1024
-> -space=97920000
-> +space=$(stat -f -c '%f * %S' $SCRATCH_MNT | $BC_PROG)
+Hello Darrick J. Wong,
 
-Hmm, this regressed test with 512B block size XFS. I'll drop it for now.
+This is a semi-automatic email about new static checker warnings.
 
-Thanks,
-Eryu
+The patch 80e4e1268802: "xfs: scrub inodes" from Oct 17, 2017, leads 
+to the following Smatch complaint:
 
->  
->  # decrease files for inode size.
->  #	22500 * (256 + 4k) = ~97MB
+fs/xfs/scrub/inode.c:356 xfs_scrub_dinode()
+	 error: we previously assumed 'sc->ip' could be null (see line 338)
+
+fs/xfs/scrub/inode.c
+   337	
+   338			if (dip->di_mode == 0 && sc->ip)
+                                                 ^^^^^^
+The patch adds a check if sc->ip is NULL
+
+   339				xfs_scrub_ino_set_corrupt(sc, ino, bp);
+   340	
+   341			if (dip->di_projid_hi != 0 &&
+   342			    !xfs_sb_version_hasprojid32bit(&mp->m_sb))
+   343				xfs_scrub_ino_set_corrupt(sc, ino, bp);
+   344			break;
+   345		default:
+   346			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+   347			return;
+   348		}
+   349	
+   350		/*
+   351		 * di_uid/di_gid -- -1 isn't invalid, but there's no way that
+   352		 * userspace could have created that.
+   353		 */
+   354		if (dip->di_uid == cpu_to_be32(-1U) ||
+   355		    dip->di_gid == cpu_to_be32(-1U))
+   356			xfs_scrub_ino_set_warning(sc, bp);
+                                                  ^^
+But later we pass it to xfs_scrub_ino_set_warning() and it gets
+dereferenced without checking...  I don't know the rules about sc->ip
+well enough to say when it's NULL or not...
+
+   357	
+   358		/* di_format */
+
+regards,
+dan carpenter
