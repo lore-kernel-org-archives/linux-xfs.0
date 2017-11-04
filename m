@@ -1,73 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46459 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752185AbdKDICu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Nov 2017 04:02:50 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA482odU017180
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 4 Nov 2017 08:02:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vA482n9o010829
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 4 Nov 2017 08:02:49 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vA482nHZ009105
-        for <linux-xfs@vger.kernel.org>; Sat, 4 Nov 2017 08:02:49 GMT
-Date: Sat, 4 Nov 2017 11:02:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] xfs: scrub inodes
-Message-ID: <20171104080243.b5gchkmrofmkdbdf@mwanda>
+Received: from mail-it0-f43.google.com ([209.85.214.43]:49017 "EHLO
+        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752539AbdKDQby (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Nov 2017 12:31:54 -0400
+Received: by mail-it0-f43.google.com with SMTP id c3so825625itc.3
+        for <linux-xfs@vger.kernel.org>; Sat, 04 Nov 2017 09:31:53 -0700 (PDT)
+Subject: Re: [PATCH 04/15] brd: remove dax support
+References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150949211688.24061.1197869674847507598.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <74de4b5f-eacd-9058-45e6-d7fcfb2f0d51@kernel.dk>
+Date: Sat, 4 Nov 2017 10:31:51 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <150949211688.24061.1197869674847507598.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org
+Cc: akpm@linux-foundation.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, hch@lst.de
 
-Hello Darrick J. Wong,
+On 10/31/2017 05:21 PM, Dan Williams wrote:
+> DAX support in brd is awkward because its backing page frames are
+> distinct from the ones provided by pmem, dcssblk, or axonram. We need
+> pfn_t_devmap() entries to fully support DAX, and the limited DAX support
+> for pfn_t_special() page frames is not interesting for brd when pmem is
+> already a superset of brd.  Lastly, brd is the only dax capable driver
+> that may sleep in its ->direct_access() implementation. So it causes a
+> global burden with no net gain of kernel functionality.
+> 
+> For all these reasons, remove DAX support.
 
-This is a semi-automatic email about new static checker warnings.
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
 
-The patch 80e4e1268802: "xfs: scrub inodes" from Oct 17, 2017, leads 
-to the following Smatch complaint:
+-- 
+Jens Axboe
 
-fs/xfs/scrub/inode.c:356 xfs_scrub_dinode()
-	 error: we previously assumed 'sc->ip' could be null (see line 338)
-
-fs/xfs/scrub/inode.c
-   337	
-   338			if (dip->di_mode == 0 && sc->ip)
-                                                 ^^^^^^
-The patch adds a check if sc->ip is NULL
-
-   339				xfs_scrub_ino_set_corrupt(sc, ino, bp);
-   340	
-   341			if (dip->di_projid_hi != 0 &&
-   342			    !xfs_sb_version_hasprojid32bit(&mp->m_sb))
-   343				xfs_scrub_ino_set_corrupt(sc, ino, bp);
-   344			break;
-   345		default:
-   346			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-   347			return;
-   348		}
-   349	
-   350		/*
-   351		 * di_uid/di_gid -- -1 isn't invalid, but there's no way that
-   352		 * userspace could have created that.
-   353		 */
-   354		if (dip->di_uid == cpu_to_be32(-1U) ||
-   355		    dip->di_gid == cpu_to_be32(-1U))
-   356			xfs_scrub_ino_set_warning(sc, bp);
-                                                  ^^
-But later we pass it to xfs_scrub_ino_set_warning() and it gets
-dereferenced without checking...  I don't know the rules about sc->ip
-well enough to say when it's NULL or not...
-
-   357	
-   358		/* di_format */
-
-regards,
-dan carpenter
