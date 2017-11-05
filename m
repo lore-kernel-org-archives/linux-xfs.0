@@ -1,40 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:49017 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752539AbdKDQby (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Nov 2017 12:31:54 -0400
-Received: by mail-it0-f43.google.com with SMTP id c3so825625itc.3
-        for <linux-xfs@vger.kernel.org>; Sat, 04 Nov 2017 09:31:53 -0700 (PDT)
-Subject: Re: [PATCH 04/15] brd: remove dax support
-References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150949211688.24061.1197869674847507598.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <74de4b5f-eacd-9058-45e6-d7fcfb2f0d51@kernel.dk>
-Date: Sat, 4 Nov 2017 10:31:51 -0600
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:56360 "EHLO
+        mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751518AbdKEIzl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Nov 2017 03:55:41 -0500
 MIME-Version: 1.0
-In-Reply-To: <150949211688.24061.1197869674847507598.stgit@dwillia2-desk3.amr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <59FEC912.4000005@tlinx.org>
+References: <59FA4499.2030502@tlinx.org> <CAOQ4uxg-bkYnpV146kBgdbgCK9On+=jM1gCe1975J8HKkWxcNg@mail.gmail.com>
+ <59FEC912.4000005@tlinx.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 5 Nov 2017 10:55:40 +0200
+Message-ID: <CAOQ4uxjDbNiZiUUzNZEHTt8SQW-1trC6dSF=c28bD8EuWLWFrw@mail.gmail.com>
+Subject: Re: Bug? or normal behavior? if bug, then where? overlay, vfs, xfs,
+ or ????
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org
-Cc: akpm@linux-foundation.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, hch@lst.de
+To: L A Walsh <lkml@tlinx.org>
+Cc: overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On 10/31/2017 05:21 PM, Dan Williams wrote:
-> DAX support in brd is awkward because its backing page frames are
-> distinct from the ones provided by pmem, dcssblk, or axonram. We need
-> pfn_t_devmap() entries to fully support DAX, and the limited DAX support
-> for pfn_t_special() page frames is not interesting for brd when pmem is
-> already a superset of brd.  Lastly, brd is the only dax capable driver
-> that may sleep in its ->direct_access() implementation. So it causes a
-> global burden with no net gain of kernel functionality.
-> 
-> For all these reasons, remove DAX support.
+[adding cc: linux-xfs]
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+On Sun, Nov 5, 2017 at 10:17 AM, L A Walsh <lkml@tlinx.org> wrote:
+> Amir Goldstein wrote:
+>>
+>>
+>>
+>>>
+>>> I then created a new xfs file system and mounted it on '/edge';
+>>>
+>>>    Ishtar:/edge> xfs_info .
+>>>    meta-data=/dev/Data/Edge     isize=256    agcount=32,
+>>>    agsize=16777200 blks     =                   sectsz=4096  attr=2
+>>>    data     =                   bsize=4096   blocks=536870400, imaxpct=5
+>>>             =                   sunit=16     swidth=64 blks
+>>>    naming   =version 2          bsize=4096   ascii-ci=0
+>>>    log      =internal           bsize=4096   blocks=262143, version=2
+>>>             =                   sectsz=4096  sunit=1 blks, lazy-count=1
+>>>    realtime =none               extsz=4096   blocks=0, rtextents=0
+>>>
+>>>
+>>
+>>
+>> Your problem is that you do not have "ftype" feature in directory
+>> name format, like this:
+>>
+>> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+>>
+>> Perhaps you have an old version of mkfs.xfs, not sure when
+>> ftype=1 became the default format, but you can try to
+>>   mkfs.xfs -n ftype=1
+>>
+>
+> ----  Ah... no .. last I was told, if you turned on ftype=1,
+> you had to also pull in crc'ing of all the meta-info.
+> That has problems -- causes errors where there would be no
+> problem, and was never tested on mature file systems that were
+> already fragmented.
+>
+>
+> Do you know if it was separated from crc32 -- for some inexplicable reason,
+> if you wanted ftype, then the crc option would be forced on for you.
+>
 
--- 
-Jens Axboe
+I don't know if there was a specific reason, but that's the way it is.
 
+> I didn't want it as I didn't want it to flag errors in metadata that
+> wasn't crucial and didn't want the speed slowdown.  Sigh.
+>
+> The problem on crc'ing the meta data, is that there is ALOT more meta
+> data where detecting it will do more harm than good (like what nanosecond
+> the file was last changed, for example).  I first ran into it
+> taking the disk offline when I changed the guid on a newly formatted disk.
+> That was fixed, but that was a warning shot...   How annoying.
+>
+
+I have never heard about those issues that you raise.
+It sounds like a myth about XFS metadata CRC that should be debunked
+so forwarding your message on to XFS list.
+See also https://www.spinics.net/lists/xfs/msg19079.html
+
+>
+> From what you say, though only the upper layer needs to have the ftype=1.
+> That's a new filesystem, so shouldn't make that much difference, but the
+> lower fs's I'd want to use overlays with are older file systems.  But
+> it sounds like those can remain as they are?
+>
+> (assuming they don't become upper layers in some multi-layer
+> scenario)...
+>
+
+That is correct.
+
+Amir.
