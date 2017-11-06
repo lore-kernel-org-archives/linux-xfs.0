@@ -1,91 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:53840 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751040AbdKHH5I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Nov 2017 02:57:08 -0500
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH v2 2/4] common/rc: support checking the version of dm-target in _require_dm_target()
-Date: Wed, 8 Nov 2017 16:02:48 +0800
-Message-ID: <20171108080250.5662-3-houtao1@huawei.com>
-In-Reply-To: <20171108080250.5662-1-houtao1@huawei.com>
-References: <20171108080250.5662-1-houtao1@huawei.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:50656 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752315AbdKFTiX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 14:38:23 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA6JcMnJ009361
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 6 Nov 2017 19:38:22 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vA6JcLZD023201
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 6 Nov 2017 19:38:22 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vA6JcLVD016244
+        for <linux-xfs@vger.kernel.org>; Mon, 6 Nov 2017 19:38:21 GMT
+Date: Mon, 6 Nov 2017 11:38:19 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [bug report] xfs: scrub inodes
+Message-ID: <20171106193819.GB6244@magnolia>
+References: <20171104080243.b5gchkmrofmkdbdf@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171104080243.b5gchkmrofmkdbdf@mwanda>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Some features of dm-target are not available on the old linux kernel,
-and we can use the version of dm-target to check the availability.
+On Sat, Nov 04, 2017 at 11:02:43AM +0300, Dan Carpenter wrote:
+> Hello Darrick J. Wong,
+> 
+> This is a semi-automatic email about new static checker warnings.
+> 
+> The patch 80e4e1268802: "xfs: scrub inodes" from Oct 17, 2017, leads 
+> to the following Smatch complaint:
+> 
+> fs/xfs/scrub/inode.c:356 xfs_scrub_dinode()
+> 	 error: we previously assumed 'sc->ip' could be null (see line 338)
+> 
+> fs/xfs/scrub/inode.c
+>    337	
+>    338			if (dip->di_mode == 0 && sc->ip)
+>                                                  ^^^^^^
+> The patch adds a check if sc->ip is NULL
+> 
+>    339				xfs_scrub_ino_set_corrupt(sc, ino, bp);
+>    340	
+>    341			if (dip->di_projid_hi != 0 &&
+>    342			    !xfs_sb_version_hasprojid32bit(&mp->m_sb))
+>    343				xfs_scrub_ino_set_corrupt(sc, ino, bp);
+>    344			break;
+>    345		default:
+>    346			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+>    347			return;
+>    348		}
+>    349	
+>    350		/*
+>    351		 * di_uid/di_gid -- -1 isn't invalid, but there's no way that
+>    352		 * userspace could have created that.
+>    353		 */
+>    354		if (dip->di_uid == cpu_to_be32(-1U) ||
+>    355		    dip->di_gid == cpu_to_be32(-1U))
+>    356			xfs_scrub_ino_set_warning(sc, bp);
+>                                                   ^^
+> But later we pass it to xfs_scrub_ino_set_warning() and it gets
+> dereferenced without checking...  I don't know the rules about sc->ip
+> well enough to say when it's NULL or not...
 
-Signed-off-by: Hou Tao <houtao1@huawei.com>
----
- common/rc | 39 ++++++++++++++++++++++++++++++++++-----
- 1 file changed, 34 insertions(+), 5 deletions(-)
+xfs_scrub_ino_set_warning and xfs_scrub_ino_set_preen both need to
+take the inode number as a parameter and not rely on sc->ip pointing
+anywhere.  I'll send a fix shortly; thank you for bringing this to my
+attention.
 
-diff --git a/common/rc b/common/rc
-index e2a8229..9ea84ba 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1779,10 +1779,12 @@ _require_sane_bdev_flush()
- 	fi
- }
- 
--# this test requires a specific device mapper target
-+# this test requires a specific device mapper target and
-+# an optional version number (e.g., 1.4.0)
- _require_dm_target()
- {
--	_target=$1
-+	local target=$1
-+	local version=$2
- 
- 	# require SCRATCH_DEV to be a valid block device with sane BLKFLSBUF
- 	# behaviour
-@@ -1790,11 +1792,38 @@ _require_dm_target()
- 	_require_sane_bdev_flush $SCRATCH_DEV
- 	_require_command "$DMSETUP_PROG" dmsetup
- 
--	modprobe dm-$_target >/dev/null 2>&1
-+	modprobe dm-$target >/dev/null 2>&1
- 
--	$DMSETUP_PROG targets 2>&1 | grep -q ^$_target
-+	$DMSETUP_PROG targets 2>&1 | grep -q ^$target
- 	if [ $? -ne 0 ]; then
--		_notrun "This test requires dm $_target support"
-+		_notrun "This test requires dm $target support"
-+	fi
-+
-+	if [ -n "$version" ]; then
-+		local got
-+
-+		got=$($DMSETUP_PROG targets 2>&1 | \
-+				awk -v tgt=$target '$0 ~ tgt {sub("v", "", $2); print $2}')
-+		if [ -z "$got" ]; then
-+			_notrun "This test requires dm $target $version at least (got unknown)"
-+		fi
-+
-+		awk -v min=$version -v got=$got '
-+		BEGIN \
-+		{
-+			cmin = split(min, amin, ".");
-+			cgot = split(got, agot, ".");
-+			for (i = 1; i <= cgot && i <= cmin; i++) {
-+				if (agot[i] != amin[i]) {
-+					exit(agot[i] < amin[i]);
-+				}
-+			}
-+			exit(cgot < cmin);
-+		}
-+		'
-+		if [ $? -ne 0 ]; then
-+			_notrun "This test requires dm $target $version at least (got $got)"
-+		fi
- 	fi
- }
- 
--- 
-2.9.5
+--D
 
+>    357	
+>    358		/* di_format */
+> 
+> regards,
+> dan carpenter
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
