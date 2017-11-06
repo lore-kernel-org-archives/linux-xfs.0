@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35414 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59519 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752315AbdKFOfG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 09:35:06 -0500
+        with ESMTP id S1752315AbdKFOfM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 09:35:12 -0500
 Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eBiUU-0001QG-4A
-        for linux-xfs@vger.kernel.org; Mon, 06 Nov 2017 14:35:06 +0000
+        id 1eBiUZ-000254-Qf
+        for linux-xfs@vger.kernel.org; Mon, 06 Nov 2017 14:35:12 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/8] xfs: trivial sparse fixes for the new scrub code
-Date: Mon,  6 Nov 2017 15:34:50 +0100
-Message-Id: <20171106143456.13567-3-hch@lst.de>
+Subject: [PATCH 4/8] xfs: remove unused debug counts for xfs_lock_inodes
+Date: Mon,  6 Nov 2017 15:34:52 +0100
+Message-Id: <20171106143456.13567-5-hch@lst.de>
 In-Reply-To: <20171106143456.13567-1-hch@lst.de>
 References: <20171106143456.13567-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -20,87 +20,53 @@ To: linux-xfs@vger.kernel.org
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/attr.c  | 4 ++--
- fs/xfs/scrub/bmap.c  | 2 +-
- fs/xfs/scrub/btree.c | 2 +-
- fs/xfs/scrub/dir.c   | 2 +-
- fs/xfs/scrub/scrub.c | 2 +-
- 5 files changed, 6 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_inode.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 51a553337dc4..99992dd8a5c3 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -91,7 +91,7 @@ xfs_scrub_xattr_listent(
- 	int				valuelen)
- {
- 	struct xfs_scrub_xattr		*sx;
--	struct xfs_da_args		args = {0};
-+	struct xfs_da_args		args = { NULL };
- 	int				error = 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index edd98353fbeb..d8226f7a5dde 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -385,14 +385,6 @@ xfs_isilocked(
+ }
+ #endif
  
- 	sx = container_of(context, struct xfs_scrub_xattr, context);
-@@ -420,7 +420,7 @@ int
- xfs_scrub_xattr(
- 	struct xfs_scrub_context	*sc)
- {
--	struct xfs_scrub_xattr		sx = { 0 };
-+	struct xfs_scrub_xattr		sx = { { NULL } };
- 	struct attrlist_cursor_kern	cursor = { 0 };
- 	xfs_dablk_t			last_checked = -1U;
- 	int				error = 0;
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 39fb2a537aea..42fec0bcd9e1 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -229,7 +229,7 @@ xfs_scrub_bmap(
- 	int				whichfork)
- {
- 	struct xfs_bmbt_irec		irec;
--	struct xfs_scrub_bmap_info	info = {0};
-+	struct xfs_scrub_bmap_info	info = { NULL };
- 	struct xfs_mount		*mp = sc->mp;
- 	struct xfs_inode		*ip = sc->ip;
- 	struct xfs_ifork		*ifp;
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 9e8b67a07baf..a81440496e7b 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -414,7 +414,7 @@ xfs_scrub_btree(
- 	struct xfs_owner_info		*oinfo,
- 	void				*private)
- {
--	struct xfs_scrub_btree		bs = {0};
-+	struct xfs_scrub_btree		bs = { NULL };
- 	union xfs_btree_ptr		ptr;
- 	union xfs_btree_ptr		*pp;
- 	union xfs_btree_rec		*recp;
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 73ac795aa6a5..d4cd7661633d 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -560,7 +560,7 @@ xfs_scrub_directory_free_bestfree(
- 	struct xfs_buf			*dbp;
- 	struct xfs_buf			*bp;
- 	__be16				*bestp;
--	__be16				best;
-+	__u16				best;
- 	unsigned int			stale = 0;
- 	int				i;
- 	int				error;
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 8c8b52523fbc..9c42c4efd01e 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -123,7 +123,7 @@
-  * structure state to decide (in broad terms) if scrub/repair are
-  * supported by the running kernel.
-  */
--int
-+static int
- xfs_scrub_probe(
- 	struct xfs_scrub_context	*sc)
- {
+-#ifdef DEBUG
+-int xfs_locked_n;
+-int xfs_small_retries;
+-int xfs_middle_retries;
+-int xfs_lots_retries;
+-int xfs_lock_delays;
+-#endif
+-
+ /*
+  * xfs_lockdep_subclass_ok() is only used in an ASSERT, so is only called when
+  * DEBUG or XFS_WARN is set. And MAX_LOCKDEP_SUBCLASSES is then only defined
+@@ -545,24 +537,11 @@ xfs_lock_inodes(
+ 
+ 		if ((attempts % 5) == 0) {
+ 			delay(1); /* Don't just spin the CPU */
+-#ifdef DEBUG
+-			xfs_lock_delays++;
+-#endif
+ 		}
+ 		i = 0;
+ 		try_lock = 0;
+ 		goto again;
+ 	}
+-
+-#ifdef DEBUG
+-	if (attempts) {
+-		if (attempts < 5) xfs_small_retries++;
+-		else if (attempts < 100) xfs_middle_retries++;
+-		else xfs_lots_retries++;
+-	} else {
+-		xfs_locked_n++;
+-	}
+-#endif
+ }
+ 
+ /*
 -- 
 2.14.2
 
