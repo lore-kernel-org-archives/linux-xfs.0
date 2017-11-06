@@ -1,86 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:53837 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751111AbdKHH5I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Nov 2017 02:57:08 -0500
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH v2 0/4] test for XFS umount hang caused by the pending dquota log item in AIL
-Date: Wed, 8 Nov 2017 16:02:46 +0800
-Message-ID: <20171108080250.5662-1-houtao1@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from bombadil.infradead.org ([65.50.211.133]:35414 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752315AbdKFOfG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 09:35:06 -0500
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1eBiUU-0001QG-4A
+        for linux-xfs@vger.kernel.org; Mon, 06 Nov 2017 14:35:06 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/8] xfs: trivial sparse fixes for the new scrub code
+Date: Mon,  6 Nov 2017 15:34:50 +0100
+Message-Id: <20171106143456.13567-3-hch@lst.de>
+In-Reply-To: <20171106143456.13567-1-hch@lst.de>
+References: <20171106143456.13567-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
+To: linux-xfs@vger.kernel.org
 
-Hi,
-
-This is the v2 patchset for testing the XFS umount hang problem caused by
-the pending dquota log item in AIL. The problem has not been fixed in
-XFS yet, and Carlos Maiolino is working on it [1]. I had tested
-it on 4.14-rc7, and the problem can be reproduced reliably.
-
-Changes since v1:
-* dmflakey: support multiple dm targets for a dm-flakey device
-	* no update
-
-* xfs: test for umount hang caused by the pending dquota log item in AIL
-	* a bunch of suggestions from Eryu Guan
-	* update the dquota buffer after the error injection to better
-	  reproduce the problem
-
-* common/rc: support checking the version of dm-target in
-_require_dm_target()
-	* new patch
-	* introduce a way to check the availability of error_write feature
-	in dm-flakey target, and accomplish it by checking the version of
-	dm-target.
-
-* common/rc: factor out _get|set_xfs_scratch_sb_field()
-	* new patch
-	* the modified test cases had been tested after applying the patch:
-	(1) xfs/098 failed, but the failure has nothing to do with the patch
-	(2) xfs/339 and xfs/340 were not runnable, because rtdev + rmap is not
-	  supported now.
-	(3) the remaing test cases passed
-
-v1:
-	* https://www.spinics.net/lists/fstests/msg07622.html
-
-Comments and questions are welcome.
-
-Regards,
-Tao
-
-[1]: https://www.spinics.net/lists/linux-xfs/msg11614.html
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-Hou Tao (4):
-  dmflakey: support multiple dm targets for a dm-flakey device
-  common/rc: support checking the version of dm-target in
-    _require_dm_target()
-  xfs: test for umount hang caused by the pending dquota log item in AIL
-  common/rc: factor out _get|set_xfs_scratch_sb_field()
+ fs/xfs/scrub/attr.c  | 4 ++--
+ fs/xfs/scrub/bmap.c  | 2 +-
+ fs/xfs/scrub/btree.c | 2 +-
+ fs/xfs/scrub/dir.c   | 2 +-
+ fs/xfs/scrub/scrub.c | 2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
- common/dmflakey   |   2 +-
- common/rc         |  39 +++++++++++--
- common/xfs        |  20 +++++++
- tests/xfs/007     |   6 +-
- tests/xfs/098     |   4 +-
- tests/xfs/186     |   3 +-
- tests/xfs/199     |  13 ++---
- tests/xfs/307     |  11 +---
- tests/xfs/308     |  11 +---
- tests/xfs/339     |   6 +-
- tests/xfs/340     |   2 +-
- tests/xfs/999     | 163 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |   2 +
- tests/xfs/group   |   1 +
- 14 files changed, 238 insertions(+), 45 deletions(-)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 51a553337dc4..99992dd8a5c3 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -91,7 +91,7 @@ xfs_scrub_xattr_listent(
+ 	int				valuelen)
+ {
+ 	struct xfs_scrub_xattr		*sx;
+-	struct xfs_da_args		args = {0};
++	struct xfs_da_args		args = { NULL };
+ 	int				error = 0;
+ 
+ 	sx = container_of(context, struct xfs_scrub_xattr, context);
+@@ -420,7 +420,7 @@ int
+ xfs_scrub_xattr(
+ 	struct xfs_scrub_context	*sc)
+ {
+-	struct xfs_scrub_xattr		sx = { 0 };
++	struct xfs_scrub_xattr		sx = { { NULL } };
+ 	struct attrlist_cursor_kern	cursor = { 0 };
+ 	xfs_dablk_t			last_checked = -1U;
+ 	int				error = 0;
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 39fb2a537aea..42fec0bcd9e1 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -229,7 +229,7 @@ xfs_scrub_bmap(
+ 	int				whichfork)
+ {
+ 	struct xfs_bmbt_irec		irec;
+-	struct xfs_scrub_bmap_info	info = {0};
++	struct xfs_scrub_bmap_info	info = { NULL };
+ 	struct xfs_mount		*mp = sc->mp;
+ 	struct xfs_inode		*ip = sc->ip;
+ 	struct xfs_ifork		*ifp;
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 9e8b67a07baf..a81440496e7b 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -414,7 +414,7 @@ xfs_scrub_btree(
+ 	struct xfs_owner_info		*oinfo,
+ 	void				*private)
+ {
+-	struct xfs_scrub_btree		bs = {0};
++	struct xfs_scrub_btree		bs = { NULL };
+ 	union xfs_btree_ptr		ptr;
+ 	union xfs_btree_ptr		*pp;
+ 	union xfs_btree_rec		*recp;
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 73ac795aa6a5..d4cd7661633d 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -560,7 +560,7 @@ xfs_scrub_directory_free_bestfree(
+ 	struct xfs_buf			*dbp;
+ 	struct xfs_buf			*bp;
+ 	__be16				*bestp;
+-	__be16				best;
++	__u16				best;
+ 	unsigned int			stale = 0;
+ 	int				i;
+ 	int				error;
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 8c8b52523fbc..9c42c4efd01e 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -123,7 +123,7 @@
+  * structure state to decide (in broad terms) if scrub/repair are
+  * supported by the running kernel.
+  */
+-int
++static int
+ xfs_scrub_probe(
+ 	struct xfs_scrub_context	*sc)
+ {
 -- 
-2.9.5
+2.14.2
 
