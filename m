@@ -1,77 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from relayout01-q01.e.movistar.es ([86.109.101.141]:42717 "EHLO
-        relayout01-q01.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751461AbdKFD33 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Nov 2017 22:29:29 -0500
-Received: from relayout01-redir.e.movistar.es (unknown [86.109.101.201])
-        by relayout01-out.e.movistar.es (Postfix) with ESMTP id 3yVdMp5BmMzjYbD
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Nov 2017 04:29:26 +0100 (CET)
-Received: from minas-tirith.valinor (40.red-83-32-233.dynamicip.rima-tde.net [83.32.233.40])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2@telefonica.net)
-        by relayout01.e.movistar.es (Postfix) with ESMTPSA id 3yVdMp3j5pzfYrB
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Nov 2017 04:29:26 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by minas-tirith.valinor (Postfix) with ESMTP id EDB3B187E5E
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Nov 2017 04:29:25 +0100 (CET)
-Date: Mon, 6 Nov 2017 04:29:25 +0100 (CET)
-From: "Carlos E. R." <robin.listas@telefonica.net>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:1577 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750739AbdKFGTp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 01:19:45 -0500
+Date: Mon, 6 Nov 2017 17:19:28 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Supposedly identical file system wastes space
-In-Reply-To: <20171007114343.3bd42f98@lubh.lubhome>
-Message-ID: <alpine.LSU.2.21.1711060427260.15643@minas-tirith.valinor>
+Message-ID: <20171106061928.GD5858@dastard>
 References: <20171007114343.3bd42f98@lubh.lubhome>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1463779071-1117347315-1509938965=:15643"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171007114343.3bd42f98@lubh.lubhome>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Luciano ES <lucmove@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----1463779071-1117347315-1509938965=:15643
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
-
-
-El 2017-11-06 a las 01:15 -0200, Luciano ES escribió:
-
-> I have two 1TB disks, one of them on USB. The USB disk is supposed
+On Mon, Nov 06, 2017 at 01:15:50AM -0200, Luciano ES wrote:
+> I have two 1TB disks, one of them on USB. The USB disk is supposed 
 > to be a backup copy of the internal disk.
->
+> 
 > I run this command:
->
+> 
 > rsync -aSHxv --delete-before /xx/ /media/usbxx/
->
+> 
 > After all the copying, I get this output from df -h:
->
+> 
 > Filesystem         Size  Used Avail Use% Mounted on
 > /dev/mapper/cxx    931G  520G  411G  56% /xx
 > /dev/mapper/usbxx  932G  529G  403G  57% /media/usbxx
->
+> 
 > So the USB disk takes up 9GB more than the internal disk.
->
+> 
 > Why?
+> 
+> That is not a problem now, but will be when the disks are nearly full.
+> 
+> I investigate:
+> 
+> ---------------- 8< ----------------
+> #> xfs_info /xx
+> meta-data=/dev/mapper/cxx    isize=256    agcount=8, agsize=30506944 blks
+>          =                   sectsz=4096  attr=2, projid32bit=1
+>          =                   crc=0        finobt=0 spinodes=0 rmapbt=0
+>          =                   reflink=0
+> data     =                   bsize=4096   blocks=244055552, imaxpct=25
+>          =                   sunit=0      swidth=0 blks
+> naming   =version 2          bsize=4096   ascii-ci=0 ftype=0
+> log      =internal           bsize=4096   blocks=119167, version=2
+>          =                   sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none               extsz=4096   blocks=0, rtextents=0
+> 
+> #> xfs_info /media/usbxx
+> meta-data=/dev/mapper/usbxx  isize=512    agcount=8, agsize=30523735 blks
+>          =                   sectsz=512   attr=2, projid32bit=1
+>          =                   crc=1        finobt=1 spinodes=0 rmapbt=0
+>          =                   reflink=0
+> data     =                   bsize=4096   blocks=244189877, imaxpct=25
+>          =                   sunit=0      swidth=0 blks
+> naming   =version 2          bsize=4096   ascii-ci=0 ftype=1
+> log      =internal           bsize=4096   blocks=119233, version=2
+>          =                   sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none               extsz=4096   blocks=0, rtextents=0
+> ---------------- >8 ----------------
+> 
+> Looks like the only difference between them is the isize. But both were 
+> formatted with the exact same line:
+> 
+> mkfs.xfs -f -b size=2048 -d agcount=8 /dev/target
 
-Notice sectsz. ;-)
+With different versions of mkfs. One is a old v4 format filesystem,
+the other is a v5 format filesystem which uses metadata CRCs, uses
+larger inodes, has a free inode btree, has ftype enabled on
+directories, etc....
 
-- -- 
-Cheers
-        Carlos E. R.
+> For the first time, I tried to introduce the -i size=256 option, 
+> but mkfs.xfs is not having it:
+> 
+> "Minimum inode size for CRCs is 512 bytes"
+> 
+> Why not? They are the same size! Why do they have different inode sizes?
 
-        (from openSUSE 42.2 x86_64 "Malachite" (Minas Tirith))
+Because the v5 format is enabled by default now and that requires
+512 byte inodes.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+> Why is the external disk "wasting" space and how do I avoid that?
 
-iF4EAREIAAYFAln/1xUACgkQja8UbcUWM1zh6wD/bXhl0xo/yvw43YsFDWofixeD
-de7jGffmtaCq2FP5NvEA/jlbPP2dq2OT6AUfq1TS8uoc+pDoU1wQcAS9ui8PZ3bq
-=lAY7
------END PGP SIGNATURE-----
----1463779071-1117347315-1509938965=:15643--
+Its not wasting space. If you want it to be identical to your old
+disk, then use "mkfs.xfs -m crc=0 ....", but I really don't advise
+that because you are using USB drives for your backups and they need
+all the silent corruption detection help they can get....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
