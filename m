@@ -1,32 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41438 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:38326 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753719AbdKIOcG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Nov 2017 09:32:06 -0500
-Date: Thu, 9 Nov 2017 09:32:05 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: incore extent b+tree fixups
-Message-ID: <20171109143204.GB43174@bfoster.bfoster>
-References: <20171109132656.1649-1-hch@lst.de>
+        id S1751779AbdKFW02 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Nov 2017 17:26:28 -0500
+Date: Mon, 6 Nov 2017 23:26:26 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
+Message-ID: <20171106222626.GB16026@wotan.suse.de>
+References: <20171006200740.7140-1-bfoster@redhat.com>
+ <20171006204751.GM7122@magnolia>
+ <CAOGQQ29rTuDzxfcbYHDi6ez9Mk2MKFzf_Qa8ZeTTvgusme5feQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171109132656.1649-1-hch@lst.de>
+In-Reply-To: <CAOGQQ29rTuDzxfcbYHDi6ez9Mk2MKFzf_Qa8ZeTTvgusme5feQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Marco Benatto <mbenatto@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Nov 09, 2017 at 02:26:50PM +0100, Christoph Hellwig wrote:
-> A couple small patches to fix issue pointed out by Brian.
+On Wed, Oct 11, 2017 at 02:11:44PM -0300, Marco Benatto wrote:
+> Hello all
 > 
+> On Fri, Oct 6, 2017 at 5:47 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > On Fri, Oct 06, 2017 at 04:07:40PM -0400, Brian Foster wrote:
+> > > xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
+> > > associated blocks. xfs_attr3_node_inactive() recursively descends
+> > > from internal blocks to leaf blocks, caching block address values
+> > > along the way to revisit parent blocks, locate the next entry and
+> > > descend down that branch of the tree.
+> > >
+> > > The code that attempts to reread the parent block is unsafe because
+> > > it assumes that the local xfs_da_node_entry pointer remains valid
+> > > after an xfs_trans_brelse() and re-read of the parent buffer. Under
+> > > heavy memory pressure, it is possible that the buffer has been
+> > > reclaimed and reallocated by the time the parent block is reread.
+> > > This means that 'btree' can point to an invalid memory address, lead
+> > > to a random/garbage value for child_fsb and cause the subsequent
+> > > read of the attr fork to go off the rails and return a NULL buffer
+> > > for an attr fork offset that is most likely not allocated.
+> > >
+> > > Note that this problem can be manufactured by setting
+> > > XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
+> > > creating a file with a multi-level attr fork and removing it to
+> > > trigger inactivation.
+> > >
+> > > To address this problem, reinit the node/btree pointers to the
+> > > parent buffer after it has been re-read. This ensures btree points
+> > > to a valid record and allows the walk to proceed.
+> > >
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> >
+> > Looks ok,
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > /me wonders if this is a good enough reason to introduce a new errortag
+> > that turns xfs_buf_set_ref into a no-op and fills bp->b_addr with
+> > garbage prior to releasing the memory to weed out any other dangling
+> > pointers?
+> >
+> > > ---
+> > >
+> > > I suspect this is the cause of the NULL buf problem down in
+> > > xfs_attr_inactive(). I can manufacture an instance of that problem as
+> > > noted above. We have a customer who's hitting that problem and will
+> > > attempt to validate this fix, but there is no confirmation as of yet.
+> > > I'm posting this for review in the meantime because this seems like a
+> > > legit fix regardless of whether they are hitting this or something else.
+> >
+> > Let me know what they report back.
+> 
+> Just to let you know, we've got some news regarding this testing and the
+> patch seems effective to fix the issue they were facing before at
+> xfs_attr_inactive() case.
 
-These all look good to me, thanks!
+Is there an actual oops trace that is reported somewhere? I didn't see it
+provided.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
