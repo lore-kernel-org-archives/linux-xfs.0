@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55614 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:41810 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752992AbdKFOfU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 09:35:20 -0500
+        with ESMTP id S1753078AbdKFOfX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 09:35:23 -0500
 Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eBiUi-00026S-0z
-        for linux-xfs@vger.kernel.org; Mon, 06 Nov 2017 14:35:20 +0000
+        id 1eBiUk-00026y-S6
+        for linux-xfs@vger.kernel.org; Mon, 06 Nov 2017 14:35:23 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 7/8] xfs: mark xlog_recover_check_summary STATIC
-Date: Mon,  6 Nov 2017 15:34:55 +0100
-Message-Id: <20171106143456.13567-8-hch@lst.de>
+Subject: [PATCH 8/8] xfs: mark xlog_verify_dest_ptr STATIC
+Date: Mon,  6 Nov 2017 15:34:56 +0100
+Message-Id: <20171106143456.13567-9-hch@lst.de>
 In-Reply-To: <20171106143456.13567-1-hch@lst.de>
 References: <20171106143456.13567-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -23,22 +23,22 @@ body itself.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_recover.c | 2 +-
+ fs/xfs/xfs_log.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6e0e38b5b7ad..87b1c331f9eb 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5825,7 +5825,7 @@ xlog_recover_cancel(
-  * Read all of the agf and agi counters and check that they
-  * are consistent with the superblock counters.
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3ce44e6d6639..38d4227895ae 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3763,7 +3763,7 @@ xlog_ticket_alloc(
+  * one of the iclogs.  This uses backup pointers stored in a different
+  * part of the log in case we trash the log structure.
   */
 -void
 +STATIC void
- xlog_recover_check_summary(
- 	struct xlog	*log)
- {
+ xlog_verify_dest_ptr(
+ 	struct xlog	*log,
+ 	void		*ptr)
 -- 
 2.14.2
 
