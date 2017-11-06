@@ -1,78 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56438 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753132AbdKGU0h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 15:26:37 -0500
-Date: Tue, 7 Nov 2017 21:26:48 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171107202648.GB10679@kroah.com>
-References: <20171107020607.GA26910@magnolia>
- <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com>
- <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org>
- <20171107192846.GA24617@infradead.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:48827 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752322AbdKFURN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 15:17:13 -0500
+Date: Mon, 6 Nov 2017 12:17:09 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/8] xfs: remove unused debug counts for xfs_lock_inodes
+Message-ID: <20171106201708.GF6244@magnolia>
+References: <20171106143456.13567-1-hch@lst.de>
+ <20171106143456.13567-5-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171107192846.GA24617@infradead.org>
+In-Reply-To: <20171106143456.13567-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 07, 2017 at 11:28:46AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 07, 2017 at 02:15:26PM -0500, Theodore Ts'o wrote:
-> > On Tue, Nov 07, 2017 at 06:46:58PM +0000, Alan Cox wrote:
-> > > > Given that it had no license text on it at all, it "defaults" to GPLv2,
-> > > > so the GPLv2 SPDX identifier was added to it.
-> > > > 
-> > > > No copyright was changed, nothing at all happened except we explicitly
-> > > > list the license of the file, instead of it being "implicit" before.
-> > > 
-> > > Well if Christoph owns the copyright (if there is one) and he has stated
-> > > he believes it is too trivial to copyright then it needs an SPDX tag that
-> > > indicates the rightsholder has stated it's too trivial to copyright and
-> > > (by estoppel) revoked any right they might have to pursue a claim.
-> > 
-> > If Cristoph has revoked any right to pursue a claim, then he's also
-> > legally given up the right to complain if, say, Bradley Kuhn starting
-> > distributing a version with a GPLv3 permission statement --- or if Greg
-> > K-H adds a GPLv2 SPDX identifier.  :-)
+On Mon, Nov 06, 2017 at 03:34:52PM +0100, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
+>  fs/xfs/xfs_inode.c | 21 ---------------------
+>  1 file changed, 21 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index edd98353fbeb..d8226f7a5dde 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -385,14 +385,6 @@ xfs_isilocked(
+>  }
+>  #endif
+>  
+> -#ifdef DEBUG
+> -int xfs_locked_n;
+> -int xfs_small_retries;
+> -int xfs_middle_retries;
+> -int xfs_lots_retries;
+> -int xfs_lock_delays;
+> -#endif
+> -
+>  /*
+>   * xfs_lockdep_subclass_ok() is only used in an ASSERT, so is only called when
+>   * DEBUG or XFS_WARN is set. And MAX_LOCKDEP_SUBCLASSES is then only defined
+> @@ -545,24 +537,11 @@ xfs_lock_inodes(
+>  
+>  		if ((attempts % 5) == 0) {
+>  			delay(1); /* Don't just spin the CPU */
+> -#ifdef DEBUG
+> -			xfs_lock_delays++;
+> -#endif
+>  		}
+>  		i = 0;
+>  		try_lock = 0;
+>  		goto again;
+>  	}
+> -
+> -#ifdef DEBUG
+> -	if (attempts) {
+> -		if (attempts < 5) xfs_small_retries++;
+> -		else if (attempts < 100) xfs_middle_retries++;
+> -		else xfs_lots_retries++;
+> -	} else {
+> -		xfs_locked_n++;
+> -	}
+> -#endif
+>  }
+>  
+>  /*
+> -- 
+> 2.14.2
 > 
-> First Christoph really appreciateѕ spelling his name right.
-> 
-> Second Christoph really appreciates talking to him when trying to slap
-> on licensing bits on his code.  I'm not evil, but I'd really like to
-> understand what you are doing and why, and I might be fairly agreeable
-> if that makes sense.
-
-I already described it in the pull request, and in this patch itself,
-and in this thread already, what is happening, why it was done, and how
-it was done.  I don't know how everyone who was on the original email
-thread got dropped and the xfs mailing list added, that's just odd...
-
-> Doing batch annotations of code where you do not the know any of
-> the history of is a receipt for a desaster if we want to use that
-> information anywhere.
-
-But we did research the history as well as we could when touching 11k
-files at a single time.  It's been months of research and work, as
-described in the patch.
-
-If we got something wrong, very sorry, not a problem, please, let's put
-the proper license on the file and all will be good.  What file are you
-concerned about, and what license belongs on it?  This patch only
-touched files without any license header, so again, by default that
-implied it was GPLv2.  Again, no copyright was changed at all.
-
-thanks,
-
-greg k-h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
