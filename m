@@ -1,73 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:1832 "EHLO
-        ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750920AbdKEWub (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Nov 2017 17:50:31 -0500
-Date: Mon, 6 Nov 2017 09:50:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171105225028.GB5858@dastard>
-References: <20171030133117.GA3535@bfoster.bfoster>
- <20171030210941.GA5858@dastard>
- <20171031112432.GA7093@bfoster.bfoster>
- <20171101004513.GK5858@dastard>
- <20171101141720.GB11709@bfoster.bfoster>
- <20171101235300.GT5858@dastard>
- <20171102112533.GA15748@bfoster.bfoster>
- <20171102233017.GX5858@dastard>
- <20171103024740.GE4911@magnolia>
- <20171103113622.GB19974@bfoster.bfoster>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:56588 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753165AbdKGFal (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 00:30:41 -0500
+Received: by mail-yw0-f194.google.com with SMTP id l32so9894714ywh.13
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Nov 2017 21:30:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171103113622.GB19974@bfoster.bfoster>
+In-Reply-To: <20171106214653.GE5858@dastard>
+References: <20171031112432.GA7093@bfoster.bfoster> <20171101004513.GK5858@dastard>
+ <20171101141720.GB11709@bfoster.bfoster> <20171101235300.GT5858@dastard>
+ <20171102112533.GA15748@bfoster.bfoster> <20171102233017.GX5858@dastard>
+ <20171103112626.GA19974@bfoster.bfoster> <CAOQ4uxjEUAR1-1ikZSN2e99gK4k_mEMnhGGYvw=2Zj6oLOPVuQ@mail.gmail.com>
+ <20171106011634.GC5858@dastard> <CAOQ4uxjJHyQ4-hUxcmRSP8V3xxZGN3MGm+8hKCRQFf2pRCfFiQ@mail.gmail.com>
+ <20171106214653.GE5858@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 7 Nov 2017 07:30:40 +0200
+Message-ID: <CAOQ4uxhcU3fZ28wpJ4e1ffxfqW6tXr2GU_9oOBckV5FKRpQ09w@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 03, 2017 at 07:36:23AM -0400, Brian Foster wrote:
-> On Thu, Nov 02, 2017 at 07:47:40PM -0700, Darrick J. Wong wrote:
-> > FWIW the way I've been modelling this patch series in my head is that we
-> > format an arbitrarily large filesystem (m_LBA_size) address space on a
-> > thinp, feed statfs an "adjusted" size (m_usable_size)i which restricts
-> > how much space we can allocate, and now growfs increases or decreases
-> > the adjusted size without having to relocate anything or mess with the
-> > address space.  If the adjusted size ever exceeds the address space
-> > size, then we tack on more AGs like we've always done.  From that POV,
-> > there's no need to physically shrink (i.e. relocate) anything (and we
-> > can leave that for later/never).
+On Mon, Nov 6, 2017 at 11:46 PM, Dave Chinner <david@fromorbit.com> wrote:
+[...]
+>> commands will resize LVM and then resize2fs to max size.
+>> Because "resize2fs to max size" is not an atomic operation and
+>> because this is a "for dummies" product, in order to recover from
+>> "half-resize", there is a post-mount script that runs resize2fs
+>> unconditionally after boot.
+>
+> Sure, but if you have a product using thinspace filesystems then you
+> are going to need to do something different. To think you can just
+> plug a thinspace filesystem into an existing stack and have it work
+> unmodified is naive at best.
+>
+
+I do not expect it to "work" on the contrary - I expect it not to work,
+just the same as xfs_repair will refuse to repair an xfs with unknown
+feature flags.
 
 [...]
+>
+>> Now imagine you upgrade such a system to a kernel that supports
+>> "thinspace" and new xfsprogs and create thin file systems, and then
+>> downgrade the system to a kernel that sill supports "thinspace", but
+>> xfsprogs that do not (or even a proprietary system component that
+>> uses XFS_IOC_FSGROWDATA ioctl to perform the "auto-grow").
+>
+> In this case the thinspace filesystems will behave exactly like a
+> physical filesystem. i.e. they will physically grow to the size of
+> the underlying device. I can't stop this from happening, but I can
+> ensure that it doesn't do irreversable damage and that it's
+> reversible as soon as userspace is restored to suport thinspace
+> administration again. i.e. just shrink it back down to the required
+> thin size, and it's like that grow never occurred...
+>
+> i.e. it's not the end of the world, and you can recover cleanly from
+> it without any issues.
+>
 
-> For example, suppose we had an absolute crude, barebones implementation
-> of physical shrink right now that basically trimmmed the amount of space
-> from the end of the fs iff those AGs were completely empty and otherwise
-> returned -EBUSY. There is no other userspace support, etc. As such, this
-> hypothetical feature is extremely limited to being usable immediately
-> after a growfs and thus probably has no use case other than "undo my
-> accidental growfs."
-> 
-> If we had that right now, _then_ what would the logical shrink interface
-> look like?
+Very true, not the end of the world. That is why your design is something
+I can "live with". But it does have potential to cause pain downstream in
+the future and I just don't see any reason why this pain cannot be avoided.
+I fail to see the downside of not allowing old xfs_grow to modify thin space.
 
-Absolutely no different to what I'm proposing we do right now. That
-is, the behaviour of the "shrink to size X" ioctl is determined by
-the feature bit in the superblock.  Hence if the thinspace feature
-is set we do a thin shrink, and if it is not set we do a physical
-shrink. i.e. grow/shrink behaviour is defined by the kernel
-implementation, not the user or the interface.
+>> The results will be that all the thin file systems will all "auto-grow"
+>> to the thick size of the volume.
+>
+> Of course it will - the user/app/admin asked the kernel to grow the
+> filesystem to the size of the underlying device.  I don't know what
+> you expect a thinspace filesystem to do here other than *grow the
+> filesystem to the size of the underlying device*.
 
-As it is, I still can't see a use case or compelling reason for
-physically shrinking a thin filesystem. What's the use case that
-leads you to think that we need to physically shrink a thin
-filesystem, Brian? Let's get that on the table first, rather than
-waste time discussing hypothetical what-if's....
+I expect kernel to tell user EINVAL and warn that user needs to use newer
+xfsprogs to auto grow thin space.
+
+Let me re-iterate the requirement we are disagreeing on:
+- old xfs_growfs will succeed to grow, *except* for a thin fs that
+  was previously shrunk (i.e. dblocks != usable_dblocks)
+
+You explained at length why the exception is not a must.
+I do not remember a single argument that explains what's
+wrong with keeping the exception.
+I claimed that this exception can reduce pain to end users.
+In response, you wrote that "user/app/admin asked to grow fs to
+maximum size" and in so many words that they can "keep the pieces".
+
+What bad things can happen if the clueless user/app/admin is refused
+to grow fs to maximum size?
+The practice of "not sure you know what you are doing so please keep
+away" has been a very good practice for xfs and file systems for years.
+Why not abide by this law in this case?
 
 Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Amir.
