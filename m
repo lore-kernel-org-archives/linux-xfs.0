@@ -1,59 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34725 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935002AbdKGBEK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 20:04:10 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA7149UM030697
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:04:09 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vA714864007359
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:04:09 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vA7148S0017845
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:04:08 GMT
-Subject: [PATCH 5/5] xfs: fix btree scrub deref check
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 06 Nov 2017 17:03:52 -0800
-Message-ID: <151001663224.26786.16638321559848220870.stgit@magnolia>
-In-Reply-To: <151001660179.26786.15701876786383794673.stgit@magnolia>
-References: <151001660179.26786.15701876786383794673.stgit@magnolia>
+Received: from imap.thunk.org ([74.207.234.97]:47936 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753221AbdKGTPl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Nov 2017 14:15:41 -0500
+Date: Tue, 7 Nov 2017 14:15:26 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171107191526.x3rzfcnnlmaz264d@thunk.org>
+References: <20171107020607.GA26910@magnolia>
+ <20171107072040.GB4586@infradead.org>
+ <20171107073940.GB4654@kroah.com>
+ <20171107172042.GB26910@magnolia>
+ <20171107182903.GA4588@kroah.com>
+ <20171107184658.56b87d41@alans-desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171107184658.56b87d41@alans-desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 07, 2017 at 06:46:58PM +0000, Alan Cox wrote:
+> > Given that it had no license text on it at all, it "defaults" to GPLv2,
+> > so the GPLv2 SPDX identifier was added to it.
+> > 
+> > No copyright was changed, nothing at all happened except we explicitly
+> > list the license of the file, instead of it being "implicit" before.
+> 
+> Well if Christoph owns the copyright (if there is one) and he has stated
+> he believes it is too trivial to copyright then it needs an SPDX tag that
+> indicates the rightsholder has stated it's too trivial to copyright and
+> (by estoppel) revoked any right they might have to pursue a claim.
 
-The btree scrubber has some custom code to retrieve and check a btree
-block via xfs_btree_lookup_get_block.  This function will either return
-an error code (verifiers failed) or a *pblock will be untouched (bad
-pointer).  Since we previously set *pblock to NULL, we need to check
-*pblock, not pblock, to trigger the early bailout.
+If Cristoph has revoked any right to pursue a claim, then he's also
+legally given up the right to complain if, say, Bradley Kuhn starting
+distributing a version with a GPLv3 permission statement --- or if Greg
+K-H adds a GPLv2 SPDX identifier.  :-)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/btree.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+						- Ted
 
-
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index a814404..df07661 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -335,7 +335,7 @@ xfs_scrub_btree_get_block(
- 
- 	error = xfs_btree_lookup_get_block(bs->cur, level, pp, pblock);
- 	if (!xfs_scrub_btree_process_error(bs->sc, bs->cur, level, &error) ||
--	    !pblock)
-+	    !*pblock)
- 		return error;
- 
- 	xfs_btree_get_block(bs->cur, level, pbp);
-
+> I'm sure there's a correct SPDX tag for that ;-)
+> 
+> Alan
