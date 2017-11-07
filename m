@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34601 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:34641 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932605AbdKGBDg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 20:03:36 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA713ZD2030251
+        with ESMTP id S932605AbdKGBDs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 20:03:48 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA713lZK030310
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:03:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vA713ZU6009165
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:03:47 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vA713l5f008673
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:03:35 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vA713ZF6031903
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:03:35 GMT
-Subject: [PATCH 2/5] xfs: refactor the directory data block bestfree checks
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:03:47 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vA713lwn018613
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 01:03:47 GMT
+Subject: [PATCH 4/5] xfs: fix uninitialized return values in scrub code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 06 Nov 2017 17:03:33 -0800
-Message-ID: <151001661390.26786.10161063535996587375.stgit@magnolia>
+Date: Mon, 06 Nov 2017 17:03:46 -0800
+Message-ID: <151001662619.26786.18307082892827501257.stgit@magnolia>
 In-Reply-To: <151001660179.26786.15701876786383794673.stgit@magnolia>
 References: <151001660179.26786.15701876786383794673.stgit@magnolia>
 MIME-Version: 1.0
@@ -27,58 +27,52 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In a directory data block, the zeroth bestfree item must point to the
-longest free space.  Therefore, when we check the bestfree block's
-records against the data blocks, we only need to compare with bf[0] and
-don't need the loop.
+Fix smatch complaints about uninitialized return codes.
 
-The weird loop was most probably the result of an earlier refactoring
-gone bad.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/dir.c |   20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+ fs/xfs/scrub/dir.c    |    2 +-
+ fs/xfs/scrub/parent.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index d4cd766..c8ca3fd 100644
+index c8ca3fd..69e1efd 100644
 --- a/fs/xfs/scrub/dir.c
 +++ b/fs/xfs/scrub/dir.c
-@@ -435,25 +435,15 @@ xfs_scrub_directory_check_freesp(
- 	struct xfs_buf			*dbp,
- 	unsigned int			len)
- {
--	struct xfs_dir2_data_free	*bf;
- 	struct xfs_dir2_data_free	*dfp;
--	int				offset;
+@@ -748,7 +748,7 @@ xfs_scrub_directory(
+ 	};
+ 	size_t				bufsize;
+ 	loff_t				oldpos;
+-	int				error;
++	int				error = 0;
  
--	if (len == 0)
--		return;
-+	dfp = sc->ip->d_ops->data_bestfree_p(dbp->b_addr);
+ 	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
+ 		return -ENOENT;
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index cc2b8f6..63a2533 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -143,7 +143,7 @@ xfs_scrub_parent_validate(
+ 	struct xfs_inode		*dp = NULL;
+ 	xfs_nlink_t			expected_nlink;
+ 	xfs_nlink_t			nlink;
+-	int				error;
++	int				error = 0;
  
--	bf = sc->ip->d_ops->data_bestfree_p(dbp->b_addr);
--	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
--		offset = be16_to_cpu(dfp->offset);
--		if (offset == 0)
--			break;
--		if (len == be16_to_cpu(dfp->length))
--			return;
--		/* Didn't find the best length in the bestfree data */
--		break;
--	}
-+	if (len != be16_to_cpu(dfp->length))
-+		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+ 	*try_again = false;
  
--	xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-+	if (len > 0 && be16_to_cpu(dfp->offset) == 0)
-+		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
- }
+@@ -258,7 +258,7 @@ xfs_scrub_parent(
+ 	xfs_ino_t			dnum;
+ 	bool				try_again;
+ 	int				tries = 0;
+-	int				error;
++	int				error = 0;
  
- /* Check free space info in a directory leaf1 block. */
+ 	/*
+ 	 * If we're a directory, check that the '..' link points up to
 
