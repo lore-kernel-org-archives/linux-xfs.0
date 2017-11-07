@@ -1,117 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36171 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752823AbdKGP0h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Nov 2017 10:26:37 -0500
-Date: Tue, 7 Nov 2017 16:26:29 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20171107152629.GF11391@quack2.suse.cz>
-References: <20171009183129.GE11645@wotan.suse.de>
- <87wp442lgm.fsf@xmission.com>
- <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
- <20171015130625.o5k6tk5uflm3rx65@thunk.org>
- <87efq4qcry.fsf@xmission.com>
- <20171016011301.dcam44qylno7rm6a@thunk.org>
- <c5bb6c1b-90c9-f50e-7283-af7e0de67caa@suse.de>
- <20171017092017.GN9762@quack2.suse.cz>
- <20171017141233.l3avshagrv7fr7xt@thunk.org>
- <CAB=NE6UK3463JfiZQFHUiMj=v6HDG0k+uEE-2OvRMsW7i1EMhA@mail.gmail.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53512 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753543AbdKGHj3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 02:39:29 -0500
+Date: Tue, 7 Nov 2017 08:39:40 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171107073940.GB4654@kroah.com>
+References: <20171107020607.GA26910@magnolia>
+ <20171107072040.GB4586@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAB=NE6UK3463JfiZQFHUiMj=v6HDG0k+uEE-2OvRMsW7i1EMhA@mail.gmail.com>
+In-Reply-To: <20171107072040.GB4586@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, colyli@suse.com, Jan Kara <jack@suse.cz>, Aleksa Sarai <asarai@suse.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Oscar Salvador <osalvador@suse.com>, Hannes Reinecke <hare@suse.de>, xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-On Mon 06-11-17 11:25:34, Luis R. Rodriguez wrote:
-> On Tue, Oct 17, 2017 at 7:12 AM, Theodore Ts'o <tytso@mit.edu> wrote:
-> > On Tue, Oct 17, 2017 at 11:20:17AM +0200, Jan Kara wrote:
-> >> The operation we are speaking about here is different. It is more along the
-> >> lines of "release this device".  And in the current world of containers,
-> >> mount namespaces, etc. it is not trivial for userspace to implement this
-> >> using umount(2) as Ted points out. I believe we could do that by walking
-> >> through all mount points of a superblock and unmounting them (and I don't
-> >> want to get into a discussion how to efficiently implement that now but in
-> >> principle the kernel has all the necessary information).
-> >
-> > Yes, this is what I want.  And regardless of how efficiently or not
-> > the kernel can implement such an operatoin, by definition it will be
-> > more efficient than if we have to do it in userspace.
-> 
-> It seems most folks agree we could all benefit from this, to help
-> userspace with a sane implementation.
-> 
-> >> What I'm a bit concerned about is the "release device reference" part - for
-> >> a block device to stop looking busy we have to do that however then the
-> >> block device can go away and the filesystem isn't prepared to that - we
-> >> reference sb->s_bdev in lots of places, we have buffer heads which are part
-> >> of bdev page cache, and probably other indirect assumptions I forgot about
-> >> now.
-> 
-> Is this new operation really the only place where such type of work
-> could be useful for, or are there existing uses cases this sort of
-> functionality could also be used for?
+On Mon, Nov 06, 2017 at 11:20:40PM -0800, Christoph Hellwig wrote:
+> NAK, for both the libxfs patch and the kernel one.
 
-The functionality of being able to "invalidate" open file descriptor so
-that it no longer points to the object it used to is useful also for other
-cases I guess...
+What libxfs patch?  And what "kernel one" are you referring to here?
 
-> For instance I don't think we do something similar to revokefs(2) (as
-> described below) when a devices has been removed from a system, you
-> seem to suggest we remove the dev from gendisk leaving it dangling and
-> invisible. But other than this, it would seem its up to the filesystem
-> to get anything else implemented correctly?
+> I wrote the file and it has no copyright header because it conatians
+> trivial, non-copyrightable code.
 
-Yes, that's the current situation. When the device is yanked from under a
-filesystem the current implementation makes it relatively straightforward
-from fs POV - for all fs cares about the underlying device still exists. It
-just returns errors for any IO done to it. It is upto fs implementation to
-deal with it and be able to shutdown itself correctly in such case.
+What file exactly?
 
-> > This all doesn't have to be a single system call.  Perhaps it would
-> > make sense for first and second step to be one system call --- call it
-> > revokefs(2), perhaps.  And then the last step could be another system
-> > call --- maybe umountall(2).
-> 
-> Wouldn't *some* part of this also help *enhance* filesystem suspend /
-> thaw be used on system suspend / resume as well?
->
-> If I may, if we split these up, into two, say revokefs(2) and
-> umountall(2), how about:
-> 
-> a) revokefs(2): ensures all file descriptors for the fs are closed
->    - blocks access attempts high up in VFS
->    - point any file descriptor to a revoked null struct file
->    - redirect any task struct CWD's so as if the directory had rmmdir'd
->    - munmap any mapped regions
-> 
-> Of these only the first one seems useful for fs suspend?
+And from what I know, there is nothing that is "non-copyrightable".
 
-If you reference "blocks access attempts high up in VFS" that already
-happens for writes when you freeze the filesystem. Also suspend is
-different in that userspace is already frozen when you get to freezing
-filesystems so you care only about in-kernel users and there you do not
-have standard set of entry points anyway... So I don't see much crossection
-with system suspend here.
+And this isn't changing the copyright of _ANYTHING_ it is just putting
+the explicit license of the file, on each file in the kernel, because it
+needs to be tracked.
 
-> 
-> b) umountall(2): properly unmounts filesystem from all namespaces
->    - May need to verify if revokefs(2) was called, if so, now that all
-> file descriptors should
->      be closed, do syncfs() to force out any dirty pages
+> I don't know why people think they can touch license information on
+> files I've written without even asking me.
 
-IMHO it doesn't need to verify this. The unmount will just fail if someone
-is still using some fs.
+Nothing was changed, the license should be the exact same as it was
+before.  But as I don't know what file you are referring to here, it's a
+bit hard to determine what you are talking about exactly :(
 
->    - unmount() in all namespaces, this takes care of any buffer or page
->      cache reference once the ref count of the struct super block goes to
->      to zero
+thanks,
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+greg k-h
