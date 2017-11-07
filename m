@@ -1,132 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:40842 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750769AbdKEXvH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Nov 2017 18:51:07 -0500
-Date: Mon, 6 Nov 2017 10:51:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171105235104.GF4094@dastard>
-References: <20171026083322.20428-1-david@fromorbit.com>
- <20171030133117.GA3535@bfoster.bfoster>
- <20171030210941.GA5858@dastard>
- <20171031112432.GA7093@bfoster.bfoster>
- <20171101004513.GK5858@dastard>
- <20171101141720.GB11709@bfoster.bfoster>
- <20171101235300.GT5858@dastard>
- <20171102112533.GA15748@bfoster.bfoster>
- <20171102233017.GX5858@dastard>
- <20171103112626.GA19974@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:56676 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965011AbdKGKWo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Nov 2017 05:22:44 -0500
+Date: Tue, 7 Nov 2017 11:22:41 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH for-4.14] xfs: fix AIM7 regression
+Message-ID: <20171107102241.GE4359@quack2.suse.cz>
+References: <20171019074705.24827-1-hch@lst.de>
+ <20171019113848.GA8911@bfoster.bfoster>
+ <20171019131407.GA20645@lst.de>
+ <20171019224431.GO4755@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171103112626.GA19974@bfoster.bfoster>
+In-Reply-To: <20171019224431.GO4755@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, x86@kernel.org
 
-On Fri, Nov 03, 2017 at 07:26:27AM -0400, Brian Foster wrote:
-> On Fri, Nov 03, 2017 at 10:30:17AM +1100, Dave Chinner wrote:
-> > On Thu, Nov 02, 2017 at 07:25:33AM -0400, Brian Foster wrote:
-> > > On Thu, Nov 02, 2017 at 10:53:00AM +1100, Dave Chinner wrote:
-> > > > On Wed, Nov 01, 2017 at 10:17:21AM -0400, Brian Foster wrote:
-> > > > > On Wed, Nov 01, 2017 at 11:45:13AM +1100, Dave Chinner wrote:
-> > > > > > On Tue, Oct 31, 2017 at 07:24:32AM -0400, Brian Foster wrote:
-> > > > > > > On Tue, Oct 31, 2017 at 08:09:41AM +1100, Dave Chinner wrote:
-> > > > > > > > On Mon, Oct 30, 2017 at 09:31:17AM -0400, Brian Foster wrote:
-> > > > > > > > > On Thu, Oct 26, 2017 at 07:33:08PM +1100, Dave Chinner wrote:
-> ...
-> > > > > BTW, was there ever any kind of solution to the metadata block
-> > > > > reservation issue in the thin case? We now hide metadata reservation
-> > > > > from the user via the m_usable_blocks account. If m_phys_blocks
-> > > > > represents a thin volume, how exactly do we prevent those metadata
-> > > > > allocations/writes from overrunning what the admin has specified as
-> > > > > "usable" with respect to the thin volume?
-> > > > 
-> > > > The reserved metadata blocks are not accounted from free space when
-> > > > they are allocated - they are pulled from the reserved space that
-> > > > has already been removed from the free space.
+On Thu 19-10-17 15:44:31, Darrick J. Wong wrote:
+> On Thu, Oct 19, 2017 at 03:14:07PM +0200, Christoph Hellwig wrote:
+> > On Thu, Oct 19, 2017 at 07:38:48AM -0400, Brian Foster wrote:
+> > > On Thu, Oct 19, 2017 at 09:47:05AM +0200, Christoph Hellwig wrote:
+> > > > Apparently our current rwsem code doesn't like doing the trylock, then
+> > > > lock for real scheme.  So change our read/write methods to just do the
+> > > > trylock for the RWF_NOWAIT case.  This fixes a ~25% regression in
+> > > > AIM7.
 > > > > 
 > > > 
-> > > Ok, so the user can set a usable blocks value of something less than the
-> > > fs geometry, then the reservation is pulled from that, reducing the
-> > > reported "usable" value further. Hence, what ends up reported to the
-> > > user is actually something less than the value set by the user, which
-> > > means that the filesystem overall respects how much space the admin says
-> > > it can use in the underlying volume.
-> > > 
-> > > For example, the user creates a 100T thin volume with 10T of usable
-> > > space. The fs reserves a further 2T out of that for metadata, so then
-> > > what the user sees is 8T of writeable space.  The filesystem itself
-> > > cannot use more than 10T out of the volume, as instructed. Am I
-> > > following that correctly? If so, that sounds reasonable to me from the
-> > > "don't overflow my thin volume" perspective.
+> > > The code looks fine, but this seems really strange. If the trylock
+> > > fails, then wouldn't the blocking lock have slept anyways if done
+> > > initially? Is there any more background info available on this, or
+> > > perhaps a theory on why there is such a significant regression..?
 > > 
-> > No, that's not what happens. For thick filesystems, the 100TB volume
-> > gets 2TB pulled from it so it appears as a 98TB filesystem. This is
-> > done by modifying the free block counts and m_usable_space when the
-> > reservations are made.
-> > 
+> > No, unfortunately I don't have a theory, but I agree it is odd
+> > behavior in the rwsem code.
 > 
-> Ok..
-> 
-> > For thin filesystems, we've already got 90TB of space "reserved",
-> > and so the metadata reservations and allocations come from that.
-> > i.e. we skip the modification of free block counts and m_usable
-> > space in the case of a thinspace filesystem, and so the user still
-> > sees 10TB of usable space that they asked to have.
-> > 
-> 
-> Hmm.. so then I'm slightly confused regarding the thin use case
-> regarding prevention of pool depletion. The usable blocks value that the
-> user settles on is likely based on how much space the filesystem should
-> use to safely avoid pool depletion.
+> <shrug> I want to know a little more about why there's a performance hit
+> in the down_read_trylock -> down_read case.  Are we getting penalized
+> for that?  Is it some weird interaction with lockdep?
 
-I did say up front that the user data thinspace accounting would not
-be an exact reflection of underlying storage pool usage. Things like
-partially written blocks in the underlying storage pool mean write
-amplification factors would need to be considered, but that's
-something the admin already has to deal with in thinly provisioned
-storage.
+At least on x86, __down_read_trylock() is implemented very much differently
+from __down_read(). In particular if there's heavy contention on the
+semaphore from readers, __down_read_trylock() implementation seems to be
+prone to going through cmpxchg loop several times which could explain
+observed performance data. But I'm just guessing... Adding some x86 people
+to CC just in case they have more to say.
 
-> If a usable value of 10T means the
-> filesystem can write to the usable 10T + some amount of metadata
-> reservation, how does the user determine a sane usable value based on
-> the current pool geometry?
-
->From an admin POV it's damn easy to document in admin guides that
-actual space usage of a thinspace filesysetm is going to be in the
-order of 2% greater than the space given to the filesystem for user
-data. Use an overhead of 2-5% for internal management and the "small
-amount of extra space for internal metadata" issue can be ignored.
-
-> > > The best I can read into the response here is that you think physical
-> > > shrink is unlikely enough to not need to care very much what kind of
-> > > interface confusion could result from needing to rev the current growfs
-> > > interface to support physical shrink on thin filesystems in the future.
-> > > Is that a fair assessment..?
-> > 
-> > Not really. I understand just how complex a physical shrink
-> > implementation is going to be, and have a fair idea of the sorts of
-> > craziness we'll need to add to xfs_growfs to support/co-ordinate a
-> > physical shrink operation.  From that perspective, I don't see a
-> > physical shrink working with an unchanged growfs interface. The
-> > discussion about whether or not we should physically shrink
-> > thinspace filesystems is almost completely irrelevant to the
-> > interface requirements of a physical shrink....
-> 
-> So it's not so much about the likelihood of realizing physical shrink,
-> but rather the likelihood that physical shrink would require to rev the
-> growfs structure anyways (regardless of this feature).
-
-Yup, pretty much.
-
-Cheers,
-
-Dave.
+								Honza
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
