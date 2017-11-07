@@ -1,50 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60194 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751587AbdKBINq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Nov 2017 04:13:46 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH v3] common: Check for fiemap range argument support
-Date: Thu,  2 Nov 2017 10:13:41 +0200
-Message-Id: <1509610421-16716-1-git-send-email-nborisov@suse.com>
-In-Reply-To: <20171102031622.GV17339@eguan.usersys.redhat.com>
-References: <20171102031622.GV17339@eguan.usersys.redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32291 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752145AbdKGRVS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 12:21:18 -0500
+Date: Tue, 7 Nov 2017 09:20:42 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171107172042.GB26910@magnolia>
+References: <20171107020607.GA26910@magnolia>
+ <20171107072040.GB4586@infradead.org>
+ <20171107073940.GB4654@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171107073940.GB4654@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Nikolay Borsiov <nborisov@suse.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-From: Nikolay Borsiov <nborisov@suse.com>
+On Tue, Nov 07, 2017 at 08:39:40AM +0100, Greg Kroah-Hartman wrote:
+> On Mon, Nov 06, 2017 at 11:20:40PM -0800, Christoph Hellwig wrote:
+> > NAK, for both the libxfs patch and the kernel one.
+> 
+> What libxfs patch?  And what "kernel one" are you referring to here?
+> 
+> > I wrote the file and it has no copyright header because it conatians
+> > trivial, non-copyrightable code.
+> 
+> What file exactly?
+> 
+> And from what I know, there is nothing that is "non-copyrightable".
+> 
+> And this isn't changing the copyright of _ANYTHING_ it is just putting
+> the explicit license of the file, on each file in the kernel, because it
+> needs to be tracked.
+> 
+> > I don't know why people think they can touch license information on
+> > files I've written without even asking me.
+> 
+> Nothing was changed, the license should be the exact same as it was
+> before.  But as I don't know what file you are referring to here, it's a
+> bit hard to determine what you are talking about exactly :(
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
-v3:
- * Changed the way we detect ranged args. Now use a regexp which checks 
- explicitly for the ranged args
- common/rc | 7 +++++++
- 1 file changed, 7 insertions(+)
+fs/xfs/libxfs/xfs_cksum.h
 
-diff --git a/common/rc b/common/rc
-index e2a8229..f7a5fe9 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2053,8 +2053,15 @@ _require_xfs_io_command()
- 			-c "$command 4k 8k" $testfile 2>&1`
- 		;;
- 	"fiemap")
-+		if echo "$param" | egrep -q "[[:digit:]]+[bskmgtpe]? [[:digit:]]+[bskmgtpe]?$"
-+		then
-+			$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]" || \
-+				_notrun "xfs_io $command range param support is missing"
-+		fi
-+
- 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
- 			-c "fiemap -v $param" $testfile 2>&1`
-+
- 		param_checked=1
- 		;;
- 	"flink" )
--- 
-2.7.4
+--D
 
+> 
+> thanks,
+> 
+> greg k-h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
