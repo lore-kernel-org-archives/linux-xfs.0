@@ -1,254 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56346 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47752 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752580AbdKGFPj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Nov 2017 00:15:39 -0500
-Date: Tue, 7 Nov 2017 13:15:38 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 3/4] generic: Adjust generic test ouputs for new
- fiemap implementation
-Message-ID: <20171107051538.GI17339@eguan.usersys.redhat.com>
-References: <1509459011-7398-1-git-send-email-nborisov@suse.com>
- <1509459096-7585-1-git-send-email-nborisov@suse.com>
- <1509459096-7585-3-git-send-email-nborisov@suse.com>
+        id S1753226AbdKGLCL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Nov 2017 06:02:11 -0500
+Date: Tue, 7 Nov 2017 06:02:08 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
+Message-ID: <20171107110207.GA34920@bfoster.bfoster>
+References: <20171006200740.7140-1-bfoster@redhat.com>
+ <20171006204751.GM7122@magnolia>
+ <CAOGQQ29rTuDzxfcbYHDi6ez9Mk2MKFzf_Qa8ZeTTvgusme5feQ@mail.gmail.com>
+ <20171106222626.GB16026@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1509459096-7585-3-git-send-email-nborisov@suse.com>
+In-Reply-To: <20171106222626.GB16026@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, darrick.wong@oracle.com
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Marco Benatto <mbenatto@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2017 at 04:11:35PM +0200, Nikolay Borisov wrote:
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-
-I think patch 2 and 3 should be merged to a single patch, so we don't
-have a tiny window to break the affected tests with old fiemap command.
-
-Thanks,
-Eryu
-
-> ---
->  tests/generic/012.out | 1 +
->  tests/generic/016.out | 1 +
->  tests/generic/021.out | 2 ++
->  tests/generic/022.out | 2 ++
->  tests/generic/058.out | 1 +
->  tests/generic/060.out | 1 +
->  tests/generic/061.out | 1 +
->  tests/generic/063.out | 1 +
->  tests/generic/255.out | 6 ++++++
->  tests/generic/316.out | 6 ++++++
->  10 files changed, 22 insertions(+)
+On Mon, Nov 06, 2017 at 11:26:26PM +0100, Luis R. Rodriguez wrote:
+> On Wed, Oct 11, 2017 at 02:11:44PM -0300, Marco Benatto wrote:
+> > Hello all
+> > 
+> > On Fri, Oct 6, 2017 at 5:47 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > On Fri, Oct 06, 2017 at 04:07:40PM -0400, Brian Foster wrote:
+> > > > xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
+> > > > associated blocks. xfs_attr3_node_inactive() recursively descends
+> > > > from internal blocks to leaf blocks, caching block address values
+> > > > along the way to revisit parent blocks, locate the next entry and
+> > > > descend down that branch of the tree.
+> > > >
+> > > > The code that attempts to reread the parent block is unsafe because
+> > > > it assumes that the local xfs_da_node_entry pointer remains valid
+> > > > after an xfs_trans_brelse() and re-read of the parent buffer. Under
+> > > > heavy memory pressure, it is possible that the buffer has been
+> > > > reclaimed and reallocated by the time the parent block is reread.
+> > > > This means that 'btree' can point to an invalid memory address, lead
+> > > > to a random/garbage value for child_fsb and cause the subsequent
+> > > > read of the attr fork to go off the rails and return a NULL buffer
+> > > > for an attr fork offset that is most likely not allocated.
+> > > >
+> > > > Note that this problem can be manufactured by setting
+> > > > XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
+> > > > creating a file with a multi-level attr fork and removing it to
+> > > > trigger inactivation.
+> > > >
+> > > > To address this problem, reinit the node/btree pointers to the
+> > > > parent buffer after it has been re-read. This ensures btree points
+> > > > to a valid record and allows the walk to proceed.
+> > > >
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > >
+> > > Looks ok,
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > >
+> > > /me wonders if this is a good enough reason to introduce a new errortag
+> > > that turns xfs_buf_set_ref into a no-op and fills bp->b_addr with
+> > > garbage prior to releasing the memory to weed out any other dangling
+> > > pointers?
+> > >
+> > > > ---
+> > > >
+> > > > I suspect this is the cause of the NULL buf problem down in
+> > > > xfs_attr_inactive(). I can manufacture an instance of that problem as
+> > > > noted above. We have a customer who's hitting that problem and will
+> > > > attempt to validate this fix, but there is no confirmation as of yet.
+> > > > I'm posting this for review in the meantime because this seems like a
+> > > > legit fix regardless of whether they are hitting this or something else.
+> > >
+> > > Let me know what they report back.
+> > 
+> > Just to let you know, we've got some news regarding this testing and the
+> > patch seems effective to fix the issue they were facing before at
+> > xfs_attr_inactive() case.
 > 
-> diff --git a/tests/generic/012.out b/tests/generic/012.out
-> index ffbf8a3..8045471 100644
-> --- a/tests/generic/012.out
-> +++ b/tests/generic/012.out
-> @@ -1,5 +1,6 @@
->  QA output created by 012
->  	1. into a hole
-> +0: [0..95]: hole
->  f4f35d60b3cc18aaa6d8d92f0cd3708a
->  	2. into allocated space
->  0: [0..95]: extent
-> diff --git a/tests/generic/016.out b/tests/generic/016.out
-> index c45a44a..1371ce7 100644
-> --- a/tests/generic/016.out
-> +++ b/tests/generic/016.out
-> @@ -1,5 +1,6 @@
->  QA output created by 016
->  	1. into a hole
-> +0: [0..95]: hole
->  f4f35d60b3cc18aaa6d8d92f0cd3708a
->  	2. into allocated space
->  0: [0..95]: extent
-> diff --git a/tests/generic/021.out b/tests/generic/021.out
-> index 1137741..791b78a 100644
-> --- a/tests/generic/021.out
-> +++ b/tests/generic/021.out
-> @@ -1,5 +1,6 @@
->  QA output created by 021
->  	1. into a hole
-> +0: [0..95]: hole
->  f4f35d60b3cc18aaa6d8d92f0cd3708a
->  	2. into allocated space
->  0: [0..95]: extent
-> @@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
->  1: [64..95]: hole
->  d8f51c20223dbce5c7c90db87bc221b0
->  	10. hole -> data -> hole
-> +0: [0..63]: hole
->  bb7df04e1b0a2570657527a7e108ae23
->  	11. data -> hole -> data
->  0: [0..63]: extent
-> diff --git a/tests/generic/022.out b/tests/generic/022.out
-> index fbffa59..6dbc192 100644
-> --- a/tests/generic/022.out
-> +++ b/tests/generic/022.out
-> @@ -1,5 +1,6 @@
->  QA output created by 022
->  	1. into a hole
-> +0: [0..95]: hole
->  f4f35d60b3cc18aaa6d8d92f0cd3708a
->  	2. into allocated space
->  0: [0..95]: extent
-> @@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
->  1: [64..95]: hole
->  d8f51c20223dbce5c7c90db87bc221b0
->  	10. hole -> data -> hole
-> +0: [0..63]: hole
->  bb7df04e1b0a2570657527a7e108ae23
->  	11. data -> hole -> data
->  0: [0..63]: extent
-> diff --git a/tests/generic/058.out b/tests/generic/058.out
-> index b15308d..3bbc2a4 100644
-> --- a/tests/generic/058.out
-> +++ b/tests/generic/058.out
-> @@ -1,5 +1,6 @@
->  QA output created by 058
->  	1. into a hole
-> +0: [0..55]: hole
->  cf845a781c107ec1346e849c9dd1b7e8
->  	2. into allocated space
->  0: [0..7]: extent
-> diff --git a/tests/generic/060.out b/tests/generic/060.out
-> index 909b578..210af74 100644
-> --- a/tests/generic/060.out
-> +++ b/tests/generic/060.out
-> @@ -1,5 +1,6 @@
->  QA output created by 060
->  	1. into a hole
-> +0: [0..55]: hole
->  cf845a781c107ec1346e849c9dd1b7e8
->  	2. into allocated space
->  0: [0..7]: extent
-> diff --git a/tests/generic/061.out b/tests/generic/061.out
-> index 78d6c6d..6d95680 100644
-> --- a/tests/generic/061.out
-> +++ b/tests/generic/061.out
-> @@ -1,5 +1,6 @@
->  QA output created by 061
->  	1. into a hole
-> +0: [0..55]: hole
->  cf845a781c107ec1346e849c9dd1b7e8
->  	2. into allocated space
->  0: [0..7]: extent
-> diff --git a/tests/generic/063.out b/tests/generic/063.out
-> index d828ff6..10db43f 100644
-> --- a/tests/generic/063.out
-> +++ b/tests/generic/063.out
-> @@ -1,5 +1,6 @@
->  QA output created by 063
->  	1. into a hole
-> +0: [0..55]: hole
->  cf845a781c107ec1346e849c9dd1b7e8
->  	2. into allocated space
->  0: [0..7]: extent
-> diff --git a/tests/generic/255.out b/tests/generic/255.out
-> index 217ef3e..441fde8 100644
-> --- a/tests/generic/255.out
-> +++ b/tests/generic/255.out
-> @@ -1,5 +1,6 @@
->  QA output created by 255
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> @@ -42,6 +43,7 @@ daa100df6e6711906b61c9ab5aa16032
->  3: [32..39]: hole
->  cc63069677939f69a6e8f68cae6a6dac
->  	10. hole -> data -> hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	11. data -> hole -> data
->  0: [0..7]: extent
-> @@ -79,6 +81,7 @@ eecb7aa303d121835de05028751d301c
->  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->  *
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> @@ -121,6 +124,7 @@ daa100df6e6711906b61c9ab5aa16032
->  3: [32..39]: hole
->  cc63069677939f69a6e8f68cae6a6dac
->  	10. hole -> data -> hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	11. data -> hole -> data
->  0: [0..7]: extent
-> @@ -158,6 +162,7 @@ eecb7aa303d121835de05028751d301c
->  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->  *
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> @@ -240,6 +245,7 @@ eecb7aa303d121835de05028751d301c
->  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->  *
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> diff --git a/tests/generic/316.out b/tests/generic/316.out
-> index 383f0d1..5506198 100644
-> --- a/tests/generic/316.out
-> +++ b/tests/generic/316.out
-> @@ -1,5 +1,6 @@
->  QA output created by 316
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> @@ -16,6 +17,7 @@ cc63069677939f69a6e8f68cae6a6dac
->  1: [8..39]: hole
->  1b3779878366498b28c702ef88c4a773
->  	10. hole -> data -> hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	11. data -> hole -> data
->  0: [0..7]: extent
-> @@ -43,6 +45,7 @@ eecb7aa303d121835de05028751d301c
->  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->  *
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> @@ -59,6 +62,7 @@ cc63069677939f69a6e8f68cae6a6dac
->  1: [8..39]: hole
->  1b3779878366498b28c702ef88c4a773
->  	10. hole -> data -> hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	11. data -> hole -> data
->  0: [0..7]: extent
-> @@ -86,6 +90,7 @@ eecb7aa303d121835de05028751d301c
->  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->  *
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> @@ -133,6 +138,7 @@ eecb7aa303d121835de05028751d301c
->  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->  *
->  	1. into a hole
-> +0: [0..39]: hole
->  daa100df6e6711906b61c9ab5aa16032
->  	2. into allocated space
->  0: [0..7]: extent
-> -- 
-> 2.7.4
+> Is there an actual oops trace that is reported somewhere? I didn't see it
+> provided.
 > 
+
+I believe it is this thread:
+
+https://www.spinics.net/lists/linux-xfs/msg06695.html
+
+Brian
+
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
