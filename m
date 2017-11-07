@@ -1,98 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16701 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933120AbdKBQwa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2017 12:52:30 -0400
-Date: Thu, 2 Nov 2017 09:52:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: fix unused variable warnings
-Message-ID: <20171102165223.GX4911@magnolia>
-References: <20171102111137.3062126-1-arnd@arndb.de>
- <20171102111137.3062126-2-arnd@arndb.de>
- <20171102124403.GC16645@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:44958 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752580AbdKGFS5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Nov 2017 00:18:57 -0500
+Date: Tue, 7 Nov 2017 13:18:55 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 2/4] punch: Implement fixup for fiemap range queries
+Message-ID: <20171107051855.GJ17339@eguan.usersys.redhat.com>
+References: <1509459011-7398-1-git-send-email-nborisov@suse.com>
+ <1509459096-7585-1-git-send-email-nborisov@suse.com>
+ <1509459096-7585-2-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171102124403.GC16645@bfoster.bfoster>
+In-Reply-To: <1509459096-7585-2-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Nov 02, 2017 at 08:44:03AM -0400, Brian Foster wrote:
-> On Thu, Nov 02, 2017 at 12:11:13PM +0100, Arnd Bergmann wrote:
-> > fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_delay':
-> > fs/xfs/libxfs/xfs_bmap.c:4648:20: error: unused variable 'ifp' [-Werror=unused-variable]
-> >   struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
-> >                     ^~~
-> > fs/xfs/libxfs/xfs_bmap.c: In function 'xfs_bmap_del_extent_cow':
-> > fs/xfs/libxfs/xfs_bmap.c:4776:20: error: unused variable 'ifp' [-Werror=unused-variable]
-> > 
-
-Christoph's subsequent patch series to reimplement the incore extent map
-starts using ifp for more than just the ASSERT, so I'll take this patch
-if that rework doesn't land in time for 4.15.
-
---D
-
-> > Fixes: ca5d8e5b7b90 ("xfs: move pre/post-bmap tracing into xfs_iext_update_extent")
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > ---
+On Tue, Oct 31, 2017 at 04:11:34PM +0200, Nikolay Borisov wrote:
+> With the new  range query support for the fiemap command,
+> the command also started printing hole extent for files which
+> consist of only a hole. This change breaks tests which are
+> executed with a version of xfs_io that doesn't support fiemap's
+> range query.
 > 
-> Thanks for sending this:
+> Fix this by implementing a function which will fixup the output
+> of tests which are broken by emulating the output on older
+> xfs_io versions
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com> 
+> ---
+>  common/punch | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
 > 
-> >  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
-> >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index f45f05c45e15..fa85b08b8fe2 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4645,7 +4645,6 @@ xfs_bmap_del_extent_delay(
-> >  	struct xfs_bmbt_irec	*del)
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> >  	struct xfs_bmbt_irec	new;
-> >  	int64_t			da_old, da_new, da_diff = 0;
-> >  	xfs_fileoff_t		del_endoff, got_endoff;
-> > @@ -4663,7 +4662,7 @@ xfs_bmap_del_extent_delay(
-> >  	da_new = 0;
-> >  
-> >  	ASSERT(*idx >= 0);
-> > -	ASSERT(*idx <= xfs_iext_count(ifp));
-> > +	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, whichfork)));
-> >  	ASSERT(del->br_blockcount > 0);
-> >  	ASSERT(got->br_startoff <= del->br_startoff);
-> >  	ASSERT(got_endoff >= del_endoff);
-> > @@ -4773,7 +4772,6 @@ xfs_bmap_del_extent_cow(
-> >  	struct xfs_bmbt_irec	*del)
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> >  	struct xfs_bmbt_irec	new;
-> >  	xfs_fileoff_t		del_endoff, got_endoff;
-> >  	int			state = BMAP_COWFORK;
-> > @@ -4784,7 +4782,7 @@ xfs_bmap_del_extent_cow(
-> >  	got_endoff = got->br_startoff + got->br_blockcount;
-> >  
-> >  	ASSERT(*idx >= 0);
-> > -	ASSERT(*idx <= xfs_iext_count(ifp));
-> > +	ASSERT(*idx <= xfs_iext_count(XFS_IFORK_PTR(ip, XFS_COW_FORK)));
-> >  	ASSERT(del->br_blockcount > 0);
-> >  	ASSERT(got->br_startoff <= del->br_startoff);
-> >  	ASSERT(got_endoff >= del_endoff);
-> > -- 
-> > 2.9.0
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/common/punch b/common/punch
+> index c4ed261..b20dc30 100644
+> --- a/common/punch
+> +++ b/common/punch
+> @@ -218,6 +218,23 @@ _filter_fiemap()
+>  	_coalesce_extents
+>  }
+>  
+> +_fiemap_range_fixup()
+
+Good to have some comments too on what this function does.
+
+> +{
+> +	#check if we support ranged query
+> +	$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]"
+
+return immediately if fiemap supports range query?
+
+Thanks,
+Eryu
+
+> +	local range_sup=$?
+> +	#check if the file consists of a single hole only
+> +	echo "$1" | grep -q "^0\: \[.*\]\: hole$"
+> +	local sole_hole=$?
+> +	local filesize="$(((`stat -c %s $1` / 512) - 1))"
+> +	local output_line_num=`$XFS_IO_PROG -c 'fiemap' $testfile | wc -l`
+> +
+> +	if [ $range_sup -eq 1 ] && [ $sole_hole -eq 1  ] && [ $output_line_num -eq 1 ]
+> +	then
+> +		echo "0: [0..$filesize]: hole"
+> +	fi
+> +}
+> +
+>  _filter_fiemap_flags()
+>  {
+>  	$AWK_PROG '
+> @@ -363,6 +380,7 @@ _test_generic_punch()
+>  	$XFS_IO_PROG -f -c "truncate $_20k" \
+>  		-c "$zero_cmd $_4k $_8k" \
+>  		-c "$map_cmd -v" $testfile | $filter_cmd
+> +	_fiemap_range_fixup $testfile
+>  	[ $? -ne 0 ] && die_now
+>  	_md5_checksum $testfile
+>  
+> @@ -470,6 +488,7 @@ _test_generic_punch()
+>  		-c "pwrite $_8k $_4k" $sync_cmd \
+>  		-c "$zero_cmd $_4k $_12k" \
+>  		-c "$map_cmd -v" $testfile | $filter_cmd
+> +	_fiemap_range_fixup $testfile
+>  	[ $? -ne 0 ] && die_now
+>  	_md5_checksum $testfile
+>  
+> -- 
+> 2.7.4
+> 
