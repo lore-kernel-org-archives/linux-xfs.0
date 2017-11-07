@@ -1,192 +1,254 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25756 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750920AbdKGCGV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 21:06:21 -0500
-Date: Mon, 6 Nov 2017 18:06:07 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] License cleanup: add SPDX GPL-2.0 license identifier to
- files with no license
-Message-ID: <20171107020607.GA26910@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:56346 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752580AbdKGFPj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Nov 2017 00:15:39 -0500
+Date: Tue, 7 Nov 2017 13:15:38 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 3/4] generic: Adjust generic test ouputs for new
+ fiemap implementation
+Message-ID: <20171107051538.GI17339@eguan.usersys.redhat.com>
+References: <1509459011-7398-1-git-send-email-nborisov@suse.com>
+ <1509459096-7585-1-git-send-email-nborisov@suse.com>
+ <1509459096-7585-3-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <1509459096-7585-3-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, darrick.wong@oracle.com
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Tue, Oct 31, 2017 at 04:11:35PM +0200, Nikolay Borisov wrote:
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 
-Source kernel commit: b24413180f5600bcb3bb70fbed5cf186b60864bd
+I think patch 2 and 3 should be merged to a single patch, so we don't
+have a tiny window to break the affected tests with old fiemap command.
 
-Many source files in the tree are missing licensing information, which
-makes it harder for compliance tools to determine the correct license.
+Thanks,
+Eryu
 
-By default all files without license information are under the default
-license of the kernel, which is GPL version 2.
-
-Update the files which contain no license information with the 'GPL-2.0'
-SPDX license identifier.  The SPDX identifier is a legally binding
-shorthand, which can be used instead of the full boiler plate text.
-
-This patch is based on work done by Thomas Gleixner and Kate Stewart and
-Philippe Ombredanne.
-
-How this work was done:
-
-Patches were generated and checked against linux-4.14-rc6 for a subset of
-the use cases:
-- file had no licensing information it it.
-- file was a */uapi/* one with no licensing information in it,
-- file was a */uapi/* one with existing licensing information,
-
-Further patches will be generated in subsequent months to fix up cases
-where non-standard license headers were used, and references to license
-had to be inferred by heuristics based on keywords.
-
-The analysis to determine which SPDX License Identifier to be applied to
-a file was done in a spreadsheet of side by side results from of the
-output of two independent scanners (ScanCode & Windriver) producing SPDX
-tag:value files created by Philippe Ombredanne.  Philippe prepared the
-base worksheet, and did an initial spot review of a few 1000 files.
-
-The 4.13 kernel was the starting point of the analysis with 60,537 files
-assessed.  Kate Stewart did a file by file comparison of the scanner
-results in the spreadsheet to determine which SPDX license identifier(s)
-to be applied to the file. She confirmed any determination that was not
-immediately clear with lawyers working with the Linux Foundation.
-
-Criteria used to select files for SPDX license identifier tagging was:
-- Files considered eligible had to be source code files.
-- Make and config files were included as candidates if they contained >5
-lines of source
-- File already had some variant of a license header in it (even if <5
-lines).
-
-All documentation files were explicitly excluded.
-
-The following heuristics were used to determine which SPDX license
-identifiers to apply.
-
-- when both scanners couldn't find any license traces, file was
-considered to have no license information in it, and the top level
-COPYING file license applied.
-
-For non */uapi/* files that summary was:
-
-SPDX license identifier                            # files
----------------------------------------------------|-------
-GPL-2.0                                              11139
-
-and resulted in the first patch in this series.
-
-If that file was a */uapi/* path one, it was "GPL-2.0 WITH
-Linux-syscall-note" otherwise it was "GPL-2.0".  Results of that was:
-
-SPDX license identifier                            # files
----------------------------------------------------|-------
-GPL-2.0 WITH Linux-syscall-note                        930
-
-and resulted in the second patch in this series.
-
-- if a file had some form of licensing information in it, and was one
-of the */uapi/* ones, it was denoted with the Linux-syscall-note if
-any GPL family license was found in the file or had no licensing in
-it (per prior point).  Results summary:
-
-SPDX license identifier                            # files
----------------------------------------------------|------
-GPL-2.0 WITH Linux-syscall-note                       270
-GPL-2.0+ WITH Linux-syscall-note                      169
-((GPL-2.0 WITH Linux-syscall-note) OR BSD-2-Clause)    21
-((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause)    17
-LGPL-2.1+ WITH Linux-syscall-note                      15
-GPL-1.0+ WITH Linux-syscall-note                       14
-((GPL-2.0+ WITH Linux-syscall-note) OR BSD-3-Clause)    5
-LGPL-2.0+ WITH Linux-syscall-note                       4
-LGPL-2.1 WITH Linux-syscall-note                        3
-((GPL-2.0 WITH Linux-syscall-note) OR MIT)              3
-((GPL-2.0 WITH Linux-syscall-note) AND MIT)             1
-
-and that resulted in the third patch in this series.
-
-- when the two scanners agreed on the detected license(s), that became
-the concluded license(s).
-
-- when there was disagreement between the two scanners (one detected a
-license but the other didn't, or they both detected different
-licenses) a manual inspection of the file occurred.
-
-- In most cases a manual inspection of the information in the file
-resulted in a clear resolution of the license that should apply (and
-which scanner probably needed to revisit its heuristics).
-
-- When it was not immediately clear, the license identifier was
-confirmed with lawyers working with the Linux Foundation.
-
-- If there was any question as to the appropriate license identifier,
-the file was flagged for further research and to be revisited later
-in time.
-
-In total, over 70 hours of logged manual review was done on the
-spreadsheet to determine the SPDX license identifiers to apply to the
-source files by Kate, Philippe, Thomas and, in some cases, confirmation
-by lawyers working with the Linux Foundation.
-
-Kate also obtained a third independent scan of the 4.13 code base from
-FOSSology, and compared selected files where the other two scanners
-disagreed against that SPDX file, to see if there was new insights.  The
-Windriver scanner is based on an older version of FOSSology in part, so
-they are related.
-
-Thomas did random spot checks in about 500 files from the spreadsheets
-for the uapi headers and agreed with SPDX license identifier in the
-files he inspected. For the non-uapi files Thomas did random spot checks
-in about 15000 files.
-
-In initial set of patches against 4.14-rc6, 3 files were found to have
-copy/paste license identifier errors, and have been fixed to reflect the
-correct identifier.
-
-Additionally Philippe spent 10 hours this week doing a detailed manual
-inspection and review of the 12,461 patched files from the initial patch
-version early this week with:
-- a full scancode scan run, collecting the matched texts, detected
-license ids and scores
-- reviewing anything where there was a license detected (about 500+
-files) to ensure that the applied SPDX license was correct
-- reviewing anything where there was no detection but the patch license
-was not GPL-2.0 WITH Linux-syscall-note to ensure that the applied
-SPDX license was correct
-
-This produced a worksheet with 20 files needing minor correction.  This
-worksheet was then exported into 3 different .csv files for the
-different types of files to be modified.
-
-These .csv files were then reviewed by Greg.  Thomas wrote a script to
-parse the csv files and add the proper SPDX tag to the file, in the
-format that the file expected.  This script was further refined by Greg
-based on the output to detect more types of files automatically and to
-distinguish between header and source .c files (which need different
-comment types.)  Finally Greg ran the script using the .csv files to
-generate the patches.
-
-Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- libxfs/xfs_cksum.h |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/libxfs/xfs_cksum.h b/libxfs/xfs_cksum.h
-index 8211f48..999a290 100644
---- a/libxfs/xfs_cksum.h
-+++ b/libxfs/xfs_cksum.h
-@@ -1,3 +1,4 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
- #ifndef _XFS_CKSUM_H
- #define _XFS_CKSUM_H 1
- 
+> ---
+>  tests/generic/012.out | 1 +
+>  tests/generic/016.out | 1 +
+>  tests/generic/021.out | 2 ++
+>  tests/generic/022.out | 2 ++
+>  tests/generic/058.out | 1 +
+>  tests/generic/060.out | 1 +
+>  tests/generic/061.out | 1 +
+>  tests/generic/063.out | 1 +
+>  tests/generic/255.out | 6 ++++++
+>  tests/generic/316.out | 6 ++++++
+>  10 files changed, 22 insertions(+)
+> 
+> diff --git a/tests/generic/012.out b/tests/generic/012.out
+> index ffbf8a3..8045471 100644
+> --- a/tests/generic/012.out
+> +++ b/tests/generic/012.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 012
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> diff --git a/tests/generic/016.out b/tests/generic/016.out
+> index c45a44a..1371ce7 100644
+> --- a/tests/generic/016.out
+> +++ b/tests/generic/016.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 016
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> diff --git a/tests/generic/021.out b/tests/generic/021.out
+> index 1137741..791b78a 100644
+> --- a/tests/generic/021.out
+> +++ b/tests/generic/021.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 021
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> @@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  1: [64..95]: hole
+>  d8f51c20223dbce5c7c90db87bc221b0
+>  	10. hole -> data -> hole
+> +0: [0..63]: hole
+>  bb7df04e1b0a2570657527a7e108ae23
+>  	11. data -> hole -> data
+>  0: [0..63]: extent
+> diff --git a/tests/generic/022.out b/tests/generic/022.out
+> index fbffa59..6dbc192 100644
+> --- a/tests/generic/022.out
+> +++ b/tests/generic/022.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 022
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> @@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  1: [64..95]: hole
+>  d8f51c20223dbce5c7c90db87bc221b0
+>  	10. hole -> data -> hole
+> +0: [0..63]: hole
+>  bb7df04e1b0a2570657527a7e108ae23
+>  	11. data -> hole -> data
+>  0: [0..63]: extent
+> diff --git a/tests/generic/058.out b/tests/generic/058.out
+> index b15308d..3bbc2a4 100644
+> --- a/tests/generic/058.out
+> +++ b/tests/generic/058.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 058
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/060.out b/tests/generic/060.out
+> index 909b578..210af74 100644
+> --- a/tests/generic/060.out
+> +++ b/tests/generic/060.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 060
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/061.out b/tests/generic/061.out
+> index 78d6c6d..6d95680 100644
+> --- a/tests/generic/061.out
+> +++ b/tests/generic/061.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 061
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/063.out b/tests/generic/063.out
+> index d828ff6..10db43f 100644
+> --- a/tests/generic/063.out
+> +++ b/tests/generic/063.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 063
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/255.out b/tests/generic/255.out
+> index 217ef3e..441fde8 100644
+> --- a/tests/generic/255.out
+> +++ b/tests/generic/255.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 255
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -42,6 +43,7 @@ daa100df6e6711906b61c9ab5aa16032
+>  3: [32..39]: hole
+>  cc63069677939f69a6e8f68cae6a6dac
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -79,6 +81,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -121,6 +124,7 @@ daa100df6e6711906b61c9ab5aa16032
+>  3: [32..39]: hole
+>  cc63069677939f69a6e8f68cae6a6dac
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -158,6 +162,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -240,6 +245,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/316.out b/tests/generic/316.out
+> index 383f0d1..5506198 100644
+> --- a/tests/generic/316.out
+> +++ b/tests/generic/316.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 316
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -16,6 +17,7 @@ cc63069677939f69a6e8f68cae6a6dac
+>  1: [8..39]: hole
+>  1b3779878366498b28c702ef88c4a773
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -43,6 +45,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -59,6 +62,7 @@ cc63069677939f69a6e8f68cae6a6dac
+>  1: [8..39]: hole
+>  1b3779878366498b28c702ef88c4a773
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -86,6 +90,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -133,6 +138,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> -- 
+> 2.7.4
+> 
