@@ -1,125 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:25993 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751060AbdKFVrP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 16:47:15 -0500
-Date: Tue, 7 Nov 2017 08:46:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/14] xfs: Towards thin provisioning aware filesystems
-Message-ID: <20171106214653.GE5858@dastard>
-References: <20171031112432.GA7093@bfoster.bfoster>
- <20171101004513.GK5858@dastard>
- <20171101141720.GB11709@bfoster.bfoster>
- <20171101235300.GT5858@dastard>
- <20171102112533.GA15748@bfoster.bfoster>
- <20171102233017.GX5858@dastard>
- <20171103112626.GA19974@bfoster.bfoster>
- <CAOQ4uxjEUAR1-1ikZSN2e99gK4k_mEMnhGGYvw=2Zj6oLOPVuQ@mail.gmail.com>
- <20171106011634.GC5858@dastard>
- <CAOQ4uxjJHyQ4-hUxcmRSP8V3xxZGN3MGm+8hKCRQFf2pRCfFiQ@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:39311 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752046AbdKGWaT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 17:30:19 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vA7MUIg9029963
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 22:30:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vA7MUIX8010573
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 22:30:18 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vA7MUHku018392
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Nov 2017 22:30:18 GMT
+Date: Tue, 7 Nov 2017 14:30:16 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-linux: xfs-4.15-merge updated to 181fdfe
+Message-ID: <20171107223016.GC26910@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjJHyQ4-hUxcmRSP8V3xxZGN3MGm+8hKCRQFf2pRCfFiQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Nov 06, 2017 at 11:48:05AM +0200, Amir Goldstein wrote:
-> On Mon, Nov 6, 2017 at 3:16 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > just work on existing binaries without them having to do
-> > anything....
-> >
-> >> Don't you see that this is the right thing to do w.r.t. API design?
-> >
-> > No, I don't, because you're trying to solve a problem that, quite
-> > simply, doesn't exist.
-> >
-> 
-> It is *very* possible that you are right, but you have not proven that
-> the problem does not exist. You have proven that the problem
-> does not exist w.r.t old xfs_grow -D <size> and you correctly
-> claimed that the problem with old xfs_grow -m <imaxpct> is an
-> implementation bug with RFC patches.
-> 
-> Let me give an example that will demonstrate my concern.
-> 
-> One of our older NAS products, still deployed with many customers
-> has LVM based volume manager and ext3 file system.
-> When user changes the size of a volume via Web UI, lower level
-> commands will resize LVM and then resize2fs to max size.
-> Because "resize2fs to max size" is not an atomic operation and
-> because this is a "for dummies" product, in order to recover from
-> "half-resize", there is a post-mount script that runs resize2fs
-> unconditionally after boot.
+Hi folks,
 
-Sure, but if you have a product using thinspace filesystems then you
-are going to need to do something different. To think you can just
-plug a thinspace filesystem into an existing stack and have it work
-unmodified is naive at best.
+The xfs-4.15-merge branch of the xfs-linux repository at:
 
-Indeed, with a thinspace filesystem, the LVM volume *never needs
-resizing* because it will be created far larger than ever required
-in the first place. And recovering from a crash half way through a
-thinspace growfs operation? Well, it's all done through the
-filesystem journal because it's all done through transactions.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-IOWs, thinspace filesystems solve this "atomic resize" problem
-without needing crutches or external constructs to hide non-atomic
-operations.
+has just been updated.
 
-Essentially, if you have a storage product and you plug thinspace
-filesystems into it without management modifications, then you get
-to keep all the bits that break and don't work correctly.
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-All I care is that stupid things don't happen if someone has
-integrated thinspace filesystems correctly and then a user
-does this:
+The biggest thing landing this time around is Christoph's rework of the
+incore extent cache -- now it's a proper tree, which eliminates one
+source of high-order memory allocations that could cause problems when
+disk and memory are both heavily fragmented.
 
-> Now imagine you upgrade such a system to a kernel that supports
-> "thinspace" and new xfsprogs and create thin file systems, and then
-> downgrade the system to a kernel that sill supports "thinspace", but
-> xfsprogs that do not (or even a proprietary system component that
-> uses XFS_IOC_FSGROWDATA ioctl to perform the "auto-grow").
+I'm still hoping to get some review of the series "xfs: various 4.15
+scrub fixes" so that I can get them in during the merge window. :)
 
-In this case the thinspace filesystems will behave exactly like a
-physical filesystem. i.e. they will physically grow to the size of
-the underlying device. I can't stop this from happening, but I can
-ensure that it doesn't do irreversable damage and that it's
-reversible as soon as userspace is restored to suport thinspace
-administration again. i.e. just shrink it back down to the required
-thin size, and it's like that grow never occurred...
+The new head of the xfs-4.15-merge branch is commit:
 
-i.e. it's not the end of the world, and you can recover cleanly from
-it without any issues.
+181fdfe xfs: mark xlog_verify_dest_ptr STATIC
 
-> The results will be that all the thin file systems will all "auto-grow"
-> to the thick size of the volume.
+New Commits:
 
-Of course it will - the user/app/admin asked the kernel to grow the
-filesystem to the size of the underlying device.  I don't know what
-you expect a thinspace filesystem to do here other than *grow the
-filesystem to the size of the underlying device*.
+Christoph Hellwig (29):
+      [1bfd761] xfs: don't create overlapping extents in xfs_bmap_add_extent_delay_real
+      [bf99971] xfs: remove a duplicate assignment in xfs_bmap_add_extent_delay_real
+      [0d04554] xfs: treat idx as a cursor in xfs_bmap_add_extent_delay_real
+      [41d196f] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_delay
+      [1d2e008] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_real
+      [a681847] xfs: treat idx as a cursor in xfs_bmap_add_extent_unwritten_real
+      [657fcb2] xfs: treat idx as a cursor in xfs_bmap_del_extent_*
+      [4263036] xfs: treat idx as a cursor in xfs_bmap_collapse_extents
+      [f36bc22] xfs: pass an on-disk extent to xfs_bmbt_validate_extent
+      [71565f4] xfs: iterate over extents in xfs_iextents_copy
+      [906abed] xfs: iterate over extents in xfs_bmap_extents_to_btree
+      [b2b1712] xfs: introduce the xfs_iext_cursor abstraction
+      [41caabd] xfs: iterate backwards in xfs_reflink_cancel_cow_blocks
+      [b121459] xfs: simplify xfs_reflink_convert_cow
+      [4351881] xfs: remove support for inlining data/extents into the inode fork
+      [135dcc1] xfs: allow unaligned extent records in xfs_bmbt_disk_set_all
+      [6bdcf26] xfs: use a b+tree for the in-core extent list
+      [0254c2f] xfs: remove the nr_extents argument to xfs_iext_insert
+      [c38ccf5] xfs: remove the nr_extents argument to xfs_iext_remove
+      [dac9c9b] xfs: pass struct xfs_bmbt_irec to xfs_bmbt_validate_extent
+      [866d782] xfs: move xfs_bmbt_irec and xfs_exntst_t to xfs_types.h
+      [fc41e2a] xfs: always define STATIC to static noinline
+      [88aa5de] xfs: trivial sparse fixes for the new scrub code
+      [4371155] xfs: mark xfs_errortag_ktype static
+      [afd7245] xfs: remove unused debug counts for xfs_lock_inodes
+      [a61a2c8] xfs: remove unreachable error injection code in xfs_qm_dqget
+      [4483eb5] xfs: mark xfs_btree_check_lblock and xfs_btree_check_ptr static
+      [e89fbb5] xfs: mark xlog_recover_check_summary STATIC
+      [181fdfe] xfs: mark xlog_verify_dest_ptr STATIC
 
-> So we can agree to disagree on the desired behavior, but for the
-> record, this and only this point is the API design flaw I am talking
-> about.
+Colin Ian King (1):
+      [c066411] xfs: remove redundant assignment to variable bit
 
-What flaw?
+Darrick J. Wong (4):
+      [06b1132] xfs: remove inode log format typedef
+      [e9e899a] xfs: move error injection tags into their own file
+      [13791d3] xfs: scrub extended attribute leaf space
+      [0dca060] xfs: scrub: avoid uninitialized return code
 
-You've come up with a scenario where the thinspace filesystem will
-behave like physical filesystem because that's what the thinspace
-unaware admin program expects it to be. i.e. thinspace is completely
-transparent to userspace, and physical grow does not prevent
-subsequent shrinks back to the original thinspace size.
+Dave Chinner (1):
+      [5d0eda0] xfs: convert remaining xfs_sb_version_... checks to bool
 
-None of this indicates that there is an interface problem...
+Eryu Guan (1):
+      [350976ae] xfs: truncate pagecache before writeback in xfs_setattr_size()
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Code Diffstat:
+
+ fs/xfs/Makefile                |    1 +
+ fs/xfs/libxfs/xfs_ag_resv.c    |    1 +
+ fs/xfs/libxfs/xfs_alloc.c      |    1 +
+ fs/xfs/libxfs/xfs_bmap.c       |  506 ++++++++--------
+ fs/xfs/libxfs/xfs_bmap.h       |   18 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c |  111 +---
+ fs/xfs/libxfs/xfs_bmap_btree.h |   11 +-
+ fs/xfs/libxfs/xfs_btree.c      |    5 +-
+ fs/xfs/libxfs/xfs_dir2.c       |    1 +
+ fs/xfs/libxfs/xfs_errortag.h   |  106 ++++
+ fs/xfs/libxfs/xfs_format.h     |   26 +-
+ fs/xfs/libxfs/xfs_ialloc.c     |    1 +
+ fs/xfs/libxfs/xfs_iext_tree.c  | 1006 +++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_buf.c  |    1 +
+ fs/xfs/libxfs/xfs_inode_fork.c | 1275 ++--------------------------------------
+ fs/xfs/libxfs/xfs_inode_fork.h |  136 ++---
+ fs/xfs/libxfs/xfs_log_format.h |    4 +-
+ fs/xfs/libxfs/xfs_refcount.c   |    1 +
+ fs/xfs/libxfs/xfs_rmap.c       |    1 +
+ fs/xfs/libxfs/xfs_rtbitmap.c   |    1 -
+ fs/xfs/libxfs/xfs_types.h      |   16 +
+ fs/xfs/scrub/attr.c            |  257 +++++++-
+ fs/xfs/scrub/bmap.c            |   13 +-
+ fs/xfs/scrub/btree.c           |    2 +-
+ fs/xfs/scrub/dabtree.c         |    6 +-
+ fs/xfs/scrub/dabtree.h         |    3 +-
+ fs/xfs/scrub/dir.c             |   18 +-
+ fs/xfs/scrub/scrub.c           |    2 +-
+ fs/xfs/xfs.h                   |    1 -
+ fs/xfs/xfs_bmap_util.c         |   27 +-
+ fs/xfs/xfs_buf.c               |    1 +
+ fs/xfs/xfs_dir2_readdir.c      |    8 +-
+ fs/xfs/xfs_dquot.c             |   21 +-
+ fs/xfs/xfs_error.c             |    3 +-
+ fs/xfs/xfs_error.h             |   83 ---
+ fs/xfs/xfs_inode.c             |   24 +-
+ fs/xfs/xfs_inode_item.c        |    2 -
+ fs/xfs/xfs_inode_item.h        |    2 +-
+ fs/xfs/xfs_iomap.c             |   15 +-
+ fs/xfs/xfs_iops.c              |   36 +-
+ fs/xfs/xfs_linux.h             |   14 +-
+ fs/xfs/xfs_log.c               |    3 +-
+ fs/xfs/xfs_log_recover.c       |   12 +-
+ fs/xfs/xfs_reflink.c           |   91 +--
+ fs/xfs/xfs_trace.h             |   61 +-
+ fs/xfs/xfs_trans_ail.c         |    1 +
+ 46 files changed, 1902 insertions(+), 2033 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_errortag.h
+ create mode 100644 fs/xfs/libxfs/xfs_iext_tree.c
