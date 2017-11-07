@@ -1,95 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47752 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:36171 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753226AbdKGLCL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Nov 2017 06:02:11 -0500
-Date: Tue, 7 Nov 2017 06:02:08 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: reinit btree pointer on attr tree inactivation walk
-Message-ID: <20171107110207.GA34920@bfoster.bfoster>
-References: <20171006200740.7140-1-bfoster@redhat.com>
- <20171006204751.GM7122@magnolia>
- <CAOGQQ29rTuDzxfcbYHDi6ez9Mk2MKFzf_Qa8ZeTTvgusme5feQ@mail.gmail.com>
- <20171106222626.GB16026@wotan.suse.de>
+        id S1752823AbdKGP0h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Nov 2017 10:26:37 -0500
+Date: Tue, 7 Nov 2017 16:26:29 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
+Message-ID: <20171107152629.GF11391@quack2.suse.cz>
+References: <20171009183129.GE11645@wotan.suse.de>
+ <87wp442lgm.fsf@xmission.com>
+ <8729041d-05e5-6bea-98db-7f265edde193@suse.de>
+ <20171015130625.o5k6tk5uflm3rx65@thunk.org>
+ <87efq4qcry.fsf@xmission.com>
+ <20171016011301.dcam44qylno7rm6a@thunk.org>
+ <c5bb6c1b-90c9-f50e-7283-af7e0de67caa@suse.de>
+ <20171017092017.GN9762@quack2.suse.cz>
+ <20171017141233.l3avshagrv7fr7xt@thunk.org>
+ <CAB=NE6UK3463JfiZQFHUiMj=v6HDG0k+uEE-2OvRMsW7i1EMhA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171106222626.GB16026@wotan.suse.de>
+In-Reply-To: <CAB=NE6UK3463JfiZQFHUiMj=v6HDG0k+uEE-2OvRMsW7i1EMhA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Marco Benatto <mbenatto@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Theodore Ts'o <tytso@mit.edu>, colyli@suse.com, Jan Kara <jack@suse.cz>, Aleksa Sarai <asarai@suse.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Dave Chinner <david@fromorbit.com>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jan Blunck <jblunck@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Oscar Salvador <osalvador@suse.com>, Hannes Reinecke <hare@suse.de>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Nov 06, 2017 at 11:26:26PM +0100, Luis R. Rodriguez wrote:
-> On Wed, Oct 11, 2017 at 02:11:44PM -0300, Marco Benatto wrote:
-> > Hello all
-> > 
-> > On Fri, Oct 6, 2017 at 5:47 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > On Fri, Oct 06, 2017 at 04:07:40PM -0400, Brian Foster wrote:
-> > > > xfs_attr3_root_inactive() walks the attr fork tree to invalidate the
-> > > > associated blocks. xfs_attr3_node_inactive() recursively descends
-> > > > from internal blocks to leaf blocks, caching block address values
-> > > > along the way to revisit parent blocks, locate the next entry and
-> > > > descend down that branch of the tree.
-> > > >
-> > > > The code that attempts to reread the parent block is unsafe because
-> > > > it assumes that the local xfs_da_node_entry pointer remains valid
-> > > > after an xfs_trans_brelse() and re-read of the parent buffer. Under
-> > > > heavy memory pressure, it is possible that the buffer has been
-> > > > reclaimed and reallocated by the time the parent block is reread.
-> > > > This means that 'btree' can point to an invalid memory address, lead
-> > > > to a random/garbage value for child_fsb and cause the subsequent
-> > > > read of the attr fork to go off the rails and return a NULL buffer
-> > > > for an attr fork offset that is most likely not allocated.
-> > > >
-> > > > Note that this problem can be manufactured by setting
-> > > > XFS_ATTR_BTREE_REF to 0 to prevent LRU caching of attr buffers,
-> > > > creating a file with a multi-level attr fork and removing it to
-> > > > trigger inactivation.
-> > > >
-> > > > To address this problem, reinit the node/btree pointers to the
-> > > > parent buffer after it has been re-read. This ensures btree points
-> > > > to a valid record and allows the walk to proceed.
-> > > >
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > >
-> > > Looks ok,
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > /me wonders if this is a good enough reason to introduce a new errortag
-> > > that turns xfs_buf_set_ref into a no-op and fills bp->b_addr with
-> > > garbage prior to releasing the memory to weed out any other dangling
-> > > pointers?
-> > >
-> > > > ---
-> > > >
-> > > > I suspect this is the cause of the NULL buf problem down in
-> > > > xfs_attr_inactive(). I can manufacture an instance of that problem as
-> > > > noted above. We have a customer who's hitting that problem and will
-> > > > attempt to validate this fix, but there is no confirmation as of yet.
-> > > > I'm posting this for review in the meantime because this seems like a
-> > > > legit fix regardless of whether they are hitting this or something else.
-> > >
-> > > Let me know what they report back.
-> > 
-> > Just to let you know, we've got some news regarding this testing and the
-> > patch seems effective to fix the issue they were facing before at
-> > xfs_attr_inactive() case.
+On Mon 06-11-17 11:25:34, Luis R. Rodriguez wrote:
+> On Tue, Oct 17, 2017 at 7:12 AM, Theodore Ts'o <tytso@mit.edu> wrote:
+> > On Tue, Oct 17, 2017 at 11:20:17AM +0200, Jan Kara wrote:
+> >> The operation we are speaking about here is different. It is more along the
+> >> lines of "release this device".  And in the current world of containers,
+> >> mount namespaces, etc. it is not trivial for userspace to implement this
+> >> using umount(2) as Ted points out. I believe we could do that by walking
+> >> through all mount points of a superblock and unmounting them (and I don't
+> >> want to get into a discussion how to efficiently implement that now but in
+> >> principle the kernel has all the necessary information).
+> >
+> > Yes, this is what I want.  And regardless of how efficiently or not
+> > the kernel can implement such an operatoin, by definition it will be
+> > more efficient than if we have to do it in userspace.
 > 
-> Is there an actual oops trace that is reported somewhere? I didn't see it
-> provided.
+> It seems most folks agree we could all benefit from this, to help
+> userspace with a sane implementation.
 > 
+> >> What I'm a bit concerned about is the "release device reference" part - for
+> >> a block device to stop looking busy we have to do that however then the
+> >> block device can go away and the filesystem isn't prepared to that - we
+> >> reference sb->s_bdev in lots of places, we have buffer heads which are part
+> >> of bdev page cache, and probably other indirect assumptions I forgot about
+> >> now.
+> 
+> Is this new operation really the only place where such type of work
+> could be useful for, or are there existing uses cases this sort of
+> functionality could also be used for?
 
-I believe it is this thread:
+The functionality of being able to "invalidate" open file descriptor so
+that it no longer points to the object it used to is useful also for other
+cases I guess...
 
-https://www.spinics.net/lists/linux-xfs/msg06695.html
+> For instance I don't think we do something similar to revokefs(2) (as
+> described below) when a devices has been removed from a system, you
+> seem to suggest we remove the dev from gendisk leaving it dangling and
+> invisible. But other than this, it would seem its up to the filesystem
+> to get anything else implemented correctly?
 
-Brian
+Yes, that's the current situation. When the device is yanked from under a
+filesystem the current implementation makes it relatively straightforward
+from fs POV - for all fs cares about the underlying device still exists. It
+just returns errors for any IO done to it. It is upto fs implementation to
+deal with it and be able to shutdown itself correctly in such case.
 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > This all doesn't have to be a single system call.  Perhaps it would
+> > make sense for first and second step to be one system call --- call it
+> > revokefs(2), perhaps.  And then the last step could be another system
+> > call --- maybe umountall(2).
+> 
+> Wouldn't *some* part of this also help *enhance* filesystem suspend /
+> thaw be used on system suspend / resume as well?
+>
+> If I may, if we split these up, into two, say revokefs(2) and
+> umountall(2), how about:
+> 
+> a) revokefs(2): ensures all file descriptors for the fs are closed
+>    - blocks access attempts high up in VFS
+>    - point any file descriptor to a revoked null struct file
+>    - redirect any task struct CWD's so as if the directory had rmmdir'd
+>    - munmap any mapped regions
+> 
+> Of these only the first one seems useful for fs suspend?
+
+If you reference "blocks access attempts high up in VFS" that already
+happens for writes when you freeze the filesystem. Also suspend is
+different in that userspace is already frozen when you get to freezing
+filesystems so you care only about in-kernel users and there you do not
+have standard set of entry points anyway... So I don't see much crossection
+with system suspend here.
+
+> 
+> b) umountall(2): properly unmounts filesystem from all namespaces
+>    - May need to verify if revokefs(2) was called, if so, now that all
+> file descriptors should
+>      be closed, do syncfs() to force out any dirty pages
+
+IMHO it doesn't need to verify this. The unmount will just fail if someone
+is still using some fs.
+
+>    - unmount() in all namespaces, this takes care of any buffer or page
+>      cache reference once the ref count of the struct super block goes to
+>      to zero
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
