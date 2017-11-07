@@ -1,127 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:49522 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751844AbdKHMg2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 07:36:28 -0500
-Received: by mail-wr0-f182.google.com with SMTP id o88so2270297wrb.6
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Nov 2017 04:36:27 -0800 (PST)
+Received: from userp1040.oracle.com ([156.151.31.81]:25756 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750920AbdKGCGV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Nov 2017 21:06:21 -0500
+Date: Mon, 6 Nov 2017 18:06:07 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] License cleanup: add SPDX GPL-2.0 license identifier to
+ files with no license
+Message-ID: <20171107020607.GA26910@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171107192846.GA24617@infradead.org>
-References: <20171107020607.GA26910@magnolia> <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com> <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com> <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org> <20171107192846.GA24617@infradead.org>
-From: Philippe Ombredanne <pombredanne@nexb.com>
-Date: Wed, 8 Nov 2017 13:35:46 +0100
-Message-ID: <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Nov 7, 2017 at 8:28 PM, Christoph Hellwig <hch@infradead.org> wrote=
-:
-> On Tue, Nov 07, 2017 at 02:15:26PM -0500, Theodore Ts'o wrote:
->> On Tue, Nov 07, 2017 at 06:46:58PM +0000, Alan Cox wrote:
->> > > Given that it had no license text on it at all, it "defaults" to GPL=
-v2,
->> > > so the GPLv2 SPDX identifier was added to it.
->> > >
->> > > No copyright was changed, nothing at all happened except we explicit=
-ly
->> > > list the license of the file, instead of it being "implicit" before.
->> >
->> > Well if Christoph owns the copyright (if there is one) and he has stat=
-ed
->> > he believes it is too trivial to copyright then it needs an SPDX tag t=
-hat
->> > indicates the rightsholder has stated it's too trivial to copyright an=
-d
->> > (by estoppel) revoked any right they might have to pursue a claim.
->>
->> If Cristoph has revoked any right to pursue a claim, then he's also
->> legally given up the right to complain if, say, Bradley Kuhn starting
->> distributing a version with a GPLv3 permission statement --- or if Greg
->> K-H adds a GPLv2 SPDX identifier.  :-)
->
->
-> First Christoph really appreciate=D1=95 spelling his name right.
->
-> Second Christoph really appreciates talking to him when trying to slap
-> on licensing bits on his code.  I'm not evil, but I'd really like to
-> understand what you are doing and why, and I might be fairly agreeable
-> if that makes sense.
->
-> Doing batch annotations of code where you do not the know any of
-> the history of is a receipt for a desaster if we want to use that
-> information anywhere.
->
-> So Greg, please explain WTF you are trying to do and talk to the
-> people who wrote the code you are "annotating".
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Christoph:
+Source kernel commit: b24413180f5600bcb3bb70fbed5cf186b60864bd
 
-I am not speaking for Greg but let me highlight some issues and
-benefits as I chipped in a bit to help:
+Many source files in the tree are missing licensing information, which
+makes it harder for compliance tools to determine the correct license.
 
-Some data points in the 4.14.rc7 kernel:
-- there are 64,742 distinct license statements
- ... in 114,597 blocks of text
- ... in 42,602 files
-- license statements represent 480,455 lines of text
-- licenses are worded in 1,015 different ways
-- there are about 85 distinct licenses, the bulk being the GPL
+By default all files without license information are under the default
+license of the kernel, which is GPL version 2.
 
-NB: All of these tallies were computed with scancode-toolkit [1]
+Update the files which contain no license information with the 'GPL-2.0'
+SPDX license identifier.  The SPDX identifier is a legally binding
+shorthand, which can be used instead of the full boiler plate text.
 
-License text lines represent about 14.7% of all source comments.
-(using a CLOC to count comment lines)
+This patch is based on work done by Thomas Gleixner and Kate Stewart and
+Philippe Ombredanne.
 
->From an engineering perspective this feels to me as pure madness,
-unless everyone in kernel land is in love with legalese!
+How this work was done:
 
-I like to think of it this way:
+Patches were generated and checked against linux-4.14-rc6 for a subset of
+the use cases:
+- file had no licensing information it it.
+- file was a */uapi/* one with no licensing information in it,
+- file was a */uapi/* one with existing licensing information,
 
-Licensing is important but repetitive long boilerplate in patches and
-in every file is just a noisy distraction from the code substance.
+Further patches will be generated in subsequent months to fix up cases
+where non-standard license headers were used, and references to license
+had to be inferred by heuristics based on keywords.
 
-Imagine if the kernel had 500 versions of a printf() function?
-Maintainers would refactor the hell of it to use a few functions.
+The analysis to determine which SPDX License Identifier to be applied to
+a file was done in a spreadsheet of side by side results from of the
+output of two independent scanners (ScanCode & Windriver) producing SPDX
+tag:value files created by Philippe Ombredanne.  Philippe prepared the
+base worksheet, and did an initial spot review of a few 1000 files.
 
-Replacing the boilerplate with licensing ids is exactly the same:
-a sane refactoring to remove duplicated boilerplate.
+The 4.13 kernel was the starting point of the analysis with 60,537 files
+assessed.  Kate Stewart did a file by file comparison of the scanner
+results in the spreadsheet to determine which SPDX license identifier(s)
+to be applied to the file. She confirmed any determination that was not
+immediately clear with lawyers working with the Linux Foundation.
 
-In the end and ideally there should be no more than one line of
-licensing info per file, so no more than 70Kish: so there are
-about 400K lines of boilerplate to remove.
+Criteria used to select files for SPDX license identifier tagging was:
+- Files considered eligible had to be source code files.
+- Make and config files were included as candidates if they contained >5
+lines of source
+- File already had some variant of a license header in it (even if <5
+lines).
 
-The benefits now and later:
-- no distraction with licensing boilerplate cr*p in patches and files
-- no guessing licensing needed when sending a patch
-- anyone can grep the kernel tree for licensing, no extra tool needed
-- Greg must feel really good about deleting so much things for once
+All documentation files were explicitly excluded.
 
-The downsides:
-- folks can no longer express their creativity in licensing texts like
-licensing thermal code under the "therms" of the GPL [2]
-- legalese lovers need to find another codebase to satisfy their
-addiction
+The following heuristics were used to determine which SPDX license
+identifiers to apply.
 
-Note also that beside the kernel, U-Boot has adopted the same
-approach for quite a while, and in the application world the Eclipse
-Foundation, JavaScript NPMs and Rubygems are some examples
-that adopted SPDX license ids to simplify and clarify licensing
-documentation.
+- when both scanners couldn't find any license traces, file was
+considered to have no license information in it, and the top level
+COPYING file license applied.
 
-[1] https://github.com/nexB/scancode-toolkit
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree=
-/drivers/w1/slaves/w1_therm.c?h=3Dv4.14-rc8#n8
+For non */uapi/* files that summary was:
 
---=20
-Cordially
-Philippe Ombredanne
+SPDX license identifier                            # files
+---------------------------------------------------|-------
+GPL-2.0                                              11139
+
+and resulted in the first patch in this series.
+
+If that file was a */uapi/* path one, it was "GPL-2.0 WITH
+Linux-syscall-note" otherwise it was "GPL-2.0".  Results of that was:
+
+SPDX license identifier                            # files
+---------------------------------------------------|-------
+GPL-2.0 WITH Linux-syscall-note                        930
+
+and resulted in the second patch in this series.
+
+- if a file had some form of licensing information in it, and was one
+of the */uapi/* ones, it was denoted with the Linux-syscall-note if
+any GPL family license was found in the file or had no licensing in
+it (per prior point).  Results summary:
+
+SPDX license identifier                            # files
+---------------------------------------------------|------
+GPL-2.0 WITH Linux-syscall-note                       270
+GPL-2.0+ WITH Linux-syscall-note                      169
+((GPL-2.0 WITH Linux-syscall-note) OR BSD-2-Clause)    21
+((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause)    17
+LGPL-2.1+ WITH Linux-syscall-note                      15
+GPL-1.0+ WITH Linux-syscall-note                       14
+((GPL-2.0+ WITH Linux-syscall-note) OR BSD-3-Clause)    5
+LGPL-2.0+ WITH Linux-syscall-note                       4
+LGPL-2.1 WITH Linux-syscall-note                        3
+((GPL-2.0 WITH Linux-syscall-note) OR MIT)              3
+((GPL-2.0 WITH Linux-syscall-note) AND MIT)             1
+
+and that resulted in the third patch in this series.
+
+- when the two scanners agreed on the detected license(s), that became
+the concluded license(s).
+
+- when there was disagreement between the two scanners (one detected a
+license but the other didn't, or they both detected different
+licenses) a manual inspection of the file occurred.
+
+- In most cases a manual inspection of the information in the file
+resulted in a clear resolution of the license that should apply (and
+which scanner probably needed to revisit its heuristics).
+
+- When it was not immediately clear, the license identifier was
+confirmed with lawyers working with the Linux Foundation.
+
+- If there was any question as to the appropriate license identifier,
+the file was flagged for further research and to be revisited later
+in time.
+
+In total, over 70 hours of logged manual review was done on the
+spreadsheet to determine the SPDX license identifiers to apply to the
+source files by Kate, Philippe, Thomas and, in some cases, confirmation
+by lawyers working with the Linux Foundation.
+
+Kate also obtained a third independent scan of the 4.13 code base from
+FOSSology, and compared selected files where the other two scanners
+disagreed against that SPDX file, to see if there was new insights.  The
+Windriver scanner is based on an older version of FOSSology in part, so
+they are related.
+
+Thomas did random spot checks in about 500 files from the spreadsheets
+for the uapi headers and agreed with SPDX license identifier in the
+files he inspected. For the non-uapi files Thomas did random spot checks
+in about 15000 files.
+
+In initial set of patches against 4.14-rc6, 3 files were found to have
+copy/paste license identifier errors, and have been fixed to reflect the
+correct identifier.
+
+Additionally Philippe spent 10 hours this week doing a detailed manual
+inspection and review of the 12,461 patched files from the initial patch
+version early this week with:
+- a full scancode scan run, collecting the matched texts, detected
+license ids and scores
+- reviewing anything where there was a license detected (about 500+
+files) to ensure that the applied SPDX license was correct
+- reviewing anything where there was no detection but the patch license
+was not GPL-2.0 WITH Linux-syscall-note to ensure that the applied
+SPDX license was correct
+
+This produced a worksheet with 20 files needing minor correction.  This
+worksheet was then exported into 3 different .csv files for the
+different types of files to be modified.
+
+These .csv files were then reviewed by Greg.  Thomas wrote a script to
+parse the csv files and add the proper SPDX tag to the file, in the
+format that the file expected.  This script was further refined by Greg
+based on the output to detect more types of files automatically and to
+distinguish between header and source .c files (which need different
+comment types.)  Finally Greg ran the script using the .csv files to
+generate the patches.
+
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ libxfs/xfs_cksum.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libxfs/xfs_cksum.h b/libxfs/xfs_cksum.h
+index 8211f48..999a290 100644
+--- a/libxfs/xfs_cksum.h
++++ b/libxfs/xfs_cksum.h
+@@ -1,3 +1,4 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ #ifndef _XFS_CKSUM_H
+ #define _XFS_CKSUM_H 1
+ 
