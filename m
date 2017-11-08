@@ -1,60 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43024 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754876AbdKGS2y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 13:28:54 -0500
-Date: Tue, 7 Nov 2017 19:29:03 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171107182903.GA4588@kroah.com>
-References: <20171107020607.GA26910@magnolia>
- <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:53835 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751056AbdKHH5I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Nov 2017 02:57:08 -0500
+From: Hou Tao <houtao1@huawei.com>
+Subject: [PATCH v2 1/4] dmflakey: support multiple dm targets for a dm-flakey device
+Date: Wed, 8 Nov 2017 16:02:47 +0800
+Message-ID: <20171108080250.5662-2-houtao1@huawei.com>
+In-Reply-To: <20171108080250.5662-1-houtao1@huawei.com>
+References: <20171108080250.5662-1-houtao1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171107172042.GB26910@magnolia>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-On Tue, Nov 07, 2017 at 09:20:42AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 07, 2017 at 08:39:40AM +0100, Greg Kroah-Hartman wrote:
-> > On Mon, Nov 06, 2017 at 11:20:40PM -0800, Christoph Hellwig wrote:
-> > > NAK, for both the libxfs patch and the kernel one.
-> > 
-> > What libxfs patch?  And what "kernel one" are you referring to here?
-> > 
-> > > I wrote the file and it has no copyright header because it conatians
-> > > trivial, non-copyrightable code.
-> > 
-> > What file exactly?
-> > 
-> > And from what I know, there is nothing that is "non-copyrightable".
-> > 
-> > And this isn't changing the copyright of _ANYTHING_ it is just putting
-> > the explicit license of the file, on each file in the kernel, because it
-> > needs to be tracked.
-> > 
-> > > I don't know why people think they can touch license information on
-> > > files I've written without even asking me.
-> > 
-> > Nothing was changed, the license should be the exact same as it was
-> > before.  But as I don't know what file you are referring to here, it's a
-> > bit hard to determine what you are talking about exactly :(
-> 
-> fs/xfs/libxfs/xfs_cksum.h
+dm-flakey can be used to emulate IO write error, however, when
+we also need to prevent the IO error for a specific range of the
+block device (eg., the log region of a XFS), we need to specify
+multiple dm targets for the dm device.
 
-Given that it had no license text on it at all, it "defaults" to GPLv2,
-so the GPLv2 SPDX identifier was added to it.
+Option --table can not accommodate the multiple dm targets case,
+so let dmsetup get the possible-multiple-targets table from
+standard input.
 
-No copyright was changed, nothing at all happened except we explicitly
-list the license of the file, instead of it being "implicit" before.
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ common/dmflakey | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-thanks,
+diff --git a/common/dmflakey b/common/dmflakey
+index 4434307..16b82d2 100644
+--- a/common/dmflakey
++++ b/common/dmflakey
+@@ -77,7 +77,7 @@ _load_flakey_table()
+ 	$DMSETUP_PROG suspend $suspend_opt flakey-test
+ 	[ $? -ne 0 ] && _fatal "failed to suspend flakey-test"
+ 
+-	$DMSETUP_PROG load flakey-test --table "$table"
++	echo -e "$table" | $DMSETUP_PROG load flakey-test
+ 	[ $? -ne 0 ] && _fatal "failed to load table into flakey-test"
+ 
+ 	$DMSETUP_PROG resume flakey-test
+-- 
+2.9.5
 
-greg k-h
