@@ -1,104 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44202 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754089AbdKAPhE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:37:04 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 12/18] mm: Define MAP_SYNC and VM_SYNC flags
-Date: Wed,  1 Nov 2017 16:36:41 +0100
-Message-Id: <20171101153648.30166-13-jack@suse.cz>
-In-Reply-To: <20171101153648.30166-1-jack@suse.cz>
-References: <20171101153648.30166-1-jack@suse.cz>
+Received: from bombadil.infradead.org ([65.50.211.133]:42170 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752057AbdKHPL1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 10:11:27 -0500
+Date: Wed, 8 Nov 2017 07:11:21 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171108151121.GC10374@infradead.org>
+References: <20171107020607.GA26910@magnolia>
+ <20171107072040.GB4586@infradead.org>
+ <20171107073940.GB4654@kroah.com>
+ <20171107172042.GB26910@magnolia>
+ <20171107182903.GA4588@kroah.com>
+ <20171107184658.56b87d41@alans-desktop>
+ <20171107191526.x3rzfcnnlmaz264d@thunk.org>
+ <20171107192846.GA24617@infradead.org>
+ <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>
+To: Philippe Ombredanne <pombredanne@nexb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
-Define new MAP_SYNC flag and corresponding VMA VM_SYNC flag. As the
-MAP_SYNC flag is not part of LEGACY_MAP_MASK, currently it will be
-refused by all MAP_SHARED_VALIDATE map attempts and silently ignored for
-everything else.
+On Wed, Nov 08, 2017 at 01:35:46PM +0100, Philippe Ombredanne wrote:
+> The benefits now and later:
+> - no distraction with licensing boilerplate cr*p in patches and files
+> - no guessing licensing needed when sending a patch
+> - anyone can grep the kernel tree for licensing, no extra tool needed
+> - Greg must feel really good about deleting so much things for once
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/proc/task_mmu.c              | 1 +
- include/linux/mm.h              | 1 +
- include/linux/mman.h            | 8 ++++++--
- include/uapi/asm-generic/mman.h | 1 +
- 4 files changed, 9 insertions(+), 2 deletions(-)
+This patch didn't delete anything, it added random notes.
 
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 5589b4bd4b85..ea78b37deeaa 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -664,6 +664,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
- 		[ilog2(VM_ACCOUNT)]	= "ac",
- 		[ilog2(VM_NORESERVE)]	= "nr",
- 		[ilog2(VM_HUGETLB)]	= "ht",
-+		[ilog2(VM_SYNC)]	= "sf",
- 		[ilog2(VM_ARCH_1)]	= "ar",
- 		[ilog2(VM_WIPEONFORK)]	= "wf",
- 		[ilog2(VM_DONTDUMP)]	= "dd",
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ca72b67153d5..5411cb7442de 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -189,6 +189,7 @@ extern unsigned int kobjsize(const void *objp);
- #define VM_ACCOUNT	0x00100000	/* Is a VM accounted object */
- #define VM_NORESERVE	0x00200000	/* should the VM suppress accounting */
- #define VM_HUGETLB	0x00400000	/* Huge TLB Page VM */
-+#define VM_SYNC		0x00800000	/* Synchronous page faults */
- #define VM_ARCH_1	0x01000000	/* Architecture-specific flag */
- #define VM_WIPEONFORK	0x02000000	/* Wipe VMA contents in child. */
- #define VM_DONTDUMP	0x04000000	/* Do not include in the core dump */
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index 94b63b4d71ff..8f7cc87828e6 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -9,7 +9,7 @@
- 
- /*
-  * Arrange for legacy / undefined architecture specific flags to be
-- * ignored by default in LEGACY_MAP_MASK.
-+ * ignored by mmap handling code.
-  */
- #ifndef MAP_32BIT
- #define MAP_32BIT 0
-@@ -23,6 +23,9 @@
- #ifndef MAP_UNINITIALIZED
- #define MAP_UNINITIALIZED 0
- #endif
-+#ifndef MAP_SYNC
-+#define MAP_SYNC 0
-+#endif
- 
- /*
-  * The historical set of flags that all mmap implementations implicitly
-@@ -125,7 +128,8 @@ calc_vm_flag_bits(unsigned long flags)
- {
- 	return _calc_vm_trans(flags, MAP_GROWSDOWN,  VM_GROWSDOWN ) |
- 	       _calc_vm_trans(flags, MAP_DENYWRITE,  VM_DENYWRITE ) |
--	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    );
-+	       _calc_vm_trans(flags, MAP_LOCKED,     VM_LOCKED    ) |
-+	       _calc_vm_trans(flags, MAP_SYNC,	     VM_SYNC      );
- }
- 
- unsigned long vm_commit_limit(void);
-diff --git a/include/uapi/asm-generic/mman.h b/include/uapi/asm-generic/mman.h
-index 7162cd4cca73..00e55627d2df 100644
---- a/include/uapi/asm-generic/mman.h
-+++ b/include/uapi/asm-generic/mman.h
-@@ -12,6 +12,7 @@
- #define MAP_NONBLOCK	0x10000		/* do not block on IO */
- #define MAP_STACK	0x20000		/* give out an address that is best suited for process/thread stacks */
- #define MAP_HUGETLB	0x40000		/* create a huge page mapping */
-+#define MAP_SYNC	0x80000		/* perform synchronous page faults for the mapping */
- 
- /* Bits [26:31] are reserved, see mman-common.h for MAP_HUGETLB usage */
- 
--- 
-2.12.3
+I see now Greg deletes things from files he maintains which is even
+worse, given that the kernel tree doesn't document anywhere what these
+tags actually mean.
 
+So he deletes a lot of license tags and replaces them with tags he
+puts a great significance on, but which aren't defined.  A quick googles
+shows some Linuxfoundation web page defines them, but they could change
+them any time they want, nevermind that we don't even have a reference
+to them either.
+
+> 
+> The downsides:
+> - folks can no longer express their creativity in licensing texts like
+> licensing thermal code under the "therms" of the GPL [2]
+
+I'd love something like that to happen.  But for that we don't need a
+sneaky patch that doesn't talk to kernel contributors.
+
+For that we need to
+
+ a) agree on which licensing schemes we accept for future contributions
+ b) cleary document that policy in the kernel tree
+ c) reject anything that doesn't matter the above policy by manual
+    and/or automated review
+
+An automated tag scheme might help with b) and c) above if done
+properly.  But for that we need to document it, agree on it, discuss
+it with everyone involved, etc.  None of that has happened.  Instead
+Greg farted arcane tags that he thinks have a legal singnificance
+all over three three without talking to the people whos code he tagged,
+without any RFC or public discussion, without documenting what his
+tags mean or any future strategy towards making use of them.
