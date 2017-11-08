@@ -1,35 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46397 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755169AbdKGHRL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 02:17:11 -0500
-Date: Mon, 6 Nov 2017 23:17:10 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 12/14] generic/204: break out of fs-filling loop early
- if we ENOSPC
-Message-ID: <20171107071709.GA4586@infradead.org>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
- <150957286222.18388.3253654888670864191.stgit@magnolia>
- <20171107015411.GA28335@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:43857 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753214AbdKHA0l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2017 19:26:41 -0500
+Date: Tue, 7 Nov 2017 16:26:36 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs_repair: always release btree buffers when refcountbt
+ checks fail
+Message-ID: <20171108002636.GD26910@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171107015411.GA28335@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Nov 06, 2017 at 05:54:11PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Use the available block count to compute the number of files we think
-> we can create, rather than hardcoding a particular size.  This fixes
-> the ENOSPC failures for xfs filesystems with rmap/reflink support.
+During phase 4 of repair, we compare the refcount records we've computed
+against what's in the refcount btree.  If the btree is corrupt the
+libxfs refcount calls will fail, but on our way out of the function we
+don't make sure to clear all the btree cursor's buffer pointers.  This
+leads to a repair deadlock in xfs/372 when fuzzing ptrs[1] to -1U
+because we forgot to release a buffer.
 
-This seems to work fine for me.  Note that even without 204 didn't
-always fail for me on reflink filesystems, although it seems like it
-failed more ofen than not:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/rmap.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 01d6f0f..d51590b 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -1359,7 +1359,8 @@ _("Incorrect reference count: saw (%u/%u) len %u nlinks %u; should be (%u/%u) le
+ 
+ err:
+ 	if (bt_cur)
+-		libxfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++		libxfs_btree_del_cursor(bt_cur, error ? XFS_BTREE_ERROR :
++							XFS_BTREE_NOERROR);
+ 	if (agbp)
+ 		libxfs_putbuf(agbp);
+ 	free_slab_cursor(&rl_cur);
