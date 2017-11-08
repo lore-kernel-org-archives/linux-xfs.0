@@ -1,41 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www.llwyncelyn.cymru ([82.70.14.225]:46004 "EHLO fuzix.org"
+Received: from mx1.redhat.com ([209.132.183.28]:54182 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752025AbdKGRIX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Nov 2017 12:08:23 -0500
-Date: Tue, 7 Nov 2017 17:07:44 +0000
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171107170744.79571752@alans-desktop>
-In-Reply-To: <20171107073940.GB4654@kroah.com>
-References: <20171107020607.GA26910@magnolia>
-        <20171107072040.GB4586@infradead.org>
-        <20171107073940.GB4654@kroah.com>
+        id S1751408AbdKHJtS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Nov 2017 04:49:18 -0500
+Date: Wed, 8 Nov 2017 17:49:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 2/4] common/rc: support checking the version of
+ dm-target in _require_dm_target()
+Message-ID: <20171108094914.GP17339@eguan.usersys.redhat.com>
+References: <20171108080250.5662-1-houtao1@huawei.com>
+ <20171108080250.5662-3-houtao1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171108080250.5662-3-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-On Tue, 7 Nov 2017 08:39:40 +0100
-Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
+On Wed, Nov 08, 2017 at 04:02:48PM +0800, Hou Tao wrote:
+> Some features of dm-target are not available on the old linux kernel,
+> and we can use the version of dm-target to check the availability.
 
-> On Mon, Nov 06, 2017 at 11:20:40PM -0800, Christoph Hellwig wrote:
-> > NAK, for both the libxfs patch and the kernel one.  
-> 
-> What libxfs patch?  And what "kernel one" are you referring to here?
-> 
-> > I wrote the file and it has no copyright header because it conatians
-> > trivial, non-copyrightable code.  
-> 
-> What file exactly?
-> 
-> And from what I know, there is nothing that is "non-copyrightable".
+We don't check version numbers in fstests, but actually try what is
+requested and _notrun if the test run failed.
 
-You'd be wrong on that. Lots of things are not copyrightable.
+I think we can keep _require_dm_target unchanged and add a new
+_require_dmflakey_error_writes in common/dmflakey, e.g.
 
-Alan
+_require_dmflakey_error_writes()
+{
+	_require_dm_targets flakey
+
+	<try creating flakey table with error_writes option here and
+	_notrun if failed>
+}
+
+And call this new _require rule in the test.
+
+Thanks,
+Eryu
