@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55543 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751856AbdKHSGw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 13:06:52 -0500
-Date: Wed, 8 Nov 2017 10:06:45 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26187 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751470AbdKHSqz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 13:46:55 -0500
+Date: Wed, 8 Nov 2017 10:46:15 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
  identifier to files with no license
-Message-ID: <20171108180645.GA23143@infradead.org>
+Message-ID: <20171108184615.GE26910@magnolia>
 References: <20171107020607.GA26910@magnolia>
  <20171107072040.GB4586@infradead.org>
  <20171107073940.GB4654@kroah.com>
@@ -16,68 +16,105 @@ References: <20171107020607.GA26910@magnolia>
  <20171107184658.56b87d41@alans-desktop>
  <20171107191526.x3rzfcnnlmaz264d@thunk.org>
  <20171107192846.GA24617@infradead.org>
- <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
- <20171108151121.GC10374@infradead.org>
+ <20171107202648.GB10679@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20171108151121.GC10374@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20171107202648.GB10679@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Philippe Ombredanne <pombredanne@nexb.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-And I swear I wrote the previous mail before I read this announcement:
-
-https://fsfe.org/news/2017/news-20171108-01.en.html
-
-But the actual practices there are pretty much what I'd expect as a
-start (plus a list of acceptable licenses), they even use the same
-identifiers as you are adding, but they also back them up with the
-actual license texts in the source tree, which makes them a whole lot
-more useful.
-
-On Wed, Nov 08, 2017 at 07:11:21AM -0800, Christoph Hellwig wrote:
-> On Wed, Nov 08, 2017 at 01:35:46PM +0100, Philippe Ombredanne wrote:
-> > The benefits now and later:
-> > - no distraction with licensing boilerplate cr*p in patches and files
-> > - no guessing licensing needed when sending a patch
-> > - anyone can grep the kernel tree for licensing, no extra tool needed
-> > - Greg must feel really good about deleting so much things for once
-> 
-> This patch didn't delete anything, it added random notes.
-> 
-> I see now Greg deletes things from files he maintains which is even
-> worse, given that the kernel tree doesn't document anywhere what these
-> tags actually mean.
-> 
-> So he deletes a lot of license tags and replaces them with tags he
-> puts a great significance on, but which aren't defined.  A quick googles
-> shows some Linuxfoundation web page defines them, but they could change
-> them any time they want, nevermind that we don't even have a reference
-> to them either.
-> 
+On Tue, Nov 07, 2017 at 09:26:48PM +0100, Greg Kroah-Hartman wrote:
+> On Tue, Nov 07, 2017 at 11:28:46AM -0800, Christoph Hellwig wrote:
+> > On Tue, Nov 07, 2017 at 02:15:26PM -0500, Theodore Ts'o wrote:
+> > > On Tue, Nov 07, 2017 at 06:46:58PM +0000, Alan Cox wrote:
+> > > > > Given that it had no license text on it at all, it "defaults" to GPLv2,
+> > > > > so the GPLv2 SPDX identifier was added to it.
+> > > > > 
+> > > > > No copyright was changed, nothing at all happened except we explicitly
+> > > > > list the license of the file, instead of it being "implicit" before.
+> > > > 
+> > > > Well if Christoph owns the copyright (if there is one) and he has stated
+> > > > he believes it is too trivial to copyright then it needs an SPDX tag that
+> > > > indicates the rightsholder has stated it's too trivial to copyright and
+> > > > (by estoppel) revoked any right they might have to pursue a claim.
+> > > 
+> > > If Cristoph has revoked any right to pursue a claim, then he's also
+> > > legally given up the right to complain if, say, Bradley Kuhn starting
+> > > distributing a version with a GPLv3 permission statement --- or if Greg
+> > > K-H adds a GPLv2 SPDX identifier.  :-)
 > > 
-> > The downsides:
-> > - folks can no longer express their creativity in licensing texts like
-> > licensing thermal code under the "therms" of the GPL [2]
+> > 
+> > First Christoph really appreciateѕ spelling his name right.
+> > 
+> > Second Christoph really appreciates talking to him when trying to slap
+> > on licensing bits on his code.  I'm not evil, but I'd really like to
+> > understand what you are doing and why, and I might be fairly agreeable
+> > if that makes sense.
 > 
-> I'd love something like that to happen.  But for that we don't need a
-> sneaky patch that doesn't talk to kernel contributors.
+> I already described it in the pull request, and in this patch itself,
+> and in this thread already, what is happening, why it was done, and how
+> it was done.  I don't know how everyone who was on the original email
+> thread got dropped and the xfs mailing list added, that's just odd...
+
+This thread is a result of regular efforts to keep the xfsprogs libxfs
+code roughly in-sync with the kernel libxfs code.  That's how the xfs
+mailing is on cc on this thread.
+
+That said, it's pretty obvious from Christoph's reaction that nobody
+emailed Christoph (the original author of xfs_cksum.h) about the
+original change to the kernel source.  Nobody emailed the XFS
+maintainers for an ack to the kernel change, and nobody cc'd the
+linux-xfs mailing list as a heads-up.  Neither XFS maintainer were
+invited to the summit where this change was discussed.
+
+I always thought the rules in SubmittingPatches[1] existed to facilitate
+cooperation with Linux subprojects and I strongly protest your decision
+to ignore us.
+
+Had anyone involved us, I would have suggested fixing the whole XFS tree
+to use the shortened tag instead of each file containing its own
+mutations of the GPL, and our broader XFS community could have worked
+with you on this.
+
+--D
+
+[1] submitting-patches.rst, section 5:
+
+5) Select the recipients for your patch
+---------------------------------------
+
+You should always copy the appropriate subsystem maintainer(s) on any
+patch to code that they maintain; look through the MAINTAINERS file and
+the source code revision history to see who those maintainers are.  The
+script scripts/get_maintainer.pl can be very useful at this step.  If
+you cannot find a maintainer for the subsystem you are working on,
+Andrew Morton (akpm@linux-foundation.org) serves as a maintainer of last
+resort.
+
+
+> > Doing batch annotations of code where you do not the know any of
+> > the history of is a receipt for a desaster if we want to use that
+> > information anywhere.
 > 
-> For that we need to
+> But we did research the history as well as we could when touching 11k
+> files at a single time.  It's been months of research and work, as
+> described in the patch.
 > 
->  a) agree on which licensing schemes we accept for future contributions
->  b) cleary document that policy in the kernel tree
->  c) reject anything that doesn't matter the above policy by manual
->     and/or automated review
+> If we got something wrong, very sorry, not a problem, please, let's put
+> the proper license on the file and all will be good.  What file are you
+> concerned about, and what license belongs on it?  This patch only
+> touched files without any license header, so again, by default that
+> implied it was GPLv2.  Again, no copyright was changed at all.
 > 
-> An automated tag scheme might help with b) and c) above if done
-> properly.  But for that we need to document it, agree on it, discuss
-> it with everyone involved, etc.  None of that has happened.  Instead
-> Greg farted arcane tags that he thinks have a legal singnificance
-> all over three three without talking to the people whos code he tagged,
-> without any RFC or public discussion, without documenting what his
-> tags mean or any future strategy towards making use of them.
----end quoted text---
+> thanks,
+> 
+> greg k-h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
