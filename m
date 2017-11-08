@@ -1,39 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www.llwyncelyn.cymru ([82.70.14.225]:46314 "EHLO fuzix.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932982AbdKGSrb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Nov 2017 13:47:31 -0500
-Date: Tue, 7 Nov 2017 18:46:58 +0000
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171107184658.56b87d41@alans-desktop>
-In-Reply-To: <20171107182903.GA4588@kroah.com>
-References: <20171107020607.GA26910@magnolia>
-        <20171107072040.GB4586@infradead.org>
-        <20171107073940.GB4654@kroah.com>
-        <20171107172042.GB26910@magnolia>
-        <20171107182903.GA4588@kroah.com>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:9979 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752376AbdKHNjr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 08:39:47 -0500
+Subject: Re: [PATCH v2 2/4] common/rc: support checking the version of
+ dm-target in _require_dm_target()
+References: <20171108080250.5662-1-houtao1@huawei.com>
+ <20171108080250.5662-3-houtao1@huawei.com>
+ <20171108094914.GP17339@eguan.usersys.redhat.com>
+From: Hou Tao <houtao1@huawei.com>
+Message-ID: <b479dd14-200b-25b8-54ec-2564e26616c8@huawei.com>
+Date: Wed, 8 Nov 2017 21:39:30 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20171108094914.GP17339@eguan.usersys.redhat.com>
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-> Given that it had no license text on it at all, it "defaults" to GPLv2,
-> so the GPLv2 SPDX identifier was added to it.
+Hi,
+
+On 2017/11/8 17:49, Eryu Guan wrote:
+> On Wed, Nov 08, 2017 at 04:02:48PM +0800, Hou Tao wrote:
+>> Some features of dm-target are not available on the old linux kernel,
+>> and we can use the version of dm-target to check the availability.
 > 
-> No copyright was changed, nothing at all happened except we explicitly
-> list the license of the file, instead of it being "implicit" before.
+> We don't check version numbers in fstests, but actually try what is
+> requested and _notrun if the test run failed.
 
-Well if Christoph owns the copyright (if there is one) and he has stated
-he believes it is too trivial to copyright then it needs an SPDX tag that
-indicates the rightsholder has stated it's too trivial to copyright and
-(by estoppel) revoked any right they might have to pursue a claim.
+OK.
 
-I'm sure there's a correct SPDX tag for that ;-)
+> I think we can keep _require_dm_target unchanged and add a new
+> _require_dmflakey_error_writes in common/dmflakey, e.g.
+> 
+> _require_dmflakey_error_writes()
+> {
+> 	_require_dm_targets flakey
+> 
+> 	<try creating flakey table with error_writes option here and
+> 	_notrun if failed>
+> }
+> 
+> And call this new _require rule in the test.
 
-Alan
+Will do it.
+
+Thanks.
+Tao
+
+> Thanks,
+> Eryu
+> 
+> .
+> 
+
