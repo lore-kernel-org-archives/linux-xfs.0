@@ -1,70 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42170 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752057AbdKHPL1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 10:11:27 -0500
-Date: Wed, 8 Nov 2017 07:11:21 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171108151121.GC10374@infradead.org>
-References: <20171107020607.GA26910@magnolia>
- <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com>
- <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org>
- <20171107192846.GA24617@infradead.org>
- <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:42001 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754002AbdKIT1C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Nov 2017 14:27:02 -0500
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH v4 1/4] xfs_io: Disable -V if pwritev is not available
+Date: Thu,  9 Nov 2017 13:26:45 -0600
+Message-Id: <20171109192648.6356-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Philippe Ombredanne <pombredanne@nexb.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
+To: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Wed, Nov 08, 2017 at 01:35:46PM +0100, Philippe Ombredanne wrote:
-> The benefits now and later:
-> - no distraction with licensing boilerplate cr*p in patches and files
-> - no guessing licensing needed when sending a patch
-> - anyone can grep the kernel tree for licensing, no extra tool needed
-> - Greg must feel really good about deleting so much things for once
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-This patch didn't delete anything, it added random notes.
+This results in default case which will display the error message
+that command is not found. This is required for xfs_io builds which
+did not support pwritev and an attempt is made to use -V.
 
-I see now Greg deletes things from files he maintains which is even
-worse, given that the kernel tree doesn't document anywhere what these
-tags actually mean.
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ io/pwrite.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-So he deletes a lot of license tags and replaces them with tags he
-puts a great significance on, but which aren't defined.  A quick googles
-shows some Linuxfoundation web page defines them, but they could change
-them any time they want, nevermind that we don't even have a reference
-to them either.
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 1c5dfca1..5f149a68 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -312,6 +312,7 @@ pwrite_f(
+ 		case 'u':
+ 			uflag = 1;
+ 			break;
++#ifdef HAVE_PWRITEV
+ 		case 'V':
+ 			vectors = strtoul(optarg, &sp, 0);
+ 			if (!sp || sp == optarg) {
+@@ -320,6 +321,7 @@ pwrite_f(
+ 				return 0;
+ 			}
+ 			break;
++#endif
+ 		case 'w':
+ 			wflag = 1;
+ 			break;
+@@ -334,6 +336,7 @@ pwrite_f(
+ 			}
+ 			break;
+ 		default:
++			printf(_("command -%c not supported\n"), c);
+ 			return command_usage(&pwrite_cmd);
+ 		}
+ 	}
+-- 
+2.14.2
 
-> 
-> The downsides:
-> - folks can no longer express their creativity in licensing texts like
-> licensing thermal code under the "therms" of the GPL [2]
-
-I'd love something like that to happen.  But for that we don't need a
-sneaky patch that doesn't talk to kernel contributors.
-
-For that we need to
-
- a) agree on which licensing schemes we accept for future contributions
- b) cleary document that policy in the kernel tree
- c) reject anything that doesn't matter the above policy by manual
-    and/or automated review
-
-An automated tag scheme might help with b) and c) above if done
-properly.  But for that we need to document it, agree on it, discuss
-it with everyone involved, etc.  None of that has happened.  Instead
-Greg farted arcane tags that he thinks have a legal singnificance
-all over three three without talking to the people whos code he tagged,
-without any RFC or public discussion, without documenting what his
-tags mean or any future strategy towards making use of them.
