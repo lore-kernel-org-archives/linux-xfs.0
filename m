@@ -1,41 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:27115 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59694 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751470AbdKICL4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 21:11:56 -0500
-Date: Thu, 9 Nov 2017 13:11:35 +1100
+        by vger.kernel.org with ESMTP id S1751241AbdKICNO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 21:13:14 -0500
+Date: Thu, 9 Nov 2017 13:13:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] xfs: refactor the directory data block bestfree
- checks
-Message-ID: <20171109021135.GL4094@dastard>
+Subject: Re: [PATCH 3/5] xfs: pass inode number to xfs_scrub_ino_set_{preen,
+ warning}
+Message-ID: <20171109021311.GM4094@dastard>
 References: <151001660179.26786.15701876786383794673.stgit@magnolia>
- <151001661390.26786.10161063535996587375.stgit@magnolia>
+ <151001662000.26786.4013509197578072250.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151001661390.26786.10161063535996587375.stgit@magnolia>
+In-Reply-To: <151001662000.26786.4013509197578072250.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>
 
-On Mon, Nov 06, 2017 at 05:03:33PM -0800, Darrick J. Wong wrote:
+On Mon, Nov 06, 2017 at 05:03:40PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In a directory data block, the zeroth bestfree item must point to the
-> longest free space.  Therefore, when we check the bestfree block's
-> records against the data blocks, we only need to compare with bf[0] and
-> don't need the loop.
+> There are two ways to scrub an inode -- calling xfs_iget and checking
+> the raw inode core, or by loading the inode cluster buffer and checking
+> the on-disk contents directly.  The second method is only useful if
+> _iget fails the verifiers; when this is the case, sc->ip is NULL and
+> calling the tracepoint will cause a system crash.
 > 
-> The weird loop was most probably the result of an earlier refactoring
-> gone bad.
+> Therefore, pass the raw inode number directly into the _preen and
+> _warning functions.
 > 
 > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks good.
-
+Simple enough. Looks ok
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
