@@ -1,81 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24952 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbdKICsU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 21:48:20 -0500
-Date: Wed, 8 Nov 2017 18:48:16 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/5] xfs: check the uniqueness of the AGFL entries
-Message-ID: <20171109024816.GI26910@magnolia>
-References: <151001660179.26786.15701876786383794673.stgit@magnolia>
- <151001660786.26786.14027251894350460924.stgit@magnolia>
- <20171109020829.GK4094@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:43830 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751472AbdKIDx2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Nov 2017 22:53:28 -0500
+Date: Thu, 9 Nov 2017 11:53:25 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 4/4] common/rc: factor out
+ _get|set_xfs_scratch_sb_field()
+Message-ID: <20171109035325.GR17339@eguan.usersys.redhat.com>
+References: <20171108080250.5662-1-houtao1@huawei.com>
+ <20171108080250.5662-5-houtao1@huawei.com>
+ <20171108164908.GA6299@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171109020829.GK4094@dastard>
+In-Reply-To: <20171108164908.GA6299@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Hou Tao <houtao1@huawei.com>, fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, cmaiolino@redhat.com
 
-On Thu, Nov 09, 2017 at 01:08:29PM +1100, Dave Chinner wrote:
-> On Mon, Nov 06, 2017 at 05:03:27PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Nov 08, 2017 at 08:49:08AM -0800, Darrick J. Wong wrote:
+> On Wed, Nov 08, 2017 at 04:02:50PM +0800, Hou Tao wrote:
+> > It's common to get and set the values of fields in XFS super block,
+> > so factor them out as _get|set_xfs_scratch_sb_field() and update the
+> > related test cases accordingly.
 > > 
-> > Make sure we don't list a block twice in the agfl.
+> > Signed-off-by: Hou Tao <houtao1@huawei.com>
+> > ---
+> >  common/xfs    | 20 ++++++++++++++++++++
+> >  tests/xfs/007 |  6 ++----
+> >  tests/xfs/098 |  4 ++--
+> >  tests/xfs/186 |  3 +--
+> >  tests/xfs/199 | 13 ++++---------
+> >  tests/xfs/307 | 11 ++---------
+> >  tests/xfs/308 | 11 ++---------
+> >  tests/xfs/339 |  6 +++---
+> >  tests/xfs/340 |  2 +-
+> >  tests/xfs/999 |  8 --------
+> >  10 files changed, 37 insertions(+), 47 deletions(-)
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> .....
-> >  /* Scrub the AGFL. */
-> >  int
-> >  xfs_scrub_agfl(
-> >  	struct xfs_scrub_context	*sc)
-> >  {
-> > +	struct xfs_scrub_agfl_info	sai = { 0 };
-> > +	struct xfs_agf			*agf;
-> > +	size_t				sz;
-> >  	xfs_agnumber_t			agno;
-> > +	unsigned int			agflcount;
-> > +	unsigned int			i;
-> >  	int				error;
-> >  
-> >  	agno = sc->sa.agno = sc->sm->sm_agno;
-> > @@ -508,8 +532,33 @@ xfs_scrub_agfl(
-> >  	if (!sc->sa.agf_bp)
-> >  		return -EFSCORRUPTED;
-> >  
-> > +	/* Allocate buffer to ensure uniqueness of AGFL entries. */
-> > +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-> > +	agflcount = be32_to_cpu(agf->agf_flcount);
-> > +	sz = sizeof(xfs_agblock_t) * agflcount;
-> > +	if (sz > sc->mp->m_sb.sb_sectsize) {
+> > diff --git a/common/xfs b/common/xfs
+> > index d4fef94..82ddc24 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -599,3 +599,23 @@ _require_no_xfs_debug()
+> >  		_notrun "Require XFS built without CONFIG_XFS_DEBUG"
+> >  	fi
+> >  }
+> > +
+> > +_get_xfs_scratch_sb_field()
+> > +{
+> > +	local field=$1
+> > +
+> > +	shift
+> > +
+> > +	_scratch_xfs_db -r -c 'sb 0' "$@" -c "print $field" | \
+> > +	awk -v field=$field '$0 ~ field {print $3}'
+> > +}
+> > +
+> > +_set_xfs_scratch_sb_field()
+> > +{
+> > +	local field=$1
+> > +	local value=$2
+> > +
+> > +	shift 2
+> > +
+> > +	_scratch_xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value"
+> > +}
 > 
-> No need for sz?
-> 
-> 	if (agflcount > XFS_AGFL_SIZE(mp)
+> FWIW we already have _scratch_xfs_[gs]et_metadata_field in common/fuzzy.
 
-<nod>
+Ah, thanks for the reminder! I forgot about them.. Tao, are the existing
+helpers in common/fuzzy something you can use? And perhaps we should
+move them to common/xfs then.
 
-> > +		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
-> > +		goto out;
-> > +	}
-> > +	sai.entries = kmem_zalloc(sz, KM_NOFS);
-> 
-> KM_NOSLEEP, check for failure?
-
-Ok.
-
---D
-
-> Otherwise looks ok.
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Eryu
