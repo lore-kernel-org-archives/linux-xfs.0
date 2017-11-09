@@ -1,97 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ishtar.tlinx.org ([173.164.175.65]:45560 "EHLO
-        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752887AbdKIHvT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 02:51:19 -0500
-Message-ID: <5A0408E9.5010501@tlinx.org>
-Date: Wed, 08 Nov 2017 23:51:05 -0800
-From: L A Walsh <lkml@tlinx.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:50612 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753124AbdKIIQs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 03:16:48 -0500
+Date: Thu, 9 Nov 2017 09:16:59 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171109081659.GB27461@kroah.com>
+References: <20171107020607.GA26910@magnolia>
+ <20171107072040.GB4586@infradead.org>
+ <20171107073940.GB4654@kroah.com>
+ <20171107172042.GB26910@magnolia>
+ <20171107182903.GA4588@kroah.com>
+ <20171108234704.GH4094@dastard>
 MIME-Version: 1.0
-Subject: Re: Bug? or normal behavior? if bug, then where? overlay, vfs, xfs,
- or ????
-References: <59FA4499.2030502@tlinx.org> <CAOQ4uxg-bkYnpV146kBgdbgCK9On+=jM1gCe1975J8HKkWxcNg@mail.gmail.com> <59FEC912.4000005@tlinx.org> <CAOQ4uxjDbNiZiUUzNZEHTt8SQW-1trC6dSF=c28bD8EuWLWFrw@mail.gmail.com> <20171105223445.GA5858@dastard> <5A03754E.5070903@tlinx.org> <20171109014726.GI4094@dastard>
-In-Reply-To: <20171109014726.GI4094@dastard>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171108234704.GH4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-Dave Chinner wrote:
->
->
-> Changing the UUID on v5 filesystems is now implemented and
-> supported:
->   
----
-    And it won't have a problem if seen by a previous gen
-tool -- like xfsrestore on an older "emergency boot disk"?
+On Thu, Nov 09, 2017 at 10:47:04AM +1100, Dave Chinner wrote:
+> On Tue, Nov 07, 2017 at 07:29:03PM +0100, Greg Kroah-Hartman wrote:
+> > On Tue, Nov 07, 2017 at 09:20:42AM -0800, Darrick J. Wong wrote:
+> > > On Tue, Nov 07, 2017 at 08:39:40AM +0100, Greg Kroah-Hartman wrote:
+> > > > On Mon, Nov 06, 2017 at 11:20:40PM -0800, Christoph Hellwig wrote:
+> > > > > NAK, for both the libxfs patch and the kernel one.
+> > > > 
+> > > > What libxfs patch?  And what "kernel one" are you referring to here?
+> > > > 
+> > > > > I wrote the file and it has no copyright header because it conatians
+> > > > > trivial, non-copyrightable code.
+> > > > 
+> > > > What file exactly?
+> > > > 
+> > > > And from what I know, there is nothing that is "non-copyrightable".
+> > > > 
+> > > > And this isn't changing the copyright of _ANYTHING_ it is just putting
+> > > > the explicit license of the file, on each file in the kernel, because it
+> > > > needs to be tracked.
+> > > > 
+> > > > > I don't know why people think they can touch license information on
+> > > > > files I've written without even asking me.
+> > > > 
+> > > > Nothing was changed, the license should be the exact same as it was
+> > > > before.  But as I don't know what file you are referring to here, it's a
+> > > > bit hard to determine what you are talking about exactly :(
+> > > 
+> > > fs/xfs/libxfs/xfs_cksum.h
+> > 
+> > Given that it had no license text on it at all, it "defaults" to GPLv2,
+> > so the GPLv2 SPDX identifier was added to it.
+> 
+> I'll point out here that this file is shared with a userspace
+> package that has a mixed LGPL/GPL code base, so even if we disregard
+> what Christoph says, this file could actually be LGPL (like
+> fs/xfs/libxfs/xfs_fs.h) and not GPL. So from that perspective alone,
+> your process on deciding what license tag should be used is
+> flawed and these changes needed, at minimum, maintainer review.
+> 
+> IMO, unannounced, unreviewed tree wide change via a back-door
+> commits sent straight to Linus reek of an attempt to avoid review
+> and oversight.
 
-    If not, then I misunderstood what you wrote earlier.
->>    My issue was the inability to bench or use them separately.
->>     
->
-> <sigh>
->
-> Not an XFS problem:
->
-> $ mkfs.xfs -f -m finobt=0 /dev/pmem0
-> ....
->          =                       crc=1        finobt=0, sparse=0, rmapbt=0, reflink=0
-> .....
->
-> Yup, crc's enabled, finobt is not. As documented in the mkfs.xfs manpage.
->   
+This was not unannounced, it was posted to lkml and discussed at the
+kernel summit ahead of time.
 
-So you are saying I can set finobt to 0 or 1 with crc=0?
+> And that is *completely unacceptible* when making claims about
+> important details like licenses for *code you do not know anything
+> about*. 
 
-Because testing sigh crc=1 and finobt=0|1 isn't
-the same as testing crc=0 and finobt=0|1.
+When a file does not have a license, again, all lawyers I have worked
+with said it is implicitly GPLv2, so we did the best we knew how at the
+time.  If we got a few files wrong, please fix them up, I hit 11k files
+at once here.
 
-I'm more interested in testing finobt's affect by itself and have
-a secondary interest in the effect of the crc option because I would
-like to use the finobt option (thus desire to test it first), but
-do not currently want to use the crc otpion, thus it being of secondary
-interest.
+And how an internal file is shared with userspace is, to be fair,
+completely strange, you have to agree :)
 
-Again, if I can test finobt 0 or 1 with no requirements I turn on
-crc, then I was mistaken in my earlier understanding.
+> We have a documented process for a reason: to stop shit like this
+> from happening. 
+> 
+> > No copyright was changed, nothing at all happened except we explicitly
+> > list the license of the file, instead of it being "implicit" before.
+> 
+> You keep saying "no copyright has changed", despite being given an
+> explicit statement by the code author that this is *exactly what you
+> have done*.
 
-So I still have 2 issues: UUID labels that don't preclude using older
-emergency boot disks, to restore a file system, and the ability to
-test finobt apart from other features.
+Again, no, the copyright was not changed.  Whom ever held the original
+copyright still holds it today.
 
+thanks,
 
-
-
-> ge.
->
-> IOWs, We can directly measure the impact of the finobt on
-> workloads/benchamrks. And if we want to compare the impact of CRCs,
-> then 'mkfs.xfs -f -isize=512, -m crc=0 <dev>' will be directly
-> comparable to the above non-finobt filesystem. THis is how we
-> benchmarked the changes in the first place....
->   
-----
-  
-
-    That methodology is flawed.
-
-    If the crc option is on during finobt being tested as 0 or 1,
-the crc option on means different disk caching -- if the crc
-option pulls in some or all of the finobt info, then you can't measure
-the finobt option with the crc option turned on. Even if you turn the crc
-feature off, if the disk has crc features, those also change how
-information is read in.
-
-    Only if you create a disk with no crc info on it, and then can test
-finobt=0|1, can you see the relative performance of the finobt cases. 
-
-    If it is the case that finobt can be toggled on a disk with no
-crc data or option in use, then I've misunderstood previously read
-constraints (or they've changed).
-
--l
-
+greg k-h
