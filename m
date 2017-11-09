@@ -1,82 +1,365 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:32770 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754633AbdKIN1V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 08:27:21 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] xfs: handle zero entries case in xfs_iext_rebalance_leaf
-Date: Thu,  9 Nov 2017 14:26:56 +0100
-Message-Id: <20171109132656.1649-7-hch@lst.de>
-In-Reply-To: <20171109132656.1649-1-hch@lst.de>
-References: <20171109132656.1649-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22397 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751125AbdKIRDM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 12:03:12 -0500
+Date: Thu, 9 Nov 2017 09:02:56 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 4/4] common/rc: factor out
+ _scratch_xfs_[get|set]_sb_field
+Message-ID: <20171109170256.GL26910@magnolia>
+References: <20171109073252.36001-1-houtao1@huawei.com>
+ <20171109073252.36001-5-houtao1@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171109073252.36001-5-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, cmaiolino@redhat.com
 
-And also rename fill to nr_entries to match the rest of the code.
+On Thu, Nov 09, 2017 at 03:32:52PM +0800, Hou Tao wrote:
+> It's common to get and set the values of fields in XFS super block,
+> so factor them out as scratch_xfs_[get|set]_sb_field, reimplement
+> them based on _scratch_xfs_[get|set]_metadata_field, and update the
+> related test cases accordingly.
+> 
+> Also move _scratch_xfs_[get|set]_metadata_field from common/fuzzy
+> to common/xfs.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> ---
+>  common/fuzzy  | 33 ---------------------------------
+>  common/xfs    | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/007 |  6 ++----
+>  tests/xfs/098 |  4 ++--
+>  tests/xfs/186 |  3 +--
+>  tests/xfs/199 | 13 ++++---------
+>  tests/xfs/307 | 11 ++---------
+>  tests/xfs/308 | 11 ++---------
+>  tests/xfs/339 |  6 +++---
+>  tests/xfs/340 |  2 +-
+>  tests/xfs/999 | 14 +++-----------
+>  11 files changed, 67 insertions(+), 83 deletions(-)
+> 
+> diff --git a/common/fuzzy b/common/fuzzy
+> index 8453c29..9642809 100644
+> --- a/common/fuzzy
+> +++ b/common/fuzzy
+> @@ -120,39 +120,6 @@ _scratch_xfs_list_metadata_fields() {
+>  	_scratch_xfs_db "${cmds[@]}" -c print | __filter_xfs_db_print_fields "${filter}"
+>  }
+>  
+> -# Get a metadata field
+> -# The first arg is the field name
+> -# The rest of the arguments are xfs_db commands to find the metadata.
+> -_scratch_xfs_get_metadata_field() {
+> -	key="$1"
+> -	shift
+> -
+> -	grep_key="$(echo "${key}" | tr '[]()' '....')"
+> -	local cmds=()
+> -	for arg in "$@"; do
+> -		cmds+=("-c" "${arg}")
+> -	done
+> -	_scratch_xfs_db "${cmds[@]}" -c "print ${key}" | grep "^${grep_key}" | \
+> -		sed -e 's/^.* = //g'
+> -}
+> -
+> -# Set a metadata field
+> -# The first arg is the field name
+> -# The second arg is the new value
+> -# The rest of the arguments are xfs_db commands to find the metadata.
+> -_scratch_xfs_set_metadata_field() {
+> -	key="$1"
+> -	value="$2"
+> -	shift; shift
+> -
+> -	local cmds=()
+> -	for arg in "$@"; do
+> -		cmds+=("-c" "${arg}")
+> -	done
+> -	_scratch_xfs_db -x "${cmds[@]}" -c "write -d ${key} ${value}"
+> -	echo
+> -}
+> -
+>  # Fuzz a metadata field
+>  # The first arg is the field name
+>  # The second arg is the xfs_db fuzz verb
+> diff --git a/common/xfs b/common/xfs
+> index d4fef94..0509760 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -599,3 +599,50 @@ _require_no_xfs_debug()
+>  		_notrun "Require XFS built without CONFIG_XFS_DEBUG"
+>  	fi
+>  }
+> +
+> +# Get a metadata field
+> +# The first arg is the field name
+> +# The rest of the arguments are xfs_db commands to find the metadata.
+> +_scratch_xfs_get_metadata_field()
+> +{
+> +	local key="$1"
+> +	shift
+> +
+> +	local grep_key="$(echo "${key}" | tr '[]()' '....')"
+> +	local cmds=()
+> +	local arg
+> +	for arg in "$@"; do
+> +		cmds+=("-c" "${arg}")
+> +	done
+> +	_scratch_xfs_db "${cmds[@]}" -c "print ${key}" | grep "^${grep_key}" | \
+> +		sed -e 's/^.* = //g'
+> +}
+> +
+> +# Set a metadata field
+> +# The first arg is the field name
+> +# The second arg is the new value
+> +# The rest of the arguments are xfs_db commands to find the metadata.
+> +_scratch_xfs_set_metadata_field()
+> +{
+> +	local key="$1"
+> +	local value="$2"
+> +	shift; shift
+> +
+> +	local cmds=()
+> +	local arg
+> +	for arg in "$@"; do
+> +		cmds+=("-c" "${arg}")
+> +	done
+> +	_scratch_xfs_db -x "${cmds[@]}" -c "write -d ${key} ${value}"
 
-Reported-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_iext_tree.c | 24 +++++++++++++++++-------
- 1 file changed, 17 insertions(+), 7 deletions(-)
+/me wonders if this should be "write -d ${key} -- ${value}" since I
+omitted that in the initial patch.  (That could be a separate patch.)
 
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index 81e0480822d8..343a94246f5b 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -787,13 +787,21 @@ xfs_iext_rebalance_leaf(
- 	struct xfs_iext_cursor	*cur,
- 	struct xfs_iext_leaf	*leaf,
- 	xfs_fileoff_t		offset,
--	int			fill)
-+	int			nr_entries)
- {
-+	/*
-+	 * If the neighbouring nodes are completely full we might never be able
-+	 * to merge our node, and will only delete it once the number of
-+	 * entries hits zero.
-+	 */
-+	if (nr_entries == 0)
-+		goto remove_node;
-+
- 	if (leaf->prev) {
- 		int nr_prev = xfs_iext_leaf_nr_entries(ifp, leaf->prev, 0), i;
- 
--		if (nr_prev + fill <= RECS_PER_LEAF) {
--			for (i = 0; i < fill; i++)
-+		if (nr_prev + nr_entries <= RECS_PER_LEAF) {
-+			for (i = 0; i < nr_entries; i++)
- 				leaf->prev->recs[nr_prev + i] = leaf->recs[i];
- 
- 			if (cur->leaf == leaf) {
-@@ -807,18 +815,20 @@ xfs_iext_rebalance_leaf(
- 	if (leaf->next) {
- 		int nr_next = xfs_iext_leaf_nr_entries(ifp, leaf->next, 0), i;
- 
--		if (fill + nr_next <= RECS_PER_LEAF) {
-+		if (nr_entries + nr_next <= RECS_PER_LEAF) {
- 			/*
- 			 * Merge the next node into this node so that we don't
- 			 * have to do an additional update of the keys in the
- 			 * higher levels.
- 			 */
--			for (i = 0; i < nr_next; i++)
--				leaf->recs[fill + i] = leaf->next->recs[i];
-+			for (i = 0; i < nr_next; i++) {
-+				leaf->recs[nr_entries + i] =
-+					leaf->next->recs[i];
-+			}
- 
- 			if (cur->leaf == leaf->next) {
- 				cur->leaf = leaf;
--				cur->pos += fill;
-+				cur->pos += nr_entries;
- 			}
- 
- 			offset = xfs_iext_leaf_key(leaf->next, 0);
--- 
-2.14.2
+Otherwise looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
+> +	echo
+> +}
+> +
+> +_scratch_xfs_get_sb_field()
+> +{
+> +	_scratch_xfs_get_metadata_field "$1" "sb 0"
+> +}
+> +
+> +_scratch_xfs_set_sb_field()
+> +{
+> +	_scratch_xfs_set_metadata_field "$1" "$2" "sb 0"
+> +}
+> diff --git a/tests/xfs/007 b/tests/xfs/007
+> index d80d380..215bd1d 100755
+> --- a/tests/xfs/007
+> +++ b/tests/xfs/007
+> @@ -62,10 +62,8 @@ do_test()
+>  	echo "*** umount"
+>  	_scratch_unmount
+>  
+> -	QINO_1=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | \
+> -			grep $qino_1 | awk '{print $NF}'`
+> -	QINO_2=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | \
+> -			grep $qino_2 | awk '{print $NF}'`
+> +	QINO_1=`_scratch_xfs_get_sb_field $qino_1`
+> +	QINO_2=`_scratch_xfs_get_sb_field $qino_2`
+>  
+>  	echo "*** Usage before quotarm ***"
+>  	_scratch_xfs_db -c "inode $QINO_1" -c "p core.nblocks"
+> diff --git a/tests/xfs/098 b/tests/xfs/098
+> index 7873f32..9bcd94b 100755
+> --- a/tests/xfs/098
+> +++ b/tests/xfs/098
+> @@ -96,9 +96,9 @@ echo "+ check fs"
+>  _scratch_xfs_repair -n >> $seqres.full 2>&1 || _fail "xfs_repair should not fail"
+>  
+>  echo "+ corrupt image"
+> -logstart="$(_scratch_xfs_db -c 'sb 0' -c 'p' | grep '^logstart =' | cut -d ' ' -f 3)"
+> +logstart="$(_scratch_xfs_get_sb_field logstart)"
+>  logstart="$(_scratch_xfs_db -c "convert fsblock ${logstart} byte" | sed -e 's/^.*(\([0-9]*\).*$/\1/g')"
+> -logblocks="$(xfs_db -c 'sb 0' -c 'p' "${SCRATCH_DEV}" | grep '^logblocks =' | cut -d ' ' -f 3)"
+> +logblocks="$(_scratch_xfs_get_sb_field logblocks)"
+>  $XFS_IO_PROG -f -c "pwrite -S 0x62 ${logstart} $((logblocks * blksz))" "${SCRATCH_DEV}" >> $seqres.full
+>  
+>  echo "+ mount image"
+> diff --git a/tests/xfs/186 b/tests/xfs/186
+> index 4b36ae6..a4527ed 100755
+> --- a/tests/xfs/186
+> +++ b/tests/xfs/186
+> @@ -173,8 +173,7 @@ fi
+>  
+>  # set inum to root dir ino
+>  # we'll add in dirents and EAs into the root directory
+> -eval `_scratch_xfs_db -r -c 'sb 0' -c 'p rootino' | $SED_PROG 's/ //g'`
+> -inum=$rootino
+> +inum=`_scratch_xfs_get_sb_field rootino`
+>  fork_dir=$SCRATCH_MNT
+>  _print_inode
+>  
+> diff --git a/tests/xfs/199 b/tests/xfs/199
+> index ee26439..a0f48ad 100755
+> --- a/tests/xfs/199
+> +++ b/tests/xfs/199
+> @@ -49,11 +49,6 @@ _supported_os Linux
+>  
+>  _require_scratch
+>  
+> -get_features()
+> -{
+> -	_scratch_xfs_db -x  -c "sb" -c "print $1" | awk '// {print $3}'
+> -}
+> -
+>  # clear any mkfs options so that we can directly specify the options we need to
+>  # be able to test the features bitmask behaviour correctly.
+>  MKFS_OPTIONS=
+> @@ -63,8 +58,8 @@ _scratch_mkfs_xfs -m crc=0 -l lazy-count=1 >/dev/null 2>&1
+>  # gives us the values the resultant tests should be the same as for testing at
+>  # the end of the test. We don't hard code feature values, because that makes the
+>  # test break every time we change mkfs feature defaults.
+> -f2=`get_features features2`
+> -bf2=`get_features bad_features2`
+> +f2=`_scratch_xfs_get_sb_field features2`
+> +bf2=`_scratch_xfs_get_sb_field bad_features2`
+>  
+>  #
+>  # Now clear the normal flags
+> @@ -74,7 +69,7 @@ _scratch_xfs_db -x  -c 'sb' -c 'write features2 0'
+>  
+>  _scratch_mount
+>  _scratch_unmount
+> -rwf2=`get_features features2`
+> +rwf2=`_scratch_xfs_get_sb_field features2`
+>  
+>  #
+>  # Clear the normal flags again for the second rount.
+> @@ -88,7 +83,7 @@ _scratch_xfs_db -x  -c 'sb' -c 'write features2 0'
+>  _scratch_mount -o ro
+>  _scratch_mount -o remount,rw
+>  _scratch_unmount
+> -rof2=`get_features features2`
+> +rof2=`_scratch_xfs_get_sb_field features2`
+>  
+>  [ "$f2" != "$bf2" ] && echo "mkfs: features2 $f2 != bad_features2 $bf2"
+>  [ "$f2" != "$rwf2" ] && echo "mount rw: old features2 $f2 != new features2 $rwf2"
+> diff --git a/tests/xfs/307 b/tests/xfs/307
+> index 4ce3e66..d829524 100755
+> --- a/tests/xfs/307
+> +++ b/tests/xfs/307
+> @@ -71,18 +71,11 @@ _set_agf_data() {
+>  }
+>  
+>  _get_sb_data() {
+> -	field="$1"
+> -	shift
+> -
+> -	_scratch_xfs_db -c 'sb 0' "$@" -c "p $field"  | awk '{print $3}'
+> +	_scratch_xfs_get_sb_field "$@"
+>  }
+>  
+>  _set_sb_data() {
+> -	field="$1"
+> -	value="$2"
+> -	shift; shift
+> -
+> -	_scratch_xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value"  >> $seqres.full
+> +	_scratch_xfs_set_sb_field "$@" >> $seqres.full
+>  }
+>  
+>  _filter_leftover() {
+> diff --git a/tests/xfs/308 b/tests/xfs/308
+> index e9d7f76..7e7adac 100755
+> --- a/tests/xfs/308
+> +++ b/tests/xfs/308
+> @@ -71,18 +71,11 @@ _set_agf_data() {
+>  }
+>  
+>  _get_sb_data() {
+> -	field="$1"
+> -	shift
+> -
+> -	_scratch_xfs_db -c 'sb 0' "$@" -c "p $field"  | awk '{print $3}'
+> +	_scratch_xfs_get_sb_field "$@"
+>  }
+>  
+>  _set_sb_data() {
+> -	field="$1"
+> -	value="$2"
+> -	shift; shift
+> -
+> -	_scratch_xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value"  >> $seqres.full
+> +	_scratch_xfs_set_sb_field "$@" >> $seqres.full
+>  }
+>  
+>  _filter_leftover() {
+> diff --git a/tests/xfs/339 b/tests/xfs/339
+> index 734d47b..78b714f 100755
+> --- a/tests/xfs/339
+> +++ b/tests/xfs/339
+> @@ -59,9 +59,9 @@ ln $SCRATCH_MNT/f3 $SCRATCH_MNT/f4
+>  _scratch_unmount
+>  
+>  echo "Corrupt fs"
+> -rrmapino=$(_scratch_xfs_db -c 'sb 0' -c 'p rrmapino' | awk '{print $3}')
+> -_scratch_xfs_db -x -c 'sb 0' -c 'addr rootino' \
+> -	-c "write u3.sfdir3.list[3].inumber.i4 $rrmapino" >> $seqres.full
+> +rrmapino=`_scratch_xfs_get_sb_field rrmapino`
+> +_scratch_xfs_set_metadata_field "u3.sfdir3.list[3].inumber.i4" $rrmapino \
+> +	'sb 0' 'addr rootino' >> $seqres.full
+>  _scratch_mount
+>  
+>  echo "Check files"
+> diff --git a/tests/xfs/340 b/tests/xfs/340
+> index 8cc50a2..7b1b7d1 100755
+> --- a/tests/xfs/340
+> +++ b/tests/xfs/340
+> @@ -59,7 +59,7 @@ ino=$(stat -c '%i' $SCRATCH_MNT/f3)
+>  _scratch_unmount
+>  
+>  echo "Corrupt fs"
+> -rrmapino=$(_scratch_xfs_db -c 'sb 0' -c 'p rrmapino' | awk '{print $3}')
+> +rrmapino=$(_scratch_xfs_get_sb_field rrmapino)
+>  _scratch_xfs_db -x -c "inode $rrmapino" \
+>  	-c 'write core.format 2' -c 'write core.size 0' \
+>  	-c 'write core.nblocks 0' -c 'sb 0' -c 'addr rootino' \
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> index 22f7ba3..2b0b1e5 100755
+> --- a/tests/xfs/999
+> +++ b/tests/xfs/999
+> @@ -51,14 +51,6 @@ _cleanup()
+>  	_cleanup_flakey > /dev/null 2>&1
+>  }
+>  
+> -get_xfs_scratch_sb_field()
+> -{
+> -	local field=$1
+> -
+> -	_scratch_xfs_db -r -c "sb 0" -c "print $field" | \
+> -	awk -v field=$field '$0 ~ field {print $3}'
+> -}
+> -
+>  # inject IO write error for the XFS filesystem except its log section
+>  make_xfs_scratch_flakey_table()
+>  {
+> @@ -72,9 +64,9 @@ make_xfs_scratch_flakey_table()
+>  		return
+>  	fi
+>  
+> -	local blk_sz=$(get_xfs_scratch_sb_field blocksize)
+> -	local log_ofs=$(get_xfs_scratch_sb_field logstart)
+> -	local log_sz=$(get_xfs_scratch_sb_field logblocks)
+> +	local blk_sz=$(_scratch_xfs_get_sb_field blocksize)
+> +	local log_ofs=$(_scratch_xfs_get_sb_field logstart)
+> +	local log_sz=$(_scratch_xfs_get_sb_field logblocks)
+>  	local table=""
+>  	local ofs=0
+>  	local sz
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
