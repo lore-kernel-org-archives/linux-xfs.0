@@ -1,74 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36444 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753653AbdKIIx3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 03:53:29 -0500
-Date: Thu, 9 Nov 2017 00:53:24 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171109085324.GA4909@infradead.org>
-References: <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com>
- <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org>
- <20171107192846.GA24617@infradead.org>
- <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
- <20171108151121.GC10374@infradead.org>
- <20171109082335.GD27461@kroah.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35802 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753490AbdKIIyL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Nov 2017 03:54:11 -0500
+Date: Thu, 9 Nov 2017 16:54:06 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v3 0/4] test for XFS umount hang caused by the pending
+ dquota log item in AIL
+Message-ID: <20171109085406.GU17339@eguan.usersys.redhat.com>
+References: <20171109073252.36001-1-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171109082335.GD27461@kroah.com>
+In-Reply-To: <20171109073252.36001-1-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Philippe Ombredanne <pombredanne@nexb.com>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-On Thu, Nov 09, 2017 at 09:23:35AM +0100, Greg Kroah-Hartman wrote:
-> The documentation of this process is lagging the patches, as usually
-> happens, sorry about that.
+On Thu, Nov 09, 2017 at 03:32:48PM +0800, Hou Tao wrote:
+> Hi,
+> 
+> This is the v3 patchset for testing the XFS umount hang problem caused by
+> the pending dquota log item in AIL. The problem has not been fixed in
+> XFS yet, and Carlos Maiolino is working on it [1].
+> 
+> The bug that the test case can not reproduced on a 15GB scratch device
+> has been fixed, and many thanks to Eryu Guan. I had tested it on 4.14-rc8,
+> and the problem can be reproduced reliably now.
+> 
+> Comments and questions are welcome.
 
-In cases like this the documentation is the most important part.
-Without documentation it is completely pointless.
+I finally could reproduce the hang, thanks a lot!
+
+But I won't merge the test until the fix is upstream, otherwise it would
+interrupt all test runs on XFS.
+
+And I have some nitpicks on individual patches :)
+
+Thanks,
+Eryu
 
 > 
-> Thomas is working on a document to describe the process, and what a file
-> should contain, based on the work he has been doing.  This was discussed
-> at the kernel summit, and sorry for it not getting out wider than that
-> audience, things take time, which is why I was only touching my
-> subsystems with the "general license cleanups" at the moment until his
-> document was ready.
+> Regards,
+> Tao
 > 
-> Hopefully a draft of it will go out today, Thomas?
-
-It would help to Cc him, I've done that. 
-
-> SPDX is an industry-wide accepted set of tags for all licenses, some
-> projects have been using it for years (like Uboot).  These are not going
-> to change randomly, and again, the document that Thomas has will
-> describe these in detail.
-
-It is not an 'industry-wide accepted set of tags' (did you get a company
-discount on buzzwords).  Yes, it it a scheme someone can up with (seems
-like an industry consortium that happens to employ you, what a
-coincidence), and from a quick look it even seems like a pretty reasonable
-scheme.  But without backing it with an explanation of those tags in
-the tree, and explaining people how to use them and how they are
-relevant it is absolutely useless.
-
-And to come up with a scheme we need to have a broad discussion on
-what we are doing.
-
-> sorry for the confusion, it was not intended at all, but it what happens
-> in time with distributed developers, all working at different rates on
-> different parts of the tree.
-
-Sorry but I call bullshit on this.  We have absolutely no problem
-working together if we try.  You clearly did not even try to cooperate
-with anyone - the clear indicator is that no RFC was posted, no
-questions were asked but you just sent a pull requests right before
-the end of the merge window.
+> ---
+> Changes since v2:
+> 
+> v3:
+> * dmflakey: support error_writes feature for dm-flakey
+> 	* check the availability of error_writes by trial instead of version number
+> 
+> * xfs: test for umount hang caused by the pending dquota log item in AIL
+> 	* calculate log_ofs correctly by using convert cmd in xfs_db
+> 
+> * common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 	* reimplement _scratch_xfs_[get|set]_sb_field based on
+> 	  _scratch_xfs_[get|set]_metadata_field.
+> 
+> v2:
+> 	* http://www.spinics.net/lists/fstests/msg07792.html
+> 
+> v1:
+> 	* https://www.spinics.net/lists/fstests/msg07622.html
+> 
+> [1]: https://www.spinics.net/lists/linux-xfs/msg11614.html
+> 
+> Hou Tao (4):
+>   dmflakey: support multiple dm targets for a dm-flakey device
+>   dmflakey: support error_writes feature for dm-flakey
+>   xfs: test for umount hang caused by the pending dquota log item in AIL
+>   common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 
+>  common/dmflakey   |  29 +++++++++-
+>  common/fuzzy      |  33 -----------
+>  common/xfs        |  47 ++++++++++++++++
+>  tests/xfs/007     |   6 +-
+>  tests/xfs/098     |   4 +-
+>  tests/xfs/186     |   3 +-
+>  tests/xfs/199     |  13 ++---
+>  tests/xfs/307     |  11 +---
+>  tests/xfs/308     |  11 +---
+>  tests/xfs/339     |   6 +-
+>  tests/xfs/340     |   2 +-
+>  tests/xfs/999     | 163 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |   2 +
+>  tests/xfs/group   |   1 +
+>  14 files changed, 257 insertions(+), 74 deletions(-)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
