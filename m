@@ -1,55 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38762 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755440AbdKJBoA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Nov 2017 20:44:00 -0500
-Subject: Re: [PATCH] xfs_io: fix gcc-7 related printf warnings
-References: <20171110013926.15289-1-david@fromorbit.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ac210659-80a1-1eec-3704-a79d650ada40@sandeen.net>
-Date: Thu, 9 Nov 2017 19:43:59 -0600
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:61527 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751914AbdKICJG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 21:09:06 -0500
+Date: Thu, 9 Nov 2017 13:08:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] xfs: check the uniqueness of the AGFL entries
+Message-ID: <20171109020829.GK4094@dastard>
+References: <151001660179.26786.15701876786383794673.stgit@magnolia>
+ <151001660786.26786.14027251894350460924.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171110013926.15289-1-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151001660786.26786.14027251894350460924.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 11/9/17 7:39 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Nov 06, 2017 at 05:03:27PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> New compiler, new checks, new warnings.
+> Make sure we don't list a block twice in the agfl.
 > 
-> Fix the new [-Wformat-truncation=] warnings that io/fsmap.c is
-> throwing w/ gcc-7.2 because "%lld..%lld" requires a buffer 40
-> characters long, not 32.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+.....
+>  /* Scrub the AGFL. */
+>  int
+>  xfs_scrub_agfl(
+>  	struct xfs_scrub_context	*sc)
+>  {
+> +	struct xfs_scrub_agfl_info	sai = { 0 };
+> +	struct xfs_agf			*agf;
+> +	size_t				sz;
+>  	xfs_agnumber_t			agno;
+> +	unsigned int			agflcount;
+> +	unsigned int			i;
+>  	int				error;
+>  
+>  	agno = sc->sa.agno = sc->sm->sm_agno;
+> @@ -508,8 +532,33 @@ xfs_scrub_agfl(
+>  	if (!sc->sa.agf_bp)
+>  		return -EFSCORRUPTED;
+>  
+> +	/* Allocate buffer to ensure uniqueness of AGFL entries. */
+> +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> +	agflcount = be32_to_cpu(agf->agf_flcount);
+> +	sz = sizeof(xfs_agblock_t) * agflcount;
+> +	if (sz > sc->mp->m_sb.sb_sectsize) {
 
-2^63 is 19 chars, yup.
+No need for sz?
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+	if (agflcount > XFS_AGFL_SIZE(mp)
 
-> ---
->  io/fsmap.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/io/fsmap.c b/io/fsmap.c
-> index 448fb5356466..e46fdbaa148c 100644
-> --- a/io/fsmap.c
-> +++ b/io/fsmap.c
-> @@ -184,8 +184,8 @@ dump_map_verbose(
->  	off64_t			agoff, bperag;
->  	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
->  	int			nr_w, dev_w;
-> -	char			rbuf[32], bbuf[32], abuf[32], obuf[32];
-> -	char			nbuf[32], dbuf[32], gbuf[32];
-> +	char			rbuf[40], bbuf[40], abuf[40], obuf[40];
-> +	char			nbuf[40], dbuf[40], gbuf[40];
->  	char			owner[OWNER_BUF_SZ];
->  	int			sunit, swidth;
->  	int			flg = 0;
-> 
+> +		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+> +		goto out;
+> +	}
+> +	sai.entries = kmem_zalloc(sz, KM_NOFS);
+
+KM_NOSLEEP, check for failure?
+
+Otherwise looks ok.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
