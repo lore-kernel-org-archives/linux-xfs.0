@@ -1,55 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:19432 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754802AbdKIXfU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 18:35:20 -0500
-Date: Fri, 10 Nov 2017 10:26:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [xfs-linux:xfs-4.15-merge 2/122] {standard input}:1409: Error:
- displacement to undefined symbol .L256 overflows 12-bit field
-Message-ID: <20171109232659.GS4094@dastard>
-References: <201711100501.PXAZAvHq%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <201711100501.PXAZAvHq%fengguang.wu@intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:42014 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754002AbdKIT1E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Nov 2017 14:27:04 -0500
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH v4 2/4] xfs_io: Add support for pwritev2()
+Date: Thu,  9 Nov 2017 13:26:46 -0600
+Message-Id: <20171109192648.6356-2-rgoldwyn@suse.de>
+In-Reply-To: <20171109192648.6356-1-rgoldwyn@suse.de>
+References: <20171109192648.6356-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, kbuild-all@01.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Fri, Nov 10, 2017 at 05:31:07AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-4.15-merge
-> head:   478f8da0f7c95f847a02f8e3b808926c894e3830
-> commit: 232b51948b99dfcc95e81d8a289bc0409b3ff5b3 [2/122] xfs: simplify the xfs_getbmap interface
-> config: sh-sdk7786_defconfig (attached as .config)
-> compiler: sh4-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 232b51948b99dfcc95e81d8a289bc0409b3ff5b3
->         # save the attached .config to linux build tree
->         make.cross ARCH=sh 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    fs/xfs/xfs_ioctl.c: In function 'xfs_ioc_getbmap':
->    fs/xfs/xfs_ioctl.c:1624:1: internal compiler error: in change_address_1, at emit-rtl.c:2150
->     }
->     ^
->    Please submit a full bug report,
->    with preprocessed source if appropriate.
->    See <file:///usr/share/doc/gcc-7/README.Bugs> for instructions.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Compiler issue. Please redirect these to the gcc developers.
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Cheers,
+Changes since v2:
+	Line wrap to 80 chars
+---
+ configure.ac          |  1 +
+ include/builddefs.in  |  1 +
+ io/Makefile           |  4 ++++
+ io/pwrite.c           | 43 ++++++++++++++++++++++++++++++-------------
+ m4/package_libcdev.m4 | 16 ++++++++++++++++
+ 5 files changed, 52 insertions(+), 13 deletions(-)
 
-Dave.
-
-
-
+diff --git a/configure.ac b/configure.ac
+index 4161c3b4..2320e3e3 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -132,6 +132,7 @@ AC_HAVE_GETMNTENT
+ AC_HAVE_GETMNTINFO
+ AC_HAVE_FALLOCATE
+ AC_HAVE_FIEMAP
++AC_HAVE_PWRITEV2
+ AC_HAVE_PREADV
+ AC_HAVE_COPY_FILE_RANGE
+ AC_HAVE_SYNC_FILE_RANGE
+diff --git a/include/builddefs.in b/include/builddefs.in
+index ec630bd9..cd58ea8e 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -103,6 +103,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_PREADV = @have_preadv@
++HAVE_PWRITEV2 = @have_pwritev2@
+ HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+ HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+ HAVE_SYNCFS = @have_syncfs@
+diff --git a/io/Makefile b/io/Makefile
+index 47b0a669..050d6bd0 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -90,6 +90,10 @@ ifeq ($(HAVE_PREADV),yes)
+ LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+ endif
+ 
++ifeq ($(HAVE_PWRITEV2),yes)
++LCFLAGS += -DHAVE_PWRITEV2
++endif
++
+ ifeq ($(HAVE_READDIR),yes)
+ CFILES += readdir.c
+ LCFLAGS += -DHAVE_READDIR
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 5f149a68..2cdf0954 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -62,7 +62,8 @@ do_pwritev(
+ 	int		fd,
+ 	off64_t		offset,
+ 	ssize_t		count,
+-	ssize_t		buffer_size)
++	ssize_t		buffer_size,
++	int 		pwritev2_flags)
+ {
+ 	int vecs = 0;
+ 	ssize_t oldlen = 0;
+@@ -81,7 +82,14 @@ do_pwritev(
+ 	} else {
+ 		vecs = vectors;
+ 	}
++#ifdef HAVE_PWRITEV2
++	if (pwritev2_flags)
++		bytes = pwritev2(fd, iov, vectors, offset, pwritev2_flags);
++	else
++		bytes = pwritev(fd, iov, vectors, offset);
++#else
+ 	bytes = pwritev(fd, iov, vectors, offset);
++#endif
+ 
+ 	/* restore trimmed iov */
+ 	if (oldlen)
+@@ -98,12 +106,13 @@ do_pwrite(
+ 	int		fd,
+ 	off64_t		offset,
+ 	ssize_t		count,
+-	ssize_t		buffer_size)
++	ssize_t		buffer_size,
++	int		pwritev2_flags)
+ {
+ 	if (!vectors)
+ 		return pwrite(fd, buffer, min(count, buffer_size), offset);
+ 
+-	return do_pwritev(fd, offset, count, buffer_size);
++	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
+ }
+ 
+ static int
+@@ -111,7 +120,8 @@ write_random(
+ 	off64_t		offset,
+ 	long long	count,
+ 	unsigned int	seed,
+-	long long	*total)
++	long long	*total,
++	int 		pwritev2_flags)
+ {
+ 	off64_t		off, range;
+ 	ssize_t		bytes;
+@@ -133,7 +143,8 @@ write_random(
+ 				buffersize;
+ 		else
+ 			off = offset;
+-		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
++		bytes = do_pwrite(file->fd, off, buffersize, buffersize,
++				pwritev2_flags);
+ 		if (bytes == 0)
+ 			break;
+ 		if (bytes < 0) {
+@@ -153,7 +164,8 @@ static int
+ write_backward(
+ 	off64_t		offset,
+ 	long long	*count,
+-	long long	*total)
++	long long	*total,
++	int		pwritev2_flags)
+ {
+ 	off64_t		end, off = offset;
+ 	ssize_t		bytes = 0, bytes_requested;
+@@ -171,7 +183,8 @@ write_backward(
+ 	if ((bytes_requested = (off % buffersize))) {
+ 		bytes_requested = min(cnt, bytes_requested);
+ 		off -= bytes_requested;
+-		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize);
++		bytes = do_pwrite(file->fd, off, bytes_requested, buffersize,
++				pwritev2_flags);
+ 		if (bytes == 0)
+ 			return ops;
+ 		if (bytes < 0) {
+@@ -189,7 +202,8 @@ write_backward(
+ 	while (cnt > end) {
+ 		bytes_requested = min(cnt, buffersize);
+ 		off -= bytes_requested;
+-		bytes = do_pwrite(file->fd, off, cnt, buffersize);
++		bytes = do_pwrite(file->fd, off, cnt, buffersize,
++				pwritev2_flags);
+ 		if (bytes == 0)
+ 			break;
+ 		if (bytes < 0) {
+@@ -212,7 +226,8 @@ write_buffer(
+ 	size_t		bs,
+ 	int		fd,
+ 	off64_t		skip,
+-	long long	*total)
++	long long	*total,
++	int		pwritev2_flags)
+ {
+ 	ssize_t		bytes;
+ 	long long	bar = min(bs, count);
+@@ -224,7 +239,7 @@ write_buffer(
+ 			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
+ 				break;
+ 		}
+-		bytes = do_pwrite(file->fd, offset, count, bar);
++		bytes = do_pwrite(file->fd, offset, count, bar, pwritev2_flags);
+ 		if (bytes == 0)
+ 			break;
+ 		if (bytes < 0) {
+@@ -258,6 +273,7 @@ pwrite_f(
+ 	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
+ 	int		direction = IO_FORWARD;
+ 	int		c, fd = -1;
++	int		pwritev2_flags = 0;
+ 
+ 	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
+ 	init_cvtnum(&fsblocksize, &fssectsize);
+@@ -368,13 +384,14 @@ pwrite_f(
+ 	case IO_RANDOM:
+ 		if (!zeed)	/* srandom seed */
+ 			zeed = time(NULL);
+-		c = write_random(offset, count, zeed, &total);
++		c = write_random(offset, count, zeed, &total, pwritev2_flags);
+ 		break;
+ 	case IO_FORWARD:
+-		c = write_buffer(offset, count, bsize, fd, skip, &total);
++		c = write_buffer(offset, count, bsize, fd, skip, &total,
++				pwritev2_flags);
+ 		break;
+ 	case IO_BACKWARD:
+-		c = write_backward(offset, &count, &total);
++		c = write_backward(offset, &count, &total, pwritev2_flags);
+ 		break;
+ 	default:
+ 		total = 0;
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index fa5b6397..48da0783 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -146,6 +146,22 @@ AC_DEFUN([AC_HAVE_PREADV],
+     AC_SUBST(have_preadv)
+   ])
+ 
++#
++# Check if we have a pwritev2 libc call (Linux)
++#
++AC_DEFUN([AC_HAVE_PWRITEV2],
++  [ AC_MSG_CHECKING([for pwritev2])
++    AC_TRY_LINK([
++#define _BSD_SOURCE
++#include <sys/uio.h>
++    ], [
++         pwritev2(0, 0, 0, 0, 0);
++    ], have_pwritev2=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_pwritev2)
++  ])
++
+ #
+ # Check if we have a copy_file_range system call (Linux)
+ #
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.2
+
