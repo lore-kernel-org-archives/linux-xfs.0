@@ -1,43 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59729 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751241AbdKICRg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 21:17:36 -0500
-Date: Thu, 9 Nov 2017 13:17:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/5] xfs: only check da node header padding on v5
- filesystems
-Message-ID: <20171109021709.GP4094@dastard>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24952 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751470AbdKICsU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2017 21:48:20 -0500
+Date: Wed, 8 Nov 2017 18:48:16 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/5] xfs: check the uniqueness of the AGFL entries
+Message-ID: <20171109024816.GI26910@magnolia>
 References: <151001660179.26786.15701876786383794673.stgit@magnolia>
- <20171108205636.GG26910@magnolia>
+ <151001660786.26786.14027251894350460924.stgit@magnolia>
+ <20171109020829.GK4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171108205636.GG26910@magnolia>
+In-Reply-To: <20171109020829.GK4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 08, 2017 at 12:56:36PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 09, 2017 at 01:08:29PM +1100, Dave Chinner wrote:
+> On Mon, Nov 06, 2017 at 05:03:27PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Make sure we don't list a block twice in the agfl.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> .....
+> >  /* Scrub the AGFL. */
+> >  int
+> >  xfs_scrub_agfl(
+> >  	struct xfs_scrub_context	*sc)
+> >  {
+> > +	struct xfs_scrub_agfl_info	sai = { 0 };
+> > +	struct xfs_agf			*agf;
+> > +	size_t				sz;
+> >  	xfs_agnumber_t			agno;
+> > +	unsigned int			agflcount;
+> > +	unsigned int			i;
+> >  	int				error;
+> >  
+> >  	agno = sc->sa.agno = sc->sm->sm_agno;
+> > @@ -508,8 +532,33 @@ xfs_scrub_agfl(
+> >  	if (!sc->sa.agf_bp)
+> >  		return -EFSCORRUPTED;
+> >  
+> > +	/* Allocate buffer to ensure uniqueness of AGFL entries. */
+> > +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> > +	agflcount = be32_to_cpu(agf->agf_flcount);
+> > +	sz = sizeof(xfs_agblock_t) * agflcount;
+> > +	if (sz > sc->mp->m_sb.sb_sectsize) {
 > 
-> It turns out that we only started zeroing a new da btree node's block
-> header on v5 filesystems.  Prior to that, we just wouldn't set anything
-> at all, which means that the pad field never got set and would retain
-> whatever happened to be in memory.
+> No need for sz?
 > 
-> Therefore, we can only check the pad for zeroness on v5 filesystems.
-> shared/006 on a v4 filesystem exposes this scrub bug.
+> 	if (agflcount > XFS_AGFL_SIZE(mp)
+
+<nod>
+
+> > +		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+> > +		goto out;
+> > +	}
+> > +	sai.entries = kmem_zalloc(sz, KM_NOFS);
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> KM_NOSLEEP, check for failure?
 
-looks good.
+Ok.
 
+--D
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+> Otherwise looks ok.
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
