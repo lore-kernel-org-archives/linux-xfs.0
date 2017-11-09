@@ -1,73 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1933 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932433AbdKBAqm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2017 20:46:42 -0400
-Date: Thu, 2 Nov 2017 11:46:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: truncate pagecache before writeback in
- xfs_setattr_size()
-Message-ID: <20171102004624.GU5858@dastard>
-References: <20171101140540.21542-1-eguan@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:49082 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753708AbdKINkI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Nov 2017 08:40:08 -0500
+Subject: Re: [PATCH v3 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+References: <20171010105802.31353-1-rgoldwyn@suse.de>
+ <20171010105802.31353-2-rgoldwyn@suse.de>
+ <9c9e611e-b38d-e85b-98dd-40009446095d@sandeen.net>
+ <2db8b7b0-e11d-99d2-1c0b-8d091d38a4bd@suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c6df9793-4f20-8167-84ca-c4d416cc7290@sandeen.net>
+Date: Thu, 9 Nov 2017 07:40:05 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171101140540.21542-1-eguan@redhat.com>
+In-Reply-To: <2db8b7b0-e11d-99d2-1c0b-8d091d38a4bd@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com, bfoster@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Wed, Nov 01, 2017 at 10:05:40PM +0800, Eryu Guan wrote:
-> On truncate down, if new size is not block size aligned, we zero the
-> rest of block to avoid exposing stale data to user, and
-> iomap_truncate_page() skips zeroing if the range is already in
-> unwritten state or a hole. Then we writeback from on-disk i_size to
-> the new size if this range hasn't been written to disk yet, and
-> truncate page cache beyond new EOF and set in-core i_size.
+On 11/9/17 6:25 AM, Goldwyn Rodrigues wrote:
 > 
-> The problem is that we could write data between di_size and newsize
-> before removing the page cache beyond newsize, as the extents may
-> still be in unwritten state right after a buffer write. As such, the
-> page of data that newsize lies in has not been zeroed by page cache
-> invalidation before it is written, and xfs_do_writepage() hasn't
-> triggered it's "zero data beyond EOF" case because we haven't
-> updated in-core i_size yet. Then a subsequent mmap read could see
-> non-zeros past EOF.
 > 
-> I occasionally see this in fsx runs in fstests generic/112, a
-> simplified fsx operation sequence is like (assuming 4k block size
-> xfs):
-> 
->   fallocate 0x0 0x1000 0x0 keep_size
->   write 0x0 0x1000 0x0
->   truncate 0x0 0x800 0x1000
->   punch_hole 0x0 0x800 0x800
->   mapread 0x0 0x800 0x800
-> 
-> where fallocate allocates unwritten extent but doesn't update
-> i_size, buffer write populates the page cache and extent is still
-> unwritten, truncate skips zeroing page past new EOF and writes the
-> page to disk, punch_hole invalidates the page cache, at last mapread
-> reads the block back and sees non-zero beyond EOF.
-> 
-> Fix it by moving truncate_setsize() to before writeback so the page
-> cache invalidation zeros the partial page at the new EOF. This also
-> triggers "zero data beyond EOF" in xfs_do_writepage() at writeback
-> time, because newsize has been set and page straddles the newsize.
-> 
-> Also fixed the wrong 'end' param of filemap_write_and_wait_range()
-> call while we're at it, the 'end' is inclusive and should be
-> 'newsize - 1'.
-> 
-> Suggested-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> On 11/08/2017 10:27 PM, Eric Sandeen wrote:
+>> On 10/10/17 5:58 AM, Goldwyn Rodrigues wrote:
 
-Looks sane, but I haven't tested it yet.
+...
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
+>> +		case 'N':
+>> +#ifdef HAVE_PWRITEV2
+>> +			pwritev2_flags |= RWF_NOWAIT;
+>> +#else
+>> +			printf(_("Not built with pwritev2 functionality\n"));
+>> +#endif
+>> +			break;
+>>
+> 
+> I had proposed something similar (with another message) in v2, but Dave
+> did not like it. I am fine to make it work either ways. Let me know.
 
--- 
-Dave Chinner
-david@fromorbit.com
+
+> Note, We would have to put similar checks for -V option which would add
+> some more ifdefs, which will make it a mess.
+
+Oh, right sorry.  Dave had suggested that the default case should say:
+
+"command -%c not supported"
+
+to support all the configurable options, and I agree that's a better solution.
+
+-Eric
