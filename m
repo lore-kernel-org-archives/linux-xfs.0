@@ -1,136 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42224 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:39130 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752254AbdKAOGN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Nov 2017 10:06:13 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 44E91356DD
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2017 14:06:13 +0000 (UTC)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v2] xfs: truncate pagecache before writeback in xfs_setattr_size()
-Date: Wed,  1 Nov 2017 22:05:40 +0800
-Message-Id: <20171101140540.21542-1-eguan@redhat.com>
+        id S1751716AbdKIE1v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Nov 2017 23:27:51 -0500
+Subject: Re: [PATCH v3 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
+References: <20171010105802.31353-1-rgoldwyn@suse.de>
+ <20171010105802.31353-2-rgoldwyn@suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9c9e611e-b38d-e85b-98dd-40009446095d@sandeen.net>
+Date: Wed, 8 Nov 2017 22:27:50 -0600
+MIME-Version: 1.0
+In-Reply-To: <20171010105802.31353-2-rgoldwyn@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com, bfoster@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On truncate down, if new size is not block size aligned, we zero the
-rest of block to avoid exposing stale data to user, and
-iomap_truncate_page() skips zeroing if the range is already in
-unwritten state or a hole. Then we writeback from on-disk i_size to
-the new size if this range hasn't been written to disk yet, and
-truncate page cache beyond new EOF and set in-core i_size.
+On 10/10/17 5:58 AM, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> This allows to make pwritev2() calls with RWF_NOWAIT,
+> which would fail in case the call blocks.
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> Changes since v2:
+> 	- ifdef around -N which set RWF_NOWAIT
+> ---
+>  io/pwrite.c       | 10 +++++++++-
+>  man/man8/xfs_io.8 |  6 ++++++
+>  2 files changed, 15 insertions(+), 1 deletion(-)
+> 
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index 5ceb26c7..e06dfb46 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -53,6 +53,9 @@ pwrite_help(void)
+>  #ifdef HAVE_PWRITEV
+>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+>  #endif
+> +#ifdef HAVE_PWRITEV2
+> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+> +#endif
+>  "\n"));
+>  }
 
-The problem is that we could write data between di_size and newsize
-before removing the page cache beyond newsize, as the extents may
-still be in unwritten state right after a buffer write. As such, the
-page of data that newsize lies in has not been zeroed by page cache
-invalidation before it is written, and xfs_do_writepage() hasn't
-triggered it's "zero data beyond EOF" case because we haven't
-updated in-core i_size yet. Then a subsequent mmap read could see
-non-zeros past EOF.
+This "-N" option didn't get added to the short help:
 
-I occasionally see this in fsx runs in fstests generic/112, a
-simplified fsx operation sequence is like (assuming 4k block size
-xfs):
+void
+pwrite_init(void)
+{
+        pwrite_cmd.name = "pwrite";
+        pwrite_cmd.altname = "w";
+        pwrite_cmd.cfunc = pwrite_f;
+        pwrite_cmd.argmin = 2;
+        pwrite_cmd.argmax = -1;
+        pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+        pwrite_cmd.args =
+_("[-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] [-FBR [-Z N]] [-V N] off len");
 
-  fallocate 0x0 0x1000 0x0 keep_size
-  write 0x0 0x1000 0x0
-  truncate 0x0 0x800 0x1000
-  punch_hole 0x0 0x800 0x800
-  mapread 0x0 0x800 0x800
+Is there any clean way to do that conditionally on the #ifdef as is done for long
+help?  Otherwise just more #ifdefs I guess.
+  
+> @@ -279,7 +282,7 @@ pwrite_f(
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+>  
+> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
+>  		switch (c) {
+>  		case 'b':
+>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -308,6 +311,11 @@ pwrite_f(
+>  		case 'i':
+>  			infile = optarg;
+>  			break;
+> +#ifdef HAVE_PWRITEV2
+> +		case 'N':
+> +			pwritev2_flags |= RWF_NOWAIT;
+> +			break;
+> +#endif
 
-where fallocate allocates unwritten extent but doesn't update
-i_size, buffer write populates the page cache and extent is still
-unwritten, truncate skips zeroing page past new EOF and writes the
-page to disk, punch_hole invalidates the page cache, at last mapread
-reads the block back and sees non-zero beyond EOF.
+If pwritev2 isn't present at build time, specifying -N gives somewhat unexpected behavior:
 
-Fix it by moving truncate_setsize() to before writeback so the page
-cache invalidation zeros the partial page at the new EOF. This also
-triggers "zero data beyond EOF" in xfs_do_writepage() at writeback
-time, because newsize has been set and page straddles the newsize.
+xfs_io> pwrite -N 0 1k
+pwrite [-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] [-FBR [-Z N]] [-V N] off len -- writes a number of bytes at a specified offset
+xfs_io>
 
-Also fixed the wrong 'end' param of filemap_write_and_wait_range()
-call while we're at it, the 'end' is inclusive and should be
-'newsize - 1'.
+vs a wholly unknown option:
 
-Suggested-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
+xfs_io> pwrite -K 0 1k
+pwrite: invalid option -- 'K'
+xfs_io>
 
-v2:
-- fix the bug by moving truncate_setsize() before writeback as suggested
-  by Dave
-- update summary and commit log accordingly, with some words stolen from
-  Dave :)
+because you have 'N' in the getopt string.  I wonder if there's a better
+way to handle it besides moar ifdefs ... I guess this wouldn't be
+terrible:
 
-v1: https://www.spinics.net/lists/linux-xfs/msg12321.html
++		case 'N':
++#ifdef HAVE_PWRITEV2
++			pwritev2_flags |= RWF_NOWAIT;
++#else
++			printf(_("Not built with pwritev2 functionality\n"));
++#endif
++			break;
 
- fs/xfs/xfs_iops.c | 36 ++++++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
+>  		case 's':
+>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
+>  			if (skip < 0) {
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 0fd9b951..9c58914f 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
+>  with a number of blocksize length iovecs. The number of iovecs is set by the
+>  .I vectors
+>  parameter.
+> +.TP
+> +.B \-N
+> +Perform the
+> +.BR pwritev2 (2)
+> +call with
+> +.I RWF_NOWAIT.
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 17081c77ef86..f24e5b6cfc86 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -886,22 +886,6 @@ xfs_setattr_size(
- 		return error;
- 
- 	/*
--	 * We are going to log the inode size change in this transaction so
--	 * any previous writes that are beyond the on disk EOF and the new
--	 * EOF that have not been written out need to be written here.  If we
--	 * do not write the data out, we expose ourselves to the null files
--	 * problem. Note that this includes any block zeroing we did above;
--	 * otherwise those blocks may not be zeroed after a crash.
--	 */
--	if (did_zeroing ||
--	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
--		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
--						      ip->i_d.di_size, newsize);
--		if (error)
--			return error;
--	}
--
--	/*
- 	 * We've already locked out new page faults, so now we can safely remove
- 	 * pages from the page cache knowing they won't get refaulted until we
- 	 * drop the XFS_MMAP_EXCL lock after the extent manipulations are
-@@ -917,9 +901,29 @@ xfs_setattr_size(
- 	 * user visible changes). There's not much we can do about this, except
- 	 * to hope that the caller sees ENOMEM and retries the truncate
- 	 * operation.
-+	 *
-+	 * And we update in-core i_size and truncate page cache beyond newsize
-+	 * before writeback the [di_size, newsize] range, so we're guaranteed
-+	 * not to write stale data past the new EOF on truncate down.
- 	 */
- 	truncate_setsize(inode, newsize);
- 
-+	/*
-+	 * We are going to log the inode size change in this transaction so
-+	 * any previous writes that are beyond the on disk EOF and the new
-+	 * EOF that have not been written out need to be written here.  If we
-+	 * do not write the data out, we expose ourselves to the null files
-+	 * problem. Note that this includes any block zeroing we did above;
-+	 * otherwise those blocks may not be zeroed after a crash.
-+	 */
-+	if (did_zeroing ||
-+	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
-+		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-+						ip->i_d.di_size, newsize - 1);
-+		if (error)
-+			return error;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error)
- 		return error;
--- 
-2.13.6
+I guess maybe this should say something about "if it's built w/ pwritev2 functionality?"
+I'm less worried about this, tbh, especially if -N gives the explanation above
+if xfs_io doesn't have the support.
 
+-Eric
+
+>  .RE
+>  .PD
+>  .TP
+> 
