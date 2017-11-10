@@ -1,137 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30061 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:39474 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751977AbdK2Ws5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 17:48:57 -0500
-Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
- <20171128203537.GZ21412@magnolia> <20171129213746.GK5858@dastard>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <3865fc6e-b496-0581-b9d4-7427fa69c825@oracle.com>
-Date: Wed, 29 Nov 2017 15:48:50 -0700
+        with ESMTP id S1755703AbdKJD1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 22:27:30 -0500
+Date: Thu, 9 Nov 2017 19:27:21 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_io: fix gcc-7 related printf warnings
+Message-ID: <20171110032721.GB25227@magnolia>
+References: <20171110013926.15289-1-david@fromorbit.com>
+ <ac210659-80a1-1eec-3704-a79d650ada40@sandeen.net>
+ <20171110032104.GA25227@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171129213746.GK5858@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20171110032104.GA25227@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
+On Thu, Nov 09, 2017 at 07:21:04PM -0800, Darrick J. Wong wrote:
+> On Thu, Nov 09, 2017 at 07:43:59PM -0600, Eric Sandeen wrote:
+> > On 11/9/17 7:39 PM, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > New compiler, new checks, new warnings.
+> > > 
+> > > Fix the new [-Wformat-truncation=] warnings that io/fsmap.c is
+> > > throwing w/ gcc-7.2 because "%lld..%lld" requires a buffer 40
+> > > characters long, not 32.
+> > > 
+> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > 
+> > 2^63 is 19 chars, yup.
+> > 
+> > Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+> > 
+> > > ---
+> > >  io/fsmap.c | 4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/io/fsmap.c b/io/fsmap.c
+> > > index 448fb5356466..e46fdbaa148c 100644
+> > > --- a/io/fsmap.c
+> > > +++ b/io/fsmap.c
+> > > @@ -184,8 +184,8 @@ dump_map_verbose(
+> > >  	off64_t			agoff, bperag;
+> > >  	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
+> > >  	int			nr_w, dev_w;
+> > > -	char			rbuf[32], bbuf[32], abuf[32], obuf[32];
+> > > -	char			nbuf[32], dbuf[32], gbuf[32];
+> > > +	char			rbuf[40], bbuf[40], abuf[40], obuf[40];
+> > > +	char			nbuf[40], dbuf[40], gbuf[40];
+> 
+> Waitaminute.  The longest format string is bbuf, which gets
+> "[%lld..%lld]:".  The longest number %lld can print is
+> "-9223372036854775807" which requires 20 bytes.  Therefore, bbuf needs
+> 1 + 20 + 2 + 20 + 2 + 1 == 46 bytes, not 40.  rbuf and abuf have similar
+> problems, though I guess a 48-byte string will work for all.
+> 
+> Granted, it's snprintf so it'll just truncate the second number if it
+> has to, but seeing as this came from a gcc warning:
+> 
+> "fsmap.c:228:3: note: ‘snprintf’ output between 8 and 40 bytes into a
+> destination of size 32"
+> 
+> So am I just bad at math, or is gcc wrong here?
 
+Ah, dchinner points out on irc that gcc knows we (>> 9) the numbers
+before printing them so the maximum value is 36028797018963967, so
+40 bytes works.
 
-On 11/29/2017 02:37 PM, Dave Chinner wrote:
-> On Tue, Nov 28, 2017 at 12:35:37PM -0800, Darrick J. Wong wrote:
->> On Fri, Nov 17, 2017 at 11:21:45AM -0700, Allison Henderson wrote:
->>> This patch adds a new file ioctl to retrieve the parent
->>> pointer of a given inode
->>
->> (Yes, it's time to start talking about actual use cases...)
->>
->> At a bare minimum, this is what I pictured for the "return parents of
->> the open file" ioctl:
->>
->> #define XFS_PPTR_MAXNAMELEN		255
->>
->> struct xfs_pptr {
->> 	u64				pp_ino;
->> 	u32				pp_gen;
->> 	u8				pp_namelen;
->> 	u8				pp_name[XFS_PPTR_MAXNAMELEN];
->> };
-> 
-> That's going to be a different size on 32bit and 64 bit platforms
-> as the structure size is a multiple of 4 bytes, not 8 bytes.
-> That will cause problems and need complex comapt ioctl translation.
-> Better to make pp_namelen a u32 and that will make the structure
-> 64 bit aligned and sized on all platforms.
-> 
-> I'd allow more than u8 for the namelen. Yes, while we currently
-> allow on 255 bytes for a name, it would make more sense to
-> use a u32 here so that the structure size is a multiple of it's
-> alignment rather than having a 4 byte hole in the array we don't
-> fill out....
-> 
->>
->> /* return parents of the handle, instead of the open fd */
->> #define XFS_PPTR_FLAG_HANDLE		(1u << 0)
->>
->> struct xfs_pptr_info {
->> 	struct xfs_fsop_handlereq	pi_handle;
->> 	struct xfs_attrlist_cursor	pi_cursor;
->> 	u32				pi_flags;
->> 	u32				pi_reserved;
->> 	u32				pi_ptrs_size;
->> 	u32				pi_ptrs_used;
->> 	u64				pi_reserved2[6];
->> 	struct xfs_pptr			pi_ptrs[0];
->> };
-> 
-> I thought gcc had started doing weird things with variable size
-> array declarations like this (i.e. pi_ptrs[0]) because the exact
-> behaviour is not defined in the C standard. i.e. we need to avoid
-> adding new declarations that do this...
+gcc: 1, maintainer: 0
 
-Oh, I think there's a few places in the set where I have declarations 
-like that.  Should they be some_array[1]; instead?
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
+> --D
 > 
-> 
->> #define XFS_PPTR_INFO_SIZEOF(ptrs)	(sizeof(struct xfs_pptr_info) + \
->> 					((ptrs) * sizeof(struct xfs_pptr)));
->> static inline struct xfs_pptr_info *
->> xfs_pptr_alloc(
->> 	size_t			nr_ptrs)
->> {
->> 	struct xfs_pptr_info	*ppi;
->>
->> 	ppi = malloc(XFS_PPTR_INFO_SIZEOF(nr_ptrs));
->> 	if (!ppi)
->> 		return NULL;
->> 	memset(ppi, 0, XFS_PPTR_INFO_SIZEOF(nr_ptrs));
->> 	ppi->pi_ptrs_size = nr_ptrs;
->> 	return ppi;
->> }
->>
->> With the following example userspace program (that does no checking
->> whatsoever):
->>
->> int main(int argc, char *argv[])
->> {
->> 	struct xfs_pptr_info	*ppi;
->> 	struct xfs_pptr		*pp;
->> 	int			fd;
->>
->> 	fd = open(argv[1], O_RDONLY);
->> 	ppi = xfs_pptr_alloc(32);
->>
->> 	while (ioctl(fd, XFS_IOC_GETPPOINTER, ppi) == 0 && ppi->pi_ptrs_used) {
->> 		for (i = 0; i < ppi->pi_ptrs_used; i++) {
->> 			printf("%llu:%u -> %s\n",
->> 					ppi->pi_ptrs[i].pp_ino,
->> 					ppi->pi_ptrs[i].pp_gen,
->> 					ppi->pi_ptrs[i].pp_name);
->> 		}
->> 	}
->> }
-> 
-> Seems like a reasonable model to me.
-> 
->> I /also/ wonder if there's any interest in having a fallback for
->> non-pptr filesystems that walks the dentry->d_parent links (like
->> d_paths() does) back to the root.  Such a fallback will only work on an
->> opened dir or a file opened by path (i.e. not a handle), however, which
->> limits its appeal.
-> 
-> I wouldn't bother complicating anything by trying to support
-> filesytems that don't have parent pointer info. Just have
-> non-parent-ptr filesystems return EOPNOTSUPP for the ioctl and be
-> done with it...
-> 
-> Cheers,
-> 
-> Dave.
-> 
+> > >  	char			owner[OWNER_BUF_SZ];
+> > >  	int			sunit, swidth;
+> > >  	int			flg = 0;
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
