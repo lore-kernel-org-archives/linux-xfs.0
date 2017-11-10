@@ -1,136 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18136 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbdKNCOc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 21:14:32 -0500
-Date: Mon, 13 Nov 2017 18:14:16 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fs, dax: unify IOMAP_F_DIRTY read vs write handling
- policy in the dax core
-Message-ID: <20171114021416.GG25227@magnolia>
-References: <151062258598.8554.8157038002895095232.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151062258598.8554.8157038002895095232.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34164 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755255AbdKJBRo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Nov 2017 20:17:44 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2BA6CC0587DE
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Nov 2017 01:17:44 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-12-55.pek2.redhat.com [10.72.12.55])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5152D60F87
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Nov 2017 01:17:43 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] xfsprogs: fix wrong variable type in write_once function
+Date: Fri, 10 Nov 2017 09:17:37 +0800
+Message-Id: <20171110011737.4089-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 13, 2017 at 05:27:54PM -0800, Dan Williams wrote:
-> While reviewing whether MAP_SYNC should strengthen its current guarantee
-> of syncing writes from the initiating process to also include
-> third-party readers observing dirty metadata, Dave pointed out that the
-> check of IOMAP_WRITE is misplaced.
-> 
-> The policy of what to with IOMAP_F_DIRTY should be separated from the
-> generic filesystem mechanism of reporting dirty metadata. Move this
-> policy to the fs-dax core to simplify the per-filesystem iomap handlers,
-> and further centralize code that implements the MAP_SYNC policy. This
-> otherwise should not change behavior, it just makes it easier to change
-> behavior in the future.
+The 'Coverity Scan' found a problem in new write_once() function:
 
-Yes, this was what I was looking for on my last read-through. :)
+272             size_t bytes;
+273             bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
+>>>     CID 1420710:  Control flow issues  (NO_EFFECT)
+>>>     This less-than-zero comparison of an unsigned value is never true. "bytes < 0UL".
+274             if (bytes < 0)
+275                     return -1;
 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reported-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> This is an additional cleanup I want to include in the 4.15 merge
-> request for the MAP_SYNC feature. Please review, I'm looking to send the
-> pull request towards the end of the week.
-> 
-> 
->  fs/dax.c           |   15 +++++++++++++--
->  fs/ext4/inode.c    |    2 +-
->  fs/xfs/xfs_iomap.c |    6 +++---
->  3 files changed, 17 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 78233c716757..27ba300660ff 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -1079,6 +1079,17 @@ static int dax_fault_return(int error)
->  	return VM_FAULT_SIGBUS;
->  }
->  
-> +/*
-> + * MAP_SYNC on a dax mapping guarantees dirty metadata is
-> + * flushed on write-faults (non-cow), but not read-faults.
-> + */
-> +static bool dax_fault_is_synchronous(unsigned long flags,
-> +		struct vm_area_struct *vma, struct iomap *iomap)
-> +{
-> +	return (flags & IOMAP_WRITE) && (vma->vm_flags & VM_SYNC)
-> +		&& (iomap->flags & IOMAP_F_DIRTY);
-> +}
-> +
->  static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
->  			       const struct iomap_ops *ops)
->  {
-> @@ -1170,7 +1181,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
->  		goto finish_iomap;
->  	}
->  
-> -	sync = (vma->vm_flags & VM_SYNC) && (iomap.flags & IOMAP_F_DIRTY);
-> +	sync = dax_fault_is_synchronous(flags, vma, &iomap);
->  
->  	switch (iomap.type) {
->  	case IOMAP_MAPPED:
-> @@ -1390,7 +1401,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
->  	if (iomap.offset + iomap.length < pos + PMD_SIZE)
->  		goto finish_iomap;
->  
-> -	sync = (vma->vm_flags & VM_SYNC) && (iomap.flags & IOMAP_F_DIRTY);
-> +	sync = dax_fault_is_synchronous(iomap_flags, vma, &iomap);
->  
->  	switch (iomap.type) {
->  	case IOMAP_MAPPED:
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 13a198924a0f..ee4d907a4251 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3479,7 +3479,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->  	}
->  
->  	iomap->flags = 0;
-> -	if ((flags & IOMAP_WRITE) && ext4_inode_datasync_dirty(inode))
-> +	if (ext4_inode_datasync_dirty(inode))
->  		iomap->flags |= IOMAP_F_DIRTY;
->  	iomap->bdev = inode->i_sb->s_bdev;
->  	iomap->dax_dev = sbi->s_daxdev;
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index b43be199fbdf..888b60189983 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1087,9 +1087,9 @@ xfs_file_iomap_begin(
->  		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
->  	}
->  
-> -	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-> -	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-> -		iomap->flags |= IOMAP_F_DIRTY;
-> +	if (xfs_ipincount(ip))
-> +		if (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP)
+That's unreasonable. do_pwrite return 'ssize_t' type value, which can
+be less than zero, but we use a 'size_t' to get the return value. So
+change the size_t to ssize_t for it can store the return value
+correctly.
 
-Why not if (xfs_ipincount(ip) && (ip->... & ~XFS_ILOG_TIMESTAMP)) ?
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+ io/pwrite.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Otherwise looks ok (just this patch, will rvb the rest separately),
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 26f79579..b28b6039 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -269,7 +269,7 @@ write_once(
+ 	long long	*total,
+ 	int		pwritev2_flags)
+ {
+-	size_t bytes;
++	ssize_t bytes;
+ 	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
+ 	if (bytes < 0)
+ 		return -1;
+-- 
+2.13.6
 
---D
-
-> +			iomap->flags |= IOMAP_F_DIRTY;
->  
->  	xfs_bmbt_to_iomap(ip, iomap, &imap);
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
