@@ -1,162 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51913 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754178AbdKIMZz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Nov 2017 07:25:55 -0500
-Subject: Re: [PATCH v3 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
-References: <20171010105802.31353-1-rgoldwyn@suse.de>
- <20171010105802.31353-2-rgoldwyn@suse.de>
- <9c9e611e-b38d-e85b-98dd-40009446095d@sandeen.net>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <2db8b7b0-e11d-99d2-1c0b-8d091d38a4bd@suse.de>
-Date: Thu, 9 Nov 2017 06:25:50 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:38434 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752494AbdKJAod (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 19:44:33 -0500
+Subject: [PATCH 1/4] xfs/31[3-7]: hide pwrite fsync errors that are supposed
+ to fail
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 09 Nov 2017 16:44:28 -0800
+Message-ID: <151027466805.13147.11900555125085821847.stgit@magnolia>
+In-Reply-To: <151027466195.13147.10381301768189156101.stgit@magnolia>
+References: <151027466195.13147.10381301768189156101.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <9c9e611e-b38d-e85b-98dd-40009446095d@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, david@fromorbit.com, bfoster@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+xfs_io 4.14 will gain the ability to print error messages when
+pwrite+fsync fail.  Certain tests use the error injector to cause
+failures, so the errors are expected.  Since we test for a shut down
+filesystem after the error injection, we can push the error messages to
+the log.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/312 |    2 +-
+ tests/xfs/313 |    2 +-
+ tests/xfs/314 |    2 +-
+ tests/xfs/315 |    2 +-
+ tests/xfs/317 |    2 +-
+ tests/xfs/326 |    2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
 
+diff --git a/tests/xfs/312 b/tests/xfs/312
+index 0c10441..0987527 100755
+--- a/tests/xfs/312
++++ b/tests/xfs/312
+@@ -79,7 +79,7 @@ echo "Inject error"
+ _scratch_inject_error "bmap_finish_one"
+ 
+ echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full 2>&1
+ 
+ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+diff --git a/tests/xfs/313 b/tests/xfs/313
+index 1a2cff2..0904b57 100755
+--- a/tests/xfs/313
++++ b/tests/xfs/313
+@@ -79,7 +79,7 @@ echo "Inject error"
+ _scratch_inject_error "refcount_finish_one"
+ 
+ echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full 2>&1
+ 
+ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+diff --git a/tests/xfs/314 b/tests/xfs/314
+index ec16c6f..e2e4d7c 100755
+--- a/tests/xfs/314
++++ b/tests/xfs/314
+@@ -81,7 +81,7 @@ echo "Inject error"
+ _scratch_inject_error "rmap_finish_one"
+ 
+ echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full 2>&1
+ 
+ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+diff --git a/tests/xfs/315 b/tests/xfs/315
+index 6170540..db26555 100755
+--- a/tests/xfs/315
++++ b/tests/xfs/315
+@@ -77,7 +77,7 @@ echo "Inject error"
+ _scratch_inject_error "free_extent"
+ 
+ echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz 0 $sz" $SCRATCH_MNT/file1 >> $seqres.full
++$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz 0 $sz" $SCRATCH_MNT/file1 >> $seqres.full 2>&1
+ sync
+ 
+ echo "FS should be shut down, touch will fail"
+diff --git a/tests/xfs/317 b/tests/xfs/317
+index 507c2a9..651a067 100755
+--- a/tests/xfs/317
++++ b/tests/xfs/317
+@@ -71,7 +71,7 @@ echo "Inject error"
+ _scratch_inject_error "rmap_finish_one"
+ 
+ echo "Write files"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz 0 $sz" $SCRATCH_MNT/file1 >> $seqres.full
++$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz 0 $sz" $SCRATCH_MNT/file1 >> $seqres.full 2>&1
+ 
+ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+diff --git a/tests/xfs/326 b/tests/xfs/326
+index 36bdcf4..929d3e6 100755
+--- a/tests/xfs/326
++++ b/tests/xfs/326
+@@ -87,7 +87,7 @@ echo "Inject error"
+ _scratch_inject_error "refcount_finish_one"
+ 
+ echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++$XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full 2>&1
+ 
+ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
 
-On 11/08/2017 10:27 PM, Eric Sandeen wrote:
-> On 10/10/17 5:58 AM, Goldwyn Rodrigues wrote:
->> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
->>
->> This allows to make pwritev2() calls with RWF_NOWAIT,
->> which would fail in case the call blocks.
->>
->> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->>
->> Changes since v2:
->> 	- ifdef around -N which set RWF_NOWAIT
->> ---
->>  io/pwrite.c       | 10 +++++++++-
->>  man/man8/xfs_io.8 |  6 ++++++
->>  2 files changed, 15 insertions(+), 1 deletion(-)
->>
->> diff --git a/io/pwrite.c b/io/pwrite.c
->> index 5ceb26c7..e06dfb46 100644
->> --- a/io/pwrite.c
->> +++ b/io/pwrite.c
->> @@ -53,6 +53,9 @@ pwrite_help(void)
->>  #ifdef HAVE_PWRITEV
->>  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
->>  #endif
->> +#ifdef HAVE_PWRITEV2
->> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
->> +#endif
->>  "\n"));
->>  }
-> 
-> This "-N" option didn't get added to the short help:
-
-Ok, I will do that.
-
-> 
-> void
-> pwrite_init(void)
-> {
->         pwrite_cmd.name = "pwrite";
->         pwrite_cmd.altname = "w";
->         pwrite_cmd.cfunc = pwrite_f;
->         pwrite_cmd.argmin = 2;
->         pwrite_cmd.argmax = -1;
->         pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
->         pwrite_cmd.args =
-> _("[-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] [-FBR [-Z N]] [-V N] off len");
-> 
-> Is there any clean way to do that conditionally on the #ifdef as is done for long
-> help?  Otherwise just more #ifdefs I guess.
->   
->> @@ -279,7 +282,7 @@ pwrite_f(
->>  	init_cvtnum(&fsblocksize, &fssectsize);
->>  	bsize = fsblocksize;
->>  
->> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
->> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
->>  		switch (c) {
->>  		case 'b':
->>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
->> @@ -308,6 +311,11 @@ pwrite_f(
->>  		case 'i':
->>  			infile = optarg;
->>  			break;
->> +#ifdef HAVE_PWRITEV2
->> +		case 'N':
->> +			pwritev2_flags |= RWF_NOWAIT;
->> +			break;
->> +#endif
-> 
-> If pwritev2 isn't present at build time, specifying -N gives somewhat unexpected behavior:
-> 
-> xfs_io> pwrite -N 0 1k
-> pwrite [-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] [-FBR [-Z N]] [-V N] off len -- writes a number of bytes at a specified offset
-> xfs_io>
-> 
-> vs a wholly unknown option:
-> 
-> xfs_io> pwrite -K 0 1k
-> pwrite: invalid option -- 'K'
-> xfs_io>
-> 
-> because you have 'N' in the getopt string.  I wonder if there's a better
-> way to handle it besides moar ifdefs ... I guess this wouldn't be
-> terrible:
-> 
-> +		case 'N':
-> +#ifdef HAVE_PWRITEV2
-> +			pwritev2_flags |= RWF_NOWAIT;
-> +#else
-> +			printf(_("Not built with pwritev2 functionality\n"));
-> +#endif
-> +			break;
-> 
-
-I had proposed something similar (with another message) in v2, but Dave
-did not like it. I am fine to make it work either ways. Let me know.
-
-Note, We would have to put similar checks for -V option which would add
-some more ifdefs, which will make it a mess.
-
-
-
->>  		case 's':
->>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
->>  			if (skip < 0) {
->> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
->> index 0fd9b951..9c58914f 100644
->> --- a/man/man8/xfs_io.8
->> +++ b/man/man8/xfs_io.8
->> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
->>  with a number of blocksize length iovecs. The number of iovecs is set by the
->>  .I vectors
->>  parameter.
->> +.TP
->> +.B \-N
->> +Perform the
->> +.BR pwritev2 (2)
->> +call with
->> +.I RWF_NOWAIT.
-> 
-> I guess maybe this should say something about "if it's built w/ pwritev2 functionality?"
-> I'm less worried about this, tbh, especially if -N gives the explanation above
-> if xfs_io doesn't have the support.
-> 
-
-Yes, I will add that.
-
-
-> -Eric
-> 
->>  .RE
->>  .PD
->>  .TP
->>
-
--- 
-Goldwyn
