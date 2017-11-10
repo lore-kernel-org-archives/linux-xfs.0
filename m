@@ -1,120 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:19006 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750807AbdKNBgJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Nov 2017 20:36:09 -0500
-Subject: [PATCH] fs,
- dax: unify IOMAP_F_DIRTY read vs write handling policy in the dax
- core
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 13 Nov 2017 17:27:54 -0800
-Message-ID: <151062258598.8554.8157038002895095232.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:7616 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755255AbdKJBTa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 20:19:30 -0500
+Date: Fri, 10 Nov 2017 12:19:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 7/5] xfs: on failed mount, force-reclaim inodes after
+ unmounting quota controls
+Message-ID: <20171110011915.GF5858@dastard>
+References: <151001660179.26786.15701876786383794673.stgit@magnolia>
+ <20171109060010.GK26910@magnolia>
+ <20171109235748.GQ26910@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171109235748.GQ26910@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-While reviewing whether MAP_SYNC should strengthen its current guarantee
-of syncing writes from the initiating process to also include
-third-party readers observing dirty metadata, Dave pointed out that the
-check of IOMAP_WRITE is misplaced.
+On Thu, Nov 09, 2017 at 03:57:48PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When mounting fails, we must force-reclaim inodes (and disable delayed
+> reclaim) /after/ the realtime and quota control have let go of the
+> realtime and quota inodes.  Without this, we corrupt the timer list and
+> cause other weird problems.
+> 
+> Found by xfs/376 fuzzing u3.bmbt[0].lastoff on an rmap filesystem to
+> force a bogus post-eof extent reclaim that causes the fs to go down.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: try again with longer comment
+> ---
+>  fs/xfs/xfs_mount.c |   15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index e9727d0..c879b51 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -1022,10 +1022,21 @@ xfs_mountfs(
+>  	xfs_rtunmount_inodes(mp);
+>   out_rele_rip:
+>  	IRELE(rip);
+> -	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> -	xfs_reclaim_inodes(mp, SYNC_WAIT);
+>  	/* Clean out dquots that might be in memory after quotacheck. */
+>  	xfs_qm_unmount(mp);
+> +	/*
+> +	 * Cancel all delayed reclaim work and reclaim the inodes directly.
+> +	 * We have to do this /after/ rtunmount and qm_unmount because those
+> +	 * two will have scheduled delayed reclaim for the rt/quota inodes.
+> +	 *
+> +	 * This is slightly different from the unmountfs call sequence
+> +	 * because we could be tearing down a partially set up mount.  In
+> +	 * particular, if log_mount_finish fails we bail out without calling
+> +	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
+> +	 * quota inodes.
+> +	 */
+> +	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> +	xfs_reclaim_inodes(mp, SYNC_WAIT);
 
-The policy of what to with IOMAP_F_DIRTY should be separated from the
-generic filesystem mechanism of reporting dirty metadata. Move this
-policy to the fs-dax core to simplify the per-filesystem iomap handlers,
-and further centralize code that implements the MAP_SYNC policy. This
-otherwise should not change behavior, it just makes it easier to change
-behavior in the future.
+Yup, that's better - I know what is going on now and I don't have to
+remember the details. Double win! :P
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reported-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-This is an additional cleanup I want to include in the 4.15 merge
-request for the MAP_SYNC feature. Please review, I'm looking to send the
-pull request towards the end of the week.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 
- fs/dax.c           |   15 +++++++++++++--
- fs/ext4/inode.c    |    2 +-
- fs/xfs/xfs_iomap.c |    6 +++---
- 3 files changed, 17 insertions(+), 6 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 78233c716757..27ba300660ff 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1079,6 +1079,17 @@ static int dax_fault_return(int error)
- 	return VM_FAULT_SIGBUS;
- }
- 
-+/*
-+ * MAP_SYNC on a dax mapping guarantees dirty metadata is
-+ * flushed on write-faults (non-cow), but not read-faults.
-+ */
-+static bool dax_fault_is_synchronous(unsigned long flags,
-+		struct vm_area_struct *vma, struct iomap *iomap)
-+{
-+	return (flags & IOMAP_WRITE) && (vma->vm_flags & VM_SYNC)
-+		&& (iomap->flags & IOMAP_F_DIRTY);
-+}
-+
- static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 			       const struct iomap_ops *ops)
- {
-@@ -1170,7 +1181,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		goto finish_iomap;
- 	}
- 
--	sync = (vma->vm_flags & VM_SYNC) && (iomap.flags & IOMAP_F_DIRTY);
-+	sync = dax_fault_is_synchronous(flags, vma, &iomap);
- 
- 	switch (iomap.type) {
- 	case IOMAP_MAPPED:
-@@ -1390,7 +1401,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	if (iomap.offset + iomap.length < pos + PMD_SIZE)
- 		goto finish_iomap;
- 
--	sync = (vma->vm_flags & VM_SYNC) && (iomap.flags & IOMAP_F_DIRTY);
-+	sync = dax_fault_is_synchronous(iomap_flags, vma, &iomap);
- 
- 	switch (iomap.type) {
- 	case IOMAP_MAPPED:
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 13a198924a0f..ee4d907a4251 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3479,7 +3479,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	}
- 
- 	iomap->flags = 0;
--	if ((flags & IOMAP_WRITE) && ext4_inode_datasync_dirty(inode))
-+	if (ext4_inode_datasync_dirty(inode))
- 		iomap->flags |= IOMAP_F_DIRTY;
- 	iomap->bdev = inode->i_sb->s_bdev;
- 	iomap->dax_dev = sbi->s_daxdev;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index b43be199fbdf..888b60189983 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1087,9 +1087,9 @@ xfs_file_iomap_begin(
- 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
- 	}
- 
--	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
--	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
--		iomap->flags |= IOMAP_F_DIRTY;
-+	if (xfs_ipincount(ip))
-+		if (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP)
-+			iomap->flags |= IOMAP_F_DIRTY;
- 
- 	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 
-
+-- 
+Dave Chinner
+david@fromorbit.com
