@@ -1,75 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:7616 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:12437 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755255AbdKJBTa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 20:19:30 -0500
-Date: Fri, 10 Nov 2017 12:19:15 +1100
+        by vger.kernel.org with ESMTP id S1755255AbdKJBXO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 20:23:14 -0500
+Date: Fri, 10 Nov 2017 12:23:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 7/5] xfs: on failed mount, force-reclaim inodes after
- unmounting quota controls
-Message-ID: <20171110011915.GF5858@dastard>
+Subject: Re: [PATCH v3 1/5] xfs: check the uniqueness of the AGFL entries
+Message-ID: <20171110012312.GG5858@dastard>
 References: <151001660179.26786.15701876786383794673.stgit@magnolia>
- <20171109060010.GK26910@magnolia>
- <20171109235748.GQ26910@magnolia>
+ <151001660786.26786.14027251894350460924.stgit@magnolia>
+ <20171109233944.GO26910@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171109235748.GQ26910@magnolia>
+In-Reply-To: <20171109233944.GO26910@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 09, 2017 at 03:57:48PM -0800, Darrick J. Wong wrote:
+On Thu, Nov 09, 2017 at 03:39:44PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When mounting fails, we must force-reclaim inodes (and disable delayed
-> reclaim) /after/ the realtime and quota control have let go of the
-> realtime and quota inodes.  Without this, we corrupt the timer list and
-> cause other weird problems.
-> 
-> Found by xfs/376 fuzzing u3.bmbt[0].lastoff on an rmap filesystem to
-> force a bogus post-eof extent reclaim that causes the fs to go down.
+> Make sure we don't list a block twice in the agfl by copying the
+> contents of the AGFL to an array, sorting it, and looking for
+> duplicates.  We can easily check that the number of agfl entries we see
+> actually matches the flcount, so do that too.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> v2: try again with longer comment
-> ---
->  fs/xfs/xfs_mount.c |   15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index e9727d0..c879b51 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1022,10 +1022,21 @@ xfs_mountfs(
->  	xfs_rtunmount_inodes(mp);
->   out_rele_rip:
->  	IRELE(rip);
-> -	cancel_delayed_work_sync(&mp->m_reclaim_work);
-> -	xfs_reclaim_inodes(mp, SYNC_WAIT);
->  	/* Clean out dquots that might be in memory after quotacheck. */
->  	xfs_qm_unmount(mp);
-> +	/*
-> +	 * Cancel all delayed reclaim work and reclaim the inodes directly.
-> +	 * We have to do this /after/ rtunmount and qm_unmount because those
-> +	 * two will have scheduled delayed reclaim for the rt/quota inodes.
-> +	 *
-> +	 * This is slightly different from the unmountfs call sequence
-> +	 * because we could be tearing down a partially set up mount.  In
-> +	 * particular, if log_mount_finish fails we bail out without calling
-> +	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
-> +	 * quota inodes.
-> +	 */
-> +	cancel_delayed_work_sync(&mp->m_reclaim_work);
-> +	xfs_reclaim_inodes(mp, SYNC_WAIT);
+> v3: check flcount, don't overflow buffer
+> v2: minor reworks per dchinner review suggestions
 
-Yup, that's better - I know what is going on now and I don't have to
-remember the details. Double win! :P
+Looks good. One minor nit:
+
+> +	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
+> +			KM_SLEEP | KM_NOFS);
+> +	if (!sai.entries) {
+> +		error = -ENOMEM;
+> +		goto out;
+> +	}
+
+KM_SLEEP means "never fail", which would make either it or the error
+checking redundant. I'd just drop the KM_SLEEP - it's not necessary
+if we can handle ENOMEM effectively.
+
+Otherwise it looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 
 -- 
 Dave Chinner
