@@ -1,162 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44762 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42390 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755015AbdKNKyu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Nov 2017 05:54:50 -0500
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 1/3] fstests: filter mount error message for EUCLEAN and ESTALE
-Date: Tue, 14 Nov 2017 18:53:59 +0800
-Message-Id: <20171114105401.10542-2-eguan@redhat.com>
-In-Reply-To: <20171114105401.10542-1-eguan@redhat.com>
-References: <20171114105401.10542-1-eguan@redhat.com>
+        id S1751288AbdKKQWd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 11 Nov 2017 11:22:33 -0500
+Date: Sun, 12 Nov 2017 00:22:31 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH v2] xfsprogs: fix wrong variable type in write_once
+ function
+Message-ID: <20171111162231.GY21475@dhcp12-143.nay.redhat.com>
+References: <20171111135759.7431-1-zlang@redhat.com>
+ <96daff60-b086-ef36-2cbf-0b21d01d42b6@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <96daff60-b086-ef36-2cbf-0b21d01d42b6@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: misono.tomohiro@jp.fujitsu.com, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-util-linux commit ea848180dd34 ("libmount: add
-mnt_context_get_excode()") since v2.30 changed the error message on
-EUCLEAN and ESTALE again (and maybe other errno too):
+On Sat, Nov 11, 2017 at 09:46:48AM -0600, Eric Sandeen wrote:
+> On 11/11/17 7:57 AM, Zorro Lang wrote:
+> > The 'Coverity Scan' found a problem in new write_once() function:
+> > 
+> > 272             size_t bytes;
+> > 273             bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
+> >>>>     CID 1420710:  Control flow issues  (NO_EFFECT)
+> >>>>     This less-than-zero comparison of an unsigned value is never true. "bytes < 0UL".
+> > 274             if (bytes < 0)
+> > 275                     return -1;
+> > 
+> > That's unreasonable. do_pwrite return 'ssize_t' type value, which can
+> > be less than zero, but we use a 'size_t' to get the return value. So
+> > change the size_t to ssize_t for it can store the return value
+> > correctly.
+> > 
+> > By the chance, correct all 'ssize_t' type problems in pwrite related
+> > functions.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> > 
+> > V2 changed more than V1, as below:
+> > 1) The return value type of do_pwritev and do_pwrite, from 'int' to 'ssize_t'
+> > 2) The arguments type of do_pwritev and do_pwrite, from 'ssize_t' to 'size_t'
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> >  io/pwrite.c | 14 +++++++-------
+> >  1 file changed, 7 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/io/pwrite.c b/io/pwrite.c
+> > index 26f79579..3df976a8 100644
+> > --- a/io/pwrite.c
+> > +++ b/io/pwrite.c
+> > @@ -61,12 +61,12 @@ pwrite_help(void)
+> >  }
+> >  
+> >  #ifdef HAVE_PWRITEV
+> > -static int
+> > +static ssize_t
+> >  do_pwritev(
+> >  	int		fd,
+> >  	off64_t		offset,
+> > -	ssize_t		count,
+> > -	ssize_t		buffer_size,
+> > +	size_t		count,
+> > +	size_t		buffer_size,
+> 
+> I had not noticed this before, but this is odd; buffer_size is not used
+> in this function. Instead, we test the global "buffersize"
+> 
+> I'm not sure what's going on there, need to read the code bit more.
+> That's probably a separate fix though.
 
- - mount: <device> on <mountpoint> failed: Structure needs cleaning
- + mount: <mountpoint>: mount(2) system call failed: Structure needs cleaning.
+The buffer_size argument in do_pwritev/do_preadv is useless. I'll remove
+it in a separate patch. But due to this patch changed the 'buffer_size'
+place, I'll send this patch and 'remove buffer_size' patch together.
+To prevent merge conflict.
 
-and it causes xfs/005, overlay/037 to fail (and probably xfs/333 too,
-but it's always _notrun for now).
+Thanks,
+Zorro
 
-So let's filter out the changing parts and keep the error message
-simple.
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- common/filter         | 23 +++++++++++++++++++++++
- tests/overlay/037     |  4 ++--
- tests/overlay/037.out |  4 ++--
- tests/xfs/005         |  7 +------
- tests/xfs/333         |  2 +-
- tests/xfs/333.out     |  2 +-
- 6 files changed, 30 insertions(+), 12 deletions(-)
-
-diff --git a/common/filter b/common/filter
-index 0cb458b0051f..d1bb94818e3d 100644
---- a/common/filter
-+++ b/common/filter
-@@ -390,6 +390,13 @@ _filter_fstrim()
- 	egrep -o "[0-9]+ bytes" | $AWK_PROG '{print $1}'
- }
- 
-+# Remove the ending dot appended to mount error message, util-linux 2.30
-+# starts to do so.
-+_filter_ending_dot()
-+{
-+	sed -e "s/\.$//"
-+}
-+
- # Older mount output referred to "block device" when mounting RO devices
- # It's gone in newer versions
- _filter_ro_mount() {
-@@ -397,6 +404,22 @@ _filter_ro_mount() {
- 	    -e "s/mount: cannot mount block device/mount: cannot mount/g"
- }
- 
-+# Filter a failed mount output, util-linux changed the message several times.
-+#
-+# prior to v2.21:
-+# mount: Structure needs cleaning
-+# v2.21 to v2.29:
-+# mount: mount <device> on <mountpoint> failed: Structure needs cleaning
-+# v2.30 and later:
-+# mount: <mountpoint>: mount(2) system call failed: Structure needs cleaning.
-+#
-+# This is also true for ESTALE error. So let's remove all the changing parts
-+# and keep the 'prior to v2.21' format.
-+_filter_error_mount()
-+{
-+	sed -e "s/mount:\(.*failed:\)/mount:/" | _filter_ending_dot
-+}
-+
- _filter_od()
- {
- 	BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
-diff --git a/tests/overlay/037 b/tests/overlay/037
-index 728732903358..b897ec9263ee 100755
---- a/tests/overlay/037
-+++ b/tests/overlay/037
-@@ -76,12 +76,12 @@ $UMOUNT_PROG $SCRATCH_MNT
- 
- # Try to mount an overlay with the same upperdir and different lowerdir - expect ESTALE
- _overlay_scratch_mount_dirs $lowerdir2 $upperdir $workdir -oindex=on \
--	2>&1 | _filter_scratch
-+	2>&1 | _filter_scratch | _filter_error_mount
- $UMOUNT_PROG $SCRATCH_MNT 2>/dev/null
- 
- # Try to mount an overlay with the same workdir and different upperdir - expect ESTALE
- _overlay_scratch_mount_dirs $lowerdir $upperdir2 $workdir -oindex=on \
--	2>&1 | _filter_scratch
-+	2>&1 | _filter_scratch | _filter_error_mount
- $UMOUNT_PROG $SCRATCH_MNT 2>/dev/null
- 
- # Mount overlay with original lowerdir, upperdir, workdir and index=on - expect success
-diff --git a/tests/overlay/037.out b/tests/overlay/037.out
-index 786ef85c29e3..d6ad7cfad687 100644
---- a/tests/overlay/037.out
-+++ b/tests/overlay/037.out
-@@ -1,3 +1,3 @@
- QA output created by 037
--mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Stale file handle
--mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Stale file handle
-+mount: Stale file handle
-+mount: Stale file handle
-diff --git a/tests/xfs/005 b/tests/xfs/005
-index fade4bbf282b..ebf4b15ec9b5 100755
---- a/tests/xfs/005
-+++ b/tests/xfs/005
-@@ -40,11 +40,6 @@ _cleanup()
-     rm -f $tmp.*
- }
- 
--filter_mount()
--{
--	sed -e "s/mount .* failed: //"
--}
--
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-@@ -64,7 +59,7 @@ _scratch_mkfs_xfs -m crc=1 >> $seqres.full 2>&1 || _fail "mkfs failed"
- $XFS_IO_PROG -c "pwrite 224 4" -c fsync $SCRATCH_DEV | _filter_xfs_io
- 
- # should FAIL, the crc is bad; golden output contains mount failure
--_scratch_mount 2>&1 | filter_mount
-+_scratch_mount 2>&1 | _filter_error_mount
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/333 b/tests/xfs/333
-index bf0c811d2435..0a66f08a1062 100755
---- a/tests/xfs/333
-+++ b/tests/xfs/333
-@@ -64,7 +64,7 @@ _scratch_unmount
- 
- echo "Corrupt fs"
- _scratch_xfs_db -x -c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
--_scratch_mount 2>&1 | _filter_scratch
-+_scratch_mount 2>&1 | _filter_scratch | _filter_error_mount
- 
- echo "Test done, mount should have failed"
- 
-diff --git a/tests/xfs/333.out b/tests/xfs/333.out
-index f7518f46d900..b3c698750f8f 100644
---- a/tests/xfs/333.out
-+++ b/tests/xfs/333.out
-@@ -2,5 +2,5 @@ QA output created by 333
- Format and mount
- Create some files
- Corrupt fs
--mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Structure needs cleaning
-+mount: Structure needs cleaning
- Test done, mount should have failed
--- 
-2.13.6
-
+> 
+> I think the rest looks ok,
+> 
+> Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+> 
+> 
+> 
+> >  	int 		pwritev2_flags)
+> >  {
+> >  	int vecs = 0;
+> > @@ -105,12 +105,12 @@ do_pwritev(
+> >  #define do_pwritev(fd, offset, count, buffer_size) (0)
+> >  #endif
+> >  
+> > -static int
+> > +static ssize_t
+> >  do_pwrite(
+> >  	int		fd,
+> >  	off64_t		offset,
+> > -	ssize_t		count,
+> > -	ssize_t		buffer_size,
+> > +	size_t		count,
+> > +	size_t		buffer_size,
+> >  	int		pwritev2_flags)
+> >  {
+> >  	if (!vectors)
+> > @@ -269,7 +269,7 @@ write_once(
+> >  	long long	*total,
+> >  	int		pwritev2_flags)
+> >  {
+> > -	size_t bytes;
+> > +	ssize_t bytes;
+> >  	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
+> >  	if (bytes < 0)
+> >  		return -1;
+> 
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
