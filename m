@@ -1,27 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:59357 "EHLO
+Received: from Galois.linutronix.de ([146.0.238.70]:59353 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751087AbdKLTfC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Nov 2017 14:35:02 -0500
-Message-Id: <20171112192142.878130847@linutronix.de>
-Date: Sun, 12 Nov 2017 20:18:26 +0100
+        with ESMTP id S1751084AbdKLTfB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Nov 2017 14:35:01 -0500
+Message-Id: <20171112192142.789785615@linutronix.de>
+Date: Sun, 12 Nov 2017 20:18:25 +0100
 From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch 5/7] LICENSES: Add the BSD 3-clause "New" or "Revised" License
+Subject: [patch 4/7] LICENSES: Add the BSD 2-clause "Simplified" license
 References: <20171112191821.240484206@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Disposition: inline;
- filename=LICENSES_Add_the_BSD_3-clause_New_Revised_license.patch
+ filename=LICENSES_Add_the_BSD_2-clause_Simplified_license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Kate Stewart <kstewart@linuxfoundation.org>
 
-Add the full text of the BSD 3-clause "New" or "Revised" License to the
-kernel tree.  It was copied directly from:
+Add the full text of the BSD 2-clause "Simplified" license to the kernel
+tree.  It was copied directly from:
 
-  https://spdx.org/licenses/BSD-3-Clause.html#licenseText
+   https://spdx.org/licenses/BSD-2-Clause.html#licenseText
 
 Add the required tags for reference and tooling.
 
@@ -31,16 +31,16 @@ Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
 Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
 
 ---
- LICENSES/preferred/BSD-3-Clause |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 LICENSES/BSD-3-Clause
+ LICENSES/preferred/BSD-2-Clause |   28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+ create mode 100644 LICENSES/BSD-2-Clause
 
 --- /dev/null
-+++ b/LICENSES/preferred/BSD-3-Clause
-@@ -0,0 +1,32 @@
-+SPDX-License-Identifier: BSD-3-Clause
-+LICENSE-URL: http://www.opensource.org/licenses/BSD-3-Clause
-+SPDX-URL: https://spdx.org/licenses/BSD-3-Clause.html
++++ b/LICENSES/preferred/BSD-2-Clause
+@@ -0,0 +1,28 @@
++SPDX-License-Identifier: BSD-2-Clause
++LICENSE-URL: http://www.opensource.org/licenses/BSD-2-Clause
++SPDX-URL: https://spdx.org/licenses/BSD-2-Clause.html
 +
 +
 +Copyright (c) <year> <owner> . All rights reserved.
@@ -54,10 +54,6 @@ Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
 +2. Redistributions in binary form must reproduce the above copyright
 +   notice, this list of conditions and the following disclaimer in the
 +   documentation and/or other materials provided with the distribution.
-+
-+3. Neither the name of the copyright holder nor the names of its
-+   contributors may be used to endorse or promote products derived from this
-+   software without specific prior written permission.
 +
 +THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 +AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
