@@ -1,112 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33016 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751462AbdKKPqt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 11 Nov 2017 10:46:49 -0500
-Subject: Re: [PATCH v2] xfsprogs: fix wrong variable type in write_once
- function
-References: <20171111135759.7431-1-zlang@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <96daff60-b086-ef36-2cbf-0b21d01d42b6@sandeen.net>
-Date: Sat, 11 Nov 2017 09:46:48 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:46416 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751754AbdKMV4S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 16:56:18 -0500
+Date: Mon, 13 Nov 2017 13:56:01 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [btrfs] WARNING: CPU: 0 PID: 6379 at fs/direct-io.c:293
+ dio_complete+0x1d4/0x220
+Message-ID: <20171113215601.GD6246@magnolia>
+References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
+ <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
+ <20171030072021.gcgpaolo5m3myuln@wfg-t540p.sh.intel.com>
+ <20171030074429.GC3283@eguan.usersys.redhat.com>
+ <20171031001041.5qjzn5pjertpdc3e@wfg-t540p.sh.intel.com>
+ <20171031065417.GD3283@eguan.usersys.redhat.com>
+ <20171106011306.GB11631@zzz.localdomain>
+ <20171113191322.GA123488@gmail.com>
+ <ff823a95-3dff-0f2b-13ab-aab9bed7b0d3@kernel.dk>
+ <CA+55aFxv4jVzoa_NpYOq=+TVpBvbSmJq++dPW5nmWNdxUEc-8Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171111135759.7431-1-zlang@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+55aFxv4jVzoa_NpYOq=+TVpBvbSmJq++dPW5nmWNdxUEc-8Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Eric Biggers <ebiggers3@gmail.com>, Eryu Guan <guaneryu@gmail.com>, Fengguang Wu <fengguang.wu@intel.com>, Lukas Czerner <lczerner@redhat.com>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On 11/11/17 7:57 AM, Zorro Lang wrote:
-> The 'Coverity Scan' found a problem in new write_once() function:
-> 
-> 272             size_t bytes;
-> 273             bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
->>>>     CID 1420710:  Control flow issues  (NO_EFFECT)
->>>>     This less-than-zero comparison of an unsigned value is never true. "bytes < 0UL".
-> 274             if (bytes < 0)
-> 275                     return -1;
-> 
-> That's unreasonable. do_pwrite return 'ssize_t' type value, which can
-> be less than zero, but we use a 'size_t' to get the return value. So
-> change the size_t to ssize_t for it can store the return value
-> correctly.
-> 
-> By the chance, correct all 'ssize_t' type problems in pwrite related
-> functions.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> V2 changed more than V1, as below:
-> 1) The return value type of do_pwritev and do_pwrite, from 'int' to 'ssize_t'
-> 2) The arguments type of do_pwritev and do_pwrite, from 'ssize_t' to 'size_t'
-> 
-> Thanks,
-> Zorro
-> 
->  io/pwrite.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 26f79579..3df976a8 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -61,12 +61,12 @@ pwrite_help(void)
->  }
->  
->  #ifdef HAVE_PWRITEV
-> -static int
-> +static ssize_t
->  do_pwritev(
->  	int		fd,
->  	off64_t		offset,
-> -	ssize_t		count,
-> -	ssize_t		buffer_size,
-> +	size_t		count,
-> +	size_t		buffer_size,
+[cc xfs list]
 
-I had not noticed this before, but this is odd; buffer_size is not used
-in this function. Instead, we test the global "buffersize"
+[We're discussing the WARN_ON in *dio_complete when invalidation fails]
 
-I'm not sure what's going on there, need to read the code bit more.
-That's probably a separate fix though.
+[yes, again]
 
-I think the rest looks ok,
-
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-
-
->  	int 		pwritev2_flags)
->  {
->  	int vecs = 0;
-> @@ -105,12 +105,12 @@ do_pwritev(
->  #define do_pwritev(fd, offset, count, buffer_size) (0)
->  #endif
->  
-> -static int
-> +static ssize_t
->  do_pwrite(
->  	int		fd,
->  	off64_t		offset,
-> -	ssize_t		count,
-> -	ssize_t		buffer_size,
-> +	size_t		count,
-> +	size_t		buffer_size,
->  	int		pwritev2_flags)
->  {
->  	if (!vectors)
-> @@ -269,7 +269,7 @@ write_once(
->  	long long	*total,
->  	int		pwritev2_flags)
->  {
-> -	size_t bytes;
-> +	ssize_t bytes;
->  	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
->  	if (bytes < 0)
->  		return -1;
-
+On Mon, Nov 13, 2017 at 11:21:50AM -0800, Linus Torvalds wrote:
+> On Mon, Nov 13, 2017 at 11:16 AM, Jens Axboe <axboe@kernel.dk> wrote:
+> >
+> > I would tend to agree with you, it's annoying to dump a full stack trace
+> > for an expected (even for a rare situation) condition. But it's not the
+> > first one, there's also one in XFS that always triggers for test runs. I
+> > complained about that one in the past.
 > 
+> Yeah, we should always consider a WARN_ON() that is triggerable from
+> user space to be a kernel bug.
+> 
+> If it's a "cannot happen", then the bug should be fixed.
+> 
+> If it's a "can happen, but I want to see the trace", then you just got
+> the trace and you're done, and the WARN_ON() should be removed.
+> 
+> It could possibly be replaced with a "pr_warn()" or something, so that
+> it still shows up as a "the user did something dodgy", but honestly,
+> even that is questionable. We do that for things like "we just removed
+> support for this, we want to see if somebody is using it"
+> 
+> So in no case is "let's just keep things as is" the right answer.
+
+Wellll... the WARN_ON in question happens when:
+
+a) two programs race to write to the same part of a file, one via the page
+   cache and the other via directio
+b) the dio write completes, tries to invalidate the page cache, and fails
+   because the corresponding page cannot be invalidated
+
+At this point, the page cache contents don't reflect what's on disk, so
+I don't think we can quietly ignore the situation.  Clearly, enough
+people dislike the WARN to complain repeatedly, so perhaps we should try
+to barf evidence of this situation up to userspace?  The dio write
+succeeded, which is why we don't turn err into ret; but now that we can
+store and forward error codes through the mapping, how about we just:
+
+   errseq_set(dio->inode->i_mapping->wb_error, -EIO);
+
+and then let the writers pick up the EIO the next time they fsync?
+Though I can already imagine the complaints about writes that used to
+work and suddenly start returning error codes.
+
+--D
+
+>                Linus
