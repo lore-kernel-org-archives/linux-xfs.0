@@ -1,172 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:42602 "EHLO ms.lwn.net"
+Received: from sandeen.net ([63.231.237.45]:50238 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935797AbdKPU5c (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Nov 2017 15:57:32 -0500
-Date: Thu, 16 Nov 2017 13:57:30 -0700
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [patch V3 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
-Message-ID: <20171116135730.265a8323@lwn.net>
-In-Reply-To: <20171116184358.398030394@linutronix.de>
-References: <20171116183306.103584007@linutronix.de>
-        <20171116184358.398030394@linutronix.de>
+        id S1751303AbdKMWWF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Nov 2017 17:22:05 -0500
+Subject: Re: [PATCH v3 2/2] fiemap: Implement ranged query
+References: <1510588073-5665-1-git-send-email-nborisov@suse.com>
+ <1510588073-5665-2-git-send-email-nborisov@suse.com>
+ <20171113214457.GX4094@dastard>
+ <e97f774f-a3ae-04c0-4b74-6a4f26e72674@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3491ce98-b744-90de-e01b-83f13abadfa9@sandeen.net>
+Date: Mon, 13 Nov 2017 16:22:03 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <e97f774f-a3ae-04c0-4b74-6a4f26e72674@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Nikolay Borisov <nborisov@suse.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-The following is all extreme nits; you can ignore all of it and the file
-will be just fine.
-
-I assume you're planning to merge this directly with the rest; feel free to
-add my ack if that's worth anything.  If you want me to take it, instead,
-just let me know.
-
-On Thu, 16 Nov 2017 19:33:07 +0100
-Thomas Gleixner <tglx@linutronix.de> wrote:
-
-> Add a file to the Documentation directory to describe how file licenses
-> should be described in all kernel files, using the SPDX identifier, as well
-> as where all licenses should be in the kernel source tree for people to
-> refer to (LICENSES/).
+On 11/13/17 4:05 PM, Nikolay Borisov wrote:
 > 
-> Thanks to Kate and Greg for review and editing and Jonas for the
-> suggestions concerning the meta tags in the licenses files.
 > 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> ---
->  Documentation/index.rst                 |   12 
->  Documentation/process/license-rules.rst |  414 ++++++++++++++++++++++++++++++++
->  2 files changed, 426 insertions(+)
->  create mode 100644 Documentation/license-rules.rst
+> On 13.11.2017 23:44, Dave Chinner wrote:
+>> On Mon, Nov 13, 2017 at 05:47:53PM +0200, Nikolay Borisov wrote:
+>>> Currently the fiemap implementation of xfs_io doesn't support making ranged
+>>> queries. This patch implements the '-r' parameter, taking up to 2 arguments - 
+>>> the starting offset and the length of the region to be queried. This also 
+>>> requires changing of the final hole range is calculated. Namely, it's now being
+>>> done as [last_logical, logical addres of next extent] rather than being
+>>> statically determined by [last_logical, filesize].
+>>>
+>>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+>>> ---
+>>> V3: 
+>>>  * Fixed a bug where incorrect extent index was shown if we didn't print a 
+>>>  hole. This was due to statically returning 2 at the end of print_(plain|verbose)
+>>>  Now, the actual number of printed extents inside the 2 functions is used. 
+>>>  This bug is visible only with the -r parameter
+>>>
+>>>  * Fixed a bug where 1 additional extent would be printed. This was a result of 
+>>>  the aforementioned bug fix, since now printing function can return 1 and still
+>>>  have printed an extent and no hole. This can happen when you use -r parameter,
+>>>  this is now fixed and a comment explaining it is put. 
+>>>
+>>>  * Reworked the handling of the new params by making them arguments to the 
+>>>  -r parameter. 
+>>>
+>>> V2:
+>>>  * Incorporated Daricks feedback - removed variables which weren't introduced
+>>>   until the next patch as a result the build with this patch was broken. This is 
+>>>   fixed now
+>> .....
+>>
+>>> @@ -256,9 +269,12 @@ fiemap_f(
+>>>  	int		tot_w = 5;	/* 5 since its just one number */
+>>>  	int		flg_w = 5;
+>>>  	__u64		last_logical = 0;
+>>> +	size_t		fsblocksize, fssectsize;
+>>>  	struct stat	st;
+>>>  
+>>> -	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+>>> +	init_cvtnum(&fsblocksize, &fssectsize);
+>>> +
+>>> +	while ((c = getopt(argc, argv, "aln:vr")) != EOF) {
+>>
+>> Ok, you're not telling gotopt that "-r" has parameters, so....
+>>
+>>>  		switch (c) {
+>>>  		case 'a':
+>>>  			fiemap_flags |= FIEMAP_FLAG_XATTR;
+>>> @@ -272,6 +288,50 @@ fiemap_f(
+>>>  		case 'v':
+>>>  			vflag++;
+>>>  			break;
+>>> +		case 'r':
+>>> +			/* Parse the first option which is mandatory */
+>>> +			if (optind < argc && argv[optind][0] != '-') {
+>>> +				off64_t start_offset = cvtnum(fsblocksize,
+>>> +							      fssectsize,
+>>> +							      argv[optind]);
+>>> +				if (start_offset < 0) {
+>>> +					printf("non-numeric offset argument -- "
+>>> +					       "%s\n", argv[optind]);
+>>> +					return 0;
+>>> +				}
+>>> +				last_logical = start_offset;
+>>> +				optind++;
+>>> +			} else {
+>>> +				fprintf(stderr, _("Invalid offset argument for"
+>>> +						  " -r\n"));
+>>> +				exitcode = 1;
+>>> +				return 0;
+>>> +			}
+>>> +
+>>> +			if (optind < argc) {
+>>> +				/* first check if what follows doesn't begin
+>>> +				 * with '-' which means it would be a param and
+>>> +				 * not an argument
+>>> +				 */
+>>> +				if (argv[optind][0] == '-') {
+>>> +					optind--;
+>>> +					break;
+>>> +
+>>> +				}
+>>> +
+>>> +				off64_t length = cvtnum(fsblocksize,
+>>> +							fssectsize,
+>>> +							argv[optind]);
+>>> +				if (length < 0) {
+>>> +					printf("non-numeric len argument --"
+>>> +					       " %s\n", argv[optind]);
+>>> +					return 0;
+>>> +				}
+>>> +				len = length;
+>>> +				range_limit = true;
+>>> +			}
+>>> +			break;
+>>
+>> .... this is pretty nasty because you're having to check if the next
+>> option should be parsed by the main loop or not. This assumes that
+>> getopt is giving us the options in the order they were presented on
+>> the command line, which is not a good assumption to make as glibc
+>> can mutate the order as it parses the listi of know options and
+>> arguments.
+>>
+>> Given that "-r" is the only option that has parameters, then this
+>> can be massively simplified just by noting we've seen the rflag, and
+>> leaving the non-arg parameter parsing to after the end of the loop.
+>> i.e.:
 > 
-> --- a/Documentation/index.rst
-> +++ b/Documentation/index.rst
-> @@ -13,6 +13,18 @@ documents into a coherent whole.  Please
->  documentation are welcome; join the linux-doc list at vger.kernel.org if
->  you want to help out.
->  
-> +Licensing documentation
-> +-----------------------
-> +
-> +The following describes the license of the Linux kernel source code
-> +(GPLv2), how to properly mark the license of individual files in the source
-> +tree, as well as links to the full license text.
-> +
-> +.. toctree::
-> +   :maxdepth: 2
-> +
-> +   process/license-rules.rst
-> +
+> 
+> You are right this is a bit ugly, but it seems more consistend to me,
+> rather than something like
+> 
+> xfs_io -c "fiemap -r -n 10 -v 4k 10k" for example. And the reason why
+> I'm using this hackish way and not declaring r as r: in getopt is
+> because getopt doesn't recognise when a parameter takes more than 1
+> argument.
 
-I'll confess that I'm not convinced that information on license identifiers
-is the very first thing readers should encounter when entering the kernel's
-documentation.  But I'll not quibble about it for now, we can always move
-it later :)
+Sorry for chiming in so late after all the go-rounds, but:
 
->  User-oriented documentation
->  ---------------------------
->  
-> --- /dev/null
-> +++ b/Documentation/process/license-rules.rst
-> @@ -0,0 +1,414 @@
-> +.. SPDX-License-Identifier: GPL-2.0
-> +
-> +Linux kernel licensing rules
-> +============================
-> +
-> +The Linux Kernel is provided under the terms of the GNU General Public
-> +License version 2 only (GPL-2.0), as published by the Free Software
-> +Foundation, and provided in the COPYING file.  This documentation file is
-> +not meant to replace the COPYING file, but provides a description of how
-> +each source file should be annotated to make the licensing it is governed
-> +under clear and unambiguous.
-> +
-> +The license in the COPYING file applies to the kernel source as a whole,
-> +though individual source files can have a different license which is
-> +required to be compatible with the GPL-2.0:
-> +
-> +::
+Why not just drop -r entirely, and make fiemap go into ranged mode iff a
+range is specified at the end of the command, i.e.:
 
-So this sort of construction (line ending with colon followed by a literal
-block) can also be done like this:
+fiemap [ -alv ] [ -n nx ] [ offset length ]
 
-	required to be compatible with the GPL-2.0::
+and if no offset/length is specified, map the whole file.   You can parse
+the optional last 2 arguments just like pread, write, sync_range, sendfile,
+or a host of other commands already do (though some are not optional.)
 
-    		GPL-1.0+  :  GNU General Public License v1.0 or later
-		GPL-2.0+  :  GNU General Public License v2.0 or later
+There are /many/ other xfs_io commands that take offset & length at the
+end, so this usage should be very familiar to users.
 
-(i.e. just put the "::" at the end of the text line).  The end result is
-the same, but the source document is a bit more compact and less
-alien-looking.  If you concur, there's lots of places that could be fixed
-up this way.
+-Eric
 
-> +Aside from that, individual files can be provided under a dual license,
-> +i.e. one of the compatible GPL variants and alternatively under a
-> +permissive license like BSD, MIT etc.
-
-Wanna see now nitly I can get?  "i.e." ("id est") is an identity mapping;
-you want "e.g." here.
-
-> +
-> +The Userspace API (UAPI) header files, which describe the interface of user
-> +space programs to the kernel are a special case.  According to the note
-
-I might suggest being consistent between "userspace" and "user space" (or
-"user-space" as an adjective).  I prefer the latter, but that's just me.
-
-> +in the kernel COPYING file the syscall interface is a clear boundary,
-
-comma after "file"
-
-> +which does not extend the GPL requirements to any software which uses
-> +it to communicate with the kernel.  Because the UAPI headers must be
-> +includable into any source files which create an executable running on
-> +the Linux kernel, the exception must be documented by a special license
-> +expression.
-> +
-> +The common way of expressing the license of a source file is to add the
-> +matching boiler plate text into the top comment of the file.  Due to
-> +formatting, typos etc. these "boiler plates" are hard to validate for
-> +tools which are used in the context of license compliance.
-> +
-> +To avoid license inconsistencies and to help tooling, it is required to add
-> +a Software Package Data Exchange (SPDX) license identifier to each source
-> +file.  SPDX license identifiers are machine parsable and precise shorthands
-> +for the license under which the content of the file is contributed.  SPDX
-> +license identifiers are managed by the SPDX Workgroup at the Linux
-> +Foundation and have been agreed on by partners throughout the industry,
-> +tool vendors, and legal teams.  For further information see
-> +https://spdx.org/
-> +
-> +The Linux kernel requires the precise SPDX identifier in all source files.
-
-This is redundant with the first line of the previous paragraph.  I'd fix
-it by keeping the first paragraph true to its topic of introducing SPDX and
-replacing its first line with something like:
-
-	An alternative to boilerplate text is the use of Software Package
-	Data Exchange (SPDX) license identifiers in each source file.
-
-> +The valid identifiers used in the kernel are explained in the section
-> +`License identifiers`_ and have been retrieved from the official SPDX
-> +license list at https://spdx.org/licenses/ along with the license texts.
-
-[...]
-
-> +License identifiers
-> +-------------------
-> +
-> +The licenses currently used, as well as the licenses for code added to the
-> +kernel can be broken down into:
-
-comma after "kernel"
-
-[ran out of things to quibble about here]
-
-jon
