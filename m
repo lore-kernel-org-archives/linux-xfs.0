@@ -1,35 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:22765 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751704AbdKLXRj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Nov 2017 18:17:39 -0500
-Date: Mon, 13 Nov 2017 10:14:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH for 4.15] xfs_io: pull xfs errortag definitions from
- libxfs
-Message-ID: <20171112231443.GH5858@dastard>
-References: <20171111014314.GD25227@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171111014314.GD25227@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:33282 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753342AbdKMPsC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Nov 2017 10:48:02 -0500
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH v3 1/2] fiemap: Factor out actual fiemap call code
+Date: Mon, 13 Nov 2017 17:47:52 +0200
+Message-Id: <1510588073-5665-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, eguan@redhat.com, david@fromorbit.com, darrick.wong@oracle.com, Nikolay Borisov <nborisov@suse.com>
 
-On Fri, Nov 10, 2017 at 05:43:14PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Use the libxfs definitions, don't provide our own.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This will be needed to in a subsequent patch to avoid code duplication
 
-Looks good, will fix the merge problem I mentioned on #xfs.:)
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+V3: No change
+V2: No change
+ io/fiemap.c | 39 ++++++++++++++++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 11 deletions(-)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+diff --git a/io/fiemap.c b/io/fiemap.c
+index e6fd66da753d..08391f69d9bd 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -211,6 +211,31 @@ calc_print_format(
+ 	}
+ }
+ 
++static int
++__fiemap(
++	 struct fiemap * fiemap,
++	 int		 mapsize,
++	 __u32		 flags,
++	 __u64		 start,
++	 __u64		 length) {
++
++	int ret;
++
++	memset(fiemap, 0, mapsize);
++	fiemap->fm_flags = flags;
++	fiemap->fm_start = start;
++	fiemap->fm_length = length;
++	fiemap->fm_extent_count = EXTENT_BATCH;
++	ret = ioctl(file->fd, FS_IOC_FIEMAP, fiemap);
++	if (ret < 0) {
++	        fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
++	                "%s\n", progname, file->name, strerror(errno));
++	        return ret;
++	}
++
++	return 0;
++}
++
+ int
+ fiemap_f(
+ 	int		argc,
+@@ -266,19 +291,11 @@ fiemap_f(
+ 
+ 	while (!last && (cur_extent != max_extents)) {
+ 
+-		memset(fiemap, 0, map_size);
+-		fiemap->fm_flags = fiemap_flags;
+-		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1LL;
+-		fiemap->fm_extent_count = EXTENT_BATCH;
+-
+-		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
++		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
++			       -1LL);
+ 		if (ret < 0) {
+-			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+-				"%s\n", progname, file->name, strerror(errno));
+-			free(fiemap);
+ 			exitcode = 1;
+-			return 0;
++			goto out;
+ 		}
+ 
+ 		/* No more extents to map, exit */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
