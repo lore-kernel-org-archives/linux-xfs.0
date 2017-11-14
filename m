@@ -1,50 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:40896 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752241AbdKMWBi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 17:01:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171113215601.GD6246@magnolia>
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
- <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com> <20171030072021.gcgpaolo5m3myuln@wfg-t540p.sh.intel.com>
- <20171030074429.GC3283@eguan.usersys.redhat.com> <20171031001041.5qjzn5pjertpdc3e@wfg-t540p.sh.intel.com>
- <20171031065417.GD3283@eguan.usersys.redhat.com> <20171106011306.GB11631@zzz.localdomain>
- <20171113191322.GA123488@gmail.com> <ff823a95-3dff-0f2b-13ab-aab9bed7b0d3@kernel.dk>
- <CA+55aFxv4jVzoa_NpYOq=+TVpBvbSmJq++dPW5nmWNdxUEc-8Q@mail.gmail.com> <20171113215601.GD6246@magnolia>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 13 Nov 2017 14:01:36 -0800
-Message-ID: <CA+55aFzQM747SW959w3CDD=6UypUa7XTqEyHnPaTcFCX+vDLGA@mail.gmail.com>
-Subject: Re: [btrfs] WARNING: CPU: 0 PID: 6379 at fs/direct-io.c:293 dio_complete+0x1d4/0x220
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:50208 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754114AbdKNKyw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Nov 2017 05:54:52 -0500
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 2/3] overlay/036: filter busy mount message
+Date: Tue, 14 Nov 2017 18:54:00 +0800
+Message-Id: <20171114105401.10542-3-eguan@redhat.com>
+In-Reply-To: <20171114105401.10542-1-eguan@redhat.com>
+References: <20171114105401.10542-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Eric Biggers <ebiggers3@gmail.com>, Eryu Guan <guaneryu@gmail.com>, Fengguang Wu <fengguang.wu@intel.com>, Lukas Czerner <lczerner@redhat.com>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: misono.tomohiro@jp.fujitsu.com, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Mon, Nov 13, 2017 at 1:56 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> Wellll... the WARN_ON in question happens when:
->
-> a) two programs race to write to the same part of a file, one via the page
->    cache and the other via directio
-> b) the dio write completes, tries to invalidate the page cache, and fails
->    because the corresponding page cannot be invalidated
->
-> At this point, the page cache contents don't reflect what's on disk, so
-> I don't think we can quietly ignore the situation.
+util-linux v2.30 changed error message of a busy mount and caused
+overlay/036 to fail. e.g.
 
-Direct-IO causing cache coherency issues? Really? I'm shocked and
-surptised that that could _possibly_ happen.
+ - mount: <device> is already mounted or <mountpoint> busy
+ + mount: <mountpoint>: <device> already mounted or mount point busy.
 
-But why the hell would you want a back-trace for it?
+Filter the mount output by a newly introduced _filter_busy_mount
+into a unified format.
 
-IOW, if you want to warn about it, use "pr_warn_ratelimited()" or
-something. What did the backtrace and "looks like a kernel oops"
-really help with?
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ common/filter         | 12 ++++++++++++
+ tests/overlay/036     |  9 +++++++--
+ tests/overlay/036.out |  4 ++--
+ 3 files changed, 21 insertions(+), 4 deletions(-)
 
-And in the end, maybe even the warning is pointless. You used
-direct-IO and cached IO at the same time, and you got coherency
-issues. What did you expect? directio is fundamentally broken.
+diff --git a/common/filter b/common/filter
+index d1bb94818e3d..b1cd558ab0e1 100644
+--- a/common/filter
++++ b/common/filter
+@@ -420,6 +420,18 @@ _filter_error_mount()
+ 	sed -e "s/mount:\(.*failed:\)/mount:/" | _filter_ending_dot
+ }
+ 
++# Similar to _filter_error_mount, filter a busy mount output.
++# Turn both old (prior to util-linux v2.30) and new (v2.30 and later) format to
++# a simple one. e.g.
++# old: mount: <device> is already mounted or <mountpoint> busy
++# new: mount: <mountpoint>: <device> already mounted or mount point busy.
++# filtered: mount: <device> already mounted or mount point busy
++_filter_busy_mount()
++{
++	sed -e "s/.*: \([^ ]*\).* already mounted.*busy/mount: \1 already mounted or mount point busy/" | \
++		_filter_ending_dot
++}
++
+ _filter_od()
+ {
+ 	BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
+diff --git a/tests/overlay/036 b/tests/overlay/036
+index 544d4e4eaa87..4c4b56ff9817 100755
+--- a/tests/overlay/036
++++ b/tests/overlay/036
+@@ -63,6 +63,11 @@ _cleanup()
+ . ./common/rc
+ . ./common/filter
+ 
++filter_mount()
++{
++	_filter_scratch | _filter_busy_mount
++}
++
+ # remove previous $seqres.full before test
+ rm -f $seqres.full
+ 
+@@ -103,12 +108,12 @@ _overlay_mount_dirs $lowerdir2 $upperdir2 $workdir \
+ # Try to mount another overlay with the same upperdir
+ # with index=on - expect EBUSY
+ _overlay_mount_dirs $lowerdir2 $upperdir $workdir2 \
+-		    overlay2 $SCRATCH_MNT -oindex=on 2>&1 | _filter_scratch
++		    overlay2 $SCRATCH_MNT -oindex=on 2>&1 | filter_mount
+ 
+ # Try to mount another overlay with the same workdir
+ # with index=on - expect EBUSY
+ _overlay_mount_dirs $lowerdir2 $upperdir2 $workdir \
+-		    overlay3 $SCRATCH_MNT -oindex=on 2>&1 | _filter_scratch
++		    overlay3 $SCRATCH_MNT -oindex=on 2>&1 | filter_mount
+ 
+ 
+ # success, all done
+diff --git a/tests/overlay/036.out b/tests/overlay/036.out
+index 51746114db1c..fbe224e1bac7 100644
+--- a/tests/overlay/036.out
++++ b/tests/overlay/036.out
+@@ -1,3 +1,3 @@
+ QA output created by 036
+-mount: overlay2 is already mounted or SCRATCH_MNT busy
+-mount: overlay3 is already mounted or SCRATCH_MNT busy
++mount: overlay2 already mounted or mount point busy
++mount: overlay3 already mounted or mount point busy
+-- 
+2.13.6
 
-                 Linus
