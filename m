@@ -1,109 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37428 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39864 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753282AbdKNOgm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Nov 2017 09:36:42 -0500
-Subject: Re: [PATCH v3 2/2] xfs: initial fiemap range query test
-References: <1510588073-5665-1-git-send-email-nborisov@suse.com>
- <1510588229-6079-1-git-send-email-nborisov@suse.com>
- <1510588229-6079-2-git-send-email-nborisov@suse.com>
+        id S1753864AbdKNPJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Nov 2017 10:09:24 -0500
+Subject: Re: [PATCH v3] common: Check for fiemap range argument support
+References: <20171102031622.GV17339@eguan.usersys.redhat.com>
+ <1509610421-16716-1-git-send-email-nborisov@suse.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5b67930f-a734-84c7-b71d-820fa8873a64@sandeen.net>
-Date: Tue, 14 Nov 2017 08:36:40 -0600
+Message-ID: <cb9fba60-a000-d08a-5099-3aa604724568@sandeen.net>
+Date: Tue, 14 Nov 2017 09:09:21 -0600
 MIME-Version: 1.0
-In-Reply-To: <1510588229-6079-2-git-send-email-nborisov@suse.com>
+In-Reply-To: <1509610421-16716-1-git-send-email-nborisov@suse.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, eguan@redhat.com, david@fromorbit.com, darrick.wong@oracle.com
+To: Nikolay Borisov <nborisov@suse.com>, eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 
 
-On 11/13/17 9:50 AM, Nikolay Borisov wrote:
+On 11/2/17 3:13 AM, Nikolay Borisov wrote:
+> From: Nikolay Borsiov <nborisov@suse.com>
+> 
 > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 > ---
+> v3:
+>  * Changed the way we detect ranged args. Now use a regexp which checks 
+>  explicitly for the ranged args
+>  common/rc | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> V3: 
->  * Added tests for -r parameter error handling
->  tests/xfs/900     |  98 ++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/900.out | 124 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 222 insertions(+)
->  create mode 100755 tests/xfs/900
->  create mode 100644 tests/xfs/900.out
-> 
-> diff --git a/tests/xfs/900 b/tests/xfs/900
-> new file mode 100755
-> index 0000000..570f7d6
-> --- /dev/null
-> +++ b/tests/xfs/900
-> @@ -0,0 +1,98 @@
-> +#! /bin/bash
-> +# FS QA Test No. 900
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
-> +# Author: Nikolay Borisov <nborisov@suse.com>
-> +#
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
+> diff --git a/common/rc b/common/rc
+> index e2a8229..f7a5fe9 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2053,8 +2053,15 @@ _require_xfs_io_command()
+>  			-c "$command 4k 8k" $testfile 2>&1`
+>  		;;
+>  	"fiemap")
+> +		if echo "$param" | egrep -q "[[:digit:]]+[bskmgtpe]? [[:digit:]]+[bskmgtpe]?$"
+> +		then
+> +			$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]" || \
+> +				_notrun "xfs_io $command range param support is missing"
+> +		fi
 > +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/punch
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
 
-This says generic but you have it under xfs/ tests, is that intentional?
+What if, rather than difficult to read regexps, we actually checked the functionality?
+The check already writes a testfile; you could try fiemapping past EOF and see what
+you get, i.e. for a file in a single 4k block:
 
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_io_command "falloc"
-> +_require_xfs_io_command "fiemap" "-r 0 4k"
+$ io/xfs_io -c "fiemap" short
+short:
+	0: [0..7]: 2788960..2788967
 
+Mapping past EOF will give you no extents (if the range values are honored by the
+command):
 
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
+$ io/xfs_io -c "fiemap 4k 4k" short
+short:
 
-Do you need to explicitly mkfs w/ a 4k block size so all the
-below tests on 4k boundaries will pass?
+>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+>  			-c "fiemap -v $param" $testfile 2>&1`
 
-(IOWs does this work on 2k or 8k fs block size?)
+so I think you could switch based on [ -n $param ] about whether we were asked
+to check a range and if so, map past EOF, and return success or fail based
+on what you get back.  The only slight weirdness is that you're asking to check
+a specific range (_require_xfs_io_command "fiemap" "0 4k") but possibly testing
+a different one ("20k 4k") but not sure if that matters.
+
+It'd be a bit of a departure but with enough comments, maybe ok to do it as:
+
+_require_xfs_io_command "fiemap" "ranged"
+
+and use the "ranged" param to DTRT in the test.
 
 -Eric
+
+> +
+>  		param_checked=1
+>  		;;
+>  	"flink" )
+> 
