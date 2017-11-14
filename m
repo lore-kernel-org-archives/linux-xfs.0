@@ -1,51 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39661 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753414AbdKMUOR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:14:17 -0500
-Date: Mon, 13 Nov 2017 21:14:14 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [Regression/XFS/PM] Freeze tasks failed in xfsaild
-Message-ID: <20171113201414.GD16026@wotan.suse.de>
-References: <20171113103139.GA18936@yu-chen.sh.intel.com>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:56455 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752284AbdKNLlq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2017 06:41:46 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171113103139.GA18936@yu-chen.sh.intel.com>
+In-Reply-To: <CAOQ4uxinJqseh+O34xVY+zs51TO0RfP8_2hTYDDSyEvQctspOQ@mail.gmail.com>
+References: <20171114105401.10542-1-eguan@redhat.com> <20171114105401.10542-3-eguan@redhat.com>
+ <CAOQ4uxinJqseh+O34xVY+zs51TO0RfP8_2hTYDDSyEvQctspOQ@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 14 Nov 2017 13:41:45 +0200
+Message-ID: <CAOQ4uxhzHtEvO2dbaNc0216tZEu1yXwAw_6=9QUgcJJfem+=cA@mail.gmail.com>
+Subject: Re: [PATCH 2/3] overlay/036: filter busy mount message
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yu Chen <yu.c.chen@intel.com>
-Cc: Michal Hocko <mhocko@suse.com>, Hendrik Woltersdorf <hendrikw@arcor.de>, Dave Chinner <dchinner@redhat.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jkosina@suse.cz>, Len Brown <len.brown@intel.com>, Rui Zhang <rui.zhang@intel.com>, Dan Williams <dan.j.williams@intel.com>, Yu Chen <yu.chen.surf@gmail.com>, linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org, inux-kernel@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Nov 13, 2017 at 06:31:39PM +0800, Yu Chen wrote:
-> The xfs-buf/dm-1 should be freezed according to
-> commit 8018ec083c72 ("xfs: mark all internal workqueues
-> as freezable"), thus a easier way might be have to revert
-> commit 18f1df4e00ce ("xfs: Make xfsaild freezeable
-> again") for now, after this reverting the xfsaild/dm-1
-> becomes non-freezable again, thus pm does not see this
-> thread - unless we find a graceful way to treat xfsaild/dm-1
-> as 'frozen' if it is waiting for an already 'frozen' task,
-> or if the filesystem freeze is added in.
-> 
-> Any comments would be much appreciated.
+On Tue, Nov 14, 2017 at 1:37 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> On Tue, Nov 14, 2017 at 12:54 PM, Eryu Guan <eguan@redhat.com> wrote:
+>> util-linux v2.30 changed error message of a busy mount and caused
+>> overlay/036 to fail. e.g.
+>>
+>>  - mount: <device> is already mounted or <mountpoint> busy
+>>  + mount: <mountpoint>: <device> already mounted or mount point busy.
+>>
+>> Filter the mount output by a newly introduced _filter_busy_mount
+>> into a unified format.
+>>
+>> Signed-off-by: Eryu Guan <eguan@redhat.com>
+>> ---
+>>  common/filter         | 12 ++++++++++++
+>>  tests/overlay/036     |  9 +++++++--
+>>  tests/overlay/036.out |  4 ++--
+>>  3 files changed, 21 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/common/filter b/common/filter
+>> index d1bb94818e3d..b1cd558ab0e1 100644
+>> --- a/common/filter
+>> +++ b/common/filter
+>> @@ -420,6 +420,18 @@ _filter_error_mount()
+>>         sed -e "s/mount:\(.*failed:\)/mount:/" | _filter_ending_dot
+>>  }
+>>
+>> +# Similar to _filter_error_mount, filter a busy mount output.
+>> +# Turn both old (prior to util-linux v2.30) and new (v2.30 and later) format to
+>> +# a simple one. e.g.
+>> +# old: mount: <device> is already mounted or <mountpoint> busy
+>> +# new: mount: <mountpoint>: <device> already mounted or mount point busy.
+>> +# filtered: mount: <device> already mounted or mount point busy
+>> +_filter_busy_mount()
+>> +{
+>> +       sed -e "s/.*: \([^ ]*\).* already mounted.*busy/mount: \1 already mounted or mount point busy/" | \
+>> +               _filter_ending_dot
+>> +}
+>> +
+>>  _filter_od()
+>>  {
+>>         BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
+>> diff --git a/tests/overlay/036 b/tests/overlay/036
+>> index 544d4e4eaa87..4c4b56ff9817 100755
+>> --- a/tests/overlay/036
+>> +++ b/tests/overlay/036
+>> @@ -63,6 +63,11 @@ _cleanup()
+>>  . ./common/rc
+>>  . ./common/filter
+>>
+>> +filter_mount()
+>> +{
+>> +       _filter_scratch | _filter_busy_mount
+>
+> This is referring to scratch, so filter_scratch_mount()??
 
-Reverting 18f1df4e00ce ("xfs: Make xfsaild freezeable again")
-would break the proper form of the kthread for it to be freezable.
-This "form" is not defined formally, and sadly its just a form
-learned throughout years over different kthreads in the kernel.
-
-I'm also not convinced all our hibernation / suspend woes would be fixed by
-reverting this commit, its why I worked instead on formalizing a proper freeze
-/ thaw, which a lot of filesystems already implement prior to system
-hibernation / suspend / resume [0].
-
-I'll be respinning this series without the last patch, provided I'm able to
-ensure I don't need the ext[234] hack I did in that thread. Can you test the
-first 3 patches *only* on that series and seeing if that helps on your XFS
-front as well?
-
-[0] https://lkml.kernel.org/r/20171003185313.1017-1-mcgrof@kernel.org
-
-  Luis
+OTOH 036.out doesn't contain SCRATCH_ at all now, so
+_filter_scratch is not needed and can use _filter_busy_mount
+without this helper.
