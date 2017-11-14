@@ -1,73 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31384 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753200AbdKMWwU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 17:52:20 -0500
-Date: Tue, 14 Nov 2017 09:52:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Regression/XFS/PM] Freeze tasks failed in xfsaild
-Message-ID: <20171113225216.GJ5858@dastard>
-References: <20171113103139.GA18936@yu-chen.sh.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37677 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbdKNBEa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 20:04:30 -0500
+Date: Mon, 13 Nov 2017 17:04:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: fix forgotten rcu read unlock when skipping inode
+ reclaim
+Message-ID: <20171114010426.GE25227@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171113103139.GA18936@yu-chen.sh.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yu Chen <yu.c.chen@intel.com>
-Cc: Michal Hocko <mhocko@suse.com>, Hendrik Woltersdorf <hendrikw@arcor.de>, Dave Chinner <dchinner@redhat.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jkosina@suse.cz>, Len Brown <len.brown@intel.com>, Rui Zhang <rui.zhang@intel.com>, Dan Williams <dan.j.williams@intel.com>, Yu Chen <yu.chen.surf@gmail.com>, linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org, inux-kernel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Omar Sandoval <osandov@fb.com>
 
-On Mon, Nov 13, 2017 at 06:31:39PM +0800, Yu Chen wrote:
-> Hi all,
-> Currently we are running hibernation stress test on a server
-> and unfortunately after 48 rounds of cycling, it fails at a
-> early stage that, the xfs task refuses to be frozen by the system:
-> 
-> [ 1934.221653] PM: Syncing filesystems ...
-> [ 1934.661517] PM: done.
-> [ 1934.664067] Freezing user space processes ... (elapsed 0.003 seconds) done.
-> [ 1934.675251] OOM killer disabled.
-> [ 1934.724317] PM: Preallocating image memory... done (allocated 6906555 pages)
-> [ 1954.666378] PM: Allocated 27626220 kbytes in 19.93 seconds (1386.16 MB/s)
-> [ 1954.673939] Freezing remaining freezable tasks ...
-> [ 1974.681089] Freezing of tasks failed after 20.001 seconds (1 tasks refusing to freeze, wq_busy=0):
-> [ 1974.691169] xfsaild/dm-1    D    0  1362      2 0x00000080
-> [ 1974.697283] Call Trace:
-> [ 1974.700014]  __schedule+0x3be/0x830
-> [ 1974.703898]  schedule+0x36/0x80
-> [ 1974.707440]  _xfs_log_force+0x143/0x280 [xfs]
-> [ 1974.712295]  ? schedule_timeout+0x16b/0x350
-> [ 1974.716953]  ? wake_up_q+0x80/0x80
-> [ 1974.720752]  ? xfsaild+0x16f/0x770 [xfs]
-> [ 1974.725134]  xfs_log_force+0x2c/0x80 [xfs]
-> [ 1974.729707]  xfsaild+0x16f/0x770 [xfs]
-> [ 1974.733885]  kthread+0x109/0x140
-> [ 1974.737480]  ? kthread+0x109/0x140
-> [ 1974.741271]  ? xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
-> [ 1974.747284]  ? kthread_park+0x60/0x60
-> [ 1974.751354]  ret_from_fork+0x25/0x30
-> [ 1974.755366] Restarting kernel threads ... done.
-> [ 1978.259907] OOM killer enabled.
-> [ 1978.263405] Restarting tasks ... done.
-> 
-> The reason for this failure might be that,
-> while the kernel thread xfsaild/dm-1 is waiting for
-> xfs-buf/dm-1 to wake it up, however the latter
-> has already been frozen, thus xfsaild/dm-1 never
-> has a chance to be woken up and get froze. (Although
-> the xfsaild/dm-1 remains in TASK_UNINTERRUPTIBLE, which
-> is quite similar to 'frozen'.)
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Should be fixed by this commit in the for-next branch:
+In commit f2e9ad21 ("xfs: check for race with xfs_reclaim_inode"), we
+skip an inode if we're racing with freeing the inode via
+xfs_reclaim_inode, but we forgot to release the rcu read lock when
+dumping the inode, with the result that we exit to userspace with a lock
+held.  Don't do that; generic/320 with a 1k block size fails this
+very occasionally.
 
-0bd89676c4fe xfs: check kthread_should_stop() after the setting of task state
+================================================
+WARNING: lock held when returning to user space!
+4.14.0-rc6-djwong #4 Tainted: G        W
+------------------------------------------------
+rm/30466 is leaving the kernel with locks still held!
+1 lock held by rm/30466:
+ #0:  (rcu_read_lock){....}, at: [<ffffffffa01364d3>] xfs_ifree_cluster.isra.17+0x2c3/0x6f0 [xfs]
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 30466 at kernel/rcu/tree_plugin.h:329 rcu_note_context_switch+0x71/0x700
+Modules linked in: deadline_iosched dm_snapshot dm_bufio ext4 mbcache jbd2 dm_flakey xfs libcrc32c dax_pmem device_dax nd_pmem sch_fq_codel af_packet [last unloaded: scsi_debug]
+CPU: 1 PID: 30466 Comm: rm Tainted: G        W       4.14.0-rc6-djwong #4
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1djwong0 04/01/2014
+task: ffff880037680000 task.stack: ffffc90001064000
+RIP: 0010:rcu_note_context_switch+0x71/0x700
+RSP: 0000:ffffc90001067e50 EFLAGS: 00010002
+RAX: 0000000000000001 RBX: ffff880037680000 RCX: ffff88003e73d200
+RDX: 0000000000000002 RSI: ffffffff819e53e9 RDI: ffffffff819f4375
+RBP: 0000000000000000 R08: 0000000000000000 R09: ffff880062c900d0
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff880037680000
+R13: 0000000000000000 R14: ffffc90001067eb8 R15: ffff880037680690
+FS:  00007fa3b8ce8700(0000) GS:ffff88003ec00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f69bf77c000 CR3: 000000002450a000 CR4: 00000000000006e0
+Call Trace:
+ __schedule+0xb8/0xb10
+ schedule+0x40/0x90
+ exit_to_usermode_loop+0x6b/0xa0
+ prepare_exit_to_usermode+0x7a/0x90
+ retint_user+0x8/0x20
+RIP: 0033:0x7fa3b87fda87
+RSP: 002b:00007ffe41206568 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff02
+RAX: 0000000000000000 RBX: 00000000010e88c0 RCX: 00007fa3b87fda87
+RDX: 0000000000000000 RSI: 00000000010e89c8 RDI: 0000000000000005
+RBP: 0000000000000000 R08: 0000000000000003 R09: 0000000000000000
+R10: 000000000000015e R11: 0000000000000246 R12: 00000000010c8060
+R13: 00007ffe41206690 R14: 0000000000000000 R15: 0000000000000000
+---[ end trace e88f83bf0cfbd07d ]---
 
-That should get merged into 4.15 with the next merge...
+Fixes: f2e9ad212def50bcf4c098c6288779dd97fff0f0
+Cc: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_inode.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d8226f7..61d1cb7 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2357,6 +2357,7 @@ xfs_ifree_cluster(
+ 				 */
+ 				if (ip->i_ino != inum + i) {
+ 					xfs_iunlock(ip, XFS_ILOCK_EXCL);
++					rcu_read_unlock();
+ 					continue;
+ 				}
+ 			}
