@@ -1,86 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39864 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753864AbdKNPJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Nov 2017 10:09:24 -0500
-Subject: Re: [PATCH v3] common: Check for fiemap range argument support
-References: <20171102031622.GV17339@eguan.usersys.redhat.com>
- <1509610421-16716-1-git-send-email-nborisov@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <cb9fba60-a000-d08a-5099-3aa604724568@sandeen.net>
-Date: Tue, 14 Nov 2017 09:09:21 -0600
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:62470 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756526AbdKNXk4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2017 18:40:56 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [Regression/XFS/PM] Freeze tasks failed in xfsaild
+Date: Wed, 15 Nov 2017 00:40:43 +0100
+Message-ID: <1642052.KjDFtI7czP@aspire.rjw.lan>
+In-Reply-To: <20171114230730.GD4094@dastard>
+References: <20171113103139.GA18936@yu-chen.sh.intel.com> <6271997.pCNICGrn9T@aspire.rjw.lan> <20171114230730.GD4094@dastard>
 MIME-Version: 1.0
-In-Reply-To: <1509610421-16716-1-git-send-email-nborisov@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>, eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Jiri Kosina <jkosina@suse.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Yu Chen <yu.c.chen@intel.com>, Michal Hocko <mhocko@suse.com>, Hendrik Woltersdorf <hendrikw@arcor.de>, Dave Chinner <dchinner@redhat.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Len Brown <len.brown@intel.com>, Rui Zhang <rui.zhang@intel.com>, Yu Chen <yu.chen.surf@gmail.com>, linux-xfs@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, linux-kernel@vger.kernel.org, Thorsten Leemhuis <linux@leemhuis.info>, oleg.b.antonyan@gmail.com, Oliver Neukum <oneukum@suse.com>
 
-
-
-On 11/2/17 3:13 AM, Nikolay Borisov wrote:
-> From: Nikolay Borsiov <nborisov@suse.com>
+On Wednesday, November 15, 2017 12:07:30 AM CET Dave Chinner wrote:
+> On Tue, Nov 14, 2017 at 11:01:57PM +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, November 14, 2017 10:25:38 PM CET Dave Chinner wrote:
+> > > On Tue, Nov 14, 2017 at 09:19:15PM +0100, Luis R. Rodriguez wrote:
+> > > > This is another way to say suspend has been busted on XFS for a very long time,
+> > > > but I would not blame XFS -- this is a kernel issue to get proper filesystem
+> > > > suspend working right, and the way we currently deal with kthreads is just
+> > > > a sloppy goo mess which has created this situation.
+> > > 
+> > > Yes, and I've been telling people that suspend on journalling
+> > > filesystems has been broken for a long time (i.e since I first
+> > > realised the scope of the problem back in 2005). However, only XFS
+> > > triggers those conditions regularly because it is the most
+> > > asynchronous of the "freezable" journalling filesytems and has the
+> > > most reliance on co-ordination of kernel threads and workqueues to
+> > > function correctly.
+> > > 
+> > > IOWs, suspend of filesystems has been broken forever, and we've been
+> > > slapping bandaids on it in XFS forever. Now we've got to a
+> > > catch-22 situation that bandaids can't fix. We need structural
+> > > fixes, like I said we needed to do more than 10 years ago.
+> > 
+> > Right.
+> > 
+> > Yet, apparently, nobody has had the time to make those changes for all
+> > that time.
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
-> v3:
->  * Changed the way we detect ranged args. Now use a regexp which checks 
->  explicitly for the ranged args
->  common/rc | 7 +++++++
->  1 file changed, 7 insertions(+)
+> No, that's not the case. The problem was that the suspend developers
+> were in complete denial about the short-comings of using "sync" to
+> quiesce filesystems.  It wasn't until Plumbers a year ago that it
+> was reluctantly admitted that maybe there was a problem and that
+> filesystem freeze should be used instead.
+
+Excuse me, but that's not correct.
+
+Fortunately, the old stuff is still there:
+
+https://lists.celinuxforum.org/pipermail/linux-pm/2011-August/032513.html
+
+and you are on the thread.  That was in 2011 and it failed, unfortunately.
+
+I needed help at that time and didn't have the time to figure it all out
+myself, but you know what, nobody from the fs side helped me then.
+
+Next time Jiri tried to revive this, in 2015 AFAICS:
+
+https://marc.info/?l=linux-kernel&m=144621283608619&w=2
+
+and again, it didn't get too far.
+
+> Until the admission that "sync" was inadequate was made, there was
+> no point in even proposing a solution; the response up until that
+> point in time was a "we don't see a problem here" denial. We had to
+> wait for you guys to come to that conclusion yourselves because you
+> simply wouldn't listen to what the filesystem developers were
+> repeatedly telling you....
+
+Can we stop here and be constructive going forward, please?
+
+> > So what do you think should be done, specifically?
 > 
-> diff --git a/common/rc b/common/rc
-> index e2a8229..f7a5fe9 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2053,8 +2053,15 @@ _require_xfs_io_command()
->  			-c "$command 4k 8k" $testfile 2>&1`
->  		;;
->  	"fiemap")
-> +		if echo "$param" | egrep -q "[[:digit:]]+[bskmgtpe]? [[:digit:]]+[bskmgtpe]?$"
-> +		then
-> +			$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]" || \
-> +				_notrun "xfs_io $command range param support is missing"
-> +		fi
-> +
+> Luis posted an initial version of those "use fs freeze" changes
+> recently, so Work with Luis to get those changes into the kernel.
 
-What if, rather than difficult to read regexps, we actually checked the functionality?
-The check already writes a testfile; you could try fiemapping past EOF and see what
-you get, i.e. for a file in a single 4k block:
+This isn't the first version as per the above and sorry, but without
+help from fs people this is going to end the same way as before and
+I sort of doubt that "working with Luis" alone is going to be sufficient.
 
-$ io/xfs_io -c "fiemap" short
-short:
-	0: [0..7]: 2788960..2788967
+We need the fs people to actually help us, pretty much like back in 2011.
 
-Mapping past EOF will give you no extents (if the range values are honored by the
-command):
+Thanks,
+Rafael
 
-$ io/xfs_io -c "fiemap 4k 4k" short
-short:
-
->  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
->  			-c "fiemap -v $param" $testfile 2>&1`
-
-so I think you could switch based on [ -n $param ] about whether we were asked
-to check a range and if so, map past EOF, and return success or fail based
-on what you get back.  The only slight weirdness is that you're asking to check
-a specific range (_require_xfs_io_command "fiemap" "0 4k") but possibly testing
-a different one ("20k 4k") but not sure if that matters.
-
-It'd be a bit of a departure but with enough comments, maybe ok to do it as:
-
-_require_xfs_io_command "fiemap" "ranged"
-
-and use the "ranged" param to DTRT in the test.
-
--Eric
-
-> +
->  		param_checked=1
->  		;;
->  	"flink" )
-> 
