@@ -1,85 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37482 "EHLO mga01.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:55730 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752276AbdKLBUd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 11 Nov 2017 20:20:33 -0500
-Date: Sun, 12 Nov 2017 09:20:30 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [kbuild-all] [xfs-linux:xfs-4.15-merge 102/131] {standard
- input}:1233: Error: displacement to undefined symbol .L331 overflows 12-bit
- field
-Message-ID: <20171112012030.c7whsttfstvfcm7e@wfg-t540p.sh.intel.com>
-References: <201711120808.bRgNYGgz%fengguang.wu@intel.com>
+        id S1752961AbdKNGcR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Nov 2017 01:32:17 -0500
+Subject: Re: [PATCH v3 2/2] fiemap: Implement ranged query
+References: <1510588073-5665-1-git-send-email-nborisov@suse.com>
+ <1510588073-5665-2-git-send-email-nborisov@suse.com>
+ <20171113214457.GX4094@dastard>
+ <e97f774f-a3ae-04c0-4b74-6a4f26e72674@suse.com>
+ <3491ce98-b744-90de-e01b-83f13abadfa9@sandeen.net>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <6619a7bc-ecc1-b8aa-82d0-1747ee812463@suse.com>
+Date: Tue, 14 Nov 2017 08:32:13 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <201711120808.bRgNYGgz%fengguang.wu@intel.com>
+In-Reply-To: <3491ce98-b744-90de-e01b-83f13abadfa9@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, kbuild-all@01.org, "Darrick J. Wong" <darrick.wong@oracle.com>
-
-I'll blacklist this error pattern for sh4 builds. Sorry for the noise!
-
-On Sun, Nov 12, 2017 at 08:50:10AM +0800, kbuild test robot wrote:
->Hi Christoph,
->
->FYI, the error/warning still remains.
->
->tree:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-4.15-merge
->head:   2d1d1da3d9cc387262193e83f0a96d753b040720
->commit: 43518812d297179ae1e432d5cd640ec168596283 [102/131] xfs: remove support for inlining data/extents into the inode fork
->config: sh-titan_defconfig (attached as .config)
->compiler: sh4-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
->reproduce:
->        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->        chmod +x ~/bin/make.cross
->        git checkout 43518812d297179ae1e432d5cd640ec168596283
->        # save the attached .config to linux build tree
->        make.cross ARCH=sh
->
->All errors (new ones prefixed by >>):
->
->   fs/xfs/xfs_ioctl.c: In function 'xfs_ioc_getbmap.isra.9':
->   fs/xfs/xfs_ioctl.c:1629:1: internal compiler error: in change_address_1, at emit-rtl.c:2150
->    }
->    ^
->   Please submit a full bug report,
->   with preprocessed source if appropriate.
->   See <file:///usr/share/doc/gcc-7/README.Bugs> for instructions.
->   {standard input}: Assembler messages:
->   {standard input}: Warning: end of file not at end of a line; newline inserted
->   {standard input}:1415: Error: missing operand
->   {standard input}:1415: Error: invalid operands for opcode
->>> {standard input}:1233: Error: displacement to undefined symbol .L331 overflows 12-bit field
->   {standard input}:1260: Error: displacement to undefined symbol .L361 overflows 12-bit field
->   {standard input}:1274: Error: displacement to undefined symbol .L333 overflows 12-bit field
->   {standard input}:1285: Error: displacement to undefined symbol .L362 overflows 12-bit field
->--
->   fs//xfs/xfs_ioctl.c: In function 'xfs_ioc_getbmap.isra.9':
->   fs//xfs/xfs_ioctl.c:1629:1: internal compiler error: in change_address_1, at emit-rtl.c:2150
->    }
->    ^
->   Please submit a full bug report,
->   with preprocessed source if appropriate.
->   See <file:///usr/share/doc/gcc-7/README.Bugs> for instructions.
->   {standard input}: Assembler messages:
->   {standard input}: Warning: end of file not at end of a line; newline inserted
->   {standard input}:1415: Error: missing operand
->   {standard input}:1415: Error: invalid operands for opcode
->>> {standard input}:1233: Error: displacement to undefined symbol .L331 overflows 12-bit field
->   {standard input}:1260: Error: displacement to undefined symbol .L361 overflows 12-bit field
->   {standard input}:1274: Error: displacement to undefined symbol .L333 overflows 12-bit field
->   {standard input}:1285: Error: displacement to undefined symbol .L362 overflows 12-bit field
->
->---
->0-DAY kernel test infrastructure                Open Source Technology Center
->https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
 
->_______________________________________________
->kbuild-all mailing list
->kbuild-all@lists.01.org
->https://lists.01.org/mailman/listinfo/kbuild-all
 
+On 14.11.2017 00:22, Eric Sandeen wrote:
+> On 11/13/17 4:05 PM, Nikolay Borisov wrote:
+>>
+>>
+>> On 13.11.2017 23:44, Dave Chinner wrote:
+>>> On Mon, Nov 13, 2017 at 05:47:53PM +0200, Nikolay Borisov wrote:
+>>>> Currently the fiemap implementation of xfs_io doesn't support making ranged
+>>>> queries. This patch implements the '-r' parameter, taking up to 2 arguments - 
+>>>> the starting offset and the length of the region to be queried. This also 
+>>>> requires changing of the final hole range is calculated. Namely, it's now being
+>>>> done as [last_logical, logical addres of next extent] rather than being
+>>>> statically determined by [last_logical, filesize].
+>>>>
+>>>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+>>>> ---
+>>>> V3: 
+>>>>  * Fixed a bug where incorrect extent index was shown if we didn't print a 
+>>>>  hole. This was due to statically returning 2 at the end of print_(plain|verbose)
+>>>>  Now, the actual number of printed extents inside the 2 functions is used. 
+>>>>  This bug is visible only with the -r parameter
+>>>>
+>>>>  * Fixed a bug where 1 additional extent would be printed. This was a result of 
+>>>>  the aforementioned bug fix, since now printing function can return 1 and still
+>>>>  have printed an extent and no hole. This can happen when you use -r parameter,
+>>>>  this is now fixed and a comment explaining it is put. 
+>>>>
+>>>>  * Reworked the handling of the new params by making them arguments to the 
+>>>>  -r parameter. 
+>>>>
+>>>> V2:
+>>>>  * Incorporated Daricks feedback - removed variables which weren't introduced
+>>>>   until the next patch as a result the build with this patch was broken. This is 
+>>>>   fixed now
+>>> .....
+>>>
+>>>> @@ -256,9 +269,12 @@ fiemap_f(
+>>>>  	int		tot_w = 5;	/* 5 since its just one number */
+>>>>  	int		flg_w = 5;
+>>>>  	__u64		last_logical = 0;
+>>>> +	size_t		fsblocksize, fssectsize;
+>>>>  	struct stat	st;
+>>>>  
+>>>> -	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+>>>> +	init_cvtnum(&fsblocksize, &fssectsize);
+>>>> +
+>>>> +	while ((c = getopt(argc, argv, "aln:vr")) != EOF) {
+>>>
+>>> Ok, you're not telling gotopt that "-r" has parameters, so....
+>>>
+>>>>  		switch (c) {
+>>>>  		case 'a':
+>>>>  			fiemap_flags |= FIEMAP_FLAG_XATTR;
+>>>> @@ -272,6 +288,50 @@ fiemap_f(
+>>>>  		case 'v':
+>>>>  			vflag++;
+>>>>  			break;
+>>>> +		case 'r':
+>>>> +			/* Parse the first option which is mandatory */
+>>>> +			if (optind < argc && argv[optind][0] != '-') {
+>>>> +				off64_t start_offset = cvtnum(fsblocksize,
+>>>> +							      fssectsize,
+>>>> +							      argv[optind]);
+>>>> +				if (start_offset < 0) {
+>>>> +					printf("non-numeric offset argument -- "
+>>>> +					       "%s\n", argv[optind]);
+>>>> +					return 0;
+>>>> +				}
+>>>> +				last_logical = start_offset;
+>>>> +				optind++;
+>>>> +			} else {
+>>>> +				fprintf(stderr, _("Invalid offset argument for"
+>>>> +						  " -r\n"));
+>>>> +				exitcode = 1;
+>>>> +				return 0;
+>>>> +			}
+>>>> +
+>>>> +			if (optind < argc) {
+>>>> +				/* first check if what follows doesn't begin
+>>>> +				 * with '-' which means it would be a param and
+>>>> +				 * not an argument
+>>>> +				 */
+>>>> +				if (argv[optind][0] == '-') {
+>>>> +					optind--;
+>>>> +					break;
+>>>> +
+>>>> +				}
+>>>> +
+>>>> +				off64_t length = cvtnum(fsblocksize,
+>>>> +							fssectsize,
+>>>> +							argv[optind]);
+>>>> +				if (length < 0) {
+>>>> +					printf("non-numeric len argument --"
+>>>> +					       " %s\n", argv[optind]);
+>>>> +					return 0;
+>>>> +				}
+>>>> +				len = length;
+>>>> +				range_limit = true;
+>>>> +			}
+>>>> +			break;
+>>>
+>>> .... this is pretty nasty because you're having to check if the next
+>>> option should be parsed by the main loop or not. This assumes that
+>>> getopt is giving us the options in the order they were presented on
+>>> the command line, which is not a good assumption to make as glibc
+>>> can mutate the order as it parses the listi of know options and
+>>> arguments.
+>>>
+>>> Given that "-r" is the only option that has parameters, then this
+>>> can be massively simplified just by noting we've seen the rflag, and
+>>> leaving the non-arg parameter parsing to after the end of the loop.
+>>> i.e.:
+>>
+>>
+>> You are right this is a bit ugly, but it seems more consistend to me,
+>> rather than something like
+>>
+>> xfs_io -c "fiemap -r -n 10 -v 4k 10k" for example. And the reason why
+>> I'm using this hackish way and not declaring r as r: in getopt is
+>> because getopt doesn't recognise when a parameter takes more than 1
+>> argument.
+> 
+> Sorry for chiming in so late after all the go-rounds, but:
+> 
+> Why not just drop -r entirely, and make fiemap go into ranged mode iff a
+> range is specified at the end of the command, i.e.:
+> 
+> fiemap [ -alv ] [ -n nx ] [ offset length ]
+
+V2 was like that but it required some changing to the generic code which
+detects the presence of this feature and Dave objected hence v3.
+
+
+> 
+> and if no offset/length is specified, map the whole file.   You can parse
+> the optional last 2 arguments just like pread, write, sync_range, sendfile,
+> or a host of other commands already do (though some are not optional.)
+> 
+> There are /many/ other xfs_io commands that take offset & length at the
+> end, so this usage should be very familiar to users.
+> 
+> -Eric
+> 
+> 
