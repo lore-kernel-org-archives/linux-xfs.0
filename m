@@ -1,70 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:47734 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935336AbdKPTNv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 14:13:51 -0500
-Message-Id: <20171116184358.711571770@linutronix.de>
-Date: Thu, 16 Nov 2017 19:33:11 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V2 05/11] LICENSES: Add the BSD 2-clause "Simplified" license
-References: <20171116183306.103584007@linutronix.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:8230 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756630AbdKNUwa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2017 15:52:30 -0500
+Date: Wed, 15 Nov 2017 07:52:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 2/2] fiemap: Implement ranged query
+Message-ID: <20171114205226.GB4094@dastard>
+References: <1510588073-5665-1-git-send-email-nborisov@suse.com>
+ <1510588073-5665-2-git-send-email-nborisov@suse.com>
+ <20171113214457.GX4094@dastard>
+ <e97f774f-a3ae-04c0-4b74-6a4f26e72674@suse.com>
+ <3491ce98-b744-90de-e01b-83f13abadfa9@sandeen.net>
+ <6619a7bc-ecc1-b8aa-82d0-1747ee812463@suse.com>
+ <bbfdb7c8-81a7-0a42-ccfc-003f3b89de9b@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline;
- filename=LICENSES_Add_the_BSD_2-clause_Simplified_license.patch
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bbfdb7c8-81a7-0a42-ccfc-003f3b89de9b@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-Add the full text of the BSD 2-clause "Simplified" license to the kernel
-tree.  It was copied directly from:
+On Tue, Nov 14, 2017 at 07:31:34AM -0600, Eric Sandeen wrote:
+> 
+> 
+> On 11/14/17 12:32 AM, Nikolay Borisov wrote:
+> > 
+> > 
+> > On 14.11.2017 00:22, Eric Sandeen wrote:
+> >> On 11/13/17 4:05 PM, Nikolay Borisov wrote:
+> 
+> ...
+> 
+> >>> You are right this is a bit ugly, but it seems more consistend to me,
+> >>> rather than something like
+> >>>
+> >>> xfs_io -c "fiemap -r -n 10 -v 4k 10k" for example. And the reason why
+> >>> I'm using this hackish way and not declaring r as r: in getopt is
+> >>> because getopt doesn't recognise when a parameter takes more than 1
+> >>> argument.
+> >>
+> >> Sorry for chiming in so late after all the go-rounds, but:
+> >>
+> >> Why not just drop -r entirely, and make fiemap go into ranged mode iff a
+> >> range is specified at the end of the command, i.e.:
+> >>
+> >> fiemap [ -alv ] [ -n nx ] [ offset length ]
+> > 
+> > V2 was like that but it required some changing to the generic code which
+> > detects the presence of this feature and Dave objected hence v3.
+> 
+> Ok, sorry for being so behind and rehashing old discussions.  Let me look
+> at that.
 
-   https://spdx.org/licenses/BSD-2-Clause.html#licenseText
+I suggested "-r" because of the fact that you can't detect optional
+parameters in fstests without jumping through really nasty hoops
+involving regex line noise.
 
-Add the required tags for reference and tooling.
+Cheers,
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- LICENSES/preferred/BSD-2-Clause |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 LICENSES/BSD-2-Clause
-
---- /dev/null
-+++ b/LICENSES/preferred/BSD-2-Clause
-@@ -0,0 +1,32 @@
-+Valid-License-Identifier: BSD-2-Clause
-+SPDX-URL: https://spdx.org/licenses/BSD-2-Clause.html
-+Usage-Guide:
-+  To use the BSD 2-clause "Simplified" License put the following SPDX
-+  tag/value pair into a comment according to the placement guidelines in
-+  the licensing rules documentation:
-+    SPDX-License-Identifier: BSD-2-Clause
-+License-Text:
-+
-+Copyright (c) <year> <owner> . All rights reserved.
-+
-+Redistribution and use in source and binary forms, with or without
-+modification, are permitted provided that the following conditions are met:
-+
-+1. Redistributions of source code must retain the above copyright notice,
-+   this list of conditions and the following disclaimer.
-+
-+2. Redistributions in binary form must reproduce the above copyright
-+   notice, this list of conditions and the following disclaimer in the
-+   documentation and/or other materials provided with the distribution.
-+
-+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+POSSIBILITY OF SUCH DAMAGE.
-
-
+Daves.
+-- 
+Dave Chinner
+david@fromorbit.com
