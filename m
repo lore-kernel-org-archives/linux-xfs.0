@@ -1,82 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46416 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751754AbdKMV4S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 16:56:18 -0500
-Date: Mon, 13 Nov 2017 13:56:01 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [btrfs] WARNING: CPU: 0 PID: 6379 at fs/direct-io.c:293
- dio_complete+0x1d4/0x220
-Message-ID: <20171113215601.GD6246@magnolia>
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
- <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
- <20171030072021.gcgpaolo5m3myuln@wfg-t540p.sh.intel.com>
- <20171030074429.GC3283@eguan.usersys.redhat.com>
- <20171031001041.5qjzn5pjertpdc3e@wfg-t540p.sh.intel.com>
- <20171031065417.GD3283@eguan.usersys.redhat.com>
- <20171106011306.GB11631@zzz.localdomain>
- <20171113191322.GA123488@gmail.com>
- <ff823a95-3dff-0f2b-13ab-aab9bed7b0d3@kernel.dk>
- <CA+55aFxv4jVzoa_NpYOq=+TVpBvbSmJq++dPW5nmWNdxUEc-8Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+55aFxv4jVzoa_NpYOq=+TVpBvbSmJq++dPW5nmWNdxUEc-8Q@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44762 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755015AbdKNKyu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Nov 2017 05:54:50 -0500
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 1/3] fstests: filter mount error message for EUCLEAN and ESTALE
+Date: Tue, 14 Nov 2017 18:53:59 +0800
+Message-Id: <20171114105401.10542-2-eguan@redhat.com>
+In-Reply-To: <20171114105401.10542-1-eguan@redhat.com>
+References: <20171114105401.10542-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Eric Biggers <ebiggers3@gmail.com>, Eryu Guan <guaneryu@gmail.com>, Fengguang Wu <fengguang.wu@intel.com>, Lukas Czerner <lczerner@redhat.com>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: misono.tomohiro@jp.fujitsu.com, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-[cc xfs list]
+util-linux commit ea848180dd34 ("libmount: add
+mnt_context_get_excode()") since v2.30 changed the error message on
+EUCLEAN and ESTALE again (and maybe other errno too):
 
-[We're discussing the WARN_ON in *dio_complete when invalidation fails]
+ - mount: <device> on <mountpoint> failed: Structure needs cleaning
+ + mount: <mountpoint>: mount(2) system call failed: Structure needs cleaning.
 
-[yes, again]
+and it causes xfs/005, overlay/037 to fail (and probably xfs/333 too,
+but it's always _notrun for now).
 
-On Mon, Nov 13, 2017 at 11:21:50AM -0800, Linus Torvalds wrote:
-> On Mon, Nov 13, 2017 at 11:16 AM, Jens Axboe <axboe@kernel.dk> wrote:
-> >
-> > I would tend to agree with you, it's annoying to dump a full stack trace
-> > for an expected (even for a rare situation) condition. But it's not the
-> > first one, there's also one in XFS that always triggers for test runs. I
-> > complained about that one in the past.
-> 
-> Yeah, we should always consider a WARN_ON() that is triggerable from
-> user space to be a kernel bug.
-> 
-> If it's a "cannot happen", then the bug should be fixed.
-> 
-> If it's a "can happen, but I want to see the trace", then you just got
-> the trace and you're done, and the WARN_ON() should be removed.
-> 
-> It could possibly be replaced with a "pr_warn()" or something, so that
-> it still shows up as a "the user did something dodgy", but honestly,
-> even that is questionable. We do that for things like "we just removed
-> support for this, we want to see if somebody is using it"
-> 
-> So in no case is "let's just keep things as is" the right answer.
+So let's filter out the changing parts and keep the error message
+simple.
 
-Wellll... the WARN_ON in question happens when:
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ common/filter         | 23 +++++++++++++++++++++++
+ tests/overlay/037     |  4 ++--
+ tests/overlay/037.out |  4 ++--
+ tests/xfs/005         |  7 +------
+ tests/xfs/333         |  2 +-
+ tests/xfs/333.out     |  2 +-
+ 6 files changed, 30 insertions(+), 12 deletions(-)
 
-a) two programs race to write to the same part of a file, one via the page
-   cache and the other via directio
-b) the dio write completes, tries to invalidate the page cache, and fails
-   because the corresponding page cannot be invalidated
+diff --git a/common/filter b/common/filter
+index 0cb458b0051f..d1bb94818e3d 100644
+--- a/common/filter
++++ b/common/filter
+@@ -390,6 +390,13 @@ _filter_fstrim()
+ 	egrep -o "[0-9]+ bytes" | $AWK_PROG '{print $1}'
+ }
+ 
++# Remove the ending dot appended to mount error message, util-linux 2.30
++# starts to do so.
++_filter_ending_dot()
++{
++	sed -e "s/\.$//"
++}
++
+ # Older mount output referred to "block device" when mounting RO devices
+ # It's gone in newer versions
+ _filter_ro_mount() {
+@@ -397,6 +404,22 @@ _filter_ro_mount() {
+ 	    -e "s/mount: cannot mount block device/mount: cannot mount/g"
+ }
+ 
++# Filter a failed mount output, util-linux changed the message several times.
++#
++# prior to v2.21:
++# mount: Structure needs cleaning
++# v2.21 to v2.29:
++# mount: mount <device> on <mountpoint> failed: Structure needs cleaning
++# v2.30 and later:
++# mount: <mountpoint>: mount(2) system call failed: Structure needs cleaning.
++#
++# This is also true for ESTALE error. So let's remove all the changing parts
++# and keep the 'prior to v2.21' format.
++_filter_error_mount()
++{
++	sed -e "s/mount:\(.*failed:\)/mount:/" | _filter_ending_dot
++}
++
+ _filter_od()
+ {
+ 	BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
+diff --git a/tests/overlay/037 b/tests/overlay/037
+index 728732903358..b897ec9263ee 100755
+--- a/tests/overlay/037
++++ b/tests/overlay/037
+@@ -76,12 +76,12 @@ $UMOUNT_PROG $SCRATCH_MNT
+ 
+ # Try to mount an overlay with the same upperdir and different lowerdir - expect ESTALE
+ _overlay_scratch_mount_dirs $lowerdir2 $upperdir $workdir -oindex=on \
+-	2>&1 | _filter_scratch
++	2>&1 | _filter_scratch | _filter_error_mount
+ $UMOUNT_PROG $SCRATCH_MNT 2>/dev/null
+ 
+ # Try to mount an overlay with the same workdir and different upperdir - expect ESTALE
+ _overlay_scratch_mount_dirs $lowerdir $upperdir2 $workdir -oindex=on \
+-	2>&1 | _filter_scratch
++	2>&1 | _filter_scratch | _filter_error_mount
+ $UMOUNT_PROG $SCRATCH_MNT 2>/dev/null
+ 
+ # Mount overlay with original lowerdir, upperdir, workdir and index=on - expect success
+diff --git a/tests/overlay/037.out b/tests/overlay/037.out
+index 786ef85c29e3..d6ad7cfad687 100644
+--- a/tests/overlay/037.out
++++ b/tests/overlay/037.out
+@@ -1,3 +1,3 @@
+ QA output created by 037
+-mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Stale file handle
+-mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Stale file handle
++mount: Stale file handle
++mount: Stale file handle
+diff --git a/tests/xfs/005 b/tests/xfs/005
+index fade4bbf282b..ebf4b15ec9b5 100755
+--- a/tests/xfs/005
++++ b/tests/xfs/005
+@@ -40,11 +40,6 @@ _cleanup()
+     rm -f $tmp.*
+ }
+ 
+-filter_mount()
+-{
+-	sed -e "s/mount .* failed: //"
+-}
+-
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
+@@ -64,7 +59,7 @@ _scratch_mkfs_xfs -m crc=1 >> $seqres.full 2>&1 || _fail "mkfs failed"
+ $XFS_IO_PROG -c "pwrite 224 4" -c fsync $SCRATCH_DEV | _filter_xfs_io
+ 
+ # should FAIL, the crc is bad; golden output contains mount failure
+-_scratch_mount 2>&1 | filter_mount
++_scratch_mount 2>&1 | _filter_error_mount
+ 
+ # success, all done
+ status=0
+diff --git a/tests/xfs/333 b/tests/xfs/333
+index bf0c811d2435..0a66f08a1062 100755
+--- a/tests/xfs/333
++++ b/tests/xfs/333
+@@ -64,7 +64,7 @@ _scratch_unmount
+ 
+ echo "Corrupt fs"
+ _scratch_xfs_db -x -c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
+-_scratch_mount 2>&1 | _filter_scratch
++_scratch_mount 2>&1 | _filter_scratch | _filter_error_mount
+ 
+ echo "Test done, mount should have failed"
+ 
+diff --git a/tests/xfs/333.out b/tests/xfs/333.out
+index f7518f46d900..b3c698750f8f 100644
+--- a/tests/xfs/333.out
++++ b/tests/xfs/333.out
+@@ -2,5 +2,5 @@ QA output created by 333
+ Format and mount
+ Create some files
+ Corrupt fs
+-mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Structure needs cleaning
++mount: Structure needs cleaning
+ Test done, mount should have failed
+-- 
+2.13.6
 
-At this point, the page cache contents don't reflect what's on disk, so
-I don't think we can quietly ignore the situation.  Clearly, enough
-people dislike the WARN to complain repeatedly, so perhaps we should try
-to barf evidence of this situation up to userspace?  The dio write
-succeeded, which is why we don't turn err into ret; but now that we can
-store and forward error codes through the mapping, how about we just:
-
-   errseq_set(dio->inode->i_mapping->wb_error, -EIO);
-
-and then let the writers pick up the EIO the next time they fsync?
-Though I can already imagine the complaints about writes that used to
-work and suddenly start returning error codes.
-
---D
-
->                Linus
