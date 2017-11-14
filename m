@@ -1,52 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:59455 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750910AbdKLUUD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Nov 2017 15:20:03 -0500
-Date: Sun, 12 Nov 2017 21:19:55 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [patch 1/7] Documentation: Add license-rules.rst to describe
- how to properly identify file licenses
-In-Reply-To: <20171112130746.607facb6@lwn.net>
-Message-ID: <alpine.DEB.2.20.1711122114520.1993@nanos>
-References: <20171112191821.240484206@linutronix.de> <20171112192142.525567667@linutronix.de> <20171112130746.607facb6@lwn.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:39361 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751376AbdKNCUQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2017 21:20:16 -0500
+Date: Mon, 13 Nov 2017 18:19:42 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 18/18] xfs: support for synchronous DAX faults
+Message-ID: <20171114021942.GI25227@magnolia>
+References: <20171101153648.30166-1-jack@suse.cz>
+ <20171101153648.30166-19-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171101153648.30166-19-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Kate Stewart <kstewart@linuxfoundation.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Sun, 12 Nov 2017, Jonathan Corbet wrote:
-> On Sun, 12 Nov 2017 20:18:22 +0100
-> Thomas Gleixner <tglx@linutronix.de> wrote:
-> > +    C source:   // SPDX-License-Identifier: <SPDX License Expression>
-> > +    C header:   /* SPDX-License-Identifier: <SPDX License Expression> */
+On Wed, Nov 01, 2017 at 04:36:47PM +0100, Jan Kara wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> So I can't be the only person with nothing better to do than to wonder why
-> source and header files use a different comment syntax.  Maybe the document
-> could explain that?
-
-Will do. The reason is that some build steps, one of them related to
-generated .lds files fail with C++ style comments. Linus fixed the .lds
-one, but there is at least an older ASM tool which doesn't like them.
-
-> > +    ASM:        /* SPDX-License-Identifier: <SPDX License Expression> */
-> > +OR should be used if the file is dual licensed and only one license is
-> > +to be selected.  For example, some dtsi files are available under dual
-> > +licenses:
+> Return IOMAP_F_DIRTY from xfs_file_iomap_begin() when asked to prepare
+> blocks for writing and the inode is pinned, and has dirty fields other
+> than the timestamps.  In __xfs_filemap_fault() we then detect this case
+> and call dax_finish_sync_fault() to make sure all metadata is committed,
+> and to insert the page table entry.
 > 
-> It would be good to document the set of permissible WITH exceptions.  Or
-> people will surely get creative in making up new ones.
->
+> Note that this will also dirty corresponding radix tree entry which is
+> what we want - fsync(2) will still provide data integrity guarantees for
+> applications not using userspace flushing. And applications using
+> userspace flushing can avoid calling fsync(2) and thus avoid the
+> performance overhead.
 > 
-> OK, I see that has been done, so amend that comment to suggest a line
-> saying that the set of exceptions is documented below.
+> [JK: Added VM_SYNC flag handling]
+> 
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Will do. The other thing is, that the exception files have the applicable
-licenses in it so something like checkpatch.pl can verify it.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks,
-
-	tglx
+> ---
+>  fs/xfs/xfs_file.c  | 15 ++++++++++++++-
+>  fs/xfs/xfs_iomap.c |  5 +++++
+>  2 files changed, 19 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 4496b45678de..4827e82d5d2c 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -44,6 +44,7 @@
+>  #include <linux/falloc.h>
+>  #include <linux/pagevec.h>
+>  #include <linux/backing-dev.h>
+> +#include <linux/mman.h>
+>  
+>  static const struct vm_operations_struct xfs_file_vm_ops;
+>  
+> @@ -1040,7 +1041,11 @@ __xfs_filemap_fault(
+>  
+>  	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>  	if (IS_DAX(inode)) {
+> -		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
+> +		pfn_t pfn;
+> +
+> +		ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
+> +		if (ret & VM_FAULT_NEEDDSYNC)
+> +			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
+>  	} else {
+>  		if (write_fault)
+>  			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> @@ -1110,6 +1115,13 @@ xfs_file_mmap(
+>  	struct file	*filp,
+>  	struct vm_area_struct *vma)
+>  {
+> +	/*
+> +	 * We don't support synchronous mappings for non-DAX files. At least
+> +	 * until someone comes with a sensible use case.
+> +	 */
+> +	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
+> +		return -EOPNOTSUPP;
+> +
+>  	file_accessed(filp);
+>  	vma->vm_ops = &xfs_file_vm_ops;
+>  	if (IS_DAX(file_inode(filp)))
+> @@ -1128,6 +1140,7 @@ const struct file_operations xfs_file_operations = {
+>  	.compat_ioctl	= xfs_file_compat_ioctl,
+>  #endif
+>  	.mmap		= xfs_file_mmap,
+> +	.mmap_supported_flags = MAP_SYNC,
+>  	.open		= xfs_file_open,
+>  	.release	= xfs_file_release,
+>  	.fsync		= xfs_file_fsync,
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index f179bdf1644d..b43be199fbdf 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -33,6 +33,7 @@
+>  #include "xfs_error.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_trans_space.h"
+> +#include "xfs_inode_item.h"
+>  #include "xfs_iomap.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_icache.h"
+> @@ -1086,6 +1087,10 @@ xfs_file_iomap_begin(
+>  		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+>  	}
+>  
+> +	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
+> +	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+> +		iomap->flags |= IOMAP_F_DIRTY;
+> +
+>  	xfs_bmbt_to_iomap(ip, iomap, &imap);
+>  
+>  	if (shared)
+> -- 
+> 2.12.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
