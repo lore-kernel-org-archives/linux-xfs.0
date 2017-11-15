@@ -1,23 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59807 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751109AbdKTJbO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Nov 2017 04:31:14 -0500
-Date: Mon, 20 Nov 2017 10:31:12 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: fix memory leak in xfs_iext_free_last_leaf
-Message-ID: <20171120093112.GA29719@lst.de>
-References: <20171120090128.11320-1-shuwang@redhat.com>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:39001 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753984AbdKOUS6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 15:18:58 -0500
+Subject: Re: Disabling barriers on NVC-backed HDD
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171120090128.11320-1-shuwang@redhat.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Wed, 15 Nov 2017 21:18:31 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <442aa3b110e7cf10c8920dfe2159e41f@assyoma.it>
+References: <8b91c685e344bdc5d084b11fab1d50af@assyoma.it>
+ <20171115173100.GD5119@magnolia> <20171115194700.GA6228@infradead.org>
+ <442aa3b110e7cf10c8920dfe2159e41f@assyoma.it>
+Message-ID: <e7d6cada4330c02c86e5159ef987c0d9@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: shuwang@redhat.com
-Cc: darrick.wong@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, bfoster@redhat.com, sandeen@redhat.com, chuhu@redhat.com, liwang@redhat.com, yizhan@redhat.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, g.danti@assyoma.it
 
-Oops.  Looks good:
+Il 15-11-2017 21:17 Gionatan Danti ha scritto:
+> Il 15-11-2017 20:47 Christoph Hellwig ha scritto:
+>> And in that case it will report WCE=0 and Linux won't even flush.
+>> As is the case for typical enterprise disks.
+> 
+> Good point. Based on what I read here[1], page n.4, it *seems* that
+> Seagate AWC (advanced write cache) enabled drives report WCD (write
+> cache disabled) to the host OS.
+> 
+> I think this is the key parameter to watch: if the HDD vendor is
+> confident enough to report WCE=0/WCD, than it should be safe running
+> without barriers (after all, in this case Linux *will* disable barrier
+> by default).
+> 
+> Thank you Christoph for pointing that.
+> Regards.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Sorry, I forgot the link: 
+https://www.seagate.com/files/www-content/product-content/enterprise-performance-savvio-fam/enterprise-performance-15k-hdd/_cross-product/_shared/doc/enchanced-cache-advantage-tp691.1-1610us.pdf
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
