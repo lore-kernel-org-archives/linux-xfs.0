@@ -1,78 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:47746 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935341AbdKPTNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 14:13:52 -0500
-Message-Id: <20171116184358.867149700@linutronix.de>
-Date: Thu, 16 Nov 2017 19:33:13 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V2 07/11] LICENSES: Add the BSD-3-clause "Clear" license
-References: <20171116183306.103584007@linutronix.de>
+Received: from mail02.iobjects.de ([188.40.134.68]:57614 "EHLO
+        mail02.iobjects.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753581AbdKOTgA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 14:36:00 -0500
+Subject: Re: [RFC PATCH] iomap: report collisions between directio and
+ buffered writes to userspace
+References: <20171114214625.GB5119@magnolia>
+ <8aa299eb-e1c4-6d8e-f536-bf764661e1b2@applied-asynchrony.com>
+ <20171115185428.GF5119@magnolia>
+From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Message-ID: <54bcf372-c8e5-5a83-819d-e56b272a98b2@applied-asynchrony.com>
+Date: Wed, 15 Nov 2017 20:35:57 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline;
- filename=LICENSES--Add-the-BSD-3-clause-Clear-license.patch
+In-Reply-To: <20171115185428.GF5119@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Add the full text of the BSD 3-clause "Clear" License to the
-kernel tree.  It was copied directly from:
+On 11/15/17 19:54, Darrick J. Wong wrote:
+> On Wed, Nov 15, 2017 at 02:16:01PM +0100, Holger Hoffstätte wrote:
+>> On 11/14/17 22:46, Darrick J. Wong wrote:
+>> (snip)
+>>> +static void iomap_warn_stale_pagecache(struct inode *inode)
+>>> +{
+>>> +	errseq_set(&inode->i_mapping->wb_err, -EIO);
+>>> +	pr_crit_ratelimited("Stale pagecache contents after collision "
+>>> +			    "between direct and buffered write!\n");
+>>> +}
+>>
+>> In this form the error message is IMHO useless since it tells me
+>> neither the file in question nor the misbehaving application.
+>> "Something went wrong somewhere" is not actionable information
+>> and in practice will only be ignored.
+>>
+>> Since you already have the inode in question at hand, print at least
+>> the full path + filename so that it's clear where things are going
+>> wrong. Usually that will let people deduce which application is
+>> misbehaving.
+> 
+> The whole point of the errseq_set call in this patch is to record the
+> write collision so that all the writers of this file will receive an EIO
+> the next time they try to flush the file.  You can pinpoint exactly
+> which fd(s) in which application(s) caused the problem.  The old dmesg
+> spew only captured which program issued the dio write.
 
-  https://spdx.org/licenses/BSD-3-Clause-Clear.html
+Then what is the use of printing the message? I'm not arguing against
+handling the error, which is of course much better than silent corruption;
+I'm asking what the point of the message is because it doesn't tell
+anything actionable after the fact. If you really want to rely on
+applications handling this condition (which I agree is the right thing
+to do!) then there is simply no need for the message; if I found it in
+the log one day, I'd have no idea what to do about it. That's all.
 
-Add the required tags for reference and tooling.
+> (And the whole point of this patch is to see what people think about
+> that change of behavior w.r.t. us no longer letting userspace silently
+> corrupt the file...)
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- LICENSES/preferred/BSD-3-Clause-Clear |   41 ++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+No argument there!
 
---- /dev/null
-+++ b/LICENSES/preferred/BSD-3-Clause-Clear
-@@ -0,0 +1,41 @@
-+Valid-License-Identifier: BSD-3-Clause-Clear
-+SPDX-URL: https://spdx.org/licenses/BSD-3-Clause-Clear.html
-+Usage-Guide:
-+  To use the BSD 3-clause "Clear" License put the following SPDX
-+  tag/value pair into a comment according to the placement guidelines in
-+  the licensing rules documentation:
-+    SPDX-License-Identifier: BSD-3-Clause-Clear
-+License-Text:
-+
-+The Clear BSD License
-+
-+Copyright (c) [xxxx]-[xxxx] [Owner Organization]
-+All rights reserved.
-+
-+Redistribution and use in source and binary forms, with or without
-+modification, are permitted (subject to the limitations in the disclaimer
-+below) provided that the following conditions are met:
-+
-+ * Redistributions of source code must retain the above copyright notice,
-+   this list of conditions and the following disclaimer.
-+
-+ * Redistributions in binary form must reproduce the above copyright
-+   notice, this list of conditions and the following disclaimer in the
-+   documentation and/or other materials provided with the distribution.
-+
-+ * Neither the name of [Owner Organization] nor the names of its
-+   contributors may be used to endorse or promote products derived from
-+   this software without specific prior written permission.
-+
-+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-+THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-+CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
-+NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER
-+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
+-h
