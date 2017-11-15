@@ -1,76 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:47738 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935339AbdKPTNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 14:13:52 -0500
-Message-Id: <20171116184358.789700782@linutronix.de>
-Date: Thu, 16 Nov 2017 19:33:12 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V2 06/11] LICENSES: Add the BSD 3-clause "New" or "Revised"
- License
-References: <20171116183306.103584007@linutronix.de>
+Received: from mx1.redhat.com ([209.132.183.28]:43960 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932302AbdKOMM3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Nov 2017 07:12:29 -0500
+Date: Wed, 15 Nov 2017 07:12:28 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] iomap: report collisions between directio and
+ buffered writes to userspace
+Message-ID: <20171115121227.GA7877@bfoster.bfoster>
+References: <20171114214625.GB5119@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline;
- filename=LICENSES_Add_the_BSD_3-clause_New_Revised_license.patch
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171114214625.GB5119@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Add the full text of the BSD 3-clause "New" or "Revised" License to the
-kernel tree.  It was copied directly from:
+On Tue, Nov 14, 2017 at 01:46:25PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> If two programs simultaneously try to write to the same part of a file
+> via direct IO and buffered IO, there's a chance that the post-diowrite
+> pagecache invalidation will fail on the dirty page.  When this happens,
+> the dio write succeeded, which means that the page cache is no longer
+> coherent with the disk!  Programs are not supposed to mix IO types and
+> this is a clear case of data corruption, so store an EIO which will be
+> reflected to userspace during the next fsync.  Get rid of the WARN_ON
+> to assuage the fuzz-tester complaints.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/iomap.c |   19 +++++++++++++++++--
+>  1 file changed, 17 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index d4801f8..61b2eca 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -710,6 +710,13 @@ struct iomap_dio {
+>  	};
+>  };
+>  
+> +static void iomap_warn_stale_pagecache(struct inode *inode)
+> +{
+> +	errseq_set(&inode->i_mapping->wb_err, -EIO);
+> +	pr_crit_ratelimited("Stale pagecache contents after collision "
+> +			    "between direct and buffered write!\n");
+> +}
 
-  https://spdx.org/licenses/BSD-3-Clause.html#licenseText
+Is stale pagecache always necessarily the end result of the race? For
+example, is it possible that the page is under writeback and is about to
+overwrite the range just written by the dio? Or what about one of those
+weird cases where we check for whether the page mapping has changed down
+in the invalidate code? I'm wondering if it's appropriate to set an
+error if any such other cases are possible.
 
-Add the required tags for reference and tooling.
+As a nit, I guess I'd just prefer a bit more generic of a warning
+message. E.g., something like:
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+"Cache invalidation failure on direct I/O. Possible data corruption due
+to collision with buffered I/O!"
 
----
- LICENSES/preferred/BSD-3-Clause |   36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
- create mode 100644 LICENSES/BSD-3-Clause
+... but feel free to rephrase that however. Otherwise that bit seems
+reasonable enough to me.
 
---- /dev/null
-+++ b/LICENSES/preferred/BSD-3-Clause
-@@ -0,0 +1,36 @@
-+Valid-License-Identifier: BSD-3-Clause
-+SPDX-URL: https://spdx.org/licenses/BSD-3-Clause.html
-+Usage-Guide:
-+  To use the BSD 3-clause "New" or "Revised" License put the following SPDX
-+  tag/value pair into a comment according to the placement guidelines in
-+  the licensing rules documentation:
-+    SPDX-License-Identifier: BSD-3-Clause
-+License-Text:
-+
-+Copyright (c) <year> <owner> . All rights reserved.
-+
-+Redistribution and use in source and binary forms, with or without
-+modification, are permitted provided that the following conditions are met:
-+
-+1. Redistributions of source code must retain the above copyright notice,
-+   this list of conditions and the following disclaimer.
-+
-+2. Redistributions in binary form must reproduce the above copyright
-+   notice, this list of conditions and the following disclaimer in the
-+   documentation and/or other materials provided with the distribution.
-+
-+3. Neither the name of the copyright holder nor the names of its
-+   contributors may be used to endorse or promote products derived from this
-+   software without specific prior written permission.
-+
-+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+POSSIBILITY OF SUCH DAMAGE.
+Brian
 
-
+> +
+>  static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  {
+>  	struct kiocb *iocb = dio->iocb;
+> @@ -752,7 +759,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  		err = invalidate_inode_pages2_range(inode->i_mapping,
+>  				offset >> PAGE_SHIFT,
+>  				(offset + dio->size - 1) >> PAGE_SHIFT);
+> -		WARN_ON_ONCE(err);
+> +		if (err)
+> +			iomap_warn_stale_pagecache(inode);
+>  	}
+>  
+>  	inode_dio_end(file_inode(iocb->ki_filp));
+> @@ -1011,9 +1019,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	if (ret)
+>  		goto out_free_dio;
+>  
+> +	/*
+> +	 * Try to invalidate cache pages for the range we're direct
+> +	 * writing.  If this invalidation fails, tough, the write will
+> +	 * still work, but racing two incompatible write paths is a
+> +	 * pretty crazy thing to do, so we don't support it 100%.
+> +	 */
+>  	ret = invalidate_inode_pages2_range(mapping,
+>  			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
+> -	WARN_ON_ONCE(ret);
+> +	if (ret)
+> +		iomap_warn_stale_pagecache(inode);
+>  	ret = 0;
+>  
+>  	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
