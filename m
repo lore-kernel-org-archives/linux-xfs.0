@@ -1,49 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45344 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755462AbdKNTFK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2017 14:05:10 -0500
-Date: Tue, 14 Nov 2017 20:05:15 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [patch 2/7] LICENSES: Add the GPL 2.0 license
-Message-ID: <20171114190515.GB2326@kroah.com>
-References: <20171112191821.240484206@linutronix.de>
- <20171112192142.614461013@linutronix.de>
- <CABGGisx5SNMbCmkxS+BqDo723nT3D-gFqLzyonH3Y9Z5zNLeUQ@mail.gmail.com>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:46869 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753196AbdKOGOe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 01:14:34 -0500
+Received: by mail-yw0-f194.google.com with SMTP id a4so542979ywh.3
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Nov 2017 22:14:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABGGisx5SNMbCmkxS+BqDo723nT3D-gFqLzyonH3Y9Z5zNLeUQ@mail.gmail.com>
+In-Reply-To: <20171115011022.GC5119@magnolia>
+References: <20170830145400.3681-1-hch@lst.de> <20171115011022.GC5119@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 15 Nov 2017 08:14:33 +0200
+Message-ID: <CAOQ4uxg2iF5ucZTeN6orJVA2VYFnHAkvyb1-FS0BEZ=rGN+-Lw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Rob Herring <robh@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Kate Stewart <kstewart@linuxfoundation.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Nov 14, 2017 at 12:02:48PM -0600, Rob Herring wrote:
-> On Sun, Nov 12, 2017 at 1:18 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > Add the full text of the GPL 2.0 license to the kernel tree.  It was
-> > copied directly from:
-> >
-> >    https://spdx.org/licenses/GPL-2.0.html#licenseText
-> >
-> > Add the required tags for reference and tooling.
-> >
-> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> > Reviewed-by: Greg KH <gregkh@linuxfoundation.org>
-> > Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-> > Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-> >
-> > ---
-> >  LICENSES/preferred/GPL-2.0 |  342 +++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 342 insertions(+)
-> >  create mode 100644 LICENSES/GPL-2.0
-> 
-> Do we need 2 copies? Here and in COPYING?
+On Wed, Nov 15, 2017 at 3:10 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Wed, Aug 30, 2017 at 04:54:00PM +0200, Christoph Hellwig wrote:
+>> But reject reflink + DAX file systems for now until the code to
+>> support reflinks on DAX is actually implemented.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>  fs/xfs/xfs_super.c | 8 +++-----
+>>  1 file changed, 3 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index 38aaacdbb8b3..92521032468e 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -1634,7 +1634,9 @@ xfs_fs_fill_super(
+>>               }
+>>               if (xfs_sb_version_hasreflink(&mp->m_sb))
+>>                       xfs_alert(mp,
+>> -             "DAX and reflink have not been tested together!");
+>> +             "DAX and reflink can not be used together!");
+>> +                     error = -EINVAL;
+>> +                     goto out_filestream_unmount;
+>>       }
+>>
+>>       if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+>> @@ -1648,10 +1650,6 @@ xfs_fs_fill_super(
+>>       "EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
+>>       }
+>>
+>> -     if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> -             xfs_alert(mp,
+>> -     "EXPERIMENTAL reflink feature enabled. Use at your own risk!");
+>
+> Ok, now that the incore extent map rework has landed upstream, can we
+> please get everyone's QA to stress the reflink/cow code vigorously
+> during this release cycle so that we can re-consider this patch for
+> 4.16?
+>
+> (And if you're particularly mean, force cowextsize = 1fsb to age the
+> filesystem prematurely?)
+>
+> Right now I think the only problem I know about is that log recovery bug
+> where the defer ops of replayed defer ops get logged in the wrong order,
+> but that's it.
+>
 
-Let's worry about moving the COPYING one _after_ this patch series gets
-merged :)
+Last time you wrote about this bug you had a "hard question" about transaction
+reservation for the solution and said your're going to go have a think about it:
+https://marc.info/?l=linux-xfs&m=150766311924170&w=2
+Did you come to any conclusions?
+That sounds like one of those nasty CoW corner cases, so I'd be happy to know
+there is at least a well thought design for a solution - if not a fix.
 
-thanks,
+Practically, I would love if that bug could be solved soon so that we can all
+start running generic/503 for more than a few iterations to stress
+test reflink/cow
+with power failure. Success on this front could be a big upside before
+turning off
+EXPERIMENTAL.
 
-greg k-h
+Thanks,
+Amir.
