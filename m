@@ -1,32 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:32198 "EHLO mga06.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:46090 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932780AbdKPVbu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Nov 2017 16:31:50 -0500
-Date: Thu, 16 Nov 2017 14:31:47 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
-Message-ID: <20171116213147.GB27448@linux.intel.com>
-References: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
- <20171025204704.3382-1-ross.zwisler@linux.intel.com>
- <20171025215638.GA30335@dastard>
- <20171116212815.GA27448@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171116212815.GA27448@linux.intel.com>
+        id S1757342AbdKOMK0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Nov 2017 07:10:26 -0500
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH v4 1/2] fiemap: Factor out actual fiemap call code
+Date: Wed, 15 Nov 2017 14:10:20 +0200
+Message-Id: <1510747821-13270-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Amir Goldstein <amir73il@gmail.com>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, eguan@redhat.com, david@fromorbit.com, darrick.wong@oracle.com, Nikolay Borisov <nborisov@suse.com>
 
-On Thu, Nov 16, 2017 at 02:28:15PM -0700, Ross Zwisler wrote:
-> On Thu, Oct 26, 2017 at 08:56:38AM +1100, Dave Chinner wrote:
-> > Perhaps stat -c %b $SCRATCH_MNT/test ?
-> 
-> Maybe, but doesn't the output of 'stat -c %b' depend on the block size the
-> filesystem is using?  I think to use stat I'd have to check both %b and %B,
-> and account for different block sizes, or do some shell math.  I think it may
-> be easier to just use du.
+This will be needed to in a subsequent patch to avoid code duplication
 
-Ah, never mind, I think you meant 'stat -c %s' - that's cleaner, will switch.
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c | 39 ++++++++++++++++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/io/fiemap.c b/io/fiemap.c
+index e6fd66da753d..08391f69d9bd 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -211,6 +211,31 @@ calc_print_format(
+ 	}
+ }
+ 
++static int
++__fiemap(
++	 struct fiemap * fiemap,
++	 int		 mapsize,
++	 __u32		 flags,
++	 __u64		 start,
++	 __u64		 length) {
++
++	int ret;
++
++	memset(fiemap, 0, mapsize);
++	fiemap->fm_flags = flags;
++	fiemap->fm_start = start;
++	fiemap->fm_length = length;
++	fiemap->fm_extent_count = EXTENT_BATCH;
++	ret = ioctl(file->fd, FS_IOC_FIEMAP, fiemap);
++	if (ret < 0) {
++	        fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
++	                "%s\n", progname, file->name, strerror(errno));
++	        return ret;
++	}
++
++	return 0;
++}
++
+ int
+ fiemap_f(
+ 	int		argc,
+@@ -266,19 +291,11 @@ fiemap_f(
+ 
+ 	while (!last && (cur_extent != max_extents)) {
+ 
+-		memset(fiemap, 0, map_size);
+-		fiemap->fm_flags = fiemap_flags;
+-		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1LL;
+-		fiemap->fm_extent_count = EXTENT_BATCH;
+-
+-		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
++		ret = __fiemap(fiemap, map_size, fiemap_flags, last_logical,
++			       -1LL);
+ 		if (ret < 0) {
+-			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+-				"%s\n", progname, file->name, strerror(errno));
+-			free(fiemap);
+ 			exitcode = 1;
+-			return 0;
++			goto out;
+ 		}
+ 
+ 		/* No more extents to map, exit */
+-- 
+2.7.4
+
