@@ -1,108 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16837 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760363AbdKQSYP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:15 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 16/17] Add the parent pointer support to the superblock version 5.
-Date: Fri, 17 Nov 2017 11:21:44 -0700
-Message-Id: <1510942905-12897-17-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:56438 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759164AbdKPUdX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Nov 2017 15:33:23 -0500
+Subject: Re: [PATCH 1/3] xfsprogs: fix wrong variable type in write_once
+ function
+References: <20171111172155.31941-1-zlang@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <643a10c5-6987-4870-bd61-932ccdc1fe69@sandeen.net>
+Date: Thu, 16 Nov 2017 14:33:22 -0600
+MIME-Version: 1.0
+In-Reply-To: <20171111172155.31941-1-zlang@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased and added parent pointer attribute to
-           compatible attributes mask]
+On 11/11/17 11:21 AM, Zorro Lang wrote:
+> The 'Coverity Scan' found a problem in new write_once() function:
+> 
+> 272             size_t bytes;
+> 273             bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
+>>>>     CID 1420710:  Control flow issues  (NO_EFFECT)
+>>>>     This less-than-zero comparison of an unsigned value is never true. "bytes < 0UL".
+> 274             if (bytes < 0)
+> 275                     return -1;
+> 
+> That's unreasonable. do_pwrite return 'ssize_t' type value, which can
+> be less than zero, but we use a 'size_t' to get the return value. So
+> change the size_t to ssize_t for it can store the return value
+> correctly.
+> 
+> By the chance, correct all 'ssize_t' type problems in pwrite/pread
+> related functions.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-v2: remove unrelated type clean up in xfs_format.h
+I may rewrite the changelog a bit because this now touches much
+more than write_once, but the content seems fine:
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_format.h | 7 +++++--
- fs/xfs/libxfs/xfs_fs.h     | 1 +
- fs/xfs/xfs_fsops.c         | 4 +++-
- fs/xfs/xfs_super.c         | 4 ++++
- 4 files changed, 13 insertions(+), 3 deletions(-)
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 121862a..f3e3132 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-+#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_PARENT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-@@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 
- static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
- {
--	return false; /* We'll enable this at the end of the set */
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 8c61f21..b8108f8 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8f22fc5..9a0ce52 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -111,7 +111,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
- 			(xfs_sb_version_hasreflink(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-+				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
-+			(xfs_sb_version_hasparent(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ee68459..066266f 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1675,6 +1675,10 @@ xfs_fs_fill_super(
- 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
- 	}
- 
-+	if (xfs_sb_version_hasparent(&mp->m_sb))
-+		xfs_alert(mp,
-+	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
-+
- 	if (xfs_sb_version_hasreflink(&mp->m_sb))
- 		xfs_alert(mp,
- 	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
--- 
-2.7.4
-
+> ---
+> 
+> Actrually, this's V3. V3 did more changes in io/pread.c, fix 'ssize_t'
+> problem in io/pread.c (V2 only did in io/pwrite.c).
+> 
+> Thanks,
+> Zorro
+> 
+>  io/pread.c  | 12 ++++++------
+>  io/pwrite.c | 14 +++++++-------
+>  2 files changed, 13 insertions(+), 13 deletions(-)
+> 
+> diff --git a/io/pread.c b/io/pread.c
+> index 7591276d..60650aa3 100644
+> --- a/io/pread.c
+> +++ b/io/pread.c
+> @@ -172,12 +172,12 @@ dump_buffer(
+>  }
+>  
+>  #ifdef HAVE_PREADV
+> -static int
+> +static ssize_t
+>  do_preadv(
+>  	int		fd,
+>  	off64_t		offset,
+> -	ssize_t		count,
+> -	ssize_t		buffer_size)
+> +	size_t		count,
+> +	size_t		buffer_size)
+>  {
+>  	int		vecs = 0;
+>  	ssize_t		oldlen = 0;
+> @@ -208,12 +208,12 @@ do_preadv(
+>  #define do_preadv(fd, offset, count, buffer_size) (0)
+>  #endif
+>  
+> -static int
+> +static ssize_t
+>  do_pread(
+>  	int		fd,
+>  	off64_t		offset,
+> -	ssize_t		count,
+> -	ssize_t		buffer_size)
+> +	size_t		count,
+> +	size_t		buffer_size)
+>  {
+>  	if (!vectors)
+>  		return pread(fd, buffer, min(count, buffer_size), offset);
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index 26f79579..3df976a8 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -61,12 +61,12 @@ pwrite_help(void)
+>  }
+>  
+>  #ifdef HAVE_PWRITEV
+> -static int
+> +static ssize_t
+>  do_pwritev(
+>  	int		fd,
+>  	off64_t		offset,
+> -	ssize_t		count,
+> -	ssize_t		buffer_size,
+> +	size_t		count,
+> +	size_t		buffer_size,
+>  	int 		pwritev2_flags)
+>  {
+>  	int vecs = 0;
+> @@ -105,12 +105,12 @@ do_pwritev(
+>  #define do_pwritev(fd, offset, count, buffer_size) (0)
+>  #endif
+>  
+> -static int
+> +static ssize_t
+>  do_pwrite(
+>  	int		fd,
+>  	off64_t		offset,
+> -	ssize_t		count,
+> -	ssize_t		buffer_size,
+> +	size_t		count,
+> +	size_t		buffer_size,
+>  	int		pwritev2_flags)
+>  {
+>  	if (!vectors)
+> @@ -269,7 +269,7 @@ write_once(
+>  	long long	*total,
+>  	int		pwritev2_flags)
+>  {
+> -	size_t bytes;
+> +	ssize_t bytes;
+>  	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
+>  	if (bytes < 0)
+>  		return -1;
+> 
