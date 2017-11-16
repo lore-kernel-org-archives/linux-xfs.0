@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39697 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932650AbdKPBWr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:22:47 -0500
-Subject: [PATCH 4/5] common/rc: check dmesg for UBSAN errors
+Received: from userp1040.oracle.com ([156.151.31.81]:49179 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933234AbdKPBXD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:23:03 -0500
+Subject: [PATCH 5/5] xfs/122: don't check xfs_iext_cursor
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 15 Nov 2017 17:22:44 -0800
-Message-ID: <151079536403.25590.10714807892659246320.stgit@magnolia>
+Date: Wed, 15 Nov 2017 17:22:50 -0800
+Message-ID: <151079537016.25590.3421772833264696226.stgit@magnolia>
 In-Reply-To: <151079533937.25590.1037061486182471724.stgit@magnolia>
 References: <151079533937.25590.1037061486182471724.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,25 +20,24 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If the UBSAN complains about bad behavior, we should capture the dmesg
-so that developers can inspect it.
+Don't size-check the incore extent map cursor; it's not a disk structure.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/rc |    1 +
+ tests/xfs/122 |    1 +
  1 file changed, 1 insertion(+)
 
 
-diff --git a/common/rc b/common/rc
-index c700102..cb83918 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3328,6 +3328,7 @@ _check_dmesg()
- 	     -e "INFO: possible circular locking dependency detected" \
- 	     -e "general protection fault:" \
- 	     -e "BUG .* remaining" \
-+	     -e "UBSAN:" \
- 	     $seqres.dmesg
- 	if [ $? -eq 0 ]; then
- 		_dump_err "_check_dmesg: something found in dmesg (see $seqres.dmesg)"
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index f39ceba..671a77b 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -187,6 +187,7 @@ xfs_trans_t
+ xfs_dirent_t
+ xfs_fsop_getparents_handlereq_t
+ xfs_dinode_core_t
++struct xfs_iext_cursor
+ EOF
+ 
+ echo 'int main(int argc, char *argv[]) {' >>$cprog
 
