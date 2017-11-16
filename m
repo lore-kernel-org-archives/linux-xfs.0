@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39660 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932650AbdKPBWg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:22:36 -0500
-Subject: [PATCH 2/5] generic/45[34]: add emoji to the unusual fs naming test
+Received: from userp1040.oracle.com ([156.151.31.81]:49093 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932650AbdKPBWm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:22:42 -0500
+Subject: [PATCH 3/5] aio-dio-append-write-read-race: abort if we encounter
+ syscall errors
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 15 Nov 2017 17:22:31 -0800
-Message-ID: <151079535171.25590.681833633382669392.stgit@magnolia>
+Date: Wed, 15 Nov 2017 17:22:37 -0800
+Message-ID: <151079535786.25590.5675435278026701306.stgit@magnolia>
 In-Reply-To: <151079533937.25590.1037061486182471724.stgit@magnolia>
 References: <151079533937.25590.1037061486182471724.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,60 +21,117 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since we have a test to make sure that we can use Unicode points in
-filesystem names, enhance it to check emoji names too.
+If any of the library calls return error codes, just print out a message
+and abort the test.  Whoever wrote the write test did not check for
+write failures, which means that if we ENOSPC without writing anything
+then the reader thread will loop forever trying to read.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/453 |    5 +++++
- tests/generic/454 |    5 +++++
- 2 files changed, 10 insertions(+)
+ .../aio-dio-append-write-read-race.c               |   41 +++++++++++---------
+ 1 file changed, 23 insertions(+), 18 deletions(-)
 
 
-diff --git a/tests/generic/453 b/tests/generic/453
-index fc07978..38adc8d 100755
---- a/tests/generic/453
-+++ b/tests/generic/453
-@@ -106,6 +106,9 @@ setf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\xd
- # Fake slash?
- setf "urk\xc0\xafmoo" "FAKESLASH"
+diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+index 1a78009..b3fbe61 100644
+--- a/src/aio-dio-regress/aio-dio-append-write-read-race.c
++++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+@@ -70,6 +70,11 @@ static void *reader(void *arg)
+ 	return NULL;
+ }
  
-+# Emoji: octopus butterfly owl giraffe
-+setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
++#define fail(fmt , args...) do {	\
++	fprintf(stderr, fmt , ##args);	\
++	exit(1);			\
++} while (0)
 +
- ls -la $testdir >> $seqres.full
+ static void *writer(struct io_data *data)
+ {
+ 	int ret;
+@@ -84,28 +89,28 @@ static void *writer(struct io_data *data)
+ 		struct iocb *iocbs[] = { &iocb };
  
- echo "Test files"
-@@ -125,6 +128,8 @@ testf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\x
+ 		ret = io_setup(1, &ctx);
+-		if (ret) {
+-			fprintf(stderr, "error %s during io_setup\n",
++		if (ret)
++			fail("error %s during io_setup\n",
+ 				strerror(ret));
+-			return NULL;
+-		}
+ 		io_prep_pwrite(&iocb, data->fd, data->buf, data->blksize, data->offset);
+ 		ret = io_submit(ctx, 1, iocbs);
+-		if (ret != 1) {
+-			fprintf(stderr, "error %s during io_submit\n",
++		if (ret != 1)
++			fail("error %s during io_submit\n",
+ 				strerror(ret));
+-			return NULL;
+-		}
+ 		ret = io_getevents(ctx, 1, 1, evs, NULL);
+-		if (ret != 1) {
+-			fprintf(stderr, "error %s during io_getevents\n",
++		if (ret != 1)
++			fail("error %s during io_getevents\n",
+ 				strerror(ret));
+-			return NULL;
+-		}
++		if ((signed)evs[0].res < 0)
++			fail("error %s during write\n",
++				strerror(-evs[0].res));
++		if ((signed)evs[0].res2 < 0)
++			fail("secondary error %s during write\n",
++				strerror(-evs[0].res2));
+ 	} else {
+ 		ret = pwrite(data->fd, data->buf, data->blksize, data->offset);
+ 		if (ret < 0)
+-			perror("write file failed");
++			fail("write file failed: %s", strerror(errno));
+ 	}
  
- testf "urk\xc0\xafmoo" "FAKESLASH"
+ 	return NULL;
+@@ -161,14 +166,14 @@ int main(int argc, char *argv[])
  
-+testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
-+
- echo "Uniqueness of inodes?"
- stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
- 	if [ "${nr}" -gt 1 ]; then
-diff --git a/tests/generic/454 b/tests/generic/454
-index 7fa8ac5..f77ab77 100755
---- a/tests/generic/454
-+++ b/tests/generic/454
-@@ -104,6 +104,9 @@ setf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\xd
- # Fake slash?
- setf "urk\xc0\xafmoo" "FAKESLASH"
+ 	ret = posix_memalign((void **)&wbuf, io_align, blksize);
+ 	if (ret) {
+-		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
++		fail("failed to alloc memory: %s\n", strerror(ret));
+ 		ret = 1;
+ 		goto err;
+ 	}
  
-+# Emoji: octopus butterfly owl giraffe
-+setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
-+
- $GETFATTR_PROG --absolute-names -d "${testfile}" >> $seqres.full
+ 	ret = posix_memalign((void **)&rbuf, io_align, blksize);
+ 	if (ret) {
+-		fprintf(stderr, "failed to alloc memory: %s\n", strerror(ret));
++		fail("failed to alloc memory: %s\n", strerror(ret));
+ 		ret = 1;
+ 		goto err;
+ 	}
+@@ -189,7 +194,7 @@ int main(int argc, char *argv[])
+ 		reader_ready = 0;
+ 		ret = pthread_create(&tid, NULL, reader, &rdata);
+ 		if (ret) {
+-			fprintf(stderr, "create reader thread failed: %s\n",
++			fail("create reader thread failed: %s\n",
+ 				strerror(ret));
+ 			ret = 1;
+ 			goto err;
+@@ -199,7 +204,7 @@ int main(int argc, char *argv[])
  
- echo "Test files"
-@@ -123,6 +126,8 @@ testf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\x
+ 		ret = pthread_join(tid, NULL);
+ 		if (ret) {
+-			fprintf(stderr, "pthread join reader failed: %s\n",
++			fail("pthread join reader failed: %s\n",
+ 				strerror(ret));
+ 			ret = 1;
+ 			goto err;
+@@ -207,7 +212,7 @@ int main(int argc, char *argv[])
  
- testf "urk\xc0\xafmoo" "FAKESLASH"
- 
-+testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
-+
- echo "Uniqueness of keys?"
- crazy_keys="$($GETFATTR_PROG --absolute-names -d "${testfile}" | egrep -c '(french_|chinese_|greek_|arabic_|urk)')"
- expected_keys=11
+ 		for (j = 0; j < blksize; j++) {
+ 			if (rdata.buf[j] != 'a') {
+-				fprintf(stderr, "encounter an error: "
++				fail("encounter an error: "
+ 					"block %d offset %d, content %x\n",
+ 					i, j, rbuf[j]);
+ 				ret = 1;
 
