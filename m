@@ -1,46 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31030 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750707AbdKCE2W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 00:28:22 -0400
-Date: Thu, 2 Nov 2017 21:28:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 15/14] xfs/020: check that we have enough space to write out
- a huge fs
-Message-ID: <20171103042802.GD1233@magnolia>
-References: <150957278824.18388.17975162441125293654.stgit@magnolia>
+Received: from Galois.linutronix.de ([146.0.238.70]:47825 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934269AbdKPTZR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 14:25:17 -0500
+Date: Thu, 16 Nov 2017 20:25:10 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [patch V2 00/11] LICENSES: Add documentation and initial License
+ files
+In-Reply-To: <20171116183306.103584007@linutronix.de>
+Message-ID: <alpine.DEB.2.20.1711162023120.2109@nanos>
+References: <20171116183306.103584007@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150957278824.18388.17975162441125293654.stgit@magnolia>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, 16 Nov 2017, Thomas Gleixner wrote:
 
-Make sure that we have enough free space on the test fs to create a
-60t sparse filesystem.
+Sorry, I was too stupid to fixup Kate's e-mail address after Joe pointed it
+out. My apologies. Please remove 'kate@linuxfoundation.org' from the CC
+list and replace it with 'kstewart@linuxfoundation.org'
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/020 |    4 ++++
- 1 file changed, 4 insertions(+)
+/me goes off to rumage for brown paperbags
 
-diff --git a/tests/xfs/020 b/tests/xfs/020
-index 120492d..b037369 100755
---- a/tests/xfs/020
-+++ b/tests/xfs/020
-@@ -49,6 +49,10 @@ _supported_fs xfs
- _supported_os Linux
- _require_test
- 
-+# Writing a 60t fs requires about 2GB of space, so make sure
-+# we have plenty of space to do that.
-+_require_fs_space $TEST_DIR 2500000
-+
- echo "Silence is golden"
- 
- fsfile=$TEST_DIR/fsfile.$seq
+> This is the second version of the licensing rules documentation.
+> 
+> Changes since v1 [1]:
+> 
+>  - Addressing the review comments from Jon, Joe and Jonas:
+> 
+>    - Moved the documentation file into Documentation/process, but kept the
+>      topic entry in the top level index file so it stands out. (Joe)
+> 
+>    - Changed the license file metatags so they are not overloading
+>      SPDX-License-Identifier (Jonas)
+> 
+>    - Cleaned up the inconsistencies in the document (Jon, Joe)
+> 
+>    - Added the comment style fior .rst files (Jon)
+> 
+>  - Added a few more links and cursed restructured text to make it render
+>    halfways sensible.
+> 
+>  - Added the license files for the SPDX tags which are already in tree and
+>    moved GPL-1.0 to the 'other' directory as it really does not belong into
+>    the preferrred category.
+> 
+>  - Removed the Reviewed-by tags as they not longer apply. 
+> 
+> Please go over it with a fine comb again. I'm sure that I screwed up
+> something on the way, but me staring more at it doesn't help.
+> 
+> Thanks to everyone who provided input!
+> 
+> It turned out that the original approach was incidentaly close to what the
+> FSFE REUSE initiative docuemented and I think we are now nearing the point
+> where we can wear the REUSE sticker if Jonas does not find any other holes
+> in it. :)
+> 
+> Thanks,
+> 
+> 	tglx
+> 
+> 
+> [1] https://lkml.kernel.org/r/20171112191821.240484206@linutronix.de
+> 
+> 
+> 
