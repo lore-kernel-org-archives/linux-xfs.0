@@ -1,84 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38829 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752424AbdKOKOm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Nov 2017 05:14:42 -0500
-Date: Wed, 15 Nov 2017 11:14:40 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [Regression/XFS/PM] Freeze tasks failed in xfsaild
-Message-ID: <20171115101440.ar2yki5axehfq3bq@dhcp22.suse.cz>
-References: <20171113103139.GA18936@yu-chen.sh.intel.com>
- <20171113225216.GJ5858@dastard>
- <20171114033959.GB23219@yu-chen.sh.intel.com>
- <20171114040232.GZ4094@dastard>
- <20171114163953.GA27880@yu-chen.sh.intel.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:47755 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934475AbdKPTNy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 14:13:54 -0500
+Message-Id: <20171116184358.946786382@linutronix.de>
+Date: Thu, 16 Nov 2017 19:33:14 +0100
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch V2 08/11] LICENSES: Add the MIT license
+References: <20171116183306.103584007@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171114163953.GA27880@yu-chen.sh.intel.com>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Disposition: inline; filename=LICENSES_Add_the_MIT_license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yu Chen <yu.c.chen@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Hendrik Woltersdorf <hendrikw@arcor.de>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jkosina@suse.cz>, Len Brown <len.brown@intel.com>, Rui Zhang <rui.zhang@intel.com>, Dan Williams <dan.j.williams@intel.com>, Yu Chen <yu.chen.surf@gmail.com>, linux-xfs@vger.kernel.org, Hou Tao <houtao1@huawei.com>, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
-On Wed 15-11-17 00:39:53, Yu Chen wrote:
-[...]
-> Before the filesystem freezing feature is merged into
-> upstream, wouldn't it be nice if we have some compromise
-> workaround for such kind of issues: how about treat the
-> always-sleeping tasks as frozen? They are safe to be
-> regarded as frozen because they do nothing.
-> Here's a draft patch to get it done, and it can be
-> optimized if the direction is acceptible.
+Add the full text of the MIT license to the kernel tree.  It was copied
+directly from:
 
-I do not think this will fly. You have no guarantee those tasks wake up
-at any moment after you consider them frozen and declare the system as
-quiescent from the userspace POV.
+  https://spdx.org/licenses/MIT.html#licenseText
 
-> diff --git a/kernel/power/process.c b/kernel/power/process.c
-> index 7381d49a44db..93e123a58558 100644
-> --- a/kernel/power/process.c
-> +++ b/kernel/power/process.c
-> @@ -100,8 +100,28 @@ static int try_to_freeze_tasks(bool user_only)
->  			read_lock(&tasklist_lock);
->  			for_each_process_thread(g, p) {
->  				if (p != current && !freezer_should_skip(p)
-> -				    && freezing(p) && !frozen(p))
-> -					sched_show_task(p);
-> +				    && freezing(p) && !frozen(p)) {
-> +					unsigned long cnt_ctx;
-> +
-> +					cnt_ctx = p->nvcsw + p->nivcsw;
-> +					msleep(MSEC_PER_SEC);
-> +					/* If the task keeps asleep for 1000 ms
-> +					 * (actually should be:
-> +					 * freeze_timeout_msecs+1000ms in theory)
-> +					 * AKA, there is no context switch for the
-> +					 * task during this period, we predict this
-> +					 * task is not likely to do any work in the
-> +					 * future and we can treat it as frozen.
-> +					 */
-> +					if ((p->state & TASK_NORMAL) &&
-> +					   (cnt_ctx == (p->nvcsw + p->nivcsw))) {
-> +						pr_err("(%s %c) is sleeping and safe to be treated as frozen\n",
-> +							p->comm, task_state_to_char(p));
-> +						todo = 0;
-> +					} else {
-> +						sched_show_task(p);
-> +					}
-> +				}
->  			}
->  			read_unlock(&tasklist_lock);
->  		}
-> -- 
-> 2.13.5
-> 
-> 
-> 
-> 
-> 
+Add the required tags for reference and tooling.
 
--- 
-Michal Hocko
-SUSE Labs
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Greg KH <gregkh@linuxfoundation.org>
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+
+---
+ LICENSES/preferred/MIT |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 LICENSES/MIT
+
+--- /dev/null
++++ b/LICENSES/preferred/MIT
+@@ -0,0 +1,30 @@
++Valid-License-Identifier: MIT
++SPDX-URL: https://spdx.org/licenses/MIT.html
++Usage-Guide:
++  To use the MIT License put the following SPDX tag/value pair into a
++  comment according to the placement guidelines in the licensing rules
++  documentation:
++    SPDX-License-Identifier: MIT
++License-Text:
++
++MIT License
++
++Copyright (c) <year> <copyright holders>
++
++Permission is hereby granted, free of charge, to any person obtaining a
++copy of this software and associated documentation files (the "Software"),
++to deal in the Software without restriction, including without limitation
++the rights to use, copy, modify, merge, publish, distribute, sublicense,
++and/or sell copies of the Software, and to permit persons to whom the
++Software is furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in
++all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++DEALINGS IN THE SOFTWARE.
+
+
