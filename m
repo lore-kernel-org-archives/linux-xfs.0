@@ -1,44 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr002msb.fastweb.it ([85.18.95.86]:42406 "EHLO
-        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753984AbdKOURp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 15:17:45 -0500
-Subject: Re: Disabling barriers on NVC-backed HDD
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:9883 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933288AbdKPAPV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 19:15:21 -0500
+Date: Thu, 16 Nov 2017 11:07:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: LVM thinp, mkfs "device is not properly aligned"
+Message-ID: <20171116000703.GG4094@dastard>
+References: <CAJCQCtR1eLc3n-19po0z8eF3tcmj6rxuPK6fcJft=swuCGSVwA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Wed, 15 Nov 2017 21:17:13 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <20171115194700.GA6228@infradead.org>
-References: <8b91c685e344bdc5d084b11fab1d50af@assyoma.it>
- <20171115173100.GD5119@magnolia> <20171115194700.GA6228@infradead.org>
-Message-ID: <442aa3b110e7cf10c8920dfe2159e41f@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtR1eLc3n-19po0z8eF3tcmj6rxuPK6fcJft=swuCGSVwA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-Il 15-11-2017 20:47 Christoph Hellwig ha scritto:
-> And in that case it will report WCE=0 and Linux won't even flush.
-> As is the case for typical enterprise disks.
+On Wed, Nov 15, 2017 at 04:20:59PM -0700, Chris Murphy wrote:
+> # mkfs.xfs /dev/mapper/vg-timemachine
+> warning: device is not properly aligned /dev/mapper/vg-timemachine
+> Use -f to force usage of a misaligned device
 
-Good point. Based on what I read here[1], page n.4, it *seems* that 
-Seagate AWC (advanced write cache) enabled drives report WCD (write 
-cache disabled) to the host OS.
+That is emitted when blikid tells XFS that the device it is about to
+format is not correctly aligned.
 
-I think this is the key parameter to watch: if the HDD vendor is 
-confident enough to report WCE=0/WCD, than it should be safe running 
-without barriers (after all, in this case Linux *will* disable barrier 
-by default).
+The check that is failing:
 
-Thank you Christoph for pointing that.
-Regards.
+	 if (blkid_topology_get_alignment_offset(tp) != 0)
 
+>From here:
+
+https://www.kernel.org/pub/linux/utils/util-linux/v2.21/libblkid-docs/libblkid-Topology-information.html
+
+ALIGNMENT_OFFSET: indicates how many bytes the beginning of the
+device is offset from the disk's natural alignment.
+
+....
+> $ lsblk -t
+> 
+(Trimmed for brevity and readability)
+.....
+> NAME                      ALIGNMENT MIN-IO   OPT-IO
+> sda                               0   4096        0
+>   sda1                            0   4096        0
+>   sda2                            0   4096        0
+>     brick1                      512   4096        0
+>   sda3                            0   4096        0
+>   sda4                            0   4096        0
+>   sda5                            0   4096        0
+>     vg-cryptoswap               512   4096        0
+>       swap                      512   4096        0
+>     vg-thintastic_tmeta         512   4096        0
+>       vg-thintastic-tpool       512 524288   524288
+>         vg-thintastic           512 524288   524288
+>         vg-timemachine          512 524288   524288
+>     vg-thintastic_tdata         512   4096        0
+>       vg-thintastic-tpool       512 524288   524288
+>         vg-thintastic           512 524288   524288
+>         vg-timemachine          512 524288   524288
+> 
+
+What you can see here is that all the volume groups have a non-zero
+alignment - they are all off by one sector - and that's what
+mkfs.xfs is warning you about. i.e. something's not quite right at
+the LVM layer....
+
+Cheers,
+
+Dave.
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+Dave Chinner
+david@fromorbit.com
