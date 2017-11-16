@@ -1,52 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56446 "EHLO sandeen.net"
+Received: from ms.lwn.net ([45.79.88.28]:42660 "EHLO ms.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759254AbdKPUdf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Nov 2017 15:33:35 -0500
-Subject: Re: [PATCH 2/3] xfsprogs: fix wrong do_pwritev definition
-References: <20171111172155.31941-1-zlang@redhat.com>
- <20171111172155.31941-2-zlang@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <fcce9c12-2a5f-8682-75dc-b1a9c7724efc@sandeen.net>
-Date: Thu, 16 Nov 2017 14:33:34 -0600
+        id S933767AbdKPVAt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Nov 2017 16:00:49 -0500
+Date: Thu, 16 Nov 2017 14:00:47 -0700
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [patch V3 09/11] LICENSES: Add Linux syscall note exception
+Message-ID: <20171116140047.4b1e9338@lwn.net>
+In-Reply-To: <20171116184359.036955204@linutronix.de>
+References: <20171116183306.103584007@linutronix.de>
+        <20171116184359.036955204@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20171111172155.31941-2-zlang@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On 11/11/17 11:21 AM, Zorro Lang wrote:
-> In io/pwrite.c, if not define HAVE_PWRITEV, we will use:
->   #define do_pwritev(fd, offset, count, buffer_size) (0)
-> 
-> But the real do_pwritev() function is:
->   do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
-> 
-> There's one more 'pwritev2_flags' argument.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+On Thu, 16 Nov 2017 19:33:15 +0100
+Thomas Gleixner <tglx@linutronix.de> wrote:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
+> Copied from the Linux kernel COPYING file.
+> 
+> Add the required tags for reference and tooling.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> 
 > ---
->  io/pwrite.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  LICENSES/exceptions/Linux-syscall-note |   25 +++++++++++++++++++++++++
+>  1 file changed, 25 insertions(+)
 > 
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 3df976a8..a89edfd0 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -102,7 +102,7 @@ do_pwritev(
->  	return bytes;
->  }
->  #else
-> -#define do_pwritev(fd, offset, count, buffer_size) (0)
-> +#define do_pwritev(fd, offset, count, buffer_size, pwritev2_flags) (0)
->  #endif
->  
->  static ssize_t
-> 
+> --- /dev/null
+> +++ b/LICENSES/exceptions/Linux-syscall-note
+> @@ -0,0 +1,25 @@
+> +SPDX-Exception-Identifier: Linux-syscall-note
+> +SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
+> +SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
+> +Usage-Guide:
+> +  This exception is used together with one of the above SPDX-Licenses
+> +  to mark user space API (uapi) header files so they can be included
+> +  into non GPL compliant user space application code.
+> +  To use this exception add it with the keyword WITH to one of the
+> +  identifiers in the SPDX-Licenses tag:
+> +    SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
+> +License-Text:
+> +
+> +   NOTE! This copyright does *not* cover user programs that use kernel
+> + services by normal system calls - this is merely considered normal use
+> + of the kernel, and does *not* fall under the heading of "derived work".
+> + Also note that the GPL below is copyrighted by the Free Software
+> + Foundation, but the instance of code that it refers to (the Linux
+> + kernel) is copyrighted by me and others who actually wrote it.
+> +
+> + Also note that the only valid version of the GPL as far as the kernel
+> + is concerned is _this_ particular version of the license (ie v2, not
+> + v2.2 or v3.x or whatever), unless explicitly otherwise stated.
+
+This seems off-topic for the syscall exception..?  Getting the GPL
+versions right is what this exercise is a whole is about (among other
+things); I wouldn't expect people to look for it here.
+
+jon
