@@ -1,43 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49179 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933234AbdKPBXD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:23:03 -0500
-Subject: [PATCH 5/5] xfs/122: don't check xfs_iext_cursor
+Received: from aserp1040.oracle.com ([141.146.126.69]:40659 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933338AbdKPB1Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:27:16 -0500
+Date: Wed, 15 Nov 2017 17:27:07 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 15 Nov 2017 17:22:50 -0800
-Message-ID: <151079537016.25590.3421772833264696226.stgit@magnolia>
-In-Reply-To: <151079533937.25590.1037061486182471724.stgit@magnolia>
-References: <151079533937.25590.1037061486182471724.stgit@magnolia>
+Subject: [PATCH] iomap: report collisions between directio and buffered
+ writes to userspace
+Message-ID: <20171116012707.GB5130@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't size-check the incore extent map cursor; it's not a disk structure.
+If two programs simultaneously try to write to the same part of a file
+via direct IO and buffered IO, there's a chance that the post-diowrite
+pagecache invalidation will fail on the dirty page.  When this happens,
+the dio write succeeded, which means that the page cache is no longer
+coherent with the disk!  Programs are not supposed to mix IO types and
+this is a clear case of data corruption, so store an EIO which will be
+reflected to userspace during the next fsync.  Get rid of the WARN_ON
+to assuage the fuzz-tester complaints.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/122 |    1 +
- 1 file changed, 1 insertion(+)
+ fs/iomap.c |   25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
-
-diff --git a/tests/xfs/122 b/tests/xfs/122
-index f39ceba..671a77b 100755
---- a/tests/xfs/122
-+++ b/tests/xfs/122
-@@ -187,6 +187,7 @@ xfs_trans_t
- xfs_dirent_t
- xfs_fsop_getparents_handlereq_t
- xfs_dinode_core_t
-+struct xfs_iext_cursor
- EOF
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 5011a96..9f0e8d4 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -711,6 +711,19 @@ struct iomap_dio {
+ 	};
+ };
  
- echo 'int main(int argc, char *argv[]) {' >>$cprog
-
++static void iomap_warn_stale_pagecache(struct inode *inode)
++{
++	static DEFINE_RATELIMIT_STATE(_rs,
++			DEFAULT_RATELIMIT_INTERVAL,
++			DEFAULT_RATELIMIT_BURST);
++
++	errseq_set(&inode->i_mapping->wb_err, -EIO);
++	if (__ratelimit(&_rs)) {
++		pr_crit("Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!\n");
++		dump_stack_print_info(KERN_CRIT);
++	}
++}
++
+ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ {
+ 	struct kiocb *iocb = dio->iocb;
+@@ -753,7 +766,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 		err = invalidate_inode_pages2_range(inode->i_mapping,
+ 				offset >> PAGE_SHIFT,
+ 				(offset + dio->size - 1) >> PAGE_SHIFT);
+-		WARN_ON_ONCE(err);
++		if (err)
++			iomap_warn_stale_pagecache(inode);
+ 	}
+ 
+ 	inode_dio_end(file_inode(iocb->ki_filp));
+@@ -1012,9 +1026,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret)
+ 		goto out_free_dio;
+ 
++	/*
++	 * Try to invalidate cache pages for the range we're direct
++	 * writing.  If this invalidation fails, tough, the write will
++	 * still work, but racing two incompatible write paths is a
++	 * pretty crazy thing to do, so we don't support it 100%.
++	 */
+ 	ret = invalidate_inode_pages2_range(mapping,
+ 			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
+-	WARN_ON_ONCE(ret);
++	if (ret)
++		iomap_warn_stale_pagecache(inode);
+ 	ret = 0;
+ 
+ 	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
