@@ -1,71 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24010 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752910AbdKORbG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 12:31:06 -0500
-Date: Wed, 15 Nov 2017 09:31:00 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:39660 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932650AbdKPBWg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Nov 2017 20:22:36 -0500
+Subject: [PATCH 2/5] generic/45[34]: add emoji to the unusual fs naming test
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Disabling barriers on NVC-backed HDD
-Message-ID: <20171115173100.GD5119@magnolia>
-References: <8b91c685e344bdc5d084b11fab1d50af@assyoma.it>
+Date: Wed, 15 Nov 2017 17:22:31 -0800
+Message-ID: <151079535171.25590.681833633382669392.stgit@magnolia>
+In-Reply-To: <151079533937.25590.1037061486182471724.stgit@magnolia>
+References: <151079533937.25590.1037061486182471724.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8b91c685e344bdc5d084b11fab1d50af@assyoma.it>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-xfs@vger.kernel.org
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Nov 15, 2017 at 06:01:17PM +0100, Gionatan Danti wrote:
-> Hi list,
-> I'm not sure this is the correct list to post my question; if so, feel free
-> to ignore this message.
-> 
-> On XFS FAQs I (rightfully) read that barrier should be *always* enabled (and
-> they are, by default), unless a write-loss protected writeback cache is used
-> at the RAID card level. So far, so good.
-> 
-> Newer HDDs has themselves have a non-volatile cache (NVC) of some sort,
-> basically:
-> - DRAM + eMCL: in a powerloss event, the DRAM cache is immediately dumped on
-> the eMLC flash;
-> - DRAM + NOR flash: NOR mirrors a (small) portion of the DRAM cache, used
-> for write acceleration purpose;
-> - dedicated "dump" areas on the disks: they effectively mirror a portion of
-> the DRAM cache.
-> 
-> My question is: do you think it is safe to disable barriers, both for XFS
-> and in general terms, on these disks? Or they should be considered as the
-> same "dumb" unprotected DRAM caches found on classical HDD?
-> 
-> From a side, these *are* powerloss-protected caches. Problem is that all
-> these power-protection schemes are considered "secret sauce / trade secret"
-> by HDD vendors and, for this reason, there are very little (if any)
-> informations on their inner working.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I would evaluate these drives to find out if you really /can/ yank the
-power without losing anything.
+Since we have a test to make sure that we can use Unicode points in
+filesystem names, enhance it to check emoji names too.
 
-That said, if the manufacturers aren't willing to tell you how that
-feature works, I'd just as soon pretend the feature didn't exist and
-continue sending flushes to the drive.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/453 |    5 +++++
+ tests/generic/454 |    5 +++++
+ 2 files changed, 10 insertions(+)
 
-FWIW if the drive really /does/ have a non-volatile WC then a flush
-should have nearly zero overhead.  (Or so you'd think...)
 
---D
+diff --git a/tests/generic/453 b/tests/generic/453
+index fc07978..38adc8d 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -106,6 +106,9 @@ setf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\xd
+ # Fake slash?
+ setf "urk\xc0\xafmoo" "FAKESLASH"
+ 
++# Emoji: octopus butterfly owl giraffe
++setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
++
+ ls -la $testdir >> $seqres.full
+ 
+ echo "Test files"
+@@ -125,6 +128,8 @@ testf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\x
+ 
+ testf "urk\xc0\xafmoo" "FAKESLASH"
+ 
++testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
++
+ echo "Uniqueness of inodes?"
+ stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
+ 	if [ "${nr}" -gt 1 ]; then
+diff --git a/tests/generic/454 b/tests/generic/454
+index 7fa8ac5..f77ab77 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -104,6 +104,9 @@ setf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\xd
+ # Fake slash?
+ setf "urk\xc0\xafmoo" "FAKESLASH"
+ 
++# Emoji: octopus butterfly owl giraffe
++setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
++
+ $GETFATTR_PROG --absolute-names -d "${testfile}" >> $seqres.full
+ 
+ echo "Test files"
+@@ -123,6 +126,8 @@ testf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\x
+ 
+ testf "urk\xc0\xafmoo" "FAKESLASH"
+ 
++testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
++
+ echo "Uniqueness of keys?"
+ crazy_keys="$($GETFATTR_PROG --absolute-names -d "${testfile}" | egrep -c '(french_|chinese_|greek_|arabic_|urk)')"
+ expected_keys=11
 
-> Regards.
-> 
-> -- 
-> Danti Gionatan
-> Supporto Tecnico
-> Assyoma S.r.l. - www.assyoma.it
-> email: g.danti@assyoma.it - info@assyoma.it
-> GPG public key ID: FF5F32A8
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
