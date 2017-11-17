@@ -1,195 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37794 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752254AbdKQRWI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 12:22:08 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_io: implement ranged fiemap query
-Message-ID: <c1bec5de-57de-a451-08b9-80376b635d28@redhat.com>
-Date: Fri, 17 Nov 2017 11:22:07 -0600
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:47626 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760345AbdKQSYL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:11 -0500
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAHIO9v8005258
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:10 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAHIO97i008986
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:09 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAHIO92J009107
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:09 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v3 15/17] Add parent pointers to rename
+Date: Fri, 17 Nov 2017 11:21:43 -0700
+Message-Id: <1510942905-12897-16-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Nikolay Borisov <nborisov@suse.com>
+To: linux-xfs@vger.kernel.org
+Cc: Allison Henderson <allison.henderson@oracle.com>
 
-From: Nikolay Borisov <nborisov@suse.com>
+This patch removes the old parent pointer attribute during the
+rename operation, and re-adds the updated parent pointer
 
-Currently the fiemap implementation of xfs_io doesn't support making ranged
-queries. This patch implements two optional arguments which take the starting
-offset and the length of the region to be queried.
-
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-[sandeen: simplify/rewrite ranged logic]
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
+ fs/xfs/libxfs/xfs_dir2.c |  6 ++++--
+ fs/xfs/xfs_inode.c       | 26 ++++++++++++++++++++------
+ 2 files changed, 24 insertions(+), 8 deletions(-)
 
-I think this is a simpler approach.  There are some questions about how
-the fiemap command should handle holes and ranges, however.
-
-First and foremost, the kernel will return any extent(s) which overlap(s)
-with the requested range.  Holes are simply inferred by xfs_io from the
-spaces in between.
-
-So there are questions about what to do if i.e. the range starts or ends
-in a hole.
-
-This patch (I think!) /will/ describe a hole on either side of the requested
-range, if it exists, with start and end points of the hole(s) based on
-the range start & end.  i.e. with range on boundaries:
-
-# io/xfs_io -c "fiemap 0 12k"  alternating 
-alternating:
-	0: [0..7]: hole
-	1: [8..15]: 60550776..60550783
-	2: [16..23]: hole
-
-with range in middle of holes, hole ranges are truncated:
-
-# io/xfs_io -c "fiemap 1k 10k"  alternating 
-alternating:
-	0: [2..7]: hole
-	1: [8..15]: 60550776..60550783
-	2: [16..21]: hole
-
-i.e. note that the first hole starts at the requested 1k range, and
-the last hole ends at the end of the requested range.
-
-Seems reasonable?
-
-
-
-diff --git a/io/fiemap.c b/io/fiemap.c
-index bdcfacd..266d134 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -49,6 +49,8 @@ fiemap_help(void)
- " -l -- also displays the length of each extent in 512-byte blocks.\n"
- " -n -- query n extents.\n"
- " -v -- Verbose information\n"
-+" offset is the starting offset to map, and is optional.  If offset is\n"
-+" specified, mapping length may (optionally) be specified as well."
- "\n"));
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 25b370b..ed25203 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -324,10 +324,11 @@ xfs_dir_createname(
+ 	else
+ 		rval = xfs_dir2_node_addname(args);
+ 
++out_free:
+ 	/* return the location that this entry was place in the parent inode */
+ 	if (offset)
+ 		*offset = args->offset;
+-out_free:
++
+ 	kmem_free(args);
+ 	return rval;
  }
- 
-@@ -118,7 +120,7 @@ print_verbose(
- 			flg_w, _("FLAGS"));
- 	}
- 
--	if (lstart != llast) {
-+	if (lstart > llast) {
- 		print_hole(foff_w, boff_w, tot_w, cur_extent, 0, false, llast,
- 			   lstart);
- 		cur_extent++;
-@@ -155,7 +157,7 @@ print_plain(
- 	len = BTOBBT(extent->fe_length);
- 	block = BTOBBT(extent->fe_physical);
- 
--	if (lstart != llast) {
-+	if (lstart > llast) {
- 		print_hole(0, 0, 0, cur_extent, lflag, true, llast, lstart);
- 		cur_extent++;
- 	}
-@@ -235,9 +237,15 @@ fiemap_f(
- 	int		boff_w = 16;
- 	int		tot_w = 5;	/* 5 since its just one number */
- 	int		flg_w = 5;
--	__u64		last_logical = 0;
-+	__u64		last_logical = 0;	/* last extent offset handled */
-+	off64_t		start_offset = 0;	/* mapping start */
-+	off64_t		length = -1LL;		/* mapping length */
-+	off64_t		range_end = -1LL;	/* mapping end*/
-+	size_t		fsblocksize, fssectsize;
- 	struct stat	st;
- 
-+	init_cvtnum(&fsblocksize, &fssectsize);
+@@ -496,9 +497,10 @@ xfs_dir_removename(
+ 		rval = xfs_dir2_leaf_removename(args);
+ 	else
+ 		rval = xfs_dir2_node_removename(args);
++out_free:
+ 	if (offset)
+ 		*offset = args->offset;
+-out_free:
 +
- 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
- 		switch (c) {
- 		case 'a':
-@@ -257,6 +265,27 @@ fiemap_f(
- 		}
+ 	kmem_free(args);
+ 	return rval;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index a289a40..da5c761 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2984,6 +2984,8 @@ xfs_rename(
+ 	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
+ 	int			spaceres;
+ 	int			error;
++	xfs_dir2_dataptr_t	new_diroffset;
++	xfs_dir2_dataptr_t	old_diroffset;
+ 
+ 	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
+ 
+@@ -3086,13 +3088,12 @@ xfs_rename(
+ 		 */
+ 		error = xfs_dir_createname(tp, target_dp, target_name,
+ 					   src_ip->i_ino, &first_block, &dfops,
+-					   spaceres, NULL);
++					   spaceres, &new_diroffset);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+ 		xfs_trans_ichgtime(tp, target_dp,
+ 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-
+ 		if (new_parent && src_is_directory) {
+ 			error = xfs_bumplink(tp, target_dp);
+ 			if (error)
+@@ -3126,7 +3127,7 @@ xfs_rename(
+ 		 */
+ 		error = xfs_dir_replace(tp, target_dp, target_name,
+ 					src_ip->i_ino, &first_block, &dfops,
+-					spaceres, NULL);
++					spaceres, &new_diroffset);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -3161,7 +3162,7 @@ xfs_rename(
+ 		 */
+ 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+ 					target_dp->i_ino, &first_block, &dfops,
+-					spaceres, NULL);
++					spaceres, &new_diroffset);
+ 		ASSERT(error != -EEXIST);
+ 		if (error)
+ 			goto out_bmap_cancel;
+@@ -3200,11 +3201,12 @@ xfs_rename(
+ 	 */
+ 	if (wip) {
+ 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+-					&first_block, &dfops, spaceres, NULL);
++					&first_block, &dfops, spaceres,
++					&old_diroffset);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+ 					   &first_block, &dfops, spaceres,
+-					   NULL);
++					   &old_diroffset);
+ 	if (error)
+ 		goto out_bmap_cancel;
+ 
+@@ -3234,6 +3236,18 @@ xfs_rename(
+ 		VFS_I(wip)->i_state &= ~I_LINKABLE;
  	}
  
-+	/* Range start (optional) */
-+	if (optind < argc) {
-+		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+		if (start_offset < 0) {
-+			printf("non-numeric offset argument -- %s\n", argv[optind]);
-+			return 0;
-+		}
-+		last_logical = start_offset;
-+		optind++;
++	if (new_parent && xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_add(tp, target_dp, src_ip, target_name,
++				       new_diroffset, &dfops, &first_block);
++		if (error)
++			goto out_bmap_cancel;
++
++		error = xfs_parent_remove(tp, src_dp, src_ip,
++					  old_diroffset, &dfops, &first_block);
++		if (error)
++			goto out_bmap_cancel;
 +	}
 +
-+	/* Range length (optional if range start was specified) */
-+	if (optind < argc) {
-+		length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+		if (length < 0) {
-+			printf("non-numeric len argument -- %s\n", argv[optind]);
-+			return 0;
-+		}
-+		range_end = start_offset + length;
-+	}
-+
- 	map_size = sizeof(struct fiemap) +
- 		(EXTENT_BATCH * sizeof(struct fiemap_extent));
- 	fiemap = malloc(map_size);
-@@ -274,7 +303,7 @@ fiemap_f(
- 		memset(fiemap, 0, map_size);
- 		fiemap->fm_flags = fiemap_flags;
- 		fiemap->fm_start = last_logical;
--		fiemap->fm_length = -1LL;
-+		fiemap->fm_length = range_end - last_logical;
- 		fiemap->fm_extent_count = EXTENT_BATCH;
- 
- 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-@@ -336,9 +365,12 @@ fiemap_f(
- 		return 0;
- 	}
- 
--	if (cur_extent && last_logical < st.st_size)
-+	/* Print last hole to EOF or to end of requested range */
-+	range_end = min((uint64_t)range_end, st.st_size);
-+
-+	if (cur_extent && last_logical < range_end)
- 		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
--			   BTOBBT(last_logical), BTOBBT(st.st_size));
-+			   BTOBBT(last_logical), BTOBBT(range_end));
- 
- out:
- 	free(fiemap);
-@@ -353,7 +385,7 @@ fiemap_init(void)
- 	fiemap_cmd.argmin = 0;
- 	fiemap_cmd.argmax = -1;
- 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	fiemap_cmd.args = _("[-alv] [-n nx]");
-+	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
- 	fiemap_cmd.oneline = _("print block mapping for a file");
- 	fiemap_cmd.help = fiemap_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 9bf1a47..7633734 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -304,11 +304,12 @@ Prints the block mapping for the current open file. Refer to the
- .BR xfs_bmap (8)
- manual page for complete documentation.
- .TP
--.BI "fiemap [ \-alv ] [ \-n " nx " ]"
-+.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
- Prints the block mapping for the current open file using the fiemap
- ioctl.  Options behave as described in the
- .BR xfs_bmap (8)
--manual page.
-+manual page. Optionally, this command also supports passing the start offset
-+from where to begin the fiemap and the length of that region.
- .TP
- .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
- Prints the mapping of disk blocks used by the filesystem hosting the current
+ 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+ 	if (new_parent)
+-- 
+2.7.4
 
