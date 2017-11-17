@@ -1,65 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:57405 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751245AbdKTJmt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 04:42:49 -0500
-Date: Mon, 20 Nov 2017 10:42:41 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
-In-Reply-To: <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
-Message-ID: <alpine.DEB.2.20.1711201030470.1734@nanos>
-References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de> <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:56486 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757043AbdKQUjK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 15:39:10 -0500
+Subject: Re: [xfsprogs PATCH 2/2] xfs_io: add a new 'log_writes' command
+References: <20171117202524.24696-1-ross.zwisler@linux.intel.com>
+ <20171117202524.24696-3-ross.zwisler@linux.intel.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <84006b9c-90db-7eea-0bdc-b73da1bb1394@sandeen.net>
+Date: Fri, 17 Nov 2017 14:39:07 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20171117202524.24696-3-ross.zwisler@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Charlemagne Lasse <charlemagnelasse@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On Sat, 18 Nov 2017, Charlemagne Lasse wrote:
-> 2017-11-16 19:33 GMT+01:00 Thomas Gleixner <tglx@linutronix.de>:
-> > Add the full text of the GPL 2.0 license to the kernel tree.  It was
-> > copied directly from:
-> >
-> >    https://spdx.org/licenses/GPL-2.0.html#licenseText
-> >
-> > Add the required tags for reference and tooling.
-> >
-> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+On 11/17/17 2:25 PM, Ross Zwisler wrote:
+> Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
+> log marks via the external 'dmsetup' executable.  It's helpful to allow
+> users of xfs_io to adds these marks from within xfs_io instead of waiting
+> until after xfs_io exits because then they are able to replay the
+> dm-log-writes log up to immediately after another xfs_io operation such as
+> mwrite.  This isolates the log replay from other operations that happen as
+> part of xfs_io exiting (file handles being closed, mmaps being torn down,
+> etc.).  This also allows users to insert multiple marks between different
+> xfs_io commands.
 > 
-> NACKed-by: Charlemagne Lasse <charlemagnelasse@gmail.com>
-> 
-> This is neither the GPL-2.0 from https://www.gnu.org/licenses/gpl-2.0.txt
-> (which you should have used) or
-> https://spdx.org/licenses/GPL-2.0.html#licenseText
-> 
-> Please download the correct ASCII version from gnu.org and add your SPDX
-> info in front of it. But I have also added detailed info about
-> non-whitespace changes in your patch.
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
 
-Indeed. I messed that up when I noticed that the license from the SPDX site
-is indeed different from the COPYING file in a few minor aspects.
+Without reviewing in detail, what is the advantage of wrapping dmsetup
+into xfs_io?  My first inclination is that there is none at all, and
+xfstests can call dmsetup as easily as they can call xfs_io.  No?
 
-I started to rumage around to find out why and found the matching one on
-
-  https://opensource.org/licenses/GPL-2.0
-
-which is linked to from the SPDX page. I downloaded that version to check
-the differences. The opensource page has the original version of the GPLv2
-and not the one which got modified by FSF later on without changing the
-version number.
-
-I then decided to copy the text from COPYING, which is the right thing to
-do as Jonas pointed, got dragged into dealing with a regression and forgot
-about it. Neither did I update the changelog.
-
-Thanks for spotting it!
-
-I'll send out a revised version later.
-
-Thanks,
-
-	tglx
-
-
+-Eric
