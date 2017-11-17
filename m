@@ -1,296 +1,233 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29942 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753147AbdKQUOM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 15:14:12 -0500
-Subject: [PATCH 06/12] libfrog: create a threaded workqueue
+Received: from aserp1040.oracle.com ([141.146.126.69]:20129 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933840AbdKQHKj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 02:10:39 -0500
+Date: Thu, 16 Nov 2017 23:10:34 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Nov 2017 12:14:07 -0800
-Message-ID: <151094964785.29763.1548614345004906846.stgit@magnolia>
-In-Reply-To: <151094960522.29763.11622891165765932168.stgit@magnolia>
-References: <151094960522.29763.11622891165765932168.stgit@magnolia>
+Subject: Re: [PATCH v2 2/2] generic: test zero page cache beyond new EOF on
+ truncate down
+Message-ID: <20171117071034.GB5111@magnolia>
+References: <20171109083242.32373-1-eguan@redhat.com>
+ <20171109083242.32373-2-eguan@redhat.com>
+ <20171117065820.GB2749@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171117065820.GB2749@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 17, 2017 at 02:58:20PM +0800, Eryu Guan wrote:
+> On Thu, Nov 09, 2017 at 04:32:42PM +0800, Eryu Guan wrote:
+> > From mmap(2) manpage, "a file is mapped in multiples of the page
+> > size. For a file that is not a multiple of the page size, the
+> > remaining memory is zeroed when mapped", this test is to test this
+> > behavior on truncate down.
+> > 
+> > This is inspired by an XFS bug that truncate down fails to zero page
+> > cache beyond new EOF and causes stale data written to disk
+> > unexpectedly and a subsequent mmap sees non-zeros post EOF.
+> > 
+> > Patch "xfs: truncate pagecache before writeback in
+> > xfs_setattr_size()" fixed the bug on XFS.
+> > 
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
+> > ---
+> > v2:
+> > - update comments and commit log to reflect the final fix of the bug
+> > - dump fsx error message to stdout on error, so it's easier to know
+> >   what is failing
+> 
+> Ping on this test.
 
-Create a thread pool that queues and runs discrete work items.  This
-will be a namespaced version of the pool in repair/threads.c; a
-subsequent patch will switch repair over.  xfs_scrub will use the
-generic thread pool.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/workqueue.h |   55 ++++++++++++++++
- libfrog/Makefile    |    3 +
- libfrog/workqueue.c |  177 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 234 insertions(+), 1 deletion(-)
- create mode 100644 include/workqueue.h
- create mode 100644 libfrog/workqueue.c
-
-
-diff --git a/include/workqueue.h b/include/workqueue.h
-new file mode 100644
-index 0000000..b4b3541
---- /dev/null
-+++ b/include/workqueue.h
-@@ -0,0 +1,55 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ *
-+ * This code was adapted from repair/threads.h.
-+ */
-+#ifndef	_WORKQUEUE_H_
-+#define	_WORKQUEUE_H_
-+
-+struct workqueue;
-+
-+typedef void workqueue_func_t(struct workqueue *wq, uint32_t index, void *arg);
-+
-+struct workqueue_item {
-+	struct workqueue	*queue;
-+	struct workqueue_item	*next;
-+	workqueue_func_t	*function;
-+	void			*arg;
-+	uint32_t		index;
-+};
-+
-+struct workqueue {
-+	void			*wq_ctx;
-+	pthread_t		*threads;
-+	struct workqueue_item	*next_item;
-+	struct workqueue_item	*last_item;
-+	pthread_mutex_t		lock;
-+	pthread_cond_t		wakeup;
-+	unsigned int		item_count;
-+	unsigned int		thread_count;
-+	bool			terminate;
-+};
-+
-+int workqueue_create(struct workqueue *wq, void *wq_ctx,
-+		unsigned int nr_workers);
-+int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
-+		uint32_t index, void *arg);
-+void workqueue_destroy(struct workqueue *wq);
-+
-+#endif	/* _WORKQUEUE_H_ */
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 3fd42a4..9a43621 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -14,7 +14,8 @@ CFILES = \
- avl64.c \
- list_sort.c \
- radix-tree.c \
--util.c
-+util.c \
-+workqueue.c
- 
- default: ltdepend $(LTLIBRARY)
- 
-diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-new file mode 100644
-index 0000000..d9217de
---- /dev/null
-+++ b/libfrog/workqueue.c
-@@ -0,0 +1,177 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ *
-+ * This code was adapted from repair/threads.c.
-+ */
-+#include <pthread.h>
-+#include <signal.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <errno.h>
-+#include <assert.h>
-+#include "workqueue.h"
-+
-+/* Main processing thread */
-+static void *
-+workqueue_thread(void *arg)
-+{
-+	struct workqueue	*wq;
-+	struct workqueue_item	*wi;
-+
-+	wq = (struct workqueue*)arg;
-+
-+	/*
-+	 * Loop pulling work from the passed in work queue.
-+	 * Check for notification to exit after every chunk of work.
-+	 */
-+	while (1) {
-+		pthread_mutex_lock(&wq->lock);
-+
-+		/*
-+		 * Wait for work.
-+		 */
-+		while (wq->next_item == NULL && !wq->terminate) {
-+			assert(wq->item_count == 0);
-+			pthread_cond_wait(&wq->wakeup, &wq->lock);
-+		}
-+		if (wq->next_item == NULL && wq->terminate) {
-+			pthread_mutex_unlock(&wq->lock);
-+			break;
-+		}
-+
-+		/*
-+		 *  Dequeue work from the head of the list.
-+		 */
-+		assert(wq->item_count > 0);
-+		wi = wq->next_item;
-+		wq->next_item = wi->next;
-+		wq->item_count--;
-+
-+		pthread_mutex_unlock(&wq->lock);
-+
-+		(wi->function)(wi->queue, wi->index, wi->arg);
-+		free(wi);
-+	}
-+
-+	return NULL;
-+}
-+
-+/* Allocate a work queue and threads. */
-+int
-+workqueue_create(
-+	struct workqueue	*wq,
-+	void			*wq_ctx,
-+	unsigned int		nr_workers)
-+{
-+	unsigned int		i;
-+	int			err = 0;
-+
-+	memset(wq, 0, sizeof(*wq));
-+	pthread_cond_init(&wq->wakeup, NULL);
-+	pthread_mutex_init(&wq->lock, NULL);
-+
-+	wq->wq_ctx = wq_ctx;
-+	wq->thread_count = nr_workers;
-+	wq->threads = malloc(nr_workers * sizeof(pthread_t));
-+	wq->terminate = false;
-+
-+	for (i = 0; i < nr_workers; i++) {
-+		err = pthread_create(&wq->threads[i], NULL, workqueue_thread,
-+				wq);
-+		if (err)
-+			break;
-+	}
-+
-+	if (err)
-+		workqueue_destroy(wq);
-+	return err;
-+}
-+
-+/*
-+ * Create a work item consisting of a function and some arguments and
-+ * schedule the work item to be run via the thread pool.
-+ */
-+int
-+workqueue_add(
-+	struct workqueue	*wq,
-+	workqueue_func_t	func,
-+	uint32_t		index,
-+	void			*arg)
-+{
-+	struct workqueue_item	*wi;
-+
-+	if (wq->thread_count == 0) {
-+		func(wq, index, arg);
-+		return 0;
-+	}
-+
-+	wi = malloc(sizeof(struct workqueue_item));
-+	if (wi == NULL)
-+		return ENOMEM;
-+
-+	wi->function = func;
-+	wi->index = index;
-+	wi->arg = arg;
-+	wi->queue = wq;
-+	wi->next = NULL;
-+
-+	/*
-+	 *  Now queue the new work structure to the work queue.
-+	 */
-+	pthread_mutex_lock(&wq->lock);
-+	if (wq->next_item == NULL) {
-+		wq->next_item = wi;
-+		assert(wq->item_count == 0);
-+		pthread_cond_signal(&wq->wakeup);
-+	} else {
-+		wq->last_item->next = wi;
-+	}
-+	wq->last_item = wi;
-+	wq->item_count++;
-+	pthread_mutex_unlock(&wq->lock);
-+
-+	return 0;
-+}
-+
-+/*
-+ * Wait for all pending work items to be processed and tear down the
-+ * workqueue.
-+ */
-+void
-+workqueue_destroy(
-+	struct workqueue	*wq)
-+{
-+	unsigned int		i;
-+
-+	pthread_mutex_lock(&wq->lock);
-+	wq->terminate = 1;
-+	pthread_mutex_unlock(&wq->lock);
-+
-+	pthread_cond_broadcast(&wq->wakeup);
-+
-+	for (i = 0; i < wq->thread_count; i++)
-+		pthread_join(wq->threads[i], NULL);
-+
-+	free(wq->threads);
-+	pthread_mutex_destroy(&wq->lock);
-+	pthread_cond_destroy(&wq->wakeup);
-+	memset(wq, 0, sizeof(*wq));
-+}
-
+> 
+> Thanks,
+> Eryu
+> 
+> > 
+> >  tests/generic/466     | 135 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/466.out |   9 ++++
+> >  tests/generic/group   |   1 +
+> >  3 files changed, 145 insertions(+)
+> >  create mode 100755 tests/generic/466
+> >  create mode 100644 tests/generic/466.out
+> > 
+> > diff --git a/tests/generic/466 b/tests/generic/466
+> > new file mode 100755
+> > index 000000000000..435bd39a42cc
+> > --- /dev/null
+> > +++ b/tests/generic/466
+> > @@ -0,0 +1,135 @@
+> > +#! /bin/bash
+> > +# FS QA Test 466
+> > +#
+> > +# Test that mmap read doesn't see non-zero data past EOF on truncate down.
+> > +#
+> > +# This is inspired by an XFS bug that truncate down fails to zero page cache
+> > +# beyond new EOF and causes stale data written to disk unexpectedly and a
+> > +# subsequent mmap reads and sees non-zeros post EOF.
+> > +#
+> > +# Patch "xfs: truncate pagecache before writeback in xfs_setattr_size()" fixed
+> > +# the bug on XFS.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2017 Red Hat Inc., All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +file=$TEST_DIR/$seq.fsx
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $file $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_test
+> > +
+> > +run_fsx()
+> > +{
+> > +	$here/ltp/fsx $2 --replay-ops $1 $file 2>&1 | tee -a $seqres.full >$tmp.fsx
+> > +	if [ ${PIPESTATUS[0]} -ne 0 ]; then
+> > +		cat $tmp.fsx
+> > +		exit 1
+> > +	fi
+> > +}
+> > +
+> > +# run fsx with and without fsync(2) after write to get more coverage
+> > +test_fsx()
+> > +{
+> > +	echo "fsx --replay-ops ${1#*.}"
+> > +	run_fsx $1
+> > +
+> > +	echo "fsx -y --replay-ops ${1#*.}"
+> > +	run_fsx $1 -y
+> > +}
+> > +
+> > +# simplified fsx operations that work on small & not blocksize-aligned offsets,
+> > +# so filesystems with small block size could reproduce too
+> > +cat >$tmp.fsxops.0 <<EOF
+> > +# create file with unwritten extent, KEEP_SIZE flag is required, otherwise page
+> > +# straddles new i_size in the writeback triggered by truncate, range [i_size,
+> > +# page_boundary] will be zeroed there, and bug won't be reproduced
+> > +fallocate 0x0 0x1000 0x0 keep_size
+> > +
+> > +# overwrite the unwritten extents with non-zeros, but extent will stay in
+> > +# unwritten till I/O completion
+> > +write 0x0 0x1000 0x0
+> > +
+> > +# truncate down the file, which should zero page cache beyong new EOF but a
+> > +# buggy kernel won't
+> > +truncate 0x0 0x10 0x1000
+> > +
+> > +# unmap the file and invalidate the pagecache of the block
+> > +punch_hole 0x0 0x10 0x10
+> > +
+> > +# mmap reads the whole block from disk, and fsx will check page range beyond
+> > +# EOF to make sure we only see zeros there
+> > +mapread 0x0 0x10 0x10
+> > +EOF
+> > +
+> > +# to get a bit more test coverage, try other operation combinations too
+> > +# same as fsxops.0, but skip punch_hole to keep the pagecache before mapread
+> > +cat >$tmp.fsxops.1 <<EOF
+> > +fallocate 0x0 0x1000 0x0 keep_size
+> > +write 0x0 0x1000 0x0
+> > +truncate 0x0 0x10 0x1000
+> > +mapread 0x0 0x10 0x10
+> > +EOF
+> > +
+> > +# same as fsxops.0, but fallocate without KEEP_SIZE flag
+> > +cat >$tmp.fsxops.2 <<EOF
+> > +fallocate 0x0 0x1000 0x0
+> > +write 0x0 0x1000 0x0
+> > +truncate 0x0 0x10 0x1000
+> > +punch_hole 0x0 0x10 0x10
+> > +mapread 0x0 0x10 0x10
+> > +EOF
+> > +
+> > +# this is from the original fsxops when bug was first hit
+> > +cat >$tmp.fsxops.3 <<EOF
+> > +fallocate 0x35870 0xa790 0x0 keep_size
+> > +write 0x2aa50 0xc37f 0x0
+> > +truncate 0x0 0x36dcd 0x36dcf
+> > +zero_range 0x35849 0x1584 0x36dcd
+> > +mapread 0x361c8 0xc05 0x36dcd
+> > +EOF
+> > +
+> > +for i in 0 1 2 3; do
+> > +	test_fsx $tmp.fsxops.$i
+> > +done
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/466.out b/tests/generic/466.out
+> > new file mode 100644
+> > index 000000000000..8430bb462ad1
+> > --- /dev/null
+> > +++ b/tests/generic/466.out
+> > @@ -0,0 +1,9 @@
+> > +QA output created by 466
+> > +fsx --replay-ops fsxops.0
+> > +fsx -y --replay-ops fsxops.0
+> > +fsx --replay-ops fsxops.1
+> > +fsx -y --replay-ops fsxops.1
+> > +fsx --replay-ops fsxops.2
+> > +fsx -y --replay-ops fsxops.2
+> > +fsx --replay-ops fsxops.3
+> > +fsx -y --replay-ops fsxops.3
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index fbe0a7f4a717..b71644008b55 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -468,3 +468,4 @@
+> >  463 auto quick clone dangerous
+> >  464 auto rw
+> >  465 auto rw quick aio
+> > +466 auto quick
+> > -- 
+> > 2.13.6
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
