@@ -1,549 +1,757 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47560 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:24904 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752544AbdKQSYE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:04 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAHIO3Ke005167
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:03 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vAHIO30s029304
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:03 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAHIO3KF015154
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:03 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 01/17] Add helper functions xfs_attr_set_args and xfs_attr_remove_args
-Date: Fri, 17 Nov 2017 11:21:29 -0700
-Message-Id: <1510942905-12897-2-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+        with ESMTP id S1753120AbdKQUOU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 15:14:20 -0500
+Subject: [PATCH 07/12] libfrog: move topology code out of libxcmd
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 17 Nov 2017 12:14:13 -0800
+Message-ID: <151094965394.29763.3803417126294495044.stgit@magnolia>
+In-Reply-To: <151094960522.29763.11622891165765932168.stgit@magnolia>
+References: <151094960522.29763.11622891165765932168.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-These sub-routines set or remove the attributes specified in
-@args. We will use this later for setting parent pointers as a
-deferred attribute operation.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Move the filesystem topology code out of libxcmd.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 335 ++++++++++++++++++++++++++++-------------------
- fs/xfs/libxfs/xfs_bmap.c |  55 ++++----
- fs/xfs/libxfs/xfs_bmap.h |   1 +
- fs/xfs/xfs_attr.h        |   2 +
- 4 files changed, 236 insertions(+), 157 deletions(-)
+ libfrog/Makefile   |    1 
+ libfrog/topology.c |  342 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxcmd/Makefile   |    2 
+ libxcmd/topology.c |  342 ----------------------------------------------------
+ 4 files changed, 344 insertions(+), 343 deletions(-)
+ create mode 100644 libfrog/topology.c
+ delete mode 100644 libxcmd/topology.c
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 6249c92..e5f2960 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -168,6 +168,195 @@ xfs_attr_get(
- }
+
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 9a43621..bffc346 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -14,6 +14,7 @@ CFILES = \
+ avl64.c \
+ list_sort.c \
+ radix-tree.c \
++topology.c \
+ util.c \
+ workqueue.c
  
- /*
-+ * Set the attribute specified in @args. In the case of the parent attribute
-+ * being set, we do not want to roll the transaction on shortform-to-leaf
-+ * conversion, as the attribute must be added in the same transaction as the
-+ * parent directory modifications. Hence @roll_trans needs to be set
-+ * appropriately to control whether the transaction is committed during this
-+ * function.
+diff --git a/libfrog/topology.c b/libfrog/topology.c
+new file mode 100644
+index 0000000..f66dd1b
+--- /dev/null
++++ b/libfrog/topology.c
+@@ -0,0 +1,342 @@
++/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+int
-+xfs_attr_set_args(
-+	struct xfs_da_args	*args,
-+	int			flags,
-+	bool			roll_trans)
++
++#include "libxfs.h"
++#include "libxcmd.h"
++#ifdef ENABLE_BLKID
++#  include <blkid/blkid.h>
++#endif /* ENABLE_BLKID */
++#include "xfs_multidisk.h"
++
++#define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
++#define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
++#define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
++
++void
++calc_default_ag_geometry(
++	int		blocklog,
++	uint64_t	dblocks,
++	int		multidisk,
++	uint64_t	*agsize,
++	uint64_t	*agcount)
 +{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount        *mp = dp->i_mount;
-+	struct xfs_trans_res    tres;
-+	int			rsvd = 0;
-+	int			error = 0;
-+	int			sf_size;
++	uint64_t	blocks = 0;
++	int		shift = 0;
 +
 +	/*
-+	 * New inodes setting the parent pointer attr will
-+	 * not have an attribute fork yet. So set the attribute
-+	 * fork appropriately
++	 * First handle the high extreme - the point at which we will
++	 * always use the maximum AG size.
++	 *
++	 * This applies regardless of storage configuration.
 +	 */
-+	if (XFS_IFORK_Q((args->dp)) == 0) {
-+		sf_size = sizeof(struct xfs_attr_sf_hdr) +
-+		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
-+		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
-+		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
-+		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
++	if (dblocks >= TERABYTES(32, blocklog)) {
++		blocks = XFS_AG_MAX_BLOCKS(blocklog);
++		goto done;
 +	}
 +
-+	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-+			 M_RES(mp)->tr_attrsetrt.tr_logres * args->total;
-+	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-+	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-+
 +	/*
-+	 * Root fork attributes can use reserved data blocks for this
-+	 * operation if necessary
++	 * For a single underlying storage device over 4TB in size
++	 * use the maximum AG size.  Between 128MB and 4TB, just use
++	 * 4 AGs and scale up smoothly between min/max AG sizes.
 +	 */
-+	error = xfs_trans_alloc(mp, &tres, args->total, 0,
-+				rsvd ? XFS_TRANS_RESERVE : 0, &args->trans);
-+	if (error)
-+		goto out;
-+
-+	error = xfs_trans_reserve_quota_nblks(args->trans, dp, args->total, 0,
-+					      rsvd ? XFS_QMOPT_RES_REGBLKS |
-+						     XFS_QMOPT_FORCE_RES :
-+						     XFS_QMOPT_RES_REGBLKS);
-+	if (error)
-+		goto out;
-+
-+	xfs_trans_ijoin(args->trans, dp, 0);
-+	/*
-+	 * If the attribute list is non-existent or a shortform list,
-+	 * upgrade it to a single-leaf-block attribute list.
-+	 */
-+	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
-+	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
-+	     dp->i_d.di_anextents == 0)) {
-+
-+		/*
-+		 * Build initial attribute list (if required).
-+		 */
-+		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
-+			xfs_attr_shortform_create(args);
-+
-+		/*
-+		 * Try to add the attr to the attribute list in the inode.
-+		 */
-+		error = xfs_attr_shortform_addname(args);
-+		if (error != -ENOSPC) {
-+			ASSERT(args->trans);
-+			if (!error && (flags & ATTR_KERNOTIME) == 0)
-+				xfs_trans_ichgtime(args->trans, dp,
-+						   XFS_ICHGTIME_CHG);
-+			goto out;
-+		}
-+
-+		/*
-+		 * It won't fit in the shortform, transform to a leaf block.
-+		 * GROT: another possible req'mt for a double-split btree op.
-+		 */
-+		error = xfs_attr_shortform_to_leaf(args);
-+		if (error)
-+			goto out;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans, args->dfops);
-+			if (error) {
-+				args->trans = NULL;
-+				goto out;
-+			}
-+
-+			/*
-+			 * Commit the leaf transformation.  We'll need another
-+			 * (linked) transaction to add the new attribute to the
-+			 * leaf.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, dp);
-+			if (error)
-+				goto out;
++	if (!multidisk) {
++		if (dblocks >= TERABYTES(4, blocklog)) {
++			blocks = XFS_AG_MAX_BLOCKS(blocklog);
++			goto done;
++		} else if (dblocks >= MEGABYTES(128, blocklog)) {
++			shift = XFS_NOMULTIDISK_AGLOG;
++			goto calc_blocks;
 +		}
 +	}
 +
-+	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-+		error = xfs_attr_leaf_addname(args);
-+	else
-+		error = xfs_attr_node_addname(args);
-+	if (error)
-+		goto out;
++	/*
++	 * For the multidisk configs we choose an AG count based on the number
++	 * of data blocks available, trying to keep the number of AGs higher
++	 * than the single disk configurations. This makes the assumption that
++	 * larger filesystems have more parallelism available to them.
++	 */
++	shift = XFS_MULTIDISK_AGLOG;
++	if (dblocks <= GIGABYTES(512, blocklog))
++		shift--;
++	if (dblocks <= GIGABYTES(8, blocklog))
++		shift--;
++	if (dblocks < MEGABYTES(128, blocklog))
++		shift--;
++	if (dblocks < MEGABYTES(64, blocklog))
++		shift--;
++	if (dblocks < MEGABYTES(32, blocklog))
++		shift--;
 +
-+	if ((flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-+
-+	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
-+out:
-+	return error;
++	/*
++	 * If dblocks is not evenly divisible by the number of
++	 * desired AGs, round "blocks" up so we don't lose the
++	 * last bit of the filesystem. The same principle applies
++	 * to the AG count, so we don't lose the last AG!
++	 */
++calc_blocks:
++	ASSERT(shift >= 0 && shift <= XFS_MULTIDISK_AGLOG);
++	blocks = dblocks >> shift;
++	if (dblocks & xfs_mask32lo(shift)) {
++		if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
++		    blocks++;
++	}
++done:
++	*agsize = blocks;
++	*agcount = dblocks / blocks + (dblocks % blocks != 0);
 +}
 +
 +/*
-+ * Remove the attribute specified in @args.
++ * Check for existing filesystem or partition table on device.
++ * Returns:
++ *	 1 for existing fs or partition
++ *	 0 for nothing found
++ *	-1 for internal error
 + */
++#ifdef ENABLE_BLKID
 +int
-+xfs_attr_remove_args(
-+	struct xfs_da_args      *args,
-+	int			flags)
++check_overwrite(
++	const char	*device)
 +{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error;
-+	int                     rsvd = 0;
++	const char	*type;
++	blkid_probe	pr = NULL;
++	int		ret;
++	int		fd;
++	long long	size;
++	int		bsz;
 +
-+	/*
-+	 * Root fork attributes can use reserved data blocks for this
-+	 * operation if necessary
-+	 */
-+	if (flags & ATTR_ROOT)
-+		rsvd = XFS_TRANS_RESERVE;
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrrm,
-+		XFS_ATTRRM_SPACE_RES(mp), 0, rsvd, &args->trans);
++	if (!device || !*device)
++		return 0;
 +
-+	if (error)
++	ret = -1; /* will reset on success of all setup calls */
++
++	fd = open(device, O_RDONLY);
++	if (fd < 0)
++		goto out;
++	platform_findsizes((char *)device, fd, &size, &bsz);
++	close(fd);
++
++	/* nothing to overwrite on a 0-length device */
++	if (size == 0) {
++		ret = 0;
++		goto out;
++	}
++
++	pr = blkid_new_probe_from_filename(device);
++	if (!pr)
++		goto out;
++
++	ret = blkid_probe_enable_partitions(pr, 1);
++	if (ret < 0)
++		goto out;
++
++	ret = blkid_do_fullprobe(pr);
++	if (ret < 0)
 +		goto out;
 +
 +	/*
-+	 * No need to make quota reservations here. We expect to release some
-+	 * blocks not allocate in the common case.
++	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
++	 * but we want the exact opposite, so reverse the return value here.
++	 *
++	 * In addition print some useful diagnostics about what actually is
++	 * on the device.
 +	 */
-+	xfs_trans_ijoin(args->trans, dp, 0);
++	if (ret) {
++		ret = 0;
++		goto out;
++	}
 +
-+	if (!xfs_inode_hasattr(dp)) {
-+		error = -ENOATTR;
-+	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-+		error = xfs_attr_shortform_remove(args);
-+	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-+		error = xfs_attr_leaf_removename(args);
++	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
++		fprintf(stderr,
++			_("%s: %s appears to contain an existing "
++			"filesystem (%s).\n"), progname, device, type);
++	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
++		fprintf(stderr,
++			_("%s: %s appears to contain a partition "
++			"table (%s).\n"), progname, device, type);
 +	} else {
-+		error = xfs_attr_node_removename(args);
++		fprintf(stderr,
++			_("%s: %s appears to contain something weird "
++			"according to blkid\n"), progname, device);
++	}
++	ret = 1;
++out:
++	if (pr)
++		blkid_free_probe(pr);
++	if (ret == -1)
++		fprintf(stderr,
++			_("%s: probe of %s failed, cannot detect "
++			  "existing filesystem.\n"), progname, device);
++	return ret;
++}
++
++static void blkid_get_topology(
++	const char	*device,
++	int		*sunit,
++	int		*swidth,
++	int		*lsectorsize,
++	int		*psectorsize,
++	int		force_overwrite)
++{
++
++	blkid_topology tp;
++	blkid_probe pr;
++	unsigned long val;
++	struct stat statbuf;
++
++	/* can't get topology info from a file */
++	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode)) {
++		fprintf(stderr,
++	_("%s: Warning: trying to probe topology of a file %s!\n"),
++			progname, device);
++		return;
 +	}
 +
-+	if (error)
-+		goto out;
++	pr = blkid_new_probe_from_filename(device);
++	if (!pr)
++		return;
++
++	tp = blkid_probe_get_topology(pr);
++	if (!tp)
++		goto out_free_probe;
++
++	val = blkid_topology_get_logical_sector_size(tp);
++	*lsectorsize = val;
++	val = blkid_topology_get_physical_sector_size(tp);
++	*psectorsize = val;
++	val = blkid_topology_get_minimum_io_size(tp);
++	*sunit = val;
++	val = blkid_topology_get_optimal_io_size(tp);
++	*swidth = val;
 +
 +	/*
-+	 * If this is a synchronous mount, make sure that the
-+	 * transaction goes to disk before returning to the user.
++	 * If the reported values are the same as the physical sector size
++	 * do not bother to report anything.  It will only cause warnings
++	 * if people specify larger stripe units or widths manually.
 +	 */
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(args->trans);
-+
-+	if ((flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-+
-+	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
-+
-+	return error;
-+
-+out:
-+	if (args->trans)
-+		xfs_trans_cancel(args->trans);
-+
-+	return error;
-+}
-+
-+/*
-  * Calculate how many blocks we need for the new attribute,
-  */
- STATIC int
-@@ -214,10 +403,9 @@ xfs_attr_set(
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_da_args	args;
- 	struct xfs_defer_ops	dfops;
--	struct xfs_trans_res	tres;
- 	xfs_fsblock_t		firstblock;
- 	int			rsvd = (flags & ATTR_ROOT) != 0;
--	int			error, err2, local;
-+	int			error, local;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
- 
-@@ -252,106 +440,11 @@ xfs_attr_set(
- 			return error;
- 	}
- 
--	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
--			 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
--	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
--	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
--
--	/*
--	 * Root fork attributes can use reserved data blocks for this
--	 * operation if necessary
--	 */
--	error = xfs_trans_alloc(mp, &tres, args.total, 0,
--			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
--	if (error)
--		return error;
--
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
--	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
--				rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
--				       XFS_QMOPT_RES_REGBLKS);
--	if (error) {
--		xfs_iunlock(dp, XFS_ILOCK_EXCL);
--		xfs_trans_cancel(args.trans);
--		return error;
--	}
--
--	xfs_trans_ijoin(args.trans, dp, 0);
--
--	/*
--	 * If the attribute list is non-existent or a shortform list,
--	 * upgrade it to a single-leaf-block attribute list.
--	 */
--	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
--
--		/*
--		 * Build initial attribute list (if required).
--		 */
--		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
--			xfs_attr_shortform_create(&args);
--
--		/*
--		 * Try to add the attr to the attribute list in
--		 * the inode.
--		 */
--		error = xfs_attr_shortform_addname(&args);
--		if (error != -ENOSPC) {
--			/*
--			 * Commit the shortform mods, and we're done.
--			 * NOTE: this is also the error path (EEXIST, etc).
--			 */
--			ASSERT(args.trans != NULL);
--
--			/*
--			 * If this is a synchronous mount, make sure that
--			 * the transaction goes to disk before returning
--			 * to the user.
--			 */
--			if (mp->m_flags & XFS_MOUNT_WSYNC)
--				xfs_trans_set_sync(args.trans);
--
--			if (!error && (flags & ATTR_KERNOTIME) == 0) {
--				xfs_trans_ichgtime(args.trans, dp,
--							XFS_ICHGTIME_CHG);
--			}
--			err2 = xfs_trans_commit(args.trans);
--			xfs_iunlock(dp, XFS_ILOCK_EXCL);
--
--			return error ? error : err2;
--		}
--
--		/*
--		 * It won't fit in the shortform, transform to a leaf block.
--		 * GROT: another possible req'mt for a double-split btree op.
--		 */
--		xfs_defer_init(args.dfops, args.firstblock);
--		error = xfs_attr_shortform_to_leaf(&args);
--		if (error)
--			goto out_defer_cancel;
--		xfs_defer_ijoin(args.dfops, dp);
--		error = xfs_defer_finish(&args.trans, args.dfops);
--		if (error)
--			goto out_defer_cancel;
--
--		/*
--		 * Commit the leaf transformation.  We'll need another (linked)
--		 * transaction to add the new attribute to the leaf.
--		 */
--
--		error = xfs_trans_roll_inode(&args.trans, dp);
--		if (error)
--			goto out;
--
--	}
--
--	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
--		error = xfs_attr_leaf_addname(&args);
--	else
--		error = xfs_attr_node_addname(&args);
-+	xfs_defer_init(args.dfops, args.firstblock);
-+	error = xfs_attr_set_args(&args, flags, true);
- 	if (error)
--		goto out;
-+		goto out_defer_cancel;
- 
- 	/*
- 	 * If this is a synchronous mount, make sure that the
-@@ -360,9 +453,6 @@ xfs_attr_set(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args.trans);
- 
--	if ((flags & ATTR_KERNOTIME) == 0)
--		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
--
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
-@@ -374,10 +464,6 @@ xfs_attr_set(
- 
- out_defer_cancel:
- 	xfs_defer_cancel(&dfops);
--	args.trans = NULL;
--out:
--	if (args.trans)
--		xfs_trans_cancel(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 	return error;
- }
-@@ -417,38 +503,18 @@ xfs_attr_remove(
- 	 */
- 	args.op_flags = XFS_DA_OP_OKNOENT;
- 
--	error = xfs_qm_dqattach(dp, 0);
--	if (error)
--		return error;
--
--	/*
--	 * Root fork attributes can use reserved data blocks for this
--	 * operation if necessary
--	 */
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrrm,
--			XFS_ATTRRM_SPACE_RES(mp), 0,
--			(flags & ATTR_ROOT) ? XFS_TRANS_RESERVE : 0,
--			&args.trans);
--	if (error)
--		return error;
--
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
- 	/*
- 	 * No need to make quota reservations here. We expect to release some
- 	 * blocks not allocate in the common case.
- 	 */
- 	xfs_trans_ijoin(args.trans, dp, 0);
-+	xfs_defer_init(args.dfops, args.firstblock);
-+	error = xfs_qm_dqattach_locked(dp, 0);
-+	if (error)
-+		return error;
- 
--	if (!xfs_inode_hasattr(dp)) {
--		error = -ENOATTR;
--	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
--		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
--		error = xfs_attr_shortform_remove(&args);
--	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
--		error = xfs_attr_leaf_removename(&args);
--	} else {
--		error = xfs_attr_node_removename(&args);
--	}
-+	error = xfs_attr_remove_args(&args, flags);
- 
- 	if (error)
- 		goto out;
-@@ -460,9 +526,6 @@ xfs_attr_remove(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args.trans);
- 
--	if ((flags & ATTR_KERNOTIME) == 0)
--		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
--
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
-@@ -473,6 +536,8 @@ xfs_attr_remove(
- 	return error;
- 
- out:
-+	xfs_defer_cancel(&dfops);
-+
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 8926379..7fa58fa 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1066,6 +1066,37 @@ xfs_bmap_add_attrfork_local(
- 	return -EFSCORRUPTED;
- }
- 
-+/* Set an inode attr fork off based on the format */
-+int
-+xfs_bmap_set_attrforkoff(
-+	struct xfs_inode	*ip,
-+	int			size,
-+	int			*version)
-+{
-+	switch (ip->i_d.di_format) {
-+	case XFS_DINODE_FMT_DEV:
-+		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
-+		break;
-+	case XFS_DINODE_FMT_UUID:
-+		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:
-+	case XFS_DINODE_FMT_EXTENTS:
-+	case XFS_DINODE_FMT_BTREE:
-+		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
-+		if (!ip->i_d.di_forkoff)
-+			ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
-+		else if ((ip->i_mount->m_flags & XFS_MOUNT_ATTR2) && version)
-+			*version = 2;
-+		break;
-+	default:
-+		ASSERT(0);
-+		return -EINVAL;
++	if (*sunit == *psectorsize || *swidth == *psectorsize) {
++		*sunit = 0;
++		*swidth = 0;
 +	}
 +
-+	return 0;
++	/*
++	 * Blkid reports the information in terms of bytes, but we want it in
++	 * terms of 512 bytes blocks (only to convert it to bytes later..)
++	 */
++	*sunit = *sunit >> 9;
++	*swidth = *swidth >> 9;
++
++	if (blkid_topology_get_alignment_offset(tp) != 0) {
++		fprintf(stderr,
++			_("warning: device is not properly aligned %s\n"),
++			device);
++
++		if (!force_overwrite) {
++			fprintf(stderr,
++				_("Use -f to force usage of a misaligned device\n"));
++
++			exit(EXIT_FAILURE);
++		}
++		/* Do not use physical sector size if the device is misaligned */
++		*psectorsize = *lsectorsize;
++	}
++
++	blkid_free_probe(pr);
++	return;
++
++out_free_probe:
++	blkid_free_probe(pr);
++	fprintf(stderr,
++		_("warning: unable to probe device topology for device %s\n"),
++		device);
++}
++#else /* ifdef ENABLE_BLKID */
++/*
++ * Without blkid, we can't do a good check for signatures.
++ * So instead of some messy attempts, just disable any checks
++ * and always return 'nothing found'.
++ */
++#  warning BLKID is disabled, so signature detection and block device\
++ access are not working!
++int
++check_overwrite(
++	const char	*device)
++{
++	return 1;
 +}
 +
- /*
-  * Convert inode from non-attributed to attributed.
-  * Must not be in a transaction, ip must not be locked.
-@@ -1119,29 +1150,9 @@ xfs_bmap_add_attrfork(
++static void blkid_get_topology(
++	const char	*device,
++	int		*sunit,
++	int		*swidth,
++	int		*lsectorsize,
++	int		*psectorsize,
++	int		force_overwrite)
++{
++	/*
++	 * Shouldn't make any difference (no blkid = no block device access),
++	 * but make sure this dummy replacement returns with at least some
++	 * sanity.
++	 */
++	*lsectorsize = *psectorsize = 512;
++}
++
++#endif /* ENABLE_BLKID */
++
++void get_topology(
++	libxfs_init_t		*xi,
++	struct fs_topology	*ft,
++	int			force_overwrite)
++{
++	struct stat statbuf;
++	char *dfile = xi->volname ? xi->volname : xi->dname;
++
++	/*
++	 * If our target is a regular file, use platform_findsizes
++	 * to try to obtain the underlying filesystem's requirements
++	 * for direct IO; we'll set our sector size to that if possible.
++	 */
++	if (xi->disfile ||
++	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
++		int fd;
++		int flags = O_RDONLY;
++		long long dummy;
++
++		/* with xi->disfile we may not have the file yet! */
++		if (xi->disfile)
++			flags |= O_CREAT;
++
++		fd = open(dfile, flags, 0666);
++		if (fd >= 0) {
++			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
++			close(fd);
++			ft->psectorsize = ft->lsectorsize;
++		} else
++			ft->psectorsize = ft->lsectorsize = BBSIZE;
++	} else {
++		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
++				   &ft->lsectorsize, &ft->psectorsize,
++				   force_overwrite);
++	}
++
++	if (xi->rtname && !xi->risfile) {
++		int sunit, lsectorsize, psectorsize;
++
++		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
++				   &lsectorsize, &psectorsize, force_overwrite);
++	}
++}
+diff --git a/libxcmd/Makefile b/libxcmd/Makefile
+index aab8d6d..7701ed9 100644
+--- a/libxcmd/Makefile
++++ b/libxcmd/Makefile
+@@ -10,7 +10,7 @@ LT_CURRENT = 0
+ LT_REVISION = 0
+ LT_AGE = 0
  
- 	xfs_trans_ijoin(tp, ip, 0);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-CFILES = command.c input.c paths.c projects.c help.c quit.c topology.c
++CFILES = command.c input.c paths.c projects.c help.c quit.c
+ 
+ ifeq ($(HAVE_GETMNTENT),yes)
+ LCFLAGS += -DHAVE_GETMNTENT
+diff --git a/libxcmd/topology.c b/libxcmd/topology.c
+deleted file mode 100644
+index f66dd1b..0000000
+--- a/libxcmd/topology.c
++++ /dev/null
+@@ -1,342 +0,0 @@
+-/*
+- * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
 -
--	switch (ip->i_d.di_format) {
--	case XFS_DINODE_FMT_DEV:
--		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
--		break;
--	case XFS_DINODE_FMT_UUID:
--		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
--		break;
--	case XFS_DINODE_FMT_LOCAL:
--	case XFS_DINODE_FMT_EXTENTS:
--	case XFS_DINODE_FMT_BTREE:
--		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
--		if (!ip->i_d.di_forkoff)
--			ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
--		else if (mp->m_flags & XFS_MOUNT_ATTR2)
--			version = 2;
--		break;
--	default:
--		ASSERT(0);
--		error = -EINVAL;
-+	error = xfs_bmap_set_attrforkoff(ip, size, &version);
-+	if (error)
- 		goto trans_cancel;
+-#include "libxfs.h"
+-#include "libxcmd.h"
+-#ifdef ENABLE_BLKID
+-#  include <blkid/blkid.h>
+-#endif /* ENABLE_BLKID */
+-#include "xfs_multidisk.h"
+-
+-#define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
+-#define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
+-#define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
+-
+-void
+-calc_default_ag_geometry(
+-	int		blocklog,
+-	uint64_t	dblocks,
+-	int		multidisk,
+-	uint64_t	*agsize,
+-	uint64_t	*agcount)
+-{
+-	uint64_t	blocks = 0;
+-	int		shift = 0;
+-
+-	/*
+-	 * First handle the high extreme - the point at which we will
+-	 * always use the maximum AG size.
+-	 *
+-	 * This applies regardless of storage configuration.
+-	 */
+-	if (dblocks >= TERABYTES(32, blocklog)) {
+-		blocks = XFS_AG_MAX_BLOCKS(blocklog);
+-		goto done;
 -	}
 -
- 	ASSERT(ip->i_afp == NULL);
- 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
- 	ip->i_afp->if_flags = XFS_IFEXTENTS;
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 502e0d8..5ca4a73 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -210,6 +210,7 @@ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
- void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
-+int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
- 			  xfs_fsblock_t bno, xfs_filblks_t len,
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 5d5a5e2..8542606 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -149,7 +149,9 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
- 		 unsigned char *value, int *valuelenp, int flags);
- int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- 		 unsigned char *value, int valuelen, int flags);
-+int xfs_attr_set_args(struct xfs_da_args *args, int flags, bool roll_trans);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-+int xfs_attr_remove_args(struct xfs_da_args *args, int flags);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
- 
--- 
-2.7.4
+-	/*
+-	 * For a single underlying storage device over 4TB in size
+-	 * use the maximum AG size.  Between 128MB and 4TB, just use
+-	 * 4 AGs and scale up smoothly between min/max AG sizes.
+-	 */
+-	if (!multidisk) {
+-		if (dblocks >= TERABYTES(4, blocklog)) {
+-			blocks = XFS_AG_MAX_BLOCKS(blocklog);
+-			goto done;
+-		} else if (dblocks >= MEGABYTES(128, blocklog)) {
+-			shift = XFS_NOMULTIDISK_AGLOG;
+-			goto calc_blocks;
+-		}
+-	}
+-
+-	/*
+-	 * For the multidisk configs we choose an AG count based on the number
+-	 * of data blocks available, trying to keep the number of AGs higher
+-	 * than the single disk configurations. This makes the assumption that
+-	 * larger filesystems have more parallelism available to them.
+-	 */
+-	shift = XFS_MULTIDISK_AGLOG;
+-	if (dblocks <= GIGABYTES(512, blocklog))
+-		shift--;
+-	if (dblocks <= GIGABYTES(8, blocklog))
+-		shift--;
+-	if (dblocks < MEGABYTES(128, blocklog))
+-		shift--;
+-	if (dblocks < MEGABYTES(64, blocklog))
+-		shift--;
+-	if (dblocks < MEGABYTES(32, blocklog))
+-		shift--;
+-
+-	/*
+-	 * If dblocks is not evenly divisible by the number of
+-	 * desired AGs, round "blocks" up so we don't lose the
+-	 * last bit of the filesystem. The same principle applies
+-	 * to the AG count, so we don't lose the last AG!
+-	 */
+-calc_blocks:
+-	ASSERT(shift >= 0 && shift <= XFS_MULTIDISK_AGLOG);
+-	blocks = dblocks >> shift;
+-	if (dblocks & xfs_mask32lo(shift)) {
+-		if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
+-		    blocks++;
+-	}
+-done:
+-	*agsize = blocks;
+-	*agcount = dblocks / blocks + (dblocks % blocks != 0);
+-}
+-
+-/*
+- * Check for existing filesystem or partition table on device.
+- * Returns:
+- *	 1 for existing fs or partition
+- *	 0 for nothing found
+- *	-1 for internal error
+- */
+-#ifdef ENABLE_BLKID
+-int
+-check_overwrite(
+-	const char	*device)
+-{
+-	const char	*type;
+-	blkid_probe	pr = NULL;
+-	int		ret;
+-	int		fd;
+-	long long	size;
+-	int		bsz;
+-
+-	if (!device || !*device)
+-		return 0;
+-
+-	ret = -1; /* will reset on success of all setup calls */
+-
+-	fd = open(device, O_RDONLY);
+-	if (fd < 0)
+-		goto out;
+-	platform_findsizes((char *)device, fd, &size, &bsz);
+-	close(fd);
+-
+-	/* nothing to overwrite on a 0-length device */
+-	if (size == 0) {
+-		ret = 0;
+-		goto out;
+-	}
+-
+-	pr = blkid_new_probe_from_filename(device);
+-	if (!pr)
+-		goto out;
+-
+-	ret = blkid_probe_enable_partitions(pr, 1);
+-	if (ret < 0)
+-		goto out;
+-
+-	ret = blkid_do_fullprobe(pr);
+-	if (ret < 0)
+-		goto out;
+-
+-	/*
+-	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
+-	 * but we want the exact opposite, so reverse the return value here.
+-	 *
+-	 * In addition print some useful diagnostics about what actually is
+-	 * on the device.
+-	 */
+-	if (ret) {
+-		ret = 0;
+-		goto out;
+-	}
+-
+-	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
+-		fprintf(stderr,
+-			_("%s: %s appears to contain an existing "
+-			"filesystem (%s).\n"), progname, device, type);
+-	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
+-		fprintf(stderr,
+-			_("%s: %s appears to contain a partition "
+-			"table (%s).\n"), progname, device, type);
+-	} else {
+-		fprintf(stderr,
+-			_("%s: %s appears to contain something weird "
+-			"according to blkid\n"), progname, device);
+-	}
+-	ret = 1;
+-out:
+-	if (pr)
+-		blkid_free_probe(pr);
+-	if (ret == -1)
+-		fprintf(stderr,
+-			_("%s: probe of %s failed, cannot detect "
+-			  "existing filesystem.\n"), progname, device);
+-	return ret;
+-}
+-
+-static void blkid_get_topology(
+-	const char	*device,
+-	int		*sunit,
+-	int		*swidth,
+-	int		*lsectorsize,
+-	int		*psectorsize,
+-	int		force_overwrite)
+-{
+-
+-	blkid_topology tp;
+-	blkid_probe pr;
+-	unsigned long val;
+-	struct stat statbuf;
+-
+-	/* can't get topology info from a file */
+-	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode)) {
+-		fprintf(stderr,
+-	_("%s: Warning: trying to probe topology of a file %s!\n"),
+-			progname, device);
+-		return;
+-	}
+-
+-	pr = blkid_new_probe_from_filename(device);
+-	if (!pr)
+-		return;
+-
+-	tp = blkid_probe_get_topology(pr);
+-	if (!tp)
+-		goto out_free_probe;
+-
+-	val = blkid_topology_get_logical_sector_size(tp);
+-	*lsectorsize = val;
+-	val = blkid_topology_get_physical_sector_size(tp);
+-	*psectorsize = val;
+-	val = blkid_topology_get_minimum_io_size(tp);
+-	*sunit = val;
+-	val = blkid_topology_get_optimal_io_size(tp);
+-	*swidth = val;
+-
+-	/*
+-	 * If the reported values are the same as the physical sector size
+-	 * do not bother to report anything.  It will only cause warnings
+-	 * if people specify larger stripe units or widths manually.
+-	 */
+-	if (*sunit == *psectorsize || *swidth == *psectorsize) {
+-		*sunit = 0;
+-		*swidth = 0;
+-	}
+-
+-	/*
+-	 * Blkid reports the information in terms of bytes, but we want it in
+-	 * terms of 512 bytes blocks (only to convert it to bytes later..)
+-	 */
+-	*sunit = *sunit >> 9;
+-	*swidth = *swidth >> 9;
+-
+-	if (blkid_topology_get_alignment_offset(tp) != 0) {
+-		fprintf(stderr,
+-			_("warning: device is not properly aligned %s\n"),
+-			device);
+-
+-		if (!force_overwrite) {
+-			fprintf(stderr,
+-				_("Use -f to force usage of a misaligned device\n"));
+-
+-			exit(EXIT_FAILURE);
+-		}
+-		/* Do not use physical sector size if the device is misaligned */
+-		*psectorsize = *lsectorsize;
+-	}
+-
+-	blkid_free_probe(pr);
+-	return;
+-
+-out_free_probe:
+-	blkid_free_probe(pr);
+-	fprintf(stderr,
+-		_("warning: unable to probe device topology for device %s\n"),
+-		device);
+-}
+-#else /* ifdef ENABLE_BLKID */
+-/*
+- * Without blkid, we can't do a good check for signatures.
+- * So instead of some messy attempts, just disable any checks
+- * and always return 'nothing found'.
+- */
+-#  warning BLKID is disabled, so signature detection and block device\
+- access are not working!
+-int
+-check_overwrite(
+-	const char	*device)
+-{
+-	return 1;
+-}
+-
+-static void blkid_get_topology(
+-	const char	*device,
+-	int		*sunit,
+-	int		*swidth,
+-	int		*lsectorsize,
+-	int		*psectorsize,
+-	int		force_overwrite)
+-{
+-	/*
+-	 * Shouldn't make any difference (no blkid = no block device access),
+-	 * but make sure this dummy replacement returns with at least some
+-	 * sanity.
+-	 */
+-	*lsectorsize = *psectorsize = 512;
+-}
+-
+-#endif /* ENABLE_BLKID */
+-
+-void get_topology(
+-	libxfs_init_t		*xi,
+-	struct fs_topology	*ft,
+-	int			force_overwrite)
+-{
+-	struct stat statbuf;
+-	char *dfile = xi->volname ? xi->volname : xi->dname;
+-
+-	/*
+-	 * If our target is a regular file, use platform_findsizes
+-	 * to try to obtain the underlying filesystem's requirements
+-	 * for direct IO; we'll set our sector size to that if possible.
+-	 */
+-	if (xi->disfile ||
+-	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
+-		int fd;
+-		int flags = O_RDONLY;
+-		long long dummy;
+-
+-		/* with xi->disfile we may not have the file yet! */
+-		if (xi->disfile)
+-			flags |= O_CREAT;
+-
+-		fd = open(dfile, flags, 0666);
+-		if (fd >= 0) {
+-			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
+-			close(fd);
+-			ft->psectorsize = ft->lsectorsize;
+-		} else
+-			ft->psectorsize = ft->lsectorsize = BBSIZE;
+-	} else {
+-		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+-				   &ft->lsectorsize, &ft->psectorsize,
+-				   force_overwrite);
+-	}
+-
+-	if (xi->rtname && !xi->risfile) {
+-		int sunit, lsectorsize, psectorsize;
+-
+-		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
+-				   &lsectorsize, &psectorsize, force_overwrite);
+-	}
+-}
 
