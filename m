@@ -1,53 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40636 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751145AbdKUTpI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Nov 2017 14:45:08 -0500
-Date: Tue, 21 Nov 2017 11:45:05 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: more fixes for 4.15
-Message-ID: <20171121194505.GD2135@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from userp1040.oracle.com ([156.151.31.81]:16802 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760357AbdKQSYN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:13 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v3 14/17] xfs: remove parent pointers in unlink
+Date: Fri, 17 Nov 2017 11:21:42 -0700
+Message-Id: <1510942905-12897-15-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-Hi Linus,
+From: Dave Chinner <dchinner@redhat.com>
 
-Here are a couple more patches to fix a memory leak and some refactoring
-to make it easier to keep xfsprogs' libxfs in sync with the kernel.
+This patch removes the parent pointer attribute during unlink
 
---D
+[bfoster: rebase, use VFS inode generation]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+	   implemented xfs_attr_remove_parent]
 
-The following changes since commit 2015a63dce8d73a439232a0d5162c88d8513101e:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_parent.c | 20 ++++++++++++++++++++
+ fs/xfs/xfs_attr.h          |  4 ++++
+ fs/xfs/xfs_inode.c         | 10 +++++++++-
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-  xfs: fix type usage (2017-11-16 12:06:45 -0800)
+diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+index 5eec0ab..9278c89 100644
+--- a/fs/xfs/libxfs/xfs_parent.c
++++ b/fs/xfs/libxfs/xfs_parent.c
+@@ -91,3 +91,23 @@ xfs_parent_add(
+ 		(void *)child_name->name, child_name->len, ATTR_PARENT);
+ }
+ 
++/*
++ * Remove a parent record from a child inode.
++ */
++int
++xfs_parent_remove(
++        struct xfs_trans        *tp,
++        struct xfs_inode        *parent,
++        struct xfs_inode        *child,
++        xfs_dir2_dataptr_t      diroffset,
++	struct xfs_defer_ops    *dfops,
++	xfs_fsblock_t           *firstblock)
++{
++	struct xfs_parent_name_rec rec;
++
++	xfs_init_parent_name_rec(&rec, parent->i_ino,
++		VFS_I(parent)->i_generation, diroffset);
++
++	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
++					ATTR_PARENT);
++}
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index 09ef747..0829687 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -198,4 +198,8 @@ int xfs_parent_add(struct xfs_trans *tp, struct xfs_inode *parent,
+ 		struct xfs_inode *child, struct xfs_name *child_name,
+ 		xfs_dir2_dataptr_t diroffset, struct xfs_defer_ops *dfops,
+ 		xfs_fsblock_t *firstblock);
++int xfs_parent_remove(struct xfs_trans *tp, struct xfs_inode *parent,
++		      struct xfs_inode *child, xfs_dir2_dataptr_t diroffset,
++		      struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
++
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0ad843d..a289a40 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2607,6 +2607,7 @@ xfs_remove(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t           first_block;
+ 	uint			resblks;
++	uint32_t		dir_offset;
+ 
+ 	trace_xfs_remove(dp, name);
+ 
+@@ -2687,12 +2688,19 @@ xfs_remove(
+ 
+ 	xfs_defer_init(&dfops, &first_block);
+ 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+-				   &dfops, resblks, NULL);
++				   &dfops, resblks, &dir_offset);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_bmap_cancel;
+ 	}
+ 
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_remove(tp, dp, ip, dir_offset, &dfops,
++					  &first_block);
++		if (error)
++			goto out_bmap_cancel;
++	}
++
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * remove transaction goes to disk before returning to
+-- 
+2.7.4
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.15-merge-3
-
-for you to fetch changes up to 274e0a1f4777b9362fc03a34e86358cc36003e48:
-
-  xfs: abstract out dev_t conversions (2017-11-21 01:44:53 -0800)
-
-----------------------------------------------------------------
-Changes since last update:
-- Fix a memory leak in the new in-core extent map.
-- Refactor the xfs_dev_t conversions for easier xfsprogs porting
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      xfs: abstract out dev_t conversions
-
-Shu Wang (1):
-      xfs: fix memory leak in xfs_iext_free_last_leaf
-
- fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
- fs/xfs/libxfs/xfs_inode_fork.c |  8 ++------
- fs/xfs/xfs_linux.h             | 10 ++++++++++
- 3 files changed, 13 insertions(+), 7 deletions(-)
