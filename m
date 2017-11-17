@@ -1,98 +1,217 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37754 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750744AbdKSEX2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 18 Nov 2017 23:23:28 -0500
-Subject: Re: Illegal value 0 for -l sunit option ?
-References: <alpine.DEB.2.10.1711181547110.14549@gozora.sk>
- <20171118215140.GL5858@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <45307a2e-9233-e463-dcad-5b91e5234f4e@sandeen.net>
-Date: Sat, 18 Nov 2017 22:23:26 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:35650 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759391AbdKQUoX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 15:44:23 -0500
+Date: Fri, 17 Nov 2017 12:44:13 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [xfsprogs PATCH 2/2] xfs_io: add a new 'log_writes' command
+Message-ID: <20171117204413.GP5119@magnolia>
+References: <20171117202524.24696-1-ross.zwisler@linux.intel.com>
+ <20171117202524.24696-3-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20171118215140.GL5858@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171117202524.24696-3-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Vladimir Gozora <c@gozora.sk>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On 11/18/17 3:51 PM, Dave Chinner wrote:
-> On Sat, Nov 18, 2017 at 04:00:08PM +0100, Vladimir Gozora wrote:
->> Hello XFS team,
->>
->> I'm working on ReaR project (https://github.com/rear/rear) which
->> aims for bare-metal disaster recovery.
->> Lately I’ve run across behavior of mkfs.xfs which I don’t really
->> know if is correct or not.
->> The thing is that when I try to create XFS file system with
->> xfsprogs-4.5.0 following commands runs just fine:
->> mkfs.xfs -f -i size=512 -d agcount=4 -s size=512 -i attr=2 -i
->> projid32bit=1 -m crc=1 -m finobt=1 -b size=4096 -i maxpct=25 -d
->> sunit=0 -d swidth=0 -l version=2 -l sunit=0 -l lazy-count=1 -n
->> size=4096 -n version=2 -r extsize=4096 <destination>
->> when I try same command with xfsprogs-4.10.0, I get following error:
->> Illegal value 0 for -l sunit option. value is too small
+On Fri, Nov 17, 2017 at 01:25:24PM -0700, Ross Zwisler wrote:
+> Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
+> log marks via the external 'dmsetup' executable.  It's helpful to allow
+> users of xfs_io to adds these marks from within xfs_io instead of waiting
+> until after xfs_io exits because then they are able to replay the
+> dm-log-writes log up to immediately after another xfs_io operation such as
+> mwrite.  This isolates the log replay from other operations that happen as
+> part of xfs_io exiting (file handles being closed, mmaps being torn down,
+> etc.).  This also allows users to insert multiple marks between different
+> xfs_io commands.
 > 
-> Yup, old mkfs would accept values that were illegal and could do
-> completly unpredictable things with them. We tightened up the input
-> parsing to only accept valid values xfsprogs in 4.7.0, and in
-> particular this commit is relevant:
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  io/Makefile       |  5 ++--
+>  io/init.c         |  1 +
+>  io/io.h           |  1 +
+>  io/log_writes.c   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_io.8 | 19 ++++++++++++++
+>  5 files changed, 102 insertions(+), 2 deletions(-)
+>  create mode 100644 io/log_writes.c
 > 
-> commit 2942ff49bdb6df08fb56674215b31c07cfc7c1fd
-> Author: Jan Tulak <jtulak@redhat.com>
-> Date:   Tue Jun 21 12:52:22 2016 +1000
+> diff --git a/io/Makefile b/io/Makefile
+> index 050d6bd..51b2eae 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -10,8 +10,9 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+>  HFILES = init.h io.h
+>  CFILES = init.c \
+>  	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
+> -	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
+> -	pwrite.c reflink.c seek.c shutdown.c stat.c sync.c truncate.c utimes.c
+> +	getrusage.c imap.c link.c log_writes.c mmap.c open.c parent.c pread.c \
+> +	prealloc.c pwrite.c reflink.c seek.c shutdown.c stat.c sync.c \
+> +	truncate.c utimes.c
+>  
+>  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+> diff --git a/io/init.c b/io/init.c
+> index 20d5f80..34d87b5 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -72,6 +72,7 @@ init_commands(void)
+>  	help_init();
+>  	imap_init();
+>  	inject_init();
+> +	log_writes_init();
+>  	madvise_init();
+>  	mincore_init();
+>  	mmap_init();
+> diff --git a/io/io.h b/io/io.h
+> index 8b2753b..d62034a 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -109,6 +109,7 @@ extern void		getrusage_init(void);
+>  extern void		help_init(void);
+>  extern void		imap_init(void);
+>  extern void		inject_init(void);
+> +extern void		log_writes_init(void);
+>  extern void		mmap_init(void);
+>  extern void		open_init(void);
+>  extern void		parent_init(void);
+> diff --git a/io/log_writes.c b/io/log_writes.c
+> new file mode 100644
+> index 0000000..bc3952c
+> --- /dev/null
+> +++ b/io/log_writes.c
+> @@ -0,0 +1,78 @@
+> +/*
+> + * Copyright (c) 2017 Intel Corporation.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "platform_defs.h"
+> +#include "command.h"
+> +#include "init.h"
+> +
+> +static cmdinfo_t log_writes_cmd;
+> +
+> +static int
+> +mark_log(char *device, char *mark)
+> +{
+> +	char command[256];
+> +
+> +	snprintf(command, 256, "dmsetup message %s 0 mark %s",
+> +			device, mark);
+> +
+> +	return system(command);
+
+I want to call my mark "bobby'; DROP TABLES;"... ;)
+
+Maybe we should check snprintf return value just in case someone feeds
+us an overlong string?
+
+--D
+
+> +}
+> +
+> +static int
+> +log_writes_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	char *device = NULL;
+> +	char *mark = NULL;
+> +	int c;
+> +
+> +	while ((c = getopt(argc, argv, "d:m:")) != EOF) {
+> +		switch (c) {
+> +		case 'd':
+> +			device = optarg;
+> +			break;
+> +		case 'm':
+> +			mark = optarg;
+> +			break;
+> +		default:
+> +			return command_usage(&log_writes_cmd);
+> +		}
+> +	}
+> +
+> +	if (device == NULL || mark == NULL)
+> +		return command_usage(&log_writes_cmd);
+> +
+> +	return mark_log(device, mark);
+> +}
+> +
+> +void
+> +log_writes_init(void)
+> +{
+> +	log_writes_cmd.name = "log_writes";
+> +	log_writes_cmd.altname = "lw";
+> +	log_writes_cmd.cfunc = log_writes_f;
+> +	log_writes_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
+> +	log_writes_cmd.argmin = 0;
+> +	log_writes_cmd.argmax = -1;
+> +	log_writes_cmd.args = _("-d device -m mark");
+> +	log_writes_cmd.oneline =
+> +		_("uses dmsetup to interact with the dm-log-writes module");
+> +
+> +	add_command(&log_writes_cmd);
+> +}
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 1693f7f..f18af99 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -1123,7 +1123,25 @@ version of policy structure (numeric)
+>  .BR get_encpolicy
+>  On filesystems that support encryption, display the encryption policy of the
+>  current file.
+> +.RE
+> +.PD
+> +.TP
+> +.BI "log_writes \-d " device " \-m "  mark
+> +Use
+> +.B dmsetup
+> +to interact with the
+> +.B dm-log-writes
+> +kernel module.  Currently the only operation
+> +supported is the creation of a mark in the log by executing the shell command:
+>  
+> +.B dmsetup message <device> 0 mark <mark>
+> +.PD
+> +.RE
+> +.TP
+> +.B lw
+> +See the
+> +.B log_writes
+> +command.
+>  .SH SEE ALSO
+>  .BR mkfs.xfs (8),
+>  .BR xfsctl (3),
+> @@ -1142,3 +1160,4 @@ current file.
+>  .BR pread (2),
+>  .BR pwrite (2),
+>  .BR readdir (3).
+> +.BR dmsetup (8).
+> -- 
+> 2.9.5
 > 
->     mkfs: fix -l su minval
->     
->     -l su should be in range BBTOB(1) <= L_SU <= XLOG_MAX_RECORD_BSIZE,
->     because the upper limit is imposed by kernel on iclogbuf: stripe
->     unit can't be bigger than the log buffer, but the log buffer can
->     span multiple stripe units. L_SUNIT is changed in the same way.
->     
->     Signed-off-by: Jan Tulak <jtulak@redhat.com>
->     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->     Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-Honestly, the minimum changed before that - the commit below fixed an
-incorrect minval of XLOG_MIN_RECORD_BSIZE (16k) to "1" -
-which honestly doesn't make much sense to me.
-
-It was 1974d3f1a6495978419d931020f63c9cac8ba230 which changed
-it from accepting min 0 to accepting min XLOG_MIN_RECORD_BSIZE:
-
-                { .index = L_SUNIT,
-+                 .minval = BTOBB(XLOG_MIN_RECORD_BSIZE),
-+                 .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
-                  .defaultval = SUBOPT_NEEDS_VAL,
-                },
-
-...
-
-                                case L_SUNIT:
--                                       if (!value || *value == '\0')
--                                               reqval('l', subopts, L_SUNIT);
-                                        if (lsunit)
-                                                respec('l', subopts, L_SUNIT);
--                                       lsunit = getnum(value, 0, 0, false);
--                                       if (lsunit < 0)
--                                               illegal(value, "l sunit");
-+                                       lsunit = getnum_checked(value, &lopts,
-+                                                                L_SUNIT);
-                                        lsunitflag = 1;
-                                        break;
-
-Specifying "0" as a value to mean "no stripe" is how I always
-interpreted these things.  Not to mention that D_SUNIT accepts 0
-without complaint, and  it's further compounded/confusing by xfs_info
-reporting a stripe unit of 0 blocks, something it won't accept on a mkfs
-commandline?  Makes little sense.
-
-I'm not really convinced that a minval of 1 is correct.  The commitlog
-changes the minval but speaks only to the rationale for the maxval, so
-it's no help.
-
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
