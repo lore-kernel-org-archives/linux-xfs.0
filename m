@@ -1,95 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54490 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755501AbdKQM3U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 07:29:20 -0500
-Date: Fri, 17 Nov 2017 13:29:24 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [patch 1/7] Documentation: Add license-rules.rst to describe how
- to properly identify file licenses
-Message-ID: <20171117122924.GA21988@kroah.com>
-References: <20171112191821.240484206@linutronix.de>
- <20171112192142.525567667@linutronix.de>
- <20171116080723.279591c8@lwn.net>
- <20171116151540.GA18500@silk.coyote.org>
- <CAOFm3uFANvJa0yxiKPcR7KER22951+uO8-qez+hKRY9PzzNskw@mail.gmail.com>
- <20171117085731.GA28421@kroah.com>
- <CAOFm3uGptVog2ZRx+Wh_330=g=sM02Lgi_f2t3R1CSKy1Gp2ug@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:34650 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751590AbdKQQ5H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 11:57:07 -0500
+Date: Fri, 17 Nov 2017 08:57:06 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH for 4.15] libxfs: fix dev_t handling in inode forks
+Message-ID: <20171117165706.GB17447@infradead.org>
+References: <20171116011505.GH5119@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOFm3uGptVog2ZRx+Wh_330=g=sM02Lgi_f2t3R1CSKy1Gp2ug@mail.gmail.com>
+In-Reply-To: <20171116011505.GH5119@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Philippe Ombredanne <pombredanne@nexb.com>
-Cc: Jonas Oberg <jonas@fsfe.org>, Jonathan Corbet <corbet@lwn.net>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Joe Perches <joe@perches.com>, xfs <linux-xfs@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 11:53:01AM +0100, Philippe Ombredanne wrote:
-> On Fri, Nov 17, 2017 at 9:57 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Fri, Nov 17, 2017 at 08:37:28AM +0100, Philippe Ombredanne wrote:
-> >> Or fix the non-standard redefinition of the MODULE_LICENSE macro as
-> >> DRIVER_LICENSE as in [2]  and found elsewhere with
-> >> grep -r . -e "DRIVER_LICENSE"
-> >>
-> >> These break the otherwise nicely grepable MODULE_LICENSE macros
-> >> with this kind of warty redirection I stumbled upon while reviewing kernel
-> >> license scans:
-> >>
-> >> #define DRIVER_LICENSE "GPL"
-> >> [...]
-> >> MODULE_LICENSE(DRIVER_LICENSE);
-> >
-> > Yes, those should be cleaned up, there's only 11 instances of them,
-> > should be simple enough to do.  I can knock up a patch series for
-> > them...
-> 
-> That would be awesome and you are probably a million times faster than
-> me at that.
-> 
-> There are actually more like 29 locations with such an oddity around AFAIK.
-> 
-> Here is a better, more comprehensive grep:
-> 
-> egrep  "MODULE_LICENSE\([^\"]|DRIVER_LICENSE|DRV_LICENSE|MOD_LICENSE"
-> -r . | egrep -v
-> "module\.h|nand_ecc\.c|Documentation|scripts|az6007\.c|mt2063.c"
-> 
-> yielding these:
-> 
-> ./drivers/ntb/test/ntb_perf.c:#define DRIVER_LICENSE "Dual BSD/GPL"
-> ./drivers/ntb/test/ntb_perf.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/ntb/test/ntb_tool.c:#define DRIVER_LICENSE "Dual BSD/GPL"
-> ./drivers/ntb/test/ntb_tool.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/ntb/test/ntb_pingpong.c:#define DRIVER_LICENSE "Dual BSD/GPL"
-> ./drivers/ntb/test/ntb_pingpong.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/ntb/ntb.c:#define DRIVER_LICENSE "Dual BSD/GPL"
-> ./drivers/ntb/ntb.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/input/tablet/hanwang.c:#define DRIVER_LICENSE  "GPL"
-> ./drivers/input/tablet/hanwang.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/input/tablet/kbtab.c:#define DRIVER_LICENSE "GPL"
-> ./drivers/input/tablet/kbtab.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/input/tablet/acecad.c:#define DRIVER_LICENSE "GPL"
-> ./drivers/input/tablet/acecad.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/input/misc/keyspan_remote.c:#define DRIVER_LICENSE "GPL"
-> ./drivers/input/misc/keyspan_remote.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/gpu/drm/gma500/psb_drv.h:#define DRIVER_LICENSE "GPL"
-> ./drivers/gpu/drm/gma500/psb_drv.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/net/usb/hso.c:#define MOD_LICENSE "GPL"
-> ./drivers/net/usb/hso.c:MODULE_LICENSE(MOD_LICENSE);
-> ./drivers/scsi/csiostor/csio_init.c:MODULE_LICENSE(CSIO_DRV_LICENSE);
-> ./drivers/scsi/csiostor/csio_init.h:#define CSIO_DRV_LICENSE "Dual BSD/GPL"
-> ./drivers/media/usb/usbvision/usbvision-video.c:#define DRIVER_LICENSE "GPL"
-> ./drivers/media/usb/usbvision/usbvision-video.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./drivers/watchdog/pcwd_usb.c:#define DRIVER_LICENSE "GPL"
-> ./drivers/watchdog/pcwd_usb.c:MODULE_LICENSE(DRIVER_LICENSE);
-> ./include/linux/raid/pq.h:#define MODULE_LICENSE(licence)
+Hmm.
 
-Thanks, I think I got all of these, but that last one should be left
-alone, it's ok and for when the code is being built outside of the
-kernel tree.
+I guess we should just clean up the calling conventions, and keep
+the conversion helpers in xfs_linux.h so that xfsprogs can turn them
+into noops.
 
-I'll send the patches out this afternoon.
+Something like the untested patch for the kernel space, xfsprogs would
+then just stub out the two inlines to return the passed in value.
 
-greg k-h
+---
+>From e0ed26ab66774c1611e71a3c290efbe4e21d483c Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Fri, 17 Nov 2017 17:55:48 +0100
+Subject: xfs: abstract out dev_t conversions
+
+And move them to xfs_linux.h so that xfsprogs can stub them out more
+easily.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c |  8 ++------
+ fs/xfs/xfs_linux.h             | 10 ++++++++++
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 1c90ec41e9df..c79a1616b79d 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -42,11 +42,6 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+ STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+ STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
+ 
+-static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
+-{
+-	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
+-}
+-
+ /*
+  * Copy inode type and data and attr format specific information from the
+  * on-disk inode to the in-core inode and fork structures.  For fifos, devices,
+@@ -792,7 +787,8 @@ xfs_iflush_fork(
+ 	case XFS_DINODE_FMT_DEV:
+ 		if (iip->ili_fields & XFS_ILOG_DEV) {
+ 			ASSERT(whichfork == XFS_DATA_FORK);
+-			xfs_dinode_put_rdev(dip, sysv_encode_dev(VFS_I(ip)->i_rdev));
++			xfs_dinode_put_rdev(dip,
++					linux_to_xfs_dev_t(VFS_I(ip)->i_rdev));
+ 		}
+ 		break;
+ 
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 6282bfc1afa9..99562ec0de56 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -204,6 +204,16 @@ static inline kgid_t xfs_gid_to_kgid(uint32_t gid)
+ 	return make_kgid(&init_user_ns, gid);
+ }
+ 
++static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
++{
++	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
++}
++
++static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
++{
++	return sysv_encode_dev(dev);
++}
++
+ /*
+  * Various platform dependent calls that don't fit anywhere else
+  */
+-- 
+2.14.2
+
