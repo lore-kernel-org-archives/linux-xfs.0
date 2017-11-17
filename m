@@ -1,126 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45412 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750888AbdKQTji (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 14:39:38 -0500
-Date: Fri, 17 Nov 2017 11:39:25 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] iomap: report collisions between directio and buffered
- writes to userspace
-Message-ID: <20171117193925.GM5119@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:54484 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751102AbdKQTqq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 14:46:46 -0500
+Date: Fri, 17 Nov 2017 11:46:45 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.15
+Message-ID: <20171117194645.GN5119@magnolia>
+References: <20171114014954.GF25227@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171114014954.GF25227@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Linus,
 
-If two programs simultaneously try to write to the same part of a file
-via direct IO and buffered IO, there's a chance that the post-diowrite
-pagecache invalidation will fail on the dirty page.  When this happens,
-the dio write succeeded, which means that the page cache is no longer
-coherent with the disk!
+Here are a couple more patches to fix a locking bug and some inconsistent
+type usage in some of the new code.
 
-Programs are not supposed to mix IO types and this is a clear case of
-data corruption, so store an EIO which will be reflected to userspace
-during the next fsync.  Replace the WARN_ON with a ratelimited pr_crit
-so that the developers have /some/ kind of breadcrumb to track down the
-offending program(s) and file(s) involved.
+--D
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/direct-io.c     |   24 +++++++++++++++++++++++-
- fs/iomap.c         |   12 ++++++++++--
- include/linux/fs.h |    1 +
- 3 files changed, 34 insertions(+), 3 deletions(-)
+The following changes since commit abc36be236358162202e86ad88616ff95a755101:
 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 98fe132..ef5d12a 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -219,6 +219,27 @@ static inline struct page *dio_get_page(struct dio *dio,
- 	return dio->pages[sdio->head];
- }
- 
-+/*
-+ * Warn about a page cache invalidation failure during a direct io write.
-+ */
-+void dio_warn_stale_pagecache(struct file *filp)
-+{
-+	static DEFINE_RATELIMIT_STATE(_rs, 30 * HZ, DEFAULT_RATELIMIT_BURST);
-+	char pathname[128];
-+	struct inode *inode = file_inode(filp);
-+	char *path;
-+
-+	errseq_set(&inode->i_mapping->wb_err, -EIO);
-+	if (__ratelimit(&_rs)) {
-+		path = file_path(filp, pathname, sizeof(pathname));
-+		if (IS_ERR(path))
-+			path = "(unknown)";
-+		pr_crit("Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!\n");
-+		pr_crit("File: %s PID: %d Comm: %.20s\n", path, current->pid,
-+			current->comm);
-+	}
-+}
-+
- /**
-  * dio_complete() - called when all DIO BIO I/O has been completed
-  * @offset: the byte offset in the file of the completed operation
-@@ -290,7 +311,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, unsigned int flags)
- 		err = invalidate_inode_pages2_range(dio->inode->i_mapping,
- 					offset >> PAGE_SHIFT,
- 					(offset + ret - 1) >> PAGE_SHIFT);
--		WARN_ON_ONCE(err);
-+		if (err)
-+			dio_warn_stale_pagecache(dio->iocb->ki_filp);
- 	}
- 
- 	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 5011a96..028f329 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -753,7 +753,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 		err = invalidate_inode_pages2_range(inode->i_mapping,
- 				offset >> PAGE_SHIFT,
- 				(offset + dio->size - 1) >> PAGE_SHIFT);
--		WARN_ON_ONCE(err);
-+		if (err)
-+			dio_warn_stale_pagecache(iocb->ki_filp);
- 	}
- 
- 	inode_dio_end(file_inode(iocb->ki_filp));
-@@ -1012,9 +1013,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (ret)
- 		goto out_free_dio;
- 
-+	/*
-+	 * Try to invalidate cache pages for the range we're direct
-+	 * writing.  If this invalidation fails, tough, the write will
-+	 * still work, but racing two incompatible write paths is a
-+	 * pretty crazy thing to do, so we don't support it 100%.
-+	 */
- 	ret = invalidate_inode_pages2_range(mapping,
- 			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
--	WARN_ON_ONCE(ret);
-+	if (ret)
-+		dio_warn_stale_pagecache(iocb->ki_filp);
- 	ret = 0;
- 
- 	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2690864..0e5f060 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2976,6 +2976,7 @@ enum {
- };
- 
- void dio_end_io(struct bio *bio);
-+void dio_warn_stale_pagecache(struct file *filp);
- 
- ssize_t __blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
- 			     struct block_device *bdev, struct iov_iter *iter,
+  Merge tag 'configfs-for-4.15' of git://git.infradead.org/users/hch/configfs (2017-11-14 14:44:04 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.15-merge-2
+
+for you to fetch changes up to 2015a63dce8d73a439232a0d5162c88d8513101e:
+
+  xfs: fix type usage (2017-11-16 12:06:45 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix a forgotten rcu read unlock
+- Fix some inconsistent integer type usage.
+
+----------------------------------------------------------------
+Darrick J. Wong (2):
+      xfs: fix forgotten rcu read unlock when skipping inode reclaim
+      xfs: fix type usage
+
+ fs/xfs/libxfs/xfs_iext_tree.c  | 2 +-
+ fs/xfs/libxfs/xfs_log_format.h | 4 ++--
+ fs/xfs/xfs_inode.c             | 1 +
+ 3 files changed, 4 insertions(+), 3 deletions(-)
