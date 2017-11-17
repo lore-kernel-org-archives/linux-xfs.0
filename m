@@ -1,53 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53659 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751753AbdKTQSa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 11:18:30 -0500
-Date: Mon, 20 Nov 2017 08:18:29 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171120161829.GA25991@bombadil.infradead.org>
-References: <20171117193925.GM5119@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171117193925.GM5119@magnolia>
+Received: from mga02.intel.com ([134.134.136.20]:19580 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760110AbdKQU2g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 15:28:36 -0500
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [fstests PATCH v4 2/4] dm-log-writes: only replay log to marks that exist
+Date: Fri, 17 Nov 2017 13:28:26 -0700
+Message-Id: <20171117202828.25472-3-ross.zwisler@linux.intel.com>
+In-Reply-To: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
+References: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: fstests <fstests@vger.kernel.org>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
 
-On Fri, Nov 17, 2017 at 11:39:25AM -0800, Darrick J. Wong wrote:
-> If two programs simultaneously try to write to the same part of a file
-> via direct IO and buffered IO, there's a chance that the post-diowrite
-> pagecache invalidation will fail on the dirty page.  When this happens,
-> the dio write succeeded, which means that the page cache is no longer
-> coherent with the disk!
+The 'replay-log' executable will replay the dm-log-writes log until the
+given mark, or until the end of the log if the mark isn't found.
 
-This seems like a good opportunity to talk about what I've been working
-on for solving this problem.  The XArray is going to introduce a set
-of entries which can be stored to locations in the page cache that I'm
-calling 'wait entries'.
+This means that if the mark you're looking for was never inserted in the
+log or if you give garbage to _log_writes_replay_log() the entire log will
+be replayed.  This can cause unexpected test results.
 
-When starting direct IO, the page cache will insert a wait entry in each
-of the indices covered by the I/O (and do the usual invalidation dance).
-At the end of direct IO, it will remove the wait entry and wake up any
-threads waiting on those entries.
+Fix this by making sure that the mark we're given actually exists in the
+log before we allow the replay.
 
-During lookup, any thread which encounters a wait entry (pagefaults,
-buffered reads, buffered writes) will sleep on the indicated wait queue.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ common/dmlogwrites | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-I don't know what a direct IO thread should do when encountering a wait
-entry.  Fail the I/O?  Sleep like any other lookup would?  Go ahead and
-issue the I/O anyway?  (uhm, I see a lot of problems with implementing
-that third option.)
+diff --git a/common/dmlogwrites b/common/dmlogwrites
+index 247c744..80ed4fc 100644
+--- a/common/dmlogwrites
++++ b/common/dmlogwrites
+@@ -72,6 +72,10 @@ _log_writes_replay_log()
+ {
+ 	_mark=$1
+ 
++	$here/src/log-writes/replay-log --log $LOGWRITES_DEV --find \
++		--end-mark $_mark >> $seqres.full 2>&1
++	[ $? -ne 0 ] && _fail "mark does not exist"
++
+ 	$here/src/log-writes/replay-log --log $LOGWRITES_DEV --replay $SCRATCH_DEV \
+ 		--end-mark $_mark >> $seqres.full 2>&1
+ 	[ $? -ne 0 ] && _fail "replay failed"
+-- 
+2.9.5
 
-I'm currently planning on using 256 'wait entries', one for each
-PAGE_WAIT_TABLE_SIZE, and sharing those wait queue heads.  Maybe that's
-overengineering the solution.
-
-Anyway, I need to get the basics of the XArray finished off before I do
-this, but it'd be great if somebody pointed out why this doesn't work
-before I implement it.
