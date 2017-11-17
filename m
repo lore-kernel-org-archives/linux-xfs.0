@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42158 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:42250 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761975AbdKQVBB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 16:01:01 -0500
-Subject: [PATCH 08/27] xfs_scrub: add inode iteration functions
+        with ESMTP id S1760147AbdKQVBO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 16:01:14 -0500
+Subject: [PATCH 10/27] xfs_scrub: add file space map iteration functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Nov 2017 13:00:57 -0800
-Message-ID: <151095245770.4825.10457924162981053981.stgit@magnolia>
+Date: Fri, 17 Nov 2017 13:01:09 -0800
+Message-ID: <151095246973.4825.18446369636263748964.stgit@magnolia>
 In-Reply-To: <151095240950.4825.6375172010231614655.stgit@magnolia>
 References: <151095240950.4825.6375172010231614655.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,45 +20,45 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These helpers enable userspace to count or iterate all inodes in a
-filesystem.  The counting function uses INUMBERS, while the inode
-iterator uses INUMBERS and BULKSTAT to iterate over every inode that
-should be in the filesystem.
+These helpers enable userspace to iterate all the space map information
+for a file.  The iteration function uses GETBMAPX.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile |    2 
- scrub/inodes.c |  284 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/inodes.h |   32 ++++++
- 3 files changed, 318 insertions(+)
- create mode 100644 scrub/inodes.c
- create mode 100644 scrub/inodes.h
+ scrub/Makefile  |    2 +
+ scrub/filemap.c |  158 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/filemap.h |   39 ++++++++++++++
+ 3 files changed, 199 insertions(+)
+ create mode 100644 scrub/filemap.c
+ create mode 100644 scrub/filemap.h
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 2d2a164..259f4d7 100644
+index 5a2ec67..bf0a813 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -18,11 +18,13 @@ endif	# scrub_prereqs
+@@ -18,6 +18,7 @@ endif	# scrub_prereqs
  HFILES = \
  common.h \
  disk.h \
-+inodes.h \
++filemap.h \
+ inodes.h \
+ spacemap.h \
  xfs_scrub.h
- 
+@@ -25,6 +26,7 @@ xfs_scrub.h
  CFILES = \
  common.c \
  disk.c \
-+inodes.c \
++filemap.c \
+ inodes.c \
  phase1.c \
- xfs_scrub.c
- 
-diff --git a/scrub/inodes.c b/scrub/inodes.c
+ spacemap.c \
+diff --git a/scrub/filemap.c b/scrub/filemap.c
 new file mode 100644
-index 0000000..c880c36
+index 0000000..a56fc2b
 --- /dev/null
-+++ b/scrub/inodes.c
-@@ -0,0 +1,284 @@
++++ b/scrub/filemap.c
+@@ -0,0 +1,158 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -82,273 +82,147 @@ index 0000000..c880c36
 +#include <stdbool.h>
 +#include <stdint.h>
 +#include <stdlib.h>
-+#include <pthread.h>
++#include <unistd.h>
++#include <string.h>
++#include <sys/types.h>
++#include <sys/stat.h>
 +#include <sys/statvfs.h>
-+#include "platform_defs.h"
 +#include "xfs.h"
-+#include "xfs_arch.h"
-+#include "xfs_format.h"
-+#include "handle.h"
++#include "xfs_fs.h"
 +#include "path.h"
-+#include "workqueue.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
-+#include "inodes.h"
++#include "filemap.h"
 +
 +/*
-+ * Iterate a range of inodes.
-+ *
-+ * This is a little more involved than repeatedly asking BULKSTAT for a
-+ * buffer's worth of stat data for some number of inodes.  We want to
-+ * scan as many of the inodes that the inobt thinks there are, including
-+ * the ones that are broken, but if we ask for n inodes start at x,
-+ * it'll skip the bad ones and fill from beyond the range (x + n).
-+ *
-+ * Therefore, we ask INUMBERS to return one inobt chunk's worth of inode
-+ * bitmap information.  Then we try to BULKSTAT only the inodes that
-+ * were present in that chunk, and compare what we got against what
-+ * INUMBERS said was there.  If there's a mismatch, we know that we have
-+ * an inode that fails the verifiers but so we can inject the bulkstat
-+ * information to force the scrub code to deal with the broken inodes.
-+ *
-+ * If the iteration function returns ESTALE, that means that the inode
-+ * has been deleted and possibly recreated since the BULKSTAT call.  We
-+ * wil refresh the stat information and try again up to 30 times before
-+ * reporting the staleness as an error.
++ * These routines provide a simple interface to query the block
++ * mappings of the fork of a given inode via GETBMAPX and call a
++ * function to iterate each mapping result.
 + */
 +
-+/*
-+ * Call into the filesystem for inode/bulkstat information and call our
-+ * iterator function.  We'll try to fill the bulkstat information in
-+ * batches, but we also can detect iget failures.
-+ */
-+static bool
-+xfs_iterate_inodes_range(
++#define BMAP_NR		2048
++
++/* Iterate all the extent block mappings between the key and fork end. */
++bool
++xfs_iterate_filemaps(
 +	struct scrub_ctx	*ctx,
 +	const char		*descr,
-+	void			*fshandle,
-+	uint64_t		first_ino,
-+	uint64_t		last_ino,
-+	xfs_inode_iter_fn	fn,
++	int			fd,
++	int			whichfork,
++	struct xfs_bmap		*key,
++	xfs_bmap_iter_fn	fn,
 +	void			*arg)
 +{
-+	struct xfs_fsop_bulkreq	igrpreq = {0};
-+	struct xfs_fsop_bulkreq	bulkreq = {0};
-+	struct xfs_fsop_bulkreq	onereq = {0};
-+	struct xfs_handle	handle;
-+	struct xfs_inogrp	inogrp;
-+	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK] = {0};
-+	char			idescr[DESCR_BUFSZ];
-+	char			buf[DESCR_BUFSZ];
-+	struct xfs_bstat	*bs;
-+	__u64			last_stale = first_ino - 1;
-+	__u64			igrp_ino;
-+	__u64			oneino;
-+	__u64			ino;
-+	__s32			bulklen = 0;
-+	__s32			onelen = 0;
-+	__s32			igrplen = 0;
++	struct fsxattr		fsx;
++	struct getbmapx		*map;
++	struct getbmapx		*p;
++	struct xfs_bmap		bmap;
++	char			bmap_descr[DESCR_BUFSZ];
 +	bool			moveon = true;
++	xfs_off_t		new_off;
++	int			getxattr_type;
 +	int			i;
 +	int			error;
-+	int			stale_count = 0;
 +
-+	onereq.lastip  = &oneino;
-+	onereq.icount  = 1;
-+	onereq.ocount  = &onelen;
++	switch (whichfork) {
++	case XFS_ATTR_FORK:
++		snprintf(bmap_descr, DESCR_BUFSZ, _("%s attr"), descr);
++		break;
++	case XFS_COW_FORK:
++		snprintf(bmap_descr, DESCR_BUFSZ, _("%s CoW"), descr);
++		break;
++	case XFS_DATA_FORK:
++		snprintf(bmap_descr, DESCR_BUFSZ, _("%s data"), descr);
++		break;
++	default:
++		abort();
++	}
 +
-+	bulkreq.lastip  = &ino;
-+	bulkreq.icount  = XFS_INODES_PER_CHUNK;
-+	bulkreq.ubuffer = &bstat;
-+	bulkreq.ocount  = &bulklen;
++	map = calloc(BMAP_NR, sizeof(struct getbmapx));
++	if (!map) {
++		str_errno(ctx, bmap_descr);
++		return false;
++	}
 +
-+	igrpreq.lastip  = &igrp_ino;
-+	igrpreq.icount  = 1;
-+	igrpreq.ubuffer = &inogrp;
-+	igrpreq.ocount  = &igrplen;
++	map->bmv_offset = BTOBB(key->bm_offset);
++	map->bmv_block = BTOBB(key->bm_physical);
++	if (key->bm_length == 0)
++		map->bmv_length = ULLONG_MAX;
++	else
++		map->bmv_length = BTOBB(key->bm_length);
++	map->bmv_count = BMAP_NR;
++	map->bmv_iflags = BMV_IF_NO_DMAPI_READ | BMV_IF_PREALLOC |
++			  BMV_IF_NO_HOLES;
++	switch (whichfork) {
++	case XFS_ATTR_FORK:
++		getxattr_type = XFS_IOC_FSGETXATTRA;
++		map->bmv_iflags |= BMV_IF_ATTRFORK;
++		break;
++	case XFS_COW_FORK:
++		map->bmv_iflags |= BMV_IF_COWFORK;
++		getxattr_type = FS_IOC_FSGETXATTR;
++		break;
++	case XFS_DATA_FORK:
++		getxattr_type = FS_IOC_FSGETXATTR;
++		break;
++	default:
++		abort();
++	}
 +
-+	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
-+	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
-+			sizeof(handle.ha_fid.fid_len);
-+	handle.ha_fid.fid_pad = 0;
++	error = ioctl(fd, getxattr_type, &fsx);
++	if (error < 0) {
++		str_errno(ctx, bmap_descr);
++		moveon = false;
++		goto out;
++	}
 +
-+	/* Find the inode chunk & alloc mask */
-+	igrp_ino = first_ino;
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	while (!error && igrplen) {
-+		/* Load the inodes. */
-+		ino = inogrp.xi_startino - 1;
-+		bulkreq.icount = inogrp.xi_alloccount;
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
-+		if (error)
-+			str_warn(ctx, descr, "%s", strerror_r(errno,
-+						buf, DESCR_BUFSZ));
-+
-+		/* Did we get exactly the inodes we expected? */
-+		for (i = 0, bs = bstat; i < XFS_INODES_PER_CHUNK; i++) {
-+			if (!(inogrp.xi_allocmask & (1ULL << i)))
-+				continue;
-+			if (bs->bs_ino == inogrp.xi_startino + i) {
-+				bs++;
-+				continue;
-+			}
-+
-+			/* Load the one inode. */
-+			oneino = inogrp.xi_startino + i;
-+			onereq.ubuffer = bs;
-+			error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT_SINGLE,
-+					&onereq);
-+			if (error || bs->bs_ino != inogrp.xi_startino + i) {
-+				memset(bs, 0, sizeof(struct xfs_bstat));
-+				bs->bs_ino = inogrp.xi_startino + i;
-+				bs->bs_blksize = ctx->mnt_sv.f_frsize;
-+			}
-+			bs++;
-+		}
-+
-+		/* Iterate all the inodes. */
-+		for (i = 0, bs = bstat; i < inogrp.xi_alloccount; i++, bs++) {
-+			if (bs->bs_ino > last_ino)
++	while ((error = ioctl(fd, XFS_IOC_GETBMAPX, map)) == 0) {
++		for (i = 0, p = &map[i + 1]; i < map->bmv_entries; i++, p++) {
++			bmap.bm_offset = BBTOB(p->bmv_offset);
++			bmap.bm_physical = BBTOB(p->bmv_block);
++			bmap.bm_length = BBTOB(p->bmv_length);
++			bmap.bm_flags = p->bmv_oflags;
++			moveon = fn(ctx, bmap_descr, fd, whichfork, &fsx,
++					&bmap, arg);
++			if (!moveon)
 +				goto out;
-+
-+			handle.ha_fid.fid_ino = bs->bs_ino;
-+			handle.ha_fid.fid_gen = bs->bs_gen;
-+			error = fn(ctx, &handle, bs, arg);
-+			switch (error) {
-+			case 0:
-+				break;
-+			case ESTALE:
-+				if (last_stale == inogrp.xi_startino)
-+					stale_count++;
-+				else {
-+					last_stale = inogrp.xi_startino;
-+					stale_count = 0;
-+				}
-+				if (stale_count < 30) {
-+					igrp_ino = inogrp.xi_startino;
-+					goto igrp_retry;
-+				}
-+				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
-+						(uint64_t)bs->bs_ino);
-+				str_warn(ctx, idescr, "%s", strerror_r(error,
-+						buf, DESCR_BUFSZ));
-+				break;
-+			case XFS_ITERATE_INODES_ABORT:
-+				error = 0;
-+				/* fall thru */
-+			default:
-+				moveon = false;
-+				errno = error;
-+				goto err;
-+			}
 +			if (xfs_scrub_excessive_errors(ctx)) {
 +				moveon = false;
 +				goto out;
 +			}
 +		}
 +
-+igrp_retry:
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
++		if (map->bmv_entries == 0)
++			break;
++		p = map + map->bmv_entries;
++		if (p->bmv_oflags & BMV_OF_LAST)
++			break;
++
++		new_off = p->bmv_offset + p->bmv_length;
++		map->bmv_length -= new_off - map->bmv_offset;
++		map->bmv_offset = new_off;
 +	}
 +
-+err:
-+	if (error) {
-+		str_errno(ctx, descr);
-+		moveon = false;
-+	}
++	/*
++	 * Pre-reflink filesystems don't know about CoW forks, so don't
++	 * be too surprised if it fails.
++	 */
++	if (whichfork == XFS_COW_FORK && error && errno == EINVAL)
++		error = 0;
++
++	if (error)
++		str_errno(ctx, bmap_descr);
 +out:
++	memcpy(key, map, sizeof(struct getbmapx));
++	free(map);
 +	return moveon;
 +}
-+
-+/* BULKSTAT wrapper routines. */
-+struct xfs_scan_inodes {
-+	xfs_inode_iter_fn	fn;
-+	void			*arg;
-+	bool			moveon;
-+};
-+
-+/* Scan all the inodes in an AG. */
-+static void
-+xfs_scan_ag_inodes(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct xfs_scan_inodes	*si = arg;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	char			descr[DESCR_BUFSZ];
-+	uint64_t		ag_ino;
-+	uint64_t		next_ag_ino;
-+	bool			moveon;
-+
-+	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
-+				major(ctx->fsinfo.fs_datadev),
-+				minor(ctx->fsinfo.fs_datadev),
-+				agno);
-+
-+	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
-+
-+	moveon = xfs_iterate_inodes_range(ctx, descr, ctx->fshandle, ag_ino,
-+			next_ag_ino - 1, si->fn, si->arg);
-+	if (!moveon)
-+		si->moveon = false;
-+}
-+
-+/* Scan all the inodes in a filesystem. */
-+bool
-+xfs_scan_all_inodes(
-+	struct scrub_ctx	*ctx,
-+	xfs_inode_iter_fn	fn,
-+	void			*arg)
-+{
-+	struct xfs_scan_inodes	si;
-+	xfs_agnumber_t		agno;
-+	struct workqueue	wq;
-+	int			ret;
-+
-+	si.moveon = true;
-+	si.fn = fn;
-+	si.arg = arg;
-+
-+	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
-+			scrub_nproc_workqueue(ctx));
-+	if (ret) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
-+		return false;
-+	}
-+
-+	for (agno = 0; agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_scan_ag_inodes, agno, &si);
-+		if (ret) {
-+			si.moveon = false;
-+			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u bulkstat work."), agno);
-+			break;
-+		}
-+	}
-+
-+	workqueue_destroy(&wq);
-+
-+	return si.moveon;
-+}
-+
-+/*
-+ * Open a file by handle, or return a negative error code.
-+ */
-+int
-+xfs_open_handle(
-+	struct xfs_handle	*handle)
-+{
-+	return open_by_fshandle(handle, sizeof(*handle),
-+			O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
-+}
-diff --git a/scrub/inodes.h b/scrub/inodes.h
+diff --git a/scrub/filemap.h b/scrub/filemap.h
 new file mode 100644
-index 0000000..c398677
+index 0000000..17c0be7
 --- /dev/null
-+++ b/scrub/inodes.h
-@@ -0,0 +1,32 @@
++++ b/scrub/filemap.h
+@@ -0,0 +1,39 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -368,17 +242,24 @@ index 0000000..c398677
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+#ifndef XFS_SCRUB_INODES_H_
-+#define XFS_SCRUB_INODES_H_
++#ifndef XFS_SCRUB_FILEMAP_H_
++#define XFS_SCRUB_FILEMAP_H_
 +
-+typedef int (*xfs_inode_iter_fn)(struct scrub_ctx *ctx,
-+		struct xfs_handle *handle, struct xfs_bstat *bs, void *arg);
++/* inode fork block mapping */
++struct xfs_bmap {
++	uint64_t	bm_offset;	/* file offset of segment in bytes */
++	uint64_t	bm_physical;	/* physical starting byte  */
++	uint64_t	bm_length;	/* length of segment, bytes */
++	uint32_t	bm_flags;	/* output flags */
++};
 +
-+#define XFS_ITERATE_INODES_ABORT	(-1)
-+bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
++typedef bool (*xfs_bmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
++		int fd, int whichfork, struct fsxattr *fsx,
++		struct xfs_bmap *bmap, void *arg);
++
++bool xfs_iterate_filemaps(struct scrub_ctx *ctx, const char *descr, int fd,
++		int whichfork, struct xfs_bmap *key, xfs_bmap_iter_fn fn,
 +		void *arg);
 +
-+int xfs_open_handle(struct xfs_handle *handle);
-+
-+#endif /* XFS_SCRUB_INODES_H_ */
++#endif /* XFS_SCRUB_FILEMAP_H_ */
 
