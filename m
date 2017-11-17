@@ -1,149 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54246 "EHLO mga02.intel.com"
+Received: from ul.coyote.org ([198.50.187.229]:44033 "EHLO ul.coyote.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760307AbdKQU2i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 15:28:38 -0500
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [fstests PATCH v4 4/4] generic: add test for DAX MAP_SYNC support
-Date: Fri, 17 Nov 2017 13:28:28 -0700
-Message-Id: <20171117202828.25472-5-ross.zwisler@linux.intel.com>
-In-Reply-To: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
-References: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
+        id S965873AbdKQTLR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 14:11:17 -0500
+Date: Fri, 17 Nov 2017 20:02:42 +0100
+From: Jonas Oberg <jonas@fsfe.org>
+Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
+ describe how to properly identify file licenses
+Message-ID: <20171117190242.GA8141@silk.coyote.org>
+References: <20171116183306.103584007@linutronix.de>
+ <20171116184358.398030394@linutronix.de>
+ <alpine.DEB.2.20.1711171057240.1709@nanos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <alpine.DEB.2.20.1711171057240.1709@nanos>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests <fstests@vger.kernel.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-This test creates a file and writes to it via an mmap(), but never syncs
-via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
+Hi Thomas,
 
-If MAP_SYNC is working the dm-log-writes replay will show the test file
-with 1 MiB of on-media block allocations.  This is because each allocating
-page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-(which you can test by removing the "-S" flag to xfs_io mmap) the file
-will be smaller or missing entirely.
+> Add a file to the Documentation directory to describe how file licenses
+> should be described in all kernel files, using the SPDX identifier, as well
+> as where all licenses should be in the kernel source tree for people to
+> refer to (LICENSES/).
 
-Note that dm-log-writes doesn't track the data that we write via the
-mmap(), so we can't do any data integrity checking.  We can only verify
-that the metadata writes for the page faults happened.
+I've given this a once over now, cross referenced against our recommendations
+and checked the patch set. Happy with the latest versions circulated (V4 of
+1/11 and V3 of the others).
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- tests/generic/468     | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/468.out |  3 ++
- tests/generic/group   |  1 +
- 3 files changed, 87 insertions(+)
- create mode 100755 tests/generic/468
- create mode 100644 tests/generic/468.out
+   Reviewed-by: Jonas Oberg <jonas@fsfe.org>
 
-diff --git a/tests/generic/468 b/tests/generic/468
-new file mode 100755
-index 0000000..fcbbf34
---- /dev/null
-+++ b/tests/generic/468
-@@ -0,0 +1,83 @@
-+#! /bin/bash
-+# FS QA Test No. 468
-+#
-+# Use dm-log-writes to verify that MAP_SYNC actually syncs metadata during
-+# page faults.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	_log_writes_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmlogwrites
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_log_writes
-+_require_scratch_dax
-+_require_xfs_io_command "log_writes"
-+
-+_log_writes_init
-+_log_writes_mkfs >> $seqres.full 2>&1
-+_log_writes_mount -o dax
-+
-+LEN=$((1024 * 1024)) # 1 MiB
-+
-+xfs_io -t -c "truncate $LEN" -c "mmap -S 0 $LEN" -c "mwrite 0 $LEN" \
-+	-c "log_writes -d $LOGWRITES_NAME -m preunmap" \
-+	-f $SCRATCH_MNT/test > /dev/null 2>&1
-+
-+# Unmount the scratch dir and tear down the log writes target
-+_log_writes_unmount
-+_log_writes_remove
-+_check_scratch_fs
-+
-+# destroy previous filesystem so we can be sure our rebuild works
-+_scratch_mkfs >> $seqres.full 2>&1
-+
-+# check pre-unmap state
-+_log_writes_replay_log preunmap
-+_scratch_mount
-+
-+# We should see $SCRATCH_MNT/test as having 1 MiB in block allocations
-+stat -c "%s" $SCRATCH_MNT/test
-+
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/generic/468.out b/tests/generic/468.out
-new file mode 100644
-index 0000000..5f897af
---- /dev/null
-+++ b/tests/generic/468.out
-@@ -0,0 +1,3 @@
-+QA output created by 468
-+1048576
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 9183950..c061842 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -470,3 +470,4 @@
- 465 auto rw quick aio
- 466 auto quick rw
- 467 auto quick exportfs
-+468 auto quick dax
+
+Best,
+
 -- 
-2.9.5
+Jonas Öberg
+Executive Director
 
+FSFE e.V. - keeping the power of technology in your hands. Your
+support enables our work, please join us today http://fsfe.org/join
