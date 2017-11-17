@@ -1,233 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20129 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933840AbdKQHKj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 02:10:39 -0500
-Date: Thu, 16 Nov 2017 23:10:34 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/2] generic: test zero page cache beyond new EOF on
- truncate down
-Message-ID: <20171117071034.GB5111@magnolia>
-References: <20171109083242.32373-1-eguan@redhat.com>
- <20171109083242.32373-2-eguan@redhat.com>
- <20171117065820.GB2749@eguan.usersys.redhat.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38224 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934362AbdKQI52 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 03:57:28 -0500
+Date: Fri, 17 Nov 2017 09:57:31 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [patch 1/7] Documentation: Add license-rules.rst to describe how
+ to properly identify file licenses
+Message-ID: <20171117085731.GA28421@kroah.com>
+References: <20171112191821.240484206@linutronix.de>
+ <20171112192142.525567667@linutronix.de>
+ <20171116080723.279591c8@lwn.net>
+ <20171116151540.GA18500@silk.coyote.org>
+ <CAOFm3uFANvJa0yxiKPcR7KER22951+uO8-qez+hKRY9PzzNskw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171117065820.GB2749@eguan.usersys.redhat.com>
+In-Reply-To: <CAOFm3uFANvJa0yxiKPcR7KER22951+uO8-qez+hKRY9PzzNskw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Philippe Ombredanne <pombredanne@nexb.com>
+Cc: Jonas Oberg <jonas@fsfe.org>, Jonathan Corbet <corbet@lwn.net>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Joe Perches <joe@perches.com>, xfs <linux-xfs@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
-On Fri, Nov 17, 2017 at 02:58:20PM +0800, Eryu Guan wrote:
-> On Thu, Nov 09, 2017 at 04:32:42PM +0800, Eryu Guan wrote:
-> > From mmap(2) manpage, "a file is mapped in multiples of the page
-> > size. For a file that is not a multiple of the page size, the
-> > remaining memory is zeroed when mapped", this test is to test this
-> > behavior on truncate down.
-> > 
-> > This is inspired by an XFS bug that truncate down fails to zero page
-> > cache beyond new EOF and causes stale data written to disk
-> > unexpectedly and a subsequent mmap sees non-zeros post EOF.
-> > 
-> > Patch "xfs: truncate pagecache before writeback in
-> > xfs_setattr_size()" fixed the bug on XFS.
-> > 
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> > v2:
-> > - update comments and commit log to reflect the final fix of the bug
-> > - dump fsx error message to stdout on error, so it's easier to know
-> >   what is failing
+On Fri, Nov 17, 2017 at 08:37:28AM +0100, Philippe Ombredanne wrote:
+> Or fix the non-standard redefinition of the MODULE_LICENSE macro as
+> DRIVER_LICENSE as in [2]  and found elsewhere with
+> grep -r . -e "DRIVER_LICENSE"
 > 
-> Ping on this test.
+> These break the otherwise nicely grepable MODULE_LICENSE macros
+> with this kind of warty redirection I stumbled upon while reviewing kernel
+> license scans:
+> 
+> #define DRIVER_LICENSE "GPL"
+> [...]
+> MODULE_LICENSE(DRIVER_LICENSE);
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yes, those should be cleaned up, there's only 11 instances of them,
+should be simple enough to do.  I can knock up a patch series for
+them...
 
-> 
-> Thanks,
-> Eryu
-> 
-> > 
-> >  tests/generic/466     | 135 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/466.out |   9 ++++
-> >  tests/generic/group   |   1 +
-> >  3 files changed, 145 insertions(+)
-> >  create mode 100755 tests/generic/466
-> >  create mode 100644 tests/generic/466.out
-> > 
-> > diff --git a/tests/generic/466 b/tests/generic/466
-> > new file mode 100755
-> > index 000000000000..435bd39a42cc
-> > --- /dev/null
-> > +++ b/tests/generic/466
-> > @@ -0,0 +1,135 @@
-> > +#! /bin/bash
-> > +# FS QA Test 466
-> > +#
-> > +# Test that mmap read doesn't see non-zero data past EOF on truncate down.
-> > +#
-> > +# This is inspired by an XFS bug that truncate down fails to zero page cache
-> > +# beyond new EOF and causes stale data written to disk unexpectedly and a
-> > +# subsequent mmap reads and sees non-zeros post EOF.
-> > +#
-> > +# Patch "xfs: truncate pagecache before writeback in xfs_setattr_size()" fixed
-> > +# the bug on XFS.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2017 Red Hat Inc., All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +file=$TEST_DIR/$seq.fsx
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $file $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_test
-> > +
-> > +run_fsx()
-> > +{
-> > +	$here/ltp/fsx $2 --replay-ops $1 $file 2>&1 | tee -a $seqres.full >$tmp.fsx
-> > +	if [ ${PIPESTATUS[0]} -ne 0 ]; then
-> > +		cat $tmp.fsx
-> > +		exit 1
-> > +	fi
-> > +}
-> > +
-> > +# run fsx with and without fsync(2) after write to get more coverage
-> > +test_fsx()
-> > +{
-> > +	echo "fsx --replay-ops ${1#*.}"
-> > +	run_fsx $1
-> > +
-> > +	echo "fsx -y --replay-ops ${1#*.}"
-> > +	run_fsx $1 -y
-> > +}
-> > +
-> > +# simplified fsx operations that work on small & not blocksize-aligned offsets,
-> > +# so filesystems with small block size could reproduce too
-> > +cat >$tmp.fsxops.0 <<EOF
-> > +# create file with unwritten extent, KEEP_SIZE flag is required, otherwise page
-> > +# straddles new i_size in the writeback triggered by truncate, range [i_size,
-> > +# page_boundary] will be zeroed there, and bug won't be reproduced
-> > +fallocate 0x0 0x1000 0x0 keep_size
-> > +
-> > +# overwrite the unwritten extents with non-zeros, but extent will stay in
-> > +# unwritten till I/O completion
-> > +write 0x0 0x1000 0x0
-> > +
-> > +# truncate down the file, which should zero page cache beyong new EOF but a
-> > +# buggy kernel won't
-> > +truncate 0x0 0x10 0x1000
-> > +
-> > +# unmap the file and invalidate the pagecache of the block
-> > +punch_hole 0x0 0x10 0x10
-> > +
-> > +# mmap reads the whole block from disk, and fsx will check page range beyond
-> > +# EOF to make sure we only see zeros there
-> > +mapread 0x0 0x10 0x10
-> > +EOF
-> > +
-> > +# to get a bit more test coverage, try other operation combinations too
-> > +# same as fsxops.0, but skip punch_hole to keep the pagecache before mapread
-> > +cat >$tmp.fsxops.1 <<EOF
-> > +fallocate 0x0 0x1000 0x0 keep_size
-> > +write 0x0 0x1000 0x0
-> > +truncate 0x0 0x10 0x1000
-> > +mapread 0x0 0x10 0x10
-> > +EOF
-> > +
-> > +# same as fsxops.0, but fallocate without KEEP_SIZE flag
-> > +cat >$tmp.fsxops.2 <<EOF
-> > +fallocate 0x0 0x1000 0x0
-> > +write 0x0 0x1000 0x0
-> > +truncate 0x0 0x10 0x1000
-> > +punch_hole 0x0 0x10 0x10
-> > +mapread 0x0 0x10 0x10
-> > +EOF
-> > +
-> > +# this is from the original fsxops when bug was first hit
-> > +cat >$tmp.fsxops.3 <<EOF
-> > +fallocate 0x35870 0xa790 0x0 keep_size
-> > +write 0x2aa50 0xc37f 0x0
-> > +truncate 0x0 0x36dcd 0x36dcf
-> > +zero_range 0x35849 0x1584 0x36dcd
-> > +mapread 0x361c8 0xc05 0x36dcd
-> > +EOF
-> > +
-> > +for i in 0 1 2 3; do
-> > +	test_fsx $tmp.fsxops.$i
-> > +done
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/466.out b/tests/generic/466.out
-> > new file mode 100644
-> > index 000000000000..8430bb462ad1
-> > --- /dev/null
-> > +++ b/tests/generic/466.out
-> > @@ -0,0 +1,9 @@
-> > +QA output created by 466
-> > +fsx --replay-ops fsxops.0
-> > +fsx -y --replay-ops fsxops.0
-> > +fsx --replay-ops fsxops.1
-> > +fsx -y --replay-ops fsxops.1
-> > +fsx --replay-ops fsxops.2
-> > +fsx -y --replay-ops fsxops.2
-> > +fsx --replay-ops fsxops.3
-> > +fsx -y --replay-ops fsxops.3
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index fbe0a7f4a717..b71644008b55 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -468,3 +468,4 @@
-> >  463 auto quick clone dangerous
-> >  464 auto rw
-> >  465 auto rw quick aio
-> > +466 auto quick
-> > -- 
-> > 2.13.6
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thanks,
+
+greg k-h
