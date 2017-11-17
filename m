@@ -1,142 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:40950 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754699AbdKRTD5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Nov 2017 14:03:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171116184358.475929943@linutronix.de>
-References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de>
-From: Charlemagne Lasse <charlemagnelasse@gmail.com>
-Date: Sat, 18 Nov 2017 20:03:56 +0100
-Message-ID: <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
-Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
-Content-Type: text/plain; charset="UTF-8"
+Received: from mga02.intel.com ([134.134.136.20]:54246 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760307AbdKQU2i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 15:28:38 -0500
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [fstests PATCH v4 4/4] generic: add test for DAX MAP_SYNC support
+Date: Fri, 17 Nov 2017 13:28:28 -0700
+Message-Id: <20171117202828.25472-5-ross.zwisler@linux.intel.com>
+In-Reply-To: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
+References: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: fstests <fstests@vger.kernel.org>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
 
-2017-11-16 19:33 GMT+01:00 Thomas Gleixner <tglx@linutronix.de>:
-> Add the full text of the GPL 2.0 license to the kernel tree.  It was
-> copied directly from:
->
->    https://spdx.org/licenses/GPL-2.0.html#licenseText
->
-> Add the required tags for reference and tooling.
->
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+This test creates a file and writes to it via an mmap(), but never syncs
+via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
 
-NACKed-by: Charlemagne Lasse <charlemagnelasse@gmail.com>
+If MAP_SYNC is working the dm-log-writes replay will show the test file
+with 1 MiB of on-media block allocations.  This is because each allocating
+page fault included an implicit metadata sync.  If MAP_SYNC isn't working
+(which you can test by removing the "-S" flag to xfs_io mmap) the file
+will be smaller or missing entirely.
 
-This is neither the GPL-2.0 from https://www.gnu.org/licenses/gpl-2.0.txt
-(which you should have used) or
-https://spdx.org/licenses/GPL-2.0.html#licenseText
+Note that dm-log-writes doesn't track the data that we write via the
+mmap(), so we can't do any data integrity checking.  We can only verify
+that the metadata writes for the page faults happened.
 
-Please download the correct ASCII version from gnu.org and add your SPDX
-info in front of it. But I have also added detailed info about
-non-whitespace changes in your patch.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ tests/generic/468     | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/468.out |  3 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 87 insertions(+)
+ create mode 100755 tests/generic/468
+ create mode 100644 tests/generic/468.out
 
-But I am sure that you will tell me again that I am only arguing in
-circles.
+diff --git a/tests/generic/468 b/tests/generic/468
+new file mode 100755
+index 0000000..fcbbf34
+--- /dev/null
++++ b/tests/generic/468
+@@ -0,0 +1,83 @@
++#! /bin/bash
++# FS QA Test No. 468
++#
++# Use dm-log-writes to verify that MAP_SYNC actually syncs metadata during
++# page faults.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	_log_writes_cleanup
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/dmlogwrites
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_log_writes
++_require_scratch_dax
++_require_xfs_io_command "log_writes"
++
++_log_writes_init
++_log_writes_mkfs >> $seqres.full 2>&1
++_log_writes_mount -o dax
++
++LEN=$((1024 * 1024)) # 1 MiB
++
++xfs_io -t -c "truncate $LEN" -c "mmap -S 0 $LEN" -c "mwrite 0 $LEN" \
++	-c "log_writes -d $LOGWRITES_NAME -m preunmap" \
++	-f $SCRATCH_MNT/test > /dev/null 2>&1
++
++# Unmount the scratch dir and tear down the log writes target
++_log_writes_unmount
++_log_writes_remove
++_check_scratch_fs
++
++# destroy previous filesystem so we can be sure our rebuild works
++_scratch_mkfs >> $seqres.full 2>&1
++
++# check pre-unmap state
++_log_writes_replay_log preunmap
++_scratch_mount
++
++# We should see $SCRATCH_MNT/test as having 1 MiB in block allocations
++stat -c "%s" $SCRATCH_MNT/test
++
++_scratch_unmount
++_check_scratch_fs
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/468.out b/tests/generic/468.out
+new file mode 100644
+index 0000000..5f897af
+--- /dev/null
++++ b/tests/generic/468.out
+@@ -0,0 +1,3 @@
++QA output created by 468
++1048576
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 9183950..c061842 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -470,3 +470,4 @@
+ 465 auto rw quick aio
+ 466 auto quick rw
+ 467 auto quick exportfs
++468 auto quick dax
+-- 
+2.9.5
 
->
-> ---
->  LICENSES/preferred/GPL-2.0 |  348 +++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 348 insertions(+)
->  create mode 100644 LICENSES/GPL-2.0
-
-This patch seems to have been modified by hand because the summary doesn't
-match the patch.
-
->
-> --- /dev/null
-> +++ b/LICENSES/preferred/GPL-2.0
-<cut>
-> +GNU GENERAL PUBLIC LICENSE
-> +Version 2, June 1991
-> +
-> +Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-
-That should be:  "Inc.," and not "Inc."
-
-<cut>
-> +
-> +Everyone is permitted to copy and distribute verbatim copies
-> +of this license document, but changing it is not allowed.
-> +
-> +Preamble
-> +
-> +The licenses for most software are designed to take away your freedom to
-> +share and change it. By contrast, the GNU General Public License is
-> +intended to guarantee your freedom to share and change free software--to
-> +make sure the software is free for all its users. This General Public
-> +License applies to most of the Free Software Foundation's software and to
-> +any other program whose authors commit to using it. (Some other Free
-> +Software Foundation software is covered by the GNU Library General Public
-> +License instead.) You can apply it to your programs, too.
-
-That should be "GNU Lesser General Public" and not "GNU Library General Public"
-
-<cut>
-> +The precise terms and conditions for copying, distribution and modification follow.
-> +
-> +TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
-
-"GNU GENERAL PUBLIC LICENSE" is missing before
-"TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION"
-
-<cut>
-> +To do so, attach the following notices to the program. It is safest to
-> +attach them to the start of each source file to most effectively convey the
-> +exclusion of warranty; and each file should have at least the "copyright"
-> +line and a pointer to where the full notice is found.
-> +
-> +    One line to give the program's name and a brief idea of what it does.
-
-This should actually be:
-
-<one line to give the program's name and a brief idea of what it does.>
-
-
-> +    Copyright (C) <year> <name of author>
-> +
-> +    This program is free software; you can redistribute it and/or modify it
-> +    under the terms of the GNU General Public License as published by the
-> +    Free Software Foundation; either version 2 of the License, or (at your
-> +    option) any later version.
-> +
-> +    This program is distributed in the hope that it will be useful, but
-> +    WITHOUT ANY WARRANTY; without even the implied warranty of
-> +    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-> +    General Public License for more details.
-> +
-> +    You should have received a copy of the GNU General Public License along
-> +    with this program; if not, write to the Free Software Foundation, Inc.,
-> +    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-This is the wrong address. It should actually be
-
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-<cut>
-> +    Yoyodyne, Inc., hereby disclaims all copyright interest in the program
-> +    `Gnomovision' (which makes passes at compilers) written by James
-> +    Hacker.
-> +
-> +    signature of Ty Coon, 1 April 1989
-
-This should actually be:
-
-<signature of Ty Coon>, 1 April 1989
-
-
-> +    Ty Coon, President of Vice
-> +
-> +This General Public License does not permit incorporating your program into
-> +proprietary programs. If your program is a subroutine library, you may
-> +consider it more useful to permit linking proprietary applications with the
-> +library. If this is what you want to do, use the GNU Library General Public
-> +License instead of this License.
-
-"Lesser Library General Public" and not "Library General Public License"
