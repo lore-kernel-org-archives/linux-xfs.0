@@ -1,57 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:48848 "EHLO ms.lwn.net"
+Received: from mga07.intel.com ([134.134.136.100]:38765 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965526AbdKQWit (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 17:38:49 -0500
-Date: Fri, 17 Nov 2017 15:38:47 -0700
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [patch V3 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
-Message-ID: <20171117153847.251e578d@lwn.net>
-In-Reply-To: <alpine.DEB.2.20.1711171040290.1709@nanos>
-References: <20171116183306.103584007@linutronix.de>
-        <20171116184358.398030394@linutronix.de>
-        <20171116135730.265a8323@lwn.net>
-        <alpine.DEB.2.20.1711171040290.1709@nanos>
+        id S1752959AbdKQVOk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 16:14:40 -0500
+Date: Fri, 17 Nov 2017 14:14:34 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [xfsprogs PATCH 2/2] xfs_io: add a new 'log_writes' command
+Message-ID: <20171117211434.GB16597@linux.intel.com>
+References: <20171117202524.24696-1-ross.zwisler@linux.intel.com>
+ <20171117202524.24696-3-ross.zwisler@linux.intel.com>
+ <84006b9c-90db-7eea-0bdc-b73da1bb1394@sandeen.net>
+ <20171117204801.GA16597@linux.intel.com>
+ <960d0051-d357-033a-0ab7-9eb99d8e63fa@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <960d0051-d357-033a-0ab7-9eb99d8e63fa@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On Fri, 17 Nov 2017 10:48:57 +0100 (CET)
-Thomas Gleixner <tglx@linutronix.de> wrote:
-
-> > > +The following describes the license of the Linux kernel source code
-> > > +(GPLv2), how to properly mark the license of individual files in the source
-> > > +tree, as well as links to the full license text.
-> > > +
-> > > +.. toctree::
-> > > +   :maxdepth: 2
-> > > +
-> > > +   process/license-rules.rst
-> > > +  
+On Fri, Nov 17, 2017 at 03:03:39PM -0600, Eric Sandeen wrote:
+> On 11/17/17 2:48 PM, Ross Zwisler wrote:
+> > On Fri, Nov 17, 2017 at 02:39:07PM -0600, Eric Sandeen wrote:
+> >> On 11/17/17 2:25 PM, Ross Zwisler wrote:
+> >>> Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
+> >>> log marks via the external 'dmsetup' executable.  It's helpful to allow
+> >>> users of xfs_io to adds these marks from within xfs_io instead of waiting
+> >>> until after xfs_io exits because then they are able to replay the
+> >>> dm-log-writes log up to immediately after another xfs_io operation such as
+> >>> mwrite.  This isolates the log replay from other operations that happen as
+> >>> part of xfs_io exiting (file handles being closed, mmaps being torn down,
+> >>> etc.).  This also allows users to insert multiple marks between different
+> >>> xfs_io commands.
+> >>>
+> >>> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> >>> Suggested-by: Dave Chinner <david@fromorbit.com>
+> >>
+> >> Without reviewing in detail, what is the advantage of wrapping dmsetup
+> >> into xfs_io?  My first inclination is that there is none at all, and
+> >> xfstests can call dmsetup as easily as they can call xfs_io.  No?
+> >>
+> >> -Eric
 > > 
-> > I'll confess that I'm not convinced that information on license identifiers
-> > is the very first thing readers should encounter when entering the kernel's
-> > documentation.  But I'll not quibble about it for now, we can always move
-> > it later :)  
+> > I commented on this a bit in the changelog for the 2nd patch:
+> > 
+> > It's helpful to allow users of xfs_io to adds these marks from within xfs_io
+> > instead of waiting until after xfs_io exits because then they are able to
+> > replay the dm-log-writes log up to immediately after another xfs_io operation
+> > such as mwrite.  This isolates the log replay from other operations that
+> > happen as part of xfs_io exiting (file handles being closed, mmaps being torn
+> > down, etc.).  This also allows users to insert multiple marks between
+> > different xfs_io commands.
+> > 
+> > I agree that the shell-out to dmsetup isn't awesome...  For the current test I
+> > have written I think we can get away with just assuming that the xfs_io exit
+> > stuff won't interact too heavily with the dm-log-writes log, and we could
+> > potentially move the dmsetup call back into the fstest.  This is how I
+> > initially had it, and moved it into the C program via shell-out in response to
+> > Amir's feedback:
 > 
-> Any suggestions for a better place?
+> Sorry, terrible of me to not have read that.  :(  Ok, so next question - 
+> DM_TARGET_MSG seems to be public, can we just invoke the ioctl directly
+> instead of shelling out to dmsetup?
+> 
+> I'm checking w/ the dm folks too, to make sure that's expected to work.  As
+> long as the use isn't too tricky it seems like that might be better.
 
-I'd put it into Documentation/process/index.rst.  That is where we have
-put the rest of that kind of information - stuff that people who want to
-do kernel development need to know.
-
-Other than that quibble, V4 looks good to me; toss in a
-
-	Reviewed-by: Jonathan Corbet <corbet@lwn.net>
-
-if you like.
-
-Thanks,
-
-jon
+Yea, that seems like a better option - I'll take a look.  Thanks for the
+suggestion.
