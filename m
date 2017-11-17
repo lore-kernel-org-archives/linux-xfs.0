@@ -1,88 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40714 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752636AbdKQFFJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 00:05:09 -0500
-Subject: Re: [PATCH for 4.14] xfs_copy: don't hang if /all/ the targets hit
- write errors
-References: <20171116011232.GG5119@magnolia>
- <9bfccb40-f75c-b801-80aa-a80d05952795@sandeen.net>
- <20171117034509.GK5119@magnolia> <20171117044847.GL5119@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c9888eec-dd1f-4bba-20dc-9e6d83e87380@sandeen.net>
-Date: Thu, 16 Nov 2017 23:05:08 -0600
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36535 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934274AbdKQHiK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 02:38:10 -0500
+Received: by mail-wm0-f67.google.com with SMTP id r68so4563901wmr.1
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Nov 2017 23:38:09 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20171117044847.GL5119@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20171116151540.GA18500@silk.coyote.org>
+References: <20171112191821.240484206@linutronix.de> <20171112192142.525567667@linutronix.de>
+ <20171116080723.279591c8@lwn.net> <20171116151540.GA18500@silk.coyote.org>
+From: Philippe Ombredanne <pombredanne@nexb.com>
+Date: Fri, 17 Nov 2017 08:37:28 +0100
+Message-ID: <CAOFm3uFANvJa0yxiKPcR7KER22951+uO8-qez+hKRY9PzzNskw@mail.gmail.com>
+Subject: Re: [patch 1/7] Documentation: Add license-rules.rst to describe how
+ to properly identify file licenses
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, djwong@kernel.org
+To: Jonas Oberg <jonas@fsfe.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Joe Perches <joe@perches.com>, xfs <linux-xfs@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
+On Thu, Nov 16, 2017 at 4:15 PM, Jonas Oberg <jonas@fsfe.org> wrote:
+> Hi,
+>
+>> One other thing that occurred to me is that documentation files, too,
+>> are copyrightable and should have license identifiers.
+>
+> Would it make sense to take an incremental approach to this? Get the
+> source code and identifiers worked on by Thomas et al through first, then
+> think about and fix up potential other issues, like the top level COPYING
+> file, or documentation :-)
 
+I could not agree more... code first!
+FWIW I scanned the whole docs with scancode as part of this exercise.
+They are rather ... messy license-wise, but even though I got through
+it eventually they also generally less critical license-wise IMHO.
 
-On 11/16/17 10:48 PM, Darrick J. Wong wrote:
-> On Thu, Nov 16, 2017 at 07:45:09PM -0800, Darrick J. Wong wrote:
->> On Thu, Nov 16, 2017 at 03:10:39PM -0600, Eric Sandeen wrote:
->>>
->>>
->>> On 11/15/17 7:14 PM, Darrick J. Wong wrote:
->>>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>>
->>>> If xfs_copy is told to copy a filesystem and /all/ the writer threads
->>>> hit an write error, there won't be any threads to unlock mainwait, which
->>>> means that write_wbuf will deadlock with itself trying to lock mainwait.
->>>> Therefore, if we discover that all the writer threads are dead, just
->>>> bail out.
->>>>
->>>> Discovered by running xfs/073 with a tiny test device.
->>>>
->>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>>> ---
->>>>  copy/xfs_copy.c |   12 ++++++++++++
->>>>  1 file changed, 12 insertions(+)
->>>>
->>>> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
->>>> index 33e05df..fb37375 100644
->>>> --- a/copy/xfs_copy.c
->>>> +++ b/copy/xfs_copy.c
->>>> @@ -476,6 +476,7 @@ void
->>>>  write_wbuf(void)
->>>>  {
->>>>  	int		i;
->>>> +	int		badness = 0;
->>>>  
->>>>  	/* verify target threads */
->>>>  	for (i = 0; i < num_targets; i++)
->>>> @@ -486,6 +487,17 @@ write_wbuf(void)
->>>>  	for (i = 0; i < num_targets; i++)
->>>>  		if (target[i].state != INACTIVE)
->>>>  			pthread_mutex_unlock(&targ[i].wait);	/* wake up */
->>>> +		else
->>>> +			badness++;
->>>> +
->>>> +	/*
->>>> +	 * If all the targets are inactive then there won't be any io
->>>> +	 * threads left to release mainwait.  We're screwed, so bail out.
->>>> +	 */
->>>> +	if (badness == num_targets) {
->>>> +		check_errors();
->>>
->>> libxfs_umount(mp); ?
->>
->> Doh. v2 on its way
-> 
-> Hmmm.  The other error bailouts don't call libxfs_umount and it hardly
-> matters since we're exiting anyway.  The mp is a local variable to main
-> so we'd have to convey abort status out of write_wbuf back to main.
-> That's a bigger change; do you want me to pursue that instead?
+You can see some details of these scans in [1] though they are not
+100% up to date: I did not post every intermediate scans and review
+there as things are moving at a fast pace.
 
-Eh if there's precedent for such sloppiness, I guess we can stick with
-V1.  ;)
+There are probably more pressing things to fix such as discrepancies
+between a MODULE_LICENSE and the licensing of a file when they do not
+match.
 
-Thanks for checking.
+Here [2] the top level comment is a plain GPL-2.0 "only" while the
+MODULE_LICENSE  is a GPL-2.0+ "or later"  (based on the plain "GPL"
+definition in module.h [3] and this is just  one of many examples of this
+weirdness.
 
--Eric
+Or fix the non-standard redefinition of the MODULE_LICENSE macro as
+DRIVER_LICENSE as in [2]  and found elsewhere with
+grep -r . -e "DRIVER_LICENSE"
+
+These break the otherwise nicely grepable MODULE_LICENSE macros
+with this kind of warty redirection I stumbled upon while reviewing kernel
+license scans:
+
+#define DRIVER_LICENSE "GPL"
+[...]
+MODULE_LICENSE(DRIVER_LICENSE);
+
+[1] https://github.com/pombredanne/linux-kernel-scans/
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/alpha/kernel/srm_env.c?h=v4.14#n13
+[3] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/module.h?h=v4.14#n174
+[4] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/gma500/psb_drv.h?h=v4.14#n39
+-- 
+Cordially
+Philippe Ombredanne
