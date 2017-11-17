@@ -1,137 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16740 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752677AbdKQSYG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:06 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAHIO4tx023332
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:05 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vAHIO4E9029351
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:04 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAHIO4Pp009049
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:04 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 03/17] Add xfs_attr_set_defered and xfs_attr_remove_defered
-Date: Fri, 17 Nov 2017 11:21:31 -0700
-Message-Id: <1510942905-12897-4-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:51693 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751436AbdKQSLx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:11:53 -0500
+Date: Fri, 17 Nov 2017 19:11:41 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to describe
+ how to properly identify file licenses
+In-Reply-To: <20171117150639.0e706421@vento.lan>
+Message-ID: <alpine.DEB.2.20.1711171850330.2186@nanos>
+References: <20171116183306.103584007@linutronix.de> <20171116184358.398030394@linutronix.de> <alpine.DEB.2.20.1711171057240.1709@nanos> <20171117150639.0e706421@vento.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-These routines set up set and start a new deferred attribute
-operation.  These functions are meant to be called by other
-code needing to initiate a deferred attribute operation.  We
-will use these routines later in the parent pointer patches.
+Mauro,
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_attr.h        |  5 ++++
- 2 files changed, 67 insertions(+)
+On Fri, 17 Nov 2017, Mauro Carvalho Chehab wrote:
+> Em Fri, 17 Nov 2017 11:00:33 +0100 (CET)
+> Thomas Gleixner <tglx@linutronix.de> escreveu:
+> 
+> > Subject: Documentation: Add license-rules.rst to describe how to properly identify file licenses
+> > From: Thomas Gleixner <tglx@linutronix.de>
+> > Date: Fri, 10 Nov 2017 09:30:00 +0100
+> > 
+> > Add a file to the Documentation directory to describe how file licenses
+> > should be described in all kernel files, using the SPDX identifier, as well
+> > as where all licenses should be in the kernel source tree for people to
+> > refer to (LICENSES/).
+> > 
+> > Thanks to Kate, Greg and Jonathan for review and editing and Jonas for the
+> > suggestions concerning the meta tags in the licenses files.
+> > 
+> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> 
+> The document itself looks good, but I think it should also mention
+> what would be the expected values for the MODULE_LICENSE() macro and
+> how each license would be mapped into it.
+> 
+> Right now, include/linux/module.h says:
+> 
+> /*
+>  * The following license idents are currently accepted as indicating free
+>  * software modules
+>  *
+>  *	"GPL"				[GNU Public License v2 or later]
+>  *	"GPL v2"			[GNU Public License v2]
+>  *	"GPL and additional rights"	[GNU Public License v2 rights and more]
+>  *	"Dual BSD/GPL"			[GNU Public License v2
+>  *					 or BSD license choice]
+>  *	"Dual MIT/GPL"			[GNU Public License v2
+>  *					 or MIT license choice]
+>  *	"Dual MPL/GPL"			[GNU Public License v2
+>  *					 or Mozilla license choice]
+>  *
+>  * The following other idents are available
+>  *
+>  *	"Proprietary"			[Non free products]
+>  *
+>  * There are dual licensed components, but when running with Linux it is the
+>  * GPL that is relevant so this is a non issue. Similarly LGPL linked with GPL
+>  * is a GPL combined work.
+>  *
+>  * This exists for several reasons
+>  * 1.	So modinfo can show license info for users wanting to vet their setup
+>  *	is free
+>  * 2.	So the community can ignore bug reports including proprietary modules
+>  * 3.	So vendors can do likewise based on their own policies
+>  */
+> #define MODULE_LICENSE(_license) MODULE_INFO(license, _license)
+> 
+> In thesis, for every SPDX property at C or assembler files, we should have
+> a mapping into one of those MODULE_LICENSE().
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 716df0f..68dc7e04 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -469,6 +469,40 @@ xfs_attr_set(
- 	return error;
- }
- 
-+/* Sets an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_set_deferred(
-+	struct xfs_inode	*dp,
-+	struct xfs_defer_ops    *dfops,
-+	void			*name,
-+	unsigned int		namelen,
-+	void			*value,
-+	unsigned int		valuelen,
-+	int			flags)
-+{
-+
-+	struct xfs_attr_item     *new;
-+
-+	ASSERT(namelen != 0);
-+	ASSERT(valuelen != 0);
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
-+			 KM_SLEEP|KM_NOFS);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
-+	new->xattri_name_len = namelen;
-+	new->xattri_value_len = valuelen;
-+	new->xattri_flags = flags;
-+	memcpy(&new->xattri_name_value[0], name, namelen);
-+	memcpy(&new->xattri_name_value[namelen],
-+		value, valuelen);
-+
-+	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*
-  * Generic handler routine to remove a name from an attribute list.
-  * Transitions attribute list from Btree to shortform as necessary.
-@@ -545,6 +579,34 @@ xfs_attr_remove(
- 	return error;
- }
- 
-+/* Removes an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_remove_deferred(
-+	struct xfs_inode        *dp,
-+	struct xfs_defer_ops    *dfops,
-+	void			*name,
-+	unsigned int		namelen,
-+	int                     flags)
-+{
-+
-+	struct xfs_attr_item     *new;
-+
-+	ASSERT(namelen != 0);
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
-+	new->xattri_name_len = namelen;
-+	new->xattri_value_len = 0;
-+	new->xattri_flags = flags;
-+	memcpy(new->xattri_name_value, name, namelen);
-+
-+	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 3ef3c77..8d4762a 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -175,5 +175,10 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       const unsigned char *name, int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-+int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
-+			  void *name, unsigned int name_len, void *value,
-+			  unsigned int valuelen, int flags);
-+int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
-+			    void *name, unsigned int namelen, int flags);
- 
- #endif	/* __XFS_ATTR_H__ */
--- 
-2.7.4
+I know. This is on the list of things which need to be addressed. The
+module license tags are a mess on their own and I have yet to come up with
+something smart to make this consistent.
 
+Whatever I came up with so far requires postprocessing.
+
+For files which have MODULE_LICENSE("...."):
+
+   1) Grab the SPDX identifier from the source file
+
+   2) Check whether the module license string is matching the SPDX license
+      id. This is limited because the module license strings are pretty
+      restricted.
+
+   2) Store the SPDX license id string in a separate module info variable
+
+Introcude a MODULE_LICENSE_SPDX macro which flags the module info storage
+as 'SPDXIFY' and let the postprocessor do:
+
+   1) Grab the SPDX identifier from the source file
+
+   2) Map it to the "known" module license string and store both in module
+      info.
+
+That way tools can get access to the SPDX identifier and start to support it.
+
+I refrained from documenting anything in that area yet, because we really
+need to sit down and figure out a solution first.
+
+It's on that huge thingy which is append only, aka. todo list.
+
+Thanks,
+
+	tglx
