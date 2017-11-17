@@ -1,69 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59568 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:43697 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753612AbdJaWNM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Oct 2017 18:13:12 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC] xfs: fix reporting supported extra file attributes for statx()
-Date: Tue, 31 Oct 2017 15:13:05 -0700
-Message-Id: <20171031221305.12908-1-mcgrof@kernel.org>
+        id S965178AbdKQTwh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 14:52:37 -0500
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 2C627AC9D
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 19:52:36 +0000 (UTC)
+From: jeffm@suse.com
+Subject: [PATCH 1/2] xfs_io: stat: fix typo in statfs->f_flags
+Date: Fri, 17 Nov 2017 14:54:56 -0500
+Message-Id: <20171117195457.16218-1-jeffm@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jeff Mahoney <jeffm@suse.com>
 
-statx(2) notes that any attribute that is not indicated as supported by
-stx_attributes_mask has no usable value. Commit 5f955f26f3d42d ("xfs: report
-crtime and attribute flags to statx") added support for informing userspace
-of extra file attributes but forgot to list these flags as supported
-making reporting them rather useless for the pedantic userspace author.
+From: Jeff Mahoney <jeffm@suse.com>
 
-$ git describe --contains 5f955f26f3d42d04aba65590a32eb70eedb7f37d
-v4.11-rc6~5^2^2~2
+The field name is f_flags.
 
-Fixes: 5f955f26f3d42d ("xfs: report crtime and attribute flags to statx")
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
 ---
+ io/stat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Its unclear why David left these out or if it was just a mistake, I checked
-the original patch thread [0] but it was not clear in the end. David?
-
-Also, I posted a patch to add support to clearing these flags through
-xfs_repair on symlinks [1] due to the pain this can cause as you have no option
-but to use xfs_db to fix these otherwise. Since we *didn't* list these extra
-file attributes as supported, it begs the question if instead we should only
-set them *and* this mask if !S_ISLNK(inode->i_mode)).
-
-If so, that also begs the question if we should add further sanity check
-on the xfs setattr to ensure these are never set on symbolic links, despite the
-fact that FS_IOC_FSSETXATTR ioctl won't be able to set them...
-
-A long shot question in terms of semantics is if all the above is rather
-generic for Linux, is if the VFS should even be checking for immutable or
-append flags on unlink for symbolic links.
-
-[0] https://patchwork.kernel.org/patch/9607879/
-[1] https://lkml.kernel.org/r/20171031215156.12544-1-mcgrof@kernel.org
-
- fs/xfs/xfs_iops.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 17081c77ef86..6b7d293a4aab 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -531,6 +531,10 @@ xfs_vn_getattr(
- 	if (ip->i_d.di_flags & XFS_DIFLAG_NODUMP)
- 		stat->attributes |= STATX_ATTR_NODUMP;
- 
-+	stat->attributes_mask |= (STATX_ATTR_IMMUTABLE |
-+				  STATX_ATTR_APPEND |
-+				  STATX_ATTR_NODUMP);
-+
- 	switch (inode->i_mode & S_IFMT) {
- 	case S_IFBLK:
- 	case S_IFCHR:
+diff --git a/io/stat.c b/io/stat.c
+index 060ff833..6ab10abf 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -199,7 +199,7 @@ statfs_f(
+ 		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
+ 		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
+ 		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
+-		printf(_("statfs.f_fflags = 0x%llx\n"), (long long) st.f_flags);
++		printf(_("statfs.f_flags = 0x%llx\n"), (long long) st.f_flags);
+ 	}
+ 	if (file->flags & IO_FOREIGN)
+ 		return 0;
 -- 
 2.14.2
 
