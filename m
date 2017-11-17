@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47222 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761980AbdKQVB4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 16:01:56 -0500
-Subject: [PATCH 17/27] xfs_scrub: warn about suspicious characters in
- directory/xattr names
+Received: from aserp1040.oracle.com ([141.146.126.69]:42694 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751858AbdKQVCI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 16:02:08 -0500
+Subject: [PATCH 19/27] xfs_scrub: create a bitmap data structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Nov 2017 13:01:51 -0800
-Message-ID: <151095251153.4825.17916982314632749590.stgit@magnolia>
+Date: Fri, 17 Nov 2017 13:02:03 -0800
+Message-ID: <151095252363.4825.18115383990821228519.stgit@magnolia>
 In-Reply-To: <151095240950.4825.6375172010231614655.stgit@magnolia>
 References: <151095240950.4825.6375172010231614655.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,440 +20,498 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Look for control characters and punctuation that interfere with shell
-globbing in directory entry names and extended attribute key names.
-Technically these aren't filesystem corruptions because names are
-arbitrary sequences of bytes, but they've been known to cause problems
-in the Unix environment so warn if we see them.
+Create an efficient tree-based bitmap data structure.  We will use this
+during the data block scan to record the LBAs of IO errors so that we
+can report broken files to userspace.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- configure.ac         |    2 +
- debian/control       |    2 -
- include/builddefs.in |    1 
- m4/Makefile          |    1 
- m4/package_attr.m4   |   23 ++++++
- scrub/Makefile       |    6 ++
- scrub/common.c       |   54 ++++++++++++++
- scrub/common.h       |    4 +
- scrub/phase5.c       |  192 ++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.h    |    1 
- 10 files changed, 285 insertions(+), 1 deletion(-)
- create mode 100644 m4/package_attr.m4
+ scrub/Makefile |    2 
+ scrub/bitmap.c |  410 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/bitmap.h |   38 +++++
+ 3 files changed, 450 insertions(+)
+ create mode 100644 scrub/bitmap.c
+ create mode 100644 scrub/bitmap.h
 
 
-diff --git a/configure.ac b/configure.ac
-index 960a40a..58dc9e8 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -163,6 +163,8 @@ AC_HAVE_MREMAP
- AC_NEED_INTERNAL_FSXATTR
- AC_HAVE_GETFSMAP
- AC_HAVE_MALLINFO
-+AC_PACKAGE_WANT_ATTRIBUTES_H
-+AC_HAVE_LIBATTR
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/debian/control b/debian/control
-index ad81662..1ef0b97 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libattr1-dev
- Standards-Version: 3.9.1
- Homepage: http://xfs.org/
- 
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 4be2efb..7964599 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -116,6 +116,7 @@ HAVE_MREMAP = @have_mremap@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
- HAVE_GETFSMAP = @have_getfsmap@
- HAVE_MALLINFO = @have_mallinfo@
-+HAVE_LIBATTR = @have_libattr@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/Makefile b/m4/Makefile
-index 4706121..100c8f5 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -16,6 +16,7 @@ LSRCFILES = \
- 	manual_format.m4 \
- 	package_blkid.m4 \
- 	package_globals.m4 \
-+	package_attr.m4 \
- 	package_libcdev.m4 \
- 	package_pthread.m4 \
- 	package_sanitizer.m4 \
-diff --git a/m4/package_attr.m4 b/m4/package_attr.m4
-new file mode 100644
-index 0000000..4324923
---- /dev/null
-+++ b/m4/package_attr.m4
-@@ -0,0 +1,23 @@
-+AC_DEFUN([AC_PACKAGE_WANT_ATTRIBUTES_H],
-+  [
-+    AC_CHECK_HEADERS(attr/attributes.h)
-+  ])
-+
-+#
-+# Check if we have a ATTR_ROOT flag and libattr structures
-+#
-+AC_DEFUN([AC_HAVE_LIBATTR],
-+  [ AC_MSG_CHECKING([for struct attrlist_cursor])
-+    AC_TRY_COMPILE([
-+#include <sys/types.h>
-+#include <attr/attributes.h>
-+       ], [
-+struct attrlist_cursor *cur;
-+struct attrlist *list;
-+struct attrlist_ent *ent;
-+int flags = ATTR_ROOT;
-+       ], have_libattr=yes
-+          AC_MSG_RESULT(yes),
-+          AC_MSG_RESULT(no))
-+    AC_SUBST(have_libattr)
-+  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index ca08bd5..d7c24a1 100644
+index 5642dea..4118ab6 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -53,8 +53,14 @@ ifeq ($(HAVE_SYNCFS),yes)
- LCFLAGS += -DHAVE_SYNCFS
- endif
+@@ -16,6 +16,7 @@ INSTALL_SCRUB = install-scrub
+ endif	# scrub_prereqs
  
-+ifeq ($(HAVE_LIBATTR),yes)
-+LCFLAGS += -DHAVE_LIBATTR
-+endif
-+
- default: depend $(LTCOMMAND)
+ HFILES = \
++bitmap.h \
+ common.h \
+ counter.h \
+ disk.h \
+@@ -28,6 +29,7 @@ unicrash.h \
+ xfs_scrub.h
  
-+phase5.o: $(TOPDIR)/include/builddefs
-+
- include $(BUILDRULES)
- 
- install: default $(INSTALL_SCRUB)
-diff --git a/scrub/common.c b/scrub/common.c
-index 18c060d..ceb80bc 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -339,3 +339,57 @@ background_sleep(void)
- 	tv.tv_nsec = time % 1000000;
- 	nanosleep(&tv, NULL);
- }
+ CFILES = \
++bitmap.c \
+ common.c \
+ counter.c \
+ disk.c \
+diff --git a/scrub/bitmap.c b/scrub/bitmap.c
+new file mode 100644
+index 0000000..c2d6af1
+--- /dev/null
++++ b/scrub/bitmap.c
+@@ -0,0 +1,410 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <errno.h>
++#include <assert.h>
++#include <inttypes.h>
++#include <pthread.h>
++#include "platform_defs.h"
++#include "avl64.h"
++#include "list.h"
++#include "bitmap.h"
 +
 +/*
-+ * Return the input string with non-printing bytes escaped.
-+ * Caller must free the buffer.
++ * Space Efficient Bitmap
++ *
++ * Implements a space-efficient bitmap.  We use an AVL tree to manage
++ * extent records that tell us which ranges are set; the bitmap key is
++ * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
++ * test, test and set) are supported, plus we can iterate set ranges.
 + */
-+char *
-+string_escape(
-+	const char		*in)
-+{
-+	char			*str;
-+	const char		*p;
-+	char			*q;
-+	int			x;
 +
-+	str = malloc(strlen(in) * 4);
-+	if (!str)
-+		return NULL;
-+	for (p = in, q = str; *p != '\0'; p++) {
-+		if (isprint(*p)) {
-+			*q = *p;
-+			q++;
-+		} else {
-+			x = sprintf(q, "\\x%02x", *p);
-+			q += x;
-+		}
-+	}
-+	*q = '\0';
-+	return str;
++#define avl_for_each_range_safe(pos, n, l, first, last) \
++	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
++			pos = n, n = pos ? pos->avl_nextino : NULL)
++
++#define avl_for_each_safe(tree, pos, n) \
++	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
++			pos != NULL; \
++			pos = n, n = pos ? pos->avl_nextino : NULL)
++
++#define avl_for_each(tree, pos) \
++	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
++
++struct bitmap_node {
++	struct avl64node	btn_node;
++	uint64_t		btn_start;
++	uint64_t		btn_length;
++};
++
++static uint64_t
++extent_start(
++	struct avl64node	*node)
++{
++	struct bitmap_node	*btn;
++
++	btn = container_of(node, struct bitmap_node, btn_node);
++	return btn->btn_start;
 +}
 +
-+/*
-+ * Record another naming warning, and decide if it's worth
-+ * complaining about.
-+ */
++static uint64_t
++extent_end(
++	struct avl64node	*node)
++{
++	struct bitmap_node	*btn;
++
++	btn = container_of(node, struct bitmap_node, btn_node);
++	return btn->btn_start + btn->btn_length;
++}
++
++static struct avl64ops bitmap_ops = {
++	extent_start,
++	extent_end,
++};
++
++/* Initialize a bitmap. */
 +bool
-+should_warn_about_name(
-+	struct scrub_ctx	*ctx)
++bitmap_init(
++	struct bitmap		**bmapp)
 +{
-+	bool			whine;
-+	bool			res;
++	struct bitmap		*bmap;
 +
-+	pthread_mutex_lock(&ctx->lock);
-+	ctx->naming_warnings++;
-+	whine = ctx->naming_warnings == TOO_MANY_NAME_WARNINGS;
-+	res = ctx->naming_warnings < TOO_MANY_NAME_WARNINGS;
-+	pthread_mutex_unlock(&ctx->lock);
++	bmap = calloc(1, sizeof(struct bitmap));
++	if (!bmap)
++		return false;
++	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
++	if (!bmap->bt_tree) {
++		free(bmap);
++		return false;
++	}
 +
-+	if (whine && !(debug || verbose))
-+		str_info(ctx, ctx->mntpoint,
-+_("More than %u naming warnings, shutting up."),
-+				TOO_MANY_NAME_WARNINGS);
++	pthread_mutex_init(&bmap->bt_lock, NULL);
++	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
++	*bmapp = bmap;
 +
-+	return debug || verbose || res;
++	return true;
 +}
-diff --git a/scrub/common.h b/scrub/common.h
-index e63f711..3bb2524 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -72,5 +72,9 @@ static inline int syncfs(int fd)
- 
- bool find_mountpoint(char *mtab, struct scrub_ctx *ctx);
- void background_sleep(void);
-+char *string_escape(const char *in);
 +
-+#define TOO_MANY_NAME_WARNINGS	10000
-+bool should_warn_about_name(struct scrub_ctx *ctx);
- 
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 7cc0496..a248c59 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -20,10 +20,15 @@
- #include <stdio.h>
- #include <stdint.h>
- #include <stdbool.h>
-+#include <dirent.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <sys/statvfs.h>
-+#ifdef HAVE_LIBATTR
-+# include <attr/attributes.h>
-+#endif
- #include "xfs.h"
-+#include "handle.h"
- #include "path.h"
- #include "workqueue.h"
- #include "xfs_scrub.h"
-@@ -34,6 +39,181 @@
- /* Phase 5: Check directory connectivity. */
- 
- /*
-+ * Warn about problematic bytes in a directory/attribute name.  That means
-+ * terminal control characters and escape sequences, since that could be used
-+ * to do something naughty to the user's computer and/or break scripts.  XFS
-+ * doesn't consider any byte sequence invalid, so don't flag these as errors.
-+ */
-+static bool
-+xfs_scrub_check_name(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*namedescr,
-+	const char		*name)
++/* Free a bitmap. */
++void
++bitmap_free(
++	struct bitmap		**bmapp)
 +{
-+	const char		*p;
-+	bool			bad = false;
-+	char			*errname;
++	struct bitmap		*bmap;
++	struct avl64node	*node;
++	struct avl64node	*n;
++	struct bitmap_node	*ext;
 +
-+	/* Complain about zero length names. */
-+	if (*name == '\0' && should_warn_about_name(ctx)) {
-+		str_warn(ctx, descr, _("Zero length name found."));
++	bmap = *bmapp;
++	avl_for_each_safe(bmap->bt_tree, node, n) {
++		ext = container_of(node, struct bitmap_node, btn_node);
++		free(ext);
++	}
++	free(bmap->bt_tree);
++	*bmapp = NULL;
++}
++
++/* Create a new bitmap extent node. */
++static struct bitmap_node *
++bitmap_node_init(
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct bitmap_node	*ext;
++
++	ext = malloc(sizeof(struct bitmap_node));
++	if (!ext)
++		return NULL;
++
++	ext->btn_node.avl_nextino = NULL;
++	ext->btn_start = start;
++	ext->btn_length = len;
++
++	return ext;
++}
++
++/* Set a region of bits (locked). */
++static bool
++__bitmap_set(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		length)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++	struct avl64node	*pos;
++	struct avl64node	*n;
++	struct avl64node	*l;
++	struct bitmap_node	*ext;
++	uint64_t		new_start;
++	uint64_t		new_length;
++	struct avl64node	*node;
++	bool			res = true;
++
++	/* Find any existing nodes adjacent or within that range. */
++	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
++			&firstn, &lastn);
++
++	/* Nothing, just insert a new extent. */
++	if (firstn == NULL && lastn == NULL) {
++		ext = bitmap_node_init(start, length);
++		if (!ext)
++			return false;
++
++		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++		if (node == NULL) {
++			free(ext);
++			errno = EEXIST;
++			return false;
++		}
++
 +		return true;
 +	}
 +
-+	/* control characters */
-+	for (p = name; *p; p++) {
-+		if ((*p >= 1 && *p <= 31) || *p == 127) {
-+			bad = true;
++	assert(firstn != NULL && lastn != NULL);
++	new_start = start;
++	new_length = length;
++
++	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
++		ext = container_of(pos, struct bitmap_node, btn_node);
++
++		/* Bail if the new extent is contained within an old one. */
++		if (ext->btn_start <= start &&
++		    ext->btn_start + ext->btn_length >= start + length)
++			return res;
++
++		/* Check for overlapping and adjacent extents. */
++		if (ext->btn_start + ext->btn_length >= start ||
++		    ext->btn_start <= start + length) {
++			if (ext->btn_start < start) {
++				new_start = ext->btn_start;
++				new_length += ext->btn_length;
++			}
++
++			if (ext->btn_start + ext->btn_length >
++			    new_start + new_length)
++				new_length = ext->btn_start + ext->btn_length -
++						new_start;
++
++			avl64_delete(bmap->bt_tree, pos);
++			free(ext);
++		}
++	}
++
++	ext = bitmap_node_init(new_start, new_length);
++	if (!ext)
++		return false;
++
++	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++	if (node == NULL) {
++		free(ext);
++		errno = EEXIST;
++		return false;
++	}
++
++	return res;
++}
++
++/* Set a region of bits. */
++bool
++bitmap_set(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		length)
++{
++	bool			res;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	res = __bitmap_set(bmap, start, length);
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return res;
++}
++
++#if 0	/* Unused, provided for completeness. */
++/* Clear a region of bits. */
++bool
++bitmap_clear(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++	struct avl64node	*pos;
++	struct avl64node	*n;
++	struct avl64node	*l;
++	struct bitmap_node	*ext;
++	uint64_t		new_start;
++	uint64_t		new_length;
++	struct avl64node	*node;
++	int			stat;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	/* Find any existing nodes over that range. */
++	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
++
++	/* Nothing, we're done. */
++	if (firstn == NULL && lastn == NULL) {
++		pthread_mutex_unlock(&bmap->bt_lock);
++		return true;
++	}
++
++	assert(firstn != NULL && lastn != NULL);
++
++	/* Delete or truncate everything in sight. */
++	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
++		ext = container_of(pos, struct bitmap_node, btn_node);
++
++		stat = 0;
++		if (ext->btn_start < start)
++			stat |= 1;
++		if (ext->btn_start + ext->btn_length > start + len)
++			stat |= 2;
++		switch (stat) {
++		case 0:
++			/* Extent totally within range; delete. */
++			avl64_delete(bmap->bt_tree, pos);
++			free(ext);
++			break;
++		case 1:
++			/* Extent is left-adjacent; truncate. */
++			ext->btn_length = start - ext->btn_start;
++			break;
++		case 2:
++			/* Extent is right-adjacent; move it. */
++			ext->btn_length = ext->btn_start + ext->btn_length -
++					(start + len);
++			ext->btn_start = start + len;
++			break;
++		case 3:
++			/* Extent overlaps both ends. */
++			ext->btn_length = start - ext->btn_start;
++			new_start = start + len;
++			new_length = ext->btn_start + ext->btn_length -
++					new_start;
++
++			ext = bitmap_node_init(new_start, new_length);
++			if (!ext)
++				return false;
++
++			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++			if (node == NULL) {
++				errno = EEXIST;
++				return false;
++			}
 +			break;
 +		}
 +	}
 +
-+	if (bad && should_warn_about_name(ctx)) {
-+		errname = string_escape(name);
-+		if (!errname) {
-+			str_errno(ctx, descr);
-+			return false;
-+		}
-+		str_info(ctx, descr,
-+_("Control character found in %s name \"%s\"."),
-+				namedescr, errname);
-+		free(errname);
-+	}
-+
++	pthread_mutex_unlock(&bmap->bt_lock);
 +	return true;
 +}
++#endif
 +
-+/*
-+ * Iterate a directory looking for filenames with problematic
-+ * characters.
-+ */
-+static bool
-+xfs_scrub_scan_dirents(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	int			*fd)
++#ifdef DEBUG
++/* Iterate the set regions of this bitmap. */
++bool
++bitmap_iterate(
++	struct bitmap		*bmap,
++	bool			(*fn)(uint64_t, uint64_t, void *),
++	void			*arg)
 +{
-+	DIR			*dir;
-+	struct dirent		*dentry;
++	struct avl64node	*node;
++	struct bitmap_node	*ext;
 +	bool			moveon = true;
 +
-+	dir = fdopendir(*fd);
-+	if (!dir) {
-+		str_errno(ctx, descr);
-+		goto out;
-+	}
-+	*fd = -1; /* closedir will close *fd for us */
-+
-+	dentry = readdir(dir);
-+	while (dentry) {
-+		moveon = xfs_scrub_check_name(ctx, descr, _("directory"),
-+				dentry->d_name);
-+		if (!moveon)
-+			break;
-+		dentry = readdir(dir);
-+	}
-+
-+	closedir(dir);
-+out:
-+	return moveon;
-+}
-+
-+#ifdef HAVE_LIBATTR
-+/* Routines to scan all of an inode's xattrs for name problems. */
-+struct xfs_attr_ns {
-+	int			flags;
-+	const char		*name;
-+};
-+
-+static const struct xfs_attr_ns attr_ns[] = {
-+	{0,			"user"},
-+	{ATTR_ROOT,		"system"},
-+	{ATTR_SECURE,		"secure"},
-+	{0, NULL},
-+};
-+
-+/*
-+ * Check all the xattr names in a particular namespace of a file handle
-+ * for Unicode normalization problems or collisions.
-+ */
-+static bool
-+xfs_scrub_scan_fhandle_namespace_xattrs(
-+	struct scrub_ctx		*ctx,
-+	const char			*descr,
-+	struct xfs_handle		*handle,
-+	const struct xfs_attr_ns	*attr_ns)
-+{
-+	struct attrlist_cursor		cur;
-+	char				attrbuf[XFS_XATTR_LIST_MAX];
-+	char				keybuf[NAME_MAX + 1];
-+	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
-+	struct attrlist_ent		*ent;
-+	bool				moveon = true;
-+	int				i;
-+	int				error;
-+
-+	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
-+	memset(&cur, 0, sizeof(cur));
-+	memset(keybuf, 0, NAME_MAX + 1);
-+	error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
-+			XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
-+	while (!error) {
-+		/* Examine the xattrs. */
-+		for (i = 0; i < attrlist->al_count; i++) {
-+			ent = ATTR_ENTRY(attrlist, i);
-+			snprintf(keybuf, NAME_MAX, "%s.%s", attr_ns->name,
-+					ent->a_name);
-+			moveon = xfs_scrub_check_name(ctx, descr,
-+					_("extended attribute"), keybuf);
-+			if (!moveon)
-+				goto out;
-+		}
-+
-+		if (!attrlist->al_more)
-+			break;
-+		error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
-+				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
-+	}
-+	if (error && errno != ESTALE)
-+		str_errno(ctx, descr);
-+out:
-+	return moveon;
-+}
-+
-+/*
-+ * Check all the xattr names in all the xattr namespaces for problematic
-+ * characters.
-+ */
-+static bool
-+xfs_scrub_scan_fhandle_xattrs(
-+	struct scrub_ctx		*ctx,
-+	const char			*descr,
-+	struct xfs_handle		*handle)
-+{
-+	const struct xfs_attr_ns	*ns;
-+	bool				moveon = true;
-+
-+	for (ns = attr_ns; ns->name; ns++) {
-+		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, descr,
-+				handle, ns);
++	pthread_mutex_lock(&bmap->bt_lock);
++	avl_for_each(bmap->bt_tree, node) {
++		ext = container_of(node, struct bitmap_node, btn_node);
++		moveon = fn(ext->btn_start, ext->btn_length, arg);
 +		if (!moveon)
 +			break;
 +	}
++	pthread_mutex_unlock(&bmap->bt_lock);
++
 +	return moveon;
 +}
-+#else
-+static inline bool
-+xfs_scrub_scan_fhandle_xattrs(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	struct xfs_handle	*handle)
++#endif
++
++/* Do any bitmap extents overlap the given one?  (locked) */
++static bool
++__bitmap_test(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
 +{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++
++	/* Find any existing nodes over that range. */
++	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
++
++	return firstn != NULL && lastn != NULL;
++}
++
++/* Is any part of this range set? */
++bool
++bitmap_test(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	bool			res;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	res = __bitmap_test(bmap, start, len);
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return res;
++}
++
++/* Are none of the bits set? */
++bool
++bitmap_empty(
++	struct bitmap		*bmap)
++{
++	return bmap->bt_tree->avl_firstino == NULL;
++}
++
++#ifdef DEBUG
++static bool
++bitmap_dump_fn(
++	uint64_t		startblock,
++	uint64_t		blockcount,
++	void			*arg)
++{
++	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
 +	return true;
 +}
-+#endif /* HAVE_LIBATTR */
 +
++/* Dump bitmap. */
++void
++bitmap_dump(
++	struct bitmap		*bmap)
++{
++	printf("BITMAP DUMP %p\n", bmap);
++	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
++	printf("BITMAP DUMP DONE\n");
++}
++#endif
+diff --git a/scrub/bitmap.h b/scrub/bitmap.h
+new file mode 100644
+index 0000000..9910edf
+--- /dev/null
++++ b/scrub/bitmap.h
+@@ -0,0 +1,38 @@
 +/*
-  * Verify the connectivity of the directory tree.
-  * We know that the kernel's open-by-handle function will try to reconnect
-  * parents of an opened directory, so we'll accept that as sufficient.
-@@ -58,6 +238,11 @@ xfs_scrub_connections(
- 			(uint64_t)bstat->bs_ino, agno, agino);
- 	background_sleep();
- 
-+        /* Warn about naming problems in xattrs. */
-+        moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle);
-+        if (!moveon)
-+                goto out;
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_BITMAP_H_
++#define XFS_SCRUB_BITMAP_H_
 +
- 	/* Open the dir, let the kernel try to reconnect it to the root. */
- 	if (S_ISDIR(bstat->bs_mode)) {
- 		fd = xfs_open_handle(handle);
-@@ -69,6 +254,13 @@ xfs_scrub_connections(
- 		}
- 	}
- 
-+        /* Warn about naming problems in the directory entries. */
-+        if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
-+                moveon = xfs_scrub_scan_dirents(ctx, descr, &fd);
-+                if (!moveon)
-+                        goto out;
-+        }
++struct bitmap {
++	pthread_mutex_t		bt_lock;
++	struct avl64tree_desc	*bt_tree;
++};
 +
- out:
- 	if (fd >= 0)
- 		close(fd);
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 373901e..c7e8e8e 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -90,6 +90,7 @@ struct scrub_ctx {
- 	unsigned long long	errors_found;
- 	unsigned long long	warnings_found;
- 	unsigned long long	inodes_checked;
-+	unsigned long long	naming_warnings;
- 	bool			need_repair;
- 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
- };
++bool bitmap_init(struct bitmap **bmap);
++void bitmap_free(struct bitmap **bmap);
++bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
++bool bitmap_iterate(struct bitmap *bmap,
++		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
++bool bitmap_test(struct bitmap *bmap, uint64_t start,
++		uint64_t len);
++bool bitmap_empty(struct bitmap *bmap);
++void bitmap_dump(struct bitmap *bmap);
++
++#endif /* XFS_SCRUB_BITMAP_H_ */
 
