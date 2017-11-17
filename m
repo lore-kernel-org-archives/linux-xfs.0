@@ -1,493 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from osg.samsung.com ([64.30.133.232]:57784 "EHLO osg.samsung.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751425AbdKQRGy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 12:06:54 -0500
-Date: Fri, 17 Nov 2017 15:06:39 -0200
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
-Message-ID: <20171117150639.0e706421@vento.lan>
-In-Reply-To: <alpine.DEB.2.20.1711171057240.1709@nanos>
-References: <20171116183306.103584007@linutronix.de>
-        <20171116184358.398030394@linutronix.de>
-        <alpine.DEB.2.20.1711171057240.1709@nanos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: from userp1040.oracle.com ([156.151.31.81]:16796 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760352AbdKQSYM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:12 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v3 07/17] xfs: get directory offset when replacing a directory name
+Date: Fri, 17 Nov 2017 11:21:35 -0700
+Message-Id: <1510942905-12897-8-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: linux-xfs@vger.kernel.org
+Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
 
-Hi Thomas,
+From: Mark Tinguely <tinguely@sgi.com>
 
-Em Fri, 17 Nov 2017 11:00:33 +0100 (CET)
-Thomas Gleixner <tglx@linutronix.de> escreveu:
+Return the directory offset information when replacing an entry to the
+directory.
 
-> Subject: Documentation: Add license-rules.rst to describe how to properly identify file licenses
-> From: Thomas Gleixner <tglx@linutronix.de>
-> Date: Fri, 10 Nov 2017 09:30:00 +0100
-> 
-> Add a file to the Documentation directory to describe how file licenses
-> should be described in all kernel files, using the SPDX identifier, as well
-> as where all licenses should be in the kernel source tree for people to
-> refer to (LICENSES/).
-> 
-> Thanks to Kate, Greg and Jonathan for review and editing and Jonas for the
-> suggestions concerning the meta tags in the licenses files.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+This offset will be used as the parent pointer offset in xfs_rename.
 
-The document itself looks good, but I think it should also mention
-what would be the expected values for the MODULE_LICENSE() macro and
-how each license would be mapped into it.
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
 
-Right now, include/linux/module.h says:
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+v2: Changed typedefs to raw struct types
 
-/*
- * The following license idents are currently accepted as indicating free
- * software modules
- *
- *	"GPL"				[GNU Public License v2 or later]
- *	"GPL v2"			[GNU Public License v2]
- *	"GPL and additional rights"	[GNU Public License v2 rights and more]
- *	"Dual BSD/GPL"			[GNU Public License v2
- *					 or BSD license choice]
- *	"Dual MIT/GPL"			[GNU Public License v2
- *					 or MIT license choice]
- *	"Dual MPL/GPL"			[GNU Public License v2
- *					 or Mozilla license choice]
- *
- * The following other idents are available
- *
- *	"Proprietary"			[Non free products]
- *
- * There are dual licensed components, but when running with Linux it is the
- * GPL that is relevant so this is a non issue. Similarly LGPL linked with GPL
- * is a GPL combined work.
- *
- * This exists for several reasons
- * 1.	So modinfo can show license info for users wanting to vet their setup
- *	is free
- * 2.	So the community can ignore bug reports including proprietary modules
- * 3.	So vendors can do likewise based on their own policies
- */
-#define MODULE_LICENSE(_license) MODULE_INFO(license, _license)
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
+ fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
+ fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
+ fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+ fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
+ 7 files changed, 31 insertions(+), 24 deletions(-)
 
-In thesis, for every SPDX property at C or assembler files, we should have
-a mapping into one of those MODULE_LICENSE().
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index b647bf2..25b370b 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -508,13 +508,14 @@ xfs_dir_removename(
+  */
+ int
+ xfs_dir_replace(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*dp,
+-	struct xfs_name	*name,		/* name of entry to replace */
+-	xfs_ino_t	inum,		/* new inode number */
+-	xfs_fsblock_t	*first,		/* bmap's firstblock */
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	struct xfs_name		*name,		/* name of entry to replace */
++	xfs_ino_t		inum,		/* new inode number */
++	xfs_fsblock_t		*first,		/* bmap's firstblock */
+ 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+-	xfs_extlen_t	total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+ {
+ 	struct xfs_da_args *args;
+ 	int		rval;
+@@ -563,6 +564,9 @@ xfs_dir_replace(
+ 		rval = xfs_dir2_leaf_replace(args);
+ 	else
+ 		rval = xfs_dir2_node_replace(args);
++
++	if (offset)
++		*offset = args->offset;
+ out_free:
+ 	kmem_free(args);
+ 	return rval;
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index e1bd05d..5cc0b3f 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_fsblock_t *first,
+-				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
++				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
++				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name);
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 4dbe2fc..69dfe64 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -865,9 +865,9 @@ xfs_dir2_block_replace(
+ 	/*
+ 	 * Point to the data entry we need to change.
+ 	 */
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
+ 	/*
+ 	 * Change the inode number to the new value.
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 197e627..770b93f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1518,6 +1518,7 @@ xfs_dir2_leaf_replace(
+ 	/*
+ 	 * Point to the data entry.
+ 	 */
++	args->offset = be32_to_cpu(lep->address);
+ 	dep = (xfs_dir2_data_entry_t *)
+ 	      ((char *)dbp->b_addr +
+ 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 13d5244..860a612 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -2237,6 +2237,7 @@ xfs_dir2_node_replace(
+ 		hdr = state->extrablk.bp->b_addr;
+ 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
++		args->offset = be32_to_cpu(lep->address);
+ 		dep = (xfs_dir2_data_entry_t *)
+ 		      ((char *)hdr +
+ 		       xfs_dir2_dataptr_to_off(args->geo,
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 9e90c22..295458f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -1045,6 +1045,8 @@ xfs_dir2_sf_replace(
+ 				ASSERT(args->inumber != ino);
+ 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
++				args->offset = xfs_dir2_byte_to_dataptr(
++						  xfs_dir2_sf_get_offset(sfep));
+ 				break;
+ 			}
+ 		}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 358a98a..f7986d8 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2774,16 +2774,14 @@ xfs_cross_rename(
+ 	int		dp2_flags = 0;
+ 
+ 	/* Swap inode number for dirent in first parent */
+-	error = xfs_dir_replace(tp, dp1, name1,
+-				ip2->i_ino,
+-				first_block, dfops, spaceres);
++	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block, dfops,
++				spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+ 	/* Swap inode number for dirent in second parent */
+-	error = xfs_dir_replace(tp, dp2, name2,
+-				ip1->i_ino,
+-				first_block, dfops, spaceres);
++	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block, dfops,
++				spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+@@ -2797,8 +2795,8 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
+-						dp1->i_ino, first_block,
+-						dfops, spaceres);
++						dp1->i_ino, first_block, dfops,
++						spaceres, NULL);
+ 			if (error)
+ 				goto out_trans_abort;
+ 
+@@ -2824,8 +2822,8 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
+-						dp2->i_ino, first_block,
+-						dfops, spaceres);
++						dp2->i_ino, first_block, dfops,
++						spaceres, NULL);
+ 			if (error)
+ 				goto out_trans_abort;
+ 
+@@ -3072,8 +3070,8 @@ xfs_rename(
+ 		 * name at the destination directory, remove it first.
+ 		 */
+ 		error = xfs_dir_replace(tp, target_dp, target_name,
+-					src_ip->i_ino,
+-					&first_block, &dfops, spaceres);
++					src_ip->i_ino, &first_block, &dfops,
++					spaceres, NULL);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -3107,8 +3105,8 @@ xfs_rename(
+ 		 * directory.
+ 		 */
+ 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+-					target_dp->i_ino,
+-					&first_block, &dfops, spaceres);
++					target_dp->i_ino, &first_block, &dfops,
++					spaceres, NULL);
+ 		ASSERT(error != -EEXIST);
+ 		if (error)
+ 			goto out_bmap_cancel;
+@@ -3147,7 +3145,7 @@ xfs_rename(
+ 	 */
+ 	if (wip) {
+ 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+-					&first_block, &dfops, spaceres);
++					&first_block, &dfops, spaceres, NULL);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+ 					   &first_block, &dfops, spaceres,
+-- 
+2.7.4
 
-
-> ---
-> 
-> Changes since V3:
->   - Addressed Jonathans review comments
->   - Added .dts{i} syntax (Rob)
->  
-> ---
->  Documentation/index.rst                 |   12 +
->  Documentation/process/license-rules.rst |  370 ++++++++++++++++++++++++++++++++
->  2 files changed, 382 insertions(+)
->  create mode 100644 Documentation/license-rules.rst
-> 
-> --- a/Documentation/index.rst
-> +++ b/Documentation/index.rst
-> @@ -13,6 +13,18 @@ documents into a coherent whole.  Please
->  documentation are welcome; join the linux-doc list at vger.kernel.org if
->  you want to help out.
->  
-> +Licensing documentation
-> +-----------------------
-> +
-> +The following describes the license of the Linux kernel source code
-> +(GPLv2), how to properly mark the license of individual files in the source
-> +tree, as well as links to the full license text.
-> +
-> +.. toctree::
-> +   :maxdepth: 2
-> +
-> +   process/license-rules.rst
-> +
->  User-oriented documentation
->  ---------------------------
->  
-> --- /dev/null
-> +++ b/Documentation/process/license-rules.rst
-> @@ -0,0 +1,370 @@
-> +.. SPDX-License-Identifier: GPL-2.0
-> +
-> +Linux kernel licensing rules
-> +============================
-> +
-> +The Linux Kernel is provided under the terms of the GNU General Public
-> +License version 2 only (GPL-2.0), as published by the Free Software
-> +Foundation, and provided in the COPYING file.  This documentation file is
-> +not meant to replace the COPYING file, but provides a description of how
-> +each source file should be annotated to make the licensing it is governed
-> +under clear and unambiguous.
-> +
-> +The license in the COPYING file applies to the kernel source as a whole,
-> +though individual source files can have a different license which is
-> +required to be compatible with the GPL-2.0::
-> +
-> +    GPL-1.0+  :  GNU General Public License v1.0 or later
-> +    GPL-2.0+  :  GNU General Public License v2.0 or later
-> +    LGPL-2.0  :  GNU Library General Public License v2 only
-> +    LGPL-2.0+ :  GNU Library General Public License v2 or later
-> +    LGPL-2.1  :  GNU Lesser General Public License v2.1 only
-> +    LGPL-2.1+ :  GNU Lesser General Public License v2.1 or later
-> +
-> +Aside from that, individual files can be provided under a dual license,
-> +e.g. one of the compatible GPL variants and alternatively under a
-> +permissive license like BSD, MIT etc.
-> +
-> +The User-space API (UAPI) header files, which describe the interface of
-> +user-space programs to the kernel are a special case.  According to the
-> +note in the kernel COPYING file, the syscall interface is a clear boundary,
-> +which does not extend the GPL requirements to any software which uses it to
-> +communicate with the kernel.  Because the UAPI headers must be includable
-> +into any source files which create an executable running on the Linux
-> +kernel, the exception must be documented by a special license expression.
-> +
-> +The common way of expressing the license of a source file is to add the
-> +matching boiler plate text into the top comment of the file.  Due to
-> +formatting, typos etc. these "boiler plates" are hard to validate for
-> +tools which are used in the context of license compliance.
-> +
-> +An alternative to boilerplate text is the use of Software Package Data
-> +Exchange (SPDX) license identifiers in each source file.  SPDX license
-> +identifiers are machine parsable and precise shorthands for the license
-> +under which the content of the file is contributed.  SPDX license
-> +identifiers are managed by the SPDX Workgroup at the Linux Foundation and
-> +have been agreed on by partners throughout the industry, tool vendors, and
-> +legal teams.  For further information see https://spdx.org/
-> +
-> +The Linux kernel requires the precise SPDX identifier in all source files.
-> +The valid identifiers used in the kernel are explained in the section
-> +`License identifiers`_ and have been retrieved from the official SPDX
-> +license list at https://spdx.org/licenses/ along with the license texts.
-> +
-> +License identifier syntax
-> +-------------------------
-> +
-> +1. Placement:
-> +
-> +   The SPDX license identifier in kernel files shall be added at the first
-> +   possible line in a file which can contain a comment.  For the majority
-> +   or files this is the first line, except for scripts which require the
-> +   '#!PATH_TO_INTERPRETER' in the first line.  For those scripts the SPDX
-> +   identifier goes into the second line.
-> +
-> +|
-> +
-> +2. Style:
-> +
-> +   The SPDX license identifier is added in form of a comment.  The comment
-> +   style depends on the file type::
-> +
-> +      C source:   // SPDX-License-Identifier: <SPDX License Expression>
-> +      C header:   /* SPDX-License-Identifier: <SPDX License Expression> */
-> +      ASM:        /* SPDX-License-Identifier: <SPDX License Expression> */
-> +      scripts:    # SPDX-License-Identifier: <SPDX License Expression>
-> +      .rst:	  .. SPDX-License-Identifier: <SPDX License Expression>
-> +      .dts{i}:	  // SPDX-License-Identifier: <SPDX License Expression>
-> +
-> +   If a specific tool cannot handle the standard comment style, then the
-> +   appropriate comment mechanism which the tool accepts shall be used. This
-> +   is the reason for having the "/\* \*/" style comment in C header
-> +   files. There was build breakage observed with generated .lds files where
-> +   'ld' failed to parse the C++ comment. This has been fixed by now, but
-> +   there are still older assembler tools which cannot handle C++ style
-> +   comments.
-> +
-> +|
-> +
-> +3. Syntax:
-> +
-> +   A <SPDX License Expression> is either an SPDX short form license
-> +   identifier found on the SPDX License List, or when multiple licenses
-> +   apply, an expression consisting of keywords "AND", "OR", and "WITH"
-> +   separating SPDX short form license identifiers surrounded by "(", ")".
-> +
-> +   License identifiers for licenses like [L]GPL with the 'or later' option
-> +   are constructed by using a "+" for indicating the 'or later' option.::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0+
-> +      // SPDX-License-Identifier: LGPL-2.1+
-> +
-> +   WITH should be used when there is a modifier to a license needed.
-> +   For example, the linux kernel UAPI files use the expression::
-> +
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note)
-> +      // SPDX-License-Identifier: (GPL-2.0+ WITH Linux-syscall-note)
-> +
-> +   Other examples using WITH exceptions found in the kernel are::
-> +
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH mif-exception)
-> +      // SPDX-License-Identifier: (GPL-2.0+ WITH GCC-exception-2.0)
-> +
-> +   Exceptions can only be used with particular License identifiers. The
-> +   valid License identifiers are listed in the tags of the exception text
-> +   file. For details see the point `Exceptions`_ in the chapter `License
-> +   identifiers`_.
-> +
-> +   OR should be used if the file is dual licensed and only one license is
-> +   to be selected.  For example, some dtsi files are available under dual
-> +   licenses::
-> +
-> +      // SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
-> +
-> +   Examples from the kernel for license expressions in dual licensed files::
-> +
-> +      // SPDX-License-Identifier: (GPL-2.0 OR MIT)
-> +      // SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +      // SPDX-License-Identifier: (GPL-2.0 OR Apache-2.0)
-> +      // SPDX-License-Identifier: (GPL-2.0 OR MPL-1.1)
-> +      // SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR MIT)
-> +      // SPDX-License-Identifier: ((GPL-1.0+ OR BSD-3-Clause) OR OpenSSL)
-> +
-> +   AND should be used if the file has multiple licenses whose terms all
-> +   apply to use the file. For example, if code is inherited from another
-> +   project and permission has been given to put it in the kernel, but the
-> +   original license terms need to remain in effect::
-> +
-> +      // SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) AND MIT)
-> +
-> +   Another other example where both sets of license terms need to be
-> +   adhered to is::
-> +
-> +      // SPDX-License-Identifier: (GPL-1.0+ AND LGPL-2.1+)
-> +
-> +License identifiers
-> +-------------------
-> +
-> +The licenses currently used, as well as the licenses for code added to the
-> +kernel, can be broken down into:
-> +
-> +1. _`Preferred licenses`:
-> +
-> +   Whenever possible these licenses should be used as they are known to be
-> +   fully compatible and widely used.  These licenses are available from the
-> +   directory::
-> +
-> +      LICENSES/preferred/
-> +
-> +   in the kernel source tree.
-> +
-> +   The files in this directory the full license text and `Metatags`_.
-> +
-> +   The file names are identical to the SPDX license identifier which shall
-> +   be used for the license in source files.
-> +
-> +   Examples::
-> +
-> +      LICENSES/preferred/GPL-2.0
-> +
-> +   Contains the GPL version 2 license text and the required metatags::
-> +
-> +      LICENSES/preferred/MIT
-> +
-> +   Contains the MIT license text and the required metatags
-> +
-> +   _`Metatags`:
-> +
-> +   The following meta tags must be available in a license file:
-> +
-> +   - Valid-License-Identifier:
-> +
-> +     One or more lines which declare which License Identifiers are valid
-> +     inside the project to reference this particular license text.  Usually
-> +     this is a single valid identifier, but e.g. for licenses with the 'or
-> +     later' options two identifiers are valid.
-> +
-> +   - SPDX-URL:
-> +
-> +     The URL of the SPDX page which contains additional information related
-> +     to the license.
-> +
-> +   - Usage-Guidance:
-> +
-> +     Freeform text for usage advice. The text must include correct examples
-> +     for the SPDX license identifiers as they should be put into source
-> +     files according to the `License identifier syntax`_ guidelines.
-> +
-> +   - License-Text:
-> +
-> +     All text after this tag is treated as the original license text
-> +
-> +   File format examples::
-> +
-> +      Valid-License-Identifier: GPL-2.0
-> +      Valid-License-Identifier: GPL-2.0+
-> +      SPDX-URL: https://spdx.org/licenses/GPL-2.0.html
-> +      Usage-Guide:
-> +        To use this license in source code, put one of the following SPDX
-> +	tag/value pairs into a comment according to the placement
-> +	guidelines in the licensing rules documentation.
-> +	For 'GNU General Public License (GPL) version 2 only' use:
-> +	  SPDX-License-Identifier: GPL-2.0
-> +	For 'GNU General Public License (GPL) version 2 or any later version' use:
-> +	  SPDX-License-Identifier: GPL-2.0+
-> +      License-Text:
-> +        Full license text
-> +
-> +   ::
-> +
-> +      SPDX-License-Identifier: MIT
-> +      SPDX-URL: https://spdx.org/licenses/MIT.html
-> +      Usage-Guide:
-> +	To use this license in source code, put the following SPDX
-> +	tag/value pair into a comment according to the placement
-> +	guidelines in the licensing rules documentation.
-> +	  SPDX-License-Identifier: MIT
-> +      License-Text:
-> +        Full license text
-> +
-> +|
-> +
-> +2. Not recommended licenses:
-> +
-> +   These licenses should only be used for existing code or for importing
-> +   code from a different project.  These licenses are available from the
-> +   directory::
-> +
-> +      LICENSES/other/
-> +
-> +   in the kernel source tree.
-> +
-> +   The files in this directory the full license text and `Metatags`_.
-> +
-> +   The file names are identical to the SPDX license identifier which shall be
-> +   used for the license in source files.
-> +
-> +   Examples::
-> +
-> +      LICENSES/other/ISC
-> +
-> +   Contains the Internet Systems Consortium license text and the required
-> +   metatags::
-> +
-> +      LICENSES/other/ZLib
-> +
-> +   Contains the ZLIB license text and the required metatags.
-> +
-> +   Metatags:
-> +
-> +   The metatag requirements for 'other' licenses are identical to the
-> +   requirements of the `Preferred licenses`_.
-> +
-> +   File format example::
-> +
-> +      Valid-License-Identifier: ISC
-> +      SPDX-URL: https://spdx.org/licenses/ISC.html
-> +      Usage-Guide:
-> +        Usage of this license in the kernel for new code is discouraged
-> +	and it should solely be used for importing code from an already
-> +	existing project.
-> +        To use this license in source code, put the following SPDX
-> +	tag/value pair into a comment according to the placement
-> +	guidelines in the licensing rules documentation.
-> +	  SPDX-License-Identifier: ISC
-> +      License-Text:
-> +        Full license text
-> +
-> +|
-> +
-> +3. _`Exceptions`:
-> +
-> +   Some licenses can be amended with exceptions which grant certain rights
-> +   which the original license does not.  These exceptions are available
-> +   from the directory::
-> +
-> +      LICENSES/exceptions/
-> +
-> +   in the kernel source tree.  The files in this directory contain the full
-> +   exception text and the required `Exception Metatags`_.
-> +
-> +   Examples::
-> +
-> +      LICENSES/exceptions/Linux-syscall-note
-> +
-> +   Contains the Linux syscall exception as documented in the COPYING
-> +   file of the Linux kernel, which is used for UAPI header files.
-> +   e.g. /\* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note \*/::
-> +
-> +      LICENSES/exceptions/GCC-exception-2.0
-> +
-> +   Contains the GCC 'linking exception' which allows to link any binary
-> +   independent of its license against the compiled version of a file marked
-> +   with this exception. This is required for creating runnable executables
-> +   from source code which is not compatible with the GPL.
-> +
-> +   _`Exception Metatags`:
-> +
-> +   The following meta tags must be available in an exception file:
-> +
-> +   - SPDX-Exception-Identifier:
-> +
-> +     One exception identifier which can be used with SPDX license
-> +     identifiers.
-> +
-> +   - SPDX-URL:
-> +
-> +     The URL of the SPDX page which contains additional information related
-> +     to the exception.
-> +
-> +   - SPDX-Licenses:
-> +
-> +     A comma separated list of SPDX license identifiers for which the
-> +     exception can be used.
-> +
-> +   - Usage-Guidance:
-> +
-> +     Freeform text for usage advice. The text must be followed by correct
-> +     examples for the SPDX license identifiers as they should be put into
-> +     source files according to the `License identifier syntax`_ guidelines.
-> +
-> +   - Exception-Text:
-> +
-> +     All text after this tag is treated as the original exception text
-> +
-> +   File format examples::
-> +
-> +      SPDX-Exception-Identifier: Linux-syscall-note
-> +      SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
-> +      SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
-> +      Usage-Guidance:
-> +        This exception is used together with one of the above SPDX-Licenses
-> +	to mark user-space API (uapi) header files so they can be included
-> +	into non GPL compliant user-space application code.
-> +        To use this exception add it with the keyword WITH to one of the
-> +	identifiers in the SPDX-Licenses tag:
-> +	  SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
-> +      Exception-Text:
-> +        Full exception text
-> +
-> +   ::
-> +
-> +      SPDX-Exception-Identifier: GCC-exception-2.0
-> +      SPDX-URL: https://spdx.org/licenses/GCC-exception-2.0.html
-> +      SPDX-Licenses: GPL-2.0, GPL-2.0+
-> +      Usage-Guidance:
-> +        The "GCC Runtime Library exception 2.0" is used together with one
-> +	of the above SPDX-Licenses for code imported from the GCC runtime
-> +	library.
-> +        To use this exception add it with the keyword WITH to one of the
-> +	identifiers in the SPDX-Licenses tag:
-> +	  SPDX-License-Identifier: <SPDX-License> WITH GCC-exception-2.0
-> +      Exception-Text:
-> +        Full exception text
-> +
-> +
-> +All SPDX license identifiers and exceptions must have a corresponding file
-> +in the LICENSING subdirectories. This is required to allow tool
-> +verification (e.g. checkpatch.pl) and to have the licenses ready to read
-> +and extract right from the source, which is recommended by various FOSS
-> +organizations, e.g. the `FSFE REUSE initiative <https://reuse.software/>`_.
-
-
-
-Thanks,
-Mauro
