@@ -1,211 +1,233 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16808 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:16800 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760360AbdKQSYN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:13 -0500
+        with ESMTP id S1760353AbdKQSYM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 13:24:12 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAHIOBO6023406
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:11 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vAHIOA6Z029702
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:11 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAHIOAdL009118
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2017 18:24:10 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 05/17] xfs: get directory offset when adding directory name
-Date: Fri, 17 Nov 2017 11:21:33 -0700
-Message-Id: <1510942905-12897-6-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 17/17] Add parent pointer ioctl
+Date: Fri, 17 Nov 2017 11:21:45 -0700
+Message-Id: <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
 References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>, Allison Henderson <allison.henderson@oracle.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>
 
-From: Mark Tinguely <tinguely@sgi.com>
+This patch adds a new file ioctl to retrieve the parent
+pointer of a given inode
 
-Return the directory offset information when adding an entry to the
-directory.
-
-This offset will be used as the parent pointer offset in xfs_create,
-xfs_symlink, xfs_link and xfs_rename.
-
-[dchinner: forward ported and cleaned up]
-[dchinner: no s-o-b from Mark]
-[bfoster: rebased, use args->geo in dir code]
-[achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_btree.h   | 1 +
- fs/xfs/libxfs/xfs_dir2.c       | 8 ++++++--
- fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
- fs/xfs/libxfs/xfs_dir2_block.c | 1 +
- fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
- fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
- fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
- fs/xfs/xfs_inode.c             | 9 +++++----
- fs/xfs/xfs_symlink.c           | 2 +-
- 9 files changed, 22 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_fs.h   |  1 +
+ fs/xfs/xfs_attr.h        |  2 ++
+ fs/xfs/xfs_attr_list.c   |  3 +++
+ fs/xfs/xfs_ioctl.c       | 48 +++++++++++++++++++++++++++++++++-
+ 5 files changed, 120 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index ae6de17..bce96d6 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -86,6 +86,7 @@ typedef struct xfs_da_args {
- 	int		rmtvaluelen2;	/* remote attr value length in bytes */
- 	int		op_flags;	/* operation flags */
- 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-+	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
- } xfs_da_args_t;
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index ccf9783..a1ca460 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -268,7 +268,8 @@ xfs_dir_createname(
- 	xfs_ino_t		inum,		/* new entry inode number */
- 	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t		total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
- {
- 	struct xfs_da_args	*args;
- 	int			rval;
-@@ -323,6 +324,9 @@ xfs_dir_createname(
- 	else
- 		rval = xfs_dir2_node_addname(args);
- 
-+	/* return the location that this entry was place in the parent inode */
-+	if (offset)
-+		*offset = args->offset;
- out_free:
- 	kmem_free(args);
- 	return rval;
-@@ -570,7 +574,7 @@ xfs_dir_canenter(
- 	xfs_inode_t	*dp,
- 	struct xfs_name	*name)		/* name of entry to add */
- {
--	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
-+	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0, NULL);
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 9d4d883..d2be842 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -134,6 +134,73 @@ xfs_attr_get_ilocked(
+ 		return xfs_attr_node_get(args);
  }
  
++/*
++ * Get the parent pointer for a given inode
++ * Caller will need to allocate a buffer pointed to by xpnir->p_name
++ * and store the buffer size in xpnir->p_namelen.  The parent
++ * pointer will be stored in the given xfs_parent_name_irec
++ *
++ * Returns 0 on success and non zero on error
++ */
++int
++xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
++			    struct xfs_parent_name_irec *xpnir)
++{
++	struct attrlist			*alist;
++	struct attrlist_ent		*aent;
++	struct attrlist_cursor_kern     cursor;
++	struct xfs_parent_name_rec	*xpnr;
++	char				*namebuf;
++	int                             error = 0;
++	unsigned int                    flags = ATTR_PARENT;
++
++	/* Allocate a buffer to store the attribute names */
++	namebuf = kmem_zalloc_large(XFS_XATTR_LIST_MAX, KM_SLEEP);
++	if (!namebuf)
++		return -ENOMEM;
++
++	/* Get all attribute names that have the ATTR_PARENT flag */
++	memset(&cursor, 0, sizeof(struct attrlist_cursor_kern));
++	error = xfs_attr_list(ip, namebuf, XFS_XATTR_LIST_MAX, flags, &cursor);
++	if (error)
++		goto out_kfree;
++
++	alist = (struct attrlist *)namebuf;
++
++	/* There should never be more than one parent pointer */
++	ASSERT(alist->al_count == 1);
++
++	aent = (struct attrlist_ent *) &namebuf[alist->al_offset[0]];
++	xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
++
++	/*
++	 * The value of the parent pointer attribute should be the file name
++	 * So we check the value length of the attribute entry against the name
++	 * length of the parent name record to make sure the caller gave enough
++	 * buffer space to store the file name (plus a null terminator)
++	 */
++	if (aent->a_valuelen >= xpnir->p_namelen) {
++		error = -ERANGE;
++		goto out_kfree;
++	}
++
++	xpnir->p_namelen = aent->a_valuelen + 1;
++	memset((void *)(xpnir->p_name), 0, xpnir->p_namelen);
++	error = xfs_attr_get(ip, (char *)xpnr,
++			     sizeof(struct xfs_parent_name_rec),
++			     (unsigned char *)(xpnir->p_name),
++			     (int *)&(xpnir->p_namelen), flags);
++	if (error)
++		goto out_kfree;
++
++	xfs_init_parent_name_irec(xpnir, xpnr);
++
++out_kfree:
++	kmem_free(namebuf);
++
++	return error;
++}
++
+ /* Retrieve an extended attribute by name, and its value. */
+ int
+ xfs_attr_get(
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index b8108f8..2f9ca2c 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -512,6 +512,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
++#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_name_irec)
+ 
  /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 21c8f8b..e349900 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -131,7 +131,8 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t *inum,
- 				struct xfs_name *ci_name);
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 43c902f..79684d5 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -552,6 +552,7 @@ xfs_dir2_block_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
- 	/*
- 	 * Clean up the bestfree array and log the header, tail, and entry.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 27297a6..2ac7a7e 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -863,6 +863,8 @@ xfs_dir2_leaf_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
-+						(char *)dep - (char *)hdr);
- 	/*
- 	 * Need to scan fix up the bestfree table.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 682e2bf..8bc91f8 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2022,6 +2022,8 @@ xfs_dir2_node_addname_int(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
-+						  (char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(args, dbp, dep);
- 	/*
- 	 * Rescan the block for bestfree if needed.
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index be8b975..489bdef 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -407,6 +407,7 @@ xfs_dir2_sf_addname_easy(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(offset);
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index 0829687..0ec3458 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -172,6 +172,8 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+ 		int flags);
+ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ 		size_t namelen, unsigned char *value, int valuelen, int flags);
++int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
++				struct xfs_parent_name_irec *xpnir);
+ int xfs_attr_set_args(struct xfs_da_args *args, int flags, bool roll_trans);
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+ 		size_t namelen, int flags);
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 7740c8a..78fc477 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -534,6 +534,9 @@ xfs_attr_put_listent(
+ 	if (((context->flags & ATTR_ROOT) == 0) !=
+ 	    ((flags & XFS_ATTR_ROOT) == 0))
+ 		return;
++	if (((context->flags & ATTR_PARENT) == 0) !=
++	    ((flags & XFS_ATTR_PARENT) == 0))
++		return;
  
- 	/*
- 	 * Update the header and inode.
-@@ -498,6 +499,7 @@ xfs_dir2_sf_addname_hard(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(offset);
- 	sfp->count++;
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
- 		sfp->i8count++;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4ec5b7f..3abcb17 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1252,7 +1252,8 @@ xfs_create(
+ 	arraytop = sizeof(*alist) +
+ 			context->count * sizeof(alist->al_offset[0]);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 4664314..5492607 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -44,6 +44,7 @@
+ #include "xfs_btree.h"
+ #include <linux/fsmap.h>
+ #include "xfs_fsmap.h"
++#include "xfs_attr.h"
  
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 					&first_block, &dfops, resblks ?
--					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
-+					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
-+					NULL);
- 	if (error) {
- 		ASSERT(error != -ENOSPC);
- 		goto out_trans_cancel;
-@@ -1495,7 +1496,7 @@ xfs_link(
- 	}
+ #include <linux/capability.h>
+ #include <linux/cred.h>
+@@ -1710,6 +1711,50 @@ xfs_ioc_getfsmap(
+ 	return 0;
+ }
  
- 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
--					&first_block, &dfops, resblks);
-+				   &first_block, &dfops, resblks, NULL);
- 	if (error)
- 		goto error_return;
- 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-@@ -3031,8 +3032,8 @@ xfs_rename(
- 		 * to account for the ".." reference from the new entry.
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
--						src_ip->i_ino, &first_block,
--						&dfops, spaceres);
-+					   src_ip->i_ino, &first_block, &dfops,
-+					   spaceres, NULL);
- 		if (error)
- 			goto out_bmap_cancel;
++/*
++ * IOCTL routine to get the parent pointer of an inode and return it to user
++ * space.  Caller must pass an struct xfs_parent_name_irec with a name buffer
++ * large enough to hold the file name.  Returns 0 on success or non-zero on
++ * failure
++ */
++STATIC int
++xfs_ioc_get_parent_pointer(
++	struct file			*filp,
++	void				__user *arg)
++{
++	struct inode			*inode = file_inode(filp);
++	struct xfs_inode		*ip = XFS_I(inode);
++	struct xfs_parent_name_irec	xpnir;
++	char				*uname;
++	char				*kname;
++	int				error = 0;
++
++	copy_from_user(&xpnir, arg, sizeof(struct xfs_parent_name_irec));
++	uname = (char *)xpnir.p_name;
++
++	/*
++	 * Use kernel space memory to get the parent pointer name.
++	 * We'll copy it to the user space name back when we're done
++	 */
++	kname = kmem_zalloc_large(xpnir.p_namelen, KM_SLEEP);
++	if (!kname)
++		return -ENOMEM;
++
++	xpnir.p_name = kname;
++	error = xfs_attr_get_parent_pointer(ip, &xpnir);
++
++	if (error)
++		goto out;
++
++	copy_to_user(uname, xpnir.p_name, xpnir.p_namelen);
++	xpnir.p_name = uname;
++	copy_to_user(arg, &xpnir, sizeof(struct xfs_parent_name_irec));
++
++out:
++	kmem_free(kname);
++	return error;
++}
++
+ int
+ xfs_ioc_swapext(
+ 	xfs_swapext_t	*sxp)
+@@ -1866,7 +1911,8 @@ xfs_file_ioctl(
+ 		return xfs_ioc_getxflags(ip, arg);
+ 	case XFS_IOC_SETXFLAGS:
+ 		return xfs_ioc_setxflags(ip, filp, arg);
+-
++	case XFS_IOC_GETPPOINTER:
++		return xfs_ioc_get_parent_pointer(filp, arg);
+ 	case XFS_IOC_FSSETDM: {
+ 		struct fsdmidata	dmi;
  
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 68d3ca2..fc803ae 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -363,7 +363,7 @@ xfs_symlink(
- 	 * Create the directory entry for the symlink.
- 	 */
- 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
--					&first_block, &dfops, resblks);
-+				   &first_block, &dfops, resblks, NULL);
- 	if (error)
- 		goto out_bmap_cancel;
- 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 -- 
 2.7.4
 
