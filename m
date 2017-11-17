@@ -1,265 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29771 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752912AbdKQUNl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 15:13:41 -0500
-Subject: [PATCH 02/12] libfrog: move libxfs_log2_roundup to libfrog
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Nov 2017 12:13:37 -0800
-Message-ID: <151094961718.29763.17807612789023568958.stgit@magnolia>
-In-Reply-To: <151094960522.29763.11622891165765932168.stgit@magnolia>
-References: <151094960522.29763.11622891165765932168.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:57572 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755539AbdKQCrK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Nov 2017 21:47:10 -0500
+Subject: Re: [PATCH v4 2/2] fiemap: Implement ranged query
+References: <1510747821-13270-1-git-send-email-nborisov@suse.com>
+ <1510747821-13270-2-git-send-email-nborisov@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <26736c47-b807-62eb-202b-4a959f16832c@sandeen.net>
+Date: Thu, 16 Nov 2017 20:47:08 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <1510747821-13270-2-git-send-email-nborisov@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, eguan@redhat.com, david@fromorbit.com, darrick.wong@oracle.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 11/15/17 6:10 AM, Nikolay Borisov wrote:
+> Currently the fiemap implementation of xfs_io doesn't support making ranged
+> queries. This patch implements two optional arguments which take the starting
+> offset and the length of the region to be queried. This also requires changing
+> of the final hole range is calculated. Namely, it's now being done as
+> [last_logical, logical addres of next extent] rather than being statically
+> determined by [last_logical, filesize].
+> 
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 
-Move libxfs_log2_roundup to libfrog and remove the 'libxfs_' prefix.
+Ok, so first an apology for taking so long to really, really look at this.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/libfrog.h |   25 +++++++++++++++++++++++++
- include/libxfs.h  |    1 -
- libfrog/Makefile  |    3 ++-
- libfrog/util.c    |   38 ++++++++++++++++++++++++++++++++++++++
- libxfs/util.c     |   12 ------------
- mkfs/Makefile     |    5 +++--
- mkfs/maxtrres.c   |    4 ++--
- mkfs/xfs_mkfs.c   |    4 ++--
- repair/Makefile   |    6 +++---
- repair/sb.c       |    4 ++--
- 10 files changed, 77 insertions(+), 25 deletions(-)
- create mode 100644 include/libfrog.h
- create mode 100644 libfrog/util.c
+When I started reviewing this, and dreading the complexity of the fiemap loop
+control (why /is/ it so complicated today, anyway?) I started wondering: why
+do we need a lot more logic?  Why can't we simply:
+
+1) Set a non-zero mapping start
+2) Set a non-maximal mapping length
+3) Decrement that length as we map, and
+4) When the kernel tells us mapped_extents for the range is 0, stop.
+
+And this is what I ended up with, which seems a lot simpler.  Is there any
+problem with this approach?
+
+This /almost/ passes your test; what it doesn't do is show holes at the edges
+of the mapping range, but I think that's ok.
+
+The interface itself says nothing about holes, it only maps allocated ranges.
+
+If we ask for a ranged query, I think it's appropriate to /not/ print holes
+on either side of the requested range.
 
 
-diff --git a/include/libfrog.h b/include/libfrog.h
-new file mode 100644
-index 0000000..c6a4fa7
---- /dev/null
-+++ b/include/libfrog.h
-@@ -0,0 +1,25 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef __LIBFROG_UTIL_H_
-+#define __LIBFROG_UTIL_H_
-+
-+unsigned int	log2_roundup(unsigned int i);
-+
-+#endif /* __LIBFROG_UTIL_H_ */
-diff --git a/include/libxfs.h b/include/libxfs.h
-index abb01cb..e392e52 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -165,7 +165,6 @@ extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
- 
- 
- /* Shared utility routines */
--extern unsigned int	libxfs_log2_roundup(unsigned int i);
- 
- extern int	libxfs_alloc_file_space (struct xfs_inode *, xfs_off_t,
- 				xfs_off_t, int, int);
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 231a734..6d9ed07 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -10,7 +10,8 @@ LT_CURRENT = 0
- LT_REVISION = 0
- LT_AGE = 0
- 
--CFILES =
-+CFILES = \
-+util.c
- 
- default: ltdepend $(LTLIBRARY)
- 
-diff --git a/libfrog/util.c b/libfrog/util.c
-new file mode 100644
-index 0000000..be38b0b
---- /dev/null
-+++ b/libfrog/util.c
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "platform_defs.h"
-+#include "libfrog.h"
-+
-+/*
-+ * libfrog is a collection of miscellaneous userspace utilities.
-+ * It's a library of Funny Random Oddball Gunk <cough>.
-+ */
-+
-+unsigned int
-+log2_roundup(unsigned int i)
-+{
-+	unsigned int	rval;
-+
-+	for (rval = 0; rval < NBBY * sizeof(i); rval++) {
-+		if ((1 << rval) >= i)
-+			break;
-+	}
-+	return rval;
-+}
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 3b11ac4..6d8cb5e 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -631,18 +631,6 @@ libxfs_alloc_file_space(
- 	return error;
+Thoughts?
+
+
+
+diff --git a/io/fiemap.c b/io/fiemap.c
+index bdcfacd..bbf6d63 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -49,6 +49,8 @@ fiemap_help(void)
+ " -l -- also displays the length of each extent in 512-byte blocks.\n"
+ " -n -- query n extents.\n"
+ " -v -- Verbose information\n"
++" offset is the starting offset to map, and is optional.  If offset is\n"
++" specified, mapping length may (optionally) be specified as well."
+ "\n"));
  }
  
--unsigned int
--libxfs_log2_roundup(unsigned int i)
--{
--	unsigned int	rval;
--
--	for (rval = 0; rval < NBBY * sizeof(i); rval++) {
--		if ((1 << rval) >= i)
--			break;
--	}
--	return rval;
--}
--
- /*
-  * Wrapper around call to libxfs_ialloc. Takes care of committing and
-  * allocating a new transaction as needed.
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index c13b903..e2dc1d4 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -10,8 +10,9 @@ LTCOMMAND = mkfs.xfs
- HFILES =
- CFILES = maxtrres.c proto.c xfs_mkfs.c
+@@ -235,9 +237,15 @@ fiemap_f(
+ 	int		boff_w = 16;
+ 	int		tot_w = 5;	/* 5 since its just one number */
+ 	int		flg_w = 5;
+-	__u64		last_logical = 0;
++	__u64		last_logical = 0;	/* last extent offset handled */
++	off64_t		start_offset = 0;	/* mapping start */
++	off64_t		length = -1LL;		/* mapping length */
++	off64_t		range_end = -1LL;	/* mapping end*/
++	size_t		fsblocksize, fssectsize;
+ 	struct stat	st;
  
--LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) $(LIBUUID)
--LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD)
-+LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
-+	$(LIBUUID)
-+LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
++	init_cvtnum(&fsblocksize, &fssectsize);
++
+ 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+@@ -257,6 +265,27 @@ fiemap_f(
+ 		}
+ 	}
  
- default: depend $(LTCOMMAND)
-diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
-index 04028bf..0fa18c8 100644
---- a/mkfs/maxtrres.c
-+++ b/mkfs/maxtrres.c
-@@ -23,7 +23,7 @@
-  * of sector size, block size, inode size, directory version, and
-  * directory block size.
-  */
--
-+#include "libfrog.h"
- #include "libxfs.h"
- #include "xfs_multidisk.h"
++	/* Range start (optional) */
++	if (optind < argc) {
++		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start_offset < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++		optind++;
++	}
++
++	/* Range length (optional if range start was specified) */
++	if (optind < argc) {
++		length = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (length < 0) {
++			printf("non-numeric len argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		range_end = start_offset + length;
++	}
++
+ 	map_size = sizeof(struct fiemap) +
+ 		(EXTENT_BATCH * sizeof(struct fiemap_extent));
+ 	fiemap = malloc(map_size);
+@@ -274,7 +303,7 @@ fiemap_f(
+ 		memset(fiemap, 0, map_size);
+ 		fiemap->fm_flags = fiemap_flags;
+ 		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1LL;
++		fiemap->fm_length = range_end - last_logical;
+ 		fiemap->fm_extent_count = EXTENT_BATCH;
  
-@@ -55,7 +55,7 @@ max_trans_res(
- 	sbp->sb_blocklog = blocklog;
- 	sbp->sb_blocksize = 1 << blocklog;
- 	sbp->sb_agblocks = agsize;
--	sbp->sb_agblklog = (uint8_t)libxfs_log2_roundup((unsigned int)agsize);
-+	sbp->sb_agblklog = (uint8_t)log2_roundup((unsigned int)agsize);
- 	sbp->sb_inodelog = inodelog;
- 	sbp->sb_inopblog = blocklog - inodelog;
- 	sbp->sb_inodesize = 1 << inodelog;
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5bfec03..cade04c 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -15,7 +15,7 @@
-  * along with this program; if not, write the Free Software Foundation,
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
--
-+#include "libfrog.h"
- #include "libxfs.h"
- #include <ctype.h>
- #include "xfs_multidisk.h"
-@@ -2720,7 +2720,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	memset(mp, 0, sizeof(xfs_mount_t));
- 	sbp->sb_blocklog = (uint8_t)blocklog;
- 	sbp->sb_sectlog = (uint8_t)sectorlog;
--	sbp->sb_agblklog = (uint8_t)libxfs_log2_roundup((unsigned int)agsize);
-+	sbp->sb_agblklog = (uint8_t)log2_roundup((unsigned int)agsize);
- 	sbp->sb_agblocks = (xfs_agblock_t)agsize;
- 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
- 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
-diff --git a/repair/Makefile b/repair/Makefile
-index b7e8fd5..4184a70 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -20,9 +20,9 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
- 	progress.c prefetch.c rmap.c rt.c sb.c scan.c slab.c threads.c \
- 	versions.c xfs_repair.c
+ 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+@@ -336,7 +365,8 @@ fiemap_f(
+ 		return 0;
+ 	}
  
--LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBUUID) \
--	$(LIBRT) $(LIBPTHREAD) $(LIBBLKID)
--LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD)
-+LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
-+	$(LIBPTHREAD) $(LIBBLKID)
-+LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
+-	if (cur_extent && last_logical < st.st_size)
++	/* Print last hole to EOF only if range end was not specified */
++	if (cur_extent && (range_end == -1LL) && (last_logical < st.st_size))
+ 		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
+ 			   BTOBBT(last_logical), BTOBBT(st.st_size));
  
- default: depend $(LTCOMMAND)
-diff --git a/repair/sb.c b/repair/sb.c
-index acc9283..f40cdea 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -15,7 +15,7 @@
-  * along with this program; if not, write the Free Software Foundation,
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
--
-+#include "libfrog.h"
- #include "libxfs.h"
- #include "libxcmd.h"
- #include "libxlog.h"
-@@ -399,7 +399,7 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- 		sb->sb_dblocks < XFS_MIN_DBLOCKS(sb))
- 		return(XR_BAD_FS_SIZE_DATA);
+@@ -353,7 +383,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx]");
++	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
  
--	if (sb->sb_agblklog != (uint8_t)libxfs_log2_roundup(sb->sb_agblocks))
-+	if (sb->sb_agblklog != (uint8_t)log2_roundup(sb->sb_agblocks))
- 		return(XR_BAD_FS_SIZE_DATA);
- 
- 	if (sb->sb_inodesize < XFS_DINODE_MIN_SIZE                     ||
 
