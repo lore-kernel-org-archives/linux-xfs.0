@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24904 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:42383 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753120AbdKQUOU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 15:14:20 -0500
-Subject: [PATCH 07/12] libfrog: move topology code out of libxcmd
+        with ESMTP id S966646AbdKQVBi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 16:01:38 -0500
+Subject: [PATCH 14/27] xfs_scrub: thread-safe stats counter
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Nov 2017 12:14:13 -0800
-Message-ID: <151094965394.29763.3803417126294495044.stgit@magnolia>
-In-Reply-To: <151094960522.29763.11622891165765932168.stgit@magnolia>
-References: <151094960522.29763.11622891165765932168.stgit@magnolia>
+Date: Fri, 17 Nov 2017 13:01:33 -0800
+Message-ID: <151095249367.4825.13078449139829472130.stgit@magnolia>
+In-Reply-To: <151095240950.4825.6375172010231614655.stgit@magnolia>
+References: <151095240950.4825.6375172010231614655.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -20,44 +20,40 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the filesystem topology code out of libxcmd.
+Create a threaded stats counter that we'll use to track scan progress.
+This includes things like how much of the disk blocks we've scanned,
+or later how much progress we've made in each phase.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libfrog/Makefile   |    1 
- libfrog/topology.c |  342 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- libxcmd/Makefile   |    2 
- libxcmd/topology.c |  342 ----------------------------------------------------
- 4 files changed, 344 insertions(+), 343 deletions(-)
- create mode 100644 libfrog/topology.c
- delete mode 100644 libxcmd/topology.c
+ include/ptvar.h  |   32 +++++++++++++
+ libfrog/Makefile |    1 
+ libfrog/ptvar.c  |  133 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/Makefile   |    2 +
+ scrub/counter.c  |  104 ++++++++++++++++++++++++++++++++++++++++++
+ scrub/counter.h  |   29 ++++++++++++
+ 6 files changed, 301 insertions(+)
+ create mode 100644 include/ptvar.h
+ create mode 100644 libfrog/ptvar.c
+ create mode 100644 scrub/counter.c
+ create mode 100644 scrub/counter.h
 
 
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 9a43621..bffc346 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -14,6 +14,7 @@ CFILES = \
- avl64.c \
- list_sort.c \
- radix-tree.c \
-+topology.c \
- util.c \
- workqueue.c
- 
-diff --git a/libfrog/topology.c b/libfrog/topology.c
+diff --git a/include/ptvar.h b/include/ptvar.h
 new file mode 100644
-index 0000000..f66dd1b
+index 0000000..52d03a5
 --- /dev/null
-+++ b/libfrog/topology.c
-@@ -0,0 +1,342 @@
++++ b/include/ptvar.h
+@@ -0,0 +1,32 @@
 +/*
-+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
 + *
 + * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
 + *
 + * This program is distributed in the hope that it would be useful,
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -66,692 +62,335 @@ index 0000000..f66dd1b
 + *
 + * You should have received a copy of the GNU General Public License
 + * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
++#ifndef LIBFROG_PERCPU_H_
++#define LIBFROG_PERCPU_H_
 +
-+#include "libxfs.h"
-+#include "libxcmd.h"
-+#ifdef ENABLE_BLKID
-+#  include <blkid/blkid.h>
-+#endif /* ENABLE_BLKID */
-+#include "xfs_multidisk.h"
++struct ptvar;
 +
-+#define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
-+#define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
-+#define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
++typedef bool (*ptvar_iter_fn)(struct ptvar *ptv, void *data, void *foreach_arg);
 +
-+void
-+calc_default_ag_geometry(
-+	int		blocklog,
-+	uint64_t	dblocks,
-+	int		multidisk,
-+	uint64_t	*agsize,
-+	uint64_t	*agcount)
-+{
-+	uint64_t	blocks = 0;
-+	int		shift = 0;
++struct ptvar *ptvar_init(size_t nr, size_t size);
++void ptvar_free(struct ptvar *ptv);
++void *ptvar_get(struct ptvar *ptv);
++bool ptvar_foreach(struct ptvar *ptv, ptvar_iter_fn fn, void *foreach_arg);
 +
-+	/*
-+	 * First handle the high extreme - the point at which we will
-+	 * always use the maximum AG size.
-+	 *
-+	 * This applies regardless of storage configuration.
-+	 */
-+	if (dblocks >= TERABYTES(32, blocklog)) {
-+		blocks = XFS_AG_MAX_BLOCKS(blocklog);
-+		goto done;
-+	}
-+
-+	/*
-+	 * For a single underlying storage device over 4TB in size
-+	 * use the maximum AG size.  Between 128MB and 4TB, just use
-+	 * 4 AGs and scale up smoothly between min/max AG sizes.
-+	 */
-+	if (!multidisk) {
-+		if (dblocks >= TERABYTES(4, blocklog)) {
-+			blocks = XFS_AG_MAX_BLOCKS(blocklog);
-+			goto done;
-+		} else if (dblocks >= MEGABYTES(128, blocklog)) {
-+			shift = XFS_NOMULTIDISK_AGLOG;
-+			goto calc_blocks;
-+		}
-+	}
-+
-+	/*
-+	 * For the multidisk configs we choose an AG count based on the number
-+	 * of data blocks available, trying to keep the number of AGs higher
-+	 * than the single disk configurations. This makes the assumption that
-+	 * larger filesystems have more parallelism available to them.
-+	 */
-+	shift = XFS_MULTIDISK_AGLOG;
-+	if (dblocks <= GIGABYTES(512, blocklog))
-+		shift--;
-+	if (dblocks <= GIGABYTES(8, blocklog))
-+		shift--;
-+	if (dblocks < MEGABYTES(128, blocklog))
-+		shift--;
-+	if (dblocks < MEGABYTES(64, blocklog))
-+		shift--;
-+	if (dblocks < MEGABYTES(32, blocklog))
-+		shift--;
-+
-+	/*
-+	 * If dblocks is not evenly divisible by the number of
-+	 * desired AGs, round "blocks" up so we don't lose the
-+	 * last bit of the filesystem. The same principle applies
-+	 * to the AG count, so we don't lose the last AG!
-+	 */
-+calc_blocks:
-+	ASSERT(shift >= 0 && shift <= XFS_MULTIDISK_AGLOG);
-+	blocks = dblocks >> shift;
-+	if (dblocks & xfs_mask32lo(shift)) {
-+		if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
-+		    blocks++;
-+	}
-+done:
-+	*agsize = blocks;
-+	*agcount = dblocks / blocks + (dblocks % blocks != 0);
-+}
++#endif /* LIBFROG_PERCPU_H_ */
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 4c15605..230b08f 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -16,6 +16,7 @@ convert.c \
+ list_sort.c \
+ paths.c \
+ projects.c \
++ptvar.c \
+ radix-tree.c \
+ topology.c \
+ util.c \
+diff --git a/libfrog/ptvar.c b/libfrog/ptvar.c
+new file mode 100644
+index 0000000..818667c
+--- /dev/null
++++ b/libfrog/ptvar.c
+@@ -0,0 +1,133 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdint.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <string.h>
++#include <assert.h>
++#include <pthread.h>
++#include <unistd.h>
++#include "platform_defs.h"
++#include "ptvar.h"
 +
 +/*
-+ * Check for existing filesystem or partition table on device.
-+ * Returns:
-+ *	 1 for existing fs or partition
-+ *	 0 for nothing found
-+ *	-1 for internal error
++ * Per-thread Variables
++ *
++ * This data structure manages a lockless per-thread variable.  We
++ * implement this by allocating an array of memory regions, and as each
++ * thread tries to acquire its own region, we hand out the array
++ * elements to each thread.  This way, each thread gets its own
++ * cacheline and (after the first access) doesn't have to contend for a
++ * lock for each access.
 + */
-+#ifdef ENABLE_BLKID
-+int
-+check_overwrite(
-+	const char	*device)
++struct ptvar {
++	pthread_key_t	key;
++	pthread_mutex_t	lock;
++	size_t		nr_used;
++	size_t		nr_counters;
++	size_t		data_size;
++	unsigned char	data[0];
++};
++#define PTVAR_SIZE(nr, sz) (sizeof(struct ptvar) + ((nr) * (size)))
++
++/* Initialize per-thread counter. */
++struct ptvar *
++ptvar_init(
++	size_t		nr,
++	size_t		size)
 +{
-+	const char	*type;
-+	blkid_probe	pr = NULL;
++	struct ptvar	*ptv;
 +	int		ret;
-+	int		fd;
-+	long long	size;
-+	int		bsz;
 +
-+	if (!device || !*device)
-+		return 0;
++#ifdef _SC_LEVEL1_DCACHE_LINESIZE
++	/* Try to prevent cache pingpong by aligning to cacheline size. */
++	size = max(size, sysconf(_SC_LEVEL1_DCACHE_LINESIZE));
++#endif
 +
-+	ret = -1; /* will reset on success of all setup calls */
-+
-+	fd = open(device, O_RDONLY);
-+	if (fd < 0)
++	ptv = malloc(PTVAR_SIZE(nr, size));
++	if (!ptv)
++		return NULL;
++	ptv->data_size = size;
++	ptv->nr_counters = nr;
++	ptv->nr_used = 0;
++	memset(ptv->data, 0, nr * size);
++	ret = pthread_mutex_init(&ptv->lock, NULL);
++	if (ret)
 +		goto out;
-+	platform_findsizes((char *)device, fd, &size, &bsz);
-+	close(fd);
++	ret = pthread_key_create(&ptv->key, NULL);
++	if (ret)
++		goto out_mutex;
++	return ptv;
 +
-+	/* nothing to overwrite on a 0-length device */
-+	if (size == 0) {
-+		ret = 0;
-+		goto out;
-+	}
-+
-+	pr = blkid_new_probe_from_filename(device);
-+	if (!pr)
-+		goto out;
-+
-+	ret = blkid_probe_enable_partitions(pr, 1);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = blkid_do_fullprobe(pr);
-+	if (ret < 0)
-+		goto out;
-+
-+	/*
-+	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
-+	 * but we want the exact opposite, so reverse the return value here.
-+	 *
-+	 * In addition print some useful diagnostics about what actually is
-+	 * on the device.
-+	 */
-+	if (ret) {
-+		ret = 0;
-+		goto out;
-+	}
-+
-+	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
-+		fprintf(stderr,
-+			_("%s: %s appears to contain an existing "
-+			"filesystem (%s).\n"), progname, device, type);
-+	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
-+		fprintf(stderr,
-+			_("%s: %s appears to contain a partition "
-+			"table (%s).\n"), progname, device, type);
-+	} else {
-+		fprintf(stderr,
-+			_("%s: %s appears to contain something weird "
-+			"according to blkid\n"), progname, device);
-+	}
-+	ret = 1;
++out_mutex:
++	pthread_mutex_destroy(&ptv->lock);
 +out:
-+	if (pr)
-+		blkid_free_probe(pr);
-+	if (ret == -1)
-+		fprintf(stderr,
-+			_("%s: probe of %s failed, cannot detect "
-+			  "existing filesystem.\n"), progname, device);
++	free(ptv);
++	return NULL;
++}
++
++/* Free per-thread counter. */
++void
++ptvar_free(
++	struct ptvar	*ptv)
++{
++	pthread_key_delete(ptv->key);
++	pthread_mutex_destroy(&ptv->lock);
++	free(ptv);
++}
++
++/* Get a reference to this thread's variable. */
++void *
++ptvar_get(
++	struct ptvar	*ptv)
++{
++	void		*p;
++
++	p = pthread_getspecific(ptv->key);
++	if (!p) {
++		pthread_mutex_lock(&ptv->lock);
++		assert(ptv->nr_used < ptv->nr_counters);
++		p = &ptv->data[(ptv->nr_used++) * ptv->data_size];
++		pthread_setspecific(ptv->key, p);
++		pthread_mutex_unlock(&ptv->lock);
++	}
++	return p;
++}
++
++/* Iterate all of the per-thread variables. */
++bool
++ptvar_foreach(
++	struct ptvar	*ptv,
++	ptvar_iter_fn	fn,
++	void		*foreach_arg)
++{
++	size_t		i;
++	bool		ret = true;
++
++	pthread_mutex_lock(&ptv->lock);
++	for (i = 0; i < ptv->nr_used; i++) {
++		ret = fn(ptv, &ptv->data[i * ptv->data_size], foreach_arg);
++		if (!ret)
++			break;
++	}
++	pthread_mutex_unlock(&ptv->lock);
++
 +	return ret;
 +}
-+
-+static void blkid_get_topology(
-+	const char	*device,
-+	int		*sunit,
-+	int		*swidth,
-+	int		*lsectorsize,
-+	int		*psectorsize,
-+	int		force_overwrite)
-+{
-+
-+	blkid_topology tp;
-+	blkid_probe pr;
-+	unsigned long val;
-+	struct stat statbuf;
-+
-+	/* can't get topology info from a file */
-+	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode)) {
-+		fprintf(stderr,
-+	_("%s: Warning: trying to probe topology of a file %s!\n"),
-+			progname, device);
-+		return;
-+	}
-+
-+	pr = blkid_new_probe_from_filename(device);
-+	if (!pr)
-+		return;
-+
-+	tp = blkid_probe_get_topology(pr);
-+	if (!tp)
-+		goto out_free_probe;
-+
-+	val = blkid_topology_get_logical_sector_size(tp);
-+	*lsectorsize = val;
-+	val = blkid_topology_get_physical_sector_size(tp);
-+	*psectorsize = val;
-+	val = blkid_topology_get_minimum_io_size(tp);
-+	*sunit = val;
-+	val = blkid_topology_get_optimal_io_size(tp);
-+	*swidth = val;
-+
-+	/*
-+	 * If the reported values are the same as the physical sector size
-+	 * do not bother to report anything.  It will only cause warnings
-+	 * if people specify larger stripe units or widths manually.
-+	 */
-+	if (*sunit == *psectorsize || *swidth == *psectorsize) {
-+		*sunit = 0;
-+		*swidth = 0;
-+	}
-+
-+	/*
-+	 * Blkid reports the information in terms of bytes, but we want it in
-+	 * terms of 512 bytes blocks (only to convert it to bytes later..)
-+	 */
-+	*sunit = *sunit >> 9;
-+	*swidth = *swidth >> 9;
-+
-+	if (blkid_topology_get_alignment_offset(tp) != 0) {
-+		fprintf(stderr,
-+			_("warning: device is not properly aligned %s\n"),
-+			device);
-+
-+		if (!force_overwrite) {
-+			fprintf(stderr,
-+				_("Use -f to force usage of a misaligned device\n"));
-+
-+			exit(EXIT_FAILURE);
-+		}
-+		/* Do not use physical sector size if the device is misaligned */
-+		*psectorsize = *lsectorsize;
-+	}
-+
-+	blkid_free_probe(pr);
-+	return;
-+
-+out_free_probe:
-+	blkid_free_probe(pr);
-+	fprintf(stderr,
-+		_("warning: unable to probe device topology for device %s\n"),
-+		device);
-+}
-+#else /* ifdef ENABLE_BLKID */
+diff --git a/scrub/Makefile b/scrub/Makefile
+index b63fd92..71d80fb 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -17,6 +17,7 @@ endif	# scrub_prereqs
+ 
+ HFILES = \
+ common.h \
++counter.h \
+ disk.h \
+ filemap.h \
+ fscounters.h \
+@@ -27,6 +28,7 @@ xfs_scrub.h
+ 
+ CFILES = \
+ common.c \
++counter.c \
+ disk.c \
+ filemap.c \
+ fscounters.c \
+diff --git a/scrub/counter.c b/scrub/counter.c
+new file mode 100644
+index 0000000..b503f7a
+--- /dev/null
++++ b/scrub/counter.c
+@@ -0,0 +1,104 @@
 +/*
-+ * Without blkid, we can't do a good check for signatures.
-+ * So instead of some messy attempts, just disable any checks
-+ * and always return 'nothing found'.
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+#  warning BLKID is disabled, so signature detection and block device\
-+ access are not working!
-+int
-+check_overwrite(
-+	const char	*device)
++#include <stdint.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <string.h>
++#include <assert.h>
++#include <pthread.h>
++#include "ptvar.h"
++#include "counter.h"
++
++/*
++ * Per-Thread Counters
++ *
++ * This is a global counter object that uses per-thread counters to
++ * count things without having to content for a single shared lock.
++ * Provided we know the number of threads that will be accessing the
++ * counter, each thread gets its own thread-specific counter variable.
++ * Changing the value is fast, though retrieving the value is expensive
++ * and approximate.
++ */
++struct ptcounter {
++	struct ptvar	*var;
++};
++
++/* Initialize per-thread counter. */
++struct ptcounter *
++ptcounter_init(
++	size_t			nr)
 +{
-+	return 1;
-+}
++	struct ptcounter	*p;
 +
-+static void blkid_get_topology(
-+	const char	*device,
-+	int		*sunit,
-+	int		*swidth,
-+	int		*lsectorsize,
-+	int		*psectorsize,
-+	int		force_overwrite)
-+{
-+	/*
-+	 * Shouldn't make any difference (no blkid = no block device access),
-+	 * but make sure this dummy replacement returns with at least some
-+	 * sanity.
-+	 */
-+	*lsectorsize = *psectorsize = 512;
-+}
-+
-+#endif /* ENABLE_BLKID */
-+
-+void get_topology(
-+	libxfs_init_t		*xi,
-+	struct fs_topology	*ft,
-+	int			force_overwrite)
-+{
-+	struct stat statbuf;
-+	char *dfile = xi->volname ? xi->volname : xi->dname;
-+
-+	/*
-+	 * If our target is a regular file, use platform_findsizes
-+	 * to try to obtain the underlying filesystem's requirements
-+	 * for direct IO; we'll set our sector size to that if possible.
-+	 */
-+	if (xi->disfile ||
-+	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
-+		int fd;
-+		int flags = O_RDONLY;
-+		long long dummy;
-+
-+		/* with xi->disfile we may not have the file yet! */
-+		if (xi->disfile)
-+			flags |= O_CREAT;
-+
-+		fd = open(dfile, flags, 0666);
-+		if (fd >= 0) {
-+			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
-+			close(fd);
-+			ft->psectorsize = ft->lsectorsize;
-+		} else
-+			ft->psectorsize = ft->lsectorsize = BBSIZE;
-+	} else {
-+		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
-+				   &ft->lsectorsize, &ft->psectorsize,
-+				   force_overwrite);
++	p = malloc(sizeof(struct ptcounter));
++	if (!p)
++		return NULL;
++	p->var = ptvar_init(nr, sizeof(uint64_t));
++	if (!p->var) {
++		free(p);
++		return NULL;
 +	}
-+
-+	if (xi->rtname && !xi->risfile) {
-+		int sunit, lsectorsize, psectorsize;
-+
-+		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
-+				   &lsectorsize, &psectorsize, force_overwrite);
-+	}
++	return p;
 +}
-diff --git a/libxcmd/Makefile b/libxcmd/Makefile
-index aab8d6d..7701ed9 100644
---- a/libxcmd/Makefile
-+++ b/libxcmd/Makefile
-@@ -10,7 +10,7 @@ LT_CURRENT = 0
- LT_REVISION = 0
- LT_AGE = 0
- 
--CFILES = command.c input.c paths.c projects.c help.c quit.c topology.c
-+CFILES = command.c input.c paths.c projects.c help.c quit.c
- 
- ifeq ($(HAVE_GETMNTENT),yes)
- LCFLAGS += -DHAVE_GETMNTENT
-diff --git a/libxcmd/topology.c b/libxcmd/topology.c
-deleted file mode 100644
-index f66dd1b..0000000
---- a/libxcmd/topology.c
-+++ /dev/null
-@@ -1,342 +0,0 @@
--/*
-- * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--
--#include "libxfs.h"
--#include "libxcmd.h"
--#ifdef ENABLE_BLKID
--#  include <blkid/blkid.h>
--#endif /* ENABLE_BLKID */
--#include "xfs_multidisk.h"
--
--#define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
--#define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
--#define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
--
--void
--calc_default_ag_geometry(
--	int		blocklog,
--	uint64_t	dblocks,
--	int		multidisk,
--	uint64_t	*agsize,
--	uint64_t	*agcount)
--{
--	uint64_t	blocks = 0;
--	int		shift = 0;
--
--	/*
--	 * First handle the high extreme - the point at which we will
--	 * always use the maximum AG size.
--	 *
--	 * This applies regardless of storage configuration.
--	 */
--	if (dblocks >= TERABYTES(32, blocklog)) {
--		blocks = XFS_AG_MAX_BLOCKS(blocklog);
--		goto done;
--	}
--
--	/*
--	 * For a single underlying storage device over 4TB in size
--	 * use the maximum AG size.  Between 128MB and 4TB, just use
--	 * 4 AGs and scale up smoothly between min/max AG sizes.
--	 */
--	if (!multidisk) {
--		if (dblocks >= TERABYTES(4, blocklog)) {
--			blocks = XFS_AG_MAX_BLOCKS(blocklog);
--			goto done;
--		} else if (dblocks >= MEGABYTES(128, blocklog)) {
--			shift = XFS_NOMULTIDISK_AGLOG;
--			goto calc_blocks;
--		}
--	}
--
--	/*
--	 * For the multidisk configs we choose an AG count based on the number
--	 * of data blocks available, trying to keep the number of AGs higher
--	 * than the single disk configurations. This makes the assumption that
--	 * larger filesystems have more parallelism available to them.
--	 */
--	shift = XFS_MULTIDISK_AGLOG;
--	if (dblocks <= GIGABYTES(512, blocklog))
--		shift--;
--	if (dblocks <= GIGABYTES(8, blocklog))
--		shift--;
--	if (dblocks < MEGABYTES(128, blocklog))
--		shift--;
--	if (dblocks < MEGABYTES(64, blocklog))
--		shift--;
--	if (dblocks < MEGABYTES(32, blocklog))
--		shift--;
--
--	/*
--	 * If dblocks is not evenly divisible by the number of
--	 * desired AGs, round "blocks" up so we don't lose the
--	 * last bit of the filesystem. The same principle applies
--	 * to the AG count, so we don't lose the last AG!
--	 */
--calc_blocks:
--	ASSERT(shift >= 0 && shift <= XFS_MULTIDISK_AGLOG);
--	blocks = dblocks >> shift;
--	if (dblocks & xfs_mask32lo(shift)) {
--		if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
--		    blocks++;
--	}
--done:
--	*agsize = blocks;
--	*agcount = dblocks / blocks + (dblocks % blocks != 0);
--}
--
--/*
-- * Check for existing filesystem or partition table on device.
-- * Returns:
-- *	 1 for existing fs or partition
-- *	 0 for nothing found
-- *	-1 for internal error
-- */
--#ifdef ENABLE_BLKID
--int
--check_overwrite(
--	const char	*device)
--{
--	const char	*type;
--	blkid_probe	pr = NULL;
--	int		ret;
--	int		fd;
--	long long	size;
--	int		bsz;
--
--	if (!device || !*device)
--		return 0;
--
--	ret = -1; /* will reset on success of all setup calls */
--
--	fd = open(device, O_RDONLY);
--	if (fd < 0)
--		goto out;
--	platform_findsizes((char *)device, fd, &size, &bsz);
--	close(fd);
--
--	/* nothing to overwrite on a 0-length device */
--	if (size == 0) {
--		ret = 0;
--		goto out;
--	}
--
--	pr = blkid_new_probe_from_filename(device);
--	if (!pr)
--		goto out;
--
--	ret = blkid_probe_enable_partitions(pr, 1);
--	if (ret < 0)
--		goto out;
--
--	ret = blkid_do_fullprobe(pr);
--	if (ret < 0)
--		goto out;
--
--	/*
--	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
--	 * but we want the exact opposite, so reverse the return value here.
--	 *
--	 * In addition print some useful diagnostics about what actually is
--	 * on the device.
--	 */
--	if (ret) {
--		ret = 0;
--		goto out;
--	}
--
--	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
--		fprintf(stderr,
--			_("%s: %s appears to contain an existing "
--			"filesystem (%s).\n"), progname, device, type);
--	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
--		fprintf(stderr,
--			_("%s: %s appears to contain a partition "
--			"table (%s).\n"), progname, device, type);
--	} else {
--		fprintf(stderr,
--			_("%s: %s appears to contain something weird "
--			"according to blkid\n"), progname, device);
--	}
--	ret = 1;
--out:
--	if (pr)
--		blkid_free_probe(pr);
--	if (ret == -1)
--		fprintf(stderr,
--			_("%s: probe of %s failed, cannot detect "
--			  "existing filesystem.\n"), progname, device);
--	return ret;
--}
--
--static void blkid_get_topology(
--	const char	*device,
--	int		*sunit,
--	int		*swidth,
--	int		*lsectorsize,
--	int		*psectorsize,
--	int		force_overwrite)
--{
--
--	blkid_topology tp;
--	blkid_probe pr;
--	unsigned long val;
--	struct stat statbuf;
--
--	/* can't get topology info from a file */
--	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode)) {
--		fprintf(stderr,
--	_("%s: Warning: trying to probe topology of a file %s!\n"),
--			progname, device);
--		return;
--	}
--
--	pr = blkid_new_probe_from_filename(device);
--	if (!pr)
--		return;
--
--	tp = blkid_probe_get_topology(pr);
--	if (!tp)
--		goto out_free_probe;
--
--	val = blkid_topology_get_logical_sector_size(tp);
--	*lsectorsize = val;
--	val = blkid_topology_get_physical_sector_size(tp);
--	*psectorsize = val;
--	val = blkid_topology_get_minimum_io_size(tp);
--	*sunit = val;
--	val = blkid_topology_get_optimal_io_size(tp);
--	*swidth = val;
--
--	/*
--	 * If the reported values are the same as the physical sector size
--	 * do not bother to report anything.  It will only cause warnings
--	 * if people specify larger stripe units or widths manually.
--	 */
--	if (*sunit == *psectorsize || *swidth == *psectorsize) {
--		*sunit = 0;
--		*swidth = 0;
--	}
--
--	/*
--	 * Blkid reports the information in terms of bytes, but we want it in
--	 * terms of 512 bytes blocks (only to convert it to bytes later..)
--	 */
--	*sunit = *sunit >> 9;
--	*swidth = *swidth >> 9;
--
--	if (blkid_topology_get_alignment_offset(tp) != 0) {
--		fprintf(stderr,
--			_("warning: device is not properly aligned %s\n"),
--			device);
--
--		if (!force_overwrite) {
--			fprintf(stderr,
--				_("Use -f to force usage of a misaligned device\n"));
--
--			exit(EXIT_FAILURE);
--		}
--		/* Do not use physical sector size if the device is misaligned */
--		*psectorsize = *lsectorsize;
--	}
--
--	blkid_free_probe(pr);
--	return;
--
--out_free_probe:
--	blkid_free_probe(pr);
--	fprintf(stderr,
--		_("warning: unable to probe device topology for device %s\n"),
--		device);
--}
--#else /* ifdef ENABLE_BLKID */
--/*
-- * Without blkid, we can't do a good check for signatures.
-- * So instead of some messy attempts, just disable any checks
-- * and always return 'nothing found'.
-- */
--#  warning BLKID is disabled, so signature detection and block device\
-- access are not working!
--int
--check_overwrite(
--	const char	*device)
--{
--	return 1;
--}
--
--static void blkid_get_topology(
--	const char	*device,
--	int		*sunit,
--	int		*swidth,
--	int		*lsectorsize,
--	int		*psectorsize,
--	int		force_overwrite)
--{
--	/*
--	 * Shouldn't make any difference (no blkid = no block device access),
--	 * but make sure this dummy replacement returns with at least some
--	 * sanity.
--	 */
--	*lsectorsize = *psectorsize = 512;
--}
--
--#endif /* ENABLE_BLKID */
--
--void get_topology(
--	libxfs_init_t		*xi,
--	struct fs_topology	*ft,
--	int			force_overwrite)
--{
--	struct stat statbuf;
--	char *dfile = xi->volname ? xi->volname : xi->dname;
--
--	/*
--	 * If our target is a regular file, use platform_findsizes
--	 * to try to obtain the underlying filesystem's requirements
--	 * for direct IO; we'll set our sector size to that if possible.
--	 */
--	if (xi->disfile ||
--	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
--		int fd;
--		int flags = O_RDONLY;
--		long long dummy;
--
--		/* with xi->disfile we may not have the file yet! */
--		if (xi->disfile)
--			flags |= O_CREAT;
--
--		fd = open(dfile, flags, 0666);
--		if (fd >= 0) {
--			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
--			close(fd);
--			ft->psectorsize = ft->lsectorsize;
--		} else
--			ft->psectorsize = ft->lsectorsize = BBSIZE;
--	} else {
--		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
--				   &ft->lsectorsize, &ft->psectorsize,
--				   force_overwrite);
--	}
--
--	if (xi->rtname && !xi->risfile) {
--		int sunit, lsectorsize, psectorsize;
--
--		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
--				   &lsectorsize, &psectorsize, force_overwrite);
--	}
--}
++
++/* Free per-thread counter. */
++void
++ptcounter_free(
++	struct ptcounter	*ptc)
++{
++	ptvar_free(ptc->var);
++	free(ptc);
++}
++
++/* Add a quantity to the counter. */
++void
++ptcounter_add(
++	struct ptcounter	*ptc,
++	int64_t			nr)
++{
++	uint64_t		*p;
++
++	p = ptvar_get(ptc->var);
++	*p += nr;
++}
++
++static bool
++ptcounter_val_helper(
++	struct ptvar		*ptv,
++	void			*data,
++	void			*foreach_arg)
++{
++	uint64_t		*sum = foreach_arg;
++	uint64_t		*count = data;
++
++	*sum += *count;
++	return true;
++}
++
++/* Return the approximate value of this counter. */
++uint64_t
++ptcounter_value(
++	struct ptcounter	*ptc)
++{
++	uint64_t		sum = 0;
++
++	ptvar_foreach(ptc->var, ptcounter_val_helper, &sum);
++	return sum;
++}
+diff --git a/scrub/counter.h b/scrub/counter.h
+new file mode 100644
+index 0000000..f6225b2
+--- /dev/null
++++ b/scrub/counter.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_COUNTER_H_
++#define XFS_SCRUB_COUNTER_H_
++
++struct ptcounter;
++struct ptcounter *ptcounter_init(size_t nr);
++void ptcounter_free(struct ptcounter *ptc);
++void ptcounter_add(struct ptcounter *ptc, int64_t nr);
++uint64_t ptcounter_value(struct ptcounter *ptc);
++
++#endif /* XFS_SCRUB_COUNTER_H_ */
 
