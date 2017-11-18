@@ -1,143 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44407 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423039AbdKQW4z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2017 17:56:55 -0500
-Date: Fri, 17 Nov 2017 14:56:41 -0800
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171117225640.GA11918@dhcp-10-11-180-142.int.fusionio.com>
-Reply-To: bo.li.liu@oracle.com
-References: <20171117193925.GM5119@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:43648 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933066AbdKRDvC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Nov 2017 22:51:02 -0500
+Date: Sat, 18 Nov 2017 11:51:00 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [fstests PATCH v4 2/4] dm-log-writes: only replay log to marks
+ that exist
+Message-ID: <20171118035100.GC2749@eguan.usersys.redhat.com>
+References: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
+ <20171117202828.25472-3-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171117193925.GM5119@magnolia>
+In-Reply-To: <20171117202828.25472-3-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
 
-On Fri, Nov 17, 2017 at 11:39:25AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 17, 2017 at 01:28:26PM -0700, Ross Zwisler wrote:
+> The 'replay-log' executable will replay the dm-log-writes log until the
+> given mark, or until the end of the log if the mark isn't found.
 > 
-> If two programs simultaneously try to write to the same part of a file
-> via direct IO and buffered IO, there's a chance that the post-diowrite
-> pagecache invalidation will fail on the dirty page.  When this happens,
-> the dio write succeeded, which means that the page cache is no longer
-> coherent with the disk!
+> This means that if the mark you're looking for was never inserted in the
+> log or if you give garbage to _log_writes_replay_log() the entire log will
+> be replayed.  This can cause unexpected test results.
 > 
-> Programs are not supposed to mix IO types and this is a clear case of
-> data corruption, so store an EIO which will be reflected to userspace
-> during the next fsync.  Replace the WARN_ON with a ratelimited pr_crit
-> so that the developers have /some/ kind of breadcrumb to track down the
-> offending program(s) and file(s) involved.
->
+> Fix this by making sure that the mark we're given actually exists in the
+> log before we allow the replay.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  common/dmlogwrites | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/common/dmlogwrites b/common/dmlogwrites
+> index 247c744..80ed4fc 100644
+> --- a/common/dmlogwrites
+> +++ b/common/dmlogwrites
+> @@ -72,6 +72,10 @@ _log_writes_replay_log()
+>  {
+>  	_mark=$1
+>  
+> +	$here/src/log-writes/replay-log --log $LOGWRITES_DEV --find \
+> +		--end-mark $_mark >> $seqres.full 2>&1
+> +	[ $? -ne 0 ] && _fail "mark does not exist"
 
-Looks good to me, thanks for addressing the warning.
-
-Reviewed-by: Liu Bo <bo.li.liu@oracle.com>
+Print out $_mark too?
 
 Thanks,
+Eryu
 
--liubo
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/direct-io.c     |   24 +++++++++++++++++++++++-
->  fs/iomap.c         |   12 ++++++++++--
->  include/linux/fs.h |    1 +
->  3 files changed, 34 insertions(+), 3 deletions(-)
+> +
+>  	$here/src/log-writes/replay-log --log $LOGWRITES_DEV --replay $SCRATCH_DEV \
+>  		--end-mark $_mark >> $seqres.full 2>&1
+>  	[ $? -ne 0 ] && _fail "replay failed"
+> -- 
+> 2.9.5
 > 
-> diff --git a/fs/direct-io.c b/fs/direct-io.c
-> index 98fe132..ef5d12a 100644
-> --- a/fs/direct-io.c
-> +++ b/fs/direct-io.c
-> @@ -219,6 +219,27 @@ static inline struct page *dio_get_page(struct dio *dio,
->  	return dio->pages[sdio->head];
->  }
->  
-> +/*
-> + * Warn about a page cache invalidation failure during a direct io write.
-> + */
-> +void dio_warn_stale_pagecache(struct file *filp)
-> +{
-> +	static DEFINE_RATELIMIT_STATE(_rs, 30 * HZ, DEFAULT_RATELIMIT_BURST);
-> +	char pathname[128];
-> +	struct inode *inode = file_inode(filp);
-> +	char *path;
-> +
-> +	errseq_set(&inode->i_mapping->wb_err, -EIO);
-> +	if (__ratelimit(&_rs)) {
-> +		path = file_path(filp, pathname, sizeof(pathname));
-> +		if (IS_ERR(path))
-> +			path = "(unknown)";
-> +		pr_crit("Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!\n");
-> +		pr_crit("File: %s PID: %d Comm: %.20s\n", path, current->pid,
-> +			current->comm);
-> +	}
-> +}
-> +
->  /**
->   * dio_complete() - called when all DIO BIO I/O has been completed
->   * @offset: the byte offset in the file of the completed operation
-> @@ -290,7 +311,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, unsigned int flags)
->  		err = invalidate_inode_pages2_range(dio->inode->i_mapping,
->  					offset >> PAGE_SHIFT,
->  					(offset + ret - 1) >> PAGE_SHIFT);
-> -		WARN_ON_ONCE(err);
-> +		if (err)
-> +			dio_warn_stale_pagecache(dio->iocb->ki_filp);
->  	}
->  
->  	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 5011a96..028f329 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -753,7 +753,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
->  		err = invalidate_inode_pages2_range(inode->i_mapping,
->  				offset >> PAGE_SHIFT,
->  				(offset + dio->size - 1) >> PAGE_SHIFT);
-> -		WARN_ON_ONCE(err);
-> +		if (err)
-> +			dio_warn_stale_pagecache(iocb->ki_filp);
->  	}
->  
->  	inode_dio_end(file_inode(iocb->ki_filp));
-> @@ -1012,9 +1013,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	if (ret)
->  		goto out_free_dio;
->  
-> +	/*
-> +	 * Try to invalidate cache pages for the range we're direct
-> +	 * writing.  If this invalidation fails, tough, the write will
-> +	 * still work, but racing two incompatible write paths is a
-> +	 * pretty crazy thing to do, so we don't support it 100%.
-> +	 */
->  	ret = invalidate_inode_pages2_range(mapping,
->  			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> -	WARN_ON_ONCE(ret);
-> +	if (ret)
-> +		dio_warn_stale_pagecache(iocb->ki_filp);
->  	ret = 0;
->  
->  	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 2690864..0e5f060 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2976,6 +2976,7 @@ enum {
->  };
->  
->  void dio_end_io(struct bio *bio);
-> +void dio_warn_stale_pagecache(struct file *filp);
->  
->  ssize_t __blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
->  			     struct block_device *bdev, struct iov_iter *iter,
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
