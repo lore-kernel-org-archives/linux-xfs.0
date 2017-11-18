@@ -1,73 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:38765 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752959AbdKQVOk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 16:14:40 -0500
-Date: Fri, 17 Nov 2017 14:14:34 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [xfsprogs PATCH 2/2] xfs_io: add a new 'log_writes' command
-Message-ID: <20171117211434.GB16597@linux.intel.com>
-References: <20171117202524.24696-1-ross.zwisler@linux.intel.com>
- <20171117202524.24696-3-ross.zwisler@linux.intel.com>
- <84006b9c-90db-7eea-0bdc-b73da1bb1394@sandeen.net>
- <20171117204801.GA16597@linux.intel.com>
- <960d0051-d357-033a-0ab7-9eb99d8e63fa@sandeen.net>
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:33396 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763198AbdKRUlr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Nov 2017 15:41:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <960d0051-d357-033a-0ab7-9eb99d8e63fa@sandeen.net>
+In-Reply-To: <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com>
+References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de>
+ <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com> <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com>
+From: Charlemagne Lasse <charlemagnelasse@gmail.com>
+Date: Sat, 18 Nov 2017 21:41:46 +0100
+Message-ID: <CAFGhKbzyyKgQ-PyoU-3N_6q5YjvoVMrm9qqtnBS6Vq-EGR2ifA@mail.gmail.com>
+Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Fri, Nov 17, 2017 at 03:03:39PM -0600, Eric Sandeen wrote:
-> On 11/17/17 2:48 PM, Ross Zwisler wrote:
-> > On Fri, Nov 17, 2017 at 02:39:07PM -0600, Eric Sandeen wrote:
-> >> On 11/17/17 2:25 PM, Ross Zwisler wrote:
-> >>> Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
-> >>> log marks via the external 'dmsetup' executable.  It's helpful to allow
-> >>> users of xfs_io to adds these marks from within xfs_io instead of waiting
-> >>> until after xfs_io exits because then they are able to replay the
-> >>> dm-log-writes log up to immediately after another xfs_io operation such as
-> >>> mwrite.  This isolates the log replay from other operations that happen as
-> >>> part of xfs_io exiting (file handles being closed, mmaps being torn down,
-> >>> etc.).  This also allows users to insert multiple marks between different
-> >>> xfs_io commands.
-> >>>
-> >>> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> >>> Suggested-by: Dave Chinner <david@fromorbit.com>
-> >>
-> >> Without reviewing in detail, what is the advantage of wrapping dmsetup
-> >> into xfs_io?  My first inclination is that there is none at all, and
-> >> xfstests can call dmsetup as easily as they can call xfs_io.  No?
-> >>
-> >> -Eric
-> > 
-> > I commented on this a bit in the changelog for the 2nd patch:
-> > 
-> > It's helpful to allow users of xfs_io to adds these marks from within xfs_io
-> > instead of waiting until after xfs_io exits because then they are able to
-> > replay the dm-log-writes log up to immediately after another xfs_io operation
-> > such as mwrite.  This isolates the log replay from other operations that
-> > happen as part of xfs_io exiting (file handles being closed, mmaps being torn
-> > down, etc.).  This also allows users to insert multiple marks between
-> > different xfs_io commands.
-> > 
-> > I agree that the shell-out to dmsetup isn't awesome...  For the current test I
-> > have written I think we can get away with just assuming that the xfs_io exit
-> > stuff won't interact too heavily with the dm-log-writes log, and we could
-> > potentially move the dmsetup call back into the fstest.  This is how I
-> > initially had it, and moved it into the C program via shell-out in response to
-> > Amir's feedback:
-> 
-> Sorry, terrible of me to not have read that.  :(  Ok, so next question - 
-> DM_TARGET_MSG seems to be public, can we just invoke the ioctl directly
-> instead of shelling out to dmsetup?
-> 
-> I'm checking w/ the dm folks too, to make sure that's expected to work.  As
-> long as the use isn't too tricky it seems like that might be better.
+2017-11-18 20:14 GMT+01:00 Linus Torvalds <torvalds@linux-foundation.org>:
+> You may be confusing things because of a newer version.
+>
+<cut>
+> I refuse to change the original copyright wording due to idiotic
+> internal FSF politics that tried to change history.
 
-Yea, that seems like a better option - I'll take a look.  Thanks for the
-suggestion.
+But you are accepting commit messages which are factually wrong? I am not
+confusing anything here but state the obvious. Either he copied it from
+https://spdx.org/licenses/GPL-2.0.html#licenseText or not. There is no
+reality where https://spdx.org/licenses/GPL-2.0.html#licenseText has the
+same content as the patch which he send.
+
+And do you even know the best part: it is also not the version from your
+COPYING file.
