@@ -1,84 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38570 "EHLO sandeen.net"
+Received: from ul.coyote.org ([198.50.187.229]:54791 "EHLO ul.coyote.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752412AbdKREoa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Nov 2017 23:44:30 -0500
-Subject: Re: [xfsprogs PATCH 2/2] xfs_io: add a new 'log_writes' command
-References: <20171117202524.24696-1-ross.zwisler@linux.intel.com>
- <20171117202524.24696-3-ross.zwisler@linux.intel.com>
- <84006b9c-90db-7eea-0bdc-b73da1bb1394@sandeen.net>
- <20171117204801.GA16597@linux.intel.com>
- <960d0051-d357-033a-0ab7-9eb99d8e63fa@sandeen.net>
- <20171117211434.GB16597@linux.intel.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <fda7a7d9-0709-74be-666d-49e5cf295faa@sandeen.net>
-Date: Fri, 17 Nov 2017 22:44:27 -0600
+        id S1162197AbdKRTVP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 18 Nov 2017 14:21:15 -0500
+Date: Sat, 18 Nov 2017 19:13:27 +0000
+In-Reply-To: <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
+References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de> <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171117211434.GB16597@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
+From: Jonas Oberg <jonas@fsfe.org>
+Message-ID: <0EA06F0F-19D9-4E05-BF8E-73F20681A1B1@fsfe.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
+To: Charlemagne Lasse <charlemagnelasse@gmail.com>, Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
+>This is neither the GPL-2.0 from
+>https://www.gnu.org/licenses/gpl-2.0.txt
 
+I think it should be the copy from COPYING, in fact, since that's the exact GPL 2.0 license the kernel is under. Library GPL is factually correct; Lesser GPL is a newer name for the same license, but COPYING retains the old name.
 
-On 11/17/17 3:14 PM, Ross Zwisler wrote:
-> On Fri, Nov 17, 2017 at 03:03:39PM -0600, Eric Sandeen wrote:
->> On 11/17/17 2:48 PM, Ross Zwisler wrote:
->>> On Fri, Nov 17, 2017 at 02:39:07PM -0600, Eric Sandeen wrote:
->>>> On 11/17/17 2:25 PM, Ross Zwisler wrote:
->>>>> Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
->>>>> log marks via the external 'dmsetup' executable.  It's helpful to allow
->>>>> users of xfs_io to adds these marks from within xfs_io instead of waiting
->>>>> until after xfs_io exits because then they are able to replay the
->>>>> dm-log-writes log up to immediately after another xfs_io operation such as
->>>>> mwrite.  This isolates the log replay from other operations that happen as
->>>>> part of xfs_io exiting (file handles being closed, mmaps being torn down,
->>>>> etc.).  This also allows users to insert multiple marks between different
->>>>> xfs_io commands.
->>>>>
->>>>> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
->>>>> Suggested-by: Dave Chinner <david@fromorbit.com>
->>>>
->>>> Without reviewing in detail, what is the advantage of wrapping dmsetup
->>>> into xfs_io?  My first inclination is that there is none at all, and
->>>> xfstests can call dmsetup as easily as they can call xfs_io.  No?
->>>>
->>>> -Eric
->>>
->>> I commented on this a bit in the changelog for the 2nd patch:
->>>
->>> It's helpful to allow users of xfs_io to adds these marks from within xfs_io
->>> instead of waiting until after xfs_io exits because then they are able to
->>> replay the dm-log-writes log up to immediately after another xfs_io operation
->>> such as mwrite.  This isolates the log replay from other operations that
->>> happen as part of xfs_io exiting (file handles being closed, mmaps being torn
->>> down, etc.).  This also allows users to insert multiple marks between
->>> different xfs_io commands.
->>>
->>> I agree that the shell-out to dmsetup isn't awesome...  For the current test I
->>> have written I think we can get away with just assuming that the xfs_io exit
->>> stuff won't interact too heavily with the dm-log-writes log, and we could
->>> potentially move the dmsetup call back into the fstest.  This is how I
->>> initially had it, and moved it into the C program via shell-out in response to
->>> Amir's feedback:
->>
->> Sorry, terrible of me to not have read that.  :(  Ok, so next question - 
->> DM_TARGET_MSG seems to be public, can we just invoke the ioctl directly
->> instead of shelling out to dmsetup?
->>
->> I'm checking w/ the dm folks too, to make sure that's expected to work.  As
->> long as the use isn't too tricky it seems like that might be better.
-> 
-> Yea, that seems like a better option - I'll take a look.  Thanks for the
-> suggestion.
+I don't remember when the FSF moved from Temple place but indeed, the address, which is correct in COPYING, could be updated.
 
-FWIW, agk is saying the only right way to do it is to use libdevicemapper ...
-sounds like they don't expect anyone to use the ioctl directly, though I'm
-not sure why, or what the complexity is.
-
--Eric
+Best
+Jonas Öberg
+Free Software Foundation Europe | jonas@fsfe.org
+Your support enables our work (fsfe.org/join)
