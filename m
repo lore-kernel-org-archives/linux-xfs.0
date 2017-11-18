@@ -1,33 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57192 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:42148 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752584AbdK0Vrr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Nov 2017 16:47:47 -0500
-Subject: Re: [PATCH 08/12] libfrog: move conversion factors out of libxcmd
-References: <151094960522.29763.11622891165765932168.stgit@magnolia>
- <151094966001.29763.1497519664885559784.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <90de8f72-f2af-7a1d-92a1-6e42759174c8@sandeen.net>
-Date: Mon, 27 Nov 2017 15:47:46 -0600
+        id S1161678AbdKRGRF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 18 Nov 2017 01:17:05 -0500
+Date: Sat, 18 Nov 2017 14:17:03 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [fstests PATCH v4 3/4] dm-log-writes: allow DAX to be used when
+ possible
+Message-ID: <20171118061703.GD2749@eguan.usersys.redhat.com>
+References: <20171117202828.25472-1-ross.zwisler@linux.intel.com>
+ <20171117202828.25472-4-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <151094966001.29763.1497519664885559784.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171117202828.25472-4-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
 
-On 11/17/17 2:14 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 17, 2017 at 01:28:27PM -0700, Ross Zwisler wrote:
+> Enhance _require_dm_target so that a user can request a minimum version of a
+> given dm target.
 > 
-> Move all the conversion functions out of libxcmd since they'll be used
-> by scrub, which doesn't have a commandline.
+> DAX support was added to v1.1.0 of the dm-log-writes kernel module, so
+> allow the DAX mount option starting with that version.
 
-This doesn't actually move anything, it just duplicates it?
+Is is possible not relying on the version numbers but actually trying
+what you want to do and _notrun if that fails? Currently fstests does no
+version number checking at all, and it'd be great if we keep that
+tradition.
 
--Eric
-
-
+Thanks,
+Eryu
