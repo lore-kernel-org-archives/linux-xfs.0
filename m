@@ -1,184 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44012 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755122AbdKNMde (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Nov 2017 07:33:34 -0500
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v2 3/3] fstests: filter readonly mount error messages
-Date: Tue, 14 Nov 2017 20:33:10 +0800
-Message-Id: <20171114123310.25286-4-eguan@redhat.com>
-In-Reply-To: <20171114123310.25286-1-eguan@redhat.com>
-References: <20171114123310.25286-1-eguan@redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:59363 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751020AbdKSWe5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Nov 2017 17:34:57 -0500
+Date: Mon, 20 Nov 2017 09:34:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Illegal value 0 for -l sunit option ?
+Message-ID: <20171119223453.GM5858@dastard>
+References: <alpine.DEB.2.10.1711181547110.14549@gozora.sk>
+ <20171118215140.GL5858@dastard>
+ <45307a2e-9233-e463-dcad-5b91e5234f4e@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <45307a2e-9233-e463-dcad-5b91e5234f4e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: misono.tomohiro@jp.fujitsu.com, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Vladimir Gozora <c@gozora.sk>, linux-xfs@vger.kernel.org
 
-util-linux commit 6dede2f2f7c5 ("libmount: support MS_RDONLY on
-write-protected devices") changed the error message on read-only
-block device, and in the failure case printed one line message
-instead of two (for details please see comments in common/filter),
-and this change broke generic/050 and overlay/035.
+On Sat, Nov 18, 2017 at 10:23:26PM -0600, Eric Sandeen wrote:
+> On 11/18/17 3:51 PM, Dave Chinner wrote:
+> > On Sat, Nov 18, 2017 at 04:00:08PM +0100, Vladimir Gozora wrote:
+> >> Hello XFS team,
+> >>
+> >> I'm working on ReaR project (https://github.com/rear/rear) which
+> >> aims for bare-metal disaster recovery.
+> >> Lately I’ve run across behavior of mkfs.xfs which I don’t really
+> >> know if is correct or not.
+> >> The thing is that when I try to create XFS file system with
+> >> xfsprogs-4.5.0 following commands runs just fine:
+> >> mkfs.xfs -f -i size=512 -d agcount=4 -s size=512 -i attr=2 -i
+> >> projid32bit=1 -m crc=1 -m finobt=1 -b size=4096 -i maxpct=25 -d
+> >> sunit=0 -d swidth=0 -l version=2 -l sunit=0 -l lazy-count=1 -n
+> >> size=4096 -n version=2 -r extsize=4096 <destination>
+> >> when I try same command with xfsprogs-4.10.0, I get following error:
+> >> Illegal value 0 for -l sunit option. value is too small
+> > 
+> > Yup, old mkfs would accept values that were illegal and could do
+> > completly unpredictable things with them. We tightened up the input
+> > parsing to only accept valid values xfsprogs in 4.7.0, and in
+> > particular this commit is relevant:
+> > 
+> > commit 2942ff49bdb6df08fb56674215b31c07cfc7c1fd
+> > Author: Jan Tulak <jtulak@redhat.com>
+> > Date:   Tue Jun 21 12:52:22 2016 +1000
+> > 
+> >     mkfs: fix -l su minval
+> >     
+> >     -l su should be in range BBTOB(1) <= L_SU <= XLOG_MAX_RECORD_BSIZE,
+> >     because the upper limit is imposed by kernel on iclogbuf: stripe
+> >     unit can't be bigger than the log buffer, but the log buffer can
+> >     span multiple stripe units. L_SUNIT is changed in the same way.
+> >     
+> >     Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> >     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> >     Signed-off-by: Dave Chinner <david@fromorbit.com>
+> 
+> Honestly, the minimum changed before that - the commit below fixed an
+> incorrect minval of XLOG_MIN_RECORD_BSIZE (16k) to "1" -
+> which honestly doesn't make much sense to me.
 
-Fix it by adding more filter rules to _filter_ro_mount and updating
-associated .out files to unify the output from both old and new
-util-linux versions.
+Yeah, that was just plain wrong - I forgot that log stripe unit
+could be any integer multiple of the fliesystem block size, not just
+the valid sizes of the in-core log buffers. The intent was to remove
+the specification of illegal values - many other illegal
+values were also caught by that set of commits in 4.7.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- common/filter         | 35 ++++++++++++++++++++++++++++++++++-
- tests/generic/050     |  8 ++++----
- tests/generic/050.out |  8 ++++----
- tests/overlay/035     |  9 +++++++--
- 4 files changed, 49 insertions(+), 11 deletions(-)
+> It was 1974d3f1a6495978419d931020f63c9cac8ba230 which changed
+> it from accepting min 0 to accepting min XLOG_MIN_RECORD_BSIZE:
+> 
+>                 { .index = L_SUNIT,
+> +                 .minval = BTOBB(XLOG_MIN_RECORD_BSIZE),
+> +                 .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+>                   .defaultval = SUBOPT_NEEDS_VAL,
+>                 },
+> 
+> ...
+> 
+>                                 case L_SUNIT:
+> -                                       if (!value || *value == '\0')
+> -                                               reqval('l', subopts, L_SUNIT);
+>                                         if (lsunit)
+>                                                 respec('l', subopts, L_SUNIT);
+> -                                       lsunit = getnum(value, 0, 0, false);
+> -                                       if (lsunit < 0)
+> -                                               illegal(value, "l sunit");
+> +                                       lsunit = getnum_checked(value, &lopts,
+> +                                                                L_SUNIT);
+>                                         lsunitflag = 1;
+>                                         break;
+> 
+> Specifying "0" as a value to mean "no stripe" is how I always
+> interpreted these things.
 
-diff --git a/common/filter b/common/filter
-index b1cd558ab0e1..357c4c9357c3 100644
---- a/common/filter
-+++ b/common/filter
-@@ -399,9 +399,42 @@ _filter_ending_dot()
- 
- # Older mount output referred to "block device" when mounting RO devices
- # It's gone in newer versions
-+#
-+# And util-linux v2.30 changed the output again, e.g.
-+# for a successful ro mount:
-+# prior to v2.30:  mount: <device> is write-protected, mounting read-only
-+# v2.30 and later: mount: <mountpoint>: WARNING: device write-protected, mounted read-only.
-+#
-+# a failed ro mount:
-+# prior to v2.30:
-+# mount: <device> is write-protected, mounting read-only
-+# mount: cannot mount <device> read-only
-+# v2.30 and later:
-+# mount: <mountpoint>: cannot mount <device> read-only.
-+#
-+# a failed rw remount:
-+# prior to v2.30:  mount: cannot remount <device> read-write, is write-protected
-+# v2.30 and later: mount: <mountpoint>: cannot remount <device> read-write, is write-protected.
-+#
-+# Now use _filter_ro_mount to unify all these differences across old & new
-+# util-linux versions.
- _filter_ro_mount() {
- 	sed -e "s/mount: block device/mount:/g" \
--	    -e "s/mount: cannot mount block device/mount: cannot mount/g"
-+	    -e "s/mount: cannot mount block device/mount: cannot mount/g" | \
-+	_filter_ending_dot | \
-+	perl -ne '
-+	if (/write-protected, mount.*read-only/) {
-+		print "mount: device write-protected, mounting read-only\n";
-+	} elsif (/mount: .*: cannot mount.*read-only/) {
-+		print "mount: device write-protected, mounting read-only\n";
-+		print "mount: cannot mount read-only\n";
-+	} elsif (/mount: .*: cannot remount (.*) read-write.*/) {
-+		print "mount: cannot remount $1 read-write, is write-protected\n";
-+	} elsif (/(^mount: cannot mount) .* (read-only$)/) {
-+		print "$1 $2\n";
-+	} else {
-+		print "$_";
-+	}'
- }
- 
- # Filter a failed mount output, util-linux changed the message several times.
-diff --git a/tests/generic/050 b/tests/generic/050
-index 5fa28a7648e5..efa45f04825b 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -60,7 +60,7 @@ blockdev --setro $SCRATCH_DEV
- # Mount it, and make sure we can't write to it, and we can unmount it again
- #
- echo "mounting read-only block device:"
--_scratch_mount 2>&1 | _filter_scratch | _filter_ro_mount
-+_scratch_mount 2>&1 | _filter_ro_mount
- 
- echo "touching file on read-only filesystem (should fail)"
- touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
-@@ -95,10 +95,10 @@ blockdev --setro $SCRATCH_DEV
- # -o norecovery is used.
- #
- echo "mounting filesystem that needs recovery on a read-only device:"
--_scratch_mount 2>&1 | _filter_scratch | _filter_ro_mount
-+_scratch_mount 2>&1 | _filter_ro_mount
- 
- echo "unmounting read-only filesystem"
--_scratch_unmount 2>&1 | _filter_scratch
-+_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- 
- #
- # This is the way out if the underlying device really is read-only.
-@@ -106,7 +106,7 @@ _scratch_unmount 2>&1 | _filter_scratch
- # data recovery hack.
- #
- echo "mounting filesystem with -o norecovery on a read-only device:"
--_scratch_mount -o norecovery 2>&1 | _filter_scratch | _filter_ro_mount
-+_scratch_mount -o norecovery 2>&1 | _filter_ro_mount
- 
- echo "unmounting read-only filesystem"
- _scratch_unmount 2>&1 | _filter_scratch
-diff --git a/tests/generic/050.out b/tests/generic/050.out
-index fb90f6ea5819..2187d16fa328 100644
---- a/tests/generic/050.out
-+++ b/tests/generic/050.out
-@@ -1,7 +1,7 @@
- QA output created by 050
- setting device read-only
- mounting read-only block device:
--mount: SCRATCH_DEV is write-protected, mounting read-only
-+mount: device write-protected, mounting read-only
- touching file on read-only filesystem (should fail)
- touch: cannot touch 'SCRATCH_MNT/foo': Read-only file system
- unmounting read-only filesystem
-@@ -12,12 +12,12 @@ going down:
- unmounting shutdown filesystem:
- setting device read-only
- mounting filesystem that needs recovery on a read-only device:
--mount: SCRATCH_DEV is write-protected, mounting read-only
--mount: cannot mount SCRATCH_DEV read-only
-+mount: device write-protected, mounting read-only
-+mount: cannot mount read-only
- unmounting read-only filesystem
- umount: SCRATCH_DEV: not mounted
- mounting filesystem with -o norecovery on a read-only device:
--mount: SCRATCH_DEV is write-protected, mounting read-only
-+mount: device write-protected, mounting read-only
- unmounting read-only filesystem
- setting device read-write
- mounting filesystem that needs recovery with -o ro:
-diff --git a/tests/overlay/035 b/tests/overlay/035
-index 64fcd708105e..d285d44ae9df 100755
---- a/tests/overlay/035
-+++ b/tests/overlay/035
-@@ -45,6 +45,11 @@ _cleanup()
- . ./common/rc
- . ./common/filter
- 
-+filter_mount()
-+{
-+	_filter_scratch | _filter_ro_mount
-+}
-+
- # remove previous $seqres.full before test
- rm -f $seqres.full
- 
-@@ -69,7 +74,7 @@ mkdir -p $lowerdir1 $lowerdir2 $upperdir $workdir
- $MOUNT_PROG -t overlay -o"lowerdir=$lowerdir2:$lowerdir1" \
- 			$OVL_BASE_SCRATCH_MNT $SCRATCH_MNT
- touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
--_scratch_remount rw 2>&1 | _filter_scratch
-+_scratch_remount rw 2>&1 | filter_mount
- $UMOUNT_PROG $SCRATCH_MNT
- 
- # Make workdir immutable to prevent workdir re-create on mount
-@@ -79,7 +84,7 @@ $CHATTR_PROG +i $workdir
- # Verify that overlay is mounted read-only and that it cannot be remounted rw.
- _overlay_scratch_mount_dirs $lowerdir2 $upperdir $workdir
- touch $SCRATCH_MNT/bar 2>&1 | _filter_scratch
--_scratch_remount rw 2>&1 | _filter_scratch
-+_scratch_remount rw 2>&1 | filter_mount
- 
- # success, all done
- status=0
+Which you can't actually do for v2 logs.  V2 logs *always* has a
+stripe unit set, it's supposed to be a multiple of the filesystem
+block size, and it's supposed to be recorded in bytes in the
+superblock sb_logsunit.  The thing is, this means that a 4k block
+size filesystem would always have a stripe unit of 4k - which is
+clearly doesn't - and that would have been a performance regression
+vs v1 logs for fsync heavy workloads. I'll come back to this.
+
+ALso, let's not forget that setting lsu = 0 is completely illegal on
+devices with a sector size != BBSIZE - the log stripe unit is
+supposed to indicate the sector size for such devices, and mkfs will
+calculate that automatically based on topology info.
+
+> Not to mention that D_SUNIT accepts 0 without complaint, and  it's
+> further compounded/confusing by xfs_info reporting a stripe unit
+> of 0 blocks, something it won't accept on a mkfs commandline?
+> Makes little sense.
+
+It's perfectly valid to have a zero data stripe unit - it has no
+"atomic write" configuration infomration encoded in it. That's why
+it's not valid to have a zero log stripe unit for v2 logs - it's
+critical information for correct log behaviour.  Let's go
+back to the mkfs commit that introduced V2 logs:
+
+commit 73bf5988043fcb9d8981a1d8fb4f9936ba0a0551
+Author: Steve Lord <lord@sgi.com>
+Date:   Tue Jun 18 20:32:20 2002 +0000
+
+    Bump revision number of version 2 log support
+
+[.....]
+
++       if (logversion == 2)
++               sbp->sb_logsunit = (lsunit == 0) ? 1 : lsunit;
++       else
++               sbp->sb_logsunit = 0;
+
+
+IOWs, mkfs has always written a non-zero value into sb_logsunit, and
+it's always been a value of 1 when no log stripe unit has been
+specified. What's that value of 1 mean, though? It's not a multiple
+of the filesystem block size - it's a hack to make v2 logs use a
+stripe unit of a single sector. i.e. all the code treats a v2 log
+with a sb_logsunit == 1 as though it is a v1 log.  e.g.  when
+calculating stripe unit alignemnt padding of log writes in
+xlog_sync():
+
+       /* Round out the log write size */
+        if (v2 && log->l_mp->m_sb.sb_logsunit > 1) {
+                /* we have a v2 stripe unit to use */
+                count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
+        } else {
+                count = BBTOB(BTOBB(count_init));
+        }
+
+IOWs, a value of 1 effectively means "use the v1 padding limits".
+
+So, what does XFS_IOC_FSGEOMETRY tell userspace:
+
+        if (new_version >= 4) {
+                geo->flags |=
+                        (xfs_sb_version_haslogv2(&mp->m_sb) ?
+                                XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
+                geo->logsunit = mp->m_sb.sb_logsunit;
+        }
+
+It tell userspace whatever is in the superblock.
+
+And what does xfs_info then output?
+
+	 "", geo.logsectsize, geo.logsunit / geo.blocksize, lazycount,
+
+Yeah, it assumes the number is in bytes and a multiple of block
+size.  IOWs, a log stripe unit of 0 indicates basic block stripe
+alignment (i.e. none) for both v1 and v2 logs without a stripe unit
+configured. 
+
+Just because xfs_info reports a value of "X" for some paramter, it
+does not mean that value of "X" is a valid mkfs CLI parameter.
+You can't say "no log stripe unit" on a v2 log. At best we can
+define "lsu=0/lsunit=0" to mean "use the default" but then people
+are going to complain that "I set it to 0 but mkfs is reporting
+4096 and I can't change it".
+
+To summaries: a log stripe value of 0 is illegal, a value of 1 means
+means "behave like a v1 log", and any other value means
+"use this byte count as the stripe unit".
+
+> I'm not really convinced that a minval of 1 is correct.  The commitlog
+> changes the minval but speaks only to the rationale for the maxval, so
+> it's no help.
+
+The information is all there in the git history... :/
+
+Cheers,
+
+Dave.
 -- 
-2.13.6
-
+Dave Chinner
+david@fromorbit.com
