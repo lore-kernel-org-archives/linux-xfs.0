@@ -1,34 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:46612 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936876AbdKRTFk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Nov 2017 14:05:40 -0500
+Received: from gozora.sk ([83.167.232.19]:38794 "EHLO gozora.sk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750806AbdKSKkG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 19 Nov 2017 05:40:06 -0500
+Date: Sun, 19 Nov 2017 11:40:04 +0100 (CET)
+From: Vladimir Gozora <c@gozora.sk>
+Subject: Re: Illegal value 0 for -l sunit option ?
+In-Reply-To: <20171118215140.GL5858@dastard>
+Message-ID: <alpine.DEB.2.10.1711191100230.19352@gozora.sk>
+References: <alpine.DEB.2.10.1711181547110.14549@gozora.sk> <20171118215140.GL5858@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
-References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de>
- <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
-From: Charlemagne Lasse <charlemagnelasse@gmail.com>
-Date: Sat, 18 Nov 2017 20:05:39 +0100
-Message-ID: <CAFGhKbw4pHg6oSeo35CBKL1TVp=iA3+kZ-mWBxAop0jY+SiZmg@mail.gmail.com>
-Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-2017-11-18 20:03 GMT+01:00 Charlemagne Lasse <charlemagnelasse@gmail.com>:
-<cut>
->> +    Ty Coon, President of Vice
->> +
->> +This General Public License does not permit incorporating your program into
->> +proprietary programs. If your program is a subroutine library, you may
->> +consider it more useful to permit linking proprietary applications with the
->> +library. If this is what you want to do, use the GNU Library General Public
->> +License instead of this License.
->
-> "Lesser Library General Public" and not "Library General Public License"
+Hello Dave,
 
-I meant: "Lesser General Public License" and not "Library General
-Public License"
+Thanks for your reply!
+
+> Yup, old mkfs would accept values that were illegal and could do 
+> completly unpredictable things with them. We tightened up the input 
+> parsing to only accept valid values xfsprogs in 4.7.0
+
+I fully agree here, you can't allow illegal values to enter file system 
+structures. What is somehow confusing for me (as a user who don't have 
+deep knowledge of XFS internals) is xfs_info output who proclaims XFS file 
+system options that are set and in use (so I'd consider them valid), but 
+on the other hand are evaluated by mkfs.xfs as invalid :-/.
+
+Apart from that when I omit "-l sunit=0" in my mkfs.xfs command, 
+file system is successfully created and consecutive call to xfs_info 
+returns that my file system was created with "sunit=0 blks" ... This 
+somehow don't feels right to me.
+
+> Why not just use xfs_copy? I mean, if all you're trying to do is
+> make a space efficient block-level clone of an XFS filesytem, then
+> we've already got a tool to do that...
+
+Honestly I've did not know much about this tool until you've mentioned it. 
+I've tried it today for first time in my life and despite its certain 
+usefulness I can't really use it for solving problem of mine. ReaR can 
+operate in multiple modes where xfs_copy could be implemented, 
+unfortunately I'm trying to solve problems in mode that is most frequently 
+used by our users and implementing xfs_copy could cause havoc. The mode 
+I'm talking about just collects information about your current 
+partitioning, file systems, mount points etc, and stores them as config 
+file into bootable ISO (which does not contains actual OS data). Once you 
+boot ISO, all these data are pull out and passed to appropriate user space 
+programs for structure recreation. So this is the main reason why I need 
+to have original file system values at hand ...
+
+Best regards!
+
+Vlado
