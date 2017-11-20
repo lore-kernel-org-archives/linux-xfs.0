@@ -1,96 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18329 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752067AbdKUBsk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 20:48:40 -0500
-Date: Mon, 20 Nov 2017 17:48:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: abstract out dev_t conversions
-Message-ID: <20171121014832.GA2135@magnolia>
-References: <20171120093356.16355-1-hch@lst.de>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:44960 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751204AbdKTPNI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 10:13:08 -0500
+Received: by mail-wm0-f68.google.com with SMTP id r68so19632746wmr.3
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Nov 2017 07:13:08 -0800 (PST)
+Date: Mon, 20 Nov 2017 16:13:04 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v3 0/4] test for XFS umount hang caused by the pending
+ dquota log item in AIL
+Message-ID: <20171120151304.lbvpfu65ybsbijps@odin.localdomain>
+References: <20171109073252.36001-1-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171120093356.16355-1-hch@lst.de>
+In-Reply-To: <20171109073252.36001-1-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Mon, Nov 20, 2017 at 10:33:56AM +0100, Christoph Hellwig wrote:
-> And move them to xfs_linux.h so that xfsprogs can stub them out more
-> easily.
+On Thu, Nov 09, 2017 at 03:32:48PM +0800, Hou Tao wrote:
+> Hi,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This is the v3 patchset for testing the XFS umount hang problem caused by
+> the pending dquota log item in AIL. The problem has not been fixed in
+> XFS yet, and Carlos Maiolino is working on it [1].
+> 
+> The bug that the test case can not reproduced on a 15GB scratch device
+> has been fixed, and many thanks to Eryu Guan. I had tested it on 4.14-rc8,
+> and the problem can be reproduced reliably now.
+> 
 
-Looks ok, but I want Eric to have a quick look at this because he's the
-stuckee on this one. :P
+Ok, found it :) I'll take a look into this tomorrow together with my patch.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Thanks for the test case.
 
---D
-
+> Comments and questions are welcome.
+> 
+> Regards,
+> Tao
+> 
 > ---
+> Changes since v2:
 > 
-> This should make life for xfsprogs a lot easier.  And it's mostly trivial
-> so it should be ok for 4.15.
+> v3:
+> * dmflakey: support error_writes feature for dm-flakey
+> 	* check the availability of error_writes by trial instead of version number
 > 
->  fs/xfs/libxfs/xfs_inode_fork.c |  8 ++------
->  fs/xfs/xfs_linux.h             | 10 ++++++++++
->  2 files changed, 12 insertions(+), 6 deletions(-)
+> * xfs: test for umount hang caused by the pending dquota log item in AIL
+> 	* calculate log_ofs correctly by using convert cmd in xfs_db
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 1c90ec41e9df..c79a1616b79d 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -42,11 +42,6 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
->  STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
->  STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
->  
-> -static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
-> -{
-> -	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
-> -}
-> -
->  /*
->   * Copy inode type and data and attr format specific information from the
->   * on-disk inode to the in-core inode and fork structures.  For fifos, devices,
-> @@ -792,7 +787,8 @@ xfs_iflush_fork(
->  	case XFS_DINODE_FMT_DEV:
->  		if (iip->ili_fields & XFS_ILOG_DEV) {
->  			ASSERT(whichfork == XFS_DATA_FORK);
-> -			xfs_dinode_put_rdev(dip, sysv_encode_dev(VFS_I(ip)->i_rdev));
-> +			xfs_dinode_put_rdev(dip,
-> +					linux_to_xfs_dev_t(VFS_I(ip)->i_rdev));
->  		}
->  		break;
->  
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 6282bfc1afa9..99562ec0de56 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -204,6 +204,16 @@ static inline kgid_t xfs_gid_to_kgid(uint32_t gid)
->  	return make_kgid(&init_user_ns, gid);
->  }
->  
-> +static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
-> +{
-> +	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
-> +}
-> +
-> +static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
-> +{
-> +	return sysv_encode_dev(dev);
-> +}
-> +
->  /*
->   * Various platform dependent calls that don't fit anywhere else
->   */
+> * common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 	* reimplement _scratch_xfs_[get|set]_sb_field based on
+> 	  _scratch_xfs_[get|set]_metadata_field.
+> 
+> v2:
+> 	* http://www.spinics.net/lists/fstests/msg07792.html
+> 
+> v1:
+> 	* https://www.spinics.net/lists/fstests/msg07622.html
+> 
+> [1]: https://www.spinics.net/lists/linux-xfs/msg11614.html
+> 
+> Hou Tao (4):
+>   dmflakey: support multiple dm targets for a dm-flakey device
+>   dmflakey: support error_writes feature for dm-flakey
+>   xfs: test for umount hang caused by the pending dquota log item in AIL
+>   common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 
+>  common/dmflakey   |  29 +++++++++-
+>  common/fuzzy      |  33 -----------
+>  common/xfs        |  47 ++++++++++++++++
+>  tests/xfs/007     |   6 +-
+>  tests/xfs/098     |   4 +-
+>  tests/xfs/186     |   3 +-
+>  tests/xfs/199     |  13 ++---
+>  tests/xfs/307     |  11 +---
+>  tests/xfs/308     |  11 +---
+>  tests/xfs/339     |   6 +-
+>  tests/xfs/340     |   2 +-
+>  tests/xfs/999     | 163 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |   2 +
+>  tests/xfs/group   |   1 +
+>  14 files changed, 257 insertions(+), 74 deletions(-)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
 > -- 
-> 2.14.2
+> 2.9.5
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
