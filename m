@@ -1,76 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:51298 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753338AbdKVWkN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 17:40:13 -0500
-Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vAMMc3lB020980
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 14:40:12 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 2edf4h0pdy-3
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 14:40:12 -0800
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH RESEND v6 0/3] XFS realtime device tweaks
-Date: Wed, 22 Nov 2017 14:40:06 -0800
-Message-ID: <20171122224009.3533341-1-rwareing@fb.com>
+Received: from sandeen.net ([63.231.237.45]:39060 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751173AbdKTUPg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Nov 2017 15:15:36 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 4EE07628754
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Nov 2017 14:15:20 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: master updated to 5bb4307 / v4.14.0-rc2
+Message-ID: <eee6bf62-e997-ec85-5e9d-26a23f7ee9f8@sandeen.net>
+Date: Mon, 20 Nov 2017 14:15:35 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="coGBjtK4xtn60wX3G98mLvAPCXJ4VnXL0"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-Re-sending patch; re-based to 4.14-rc8 (& re-tested).  Patch 1 in this series
-is reviewed and is ready to be merged independent of the others.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--coGBjtK4xtn60wX3G98mLvAPCXJ4VnXL0
+Content-Type: multipart/mixed; boundary="wqdi9vtk6uRlILfit0AWKxJimsOgeWqou";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <eee6bf62-e997-ec85-5e9d-26a23f7ee9f8@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: master updated to 5bb4307 / v4.14.0-rc2
 
-====
+--wqdi9vtk6uRlILfit0AWKxJimsOgeWqou
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-1. Inode flag now correctly set when locks are held via XFS_BMAPI_RTDATA
-   flag.
-2. Realtime flag is honored when set by user via ioctl or inherit flag on
-   directory.
-3. Misc changes around formatting & bounds checks on sysfs options.
+Hi folks,
 
-See individual patches for more details.
+The xfsprogs repository at:
 
-Please pay close attention to the change in xfs_file_iomap_begin (patch 2),
-the new version of the patch by-passes the xfs_file_iomap_begin_delay function
-in the "realtime" case, since the realtime code here is not reachable/dead
-(see assert in this function).  Instead, we by-pass this, hit
-xfs_iomap_write_direct where the XFS_BMAPI_RTDATA will be passed on to the
-xfs_bmapi_write function where it's set.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-I'm curious if there is a better approach, and/or verification this is
-sane/safe.
+has just been updated and tagged with v4.14.0-rc2 on the master
+branch.
 
-Patch set based off Linux 4.14-rc8 (commit
-39dae59d66acd86d1de24294bd2f343fd5e7a625) located @
-https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git .
+(I've also retroactively updated the release files for rc1, and
+this is all now merged to the master branch as well).
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+5bb4307 xfsprogs: Release v4.14.0-rc2
+
+This is likely the last rc; there is a remote possibility that the
+ranged fiemap patch will get in yet but I'd like to see the tests
+in place for that before merging - so it'll probably slip.
+
+New Commits:
+
+Darrick J. Wong (1):
+      [255c38f] xfs_copy: don't hang if /all/ the targets hit write error=
+s
+
+Eric Sandeen (2):
+      [84fe80c] xfsprogs: Release v4.14.0-rc1 (*cough*)
+      [5bb4307] xfsprogs: Release v4.14.0-rc2
+
+Goldwyn Rodrigues (4):
+      [68c269c] xfs_io: Disable -V if pwritev is not available
+      [c5deeac] xfs_io: Add support for pwritev2()
+      [0799d5c] xfs_io: Add RWF_NOWAIT to pwritev2()
+      [43ba1d6] xfs_io: Allow partial writes
+
+Jeff Mahoney (2):
+      [8bb344f] xfs_io: stat: fix typo in statfs->f_flags
+      [ce9adab] xfs_io: stat: treat statfs.f_flags as optional
+
+Zirong Lang (2):
+      [421c922] xfsprogs: fix wrong variable types in pwrite/pread code
+      [ac9a7bc] xfsprogs: fix wrong do_pwritev definition
 
 
-Richard Wareing (3):
-  xfs: Show realtime device stats on statfs calls if inherit flag set
-  xfs: Set realtime flag based on initial allocation size
-  xfs: Add realtime fallback if data device full
+Code Diffstat:
 
- Documentation/filesystems/xfs.txt | 27 +++++++++++-
- fs/xfs/libxfs/xfs_bmap.c          | 35 +++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h          |  3 ++
- fs/xfs/xfs_bmap_util.c            |  3 ++
- fs/xfs/xfs_fsops.c                |  2 +
- fs/xfs/xfs_inode.c                |  6 +++
- fs/xfs/xfs_iomap.c                | 18 +++++++-
- fs/xfs/xfs_linux.h                |  2 +
- fs/xfs/xfs_mount.c                | 24 +++++++++++
- fs/xfs/xfs_mount.h                |  8 ++++
- fs/xfs/xfs_rtalloc.c              | 90 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_rtalloc.h              |  2 +
- fs/xfs/xfs_super.c                |  8 ++++
- fs/xfs/xfs_sysfs.c                | 80 ++++++++++++++++++++++++++++++++++
- 14 files changed, 305 insertions(+), 3 deletions(-)
+ VERSION               |  4 +--
+ configure.ac          |  4 ++-
+ copy/xfs_copy.c       | 12 +++++++
+ doc/CHANGES           | 17 +++++++++
+ include/builddefs.in  |  2 ++
+ io/Makefile           |  8 +++++
+ io/io.h               |  1 +
+ io/pread.c            | 12 +++----
+ io/pwrite.c           | 97 ++++++++++++++++++++++++++++++++++++++++-----=
+------
+ io/stat.c             |  4 ++-
+ m4/package_libcdev.m4 | 30 ++++++++++++++++
+ man/man8/xfs_io.8     | 31 ++++++++++------
+ 12 files changed, 180 insertions(+), 42 deletions(-)
 
--- 
-2.9.5
 
+--wqdi9vtk6uRlILfit0AWKxJimsOgeWqou--
+
+--coGBjtK4xtn60wX3G98mLvAPCXJ4VnXL0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAloTN+cACgkQIK4WkuE9
+3uB5Tw/+N5NMxswbrFPa6td3jloIVAMMIGH2jqXCxBgHrCOwnKj6orqdsqaBx429
++rNoO6kOIOARZtNA7rkOXP+bodF3zPBr27T6JqIvq2use/UxEdKhaUjYoZo7AMYZ
+SFOPPnnepDdBEWgHBfQH1wiY8csfrwNvSILmDk96i9+MNyc/hOIp31uUJrBnZNy4
+eW2gRN2zBcFsTvXOVMeS1YQg7ByGTUPTLR0wp0mBOIdn2HD8iuhFaOaGxMiSoiCQ
+O8dJBios7IIAuJ8Nct5MMAPRiaL19CRvzGzDpIzNGp+pI6FQrpg1Rbk8AiWJG6ty
+d1NLmZE+Br5Uz5i0P00ki2Sxi1G7xdbJVF6c0lsENqd1tho2tnv4FqUEpEbhgAQg
+78fqA4OOTRq/MnmD81RLK10O3DmFLof6bkiPl9r0SY6vdJo+YxeurXRfjenEIfDt
+Z5JQUckdC8P0OVdjNyuvWKQCueoCmZ4vJQbdCalqFKLVA1nAsVI4bsCIo3J0S3c7
+VTIDiDZ0+SYN3F0Lpklt5FEsGGvSKP7QqDz9zTYYaSDjkGFfO/aGHoKEir4XXooa
+kaXj+do2r2Op2Mr44KEliWX/NfcGAl1EBuAZcZ+1CWxmoIhbU5y8ZGr32oHRV5a2
+nMKteH76Y5ncT+cXPgbHdHCLSXbaKVSycbQwVgOSUUBidjVGqE8=
+=zziU
+-----END PGP SIGNATURE-----
+
+--coGBjtK4xtn60wX3G98mLvAPCXJ4VnXL0--
