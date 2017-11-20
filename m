@@ -1,35 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:33396 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763198AbdKRUlr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Nov 2017 15:41:47 -0500
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:34278 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751155AbdKTPDg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 10:03:36 -0500
+Received: by mail-wm0-f49.google.com with SMTP id y82so6710816wmg.1
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Nov 2017 07:03:35 -0800 (PST)
+Date: Mon, 20 Nov 2017 16:03:32 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [RFC PATCH] xfs: Properly retry failed dquot items in case of
+ error during buffer writeback
+Message-ID: <20171120150332.kimqrvgo66rqy32a@odin.localdomain>
+References: <20170825120752.22553-1-cmaiolino@redhat.com>
+ <20170825170400.GS4796@magnolia>
+ <20170825215701.GT4796@magnolia>
+ <20170828092030.l5z2hruccr7ctvl3@hades.localdomain>
+ <20171013162114.GP7122@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com>
-References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de>
- <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com> <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com>
-From: Charlemagne Lasse <charlemagnelasse@gmail.com>
-Date: Sat, 18 Nov 2017 21:41:46 +0100
-Message-ID: <CAFGhKbzyyKgQ-PyoU-3N_6q5YjvoVMrm9qqtnBS6Vq-EGR2ifA@mail.gmail.com>
-Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171013162114.GP7122@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-2017-11-18 20:14 GMT+01:00 Linus Torvalds <torvalds@linux-foundation.org>:
-> You may be confusing things because of a newer version.
->
-<cut>
-> I refuse to change the original copyright wording due to idiotic
-> internal FSF politics that tried to change history.
+> > Yup, you are right.
+> > 
+> > > (Does this compile at all?)
+> > > 
+> > 
+> > Yes, it compiled the way it was :P
+> > 
+> > I'll wait for some extra comments here, before submitting a non-RFC patch, and
+> > will think about how can I reproduce it on xfstests, maybe filling the
+> > filesystem and then playing with quotas.
+> 
+> Has there been a rework of this patch?
 
-But you are accepting commit messages which are factually wrong? I am not
-confusing anything here but state the obvious. Either he copied it from
-https://spdx.org/licenses/GPL-2.0.html#licenseText or not. There is no
-reality where https://spdx.org/licenses/GPL-2.0.html#licenseText has the
-same content as the patch which he send.
+I missed this e-mail somehow, I'll rework and submit the non-RFC patch
 
-And do you even know the best part: it is also not the version from your
-COPYING file.
+> 
+> --D
+> 
+> > 
+> > Thanks for the review Darrick.
+> > 
+> > Cheers.
+> > 
+> > -- 
+> > Carlos
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
