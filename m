@@ -1,41 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51160 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752187AbdK2BJJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:09:09 -0500
-Date: Tue, 28 Nov 2017 17:09:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] generic/388: use TIME_FACTOR to scale test duration
-Message-ID: <20171129010904.GA31372@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:59807 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751109AbdKTJbO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Nov 2017 04:31:14 -0500
+Date: Mon, 20 Nov 2017 10:31:12 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: fix memory leak in xfs_iext_free_last_leaf
+Message-ID: <20171120093112.GA29719@lst.de>
+References: <20171120090128.11320-1-shuwang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171120090128.11320-1-shuwang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: shuwang@redhat.com
+Cc: darrick.wong@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, bfoster@redhat.com, sandeen@redhat.com, chuhu@redhat.com, liwang@redhat.com, yizhan@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Oops.  Looks good:
 
-Use TIME_FACTOR to increase the amount of time we spend testing log
-shutdown recovery.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/388 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/tests/generic/388 b/tests/generic/388
-index 2760208..4f5a63b 100755
---- a/tests/generic/388
-+++ b/tests/generic/388
-@@ -65,7 +65,7 @@ _scratch_mkfs >> $seqres.full 2>&1
- _require_metadata_journaling $SCRATCH_DEV
- _scratch_mount || _fail "mount failed"
- 
--for i in $(seq 1 50); do
-+for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
- 	($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
- 		> /dev/null 2>&1
- 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
