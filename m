@@ -1,62 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36294 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51572 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751835AbdK0UYg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Nov 2017 15:24:36 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B664C8553E
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2017 20:24:36 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9B694600C2
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2017 20:24:36 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/4] xfs: print transaction log reservation on overrun
-Date: Mon, 27 Nov 2017 15:24:31 -0500
-Message-Id: <20171127202434.43125-2-bfoster@redhat.com>
-In-Reply-To: <20171127202434.43125-1-bfoster@redhat.com>
-References: <20171127202434.43125-1-bfoster@redhat.com>
+        id S1750962AbdKTJB6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Nov 2017 04:01:58 -0500
+From: shuwang@redhat.com
+Subject: [PATCH] xfs: fix memory leak in xfs_iext_free_last_leaf
+Date: Mon, 20 Nov 2017 17:01:28 +0800
+Message-Id: <20171120090128.11320-1-shuwang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com, hch@lst.de
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, bfoster@redhat.com, sandeen@redhat.com, chuhu@redhat.com, liwang@redhat.com, yizhan@redhat.com, Shu Wang <shuwang@redhat.com>
 
-The transaction dump code displays the content and reservation
-consumption of a particular transaction in the event of an overrun.
-It currently displays the reservation associated with the
-transaction ticket, but not the original reservation attached to the
-transaction.
+From: Shu Wang <shuwang@redhat.com>
 
-The latter value reflects the original transaction reservation
-calculation before additional reservation overhead is assigned, such
-as for the CIL context header and potential split region headers.
+found the issue by kmemleak.
+unreferenced object 0xffff8800674611c0 (size 16):
+    xfs_iext_insert+0x82a/0xa90 [xfs]
+    xfs_bmap_add_extent_hole_delay+0x1e5/0x5b0 [xfs]
+    xfs_bmapi_reserve_delalloc+0x483/0x530 [xfs]
+    xfs_file_iomap_begin+0xac8/0xd40 [xfs]
+    iomap_apply+0xb8/0x1b0
+    iomap_file_buffered_write+0xac/0xe0
+    xfs_file_buffered_aio_write+0x198/0x420 [xfs]
+    xfs_file_write_iter+0x23f/0x2a0 [xfs]
+    __vfs_write+0x23e/0x340
+    vfs_write+0xe9/0x240
+    SyS_write+0xa1/0x120
+    do_syscall_64+0xda/0x260
 
-Update xlog_print_trans() to also print the original transaction
-reservation in the event of overrun. This provides a reference point
-to identify how much reservation overhead was added to a particular
-ticket by xfs_log_calc_unit_res().
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Shu Wang <shuwang@redhat.com>
 ---
- fs/xfs/xfs_log.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_iext_tree.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 38d4227895ae..3a37fa1ed25e 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2117,7 +2117,9 @@ xlog_print_trans(
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 19e546a41251..89bf16b4d937 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -850,9 +850,9 @@ static void
+ xfs_iext_free_last_leaf(
+ 	struct xfs_ifork	*ifp)
+ {
+-	ifp->if_u1.if_root = NULL;
+ 	ifp->if_height--;
+ 	kmem_free(ifp->if_u1.if_root);
++	ifp->if_u1.if_root = NULL;
+ }
  
- 	/* dump core transaction and ticket info */
- 	xfs_warn(mp, "transaction summary:");
--	xfs_warn(mp, "  flags	= 0x%x", tp->t_flags);
-+	xfs_warn(mp, "  log res   = %d", tp->t_log_res);
-+	xfs_warn(mp, "  log count = %d", tp->t_log_count);
-+	xfs_warn(mp, "  flags     = 0x%x", tp->t_flags);
- 
- 	xlog_print_tic_res(mp, tp->t_ticket);
- 
+ void
 -- 
-2.13.6
+2.13.5
 
