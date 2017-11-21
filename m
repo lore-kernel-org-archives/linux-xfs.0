@@ -1,112 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:37995 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750772AbdKUQf2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 11:35:28 -0500
-Received: by mail-wm0-f68.google.com with SMTP id 128so4644799wmo.3
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2017 08:35:27 -0800 (PST)
-Date: Tue, 21 Nov 2017 17:35:24 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v3 0/4] test for XFS umount hang caused by the pending
- dquota log item in AIL
-Message-ID: <20171121163524.7m4d7xvtmvmxcdgu@odin.localdomain>
-References: <20171109073252.36001-1-houtao1@huawei.com>
- <20171109085406.GU17339@eguan.usersys.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51434 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751191AbdKURf7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Nov 2017 12:35:59 -0500
+Date: Tue, 21 Nov 2017 12:35:57 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171121173557.GB6004@bfoster.bfoster>
+References: <20171121150557.GA5014@bfoster.bfoster>
+ <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171109085406.GU17339@eguan.usersys.redhat.com>
+In-Reply-To: <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Hou Tao <houtao1@huawei.com>, fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Mark Tinguely <mark.tinguely@hpe.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 09, 2017 at 04:54:06PM +0800, Eryu Guan wrote:
-> On Thu, Nov 09, 2017 at 03:32:48PM +0800, Hou Tao wrote:
-> > Hi,
-> > 
-> > This is the v3 patchset for testing the XFS umount hang problem caused by
-> > the pending dquota log item in AIL. The problem has not been fixed in
-> > XFS yet, and Carlos Maiolino is working on it [1].
-> > 
-> > The bug that the test case can not reproduced on a 15GB scratch device
-> > has been fixed, and many thanks to Eryu Guan. I had tested it on 4.14-rc8,
-> > and the problem can be reproduced reliably now.
-> > 
-> > Comments and questions are welcome.
-> 
-> I finally could reproduce the hang, thanks a lot!
-> 
-> But I won't merge the test until the fix is upstream, otherwise it would
-> interrupt all test runs on XFS.
+cc linux-xfs
 
-Just FYI, I should have the patch ready soon, it already passes this test, I
-just need to make sure I'm not screwing up with the locks.
+On Tue, Nov 21, 2017 at 10:51:10AM -0600, Mark Tinguely wrote:
+> On 11/21/2017 09:05 AM, Brian Foster wrote:
+> > I ended up looking at tr_ifree while investigating some options to
+> > resolve this problem and am slightly confused by the reservation
+> > calculation. In particular, we do this for the inobt portion of the
+> > operation (i.e., "the inode btree: max depth * blocksize"):
+> > 
+> >                  xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+> >                                   mp->m_in_maxlevels, 0) +
+> 
+
+Hi Mark,
+
+> I reviewed the Jeff Lui refactoring of the log space calculation years
+> ago....
+> 
+> There is some combination of entries  only difference that I see is that the
+> original calculation used the generic btree calculation for the inode btree
+> and the generic btree calculation accounts for the by-block and by-count, so
+> they are times two:
+> 
+> /*
+>  * In freeing an inode we can modify:
+>  *    the inode being freed: inode size
+>  *    the super block free inode counter: sector size
+>  *    the agi hash list and counters: sector size
+>  *    the inode btree entry: block size
+>  *    the on disk inode before ours in the agi hash list: inode cluster size
+>  *    the inode btree: max depth * blocksize
+>  *    the allocation btrees: 2 trees * (max depth - 1) * block size
+>  */
+> STATIC uint
+> xfs_calc_ifree_reservation(
+>         struct xfs_mount        *mp)
+> {
+>         return XFS_DQUOT_LOGRES(mp) +
+>                 mp->m_sb.sb_inodesize +
+>                 mp->m_sb.sb_sectsize +
+>                 mp->m_sb.sb_sectsize +
+>                 XFS_FSB_TO_B(mp, 1) +
+>                 MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+>                     XFS_INODE_CLUSTER_SIZE(mp)) +
+>                 128 * 5 +
+>                 XFS_ALLOCFREE_LOG_RES(mp, 1) +
+>                 128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
+>                        XFS_ALLOCFREE_LOG_COUNT(mp, 1));
+> }
+> ...
+
+Indeed, this looks fairly similar to the line cited above from the
+current code (modulo the xfs_calc_buf_res() refactoring). I'm curious
+why we only consider the buffer overhead (i.e., 128 bytes *
+->m_in_maxlevels) of the ->m_in_maxlevels value rather than the full
+buffer size.
+
+> /*
+>  * Per-extent log reservation for the allocation btree changes
+>  * involved in freeing or allocating an extent.
+>  * 2 trees * (2 blocks/level * max depth - 1) * block size
+>  */
+> #define XFS_ALLOCFREE_LOG_RES(mp,nx) \
+>         ((nx) * (2 * XFS_FSB_TO_B((mp), 2 * XFS_AG_MAXLEVELS(mp) - 1)))
+> #define XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
+>         ((nx) * (2 * (2 * XFS_AG_MAXLEVELS(mp) - 1)))
+> 
+> Doesn't the blocks for the btrees get allocated in:
+> 
+> 	xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+>                                  XFS_FSB_TO_B(mp, 1)) +
+
+Yeah, I believe that covers the log reservation for the allocation
+btrees. I'm wondering if/where we'd account for a join of the inobt due
+to freeing an inode chunk and removing the associated inobt record. I
+suppose the above could also cover the inobt since the transaction is
+rolled, but then aren't we assuming that m_in_maxlevels ==
+m_ag_maxlevels..?
+
+Brian
 
 > 
-> And I have some nitpicks on individual patches :)
-> 
-> Thanks,
-> Eryu
-> 
-> > 
-> > Regards,
-> > Tao
-> > 
-> > ---
-> > Changes since v2:
-> > 
-> > v3:
-> > * dmflakey: support error_writes feature for dm-flakey
-> > 	* check the availability of error_writes by trial instead of version number
-> > 
-> > * xfs: test for umount hang caused by the pending dquota log item in AIL
-> > 	* calculate log_ofs correctly by using convert cmd in xfs_db
-> > 
-> > * common/rc: factor out _scratch_xfs_[get|set]_sb_field
-> > 	* reimplement _scratch_xfs_[get|set]_sb_field based on
-> > 	  _scratch_xfs_[get|set]_metadata_field.
-> > 
-> > v2:
-> > 	* http://www.spinics.net/lists/fstests/msg07792.html
-> > 
-> > v1:
-> > 	* https://www.spinics.net/lists/fstests/msg07622.html
-> > 
-> > [1]: https://www.spinics.net/lists/linux-xfs/msg11614.html
-> > 
-> > Hou Tao (4):
-> >   dmflakey: support multiple dm targets for a dm-flakey device
-> >   dmflakey: support error_writes feature for dm-flakey
-> >   xfs: test for umount hang caused by the pending dquota log item in AIL
-> >   common/rc: factor out _scratch_xfs_[get|set]_sb_field
-> > 
-> >  common/dmflakey   |  29 +++++++++-
-> >  common/fuzzy      |  33 -----------
-> >  common/xfs        |  47 ++++++++++++++++
-> >  tests/xfs/007     |   6 +-
-> >  tests/xfs/098     |   4 +-
-> >  tests/xfs/186     |   3 +-
-> >  tests/xfs/199     |  13 ++---
-> >  tests/xfs/307     |  11 +---
-> >  tests/xfs/308     |  11 +---
-> >  tests/xfs/339     |   6 +-
-> >  tests/xfs/340     |   2 +-
-> >  tests/xfs/999     | 163 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/999.out |   2 +
-> >  tests/xfs/group   |   1 +
-> >  14 files changed, 257 insertions(+), 74 deletions(-)
-> >  create mode 100755 tests/xfs/999
-> >  create mode 100644 tests/xfs/999.out
-> > 
-> > -- 
-> > 2.9.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
+> And the rest of the calculation counts the log chunks that can get modified?
