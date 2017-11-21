@@ -1,144 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:39258 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752656AbdKWAg2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 19:36:28 -0500
-Date: Thu, 23 Nov 2017 11:24:02 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:20983 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751505AbdKUGv1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 01:51:27 -0500
+Date: Tue, 21 Nov 2017 17:48:15 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171123002401.GT5858@dastard>
-References: <20171121150557.GA5014@bfoster.bfoster>
- <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
- <20171121173557.GB6004@bfoster.bfoster>
- <20171122022645.GR5858@dastard>
- <20171122122100.GA9984@bfoster.bfoster>
- <20171122204126.GA19041@bfoster.bfoster>
+Subject: Re: [PATCH v2] iomap: report collisions between directio and
+ buffered writes to userspace
+Message-ID: <20171121064815.GP5858@dastard>
+References: <20171117193925.GM5119@magnolia>
+ <20171120161829.GA25991@bombadil.infradead.org>
+ <20171120202606.GN5858@dastard>
+ <20171120215100.GB8933@bombadil.infradead.org>
+ <20171120222749.GO5858@dastard>
+ <20171121013753.GA12441@magnolia>
+ <20171121043240.GB8774@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171122204126.GA19041@bfoster.bfoster>
+In-Reply-To: <20171121043240.GB8774@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Wed, Nov 22, 2017 at 03:41:26PM -0500, Brian Foster wrote:
-> On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
-> > On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
-> > > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
-> > > I'm still not 100% sure what the extra "2 +" is accounting for
-> > > there, though, so to be safe that migh need to be accounted as full
-> > > blocks, not log headers.
+On Mon, Nov 20, 2017 at 08:32:40PM -0800, Matthew Wilcox wrote:
+> On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
+> > > First thing I noticed was that "xa" as a prefix is already quite
+> > > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
+> > > already exists and is quite widely used, so having a generic
+> > > interface using the same prefixes and lock names is going to be
+> > > quite confusing in the XFS code. Especially considering there's
+> > > fair bit of radix tree use in XFS (e.g. the internal inode and
+> > > dquot caches).
 > > > 
+> > > FYI, from fs/xfs/xfs_trans_priv.h:
+> > > 
+> > > /*
+> > >  * Private AIL structures.
+> > >  *
+> > >  * Eventually we need to drive the locking in here as well.
+> > >  */
+> > > struct xfs_ail {
+> > >         struct xfs_mount        *xa_mount;
+> > >         struct task_struct      *xa_task;
+> > >         struct list_head        xa_ail;
+> > >         xfs_lsn_t               xa_target;
+> > >         xfs_lsn_t               xa_target_prev;
+> > >         struct list_head        xa_cursors;
+> > >         spinlock_t              xa_lock;
+> > >         xfs_lsn_t               xa_last_pushed_lsn;
+> > >         int                     xa_log_flush;
+> > >         struct list_head        xa_buf_list;
+> > >         wait_queue_head_t       xa_empty;
+> > > };
+> > > 
+> > > FWIW, why is it named "XArray"?  "X" stands for what?  It still
+> > > looks like a tree structure to me, but without a design doc I'm a
+> > > bit lost to how it differs to the radix tree (apart from the API)
+> > > and why it's considered an "array".
 > > 
-> > Same.. there is still a bit of cruft in this calculation that really
-> > isn't clear. That +2 is one part and then there's another
-> > xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
-> > that it's a separate line implies it is logically separate, but who
-> > knows.
-> > 
-> > I suppose I'll keep that line as is, replace the inobt entry bit with
-> > the full inobt calculation (as above), keep the +2 associated with the
-> > inobt calculation and run some tests on that.
+> > /me nominates 'xarr' for the prefix because pirates. :P
+> 
+> The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
+> use more than a two-letter acronym for whatever the XArray ends up being
+> called.  One of the problems with the radix tree is that everything has
+> that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
+> makes a huge improvement to readability.
 
-I think I've worked out what the +2 is supposed to be - the AGF
-and AGFL when we alloc/free blocks for either the inode chunk
-or inobt records. You see them in, say, xfs_calc_write_reservation()
-but not in the inode allocation reservations, despite needing
-to do allocation....
+Yeah, understood. That's why
+we have very little clear
+prefix namespace left.... :/
 
-Ok, xfs_calc_itruncate_reservation() appears to have the same
-inobt modification bug in it. But now I'm wondering: why does a
-truncate transaction modify the inobt?
+[ somedays I write something that looks sorta like a haiku, and from
+that point on everything just starts falling out of my brain that
+way. I blame Eric for this today! :P ]
 
-It doesn't, and the commitin the historic tree doesn't explain why
-it was necesary then, either:
+> I'm open to renaming it, but I want a good name.  I think it needs to
+> be *something* array, so we're looking for a prefix used nowhere in the
+> kernel.  Running 'git grep' in turn for '\<[a-z]a_' really only allows
+> for ja, ya and za.  'ja_' and 'ya_' only have one user, while 'za_'
+> has none.  So ... anyone got a good retcon for JArray, YArray or ZArray?
 
-commit 5fe6abb82f76472ad4ca0d99c0c86585948060eb
-Author: Glen Overby <overby@sgi.com>
-Date:   Wed Mar 17 00:52:31 2004 +0000
+A Yellow Array.
+Colour is irrelevant.
+The bikeshed looks nice.
 
-    Add space for inode and allocation btrees to ITRUNCATE log reservation
-    Add XFS_ALLOCFREE_LOG_RES to IFREE log reservation.
+> It's considered an array because it behaves "as if" it's an infinite
+> array.
 
-FWIW, there's a bunch of stuff in the other transactions
-reservations that I'm finding highly questionable, too....
+Infinite Array.
+Namespace prefix collision
+this haiku can't solve.
 
-And thinking on this a bit further, I suspect the whole allocation
-reservation is just be a fudge. We do a single alloc/free
-reservation per AG per transaction, which allows for one full height
-split of the tree. The problem that Brian has reported is that this
-reservation only covers a /single/ freespace tree modification and
-we're overrunning it just in fixing up the freelist.
+> The fact that we chop it up into chunks of 64 entries, and then
+> arrange those chunks into a tree is not something the average user needs
+> to concern themselves with.
 
-So if we want to cover the worst case, we need a reservation for
-each freespace tree modification, not one to cover them all. i.e.
-one for each AGFL modification, and one for the actual extent being
-allocated/freed. And we need one of those reservations for
-*every single allocation/free that can occur in a transaction*.
+Jumbo Array. Many
+pieces hidden behind walls.
+Will anyone notice?
 
-This rapidly blows out to being impractical. We're not going to get
-full height splits/joins on every single allocation that occurs in a
-transaction, and the number of potential allocations in a
-transaction can be considered essentially unbound. e.g.  how many
-allocations can a single a directory modification do? Hash btree
-split, data/node btree split,  new freespace block, too - especially
-when considering that a each directory block could - in the worse
-case - be 128 x 512 byte extents (64k dir block size on 512 byte
-block size filesystem).
+> We have a lot of places in the kernel that
+> fuss around with "allocate N entries, whoops, we exceeded N, kmalloc some
+> more, oh no kmalloc failed, vmalloc it instead".  So the idea is to give
+> these places an interface that acts like an automatically-resizing array.
 
-So, no, I don't think it's realistic to start trying to cater for
-worst case reservations here. Such crazy shit just doesn't happen
-often enough in the real world for us to penalise everything with
-such reservations.
-
-In which case, I think we need to consider that each major operation
-(inobt, directory, finobt, etc) probably should have it's own
-allocation reservation. It's extremely unlikely that all of them are
-going to overrun in the same transaction, so maybe this is a good
-enough safe guard without going completely over the top...
-
-.....
-
-> Quick update... I ended up still hitting an overrun with this fix in
-> place (actually, the original bug report shows an overrun of ~32k which
-> should have indicated that was going to be the case).
-
-Yeah, no surprise there given the above.
-
-> In any event, that had me thinking about tweaking how we manage the agfl
-> and subsequently brings up a couple other issues. Firstly, this is a
-> large fs, so we have 1TB AGs and the associated 16 entry agfls.
-
-16 entries?
-
-The AGFL can hold (on a v5 filesystems and 512 byte sectors) 117
-individual freespace blocks.  It's always much larger than we need
-to hold the blocks for a single extent allocation.
-
-> The min
-> agfl allocation is 8 at the time of the overrun, which is the maximum
-> case for such a filesystem (4 per space btree). IIUC, as much as we need
-> to keep the agfl populated with a minimum of 8 blocks in this case, we
-> conversely also need to make sure we have 8 free slots, yes? If so, I'm
-> not sure that being lazy about freeing blocks is an option because I
-> have at least one trace where it takes 3 agfl block frees just to get
-> the agfl from 9 down to the required 8.
-
-Even the AGFL is half full, we've still got space for ~50 blocks to
-be freed from the bno/cnt/rmap btrees in a single allocation/free
-operation, so I just don't think we have to care about being a few
-blocks off. If trying to free blocks from the AGFL results in it
-growing, then just abort unless the AGFL is over half full...
-
-> Unrelated to the overrun issue, I also notice that we use the agfl for
-> the rmapbt. That adds another 5 blocks in the maximum case, which means
-> a 1TB AG can have a min agfl requirement of 4+4+5=13 blocks allocated of
-> 16 slots. Unless I'm missing something in the reasoning above, aren't we
-> kind of playing with fire in that case?
-
-No, because the AGFL is 117 blocks long at minimum.
+Zoetrope Array.
+Labyrinth of illusion.
+Structure never ends.
 
 Cheers,
 
