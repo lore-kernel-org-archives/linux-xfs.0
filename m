@@ -1,60 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ul.coyote.org ([198.50.187.229]:38655 "EHLO ul.coyote.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751496AbdKUIgS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Nov 2017 03:36:18 -0500
-Date: Tue, 21 Nov 2017 09:27:28 +0100
-From: Jonas Oberg <jonas@fsfe.org>
-Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
-Message-ID: <20171121082728.GD6859@silk.coyote.org>
-References: <20171116183306.103584007@linutronix.de>
- <20171116184358.475929943@linutronix.de>
- <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
- <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com>
- <20171120153105.38d2b892@alans-desktop>
+Received: from bombadil.infradead.org ([65.50.211.133]:47334 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752083AbdKUMw4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 07:52:56 -0500
+Date: Tue, 21 Nov 2017 04:52:53 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v2] iomap: report collisions between directio and
+ buffered writes to userspace
+Message-ID: <20171121125253.GA1484@bombadil.infradead.org>
+References: <20171117193925.GM5119@magnolia>
+ <20171120161829.GA25991@bombadil.infradead.org>
+ <20171120202606.GN5858@dastard>
+ <20171120215100.GB8933@bombadil.infradead.org>
+ <20171120222749.GO5858@dastard>
+ <20171121013753.GA12441@magnolia>
+ <20171121043240.GB8774@bombadil.infradead.org>
+ <20171121064815.GP5858@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171120153105.38d2b892@alans-desktop>
+In-Reply-To: <20171121064815.GP5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-Hi Alan,
+On Tue, Nov 21, 2017 at 05:48:15PM +1100, Dave Chinner wrote:
+> On Mon, Nov 20, 2017 at 08:32:40PM -0800, Matthew Wilcox wrote:
+> > On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
+> > > On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
+> > > > First thing I noticed was that "xa" as a prefix is already quite
+> > > > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
+> >
+> > The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
+> > use more than a two-letter acronym for whatever the XArray ends up being
+> > called.  One of the problems with the radix tree is that everything has
+> > that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
+> > makes a huge improvement to readability.
+> 
+> Yeah, understood. That's why
+> we have very little clear
+> prefix namespace left.... :/
+> 
+> [ somedays I write something that looks sorta like a haiku, and from
+> that point on everything just starts falling out of my brain that
+> way. I blame Eric for this today! :P ]
 
-> Which raises another question. If there are multiple GPL 2.0 texts which
-> are *supposedly* legally identical but this has never been tested in law
-> -that implies SPDX is wrong in tagging them identically in case they turn
-> out not to be...
+When the namespace is
+tight we must consider the
+competing users.
 
-For the cases, and the differences we're talking about now, I believe the
-current approach is fine. In the general case though, the FSFE's REUSE
-recommendations are that for situations where the license in use differ
-from the one included in SPDX, you make use of a local reference to the
-license file instead of the SPDX identifier.
+The earliest us'r
+has a claim to a prefix
+we are used to it.
 
-This is sometimes the case with the umpteen versions of the BSD licenses.
-The way we recommend doing this is you define an identifier of the form
-LicenseRef-<unique_code> (consistent with the SPDX specification).
-Source code files would be marked up with:
+Also a more wide-
+spread user has a claim to
+a shorter prefix.
 
-   SPDX-License-Identifier: LicenseRef-MyBSD4
+Would you mind changing
+your prefix to one only
+one letter longer?
 
-and the corresponding license file in LICENSES/ with:
+... ok, I give up ;-)
 
-   Valid-License-Identifier: LicenseRef-MyBSD4
-   License-Text:
-     ...
+All your current usage of the xa_ prefix looks somewhat like this:
 
+fs/xfs/xfs_trans_ail.c: spin_lock(&ailp->xa_lock);
 
-Best,
+with honourable mentions to:
+fs/xfs/xfs_log.c:	spin_lock(&mp->m_ail->xa_lock);
 
--- 
-Jonas Öberg
-Executive Director
+Would you mind if I bolt a patch on to the front of the series called
+something like "free up xa_ namespace" that renamed your xa_* to ail_*?
+There are no uses of the 'ail_' prefix in the kernel today.
 
-FSFE e.V. - keeping the power of technology in your hands. Your
-support enables our work, please join us today http://fsfe.org/join
+I don't think that
+	spin_lock(&ailp->ail_lock);
+loses any readability.
+
+By the way, what does AIL stand for?  It'd be nice if it were spelled out
+in at least one of the header files, maybe fs/xfs/xfs_trans_priv.h?
+
+> Zoetrope Array.
+> Labyrinth of illusion.
+> Structure never ends.
+
+Thank you for making me look up zoetrope ;-)
