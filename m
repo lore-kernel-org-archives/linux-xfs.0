@@ -1,91 +1,320 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33379 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752330AbdKUEcl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 23:32:41 -0500
-Date: Mon, 20 Nov 2017 20:32:40 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171121043240.GB8774@bombadil.infradead.org>
-References: <20171117193925.GM5119@magnolia>
- <20171120161829.GA25991@bombadil.infradead.org>
- <20171120202606.GN5858@dastard>
- <20171120215100.GB8933@bombadil.infradead.org>
- <20171120222749.GO5858@dastard>
- <20171121013753.GA12441@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:34096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750762AbdKUF3v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Nov 2017 00:29:51 -0500
+Date: Tue, 21 Nov 2017 13:29:49 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v4 1/3] generic: Adjust generic test outputs for new
+ fiemap imeplementation
+Message-ID: <20171121052949.GI2749@eguan.usersys.redhat.com>
+References: <1510747821-13270-1-git-send-email-nborisov@suse.com>
+ <1510747900-13440-1-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171121013753.GA12441@magnolia>
+In-Reply-To: <1510747900-13440-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com
 
-On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
-> > First thing I noticed was that "xa" as a prefix is already quite
-> > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
-> > already exists and is quite widely used, so having a generic
-> > interface using the same prefixes and lock names is going to be
-> > quite confusing in the XFS code. Especially considering there's
-> > fair bit of radix tree use in XFS (e.g. the internal inode and
-> > dquot caches).
-> > 
-> > FYI, from fs/xfs/xfs_trans_priv.h:
-> > 
-> > /*
-> >  * Private AIL structures.
-> >  *
-> >  * Eventually we need to drive the locking in here as well.
-> >  */
-> > struct xfs_ail {
-> >         struct xfs_mount        *xa_mount;
-> >         struct task_struct      *xa_task;
-> >         struct list_head        xa_ail;
-> >         xfs_lsn_t               xa_target;
-> >         xfs_lsn_t               xa_target_prev;
-> >         struct list_head        xa_cursors;
-> >         spinlock_t              xa_lock;
-> >         xfs_lsn_t               xa_last_pushed_lsn;
-> >         int                     xa_log_flush;
-> >         struct list_head        xa_buf_list;
-> >         wait_queue_head_t       xa_empty;
-> > };
-> > 
-> > FWIW, why is it named "XArray"?  "X" stands for what?  It still
-> > looks like a tree structure to me, but without a design doc I'm a
-> > bit lost to how it differs to the radix tree (apart from the API)
-> > and why it's considered an "array".
+On Wed, Nov 15, 2017 at 02:11:38PM +0200, Nikolay Borisov wrote:
+> With the new  range query support for the fiemap command,
+> the command also started printing hole extent for files which
+> consist of only a hole. So adjust generic test output accordingly.
+> Furthermore, this change breaks tests which are executed with a version
+> of xfs_io that doesn't support fiemap's range query. Fix this by implementing a
+> function which will fixup the output of tests which are broken by emulating
+> the output on older xfs_io versions
 > 
-> /me nominates 'xarr' for the prefix because pirates. :P
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  common/punch          | 23 +++++++++++++++++++++++
+>  tests/generic/012.out |  1 +
+>  tests/generic/016.out |  1 +
+>  tests/generic/021.out |  2 ++
+>  tests/generic/022.out |  2 ++
+>  tests/generic/058.out |  1 +
+>  tests/generic/060.out |  1 +
+>  tests/generic/061.out |  1 +
+>  tests/generic/063.out |  1 +
+>  tests/generic/255.out |  6 ++++++
+>  tests/generic/316.out |  6 ++++++
+>  11 files changed, 45 insertions(+)
+> 
+> diff --git a/common/punch b/common/punch
+> index c4ed261..9c39183 100644
+> --- a/common/punch
+> +++ b/common/punch
+> @@ -218,6 +218,27 @@ _filter_fiemap()
+>  	_coalesce_extents
+>  }
+>  
+> +#This function allows for tests which print the fiemap of a
 
-The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
-use more than a two-letter acronym for whatever the XArray ends up being
-called.  One of the problems with the radix tree is that everything has
-that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
-makes a huge improvement to readability.
+Please add a space after "#" for comments.
 
-I'm open to renaming it, but I want a good name.  I think it needs to
-be *something* array, so we're looking for a prefix used nowhere in the
-kernel.  Running 'git grep' in turn for '\<[a-z]a_' really only allows
-for ja, ya and za.  'ja_' and 'ya_' only have one user, while 'za_'
-has none.  So ... anyone got a good retcon for JArray, YArray or ZArray?
+> +#file, that consists of only a hole to pass when executed with 
 
-It's considered an array because it behaves "as if" it's an infinite
-array.  The fact that we chop it up into chunks of 64 entries, and then
-arrange those chunks into a tree is not something the average user needs
-to concern themselves with.  We have a lot of places in the kernel that
-fuss around with "allocate N entries, whoops, we exceeded N, kmalloc some
-more, oh no kmalloc failed, vmalloc it instead".  So the idea is to give
-these places an interface that acts like an automatically-resizing array.
+Trailing whitespace in above line.
 
-One of the ways the radix tree fails to act like an array is returning
-EEXIST on an insert operation.  Most users don't want that.  Arrays don't
-behave like that; you just overwrite whatever's there.  A few users do
-want to know whether something was already there (eg the brd example
-I showed), but those users generally want to know what was already
-there, not just 'something was'.  So this is why we have xa_store()
-and xa_cmpxchg() as our higher-level primitives.
+> +#older versions of xfs_io's fiemap that didn't print anything for
+> +#such files
+> +_fiemap_range_fixup()
+> +{
+> +	#check if we support ranged query
+> +	$XFS_IO_PROG -c "help fiemap" | head -n 1 | grep -q "[offset [len]]"
+
+regexp doesn't look correct, either use fgrep or escape "[".
+
+> +	local range_sup=$?
+
+I think we can return immediately if xfs_io supports ranged query, so we
+don't have to do the "$range_sup -eq 1" check later, which results in a
+shorter line.
+
+Thanks,
+Eryu
+
+> +	#check if the file consists of a single hole only
+> +	echo "$1" | grep -q "^0\: \[.*\]\: hole$"
+> +	local sole_hole=$?
+> +	local filesize="$(((`stat -c %s $1` / 512) - 1))"
+> +	local output_line_num=`$XFS_IO_PROG -c 'fiemap' $testfile | wc -l`
+> +
+> +	if [ $range_sup -eq 1 ] && [ $sole_hole -eq 1  ] && [ $output_line_num -eq 1 ]
+> +	then
+> +		echo "0: [0..$filesize]: hole"
+> +	fi
+> +}
+> +
+>  _filter_fiemap_flags()
+>  {
+>  	$AWK_PROG '
+> @@ -363,6 +384,7 @@ _test_generic_punch()
+>  	$XFS_IO_PROG -f -c "truncate $_20k" \
+>  		-c "$zero_cmd $_4k $_8k" \
+>  		-c "$map_cmd -v" $testfile | $filter_cmd
+> +	_fiemap_range_fixup $testfile
+>  	[ $? -ne 0 ] && die_now
+>  	_md5_checksum $testfile
+>  
+> @@ -470,6 +492,7 @@ _test_generic_punch()
+>  		-c "pwrite $_8k $_4k" $sync_cmd \
+>  		-c "$zero_cmd $_4k $_12k" \
+>  		-c "$map_cmd -v" $testfile | $filter_cmd
+> +	_fiemap_range_fixup $testfile
+>  	[ $? -ne 0 ] && die_now
+>  	_md5_checksum $testfile
+>  
+> diff --git a/tests/generic/012.out b/tests/generic/012.out
+> index ffbf8a3..8045471 100644
+> --- a/tests/generic/012.out
+> +++ b/tests/generic/012.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 012
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> diff --git a/tests/generic/016.out b/tests/generic/016.out
+> index c45a44a..1371ce7 100644
+> --- a/tests/generic/016.out
+> +++ b/tests/generic/016.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 016
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> diff --git a/tests/generic/021.out b/tests/generic/021.out
+> index 1137741..791b78a 100644
+> --- a/tests/generic/021.out
+> +++ b/tests/generic/021.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 021
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> @@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  1: [64..95]: hole
+>  d8f51c20223dbce5c7c90db87bc221b0
+>  	10. hole -> data -> hole
+> +0: [0..63]: hole
+>  bb7df04e1b0a2570657527a7e108ae23
+>  	11. data -> hole -> data
+>  0: [0..63]: extent
+> diff --git a/tests/generic/022.out b/tests/generic/022.out
+> index fbffa59..6dbc192 100644
+> --- a/tests/generic/022.out
+> +++ b/tests/generic/022.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 022
+>  	1. into a hole
+> +0: [0..95]: hole
+>  f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  	2. into allocated space
+>  0: [0..95]: extent
+> @@ -34,6 +35,7 @@ f4f35d60b3cc18aaa6d8d92f0cd3708a
+>  1: [64..95]: hole
+>  d8f51c20223dbce5c7c90db87bc221b0
+>  	10. hole -> data -> hole
+> +0: [0..63]: hole
+>  bb7df04e1b0a2570657527a7e108ae23
+>  	11. data -> hole -> data
+>  0: [0..63]: extent
+> diff --git a/tests/generic/058.out b/tests/generic/058.out
+> index b15308d..3bbc2a4 100644
+> --- a/tests/generic/058.out
+> +++ b/tests/generic/058.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 058
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/060.out b/tests/generic/060.out
+> index 909b578..210af74 100644
+> --- a/tests/generic/060.out
+> +++ b/tests/generic/060.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 060
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/061.out b/tests/generic/061.out
+> index 78d6c6d..6d95680 100644
+> --- a/tests/generic/061.out
+> +++ b/tests/generic/061.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 061
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/063.out b/tests/generic/063.out
+> index d828ff6..10db43f 100644
+> --- a/tests/generic/063.out
+> +++ b/tests/generic/063.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 063
+>  	1. into a hole
+> +0: [0..55]: hole
+>  cf845a781c107ec1346e849c9dd1b7e8
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/255.out b/tests/generic/255.out
+> index 217ef3e..441fde8 100644
+> --- a/tests/generic/255.out
+> +++ b/tests/generic/255.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 255
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -42,6 +43,7 @@ daa100df6e6711906b61c9ab5aa16032
+>  3: [32..39]: hole
+>  cc63069677939f69a6e8f68cae6a6dac
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -79,6 +81,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -121,6 +124,7 @@ daa100df6e6711906b61c9ab5aa16032
+>  3: [32..39]: hole
+>  cc63069677939f69a6e8f68cae6a6dac
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -158,6 +162,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -240,6 +245,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> diff --git a/tests/generic/316.out b/tests/generic/316.out
+> index 383f0d1..5506198 100644
+> --- a/tests/generic/316.out
+> +++ b/tests/generic/316.out
+> @@ -1,5 +1,6 @@
+>  QA output created by 316
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -16,6 +17,7 @@ cc63069677939f69a6e8f68cae6a6dac
+>  1: [8..39]: hole
+>  1b3779878366498b28c702ef88c4a773
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -43,6 +45,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -59,6 +62,7 @@ cc63069677939f69a6e8f68cae6a6dac
+>  1: [8..39]: hole
+>  1b3779878366498b28c702ef88c4a773
+>  	10. hole -> data -> hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	11. data -> hole -> data
+>  0: [0..7]: extent
+> @@ -86,6 +90,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> @@ -133,6 +138,7 @@ eecb7aa303d121835de05028751d301c
+>  0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+>  *
+>  	1. into a hole
+> +0: [0..39]: hole
+>  daa100df6e6711906b61c9ab5aa16032
+>  	2. into allocated space
+>  0: [0..7]: extent
+> -- 
+> 2.7.4
+> 
