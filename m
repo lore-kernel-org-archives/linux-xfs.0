@@ -1,99 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62184 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753317AbdKWWA7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Nov 2017 17:00:59 -0500
-Date: Fri, 24 Nov 2017 09:00:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: handle register_shrinker error
-Message-ID: <20171123220045.GV5858@dastard>
-References: <20171123120828.31881-1-mhocko@kernel.org>
- <20171123132633.GB21798@infradead.org>
- <20171123134128.mzxv6234hypokg4k@dhcp22.suse.cz>
- <201711240101.CJF18223.FJtHOLOSQFOMVF@I-love.SAKURA.ne.jp>
- <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:37970 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751181AbdKUPGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Nov 2017 10:06:00 -0500
+Date: Tue, 21 Nov 2017 10:05:57 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: tr_ifree transaction log reservation calculation
+Message-ID: <20171121150557.GA5014@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com
 
-On Thu, Nov 23, 2017 at 05:11:37PM +0100, Michal Hocko wrote:
-> On Fri 24-11-17 01:01:10, Tetsuo Handa wrote:
-> > Michal Hocko wrote:
-> > > On Thu 23-11-17 05:26:33, Christoph Hellwig wrote:
-> > > > Looks good,
-> > > > 
-> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > 
-> > > Thanks!
-> > > 
-> > > > I can take a stab at the quota one.
-> > > 
-> > > That would be really great!
-> > > 
-> > Again, it does not look good. Since kmem_free() does only kvfree(),
-> > nothing will release memory allocated by list_lru_init().
-> 
-> Hmm, you are right. I have (blindly) followed the current code flow
-> which is wrong as well. The following should do the trick. Should I
-> split that into two patches?
+Hi all,
 
-One is fine by me - if we're need to backport one fix, then we need
-to backport both :/
+I'm looking into a bug that appears to reflect the fairly rare
+xfs_inactive_ifree() transaction overruns that have been reported in the
+past. To summarize, the cause of the overrun appears to be that the
+pre-inode-chunk-free agfl fixup ends up freeing a single agfl block that
+leads to multiple [cnt|bno]bt joins that repopulate the agfl and cause
+several more iterations in xfs_alloc_fix_freelist(). These extra
+iterations combine with a couple other conditions that ultimately result
+in consuming most or all of the anticipated cntbt log reservation before
+we actually get to freeing the inode chunk:
 
-> ---
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index dd0e18af990c..4c6e86d861fd 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1815,25 +1815,27 @@ xfs_alloc_buftarg(
->  	btp->bt_daxdev = dax_dev;
->  
->  	if (xfs_setsize_buftarg_early(btp, bdev))
-> -		goto error;
-> +		goto error_free;
->  
->  	if (list_lru_init(&btp->bt_lru))
-> -		goto error;
-> +		goto error_free;
->  
->  	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-> -		goto error;
-> +		goto error_lru;
->  
->  	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
->  	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
->  	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
->  	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
-> -	if (register_shrinker(&btp->bt_shrinker)) {
-> -		percpu_counter_destroy(&btp->bt_io_count);
-> -		goto error;
-> -	}
-> +	if (register_shrinker(&btp->bt_shrinker))
-> +		goto error_pcpu;
->  	return btp;
->  
-> -error:
-> +error_pcpu:
-> +	percpu_counter_destroy(&btp->bt_io_count);
-> +error_lru:
-> +	list_lru_destroy(&btp->bt_lru);
-> +error_free:
->  	kmem_free(btp);
->  	return NULL;
+- left+right contiguous blocks that require 2 cntbt record removals and
+  an insert with a new length key
+- the overrun is the first transaction in a CIL ctx and thus consumes
+  the CIL ticket reservation
+- the transaction spans a log buffer and thus requires additional space
+  for split region headers
 
-That should do the trick.
+Note that I don't believe the above are problems, but rather this
+suggests how we probably get away with the higher level problem in most
+cases where this additional "worst case" reservation goes unused.
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
+I ended up looking at tr_ifree while investigating some options to
+resolve this problem and am slightly confused by the reservation
+calculation. In particular, we do this for the inobt portion of the
+operation (i.e., "the inode btree: max depth * blocksize"):
 
-Cheers,
+                xfs_calc_buf_res(2 + mp->m_ialloc_blks +   
+                                 mp->m_in_maxlevels, 0) +  
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+... where it looks to me that we only incorporate the overhead of the
+inobt buffers rather than the buffer content themselves. Is this
+expected/appropriate, or should we be passing something like
+XFS_FSB_TO_B(mp, 1) there rather than 0? As it is, while this is not
+related to the allocation btrees, it does happen to add enough
+reservation to the transaction to avoid the overrun. Then again, it
+might not technically be appropriate to add that reservation since the
+inobt and free space btree updates are separated by a transaction roll.
+
+That aside, the next best option for dealing with this situation seems
+to be to limit the number of agfl fixups that can occur per-transaction.
+Yet another option might be to roll the transaction in certain
+situations (i.e., let the deferred op handling give us a new transaction
+if an agfl fixup resulted in a split/join), but I suspect that could get
+more involved as we may want to keep the agf locked across that
+sequence, etc.
+
+Thoughts? Can anyone shed some light on this reservation? Thanks!
+
+Brian
