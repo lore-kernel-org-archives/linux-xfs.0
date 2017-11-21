@@ -1,77 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48353 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753465AbdKOBKZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2017 20:10:25 -0500
-Date: Tue, 14 Nov 2017 17:10:22 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20171115011022.GC5119@magnolia>
-References: <20170830145400.3681-1-hch@lst.de>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:40119 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbdKUPtN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 10:49:13 -0500
+Received: by mail-wm0-f50.google.com with SMTP id b189so4323473wmd.5
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2017 07:49:12 -0800 (PST)
+Date: Tue, 21 Nov 2017 16:49:09 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v3 0/4] test for XFS umount hang caused by the pending
+ dquota log item in AIL
+Message-ID: <20171121154909.2acusmt3nfdonttw@odin.localdomain>
+References: <20171109073252.36001-1-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830145400.3681-1-hch@lst.de>
+In-Reply-To: <20171109073252.36001-1-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Aug 30, 2017 at 04:54:00PM +0200, Christoph Hellwig wrote:
-> But reject reflink + DAX file systems for now until the code to
-> support reflinks on DAX is actually implemented.
+On Thu, Nov 09, 2017 at 03:32:48PM +0800, Hou Tao wrote:
+> Hi,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This is the v3 patchset for testing the XFS umount hang problem caused by
+> the pending dquota log item in AIL. The problem has not been fixed in
+> XFS yet, and Carlos Maiolino is working on it [1].
+> 
+> The bug that the test case can not reproduced on a 15GB scratch device
+> has been fixed, and many thanks to Eryu Guan. I had tested it on 4.14-rc8,
+> and the problem can be reproduced reliably now.
+> 
+> Comments and questions are welcome.
+> 
+
+Thanks, I'm testing my patch against this test, it might take a few more time to
+properly work on that patch, but with the test it is better.
+
+I didn't review the test yet, but I tried it once, and at least the result is
+what I expected, I'll get some time to review it.
+
+> Regards,
+> Tao
+> 
 > ---
->  fs/xfs/xfs_super.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
+> Changes since v2:
 > 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacdbb8b3..92521032468e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1634,7 +1634,9 @@ xfs_fs_fill_super(
->  		}
->  		if (xfs_sb_version_hasreflink(&mp->m_sb))
->  			xfs_alert(mp,
-> -		"DAX and reflink have not been tested together!");
-> +		"DAX and reflink can not be used together!");
-> +			error = -EINVAL;
-> +			goto out_filestream_unmount;
->  	}
->  
->  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> @@ -1648,10 +1650,6 @@ xfs_fs_fill_super(
->  	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
->  	}
->  
-> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> -		xfs_alert(mp,
-> -	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
-
-Ok, now that the incore extent map rework has landed upstream, can we
-please get everyone's QA to stress the reflink/cow code vigorously
-during this release cycle so that we can re-consider this patch for
-4.16?
-
-(And if you're particularly mean, force cowextsize = 1fsb to age the
-filesystem prematurely?)
-
-Right now I think the only problem I know about is that log recovery bug
-where the defer ops of replayed defer ops get logged in the wrong order,
-but that's it.
-
---D
-
-> -
->  	error = xfs_mountfs(mp);
->  	if (error)
->  		goto out_filestream_unmount;
+> v3:
+> * dmflakey: support error_writes feature for dm-flakey
+> 	* check the availability of error_writes by trial instead of version number
+> 
+> * xfs: test for umount hang caused by the pending dquota log item in AIL
+> 	* calculate log_ofs correctly by using convert cmd in xfs_db
+> 
+> * common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 	* reimplement _scratch_xfs_[get|set]_sb_field based on
+> 	  _scratch_xfs_[get|set]_metadata_field.
+> 
+> v2:
+> 	* http://www.spinics.net/lists/fstests/msg07792.html
+> 
+> v1:
+> 	* https://www.spinics.net/lists/fstests/msg07622.html
+> 
+> [1]: https://www.spinics.net/lists/linux-xfs/msg11614.html
+> 
+> Hou Tao (4):
+>   dmflakey: support multiple dm targets for a dm-flakey device
+>   dmflakey: support error_writes feature for dm-flakey
+>   xfs: test for umount hang caused by the pending dquota log item in AIL
+>   common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 
+>  common/dmflakey   |  29 +++++++++-
+>  common/fuzzy      |  33 -----------
+>  common/xfs        |  47 ++++++++++++++++
+>  tests/xfs/007     |   6 +-
+>  tests/xfs/098     |   4 +-
+>  tests/xfs/186     |   3 +-
+>  tests/xfs/199     |  13 ++---
+>  tests/xfs/307     |  11 +---
+>  tests/xfs/308     |  11 +---
+>  tests/xfs/339     |   6 +-
+>  tests/xfs/340     |   2 +-
+>  tests/xfs/999     | 163 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |   2 +
+>  tests/xfs/group   |   1 +
+>  14 files changed, 257 insertions(+), 74 deletions(-)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
 > -- 
-> 2.11.0
+> 2.9.5
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
