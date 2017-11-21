@@ -1,65 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48907 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750772AbdKUSyT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 13:54:19 -0500
-Date: Tue, 21 Nov 2017 10:53:46 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:51250 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751238AbdKUUe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 15:34:56 -0500
+Date: Tue, 21 Nov 2017 12:34:16 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171121185346.GC2135@magnolia>
-References: <20171117193925.GM5119@magnolia>
- <20171120161829.GA25991@bombadil.infradead.org>
- <20171120202606.GN5858@dastard>
- <20171120215100.GB8933@bombadil.infradead.org>
- <20171120222749.GO5858@dastard>
- <20171121172347.GA7640@bombadil.infradead.org>
+Subject: [PATCH v3] iomap: report collisions between directio and  buffered
+ writes to userspace
+Message-ID: <20171121203416.GE2135@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171121172347.GA7640@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: torvalds@linux-foundation.org
+Cc: Matthew Wilcox <willy@infradead.org>, Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, bo.li.liu@oracle.com, viro@ZenIV.linux.org.uk
 
-On Tue, Nov 21, 2017 at 09:23:47AM -0800, Matthew Wilcox wrote:
-> On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
-> > On Mon, Nov 20, 2017 at 01:51:00PM -0800, Matthew Wilcox wrote:
-> > > If you want an example of it in use, I'm pretty happy with this patch
-> > > that switches the brd driver entirely from the radix tree API to the
-> > > xarray API:
-> > > 
-> > > http://git.infradead.org/users/willy/linux-dax.git/commitdiff/dbf96ae943e43563cbbaa26e21b656b6fe8f4b0f
-> > 
-> > Looks pretty neat, but I'll reserve judgement for when I see the
-> > conversion of the XFS radix tree code....
-> 
-> Challenge accepted.  This was a good thing for me to do because I found
-> some opportunities to improve the XArray API.
-> 
-> Changes since yesterday:
-> 
->  - Added XA_NO_TAG
->  - Added 'max' parameters to xa_get_entries() and xa_get_tagged()
->  - Changed the order of the arguments of xa_get_entries() and xa_get_tagged()
->    to match the radix tree equivalents
-> 
-> You can see the patches on that (rebased) branch:
-> 
-> xfs: Convert mru cache to XArray
-> xfs: Convert xfs dquot to XArray
-> xfs: Convert pag_ici_root to XArray
-> xfs: Convert m_perag_tree to XArray
-> 
-> or did you want me to send them by email?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes please.
+If two programs simultaneously try to write to the same part of a file
+via direct IO and buffered IO, there's a chance that the post-diowrite
+pagecache invalidation will fail on the dirty page.  When this happens,
+the dio write succeeded, which means that the page cache is no longer
+coherent with the disk!
 
---D
+Programs are not supposed to mix IO types and this is a clear case of
+data corruption, so store an EIO which will be reflected to userspace
+during the next fsync.  Replace the WARN_ON with a ratelimited pr_crit
+so that the developers have /some/ kind of breadcrumb to track down the
+offending program(s) and file(s) involved.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Liu Bo <bo.li.liu@oracle.com>
+---
+v3: increase ratelimit period to 30s
+v2: fix old and new dio paths
+---
+ fs/direct-io.c     |   24 +++++++++++++++++++++++-
+ fs/iomap.c         |   12 ++++++++++--
+ include/linux/fs.h |    1 +
+ 3 files changed, 34 insertions(+), 3 deletions(-)
+
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 98fe132..ef5d12a 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -219,6 +219,27 @@ static inline struct page *dio_get_page(struct dio *dio,
+ 	return dio->pages[sdio->head];
+ }
+ 
++/*
++ * Warn about a page cache invalidation failure during a direct io write.
++ */
++void dio_warn_stale_pagecache(struct file *filp)
++{
++	static DEFINE_RATELIMIT_STATE(_rs, 30 * HZ, DEFAULT_RATELIMIT_BURST);
++	char pathname[128];
++	struct inode *inode = file_inode(filp);
++	char *path;
++
++	errseq_set(&inode->i_mapping->wb_err, -EIO);
++	if (__ratelimit(&_rs)) {
++		path = file_path(filp, pathname, sizeof(pathname));
++		if (IS_ERR(path))
++			path = "(unknown)";
++		pr_crit("Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!\n");
++		pr_crit("File: %s PID: %d Comm: %.20s\n", path, current->pid,
++			current->comm);
++	}
++}
++
+ /**
+  * dio_complete() - called when all DIO BIO I/O has been completed
+  * @offset: the byte offset in the file of the completed operation
+@@ -290,7 +311,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, unsigned int flags)
+ 		err = invalidate_inode_pages2_range(dio->inode->i_mapping,
+ 					offset >> PAGE_SHIFT,
+ 					(offset + ret - 1) >> PAGE_SHIFT);
+-		WARN_ON_ONCE(err);
++		if (err)
++			dio_warn_stale_pagecache(dio->iocb->ki_filp);
+ 	}
+ 
+ 	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 5011a96..028f329 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -753,7 +753,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 		err = invalidate_inode_pages2_range(inode->i_mapping,
+ 				offset >> PAGE_SHIFT,
+ 				(offset + dio->size - 1) >> PAGE_SHIFT);
+-		WARN_ON_ONCE(err);
++		if (err)
++			dio_warn_stale_pagecache(iocb->ki_filp);
+ 	}
+ 
+ 	inode_dio_end(file_inode(iocb->ki_filp));
+@@ -1012,9 +1013,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret)
+ 		goto out_free_dio;
+ 
++	/*
++	 * Try to invalidate cache pages for the range we're direct
++	 * writing.  If this invalidation fails, tough, the write will
++	 * still work, but racing two incompatible write paths is a
++	 * pretty crazy thing to do, so we don't support it 100%.
++	 */
+ 	ret = invalidate_inode_pages2_range(mapping,
+ 			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
+-	WARN_ON_ONCE(ret);
++	if (ret)
++		dio_warn_stale_pagecache(iocb->ki_filp);
+ 	ret = 0;
+ 
+ 	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 2690864..0e5f060 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2976,6 +2976,7 @@ enum {
+ };
+ 
+ void dio_end_io(struct bio *bio);
++void dio_warn_stale_pagecache(struct file *filp);
+ 
+ ssize_t __blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 			     struct block_device *bdev, struct iov_iter *iter,
