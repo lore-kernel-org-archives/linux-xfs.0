@@ -1,156 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41514 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751443AbdK0V3u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 16:29:50 -0500
-Date: Tue, 28 Nov 2017 08:29:46 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:16967 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751263AbdKUW2L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 17:28:11 -0500
+Date: Wed, 22 Nov 2017 09:28:06 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171127212946.GY5858@dastard>
-References: <20171121173557.GB6004@bfoster.bfoster>
- <20171122022645.GR5858@dastard>
- <20171122122100.GA9984@bfoster.bfoster>
- <20171122204126.GA19041@bfoster.bfoster>
- <20171123002401.GT5858@dastard>
- <20171123143652.GA22032@bfoster.bfoster>
- <20171123215457.GU5858@dastard>
- <20171124145121.GA26516@bfoster.bfoster>
- <20171125232010.GW5858@dastard>
- <20171127184651.GA39719@bfoster.bfoster>
+Subject: Re: [PATCH v2] iomap: report collisions between directio and
+ buffered writes to userspace
+Message-ID: <20171121222806.GQ5858@dastard>
+References: <20171117193925.GM5119@magnolia>
+ <20171120161829.GA25991@bombadil.infradead.org>
+ <20171120202606.GN5858@dastard>
+ <20171120215100.GB8933@bombadil.infradead.org>
+ <20171120222749.GO5858@dastard>
+ <20171121013753.GA12441@magnolia>
+ <20171121043240.GB8774@bombadil.infradead.org>
+ <20171121064815.GP5858@dastard>
+ <20171121125253.GA1484@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171127184651.GA39719@bfoster.bfoster>
+In-Reply-To: <20171121125253.GA1484@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 01:46:51PM -0500, Brian Foster wrote:
-> On Sun, Nov 26, 2017 at 10:20:10AM +1100, Dave Chinner wrote:
-> > On Fri, Nov 24, 2017 at 09:51:22AM -0500, Brian Foster wrote:
-> > > On Fri, Nov 24, 2017 at 08:54:57AM +1100, Dave Chinner wrote:
-> > > > On Thu, Nov 23, 2017 at 09:36:53AM -0500, Brian Foster wrote:
-> > > > > On Thu, Nov 23, 2017 at 11:24:02AM +1100, Dave Chinner wrote:
-> > > > > That sounds reasonable, but at the same time I'm a bit concerned that I
-> > > > > think the ifree transaction should technically be refactored into a max
-> > > > > of the pre/post tx roll reservations similar to the write reservation
-> > > > > mentioned above. For example:
-> > > > > 
-> > > > > 	MAX(inode + inobt + finobt + agi + inode chunk + etc.,
-> > > > > 	    allocfree for inode chunk + (allocfree * nr inobts));
-> > > > 
-> > > > Yeah, I think you're right in that we need to we need to look at
-> > > > redefining the reservations at a higher level.
-> > > > 
-> > > > For this specific example, though, we have to take into account that
-> > > > a finobt modification to mark an inode free can insert a new record
-> > > > into the btree. Hence we have scope for a finobt block allocation
-> > > > and tree split, so we need to have allocfree reservations in the
-> > > > primary transaction.
-> > > > 
-> > > > Also, the inode btree modifications (and refcountbt, too) call
-> > > > xfs_free_extent() directly - they don't use deferops free list that
-> > > > is processed as an EFI/EFD op after the primary transaction has been
-> > > > rolled.  i.e:
-> > > > 
-> > > > xfs_btree_delrec
-> > > >   xfs_btree_free_block
-> > > >     xfs_inobt_free_block
-> > > >       xfs_free_extent
-> > > > 
-> > > > Hence the primary transaction reservation has to take into account
-> > > > that operations that remove a record from the tree can cause and
-> > > > extent to be freed. As such, the removal of an inode chunk - which
-> > > > removes the record from both the inobt and finobt - can trigger
-> > > > freespace tree modification directly.
-> > > > 
-> > > 
-> > > Ah, because the inobt doesn't use the agfl. It looks like we try to do
-> > > this in xfs_calc_finobt_res(), but it doesn't appear to be fully correct
-> > > because the allocfree res is only accounted for transactions that "do
-> > > not already account for free space btree modifications," according to
-> > > the comment. I don't recall the exact reasoning there off the top of my
-> > > head, but if I had to guess, this was probably just another instance of
-> > > "bolt something on to the transaction that appears to follow the pattern
-> > > of other transactions and doesn't explode."
-> > > 
-> > > Given that, it seems like the appropriate thing to do is in fact for the
-> > > transaction to include an independent allocfree res for the inode chunk,
-> > > the inobt and finobt. That justifies the existence of the current
-> > > allocfree in the pre-roll part of the transaction and would increase the
-> > > transaction size by one more allocfree in the finobt case (the inode
-> > > chunk should technically be part of the post-roll calculation).
-> > > 
-> > > Actually, with addition of some proper documentation that may also
-> > > obviate the need to do the whole pre/post tx roll thing because the
-> > > first part of the transaction will obviously be larger than a single
-> > > allocfree res for the second part (amazing how a little documentation to
-> > > establish/assess intent can save us time from trying to work backwards
-> > > from the transaction :P).
-> > > 
-> > > Ok, I think that gives me enough to go on to try and refactor at least
-> > > the inobt tx res bits. I'll take a closer look next week, thanks for all
-> > > of the feedback.
+On Tue, Nov 21, 2017 at 04:52:53AM -0800, Matthew Wilcox wrote:
+> On Tue, Nov 21, 2017 at 05:48:15PM +1100, Dave Chinner wrote:
+> > On Mon, Nov 20, 2017 at 08:32:40PM -0800, Matthew Wilcox wrote:
+> > > On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
+> > > > On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
+> > > > > First thing I noticed was that "xa" as a prefix is already quite
+> > > > > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
+> > >
+> > > The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
+> > > use more than a two-letter acronym for whatever the XArray ends up being
+> > > called.  One of the problems with the radix tree is that everything has
+> > > that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
+> > > makes a huge improvement to readability.
 > > 
-> > Actually, I wrote a patch as I was working all this out :p
+> > Yeah, understood. That's why
+> > we have very little clear
+> > prefix namespace left.... :/
 > > 
-> > Not complete, or anything like that, but I've attached it below
-> > so you've got some idea of what I was thinking....
-> > 
+> > [ somedays I write something that looks sorta like a haiku, and from
+> > that point on everything just starts falling out of my brain that
+> > way. I blame Eric for this today! :P ]
 > 
-> Ok. While I get the basic idea, this isn't quite what I was thinking
-> with regard to the finobt bits. The current finobt reservation applies
-> the allocation part of the logic only when the higher level transaction
-> doesn't already include the allocfree res.
+> When the namespace is
+> tight we must consider the
+> competing users.
+> 
+> The earliest us'r
+> has a claim to a prefix
+> we are used to it.
+> 
+> Also a more wide-
+> spread user has a claim to
+> a shorter prefix.
+> 
+> Would you mind changing
+> your prefix to one only
+> one letter longer?
 
-Which is wrong, as we've already discussed. If we are doing an
-allocation of [f]inobt blocks, we need an allocfree reservation for
-that specific operation.
+We can do something
+like that, though Darrick has the
+final say in it.
 
-> This kind of handwaves away
-> the finobt allocfree res by assuming the existing transaction
-> reservation would cover the blocks alloc'd/freed by the finobt.
->
-> IOW, there isn't really a clear separation between the modify and
-> allocation cases for the finobt as there is for the inobt. The finobt
-> can add/remove a record in either of those cases. The requirement to add
-> an additional allocfree res with the finobt operation pretty much
-> invalidates the finobt modify case, I think.
+> ... ok, I give up ;-)
 
-Sure. What I did was separate allocation vs no allocation
-(modification) in terms of what the tree operation requires. But
-that doesn't mean we actually use the modification variant for
-finobt if all operations we take reservations for could require
-allocation.
+Top marks for effort :)
 
-It's the difference between "this is the reservation for a pure
-record modification operation" vs "this is the reservation for a
-record modification operation that *may* require record insertion or
-deletion and hence allocation/freeing"
+> All your current usage of the xa_ prefix looks somewhat like this:
+> 
+> fs/xfs/xfs_trans_ail.c: spin_lock(&ailp->xa_lock);
+> 
+> with honourable mentions to:
+> fs/xfs/xfs_log.c:	spin_lock(&mp->m_ail->xa_lock);
+> 
+> Would you mind if I bolt a patch on to the front of the series called
+> something like "free up xa_ namespace" that renamed your xa_* to ail_*?
+> There are no uses of the 'ail_' prefix in the kernel today.
+> 
+> I don't think that
+> 	spin_lock(&ailp->ail_lock);
+> loses any readability.
 
-> Also, it looks like this makes some other changes that are not
-> immediately clear to me,
+Not sure that's going to work - there's an "xa_ail" member for the
+AIL list head. That would now read in places:
 
-Which ones?
+	if (list_empty(&ailp->ail_ail))
 
-> squashes in a couple of the fixes I've already
-> made and doesn't actually add a new allocfree res in some of the
-> create/alloc calculations (but rather refactors the existing allocfree
-> res to use the new helper). It's not clear to me if the latter is
-> intentional..?
+I'd be inclined to just drop the "xa_" prefix from the XFS
+structure.  There is no information loss by removing the prefix in
+the XFS code because the pointer name tells us what structure it is
+pointing at.
 
-Not sure what you are asking? I factored existing open-coded inobt
-reservations to use helpers so that I didn't have to modify the
-reservation in lots of places. Get it right in one place, all the
-others are correct too. Indeed, most of the cases I factored already
-had the allocfree reservation, so I'm not sure why we'd be adding a
-new one to those reservations?
+> 
+> By the way, what does AIL stand for?  It'd be nice if it were spelled out
+> in at least one of the header files, maybe fs/xfs/xfs_trans_priv.h?
 
-And, keep in mind that I did say "the patch is just what I wrote as
-I discovered problems" before tearing into it about not being
-complete a complete solution....
+Active Item List. See the section "Tracking Changes" in
+Documentation/filesystems/xfs-delayed-logging-design.txt for the
+full rundown, but in short:
+
+"The log item is already used to track the log items that have been
+written to the log but not yet written to disk. Such log items are
+considered "active" and as such are stored in the Active Item List
+(AIL) which is a LSN-ordered double linked list. Items are inserted
+into this list during log buffer IO completion, after which they are
+unpinned and can be written to disk."
+
+The lack of comments describing the AIL is historic - it's never
+been documented in the code, nor has the whole relogging concept it
+implements. I wrote the document above when introducing the CIL
+(Commited Item List) because almost no-one actively working on XFS
+understood how the whole journalling subsystem worked in any detail.
+
+> > Zoetrope Array.
+> > Labyrinth of illusion.
+> > Structure never ends.
+> 
+> Thank you for making me look up zoetrope ;-)
+
+My pleasure :)
 
 Cheers,
 
