@@ -1,97 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:45775 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756730AbdKPJOP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2017 04:14:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40636 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751145AbdKUTpI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Nov 2017 14:45:08 -0500
+Date: Tue, 21 Nov 2017 11:45:05 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: more fixes for 4.15
+Message-ID: <20171121194505.GD2135@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171116012707.GB5130@magnolia>
-References: <20171116012707.GB5130@magnolia>
-From: Ilya Dryomov <idryomov@gmail.com>
-Date: Thu, 16 Nov 2017 10:14:14 +0100
-Message-ID: <CAOi1vP8QzuZRFosZWHi4Hb8=WC1jAqXFHwH28PyoOV6eXScnQw@mail.gmail.com>
-Subject: Re: [PATCH] iomap: report collisions between directio and buffered
- writes to userspace
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Thu, Nov 16, 2017 at 2:27 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> If two programs simultaneously try to write to the same part of a file
-> via direct IO and buffered IO, there's a chance that the post-diowrite
-> pagecache invalidation will fail on the dirty page.  When this happens,
-> the dio write succeeded, which means that the page cache is no longer
-> coherent with the disk!  Programs are not supposed to mix IO types and
-> this is a clear case of data corruption, so store an EIO which will be
-> reflected to userspace during the next fsync.  Get rid of the WARN_ON
-> to assuage the fuzz-tester complaints.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/iomap.c |   25 +++++++++++++++++++++++--
->  1 file changed, 23 insertions(+), 2 deletions(-)
->
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 5011a96..9f0e8d4 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -711,6 +711,19 @@ struct iomap_dio {
->         };
->  };
->
-> +static void iomap_warn_stale_pagecache(struct inode *inode)
-> +{
-> +       static DEFINE_RATELIMIT_STATE(_rs,
-> +                       DEFAULT_RATELIMIT_INTERVAL,
-> +                       DEFAULT_RATELIMIT_BURST);
-> +
-> +       errseq_set(&inode->i_mapping->wb_err, -EIO);
-> +       if (__ratelimit(&_rs)) {
-> +               pr_crit("Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!\n");
-> +               dump_stack_print_info(KERN_CRIT);
-> +       }
-> +}
-> +
->  static ssize_t iomap_dio_complete(struct iomap_dio *dio)
->  {
->         struct kiocb *iocb = dio->iocb;
-> @@ -753,7 +766,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
->                 err = invalidate_inode_pages2_range(inode->i_mapping,
->                                 offset >> PAGE_SHIFT,
->                                 (offset + dio->size - 1) >> PAGE_SHIFT);
-> -               WARN_ON_ONCE(err);
-> +               if (err)
-> +                       iomap_warn_stale_pagecache(inode);
->         }
->
->         inode_dio_end(file_inode(iocb->ki_filp));
-> @@ -1012,9 +1026,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->         if (ret)
->                 goto out_free_dio;
->
-> +       /*
-> +        * Try to invalidate cache pages for the range we're direct
-> +        * writing.  If this invalidation fails, tough, the write will
-> +        * still work, but racing two incompatible write paths is a
-> +        * pretty crazy thing to do, so we don't support it 100%.
-> +        */
->         ret = invalidate_inode_pages2_range(mapping,
->                         start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> -       WARN_ON_ONCE(ret);
-> +       if (ret)
-> +               iomap_warn_stale_pagecache(inode);
->         ret = 0;
->
->         if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
+Hi Linus,
 
-Shouldn't the same be done for the non-iomap path as well?
-dio_complete() has a similar WARN_ON_ONCE().
+Here are a couple more patches to fix a memory leak and some refactoring
+to make it easier to keep xfsprogs' libxfs in sync with the kernel.
 
-Thanks,
+--D
 
-                Ilya
+The following changes since commit 2015a63dce8d73a439232a0d5162c88d8513101e:
+
+  xfs: fix type usage (2017-11-16 12:06:45 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.15-merge-3
+
+for you to fetch changes up to 274e0a1f4777b9362fc03a34e86358cc36003e48:
+
+  xfs: abstract out dev_t conversions (2017-11-21 01:44:53 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix a memory leak in the new in-core extent map.
+- Refactor the xfs_dev_t conversions for easier xfsprogs porting
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: abstract out dev_t conversions
+
+Shu Wang (1):
+      xfs: fix memory leak in xfs_iext_free_last_leaf
+
+ fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c |  8 ++------
+ fs/xfs/xfs_linux.h             | 10 ++++++++++
+ 3 files changed, 13 insertions(+), 7 deletions(-)
