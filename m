@@ -1,40 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49774 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:31141 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751305AbdKUCQL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Nov 2017 21:16:11 -0500
-Subject: Re: [PATCH] xfs: abstract out dev_t conversions
-References: <20171120093356.16355-1-hch@lst.de>
- <20171121014832.GA2135@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6f6b1348-6329-a539-09e8-9a29fb3bf227@sandeen.net>
-Date: Mon, 20 Nov 2017 20:16:09 -0600
+        id S1750762AbdKUFwW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Nov 2017 00:52:22 -0500
+Date: Tue, 21 Nov 2017 13:52:20 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [ANNOUNCE] xfsprogs: master updated to 5bb4307 / v4.14.0-rc2
+Message-ID: <20171121055220.GL2749@eguan.usersys.redhat.com>
+References: <eee6bf62-e997-ec85-5e9d-26a23f7ee9f8@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20171121014832.GA2135@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <eee6bf62-e997-ec85-5e9d-26a23f7ee9f8@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 11/20/17 7:48 PM, Darrick J. Wong wrote:
-> On Mon, Nov 20, 2017 at 10:33:56AM +0100, Christoph Hellwig wrote:
->> And move them to xfs_linux.h so that xfsprogs can stub them out more
->> easily.
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Nov 20, 2017 at 02:15:35PM -0600, Eric Sandeen wrote:
+> Hi folks,
 > 
-> Looks ok, but I want Eric to have a quick look at this because he's the
-> stuckee on this one. :P
+> The xfsprogs repository at:
 > 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> 
+> has just been updated and tagged with v4.14.0-rc2 on the master
+> branch.
+> 
+> (I've also retroactively updated the release files for rc1, and
+> this is all now merged to the master branch as well).
+> 
+> Patches often get missed, so please check if your outstanding
+> patches were in this update. If they have not been in this update,
+> please resubmit them to linux-xfs@vger.kernel.org so they can be
+> picked up in the next update.
+> 
+> The new head of the master branch is commit:
+> 
+> 5bb4307 xfsprogs: Release v4.14.0-rc2
+> 
+> This is likely the last rc; there is a remote possibility that the
+> ranged fiemap patch will get in yet but I'd like to see the tests
+> in place for that before merging - so it'll probably slip.
 
-I'm probably slow but I'm seeing neither big problems nor big solutions
-from this patch; IOWS - fine by me?  :)
+I was kinda waiting for the final expected behaviors to be determined
+first :) e.g. truncate data/hole on range boundaries or not, because
+your patch and Nikolay's patch are doing it differently, at least in the
+"range boundary is in the middle of hole" case.
 
--Eric
+Thanks,
+Eryu
