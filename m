@@ -1,54 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36423 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdKURXu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 12:23:50 -0500
-Date: Tue, 21 Nov 2017 09:23:47 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171121172347.GA7640@bombadil.infradead.org>
-References: <20171117193925.GM5119@magnolia>
- <20171120161829.GA25991@bombadil.infradead.org>
- <20171120202606.GN5858@dastard>
- <20171120215100.GB8933@bombadil.infradead.org>
- <20171120222749.GO5858@dastard>
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:40894 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751290AbdKUR4c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 12:56:32 -0500
+Received: by mail-wr0-f176.google.com with SMTP id s41so6651807wrc.7
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2017 09:56:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171120222749.GO5858@dastard>
+In-Reply-To: <CAOFm3uE52WQ5JO1oRYctDjOfxiPLUi38xCxjV7vty=a=TiBWiA@mail.gmail.com>
+References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de>
+ <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
+ <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com>
+ <20171120153105.38d2b892@alans-desktop> <CAOFm3uE52WQ5JO1oRYctDjOfxiPLUi38xCxjV7vty=a=TiBWiA@mail.gmail.com>
+From: Philippe Ombredanne <pombredanne@nexb.com>
+Date: Tue, 21 Nov 2017 18:55:49 +0100
+Message-ID: <CAOFm3uEzRMf261+O-Nm+9HDoEn9RbFjH=5J9i1C2GgMUg2G4LA@mail.gmail.com>
+Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Charlemagne Lasse <charlemagnelasse@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
-> On Mon, Nov 20, 2017 at 01:51:00PM -0800, Matthew Wilcox wrote:
-> > If you want an example of it in use, I'm pretty happy with this patch
-> > that switches the brd driver entirely from the radix tree API to the
-> > xarray API:
-> > 
-> > http://git.infradead.org/users/willy/linux-dax.git/commitdiff/dbf96ae943e43563cbbaa26e21b656b6fe8f4b0f
-> 
-> Looks pretty neat, but I'll reserve judgement for when I see the
-> conversion of the XFS radix tree code....
+On Tue, Nov 21, 2017 at 2:57 PM, Philippe Ombredanne
+<pombredanne@nexb.com> wrote:
+> Alan, Linus,
+>
+> On Mon, Nov 20, 2017 at 4:31 PM, Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
+>> On Sat, 18 Nov 2017 11:14:00 -0800
+>> Linus Torvalds <torvalds@linux-foundation.org> wrote:
+>>
+>>> You may be confusing things because of a newer version.
+>>>
+>>> On Sat, Nov 18, 2017 at 11:03 AM, Charlemagne Lasse
+>>> <charlemagnelasse@gmail.com> wrote:
+>>> >
+>>> > That should be "GNU Lesser General Public" and not "GNU Library General Public"
+>>>
+>>> That's just FSF revisionism.
+>
+> Linus:
+>
+> Revisionism it is indeed! Please see the fun and twisted tale of the
+> five official GPL texts below.
+>
+>
+>>> It used to be called "Library" over "Lesser", in the original GPL2.
+>>>
+>>> I suspect your other issues are similar "there's been different
+>>> versions over time" things. the address being one of them.
+>>>
+>>> We've actually taken some of the FSF updates over the years ("19yy" ->
+>>> "<year>", and the address change) but the main COPYING file still
+>>> calls the LGPL the "GNU Library General Public License".
+>>>
+>>> I refuse to change the original copyright wording due to idiotic
+>>> internal FSF politics that tried to change history.
+>>
+>> Do we have any files which had the later LGPL text attached to them - if
+>> so then they should be keeping that header.
+>>
+>> Which raises another question. If there are multiple GPL 2.0 texts which
+>> are *supposedly* legally identical but this has never been tested in law
+>> -that implies SPDX is wrong in tagging them identically in case they turn
+>> out not to be...
+>
+> Alan:
+>
+> This last comment rings as a red herring to me. There are many minute
+> variations of the GPL around and these are unlikely relevant.
+> No sane judge would consider any of these variations material IMHO and
+> should fine and throw in jail for contempt anyone arguing that this is
+> important.
+>
+> Now, on the fun side, I discovered a while back through fixing a bug
+> in scancode-toolkit that there are FIVE versions of the official GPL
+> 2.0 texts published by the FSF over the years. I am ashamed that I end
+> up doing this research and I would never thought I would need to
+> rummage through this pile.... but that came up while reviewing kernel
+> license scans and a few other scans to support Thomas and Greg
+> licensing clarification efforts.
+>
+> Shocking, isn't it?
+>
+> Let me call these GPL versions the GPL-2.0.0, GPL-2.0.1, GPL-2.0.2,
+> GPL-2.0.3 and GPL-2.0.4 :D
+>
+> (but please this one time only!, let's forget about these afterwards)
+>
+> GPL-2.0.4 v5. The most recent one was published after the GPL 3.0
+> publication [1] [2]. It refers to the `Franklin Street` address and to
+> the `GNU Lesser General Public License` top and bottom
+>
+> GPL-2.0.3 v4. Slightly after the HTML publication of the new address
+> in v3, the address was changed in the text version [3]: It refers to
+> the  `Franklin Street` address and to the `GNU Library General Public
+> License` top and bottom.
+>
+> GPL-2.0.2 v3. The previous one in force before the publication of the
+> GPL 3.0 came about the time of the FSF office move on May 1, 2005 to
+> Franklin Street [4] In this HTML version, it refers to the `Franklin
+> St` address and uses the `GNU Library General Public License` at the
+> top and `GNU Lesser General Public License`  at the bottom with a
+> conflicted opinion on which one of the LGPL 2 or 2.1 version to use.
+>
+> GPL-2.0.1 v2. Around December 2003, a variation was published [5]. It
+> also predates the move to Franklin and it refers to the `Temple Place`
+> address and the `GNU Library General Public License` at the top and
+> `GNU Lesser General Public License`  at the bottom. Still split on
+> confused about which LGPL version to recommend.
+>
+> GPL-2.0.1 v1. The one true and only original GPL 2.0.... the oldest
+> cached version [6] predates the move and it refers to the `Temple
+> Place` address and the `GNU Library General Public License`
+> throughout.
+>
+> FWIW, I made sure I have all these texts as scancode detection rules
+> so I would get 100% exact hash matches on these oddities.
+>
+> Now you will surely agree with me that the sole sane conclusion of
+> studying this mess is that there must some unhappy ghost that
+> triggered these text changes when the FSF moved from Temple Place to
+> Franklin Street in protest for the move. The only other possible
+> explanation I could fathom would be a bug in their teletype [7].
+>
+> [1] https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+> [2] http://web.archive.org/web/20070716031727/http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+> [3] http://web.archive.org/web/20050511030123/http://www.fsf.org/licensing/licenses/gpl.txt
+> [4] http://web.archive.org/web/20050507090312/http://www.fsf.org/licensing/licenses/gpl.html
+> [5] http://web.archive.org/web/20031202220858/http://www.fsf.org/copyleft/gpl.html
+> [6] http://web.archive.org/web/19980119061851/http://www.fsf.org/copyleft/gpl.html
+> [7] https://en.wikipedia.org/wiki/IBM_Selectric_typewriter
 
-Challenge accepted.  This was a good thing for me to do because I found
-some opportunities to improve the XArray API.
+Now in earnest here is the situation: There is NO trustworthy version
+of an official GPL 2.0 text: the FSF official texts are all fubar (if
+only in small and subtle ways). The FSF texts should be authoritative,
+but then which one? they published more GPL 2.0 versions than most. So
+we would be hard pressed to blame SPDX or the OSI for having their own
+minor variant.
 
-Changes since yesterday:
+Then in digging further, I found the ONE true original GPL with a file
+time stamp on June 2 1991, 01:50 (AM?, PM? unknown time zone?)  ! in
+an old GCC archive.
 
- - Added XA_NO_TAG
- - Added 'max' parameters to xa_get_entries() and xa_get_tagged()
- - Changed the order of the arguments of xa_get_entries() and xa_get_tagged()
-   to match the radix tree equivalents
+For the posterity and everyone's enjoyment I have built a git history
+of GPL 2.0 Mark1 to Mark6
 
-You can see the patches on that (rebased) branch:
+See https://github.com/pombredanne/gpl-history/commits/master/COPYING
 
-xfs: Convert mru cache to XArray
-xfs: Convert xfs dquot to XArray
-xfs: Convert pag_ici_root to XArray
-xfs: Convert m_perag_tree to XArray
+Each commit message has the link to the original archive.org page or
+archive download.
 
-or did you want me to send them by email?
+For simplified diffs, the allvers/ dir contains all the versions of the texts.
+
+Acks and reviews are welcomed, but not really.
+
+I also added a shorter history of the Linux COPYING text. The first
+version in Linus's git tree is based on the very fine and well tuned
+GPL 2 Mark4, the first fully Y2K compliant version of the GPL 2, as
+you can see from the diffs with the former Mark3: that was dangerously
+stuck in the last century.
+
+The current version in is based on a rare GPL 2.0 Mark5.1 aka
+"Franklin St",  that I do not have in my history yet and spells
+"Franklin St." rather than "Franklin Street."
+Therefore there is likely another GPL 2.0 version between Mark4 and
+Mark5 that I have yet to find and may not have been caught by the
+archive.org spiders. Here help and patches welcomed: this is likely
+an important missing link.
+
+Linus:
+I am rather sad to see that you never adopted the GPL 2.0 Mark6 ;)
+aka. the  "final frontier" or "graveyard" release that came after the
+GPL 3 launch and when the GPL 2.0 was made an "old" license: this
+latest version is the finest ever published and I am sure we are all
+missing out something worthy!
+
+I look forward to the future publication of Mark7 and all the fine GPL
+2.0 versions to come that we should all long for.
+
+-- 
+Cordially
+Philippe Ombredanne aka. the unwelcomed GPL archeologist
