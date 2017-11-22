@@ -1,88 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47678 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751651AbdKVRxm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 12:53:42 -0500
-Date: Wed, 22 Nov 2017 18:53:46 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171122175346.GB6528@kroah.com>
-References: <20171107020607.GA26910@magnolia>
- <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com>
- <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org>
- <20171107192846.GA24617@infradead.org>
- <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
- <20171122170713.GD12684@amd>
+Received: from bombadil.infradead.org ([65.50.211.133]:37056 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbdKVTxU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 14:53:20 -0500
+Date: Wed, 22 Nov 2017 11:53:18 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 01/18] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Message-ID: <20171122195318.GA29485@bombadil.infradead.org>
+References: <20171101153648.30166-1-jack@suse.cz>
+ <20171101153648.30166-2-jack@suse.cz>
+ <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
+ <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171122170713.GD12684@amd>
+In-Reply-To: <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Kees Cook <keescook@chromium.org>, Florian Weimer <fweimer@redhat.com>, John Hubbard <jhubbard@nvidia.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
 
-On Wed, Nov 22, 2017 at 06:07:13PM +0100, Pavel Machek wrote:
-> Lets look at random file in usb:
+On Wed, Nov 22, 2017 at 08:52:37AM -0800, Dan Williams wrote:
+> On Wed, Nov 22, 2017 at 4:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
+> > On 11/01/2017 04:36 PM, Jan Kara wrote:
+> >> From: Dan Williams <dan.j.williams@intel.com>
+> >>
+> >> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+> >> unknown flags. However, proposals like MAP_SYNC need a mechanism to
+> >> define new behavior that is known to fail on older kernels without the
+> >> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
+> >> guaranteed to fail on all legacy mmap implementations.
+> >
+> > So I'm trying to make sense of this together with Michal's attempt for
+> > MAP_FIXED_SAFE [1] where he has to introduce a completely new flag
+> > instead of flag modifier exactly for the reason of not validating
+> > unknown flags. And my conclusion is that because MAP_SHARED_VALIDATE
+> > implies MAP_SHARED and excludes MAP_PRIVATE, MAP_FIXED_SAFE as a
+> > modifier cannot build on top of this. Wouldn't thus it be really better
+> > long-term to introduce mmap3 at this point? ...
 > 
-> // SPDX-License-Identifier: GPL-2.0+
-> /*
->  * Driver for SMSC USB3503 USB 2.0 hub controller driver
->  *
->  * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
->  */
-> ...
-> MODULE_LICENSE("GPL");
-> 
-> ...do we agree that this is nowhere near distration-free? Ugly //
-> comment that screams for attention, away from other copyright info, it
-> hurts your eyes...
-> 
-> This would be improvement:
-> 
-> /*
->  * Driver for SMSC USB3503 USB 2.0 hub controller driver
->  *
->  * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
->  *
->  * SPDX-License-Identifier: GPL-2.0+
->  */
-> 
-> ...but what is above is just uuuugly.
-> 
-> ...as is MODULE_LICENSE having completely different tags from SPDX.
-> 
-> This would be even better:
-> 
-> /*
->  * Driver for SMSC USB3503 USB 2.0 hub controller driver
->  *
->  * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
->  */
-> ...
-> SPDX_MODULE_LICENSE("GPL-2.0+")
-> 
-> So yes, SPDX can be improvement. But in current implementation it is
-> not.
+> We have room to define MAP_PRIVATE_VALIDATE in MAP_TYPE on every arch
+> except parisc. Can we steal an extra bit for MAP_TYPE from somewhere
+> else on parisc?
 
-Again, as people seem to keep still missing this point, Linus asked for
-the format to look like it does today, using // at the top.  Thomas and
-I originally did it first the way with the SPDX line in the big comment
-block.
+It looks like 0x08 should work.  But I don't have an HPUX machine around
+to check that HP didn't use that bit for something else.
 
-If you don't like the format, complain and convince him otherwise, you
-are not getting anywhere by responding to this old topic about it
-again.
-
-Having it be the first line of the file is good, it's obvious, and
-stands out, which is the point, you want it to, it's a license :)
-
-thanks,
-
-greg k-h
+It'd probably help to cc the linux-parisc mailing list when asking
+questions about PARISC, eh?
