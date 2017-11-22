@@ -1,87 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from osg.samsung.com ([64.30.133.232]:44231 "EHLO osg.samsung.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752205AbdKVLv0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Nov 2017 06:51:26 -0500
-Date: Wed, 22 Nov 2017 09:51:17 -0200
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
-Message-ID: <20171122095117.49c558a4@vento.lan>
-In-Reply-To: <alpine.DEB.2.20.1711221207460.1751@nanos>
-References: <20171116183306.103584007@linutronix.de>
-        <20171116184358.398030394@linutronix.de>
-        <alpine.DEB.2.20.1711171057240.1709@nanos>
-        <20171117150639.0e706421@vento.lan>
-        <alpine.DEB.2.20.1711171850330.2186@nanos>
-        <20171117183946.GA28533@lst.de>
-        <alpine.DEB.2.20.1711221207460.1751@nanos>
+Received: from mail-ua0-f171.google.com ([209.85.217.171]:34859 "EHLO
+        mail-ua0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbdKVMwl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 07:52:41 -0500
+Received: by mail-ua0-f171.google.com with SMTP id 108so10529490uaf.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 04:52:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Romeo Theriault <romeotheriault@gmail.com>
+Date: Wed, 22 Nov 2017 02:52:40 -1000
+Message-ID: <CAL4D3QFpES1U1pCQ3md2Jiiqm0E5L5KhG4T77gnyEiom-EZBgw@mail.gmail.com>
+Subject: Display project quotas without
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: linux-xfs@vger.kernel.org
 
-Em Wed, 22 Nov 2017 12:12:04 +0100 (CET)
-Thomas Gleixner <tglx@linutronix.de> escreveu:
+Hello, Is it possible to display project quotas without the
+/etc/projid file? I have a need to display the quotas without this (or
+the /etc/project file) and just display the quotas with the id's.
 
-> On Fri, 17 Nov 2017, Christoph Hellwig wrote:
-> > On Fri, Nov 17, 2017 at 07:11:41PM +0100, Thomas Gleixner wrote:  
-> > > Introcude a MODULE_LICENSE_SPDX macro which flags the module info storage
-> > > as 'SPDXIFY' and let the postprocessor do:  
-> > 
-> > Shouldn;t this be a FILE_LICENSE_SPDX?  I'd also much prefer that over
-> > the nasty C99 comments to start with.  And while I'm a bit behind on
-> > email I still haven't managed to find a good rationale for those to
-> > start with.
+For example,
 
-Yeah, I also find nasty to have things like this on each C file:
+xfs_quota -x -c 'report -p'
 
-// SPDX-License-Identifier: GPL-2.0
-/*
- * Copyright ...
- * ...
- */
+displays nothing until I add a /etc/projid file.
 
-Also, one may forget that headers use /**/ and end by doing the wrong
-thing, as a common practice is to just cut-and-paste the same copyright
-header on both C and H files at development time.
-
-> > 
-> > So it would be good to figure this out before people start spamming
-> > the lists with all kinds of mass conversions and checkpatch fixes
-> > for licensing..  
-> 
-> I tried solving this with a macro in the first place and ran into issues:
-> 
->    - Does not work in headers, especially not in UAPI ones
-
-Make headers_install could replace such macros by SPDX comments when
-installing on userspace.
-
->    - Breaks in assembly, boot and other special source files. There was no
->      easy solution to that and the result would have been to have macros in
->      some files and not in others.
-
-At the end, we have different markups, depending on the file type.
-I guess the main problem of using a macro is that a module composed
-by multiple C files will end by defining it multiple times. Not sure
-if gcc would do the right thing on grouping everything altogether
-and producing the right equivalent to MODULE_LICENSE().
-
-Also, at least on media, I found cases where the same module
-has multiple licenses, e. g. some files that are grouped together on
-a module are GPL v2 only, while others are GPL v2+.
-
-> So the fallback was to use a comment and Linus decided the '//' style.
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Anyway around this? Using xfs_db or xfs_io somehow?
 
 Thanks,
-Mauro
+
+-- 
+Romeo Theriault
