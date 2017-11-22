@@ -1,151 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22524 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751408AbdKVAFp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 19:05:45 -0500
-Date: Tue, 21 Nov 2017 16:05:06 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171122000506.GF2135@magnolia>
-References: <20171117193925.GM5119@magnolia>
- <20171120161829.GA25991@bombadil.infradead.org>
- <20171120202606.GN5858@dastard>
- <20171120215100.GB8933@bombadil.infradead.org>
- <20171120222749.GO5858@dastard>
- <20171121013753.GA12441@magnolia>
- <20171121043240.GB8774@bombadil.infradead.org>
- <20171121064815.GP5858@dastard>
- <20171121125253.GA1484@bombadil.infradead.org>
- <20171121222806.GQ5858@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:60652 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751194AbdKVGrM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Nov 2017 01:47:12 -0500
+Date: Wed, 22 Nov 2017 14:47:10 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v5] xfs: initial fiemap range query test
+Message-ID: <20171122064710.GP2749@eguan.usersys.redhat.com>
+References: <1511277416-3191-1-git-send-email-nborisov@suse.com>
+ <1511277416-3191-2-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171121222806.GQ5858@dastard>
+In-Reply-To: <1511277416-3191-2-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
 
-On Wed, Nov 22, 2017 at 09:28:06AM +1100, Dave Chinner wrote:
-> On Tue, Nov 21, 2017 at 04:52:53AM -0800, Matthew Wilcox wrote:
-> > On Tue, Nov 21, 2017 at 05:48:15PM +1100, Dave Chinner wrote:
-> > > On Mon, Nov 20, 2017 at 08:32:40PM -0800, Matthew Wilcox wrote:
-> > > > On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
-> > > > > On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
-> > > > > > First thing I noticed was that "xa" as a prefix is already quite
-> > > > > > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
-> > > >
-> > > > The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
-> > > > use more than a two-letter acronym for whatever the XArray ends up being
-> > > > called.  One of the problems with the radix tree is that everything has
-> > > > that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
-> > > > makes a huge improvement to readability.
-> > > 
-> > > Yeah, understood. That's why
-> > > we have very little clear
-> > > prefix namespace left.... :/
-> > > 
-> > > [ somedays I write something that looks sorta like a haiku, and from
-> > > that point on everything just starts falling out of my brain that
-> > > way. I blame Eric for this today! :P ]
-> > 
-> > When the namespace is
-> > tight we must consider the
-> > competing users.
-> > 
-> > The earliest us'r
-> > has a claim to a prefix
-> > we are used to it.
-> > 
-> > Also a more wide-
-> > spread user has a claim to
-> > a shorter prefix.
-> > 
-> > Would you mind changing
-> > your prefix to one only
-> > one letter longer?
+On Tue, Nov 21, 2017 at 05:16:56PM +0200, Nikolay Borisov wrote:
+> Fiemap gained support for passing in optional offset len
+> which denote the range requested, so this patch adds
+> testcases for this functionality. Aditionally, a special "ranged"
+> argument is added to the require_xfs_io_command which checks
+> for the presence of fiemap range support.
 > 
-> We can do something
-> like that, though Darrick has the
-> final say in it.
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+> V5: 
+>  * Drop changes to existing generic punch hole tests since 
+>  the new fiemap implementation don't require them 
+>  * Merge the common/rc change with this patch
+>  * Added Data + Hole + Data and Hole + Data tests as per Eryu's request
+>  * Adjusted output of some tests which fall in a hole, since holes are
+>  truncated to passed range
+>  * Simplified the logic to check for fiemap range support (Eryu)
 
-Keep this up and soon
-I'll require patch changelogs
-Written in Haiku. :P
+Thanks for the 5th version, looks good overall, though I have more
+comments, sorry for not bringing them up in previous reviews...
 
-(j/k)
+> 
+> V4: 
+>  * Added test description
+>  * Added new test for past-eof behavior
+>  * Removed supported_generic_fs line
+>  * Switched to using the "ranged" param require
+>  * Revert v3 changes
+> 
+> V3:
+>  * Adjusted tests for '-r' fiemap param
+>  * Tests for invalid -r combination
+> 
+> V2: No change
+> V1: No change
+>  common/rc         |   7 +++
+>  tests/xfs/900     | 101 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/900.out | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 233 insertions(+)
+>  create mode 100755 tests/xfs/900
+>  create mode 100644 tests/xfs/900.out
+> 
+> diff --git a/common/rc b/common/rc
+> index e2a8229..d0dd32d 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2053,6 +2053,13 @@ _require_xfs_io_command()
+>  			-c "$command 4k 8k" $testfile 2>&1`
+>  		;;
+>  	"fiemap")
+> +		# If 'ranged' is passed as argument then we check to see if fiemap supports
+> +		# ranged query params
+> +		if echo "$param" | grep -q "ranged"; then
+> +			param=$(echo "$param" | sed "s/ranged//")
+> +			$XFS_IO_PROG -c "help fiemap" | grep -q "\[offset \[len\]\]"
+> +			[ $? -eq 0 ] || _notrun "xfs_io $command ranged support is missing"
+> +		fi
+>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+>  			-c "fiemap -v $param" $testfile 2>&1`
+>  		param_checked=1
+> diff --git a/tests/xfs/900 b/tests/xfs/900
+> new file mode 100755
+> index 0000000..07f4f40
+> --- /dev/null
+> +++ b/tests/xfs/900
+> @@ -0,0 +1,101 @@
+> +#! /bin/bash
+> +# FS QA Test No. 900
+> +
+> +# Test for the new ranged query functionality in xfs_io's fiemap command.
+> +# This tests various combinations of hole + data layout being printed.
+> +# Also the test used 16k holes to be compatible with 16k block filesystems
+> +
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
+> +# Author: Nikolay Borisov <nborisov@suse.com>
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/punch
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_os Linux
+> +_require_scratch
 
-Everyone in the US, have a happy Thanksgiving!
+This test is in xfs dir and that means it's an xfs-specific test, better
+to have "_supported_fs xfs" for consistency.
 
---D
+But I'm wondering why not make it a generic test? There seems nothing
+xfs-specific. And I hacked the test and tested with ext4/btrfs, tests
+all passed.
 
-> > ... ok, I give up ;-)
-> 
-> Top marks for effort :)
-> 
-> > All your current usage of the xa_ prefix looks somewhat like this:
-> > 
-> > fs/xfs/xfs_trans_ail.c: spin_lock(&ailp->xa_lock);
-> > 
-> > with honourable mentions to:
-> > fs/xfs/xfs_log.c:	spin_lock(&mp->m_ail->xa_lock);
-> > 
-> > Would you mind if I bolt a patch on to the front of the series called
-> > something like "free up xa_ namespace" that renamed your xa_* to ail_*?
-> > There are no uses of the 'ail_' prefix in the kernel today.
-> > 
-> > I don't think that
-> > 	spin_lock(&ailp->ail_lock);
-> > loses any readability.
-> 
-> Not sure that's going to work - there's an "xa_ail" member for the
-> AIL list head. That would now read in places:
-> 
-> 	if (list_empty(&ailp->ail_ail))
-> 
-> I'd be inclined to just drop the "xa_" prefix from the XFS
-> structure.  There is no information loss by removing the prefix in
-> the XFS code because the pointer name tells us what structure it is
-> pointing at.
-> 
-> > 
-> > By the way, what does AIL stand for?  It'd be nice if it were spelled out
-> > in at least one of the header files, maybe fs/xfs/xfs_trans_priv.h?
-> 
-> Active Item List. See the section "Tracking Changes" in
-> Documentation/filesystems/xfs-delayed-logging-design.txt for the
-> full rundown, but in short:
-> 
-> "The log item is already used to track the log items that have been
-> written to the log but not yet written to disk. Such log items are
-> considered "active" and as such are stored in the Active Item List
-> (AIL) which is a LSN-ordered double linked list. Items are inserted
-> into this list during log buffer IO completion, after which they are
-> unpinned and can be written to disk."
-> 
-> The lack of comments describing the AIL is historic - it's never
-> been documented in the code, nor has the whole relogging concept it
-> implements. I wrote the document above when introducing the CIL
-> (Commited Item List) because almost no-one actively working on XFS
-> understood how the whole journalling subsystem worked in any detail.
-> 
-> > > Zoetrope Array.
-> > > Labyrinth of illusion.
-> > > Structure never ends.
-> > 
-> > Thank you for making me look up zoetrope ;-)
-> 
-> My pleasure :)
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Interesting thing is, test failed on XFS as:
+
+ Hole + Data
+ 0: [0..31]: hole
+-1: [32..63]: unwritten
++1: [32..33]: unwritten
+ Hole + Data + Hole
+ 0: [64..95]: hole
+ 1: [96..127]: unwritten
+@@ -14,7 +14,7 @@
+ Data + Hole + Data
+ 0: [32..63]: unwritten
+ 1: [64..95]: hole
+-2: [96..127]: unwritten
++2: [96..97]: unwritten
+
+The data extents were truncated. I was using Eric's v6 patch and v4.14+
+kernel, which contains the xfs updates for 4.15-rc1.
+
+> +_require_xfs_io_command "falloc"
+
+fpunch is used as well, maybe need "_require_xfs_io_command fpunch".
+
+But I'd like to avoid falloc and fpunch, so test runs on filesystems
+that don't support falloc/fpunch but support fiemap, e.g. ext3, to get
+better test coverage.
+
+> +# ranged is a special argument which checks if fiemap supports
+> +# [offset [len]] args
+> +_require_xfs_io_command "fiemap" "ranged"
+> +
+> +_scratch_mkfs > $seqres.full 2>&1
+> +_scratch_mount || _fail "mount failure"
+> +
+> +file=$SCRATCH_MNT/testfile
+> +$XFS_IO_PROG -f -c "falloc 0 1m" $file
+> +for i in {0..31}; do $XFS_IO_PROG -c "fpunch $(($i*32))k 16k" $file; done
+
+So I'd like to create $file with the following command:
+
+# Create a file with 16k hole followed by 16k data, and this pattern
+# repeats till it reaches 1M file size, so each extent has 16k data.
+# But truncate file to its final size first, otherwise XFS would merge
+# some extents due to speculative preallocation.
+$XFS_IO_PROG -fc "truncate 1m" $file
+for i in {0..31}; do
+	$XFS_IO_PROG -c "pwrite $(($i*32+16))k 16k" $file >/dev/null
+done
+
+Then update .out file, replace all "unwritten" with "data".
+
+
+And test is missing an entry in group file.
+
+Thanks,
+Eryu
