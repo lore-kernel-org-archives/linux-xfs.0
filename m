@@ -1,134 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:31114 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751443AbdKVC0t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 21:26:49 -0500
-Date: Wed, 22 Nov 2017 13:26:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171122022645.GR5858@dastard>
-References: <20171121150557.GA5014@bfoster.bfoster>
- <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
- <20171121173557.GB6004@bfoster.bfoster>
+Received: from osg.samsung.com ([64.30.133.232]:44231 "EHLO osg.samsung.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752205AbdKVLv0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Nov 2017 06:51:26 -0500
+Date: Wed, 22 Nov 2017 09:51:17 -0200
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
+ describe how to properly identify file licenses
+Message-ID: <20171122095117.49c558a4@vento.lan>
+In-Reply-To: <alpine.DEB.2.20.1711221207460.1751@nanos>
+References: <20171116183306.103584007@linutronix.de>
+        <20171116184358.398030394@linutronix.de>
+        <alpine.DEB.2.20.1711171057240.1709@nanos>
+        <20171117150639.0e706421@vento.lan>
+        <alpine.DEB.2.20.1711171850330.2186@nanos>
+        <20171117183946.GA28533@lst.de>
+        <alpine.DEB.2.20.1711221207460.1751@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171121173557.GB6004@bfoster.bfoster>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
-> cc linux-xfs
+Em Wed, 22 Nov 2017 12:12:04 +0100 (CET)
+Thomas Gleixner <tglx@linutronix.de> escreveu:
+
+> On Fri, 17 Nov 2017, Christoph Hellwig wrote:
+> > On Fri, Nov 17, 2017 at 07:11:41PM +0100, Thomas Gleixner wrote:  
+> > > Introcude a MODULE_LICENSE_SPDX macro which flags the module info storage
+> > > as 'SPDXIFY' and let the postprocessor do:  
+> > 
+> > Shouldn;t this be a FILE_LICENSE_SPDX?  I'd also much prefer that over
+> > the nasty C99 comments to start with.  And while I'm a bit behind on
+> > email I still haven't managed to find a good rationale for those to
+> > start with.
+
+Yeah, I also find nasty to have things like this on each C file:
+
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright ...
+ * ...
+ */
+
+Also, one may forget that headers use /**/ and end by doing the wrong
+thing, as a common practice is to just cut-and-paste the same copyright
+header on both C and H files at development time.
+
+> > 
+> > So it would be good to figure this out before people start spamming
+> > the lists with all kinds of mass conversions and checkpatch fixes
+> > for licensing..  
 > 
-> On Tue, Nov 21, 2017 at 10:51:10AM -0600, Mark Tinguely wrote:
-> > STATIC uint
-> > xfs_calc_ifree_reservation(
-> >         struct xfs_mount        *mp)
-> > {
-> >         return XFS_DQUOT_LOGRES(mp) +
-> >                 mp->m_sb.sb_inodesize +
-> >                 mp->m_sb.sb_sectsize +
-> >                 mp->m_sb.sb_sectsize +
-> >                 XFS_FSB_TO_B(mp, 1) +
-> >                 MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
-> >                     XFS_INODE_CLUSTER_SIZE(mp)) +
-> >                 128 * 5 +
-> >                 XFS_ALLOCFREE_LOG_RES(mp, 1) +
-> >                 128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
-> >                        XFS_ALLOCFREE_LOG_COUNT(mp, 1));
-> > }
-> > ...
+> I tried solving this with a macro in the first place and ran into issues:
 > 
-> Indeed, this looks fairly similar to the line cited above from the
-> current code (modulo the xfs_calc_buf_res() refactoring).
+>    - Does not work in headers, especially not in UAPI ones
 
-Right, the refactoring should have been a straight conversion of the
-code - and not change any of the reservations. If they were wrong
-before the refactoring, they will still be wrong now.
+Make headers_install could replace such macros by SPDX comments when
+installing on userspace.
 
-> I'm curious
-> why we only consider the buffer overhead (i.e., 128 bytes *
-> ->m_in_maxlevels) of the ->m_in_maxlevels value rather than the full
-> buffer size.
+>    - Breaks in assembly, boot and other special source files. There was no
+>      easy solution to that and the result would have been to have macros in
+>      some files and not in others.
 
-That just looks like a bug. Earlier on in the calculation we
-take into account:
+At the end, we have different markups, depending on the file type.
+I guess the main problem of using a macro is that a module composed
+by multiple C files will end by defining it multiple times. Not sure
+if gcc would do the right thing on grouping everything altogether
+and producing the right equivalent to MODULE_LICENSE().
 
- *    the inode btree entry: block size
-....
-		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+Also, at least on media, I found cases where the same module
+has multiple licenses, e. g. some files that are grouped together on
+a module are GPL v2 only, while others are GPL v2+.
 
-So we've accounted for the AGI btree block the record being modified
-exists in. But we don't account for tree shape changes....
+> So the fallback was to use a comment and Linus decided the '//' style.
+> 
+> Thanks,
+> 
+> 	tglx
+> 
 
-.... and, as usual, knowing the history of the code tells me the
-probable reason why the reservation is like this.
-
-i.e. inodes could not be removed from disk when the original
-reservation was defined.  Once allocated, they never got
-removed, so an ifree transaction only ever touched the inode btree
-block the chunk record was in. So, a quick dive into history from
-the XFS archive with git blame:
-
-814994f5c75f6 (Adam Sweeney     1994-09-23  * In freeing an inode we can modify:
-814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode being freed: inode size
-814994f5c75f6 (Adam Sweeney     1994-09-23  *    the super block free inode counter: sector size
-814994f5c75f6 (Adam Sweeney     1994-09-23  *    the agi hash list and counters: sector size
-814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode btree entry: block size
-cd235688e046e (Adam Sweeney     1995-08-31  *    the on disk inode before ours in the agi hash list: inode cluster size
-254f6311ed1b7 (Steve Lord       2003-10-06  *    the inode btree: max depth * blocksize
-254f6311ed1b7 (Steve Lord       2003-10-06  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-814994f5c75f6 (Adam Sweeney     1994-09-23  */       
-d3c15dd08b409 (Russell Cattelan 2003-04-15 #define  XFS_CALC_IFREE_LOG_RES(mp) \
-814994f5c75f6 (Adam Sweeney     1994-09-23  ((mp)->m_sb.sb_inodesize + \
-814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
-814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
-814994f5c75f6 (Adam Sweeney     1994-09-23   XFS_FSB_TO_B((mp), 1) + \
-0139225509eb1 (Steve Lord       2001-09-11   MAX((__uint16_t)XFS_FSB_TO_B((mp), 1), XFS_INODE_CLUSTER_SIZE(mp)) + \
-254f6311ed1b7 (Steve Lord       2003-10-06   (128 * 5) + \
-254f6311ed1b7 (Steve Lord       2003-10-06    (128 * (2 + XFS_IALLOC_BLOCKS(mp) + XFS_IN_MAXLEVELS(mp) + \
-254f6311ed1b7 (Steve Lord       2003-10-06     XFS_ALLOCFREE_LOG_COUNT(mp, 1))))
-254f6311ed1b7 (Steve Lord       2003-10-06           
-
-Without even looking I know what those 2003 changes were. For
-everyone else:
-
-254f6311ed1b Implement deletion of inode clusters in XFS.
-
-So, yeah, this looks like a bug in the original reservation
-calculation for freeing inode clusters. I suspect it got messed up
-because the buffers covering XFS_IALLOC_BLOCKS (the inode chunk) get
-marked stale and so their contents are not logged. That means just
-the header+blf is logged and so the reservation is correct for them.
-that isn't the case for the inobt blocks themselves, however.
-
-i.e.  it should be calculating:
-
-....
- *	the inode chunk blocks are stale, so only headers get logged
- *	the inode btree: max depth * blocksize
-....
-	xfs_calc_buf_res(2 + mp->m_ialloc_blks, 0) +
-	xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
-....
-
-I'm still not 100% sure what the extra "2 +" is accounting for
-there, though, so to be safe that migh need to be accounted as full
-blocks, not log headers.
-
-Good find, Brian!
-
-Of course, that doesn't mean it will fix the transaction overrun
-being reported because it's overrunning the freespace tree
-reservations rather than the inobt reservation. It certainly won't
-hurt, though. :P
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Mauro
