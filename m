@@ -1,442 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47312 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751599AbdKVSaA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 13:30:00 -0500
-Date: Wed, 22 Nov 2017 10:29:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: log recovery should replay deferred ops in order
-Message-ID: <20171122182949.GH2135@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:35602 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751260AbdKVUl2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Nov 2017 15:41:28 -0500
+Date: Wed, 22 Nov 2017 15:41:26 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171122204126.GA19041@bfoster.bfoster>
+References: <20171121150557.GA5014@bfoster.bfoster>
+ <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
+ <20171121173557.GB6004@bfoster.bfoster>
+ <20171122022645.GR5858@dastard>
+ <20171122122100.GA9984@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171122122100.GA9984@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Hou Tao <houtao1@huawei.com>, Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
+> On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
+> > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
+> > > cc linux-xfs
+> > > 
+> > > On Tue, Nov 21, 2017 at 10:51:10AM -0600, Mark Tinguely wrote:
+> > > > STATIC uint
+> > > > xfs_calc_ifree_reservation(
+> > > >         struct xfs_mount        *mp)
+> > > > {
+> > > >         return XFS_DQUOT_LOGRES(mp) +
+> > > >                 mp->m_sb.sb_inodesize +
+> > > >                 mp->m_sb.sb_sectsize +
+> > > >                 mp->m_sb.sb_sectsize +
+> > > >                 XFS_FSB_TO_B(mp, 1) +
+> > > >                 MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+> > > >                     XFS_INODE_CLUSTER_SIZE(mp)) +
+> > > >                 128 * 5 +
+> > > >                 XFS_ALLOCFREE_LOG_RES(mp, 1) +
+> > > >                 128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
+> > > >                        XFS_ALLOCFREE_LOG_COUNT(mp, 1));
+> > > > }
+> > > > ...
+> > > 
+> > > Indeed, this looks fairly similar to the line cited above from the
+> > > current code (modulo the xfs_calc_buf_res() refactoring).
+> > 
+> > Right, the refactoring should have been a straight conversion of the
+> > code - and not change any of the reservations. If they were wrong
+> > before the refactoring, they will still be wrong now.
+> > 
+> > > I'm curious
+> > > why we only consider the buffer overhead (i.e., 128 bytes *
+> > > ->m_in_maxlevels) of the ->m_in_maxlevels value rather than the full
+> > > buffer size.
+> > 
+> > That just looks like a bug. Earlier on in the calculation we
+> > take into account:
+> > 
+> >  *    the inode btree entry: block size
+> > ....
+> > 		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+> > 
+> > So we've accounted for the AGI btree block the record being modified
+> > exists in. But we don't account for tree shape changes....
+> > 
+> > .... and, as usual, knowing the history of the code tells me the
+> > probable reason why the reservation is like this.
+> > 
+> > i.e. inodes could not be removed from disk when the original
+> > reservation was defined.  Once allocated, they never got
+> > removed, so an ifree transaction only ever touched the inode btree
+> > block the chunk record was in. So, a quick dive into history from
+> > the XFS archive with git blame:
+> > 
+> 
+> Ah, I wasn't aware of that. That definitely helps explain the current
+> reservation.
+> 
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  * In freeing an inode we can modify:
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode being freed: inode size
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the super block free inode counter: sector size
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the agi hash list and counters: sector size
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode btree entry: block size
+> > cd235688e046e (Adam Sweeney     1995-08-31  *    the on disk inode before ours in the agi hash list: inode cluster size
+> > 254f6311ed1b7 (Steve Lord       2003-10-06  *    the inode btree: max depth * blocksize
+> > 254f6311ed1b7 (Steve Lord       2003-10-06  *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  */       
+> > d3c15dd08b409 (Russell Cattelan 2003-04-15 #define  XFS_CALC_IFREE_LOG_RES(mp) \
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23  ((mp)->m_sb.sb_inodesize + \
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
+> > 814994f5c75f6 (Adam Sweeney     1994-09-23   XFS_FSB_TO_B((mp), 1) + \
+> > 0139225509eb1 (Steve Lord       2001-09-11   MAX((__uint16_t)XFS_FSB_TO_B((mp), 1), XFS_INODE_CLUSTER_SIZE(mp)) + \
+> > 254f6311ed1b7 (Steve Lord       2003-10-06   (128 * 5) + \
+> > 254f6311ed1b7 (Steve Lord       2003-10-06    (128 * (2 + XFS_IALLOC_BLOCKS(mp) + XFS_IN_MAXLEVELS(mp) + \
+> > 254f6311ed1b7 (Steve Lord       2003-10-06     XFS_ALLOCFREE_LOG_COUNT(mp, 1))))
+> > 254f6311ed1b7 (Steve Lord       2003-10-06           
+> > 
+> > Without even looking I know what those 2003 changes were. For
+> > everyone else:
+> > 
+> > 254f6311ed1b Implement deletion of inode clusters in XFS.
+> > 
+> > So, yeah, this looks like a bug in the original reservation
+> > calculation for freeing inode clusters. I suspect it got messed up
+> > because the buffers covering XFS_IALLOC_BLOCKS (the inode chunk) get
+> > marked stale and so their contents are not logged. That means just
+> > the header+blf is logged and so the reservation is correct for them.
+> > that isn't the case for the inobt blocks themselves, however.
+> > 
+> 
+> Yep, that's what I figured for ->m_ialloc_blks.
+> 
+> > i.e.  it should be calculating:
+> > 
+> > ....
+> >  *	the inode chunk blocks are stale, so only headers get logged
+> >  *	the inode btree: max depth * blocksize
+> > ....
+> > 	xfs_calc_buf_res(2 + mp->m_ialloc_blks, 0) +
+> > 	xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> > ....
+> > 
+> 
+> Sounds about right.. though I think we should also replace the old
+> single block reservation ("the inode btree entry: block size") as well
+> since that is now a subset of the m_in_maxlevels res.
+> 
+> > I'm still not 100% sure what the extra "2 +" is accounting for
+> > there, though, so to be safe that migh need to be accounted as full
+> > blocks, not log headers.
+> > 
+> 
+> Same.. there is still a bit of cruft in this calculation that really
+> isn't clear. That +2 is one part and then there's another
+> xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
+> that it's a separate line implies it is logically separate, but who
+> knows.
+> 
+> I suppose I'll keep that line as is, replace the inobt entry bit with
+> the full inobt calculation (as above), keep the +2 associated with the
+> inobt calculation and run some tests on that.
+> 
+> > Good find, Brian!
+> > 
+> > Of course, that doesn't mean it will fix the transaction overrun
+> > being reported because it's overrunning the freespace tree
+> > reservations rather than the inobt reservation. It certainly won't
+> > hurt, though. :P
+> > 
+> 
+> Right.. technically this is a separate issue but I actually think it may
+> end up resolving the overrun in most cases. I tested a quick hack to
+> change the 0 in the existing code to XFS_FSB_TO_B(mp, 1) before I
+> realized that the m_ialloc_blks part still needs to be separate. That
+> survived all my tests, but it's also larger than what we've settled on
+> here. I think the overrun has been within m_in_maxlevels blocks worth of
+> bytes in most cases. I do recall seeing occasional larger instances,
+> however, I just don't recall the exact numbers. I'll give this some
+> testing and see if we need to also bolt on some kind of agfl fixup
+> limit.
+> 
 
-As part of testing log recovery with dm_log_writes, Amir Goldstein
-discovered an error in the deferred ops recovery that lead to corruption
-of the filesystem metadata if a reflink+rmap filesystem happened to shut
-down midway through a CoW remap:
+Quick update... I ended up still hitting an overrun with this fix in
+place (actually, the original bug report shows an overrun of ~32k which
+should have indicated that was going to be the case).
 
-"This is what happens [after failed log recovery]:
+In any event, that had me thinking about tweaking how we manage the agfl
+and subsequently brings up a couple other issues. Firstly, this is a
+large fs, so we have 1TB AGs and the associated 16 entry agfls. The min
+agfl allocation is 8 at the time of the overrun, which is the maximum
+case for such a filesystem (4 per space btree). IIUC, as much as we need
+to keep the agfl populated with a minimum of 8 blocks in this case, we
+conversely also need to make sure we have 8 free slots, yes? If so, I'm
+not sure that being lazy about freeing blocks is an option because I
+have at least one trace where it takes 3 agfl block frees just to get
+the agfl from 9 down to the required 8.
 
-"Phase 1 - find and verify superblock...
-"Phase 2 - using internal log
-"        - zero log...
-"        - scan filesystem freespace and inode maps...
-"        - found root inode chunk
-"Phase 3 - for each AG...
-"        - scan (but don't clear) agi unlinked lists...
-"        - process known inodes and perform inode discovery...
-"        - agno = 0
-"data fork in regular inode 134 claims CoW block 376
-"correcting nextents for inode 134
-"bad data fork in inode 134
-"would have cleared inode 134"
+Unrelated to the overrun issue, I also notice that we use the agfl for
+the rmapbt. That adds another 5 blocks in the maximum case, which means
+a 1TB AG can have a min agfl requirement of 4+4+5=13 blocks allocated of
+16 slots. Unless I'm missing something in the reasoning above, aren't we
+kind of playing with fire in that case? E.g., what prevents us from
+doing a 4-level join on one of the trees with a 13/16 agfl and running
+out of space to free btree blocks? This has me wondering whether we need
+some kind of larger/dynamic agfl that facilitates the additional use
+(and potentially lazier management to resolve the "too many fixups"
+issue). Thoughts?
 
-Hou Tao dissected the log contents of exactly such a crash:
+Brian
 
-"According to the implementation of xfs_defer_finish(), these ops should
-be completed in the following sequence:
-
-"Have been done:
-"(1) CUI: Oper (160)
-"(2) BUI: Oper (161)
-"(3) CUD: Oper (194), for CUI Oper (160)
-"(4) RUI A: Oper (197), free rmap [0x155, 2, -9]
-
-"Should be done:
-"(5) BUD: for BUI Oper (161)
-"(6) RUI B: add rmap [0x155, 2, 137]
-"(7) RUD: for RUI A
-"(8) RUD: for RUI B
-
-"Actually be done by xlog_recover_process_intents()
-"(5) BUD: for BUI Oper (161)
-"(6) RUI B: add rmap [0x155, 2, 137]
-"(7) RUD: for RUI B
-"(8) RUD: for RUI A
-
-"So the rmap entry [0x155, 2, -9] for COW should be freed firstly,
-then a new rmap entry [0x155, 2, 137] will be added. However, as we can see
-from the log record in post_mount.log (generated after umount) and the trace
-print, the new rmap entry [0x155, 2, 137] are added firstly, then the rmap
-entry [0x155, 2, -9] are freed."
-
-When reconstructing the internal log state from the log items found on
-disk, it's required that deferred ops replay in exactly the same order
-that they would have had the filesystem not gone down.  However,
-replaying unfinished deferred ops can create /more/ deferred ops.  These
-new deferred ops are finished in the wrong order.  This causes fs
-corruption and replay crashes, so let's create a single defer_ops to
-handle the subsequent ops created during replay, then use one single
-transaction at the end of log recovery to ensure that everything is
-replayed in the same order as they're supposed to be.
-
-Reported-by: Amir Goldstein <amir73il@gmail.com>
-Analyzed-by: Hou Tao <houtao1@huawei.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_item.c     |   23 ++++----------
- fs/xfs/xfs_bmap_item.h     |    3 +-
- fs/xfs/xfs_log_recover.c   |   73 +++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_refcount_item.c |   21 ++++---------
- fs/xfs/xfs_refcount_item.h |    3 +-
- 5 files changed, 83 insertions(+), 40 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index dd136f7..e5fb008 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -389,7 +389,8 @@ xfs_bud_init(
- int
- xfs_bui_recover(
- 	struct xfs_mount		*mp,
--	struct xfs_bui_log_item		*buip)
-+	struct xfs_bui_log_item		*buip,
-+	struct xfs_defer_ops		*dfops)
- {
- 	int				error = 0;
- 	unsigned int			bui_type;
-@@ -404,9 +405,7 @@ xfs_bui_recover(
- 	xfs_exntst_t			state;
- 	struct xfs_trans		*tp;
- 	struct xfs_inode		*ip = NULL;
--	struct xfs_defer_ops		dfops;
- 	struct xfs_bmbt_irec		irec;
--	xfs_fsblock_t			firstfsb;
- 
- 	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
- 
-@@ -464,7 +463,6 @@ xfs_bui_recover(
- 
- 	if (VFS_I(ip)->i_nlink == 0)
- 		xfs_iflags_set(ip, XFS_IRECOVERY);
--	xfs_defer_init(&dfops, &firstfsb);
- 
- 	/* Process deferred bmap item. */
- 	state = (bmap->me_flags & XFS_BMAP_EXTENT_UNWRITTEN) ?
-@@ -479,16 +477,16 @@ xfs_bui_recover(
- 		break;
- 	default:
- 		error = -EFSCORRUPTED;
--		goto err_dfops;
-+		goto err_inode;
- 	}
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	count = bmap->me_len;
--	error = xfs_trans_log_finish_bmap_update(tp, budp, &dfops, type,
-+	error = xfs_trans_log_finish_bmap_update(tp, budp, dfops, type,
- 			ip, whichfork, bmap->me_startoff,
- 			bmap->me_startblock, &count, state);
- 	if (error)
--		goto err_dfops;
-+		goto err_inode;
- 
- 	if (count > 0) {
- 		ASSERT(type == XFS_BMAP_UNMAP);
-@@ -496,16 +494,11 @@ xfs_bui_recover(
- 		irec.br_blockcount = count;
- 		irec.br_startoff = bmap->me_startoff;
- 		irec.br_state = state;
--		error = xfs_bmap_unmap_extent(tp->t_mountp, &dfops, ip, &irec);
-+		error = xfs_bmap_unmap_extent(tp->t_mountp, dfops, ip, &irec);
- 		if (error)
--			goto err_dfops;
-+			goto err_inode;
- 	}
- 
--	/* Finish transaction, free inodes. */
--	error = xfs_defer_finish(&tp, &dfops);
--	if (error)
--		goto err_dfops;
--
- 	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-@@ -513,8 +506,6 @@ xfs_bui_recover(
- 
- 	return error;
- 
--err_dfops:
--	xfs_defer_cancel(&dfops);
- err_inode:
- 	xfs_trans_cancel(tp);
- 	if (ip) {
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index c867daa..24b354a 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -93,6 +93,7 @@ struct xfs_bud_log_item *xfs_bud_init(struct xfs_mount *,
- 		struct xfs_bui_log_item *);
- void xfs_bui_item_free(struct xfs_bui_log_item *);
- void xfs_bui_release(struct xfs_bui_log_item *);
--int xfs_bui_recover(struct xfs_mount *mp, struct xfs_bui_log_item *buip);
-+int xfs_bui_recover(struct xfs_mount *mp, struct xfs_bui_log_item *buip,
-+		struct xfs_defer_ops *dfops);
- 
- #endif	/* __XFS_BMAP_ITEM_H__ */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 87b1c33..36da419 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -24,6 +24,7 @@
- #include "xfs_bit.h"
- #include "xfs_sb.h"
- #include "xfs_mount.h"
-+#include "xfs_defer.h"
- #include "xfs_da_format.h"
- #include "xfs_da_btree.h"
- #include "xfs_inode.h"
-@@ -4716,7 +4717,8 @@ STATIC int
- xlog_recover_process_cui(
- 	struct xfs_mount		*mp,
- 	struct xfs_ail			*ailp,
--	struct xfs_log_item		*lip)
-+	struct xfs_log_item		*lip,
-+	struct xfs_defer_ops		*dfops)
- {
- 	struct xfs_cui_log_item		*cuip;
- 	int				error;
-@@ -4729,7 +4731,7 @@ xlog_recover_process_cui(
- 		return 0;
- 
- 	spin_unlock(&ailp->xa_lock);
--	error = xfs_cui_recover(mp, cuip);
-+	error = xfs_cui_recover(mp, cuip, dfops);
- 	spin_lock(&ailp->xa_lock);
- 
- 	return error;
-@@ -4756,7 +4758,8 @@ STATIC int
- xlog_recover_process_bui(
- 	struct xfs_mount		*mp,
- 	struct xfs_ail			*ailp,
--	struct xfs_log_item		*lip)
-+	struct xfs_log_item		*lip,
-+	struct xfs_defer_ops		*dfops)
- {
- 	struct xfs_bui_log_item		*buip;
- 	int				error;
-@@ -4769,7 +4772,7 @@ xlog_recover_process_bui(
- 		return 0;
- 
- 	spin_unlock(&ailp->xa_lock);
--	error = xfs_bui_recover(mp, buip);
-+	error = xfs_bui_recover(mp, buip, dfops);
- 	spin_lock(&ailp->xa_lock);
- 
- 	return error;
-@@ -4805,6 +4808,44 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
- 	}
- }
- 
-+/* Take all the collected deferred ops and finish them in order. */
-+static int
-+xlog_finish_defer_ops(
-+	struct xfs_mount	*mp,
-+	struct xfs_defer_ops	*dfops)
-+{
-+	struct xfs_trans	*tp;
-+	s64			freeblks;
-+	uint			resblks;
-+	int			error;
-+
-+	/*
-+	 * We're finishing the defer_ops that accumulated as a result of
-+	 * recovering unfinished intent items during log recovery.  We
-+	 * reserve an itruncate transaction because it is the largest
-+	 * permanent transaction type.  Since we're the only user of the
-+	 * fs right now, take 93% of the available free blocks.  Use
-+	 * weird math to avoid a 64-bit division.
-+	 */
-+	freeblks = percpu_counter_sum(&mp->m_fdblocks);
-+	resblks = min_t(s64, UINT_MAX, freeblks);
-+	resblks = resblks * 15 / 16;
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
-+			0, XFS_TRANS_RESERVE, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_defer_finish(&tp, dfops);
-+	if (error)
-+		goto out_cancel;
-+
-+	return xfs_trans_commit(tp);
-+
-+out_cancel:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
- /*
-  * When this is called, all of the log intent items which did not have
-  * corresponding log done items should be in the AIL.  What we do now
-@@ -4825,10 +4866,12 @@ STATIC int
- xlog_recover_process_intents(
- 	struct xlog		*log)
- {
--	struct xfs_log_item	*lip;
--	int			error = 0;
-+	struct xfs_defer_ops	dfops;
- 	struct xfs_ail_cursor	cur;
-+	struct xfs_log_item	*lip;
- 	struct xfs_ail		*ailp;
-+	xfs_fsblock_t		firstfsb;
-+	int			error = 0;
- #if defined(DEBUG) || defined(XFS_WARN)
- 	xfs_lsn_t		last_lsn;
- #endif
-@@ -4839,6 +4882,7 @@ xlog_recover_process_intents(
- #if defined(DEBUG) || defined(XFS_WARN)
- 	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
- #endif
-+	xfs_defer_init(&dfops, &firstfsb);
- 	while (lip != NULL) {
- 		/*
- 		 * We're done when we see something other than an intent.
-@@ -4859,6 +4903,12 @@ xlog_recover_process_intents(
- 		 */
- 		ASSERT(XFS_LSN_CMP(last_lsn, lip->li_lsn) >= 0);
- 
-+		/*
-+		 * NOTE: If your intent processing routine can create
-+		 * more deferred ops, you /must/ attach them to the
-+		 * dfops in this routine or else those subsequent
-+		 * intents will get replayed in the wrong order!
-+		 */
- 		switch (lip->li_type) {
- 		case XFS_LI_EFI:
- 			error = xlog_recover_process_efi(log->l_mp, ailp, lip);
-@@ -4867,10 +4917,12 @@ xlog_recover_process_intents(
- 			error = xlog_recover_process_rui(log->l_mp, ailp, lip);
- 			break;
- 		case XFS_LI_CUI:
--			error = xlog_recover_process_cui(log->l_mp, ailp, lip);
-+			error = xlog_recover_process_cui(log->l_mp, ailp, lip,
-+					&dfops);
- 			break;
- 		case XFS_LI_BUI:
--			error = xlog_recover_process_bui(log->l_mp, ailp, lip);
-+			error = xlog_recover_process_bui(log->l_mp, ailp, lip,
-+					&dfops);
- 			break;
- 		}
- 		if (error)
-@@ -4880,6 +4932,11 @@ xlog_recover_process_intents(
- out:
- 	xfs_trans_ail_cursor_done(&cur);
- 	spin_unlock(&ailp->xa_lock);
-+	if (error)
-+		xfs_defer_cancel(&dfops);
-+	else
-+		error = xlog_finish_defer_ops(log->l_mp, &dfops);
-+
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 8f2e2fa..3a55d6f 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -393,7 +393,8 @@ xfs_cud_init(
- int
- xfs_cui_recover(
- 	struct xfs_mount		*mp,
--	struct xfs_cui_log_item		*cuip)
-+	struct xfs_cui_log_item		*cuip,
-+	struct xfs_defer_ops		*dfops)
- {
- 	int				i;
- 	int				error = 0;
-@@ -405,11 +406,9 @@ xfs_cui_recover(
- 	struct xfs_trans		*tp;
- 	struct xfs_btree_cur		*rcur = NULL;
- 	enum xfs_refcount_intent_type	type;
--	xfs_fsblock_t			firstfsb;
- 	xfs_fsblock_t			new_fsb;
- 	xfs_extlen_t			new_len;
- 	struct xfs_bmbt_irec		irec;
--	struct xfs_defer_ops		dfops;
- 	bool				requeue_only = false;
- 
- 	ASSERT(!test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags));
-@@ -465,7 +464,6 @@ xfs_cui_recover(
- 		return error;
- 	cudp = xfs_trans_get_cud(tp, cuip);
- 
--	xfs_defer_init(&dfops, &firstfsb);
- 	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
- 		refc = &cuip->cui_format.cui_extents[i];
- 		refc_type = refc->pe_flags & XFS_REFCOUNT_EXTENT_TYPE_MASK;
-@@ -485,7 +483,7 @@ xfs_cui_recover(
- 			new_len = refc->pe_len;
- 		} else
- 			error = xfs_trans_log_finish_refcount_update(tp, cudp,
--				&dfops, type, refc->pe_startblock, refc->pe_len,
-+				dfops, type, refc->pe_startblock, refc->pe_len,
- 				&new_fsb, &new_len, &rcur);
- 		if (error)
- 			goto abort_error;
-@@ -497,21 +495,21 @@ xfs_cui_recover(
- 			switch (type) {
- 			case XFS_REFCOUNT_INCREASE:
- 				error = xfs_refcount_increase_extent(
--						tp->t_mountp, &dfops, &irec);
-+						tp->t_mountp, dfops, &irec);
- 				break;
- 			case XFS_REFCOUNT_DECREASE:
- 				error = xfs_refcount_decrease_extent(
--						tp->t_mountp, &dfops, &irec);
-+						tp->t_mountp, dfops, &irec);
- 				break;
- 			case XFS_REFCOUNT_ALLOC_COW:
- 				error = xfs_refcount_alloc_cow_extent(
--						tp->t_mountp, &dfops,
-+						tp->t_mountp, dfops,
- 						irec.br_startblock,
- 						irec.br_blockcount);
- 				break;
- 			case XFS_REFCOUNT_FREE_COW:
- 				error = xfs_refcount_free_cow_extent(
--						tp->t_mountp, &dfops,
-+						tp->t_mountp, dfops,
- 						irec.br_startblock,
- 						irec.br_blockcount);
- 				break;
-@@ -525,17 +523,12 @@ xfs_cui_recover(
- 	}
- 
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--	error = xfs_defer_finish(&tp, &dfops);
--	if (error)
--		goto abort_defer;
- 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
- 	error = xfs_trans_commit(tp);
- 	return error;
- 
- abort_error:
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--abort_defer:
--	xfs_defer_cancel(&dfops);
- 	xfs_trans_cancel(tp);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-index 5b74ddd..0e53273 100644
---- a/fs/xfs/xfs_refcount_item.h
-+++ b/fs/xfs/xfs_refcount_item.h
-@@ -96,6 +96,7 @@ struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
- 		struct xfs_cui_log_item *);
- void xfs_cui_item_free(struct xfs_cui_log_item *);
- void xfs_cui_release(struct xfs_cui_log_item *);
--int xfs_cui_recover(struct xfs_mount *mp, struct xfs_cui_log_item *cuip);
-+int xfs_cui_recover(struct xfs_mount *mp, struct xfs_cui_log_item *cuip,
-+		struct xfs_defer_ops *dfops);
- 
- #endif	/* __XFS_REFCOUNT_ITEM_H__ */
+> Thanks for the feedback!
+> 
+> Brian
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
