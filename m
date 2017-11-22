@@ -1,130 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51250 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751238AbdKUUe4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 15:34:56 -0500
-Date: Tue, 21 Nov 2017 12:34:16 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3] iomap: report collisions between directio and  buffered
- writes to userspace
-Message-ID: <20171121203416.GE2135@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:31114 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751443AbdKVC0t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 21:26:49 -0500
+Date: Wed, 22 Nov 2017 13:26:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171122022645.GR5858@dastard>
+References: <20171121150557.GA5014@bfoster.bfoster>
+ <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
+ <20171121173557.GB6004@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171121173557.GB6004@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: Matthew Wilcox <willy@infradead.org>, Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, bo.li.liu@oracle.com, viro@ZenIV.linux.org.uk
+To: Brian Foster <bfoster@redhat.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
+> cc linux-xfs
+> 
+> On Tue, Nov 21, 2017 at 10:51:10AM -0600, Mark Tinguely wrote:
+> > STATIC uint
+> > xfs_calc_ifree_reservation(
+> >         struct xfs_mount        *mp)
+> > {
+> >         return XFS_DQUOT_LOGRES(mp) +
+> >                 mp->m_sb.sb_inodesize +
+> >                 mp->m_sb.sb_sectsize +
+> >                 mp->m_sb.sb_sectsize +
+> >                 XFS_FSB_TO_B(mp, 1) +
+> >                 MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+> >                     XFS_INODE_CLUSTER_SIZE(mp)) +
+> >                 128 * 5 +
+> >                 XFS_ALLOCFREE_LOG_RES(mp, 1) +
+> >                 128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
+> >                        XFS_ALLOCFREE_LOG_COUNT(mp, 1));
+> > }
+> > ...
+> 
+> Indeed, this looks fairly similar to the line cited above from the
+> current code (modulo the xfs_calc_buf_res() refactoring).
 
-If two programs simultaneously try to write to the same part of a file
-via direct IO and buffered IO, there's a chance that the post-diowrite
-pagecache invalidation will fail on the dirty page.  When this happens,
-the dio write succeeded, which means that the page cache is no longer
-coherent with the disk!
+Right, the refactoring should have been a straight conversion of the
+code - and not change any of the reservations. If they were wrong
+before the refactoring, they will still be wrong now.
 
-Programs are not supposed to mix IO types and this is a clear case of
-data corruption, so store an EIO which will be reflected to userspace
-during the next fsync.  Replace the WARN_ON with a ratelimited pr_crit
-so that the developers have /some/ kind of breadcrumb to track down the
-offending program(s) and file(s) involved.
+> I'm curious
+> why we only consider the buffer overhead (i.e., 128 bytes *
+> ->m_in_maxlevels) of the ->m_in_maxlevels value rather than the full
+> buffer size.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Liu Bo <bo.li.liu@oracle.com>
----
-v3: increase ratelimit period to 30s
-v2: fix old and new dio paths
----
- fs/direct-io.c     |   24 +++++++++++++++++++++++-
- fs/iomap.c         |   12 ++++++++++--
- include/linux/fs.h |    1 +
- 3 files changed, 34 insertions(+), 3 deletions(-)
+That just looks like a bug. Earlier on in the calculation we
+take into account:
 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 98fe132..ef5d12a 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -219,6 +219,27 @@ static inline struct page *dio_get_page(struct dio *dio,
- 	return dio->pages[sdio->head];
- }
- 
-+/*
-+ * Warn about a page cache invalidation failure during a direct io write.
-+ */
-+void dio_warn_stale_pagecache(struct file *filp)
-+{
-+	static DEFINE_RATELIMIT_STATE(_rs, 30 * HZ, DEFAULT_RATELIMIT_BURST);
-+	char pathname[128];
-+	struct inode *inode = file_inode(filp);
-+	char *path;
-+
-+	errseq_set(&inode->i_mapping->wb_err, -EIO);
-+	if (__ratelimit(&_rs)) {
-+		path = file_path(filp, pathname, sizeof(pathname));
-+		if (IS_ERR(path))
-+			path = "(unknown)";
-+		pr_crit("Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!\n");
-+		pr_crit("File: %s PID: %d Comm: %.20s\n", path, current->pid,
-+			current->comm);
-+	}
-+}
-+
- /**
-  * dio_complete() - called when all DIO BIO I/O has been completed
-  * @offset: the byte offset in the file of the completed operation
-@@ -290,7 +311,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, unsigned int flags)
- 		err = invalidate_inode_pages2_range(dio->inode->i_mapping,
- 					offset >> PAGE_SHIFT,
- 					(offset + ret - 1) >> PAGE_SHIFT);
--		WARN_ON_ONCE(err);
-+		if (err)
-+			dio_warn_stale_pagecache(dio->iocb->ki_filp);
- 	}
- 
- 	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 5011a96..028f329 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -753,7 +753,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 		err = invalidate_inode_pages2_range(inode->i_mapping,
- 				offset >> PAGE_SHIFT,
- 				(offset + dio->size - 1) >> PAGE_SHIFT);
--		WARN_ON_ONCE(err);
-+		if (err)
-+			dio_warn_stale_pagecache(iocb->ki_filp);
- 	}
- 
- 	inode_dio_end(file_inode(iocb->ki_filp));
-@@ -1012,9 +1013,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (ret)
- 		goto out_free_dio;
- 
-+	/*
-+	 * Try to invalidate cache pages for the range we're direct
-+	 * writing.  If this invalidation fails, tough, the write will
-+	 * still work, but racing two incompatible write paths is a
-+	 * pretty crazy thing to do, so we don't support it 100%.
-+	 */
- 	ret = invalidate_inode_pages2_range(mapping,
- 			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
--	WARN_ON_ONCE(ret);
-+	if (ret)
-+		dio_warn_stale_pagecache(iocb->ki_filp);
- 	ret = 0;
- 
- 	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2690864..0e5f060 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2976,6 +2976,7 @@ enum {
- };
- 
- void dio_end_io(struct bio *bio);
-+void dio_warn_stale_pagecache(struct file *filp);
- 
- ssize_t __blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
- 			     struct block_device *bdev, struct iov_iter *iter,
+ *    the inode btree entry: block size
+....
+		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+
+So we've accounted for the AGI btree block the record being modified
+exists in. But we don't account for tree shape changes....
+
+.... and, as usual, knowing the history of the code tells me the
+probable reason why the reservation is like this.
+
+i.e. inodes could not be removed from disk when the original
+reservation was defined.  Once allocated, they never got
+removed, so an ifree transaction only ever touched the inode btree
+block the chunk record was in. So, a quick dive into history from
+the XFS archive with git blame:
+
+814994f5c75f6 (Adam Sweeney     1994-09-23  * In freeing an inode we can modify:
+814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode being freed: inode size
+814994f5c75f6 (Adam Sweeney     1994-09-23  *    the super block free inode counter: sector size
+814994f5c75f6 (Adam Sweeney     1994-09-23  *    the agi hash list and counters: sector size
+814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode btree entry: block size
+cd235688e046e (Adam Sweeney     1995-08-31  *    the on disk inode before ours in the agi hash list: inode cluster size
+254f6311ed1b7 (Steve Lord       2003-10-06  *    the inode btree: max depth * blocksize
+254f6311ed1b7 (Steve Lord       2003-10-06  *    the allocation btrees: 2 trees * (max depth - 1) * block size
+814994f5c75f6 (Adam Sweeney     1994-09-23  */       
+d3c15dd08b409 (Russell Cattelan 2003-04-15 #define  XFS_CALC_IFREE_LOG_RES(mp) \
+814994f5c75f6 (Adam Sweeney     1994-09-23  ((mp)->m_sb.sb_inodesize + \
+814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
+814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
+814994f5c75f6 (Adam Sweeney     1994-09-23   XFS_FSB_TO_B((mp), 1) + \
+0139225509eb1 (Steve Lord       2001-09-11   MAX((__uint16_t)XFS_FSB_TO_B((mp), 1), XFS_INODE_CLUSTER_SIZE(mp)) + \
+254f6311ed1b7 (Steve Lord       2003-10-06   (128 * 5) + \
+254f6311ed1b7 (Steve Lord       2003-10-06    (128 * (2 + XFS_IALLOC_BLOCKS(mp) + XFS_IN_MAXLEVELS(mp) + \
+254f6311ed1b7 (Steve Lord       2003-10-06     XFS_ALLOCFREE_LOG_COUNT(mp, 1))))
+254f6311ed1b7 (Steve Lord       2003-10-06           
+
+Without even looking I know what those 2003 changes were. For
+everyone else:
+
+254f6311ed1b Implement deletion of inode clusters in XFS.
+
+So, yeah, this looks like a bug in the original reservation
+calculation for freeing inode clusters. I suspect it got messed up
+because the buffers covering XFS_IALLOC_BLOCKS (the inode chunk) get
+marked stale and so their contents are not logged. That means just
+the header+blf is logged and so the reservation is correct for them.
+that isn't the case for the inobt blocks themselves, however.
+
+i.e.  it should be calculating:
+
+....
+ *	the inode chunk blocks are stale, so only headers get logged
+ *	the inode btree: max depth * blocksize
+....
+	xfs_calc_buf_res(2 + mp->m_ialloc_blks, 0) +
+	xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+....
+
+I'm still not 100% sure what the extra "2 +" is accounting for
+there, though, so to be safe that migh need to be accounted as full
+blocks, not log headers.
+
+Good find, Brian!
+
+Of course, that doesn't mean it will fix the transaction overrun
+being reported because it's overrunning the freespace tree
+reservations rather than the inobt reservation. It certainly won't
+hurt, though. :P
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
