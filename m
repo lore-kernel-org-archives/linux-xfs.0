@@ -1,210 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47343 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750772AbdKUSug (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 13:50:36 -0500
-Date: Tue, 21 Nov 2017 10:50:18 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:22524 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751408AbdKVAFp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 19:05:45 -0500
+Date: Tue, 21 Nov 2017 16:05:06 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
-Message-ID: <20171121185018.GB2135@magnolia>
-References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
- <1757414.A5ytRCBscU@libor-nb>
- <20171121162428.GA6004@bfoster.bfoster>
+Subject: Re: [PATCH v2] iomap: report collisions between directio and
+ buffered writes to userspace
+Message-ID: <20171122000506.GF2135@magnolia>
+References: <20171117193925.GM5119@magnolia>
+ <20171120161829.GA25991@bombadil.infradead.org>
+ <20171120202606.GN5858@dastard>
+ <20171120215100.GB8933@bombadil.infradead.org>
+ <20171120222749.GO5858@dastard>
+ <20171121013753.GA12441@magnolia>
+ <20171121043240.GB8774@bombadil.infradead.org>
+ <20171121064815.GP5858@dastard>
+ <20171121125253.GA1484@bombadil.infradead.org>
+ <20171121222806.GQ5858@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171121162428.GA6004@bfoster.bfoster>
+In-Reply-To: <20171121222806.GQ5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>, alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Tue, Nov 21, 2017 at 11:24:29AM -0500, Brian Foster wrote:
-> On Tue, Nov 21, 2017 at 04:31:20PM +0100, Libor Klepáč wrote:
-> > Hello again,
-> > i'm sorry to bug you, but i would like to ask, if this patch made it to kernel 
-> > yet?
-> > I was looking on pull request messages and did not see it.
+On Wed, Nov 22, 2017 at 09:28:06AM +1100, Dave Chinner wrote:
+> On Tue, Nov 21, 2017 at 04:52:53AM -0800, Matthew Wilcox wrote:
+> > On Tue, Nov 21, 2017 at 05:48:15PM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 20, 2017 at 08:32:40PM -0800, Matthew Wilcox wrote:
+> > > > On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
+> > > > > On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
+> > > > > > First thing I noticed was that "xa" as a prefix is already quite
+> > > > > > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
+> > > >
+> > > > The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
+> > > > use more than a two-letter acronym for whatever the XArray ends up being
+> > > > called.  One of the problems with the radix tree is that everything has
+> > > > that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
+> > > > makes a huge improvement to readability.
+> > > 
+> > > Yeah, understood. That's why
+> > > we have very little clear
+> > > prefix namespace left.... :/
+> > > 
+> > > [ somedays I write something that looks sorta like a haiku, and from
+> > > that point on everything just starts falling out of my brain that
+> > > way. I blame Eric for this today! :P ]
 > > 
-> > We were struck by "Metadata corruption detected at 
-> > xfs_attr3_leaf_write_verify" under high load, after months without problem.
+> > When the namespace is
+> > tight we must consider the
+> > competing users.
 > > 
-> > But we are still on 4.9.30 on this server, there is possibility to upgrade to 
-> > 4.9.51 from backports.
+> > The earliest us'r
+> > has a claim to a prefix
+> > we are used to it.
 > > 
+> > Also a more wide-
+> > spread user has a claim to
+> > a shorter prefix.
+> > 
+> > Would you mind changing
+> > your prefix to one only
+> > one letter longer?
 > 
-> IIRC, the issue that prevented this patch from being merged was that the
-> buffer needed to be joined and relogged across deferred operations. That
-> had a dependency on some rectoring of the buffer logging code, which has
-> since been merged, but I don't recall seeing anything regarding a
-> deferred op buffer relogging mechanism and using it here. Alex?
+> We can do something
+> like that, though Darrick has the
+> final say in it.
 
-Correct, there's no such thing as deferred op buffer relogging.  If I
-have time this week or next I can try to revisit what exactly we needed
-to do to retain the buffer lock across transaction rolls in
-defer_finish and try to cough up a patch, after which the original attr
-fix from Alex should be refactored to use that mechanism.
+Keep this up and soon
+I'll require patch changelogs
+Written in Haiku. :P
 
-(Not sure what we do about backporting to pre-defer_ops kernels...)
+(j/k)
+
+Everyone in the US, have a happy Thanksgiving!
 
 --D
 
-> Brian
+> > ... ok, I give up ;-)
 > 
-> > With regards,
-> > Libor
+> Top marks for effort :)
+> 
+> > All your current usage of the xa_ prefix looks somewhat like this:
 > > 
+> > fs/xfs/xfs_trans_ail.c: spin_lock(&ailp->xa_lock);
 > > 
-> > On středa 9. srpna 2017 13:06:12 CET alex@zadarastorage.com wrote:
-> > > From: Alex Lyakas <alex@zadarastorage.com>
-> > > 
-> > > The new attribute leaf buffer is not held locked across
-> > > the transaction roll between the shortform->leaf modification
-> > > and the addition of the new entry. As a result, the attribute
-> > > buffer modification being made is not atomic from
-> > > an operational perspective. Hence the AIL push can grab it in
-> > > the transient state of "just created" after the initial
-> > > transaction is rolled, because the buffer has been released.
-> > > This leads to xfs_attr3_leaf_verify() asserting that
-> > > hdr.count is zero, treating this as in-memory corruption,
-> > > and shutting down the filesystem.
-> > > 
-> > > Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
-> > >  fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
-> > >  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
-> > >  3 files changed, 23 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > index de7b9bd..982e322 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > @@ -216,10 +216,11 @@
-> > >  	struct xfs_defer_ops	dfops;
-> > >  	struct xfs_trans_res	tres;
-> > >  	xfs_fsblock_t		firstblock;
-> > >  	int			rsvd = (flags & ATTR_ROOT) != 0;
-> > >  	int			error, err2, local;
-> > > +	struct xfs_buf		*leaf_bp = NULL;
-> > >  
-> > >  	XFS_STATS_INC(mp, xs_attr_set);
-> > >  
-> > >  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-> > >  		return -EIO;
-> > > @@ -325,11 +326,17 @@
-> > >  		/*
-> > >  		 * It won't fit in the shortform, transform to a leaf block.
-> > >  		 * GROT: another possible req'mt for a double-split btree op.
-> > >  		 */
-> > >  		xfs_defer_init(args.dfops, args.firstblock);
-> > > -		error = xfs_attr_shortform_to_leaf(&args);
-> > > +		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-> > > +		/*
-> > > +		 * Prevent the leaf buffer from being unlocked
-> > > +		 * when "args.trans" transaction commits.
-> > > +		 */
-> > > +		if (leaf_bp)
-> > > +			xfs_trans_bhold(args.trans, leaf_bp);
-> > >  		if (!error)
-> > >  			error = xfs_defer_finish(&args.trans, args.dfops, dp);
-> > >  		if (error) {
-> > >  			args.trans = NULL;
-> > >  			xfs_defer_cancel(&dfops);
-> > > @@ -343,10 +350,18 @@
-> > >  
-> > >  		error = xfs_trans_roll(&args.trans, dp);
-> > >  		if (error)
-> > >  			goto out;
-> > >  
-> > > +		/*
-> > > +		 * Rejoin the leaf buffer to the new transaction.
-> > > +		 * This allows a subsequent read to find the buffer in the
-> > > +		 * transaction (and avoid a deadlock).
-> > > +		 */
-> > > +		xfs_trans_bjoin(args.trans, leaf_bp);
-> > > +		/* Prevent from being released at the end of the function */
-> > > +		leaf_bp = NULL;
-> > >  	}
-> > >  
-> > >  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> > >  		error = xfs_attr_leaf_addname(&args);
-> > >  	else
-> > > @@ -374,10 +389,12 @@
-> > >  	return error;
-> > >  
-> > >  out:
-> > >  	if (args.trans)
-> > >  		xfs_trans_cancel(args.trans);
-> > > +	if (leaf_bp)
-> > > +		xfs_buf_relse(leaf_bp);
-> > >  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> > >  	return error;
-> > >  }
-> > >  
-> > >  /*
-> > > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > > index c6c15e5..ab73e4b 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > > @@ -738,13 +738,14 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args 
-> > *args,
-> > >  	return -ENOATTR;
-> > >  }
-> > >  
-> > >  /*
-> > >   * Convert from using the shortform to the leaf.
-> > > + * Upon success, return the leaf buffer.
-> > >   */
-> > >  int
-> > > -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> > > +xfs_attr_shortform_to_leaf(xfs_da_args_t *args, struct xfs_buf **bpp)
-> > >  {
-> > >  	xfs_inode_t *dp;
-> > >  	xfs_attr_shortform_t *sf;
-> > >  	xfs_attr_sf_entry_t *sfe;
-> > >  	xfs_da_args_t nargs;
-> > > @@ -820,10 +821,11 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args 
-> > *args,
-> > >  		if (error)
-> > >  			goto out;
-> > >  		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-> > >  	}
-> > >  	error = 0;
-> > > +	*bpp = bp;
-> > >  
-> > >  out:
-> > >  	kmem_free(tmpbuffer);
-> > >  	return error;
-> > >  }
-> > > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> > > index f7dda0c..2b3c69df 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> > > +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> > > @@ -46,11 +46,12 @@
-> > >   */
-> > >  void	xfs_attr_shortform_create(struct xfs_da_args *args);
-> > >  void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
-> > >  int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
-> > >  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
-> > > -int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-> > > +int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
-> > > +					struct xfs_buf **bpp);
-> > >  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
-> > >  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
-> > >  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
-> > >  void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
-> > >  
-> > > 
+> > with honourable mentions to:
+> > fs/xfs/xfs_log.c:	spin_lock(&mp->m_ail->xa_lock);
 > > 
+> > Would you mind if I bolt a patch on to the front of the series called
+> > something like "free up xa_ namespace" that renamed your xa_* to ail_*?
+> > There are no uses of the 'ail_' prefix in the kernel today.
 > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > I don't think that
+> > 	spin_lock(&ailp->ail_lock);
+> > loses any readability.
+> 
+> Not sure that's going to work - there's an "xa_ail" member for the
+> AIL list head. That would now read in places:
+> 
+> 	if (list_empty(&ailp->ail_ail))
+> 
+> I'd be inclined to just drop the "xa_" prefix from the XFS
+> structure.  There is no information loss by removing the prefix in
+> the XFS code because the pointer name tells us what structure it is
+> pointing at.
+> 
+> > 
+> > By the way, what does AIL stand for?  It'd be nice if it were spelled out
+> > in at least one of the header files, maybe fs/xfs/xfs_trans_priv.h?
+> 
+> Active Item List. See the section "Tracking Changes" in
+> Documentation/filesystems/xfs-delayed-logging-design.txt for the
+> full rundown, but in short:
+> 
+> "The log item is already used to track the log items that have been
+> written to the log but not yet written to disk. Such log items are
+> considered "active" and as such are stored in the Active Item List
+> (AIL) which is a LSN-ordered double linked list. Items are inserted
+> into this list during log buffer IO completion, after which they are
+> unpinned and can be written to disk."
+> 
+> The lack of comments describing the AIL is historic - it's never
+> been documented in the code, nor has the whole relogging concept it
+> implements. I wrote the document above when introducing the CIL
+> (Commited Item List) because almost no-one actively working on XFS
+> understood how the whole journalling subsystem worked in any detail.
+> 
+> > > Zoetrope Array.
+> > > Labyrinth of illusion.
+> > > Structure never ends.
+> > 
+> > Thank you for making me look up zoetrope ;-)
+> 
+> My pleasure :)
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
