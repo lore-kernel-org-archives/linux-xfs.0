@@ -1,79 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from osg.samsung.com ([64.30.133.232]:45149 "EHLO osg.samsung.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751258AbdKVNfg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Nov 2017 08:35:36 -0500
-Date: Wed, 22 Nov 2017 11:35:28 -0200
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
-Message-ID: <20171122113528.3f69fab6@vento.lan>
-In-Reply-To: <20171122132328.GA26023@lst.de>
-References: <20171116183306.103584007@linutronix.de>
-        <20171116184358.398030394@linutronix.de>
-        <alpine.DEB.2.20.1711171057240.1709@nanos>
-        <20171117150639.0e706421@vento.lan>
-        <alpine.DEB.2.20.1711171850330.2186@nanos>
-        <20171117183946.GA28533@lst.de>
-        <alpine.DEB.2.20.1711221207460.1751@nanos>
-        <20171122095117.49c558a4@vento.lan>
-        <20171122132328.GA26023@lst.de>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42868 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbdKVRHT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 12:07:19 -0500
+Date: Wed, 22 Nov 2017 18:07:13 +0100
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171122170713.GD12684@amd>
+References: <20171107020607.GA26910@magnolia>
+ <20171107072040.GB4586@infradead.org>
+ <20171107073940.GB4654@kroah.com>
+ <20171107172042.GB26910@magnolia>
+ <20171107182903.GA4588@kroah.com>
+ <20171107184658.56b87d41@alans-desktop>
+ <20171107191526.x3rzfcnnlmaz264d@thunk.org>
+ <20171107192846.GA24617@infradead.org>
+ <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="cQXOx3fnlpmgJsTP"
+Content-Disposition: inline
+In-Reply-To: <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Philippe Ombredanne <pombredanne@nexb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
-Em Wed, 22 Nov 2017 14:23:29 +0100
-Christoph Hellwig <hch@lst.de> escreveu:
 
-> On Wed, Nov 22, 2017 at 09:51:17AM -0200, Mauro Carvalho Chehab wrote:
-> > Also, one may forget that headers use /**/ and end by doing the wrong
-> > thing, as a common practice is to just cut-and-paste the same copyright
-> > header on both C and H files at development time.  
-> 
-> Yes.
-> 
-> > Make headers_install could replace such macros by SPDX comments when
-> > installing on userspace.  
-> 
-> Agreed.  Or for that matter we could simply stick to the comment version
-> for UAPI headers only, and have a macro for everything else.
-> 
-> > >    - Breaks in assembly, boot and other special source files. There was no
-> > >      easy solution to that and the result would have been to have macros in
-> > >      some files and not in others.  
-> > 
-> > At the end, we have different markups, depending on the file type.
-> > I guess the main problem of using a macro is that a module composed
-> > by multiple C files will end by defining it multiple times. Not sure
-> > if gcc would do the right thing on grouping everything altogether
-> > and producing the right equivalent to MODULE_LICENSE().  
-> 
-> We'd basically need to add a new entry to a section, similar to how
-> say __setup works in the core kernel.  But I think the important bit
-> is to start with a macro now, even if it has zero functionality to
-> start with - at least that enables us to fill the functionality once
-> needed.
-> 
-> > Also, at least on media, I found cases where the same module
-> > has multiple licenses, e. g. some files that are grouped together on
-> > a module are GPL v2 only, while others are GPL v2+.  
-> 
-> A module always has the least permissive license of all files.
+--cQXOx3fnlpmgJsTP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Yes, but I'm not sure how a macro would work. I mean, if a driver
-foo has, let's say:
 
-	foo-core.h: FILE_LICENSE_SPDX("SPDX-License-Identifier: GPL-2.0");
-	foo-core.c: FILE_LICENSE_SPDX("SPDX-License-Identifier: GPL-2.0");
-	foo-driver.c: FILE_LICENSE_SPDX("SPDX-License-Identifier: GPL-2.0+");
+Hi!
+> Christoph:
+>=20
+> I am not speaking for Greg but let me highlight some issues and
+> benefits as I chipped in a bit to help:
+>=20
+> Some data points in the 4.14.rc7 kernel:
+> - there are 64,742 distinct license statements
+>  ... in 114,597 blocks of text
+>  ... in 42,602 files
+> - license statements represent 480,455 lines of text
+> - licenses are worded in 1,015 different ways
+> - there are about 85 distinct licenses, the bulk being the GPL
+>=20
+> NB: All of these tallies were computed with scancode-toolkit [1]
+>=20
+> License text lines represent about 14.7% of all source comments.
+> (using a CLOC to count comment lines)
+>=20
+> >From an engineering perspective this feels to me as pure madness,
+> unless everyone in kernel land is in love with legalese!
+>=20
+> I like to think of it this way:
+>=20
+> Licensing is important but repetitive long boilerplate in patches and
+> in every file is just a noisy distraction from the code substance.
+>=20
+> Imagine if the kernel had 500 versions of a printf() function?
+> Maintainers would refactor the hell of it to use a few functions.
+>=20
+> Replacing the boilerplate with licensing ids is exactly the same:
+> a sane refactoring to remove duplicated boilerplate.
+>=20
+> In the end and ideally there should be no more than one line of
+> licensing info per file, so no more than 70Kish: so there are
+> about 400K lines of boilerplate to remove.
+>=20
+> The benefits now and later:
+> - no distraction with licensing boilerplate cr*p in patches and files
 
-I can't see how to write such macro in a way that it would be
-discovering the license interception.
+Well... No distraction you say?
 
-Thanks,
-Mauro
+> Note also that beside the kernel, U-Boot has adopted the same
+> approach for quite a while, and in the application world the Eclipse
+
+Yes, it works nicely for U-Boot.
+
+But someone actually _added_ distraction. Top-level Makefile had no
+distraction there and boom, here it is, totally uninteresting and just
+at line one.
+
+Lets look at random file in usb:
+
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Driver for SMSC USB3503 USB 2.0 hub controller driver
+ *
+ * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
+ */
+=2E..
+MODULE_LICENSE("GPL");
+
+=2E..do we agree that this is nowhere near distration-free? Ugly //
+comment that screams for attention, away from other copyright info, it
+hurts your eyes...
+
+This would be improvement:
+
+/*
+ * Driver for SMSC USB3503 USB 2.0 hub controller driver
+ *
+ * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
+ *
+ * SPDX-License-Identifier: GPL-2.0+
+ */
+
+=2E..but what is above is just uuuugly.
+
+=2E..as is MODULE_LICENSE having completely different tags from SPDX.
+
+This would be even better:
+
+/*
+ * Driver for SMSC USB3503 USB 2.0 hub controller driver
+ *
+ * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
+ */
+=2E..
+SPDX_MODULE_LICENSE("GPL-2.0+")
+
+So yes, SPDX can be improvement. But in current implementation it is
+not.
+
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--cQXOx3fnlpmgJsTP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAloVrsEACgkQMOfwapXb+vIf8gCeKVDad+VOZeY63vIUFBuzGlk7
+CmEAoJmrfye23CNpoqWweROmFd3lfnFi
+=mvVZ
+-----END PGP SIGNATURE-----
+
+--cQXOx3fnlpmgJsTP--
