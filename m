@@ -1,319 +1,244 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56067 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751154AbdKUPKt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Nov 2017 10:10:49 -0500
-Subject: Re: [PATCH v4 3/3] xfs: initial fiemap range query test
-References: <1510747821-13270-1-git-send-email-nborisov@suse.com>
- <1510747900-13440-1-git-send-email-nborisov@suse.com>
- <1510747900-13440-3-git-send-email-nborisov@suse.com>
- <20171121054541.GK2749@eguan.usersys.redhat.com>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <699dc53a-4e13-3a90-de16-e4dd1f985948@suse.com>
-Date: Tue, 21 Nov 2017 17:10:44 +0200
+Received: from userp1040.oracle.com ([156.151.31.81]:17018 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751249AbdKVTyr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 14:54:47 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAMJskYY000698
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 19:54:47 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vAMJsk7e014093
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 19:54:46 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vAMJskul010569
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 19:54:46 GMT
+Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <f66c6448-60c8-884a-d9d0-43d3018deece@oracle.com>
+Date: Wed, 22 Nov 2017 12:54:45 -0700
 MIME-Version: 1.0
-In-Reply-To: <20171121054541.GK2749@eguan.usersys.redhat.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
+On 11/17/2017 11:21 AM, Allison Henderson wrote:
 
+> This patch adds a new file ioctl to retrieve the parent
+> pointer of a given inode
+>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>   fs/xfs/libxfs/xfs_attr.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++++
+>   fs/xfs/libxfs/xfs_fs.h   |  1 +
+>   fs/xfs/xfs_attr.h        |  2 ++
+>   fs/xfs/xfs_attr_list.c   |  3 +++
+>   fs/xfs/xfs_ioctl.c       | 48 +++++++++++++++++++++++++++++++++-
+>   5 files changed, 120 insertions(+), 1 deletion(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 9d4d883..d2be842 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -134,6 +134,73 @@ xfs_attr_get_ilocked(
+>   		return xfs_attr_node_get(args);
+>   }
+>   
+> +/*
+> + * Get the parent pointer for a given inode
+> + * Caller will need to allocate a buffer pointed to by xpnir->p_name
+> + * and store the buffer size in xpnir->p_namelen.  The parent
+> + * pointer will be stored in the given xfs_parent_name_irec
+> + *
+> + * Returns 0 on success and non zero on error
+> + */
+> +int
+> +xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
+> +			    struct xfs_parent_name_irec *xpnir)
+> +{
+> +	struct attrlist			*alist;
+> +	struct attrlist_ent		*aent;
+> +	struct attrlist_cursor_kern     cursor;
+> +	struct xfs_parent_name_rec	*xpnr;
+> +	char				*namebuf;
+> +	int                             error = 0;
+> +	unsigned int                    flags = ATTR_PARENT;
+> +
+> +	/* Allocate a buffer to store the attribute names */
+> +	namebuf = kmem_zalloc_large(XFS_XATTR_LIST_MAX, KM_SLEEP);
+> +	if (!namebuf)
+> +		return -ENOMEM;
+> +
+> +	/* Get all attribute names that have the ATTR_PARENT flag */
+> +	memset(&cursor, 0, sizeof(struct attrlist_cursor_kern));
+> +	error = xfs_attr_list(ip, namebuf, XFS_XATTR_LIST_MAX, flags, &cursor);
+> +	if (error)
+> +		goto out_kfree;
+> +
+> +	alist = (struct attrlist *)namebuf;
+> +
+> +	/* There should never be more than one parent pointer */
+> +	ASSERT(alist->al_count == 1);
+> +
+> +	aent = (struct attrlist_ent *) &namebuf[alist->al_offset[0]];
+> +	xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
+> +
+> +	/*
+> +	 * The value of the parent pointer attribute should be the file name
+> +	 * So we check the value length of the attribute entry against the name
+> +	 * length of the parent name record to make sure the caller gave enough
+> +	 * buffer space to store the file name (plus a null terminator)
+> +	 */
+> +	if (aent->a_valuelen >= xpnir->p_namelen) {
+> +		error = -ERANGE;
+> +		goto out_kfree;
+> +	}
+> +
+> +	xpnir->p_namelen = aent->a_valuelen + 1;
+> +	memset((void *)(xpnir->p_name), 0, xpnir->p_namelen);
+> +	error = xfs_attr_get(ip, (char *)xpnr,
+> +			     sizeof(struct xfs_parent_name_rec),
+> +			     (unsigned char *)(xpnir->p_name),
+> +			     (int *)&(xpnir->p_namelen), flags);
+> +	if (error)
+> +		goto out_kfree;
+> +
+> +	xfs_init_parent_name_irec(xpnir, xpnr);
+> +
+> +out_kfree:
+> +	kmem_free(namebuf);
+> +
+> +	return error;
+> +}
+I was thinking of moving this function else where.  It seems to generate 
+a lot of compile issues when I apply it to xfsprogs because of the 
+things it needs from xfs_attr.h.  Generally are patches to code in 
+fs/xfs/libxfs not supposed to be including things outside libxfs?  Do I 
+need to revise the series to avoid doing that? Thanks!
 
-On 21.11.2017 07:45, Eryu Guan wrote:
-> On Wed, Nov 15, 2017 at 02:11:40PM +0200, Nikolay Borisov wrote:
->> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> 
-> Please add test description to commit log too.
-> 
->> ---
->>
->> V4: 
->>  * Added test description
->>  * Added new test for past-eof behavior
->>  * Removed supported_generic_fs line
->>  * Switched to using the "ranged" param require
->>  * Revert v3 changes
->>
->> V3:
->>  * Adjusted tests for '-r' fiemap param
->>  * Tests for invalid -r combination
->>
->> V2: No change
->> V1: No change
->>
->>  tests/xfs/900     |  92 +++++++++++++++++++++++++++++++++++++++++
->>  tests/xfs/900.out | 119 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 211 insertions(+)
->>  create mode 100755 tests/xfs/900
->>  create mode 100644 tests/xfs/900.out
->>
->> diff --git a/tests/xfs/900 b/tests/xfs/900
->> new file mode 100755
->> index 0000000..06a5c64
->> --- /dev/null
->> +++ b/tests/xfs/900
->> @@ -0,0 +1,92 @@
->> +#! /bin/bash
->> +# FS QA Test No. 900
-> 
-> Add an empty line after the first line.
-> 
->> +# Test for the new ranged query functionality in xfs_io's fiemap command.
->> +# This tests various combinations of hole + data layout being printed.
->> +# Also the test used 16k holes to be compatible with 16k block filesystems
-> 
-> Empty line here too.
-> 
->> +#-----------------------------------------------------------------------
->> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
->> +# Author: Nikolay Borisov <nborisov@suse.com>
->> +#
->> +#
-> 
-> Extra empty line here.
-> 
->> +# This program is free software; you can redistribute it and/or
->> +# modify it under the terms of the GNU General Public License as
->> +# published by the Free Software Foundation.
->> +#
->> +# This program is distributed in the hope that it would be useful,
->> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> +# GNU General Public License for more details.
->> +#
->> +# You should have received a copy of the GNU General Public License
->> +# along with this program; if not, write the Free Software Foundation,
->> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> +#-----------------------------------------------------------------------
->> +#
->> +
->> +seq=`basename $0`
->> +seqres=$RESULT_DIR/$seq
->> +echo "QA output created by $seq"
->> +
->> +here=`pwd`
->> +tmp=/tmp/$$
->> +status=1	# failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->> +
->> +_cleanup()
->> +{
->> +	cd /
->> +	rm -f $tmp.*
->> +}
->> +
->> +# get standard environment, filters and checks
->> +. ./common/rc
->> +. ./common/punch
->> +
->> +# remove previous $seqres.full before test
->> +rm -f $seqres.full
->> +
->> +# real QA test starts here
->> +
->> +# Modify as appropriate.
->> +_supported_os Linux
->> +_require_scratch
->> +_require_xfs_io_command "falloc"
->> +_require_xfs_io_command "fiemap" "ranged"
-> 
-> Better to add comments about the "ranged" too in the test.
-> 
->> +
->> +_scratch_mkfs > $seqres.full 2>&1
->> +_scratch_mount || _fail "mount failure"
->> +
->> +file=$SCRATCH_MNT/testfile
->> +$XFS_IO_PROG -f -c "falloc 0 1m" $file 
-> 
-> Trailing whitespace in above line.
-> 
->> +for i in {0..31}; do $XFS_IO_PROG -c "fpunch $(($i*32))k 16k" $file; done
->> +
->> +# Query 1 data extent between 16k..16k range
->> +echo "Basic data extent"
->> +$XFS_IO_PROG -c "fiemap -v 16k 16k" $file | _filter_fiemap 
-> 
-> Trailing whitespace in above line.
-> 
->> +
->> +# Query data and hole extent
->> +echo "Data + Hole"
->> +$XFS_IO_PROG -c "fiemap -v 16k 20k" $file | _filter_fiemap
->> +
->> +echo "Hole + Data + Hole"
->> +$XFS_IO_PROG -c "fiemap -v 32k 40k" $file | _filter_fiemap
-> 
-> Test "Only hole", "Hole + Data" and "Data + Hole + Data" too? As well as
-> some tests to exercise range boundaries are not aligned with extent
-> boundaries?
+Allison
+> +
+>   /* Retrieve an extended attribute by name, and its value. */
+>   int
+>   xfs_attr_get(
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index b8108f8..2f9ca2c 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -512,6 +512,7 @@ typedef struct xfs_swapext
+>   #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+>   #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+>   /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+> +#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_name_irec)
+>   
+>   /*
+>    * ioctl commands that replace IRIX syssgi()'s
+> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+> index 0829687..0ec3458 100644
+> --- a/fs/xfs/xfs_attr.h
+> +++ b/fs/xfs/xfs_attr.h
+> @@ -172,6 +172,8 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+>   		int flags);
+>   int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+>   		size_t namelen, unsigned char *value, int valuelen, int flags);
+> +int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
+> +				struct xfs_parent_name_irec *xpnir);
+>   int xfs_attr_set_args(struct xfs_da_args *args, int flags, bool roll_trans);
+>   int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+>   		size_t namelen, int flags);
+> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> index 7740c8a..78fc477 100644
+> --- a/fs/xfs/xfs_attr_list.c
+> +++ b/fs/xfs/xfs_attr_list.c
+> @@ -534,6 +534,9 @@ xfs_attr_put_listent(
+>   	if (((context->flags & ATTR_ROOT) == 0) !=
+>   	    ((flags & XFS_ATTR_ROOT) == 0))
+>   		return;
+> +	if (((context->flags & ATTR_PARENT) == 0) !=
+> +	    ((flags & XFS_ATTR_PARENT) == 0))
+> +		return;
+>   
+>   	arraytop = sizeof(*alist) +
+>   			context->count * sizeof(alist->al_offset[0]);
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 4664314..5492607 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -44,6 +44,7 @@
+>   #include "xfs_btree.h"
+>   #include <linux/fsmap.h>
+>   #include "xfs_fsmap.h"
+> +#include "xfs_attr.h"
+>   
+>   #include <linux/capability.h>
+>   #include <linux/cred.h>
+> @@ -1710,6 +1711,50 @@ xfs_ioc_getfsmap(
+>   	return 0;
+>   }
+>   
+> +/*
+> + * IOCTL routine to get the parent pointer of an inode and return it to user
+> + * space.  Caller must pass an struct xfs_parent_name_irec with a name buffer
+> + * large enough to hold the file name.  Returns 0 on success or non-zero on
+> + * failure
+> + */
+> +STATIC int
+> +xfs_ioc_get_parent_pointer(
+> +	struct file			*filp,
+> +	void				__user *arg)
+> +{
+> +	struct inode			*inode = file_inode(filp);
+> +	struct xfs_inode		*ip = XFS_I(inode);
+> +	struct xfs_parent_name_irec	xpnir;
+> +	char				*uname;
+> +	char				*kname;
+> +	int				error = 0;
+> +
+> +	copy_from_user(&xpnir, arg, sizeof(struct xfs_parent_name_irec));
+> +	uname = (char *)xpnir.p_name;
+> +
+> +	/*
+> +	 * Use kernel space memory to get the parent pointer name.
+> +	 * We'll copy it to the user space name back when we're done
+> +	 */
+> +	kname = kmem_zalloc_large(xpnir.p_namelen, KM_SLEEP);
+> +	if (!kname)
+> +		return -ENOMEM;
+> +
+> +	xpnir.p_name = kname;
+> +	error = xfs_attr_get_parent_pointer(ip, &xpnir);
+> +
+> +	if (error)
+> +		goto out;
+> +
+> +	copy_to_user(uname, xpnir.p_name, xpnir.p_namelen);
+> +	xpnir.p_name = uname;
+> +	copy_to_user(arg, &xpnir, sizeof(struct xfs_parent_name_irec));
+> +
+> +out:
+> +	kmem_free(kname);
+> +	return error;
+> +}
+> +
+>   int
+>   xfs_ioc_swapext(
+>   	xfs_swapext_t	*sxp)
+> @@ -1866,7 +1911,8 @@ xfs_file_ioctl(
+>   		return xfs_ioc_getxflags(ip, arg);
+>   	case XFS_IOC_SETXFLAGS:
+>   		return xfs_ioc_setxflags(ip, filp, arg);
+> -
+> +	case XFS_IOC_GETPPOINTER:
+> +		return xfs_ioc_get_parent_pointer(filp, arg);
+>   	case XFS_IOC_FSSETDM: {
+>   		struct fsdmidata	dmi;
+>   
 
-Only hole is covered by "Begining with a hole", I've added the next 2
-suggestions. Also some tests already have boundaries which are not
-aligned and the behavior there is pretty well defined by the kernel so
-no point in adding specific tests for those.
-
-> 
->> +
->> +echo "Beginning with a hole"
->> +$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
->> +
->> +# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
->> +echo "Query more than 32 extents"
->> +$XFS_IO_PROG -c "fiemap -v 0 640k" $file | _filter_fiemap
->> +
->> +echo "Larger query than file size"
->> +$XFS_IO_PROG -c "fiemap -v 0 2m" $file | _filter_fiemap
->> +
->> +#mapping past eof shouldn't print anything"
-> 
-> Add a space after "#" for comments.
-> 
->> +$XFS_IO_PROG -c "fiemap -v 2m" $file | _filter_fiemap
->> +
->> +#check everything without the first hole
-> 
-> Same here.
-> 
-> Thanks,
-> Eryu
-> 
->> +$XFS_IO_PROG -c "fiemap -v 16k" $file | wc -l
->> +
->> +# success, all done
->> +status=0
->> +exit
->> diff --git a/tests/xfs/900.out b/tests/xfs/900.out
->> new file mode 100644
->> index 0000000..6ecf1b6
->> --- /dev/null
->> +++ b/tests/xfs/900.out
->> @@ -0,0 +1,119 @@
->> +QA output created by 900
->> +Basic data extent
->> +0: [32..63]: unwritten
->> +Data + Hole
->> +0: [32..63]: unwritten
->> +1: [64..95]: hole
->> +Hole + Data + Hole
->> +0: [64..95]: hole
->> +1: [96..127]: unwritten
->> +2: [128..159]: hole
->> +Beginning with a hole
->> +0: [0..31]: hole
->> +Query more than 32 extents
->> +0: [0..31]: hole
->> +1: [32..63]: unwritten
->> +2: [64..95]: hole
->> +3: [96..127]: unwritten
->> +4: [128..159]: hole
->> +5: [160..191]: unwritten
->> +6: [192..223]: hole
->> +7: [224..255]: unwritten
->> +8: [256..287]: hole
->> +9: [288..319]: unwritten
->> +10: [320..351]: hole
->> +11: [352..383]: unwritten
->> +12: [384..415]: hole
->> +13: [416..447]: unwritten
->> +14: [448..479]: hole
->> +15: [480..511]: unwritten
->> +16: [512..543]: hole
->> +17: [544..575]: unwritten
->> +18: [576..607]: hole
->> +19: [608..639]: unwritten
->> +20: [640..671]: hole
->> +21: [672..703]: unwritten
->> +22: [704..735]: hole
->> +23: [736..767]: unwritten
->> +24: [768..799]: hole
->> +25: [800..831]: unwritten
->> +26: [832..863]: hole
->> +27: [864..895]: unwritten
->> +28: [896..927]: hole
->> +29: [928..959]: unwritten
->> +30: [960..991]: hole
->> +31: [992..1023]: unwritten
->> +32: [1024..1055]: hole
->> +33: [1056..1087]: unwritten
->> +34: [1088..1119]: hole
->> +35: [1120..1151]: unwritten
->> +36: [1152..1183]: hole
->> +37: [1184..1215]: unwritten
->> +38: [1216..1247]: hole
->> +39: [1248..1279]: unwritten
->> +Larger query than file size
->> +0: [0..31]: hole
->> +1: [32..63]: unwritten
->> +2: [64..95]: hole
->> +3: [96..127]: unwritten
->> +4: [128..159]: hole
->> +5: [160..191]: unwritten
->> +6: [192..223]: hole
->> +7: [224..255]: unwritten
->> +8: [256..287]: hole
->> +9: [288..319]: unwritten
->> +10: [320..351]: hole
->> +11: [352..383]: unwritten
->> +12: [384..415]: hole
->> +13: [416..447]: unwritten
->> +14: [448..479]: hole
->> +15: [480..511]: unwritten
->> +16: [512..543]: hole
->> +17: [544..575]: unwritten
->> +18: [576..607]: hole
->> +19: [608..639]: unwritten
->> +20: [640..671]: hole
->> +21: [672..703]: unwritten
->> +22: [704..735]: hole
->> +23: [736..767]: unwritten
->> +24: [768..799]: hole
->> +25: [800..831]: unwritten
->> +26: [832..863]: hole
->> +27: [864..895]: unwritten
->> +28: [896..927]: hole
->> +29: [928..959]: unwritten
->> +30: [960..991]: hole
->> +31: [992..1023]: unwritten
->> +32: [1024..1055]: hole
->> +33: [1056..1087]: unwritten
->> +34: [1088..1119]: hole
->> +35: [1120..1151]: unwritten
->> +36: [1152..1183]: hole
->> +37: [1184..1215]: unwritten
->> +38: [1216..1247]: hole
->> +39: [1248..1279]: unwritten
->> +40: [1280..1311]: hole
->> +41: [1312..1343]: unwritten
->> +42: [1344..1375]: hole
->> +43: [1376..1407]: unwritten
->> +44: [1408..1439]: hole
->> +45: [1440..1471]: unwritten
->> +46: [1472..1503]: hole
->> +47: [1504..1535]: unwritten
->> +48: [1536..1567]: hole
->> +49: [1568..1599]: unwritten
->> +50: [1600..1631]: hole
->> +51: [1632..1663]: unwritten
->> +52: [1664..1695]: hole
->> +53: [1696..1727]: unwritten
->> +54: [1728..1759]: hole
->> +55: [1760..1791]: unwritten
->> +56: [1792..1823]: hole
->> +57: [1824..1855]: unwritten
->> +58: [1856..1887]: hole
->> +59: [1888..1919]: unwritten
->> +60: [1920..1951]: hole
->> +61: [1952..1983]: unwritten
->> +62: [1984..2015]: hole
->> +63: [2016..2047]: unwritten
->> +65
->> -- 
->> 2.7.4
->>
-> 
