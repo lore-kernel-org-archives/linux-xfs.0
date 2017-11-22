@@ -1,178 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:36762 "EHLO mail.webx.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751067AbdKUPkX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Nov 2017 10:40:23 -0500
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf conversion and the addition of an attribute
-Date: Tue, 21 Nov 2017 16:31:20 +0100
-Message-ID: <1757414.A5ytRCBscU@libor-nb>
-In-Reply-To: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
-References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49750 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753148AbdKVWkM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 17:40:12 -0500
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vAMMe5Zq017886
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 14:40:12 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2edhtj02pm-4
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 14:40:12 -0800
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH RESEND v6 1/3] xfs: Show realtime device stats on statfs calls if inherit flag set
+Date: Wed, 22 Nov 2017 14:40:07 -0800
+Message-ID: <20171122224009.3533341-2-rwareing@fb.com>
+In-Reply-To: <20171122224009.3533341-1-rwareing@fb.com>
+References: <20171122224009.3533341-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: alex@zadarastorage.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-Hello again,
-i'm sorry to bug you, but i would like to ask, if this patch made it to kernel 
-yet?
-I was looking on pull request messages and did not see it.
+- Reports realtime device free blocks in statfs calls if inheritance
+  bit is set on the inode of directory.  This is a bit more intuitive,
+  especially for use-cases which are using a much larger device for
+  the realtime device.
+- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
+  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
+  option.
 
-We were struck by "Metadata corruption detected at 
-xfs_attr3_leaf_write_verify" under high load, after months without problem.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v5:
+* None
 
-But we are still on 4.9.30 on this server, there is possibility to upgrade to 
-4.9.51 from backports.
+Changes since v4:
+* None
 
-With regards,
-Libor
+Changes since v3:
+* Fixed accounting bug, we are not required to substract m_alloc_set_aside
+  as this is a data device only requirement.
+* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
+  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
+  for the inode.
+
+Changes since v2:
+* Style updated per Christoph Hellwig's comment
+* Fixed bug: statp->f_bavail = statp->f_bfree
 
 
-On středa 9. srpna 2017 13:06:12 CET alex@zadarastorage.com wrote:
-> From: Alex Lyakas <alex@zadarastorage.com>
-> 
-> The new attribute leaf buffer is not held locked across
-> the transaction roll between the shortform->leaf modification
-> and the addition of the new entry. As a result, the attribute
-> buffer modification being made is not atomic from
-> an operational perspective. Hence the AIL push can grab it in
-> the transient state of "just created" after the initial
-> transaction is rolled, because the buffer has been released.
-> This leads to xfs_attr3_leaf_verify() asserting that
-> hdr.count is zero, treating this as in-memory corruption,
-> and shutting down the filesystem.
-> 
-> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
->  fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
->  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
->  3 files changed, 23 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index de7b9bd..982e322 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -216,10 +216,11 @@
->  	struct xfs_defer_ops	dfops;
->  	struct xfs_trans_res	tres;
->  	xfs_fsblock_t		firstblock;
->  	int			rsvd = (flags & ATTR_ROOT) != 0;
->  	int			error, err2, local;
-> +	struct xfs_buf		*leaf_bp = NULL;
->  
->  	XFS_STATS_INC(mp, xs_attr_set);
->  
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
-> @@ -325,11 +326,17 @@
->  		/*
->  		 * It won't fit in the shortform, transform to a leaf block.
->  		 * GROT: another possible req'mt for a double-split btree op.
->  		 */
->  		xfs_defer_init(args.dfops, args.firstblock);
-> -		error = xfs_attr_shortform_to_leaf(&args);
-> +		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-> +		/*
-> +		 * Prevent the leaf buffer from being unlocked
-> +		 * when "args.trans" transaction commits.
-> +		 */
-> +		if (leaf_bp)
-> +			xfs_trans_bhold(args.trans, leaf_bp);
->  		if (!error)
->  			error = xfs_defer_finish(&args.trans, args.dfops, dp);
->  		if (error) {
->  			args.trans = NULL;
->  			xfs_defer_cancel(&dfops);
-> @@ -343,10 +350,18 @@
->  
->  		error = xfs_trans_roll(&args.trans, dp);
->  		if (error)
->  			goto out;
->  
-> +		/*
-> +		 * Rejoin the leaf buffer to the new transaction.
-> +		 * This allows a subsequent read to find the buffer in the
-> +		 * transaction (and avoid a deadlock).
-> +		 */
-> +		xfs_trans_bjoin(args.trans, leaf_bp);
-> +		/* Prevent from being released at the end of the function */
-> +		leaf_bp = NULL;
->  	}
->  
->  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->  		error = xfs_attr_leaf_addname(&args);
->  	else
-> @@ -374,10 +389,12 @@
->  	return error;
->  
->  out:
->  	if (args.trans)
->  		xfs_trans_cancel(args.trans);
-> +	if (leaf_bp)
-> +		xfs_buf_relse(leaf_bp);
->  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
->  	return error;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index c6c15e5..ab73e4b 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -738,13 +738,14 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args 
-*args,
->  	return -ENOATTR;
->  }
->  
->  /*
->   * Convert from using the shortform to the leaf.
-> + * Upon success, return the leaf buffer.
->   */
->  int
-> -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> +xfs_attr_shortform_to_leaf(xfs_da_args_t *args, struct xfs_buf **bpp)
->  {
->  	xfs_inode_t *dp;
->  	xfs_attr_shortform_t *sf;
->  	xfs_attr_sf_entry_t *sfe;
->  	xfs_da_args_t nargs;
-> @@ -820,10 +821,11 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args 
-*args,
->  		if (error)
->  			goto out;
->  		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
->  	}
->  	error = 0;
-> +	*bpp = bp;
->  
->  out:
->  	kmem_free(tmpbuffer);
->  	return error;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index f7dda0c..2b3c69df 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -46,11 +46,12 @@
->   */
->  void	xfs_attr_shortform_create(struct xfs_da_args *args);
->  void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
->  int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
->  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
-> -int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-> +int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
-> +					struct xfs_buf **bpp);
->  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
->  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
->  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
->  void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
->  
-> 
+ fs/xfs/xfs_linux.h | 2 ++
+ fs/xfs/xfs_super.c | 8 ++++++++
+ 2 files changed, 10 insertions(+)
 
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index dcd1292..944b02d 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -278,8 +278,10 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+ #define XFS_IS_REALTIME_INODE(ip)			\
+ 	(((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME) &&	\
+ 	 (ip)->i_mount->m_rtdev_targp)
++#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
+ #else
+ #define XFS_IS_REALTIME_INODE(ip) (0)
++#define XFS_IS_REALTIME_MOUNT(mp) (0)
+ #endif
+ 
+ #endif /* __XFS_LINUX__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f663022..3c9a989 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1153,6 +1153,14 @@ xfs_fs_statfs(
+ 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+ 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+ 		xfs_qm_statvfs(ip, statp);
++
++	if (XFS_IS_REALTIME_MOUNT(mp) &&
++	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
++		statp->f_blocks = sbp->sb_rblocks;
++		statp->f_bavail = statp->f_bfree =
++			sbp->sb_frextents * sbp->sb_rextsize;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+2.9.5
 
