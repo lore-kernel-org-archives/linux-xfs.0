@@ -1,214 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35602 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751260AbdKVUl2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Nov 2017 15:41:28 -0500
-Date: Wed, 22 Nov 2017 15:41:26 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171122204126.GA19041@bfoster.bfoster>
-References: <20171121150557.GA5014@bfoster.bfoster>
- <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
- <20171121173557.GB6004@bfoster.bfoster>
- <20171122022645.GR5858@dastard>
- <20171122122100.GA9984@bfoster.bfoster>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:57102 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752162AbdKVWlz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 17:41:55 -0500
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.16.0.21/8.16.0.21) with SMTP id vAMMfBQi010058
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 14:41:54 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by m0001303.ppops.net with ESMTP id 2edawh23gr-8
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 14:41:54 -0800
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH RESEND v6 3/3] xfs: Add realtime fallback if data device full
+Date: Wed, 22 Nov 2017 14:40:09 -0800
+Message-ID: <20171122224009.3533341-4-rwareing@fb.com>
+In-Reply-To: <20171122224009.3533341-1-rwareing@fb.com>
+References: <20171122224009.3533341-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171122122100.GA9984@bfoster.bfoster>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
-> On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
-> > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
-> > > cc linux-xfs
-> > > 
-> > > On Tue, Nov 21, 2017 at 10:51:10AM -0600, Mark Tinguely wrote:
-> > > > STATIC uint
-> > > > xfs_calc_ifree_reservation(
-> > > >         struct xfs_mount        *mp)
-> > > > {
-> > > >         return XFS_DQUOT_LOGRES(mp) +
-> > > >                 mp->m_sb.sb_inodesize +
-> > > >                 mp->m_sb.sb_sectsize +
-> > > >                 mp->m_sb.sb_sectsize +
-> > > >                 XFS_FSB_TO_B(mp, 1) +
-> > > >                 MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
-> > > >                     XFS_INODE_CLUSTER_SIZE(mp)) +
-> > > >                 128 * 5 +
-> > > >                 XFS_ALLOCFREE_LOG_RES(mp, 1) +
-> > > >                 128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
-> > > >                        XFS_ALLOCFREE_LOG_COUNT(mp, 1));
-> > > > }
-> > > > ...
-> > > 
-> > > Indeed, this looks fairly similar to the line cited above from the
-> > > current code (modulo the xfs_calc_buf_res() refactoring).
-> > 
-> > Right, the refactoring should have been a straight conversion of the
-> > code - and not change any of the reservations. If they were wrong
-> > before the refactoring, they will still be wrong now.
-> > 
-> > > I'm curious
-> > > why we only consider the buffer overhead (i.e., 128 bytes *
-> > > ->m_in_maxlevels) of the ->m_in_maxlevels value rather than the full
-> > > buffer size.
-> > 
-> > That just looks like a bug. Earlier on in the calculation we
-> > take into account:
-> > 
-> >  *    the inode btree entry: block size
-> > ....
-> > 		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> > 
-> > So we've accounted for the AGI btree block the record being modified
-> > exists in. But we don't account for tree shape changes....
-> > 
-> > .... and, as usual, knowing the history of the code tells me the
-> > probable reason why the reservation is like this.
-> > 
-> > i.e. inodes could not be removed from disk when the original
-> > reservation was defined.  Once allocated, they never got
-> > removed, so an ifree transaction only ever touched the inode btree
-> > block the chunk record was in. So, a quick dive into history from
-> > the XFS archive with git blame:
-> > 
-> 
-> Ah, I wasn't aware of that. That definitely helps explain the current
-> reservation.
-> 
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  * In freeing an inode we can modify:
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode being freed: inode size
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the super block free inode counter: sector size
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the agi hash list and counters: sector size
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  *    the inode btree entry: block size
-> > cd235688e046e (Adam Sweeney     1995-08-31  *    the on disk inode before ours in the agi hash list: inode cluster size
-> > 254f6311ed1b7 (Steve Lord       2003-10-06  *    the inode btree: max depth * blocksize
-> > 254f6311ed1b7 (Steve Lord       2003-10-06  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  */       
-> > d3c15dd08b409 (Russell Cattelan 2003-04-15 #define  XFS_CALC_IFREE_LOG_RES(mp) \
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23  ((mp)->m_sb.sb_inodesize + \
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23   (mp)->m_sb.sb_sectsize + \
-> > 814994f5c75f6 (Adam Sweeney     1994-09-23   XFS_FSB_TO_B((mp), 1) + \
-> > 0139225509eb1 (Steve Lord       2001-09-11   MAX((__uint16_t)XFS_FSB_TO_B((mp), 1), XFS_INODE_CLUSTER_SIZE(mp)) + \
-> > 254f6311ed1b7 (Steve Lord       2003-10-06   (128 * 5) + \
-> > 254f6311ed1b7 (Steve Lord       2003-10-06    (128 * (2 + XFS_IALLOC_BLOCKS(mp) + XFS_IN_MAXLEVELS(mp) + \
-> > 254f6311ed1b7 (Steve Lord       2003-10-06     XFS_ALLOCFREE_LOG_COUNT(mp, 1))))
-> > 254f6311ed1b7 (Steve Lord       2003-10-06           
-> > 
-> > Without even looking I know what those 2003 changes were. For
-> > everyone else:
-> > 
-> > 254f6311ed1b Implement deletion of inode clusters in XFS.
-> > 
-> > So, yeah, this looks like a bug in the original reservation
-> > calculation for freeing inode clusters. I suspect it got messed up
-> > because the buffers covering XFS_IALLOC_BLOCKS (the inode chunk) get
-> > marked stale and so their contents are not logged. That means just
-> > the header+blf is logged and so the reservation is correct for them.
-> > that isn't the case for the inobt blocks themselves, however.
-> > 
-> 
-> Yep, that's what I figured for ->m_ialloc_blks.
-> 
-> > i.e.  it should be calculating:
-> > 
-> > ....
-> >  *	the inode chunk blocks are stale, so only headers get logged
-> >  *	the inode btree: max depth * blocksize
-> > ....
-> > 	xfs_calc_buf_res(2 + mp->m_ialloc_blks, 0) +
-> > 	xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
-> > ....
-> > 
-> 
-> Sounds about right.. though I think we should also replace the old
-> single block reservation ("the inode btree entry: block size") as well
-> since that is now a subset of the m_in_maxlevels res.
-> 
-> > I'm still not 100% sure what the extra "2 +" is accounting for
-> > there, though, so to be safe that migh need to be accounted as full
-> > blocks, not log headers.
-> > 
-> 
-> Same.. there is still a bit of cruft in this calculation that really
-> isn't clear. That +2 is one part and then there's another
-> xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
-> that it's a separate line implies it is logically separate, but who
-> knows.
-> 
-> I suppose I'll keep that line as is, replace the inobt entry bit with
-> the full inobt calculation (as above), keep the +2 associated with the
-> inobt calculation and run some tests on that.
-> 
-> > Good find, Brian!
-> > 
-> > Of course, that doesn't mean it will fix the transaction overrun
-> > being reported because it's overrunning the freespace tree
-> > reservations rather than the inobt reservation. It certainly won't
-> > hurt, though. :P
-> > 
-> 
-> Right.. technically this is a separate issue but I actually think it may
-> end up resolving the overrun in most cases. I tested a quick hack to
-> change the 0 in the existing code to XFS_FSB_TO_B(mp, 1) before I
-> realized that the m_ialloc_blks part still needs to be separate. That
-> survived all my tests, but it's also larger than what we've settled on
-> here. I think the overrun has been within m_in_maxlevels blocks worth of
-> bytes in most cases. I do recall seeing occasional larger instances,
-> however, I just don't recall the exact numbers. I'll give this some
-> testing and see if we need to also bolt on some kind of agfl fixup
-> limit.
-> 
+- For FSes which have a realtime device configured, rt_fallback_pct forces
+  allocations to the realtime device after data device usage reaches
+  rt_fallback_pct.
+- Useful for realtime device users to help prevent ENOSPC errors when
+  selectively storing some files (e.g. small files) on data device, while
+  others are stored on realtime block device.
+- Set via the "rt_fallback_pct" sysfs value which is available if
+  the kernel is compiled with CONFIG_XFS_RT.
 
-Quick update... I ended up still hitting an overrun with this fix in
-place (actually, the original bug report shows an overrun of ~32k which
-should have indicated that was going to be the case).
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v5:
+* Minor change to work with XFS_BMAPI_RTDATA method described
+  in rt_alloc_min patch
+* Fixed bounds checks on sysfs option
+* Documentation
 
-In any event, that had me thinking about tweaking how we manage the agfl
-and subsequently brings up a couple other issues. Firstly, this is a
-large fs, so we have 1TB AGs and the associated 16 entry agfls. The min
-agfl allocation is 8 at the time of the overrun, which is the maximum
-case for such a filesystem (4 per space btree). IIUC, as much as we need
-to keep the agfl populated with a minimum of 8 blocks in this case, we
-conversely also need to make sure we have 8 free slots, yes? If so, I'm
-not sure that being lazy about freeing blocks is an option because I
-have at least one trace where it takes 3 agfl block frees just to get
-the agfl from 9 down to the required 8.
+Changes since v4:
+* Refactored to align with xfs_inode_select_target change
+* Fallback percentage reworked to trigger on % space used on data device.
+  I find this a bit more intuitive as it aligns well with "df" output.
+* mp->m_rt_min_fdblocks now assigned via function call
+* Better consistency on sysfs options
 
-Unrelated to the overrun issue, I also notice that we use the agfl for
-the rmapbt. That adds another 5 blocks in the maximum case, which means
-a 1TB AG can have a min agfl requirement of 4+4+5=13 blocks allocated of
-16 slots. Unless I'm missing something in the reasoning above, aren't we
-kind of playing with fire in that case? E.g., what prevents us from
-doing a 4-level join on one of the trees with a 13/16 agfl and running
-out of space to free btree blocks? This has me wondering whether we need
-some kind of larger/dynamic agfl that facilitates the additional use
-(and potentially lazier management to resolve the "too many fixups"
-issue). Thoughts?
+Changes since v3:
+* None, new patch to patch set
 
-Brian
+ Documentation/filesystems/xfs.txt |  6 ++++++
+ fs/xfs/xfs_fsops.c                |  2 ++
+ fs/xfs/xfs_mount.c                | 24 ++++++++++++++++++++++
+ fs/xfs/xfs_mount.h                |  7 +++++++
+ fs/xfs/xfs_rtalloc.c              | 42 ++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_sysfs.c                | 38 +++++++++++++++++++++++++++++++++++
+ 6 files changed, 118 insertions(+), 1 deletion(-)
 
-> Thanks for the feedback!
-> 
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+index 0763972..ed6f6e2 100644
+--- a/Documentation/filesystems/xfs.txt
++++ b/Documentation/filesystems/xfs.txt
+@@ -486,3 +486,9 @@ When using a realtime sub-volume, the following sysfs options are supported:
+ 	Buffered, direct IO and pre-allocation are supported.
+ 
+ 	Setting the value to "0" disables this behavior.
++
++  /sys/fs/xfs/<dev>/rt_fallback_pct
++  (Units: percentage  Min: 0  Default: 0,  Max: 100)
++	When set, the file will be allocated blocks from the realtime device if the
++	data device space utilization rises above rt_fallback_pct.  Setting the
++	value to "0" disables this behavior.
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 8f22fc5..89713f1 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -610,6 +610,8 @@ xfs_growfs_data_private(
+ 	xfs_set_low_space_thresholds(mp);
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
++	mp->m_rt_min_free_dblocks = xfs_rt_calc_min_free_dblocks(mp);
++
+ 	/*
+ 	 * If we expanded the last AG, free the per-AG reservation
+ 	 * so we can reinitialize it with the new size.
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index e9727d0..3905e57 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1396,3 +1396,27 @@ xfs_dev_is_read_only(
+ 	}
+ 	return 0;
+ }
++
++/*
++ * precalculate minimum of data blocks required, if we fall
++ * below this value, we will fallback to the real-time device.
++ *
++ * m_rt_fallback_pct can only be non-zero if a real-time device
++ * is configured.
++ */
++uint64_t
++xfs_rt_calc_min_free_dblocks(
++	struct xfs_mount	*mp)
++{
++	xfs_rfsblock_t		min_free_dblocks = 0;
++
++	if (!XFS_IS_REALTIME_MOUNT(mp))
++		return 0;
++
++	/* Pre-compute minimum data blocks required before
++	 * falling back to RT device for allocations
++	 */
++	min_free_dblocks = mp->m_sb.sb_dblocks * (100 - mp->m_rt_fallback_pct);
++	do_div(min_free_dblocks, 100);
++	return min_free_dblocks;
++}
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 0db9731..9dc17b8 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -198,6 +198,12 @@ typedef struct xfs_mount {
+ 
+ 	bool			m_fail_unmount;
+ 	xfs_off_t		m_rt_alloc_min; /* Min RT allocation */
++	/* Fallback to realtime device if data device usage above rt_fallback_pct */
++	uint			m_rt_fallback_pct;
++	/* Use realtime device if free data device blocks falls below this; computed
++	 * from m_rt_fallback_pct.
++	 */
++	xfs_rfsblock_t		m_rt_min_free_dblocks;
+ #ifdef DEBUG
+ 	/*
+ 	 * Frequency with which errors are injected.  Replaces xfs_etest; the
+@@ -447,4 +453,5 @@ int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+ struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
+ 		int error_class, int error);
+ 
++uint64_t	xfs_rt_calc_min_free_dblocks(struct xfs_mount *mp);
+ #endif	/* __XFS_MOUNT_H__ */
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 145007b..3abd403 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1304,6 +1304,37 @@ xfs_rt_alloc_min(
+ }
+ 
+ /*
++ * m_rt_min_free_dblocks is a pre-computed threshold, which controls target
++ * selection based on how many free blocks are available on the data device.
++ *
++ * If the number of free data device blocks falls below
++ * mp->m_rt_min_free_dblocks, the realtime device is selected as the target
++ * device.  If this value is not set, this target policy is in-active.
++ *
++ */
++bool
++xfs_rt_min_free_dblocks(
++	struct xfs_mount	*mp,
++	struct xfs_inode	*ip,
++	xfs_off_t		len)
++{
++	/* Disabled */
++	if (!mp->m_rt_fallback_pct)
++		return false;
++
++	/* If inode target is already realtime device, nothing to do here */
++	if (!XFS_IS_REALTIME_INODE(ip)) {
++		uint64_t	free_dblocks;
++		free_dblocks = percpu_counter_sum(&mp->m_fdblocks) -
++			mp->m_alloc_set_aside;
++		if (free_dblocks < mp->m_rt_min_free_dblocks) {
++			return true;
++		}
++	}
++	return false;
++}
++
++/*
+ * Select the target device for the inode based on either the size of the
+ * initial allocation, or the amount of space available on the data device.
+ *
+@@ -1332,5 +1363,14 @@ xfs_inode_select_rt_target(
+ 	/* Select realtime device as our target based on the value of
+ 	 * mp->m_rt_alloc_min.  Target selection code if not valid if not set.
+ 	 */
+-	return xfs_rt_alloc_min(mp, len);
++	if (xfs_rt_alloc_min(mp, len))
++		return true;
++
++	/* Check if data device has enough space, if not fallback to realtime
++	 * device.  Valid only if mp->m_rt_fallback_pct is set.
++	 */
++	if (xfs_rt_min_free_dblocks(mp, ip, len))
++		return true;
++
++	return false;
+ }
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 8b425be..64f29b6 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -127,11 +127,49 @@ rt_alloc_min_show(
+ 	return snprintf(buf, PAGE_SIZE, "%lld\n", mp->m_rt_alloc_min);
+ }
+ XFS_SYSFS_ATTR_RW(rt_alloc_min);
++
++STATIC ssize_t
++rt_fallback_pct_store(
++	struct kobject		*kobject,
++	const char		*buf,
++	size_t			count)
++{
++	struct xfs_mount	*mp = to_mp(kobject);
++	int			ret;
++	int			val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	if (!XFS_IS_REALTIME_MOUNT(mp))
++		return -EINVAL;
++
++	if (val < 0 || val > 100)
++		return -EINVAL;
++
++	/* Only valid if using a real-time device */
++	mp->m_rt_fallback_pct = val;
++	mp->m_rt_min_free_dblocks = xfs_rt_calc_min_free_dblocks(mp);
++	return count;
++}
++
++STATIC ssize_t
++rt_fallback_pct_show(
++	struct kobject          *kobject,
++	char                    *buf)
++{
++	struct xfs_mount        *mp = to_mp(kobject);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_fallback_pct);
++}
++XFS_SYSFS_ATTR_RW(rt_fallback_pct);
+ #endif
+ 
+ static struct attribute *xfs_mp_attrs[] = {
+ #ifdef CONFIG_XFS_RT
+ 	ATTR_LIST(rt_alloc_min),
++	ATTR_LIST(rt_fallback_pct),
+ #endif
+ 	NULL,
+ };
+-- 
+2.9.5
+
