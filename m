@@ -1,115 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48390 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751253AbdKUBii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2017 20:38:38 -0500
-Date: Mon, 20 Nov 2017 17:37:53 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171121013753.GA12441@magnolia>
-References: <20171117193925.GM5119@magnolia>
- <20171120161829.GA25991@bombadil.infradead.org>
- <20171120202606.GN5858@dastard>
- <20171120215100.GB8933@bombadil.infradead.org>
- <20171120222749.GO5858@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:31397 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753028AbdKVWta (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 17:49:30 -0500
+Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+ <f66c6448-60c8-884a-d9d0-43d3018deece@oracle.com>
+ <20171122210744.GS5858@dastard>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <a9ace24a-8735-8600-6982-79bc89adf8c4@oracle.com>
+Date: Wed, 22 Nov 2017 15:49:25 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171120222749.GO5858@dastard>
+In-Reply-To: <20171122210744.GS5858@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
-> On Mon, Nov 20, 2017 at 01:51:00PM -0800, Matthew Wilcox wrote:
-> > On Tue, Nov 21, 2017 at 07:26:06AM +1100, Dave Chinner wrote:
-> > > On Mon, Nov 20, 2017 at 08:18:29AM -0800, Matthew Wilcox wrote:
-> > > > On Fri, Nov 17, 2017 at 11:39:25AM -0800, Darrick J. Wong wrote:
-> > > > > If two programs simultaneously try to write to the same part of a file
-> > > > > via direct IO and buffered IO, there's a chance that the post-diowrite
-> > > > > pagecache invalidation will fail on the dirty page.  When this happens,
-> > > > > the dio write succeeded, which means that the page cache is no longer
-> > > > > coherent with the disk!
-> > > > 
-> > > > This seems like a good opportunity to talk about what I've been working
-> > > > on for solving this problem.  The XArray is going to introduce a set
-> > > > of entries which can be stored to locations in the page cache that I'm
-> > > > calling 'wait entries'.
-> > > 
-> > > What's this XArray thing you speak of?
-> > 
-> > Ah, right, you were on sabbatical at LSFMM this year where I talked
-> > about it.  Briefly, it's a new API for the radix tree.  The data structure
-> > is essentially unchanged (minor enhancements), but I'm rationalising
-> > existing functionality and adding new abilities.  And getting rid of
-> > misfeatures like the preload API and implicit GFP flags.
-> > 
-> > My current working tree is here:
-> > 
-> > http://git.infradead.org/users/willy/linux-dax.git/shortlog/refs/heads/xarray-2017-11-20
-> 
-> First thing I noticed was that "xa" as a prefix is already quite
-> widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
-> already exists and is quite widely used, so having a generic
-> interface using the same prefixes and lock names is going to be
-> quite confusing in the XFS code. Especially considering there's
-> fair bit of radix tree use in XFS (e.g. the internal inode and
-> dquot caches).
-> 
-> FYI, from fs/xfs/xfs_trans_priv.h:
-> 
-> /*
->  * Private AIL structures.
->  *
->  * Eventually we need to drive the locking in here as well.
->  */
-> struct xfs_ail {
->         struct xfs_mount        *xa_mount;
->         struct task_struct      *xa_task;
->         struct list_head        xa_ail;
->         xfs_lsn_t               xa_target;
->         xfs_lsn_t               xa_target_prev;
->         struct list_head        xa_cursors;
->         spinlock_t              xa_lock;
->         xfs_lsn_t               xa_last_pushed_lsn;
->         int                     xa_log_flush;
->         struct list_head        xa_buf_list;
->         wait_queue_head_t       xa_empty;
-> };
-> 
-> 
-> > Ignoring the prep patches, the excitement is all to be found with the
-> > commits which start 'xarray:'
-> 
-> FWIW, why is it named "XArray"?  "X" stands for what?  It still
-> looks like a tree structure to me, but without a design doc I'm a
-> bit lost to how it differs to the radix tree (apart from the API)
-> and why it's considered an "array".
+On 11/22/2017 02:07 PM, Dave Chinner wrote:
 
-/me nominates 'xarr' for the prefix because pirates. :P
-
---D
-
-> > If you want an example of it in use, I'm pretty happy with this patch
-> > that switches the brd driver entirely from the radix tree API to the
-> > xarray API:
-> > 
-> > http://git.infradead.org/users/willy/linux-dax.git/commitdiff/dbf96ae943e43563cbbaa26e21b656b6fe8f4b0f
-> 
-> Looks pretty neat, but I'll reserve judgement for when I see the
-> conversion of the XFS radix tree code....
-> 
-> > I've been pretty liberal with the kernel-doc, but I haven't written out
-> > a good .rst file to give an overview of how to use it.
-> 
-> Let me know when you've written it :)
-> 
+> On Wed, Nov 22, 2017 at 12:54:45PM -0700, Allison Henderson wrote:
+>> On 11/17/2017 11:21 AM, Allison Henderson wrote:
+>>
+>>> This patch adds a new file ioctl to retrieve the parent
+>>> pointer of a given inode
+>>>
+>>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>>> ---
+>>>   fs/xfs/libxfs/xfs_attr.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++++
+>>>   fs/xfs/libxfs/xfs_fs.h   |  1 +
+>>>   fs/xfs/xfs_attr.h        |  2 ++
+>>>   fs/xfs/xfs_attr_list.c   |  3 +++
+>>>   fs/xfs/xfs_ioctl.c       | 48 +++++++++++++++++++++++++++++++++-
+>>>   5 files changed, 120 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>>> index 9d4d883..d2be842 100644
+>>> --- a/fs/xfs/libxfs/xfs_attr.c
+>>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>>> @@ -134,6 +134,73 @@ xfs_attr_get_ilocked(
+>>>   		return xfs_attr_node_get(args);
+>>>   }
+>>> +/*
+>>> + * Get the parent pointer for a given inode
+>>> + * Caller will need to allocate a buffer pointed to by xpnir->p_name
+>>> + * and store the buffer size in xpnir->p_namelen.  The parent
+>>> + * pointer will be stored in the given xfs_parent_name_irec
+>>> + *
+>>> + * Returns 0 on success and non zero on error
+>>> + */
+>>> +int
+>>> +xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
+>>> +			    struct xfs_parent_name_irec *xpnir)
+>>> +{
+>>> +	struct attrlist			*alist;
+>>> +	struct attrlist_ent		*aent;
+>>> +	struct attrlist_cursor_kern     cursor;
+>>> +	struct xfs_parent_name_rec	*xpnr;
+>>> +	char				*namebuf;
+>>> +	int                             error = 0;
+>>> +	unsigned int                    flags = ATTR_PARENT;
+>>> +
+>>> +	/* Allocate a buffer to store the attribute names */
+>>> +	namebuf = kmem_zalloc_large(XFS_XATTR_LIST_MAX, KM_SLEEP);
+>>> +	if (!namebuf)
+>>> +		return -ENOMEM;
+>>> +
+>>> +	/* Get all attribute names that have the ATTR_PARENT flag */
+>>> +	memset(&cursor, 0, sizeof(struct attrlist_cursor_kern));
+>>> +	error = xfs_attr_list(ip, namebuf, XFS_XATTR_LIST_MAX, flags, &cursor);
+>>> +	if (error)
+>>> +		goto out_kfree;
+>>> +
+>>> +	alist = (struct attrlist *)namebuf;
+>>> +
+>>> +	/* There should never be more than one parent pointer */
+>>> +	ASSERT(alist->al_count == 1);
+>>> +
+>>> +	aent = (struct attrlist_ent *) &namebuf[alist->al_offset[0]];
+>>> +	xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
+>>> +
+>>> +	/*
+>>> +	 * The value of the parent pointer attribute should be the file name
+>>> +	 * So we check the value length of the attribute entry against the name
+>>> +	 * length of the parent name record to make sure the caller gave enough
+>>> +	 * buffer space to store the file name (plus a null terminator)
+>>> +	 */
+>>> +	if (aent->a_valuelen >= xpnir->p_namelen) {
+>>> +		error = -ERANGE;
+>>> +		goto out_kfree;
+>>> +	}
+>>> +
+>>> +	xpnir->p_namelen = aent->a_valuelen + 1;
+>>> +	memset((void *)(xpnir->p_name), 0, xpnir->p_namelen);
+>>> +	error = xfs_attr_get(ip, (char *)xpnr,
+>>> +			     sizeof(struct xfs_parent_name_rec),
+>>> +			     (unsigned char *)(xpnir->p_name),
+>>> +			     (int *)&(xpnir->p_namelen), flags);
+>>> +	if (error)
+>>> +		goto out_kfree;
+>>> +
+>>> +	xfs_init_parent_name_irec(xpnir, xpnr);
+>>> +
+>>> +out_kfree:
+>>> +	kmem_free(namebuf);
+>>> +
+>>> +	return error;
+>>> +}
+>> I was thinking of moving this function else where.  It seems to
+>> generate a lot of compile issues when I apply it to xfsprogs because
+>> of the things it needs from xfs_attr.h.  Generally are patches to
+>> code in fs/xfs/libxfs not supposed to be including things outside
+>> libxfs?  Do I need to revise the series to avoid doing that? Thanks!
+> In general, yes. More complex than that (e.g. userspace and kernel
+> have separate definitions of some structures like xfs_mount,
+> xfs_buf, etc), but we try to keep the libxfs code as encapsulated as
+> possible.
+>
+> In terms of getting attrs to userspace, the equivalent attribute
+> listing code is in fs/xfs/xfs_attr_list.c, and that avoids all these
+> problems. I'd just move the xfs_attr_get_parent_pointer() function
+> there as ithis code should not be needed in userspace and it would
+> avoid all the userspace libxfs compile issues...
+>
 > Cheers,
-> 
+>
 > Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Alrighty, that seems like a good place for it then.  Thank you!
+
+Allison
