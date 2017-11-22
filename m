@@ -1,100 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:34255 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S936884AbdKRVvn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Nov 2017 16:51:43 -0500
-Date: Sun, 19 Nov 2017 08:51:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Illegal value 0 for -l sunit option ?
-Message-ID: <20171118215140.GL5858@dastard>
-References: <alpine.DEB.2.10.1711181547110.14549@gozora.sk>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:45103 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbdKVQwi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 11:52:38 -0500
+Received: by mail-ot0-f194.google.com with SMTP id u10so14082285otc.12
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2017 08:52:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <alpine.DEB.2.10.1711181547110.14549@gozora.sk>
+In-Reply-To: <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
+References: <20171101153648.30166-1-jack@suse.cz> <20171101153648.30166-2-jack@suse.cz>
+ <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 22 Nov 2017 08:52:37 -0800
+Message-ID: <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
+Subject: Re: [PATCH 01/18] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vladimir Gozora <c@gozora.sk>
-Cc: linux-xfs@vger.kernel.org
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Matthew Wilcox <willy@infradead.org>, Kees Cook <keescook@chromium.org>, Florian Weimer <fweimer@redhat.com>, John Hubbard <jhubbard@nvidia.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Sat, Nov 18, 2017 at 04:00:08PM +0100, Vladimir Gozora wrote:
-> Hello XFS team,
-> 
-> I'm working on ReaR project (https://github.com/rear/rear) which
-> aims for bare-metal disaster recovery.
-> Lately I’ve run across behavior of mkfs.xfs which I don’t really
-> know if is correct or not.
-> The thing is that when I try to create XFS file system with
-> xfsprogs-4.5.0 following commands runs just fine:
-> mkfs.xfs -f -i size=512 -d agcount=4 -s size=512 -i attr=2 -i
-> projid32bit=1 -m crc=1 -m finobt=1 -b size=4096 -i maxpct=25 -d
-> sunit=0 -d swidth=0 -l version=2 -l sunit=0 -l lazy-count=1 -n
-> size=4096 -n version=2 -r extsize=4096 <destination>
-> when I try same command with xfsprogs-4.10.0, I get following error:
-> Illegal value 0 for -l sunit option. value is too small
+On Wed, Nov 22, 2017 at 4:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
+> On 11/01/2017 04:36 PM, Jan Kara wrote:
+>> From: Dan Williams <dan.j.williams@intel.com>
+>>
+>> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+>> unknown flags. However, proposals like MAP_SYNC need a mechanism to
+>> define new behavior that is known to fail on older kernels without the
+>> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
+>> guaranteed to fail on all legacy mmap implementations.
+>
+> So I'm trying to make sense of this together with Michal's attempt for
+> MAP_FIXED_SAFE [1] where he has to introduce a completely new flag
+> instead of flag modifier exactly for the reason of not validating
+> unknown flags. And my conclusion is that because MAP_SHARED_VALIDATE
+> implies MAP_SHARED and excludes MAP_PRIVATE, MAP_FIXED_SAFE as a
+> modifier cannot build on top of this. Wouldn't thus it be really better
+> long-term to introduce mmap3 at this point? ...
 
-Yup, old mkfs would accept values that were illegal and could do
-completly unpredictable things with them. We tightened up the input
-parsing to only accept valid values xfsprogs in 4.7.0, and in
-particular this commit is relevant:
-
-commit 2942ff49bdb6df08fb56674215b31c07cfc7c1fd
-Author: Jan Tulak <jtulak@redhat.com>
-Date:   Tue Jun 21 12:52:22 2016 +1000
-
-    mkfs: fix -l su minval
-    
-    -l su should be in range BBTOB(1) <= L_SU <= XLOG_MAX_RECORD_BSIZE,
-    because the upper limit is imposed by kernel on iclogbuf: stripe
-    unit can't be bigger than the log buffer, but the log buffer can
-    span multiple stripe units. L_SUNIT is changed in the same way.
-    
-    Signed-off-by: Jan Tulak <jtulak@redhat.com>
-    Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 1593ee893f92..ce1ade25780e 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -452,7 +452,7 @@ struct opt_params lopts = {
-                { .index = L_SUNIT,
-                  .conflicts = { L_SU,
-                                 LAST_CONFLICT },
--                 .minval = BTOBB(XLOG_MIN_RECORD_BSIZE),
-+                 .minval = 1,
-                  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
-                  .defaultval = SUBOPT_NEEDS_VAL,
-                },
-@@ -460,7 +460,7 @@ struct opt_params lopts = {
-                  .conflicts = { L_SUNIT,
-                                 LAST_CONFLICT },
-                  .convert = true,
--                 .minval = XLOG_MIN_RECORD_BSIZE,
-+                 .minval = BBTOB(1),
-                  .maxval = XLOG_MAX_RECORD_BSIZE,
-                  .defaultval = SUBOPT_NEEDS_VAL,
-                },
-
-> In ReaR we are trying to backup whole OS and recreate it closest to
-> original as possible, so I was collecting data obtained from
-> xfs_info and used them during recovery phase. This approach would
-> unfortunately not work any more, since I can't use (at least) log
-> sections "sunit=0 blks"
-> and pass it back to mkfs.xfs ...
-> Is there some (correct) way how I could save options that were used
-> during XFS file system creation and use them later, during recovery
-> phase?
-
-Why not just use xfs_copy? I mean, if all you're trying to do is
-make a space efficient block-level clone of an XFS filesytem, then
-we've already got a tool to do that...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+We have room to define MAP_PRIVATE_VALIDATE in MAP_TYPE on every arch
+except parisc. Can we steal an extra bit for MAP_TYPE from somewhere
+else on parisc?
