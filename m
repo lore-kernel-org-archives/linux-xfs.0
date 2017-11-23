@@ -1,163 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37518 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35522 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752020AbdKWOJ3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Nov 2017 09:09:29 -0500
-Date: Thu, 23 Nov 2017 22:09:27 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v3 3/3] fstests: filter readonly mount error messages
-Message-ID: <20171123140927.GX2749@eguan.usersys.redhat.com>
-References: <20171123111031.6550-1-eguan@redhat.com>
- <20171123111031.6550-4-eguan@redhat.com>
- <CAOQ4uxjg-SYNidgzwpZWxKCWxqzrDEj6TvRK1AWmYQr6fcrPSQ@mail.gmail.com>
+        id S1752787AbdKWOgy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Nov 2017 09:36:54 -0500
+Date: Thu, 23 Nov 2017 09:36:53 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171123143652.GA22032@bfoster.bfoster>
+References: <20171121150557.GA5014@bfoster.bfoster>
+ <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
+ <20171121173557.GB6004@bfoster.bfoster>
+ <20171122022645.GR5858@dastard>
+ <20171122122100.GA9984@bfoster.bfoster>
+ <20171122204126.GA19041@bfoster.bfoster>
+ <20171123002401.GT5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjg-SYNidgzwpZWxKCWxqzrDEj6TvRK1AWmYQr6fcrPSQ@mail.gmail.com>
+In-Reply-To: <20171123002401.GT5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-On Thu, Nov 23, 2017 at 03:28:58PM +0200, Amir Goldstein wrote:
-> On Thu, Nov 23, 2017 at 1:10 PM, Eryu Guan <eguan@redhat.com> wrote:
-> > util-linux commit 6dede2f2f7c5 ("libmount: support MS_RDONLY on
-> > write-protected devices") changed the error message on read-only
-> > block device, and in the failure case printed one line message
-> > instead of two (for details please see comments in common/filter),
-> > and this change broke generic/050 and overlay/035.
-> >
-> > Fix it by adding more filter rules to _filter_ro_mount and updating
-> > associated .out files to unify the output from both old and new
-> > util-linux versions.
-> >
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> > v3:
-> > - document the filtered format in comments
-> > - remove legacy sed filter, the perl filter covers the legacy case well
-> > - filter out $SCRATCH_DEV/MNT too and use a consistent output
-> > - remove the new filter_mount helper in overlay/035
-> >
-> >  common/filter         | 48 ++++++++++++++++++++++++++++++++++++++++++++++--
-> >  tests/generic/050     |  8 ++++----
-> >  tests/generic/050.out |  8 ++++----
-> >  tests/overlay/035     |  4 ++--
-> >  tests/overlay/035.out |  4 ++--
-> >  5 files changed, 58 insertions(+), 14 deletions(-)
-> >
-> > diff --git a/common/filter b/common/filter
-> > index a212c09aa138..6140b331017f 100644
-> > --- a/common/filter
-> > +++ b/common/filter
-> > @@ -399,9 +399,53 @@ _filter_ending_dot()
-> >
-> >  # Older mount output referred to "block device" when mounting RO devices
-> >  # It's gone in newer versions
-> > +#
-> > +# And util-linux v2.30 changed the output again, e.g.
-> > +# for a successful ro mount:
-> > +# prior to v2.30:  mount: <device> is write-protected, mounting read-only
-> > +# v2.30 and later: mount: <mountpoint>: WARNING: device write-protected, mounted read-only.
-> > +#
-> > +# a failed ro mount:
-> > +# prior to v2.30:
-> > +# mount: <device> is write-protected, mounting read-only
-> > +# mount: cannot mount <device> read-only
-> > +# v2.30 and later:
-> > +# mount: <mountpoint>: cannot mount <device> read-only.
-> > +#
-> > +# a failed rw remount:
-> > +# prior to v2.30:  mount: cannot remount <device> read-write, is write-protected
-> > +# v2.30 and later: mount: <mountpoint>: cannot remount <device> read-write, is write-protected.
-> > +#
-> > +# Now use _filter_ro_mount to unify all these differences across old & new
-> > +# util-linux versions. So the filtered format would be:
-> > +#
-> > +# successful ro mount:
-> > +# mount: device write-protected, mounting read-only
-> > +#
-> > +# failed ro mount:
-> > +# mount: device write-protected, mounting read-only
-> > +# mount: cannot mount read-only
-> > +#
-> > +# failed rw remount:
-> > +# mount: cannot remount device read-write, is write-protected
-> >  _filter_ro_mount() {
-> > -       sed -e "s/mount: block device/mount:/g" \
-> > -           -e "s/mount: cannot mount block device/mount: cannot mount/g"
-> > +       perl -ne '
-> > +       if (/write-protected, mount.*read-only/) {
-> > +               # successful ro mount
-> > +               print "mount: device write-protected, mounting read-only\n";
-> > +       } elsif (/mount: .*: cannot mount.*read-only/) {
-> > +               # filter v2.30 format failed ro mount
-> > +               print "mount: device write-protected, mounting read-only\n";
+On Thu, Nov 23, 2017 at 11:24:02AM +1100, Dave Chinner wrote:
+> On Wed, Nov 22, 2017 at 03:41:26PM -0500, Brian Foster wrote:
+> > On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
+> > > On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
+> > > > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
+> > > > I'm still not 100% sure what the extra "2 +" is accounting for
+> > > > there, though, so to be safe that migh need to be accounted as full
+> > > > blocks, not log headers.
+> > > > 
+> > > 
+> > > Same.. there is still a bit of cruft in this calculation that really
+> > > isn't clear. That +2 is one part and then there's another
+> > > xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
+> > > that it's a separate line implies it is logically separate, but who
+> > > knows.
+> > > 
+> > > I suppose I'll keep that line as is, replace the inobt entry bit with
+> > > the full inobt calculation (as above), keep the +2 associated with the
+> > > inobt calculation and run some tests on that.
 > 
-> Leftover copy&paste line?
-
-No, that's intentional. Prior to v2.30, mount printed two-line error
-messages, as described in the comments above:
-
-# a failed ro mount:
-# prior to v2.30:
-# mount: <device> is write-protected, mounting read-only
-# mount: cannot mount <device> read-only
-# v2.30 and later:
-# mount: <mountpoint>: cannot mount <device> read-only.
-
-So this is matching the one-line v2.30 format and converting it to
-two-line messages.
-
+> I think I've worked out what the +2 is supposed to be - the AGF
+> and AGFL when we alloc/free blocks for either the inode chunk
+> or inobt records. You see them in, say, xfs_calc_write_reservation()
+> but not in the inode allocation reservations, despite needing
+> to do allocation....
 > 
-> > +               print "mount: cannot mount read-only\n";
-> > +       } elsif (/(^mount: cannot mount) .* (read-only$)/) {
-> > +               # filter prior to v2.30 format failed ro mount
-> > +               print "$1 $2\n";
+
+That sounds sane.. though it looks like in the case of
+xfs_calc_write_reservation() those are accounted as sectors rather than
+full blocks as in the ifree calculation. I suppose we should fix those
+up in the ifree calculation to reflect the sector size and properly
+document them.
+
+Hmm, xfs_calc_write_reservation() also handles the space freeing bits a
+bit more how I would expect: using the max of two calculations since a
+part of the operation occurs after a transaction roll. The ifree
+calculation just adds everything together (and we still overrun it :/).
+
+> Ok, xfs_calc_itruncate_reservation() appears to have the same
+> inobt modification bug in it. But now I'm wondering: why does a
+> truncate transaction modify the inobt?
 > 
-> Maybe I am missing something, but why are you printing arguments
-> when you know what the expected output should be?
-
-No special reason, perhaps that was easier to type :) I'll print the
-expected output directly, and change the output to
-
-mount: cannot mount device read-only
-
-as you suggested.
-
-> Also, in what is that match expression different from the v2.30 format?
-
-v2.30 failed ro mount output is a single-line message, with the
-"<mountpoint> :" string in between "mount: " and "cannot mount", so I'm
-explicitly matching the colon with ".*:".
-
-prior to v2.30, failed ro mount output is two-line message, with the
-first line identical to the "successful ro mount" case (maybe I should
-have mentioned it too along with the "successful ro mount" comment), so
-I'm matching the second line here.
-
-> Can't you merge both cases to use the more generic match expr
-> (without .*:) and print the expected result?
-
-Seems no, I need to distinguish the two cases and decide if I should
-print out single-line or two-line messages.
-
-It's a bit complicated, maybe I missed some obvious straightforward fix,
-that's why I said the following in v1/v2 cover letter :)
-
-"Perhaps there're better and cleaner ways to fix the problems, please
-help review and advise"
-
-Thanks,
-Eryu
-
+> It doesn't, and the commitin the historic tree doesn't explain why
+> it was necesary then, either:
 > 
-> > +       } elsif (/mount:.* cannot remount .* read-write.*/) {
-> > +               # failed rw remount
-> > +               print "mount: cannot remount device read-write, is write-protected\n";
-> > +       } else {
-> > +               print "$_";
-> > +       }' | _filter_ending_dot
-> >  }
-> >
+> commit 5fe6abb82f76472ad4ca0d99c0c86585948060eb
+> Author: Glen Overby <overby@sgi.com>
+> Date:   Wed Mar 17 00:52:31 2004 +0000
+> 
+>     Add space for inode and allocation btrees to ITRUNCATE log reservation
+>     Add XFS_ALLOCFREE_LOG_RES to IFREE log reservation.
+> 
+> FWIW, there's a bunch of stuff in the other transactions
+> reservations that I'm finding highly questionable, too....
+> 
+> And thinking on this a bit further, I suspect the whole allocation
+> reservation is just be a fudge. We do a single alloc/free
+> reservation per AG per transaction, which allows for one full height
+> split of the tree. The problem that Brian has reported is that this
+> reservation only covers a /single/ freespace tree modification and
+> we're overrunning it just in fixing up the freelist.
+> 
+> So if we want to cover the worst case, we need a reservation for
+> each freespace tree modification, not one to cover them all. i.e.
+> one for each AGFL modification, and one for the actual extent being
+> allocated/freed. And we need one of those reservations for
+> *every single allocation/free that can occur in a transaction*.
+> 
+> This rapidly blows out to being impractical. We're not going to get
+> full height splits/joins on every single allocation that occurs in a
+> transaction, and the number of potential allocations in a
+> transaction can be considered essentially unbound. e.g.  how many
+> allocations can a single a directory modification do? Hash btree
+> split, data/node btree split,  new freespace block, too - especially
+> when considering that a each directory block could - in the worse
+> case - be 128 x 512 byte extents (64k dir block size on 512 byte
+> block size filesystem).
+> 
+
+The impression I get is that at the time of designing these transactions
+it was simply easiest to characterize worst case of a single operation
+as a full btree modification, and then either there was an assumption
+made that would be sufficient to cover other multiple allocation/free
+cases (since the full tree changes are relatively rare) or that was just
+borne out in practice and so was never really revisited. 
+
+> So, no, I don't think it's realistic to start trying to cater for
+> worst case reservations here. Such crazy shit just doesn't happen
+> often enough in the real world for us to penalise everything with
+> such reservations.
+> 
+
+Agreed.
+
+> In which case, I think we need to consider that each major operation
+> (inobt, directory, finobt, etc) probably should have it's own
+> allocation reservation. It's extremely unlikely that all of them are
+> going to overrun in the same transaction, so maybe this is a good
+> enough safe guard without going completely over the top...
+> 
+
+For the ifree example, I take this to mean we should refactor the
+calculation to consider freeing of the inode chunk separate from the
+inobt and finobt modifications with respect to free space tree
+modifications.  In other words, we account one allocfree res for the
+inode chunk, another for the inobt modification (to effectively cover
+agfl fixups) and another (optional) for the finobt as opposed to one for
+the whole transaction. Is that what you're suggesting?
+
+That sounds reasonable, but at the same time I'm a bit concerned that I
+think the ifree transaction should technically be refactored into a max
+of the pre/post tx roll reservations similar to the write reservation
+mentioned above. For example:
+
+	MAX(inode + inobt + finobt + agi + inode chunk + etc.,
+	    allocfree for inode chunk + (allocfree * nr inobts));
+
+But that would end up making the transaction smaller than adding it all
+together. Of course, that may be fine with the agfl fixup below..
+
+> .....
+> 
+> > Quick update... I ended up still hitting an overrun with this fix in
+> > place (actually, the original bug report shows an overrun of ~32k which
+> > should have indicated that was going to be the case).
+> 
+> Yeah, no surprise there given the above.
+> 
+> > In any event, that had me thinking about tweaking how we manage the agfl
+> > and subsequently brings up a couple other issues. Firstly, this is a
+> > large fs, so we have 1TB AGs and the associated 16 entry agfls.
+> 
+> 16 entries?
+> 
+> The AGFL can hold (on a v5 filesystems and 512 byte sectors) 117
+> individual freespace blocks.  It's always much larger than we need
+> to hold the blocks for a single extent allocation.
+> 
+
+Oops, thinko on my part...
+
+> > The min
+> > agfl allocation is 8 at the time of the overrun, which is the maximum
+> > case for such a filesystem (4 per space btree). IIUC, as much as we need
+> > to keep the agfl populated with a minimum of 8 blocks in this case, we
+> > conversely also need to make sure we have 8 free slots, yes? If so, I'm
+> > not sure that being lazy about freeing blocks is an option because I
+> > have at least one trace where it takes 3 agfl block frees just to get
+> > the agfl from 9 down to the required 8.
+> 
+> Even the AGFL is half full, we've still got space for ~50 blocks to
+> be freed from the bno/cnt/rmap btrees in a single allocation/free
+> operation, so I just don't think we have to care about being a few
+> blocks off. If trying to free blocks from the AGFL results in it
+> growing, then just abort unless the AGFL is over half full...
+> 
+
+Right.. disregard my previous concern. I think this means we can most
+likely resolve this by doing something like limiting to a single free
+per fixup or breaking out once a block free ends up adding another to
+the agfl. Thanks.
+
+Brian
+
+> > Unrelated to the overrun issue, I also notice that we use the agfl for
+> > the rmapbt. That adds another 5 blocks in the maximum case, which means
+> > a 1TB AG can have a min agfl requirement of 4+4+5=13 blocks allocated of
+> > 16 slots. Unless I'm missing something in the reasoning above, aren't we
+> > kind of playing with fire in that case?
+> 
+> No, because the AGFL is 117 blocks long at minimum.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
