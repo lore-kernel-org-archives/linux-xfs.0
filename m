@@ -1,92 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f174.google.com ([209.85.213.174]:36111 "EHLO
-        mail-yb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751998AbdKWKqq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Nov 2017 05:46:46 -0500
-Received: by mail-yb0-f174.google.com with SMTP id g184so7034290ybg.3
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Nov 2017 02:46:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20171122182949.GH2135@magnolia>
-References: <20171122182949.GH2135@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 23 Nov 2017 12:46:45 +0200
-Message-ID: <CAOQ4uxhHM7B_fG89if2DcLd65zFgvLBbp+RkPwKWGuD0swQBhQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: log recovery should replay deferred ops in order
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:49847 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751799AbdKWLkH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Nov 2017 06:40:07 -0500
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH] xfs: Don't trim file extents during iomap
+Date: Thu, 23 Nov 2017 13:40:03 +0200
+Message-Id: <1511437203-4329-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Hou Tao <houtao1@huawei.com>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org, hch@infradead.org
+Cc: sandeen@redhat.com, darrick.wong@oracle.com, Nikolay Borisov <nborisov@suse.com>
 
-On Wed, Nov 22, 2017 at 8:29 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> As part of testing log recovery with dm_log_writes, Amir Goldstein
-> discovered an error in the deferred ops recovery that lead to corruption
-> of the filesystem metadata if a reflink+rmap filesystem happened to shut
-> down midway through a CoW remap:
->
-> "This is what happens [after failed log recovery]:
->
-> "Phase 1 - find and verify superblock...
-> "Phase 2 - using internal log
-> "        - zero log...
-> "        - scan filesystem freespace and inode maps...
-> "        - found root inode chunk
-> "Phase 3 - for each AG...
-> "        - scan (but don't clear) agi unlinked lists...
-> "        - process known inodes and perform inode discovery...
-> "        - agno = 0
-> "data fork in regular inode 134 claims CoW block 376
-> "correcting nextents for inode 134
-> "bad data fork in inode 134
-> "would have cleared inode 134"
->
-> Hou Tao dissected the log contents of exactly such a crash:
->
-> "According to the implementation of xfs_defer_finish(), these ops should
-> be completed in the following sequence:
->
-> "Have been done:
-> "(1) CUI: Oper (160)
-> "(2) BUI: Oper (161)
-> "(3) CUD: Oper (194), for CUI Oper (160)
-> "(4) RUI A: Oper (197), free rmap [0x155, 2, -9]
->
-> "Should be done:
-> "(5) BUD: for BUI Oper (161)
-> "(6) RUI B: add rmap [0x155, 2, 137]
-> "(7) RUD: for RUI A
-> "(8) RUD: for RUI B
->
-> "Actually be done by xlog_recover_process_intents()
-> "(5) BUD: for BUI Oper (161)
-> "(6) RUI B: add rmap [0x155, 2, 137]
-> "(7) RUD: for RUI B
-> "(8) RUD: for RUI A
->
-> "So the rmap entry [0x155, 2, -9] for COW should be freed firstly,
-> then a new rmap entry [0x155, 2, 137] will be added. However, as we can see
-> from the log record in post_mount.log (generated after umount) and the trace
-> print, the new rmap entry [0x155, 2, 137] are added firstly, then the rmap
-> entry [0x155, 2, -9] are freed."
->
-> When reconstructing the internal log state from the log items found on
-> disk, it's required that deferred ops replay in exactly the same order
-> that they would have had the filesystem not gone down.  However,
-> replaying unfinished deferred ops can create /more/ deferred ops.  These
-> new deferred ops are finished in the wrong order.  This causes fs
-> corruption and replay crashes, so let's create a single defer_ops to
-> handle the subsequent ops created during replay, then use one single
-> transaction at the end of log recovery to ensure that everything is
-> replayed in the same order as they're supposed to be.
->
-> Reported-by: Amir Goldstein <amir73il@gmail.com>
-> Analyzed-by: Hou Tao <houtao1@huawei.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+For file extents xfs currently calls xfs_bmapi_read with flag set to 0,
+meaning extents are going to be truncated to the requested range. Since the
+same codepath is used for fiemap this means xfs is special in that regard, since
+other filesystems (ext4/btrfs) do not trim extents for fiemap. Make the behavior
+consistent by always passing XFS_BMAPI_ENTIRE. A full xfstest run validated that
+this doesn't regress on ordinary read/write IO.
 
-You may add:
-Tested-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ fs/xfs/xfs_iomap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index f179bdf1644d..8942324a4d3d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1008,7 +1008,7 @@ xfs_file_iomap_begin(
+ 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+ 
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+-			       &nimaps, 0);
++			       &nimaps, XFS_BMAPI_ENTIRE);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-- 
+2.7.4
+
