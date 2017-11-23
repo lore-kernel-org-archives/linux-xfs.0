@@ -1,54 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f182.google.com ([209.85.213.182]:45015 "EHLO
-        mail-yb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752683AbdKWKo7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Nov 2017 05:44:59 -0500
-Received: by mail-yb0-f182.google.com with SMTP id x72so7026447ybg.11
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Nov 2017 02:44:59 -0800 (PST)
+Received: from mail-yb0-f174.google.com ([209.85.213.174]:36111 "EHLO
+        mail-yb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751998AbdKWKqq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Nov 2017 05:46:46 -0500
+Received: by mail-yb0-f174.google.com with SMTP id g184so7034290ybg.3
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Nov 2017 02:46:46 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20171122210023.GJ2135@magnolia>
-References: <20170830145400.3681-1-hch@lst.de> <20171115011022.GC5119@magnolia>
- <CAOQ4uxg2iF5ucZTeN6orJVA2VYFnHAkvyb1-FS0BEZ=rGN+-Lw@mail.gmail.com>
- <20171122183119.GI2135@magnolia> <CAOQ4uxjzpBrzMnt-OFP4P_6DB5onw9U+BM+4Dd_BpaeaPQ86iQ@mail.gmail.com>
- <20171122210023.GJ2135@magnolia>
+In-Reply-To: <20171122182949.GH2135@magnolia>
+References: <20171122182949.GH2135@magnolia>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 23 Nov 2017 12:44:58 +0200
-Message-ID: <CAOQ4uxhqf9mNcDdmMenzLNEXGSksuOZ5s_gGoQB5WJ9cbUEgbw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
+Date: Thu, 23 Nov 2017 12:46:45 +0200
+Message-ID: <CAOQ4uxhHM7B_fG89if2DcLd65zFgvLBbp+RkPwKWGuD0swQBhQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: log recovery should replay deferred ops in order
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Hou Tao <houtao1@huawei.com>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Nov 22, 2017 at 11:00 PM, Darrick J. Wong
+On Wed, Nov 22, 2017 at 8:29 PM, Darrick J. Wong
 <darrick.wong@oracle.com> wrote:
-> On Wed, Nov 22, 2017 at 10:40:07PM +0200, Amir Goldstein wrote:
->> On Wed, Nov 22, 2017 at 8:31 PM, Darrick J. Wong
->> <darrick.wong@oracle.com> wrote:
->> > On Wed, Nov 15, 2017 at 08:14:33AM +0200, Amir Goldstein wrote:
->> [...]
->> >>
->> >> Last time you wrote about this bug you had a "hard question" about transaction
->> >> reservation for the solution and said your're going to go have a think about it:
->> >> https://marc.info/?l=linux-xfs&m=150766311924170&w=2
->> >> Did you come to any conclusions?
->> >> That sounds like one of those nasty CoW corner cases, so I'd be happy to know
->> >> there is at least a well thought design for a solution - if not a fix.
->> >
->> > Sorry I let myself get distracted/stressed with the merge window;
->> > hopefully the patch I sent out will address that problem?
->> >
->>
->> Problem reproduces better on a spinning rust I have at the office, so will
->> give it a spin tomorrow.
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 >
+> As part of testing log recovery with dm_log_writes, Amir Goldstein
+> discovered an error in the deferred ops recovery that lead to corruption
+> of the filesystem metadata if a reflink+rmap filesystem happened to shut
+> down midway through a CoW remap:
+>
+> "This is what happens [after failed log recovery]:
+>
+> "Phase 1 - find and verify superblock...
+> "Phase 2 - using internal log
+> "        - zero log...
+> "        - scan filesystem freespace and inode maps...
+> "        - found root inode chunk
+> "Phase 3 - for each AG...
+> "        - scan (but don't clear) agi unlinked lists...
+> "        - process known inodes and perform inode discovery...
+> "        - agno = 0
+> "data fork in regular inode 134 claims CoW block 376
+> "correcting nextents for inode 134
+> "bad data fork in inode 134
+> "would have cleared inode 134"
+>
+> Hou Tao dissected the log contents of exactly such a crash:
+>
+> "According to the implementation of xfs_defer_finish(), these ops should
+> be completed in the following sequence:
+>
+> "Have been done:
+> "(1) CUI: Oper (160)
+> "(2) BUI: Oper (161)
+> "(3) CUD: Oper (194), for CUI Oper (160)
+> "(4) RUI A: Oper (197), free rmap [0x155, 2, -9]
+>
+> "Should be done:
+> "(5) BUD: for BUI Oper (161)
+> "(6) RUI B: add rmap [0x155, 2, 137]
+> "(7) RUD: for RUI A
+> "(8) RUD: for RUI B
+>
+> "Actually be done by xlog_recover_process_intents()
+> "(5) BUD: for BUI Oper (161)
+> "(6) RUI B: add rmap [0x155, 2, 137]
+> "(7) RUD: for RUI B
+> "(8) RUD: for RUI A
+>
+> "So the rmap entry [0x155, 2, -9] for COW should be freed firstly,
+> then a new rmap entry [0x155, 2, 137] will be added. However, as we can see
+> from the log record in post_mount.log (generated after umount) and the trace
+> print, the new rmap entry [0x155, 2, 137] are added firstly, then the rmap
+> entry [0x155, 2, -9] are freed."
+>
+> When reconstructing the internal log state from the log items found on
+> disk, it's required that deferred ops replay in exactly the same order
+> that they would have had the filesystem not gone down.  However,
+> replaying unfinished deferred ops can create /more/ deferred ops.  These
+> new deferred ops are finished in the wrong order.  This causes fs
+> corruption and replay crashes, so let's create a single defer_ops to
+> handle the subsequent ops created during replay, then use one single
+> transaction at the end of log recovery to ensure that everything is
+> replayed in the same order as they're supposed to be.
+>
+> Reported-by: Amir Goldstein <amir73il@gmail.com>
+> Analyzed-by: Hou Tao <houtao1@huawei.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-So far all good.
-Spinning rust never survived 10 rounds of generic/457
-and it is past the 100's round with your patch already.
-Will keep it spinning for the weekend.
-
-Thanks,
-Amir.
+You may add:
+Tested-by: Amir Goldstein <amir73il@gmail.com>
