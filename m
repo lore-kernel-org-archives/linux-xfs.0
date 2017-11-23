@@ -1,307 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52306 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750794AbdKUFpo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Nov 2017 00:45:44 -0500
-Date: Tue, 21 Nov 2017 13:45:41 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v4 3/3] xfs: initial fiemap range query test
-Message-ID: <20171121054541.GK2749@eguan.usersys.redhat.com>
-References: <1510747821-13270-1-git-send-email-nborisov@suse.com>
- <1510747900-13440-1-git-send-email-nborisov@suse.com>
- <1510747900-13440-3-git-send-email-nborisov@suse.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:39258 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752656AbdKWAg2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2017 19:36:28 -0500
+Date: Thu, 23 Nov 2017 11:24:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171123002401.GT5858@dastard>
+References: <20171121150557.GA5014@bfoster.bfoster>
+ <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
+ <20171121173557.GB6004@bfoster.bfoster>
+ <20171122022645.GR5858@dastard>
+ <20171122122100.GA9984@bfoster.bfoster>
+ <20171122204126.GA19041@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1510747900-13440-3-git-send-email-nborisov@suse.com>
+In-Reply-To: <20171122204126.GA19041@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-On Wed, Nov 15, 2017 at 02:11:40PM +0200, Nikolay Borisov wrote:
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+On Wed, Nov 22, 2017 at 03:41:26PM -0500, Brian Foster wrote:
+> On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
+> > On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
+> > > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
+> > > I'm still not 100% sure what the extra "2 +" is accounting for
+> > > there, though, so to be safe that migh need to be accounted as full
+> > > blocks, not log headers.
+> > > 
+> > 
+> > Same.. there is still a bit of cruft in this calculation that really
+> > isn't clear. That +2 is one part and then there's another
+> > xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
+> > that it's a separate line implies it is logically separate, but who
+> > knows.
+> > 
+> > I suppose I'll keep that line as is, replace the inobt entry bit with
+> > the full inobt calculation (as above), keep the +2 associated with the
+> > inobt calculation and run some tests on that.
 
-Please add test description to commit log too.
+I think I've worked out what the +2 is supposed to be - the AGF
+and AGFL when we alloc/free blocks for either the inode chunk
+or inobt records. You see them in, say, xfs_calc_write_reservation()
+but not in the inode allocation reservations, despite needing
+to do allocation....
 
-> ---
-> 
-> V4: 
->  * Added test description
->  * Added new test for past-eof behavior
->  * Removed supported_generic_fs line
->  * Switched to using the "ranged" param require
->  * Revert v3 changes
-> 
-> V3:
->  * Adjusted tests for '-r' fiemap param
->  * Tests for invalid -r combination
-> 
-> V2: No change
-> V1: No change
-> 
->  tests/xfs/900     |  92 +++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/900.out | 119 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 211 insertions(+)
->  create mode 100755 tests/xfs/900
->  create mode 100644 tests/xfs/900.out
-> 
-> diff --git a/tests/xfs/900 b/tests/xfs/900
-> new file mode 100755
-> index 0000000..06a5c64
-> --- /dev/null
-> +++ b/tests/xfs/900
-> @@ -0,0 +1,92 @@
-> +#! /bin/bash
-> +# FS QA Test No. 900
+Ok, xfs_calc_itruncate_reservation() appears to have the same
+inobt modification bug in it. But now I'm wondering: why does a
+truncate transaction modify the inobt?
 
-Add an empty line after the first line.
+It doesn't, and the commitin the historic tree doesn't explain why
+it was necesary then, either:
 
-> +# Test for the new ranged query functionality in xfs_io's fiemap command.
-> +# This tests various combinations of hole + data layout being printed.
-> +# Also the test used 16k holes to be compatible with 16k block filesystems
+commit 5fe6abb82f76472ad4ca0d99c0c86585948060eb
+Author: Glen Overby <overby@sgi.com>
+Date:   Wed Mar 17 00:52:31 2004 +0000
 
-Empty line here too.
+    Add space for inode and allocation btrees to ITRUNCATE log reservation
+    Add XFS_ALLOCFREE_LOG_RES to IFREE log reservation.
 
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
-> +# Author: Nikolay Borisov <nborisov@suse.com>
-> +#
-> +#
+FWIW, there's a bunch of stuff in the other transactions
+reservations that I'm finding highly questionable, too....
 
-Extra empty line here.
+And thinking on this a bit further, I suspect the whole allocation
+reservation is just be a fudge. We do a single alloc/free
+reservation per AG per transaction, which allows for one full height
+split of the tree. The problem that Brian has reported is that this
+reservation only covers a /single/ freespace tree modification and
+we're overrunning it just in fixing up the freelist.
 
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/punch
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_io_command "falloc"
-> +_require_xfs_io_command "fiemap" "ranged"
+So if we want to cover the worst case, we need a reservation for
+each freespace tree modification, not one to cover them all. i.e.
+one for each AGFL modification, and one for the actual extent being
+allocated/freed. And we need one of those reservations for
+*every single allocation/free that can occur in a transaction*.
 
-Better to add comments about the "ranged" too in the test.
+This rapidly blows out to being impractical. We're not going to get
+full height splits/joins on every single allocation that occurs in a
+transaction, and the number of potential allocations in a
+transaction can be considered essentially unbound. e.g.  how many
+allocations can a single a directory modification do? Hash btree
+split, data/node btree split,  new freespace block, too - especially
+when considering that a each directory block could - in the worse
+case - be 128 x 512 byte extents (64k dir block size on 512 byte
+block size filesystem).
 
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount || _fail "mount failure"
-> +
-> +file=$SCRATCH_MNT/testfile
-> +$XFS_IO_PROG -f -c "falloc 0 1m" $file 
+So, no, I don't think it's realistic to start trying to cater for
+worst case reservations here. Such crazy shit just doesn't happen
+often enough in the real world for us to penalise everything with
+such reservations.
 
-Trailing whitespace in above line.
+In which case, I think we need to consider that each major operation
+(inobt, directory, finobt, etc) probably should have it's own
+allocation reservation. It's extremely unlikely that all of them are
+going to overrun in the same transaction, so maybe this is a good
+enough safe guard without going completely over the top...
 
-> +for i in {0..31}; do $XFS_IO_PROG -c "fpunch $(($i*32))k 16k" $file; done
-> +
-> +# Query 1 data extent between 16k..16k range
-> +echo "Basic data extent"
-> +$XFS_IO_PROG -c "fiemap -v 16k 16k" $file | _filter_fiemap 
+.....
 
-Trailing whitespace in above line.
+> Quick update... I ended up still hitting an overrun with this fix in
+> place (actually, the original bug report shows an overrun of ~32k which
+> should have indicated that was going to be the case).
 
-> +
-> +# Query data and hole extent
-> +echo "Data + Hole"
-> +$XFS_IO_PROG -c "fiemap -v 16k 20k" $file | _filter_fiemap
-> +
-> +echo "Hole + Data + Hole"
-> +$XFS_IO_PROG -c "fiemap -v 32k 40k" $file | _filter_fiemap
+Yeah, no surprise there given the above.
 
-Test "Only hole", "Hole + Data" and "Data + Hole + Data" too? As well as
-some tests to exercise range boundaries are not aligned with extent
-boundaries?
+> In any event, that had me thinking about tweaking how we manage the agfl
+> and subsequently brings up a couple other issues. Firstly, this is a
+> large fs, so we have 1TB AGs and the associated 16 entry agfls.
 
-> +
-> +echo "Beginning with a hole"
-> +$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
-> +
-> +# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
-> +echo "Query more than 32 extents"
-> +$XFS_IO_PROG -c "fiemap -v 0 640k" $file | _filter_fiemap
-> +
-> +echo "Larger query than file size"
-> +$XFS_IO_PROG -c "fiemap -v 0 2m" $file | _filter_fiemap
-> +
-> +#mapping past eof shouldn't print anything"
+16 entries?
 
-Add a space after "#" for comments.
+The AGFL can hold (on a v5 filesystems and 512 byte sectors) 117
+individual freespace blocks.  It's always much larger than we need
+to hold the blocks for a single extent allocation.
 
-> +$XFS_IO_PROG -c "fiemap -v 2m" $file | _filter_fiemap
-> +
-> +#check everything without the first hole
+> The min
+> agfl allocation is 8 at the time of the overrun, which is the maximum
+> case for such a filesystem (4 per space btree). IIUC, as much as we need
+> to keep the agfl populated with a minimum of 8 blocks in this case, we
+> conversely also need to make sure we have 8 free slots, yes? If so, I'm
+> not sure that being lazy about freeing blocks is an option because I
+> have at least one trace where it takes 3 agfl block frees just to get
+> the agfl from 9 down to the required 8.
 
-Same here.
+Even the AGFL is half full, we've still got space for ~50 blocks to
+be freed from the bno/cnt/rmap btrees in a single allocation/free
+operation, so I just don't think we have to care about being a few
+blocks off. If trying to free blocks from the AGFL results in it
+growing, then just abort unless the AGFL is over half full...
 
-Thanks,
-Eryu
+> Unrelated to the overrun issue, I also notice that we use the agfl for
+> the rmapbt. That adds another 5 blocks in the maximum case, which means
+> a 1TB AG can have a min agfl requirement of 4+4+5=13 blocks allocated of
+> 16 slots. Unless I'm missing something in the reasoning above, aren't we
+> kind of playing with fire in that case?
 
-> +$XFS_IO_PROG -c "fiemap -v 16k" $file | wc -l
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/900.out b/tests/xfs/900.out
-> new file mode 100644
-> index 0000000..6ecf1b6
-> --- /dev/null
-> +++ b/tests/xfs/900.out
-> @@ -0,0 +1,119 @@
-> +QA output created by 900
-> +Basic data extent
-> +0: [32..63]: unwritten
-> +Data + Hole
-> +0: [32..63]: unwritten
-> +1: [64..95]: hole
-> +Hole + Data + Hole
-> +0: [64..95]: hole
-> +1: [96..127]: unwritten
-> +2: [128..159]: hole
-> +Beginning with a hole
-> +0: [0..31]: hole
-> +Query more than 32 extents
-> +0: [0..31]: hole
-> +1: [32..63]: unwritten
-> +2: [64..95]: hole
-> +3: [96..127]: unwritten
-> +4: [128..159]: hole
-> +5: [160..191]: unwritten
-> +6: [192..223]: hole
-> +7: [224..255]: unwritten
-> +8: [256..287]: hole
-> +9: [288..319]: unwritten
-> +10: [320..351]: hole
-> +11: [352..383]: unwritten
-> +12: [384..415]: hole
-> +13: [416..447]: unwritten
-> +14: [448..479]: hole
-> +15: [480..511]: unwritten
-> +16: [512..543]: hole
-> +17: [544..575]: unwritten
-> +18: [576..607]: hole
-> +19: [608..639]: unwritten
-> +20: [640..671]: hole
-> +21: [672..703]: unwritten
-> +22: [704..735]: hole
-> +23: [736..767]: unwritten
-> +24: [768..799]: hole
-> +25: [800..831]: unwritten
-> +26: [832..863]: hole
-> +27: [864..895]: unwritten
-> +28: [896..927]: hole
-> +29: [928..959]: unwritten
-> +30: [960..991]: hole
-> +31: [992..1023]: unwritten
-> +32: [1024..1055]: hole
-> +33: [1056..1087]: unwritten
-> +34: [1088..1119]: hole
-> +35: [1120..1151]: unwritten
-> +36: [1152..1183]: hole
-> +37: [1184..1215]: unwritten
-> +38: [1216..1247]: hole
-> +39: [1248..1279]: unwritten
-> +Larger query than file size
-> +0: [0..31]: hole
-> +1: [32..63]: unwritten
-> +2: [64..95]: hole
-> +3: [96..127]: unwritten
-> +4: [128..159]: hole
-> +5: [160..191]: unwritten
-> +6: [192..223]: hole
-> +7: [224..255]: unwritten
-> +8: [256..287]: hole
-> +9: [288..319]: unwritten
-> +10: [320..351]: hole
-> +11: [352..383]: unwritten
-> +12: [384..415]: hole
-> +13: [416..447]: unwritten
-> +14: [448..479]: hole
-> +15: [480..511]: unwritten
-> +16: [512..543]: hole
-> +17: [544..575]: unwritten
-> +18: [576..607]: hole
-> +19: [608..639]: unwritten
-> +20: [640..671]: hole
-> +21: [672..703]: unwritten
-> +22: [704..735]: hole
-> +23: [736..767]: unwritten
-> +24: [768..799]: hole
-> +25: [800..831]: unwritten
-> +26: [832..863]: hole
-> +27: [864..895]: unwritten
-> +28: [896..927]: hole
-> +29: [928..959]: unwritten
-> +30: [960..991]: hole
-> +31: [992..1023]: unwritten
-> +32: [1024..1055]: hole
-> +33: [1056..1087]: unwritten
-> +34: [1088..1119]: hole
-> +35: [1120..1151]: unwritten
-> +36: [1152..1183]: hole
-> +37: [1184..1215]: unwritten
-> +38: [1216..1247]: hole
-> +39: [1248..1279]: unwritten
-> +40: [1280..1311]: hole
-> +41: [1312..1343]: unwritten
-> +42: [1344..1375]: hole
-> +43: [1376..1407]: unwritten
-> +44: [1408..1439]: hole
-> +45: [1440..1471]: unwritten
-> +46: [1472..1503]: hole
-> +47: [1504..1535]: unwritten
-> +48: [1536..1567]: hole
-> +49: [1568..1599]: unwritten
-> +50: [1600..1631]: hole
-> +51: [1632..1663]: unwritten
-> +52: [1664..1695]: hole
-> +53: [1696..1727]: unwritten
-> +54: [1728..1759]: hole
-> +55: [1760..1791]: unwritten
-> +56: [1792..1823]: hole
-> +57: [1824..1855]: unwritten
-> +58: [1856..1887]: hole
-> +59: [1888..1919]: unwritten
-> +60: [1920..1951]: hole
-> +61: [1952..1983]: unwritten
-> +62: [1984..2015]: hole
-> +63: [2016..2047]: unwritten
-> +65
-> -- 
-> 2.7.4
-> 
+No, because the AGFL is 117 blocks long at minimum.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
