@@ -1,130 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:27744 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752109AbdK0W3A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 17:29:00 -0500
-Date: Tue, 28 Nov 2017 09:28:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: include inobt buffers in ifree tx log
- reservation
-Message-ID: <20171127222857.GA5858@dastard>
-References: <20171127202434.43125-1-bfoster@redhat.com>
- <20171127202434.43125-3-bfoster@redhat.com>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:33045 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751984AbdKWIci (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Nov 2017 03:32:38 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171127202434.43125-3-bfoster@redhat.com>
+In-Reply-To: <20171114123310.25286-4-eguan@redhat.com>
+References: <20171114123310.25286-1-eguan@redhat.com> <20171114123310.25286-4-eguan@redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 23 Nov 2017 10:32:36 +0200
+Message-ID: <CAOQ4uxhNqNEX5V3EFiYpYFAHdLEs+-0ut3DTpA2QBw-YvoCE0Q@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] fstests: filter readonly mount error messages
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 03:24:32PM -0500, Brian Foster wrote:
-> The tr_ifree transaction handles inode unlinks and inode chunk
-> frees. The current transaction calculation does not accurately
-> reflect worst case changes to the inode btree, however. The inobt
-> portion of the current transaction reservation only covers
-> modification of a single inobt buffer (for the particular inode
-> record). This is a historical artifact from the days before XFS
-> supported full inode chunk removal.
-> 
-> When support for inode chunk removal was added in commit
-> 254f6311ed1b ("Implement deletion of inode clusters in XFS."), the
-> additional log reservation required for chunk removal was not added
-> correctly. The new reservation only considered the header overhead
-> of associated buffers rather than the full contents of the btrees
-> and AGF and AGFL buffers affected by the transaction. The
-> reservation for the free space btrees was subsequently fixed up in
-> commit 5fe6abb82f76 ("Add space for inode and allocation btrees to
-> ITRUNCATE log reservation"), but the res. for full inobt joins has
-> never been added.
-> 
-> Update xfs_calc_ifree_reservation() to include a full inobt join in
-> the reservation calculation. Refactor the undocumented +2 blocks for
-> the AGF and AGFL buffers into the appropriate place so they are
-> accounted as sectors (not FSBs) and update the associated comments.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Tue, Nov 14, 2017 at 2:33 PM, Eryu Guan <eguan@redhat.com> wrote:
+> util-linux commit 6dede2f2f7c5 ("libmount: support MS_RDONLY on
+> write-protected devices") changed the error message on read-only
+> block device, and in the failure case printed one line message
+> instead of two (for details please see comments in common/filter),
+> and this change broke generic/050 and overlay/035.
+>
+> Fix it by adding more filter rules to _filter_ro_mount and updating
+> associated .out files to unify the output from both old and new
+> util-linux versions.
+>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_trans_resv.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 6bd916bd35e2..4cd7cd1e60da 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -490,10 +490,10 @@ xfs_calc_symlink_reservation(
->  /*
->   * In freeing an inode we can modify:
->   *    the inode being freed: inode size
-> - *    the super block free inode counter: sector size
-> + *    the super block free inode counter, AGF and AGFL: sector size
->   *    the agi hash list and counters: sector size
-> - *    the inode btree entry: block size
->   *    the on disk inode before ours in the agi hash list: inode cluster size
-> + *    the inode chunk is marked stale (headers only)
->   *    the inode btree: max depth * blocksize
->   *    the allocation btrees: 2 trees * (max depth - 1) * block size
->   *    the finobt (record insertion, removal or modification)
-> @@ -504,12 +504,11 @@ xfs_calc_ifree_reservation(
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
->  		xfs_calc_inode_res(mp, 1) +
+>  common/filter         | 35 ++++++++++++++++++++++++++++++++++-
+>  tests/generic/050     |  8 ++++----
+>  tests/generic/050.out |  8 ++++----
+>  tests/overlay/035     |  9 +++++++--
+>  4 files changed, 49 insertions(+), 11 deletions(-)
+>
+> diff --git a/common/filter b/common/filter
+> index b1cd558ab0e1..357c4c9357c3 100644
+> --- a/common/filter
+> +++ b/common/filter
+> @@ -399,9 +399,42 @@ _filter_ending_dot()
+>
+>  # Older mount output referred to "block device" when mounting RO devices
+>  # It's gone in newer versions
+> +#
+> +# And util-linux v2.30 changed the output again, e.g.
+> +# for a successful ro mount:
+> +# prior to v2.30:  mount: <device> is write-protected, mounting read-only
+> +# v2.30 and later: mount: <mountpoint>: WARNING: device write-protected, mounted read-only.
+> +#
+> +# a failed ro mount:
+> +# prior to v2.30:
+> +# mount: <device> is write-protected, mounting read-only
+> +# mount: cannot mount <device> read-only
+> +# v2.30 and later:
+> +# mount: <mountpoint>: cannot mount <device> read-only.
+> +#
+> +# a failed rw remount:
+> +# prior to v2.30:  mount: cannot remount <device> read-write, is write-protected
+> +# v2.30 and later: mount: <mountpoint>: cannot remount <device> read-write, is write-protected.
+> +#
+> +# Now use _filter_ro_mount to unify all these differences across old & new
+> +# util-linux versions.
 
- *    the inode being freed: inode size
+Please document the unified filter result as you did with _filter_busy_mount
 
-> -		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-> -		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> +		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+>  _filter_ro_mount() {
+>         sed -e "s/mount: block device/mount:/g" \
+> -           -e "s/mount: cannot mount block device/mount: cannot mount/g"
+> +           -e "s/mount: cannot mount block device/mount: cannot mount/g" | \
 
- *    the super block free inode counter, AGF and AGFL: sector size
+Let's convert all new error formats to this legacy format, so we don't need
+this extra sed to convert the legacy format to an xfstest invented format.
 
-		[missing, hidden in calc_iunlink_remove]
+Besides, this filter is making an effort to preserve the <device> variable
+and for what? for having to add _filter_scratch after it and covert <device>
+to SCRATCH_DEV?
+Better to let this filter already replace <device> with "block device" and do
+away with the need to _filter_scratch.
 
- *    the agi hash list and counters: sector size
+> +       _filter_ending_dot | \
+> +       perl -ne '
+> +       if (/write-protected, mount.*read-only/) {
+> +               print "mount: device write-protected, mounting read-only\n";
+> +       } elsif (/mount: .*: cannot mount.*read-only/) {
+> +               print "mount: device write-protected, mounting read-only\n";
+> +               print "mount: cannot mount read-only\n";
+> +       } elsif (/mount: .*: cannot remount (.*) read-write.*/) {
+> +               print "mount: cannot remount $1 read-write, is write-protected\n";
+> +       } elsif (/(^mount: cannot mount) .* (read-only$)/) {
+> +               print "$1 $2\n";
+> +       } else {
+> +               print "$_";
+> +       }'
+>  }
+>
+[...]
+> --- a/tests/overlay/035
+> +++ b/tests/overlay/035
+> @@ -45,6 +45,11 @@ _cleanup()
+>  . ./common/rc
+>  . ./common/filter
+>
+> +filter_mount()
+> +{
+> +       _filter_scratch | _filter_ro_mount
+> +}
 
->  		xfs_calc_iunlink_remove_reservation(mp) +
+_filter_scratch not needed. helper not needed.
 
- *    the on disk inode before ours in the agi hash list: inode cluster size
-
-		[missing]
-
- *    on-disk inode to log the di_next_unlinked: inode cluster size
-
-Yes, check the xfs_iunlink_remove() code - we can log two inode
-cluster buffers there: the one prior to us in the unlinked list,
-and ours to reset the di_next_unlinked pointer to
-null. IOWs, xfs_calc_iunlink_remove_reservation() needs to take into
-account /2/ inode cluster buffers, not one.
-
->  		xfs_calc_buf_res(1, 0) +
-
-No idea what this is.
-
-> -		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
-> -				 mp->m_in_maxlevels, 0) +
-> +		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
-
- *    the inode chunk is marked stale (headers only)
-
-> +		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
-
-  *    the inode btree: max depth * blocksize
-
->  		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1)) +
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-
->  		xfs_calc_finobt_res(mp, 0, 1);
-
-  *    the finobt (record insertion, removal or modification)
-
-The rest look fine.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Amir.
