@@ -1,244 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46792 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:51376 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750762AbdKUFZg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Nov 2017 00:25:36 -0500
-Date: Tue, 21 Nov 2017 13:25:31 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs_io: implement ranged fiemap query
-Message-ID: <20171121052531.GH2749@eguan.usersys.redhat.com>
-References: <c1bec5de-57de-a451-08b9-80376b635d28@redhat.com>
+        id S1751376AbdKWIK4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Nov 2017 03:10:56 -0500
+Subject: Re: [PATCH v5] xfs: initial fiemap range query test
+References: <1511277416-3191-1-git-send-email-nborisov@suse.com>
+ <1511277416-3191-2-git-send-email-nborisov@suse.com>
+ <20171122064710.GP2749@eguan.usersys.redhat.com>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <f6d2723c-4645-d01b-145a-f070ba8ee83f@suse.com>
+Date: Thu, 23 Nov 2017 10:10:53 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c1bec5de-57de-a451-08b9-80376b635d28@redhat.com>
+In-Reply-To: <20171122064710.GP2749@eguan.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Nikolay Borisov <nborisov@suse.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
 
-On Fri, Nov 17, 2017 at 11:22:07AM -0600, Eric Sandeen wrote:
-> From: Nikolay Borisov <nborisov@suse.com>
-> 
-> Currently the fiemap implementation of xfs_io doesn't support making ranged
-> queries. This patch implements two optional arguments which take the starting
-> offset and the length of the region to be queried.
-> 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> [sandeen: simplify/rewrite ranged logic]
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> ---
-> 
-> I think this is a simpler approach.  There are some questions about how
-> the fiemap command should handle holes and ranges, however.
-> 
-> First and foremost, the kernel will return any extent(s) which overlap(s)
-> with the requested range.  Holes are simply inferred by xfs_io from the
 
-So it's expected that data range won't be truncated on boundaries? e.g.
 
-# xfs_io -fc "pwrite 4k 4k" -c "pwrite 12k 4k" -c fsync -c "fiemap" -c "fiemap 6k 2k" testfile
-wrote 4096/4096 bytes at offset 4096
-4 KiB, 1 ops; 0.0000 sec (300.481 MiB/sec and 76923.0769 ops/sec)
-wrote 4096/4096 bytes at offset 12288
-4 KiB, 1 ops; 0.0000 sec (781.250 MiB/sec and 200000.0000 ops/sec)
-testfile:
-        0: [0..7]: hole
-        1: [8..15]: 1300882584..1300882591
-        2: [16..23]: hole
-        3: [24..31]: 1300882592..1300882599
-testfile:
-        0: [8..15]: 1300882584..1300882591  <=== not truncated on range boundaries
-xfs_io: ioctl(FS_IOC_FIEMAP) ["testfile"]: Invalid argument
+On 22.11.2017 08:47, Eryu Guan wrote:
+> On Tue, Nov 21, 2017 at 05:16:56PM +0200, Nikolay Borisov wrote:
+>> Fiemap gained support for passing in optional offset len
+>> which denote the range requested, so this patch adds
+>> testcases for this functionality. Aditionally, a special "ranged"
+>> argument is added to the require_xfs_io_command which checks
+>> for the presence of fiemap range support.
+>>
+>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+>> ---
+>> V5: 
+>>  * Drop changes to existing generic punch hole tests since 
+>>  the new fiemap implementation don't require them 
+>>  * Merge the common/rc change with this patch
+>>  * Added Data + Hole + Data and Hole + Data tests as per Eryu's request
+>>  * Adjusted output of some tests which fall in a hole, since holes are
+>>  truncated to passed range
+>>  * Simplified the logic to check for fiemap range support (Eryu)
+> 
+> Thanks for the 5th version, looks good overall, though I have more
+> comments, sorry for not bringing them up in previous reviews...
+> 
+>>
+>> V4: 
+>>  * Added test description
+>>  * Added new test for past-eof behavior
+>>  * Removed supported_generic_fs line
+>>  * Switched to using the "ranged" param require
+>>  * Revert v3 changes
+>>
+>> V3:
+>>  * Adjusted tests for '-r' fiemap param
+>>  * Tests for invalid -r combination
+>>
+>> V2: No change
+>> V1: No change
+>>  common/rc         |   7 +++
+>>  tests/xfs/900     | 101 +++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/900.out | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 233 insertions(+)
+>>  create mode 100755 tests/xfs/900
+>>  create mode 100644 tests/xfs/900.out
+>>
+>> diff --git a/common/rc b/common/rc
+>> index e2a8229..d0dd32d 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -2053,6 +2053,13 @@ _require_xfs_io_command()
+>>  			-c "$command 4k 8k" $testfile 2>&1`
+>>  		;;
+>>  	"fiemap")
+>> +		# If 'ranged' is passed as argument then we check to see if fiemap supports
+>> +		# ranged query params
+>> +		if echo "$param" | grep -q "ranged"; then
+>> +			param=$(echo "$param" | sed "s/ranged//")
+>> +			$XFS_IO_PROG -c "help fiemap" | grep -q "\[offset \[len\]\]"
+>> +			[ $? -eq 0 ] || _notrun "xfs_io $command ranged support is missing"
+>> +		fi
+>>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+>>  			-c "fiemap -v $param" $testfile 2>&1`
+>>  		param_checked=1
+>> diff --git a/tests/xfs/900 b/tests/xfs/900
+>> new file mode 100755
+>> index 0000000..07f4f40
+>> --- /dev/null
+>> +++ b/tests/xfs/900
+>> @@ -0,0 +1,101 @@
+>> +#! /bin/bash
+>> +# FS QA Test No. 900
+>> +
+>> +# Test for the new ranged query functionality in xfs_io's fiemap command.
+>> +# This tests various combinations of hole + data layout being printed.
+>> +# Also the test used 16k holes to be compatible with 16k block filesystems
+>> +
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
+>> +# Author: Nikolay Borisov <nborisov@suse.com>
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/punch
+>> +
+>> +# remove previous $seqres.full before test
+>> +rm -f $seqres.full
+>> +
+>> +# real QA test starts here
+>> +
+>> +# Modify as appropriate.
+>> +_supported_os Linux
+>> +_require_scratch
+> 
+> This test is in xfs dir and that means it's an xfs-specific test, better
+> to have "_supported_fs xfs" for consistency.
+> 
+> But I'm wondering why not make it a generic test? There seems nothing
+> xfs-specific. And I hacked the test and tested with ext4/btrfs, tests
+> all passed.
+> 
+> Interesting thing is, test failed on XFS as:
+> 
+>  Hole + Data
+>  0: [0..31]: hole
+> -1: [32..63]: unwritten
+> +1: [32..33]: unwritten
+>  Hole + Data + Hole
+>  0: [64..95]: hole
+>  1: [96..127]: unwritten
+> @@ -14,7 +14,7 @@
+>  Data + Hole + Data
+>  0: [32..63]: unwritten
+>  1: [64..95]: hole
+> -2: [96..127]: unwritten
+> +2: [96..97]: unwritten
 
-And the "Invalid argument" looks suspicious too. Note that I applied
-this patch on top of latest for-next branch.
+This is due to xfs always trimming extents. I've sent a patch:
+ xfs: Don't trim extents for fiemap
 
-Another very minor issue on the extent sequence number:
+That harmonizes xfs' behavior in that regard to the other major
+filesystems by not trimming extents when called on behalf of iomap. For
+once it wasn't a problem in xfs_io's fiemap code :D
 
-# xfs_io -fc "pwrite 4k 4k" -c "pwrite 12k 4k" -c fsync -c "fiemap" -c "fiemap 4k 8k" testfile
-wrote 4096/4096 bytes at offset 4096
-4 KiB, 1 ops; 0.0000 sec (325.521 MiB/sec and 83333.3333 ops/sec)
-wrote 4096/4096 bytes at offset 12288
-4 KiB, 1 ops; 0.0000 sec (781.250 MiB/sec and 200000.0000 ops/sec)
-testfile:
-        0: [0..7]: hole
-        1: [8..15]: 1300882584..1300882591
-        2: [16..23]: hole
-        3: [24..31]: 1300882592..1300882599
-testfile:
-        0: [8..15]: 1300882584..1300882591
-        2: [16..23]: hole
-
-Range "4k 8k" includes two extents, from the full-file fiemap result
-the extents are continuous (extent 1 2), but the range results list the
-extents as 0 and 2. It should be continuous too?
-
-Thanks,
-Eryu
-
-> spaces in between.
 > 
-> So there are questions about what to do if i.e. the range starts or ends
-> in a hole.
+> The data extents were truncated. I was using Eric's v6 patch and v4.14+
+> kernel, which contains the xfs updates for 4.15-rc1.
 > 
-> This patch (I think!) /will/ describe a hole on either side of the requested
-> range, if it exists, with start and end points of the hole(s) based on
-> the range start & end.  i.e. with range on boundaries:
+>> +_require_xfs_io_command "falloc"
 > 
-> # io/xfs_io -c "fiemap 0 12k"  alternating 
-> alternating:
-> 	0: [0..7]: hole
-> 	1: [8..15]: 60550776..60550783
-> 	2: [16..23]: hole
+> fpunch is used as well, maybe need "_require_xfs_io_command fpunch".
 > 
-> with range in middle of holes, hole ranges are truncated:
+> But I'd like to avoid falloc and fpunch, so test runs on filesystems
+> that don't support falloc/fpunch but support fiemap, e.g. ext3, to get
+> better test coverage.
 > 
-> # io/xfs_io -c "fiemap 1k 10k"  alternating 
-> alternating:
-> 	0: [2..7]: hole
-> 	1: [8..15]: 60550776..60550783
-> 	2: [16..21]: hole
+>> +# ranged is a special argument which checks if fiemap supports
+>> +# [offset [len]] args
+>> +_require_xfs_io_command "fiemap" "ranged"
+>> +
+>> +_scratch_mkfs > $seqres.full 2>&1
+>> +_scratch_mount || _fail "mount failure"
+>> +
+>> +file=$SCRATCH_MNT/testfile
+>> +$XFS_IO_PROG -f -c "falloc 0 1m" $file
+>> +for i in {0..31}; do $XFS_IO_PROG -c "fpunch $(($i*32))k 16k" $file; done
 > 
-> i.e. note that the first hole starts at the requested 1k range, and
-> the last hole ends at the end of the requested range.
+> So I'd like to create $file with the following command:
 > 
-> Seems reasonable?
+> # Create a file with 16k hole followed by 16k data, and this pattern
+> # repeats till it reaches 1M file size, so each extent has 16k data.
+> # But truncate file to its final size first, otherwise XFS would merge
+> # some extents due to speculative preallocation.
+> $XFS_IO_PROG -fc "truncate 1m" $file
+> for i in {0..31}; do
+> 	$XFS_IO_PROG -c "pwrite $(($i*32+16))k 16k" $file >/dev/null
+> done
+> 
+> Then update .out file, replace all "unwritten" with "data".
 > 
 > 
+> And test is missing an entry in group file.
 > 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index bdcfacd..266d134 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -49,6 +49,8 @@ fiemap_help(void)
->  " -l -- also displays the length of each extent in 512-byte blocks.\n"
->  " -n -- query n extents.\n"
->  " -v -- Verbose information\n"
-> +" offset is the starting offset to map, and is optional.  If offset is\n"
-> +" specified, mapping length may (optionally) be specified as well."
->  "\n"));
->  }
->  
-> @@ -118,7 +120,7 @@ print_verbose(
->  			flg_w, _("FLAGS"));
->  	}
->  
-> -	if (lstart != llast) {
-> +	if (lstart > llast) {
->  		print_hole(foff_w, boff_w, tot_w, cur_extent, 0, false, llast,
->  			   lstart);
->  		cur_extent++;
-> @@ -155,7 +157,7 @@ print_plain(
->  	len = BTOBBT(extent->fe_length);
->  	block = BTOBBT(extent->fe_physical);
->  
-> -	if (lstart != llast) {
-> +	if (lstart > llast) {
->  		print_hole(0, 0, 0, cur_extent, lflag, true, llast, lstart);
->  		cur_extent++;
->  	}
-> @@ -235,9 +237,15 @@ fiemap_f(
->  	int		boff_w = 16;
->  	int		tot_w = 5;	/* 5 since its just one number */
->  	int		flg_w = 5;
-> -	__u64		last_logical = 0;
-> +	__u64		last_logical = 0;	/* last extent offset handled */
-> +	off64_t		start_offset = 0;	/* mapping start */
-> +	off64_t		length = -1LL;		/* mapping length */
-> +	off64_t		range_end = -1LL;	/* mapping end*/
-> +	size_t		fsblocksize, fssectsize;
->  	struct stat	st;
->  
-> +	init_cvtnum(&fsblocksize, &fssectsize);
-> +
->  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
->  		switch (c) {
->  		case 'a':
-> @@ -257,6 +265,27 @@ fiemap_f(
->  		}
->  	}
->  
-> +	/* Range start (optional) */
-> +	if (optind < argc) {
-> +		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +		if (start_offset < 0) {
-> +			printf("non-numeric offset argument -- %s\n", argv[optind]);
-> +			return 0;
-> +		}
-> +		last_logical = start_offset;
-> +		optind++;
-> +	}
-> +
-> +	/* Range length (optional if range start was specified) */
-> +	if (optind < argc) {
-> +		length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +		if (length < 0) {
-> +			printf("non-numeric len argument -- %s\n", argv[optind]);
-> +			return 0;
-> +		}
-> +		range_end = start_offset + length;
-> +	}
-> +
->  	map_size = sizeof(struct fiemap) +
->  		(EXTENT_BATCH * sizeof(struct fiemap_extent));
->  	fiemap = malloc(map_size);
-> @@ -274,7 +303,7 @@ fiemap_f(
->  		memset(fiemap, 0, map_size);
->  		fiemap->fm_flags = fiemap_flags;
->  		fiemap->fm_start = last_logical;
-> -		fiemap->fm_length = -1LL;
-> +		fiemap->fm_length = range_end - last_logical;
->  		fiemap->fm_extent_count = EXTENT_BATCH;
->  
->  		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> @@ -336,9 +365,12 @@ fiemap_f(
->  		return 0;
->  	}
->  
-> -	if (cur_extent && last_logical < st.st_size)
-> +	/* Print last hole to EOF or to end of requested range */
-> +	range_end = min((uint64_t)range_end, st.st_size);
-> +
-> +	if (cur_extent && last_logical < range_end)
->  		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
-> -			   BTOBBT(last_logical), BTOBBT(st.st_size));
-> +			   BTOBBT(last_logical), BTOBBT(range_end));
->  
->  out:
->  	free(fiemap);
-> @@ -353,7 +385,7 @@ fiemap_init(void)
->  	fiemap_cmd.argmin = 0;
->  	fiemap_cmd.argmax = -1;
->  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> -	fiemap_cmd.args = _("[-alv] [-n nx]");
-> +	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
->  	fiemap_cmd.oneline = _("print block mapping for a file");
->  	fiemap_cmd.help = fiemap_help;
->  
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 9bf1a47..7633734 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -304,11 +304,12 @@ Prints the block mapping for the current open file. Refer to the
->  .BR xfs_bmap (8)
->  manual page for complete documentation.
->  .TP
-> -.BI "fiemap [ \-alv ] [ \-n " nx " ]"
-> +.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
->  Prints the block mapping for the current open file using the fiemap
->  ioctl.  Options behave as described in the
->  .BR xfs_bmap (8)
-> -manual page.
-> +manual page. Optionally, this command also supports passing the start offset
-> +from where to begin the fiemap and the length of that region.
->  .TP
->  .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
->  Prints the mapping of disk blocks used by the filesystem hosting the current
+> Thanks,
+> Eryu
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
