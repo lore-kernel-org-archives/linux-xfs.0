@@ -1,82 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55682 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34478 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753100AbdKXKiT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 05:38:19 -0500
-Date: Fri, 24 Nov 2017 11:38:14 +0100
-From: Karel Zak <kzak@redhat.com>
-Subject: Re: [PATCH v4] fstests: filter readonly mount error messages
-Message-ID: <20171124103814.gfvxw3ethkcvm6xa@ws.net.home>
-References: <20171123111031.6550-4-eguan@redhat.com>
- <20171124050144.23549-1-eguan@redhat.com>
- <CAOQ4uxgxRxByGHhePr3b4H+W1zEGxUX6Emj9PBzZpEKEs2iHog@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgxRxByGHhePr3b4H+W1zEGxUX6Emj9PBzZpEKEs2iHog@mail.gmail.com>
+        id S1753569AbdKXMD7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Nov 2017 07:03:59 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9E3E4A1438
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2017 12:03:59 +0000 (UTC)
+Received: from odin.localdomain.com (unknown [10.40.205.123])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C26CA61784
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2017 12:03:58 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfs: Properly retry failed dquot items in case of error during buffer writeback
+Date: Fri, 24 Nov 2017 13:03:53 +0100
+Message-Id: <20171124120353.30997-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Nov 24, 2017 at 10:04:33AM +0200, Amir Goldstein wrote:
-> [cc: Karel Zak]
-> 
-> On Fri, Nov 24, 2017 at 7:01 AM, Eryu Guan <eguan@redhat.com> wrote:
-> > util-linux commit 6dede2f2f7c5 ("libmount: support MS_RDONLY on
-> > write-protected devices") changed the error message on read-only
-> > block device, and in the failure case printed one line message
-> > instead of two (for details please see comments in common/filter),
-> > and this change broke generic/050 and overlay/035.
-> >
-> > Fix it by adding more filter rules to _filter_ro_mount and updating
-> > associated .out files to unify the output from both old and new
-> > util-linux versions.
-> >
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> > v4 (also passed with both old & new util-linux):
-> > - add more comments to explain the output differences between util-linux
-> >   versions
-> > - print out message directly instead of using perl variables
-> > - add word "device" to failed ro mount message
-> 
-> 
-> Eryu,
-> 
-> This looks good and you can take it as an ACK on the series.
-> 
-> I've CC'ed Karel, so maybe he thinks about us fstests guys before making
-> these sort of changes again...
+Once the inode item writeback errors is already fixed, it's time to fix the same
+problem in dquot code.
 
-Frankly, we have never promised that things like warning messages (or
-another messages) are stable interface. It's fragile to depend on this
-stuff...
+Although there were no reports of users hitting this bug in dquot code (at least
+none I've seen), the bug is there and I was already planning to fix it when the
+correct approach to fix the inodes part was decided.
 
-> Thinking out loud, does xfstest even need to use mount program from
-> util-linux? Do we ever need anything other than the bare libc mount(2)?
-> We need it for -o loop, but that is the exception to the rule.
+This patch aims to fix the same problem in dquot code, regarding failed buffers
+being unable to be resubmitted once they are flush locked.
 
-Well, I don't think that create a parallel universe is the best
-solution.
+Tested with the recently test-case sent to fstests list by Hou Tao.
 
-> For fs that have mount helpers (cifs,nfs), we could use mount.$FSTYP
-> directly (what error formats are reported from the helpers??). For all other
-> fs we can write a simple t_mount program to wrap libc mount(2) and not be
-> dependent on util-linux error message formats.
-> Maybe we can consider it next time util-linux changes..
-> 
-> Another idea to through in the air in the direction of Karel -
-> Maybe it makes sense for util-linux to check some env variable
-> and then print all error messages in a unified machine format, e.g.:
-> fprintf("%s: errno=%d\n", progname, errno);
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-This is good idea, I can try to implement it into libmount. 
+>From RFC:
+	- ASSERT the correct dquot flush lock in xfs_dquot_item_error()
 
- Karel
+	As in the inode item error path, we ASSERT the inode flush lock is
+	properly locked when settin XFS_LI_FAILED to the log item. I'm not 100%
+	sure I've handled the dquot flush lock properly. Once dquot uses a
+	completion queue as a flush lock, I used completion_done() helper to
+	check if it's properly locked, but I'm not 100% sure if it is the right
+	approach, once it uses a spin_lock/unlock irqsave/restore, and I don't
+	know if in this code path it is ok to run such spin locks.
+	What you guys think?
+
+with flush lock
+	- add an extra couple of parenthesis in xfs_qm_dqflush_done() as
+	  suggested by Darrick.
 
 
+ fs/xfs/xfs_dquot.c      | 11 ++++++++---
+ fs/xfs/xfs_dquot_item.c | 38 ++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 44 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index d57c2db64e59..a77b5c8e4f6b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -970,14 +970,19 @@ xfs_qm_dqflush_done(
+ 	 * holding the lock before removing the dquot from the AIL.
+ 	 */
+ 	if ((lip->li_flags & XFS_LI_IN_AIL) &&
+-	    lip->li_lsn == qip->qli_flush_lsn) {
++	   ((lip->li_lsn == qip->qli_flush_lsn) ||
++	    lip->li_flags & XFS_LI_FAILED)) {
+ 
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+ 		spin_lock(&ailp->xa_lock);
+-		if (lip->li_lsn == qip->qli_flush_lsn)
++		if (lip->li_lsn == qip->qli_flush_lsn) {
+ 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+-		else
++		} else if (lip->li_flags & XFS_LI_FAILED) {
++			xfs_clear_li_failed(lip);
+ 			spin_unlock(&ailp->xa_lock);
++		} else {
++			spin_unlock(&ailp->xa_lock);
++		}
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 2c7a1629e064..3d73a0124988 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -137,6 +137,24 @@ xfs_qm_dqunpin_wait(
+ 	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
+ }
+ 
++/*
++ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
++ * have been failed during writeback
++ *
++ * this informs the AIL that the dquot is already flush locked on the next push,
++ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
++ * dirty data makes it to disk.
++ */
++STATIC void
++xfs_dquot_item_error(
++	struct xfs_log_item	*lip,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
++	ASSERT(!completion_done(&dqp->q_flush));
++	xfs_set_li_failed(lip, bp);
++}
++
+ STATIC uint
+ xfs_qm_dquot_logitem_push(
+ 	struct xfs_log_item	*lip,
+@@ -144,13 +162,28 @@ xfs_qm_dquot_logitem_push(
+ 					      __acquires(&lip->li_ailp->xa_lock)
+ {
+ 	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
+-	struct xfs_buf		*bp = NULL;
++	struct xfs_buf		*bp = lip->li_buf;
+ 	uint			rval = XFS_ITEM_SUCCESS;
+ 	int			error;
+ 
+ 	if (atomic_read(&dqp->q_pincount) > 0)
+ 		return XFS_ITEM_PINNED;
+ 
++	/*
++	 * The buffer containing this item failed to be written back
++	 * previously. Resubmit the buffer for IO
++	 */
++	if (lip->li_flags & XFS_LI_FAILED) {
++		if (!xfs_buf_trylock(bp))
++			return XFS_ITEM_LOCKED;
++
++		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
++			rval = XFS_ITEM_FLUSHING;
++
++		xfs_buf_unlock(bp);
++		return rval;
++	}
++
+ 	if (!xfs_dqlock_nowait(dqp))
+ 		return XFS_ITEM_LOCKED;
+ 
+@@ -242,7 +275,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
+ 	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
+ 	.iop_committed	= xfs_qm_dquot_logitem_committed,
+ 	.iop_push	= xfs_qm_dquot_logitem_push,
+-	.iop_committing = xfs_qm_dquot_logitem_committing
++	.iop_committing = xfs_qm_dquot_logitem_committing,
++	.iop_error	= xfs_dquot_item_error
+ };
+ 
+ /*
 -- 
- Karel Zak  <kzak@redhat.com>
- http://karelzak.blogspot.com
+2.14.3
+
