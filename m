@@ -1,44 +1,221 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42582 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:60506 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752710AbdKXMJt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 07:09:49 -0500
-Date: Fri, 24 Nov 2017 13:09:46 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] xfs: handle register_shrinker error
-Message-ID: <20171124120946.7zsz27dlni7s7ijm@dhcp22.suse.cz>
-References: <20171123134128.mzxv6234hypokg4k@dhcp22.suse.cz>
- <201711240101.CJF18223.FJtHOLOSQFOMVF@I-love.SAKURA.ne.jp>
- <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
- <20171123220045.GV5858@dastard>
- <20171124073957.3z4hjwg5exqw277h@dhcp22.suse.cz>
- <201711242103.FIH57396.FOFVJtQFLSMOHO@I-love.SAKURA.ne.jp>
+        id S1753319AbdKXOvX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Nov 2017 09:51:23 -0500
+Date: Fri, 24 Nov 2017 09:51:22 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171124145121.GA26516@bfoster.bfoster>
+References: <20171121150557.GA5014@bfoster.bfoster>
+ <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
+ <20171121173557.GB6004@bfoster.bfoster>
+ <20171122022645.GR5858@dastard>
+ <20171122122100.GA9984@bfoster.bfoster>
+ <20171122204126.GA19041@bfoster.bfoster>
+ <20171123002401.GT5858@dastard>
+ <20171123143652.GA22032@bfoster.bfoster>
+ <20171123215457.GU5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <201711242103.FIH57396.FOFVJtQFLSMOHO@I-love.SAKURA.ne.jp>
+In-Reply-To: <20171123215457.GU5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: david@fromorbit.com, hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-On Fri 24-11-17 21:03:28, Tetsuo Handa wrote:
-> Michal Hocko wrote:
-> > Thanks. Updated patch below
-> > ---
-> > From 1009db61988c48c9a9e327a9d076945b29b02eee Mon Sep 17 00:00:00 2001
-> > From: Michal Hocko <mhocko@suse.com>
-> > Date: Thu, 23 Nov 2017 17:13:40 +0100
-> > Subject: [PATCH] xfs: fortify xfs_alloc_buftarg error handling
+On Fri, Nov 24, 2017 at 08:54:57AM +1100, Dave Chinner wrote:
+> On Thu, Nov 23, 2017 at 09:36:53AM -0500, Brian Foster wrote:
+> > On Thu, Nov 23, 2017 at 11:24:02AM +1100, Dave Chinner wrote:
+> > > On Wed, Nov 22, 2017 at 03:41:26PM -0500, Brian Foster wrote:
+> > > > On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
+> > > > > On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
+> > > > > > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
+> > > > > > I'm still not 100% sure what the extra "2 +" is accounting for
+> > > > > > there, though, so to be safe that migh need to be accounted as full
+> > > > > > blocks, not log headers.
+> > > > > > 
+> > > > > 
+> > > > > Same.. there is still a bit of cruft in this calculation that really
+> > > > > isn't clear. That +2 is one part and then there's another
+> > > > > xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
+> > > > > that it's a separate line implies it is logically separate, but who
+> > > > > knows.
+> > > > > 
+> > > > > I suppose I'll keep that line as is, replace the inobt entry bit with
+> > > > > the full inobt calculation (as above), keep the +2 associated with the
+> > > > > inobt calculation and run some tests on that.
+> > > 
+> > > I think I've worked out what the +2 is supposed to be - the AGF
+> > > and AGFL when we alloc/free blocks for either the inode chunk
+> > > or inobt records. You see them in, say, xfs_calc_write_reservation()
+> > > but not in the inode allocation reservations, despite needing
+> > > to do allocation....
+> > > 
+> > 
+> > That sounds sane.. though it looks like in the case of
+> > xfs_calc_write_reservation() those are accounted as sectors rather than
+> > full blocks as in the ifree calculation. I suppose we should fix those
+> > up in the ifree calculation to reflect the sector size and properly
+> > document them.
+> > 
+> > Hmm, xfs_calc_write_reservation() also handles the space freeing bits a
+> > bit more how I would expect: using the max of two calculations since a
+> > part of the operation occurs after a transaction roll. The ifree
+> > calculation just adds everything together (and we still overrun it :/).
 > 
-> Do we need below patch on top of Michal's patch?
-> KM_NOFS was added by commit b17cb364dbbbf65a ("xfs: fix missing KM_NOFS
-> tags to keep lockdep happy"). If not needed, some comment is expected.
+> Well, I don't think that's going to matter - more below...
+> 
+> [....]
+> 
+> > > So if we want to cover the worst case, we need a reservation for
+> > > each freespace tree modification, not one to cover them all. i.e.
+> > > one for each AGFL modification, and one for the actual extent being
+> > > allocated/freed. And we need one of those reservations for
+> > > *every single allocation/free that can occur in a transaction*.
+> > > 
+> > > This rapidly blows out to being impractical. We're not going to get
+> > > full height splits/joins on every single allocation that occurs in a
+> > > transaction, and the number of potential allocations in a
+> > > transaction can be considered essentially unbound. e.g.  how many
+> > > allocations can a single a directory modification do? Hash btree
+> > > split, data/node btree split,  new freespace block, too - especially
+> > > when considering that a each directory block could - in the worse
+> > > case - be 128 x 512 byte extents (64k dir block size on 512 byte
+> > > block size filesystem).
+> > > 
+> > 
+> > The impression I get is that at the time of designing these transactions
+> > it was simply easiest to characterize worst case of a single operation
+> > as a full btree modification, and then either there was an assumption
+> > made that would be sufficient to cover other multiple allocation/free
+> > cases (since the full tree changes are relatively rare) or that was just
+> > borne out in practice and so was never really revisited. 
+> 
+> Yup, that seems to fit the pattern over time of "increase the
+> reservation when it runs out" fixes....
+> 
+> > > So, no, I don't think it's realistic to start trying to cater for
+> > > worst case reservations here. Such crazy shit just doesn't happen
+> > > often enough in the real world for us to penalise everything with
+> > > such reservations.
+> > > 
+> > 
+> > Agreed.
+> > 
+> > > In which case, I think we need to consider that each major operation
+> > > (inobt, directory, finobt, etc) probably should have it's own
+> > > allocation reservation. It's extremely unlikely that all of them are
+> > > going to overrun in the same transaction, so maybe this is a good
+> > > enough safe guard without going completely over the top...
+> > > 
+> > 
+> > For the ifree example, I take this to mean we should refactor the
+> > calculation to consider freeing of the inode chunk separate from the
+> > inobt and finobt modifications with respect to free space tree
+> > modifications.  In other words, we account one allocfree res for the
+> > inode chunk, another for the inobt modification (to effectively cover
+> > agfl fixups) and another (optional) for the finobt as opposed to one for
+> > the whole transaction. Is that what you're suggesting?
+> > 
+> > That sounds reasonable, but at the same time I'm a bit concerned that I
+> > think the ifree transaction should technically be refactored into a max
+> > of the pre/post tx roll reservations similar to the write reservation
+> > mentioned above. For example:
+> > 
+> > 	MAX(inode + inobt + finobt + agi + inode chunk + etc.,
+> > 	    allocfree for inode chunk + (allocfree * nr inobts));
+> 
+> Yeah, I think you're right in that we need to we need to look at
+> redefining the reservations at a higher level.
+> 
+> For this specific example, though, we have to take into account that
+> a finobt modification to mark an inode free can insert a new record
+> into the btree. Hence we have scope for a finobt block allocation
+> and tree split, so we need to have allocfree reservations in the
+> primary transaction.
+> 
+> Also, the inode btree modifications (and refcountbt, too) call
+> xfs_free_extent() directly - they don't use deferops free list that
+> is processed as an EFI/EFD op after the primary transaction has been
+> rolled.  i.e:
+> 
+> xfs_btree_delrec
+>   xfs_btree_free_block
+>     xfs_inobt_free_block
+>       xfs_free_extent
+> 
+> Hence the primary transaction reservation has to take into account
+> that operations that remove a record from the tree can cause and
+> extent to be freed. As such, the removal of an inode chunk - which
+> removes the record from both the inobt and finobt - can trigger
+> freespace tree modification directly.
+> 
 
-I am not not familiar with the code but git blame says that the whole
-point of NOFS here was to make lockdep happy. We do have means to
-silence the warning if the original concern still applies.
--- 
-Michal Hocko
-SUSE Labs
+Ah, because the inobt doesn't use the agfl. It looks like we try to do
+this in xfs_calc_finobt_res(), but it doesn't appear to be fully correct
+because the allocfree res is only accounted for transactions that "do
+not already account for free space btree modifications," according to
+the comment. I don't recall the exact reasoning there off the top of my
+head, but if I had to guess, this was probably just another instance of
+"bolt something on to the transaction that appears to follow the pattern
+of other transactions and doesn't explode."
+
+Given that, it seems like the appropriate thing to do is in fact for the
+transaction to include an independent allocfree res for the inode chunk,
+the inobt and finobt. That justifies the existence of the current
+allocfree in the pre-roll part of the transaction and would increase the
+transaction size by one more allocfree in the finobt case (the inode
+chunk should technically be part of the post-roll calculation).
+
+Actually, with addition of some proper documentation that may also
+obviate the need to do the whole pre/post tx roll thing because the
+first part of the transaction will obviously be larger than a single
+allocfree res for the second part (amazing how a little documentation to
+establish/assess intent can save us time from trying to work backwards
+from the transaction :P).
+
+Ok, I think that gives me enough to go on to try and refactor at least
+the inobt tx res bits. I'll take a closer look next week, thanks for all
+of the feedback.
+
+> IOWs, the primary ifree transaction needs alloc/free reservations
+> for the modifications of both the inobt and the finobt, regardless
+> of anything else that goes on, so.....
+> 
+> > But that would end up making the transaction smaller than adding it all
+> > together. Of course, that may be fine with the agfl fixup below..
+> 
+> .... I doubt it will shrink if we take into account the multiple
+> direct alloc/free operations in the primary transaction properly. :/
+> 
+> Hmmmm - I'm wondering if we need to limit the max extents in a
+> defer-ops EFI/EFD item to 2 so we don't try to free all the defered
+> extent frees in a single EFI/EFD transaction pair. i.e. force it
+> to roll the transaction and get a new log reservation every two
+> extents being freed so we can limit the reservation size defered
+> extent freeing requires....
+> 
+
+This sounds similar in principle to the other option I was thinking
+about with regard to dealing with the agfl fixup problem (rolling the
+tx). The difference is the driving logic: putting a hard limit on the
+number of per-tx operations vs. rolling in a particular agfl corner
+case.
+
+The former may be more straightforward, particularly if we can avoid
+burying deferred ops logic down in the agfl fixup code (or even enforce
+it in the deferred ops efi/efd class handling code), but I'll have to
+take a closer look at this.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
