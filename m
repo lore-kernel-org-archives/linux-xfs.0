@@ -1,82 +1,280 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36410 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:34716 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752281AbdK0P5Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Nov 2017 10:57:24 -0500
-Subject: Re: [PATCH 01/18] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
-References: <20171101153648.30166-1-jack@suse.cz>
- <20171101153648.30166-2-jack@suse.cz>
- <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
- <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
- <20171122195318.GA29485@bombadil.infradead.org>
- <09f54d38-7cb5-343d-a017-2d71a793d05c@gmx.de>
-From: Vlastimil Babka <vbabka@suse.cz>
-Message-ID: <35fa2cb6-9957-fd77-836c-760cecc64b2e@suse.cz>
-Date: Mon, 27 Nov 2017 16:55:54 +0100
+        id S1752257AbdKXJJW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Nov 2017 04:09:22 -0500
+Date: Fri, 24 Nov 2017 17:09:20 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v6] generic: initial fiemap range query test
+Message-ID: <20171124090920.GD2749@eguan.usersys.redhat.com>
+References: <1511439214-8400-1-git-send-email-nborisov@suse.com>
+ <20171124081100.GB2749@eguan.usersys.redhat.com>
+ <f4e3a187-656b-887c-2425-9c3449b63842@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <09f54d38-7cb5-343d-a017-2d71a793d05c@gmx.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f4e3a187-656b-887c-2425-9c3449b63842@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Helge Deller <deller@gmx.de>, Matthew Wilcox <willy@infradead.org>, Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Kees Cook <keescook@chromium.org>, Florian Weimer <fweimer@redhat.com>, John Hubbard <jhubbard@nvidia.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
 
-On 11/25/2017 07:45 PM, Helge Deller wrote:
-> On 22.11.2017 20:53, Matthew Wilcox wrote:
->> On Wed, Nov 22, 2017 at 08:52:37AM -0800, Dan Williams wrote:
->>> On Wed, Nov 22, 2017 at 4:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
->>>> On 11/01/2017 04:36 PM, Jan Kara wrote:
->>>>> From: Dan Williams <dan.j.williams@intel.com>
->>>>>
->>>>> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
->>>>> unknown flags. However, proposals like MAP_SYNC need a mechanism to
->>>>> define new behavior that is known to fail on older kernels without the
->>>>> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
->>>>> guaranteed to fail on all legacy mmap implementations.
->>>>
->>>> So I'm trying to make sense of this together with Michal's attempt for
->>>> MAP_FIXED_SAFE [1] where he has to introduce a completely new flag
->>>> instead of flag modifier exactly for the reason of not validating
->>>> unknown flags. And my conclusion is that because MAP_SHARED_VALIDATE
->>>> implies MAP_SHARED and excludes MAP_PRIVATE, MAP_FIXED_SAFE as a
->>>> modifier cannot build on top of this. Wouldn't thus it be really better
->>>> long-term to introduce mmap3 at this point? ...
->>>
->>> We have room to define MAP_PRIVATE_VALIDATE in MAP_TYPE on every arch
->>> except parisc. Can we steal an extra bit for MAP_TYPE from somewhere
->>> else on parisc?
->>
->> It looks like 0x08 should work.
+On Fri, Nov 24, 2017 at 10:57:01AM +0200, Nikolay Borisov wrote:
 > 
-> I posted an RFC to the parisc mailing list for that:
-> https://patchwork.kernel.org/patch/9970553/
+> 
+> On 24.11.2017 10:11, Eryu Guan wrote:
+> > On Thu, Nov 23, 2017 at 02:13:34PM +0200, Nikolay Borisov wrote:
+> >> Fiemap gained support for passing in optional offset len
+> >> which denote the range requested, so this patch adds
+> >> testcases for this functionality. Aditionally, a special "ranged"
+> >> argument is added to the require_xfs_io_command which checks
+> >> for the presence of fiemap range support.
+> >>
+> >> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> >> --- 
+> >>  V6:
+> >>  * Moved to generic tests and successfully ran against ext4/btrfs
+> >>  * Use pwrite to create the holes to make it even more generic
+> > 
+> > Sorry, I found another issue when testing with btrfs on ppc64 host,
+> > where page size is 64k, for details please see below. Sorry for pushing
+> > this test back and forth so many times..
+> > 
+> >>
+> >>  V5: 
+> >>   * Drop changes to existing generic punch hole tests since 
+> >>   the new fiemap implementation don't require them 
+> >>   * Merge the common/rc change with this patch
+> >>   * Added Data + Hole + Data and Hole + Data tests as per Eryu's request
+> >>   * Adjusted output of some tests which fall in a hole, since holes are
+> >>   truncated to passed range
+> >>   * Simplified the logic to check for fiemap range support (Eryu)
+> >>
+> >>  V4: 
+> >>   * Added test description
+> >>   * Added new test for past-eof behavior
+> >>   * Removed supported_generic_fs line
+> >>   * Switched to using the "ranged" param require
+> >>   * Revert v3 changes
+> >>
+> >>  V3:
+> >>   * Adjusted tests for '-r' fiemap param
+> >>   * Tests for invalid -r combination
+> >>
+> >>  V2: No change
+> >>  V1: No change
+> >>  common/rc             |   7 +++
+> >>  tests/generic/900     | 108 +++++++++++++++++++++++++++++++++++++++++++
+> >>  tests/generic/900.out | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >>  tests/generic/group   |   1 +
+> >>  4 files changed, 241 insertions(+)
+> >>  create mode 100755 tests/generic/900
+> >>  create mode 100644 tests/generic/900.out
+> >>
+> >> diff --git a/common/rc b/common/rc
+> >> index 4c053a5..a0d162a 100644
+> >> --- a/common/rc
+> >> +++ b/common/rc
+> >> @@ -2056,6 +2056,13 @@ _require_xfs_io_command()
+> >>  			-c "$command 4k 8k" $testfile 2>&1`
+> >>  		;;
+> >>  	"fiemap")
+> >> +		# If 'ranged' is passed as argument then we check to see if fiemap supports
+> >> +		# ranged query params
+> >> +		if echo "$param" | grep -q "ranged"; then
+> >> +			param=$(echo "$param" | sed "s/ranged//")
+> >> +			$XFS_IO_PROG -c "help fiemap" | grep -q "\[offset \[len\]\]"
+> >> +			[ $? -eq 0 ] || _notrun "xfs_io $command ranged support is missing"
+> >> +		fi
+> >>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+> >>  			-c "fiemap -v $param" $testfile 2>&1`
+> >>  		param_checked=1
+> >> diff --git a/tests/generic/900 b/tests/generic/900
+> >> new file mode 100755
+> >> index 0000000..64a762f
+> >> --- /dev/null
+> >> +++ b/tests/generic/900
+> >> @@ -0,0 +1,108 @@
+> >> +#! /bin/bash
+> >> +# FS QA Test No. 900
+> >> +
+> >> +# Test for the new ranged query functionality in xfs_io's fiemap command.
+> >> +# This tests various combinations of hole + data layout being printed.
+> >> +# Also the test used 16k holes to be compatible with 16k block filesystems
+> >> +
+> >> +#-----------------------------------------------------------------------
+> >> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
+> >> +# Author: Nikolay Borisov <nborisov@suse.com>
+> >> +#
+> >> +# This program is free software; you can redistribute it and/or
+> >> +# modify it under the terms of the GNU General Public License as
+> >> +# published by the Free Software Foundation.
+> >> +#
+> >> +# This program is distributed in the hope that it would be useful,
+> >> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> >> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> >> +# GNU General Public License for more details.
+> >> +#
+> >> +# You should have received a copy of the GNU General Public License
+> >> +# along with this program; if not, write the Free Software Foundation,
+> >> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> >> +#-----------------------------------------------------------------------
+> >> +#
+> >> +
+> >> +seq=`basename $0`
+> >> +seqres=$RESULT_DIR/$seq
+> >> +echo "QA output created by $seq"
+> >> +
+> >> +here=`pwd`
+> >> +tmp=/tmp/$$
+> >> +status=1	# failure is the default!
+> >> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> >> +
+> >> +_cleanup()
+> >> +{
+> >> +	cd /
+> >> +	rm -f $tmp.*
+> >> +}
+> >> +
+> >> +# get standard environment, filters and checks
+> >> +. ./common/rc
+> >> +. ./common/punch
+> >> +
+> >> +# remove previous $seqres.full before test
+> >> +rm -f $seqres.full
+> >> +
+> >> +# real QA test starts here
+> >> +
+> >> +# Modify as appropriate.
+> >> +_supported_os Linux
+> >> +_require_scratch
+> > 
+> > I just realized that test can be done without SCRATCH_DEV, just
+> > _require_test and test in $TEST_DIR. e.g.
+> > 
+> > file=$TEST_DIR/fiemap.$seq
+> > rm -f $file
+> > $XFS_IO_PROG -f -c "truncate ..." $file
+> > ...
+> > 
+> >> +_require_xfs_io_command "truncate"
+> >> +# ranged is a special argument which checks if fiemap supports
+> >> +# [offset [len]] args
+> >> +_require_xfs_io_command "fiemap" "ranged"
+> >> +
+> >> +_scratch_mkfs > $seqres.full 2>&1
+> >> +_scratch_mount || _fail "mount failure"
+> >> +
+> >> +file=$SCRATCH_MNT/testfile
+> >> +
+> >> +# Create a file with 16k hole followed by 16k data, and this pattern
+> >> +# repeats till it reaches 1M file size, so each extent has 16k data.
+> >> +# But truncate file to its final size first, otherwise XFS would merge
+> >> +# some extents due to speculative preallocation.
+> >> +$XFS_IO_PROG -f -c "truncate 1m" $file
+> >> +for i in {0..31}; do
+> >> +	$XFS_IO_PROG -c "pwrite $(($i*32+16))k 16k" $file >/dev/null;
+> >> +done
+> > 
+> > On ppc64 hosts, this results in a single extent with btrfs, not 64 as
+> > expected, and all sub-tests failed. Using 64k extent as suggested by
+> > Darrick earlier fixes the problem for me, i.e. the following commands
+> > result in 64 extents:
+> 
+> Darrick suggested using 16k holes to test on filesystem with up to 16k
+> block sizes and that's what I did. SO it's natural it's going to fail
+> with btrfs. But this begs the question what is the upper limit of block
+> we really would like to test? 64k on ppc seems ordinary but then nothing
+> prevents for 128k blocks coming etc etc, where do we draw the line?
 
-Thanks. BTW there doesn't seem to be much interest making MAP_FIXED_SAFE
-a flag modifier after all, so MAP_PRIVATE_VALIDATE wouldn't get
-immediate users.
+I think what Darrick suggested was multiplying 4k by 16, not 16k. Quoted
+from Darrick's reply
 
-> Basically this is (for parisc only):
-> -#define MAP_TYPE	0x03		/* Mask for type of mapping */
-> +#define MAP_TYPE	(MAP_SHARED|MAP_PRIVATE|MAP_RESRVD1|MAP_RESRVD2) /* Mask for type of mapping */
->  #define MAP_FIXED	0x04		/* Interpret addr exactly */
-> +#define MAP_RESRVD1	0x08		/* reserved for 3rd bit of MAP_TYPE */
->  #define MAP_ANONYMOUS	0x10		/* don't use a file */
-> +#define MAP_RESRVD2	0x20		/* reserved for 4th bit of MAP_TYPE */
-> 
->> But I don't have an HPUX machine around
->> to check that HP didn't use that bit for something else.
-> 
-> We completely dropped support for HPUX binaries, so it's not relvant any longer. 
-> 
->> It'd probably help to cc the linux-parisc mailing list when asking
->> questions about PARISC, eh?
-> 
-> Yes, please.
-> 
-> Helge
-> 
+"
+Can you multiply everything by 16 (i.e. assume 64k fs blocks instead of
+4k fs blocks) so that we can test machines with larger pages and larger
+fs block sizes?
+"
 
+> 
+> > 
+> > $XFS_IO_PROG -f -c "truncate 4m" $file
+> > for i in {0..31}; do
+> > 	$XFS_IO_PROG -c "pwrite $(($i*128+64))k 64k" $file >/dev/null;
+> > done
+> > 
+> >> +
+> >> +# Query 1 data extent between 16k..16k range
+> >> +echo "Basic data extent"
+> >> +$XFS_IO_PROG -c "fiemap -v 16k 16k" $file | _filter_fiemap
+> > 
+> > Then all these ranges need update..
+> > 
+> >> +
+> >> +# Query data and hole extent
+> >> +echo "Data + Hole"
+> >> +$XFS_IO_PROG -c "fiemap -v 16k 20k" $file | _filter_fiemap
+> >> +
+> >> +echo "Hole + Data"
+> >> +$XFS_IO_PROG -c "fiemap -v 0 17k" $file | _filter_fiemap
+> >> +
+> >> +echo "Hole + Data + Hole"
+> >> +$XFS_IO_PROG -c "fiemap -v 32k 40k" $file | _filter_fiemap
+> >> +
+> >> +echo "Data + Hole + Data"
+> >> +$XFS_IO_PROG -c "fiemap -v 16k 33k" $file | _filter_fiemap
+> >> +
+> >> +echo "Beginning with a hole"
+> >> +$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
+> >> +
+> >> +# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
+> >                   ^^^^ meant 640k previously?
+> > 
+> >> +echo "Query more than 32 extents"
+> >> +$XFS_IO_PROG -c "fiemap -v 0 640k" $file | _filter_fiemap
+> >> +
+> >> +echo "Larger query than file size"
+> >> +$XFS_IO_PROG -c "fiemap -v 0 2m" $file | _filter_fiemap
+> >> +
+> >> +# mapping past eof shouldn't print anything"
+> >> +$XFS_IO_PROG -c "fiemap -v 2m" $file | _filter_fiemap
+> >> +
+> >> +# check everything without the first hole
+> >> +$XFS_IO_PROG -c "fiemap -v 16k" $file | wc -l
+> > 
+> > Any reason doing "wc -l" instead of "_filter_fiemap" here?
+> 
+> This only tests whether the correct number of lines are printed. It
+> would indeed be identical to _filter_fiemap but it was a lot easier to
+> input a single number than the lines :)
+
+With everything else using _filter_fiemap, this "wc -l" seems rather
+"surprising", I'd like either add a comment or use filter too.
+
+Thanks,
+Eryu
+
+> 
+> > 
+> >> +
+> >> +# success, all done
+> >> +status=0
+> >> +exit
+> > ...
+> >> --- a/tests/generic/group
+> >> +++ b/tests/generic/group
+> >> @@ -472,3 +472,4 @@
+> >>  467 auto quick exportfs
+> >>  468 shutdown auto quick metadata
+> >>  469 auto quick
+> >> +900
+> > 
+> > group can be fixed then :)
+> > 
+> > Thanks,
+> > Eryu
+> > 
+> >> -- 
+> >> 2.7.4
+> >>
