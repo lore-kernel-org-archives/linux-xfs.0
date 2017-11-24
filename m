@@ -1,135 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:16967 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751263AbdKUW2L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2017 17:28:11 -0500
-Date: Wed, 22 Nov 2017 09:28:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] iomap: report collisions between directio and
- buffered writes to userspace
-Message-ID: <20171121222806.GQ5858@dastard>
-References: <20171117193925.GM5119@magnolia>
- <20171120161829.GA25991@bombadil.infradead.org>
- <20171120202606.GN5858@dastard>
- <20171120215100.GB8933@bombadil.infradead.org>
- <20171120222749.GO5858@dastard>
- <20171121013753.GA12441@magnolia>
- <20171121043240.GB8774@bombadil.infradead.org>
- <20171121064815.GP5858@dastard>
- <20171121125253.GA1484@bombadil.infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:49101 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753247AbdKXHkB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Nov 2017 02:40:01 -0500
+Date: Fri, 24 Nov 2017 08:39:57 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH v2] xfs: handle register_shrinker error
+Message-ID: <20171124073957.3z4hjwg5exqw277h@dhcp22.suse.cz>
+References: <20171123120828.31881-1-mhocko@kernel.org>
+ <20171123132633.GB21798@infradead.org>
+ <20171123134128.mzxv6234hypokg4k@dhcp22.suse.cz>
+ <201711240101.CJF18223.FJtHOLOSQFOMVF@I-love.SAKURA.ne.jp>
+ <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
+ <20171123220045.GV5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171121125253.GA1484@bombadil.infradead.org>
+In-Reply-To: <20171123220045.GV5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Ilya Dryomov <idryomov@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, holger@applied-asynchrony.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 21, 2017 at 04:52:53AM -0800, Matthew Wilcox wrote:
-> On Tue, Nov 21, 2017 at 05:48:15PM +1100, Dave Chinner wrote:
-> > On Mon, Nov 20, 2017 at 08:32:40PM -0800, Matthew Wilcox wrote:
-> > > On Mon, Nov 20, 2017 at 05:37:53PM -0800, Darrick J. Wong wrote:
-> > > > On Tue, Nov 21, 2017 at 09:27:49AM +1100, Dave Chinner wrote:
-> > > > > First thing I noticed was that "xa" as a prefix is already quite
-> > > > > widely used in XFS - it's shorthand for "XFS AIL". Indeed, xa_lock
-> > >
-> > > The X stands for 'eXpandable' or 'eXtending'.  I really don't want to
-> > > use more than a two-letter acronym for whatever the XArray ends up being
-> > > called.  One of the problems with the radix tree is that everything has
-> > > that 11-character 'radix_tree_' prefix; just replacing that with 'xa_'
-> > > makes a huge improvement to readability.
+On Fri 24-11-17 09:00:46, Dave Chinner wrote:
+> On Thu, Nov 23, 2017 at 05:11:37PM +0100, Michal Hocko wrote:
+> > On Fri 24-11-17 01:01:10, Tetsuo Handa wrote:
+> > > Michal Hocko wrote:
+> > > > On Thu 23-11-17 05:26:33, Christoph Hellwig wrote:
+> > > > > Looks good,
+> > > > > 
+> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > 
+> > > > Thanks!
+> > > > 
+> > > > > I can take a stab at the quota one.
+> > > > 
+> > > > That would be really great!
+> > > > 
+> > > Again, it does not look good. Since kmem_free() does only kvfree(),
+> > > nothing will release memory allocated by list_lru_init().
 > > 
-> > Yeah, understood. That's why
-> > we have very little clear
-> > prefix namespace left.... :/
-> > 
-> > [ somedays I write something that looks sorta like a haiku, and from
-> > that point on everything just starts falling out of my brain that
-> > way. I blame Eric for this today! :P ]
+> > Hmm, you are right. I have (blindly) followed the current code flow
+> > which is wrong as well. The following should do the trick. Should I
+> > split that into two patches?
 > 
-> When the namespace is
-> tight we must consider the
-> competing users.
+> One is fine by me - if we're need to backport one fix, then we need
+> to backport both :/
+
+OK
+
+> > ---
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index dd0e18af990c..4c6e86d861fd 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -1815,25 +1815,27 @@ xfs_alloc_buftarg(
+> >  	btp->bt_daxdev = dax_dev;
+> >  
+> >  	if (xfs_setsize_buftarg_early(btp, bdev))
+> > -		goto error;
+> > +		goto error_free;
+> >  
+> >  	if (list_lru_init(&btp->bt_lru))
+> > -		goto error;
+> > +		goto error_free;
+> >  
+> >  	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
+> > -		goto error;
+> > +		goto error_lru;
+> >  
+> >  	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+> >  	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+> >  	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+> >  	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+> > -	if (register_shrinker(&btp->bt_shrinker)) {
+> > -		percpu_counter_destroy(&btp->bt_io_count);
+> > -		goto error;
+> > -	}
+> > +	if (register_shrinker(&btp->bt_shrinker))
+> > +		goto error_pcpu;
+> >  	return btp;
+> >  
+> > -error:
+> > +error_pcpu:
+> > +	percpu_counter_destroy(&btp->bt_io_count);
+> > +error_lru:
+> > +	list_lru_destroy(&btp->bt_lru);
+> > +error_free:
+> >  	kmem_free(btp);
+> >  	return NULL;
 > 
-> The earliest us'r
-> has a claim to a prefix
-> we are used to it.
+> That should do the trick.
 > 
-> Also a more wide-
-> spread user has a claim to
-> a shorter prefix.
-> 
-> Would you mind changing
-> your prefix to one only
-> one letter longer?
+> Acked-by: Dave Chinner <dchinner@redhat.com>
 
-We can do something
-like that, though Darrick has the
-final say in it.
+Thanks. Updated patch below
+---
+>From 1009db61988c48c9a9e327a9d076945b29b02eee Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
+Date: Thu, 23 Nov 2017 17:13:40 +0100
+Subject: [PATCH] xfs: fortify xfs_alloc_buftarg error handling
 
-> ... ok, I give up ;-)
+percpu_counter_init failure path doesn't clean up &btp->bt_lru list.
+Call list_lru_destroy in that error path. Similarly register_shrinker
+error path is not handled.
 
-Top marks for effort :)
+While it is unlikely to trigger these error path, it is not impossible
+especially the later might fail with large NUMAs.  Let's handle the
+failure to make the code more robust.
 
-> All your current usage of the xa_ prefix looks somewhat like this:
-> 
-> fs/xfs/xfs_trans_ail.c: spin_lock(&ailp->xa_lock);
-> 
-> with honourable mentions to:
-> fs/xfs/xfs_log.c:	spin_lock(&mp->m_ail->xa_lock);
-> 
-> Would you mind if I bolt a patch on to the front of the series called
-> something like "free up xa_ namespace" that renamed your xa_* to ail_*?
-> There are no uses of the 'ail_' prefix in the kernel today.
-> 
-> I don't think that
-> 	spin_lock(&ailp->ail_lock);
-> loses any readability.
+Acked-by: Dave Chinner <dchinner@redhat.com>
+Noticed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/xfs_buf.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-Not sure that's going to work - there's an "xa_ail" member for the
-AIL list head. That would now read in places:
-
-	if (list_empty(&ailp->ail_ail))
-
-I'd be inclined to just drop the "xa_" prefix from the XFS
-structure.  There is no information loss by removing the prefix in
-the XFS code because the pointer name tells us what structure it is
-pointing at.
-
-> 
-> By the way, what does AIL stand for?  It'd be nice if it were spelled out
-> in at least one of the header files, maybe fs/xfs/xfs_trans_priv.h?
-
-Active Item List. See the section "Tracking Changes" in
-Documentation/filesystems/xfs-delayed-logging-design.txt for the
-full rundown, but in short:
-
-"The log item is already used to track the log items that have been
-written to the log but not yet written to disk. Such log items are
-considered "active" and as such are stored in the Active Item List
-(AIL) which is a LSN-ordered double linked list. Items are inserted
-into this list during log buffer IO completion, after which they are
-unpinned and can be written to disk."
-
-The lack of comments describing the AIL is historic - it's never
-been documented in the code, nor has the whole relogging concept it
-implements. I wrote the document above when introducing the CIL
-(Commited Item List) because almost no-one actively working on XFS
-understood how the whole journalling subsystem worked in any detail.
-
-> > Zoetrope Array.
-> > Labyrinth of illusion.
-> > Structure never ends.
-> 
-> Thank you for making me look up zoetrope ;-)
-
-My pleasure :)
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 4db6e8d780f6..4c6e86d861fd 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1815,22 +1815,27 @@ xfs_alloc_buftarg(
+ 	btp->bt_daxdev = dax_dev;
+ 
+ 	if (xfs_setsize_buftarg_early(btp, bdev))
+-		goto error;
++		goto error_free;
+ 
+ 	if (list_lru_init(&btp->bt_lru))
+-		goto error;
++		goto error_free;
+ 
+ 	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
+-		goto error;
++		goto error_lru;
+ 
+ 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+ 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+ 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+ 	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+-	register_shrinker(&btp->bt_shrinker);
++	if (register_shrinker(&btp->bt_shrinker))
++		goto error_pcpu;
+ 	return btp;
+ 
+-error:
++error_pcpu:
++	percpu_counter_destroy(&btp->bt_io_count);
++error_lru:
++	list_lru_destroy(&btp->bt_lru);
++error_free:
+ 	kmem_free(btp);
+ 	return NULL;
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.15.0
+
+-- 
+Michal Hocko
+SUSE Labs
