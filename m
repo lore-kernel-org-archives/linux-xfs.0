@@ -1,74 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:60537 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751024AbdKYSqj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 25 Nov 2017 13:46:39 -0500
-Subject: Re: [PATCH 01/18] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
- safely define new mmap flags
-References: <20171101153648.30166-1-jack@suse.cz>
- <20171101153648.30166-2-jack@suse.cz>
- <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
- <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
- <20171122195318.GA29485@bombadil.infradead.org>
-From: Helge Deller <deller@gmx.de>
-Message-ID: <09f54d38-7cb5-343d-a017-2d71a793d05c@gmx.de>
-Date: Sat, 25 Nov 2017 19:45:21 +0100
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42235 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750729AbdKYSvn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Nov 2017 13:51:43 -0500
+Date: Sat, 25 Nov 2017 19:51:40 +0100
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
+ describe how to properly identify file licenses
+Message-ID: <20171125185140.GA5114@amd>
+References: <20171116183306.103584007@linutronix.de>
+ <20171116184358.398030394@linutronix.de>
+ <alpine.DEB.2.20.1711171057240.1709@nanos>
+ <20171117150639.0e706421@vento.lan>
 MIME-Version: 1.0
-In-Reply-To: <20171122195318.GA29485@bombadil.infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
+Content-Disposition: inline
+In-Reply-To: <20171117150639.0e706421@vento.lan>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>, Dan Williams <dan.j.williams@intel.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Kees Cook <keescook@chromium.org>, Florian Weimer <fweimer@redhat.com>, John Hubbard <jhubbard@nvidia.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
+To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On 22.11.2017 20:53, Matthew Wilcox wrote:
-> On Wed, Nov 22, 2017 at 08:52:37AM -0800, Dan Williams wrote:
->> On Wed, Nov 22, 2017 at 4:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
->>> On 11/01/2017 04:36 PM, Jan Kara wrote:
->>>> From: Dan Williams <dan.j.williams@intel.com>
->>>>
->>>> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
->>>> unknown flags. However, proposals like MAP_SYNC need a mechanism to
->>>> define new behavior that is known to fail on older kernels without the
->>>> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
->>>> guaranteed to fail on all legacy mmap implementations.
->>>
->>> So I'm trying to make sense of this together with Michal's attempt for
->>> MAP_FIXED_SAFE [1] where he has to introduce a completely new flag
->>> instead of flag modifier exactly for the reason of not validating
->>> unknown flags. And my conclusion is that because MAP_SHARED_VALIDATE
->>> implies MAP_SHARED and excludes MAP_PRIVATE, MAP_FIXED_SAFE as a
->>> modifier cannot build on top of this. Wouldn't thus it be really better
->>> long-term to introduce mmap3 at this point? ...
->>
->> We have room to define MAP_PRIVATE_VALIDATE in MAP_TYPE on every arch
->> except parisc. Can we steal an extra bit for MAP_TYPE from somewhere
->> else on parisc?
-> 
-> It looks like 0x08 should work.
 
-I posted an RFC to the parisc mailing list for that:
-https://patchwork.kernel.org/patch/9970553/
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Basically this is (for parisc only):
--#define MAP_TYPE	0x03		/* Mask for type of mapping */
-+#define MAP_TYPE	(MAP_SHARED|MAP_PRIVATE|MAP_RESRVD1|MAP_RESRVD2) /* Mask for type of mapping */
- #define MAP_FIXED	0x04		/* Interpret addr exactly */
-+#define MAP_RESRVD1	0x08		/* reserved for 3rd bit of MAP_TYPE */
- #define MAP_ANONYMOUS	0x10		/* don't use a file */
-+#define MAP_RESRVD2	0x20		/* reserved for 4th bit of MAP_TYPE */
+On Fri 2017-11-17 15:06:39, Mauro Carvalho Chehab wrote:
+> Hi Thomas,
+>=20
+> Em Fri, 17 Nov 2017 11:00:33 +0100 (CET)
+> Thomas Gleixner <tglx@linutronix.de> escreveu:
+>=20
+> > Subject: Documentation: Add license-rules.rst to describe how to proper=
+ly identify file licenses
+> > From: Thomas Gleixner <tglx@linutronix.de>
+> > Date: Fri, 10 Nov 2017 09:30:00 +0100
+> >=20
+> > Add a file to the Documentation directory to describe how file licenses
+> > should be described in all kernel files, using the SPDX identifier, as =
+well
+> > as where all licenses should be in the kernel source tree for people to
+> > refer to (LICENSES/).
+> >=20
+> > Thanks to Kate, Greg and Jonathan for review and editing and Jonas for =
+the
+> > suggestions concerning the meta tags in the licenses files.
+> >=20
+> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+>=20
+> The document itself looks good, but I think it should also mention
+> what would be the expected values for the MODULE_LICENSE() macro and
+> how each license would be mapped into it.
+>=20
+> Right now, include/linux/module.h says:
+>=20
+> /*
+>  * The following license idents are currently accepted as indicating free
+>  * software modules
+>  *
+>  *	"GPL"				[GNU Public License v2 or later]
 
-> But I don't have an HPUX machine around
-> to check that HP didn't use that bit for something else.
+Hmm. AFAICT Greg translated GPL as GPL v1 or later. That seemed
+wrong... and now it seems even more wrong.
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
 
-We completely dropped support for HPUX binaries, so it's not relvant any longer. 
+--ew6BAiZeqk4r7MaW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-> It'd probably help to cc the linux-parisc mailing list when asking
-> questions about PARISC, eh?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-Yes, please.
+iEYEARECAAYFAloZu7wACgkQMOfwapXb+vInsACgl8OvtwbLO8qiw6NPDgIDgFbZ
+c18AnRngkGne/+G0QXQmUpHBlNz4Jf6m
+=gKKs
+-----END PGP SIGNATURE-----
 
-Helge
+--ew6BAiZeqk4r7MaW--
