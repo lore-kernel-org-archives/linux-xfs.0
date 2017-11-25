@@ -1,221 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60506 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.17.21]:60537 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753319AbdKXOvX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 09:51:23 -0500
-Date: Fri, 24 Nov 2017 09:51:22 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171124145121.GA26516@bfoster.bfoster>
-References: <20171121150557.GA5014@bfoster.bfoster>
- <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
- <20171121173557.GB6004@bfoster.bfoster>
- <20171122022645.GR5858@dastard>
- <20171122122100.GA9984@bfoster.bfoster>
- <20171122204126.GA19041@bfoster.bfoster>
- <20171123002401.GT5858@dastard>
- <20171123143652.GA22032@bfoster.bfoster>
- <20171123215457.GU5858@dastard>
+        id S1751024AbdKYSqj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 25 Nov 2017 13:46:39 -0500
+Subject: Re: [PATCH 01/18] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+References: <20171101153648.30166-1-jack@suse.cz>
+ <20171101153648.30166-2-jack@suse.cz>
+ <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
+ <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
+ <20171122195318.GA29485@bombadil.infradead.org>
+From: Helge Deller <deller@gmx.de>
+Message-ID: <09f54d38-7cb5-343d-a017-2d71a793d05c@gmx.de>
+Date: Sat, 25 Nov 2017 19:45:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171123215457.GU5858@dastard>
+In-Reply-To: <20171122195318.GA29485@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>, Dan Williams <dan.j.williams@intel.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Kees Cook <keescook@chromium.org>, Florian Weimer <fweimer@redhat.com>, John Hubbard <jhubbard@nvidia.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
 
-On Fri, Nov 24, 2017 at 08:54:57AM +1100, Dave Chinner wrote:
-> On Thu, Nov 23, 2017 at 09:36:53AM -0500, Brian Foster wrote:
-> > On Thu, Nov 23, 2017 at 11:24:02AM +1100, Dave Chinner wrote:
-> > > On Wed, Nov 22, 2017 at 03:41:26PM -0500, Brian Foster wrote:
-> > > > On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
-> > > > > On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
-> > > > > > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
-> > > > > > I'm still not 100% sure what the extra "2 +" is accounting for
-> > > > > > there, though, so to be safe that migh need to be accounted as full
-> > > > > > blocks, not log headers.
-> > > > > > 
-> > > > > 
-> > > > > Same.. there is still a bit of cruft in this calculation that really
-> > > > > isn't clear. That +2 is one part and then there's another
-> > > > > xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
-> > > > > that it's a separate line implies it is logically separate, but who
-> > > > > knows.
-> > > > > 
-> > > > > I suppose I'll keep that line as is, replace the inobt entry bit with
-> > > > > the full inobt calculation (as above), keep the +2 associated with the
-> > > > > inobt calculation and run some tests on that.
-> > > 
-> > > I think I've worked out what the +2 is supposed to be - the AGF
-> > > and AGFL when we alloc/free blocks for either the inode chunk
-> > > or inobt records. You see them in, say, xfs_calc_write_reservation()
-> > > but not in the inode allocation reservations, despite needing
-> > > to do allocation....
-> > > 
-> > 
-> > That sounds sane.. though it looks like in the case of
-> > xfs_calc_write_reservation() those are accounted as sectors rather than
-> > full blocks as in the ifree calculation. I suppose we should fix those
-> > up in the ifree calculation to reflect the sector size and properly
-> > document them.
-> > 
-> > Hmm, xfs_calc_write_reservation() also handles the space freeing bits a
-> > bit more how I would expect: using the max of two calculations since a
-> > part of the operation occurs after a transaction roll. The ifree
-> > calculation just adds everything together (and we still overrun it :/).
+On 22.11.2017 20:53, Matthew Wilcox wrote:
+> On Wed, Nov 22, 2017 at 08:52:37AM -0800, Dan Williams wrote:
+>> On Wed, Nov 22, 2017 at 4:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
+>>> On 11/01/2017 04:36 PM, Jan Kara wrote:
+>>>> From: Dan Williams <dan.j.williams@intel.com>
+>>>>
+>>>> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+>>>> unknown flags. However, proposals like MAP_SYNC need a mechanism to
+>>>> define new behavior that is known to fail on older kernels without the
+>>>> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
+>>>> guaranteed to fail on all legacy mmap implementations.
+>>>
+>>> So I'm trying to make sense of this together with Michal's attempt for
+>>> MAP_FIXED_SAFE [1] where he has to introduce a completely new flag
+>>> instead of flag modifier exactly for the reason of not validating
+>>> unknown flags. And my conclusion is that because MAP_SHARED_VALIDATE
+>>> implies MAP_SHARED and excludes MAP_PRIVATE, MAP_FIXED_SAFE as a
+>>> modifier cannot build on top of this. Wouldn't thus it be really better
+>>> long-term to introduce mmap3 at this point? ...
+>>
+>> We have room to define MAP_PRIVATE_VALIDATE in MAP_TYPE on every arch
+>> except parisc. Can we steal an extra bit for MAP_TYPE from somewhere
+>> else on parisc?
 > 
-> Well, I don't think that's going to matter - more below...
-> 
-> [....]
-> 
-> > > So if we want to cover the worst case, we need a reservation for
-> > > each freespace tree modification, not one to cover them all. i.e.
-> > > one for each AGFL modification, and one for the actual extent being
-> > > allocated/freed. And we need one of those reservations for
-> > > *every single allocation/free that can occur in a transaction*.
-> > > 
-> > > This rapidly blows out to being impractical. We're not going to get
-> > > full height splits/joins on every single allocation that occurs in a
-> > > transaction, and the number of potential allocations in a
-> > > transaction can be considered essentially unbound. e.g.  how many
-> > > allocations can a single a directory modification do? Hash btree
-> > > split, data/node btree split,  new freespace block, too - especially
-> > > when considering that a each directory block could - in the worse
-> > > case - be 128 x 512 byte extents (64k dir block size on 512 byte
-> > > block size filesystem).
-> > > 
-> > 
-> > The impression I get is that at the time of designing these transactions
-> > it was simply easiest to characterize worst case of a single operation
-> > as a full btree modification, and then either there was an assumption
-> > made that would be sufficient to cover other multiple allocation/free
-> > cases (since the full tree changes are relatively rare) or that was just
-> > borne out in practice and so was never really revisited. 
-> 
-> Yup, that seems to fit the pattern over time of "increase the
-> reservation when it runs out" fixes....
-> 
-> > > So, no, I don't think it's realistic to start trying to cater for
-> > > worst case reservations here. Such crazy shit just doesn't happen
-> > > often enough in the real world for us to penalise everything with
-> > > such reservations.
-> > > 
-> > 
-> > Agreed.
-> > 
-> > > In which case, I think we need to consider that each major operation
-> > > (inobt, directory, finobt, etc) probably should have it's own
-> > > allocation reservation. It's extremely unlikely that all of them are
-> > > going to overrun in the same transaction, so maybe this is a good
-> > > enough safe guard without going completely over the top...
-> > > 
-> > 
-> > For the ifree example, I take this to mean we should refactor the
-> > calculation to consider freeing of the inode chunk separate from the
-> > inobt and finobt modifications with respect to free space tree
-> > modifications.  In other words, we account one allocfree res for the
-> > inode chunk, another for the inobt modification (to effectively cover
-> > agfl fixups) and another (optional) for the finobt as opposed to one for
-> > the whole transaction. Is that what you're suggesting?
-> > 
-> > That sounds reasonable, but at the same time I'm a bit concerned that I
-> > think the ifree transaction should technically be refactored into a max
-> > of the pre/post tx roll reservations similar to the write reservation
-> > mentioned above. For example:
-> > 
-> > 	MAX(inode + inobt + finobt + agi + inode chunk + etc.,
-> > 	    allocfree for inode chunk + (allocfree * nr inobts));
-> 
-> Yeah, I think you're right in that we need to we need to look at
-> redefining the reservations at a higher level.
-> 
-> For this specific example, though, we have to take into account that
-> a finobt modification to mark an inode free can insert a new record
-> into the btree. Hence we have scope for a finobt block allocation
-> and tree split, so we need to have allocfree reservations in the
-> primary transaction.
-> 
-> Also, the inode btree modifications (and refcountbt, too) call
-> xfs_free_extent() directly - they don't use deferops free list that
-> is processed as an EFI/EFD op after the primary transaction has been
-> rolled.  i.e:
-> 
-> xfs_btree_delrec
->   xfs_btree_free_block
->     xfs_inobt_free_block
->       xfs_free_extent
-> 
-> Hence the primary transaction reservation has to take into account
-> that operations that remove a record from the tree can cause and
-> extent to be freed. As such, the removal of an inode chunk - which
-> removes the record from both the inobt and finobt - can trigger
-> freespace tree modification directly.
-> 
+> It looks like 0x08 should work.
 
-Ah, because the inobt doesn't use the agfl. It looks like we try to do
-this in xfs_calc_finobt_res(), but it doesn't appear to be fully correct
-because the allocfree res is only accounted for transactions that "do
-not already account for free space btree modifications," according to
-the comment. I don't recall the exact reasoning there off the top of my
-head, but if I had to guess, this was probably just another instance of
-"bolt something on to the transaction that appears to follow the pattern
-of other transactions and doesn't explode."
+I posted an RFC to the parisc mailing list for that:
+https://patchwork.kernel.org/patch/9970553/
 
-Given that, it seems like the appropriate thing to do is in fact for the
-transaction to include an independent allocfree res for the inode chunk,
-the inobt and finobt. That justifies the existence of the current
-allocfree in the pre-roll part of the transaction and would increase the
-transaction size by one more allocfree in the finobt case (the inode
-chunk should technically be part of the post-roll calculation).
+Basically this is (for parisc only):
+-#define MAP_TYPE	0x03		/* Mask for type of mapping */
++#define MAP_TYPE	(MAP_SHARED|MAP_PRIVATE|MAP_RESRVD1|MAP_RESRVD2) /* Mask for type of mapping */
+ #define MAP_FIXED	0x04		/* Interpret addr exactly */
++#define MAP_RESRVD1	0x08		/* reserved for 3rd bit of MAP_TYPE */
+ #define MAP_ANONYMOUS	0x10		/* don't use a file */
++#define MAP_RESRVD2	0x20		/* reserved for 4th bit of MAP_TYPE */
 
-Actually, with addition of some proper documentation that may also
-obviate the need to do the whole pre/post tx roll thing because the
-first part of the transaction will obviously be larger than a single
-allocfree res for the second part (amazing how a little documentation to
-establish/assess intent can save us time from trying to work backwards
-from the transaction :P).
+> But I don't have an HPUX machine around
+> to check that HP didn't use that bit for something else.
 
-Ok, I think that gives me enough to go on to try and refactor at least
-the inobt tx res bits. I'll take a closer look next week, thanks for all
-of the feedback.
+We completely dropped support for HPUX binaries, so it's not relvant any longer. 
 
-> IOWs, the primary ifree transaction needs alloc/free reservations
-> for the modifications of both the inobt and the finobt, regardless
-> of anything else that goes on, so.....
-> 
-> > But that would end up making the transaction smaller than adding it all
-> > together. Of course, that may be fine with the agfl fixup below..
-> 
-> .... I doubt it will shrink if we take into account the multiple
-> direct alloc/free operations in the primary transaction properly. :/
-> 
-> Hmmmm - I'm wondering if we need to limit the max extents in a
-> defer-ops EFI/EFD item to 2 so we don't try to free all the defered
-> extent frees in a single EFI/EFD transaction pair. i.e. force it
-> to roll the transaction and get a new log reservation every two
-> extents being freed so we can limit the reservation size defered
-> extent freeing requires....
-> 
+> It'd probably help to cc the linux-parisc mailing list when asking
+> questions about PARISC, eh?
 
-This sounds similar in principle to the other option I was thinking
-about with regard to dealing with the agfl fixup problem (rolling the
-tx). The difference is the driving logic: putting a hard limit on the
-number of per-tx operations vs. rolling in a particular agfl corner
-case.
+Yes, please.
 
-The former may be more straightforward, particularly if we can avoid
-burying deferred ops logic down in the agfl fixup code (or even enforce
-it in the deferred ops efi/efd class handling code), but I'll have to
-take a closer look at this.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Helge
