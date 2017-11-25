@@ -1,107 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42687 "EHLO
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42783 "EHLO
         atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750808AbdKYTMZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Nov 2017 14:12:25 -0500
-Date: Sat, 25 Nov 2017 20:12:23 +0100
+        with ESMTP id S1750775AbdKYTR2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Nov 2017 14:17:28 -0500
+Date: Sat, 25 Nov 2017 20:17:26 +0100
 From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
- identifier to files with no license
-Message-ID: <20171125191223.GC5114@amd>
-References: <20171107072040.GB4586@infradead.org>
- <20171107073940.GB4654@kroah.com>
- <20171107172042.GB26910@magnolia>
- <20171107182903.GA4588@kroah.com>
- <20171107184658.56b87d41@alans-desktop>
- <20171107191526.x3rzfcnnlmaz264d@thunk.org>
- <20171107192846.GA24617@infradead.org>
- <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
- <20171122170713.GD12684@amd>
- <20171122175346.GB6528@kroah.com>
+Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
+ describe how to properly identify file licenses
+Message-ID: <20171125191726.GA6886@amd>
+References: <20171116184358.398030394@linutronix.de>
+ <alpine.DEB.2.20.1711171057240.1709@nanos>
+ <20171117150639.0e706421@vento.lan>
+ <alpine.DEB.2.20.1711171850330.2186@nanos>
+ <20171117183946.GA28533@lst.de>
+ <alpine.DEB.2.20.1711221207460.1751@nanos>
+ <20171122095117.49c558a4@vento.lan>
+ <20171122134804.GA30796@kroah.com>
+ <20171125190447.GB5114@amd>
+ <CA+55aFyGDE1tB-5ms6yHFUujJ815FoQQE2SceXDybiT8xcvgpQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="rQ2U398070+RC21q"
+        protocol="application/pgp-signature"; boundary="liOOAslEiF7prFVr"
 Content-Disposition: inline
-In-Reply-To: <20171122175346.GB6528@kroah.com>
+In-Reply-To: <CA+55aFyGDE1tB-5ms6yHFUujJ815FoQQE2SceXDybiT8xcvgpQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mauro Carvalho Chehab <mchehab@s-opensource.com>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
 
---rQ2U398070+RC21q
+--liOOAslEiF7prFVr
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi!
-
-> > This would be even better:
-> >=20
-> > /*
-> >  * Driver for SMSC USB3503 USB 2.0 hub controller driver
-> >  *
-> >  * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
-> >  */
-> > ...
-> > SPDX_MODULE_LICENSE("GPL-2.0+")
-> >=20
-> > So yes, SPDX can be improvement. But in current implementation it is
-> > not.
+On Sat 2017-11-25 09:11:58, Linus Torvalds wrote:
+> On Sat, Nov 25, 2017 at 9:04 AM, Pavel Machek <pavel@ucw.cz> wrote:
+> >
+> > That does not sound like he was deciding between /* */ and //. And
+> > actually this was in context of files with no existing license. You
+> > made the ugly patches. Stop hiding behind Linus.
 >=20
-> Again, as people seem to keep still missing this point, Linus asked for
-> the format to look like it does today, using // at the top.  Thomas and
-> I originally did it first the way with the SPDX line in the big comment
-> block.
+> No, Linus happily stands up for //.
 >=20
-> If you don't like the format, complain and convince him otherwise, you
-> are not getting anywhere by responding to this old topic about it
-> again.
+> I really don't like one-liner /* */ comments. Let's face it, // was
+> the _one_ thing C++ got right, among all the horrible bad decisions.
+>=20
+> I think we should just start moving to // in general, but only when
+> adding new ones (ie I don't want to see any automatic conversion
+> patches).
+>=20
+> And it's _particularly_ true for the whole case where we mix
+> one-liners like the SPDX line with block comments. That's where /* */
+> really sucks.
 
-Hey, Linus. This // SPDX at the begining of file looks really
-ugly. Can we get something that looks less bad?
+I agree that we should not do
 
-And BTW I responded to this uglyness before, but you just tried to
-make me shut up, and then did not reply. Given what quality you
-normally expect from patch submitters, you are doing pretty poor job
-here.
-
-> Having it be the first line of the file is good, it's obvious, and
-> stands out, which is the point, you want it to, it's a license :)
-
-What is good about that? License is about the least interesting thing
-about the file. Point of SPDX conversion (see the mail I was replying
-to?) was to make license information _less_ intrusive, not more. Tools
-can find SPDX anywhere in the file for the people that really care.
-
-That's how it works in U-Boot, which people are using as example of
-reasonable SPDX conversion:
-
+/* SPDX-License-Identifier:     GPL-2.0+ */
 /*
- * Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
- * Copyright (c) 2010-2011 NVIDIA Corporation
- *  NVIDIA Corporation <www.nvidia.com>
+ * Driver for SMSC USB3503 USB 2.0 hub controller driver
  *
- * SPDX-License-Identifier:     GPL-2.0+
+ * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
  */
 
+There's logical place in the comment, and it should look like this:
+
+/*
+ * Driver for SMSC USB3503 USB 2.0 hub controller driver
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
+ * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
+ */
+
+So I'm not saying "use one-line comments with SPDX identifier". I'm
+saying place it where people expect it.
+
+Best regards,
 									Pavel
 --=20
 (english) http://www.livejournal.com/~pavelmachek
 (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
 g.html
 
---rQ2U398070+RC21q
+--liOOAslEiF7prFVr
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iEYEARECAAYFAloZwJcACgkQMOfwapXb+vLm3QCePdWz0eyK72AcRBd+Xz06TzxB
-PgUAoINQSGDgbkP5QDzveW0VSFc+3is7
-=O+HG
+iEYEARECAAYFAloZwcYACgkQMOfwapXb+vJkoACfY3LlGMnMukoXzwwlI22RmuXJ
+ItkAoIGbAQKW+rR/OCA2hi1eLZbA1pdy
+=K+L7
 -----END PGP SIGNATURE-----
 
---rQ2U398070+RC21q--
+--liOOAslEiF7prFVr--
