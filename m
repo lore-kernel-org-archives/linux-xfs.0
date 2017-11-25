@@ -1,87 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:41659 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751024AbdKYUab (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Nov 2017 15:30:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171125175353.467b6e49@vento.lan>
-References: <20171116184358.398030394@linutronix.de> <alpine.DEB.2.20.1711171057240.1709@nanos>
- <20171117150639.0e706421@vento.lan> <alpine.DEB.2.20.1711171850330.2186@nanos>
- <20171117183946.GA28533@lst.de> <alpine.DEB.2.20.1711221207460.1751@nanos>
- <20171122095117.49c558a4@vento.lan> <20171122134804.GA30796@kroah.com>
- <20171125190447.GB5114@amd> <CA+55aFyGDE1tB-5ms6yHFUujJ815FoQQE2SceXDybiT8xcvgpQ@mail.gmail.com>
- <20171125191726.GA6886@amd> <CA+55aFzPUi6En9tg+kZnDHQd3yuz5n99rDkk2tjAA=w4-K3uBg@mail.gmail.com>
- <20171125175353.467b6e49@vento.lan>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 25 Nov 2017 10:30:29 -1000
-Message-ID: <CA+55aFzP+b2Vt=+ZZbkpuYi87gO+pZXVxKnySkiedn+SYN2CCw@mail.gmail.com>
-Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to describe
- how to properly identify file licenses
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0103.hostedemail.com ([216.40.44.103]:57978 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751097AbdKYV5i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Nov 2017 16:57:38 -0500
+Message-ID: <1511647053.2503.22.camel@perches.com>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+From: Joe Perches <joe@perches.com>
+Date: Sat, 25 Nov 2017 13:57:33 -0800
+In-Reply-To: <20171125191223.GC5114@amd>
+References: <20171107072040.GB4586@infradead.org>
+         <20171107073940.GB4654@kroah.com> <20171107172042.GB26910@magnolia>
+         <20171107182903.GA4588@kroah.com> <20171107184658.56b87d41@alans-desktop>
+         <20171107191526.x3rzfcnnlmaz264d@thunk.org>
+         <20171107192846.GA24617@infradead.org>
+         <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
+         <20171122170713.GD12684@amd> <20171122175346.GB6528@kroah.com>
+         <20171125191223.GC5114@amd>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
-On Sat, Nov 25, 2017 at 9:53 AM, Mauro Carvalho Chehab
-<mchehab@s-opensource.com> wrote:
->
-> Let me see if I got it straight. At drivers/media/common/siano/smsir.c,
-> we have, currently:
+On Sat, 2017-11-25 at 20:12 +0100, Pavel Machek wrote:
+> [Linus Torvalds...]
+> > Having it be the first line of the file is good, it's obvious, and
+> > stands out, which is the point, you want it to, it's a license :)
+> 
+> What is good about that? License is about the least interesting thing
+> about the file. Point of SPDX conversion (see the mail I was replying
+> to?) was to make license information _less_ intrusive, not more. Tools
+> can find SPDX anywhere in the file for the people that really care.
+> 
+> That's how it works in U-Boot, which people are using as example of
+> reasonable SPDX conversion:
+> 
+> /*
+>  * Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+>  * Copyright (c) 2010-2011 NVIDIA Corporation
+>  *  NVIDIA Corporation <www.nvidia.com>
+>  *
+>  * SPDX-License-ers/ d
 
-.. snip snip ..
+> .c:     GPL-2.0+
+>  */
 
-> With is completely out of standard. I'd like to add an SPDX tag there
-> and, while doing that, adjust the comments.
->
-> So, if I understand well, your preference would be to make it like:
->
->         // SPDX-License-Identifier: GPL-2.0+
->         //
->         // Siano Mobile Silicon, Inc.
->         // MDTV receiver kernel modules.
->         // Copyright (C) 2006-2009, Uri Shkolnik
->         //
->         // Copyright (c) 2010 - Mauro Carvalho Chehab
->         //      - Ported the driver to use rc-core
->         //      - IR raw event decoding is now done at rc-core
->         //      - Code almost re-written
->
-> Right?
+fwiw: I agree with Pavel.
 
-Exactly.
+My preferred header listing order:
 
-I would also like to make clear that this is not a "let's do this in
-bulk and automatically". But let's just say that if the "//" for the
-SPDX line ends up encouraging people towards this kind of  format over
-the long run, I think that would be lovely.
+// Simple description/purpose
+// Copyright/Author
+// License
 
-The /* */ format really  ends up encouraging some odd formatting. Your
-example with the whole "box of stars" is not standard kernel format,
-but it's surprisingly common. And you find various lopsided versions
-of the multi-line thing, and even when you do *single* lines, the /*
-*/ thing ends up being something where people try to align the closing
-"*/" part.
 
-Honestly now, how many people have seen things like
-
-    struct somestruct {
-        int member;    /* For Xyz         */
-        int other;     /* For Abracadabra */
-        ...
-
-where people try to align that ending thing?
-
-Or tell me you haven't seen block comments where  people do
-
-    /*  This is a multi-line
-     * thing that tries to be dense */
-
-and other odd formats that are just ugly and unbalanced.
-
-That's why I think "//" ends up being better in the end. And yes, I've
-changed my mind over time. Had you asked me ten or fifteen years ago,
-I probably would have said that "//" is not real C.
-
-               Linus
