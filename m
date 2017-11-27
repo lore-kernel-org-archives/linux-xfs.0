@@ -1,59 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32778 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:36410 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752294AbdK0Kya (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Nov 2017 05:54:30 -0500
-Date: Mon, 27 Nov 2017 11:54:25 +0100
-From: Karel Zak <kzak@redhat.com>
-Subject: Re: [PATCH v4] fstests: filter readonly mount error messages
-Message-ID: <20171127105425.zxcgjo5eju6azj5u@ws.net.home>
-References: <20171123111031.6550-4-eguan@redhat.com>
- <20171124050144.23549-1-eguan@redhat.com>
- <CAOQ4uxgxRxByGHhePr3b4H+W1zEGxUX6Emj9PBzZpEKEs2iHog@mail.gmail.com>
- <20171124103814.gfvxw3ethkcvm6xa@ws.net.home>
- <CAOQ4uxjbnrgJG3PLVV6TvAS-Fjgskms_jWc5-b4DVmLhbVUdFg@mail.gmail.com>
+        id S1752281AbdK0P5Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 10:57:24 -0500
+Subject: Re: [PATCH 01/18] mm: introduce MAP_SHARED_VALIDATE, a mechanism to
+ safely define new mmap flags
+References: <20171101153648.30166-1-jack@suse.cz>
+ <20171101153648.30166-2-jack@suse.cz>
+ <638b3b80-5cb9-97c2-5055-fef3a1ec25b9@suse.cz>
+ <CAPcyv4gGRHWc6AH5Enb7njtmqHgd=g+0-mYMdd5wWjJMW0+d7g@mail.gmail.com>
+ <20171122195318.GA29485@bombadil.infradead.org>
+ <09f54d38-7cb5-343d-a017-2d71a793d05c@gmx.de>
+From: Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <35fa2cb6-9957-fd77-836c-760cecc64b2e@suse.cz>
+Date: Mon, 27 Nov 2017 16:55:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjbnrgJG3PLVV6TvAS-Fjgskms_jWc5-b4DVmLhbVUdFg@mail.gmail.com>
+In-Reply-To: <09f54d38-7cb5-343d-a017-2d71a793d05c@gmx.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Helge Deller <deller@gmx.de>, Matthew Wilcox <willy@infradead.org>, Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Kees Cook <keescook@chromium.org>, Florian Weimer <fweimer@redhat.com>, John Hubbard <jhubbard@nvidia.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
 
-On Sun, Nov 26, 2017 at 10:56:40AM +0200, Amir Goldstein wrote:
-> >> Thinking out loud, does xfstest even need to use mount program from
-> >> util-linux? Do we ever need anything other than the bare libc mount(2)?
-> >> We need it for -o loop, but that is the exception to the rule.
-> >
-> > Well, I don't think that create a parallel universe is the best
-> > solution.
-> >
+On 11/25/2017 07:45 PM, Helge Deller wrote:
+> On 22.11.2017 20:53, Matthew Wilcox wrote:
+>> On Wed, Nov 22, 2017 at 08:52:37AM -0800, Dan Williams wrote:
+>>> On Wed, Nov 22, 2017 at 4:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
+>>>> On 11/01/2017 04:36 PM, Jan Kara wrote:
+>>>>> From: Dan Williams <dan.j.williams@intel.com>
+>>>>>
+>>>>> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+>>>>> unknown flags. However, proposals like MAP_SYNC need a mechanism to
+>>>>> define new behavior that is known to fail on older kernels without the
+>>>>> support. Define a new MAP_SHARED_VALIDATE flag pattern that is
+>>>>> guaranteed to fail on all legacy mmap implementations.
+>>>>
+>>>> So I'm trying to make sense of this together with Michal's attempt for
+>>>> MAP_FIXED_SAFE [1] where he has to introduce a completely new flag
+>>>> instead of flag modifier exactly for the reason of not validating
+>>>> unknown flags. And my conclusion is that because MAP_SHARED_VALIDATE
+>>>> implies MAP_SHARED and excludes MAP_PRIVATE, MAP_FIXED_SAFE as a
+>>>> modifier cannot build on top of this. Wouldn't thus it be really better
+>>>> long-term to introduce mmap3 at this point? ...
+>>>
+>>> We have room to define MAP_PRIVATE_VALIDATE in MAP_TYPE on every arch
+>>> except parisc. Can we steal an extra bit for MAP_TYPE from somewhere
+>>> else on parisc?
+>>
+>> It looks like 0x08 should work.
 > 
-> I agree. However, xfstest uses 'mount' is a very particular way:
-> - User has to provide both block device and mount point
-> - xfstests already checks that those block device and mount point
->   are not in use in /proc/mounts *before* calling 'mount'
+> I posted an RFC to the parisc mailing list for that:
+> https://patchwork.kernel.org/patch/9970553/
 
-OK, I see, than the wrapper is not so bad idea (if you're able to keep
-it simple and stupid:-)
+Thanks. BTW there doesn't seem to be much interest making MAP_FIXED_SAFE
+a flag modifier after all, so MAP_PRIVATE_VALIDATE wouldn't get
+immediate users.
 
-> So I prefer the 'machine output format' solution going forward, but
-> since xfstests will need to continue supporting old util-linux installations
-> it might be less clumsy to use a simple C wrapper to mount(2), then
-> to carry these error format filters.
-> xfstests can also check for availability of the new machine format in
-> 'mount' and if it doesn't exist fall back to using its private mount helper.
+> Basically this is (for parisc only):
+> -#define MAP_TYPE	0x03		/* Mask for type of mapping */
+> +#define MAP_TYPE	(MAP_SHARED|MAP_PRIVATE|MAP_RESRVD1|MAP_RESRVD2) /* Mask for type of mapping */
+>  #define MAP_FIXED	0x04		/* Interpret addr exactly */
+> +#define MAP_RESRVD1	0x08		/* reserved for 3rd bit of MAP_TYPE */
+>  #define MAP_ANONYMOUS	0x10		/* don't use a file */
+> +#define MAP_RESRVD2	0x20		/* reserved for 4th bit of MAP_TYPE */
+> 
+>> But I don't have an HPUX machine around
+>> to check that HP didn't use that bit for something else.
+> 
+> We completely dropped support for HPUX binaries, so it's not relvant any longer. 
+> 
+>> It'd probably help to cc the linux-parisc mailing list when asking
+>> questions about PARISC, eh?
+> 
+> Yes, please.
+> 
+> Helge
+> 
 
-If you want to implement the wrapper than it's probably better use it
-in all cases and then you can remove all the backward compatibility
-filters. In thins case it seems better to depend on the wrapper only.
-So, the unified messages maintained by unit-linux mount(8) will be
-unnecessary.
-
-    Karel
-
--- 
- Karel Zak  <kzak@redhat.com>
- http://karelzak.blogspot.com
