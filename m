@@ -1,204 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35522 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752787AbdKWOgy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Nov 2017 09:36:54 -0500
-Date: Thu, 23 Nov 2017 09:36:53 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171123143652.GA22032@bfoster.bfoster>
-References: <20171121150557.GA5014@bfoster.bfoster>
- <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
- <20171121173557.GB6004@bfoster.bfoster>
- <20171122022645.GR5858@dastard>
- <20171122122100.GA9984@bfoster.bfoster>
- <20171122204126.GA19041@bfoster.bfoster>
- <20171123002401.GT5858@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:48472 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752746AbdK0RvH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 12:51:07 -0500
+Date: Mon, 27 Nov 2017 09:50:53 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: log recovery should replay deferred ops in order
+Message-ID: <20171127175053.GD19379@magnolia>
+References: <20171122182949.GH2135@magnolia>
+ <20171123133640.GA27935@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171123002401.GT5858@dastard>
+In-Reply-To: <20171123133640.GA27935@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Hou Tao <houtao1@huawei.com>, Amir Goldstein <amir73il@gmail.com>
 
-On Thu, Nov 23, 2017 at 11:24:02AM +1100, Dave Chinner wrote:
-> On Wed, Nov 22, 2017 at 03:41:26PM -0500, Brian Foster wrote:
-> > On Wed, Nov 22, 2017 at 07:21:01AM -0500, Brian Foster wrote:
-> > > On Wed, Nov 22, 2017 at 01:26:45PM +1100, Dave Chinner wrote:
-> > > > On Tue, Nov 21, 2017 at 12:35:57PM -0500, Brian Foster wrote:
-> > > > I'm still not 100% sure what the extra "2 +" is accounting for
-> > > > there, though, so to be safe that migh need to be accounted as full
-> > > > blocks, not log headers.
-> > > > 
-> > > 
-> > > Same.. there is still a bit of cruft in this calculation that really
-> > > isn't clear. That +2 is one part and then there's another
-> > > xfs_calc_buf_res(1, 0) right before the m_ialloc_blks line. The fact
-> > > that it's a separate line implies it is logically separate, but who
-> > > knows.
-> > > 
-> > > I suppose I'll keep that line as is, replace the inobt entry bit with
-> > > the full inobt calculation (as above), keep the +2 associated with the
-> > > inobt calculation and run some tests on that.
+On Thu, Nov 23, 2017 at 02:36:40PM +0100, Christoph Hellwig wrote:
+> Hi Darrick,
 > 
-> I think I've worked out what the +2 is supposed to be - the AGF
-> and AGFL when we alloc/free blocks for either the inode chunk
-> or inobt records. You see them in, say, xfs_calc_write_reservation()
-> but not in the inode allocation reservations, despite needing
-> to do allocation....
+> this looks generally good to me:
 > 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> But I have a few nitpicks below:
+> 
+> > +	/*
+> > +	 * We're finishing the defer_ops that accumulated as a result of
+> > +	 * recovering unfinished intent items during log recovery.  We
+> > +	 * reserve an itruncate transaction because it is the largest
+> > +	 * permanent transaction type.  Since we're the only user of the
+> > +	 * fs right now, take 93% of the available free blocks.  Use
+> > +	 * weird math to avoid a 64-bit division.
+> > +	 */
+> 
+> Those magic 93% are 15/16th, maybe better to write it that way :)
 
-That sounds sane.. though it looks like in the case of
-xfs_calc_write_reservation() those are accounted as sectors rather than
-full blocks as in the ifree calculation. I suppose we should fix those
-up in the ifree calculation to reflect the sector size and properly
-document them.
+Ok, will update comment.
 
-Hmm, xfs_calc_write_reservation() also handles the space freeing bits a
-bit more how I would expect: using the max of two calculations since a
-part of the operation occurs after a transaction roll. The ifree
-calculation just adds everything together (and we still overrun it :/).
+> That being said / 16 still is a 64-bit division, and I'm pretty sure
+> we'll run into an old gcc on some weird architecture that will not
+> turn it into a shift, so better write it as a shift to start with.
 
-> Ok, xfs_calc_itruncate_reservation() appears to have the same
-> inobt modification bug in it. But now I'm wondering: why does a
-> truncate transaction modify the inobt?
-> 
-> It doesn't, and the commitin the historic tree doesn't explain why
-> it was necesary then, either:
-> 
-> commit 5fe6abb82f76472ad4ca0d99c0c86585948060eb
-> Author: Glen Overby <overby@sgi.com>
-> Date:   Wed Mar 17 00:52:31 2004 +0000
-> 
->     Add space for inode and allocation btrees to ITRUNCATE log reservation
->     Add XFS_ALLOCFREE_LOG_RES to IFREE log reservation.
-> 
-> FWIW, there's a bunch of stuff in the other transactions
-> reservations that I'm finding highly questionable, too....
-> 
-> And thinking on this a bit further, I suspect the whole allocation
-> reservation is just be a fudge. We do a single alloc/free
-> reservation per AG per transaction, which allows for one full height
-> split of the tree. The problem that Brian has reported is that this
-> reservation only covers a /single/ freespace tree modification and
-> we're overrunning it just in fixing up the freelist.
-> 
-> So if we want to cover the worst case, we need a reservation for
-> each freespace tree modification, not one to cover them all. i.e.
-> one for each AGFL modification, and one for the actual extent being
-> allocated/freed. And we need one of those reservations for
-> *every single allocation/free that can occur in a transaction*.
-> 
-> This rapidly blows out to being impractical. We're not going to get
-> full height splits/joins on every single allocation that occurs in a
-> transaction, and the number of potential allocations in a
-> transaction can be considered essentially unbound. e.g.  how many
-> allocations can a single a directory modification do? Hash btree
-> split, data/node btree split,  new freespace block, too - especially
-> when considering that a each directory block could - in the worse
-> case - be 128 x 512 byte extents (64k dir block size on 512 byte
-> block size filesystem).
-> 
+It shouldn't be, since resblks is unsigned int, which afaik is 32-bit.
+But meh, I'll just change it to ">> 4" to make it obvious.
 
-The impression I get is that at the time of designing these transactions
-it was simply easiest to characterize worst case of a single operation
-as a full btree modification, and then either there was an assumption
-made that would be sufficient to cover other multiple allocation/free
-cases (since the full tree changes are relatively rare) or that was just
-borne out in practice and so was never really revisited. 
-
-> So, no, I don't think it's realistic to start trying to cater for
-> worst case reservations here. Such crazy shit just doesn't happen
-> often enough in the real world for us to penalise everything with
-> such reservations.
+> > +	freeblks = percpu_counter_sum(&mp->m_fdblocks);
+> > +	resblks = min_t(s64, UINT_MAX, freeblks);
 > 
+> Didn't I just got called out for using u* types?  The same applies
+> to s*, so use int64_t here to be consistent.
 
-Agreed.
+Yeah... I pulled the return type directly from percpu_counter_sum, sigh.
+Will change to int64_t.
 
-> In which case, I think we need to consider that each major operation
-> (inobt, directory, finobt, etc) probably should have it's own
-> allocation reservation. It's extremely unlikely that all of them are
-> going to overrun in the same transaction, so maybe this is a good
-> enough safe guard without going completely over the top...
+> > +		/*
+> > +		 * NOTE: If your intent processing routine can create
+> > +		 * more deferred ops, you /must/ attach them to the
+> > +		 * dfops in this routine or else those subsequent
+> > +		 * intents will get replayed in the wrong order!
+> > +		 */
 > 
+> Please use up all available 80 characters for your comments.
 
-For the ifree example, I take this to mean we should refactor the
-calculation to consider freeing of the inode chunk separate from the
-inobt and finobt modifications with respect to free space tree
-modifications.  In other words, we account one allocfree res for the
-inode chunk, another for the inobt modification (to effectively cover
-agfl fixups) and another (optional) for the finobt as opposed to one for
-the whole transaction. Is that what you're suggesting?
+Ok, will fix the comment.
 
-That sounds reasonable, but at the same time I'm a bit concerned that I
-think the ifree transaction should technically be refactored into a max
-of the pre/post tx roll reservations similar to the write reservation
-mentioned above. For example:
+--D
 
-	MAX(inode + inobt + finobt + agi + inode chunk + etc.,
-	    allocfree for inode chunk + (allocfree * nr inobts));
-
-But that would end up making the transaction smaller than adding it all
-together. Of course, that may be fine with the agfl fixup below..
-
-> .....
-> 
-> > Quick update... I ended up still hitting an overrun with this fix in
-> > place (actually, the original bug report shows an overrun of ~32k which
-> > should have indicated that was going to be the case).
-> 
-> Yeah, no surprise there given the above.
-> 
-> > In any event, that had me thinking about tweaking how we manage the agfl
-> > and subsequently brings up a couple other issues. Firstly, this is a
-> > large fs, so we have 1TB AGs and the associated 16 entry agfls.
-> 
-> 16 entries?
-> 
-> The AGFL can hold (on a v5 filesystems and 512 byte sectors) 117
-> individual freespace blocks.  It's always much larger than we need
-> to hold the blocks for a single extent allocation.
-> 
-
-Oops, thinko on my part...
-
-> > The min
-> > agfl allocation is 8 at the time of the overrun, which is the maximum
-> > case for such a filesystem (4 per space btree). IIUC, as much as we need
-> > to keep the agfl populated with a minimum of 8 blocks in this case, we
-> > conversely also need to make sure we have 8 free slots, yes? If so, I'm
-> > not sure that being lazy about freeing blocks is an option because I
-> > have at least one trace where it takes 3 agfl block frees just to get
-> > the agfl from 9 down to the required 8.
-> 
-> Even the AGFL is half full, we've still got space for ~50 blocks to
-> be freed from the bno/cnt/rmap btrees in a single allocation/free
-> operation, so I just don't think we have to care about being a few
-> blocks off. If trying to free blocks from the AGFL results in it
-> growing, then just abort unless the AGFL is over half full...
-> 
-
-Right.. disregard my previous concern. I think this means we can most
-likely resolve this by doing something like limiting to a single free
-per fixup or breaking out once a block free ends up adding another to
-the agfl. Thanks.
-
-Brian
-
-> > Unrelated to the overrun issue, I also notice that we use the agfl for
-> > the rmapbt. That adds another 5 blocks in the maximum case, which means
-> > a 1TB AG can have a min agfl requirement of 4+4+5=13 blocks allocated of
-> > 16 slots. Unless I'm missing something in the reasoning above, aren't we
-> > kind of playing with fire in that case?
-> 
-> No, because the AGFL is 117 blocks long at minimum.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
