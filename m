@@ -1,162 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49101 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:47056 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753247AbdKXHkB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 02:40:01 -0500
-Date: Fri, 24 Nov 2017 08:39:57 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH v2] xfs: handle register_shrinker error
-Message-ID: <20171124073957.3z4hjwg5exqw277h@dhcp22.suse.cz>
-References: <20171123120828.31881-1-mhocko@kernel.org>
- <20171123132633.GB21798@infradead.org>
- <20171123134128.mzxv6234hypokg4k@dhcp22.suse.cz>
- <201711240101.CJF18223.FJtHOLOSQFOMVF@I-love.SAKURA.ne.jp>
- <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
- <20171123220045.GV5858@dastard>
+        id S1752763AbdK0T0h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 14:26:37 -0500
+Subject: Re: [PATCH for 4.15] libxfs: fix dev_t handling in inode forks
+References: <20171116011505.GH5119@magnolia>
+ <20171117165706.GB17447@infradead.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <91f84193-e3c8-c4f7-ca93-5caea3a7bb03@sandeen.net>
+Date: Mon, 27 Nov 2017 13:26:36 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171123220045.GV5858@dastard>
+In-Reply-To: <20171117165706.GB17447@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Fri 24-11-17 09:00:46, Dave Chinner wrote:
-> On Thu, Nov 23, 2017 at 05:11:37PM +0100, Michal Hocko wrote:
-> > On Fri 24-11-17 01:01:10, Tetsuo Handa wrote:
-> > > Michal Hocko wrote:
-> > > > On Thu 23-11-17 05:26:33, Christoph Hellwig wrote:
-> > > > > Looks good,
-> > > > > 
-> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > > 
-> > > > Thanks!
-> > > > 
-> > > > > I can take a stab at the quota one.
-> > > > 
-> > > > That would be really great!
-> > > > 
-> > > Again, it does not look good. Since kmem_free() does only kvfree(),
-> > > nothing will release memory allocated by list_lru_init().
-> > 
-> > Hmm, you are right. I have (blindly) followed the current code flow
-> > which is wrong as well. The following should do the trick. Should I
-> > split that into two patches?
+On 11/17/17 10:57 AM, Christoph Hellwig wrote:
+> Hmm.
 > 
-> One is fine by me - if we're need to backport one fix, then we need
-> to backport both :/
-
-OK
-
-> > ---
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index dd0e18af990c..4c6e86d861fd 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -1815,25 +1815,27 @@ xfs_alloc_buftarg(
-> >  	btp->bt_daxdev = dax_dev;
-> >  
-> >  	if (xfs_setsize_buftarg_early(btp, bdev))
-> > -		goto error;
-> > +		goto error_free;
-> >  
-> >  	if (list_lru_init(&btp->bt_lru))
-> > -		goto error;
-> > +		goto error_free;
-> >  
-> >  	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-> > -		goto error;
-> > +		goto error_lru;
-> >  
-> >  	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
-> >  	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
-> >  	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-> >  	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
-> > -	if (register_shrinker(&btp->bt_shrinker)) {
-> > -		percpu_counter_destroy(&btp->bt_io_count);
-> > -		goto error;
-> > -	}
-> > +	if (register_shrinker(&btp->bt_shrinker))
-> > +		goto error_pcpu;
-> >  	return btp;
-> >  
-> > -error:
-> > +error_pcpu:
-> > +	percpu_counter_destroy(&btp->bt_io_count);
-> > +error_lru:
-> > +	list_lru_destroy(&btp->bt_lru);
-> > +error_free:
-> >  	kmem_free(btp);
-> >  	return NULL;
+> I guess we should just clean up the calling conventions, and keep
+> the conversion helpers in xfs_linux.h so that xfsprogs can turn them
+> into noops.
 > 
-> That should do the trick.
+> Something like the untested patch for the kernel space, xfsprogs would
+> then just stub out the two inlines to return the passed in value.
 > 
-> Acked-by: Dave Chinner <dchinner@redhat.com>
+> ---
+> From e0ed26ab66774c1611e71a3c290efbe4e21d483c Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Fri, 17 Nov 2017 17:55:48 +0100
+> Subject: xfs: abstract out dev_t conversions
+> 
+> And move them to xfs_linux.h so that xfsprogs can stub them out more
+> easily.
 
-Thanks. Updated patch below
----
->From 1009db61988c48c9a9e327a9d076945b29b02eee Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.com>
-Date: Thu, 23 Nov 2017 17:13:40 +0100
-Subject: [PATCH] xfs: fortify xfs_alloc_buftarg error handling
+Ok I'm a little confused by this, actually (sorry for the late reply).
 
-percpu_counter_init failure path doesn't clean up &btp->bt_lru list.
-Call list_lru_destroy in that error path. Similarly register_shrinker
-error path is not handled.
+I added an i_rdev to the "vfs inode" in xfsprogs... but if that's
+really supposed to be a "linux inode" then we probably want to keep
+the conversions to/from linux dev_t format when it's stored there,
+even if it's never actually used as such.
 
-While it is unlikely to trigger these error path, it is not impossible
-especially the later might fail with large NUMAs.  Let's handle the
-failure to make the code more robust.
+So I'm not sure no-ops are the right answer.  That'd work, but it
+seems odd to carry around the xfs device format in the "linux" inode
+even in xfsprogs, from a "least surprise" POV.
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
-Noticed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
- fs/xfs/xfs_buf.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+So moving these to the header file is (was) fine, but I'll probably
+keep the translation in xfsprogs.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4db6e8d780f6..4c6e86d861fd 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1815,22 +1815,27 @@ xfs_alloc_buftarg(
- 	btp->bt_daxdev = dax_dev;
- 
- 	if (xfs_setsize_buftarg_early(btp, bdev))
--		goto error;
-+		goto error_free;
- 
- 	if (list_lru_init(&btp->bt_lru))
--		goto error;
-+		goto error_free;
- 
- 	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
--		goto error;
-+		goto error_lru;
- 
- 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
- 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
- 	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
--	register_shrinker(&btp->bt_shrinker);
-+	if (register_shrinker(&btp->bt_shrinker))
-+		goto error_pcpu;
- 	return btp;
- 
--error:
-+error_pcpu:
-+	percpu_counter_destroy(&btp->bt_io_count);
-+error_lru:
-+	list_lru_destroy(&btp->bt_lru);
-+error_free:
- 	kmem_free(btp);
- 	return NULL;
- }
--- 
-2.15.0
+Unless I'm missing something ...
 
--- 
-Michal Hocko
-SUSE Labs
+-Eric
+
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_inode_fork.c |  8 ++------
+>  fs/xfs/xfs_linux.h             | 10 ++++++++++
+>  2 files changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 1c90ec41e9df..c79a1616b79d 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -42,11 +42,6 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+>  STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+>  STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
+>  
+> -static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
+> -{
+> -	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
+> -}
+> -
+>  /*
+>   * Copy inode type and data and attr format specific information from the
+>   * on-disk inode to the in-core inode and fork structures.  For fifos, devices,
+> @@ -792,7 +787,8 @@ xfs_iflush_fork(
+>  	case XFS_DINODE_FMT_DEV:
+>  		if (iip->ili_fields & XFS_ILOG_DEV) {
+>  			ASSERT(whichfork == XFS_DATA_FORK);
+> -			xfs_dinode_put_rdev(dip, sysv_encode_dev(VFS_I(ip)->i_rdev));
+> +			xfs_dinode_put_rdev(dip,
+> +					linux_to_xfs_dev_t(VFS_I(ip)->i_rdev));
+>  		}
+>  		break;
+>  
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index 6282bfc1afa9..99562ec0de56 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -204,6 +204,16 @@ static inline kgid_t xfs_gid_to_kgid(uint32_t gid)
+>  	return make_kgid(&init_user_ns, gid);
+>  }
+>  
+> +static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
+> +{
+> +	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
+> +}
+> +
+> +static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
+> +{
+> +	return sysv_encode_dev(dev);
+> +}
+> +
+>  /*
+>   * Various platform dependent calls that don't fit anywhere else
+>   */
+> 
