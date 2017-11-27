@@ -1,262 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59392 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752152AbdKXI5E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 03:57:04 -0500
-Subject: Re: [PATCH v6] generic: initial fiemap range query test
-References: <1511439214-8400-1-git-send-email-nborisov@suse.com>
- <20171124081100.GB2749@eguan.usersys.redhat.com>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <f4e3a187-656b-887c-2425-9c3449b63842@suse.com>
-Date: Fri, 24 Nov 2017 10:57:01 +0200
+Received: from aserp1040.oracle.com ([141.146.126.69]:33540 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752801AbdK0Qvd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 11:51:33 -0500
+Date: Mon, 27 Nov 2017 08:50:44 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: WTF? Re: [PATCH] License cleanup: add SPDX GPL-2.0 license
+ identifier to files with no license
+Message-ID: <20171127165044.GA19379@magnolia>
+References: <20171107073940.GB4654@kroah.com>
+ <20171107172042.GB26910@magnolia>
+ <20171107182903.GA4588@kroah.com>
+ <20171107184658.56b87d41@alans-desktop>
+ <20171107191526.x3rzfcnnlmaz264d@thunk.org>
+ <20171107192846.GA24617@infradead.org>
+ <CAOFm3uFLRCZwtw4F884Rd=5=yZnX_ibzBzyiC4f+=5iju4k81Q@mail.gmail.com>
+ <20171122170713.GD12684@amd>
+ <20171122175346.GB6528@kroah.com>
+ <20171125191223.GC5114@amd>
 MIME-Version: 1.0
-In-Reply-To: <20171124081100.GB2749@eguan.usersys.redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171125191223.GC5114@amd>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kate Stewart <kstewart@linuxfoundation.org>
 
+On Sat, Nov 25, 2017 at 08:12:23PM +0100, Pavel Machek wrote:
+> Hi!
+> 
+> > > This would be even better:
+> > > 
+> > > /*
+> > >  * Driver for SMSC USB3503 USB 2.0 hub controller driver
+> > >  *
+> > >  * Copyright (c) 2012-2013 Dongjin Kim (tobetter@gmail.com)
+> > >  */
+> > > ...
+> > > SPDX_MODULE_LICENSE("GPL-2.0+")
+> > > 
+> > > So yes, SPDX can be improvement. But in current implementation it is
+> > > not.
+> > 
+> > Again, as people seem to keep still missing this point, Linus asked for
+> > the format to look like it does today, using // at the top.  Thomas and
+> > I originally did it first the way with the SPDX line in the big comment
+> > block.
+> > 
+> > If you don't like the format, complain and convince him otherwise, you
+> > are not getting anywhere by responding to this old topic about it
+> > again.
+> 
+> Hey, Linus. This // SPDX at the begining of file looks really
+> ugly. Can we get something that looks less bad?
+> 
+> And BTW I responded to this uglyness before, but you just tried to
+> make me shut up, and then did not reply. Given what quality you
+> normally expect from patch submitters, you are doing pretty poor job
+> here.
+> 
+> > Having it be the first line of the file is good, it's obvious, and
+> > stands out, which is the point, you want it to, it's a license :)
+> 
+> What is good about that? License is about the least interesting thing
+> about the file. Point of SPDX conversion (see the mail I was replying
+> to?) was to make license information _less_ intrusive, not more. Tools
+> can find SPDX anywhere in the file for the people that really care.
+> 
+> That's how it works in U-Boot, which people are using as example of
+> reasonable SPDX conversion:
+> 
+> /*
+>  * Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+>  * Copyright (c) 2010-2011 NVIDIA Corporation
+>  *  NVIDIA Corporation <www.nvidia.com>
+>  *
+>  * SPDX-License-Identifier:     GPL-2.0+
+>  */
 
+Agree.
 
-On 24.11.2017 10:11, Eryu Guan wrote:
-> On Thu, Nov 23, 2017 at 02:13:34PM +0200, Nikolay Borisov wrote:
->> Fiemap gained support for passing in optional offset len
->> which denote the range requested, so this patch adds
->> testcases for this functionality. Aditionally, a special "ranged"
->> argument is added to the require_xfs_io_command which checks
->> for the presence of fiemap range support.
->>
->> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
->> --- 
->>  V6:
->>  * Moved to generic tests and successfully ran against ext4/btrfs
->>  * Use pwrite to create the holes to make it even more generic
-> 
-> Sorry, I found another issue when testing with btrfs on ppc64 host,
-> where page size is 64k, for details please see below. Sorry for pushing
-> this test back and forth so many times..
-> 
->>
->>  V5: 
->>   * Drop changes to existing generic punch hole tests since 
->>   the new fiemap implementation don't require them 
->>   * Merge the common/rc change with this patch
->>   * Added Data + Hole + Data and Hole + Data tests as per Eryu's request
->>   * Adjusted output of some tests which fall in a hole, since holes are
->>   truncated to passed range
->>   * Simplified the logic to check for fiemap range support (Eryu)
->>
->>  V4: 
->>   * Added test description
->>   * Added new test for past-eof behavior
->>   * Removed supported_generic_fs line
->>   * Switched to using the "ranged" param require
->>   * Revert v3 changes
->>
->>  V3:
->>   * Adjusted tests for '-r' fiemap param
->>   * Tests for invalid -r combination
->>
->>  V2: No change
->>  V1: No change
->>  common/rc             |   7 +++
->>  tests/generic/900     | 108 +++++++++++++++++++++++++++++++++++++++++++
->>  tests/generic/900.out | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>  tests/generic/group   |   1 +
->>  4 files changed, 241 insertions(+)
->>  create mode 100755 tests/generic/900
->>  create mode 100644 tests/generic/900.out
->>
->> diff --git a/common/rc b/common/rc
->> index 4c053a5..a0d162a 100644
->> --- a/common/rc
->> +++ b/common/rc
->> @@ -2056,6 +2056,13 @@ _require_xfs_io_command()
->>  			-c "$command 4k 8k" $testfile 2>&1`
->>  		;;
->>  	"fiemap")
->> +		# If 'ranged' is passed as argument then we check to see if fiemap supports
->> +		# ranged query params
->> +		if echo "$param" | grep -q "ranged"; then
->> +			param=$(echo "$param" | sed "s/ranged//")
->> +			$XFS_IO_PROG -c "help fiemap" | grep -q "\[offset \[len\]\]"
->> +			[ $? -eq 0 ] || _notrun "xfs_io $command ranged support is missing"
->> +		fi
->>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
->>  			-c "fiemap -v $param" $testfile 2>&1`
->>  		param_checked=1
->> diff --git a/tests/generic/900 b/tests/generic/900
->> new file mode 100755
->> index 0000000..64a762f
->> --- /dev/null
->> +++ b/tests/generic/900
->> @@ -0,0 +1,108 @@
->> +#! /bin/bash
->> +# FS QA Test No. 900
->> +
->> +# Test for the new ranged query functionality in xfs_io's fiemap command.
->> +# This tests various combinations of hole + data layout being printed.
->> +# Also the test used 16k holes to be compatible with 16k block filesystems
->> +
->> +#-----------------------------------------------------------------------
->> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
->> +# Author: Nikolay Borisov <nborisov@suse.com>
->> +#
->> +# This program is free software; you can redistribute it and/or
->> +# modify it under the terms of the GNU General Public License as
->> +# published by the Free Software Foundation.
->> +#
->> +# This program is distributed in the hope that it would be useful,
->> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> +# GNU General Public License for more details.
->> +#
->> +# You should have received a copy of the GNU General Public License
->> +# along with this program; if not, write the Free Software Foundation,
->> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> +#-----------------------------------------------------------------------
->> +#
->> +
->> +seq=`basename $0`
->> +seqres=$RESULT_DIR/$seq
->> +echo "QA output created by $seq"
->> +
->> +here=`pwd`
->> +tmp=/tmp/$$
->> +status=1	# failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->> +
->> +_cleanup()
->> +{
->> +	cd /
->> +	rm -f $tmp.*
->> +}
->> +
->> +# get standard environment, filters and checks
->> +. ./common/rc
->> +. ./common/punch
->> +
->> +# remove previous $seqres.full before test
->> +rm -f $seqres.full
->> +
->> +# real QA test starts here
->> +
->> +# Modify as appropriate.
->> +_supported_os Linux
->> +_require_scratch
-> 
-> I just realized that test can be done without SCRATCH_DEV, just
-> _require_test and test in $TEST_DIR. e.g.
-> 
-> file=$TEST_DIR/fiemap.$seq
-> rm -f $file
-> $XFS_IO_PROG -f -c "truncate ..." $file
-> ...
-> 
->> +_require_xfs_io_command "truncate"
->> +# ranged is a special argument which checks if fiemap supports
->> +# [offset [len]] args
->> +_require_xfs_io_command "fiemap" "ranged"
->> +
->> +_scratch_mkfs > $seqres.full 2>&1
->> +_scratch_mount || _fail "mount failure"
->> +
->> +file=$SCRATCH_MNT/testfile
->> +
->> +# Create a file with 16k hole followed by 16k data, and this pattern
->> +# repeats till it reaches 1M file size, so each extent has 16k data.
->> +# But truncate file to its final size first, otherwise XFS would merge
->> +# some extents due to speculative preallocation.
->> +$XFS_IO_PROG -f -c "truncate 1m" $file
->> +for i in {0..31}; do
->> +	$XFS_IO_PROG -c "pwrite $(($i*32+16))k 16k" $file >/dev/null;
->> +done
-> 
-> On ppc64 hosts, this results in a single extent with btrfs, not 64 as
-> expected, and all sub-tests failed. Using 64k extent as suggested by
-> Darrick earlier fixes the problem for me, i.e. the following commands
-> result in 64 extents:
+If/when anyone /does/ get to SPDX'ing the xfs files that already have
+a comment blob at the top, this is my preferred format for doing that.
 
-Darrick suggested using 16k holes to test on filesystem with up to 16k
-block sizes and that's what I did. SO it's natural it's going to fail
-with btrfs. But this begs the question what is the upper limit of block
-we really would like to test? 64k on ppc seems ordinary but then nothing
-prevents for 128k blocks coming etc etc, where do we draw the line?
+(versus having a sole //-style comment right before a multiline
+comment)
+
+--D
 
 > 
-> $XFS_IO_PROG -f -c "truncate 4m" $file
-> for i in {0..31}; do
-> 	$XFS_IO_PROG -c "pwrite $(($i*128+64))k 64k" $file >/dev/null;
-> done
-> 
->> +
->> +# Query 1 data extent between 16k..16k range
->> +echo "Basic data extent"
->> +$XFS_IO_PROG -c "fiemap -v 16k 16k" $file | _filter_fiemap
-> 
-> Then all these ranges need update..
-> 
->> +
->> +# Query data and hole extent
->> +echo "Data + Hole"
->> +$XFS_IO_PROG -c "fiemap -v 16k 20k" $file | _filter_fiemap
->> +
->> +echo "Hole + Data"
->> +$XFS_IO_PROG -c "fiemap -v 0 17k" $file | _filter_fiemap
->> +
->> +echo "Hole + Data + Hole"
->> +$XFS_IO_PROG -c "fiemap -v 32k 40k" $file | _filter_fiemap
->> +
->> +echo "Data + Hole + Data"
->> +$XFS_IO_PROG -c "fiemap -v 16k 33k" $file | _filter_fiemap
->> +
->> +echo "Beginning with a hole"
->> +$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
->> +
->> +# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
->                   ^^^^ meant 640k previously?
-> 
->> +echo "Query more than 32 extents"
->> +$XFS_IO_PROG -c "fiemap -v 0 640k" $file | _filter_fiemap
->> +
->> +echo "Larger query than file size"
->> +$XFS_IO_PROG -c "fiemap -v 0 2m" $file | _filter_fiemap
->> +
->> +# mapping past eof shouldn't print anything"
->> +$XFS_IO_PROG -c "fiemap -v 2m" $file | _filter_fiemap
->> +
->> +# check everything without the first hole
->> +$XFS_IO_PROG -c "fiemap -v 16k" $file | wc -l
-> 
-> Any reason doing "wc -l" instead of "_filter_fiemap" here?
+> 									Pavel
+> -- 
+> (english) http://www.livejournal.com/~pavelmachek
+> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
 
-This only tests whether the correct number of lines are printed. It
-would indeed be identical to _filter_fiemap but it was a lot easier to
-input a single number than the lines :)
 
-> 
->> +
->> +# success, all done
->> +status=0
->> +exit
-> ...
->> --- a/tests/generic/group
->> +++ b/tests/generic/group
->> @@ -472,3 +472,4 @@
->>  467 auto quick exportfs
->>  468 shutdown auto quick metadata
->>  469 auto quick
->> +900
-> 
-> group can be fixed then :)
-> 
-> Thanks,
-> Eryu
-> 
->> -- 
->> 2.7.4
->>
