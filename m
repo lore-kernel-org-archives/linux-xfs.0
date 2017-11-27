@@ -1,43 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56813 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:32778 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751224AbdK0IFD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Nov 2017 03:05:03 -0500
-Date: Mon, 27 Nov 2017 09:05:00 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] xfs: handle register_shrinker error
-Message-ID: <20171127080500.akpzasr6z6adyesk@dhcp22.suse.cz>
-References: <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
- <20171123220045.GV5858@dastard>
- <20171124073957.3z4hjwg5exqw277h@dhcp22.suse.cz>
- <201711242103.FIH57396.FOFVJtQFLSMOHO@I-love.SAKURA.ne.jp>
- <20171125233453.GX5858@dastard>
- <201711261114.DBJ78191.SOOFOHMJLQFVFt@I-love.SAKURA.ne.jp>
+        id S1752294AbdK0Kya (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 05:54:30 -0500
+Date: Mon, 27 Nov 2017 11:54:25 +0100
+From: Karel Zak <kzak@redhat.com>
+Subject: Re: [PATCH v4] fstests: filter readonly mount error messages
+Message-ID: <20171127105425.zxcgjo5eju6azj5u@ws.net.home>
+References: <20171123111031.6550-4-eguan@redhat.com>
+ <20171124050144.23549-1-eguan@redhat.com>
+ <CAOQ4uxgxRxByGHhePr3b4H+W1zEGxUX6Emj9PBzZpEKEs2iHog@mail.gmail.com>
+ <20171124103814.gfvxw3ethkcvm6xa@ws.net.home>
+ <CAOQ4uxjbnrgJG3PLVV6TvAS-Fjgskms_jWc5-b4DVmLhbVUdFg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <201711261114.DBJ78191.SOOFOHMJLQFVFt@I-love.SAKURA.ne.jp>
+In-Reply-To: <CAOQ4uxjbnrgJG3PLVV6TvAS-Fjgskms_jWc5-b4DVmLhbVUdFg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: david@fromorbit.com, hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun 26-11-17 11:14:25, Tetsuo Handa wrote:
-> Dave Chinner wrote:
-> > IOWs, we don't actually need to touch this code, but if you really
-> > must, just remove the KM_NOFS tag.
+On Sun, Nov 26, 2017 at 10:56:40AM +0200, Amir Goldstein wrote:
+> >> Thinking out loud, does xfstest even need to use mount program from
+> >> util-linux? Do we ever need anything other than the bare libc mount(2)?
+> >> We need it for -o loop, but that is the exception to the rule.
+> >
+> > Well, I don't think that create a parallel universe is the best
+> > solution.
+> >
 > 
-> OK. Then, please remove KM_NOFS. GFP_KERNEL is safer than GFP_NOFS
-> in the sense that it won't cause OOM lockup due to unable to invoke
-> the OOM killer.
+> I agree. However, xfstest uses 'mount' is a very particular way:
+> - User has to provide both block device and mount point
+> - xfstests already checks that those block device and mount point
+>   are not in use in /proc/mounts *before* calling 'mount'
 
-I agree that we should remove nofs request if they are not really
-needed. But arguing your usual OOM lockup is (again) over exaggerating.
-As a rule of thumb, it is almost always better to have the full reclaim
-context rather than reduced one because the later one can influence
-other parts of the system as they might need to do more work.
+OK, I see, than the wrapper is not so bad idea (if you're able to keep
+it simple and stupid:-)
+
+> So I prefer the 'machine output format' solution going forward, but
+> since xfstests will need to continue supporting old util-linux installations
+> it might be less clumsy to use a simple C wrapper to mount(2), then
+> to carry these error format filters.
+> xfstests can also check for availability of the new machine format in
+> 'mount' and if it doesn't exist fall back to using its private mount helper.
+
+If you want to implement the wrapper than it's probably better use it
+in all cases and then you can remove all the backward compatibility
+filters. In thins case it seems better to depend on the wrapper only.
+So, the unified messages maintained by unit-linux mount(8) will be
+unnecessary.
+
+    Karel
 
 -- 
-Michal Hocko
-SUSE Labs
+ Karel Zak  <kzak@redhat.com>
+ http://karelzak.blogspot.com
