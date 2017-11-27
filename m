@@ -1,87 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63933 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751355AbdKYXk4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Nov 2017 18:40:56 -0500
-Date: Sun, 26 Nov 2017 10:34:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: handle register_shrinker error
-Message-ID: <20171125233453.GX5858@dastard>
-References: <20171123134128.mzxv6234hypokg4k@dhcp22.suse.cz>
- <201711240101.CJF18223.FJtHOLOSQFOMVF@I-love.SAKURA.ne.jp>
- <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
- <20171123220045.GV5858@dastard>
- <20171124073957.3z4hjwg5exqw277h@dhcp22.suse.cz>
- <201711242103.FIH57396.FOFVJtQFLSMOHO@I-love.SAKURA.ne.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <201711242103.FIH57396.FOFVJtQFLSMOHO@I-love.SAKURA.ne.jp>
+Received: from mx1.redhat.com ([209.132.183.28]:36294 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751835AbdK0UYg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 15:24:36 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B664C8553E
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2017 20:24:36 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9B694600C2
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2017 20:24:36 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/4] xfs: print transaction log reservation on overrun
+Date: Mon, 27 Nov 2017 15:24:31 -0500
+Message-Id: <20171127202434.43125-2-bfoster@redhat.com>
+In-Reply-To: <20171127202434.43125-1-bfoster@redhat.com>
+References: <20171127202434.43125-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: mhocko@kernel.org, hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Nov 24, 2017 at 09:03:28PM +0900, Tetsuo Handa wrote:
-> Michal Hocko wrote:
-> > Thanks. Updated patch below
-> > ---
-> > From 1009db61988c48c9a9e327a9d076945b29b02eee Mon Sep 17 00:00:00 2001
-> > From: Michal Hocko <mhocko@suse.com>
-> > Date: Thu, 23 Nov 2017 17:13:40 +0100
-> > Subject: [PATCH] xfs: fortify xfs_alloc_buftarg error handling
-> 
-> Do we need below patch on top of Michal's patch?
-> KM_NOFS was added by commit b17cb364dbbbf65a ("xfs: fix missing KM_NOFS
-> tags to keep lockdep happy"). If not needed, some comment is expected.
+The transaction dump code displays the content and reservation
+consumption of a particular transaction in the event of an overrun.
+It currently displays the reservation associated with the
+transaction ticket, but not the original reservation attached to the
+transaction.
 
-Quite frankly, if the fix is "sprinkle magic undocumented
-memalloc_nofs_save() calls around", then you need to think a little
-more about the things you just read and the context we're operating
-on here.
+The latter value reflects the original transaction reservation
+calculation before additional reservation overhead is assigned, such
+as for the CIL context header and potential split region headers.
 
-IOWs:
+Update xlog_print_trans() to also print the original transaction
+reservation in the event of overrun. This provides a reference point
+to identify how much reservation overhead was added to a particular
+ticket by xfs_log_calc_unit_res().
 
-> ---
->  fs/xfs/xfs_buf.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 4c6e86d..b73fc76 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1806,6 +1806,7 @@ struct xfs_buf *
->  	struct dax_device	*dax_dev)
->  {
->  	xfs_buftarg_t		*btp;
-> +	unsigned int nofs_flag = memalloc_nofs_save();
->  
->  	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP | KM_NOFS);
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-xfs_alloc_buftarg() isn't called from transaction context, so this
-KM_NOFS flag wasn't added to prevent reclaim deadlocks - it was
-added to avoid stupid lockdep false positives (as was stated in the
-commit you quoted).
-
-IOWs, GFP_KERNEL allocations in this function used to trigger
-lockdep false positives.
-
-So - think for a minute rather than bashing on the keyboard. Why
-aren't the other GFP_KERNEL allocations from this function causing
-lockdep to trigger warnings?
-
-Yeah - lockdep is a lot smarter these days and the false positive
-trigger has clearly been fixed. i.e. there's no false positive
-detection occurring here any more under GFP_KERNEL allocations,
-so we don't need the KM_NOFS flag anymore.
-
-IOWs, we don't actually need to touch this code, but if you really
-must, just remove the KM_NOFS tag.
-
--Dave.
-
-
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 38d4227895ae..3a37fa1ed25e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2117,7 +2117,9 @@ xlog_print_trans(
+ 
+ 	/* dump core transaction and ticket info */
+ 	xfs_warn(mp, "transaction summary:");
+-	xfs_warn(mp, "  flags	= 0x%x", tp->t_flags);
++	xfs_warn(mp, "  log res   = %d", tp->t_log_res);
++	xfs_warn(mp, "  log count = %d", tp->t_log_count);
++	xfs_warn(mp, "  flags     = 0x%x", tp->t_flags);
+ 
+ 	xlog_print_tic_res(mp, tp->t_ticket);
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.13.6
+
