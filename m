@@ -1,245 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52590 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:37040 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751557AbdKXILC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 03:11:02 -0500
-Date: Fri, 24 Nov 2017 16:11:00 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v6] generic: initial fiemap range query test
-Message-ID: <20171124081100.GB2749@eguan.usersys.redhat.com>
-References: <1511439214-8400-1-git-send-email-nborisov@suse.com>
+        id S932305AbdK0RIz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 12:08:55 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 47A1B4425
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2017 11:08:29 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v4.14.0 released
+Message-ID: <dc7e7f37-70aa-e34d-0242-a362f1a90857@sandeen.net>
+Date: Mon, 27 Nov 2017 11:08:53 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1511439214-8400-1-git-send-email-nborisov@suse.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="NIjFLqvu9Sj2NHOK396p5cISmU7u65c8x"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Nov 23, 2017 at 02:13:34PM +0200, Nikolay Borisov wrote:
-> Fiemap gained support for passing in optional offset len
-> which denote the range requested, so this patch adds
-> testcases for this functionality. Aditionally, a special "ranged"
-> argument is added to the require_xfs_io_command which checks
-> for the presence of fiemap range support.
-> 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> --- 
->  V6:
->  * Moved to generic tests and successfully ran against ext4/btrfs
->  * Use pwrite to create the holes to make it even more generic
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--NIjFLqvu9Sj2NHOK396p5cISmU7u65c8x
+Content-Type: multipart/mixed; boundary="p0O6K1wVb2f1fkTRlRIdOaOWpPIJ6Lea9";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <dc7e7f37-70aa-e34d-0242-a362f1a90857@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v4.14.0 released
 
-Sorry, I found another issue when testing with btrfs on ppc64 host,
-where page size is 64k, for details please see below. Sorry for pushing
-this test back and forth so many times..
+--p0O6K1wVb2f1fkTRlRIdOaOWpPIJ6Lea9
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> 
->  V5: 
->   * Drop changes to existing generic punch hole tests since 
->   the new fiemap implementation don't require them 
->   * Merge the common/rc change with this patch
->   * Added Data + Hole + Data and Hole + Data tests as per Eryu's request
->   * Adjusted output of some tests which fall in a hole, since holes are
->   truncated to passed range
->   * Simplified the logic to check for fiemap range support (Eryu)
-> 
->  V4: 
->   * Added test description
->   * Added new test for past-eof behavior
->   * Removed supported_generic_fs line
->   * Switched to using the "ranged" param require
->   * Revert v3 changes
-> 
->  V3:
->   * Adjusted tests for '-r' fiemap param
->   * Tests for invalid -r combination
-> 
->  V2: No change
->  V1: No change
->  common/rc             |   7 +++
->  tests/generic/900     | 108 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/900.out | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/group   |   1 +
->  4 files changed, 241 insertions(+)
->  create mode 100755 tests/generic/900
->  create mode 100644 tests/generic/900.out
-> 
-> diff --git a/common/rc b/common/rc
-> index 4c053a5..a0d162a 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2056,6 +2056,13 @@ _require_xfs_io_command()
->  			-c "$command 4k 8k" $testfile 2>&1`
->  		;;
->  	"fiemap")
-> +		# If 'ranged' is passed as argument then we check to see if fiemap supports
-> +		# ranged query params
-> +		if echo "$param" | grep -q "ranged"; then
-> +			param=$(echo "$param" | sed "s/ranged//")
-> +			$XFS_IO_PROG -c "help fiemap" | grep -q "\[offset \[len\]\]"
-> +			[ $? -eq 0 ] || _notrun "xfs_io $command ranged support is missing"
-> +		fi
->  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
->  			-c "fiemap -v $param" $testfile 2>&1`
->  		param_checked=1
-> diff --git a/tests/generic/900 b/tests/generic/900
-> new file mode 100755
-> index 0000000..64a762f
-> --- /dev/null
-> +++ b/tests/generic/900
-> @@ -0,0 +1,108 @@
-> +#! /bin/bash
-> +# FS QA Test No. 900
-> +
-> +# Test for the new ranged query functionality in xfs_io's fiemap command.
-> +# This tests various combinations of hole + data layout being printed.
-> +# Also the test used 16k holes to be compatible with 16k block filesystems
-> +
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
-> +# Author: Nikolay Borisov <nborisov@suse.com>
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/punch
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_os Linux
-> +_require_scratch
+Hi folks,
 
-I just realized that test can be done without SCRATCH_DEV, just
-_require_test and test in $TEST_DIR. e.g.
+The xfsprogs repository at:
 
-file=$TEST_DIR/fiemap.$seq
-rm -f $file
-$XFS_IO_PROG -f -c "truncate ..." $file
-...
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> +_require_xfs_io_command "truncate"
-> +# ranged is a special argument which checks if fiemap supports
-> +# [offset [len]] args
-> +_require_xfs_io_command "fiemap" "ranged"
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount || _fail "mount failure"
-> +
-> +file=$SCRATCH_MNT/testfile
-> +
-> +# Create a file with 16k hole followed by 16k data, and this pattern
-> +# repeats till it reaches 1M file size, so each extent has 16k data.
-> +# But truncate file to its final size first, otherwise XFS would merge
-> +# some extents due to speculative preallocation.
-> +$XFS_IO_PROG -f -c "truncate 1m" $file
-> +for i in {0..31}; do
-> +	$XFS_IO_PROG -c "pwrite $(($i*32+16))k 16k" $file >/dev/null;
-> +done
+has just been updated and tagged with v4.14.0 release.
 
-On ppc64 hosts, this results in a single extent with btrfs, not 64 as
-expected, and all sub-tests failed. Using 64k extent as suggested by
-Darrick earlier fixes the problem for me, i.e. the following commands
-result in 64 extents:
+Tarballs will be on kernel.org shortly.
 
-$XFS_IO_PROG -f -c "truncate 4m" $file
-for i in {0..31}; do
-	$XFS_IO_PROG -c "pwrite $(($i*128+64))k 64k" $file >/dev/null;
-done
+There are no changes since v4.14.0-rc2.
 
-> +
-> +# Query 1 data extent between 16k..16k range
-> +echo "Basic data extent"
-> +$XFS_IO_PROG -c "fiemap -v 16k 16k" $file | _filter_fiemap
+Patches often get missed, so please check if your outstanding
+patches were in this release. If they have not been in this release,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-Then all these ranges need update..
+The new head of the master branch is commit:
 
-> +
-> +# Query data and hole extent
-> +echo "Data + Hole"
-> +$XFS_IO_PROG -c "fiemap -v 16k 20k" $file | _filter_fiemap
-> +
-> +echo "Hole + Data"
-> +$XFS_IO_PROG -c "fiemap -v 0 17k" $file | _filter_fiemap
-> +
-> +echo "Hole + Data + Hole"
-> +$XFS_IO_PROG -c "fiemap -v 32k 40k" $file | _filter_fiemap
-> +
-> +echo "Data + Hole + Data"
-> +$XFS_IO_PROG -c "fiemap -v 16k 33k" $file | _filter_fiemap
-> +
-> +echo "Beginning with a hole"
-> +$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
-> +
-> +# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
-                  ^^^^ meant 640k previously?
+19ca9b0 xfsprogs: Release v4.14.0
 
-> +echo "Query more than 32 extents"
-> +$XFS_IO_PROG -c "fiemap -v 0 640k" $file | _filter_fiemap
-> +
-> +echo "Larger query than file size"
-> +$XFS_IO_PROG -c "fiemap -v 0 2m" $file | _filter_fiemap
-> +
-> +# mapping past eof shouldn't print anything"
-> +$XFS_IO_PROG -c "fiemap -v 2m" $file | _filter_fiemap
-> +
-> +# check everything without the first hole
-> +$XFS_IO_PROG -c "fiemap -v 16k" $file | wc -l
+A brief summary of changes in this release:
 
-Any reason doing "wc -l" instead of "_filter_fiemap" here?
+        - xfs_repair: fix deadlock on failed refcountbt checks (Darrick W=
+ong)
+        - xfs_repair: fix cowextsize field checking and repairing (Darric=
+k Wong)
+        - xfs_repair: clear DAX flag from non-file inodes (Darrick Wong)
+        - xfs_repair: fix bag memory overwrite problems (Darrick Wong)
+        - xfs_metadump: zap stale data in DIR2_LEAF1 dirs (Eric Sandeen)
+        - xfs_metadump: allow large directory extents by default (Darrick=
+ Wong)
+        - xfs_copy: don't hang if all targets hit write errors (Darrick W=
+ong)
+        - xfs_io: stat: treat statfs.f_flags as optional (Jeff Mahoney)
+        - xfs_io: stat: fix typo in statfs->f_flags (Jeff Mahoney)
+        - xfs_io: Allow partial writes in pwrite (Goldwyn Rodrigues)
+        - xfs_io: Add support for pwritev2() (Goldwyn Rodrigues)
+        - xfs_io: Add RWF_NOWAIT to pwritev2() (Goldwyn Rodrigues))
+        - xfs_io: Disable pwrite -V if pwritev unavailable (Goldwyn Rodri=
+gues)
+        - xfs_io: add new error injection knobs to inject command (Darric=
+k Wong)
+        - xfs_io: report io errors from pwrite -W and -w (Liu Bo)
 
-> +
-> +# success, all done
-> +status=0
-> +exit
-...
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -472,3 +472,4 @@
->  467 auto quick exportfs
->  468 shutdown auto quick metadata
->  469 auto quick
-> +900
 
-group can be fixed then :)
 
-Thanks,
-Eryu
+--p0O6K1wVb2f1fkTRlRIdOaOWpPIJ6Lea9--
 
-> -- 
-> 2.7.4
-> 
+--NIjFLqvu9Sj2NHOK396p5cISmU7u65c8x
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlocRqUACgkQIK4WkuE9
+3uAw+BAAqwBjXEcZG7p4cCQMiMmI6nuvwGD/BiHNBadpN0ofpk6Tz9dVgrMVODol
+FyDFIRwA/shuoXv9NuaruS+9bNUkxa5lXbLxGlDWcv0RKhuw272TevQrZFT8zWo5
+H48UZKr9htTc+n3y0PsD6G4oUcEgP66mYz2yc6r0zXUe0hYY8f5LG0SwdDmeoeMm
+58vdPjp1oK67IQyZfzDZf02VPVb5bP/EffSQW1i61IEuT2bOBwv+rlL5GJzPWeYB
+qK+WVybnONeafUwEwOCXt4LUZirgCGxFBUNmhgcMCdAorzVHLhMhSoHr7oU07rCx
+WFsBecde7lT3GsZj6ng45gWS2nvJfvdDb9DVf58mWfRGv4Y6mz+gH1YBpfmrSfR0
+ZS5n0iTIpnuOwITciavq5NdfEXR+pRu3AZymMkEQz+/tUutrzIvbBa1+BAr5duAU
+TAZkCHrXgrYNi2uDSXa5msVKyECxBxzNeNGMU5HrchUYdP4tRyU73wiWdRdSW/II
+hbjwOioVOgDGRTeOMOFyW/RknagOyDc9zEOYzHXInQ43BC1HseYgQpexkI83p09r
+ikSQkWT5iTdGJmlp2NGBk5r0xI18saBxoJ31Ppy71AfpN1zWeWQrIya4kvcsWEOA
+7675/gch82q/T8ynGdmygn86b/eDscoQx8lnwYh90I5bAJ2eF/0=
+=O23n
+-----END PGP SIGNATURE-----
+
+--NIjFLqvu9Sj2NHOK396p5cISmU7u65c8x--
