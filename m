@@ -1,220 +1,436 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54784 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48994 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750715AbdKXFB6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Nov 2017 00:01:58 -0500
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v4] fstests: filter readonly mount error messages
-Date: Fri, 24 Nov 2017 13:01:44 +0800
-Message-Id: <20171124050144.23549-1-eguan@redhat.com>
-In-Reply-To: <20171123111031.6550-4-eguan@redhat.com>
-References: <20171123111031.6550-4-eguan@redhat.com>
+        id S1753193AbdK0Sqx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 13:46:53 -0500
+Date: Mon, 27 Nov 2017 13:46:51 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171127184651.GA39719@bfoster.bfoster>
+References: <0a9b47ba-a41e-3b96-981f-f04f9e2ab11c@hpe.com>
+ <20171121173557.GB6004@bfoster.bfoster>
+ <20171122022645.GR5858@dastard>
+ <20171122122100.GA9984@bfoster.bfoster>
+ <20171122204126.GA19041@bfoster.bfoster>
+ <20171123002401.GT5858@dastard>
+ <20171123143652.GA22032@bfoster.bfoster>
+ <20171123215457.GU5858@dastard>
+ <20171124145121.GA26516@bfoster.bfoster>
+ <20171125232010.GW5858@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171125232010.GW5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: misono.tomohiro@jp.fujitsu.com, linux-xfs@vger.kernel.org, amir73il@gmail.com, Eryu Guan <eguan@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-util-linux commit 6dede2f2f7c5 ("libmount: support MS_RDONLY on
-write-protected devices") changed the error message on read-only
-block device, and in the failure case printed one line message
-instead of two (for details please see comments in common/filter),
-and this change broke generic/050 and overlay/035.
+On Sun, Nov 26, 2017 at 10:20:10AM +1100, Dave Chinner wrote:
+> On Fri, Nov 24, 2017 at 09:51:22AM -0500, Brian Foster wrote:
+> > On Fri, Nov 24, 2017 at 08:54:57AM +1100, Dave Chinner wrote:
+> > > On Thu, Nov 23, 2017 at 09:36:53AM -0500, Brian Foster wrote:
+> > > > On Thu, Nov 23, 2017 at 11:24:02AM +1100, Dave Chinner wrote:
+> > > > That sounds reasonable, but at the same time I'm a bit concerned that I
+> > > > think the ifree transaction should technically be refactored into a max
+> > > > of the pre/post tx roll reservations similar to the write reservation
+> > > > mentioned above. For example:
+> > > > 
+> > > > 	MAX(inode + inobt + finobt + agi + inode chunk + etc.,
+> > > > 	    allocfree for inode chunk + (allocfree * nr inobts));
+> > > 
+> > > Yeah, I think you're right in that we need to we need to look at
+> > > redefining the reservations at a higher level.
+> > > 
+> > > For this specific example, though, we have to take into account that
+> > > a finobt modification to mark an inode free can insert a new record
+> > > into the btree. Hence we have scope for a finobt block allocation
+> > > and tree split, so we need to have allocfree reservations in the
+> > > primary transaction.
+> > > 
+> > > Also, the inode btree modifications (and refcountbt, too) call
+> > > xfs_free_extent() directly - they don't use deferops free list that
+> > > is processed as an EFI/EFD op after the primary transaction has been
+> > > rolled.  i.e:
+> > > 
+> > > xfs_btree_delrec
+> > >   xfs_btree_free_block
+> > >     xfs_inobt_free_block
+> > >       xfs_free_extent
+> > > 
+> > > Hence the primary transaction reservation has to take into account
+> > > that operations that remove a record from the tree can cause and
+> > > extent to be freed. As such, the removal of an inode chunk - which
+> > > removes the record from both the inobt and finobt - can trigger
+> > > freespace tree modification directly.
+> > > 
+> > 
+> > Ah, because the inobt doesn't use the agfl. It looks like we try to do
+> > this in xfs_calc_finobt_res(), but it doesn't appear to be fully correct
+> > because the allocfree res is only accounted for transactions that "do
+> > not already account for free space btree modifications," according to
+> > the comment. I don't recall the exact reasoning there off the top of my
+> > head, but if I had to guess, this was probably just another instance of
+> > "bolt something on to the transaction that appears to follow the pattern
+> > of other transactions and doesn't explode."
+> > 
+> > Given that, it seems like the appropriate thing to do is in fact for the
+> > transaction to include an independent allocfree res for the inode chunk,
+> > the inobt and finobt. That justifies the existence of the current
+> > allocfree in the pre-roll part of the transaction and would increase the
+> > transaction size by one more allocfree in the finobt case (the inode
+> > chunk should technically be part of the post-roll calculation).
+> > 
+> > Actually, with addition of some proper documentation that may also
+> > obviate the need to do the whole pre/post tx roll thing because the
+> > first part of the transaction will obviously be larger than a single
+> > allocfree res for the second part (amazing how a little documentation to
+> > establish/assess intent can save us time from trying to work backwards
+> > from the transaction :P).
+> > 
+> > Ok, I think that gives me enough to go on to try and refactor at least
+> > the inobt tx res bits. I'll take a closer look next week, thanks for all
+> > of the feedback.
+> 
+> Actually, I wrote a patch as I was working all this out :p
+> 
+> Not complete, or anything like that, but I've attached it below
+> so you've got some idea of what I was thinking....
+> 
 
-Fix it by adding more filter rules to _filter_ro_mount and updating
-associated .out files to unify the output from both old and new
-util-linux versions.
+Ok. While I get the basic idea, this isn't quite what I was thinking
+with regard to the finobt bits. The current finobt reservation applies
+the allocation part of the logic only when the higher level transaction
+doesn't already include the allocfree res. This kind of handwaves away
+the finobt allocfree res by assuming the existing transaction
+reservation would cover the blocks alloc'd/freed by the finobt.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v4 (also passed with both old & new util-linux):
-- add more comments to explain the output differences between util-linux
-  versions
-- print out message directly instead of using perl variables
-- add word "device" to failed ro mount message
+IOW, there isn't really a clear separation between the modify and
+allocation cases for the finobt as there is for the inobt. The finobt
+can add/remove a record in either of those cases. The requirement to add
+an additional allocfree res with the finobt operation pretty much
+invalidates the finobt modify case, I think.
 
-v3:
-- document the filtered format in comments
-- remove legacy sed filter, the perl filter covers the legacy case well
-- filter out $SCRATCH_DEV/MNT too and use a consistent output
-- remove the new filter_mount helper in overlay/035
+Also, it looks like this makes some other changes that are not
+immediately clear to me, squashes in a couple of the fixes I've already
+made and doesn't actually add a new allocfree res in some of the
+create/alloc calculations (but rather refactors the existing allocfree
+res to use the new helper). It's not clear to me if the latter is
+intentional..?
 
- common/filter         | 59 +++++++++++++++++++++++++++++++++++++++++++++++----
- tests/generic/050     |  8 +++----
- tests/generic/050.out |  8 +++----
- tests/overlay/035     |  4 ++--
- tests/overlay/035.out |  4 ++--
- 5 files changed, 67 insertions(+), 16 deletions(-)
+In any event, I'd like to keep the previous bugfixes separate from the
+refactoring so I will post what I was thinking with regard to the
+refactoring bits on top of the bugfix series. If I'm missing something
+or you had a different approach, I'd appreciate if we could work off the
+bugfixes as a baseline..
 
-diff --git a/common/filter b/common/filter
-index a212c09aa138..9c33efacea6c 100644
---- a/common/filter
-+++ b/common/filter
-@@ -397,11 +397,62 @@ _filter_ending_dot()
- 	sed -e "s/\.$//"
- }
- 
--# Older mount output referred to "block device" when mounting RO devices
--# It's gone in newer versions
-+# Older mount output referred to "block device" when mounting RO devices. It's
-+# gone in newer versions. v2.30 changed the output again. This filter is to
-+# unify all read-only mount messages across all util-linux versions.
-+#
-+# for a successful ro mount:
-+# ancient:	   mount: block device <device> is write-protected, mounting read-only
-+# prior to v2.30:  mount: <device> is write-protected, mounting read-only
-+# v2.30 and later: mount: <mountpoint>: WARNING: device write-protected, mounted read-only.
-+#
-+# a failed ro mount:
-+# ancient (two-line message):
-+# mount: block device <device> is write-protected, mounting read-only
-+# mount: cannot mount block device <device> read-only
-+# prior to v2.30 (two-line message):
-+# mount: <device> is write-protected, mounting read-only
-+# mount: cannot mount <device> read-only
-+# v2.30 and later (single-line message):
-+# mount: <mountpoint>: cannot mount <device> read-only.
-+#
-+# a failed rw remount:
-+# ancient:	   mount: cannot remount block device <device> read-write, is write-protected
-+# prior to v2.30:  mount: cannot remount <device> read-write, is write-protected
-+# v2.30 and later: mount: <mountpoint>: cannot remount <device> read-write, is write-protected.
-+#
-+# Now use _filter_ro_mount to unify all these differences across old & new
-+# util-linux versions. So the filtered format would be:
-+#
-+# successful ro mount:
-+# mount: device write-protected, mounting read-only
-+#
-+# failed ro mount:
-+# mount: device write-protected, mounting read-only
-+# mount: cannot mount device read-only
-+#
-+# failed rw remount:
-+# mount: cannot remount device read-write, is write-protected
- _filter_ro_mount() {
--	sed -e "s/mount: block device/mount:/g" \
--	    -e "s/mount: cannot mount block device/mount: cannot mount/g"
-+	perl -ne '
-+	if (/write-protected, mount.*read-only/) {
-+		# filter successful ro mount, and first line of prior to v2.30
-+		# format failed ro mount
-+		print "mount: device write-protected, mounting read-only\n";
-+	} elsif (/mount: .*: cannot mount.*read-only/) {
-+		# filter v2.30 format failed ro mount, convert single-line
-+		# message to two-line message
-+		print "mount: device write-protected, mounting read-only\n";
-+		print "mount: cannot mount device read-only\n";
-+	} elsif (/^mount: cannot mount .* read-only$/) {
-+		# filter prior to v2.30 format failed ro mount
-+		print "mount: cannot mount device read-only\n";
-+	} elsif (/mount:.* cannot remount .* read-write.*/) {
-+		# filter failed rw remount
-+		print "mount: cannot remount device read-write, is write-protected\n";
-+	} else {
-+		print "$_";
-+	}' | _filter_ending_dot
- }
- 
- # Filter a failed mount output due to EUCLEAN and USTALE, util-linux changed
-diff --git a/tests/generic/050 b/tests/generic/050
-index 5fa28a7648e5..efa45f04825b 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -60,7 +60,7 @@ blockdev --setro $SCRATCH_DEV
- # Mount it, and make sure we can't write to it, and we can unmount it again
- #
- echo "mounting read-only block device:"
--_scratch_mount 2>&1 | _filter_scratch | _filter_ro_mount
-+_scratch_mount 2>&1 | _filter_ro_mount
- 
- echo "touching file on read-only filesystem (should fail)"
- touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
-@@ -95,10 +95,10 @@ blockdev --setro $SCRATCH_DEV
- # -o norecovery is used.
- #
- echo "mounting filesystem that needs recovery on a read-only device:"
--_scratch_mount 2>&1 | _filter_scratch | _filter_ro_mount
-+_scratch_mount 2>&1 | _filter_ro_mount
- 
- echo "unmounting read-only filesystem"
--_scratch_unmount 2>&1 | _filter_scratch
-+_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- 
- #
- # This is the way out if the underlying device really is read-only.
-@@ -106,7 +106,7 @@ _scratch_unmount 2>&1 | _filter_scratch
- # data recovery hack.
- #
- echo "mounting filesystem with -o norecovery on a read-only device:"
--_scratch_mount -o norecovery 2>&1 | _filter_scratch | _filter_ro_mount
-+_scratch_mount -o norecovery 2>&1 | _filter_ro_mount
- 
- echo "unmounting read-only filesystem"
- _scratch_unmount 2>&1 | _filter_scratch
-diff --git a/tests/generic/050.out b/tests/generic/050.out
-index fb90f6ea5819..7d70ddee83cb 100644
---- a/tests/generic/050.out
-+++ b/tests/generic/050.out
-@@ -1,7 +1,7 @@
- QA output created by 050
- setting device read-only
- mounting read-only block device:
--mount: SCRATCH_DEV is write-protected, mounting read-only
-+mount: device write-protected, mounting read-only
- touching file on read-only filesystem (should fail)
- touch: cannot touch 'SCRATCH_MNT/foo': Read-only file system
- unmounting read-only filesystem
-@@ -12,12 +12,12 @@ going down:
- unmounting shutdown filesystem:
- setting device read-only
- mounting filesystem that needs recovery on a read-only device:
--mount: SCRATCH_DEV is write-protected, mounting read-only
--mount: cannot mount SCRATCH_DEV read-only
-+mount: device write-protected, mounting read-only
-+mount: cannot mount device read-only
- unmounting read-only filesystem
- umount: SCRATCH_DEV: not mounted
- mounting filesystem with -o norecovery on a read-only device:
--mount: SCRATCH_DEV is write-protected, mounting read-only
-+mount: device write-protected, mounting read-only
- unmounting read-only filesystem
- setting device read-write
- mounting filesystem that needs recovery with -o ro:
-diff --git a/tests/overlay/035 b/tests/overlay/035
-index 64fcd708105e..05447741a1ba 100755
---- a/tests/overlay/035
-+++ b/tests/overlay/035
-@@ -69,7 +69,7 @@ mkdir -p $lowerdir1 $lowerdir2 $upperdir $workdir
- $MOUNT_PROG -t overlay -o"lowerdir=$lowerdir2:$lowerdir1" \
- 			$OVL_BASE_SCRATCH_MNT $SCRATCH_MNT
- touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
--_scratch_remount rw 2>&1 | _filter_scratch
-+_scratch_remount rw 2>&1 | _filter_ro_mount
- $UMOUNT_PROG $SCRATCH_MNT
- 
- # Make workdir immutable to prevent workdir re-create on mount
-@@ -79,7 +79,7 @@ $CHATTR_PROG +i $workdir
- # Verify that overlay is mounted read-only and that it cannot be remounted rw.
- _overlay_scratch_mount_dirs $lowerdir2 $upperdir $workdir
- touch $SCRATCH_MNT/bar 2>&1 | _filter_scratch
--_scratch_remount rw 2>&1 | _filter_scratch
-+_scratch_remount rw 2>&1 | _filter_ro_mount
- 
- # success, all done
- status=0
-diff --git a/tests/overlay/035.out b/tests/overlay/035.out
-index 5a5f67771402..e08ba2ebc691 100644
---- a/tests/overlay/035.out
-+++ b/tests/overlay/035.out
-@@ -1,5 +1,5 @@
- QA output created by 035
- touch: cannot touch 'SCRATCH_MNT/foo': Read-only file system
--mount: cannot remount SCRATCH_DEV read-write, is write-protected
-+mount: cannot remount device read-write, is write-protected
- touch: cannot touch 'SCRATCH_MNT/bar': Read-only file system
--mount: cannot remount SCRATCH_DEV read-write, is write-protected
-+mount: cannot remount device read-write, is write-protected
--- 
-2.14.3
+> > > IOWs, the primary ifree transaction needs alloc/free reservations
+> > > for the modifications of both the inobt and the finobt, regardless
+> > > of anything else that goes on, so.....
+> > > 
+> > > > But that would end up making the transaction smaller than adding it all
+> > > > together. Of course, that may be fine with the agfl fixup below..
+> > > 
+> > > .... I doubt it will shrink if we take into account the multiple
+> > > direct alloc/free operations in the primary transaction properly. :/
+> > > 
+> > > Hmmmm - I'm wondering if we need to limit the max extents in a
+> > > defer-ops EFI/EFD item to 2 so we don't try to free all the defered
+> > > extent frees in a single EFI/EFD transaction pair. i.e. force it
+> > > to roll the transaction and get a new log reservation every two
+> > > extents being freed so we can limit the reservation size defered
+> > > extent freeing requires....
+> > 
+> > This sounds similar in principle to the other option I was thinking
+> > about with regard to dealing with the agfl fixup problem (rolling the
+> > tx). The difference is the driving logic: putting a hard limit on the
+> > number of per-tx operations vs. rolling in a particular agfl corner
+> > case.
+> 
+> Rolling the transaction at the AGFL level is problematic. The
+> transaction scope is defined way further up the call stack and we
+> can't roll transactions while we hold random logged objects locked
+> that need to stay locked across the entire allocation process.
+> 
+> Hence I don't think we can roll the transaction at the point where
+> we are modifying the AGFL simply because we don't have the context
+> available to ensure it can be done in a transactionally atomic and
+> deadlock free manner.
+> 
 
+Yes, the idea wasn't to explicitly roll the transaction down in the AGFL
+code. Rather, refactor the code to allow the deferred ops infrastructure
+to do so (so we relog the intent as well). This would most likely
+require some ugly factoring to deal with the layering.
+
+No matter, I think a hard restriction of a couple frees per transaction
+is much more straightforward and thus a better idea.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> 
+> xfs: inode transaciton reservations are whacky
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Start hacking cleanups into the code, see if we can untangle the
+> mess.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_trans_resv.c | 128 +++++++++++++++++++++++++----------------
+>  1 file changed, 77 insertions(+), 51 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 6bd916bd35e2..60d25d353fc0 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -131,6 +131,40 @@ xfs_calc_inode_res(
+>  		 2 * XFS_BMBT_BLOCK_LEN(mp));
+>  }
+>  
+> +/*
+> + * Allocation/freeing of a [f]inobt record requires:
+> + *
+> + * the inode btree: max depth * block size
+> + * the allocation btrees: 2 trees * (max depth - 1) * block size
+> + *
+> + * This assumes that AGI/AGF/SB modifications are accounted for by the caller.
+> + * Modification is assumed as the first block in the tree depth reservation.
+> + */
+> +static uint
+> +xfs_calc_inobt_alloc_res(
+> +	struct xfs_mount	*mp)
+> +{
+> +	return xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> +	       xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> +				XFS_FSB_TO_B(mp, 1));
+> +}
+> +
+> +/*
+> + * Modification of a [f]inobt record requires:
+> + *
+> + * the inode btree: max depth * block size
+> + * the inode btree entry: block size
+> + *
+> + * This assumes that AGI/AGF/SB modifications are accounted for by the caller.
+> + */
+> +static uint
+> +xfs_calc_inobt_modify_res(
+> +	struct xfs_mount	*mp)
+> +{
+> +	return xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> +	       (uint)XFS_FSB_TO_B(mp, 1);
+> +}
+> +
+>  /*
+>   * The free inode btree is a conditional feature and the log reservation
+>   * requirements differ slightly from that of the traditional inode allocation
+> @@ -146,30 +180,19 @@ xfs_calc_inode_res(
+>   * 'alloc' param indicates to include the reservation for free space btree
+>   * modifications on behalf of finobt modifications. This is required only for
+>   * transactions that do not already account for free space btree modifications.
+> - *
+> - * the free inode btree: max depth * block size
+> - * the allocation btrees: 2 trees * (max depth - 1) * block size
+> - * the free inode btree entry: block size
+>   */
+>  STATIC uint
+>  xfs_calc_finobt_res(
+>  	struct xfs_mount	*mp,
+> -	int			alloc,
+> -	int			modify)
+> +	bool			alloc)
+>  {
+> -	uint res;
+> -
+>  	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
+>  		return 0;
+>  
+> -	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
+> +	/* alloc implies modification */
+>  	if (alloc)
+> -		res += xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -					XFS_FSB_TO_B(mp, 1));
+> -	if (modify)
+> -		res += (uint)XFS_FSB_TO_B(mp, 1);
+> -
+> -	return res;
+> +		return xfs_calc_inobt_alloc_res(mp);
+> +	return xfs_calc_inobt_modify_res(mp);
+>  }
+>
+>  /*
+> @@ -232,8 +255,6 @@ xfs_calc_write_reservation(
+>   *    the super block to reflect the freed blocks: sector size
+>   *    worst case split in allocation btrees per extent assuming 4 extents:
+>   *		4 exts * 2 trees * (2 * max depth - 1) * block size
+> - *    the inode btree: max depth * blocksize
+> - *    the allocation btrees: 2 trees * (max depth - 1) * block size
+>   */
+>  STATIC uint
+>  xfs_calc_itruncate_reservation(
+> @@ -245,12 +266,7 @@ xfs_calc_itruncate_reservation(
+>  				      XFS_FSB_TO_B(mp, 1))),
+>  		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+>  		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+> -				      XFS_FSB_TO_B(mp, 1)) +
+> -		    xfs_calc_buf_res(5, 0) +
+> -		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -				     XFS_FSB_TO_B(mp, 1)) +
+> -		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+> -				     mp->m_in_maxlevels, 0)));
+> +				      XFS_FSB_TO_B(mp, 1))));
+>  }
+>  
+>  /*
+> @@ -320,13 +336,13 @@ xfs_calc_link_reservation(
+>  /*
+>   * For adding an inode to unlinked list we can modify:
+>   *    the agi hash list: sector size
+> - *    the unlinked inode: inode size
+> + *    the on-disk unlinked inode: inode cluster size
+>   */
+>  STATIC uint
+>  xfs_calc_iunlink_add_reservation(xfs_mount_t *mp)
+>  {
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+> -		xfs_calc_inode_res(mp, 1);
+> +	       max_t(uint, XFS_FSB_TO_B(mp, 1), mp->m_inode_cluster_size);
+>  }
+>  
+>  /*
+> @@ -367,24 +383,26 @@ xfs_calc_remove_reservation(
+>   *    the new inode: inode size
+>   *    the inode btree entry: block size
+>   *    the superblock for the nlink flag: sector size
+> + *    the AGI for inode counters: sector size
+>   *    the directory btree: (max depth + v2) * dir block size
+>   *    the directory inode's bmap btree: (max depth + v2) * block size
+> - *    the finobt (record modification and allocation btrees)
+> + *    the finobt (record modification/removal and allocation btrees)
+> + *    the AGF, AGFL for finobt allocation: 2 * sector size
+>   */
+>  STATIC uint
+>  xfs_calc_create_resv_modify(
+>  	struct xfs_mount	*mp)
+>  {
+>  	return xfs_calc_inode_res(mp, 2) +
+> -		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+> -		(uint)XFS_FSB_TO_B(mp, 1) +
+> +		xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+>  		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1)) +
+> -		xfs_calc_finobt_res(mp, 1, 1);
+> +		xfs_calc_inobt_modify_res(mp) +
+> +		xfs_calc_finobt_res(mp, true);
+>  }
+>  
+>  /*
+>   * For create we can allocate some inodes giving:
+> - *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+> + *    the agi, agf, agfl of the ag getting the new inodes: 3 * sectorsize
+>   *    the superblock for the nlink flag: sector size
+>   *    the inode blocks allocated: mp->m_ialloc_blks * blocksize
+>   *    the inode btree: max depth * blocksize
+> @@ -394,12 +412,9 @@ STATIC uint
+>  xfs_calc_create_resv_alloc(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+> -		mp->m_sb.sb_sectsize +
+> +	return xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+>  		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
+> -		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> -		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -				 XFS_FSB_TO_B(mp, 1));
+> +		xfs_calc_inobt_alloc_res(mp);
+>  }
+>  
+>  STATIC uint
+> @@ -413,7 +428,7 @@ __xfs_calc_create_reservation(
+>  
+>  /*
+>   * For icreate we can allocate some inodes giving:
+> - *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+> + *    the agi, agf, agfl of the ag getting the new inodes: 3 * sectorsize
+>   *    the superblock for the nlink flag: sector size
+>   *    the inode btree: max depth * blocksize
+>   *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> @@ -423,12 +438,9 @@ STATIC uint
+>  xfs_calc_icreate_resv_alloc(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+> -		mp->m_sb.sb_sectsize +
+> -		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> -		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -				 XFS_FSB_TO_B(mp, 1)) +
+> -		xfs_calc_finobt_res(mp, 0, 0);
+> +	return xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+> +		xfs_calc_inobt_alloc_res(mp) +
+> +		xfs_calc_finobt_res(mp, false);
+>  }
+>  
+>  STATIC uint
+> @@ -493,26 +505,40 @@ xfs_calc_symlink_reservation(
+>   *    the super block free inode counter: sector size
+>   *    the agi hash list and counters: sector size
+>   *    the inode btree entry: block size
+> + *    the on disk inode to null di_next_unlinked: inode cluster size
+>   *    the on disk inode before ours in the agi hash list: inode cluster size
+> + *
+> + * If we also have to free an inode chunk or recrod
+>   *    the inode btree: max depth * blocksize
+> + *	Note: this also includes inode btree entry block!
+> + *    the AGF and AGFL: 2 sectors
+> + *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> + *    the log headers to record the inode chunk buffers as freed
+> + *
+> + * If we also have to modify the finbot - record may need allocation:
+> + *    the finobt: max depth * block size
+>   *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> - *    the finobt (record insertion, removal or modification)
+> + *
+>   */
+>  STATIC uint
+>  xfs_calc_ifree_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+>  	return XFS_DQUOT_LOGRES(mp) +
+> +		/* inode being freed */
+>  		xfs_calc_inode_res(mp, 1) +
+> -		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+> -		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+> +		/* sb, AGF, AGFL */
+> +		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+> +		/* AGI + inode cluster */
+>  		xfs_calc_iunlink_remove_reservation(mp) +
+> -		xfs_calc_buf_res(1, 0) +
+> -		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+> -				 mp->m_in_maxlevels, 0) +
+> -		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -				 XFS_FSB_TO_B(mp, 1)) +
+> -		xfs_calc_finobt_res(mp, 0, 1);
+> +		/* inode cluster on disk before ours */
+> +		xfs_calc_iunlink_remove_reservation(mp) +
+> +		/* inode btree record freeing */
+> +		xfs_calc_inobt_alloc_res(mp) +
+> +		/* stale inode chunk buffers (blf & log hdrs only) */
+> +		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
+> +		/* free inode btree */
+> +		xfs_calc_finobt_res(mp, true);
+>  }
+>  
+>  /*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
