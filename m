@@ -1,164 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20153 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751846AbdK2B0x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:26:53 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1Qql2015720
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:52 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1Qpo4015506
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:52 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAT1QprW004645
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:51 GMT
-Subject: [PATCH 14/16] xfs: scrub should cross-reference the realtime bitmap
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 28 Nov 2017 17:26:50 -0800
-Message-ID: <151191881065.8553.294883978147133548.stgit@magnolia>
-In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
-References: <151191872395.8553.15627872818207535470.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:40830 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752202AbdK1Jfx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Nov 2017 04:35:53 -0500
+Date: Tue, 28 Nov 2017 10:35:51 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2] xfs: handle register_shrinker error
+Message-ID: <20171128093551.mjwao7afv75me6ht@dhcp22.suse.cz>
+References: <20171123120828.31881-1-mhocko@kernel.org>
+ <20171123132633.GB21798@infradead.org>
+ <20171123134128.mzxv6234hypokg4k@dhcp22.suse.cz>
+ <201711240101.CJF18223.FJtHOLOSQFOMVF@I-love.SAKURA.ne.jp>
+ <20171123161137.ncjqskbvdm6dgb3z@dhcp22.suse.cz>
+ <20171123220045.GV5858@dastard>
+ <20171124073957.3z4hjwg5exqw277h@dhcp22.suse.cz>
+ <20171127174453.GC19379@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171127174453.GC19379@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, hch@infradead.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon 27-11-17 09:44:53, Darrick J. Wong wrote:
+[...]
+> > From 1009db61988c48c9a9e327a9d076945b29b02eee Mon Sep 17 00:00:00 2001
+> > From: Michal Hocko <mhocko@suse.com>
+> > Date: Thu, 23 Nov 2017 17:13:40 +0100
+> > Subject: [PATCH] xfs: fortify xfs_alloc_buftarg error handling
+> > 
+> > percpu_counter_init failure path doesn't clean up &btp->bt_lru list.
+> > Call list_lru_destroy in that error path. Similarly register_shrinker
+> > error path is not handled.
+> > 
+> > While it is unlikely to trigger these error path, it is not impossible
+> > especially the later might fail with large NUMAs.  Let's handle the
+> > failure to make the code more robust.
+> > 
+> > Acked-by: Dave Chinner <dchinner@redhat.com>
+> > Noticed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > ---
+> >  fs/xfs/xfs_buf.c | 15 ++++++++++-----
+> >  1 file changed, 10 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 4db6e8d780f6..4c6e86d861fd 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -1815,22 +1815,27 @@ xfs_alloc_buftarg(
+> >  	btp->bt_daxdev = dax_dev;
+> >  
+> >  	if (xfs_setsize_buftarg_early(btp, bdev))
+> > -		goto error;
+> > +		goto error_free;
+> >  
+> >  	if (list_lru_init(&btp->bt_lru))
+> > -		goto error;
+> > +		goto error_free;
+> >  
+> >  	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
+> > -		goto error;
+> > +		goto error_lru;
+> >  
+> >  	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+> >  	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+> >  	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+> >  	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+> > -	register_shrinker(&btp->bt_shrinker);
+> > +	if (register_shrinker(&btp->bt_shrinker))
+> > +		goto error_pcpu;
+> >  	return btp;
+> >  
+> > -error:
+> > +error_pcpu:
+> > +	percpu_counter_destroy(&btp->bt_io_count);
+> > +error_lru:
+> > +	list_lru_destroy(&btp->bt_lru);
+> > +error_free:
+> >  	kmem_free(btp);
+> >  	return NULL;
+> 
+> This part looks ok,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-While we're scrubbing various btrees, cross-reference the records
-with the other metadata.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_rtbitmap.c |   30 ++++++++++++++++++++++++++++++
- fs/xfs/scrub/bmap.c          |    2 ++
- fs/xfs/scrub/rtbitmap.c      |   20 ++++++++++++++++++++
- fs/xfs/scrub/scrub.h         |    6 ++++++
- fs/xfs/xfs_rtalloc.h         |    4 ++++
- 5 files changed, 62 insertions(+)
-
-
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 3fb29a5..a3f25a2 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1097,3 +1097,33 @@ xfs_verify_rtbno(
- {
- 	return rtbno < mp->m_sb.sb_rblocks;
- }
-+
-+/* Is the given extent all free? */
-+int
-+xfs_rtalloc_extent_is_free(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	xfs_rtblock_t			start,
-+	xfs_rtblock_t			len,
-+	bool				*is_free)
-+{
-+	xfs_rtblock_t			end;
-+	xfs_extlen_t			clen;
-+	int				matches;
-+	int				error;
-+
-+	*is_free = false;
-+	while (len) {
-+		clen = len > ~0U ? ~0U : len;
-+		error = xfs_rtcheck_range(mp, tp, start, clen, 1, &end,
-+				&matches);
-+		if (error || !matches || end < start + clen)
-+			return error;
-+
-+		len -= end - start;
-+		start = end + 1;
-+	}
-+
-+	*is_free = true;
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 2b99f06..1e5ab53 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -276,6 +276,8 @@ xfs_scrub_bmap_rt_extent_xref(
- 	struct xfs_btree_cur		*cur,
- 	struct xfs_bmbt_irec		*irec)
- {
-+	xfs_scrub_xref_not_rtfree(info->sc, irec->br_startblock,
-+			irec->br_blockcount);
- }
- 
- /* Cross-reference a single datadev extent record. */
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index c6fedb6..810666d 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -106,3 +106,23 @@ xfs_scrub_rtsummary(
- 	/* XXX: implement this some day */
- 	return -ENOENT;
- }
-+
-+
-+/* xref check that the extent is not free in the rtbitmap */
-+void
-+xfs_scrub_xref_not_rtfree(
-+	struct xfs_scrub_context	*sc,
-+	xfs_fsblock_t			fsbno,
-+	xfs_fsblock_t			len)
-+{
-+	bool				is_free;
-+	int				error;
-+
-+	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
-+	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, fsbno, len,
-+			&is_free);
-+	if (xfs_scrub_should_xref(sc, &error, NULL) && is_free)
-+		xfs_scrub_ino_xref_set_corrupt(sc, sc->mp->m_rbmip->i_ino,
-+				NULL);
-+	xfs_iunlock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
-+}
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 3ccfff2..a1cd43d 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -137,5 +137,11 @@ void xfs_scrub_xref_has_cow_staging(struct xfs_scrub_context *sc,
- void xfs_scrub_xref_not_shared(struct xfs_scrub_context *sc,
- 		struct xfs_btree_cur **pcur, xfs_agblock_t bno,
- 		xfs_extlen_t len);
-+#ifdef CONFIG_XFS_RT
-+void xfs_scrub_xref_not_rtfree(struct xfs_scrub_context *sc,
-+		xfs_fsblock_t fsbno, xfs_fsblock_t len);
-+#else
-+# define xfs_scrub_xref_not_rtfree(sc, fsbno, len)	do { } while (0)
-+#endif
- 
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 3f30f84..540d506 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -139,6 +139,9 @@ int xfs_rtalloc_query_all(struct xfs_trans *tp,
- 			  xfs_rtalloc_query_range_fn fn,
- 			  void *priv);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-+int xfs_rtalloc_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
-+			       xfs_rtblock_t start, xfs_rtblock_t len,
-+			       bool *is_free);
- #else
- # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
- # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
-@@ -148,6 +151,7 @@ bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- # define xfs_rtalloc_query_all(t,f,p)                   (ENOSYS)
- # define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
- # define xfs_verify_rtbno(m, r)			(false)
-+# define xfs_rtalloc_extent_is_free(m,t,s,l,i)          (ENOSYS)
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
-
+Are you going to apply the patch or should I re-send it with
+acks/reviewed-by?
+-- 
+Michal Hocko
+SUSE Labs
