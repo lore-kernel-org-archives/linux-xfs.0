@@ -1,130 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50754 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932620AbdKCOp5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2017 10:45:57 -0400
-Received: from [94.72.11.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1eAdEG-0001mc-68
-        for linux-xfs@vger.kernel.org; Fri, 03 Nov 2017 14:45:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/21] xfs: treat idx as a cursor in xfs_bmap_add_extent_delay_real
-Date: Fri,  3 Nov 2017 17:45:21 +0300
-Message-Id: <20171103144539.2187-4-hch@lst.de>
-In-Reply-To: <20171103144539.2187-1-hch@lst.de>
-References: <20171103144539.2187-1-hch@lst.de>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:34054 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753558AbdK1Vzb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 16:55:31 -0500
+Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
+        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vASLpbN3015751
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 13:55:31 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0b-00082601.pphosted.com with ESMTP id 2eh8cx9rqj-5
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 13:55:31 -0800
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v7 1/3] xfs: Show realtime device stats on statfs calls if realtime flags set
+Date: Tue, 28 Nov 2017 13:55:25 -0800
+Message-ID: <20171128215527.2510350-2-rwareing@fb.com>
+In-Reply-To: <20171128215527.2510350-1-rwareing@fb.com>
+References: <20171128215527.2510350-1-rwareing@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
 
-Stop poking before and after the index and just increment or decrement
-it while doing our operations on it to prepare for a new extent list
-implementation.
+- Reports realtime device free blocks in statfs calls if (realtime)
+  inheritance bit is set on the inode of directory, or realtime flag
+  in the case of files.  This is a bit more intuitive, especially for
+  use-cases which are using a much larger device for the realtime device.
+- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
+  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
+  option.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Richard Wareing <rwareing@fb.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
+Changes since v6:
+* statfs will now return realtime stats for the underlying filesystem if
+inode has XFS_DIFLAG_REALTIME set, this provides consistent behavior along
+the same lines as the XFS_DIFLAG_RTINHERIT flag is set on directories.
+* Updated commit title + description to reflect change
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index e1d61face277..c0216e9e2af8 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1648,12 +1648,13 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in all of a previously delayed allocation extent.
- 		 * The left and right neighbors are both contiguous with new.
- 		 */
--		bma->idx--;
- 		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
--		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+Changes since v5:
+* None
+
+Changes since v4:
+* None
+
+Changes since v3:
+* Fixed accounting bug, we are not required to substract m_alloc_set_aside
+  as this is a data device only requirement.
+* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
+  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
+  for the inode.
+
+Changes since v2:
+* Style updated per Christoph Hellwig's comment
+* Fixed bug: statp->f_bavail = statp->f_bfree
+
+ fs/xfs/xfs_linux.h | 2 ++
+ fs/xfs/xfs_super.c | 8 ++++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index dcd1292..944b02d 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -278,8 +278,10 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+ #define XFS_IS_REALTIME_INODE(ip)			\
+ 	(((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME) &&	\
+ 	 (ip)->i_mount->m_rtdev_targp)
++#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
+ #else
+ #define XFS_IS_REALTIME_INODE(ip) (0)
++#define XFS_IS_REALTIME_MOUNT(mp) (0)
+ #endif
  
--		xfs_iext_remove(bma->ip, bma->idx + 1, 2, state);
-+		xfs_iext_remove(bma->ip, bma->idx, 2, state);
-+		bma->idx--;
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
- 		(*nextents)--;
+ #endif /* __XFS_LINUX__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f663022..07afadd 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1153,6 +1153,14 @@ xfs_fs_statfs(
+ 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+ 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+ 		xfs_qm_statvfs(ip, statp);
 +
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -1681,13 +1682,13 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in all of a previously delayed allocation extent.
- 		 * The left neighbor is contiguous, the right is not.
- 		 */
--		bma->idx--;
--
- 		old = LEFT;
- 		LEFT.br_blockcount += PREV.br_blockcount;
++	if (XFS_IS_REALTIME_MOUNT(mp) &&
++	    (ip->i_d.di_flags & (XFS_DIFLAG_RTINHERIT | XFS_DIFLAG_REALTIME))) {
++		statp->f_blocks = sbp->sb_rblocks;
++		statp->f_bavail = statp->f_bfree =
++			sbp->sb_frextents * sbp->sb_rextsize;
++	}
 +
-+		xfs_iext_remove(bma->ip, bma->idx, 1, state);
-+		bma->idx--;
- 		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
+ 	return 0;
+ }
  
--		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
- 		else {
-@@ -1709,9 +1710,12 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		PREV.br_startblock = new->br_startblock;
- 		PREV.br_blockcount += RIGHT.br_blockcount;
-+
-+		bma->idx++;
-+		xfs_iext_remove(bma->ip, bma->idx, 1, state);
-+		bma->idx--;
- 		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
- 
--		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
- 		else {
-@@ -1763,12 +1767,14 @@ xfs_bmap_add_extent_delay_real(
- 				startblockval(PREV.br_startblock));
- 
- 		LEFT.br_blockcount += new->br_blockcount;
--		xfs_iext_update_extent(bma->ip, state, bma->idx - 1, &LEFT);
- 
- 		PREV.br_blockcount = temp;
- 		PREV.br_startoff += new->br_blockcount;
- 		PREV.br_startblock = nullstartblock(da_new);
-+
- 		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
-+		bma->idx--;
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, &LEFT);
- 
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
-@@ -1783,7 +1789,6 @@ xfs_bmap_add_extent_delay_real(
- 				goto done;
- 		}
- 
--		bma->idx--;
- 		break;
- 
- 	case BMAP_LEFT_FILLING:
-@@ -1836,7 +1841,6 @@ xfs_bmap_add_extent_delay_real(
- 		RIGHT.br_startoff = new->br_startoff;
- 		RIGHT.br_startblock = new->br_startblock;
- 		RIGHT.br_blockcount += new->br_blockcount;
--		xfs_iext_update_extent(bma->ip, state, bma->idx + 1, &RIGHT);
- 
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
-@@ -1857,9 +1861,10 @@ xfs_bmap_add_extent_delay_real(
- 
- 		PREV.br_blockcount = temp;
- 		PREV.br_startblock = nullstartblock(da_new);
--		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
- 
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, &PREV);
- 		bma->idx++;
-+		xfs_iext_update_extent(bma->ip, state, bma->idx, &RIGHT);
- 		break;
- 
- 	case BMAP_RIGHT_FILLING:
 -- 
-2.14.2
+2.9.5
 
