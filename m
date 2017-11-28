@@ -1,173 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24413 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:26305 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751648AbdK1SUo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 13:20:44 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vASIKg6A013392
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 18:20:43 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vASIKf6j016261
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 18:20:41 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vASIKf4i023479
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 18:20:41 GMT
-Date: Tue, 28 Nov 2017 10:20:40 -0800
+        with ESMTP id S1751770AbdK1SY3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 13:24:29 -0500
+Date: Tue, 28 Nov 2017 10:24:24 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 15/17] Add parent pointers to rename
-Message-ID: <20171128182040.GJ21412@magnolia>
+Subject: Re: [PATCH v3 14/17] xfs: remove parent pointers in unlink
+Message-ID: <20171128182424.GK21412@magnolia>
 References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-16-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-15-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1510942905-12897-16-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1510942905-12897-15-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Fri, Nov 17, 2017 at 11:21:43AM -0700, Allison Henderson wrote:
-> This patch removes the old parent pointer attribute during the
-> rename operation, and re-adds the updated parent pointer
+On Fri, Nov 17, 2017 at 11:21:42AM -0700, Allison Henderson wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
+> This patch removes the parent pointer attribute during unlink
+> 
+> [bfoster: rebase, use VFS inode generation]
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+> 	   implemented xfs_attr_remove_parent]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_dir2.c |  6 ++++--
->  fs/xfs/xfs_inode.c       | 26 ++++++++++++++++++++------
->  2 files changed, 24 insertions(+), 8 deletions(-)
+>  fs/xfs/libxfs/xfs_parent.c | 20 ++++++++++++++++++++
+>  fs/xfs/xfs_attr.h          |  4 ++++
+>  fs/xfs/xfs_inode.c         | 10 +++++++++-
+>  3 files changed, 33 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 25b370b..ed25203 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -324,10 +324,11 @@ xfs_dir_createname(
->  	else
->  		rval = xfs_dir2_node_addname(args);
+> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+> index 5eec0ab..9278c89 100644
+> --- a/fs/xfs/libxfs/xfs_parent.c
+> +++ b/fs/xfs/libxfs/xfs_parent.c
+> @@ -91,3 +91,23 @@ xfs_parent_add(
+>  		(void *)child_name->name, child_name->len, ATTR_PARENT);
+>  }
 >  
-> +out_free:
->  	/* return the location that this entry was place in the parent inode */
->  	if (offset)
->  		*offset = args->offset;
-> -out_free:
-> +
->  	kmem_free(args);
->  	return rval;
->  }
-> @@ -496,9 +497,10 @@ xfs_dir_removename(
->  		rval = xfs_dir2_leaf_removename(args);
->  	else
->  		rval = xfs_dir2_node_removename(args);
-> +out_free:
->  	if (offset)
->  		*offset = args->offset;
-> -out_free:
-> +
+> +/*
+> + * Remove a parent record from a child inode.
+> + */
+> +int
+> +xfs_parent_remove(
+> +        struct xfs_trans        *tp,
 
-Why do these labels need to be moved here?  The *offset = ... lines are
-new, so why not put them in their final place in the patch that adds
-those lines?
+Unused parameter.
 
->  	kmem_free(args);
->  	return rval;
->  }
+> +        struct xfs_inode        *parent,
+> +        struct xfs_inode        *child,
+> +        xfs_dir2_dataptr_t      diroffset,
+> +	struct xfs_defer_ops    *dfops,
+
+Inconsistent indenting here.
+
+> +	xfs_fsblock_t           *firstblock)
+
+Unused parameter.
+
+> +{
+> +	struct xfs_parent_name_rec rec;
+> +
+> +	xfs_init_parent_name_rec(&rec, parent->i_ino,
+> +		VFS_I(parent)->i_generation, diroffset);
+
+Two tabs, please...
+
+> +
+> +	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
+> +					ATTR_PARENT);
+
+...or this indentation style.
+
+> +}
+> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+> index 09ef747..0829687 100644
+> --- a/fs/xfs/xfs_attr.h
+> +++ b/fs/xfs/xfs_attr.h
+> @@ -198,4 +198,8 @@ int xfs_parent_add(struct xfs_trans *tp, struct xfs_inode *parent,
+>  		struct xfs_inode *child, struct xfs_name *child_name,
+>  		xfs_dir2_dataptr_t diroffset, struct xfs_defer_ops *dfops,
+>  		xfs_fsblock_t *firstblock);
+> +int xfs_parent_remove(struct xfs_trans *tp, struct xfs_inode *parent,
+> +		      struct xfs_inode *child, xfs_dir2_dataptr_t diroffset,
+> +		      struct xfs_defer_ops *dfops, xfs_fsblock_t *firstblock);
+> +
+>  #endif	/* __XFS_ATTR_H__ */
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index a289a40..da5c761 100644
+> index 0ad843d..a289a40 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -2984,6 +2984,8 @@ xfs_rename(
->  	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
->  	int			spaceres;
->  	int			error;
-> +	xfs_dir2_dataptr_t	new_diroffset;
-> +	xfs_dir2_dataptr_t	old_diroffset;
->  
->  	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
->  
-> @@ -3086,13 +3088,12 @@ xfs_rename(
->  		 */
->  		error = xfs_dir_createname(tp, target_dp, target_name,
->  					   src_ip->i_ino, &first_block, &dfops,
-> -					   spaceres, NULL);
-> +					   spaceres, &new_diroffset);
->  		if (error)
->  			goto out_bmap_cancel;
->  
->  		xfs_trans_ichgtime(tp, target_dp,
->  					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> -
+> @@ -2607,6 +2607,7 @@ xfs_remove(
+>  	struct xfs_defer_ops	dfops;
+>  	xfs_fsblock_t           first_block;
+>  	uint			resblks;
+> +	uint32_t		dir_offset;
 
-Huh?
-
->  		if (new_parent && src_is_directory) {
->  			error = xfs_bumplink(tp, target_dp);
->  			if (error)
-> @@ -3126,7 +3127,7 @@ xfs_rename(
->  		 */
->  		error = xfs_dir_replace(tp, target_dp, target_name,
->  					src_ip->i_ino, &first_block, &dfops,
-> -					spaceres, NULL);
-> +					spaceres, &new_diroffset);
->  		if (error)
->  			goto out_bmap_cancel;
->  
-> @@ -3161,7 +3162,7 @@ xfs_rename(
->  		 */
->  		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
->  					target_dp->i_ino, &first_block, &dfops,
-> -					spaceres, NULL);
-> +					spaceres, &new_diroffset);
->  		ASSERT(error != -EEXIST);
->  		if (error)
->  			goto out_bmap_cancel;
-> @@ -3200,11 +3201,12 @@ xfs_rename(
->  	 */
->  	if (wip) {
->  		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
-> -					&first_block, &dfops, spaceres, NULL);
-> +					&first_block, &dfops, spaceres,
-> +					&old_diroffset);
->  	} else
->  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
->  					   &first_block, &dfops, spaceres,
-> -					   NULL);
-> +					   &old_diroffset);
->  	if (error)
->  		goto out_bmap_cancel;
->  
-> @@ -3234,6 +3236,18 @@ xfs_rename(
->  		VFS_I(wip)->i_state &= ~I_LINKABLE;
->  	}
->  
-> +	if (new_parent && xfs_sb_version_hasparent(&mp->m_sb)) {
-
-I'm confused about checking new_parent -- does this cause us to forget
-to update the pptr for a rename within a directory?
-
-I'm assuming that all of these directory operations will get their own
-xfstests in time... (create a file, check pptr; hardlink a file, check
-both pptrs; delete one of the links, check pptrs; check pptr after a
-rename within a dir; check pptr after a rename between dirs; etc.)
+xfs_dir2_dataptr_t	dir_offset; ?
 
 --D
 
-> +		error = xfs_parent_add(tp, target_dp, src_ip, target_name,
-> +				       new_diroffset, &dfops, &first_block);
-> +		if (error)
-> +			goto out_bmap_cancel;
-> +
-> +		error = xfs_parent_remove(tp, src_dp, src_ip,
-> +					  old_diroffset, &dfops, &first_block);
+>  
+>  	trace_xfs_remove(dp, name);
+>  
+> @@ -2687,12 +2688,19 @@ xfs_remove(
+>  
+>  	xfs_defer_init(&dfops, &first_block);
+>  	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+> -				   &dfops, resblks, NULL);
+> +				   &dfops, resblks, &dir_offset);
+>  	if (error) {
+>  		ASSERT(error != -ENOENT);
+>  		goto out_bmap_cancel;
+>  	}
+>  
+> +	if (xfs_sb_version_hasparent(&mp->m_sb)) {
+> +		error = xfs_parent_remove(tp, dp, ip, dir_offset, &dfops,
+> +					  &first_block);
 > +		if (error)
 > +			goto out_bmap_cancel;
 > +	}
 > +
->  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
->  	if (new_parent)
+>  	/*
+>  	 * If this is a synchronous mount, make sure that the
+>  	 * remove transaction goes to disk before returning to
 > -- 
 > 2.7.4
 > 
