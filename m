@@ -1,141 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:10128 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752348AbdK0XLV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 18:11:21 -0500
-Date: Tue, 28 Nov 2017 10:07:34 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:37766 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750904AbdK1W0k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 17:26:40 -0500
+Date: Wed, 29 Nov 2017 09:26:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/4] xfs: amortize agfl block frees across multiple
- transactions
-Message-ID: <20171127230734.GB5858@dastard>
+Subject: Re: [PATCH RFC 4/4] xfs: include an allocfree res for inobt
+ modifications
+Message-ID: <20171128222637.GG5858@dastard>
 References: <20171127202434.43125-1-bfoster@redhat.com>
- <20171127202434.43125-4-bfoster@redhat.com>
+ <20171127202434.43125-5-bfoster@redhat.com>
+ <20171127232719.GC5858@dastard>
+ <20171128140459.GD45759@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171127202434.43125-4-bfoster@redhat.com>
+In-Reply-To: <20171128140459.GD45759@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 27, 2017 at 03:24:33PM -0500, Brian Foster wrote:
-> We've had rare reports of transaction overruns in
-> xfs_inactive_ifree() for quite some time. Analysis of a reproducing
-> metadump has shown the problem is essentially caused by performing
-> too many agfl block frees in a single transaction.
+On Tue, Nov 28, 2017 at 09:04:59AM -0500, Brian Foster wrote:
+> On Tue, Nov 28, 2017 at 10:27:19AM +1100, Dave Chinner wrote:
+> > On Mon, Nov 27, 2017 at 03:24:34PM -0500, Brian Foster wrote:
+> > >  STATIC uint
+> > > @@ -415,8 +414,8 @@ __xfs_calc_create_reservation(
+> > >   * For icreate we can allocate some inodes giving:
+> > >   *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+> > >   *    the superblock for the nlink flag: sector size
+> > > - *    the inode btree: max depth * blocksize
+> > >   *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> > > + *    the inobt (record insertion)
+> > >   *    the finobt (record insertion)
+> > >   */
+> > >  STATIC uint
+> > > @@ -425,10 +424,10 @@ xfs_calc_icreate_resv_alloc(
+> > >  {
+> > >  	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+> > >  		mp->m_sb.sb_sectsize +
+> > > -		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> > >  		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> > >  				 XFS_FSB_TO_B(mp, 1)) +
+> > > -		xfs_calc_finobt_res(mp, 0, 0);
+> > > +		xfs_calc_inobt_res(mp) +
+> > > +		xfs_calc_finobt_res(mp);
+> > >  }
+> > 
+> > 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+> > 		mp->m_sb.sb_sectsize +
+> > 		xfs_calc_inode_chunk_res(mp, false) +
+> > 		xfs_calc_inobt_res(mp) +
+> > 		xfs_calc_finobt_res(mp);
+> > 
 > 
-> For example, an inode chunk is freed and the associated agfl fixup
-> algorithm discovers it needs to free a single agfl block before the
-> chunk free occurs. This single block ends up causing a space btree
-> join and adds one or more blocks back onto the agfl. This causes
-> xfs_alloc_fix_freelist() to free up to 3 blocks just to rectify a
-> single block discrepency.
-> 
-> The transaction overrun occurs under several other unfortunate
-> circumstances:
-> 
->  - Each agfl block free is left+right contiguous. This requires 2
->    record deletions and 1 insertion for the cntbt and thus requires
->    more log reservation than normal.
->  - The associated transaction is the first in the CIL ctx and thus
->    the ctx header reservation is consumed.
->  - The transaction reservation is larger than a log buffer and thus
->    extra split header reservation is consumed.
-> 
-> As a result of the agfl and free space state of the filesystem, the
-> agfl fixup code has dirtied more cntbt buffer space than allowed by
-> the portion of the reservation allotted for block allocation. This
-> is all before the real allocation even starts!
-> 
-> Note that the log related conditions above are correctly covered by
-> the existing transaction reservation. The above demonstrates that
-> the reservation allotted for the context/split headers may help
-> suppress overruns in the more common case where that reservation
-> goes unused for its intended purpose.
-> 
-> To address this problem, update xfs_alloc_fix_freelist() to amortize
-> agfl block frees over multiple transactions. Free one block per
-> transaction so long as the agfl is less than half free. The agfl
-> minimum allocation requirement is dynamic, but is based on the
-> geometry of the associated btrees (i.e., level count) and therefore
-> should be easily rectified over multiple allocation transactions.
-> Further, there is no real harm in leaving extraneous blocks on the
-> agfl so long as there are enough free slots available for btree
-> blocks freed as a result of the upcoming allocation.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 0da80019a917..d8d58e35da00 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2117,11 +2117,6 @@ xfs_alloc_fix_freelist(
->  	 * appropriately based on the recursion count and dirty state of the
->  	 * buffer.
->  	 *
-> -	 * XXX (dgc): When we have lots of free space, does this buy us
-> -	 * anything other than extra overhead when we need to put more blocks
-> -	 * back on the free list? Maybe we should only do this when space is
-> -	 * getting low or the AGFL is more than half full?
-> -	 *
->  	 * The NOSHRINK flag prevents the AGFL from being shrunk if it's too
->  	 * big; the NORMAP flag prevents AGFL expand/shrink operations from
->  	 * updating the rmapbt.  Both flags are used in xfs_repair while we're
-> @@ -2151,6 +2146,16 @@ xfs_alloc_fix_freelist(
->  			goto out_agbp_relse;
->  		}
->  		xfs_trans_binval(tp, bp);
-> +
-> +		/*
-> +		 * Freeing all extra agfl blocks adds too much log reservation
-> +		 * overhead to a single transaction, particularly considering
-> +		 * that freeing a block can cause a btree join and put one right
-> +		 * back on the agfl. Try to free one block per tx so long as
-> +		 * we've left enough free slots for the upcoming modifications.
-> +		 */
-> +		if (pag->pagf_flcount <= (XFS_AGFL_SIZE(mp) >> 1))
-> +			break;
->  	}
+> The icreate reservation doesn't currently include m_ialloc_blks at all.
+> The helper, as defined above, adds a reservation for associated headers.
+> Is that really necessary?  My understanding is that icreate doesn't log
+> the inode chunk.
 
-In /theory/, this /should/ work. However, as the comment you removed
-implies, there are likely to be issues with this as we get near
-ENOSPC. We know that if we don't trim the AGFL right down to the
-minimum requested as we approach ENOSPC we can get premature ENOSPC
-events being reported that lead to filesystem shutdowns.  (e.g. need
-the very last free block for a BMBT block to complete a data extent
-allocation).  Hence I'd suggest that this needs to be aware of the
-low space allocation algorithm (i.e. dfops->dop_low is true) to trim
-the agfl right back when we are really short of space
+Right, it uses ordered buffers to avoid needing to log them.
 
-I'm also concerned that it doesn't take into account that freeing
-a block from the AGFL could cause a freespace tree split to occur,
-thereby emptying the AGFL whilst consuming the entire log
-reservation for tree modifications. This leaves nothing in the log
-reservation for re-growing the AGFL to the minimum required, which
-we /must do/ before returning and could cause more splits/joins to
-occur.
+> I suppose we could get around that by tweaking the
+> parameter to take the size to reserve instead of a bool and pass a dummy
+> value (i.e., negative) to avoid logging the chunk at all. A little ugly,
+> but I could live with it.
 
-IMO, there's a lot more to be concerned about here than just trying
-to work around the specific symptom observed in the given test case.
-This code is, unfortunately, really tricky and intricate and history
-tells us that the risk of unexpected regressions is extremely high,
-especially around ENOSPC related issues. Of all the patches in this
-series, this is the most dangerous and "iffy" of them and the
-one we should be most concerned and conservative about....
+I don't think that having an extra few hundred bytes of overhead in
+the reservation is going to be noticable by anyone. I'd just
+ignore the problem (as I did when suggesting this).
 
-I'm not sure what the solution to this problem is, but I'm extremely
-hesitant to make changes like this without an awful lot more
-analysis of it's impact.
+> > >  STATIC uint
+> > > @@ -494,9 +493,14 @@ xfs_calc_symlink_reservation(
+> > >   *    the agi hash list and counters: sector size
+> > >   *    the on disk inode before ours in the agi hash list: inode cluster size
+> > >   *    the inode chunk is marked stale (headers only)
+> > > - *    the inode btree: max depth * blocksize
+> > > - *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> > > + *    the inode btree
+> > >   *    the finobt (record insertion, removal or modification)
+> > > + *
+> > > + * Note that the allocfree res. for the inode chunk itself is not included
+> > > + * because the extent free occurs after a transaction roll. We could take the
+> > > + * maximum of the pre/post roll operations, but the pre-roll reservation already
+> > > + * includes at least one allocfree res. for the inobt and is thus guaranteed to
+> > > + * be larger.
+> > >   */
+> > >  STATIC uint
+> > >  xfs_calc_ifree_reservation(
+> > > @@ -508,10 +512,8 @@ xfs_calc_ifree_reservation(
+> > >  		xfs_calc_iunlink_remove_reservation(mp) +
+> > >  		xfs_calc_buf_res(1, 0) +
+> > >  		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
+> > > -		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> > > -		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> > > -				 XFS_FSB_TO_B(mp, 1)) +
+> > > -		xfs_calc_finobt_res(mp, 0, 1);
+> > > +		xfs_calc_inobt_res(mp) +
+> > > +		xfs_calc_finobt_res(mp);
+> > >  }
+> > 
+> > 	.....
+> > 		xfs_calc_iunlink_remove_reservation(mp) +
+> > 		xfs_calc_buf_res(1, 0) +
+> > 		xfs_calc_inode_chunk_res(mp, false) +
+> > 		xfs_calc_inobt_res(mp) +
+> > 		xfs_calc_finobt_res(mp);
+> > 
+> 
+> This covers the inode chunk invalidation, but also adds the allocfree
+> res. for the chunk free where we technically don't need it (because the
+> free is deferred, re: the comment above).
+> 
+> I guess I'm fine with just adding that one, but I'd update the comment
+> above to point out that it's technically unecessary. Hm?
+
+*nod*
+
+Though with sparse inodes, we might be freeing multiple extents,
+right?  which means we probably need all the allocfree reservations
+we can get....
+
+> > This seems to make more sense to me - it's clear what the individual
+> > components of the reservation are, and we can ensure that the
+> > individual components have the necessary reservation independently
+> > of the overall reservations that need them.
+> > 
+> 
+> I agree in principle. I think the underlying helpers (and pushing down
+> some of the associated documentation) help clearly declare the intent of
+> the reservations, particularly when we include multiple factors of a
+> single reservation and/or have situations where we don't technically
+> have a definition of worst case, but want to define something logically
+> reasonable (like the whole allocfree per inode tree thing).
+
+Yup, that's pretty much what I was thinking.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
