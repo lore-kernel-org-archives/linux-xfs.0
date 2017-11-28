@@ -1,84 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36440 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751613AbdK2BZu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:25:50 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1PouQ021286
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:25:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1PngH011098
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:25:50 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAT1Pn5u025654
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:25:49 GMT
-Subject: [PATCH 04/16] xfs: add scrub cross-referencing helpers for the
- refcount btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 28 Nov 2017 17:25:48 -0800
-Message-ID: <151191874853.8553.13043841229113659864.stgit@magnolia>
-In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
-References: <151191872395.8553.15627872818207535470.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:38906 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752665AbdK1AE4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Nov 2017 19:04:56 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 51CB783F40
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 00:04:56 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 288695C549
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 00:04:56 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: calculate correct offset in xfs_scrub_quota_item
+Message-ID: <44410519-fd0d-2527-c5cd-e23032eba299@redhat.com>
+Date: Mon, 27 Nov 2017 18:04:55 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+It's only used for tracepoints so it's relatively harmless,
+but the offset is calculated incorrectly in xfs_scrub_quota_item.
 
-Add a couple of functions to the refcount btrees that will be used
-to cross-reference metadata against the refcountbt.
+qi_dqperchunk is the nr. of dquots per "chunk" which we have
+conveniently *cough* defined to always be 1 FSB.  Therefore 
+block_offset * qi_dqperchunk == first id in that chunk,
+and so offset = id / qi_dqperchunk
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+id * dqperchunk is ... meaningless.
+
+Fixes-coverity-id: 1423965
+Fixes: c2fc338c ("xfs: scrub quota information")
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_refcount.c |   19 +++++++++++++++++++
- fs/xfs/libxfs/xfs_refcount.h |    3 +++
- 2 files changed, 22 insertions(+)
 
+compile-tested only
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 585b35d..14b90b3 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1710,3 +1710,22 @@ xfs_refcount_recover_cow_leftovers(
- 	xfs_trans_brelse(tp, agbp);
- 	goto out_trans;
- }
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_refcount_has_record(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			*exists)
-+{
-+	union xfs_btree_irec	low;
-+	union xfs_btree_irec	high;
-+
-+	memset(&low, 0, sizeof(low));
-+	low.rc.rc_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.rc.rc_startblock = bno + len - 1;
-+
-+	return xfs_btree_has_record(cur, &low, &high, exists);
-+}
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index eafb9d1..2a731ac 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -83,4 +83,7 @@ static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
- 	return (log_res * 3 / 4) / XFS_REFCOUNT_ITEM_OVERHEAD;
- }
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 8e58ba8..2eac160 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -107,7 +107,7 @@
+ 	unsigned long long		rcount;
+ 	xfs_ino_t			fs_icount;
  
-+extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
-+		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
-+
- #endif	/* __XFS_REFCOUNT_H__ */
-
+-	offset = id * qi->qi_dqperchunk;
++	offset = id / qi->qi_dqperchunk;
+ 
+ 	/*
+ 	 * We fed $id and DQNEXT into the xfs_qm_dqget call, which means
