@@ -1,261 +1,223 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:34048 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753554AbdK1Vzb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 16:55:31 -0500
-Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
-        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vASLpbGO015748
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 13:55:31 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0b-00082601.pphosted.com with ESMTP id 2eh8cx9rqg-6
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 13:55:30 -0800
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v7 3/3] xfs: Add realtime fallback if data device full
-Date: Tue, 28 Nov 2017 13:55:27 -0800
-Message-ID: <20171128215527.2510350-4-rwareing@fb.com>
-In-Reply-To: <20171128215527.2510350-1-rwareing@fb.com>
-References: <20171128215527.2510350-1-rwareing@fb.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:21667 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752229AbdK1WdU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 17:33:20 -0500
+Date: Tue, 28 Nov 2017 14:33:08 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 10/13] fstests: crash consistency fsx test using
+ dm-log-writes
+Message-ID: <20171128223308.GC21412@magnolia>
+References: <1504638680-25682-1-git-send-email-amir73il@gmail.com>
+ <1504638680-25682-11-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxi_SjKCJ97Knvh4S6UiD3jskHEqDja7wwc+-mXp4CNbEw@mail.gmail.com>
+ <20171127150439.i4tpt4yhooxnoaiz@destiny>
+ <CAOQ4uxiGryFy7GLZUa0EWcbT+50cMfBb8a2dYa1mZ7tEf+UURg@mail.gmail.com>
+ <20171128172152.ktvpnwv233govfwl@destiny>
+ <CAOQ4uxgeKdZnxXcvt10MG2kT4PTZ4eZH+-v2R0zPJXTcRvONeQ@mail.gmail.com>
+ <20171128200035.26kqhetxtemnm7z4@destiny>
+ <CAOQ4uxh2OX9Lbnauv-ip5GC_8oCJ38hYsjjvp0+JFGYLqRk7nw@mail.gmail.com>
+ <CAOQ4uxhQu-1AK71zg4Ce0cJd+xRt3Gf9zMMVb=Rs00zFuWA3hQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhQu-1AK71zg4Ce0cJd+xRt3Gf9zMMVb=Rs00zFuWA3hQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <jbacik@fb.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>
 
-- For FSes which have a realtime device configured, rt_fallback_pct forces
-  allocations to the realtime device after data device usage reaches
-  rt_fallback_pct.
-- Useful for realtime device users to help prevent ENOSPC errors when
-  selectively storing some files (e.g. small files) on data device, while
-  others are stored on realtime block device.
-- Set via the "rt_fallback_pct" sysfs value which is available if
-  the kernel is compiled with CONFIG_XFS_RT.
+On Tue, Nov 28, 2017 at 11:17:01PM +0200, Amir Goldstein wrote:
+> On Tue, Nov 28, 2017 at 10:26 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > On Tue, Nov 28, 2017 at 10:00 PM, Josef Bacik <josef@toxicpanda.com> wrote:
+> >> On Tue, Nov 28, 2017 at 09:32:59PM +0200, Amir Goldstein wrote:
+> >>> On Tue, Nov 28, 2017 at 7:21 PM, Josef Bacik <josef@toxicpanda.com> wrote:
+> >>> > On Tue, Nov 28, 2017 at 06:48:43PM +0200, Amir Goldstein wrote:
+> >>> >> On Mon, Nov 27, 2017 at 5:04 PM, Josef Bacik <josef@toxicpanda.com> wrote:
+> >>> >> > On Mon, Nov 27, 2017 at 11:56:58AM +0200, Amir Goldstein wrote:
+> >>> >> >> On Tue, Sep 5, 2017 at 10:11 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> >>> >> >> > Cherry-picked the test from commit 70d41e17164b
+> >>> >> >> > in Josef Bacik's fstests tree (https://github.com/josefbacik/fstests).
+> >>> >> >> > Quoting from Josef's commit message:
+> >>> >> >> >
+> >>> >> >> >   The test just runs some ops and exits, then finds all of the good buffers
+> >>> >> >> >   in the directory we provided and:
+> >>> >> >> >   - replays up to the mark given
+> >>> >> >> >   - mounts the file system and compares the md5sum
+> >>> >> >> >   - unmounts and fsck's to check for metadata integrity
+> >>> >> >> >
+> >>> >> >> >   dm-log-writes will pretend to do discard and the replay-log tool will
+> >>> >> >> >   replay it properly depending on the underlying device, either by writing
+> >>> >> >> >   0's or actually calling the discard ioctl, so I've enabled discard in the
+> >>> >> >> >   test for maximum fun.
+> >>> >> >> >
+> >>> >> >> > [Amir:]
+> >>> >> >> > - Removed unneeded _test_falloc_support dynamic FSX_OPTS
+> >>> >> >> > - Fold repetitions into for loops
+> >>> >> >> > - Added place holders for using constant random seeds
+> >>> >> >> > - Add pre umount checkpint
+> >>> >> >> > - Add test to new 'replay' group
+> >>> >> >> > - Address review comments by Eryu Guan
+> >>> >> >> >
+> >>> >> >> > Cc: Josef Bacik <jbacik@fb.com>
+> >>> >> >> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> >>> >> >>
+> >>> >> >>
+> >>> >> >> Josef,
+> >>> >> >>
+> >>> >> >> As you know, this test is now merged to xfstest as generic/455.
+> >>> >> >> I have been running the test for a while on xfs and it occasionally
+> >>> >> >> reports inconsistencies which I try to investigate.
+> >>> >> >>
+> >>> >> >> In some of the reports, it appears that dm-log-writes may be exhibiting
+> >>> >> >> a reliability issue (see below).
+> >>> >> >>
+> >>> >> >
+> >>> >> > It's not a reliability issue, its a caching issue.  dm-log-writes is just
+> >>> >> > issuing bio's to the log device, and our destructor waits for all pending io
+> >>> >> > blocks to complete before exiting, so unless I've missed how dm is destroying
+> >>> >> > devices everything should be on disk.
+> >>> >> >
+> >>> >> > However since we replay in userspace we are going through the blockdevice's
+> >>> >> > pagecache, so we could have stale pages left in place which is screwing us up.
+> >>> >> > Will you try this patch and see if it fixes the problem?  Thanks,
+> >>> >> >
+> >>> >> > Josef
+> >>> >> >
+> >>> >> >
+> >>> >> > diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
+> >>> >> > index 8b80a9ce9ea9..1c502930af5e 100644
+> >>> >> > --- a/drivers/md/dm-log-writes.c
+> >>> >> > +++ b/drivers/md/dm-log-writes.c
+> >>> >> > @@ -545,6 +545,8 @@ static void log_writes_dtr(struct dm_target *ti)
+> >>> >> >                    !atomic_read(&lc->pending_blocks));
+> >>> >> >         kthread_stop(lc->log_kthread);
+> >>> >> >
+> >>> >> > +       invalidate_bdev(lc->logdev->bdev);
+> >>> >> > +       invalidate_bdev(lc->dev->bdev);
+> >>> >> >         WARN_ON(!list_empty(&lc->logging_blocks));
+> >>> >> >         WARN_ON(!list_empty(&lc->unflushed_blocks));
+> >>> >> >         dm_put_device(ti, lc->dev);
+> >>> >>
+> >>> >> Josef,
+> >>> >>
+> >>> >> With your patch OR with my xfstest patch that adds "sync" I did not yet see
+> >>> >> another problem of garbage fs after _log_writes_remove.
+> >>> >>
+> >>> >> I did however, encounter this error (failure to verify read data during fsx)
+> >>> >> from scratch/log-writes device (see attached full log).
+> >>> >>
+> >>> >> I will keep running the test to collect more information.
+> >>> >>
+> >>> >
+> >>> > That failure I'll lay at the feet of whatever fs you are testing ;).  I'm glad
+> >>> > my patch fixed the replay problem, I'll send that up.  Thanks,
+> >>> >
+> >>>
+> >>> O oh!. You are implying that xfs fails plain fsx and nobody noticed.
+> >>> That is not where I would place my bet.
+> >>>
+> >>
+> >> Why not?  This is one of the only tests that runs multiple threads of fsx at the
+> >> same time.  dm-log-writes does nothing special with the actual target disk, it
+> >> just clones the bio's as it gets them, sets the bdev for the normal device and
+> >> sends them on their way, there's no reason to think we're breaking that.
+> >> Furthermore fsx is in normal page cache mode, not O_DIRECT, so it's more likely
+> >> something else is going wrong and not dm-log-writes, unless there is so little
+> >> memory on the system that we are constantly reading cold-cache.  Thanks,
+> >>
+> >
+> > Very well, I'll run the same test on bare xfs for comparison.
+> >
+> 
+> Well, what do you know.
+> xfs crashed and burned after 18 rounds of 455 on test partition.
+> Same check fs error I blamed dm-log-writes for.
+> 
+> Darrick,
+> 
+> Attached the modified 455 test which runs fsx on test partition
+> and full log (+ dmesg with nothing of interest AFAICT).
+> xfs code is 4.14.0-rc8 + your patch
+> "xfs: log recovery should replay deferred ops in order"
+> 
+> The test was run on a 100G partition on a spinning disk.
+> 
+> Let me know what you think.
 
-Signed-off-by: Richard Wareing <rwareing@fb.com>
----
-Changes since v6:
-* None
+I didn't even get /that/ far; with 4.15-rc1 and a vanilla g/455 I see
+immediately:
 
-Changes since v5:
-* Minor change to work with XFS_BMAPI_RTDATA method described
-  in rt_alloc_min patch
-* Fixed bounds checks on sysfs option
-* Documentation
+[18395.236285] run fstests generic/457 at 2017-11-28 14:15:49
+[18395.561112] XFS (sdf): Unmounting Filesystem
+[18395.752713] XFS (sdf): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[18395.753469] XFS (sdf): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[18395.754259] XFS (sdf): Mounting V5 Filesystem
+[18395.757525] XFS (sdf): Ending clean mount
+[18395.796992] XFS (sdf): Unmounting Filesystem
+[18395.949561] XFS (dm-0): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[18395.950316] XFS (dm-0): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[18395.951103] XFS (dm-0): Mounting V5 Filesystem
+[18395.954946] XFS (dm-0): Ending clean mount
+[18396.132701] XFS (dm-0): Unmounting Filesystem
+[18396.309939] XFS (sdf): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[18396.310913] XFS (sdf): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[18396.311798] XFS (sdf): Mounting V5 Filesystem
+[18396.330304] XFS (sdf): Starting recovery (logdev: internal)
+[18396.334996] XFS (sdf): Metadata corruption detected at xfs_inode_buf_verify+0xc4/0x330 [xfs], xfs_inode block 0x80
+[18396.336389] XFS (sdf): Unmount and run xfs_repair
+[18396.336945] XFS (sdf): First 64 bytes of corrupted metadata buffer:
+[18396.337679] ffffc90004080000: 00 4e 41 ed 03 01 00 00 00 00 00 00 00 00 00 00  .NA.............
+[18396.338647] ffffc90004080010: 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[18396.339576] ffffc90004080020: 00 00 00 00 00 00 00 00 5a 1d e0 16 0b 69 8a 10  ........Z....i..
+[18396.340341] ffffc90004080030: 5a 1d e0 16 0b 69 8a 10 00 00 00 00 00 00 00 06  Z....i..........
+[18396.341091] XFS (sdf): bad inode magic/vsn daddr 128 #0 (magic=4e)
+[18396.341754] XFS (sdf): metadata I/O error: block 0x80 ("xlog_recover_do..(read#2)") error 117 numblks 32
+[18396.343131] XFS (sdf): log mount/recovery failed: error -117
+[18396.343852] XFS (sdf): log mount failed
 
-Changes since v4:
-* Refactored to align with xfs_inode_select_target change
-* Fallback percentage reworked to trigger on % space used on data device.
-  I find this a bit more intuitive as it aligns well with "df" output.
-* mp->m_rt_min_fdblocks now assigned via function call
-* Better consistency on sysfs options
+Off by one in the inode verifier... am I supposed to have Josef's patch?
 
-Changes since v3:
-* None, new patch to patch set
+Also, fwiw I don't see any test failures (or interesting output) with
+your modified 455:
 
- Documentation/filesystems/xfs.txt |  6 ++++++
- fs/xfs/xfs_fsops.c                |  2 ++
- fs/xfs/xfs_mount.c                | 24 ++++++++++++++++++++++
- fs/xfs/xfs_mount.h                |  7 +++++++
- fs/xfs/xfs_rtalloc.c              | 42 ++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.c                | 38 +++++++++++++++++++++++++++++++++++
- 6 files changed, 118 insertions(+), 1 deletion(-)
+[19344.527290] run fstests generic/455 at 2017-11-28 14:31:38
+[19344.948061] XFS (pmem4): Unmounting Filesystem
+[19345.098299] XFS (dm-0): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[19345.099328] XFS (dm-0): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[19345.100427] XFS (dm-0): Mounting V5 Filesystem
+[19345.105724] XFS (dm-0): Ending clean mount
+[19345.476248] XFS (dm-0): Unmounting Filesystem
+[19346.055840] XFS (pmem4): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[19346.057092] XFS (pmem4): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[19346.057883] XFS (pmem4): Mounting V5 Filesystem
+[19346.059640] XFS (pmem4): Ending clean mount
+[19346.084019] XFS (pmem4): Unmounting Filesystem
+[19346.492297] XFS (pmem4): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[19346.492950] XFS (pmem4): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[19346.493865] XFS (pmem4): Mounting V5 Filesystem
+[19346.495732] XFS (pmem4): Ending clean mount
+[19346.556181] XFS (pmem4): Unmounting Filesystem
+[19346.780951] XFS (pmem3): Unmounting Filesystem
+[19346.857051] XFS (pmem3): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[19346.858352] XFS (pmem3): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[19346.859053] XFS (pmem3): Mounting V5 Filesystem
+[19346.861319] XFS (pmem3): Ending clean mount
+[19346.940162] XFS (pmem3): Unmounting Filesystem
+[19346.980932] XFS (pmem3): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[19346.981640] XFS (pmem3): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[19346.982359] XFS (pmem3): Mounting V5 Filesystem
+[19346.984765] XFS (pmem3): Ending clean mount
+[19347.204449] XFS (pmem3): Unmounting Filesystem
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 0763972..ed6f6e2 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -486,3 +486,9 @@ When using a realtime sub-volume, the following sysfs options are supported:
- 	Buffered, direct IO and pre-allocation are supported.
- 
- 	Setting the value to "0" disables this behavior.
-+
-+  /sys/fs/xfs/<dev>/rt_fallback_pct
-+  (Units: percentage  Min: 0  Default: 0,  Max: 100)
-+	When set, the file will be allocated blocks from the realtime device if the
-+	data device space utilization rises above rt_fallback_pct.  Setting the
-+	value to "0" disables this behavior.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8f22fc5..89713f1 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -610,6 +610,8 @@ xfs_growfs_data_private(
- 	xfs_set_low_space_thresholds(mp);
- 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
- 
-+	mp->m_rt_min_free_dblocks = xfs_rt_calc_min_free_dblocks(mp);
-+
- 	/*
- 	 * If we expanded the last AG, free the per-AG reservation
- 	 * so we can reinitialize it with the new size.
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index e9727d0..3905e57 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1396,3 +1396,27 @@ xfs_dev_is_read_only(
- 	}
- 	return 0;
- }
-+
-+/*
-+ * precalculate minimum of data blocks required, if we fall
-+ * below this value, we will fallback to the real-time device.
-+ *
-+ * m_rt_fallback_pct can only be non-zero if a real-time device
-+ * is configured.
-+ */
-+uint64_t
-+xfs_rt_calc_min_free_dblocks(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_rfsblock_t		min_free_dblocks = 0;
-+
-+	if (!XFS_IS_REALTIME_MOUNT(mp))
-+		return 0;
-+
-+	/* Pre-compute minimum data blocks required before
-+	 * falling back to RT device for allocations
-+	 */
-+	min_free_dblocks = mp->m_sb.sb_dblocks * (100 - mp->m_rt_fallback_pct);
-+	do_div(min_free_dblocks, 100);
-+	return min_free_dblocks;
-+}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 0db9731..9dc17b8 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -198,6 +198,12 @@ typedef struct xfs_mount {
- 
- 	bool			m_fail_unmount;
- 	xfs_off_t		m_rt_alloc_min; /* Min RT allocation */
-+	/* Fallback to realtime device if data device usage above rt_fallback_pct */
-+	uint			m_rt_fallback_pct;
-+	/* Use realtime device if free data device blocks falls below this; computed
-+	 * from m_rt_fallback_pct.
-+	 */
-+	xfs_rfsblock_t		m_rt_min_free_dblocks;
- #ifdef DEBUG
- 	/*
- 	 * Frequency with which errors are injected.  Replaces xfs_etest; the
-@@ -447,4 +453,5 @@ int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
- struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
- 		int error_class, int error);
- 
-+uint64_t	xfs_rt_calc_min_free_dblocks(struct xfs_mount *mp);
- #endif	/* __XFS_MOUNT_H__ */
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 145007b..3abd403 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1304,6 +1304,37 @@ xfs_rt_alloc_min(
- }
- 
- /*
-+ * m_rt_min_free_dblocks is a pre-computed threshold, which controls target
-+ * selection based on how many free blocks are available on the data device.
-+ *
-+ * If the number of free data device blocks falls below
-+ * mp->m_rt_min_free_dblocks, the realtime device is selected as the target
-+ * device.  If this value is not set, this target policy is in-active.
-+ *
-+ */
-+bool
-+xfs_rt_min_free_dblocks(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*ip,
-+	xfs_off_t		len)
-+{
-+	/* Disabled */
-+	if (!mp->m_rt_fallback_pct)
-+		return false;
-+
-+	/* If inode target is already realtime device, nothing to do here */
-+	if (!XFS_IS_REALTIME_INODE(ip)) {
-+		uint64_t	free_dblocks;
-+		free_dblocks = percpu_counter_sum(&mp->m_fdblocks) -
-+			mp->m_alloc_set_aside;
-+		if (free_dblocks < mp->m_rt_min_free_dblocks) {
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
-+/*
- * Select the target device for the inode based on either the size of the
- * initial allocation, or the amount of space available on the data device.
- *
-@@ -1332,5 +1363,14 @@ xfs_inode_select_rt_target(
- 	/* Select realtime device as our target based on the value of
- 	 * mp->m_rt_alloc_min.  Target selection code if not valid if not set.
- 	 */
--	return xfs_rt_alloc_min(mp, len);
-+	if (xfs_rt_alloc_min(mp, len))
-+		return true;
-+
-+	/* Check if data device has enough space, if not fallback to realtime
-+	 * device.  Valid only if mp->m_rt_fallback_pct is set.
-+	 */
-+	if (xfs_rt_min_free_dblocks(mp, ip, len))
-+		return true;
-+
-+	return false;
- }
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 8b425be..64f29b6 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -127,11 +127,49 @@ rt_alloc_min_show(
- 	return snprintf(buf, PAGE_SIZE, "%lld\n", mp->m_rt_alloc_min);
- }
- XFS_SYSFS_ATTR_RW(rt_alloc_min);
-+
-+STATIC ssize_t
-+rt_fallback_pct_store(
-+	struct kobject		*kobject,
-+	const char		*buf,
-+	size_t			count)
-+{
-+	struct xfs_mount	*mp = to_mp(kobject);
-+	int			ret;
-+	int			val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (!XFS_IS_REALTIME_MOUNT(mp))
-+		return -EINVAL;
-+
-+	if (val < 0 || val > 100)
-+		return -EINVAL;
-+
-+	/* Only valid if using a real-time device */
-+	mp->m_rt_fallback_pct = val;
-+	mp->m_rt_min_free_dblocks = xfs_rt_calc_min_free_dblocks(mp);
-+	return count;
-+}
-+
-+STATIC ssize_t
-+rt_fallback_pct_show(
-+	struct kobject          *kobject,
-+	char                    *buf)
-+{
-+	struct xfs_mount        *mp = to_mp(kobject);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_rt_fallback_pct);
-+}
-+XFS_SYSFS_ATTR_RW(rt_fallback_pct);
- #endif
- 
- static struct attribute *xfs_mp_attrs[] = {
- #ifdef CONFIG_XFS_RT
- 	ATTR_LIST(rt_alloc_min),
-+	ATTR_LIST(rt_fallback_pct),
- #endif
- 	NULL,
- };
--- 
-2.9.5
+I think it's supposed to cycle more than that, right?
+
+--D
+
+> 
+> Amir.
+
+
+
 
