@@ -1,172 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19929 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751807AbdK2B0C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:26:02 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1Q2Bl015247
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:02 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1Q2i2015728
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:02 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1Q1g2027238
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:01 GMT
-Subject: [PATCH 06/16] xfs: check btree block ownership with bnobt/rmapbt
- when scrubbing btree
+Received: from userp1040.oracle.com ([156.151.31.81]:25246 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752712AbdK1BsX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Nov 2017 20:48:23 -0500
+Date: Mon, 27 Nov 2017 17:47:46 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 28 Nov 2017 17:26:00 -0800
-Message-ID: <151191876080.8553.10718319703301125265.stgit@magnolia>
-In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
-References: <151191872395.8553.15627872818207535470.stgit@magnolia>
+Subject: Re: [PATCH] xfs: Don't trim file extents during iomap
+Message-ID: <20171128014746.GC21412@magnolia>
+References: <1511437203-4329-1-git-send-email-nborisov@suse.com>
+ <20171127174434.GB19379@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171127174434.GB19379@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, sandeen@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Nov 27, 2017 at 09:44:34AM -0800, Darrick J. Wong wrote:
+> On Thu, Nov 23, 2017 at 01:40:03PM +0200, Nikolay Borisov wrote:
+> > For file extents xfs currently calls xfs_bmapi_read with flag set to 0,
+> > meaning extents are going to be truncated to the requested range. Since the
+> > same codepath is used for fiemap this means xfs is special in that regard, since
+> > other filesystems (ext4/btrfs) do not trim extents for fiemap. Make the behavior
+> > consistent by always passing XFS_BMAPI_ENTIRE. A full xfstest run validated that
+> > this doesn't regress on ordinary read/write IO.
+> > 
+> > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> 
+> Looks ok, will also test...
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-When scanning a metadata btree block, cross-reference the block location
-with the free space btree and the reverse mapping btree to ensure that
-the rmapbt knows about the block and the bnobt does not.  Add a
-mechanism to defer checks when we happen to be scanning the bnobt/rmapbt
-itself because it's less efficient to repeatedly clone and destroy the
-cursor.
+...and now withdrawn.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/btree.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 92 insertions(+)
+Looking at iomap_apply, it seems we call ->iomap_begin, and at line 73 we
+trim an iomap that is longer than the range we requested:
 
+/*
+ * Cut down the length to the one actually provided by the filesystem,
+ * as it might not be able to give us the whole size that we requested.
+ */
+if (iomap.offset + iomap.length < pos + length)
+	length = iomap.offset + iomap.length - pos;
 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 8d48b5b1..40fc26f 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -359,6 +359,80 @@ xfs_scrub_btree_block_check_siblings(
- 	return error;
- }
- 
-+struct check_owner {
-+	struct list_head	list;
-+	xfs_daddr_t		daddr;
-+	int			level;
-+};
-+
-+/*
-+ * Make sure this btree block isn't in the free list and that there's
-+ * an rmap record for it.
-+ */
-+STATIC int
-+xfs_scrub_btree_check_block_owner(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	xfs_daddr_t			daddr)
-+{
-+	struct xfs_scrub_ag		sa = { 0 };
-+	struct xfs_scrub_ag		*psa;
-+	xfs_agnumber_t			agno;
-+	int				error = 0;
-+
-+	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
-+
-+	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
-+		if (!xfs_scrub_btree_xref_process_error(bs->sc, bs->cur,
-+				level, &error))
-+			return error;
-+		psa = &sa;
-+	} else {
-+		psa = &bs->sc->sa;
-+	}
-+
-+	if (psa == &sa)
-+		xfs_scrub_ag_free(bs->sc, &sa);
-+
-+	return error;
-+}
-+
-+/* Check the owner of a btree block. */
-+STATIC int
-+xfs_scrub_btree_check_owner(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	struct xfs_buf			*bp)
-+{
-+	struct xfs_btree_cur		*cur = bs->cur;
-+	struct check_owner		*co;
-+
-+	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) && bp == NULL)
-+		return 0;
-+
-+	/*
-+	 * We want to cross-reference each btree block with the bnobt
-+	 * and the rmapbt.  We cannot cross-reference the bnobt or
-+	 * rmapbt while scanning the bnobt or rmapbt, respectively,
-+	 * because we cannot alter the cursor and we'd prefer not to
-+	 * duplicate cursors.  Therefore, save the buffer daddr for
-+	 * later scanning.
-+	 */
-+	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
-+		co = kmem_alloc(sizeof(struct check_owner),
-+				KM_MAYFAIL | KM_NOFS);
-+		if (!co)
-+			return -ENOMEM;
-+		co->level = level;
-+		co->daddr = XFS_BUF_ADDR(bp);
-+		list_add_tail(&co->list, &bs->to_check);
-+		return 0;
-+	}
-+
-+	return xfs_scrub_btree_check_block_owner(bs, level, XFS_BUF_ADDR(bp));
-+}
-+
- /*
-  * Grab and scrub a btree block given a btree pointer.  Returns block
-  * and buffer pointers (if applicable) if they're ok to use.
-@@ -395,6 +469,14 @@ xfs_scrub_btree_get_block(
- 	}
- 
- 	/*
-+	 * Check the block's owner; this function absorbs error codes
-+	 * for us.
-+	 */
-+	error = xfs_scrub_btree_check_owner(bs, level, *pbp);
-+	if (error)
-+		return error;
-+
-+	/*
- 	 * Check the block's siblings; this function absorbs error codes
- 	 * for us.
- 	 */
-@@ -465,6 +547,8 @@ xfs_scrub_btree(
- 	struct xfs_btree_block		*block;
- 	int				level;
- 	struct xfs_buf			*bp;
-+	struct check_owner		*co;
-+	struct check_owner		*n;
- 	int				i;
- 	int				error = 0;
- 
-@@ -556,6 +640,14 @@ xfs_scrub_btree(
- 	}
- 
- out:
-+	/* Process deferred owner checks on btree blocks. */
-+	list_for_each_entry_safe(co, n, &bs.to_check, list) {
-+		if (!error)
-+			error = xfs_scrub_btree_check_block_owner(&bs,
-+					co->level, co->daddr);
-+		list_del(&co->list);
-+		kmem_free(co);
-+	}
- 
- 	return error;
- }
+However, we do not trim the beginning off an iomap that starts before
+the 'pos' we passed to ->iomap_begin, so we're left with an iomap that
+can begin before the range.
 
+FWIW I ran xfstests (like I told you to on IRC) and saw regressions
+in a whole bunch of tests:
+
+generic/170 generic/287 generic/295 generic/326 generic/330 generic/333
+generic/372 xfs/214 xfs/237 xfs/249 xfs/258 xfs/346 xfs/420 xfs/421
+
+>From a brief glance it looks as though most of the iomap_apply'ers
+try to trim the iomap before using it, but clearly there's something
+wrong here.
+
+--D
+
+> 
+> > ---
+> >  fs/xfs/xfs_iomap.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index f179bdf1644d..8942324a4d3d 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -1008,7 +1008,7 @@ xfs_file_iomap_begin(
+> >  	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+> >  
+> >  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+> > -			       &nimaps, 0);
+> > +			       &nimaps, XFS_BMAPI_ENTIRE);
+> >  	if (error)
+> >  		goto out_unlock;
+> >  
+> > -- 
+> > 2.7.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
