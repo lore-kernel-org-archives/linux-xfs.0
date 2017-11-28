@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57788 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39012 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750842AbdK1Gqa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Nov 2017 01:46:30 -0500
+        id S1750987AbdK1JRl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Nov 2017 04:17:41 -0500
 Subject: Re: [PATCH] xfs: Don't trim file extents during iomap
 References: <1511437203-4329-1-git-send-email-nborisov@suse.com>
  <20171127174434.GB19379@magnolia> <20171128014746.GC21412@magnolia>
 From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <154aef58-7f5a-9e69-f33c-2cff22efb009@suse.com>
-Date: Tue, 28 Nov 2017 08:46:27 +0200
+Message-ID: <f66286b0-593e-8522-ba0c-dffb054a63d9@suse.com>
+Date: Tue, 28 Nov 2017 11:17:37 +0200
 MIME-Version: 1.0
 In-Reply-To: <20171128014746.GC21412@magnolia>
 Content-Type: text/plain; charset=utf-8
@@ -48,6 +48,17 @@ On 28.11.2017 03:47, Darrick J. Wong wrote:
 >  */
 > if (iomap.offset + iomap.length < pos + length)
 > 	length = iomap.offset + iomap.length - pos;
+
+This actually trims the requested length to match what iomap has given
+is. I.e if we request a range between [50, 100] (length 50, offset 50)
+but iomap returns
+
+[40,60] (offset 40, length 20) then the trimmer range is :
+
+[50, 10]. SO it's actually trimming the requested range against what was
+actually returned by the filesystem not the other way around.
+
+
 > 
 > However, we do not trim the beginning off an iomap that starts before
 > the 'pos' we passed to ->iomap_begin, so we're left with an iomap that
@@ -62,11 +73,6 @@ On 28.11.2017 03:47, Darrick J. Wong wrote:
 > From a brief glance it looks as though most of the iomap_apply'ers
 > try to trim the iomap before using it, but clearly there's something
 > wrong here.
-
-Strange, I didn't see those failures o_O. Anyways, how about using
-XFS_BMAPI_ENTIRE in case when IOMAP_REPORT is passed i.e the first
-iteration of this patch.
-
 > 
 > --D
 > 
