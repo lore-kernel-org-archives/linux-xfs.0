@@ -1,107 +1,206 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39012 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750987AbdK1JRl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Nov 2017 04:17:41 -0500
-Subject: Re: [PATCH] xfs: Don't trim file extents during iomap
-References: <1511437203-4329-1-git-send-email-nborisov@suse.com>
- <20171127174434.GB19379@magnolia> <20171128014746.GC21412@magnolia>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <f66286b0-593e-8522-ba0c-dffb054a63d9@suse.com>
-Date: Tue, 28 Nov 2017 11:17:37 +0200
+Received: from userp1040.oracle.com ([156.151.31.81]:23102 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752260AbdK1S6H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 13:58:07 -0500
+Date: Tue, 28 Nov 2017 10:58:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 10/17] xfs: extent transaction reservations for parent
+ attributes
+Message-ID: <20171128185802.GP21412@magnolia>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-11-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20171128014746.GC21412@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1510942905-12897-11-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, sandeen@redhat.com
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
+On Fri, Nov 17, 2017 at 11:21:38AM -0700, Allison Henderson wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> We need to add, remove or modify parent pointer attributes during
+> create/link/unlink/rename operations atomically with the dirents in the parent
+> directories being modified. This means they need to be modified in the same
+> transaction as the parent directories, and so we need to add the required
+> space for the attribute modifications to the transaction reservations.
+> 
+> [achender: rebased, added xfs_sb_version_hasparent stub]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h     |   5 ++
+>  fs/xfs/libxfs/xfs_trans_resv.c | 103 ++++++++++++++++++++++++++++++++---------
+>  2 files changed, 85 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index b9ea5bf..121862a 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -556,6 +556,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+>  }
+>  
+> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+> +{
+> +	return false; /* We'll enable this at the end of the set */
+> +}
+> +
+>  /*
+>   * end of superblock version macros
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 6bd916b..54399e2 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -802,29 +802,30 @@ xfs_calc_sb_reservation(
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>  }
+>  
+> +/*
+> + * Namespace reservations.
+> + *
+> + * These get tricky when parent pointers are enabled as we have attribute
+> + * modifications occurring from within these transactions. Rather than confuse
+> + * each of these reservation calculations with the conditional attribute
+> + * reservations, add them here in a clear and concise manner. This assumes that
+> + * the attribute reservations have already been calculated.
+> + *
+> + * Note that we only include the static attribute reservation here; the runtime
+> + * reservation will have to be modified by the size of the attributes being
+> + * added/removed/modified. See the comments on the attribute reservation
+> + * calculations for more details.
+> + *
+> + * Note for rename: rename will vastly overestimate requirements. This will be
+> + * addressed later when modifications are made to ensure parent attribute
+> + * modifications can be done atomically with the rename operation.
+> + */
+>  void
+> -xfs_trans_resv_calc(
+> +xfs_calc_namespace_reservations(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_trans_resv	*resp)
+>  {
+> -	/*
+> -	 * The following transactions are logged in physical format and
+> -	 * require a permanent reservation on space.
+> -	 */
+> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+> -	else
+> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> -		resp->tr_itruncate.tr_logcount =
+> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+> -	else
+> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>  
+>  	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+>  	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+> @@ -846,15 +847,69 @@ xfs_trans_resv_calc(
+>  	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+>  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
+> +		return;
+> +
+> +	/* rename can add/remove/modify 2 parent attributes */
+> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
+> +					     resp->tr_attrrm.tr_logres);
+> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
+> +					       resp->tr_attrrm.tr_logcount);
+> +
+> +	/* create will add 1 parent attribute */
+> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* mkdir will add 1 parent attribute */
+> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* link will add 1 parent attribute */
+> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* symlink will add 1 parent attribute */
+> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* remove will remove 1 parent attribute */
+> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+> +	resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
 
+djwong, clearly reviewing patches in reverse order:
 
-On 28.11.2017 03:47, Darrick J. Wong wrote:
-> On Mon, Nov 27, 2017 at 09:44:34AM -0800, Darrick J. Wong wrote:
->> On Thu, Nov 23, 2017 at 01:40:03PM +0200, Nikolay Borisov wrote:
->>> For file extents xfs currently calls xfs_bmapi_read with flag set to 0,
->>> meaning extents are going to be truncated to the requested range. Since the
->>> same codepath is used for fiemap this means xfs is special in that regard, since
->>> other filesystems (ext4/btrfs) do not trim extents for fiemap. Make the behavior
->>> consistent by always passing XFS_BMAPI_ENTIRE. A full xfstest run validated that
->>> this doesn't regress on ordinary read/write IO.
->>>
->>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
->>
->> Looks ok, will also test...
->> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> ...and now withdrawn.
-> 
-> Looking at iomap_apply, it seems we call ->iomap_begin, and at line 73 we
-> trim an iomap that is longer than the range we requested:
-> 
-> /*
->  * Cut down the length to the one actually provided by the filesystem,
->  * as it might not be able to give us the whole size that we requested.
->  */
-> if (iomap.offset + iomap.length < pos + length)
-> 	length = iomap.offset + iomap.length - pos;
+This looks pretty similar to the function in the next patch; can they
+be combined into a single helper?
 
-This actually trims the requested length to match what iomap has given
-is. I.e if we request a range between [50, 100] (length 50, offset 50)
-but iomap returns
-
-[40,60] (offset 40, length 20) then the trimmer range is :
-
-[50, 10]. SO it's actually trimming the requested range against what was
-actually returned by the filesystem not the other way around.
-
-
+> +}
+> +
+> +void
+> +xfs_trans_resv_calc(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	/*
+> +	 * The following transactions are logged in physical format and
+> +	 * require a permanent reservation on space.
+> +	 */
+> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+> +	else
+> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> +		resp->tr_itruncate.tr_logcount =
+> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+> +	else
+> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+>  	resp->tr_create_tmpfile.tr_logres =
+>  			xfs_calc_create_tmpfile_reservation(mp);
+>  	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>  	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+>  	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>  	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>  	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> @@ -886,6 +941,8 @@ xfs_trans_resv_calc(
+>  		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	xfs_calc_namespace_reservations(mp, resp);
+> +
+>  	/*
+>  	 * The following transactions are logged in logical format with
+>  	 * a default log count.
+> -- 
+> 2.7.4
 > 
-> However, we do not trim the beginning off an iomap that starts before
-> the 'pos' we passed to ->iomap_begin, so we're left with an iomap that
-> can begin before the range.
-> 
-> FWIW I ran xfstests (like I told you to on IRC) and saw regressions
-> in a whole bunch of tests:
-> 
-> generic/170 generic/287 generic/295 generic/326 generic/330 generic/333
-> generic/372 xfs/214 xfs/237 xfs/249 xfs/258 xfs/346 xfs/420 xfs/421
-> 
-> From a brief glance it looks as though most of the iomap_apply'ers
-> try to trim the iomap before using it, but clearly there's something
-> wrong here.
-> 
-> --D
-> 
->>
->>> ---
->>>  fs/xfs/xfs_iomap.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
->>> index f179bdf1644d..8942324a4d3d 100644
->>> --- a/fs/xfs/xfs_iomap.c
->>> +++ b/fs/xfs/xfs_iomap.c
->>> @@ -1008,7 +1008,7 @@ xfs_file_iomap_begin(
->>>  	end_fsb = XFS_B_TO_FSB(mp, offset + length);
->>>  
->>>  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
->>> -			       &nimaps, 0);
->>> +			       &nimaps, XFS_BMAPI_ENTIRE);
->>>  	if (error)
->>>  		goto out_unlock;
->>>  
->>> -- 
->>> 2.7.4
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
