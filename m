@@ -1,120 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44804 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752129AbdK1TBz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 14:01:55 -0500
-Date: Tue, 28 Nov 2017 11:01:46 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:26821 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752280AbdK1TEe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 14:04:34 -0500
+Date: Tue, 28 Nov 2017 11:04:12 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 08/17] xfs: add parent pointer support to attribute
- code
-Message-ID: <20171128190146.GR21412@magnolia>
+Subject: Re: [PATCH v3 07/17] xfs: get directory offset when replacing a
+ directory name
+Message-ID: <20171128190412.GS21412@magnolia>
 References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-9-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-8-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1510942905-12897-9-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1510942905-12897-8-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-On Fri, Nov 17, 2017 at 11:21:36AM -0700, Allison Henderson wrote:
+On Fri, Nov 17, 2017 at 11:21:35AM -0700, Allison Henderson wrote:
 > From: Mark Tinguely <tinguely@sgi.com>
 > 
-> Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-> parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+> Return the directory offset information when replacing an entry to the
+> directory.
+> 
+> This offset will be used as the parent pointer offset in xfs_rename.
 > 
 > [dchinner: forward ported and cleaned up]
-> [achender: rebased]
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c      |  2 +-
->  fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
->  fs/xfs/xfs_attr.h             |  2 ++
->  3 files changed, 11 insertions(+), 5 deletions(-)
+> v2: Changed typedefs to raw struct types
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 61e8343..9d4d883 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -408,7 +408,7 @@ xfs_attr_set(
->  	struct xfs_da_args	args;
->  	struct xfs_defer_ops	dfops;
->  	xfs_fsblock_t		firstblock;
-> -	int			rsvd = (flags & ATTR_ROOT) != 0;
-> +	bool			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
->  	int			error, local;
->  
->  	XFS_STATS_INC(mp, xs_attr_set);
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 3771edc..5f94c84 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -758,24 +758,28 @@ struct xfs_attr3_icleaf_hdr {
->  #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
->  #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
->  #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-> +#define XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
+>  fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
+>  fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
+>  fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+>  fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
+>  7 files changed, 31 insertions(+), 24 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index b647bf2..25b370b 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -508,13 +508,14 @@ xfs_dir_removename(
+>   */
+>  int
+>  xfs_dir_replace(
+> -	xfs_trans_t	*tp,
+> -	xfs_inode_t	*dp,
+> -	struct xfs_name	*name,		/* name of entry to replace */
+> -	xfs_ino_t	inum,		/* new inode number */
+> -	xfs_fsblock_t	*first,		/* bmap's firstblock */
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*dp,
+> +	struct xfs_name		*name,		/* name of entry to replace */
+> +	xfs_ino_t		inum,		/* new inode number */
+> +	xfs_fsblock_t		*first,		/* bmap's firstblock */
+>  	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+> -	xfs_extlen_t	total)		/* bmap's total block count */
+> +	xfs_extlen_t		total,		/* bmap's total block count */
+> +	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+>  {
+>  	struct xfs_da_args *args;
+>  	int		rval;
+> @@ -563,6 +564,9 @@ xfs_dir_replace(
+>  		rval = xfs_dir2_leaf_replace(args);
+>  	else
+>  		rval = xfs_dir2_node_replace(args);
+> +
+> +	if (offset)
+> +		*offset = args->offset;
+>  out_free:
 
-Please fix the indenting to be consistent with the previous line.
-
-Also, I think you can drop the word 'secure' from the comment.
+FWIW I complained in the review for a subsequent patch about the out_free
+label moving to above the "if (offset)" hunk.
 
 --D
 
->  #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
->  #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
->  #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
->  #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-> +#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
->  #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
+>  	kmem_free(args);
+>  	return rval;
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index e1bd05d..5cc0b3f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t inum,
+>  				xfs_fsblock_t *first,
+> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
+> +				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
+> +				xfs_dir2_dataptr_t *offset);
+>  extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name);
 >  
->  /*
->   * Conversion macros for converting namespace bits from argument flags
->   * to ondisk flags.
->   */
-> -#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
-> -#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-> +#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-> +#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
->  #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
->  #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
->  #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
-> -					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-> +					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-> +					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
->  #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
-> -					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-> +					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-> +					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 4dbe2fc..69dfe64 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -865,9 +865,9 @@ xfs_dir2_block_replace(
+>  	/*
+>  	 * Point to the data entry we need to change.
+>  	 */
+> +	args->offset = be32_to_cpu(blp[ent].address);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -			xfs_dir2_dataptr_to_off(args->geo,
+> -						be32_to_cpu(blp[ent].address)));
+> +			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
+>  	/*
+>  	 * Change the inode number to the new value.
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 197e627..770b93f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -1518,6 +1518,7 @@ xfs_dir2_leaf_replace(
+>  	/*
+>  	 * Point to the data entry.
+>  	 */
+> +	args->offset = be32_to_cpu(lep->address);
+>  	dep = (xfs_dir2_data_entry_t *)
+>  	      ((char *)dbp->b_addr +
+>  	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 13d5244..860a612 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -2237,6 +2237,7 @@ xfs_dir2_node_replace(
+>  		hdr = state->extrablk.bp->b_addr;
+>  		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+>  		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
+> +		args->offset = be32_to_cpu(lep->address);
+>  		dep = (xfs_dir2_data_entry_t *)
+>  		      ((char *)hdr +
+>  		       xfs_dir2_dataptr_to_off(args->geo,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 9e90c22..295458f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -1045,6 +1045,8 @@ xfs_dir2_sf_replace(
+>  				ASSERT(args->inumber != ino);
+>  				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+>  				dp->d_ops->sf_put_ftype(sfep, args->filetype);
+> +				args->offset = xfs_dir2_byte_to_dataptr(
+> +						  xfs_dir2_sf_get_offset(sfep));
+>  				break;
+>  			}
+>  		}
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 358a98a..f7986d8 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2774,16 +2774,14 @@ xfs_cross_rename(
+>  	int		dp2_flags = 0;
 >  
->  /*
->   * Alignment for namelist and valuelist entries (since they are mixed
-> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-> index 10fc466..1f5c711 100644
-> --- a/fs/xfs/xfs_attr.h
-> +++ b/fs/xfs/xfs_attr.h
-> @@ -46,6 +46,7 @@ struct xfs_attr_list_context;
->  #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
->  #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
->  #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-> +#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
+>  	/* Swap inode number for dirent in first parent */
+> -	error = xfs_dir_replace(tp, dp1, name1,
+> -				ip2->i_ino,
+> -				first_block, dfops, spaceres);
+> +	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block, dfops,
+> +				spaceres, NULL);
+>  	if (error)
+>  		goto out_trans_abort;
 >  
->  #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
->  #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-> @@ -57,6 +58,7 @@ struct xfs_attr_list_context;
->  	{ ATTR_SECURE,		"SECURE" }, \
->  	{ ATTR_CREATE,		"CREATE" }, \
->  	{ ATTR_REPLACE,		"REPLACE" }, \
-> +	{ ATTR_PARENT,		"PARENT" }, \
->  	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
->  	{ ATTR_KERNOVAL,	"KERNOVAL" }
+>  	/* Swap inode number for dirent in second parent */
+> -	error = xfs_dir_replace(tp, dp2, name2,
+> -				ip1->i_ino,
+> -				first_block, dfops, spaceres);
+> +	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block, dfops,
+> +				spaceres, NULL);
+>  	if (error)
+>  		goto out_trans_abort;
 >  
+> @@ -2797,8 +2795,8 @@ xfs_cross_rename(
+>  
+>  		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
+>  			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
+> -						dp1->i_ino, first_block,
+> -						dfops, spaceres);
+> +						dp1->i_ino, first_block, dfops,
+> +						spaceres, NULL);
+>  			if (error)
+>  				goto out_trans_abort;
+>  
+> @@ -2824,8 +2822,8 @@ xfs_cross_rename(
+>  
+>  		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
+>  			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
+> -						dp2->i_ino, first_block,
+> -						dfops, spaceres);
+> +						dp2->i_ino, first_block, dfops,
+> +						spaceres, NULL);
+>  			if (error)
+>  				goto out_trans_abort;
+>  
+> @@ -3072,8 +3070,8 @@ xfs_rename(
+>  		 * name at the destination directory, remove it first.
+>  		 */
+>  		error = xfs_dir_replace(tp, target_dp, target_name,
+> -					src_ip->i_ino,
+> -					&first_block, &dfops, spaceres);
+> +					src_ip->i_ino, &first_block, &dfops,
+> +					spaceres, NULL);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> @@ -3107,8 +3105,8 @@ xfs_rename(
+>  		 * directory.
+>  		 */
+>  		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+> -					target_dp->i_ino,
+> -					&first_block, &dfops, spaceres);
+> +					target_dp->i_ino, &first_block, &dfops,
+> +					spaceres, NULL);
+>  		ASSERT(error != -EEXIST);
+>  		if (error)
+>  			goto out_bmap_cancel;
+> @@ -3147,7 +3145,7 @@ xfs_rename(
+>  	 */
+>  	if (wip) {
+>  		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+> -					&first_block, &dfops, spaceres);
+> +					&first_block, &dfops, spaceres, NULL);
+>  	} else
+>  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+>  					   &first_block, &dfops, spaceres,
 > -- 
 > 2.7.4
 > 
