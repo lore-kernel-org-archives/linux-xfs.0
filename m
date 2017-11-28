@@ -1,175 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57998 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752718AbdK1Rz6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Nov 2017 12:55:58 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BBBAB7EA80
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 17:55:58 +0000 (UTC)
-Date: Tue, 28 Nov 2017 12:55:54 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] xfs: Properly retry failed dquot items in case of
- error during buffer writeback
-Message-ID: <20171128175553.GA47056@bfoster.bfoster>
-References: <20171128143101.18861-1-cmaiolino@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17520 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751355AbdK1SIM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 13:08:12 -0500
+Date: Tue, 28 Nov 2017 10:08:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 16/17] Add the parent pointer support to the
+ superblock version 5.
+Message-ID: <20171128180804.GI21412@magnolia>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-17-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171128143101.18861-1-cmaiolino@redhat.com>
+In-Reply-To: <1510942905-12897-17-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Nov 28, 2017 at 03:31:01PM +0100, Carlos Maiolino wrote:
-> Once the inode item writeback errors is already fixed, it's time to fix the same
-> problem in dquot code.
+On Fri, Nov 17, 2017 at 11:21:44AM -0700, Allison Henderson wrote:
+> [dchinner: forward ported and cleaned up]
+> [achender: rebased and added parent pointer attribute to
+>            compatible attributes mask]
 > 
-> Although there were no reports of users hitting this bug in dquot code (at least
-> none I've seen), the bug is there and I was already planning to fix it when the
-> correct approach to fix the inodes part was decided.
-> 
-> This patch aims to fix the same problem in dquot code, regarding failed buffers
-> being unable to be resubmitted once they are flush locked.
-> 
-> Tested with the recently test-case sent to fstests list by Hou Tao.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
-> V2:
-> 	- in xfs_dquot.c
-> 	  ..Add a couple of parentheses around lip->li_flags & XFS_LI_FAILED
-> 	- in xfs_dquot_item.c:
-> 	  ..Add missing blank line between variable definiton and code
-> 	  ..Initialize dqp pointer out of variable definition to shut up
-> 	    gcc's 'unused variable' warning
+> v2: remove unrelated type clean up in xfs_format.h
 > 
->  fs/xfs/xfs_dquot.c      | 11 ++++++++---
->  fs/xfs/xfs_dquot_item.c | 40 ++++++++++++++++++++++++++++++++++++++--
->  2 files changed, 46 insertions(+), 5 deletions(-)
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h | 7 +++++--
+>  fs/xfs/libxfs/xfs_fs.h     | 1 +
+>  fs/xfs/xfs_fsops.c         | 4 +++-
+>  fs/xfs/xfs_super.c         | 4 ++++
+>  4 files changed, 13 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index d57c2db64e59..b2bafa284253 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -970,14 +970,19 @@ xfs_qm_dqflush_done(
->  	 * holding the lock before removing the dquot from the AIL.
->  	 */
->  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
-> -	    lip->li_lsn == qip->qli_flush_lsn) {
-> +	    ((lip->li_lsn == qip->qli_flush_lsn) ||
-> +	     (lip->li_flags & XFS_LI_FAILED))) {
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 121862a..f3e3132 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
+>  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+> +#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
+
+Please make this line up, i.e.
+
+#define XFS_SB_FEAT_RO_COMPAT_PARENT<three spaces>(1 << 3)<two tabs>/* parent inode ptr */
+
+With that fixed,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+>  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+> +		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+>  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+>  static inline bool
+>  xfs_sb_has_ro_compat_feature(
+> @@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
 >  
->  		/* xfs_trans_ail_delete() drops the AIL lock. */
->  		spin_lock(&ailp->xa_lock);
-> -		if (lip->li_lsn == qip->qli_flush_lsn)
-> +		if (lip->li_lsn == qip->qli_flush_lsn) {
->  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
-> -		else
-> +		} else if (lip->li_flags & XFS_LI_FAILED) {
-> +			xfs_clear_li_failed(lip);
->  			spin_unlock(&ailp->xa_lock);
-> +		} else {
-> +			spin_unlock(&ailp->xa_lock);
-> +		}
-
-Nit, but the following looks a bit cleaner to me:
-
-		if ((ip->li_lsn == qip->qli_flush_lsn) {
-			xfs_trans_ail_delete(...);
-		} else {
-			/*
-			 * clear the failed state since we're about to drop the
-			 * flush lock
-			 */
-			if (lip->li_flags & XFS_LI_FAILED)
-				xfs_clear_li_failed(lip);
-			spin_unlock();
-		}
-
-Otherwise looks good to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  	}
->  
->  	/*
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index 2c7a1629e064..664dea105e76 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -137,6 +137,26 @@ xfs_qm_dqunpin_wait(
->  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
+>  static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>  {
+> -	return false; /* We'll enable this at the end of the set */
+> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
 >  }
 >  
-> +/*
-> + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-> + * have been failed during writeback
-> + *
-> + * this informs the AIL that the dquot is already flush locked on the next push,
-> + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-> + * dirty data makes it to disk.
-> + */
-> +STATIC void
-> +xfs_dquot_item_error(
-> +	struct xfs_log_item	*lip,
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_dquot	*dqp;
-> +
-> +	dqp = DQUOT_ITEM(lip)->qli_dquot;
-> +	ASSERT(!completion_done(&dqp->q_flush));
-> +	xfs_set_li_failed(lip, bp);
-> +}
-> +
->  STATIC uint
->  xfs_qm_dquot_logitem_push(
->  	struct xfs_log_item	*lip,
-> @@ -144,13 +164,28 @@ xfs_qm_dquot_logitem_push(
->  					      __acquires(&lip->li_ailp->xa_lock)
->  {
->  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
-> -	struct xfs_buf		*bp = NULL;
-> +	struct xfs_buf		*bp = lip->li_buf;
->  	uint			rval = XFS_ITEM_SUCCESS;
->  	int			error;
->  
->  	if (atomic_read(&dqp->q_pincount) > 0)
->  		return XFS_ITEM_PINNED;
->  
-> +	/*
-> +	 * The buffer containing this item failed to be written back
-> +	 * previously. Resubmit the buffer for IO
-> +	 */
-> +	if (lip->li_flags & XFS_LI_FAILED) {
-> +		if (!xfs_buf_trylock(bp))
-> +			return XFS_ITEM_LOCKED;
-> +
-> +		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-> +			rval = XFS_ITEM_FLUSHING;
-> +
-> +		xfs_buf_unlock(bp);
-> +		return rval;
-> +	}
-> +
->  	if (!xfs_dqlock_nowait(dqp))
->  		return XFS_ITEM_LOCKED;
->  
-> @@ -242,7 +277,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
->  	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
->  	.iop_committed	= xfs_qm_dquot_logitem_committed,
->  	.iop_push	= xfs_qm_dquot_logitem_push,
-> -	.iop_committing = xfs_qm_dquot_logitem_committing
-> +	.iop_committing = xfs_qm_dquot_logitem_committing,
-> +	.iop_error	= xfs_dquot_item_error
->  };
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 8c61f21..b8108f8 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+>  #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+>  #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
+> +#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
 >  
 >  /*
+>   * Minimum and maximum sizes need for growth checks.
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 8f22fc5..9a0ce52 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -111,7 +111,9 @@ xfs_fs_geometry(
+>  			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+>  				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+>  			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+> -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+> +				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
+> +			(xfs_sb_version_hasparent(&mp->m_sb) ?
+> +				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
+>  		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+>  				mp->m_sb.sb_logsectsize : BBSIZE;
+>  		geo->rtsectsize = mp->m_sb.sb_blocksize;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index ee68459..066266f 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1675,6 +1675,10 @@ xfs_fs_fill_super(
+>  	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
+>  	}
+>  
+> +	if (xfs_sb_version_hasparent(&mp->m_sb))
+> +		xfs_alert(mp,
+> +	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
+> +
+>  	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>  		xfs_alert(mp,
+>  	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
 > -- 
-> 2.14.3
+> 2.7.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
