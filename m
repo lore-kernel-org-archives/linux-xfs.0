@@ -1,406 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36665 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752495AbdK2B0l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:26:41 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1QdcT021872
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:40 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1Qd14018129
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:39 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1Qdsd027530
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:39 GMT
-Subject: [PATCH 12/16] xfs: cross-reference the rmapbt data with the
- refcountbt
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 28 Nov 2017 17:26:38 -0800
-Message-ID: <151191879835.8553.11098682768606550755.stgit@magnolia>
-In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
-References: <151191872395.8553.15627872818207535470.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:21223 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752182AbdK1VgM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 16:36:12 -0500
+Date: Wed, 29 Nov 2017 08:34:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171128213408.GD5858@dastard>
+References: <20171122122100.GA9984@bfoster.bfoster>
+ <20171122204126.GA19041@bfoster.bfoster>
+ <20171123002401.GT5858@dastard>
+ <20171123143652.GA22032@bfoster.bfoster>
+ <20171123215457.GU5858@dastard>
+ <20171124145121.GA26516@bfoster.bfoster>
+ <20171125232010.GW5858@dastard>
+ <20171127184651.GA39719@bfoster.bfoster>
+ <20171127212946.GY5858@dastard>
+ <20171128132801.GA45759@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171128132801.GA45759@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 28, 2017 at 08:28:02AM -0500, Brian Foster wrote:
+> On Tue, Nov 28, 2017 at 08:29:46AM +1100, Dave Chinner wrote:
+> > On Mon, Nov 27, 2017 at 01:46:51PM -0500, Brian Foster wrote:
+> > > Also, it looks like this makes some other changes that are not
+> > > immediately clear to me,
+> > 
+> > Which ones?
+> > 
+> 
+> The truncate and iunlink bits...
 
-Cross reference the refcount data with the rmap data to check that the
-number of rmaps for a given block match the refcount of that block, and
-that CoW blocks (which are owned entirely by the refcountbt) are tracked
-as well.
+The truncate reservation includes a reservation for an inobt
+modification. We *never* modify the inobt inside a truncate
+transaction, so even if we ignore the fact it was wrong (like all
+the others we are fixing), it really shouldn't be there.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/refcount.c |  315 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 313 insertions(+), 2 deletions(-)
+THe commit message from the archive tree doesn't help explain it,
+either. It just says (paraphrasing) "fix transaction reservation".
+So I removed it.
 
+As for the iunlink bit, you mean this the fact I added the on disk
+inode cluster to the reservation in
+xfs_calc_iunlink_add_reservation()?
 
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 8add281..6efae58 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -50,6 +50,274 @@ xfs_scrub_setup_ag_refcountbt(
- 
- /* Reference count btree scrubber. */
- 
-+/*
-+ * Confirming Reference Counts via Reverse Mappings
-+ *
-+ * We want to count the reverse mappings overlapping a refcount record
-+ * (bno, len, refcount), allowing for the possibility that some of the
-+ * overlap may come from smaller adjoining reverse mappings, while some
-+ * comes from single extents which overlap the range entirely.  The
-+ * outer loop is as follows:
-+ *
-+ * 1. For all reverse mappings overlapping the refcount extent,
-+ *    a. If a given rmap completely overlaps, mark it as seen.
-+ *    b. Otherwise, record the fragment for later processing.
-+ *
-+ * Once we've seen all the rmaps, we know that for all blocks in the
-+ * refcount record we want to find $refcount owners and we've already
-+ * visited $seen extents that overlap all the blocks.  Therefore, we
-+ * need to find ($refcount - $seen) owners for every block in the
-+ * extent; call that quantity $target_nr.  Proceed as follows:
-+ *
-+ * 2. Pull the first $target_nr fragments from the list; all of them
-+ *    should start at or before the start of the extent.
-+ *    Call this subset of fragments the working set.
-+ * 3. Until there are no more unprocessed fragments,
-+ *    a. Find the shortest fragments in the set and remove them.
-+ *    b. Note the block number of the end of these fragments.
-+ *    c. Pull the same number of fragments from the list.  All of these
-+ *       fragments should start at the block number recorded in the
-+ *       previous step.
-+ *    d. Put those fragments in the set.
-+ * 4. Check that there are $target_nr fragments remaining in the list,
-+ *    and that they all end at or beyond the end of the refcount extent.
-+ *
-+ * If the refcount is correct, all the check conditions in the algorithm
-+ * should always hold true.  If not, the refcount is incorrect.
-+ */
-+struct xfs_scrub_refcnt_frag {
-+	struct list_head		list;
-+	struct xfs_rmap_irec		rm;
-+};
-+
-+struct xfs_scrub_refcnt_check {
-+	struct xfs_scrub_context	*sc;
-+	struct list_head		fragments;
-+
-+	/* refcount extent we're examining */
-+	xfs_agblock_t			bno;
-+	xfs_extlen_t			len;
-+	xfs_nlink_t			refcount;
-+
-+	/* number of owners seen */
-+	xfs_nlink_t			seen;
-+};
-+
-+/*
-+ * Decide if the given rmap is large enough that we can redeem it
-+ * towards refcount verification now, or if it's a fragment, in
-+ * which case we'll hang onto it in the hopes that we'll later
-+ * discover that we've collected exactly the correct number of
-+ * fragments as the refcountbt says we should have.
-+ */
-+STATIC int
-+xfs_scrub_refcountbt_rmap_check(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_scrub_refcnt_check	*refchk = priv;
-+	struct xfs_scrub_refcnt_frag	*frag;
-+	xfs_agblock_t			rm_last;
-+	xfs_agblock_t			rc_last;
-+	int				error = 0;
-+
-+	if (xfs_scrub_should_terminate(refchk->sc, &error))
-+		return error;
-+
-+	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
-+	rc_last = refchk->bno + refchk->len - 1;
-+
-+	/* Confirm that a single-owner refc extent is a CoW stage. */
-+	if (refchk->refcount == 1 && rec->rm_owner != XFS_RMAP_OWN_COW) {
-+		xfs_scrub_btree_xref_set_corrupt(refchk->sc, cur, 0);
-+		return 0;
-+	}
-+
-+	if (rec->rm_startblock <= refchk->bno && rm_last >= rc_last) {
-+		/*
-+		 * The rmap overlaps the refcount record, so we can confirm
-+		 * one refcount owner seen.
-+		 */
-+		refchk->seen++;
-+	} else {
-+		/*
-+		 * This rmap covers only part of the refcount record, so
-+		 * save the fragment for later processing.
-+		 */
-+		frag = kmem_alloc(sizeof(struct xfs_scrub_refcnt_frag),
-+				KM_MAYFAIL | KM_NOFS);
-+		if (!frag)
-+			return -ENOMEM;
-+		memcpy(&frag->rm, rec, sizeof(frag->rm));
-+		list_add_tail(&frag->list, &refchk->fragments);
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Given a bunch of rmap fragments, iterate through them, keeping
-+ * a running tally of the refcount.  If this ever deviates from
-+ * what we expect (which is the refcountbt's refcount minus the
-+ * number of extents that totally covered the refcountbt extent),
-+ * we have a refcountbt error.
-+ */
-+STATIC void
-+xfs_scrub_refcountbt_process_rmap_fragments(
-+	struct xfs_scrub_refcnt_check	*refchk)
-+{
-+	struct list_head		worklist;
-+	struct xfs_scrub_refcnt_frag	*frag;
-+	struct xfs_scrub_refcnt_frag	*n;
-+	xfs_agblock_t			bno;
-+	xfs_agblock_t			rbno;
-+	xfs_agblock_t			next_rbno;
-+	xfs_nlink_t			nr;
-+	xfs_nlink_t			target_nr;
-+
-+	target_nr = refchk->refcount - refchk->seen;
-+	if (target_nr == 0)
-+		return;
-+
-+	/*
-+	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
-+	 * references we haven't found yet.  Pull that many off the
-+	 * fragment list and figure out where the smallest rmap ends
-+	 * (and therefore the next rmap should start).  All the rmaps
-+	 * we pull off should start at or before the beginning of the
-+	 * refcount record's range.
-+	 */
-+	INIT_LIST_HEAD(&worklist);
-+	rbno = NULLAGBLOCK;
-+	nr = 1;
-+
-+	/* Find all the rmaps that start at or before the refc extent. */
-+	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-+		if (frag->rm.rm_startblock > refchk->bno)
-+			goto done;
-+		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-+		if (rbno > bno)
-+			rbno = bno;
-+		list_del(&frag->list);
-+		list_add_tail(&frag->list, &worklist);
-+		if (nr == target_nr)
-+			break;
-+		nr++;
-+	}
-+
-+	/*
-+	 * We should have found exactly $target_nr rmap fragments starting
-+	 * at or before the refcount extent.
-+	 */
-+	if (nr != target_nr)
-+		goto done;
-+
-+	while (!list_empty(&refchk->fragments)) {
-+		/* Discard any fragments ending at rbno. */
-+		nr = 0;
-+		next_rbno = NULLAGBLOCK;
-+		list_for_each_entry_safe(frag, n, &worklist, list) {
-+			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-+			if (bno != rbno) {
-+				if (next_rbno > bno)
-+					next_rbno = bno;
-+				continue;
-+			}
-+			list_del(&frag->list);
-+			kmem_free(frag);
-+			nr++;
-+		}
-+
-+		/* Empty list?  We're done. */
-+		if (list_empty(&refchk->fragments))
-+			break;
-+
-+		/* Try to add nr rmaps starting at rbno to the worklist. */
-+		list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-+			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-+			if (frag->rm.rm_startblock != rbno)
-+				goto done;
-+			list_del(&frag->list);
-+			list_add_tail(&frag->list, &worklist);
-+			if (next_rbno > bno)
-+				next_rbno = bno;
-+			nr--;
-+			if (nr == 0)
-+				break;
-+		}
-+
-+		rbno = next_rbno;
-+	}
-+
-+	/*
-+	 * Make sure the last extent we processed ends at or beyond
-+	 * the end of the refcount extent.
-+	 */
-+	if (rbno < refchk->bno + refchk->len)
-+		goto done;
-+
-+	/* Actually record us having seen the remaining refcount. */
-+	refchk->seen = refchk->refcount;
-+done:
-+	/* Delete fragments and work list. */
-+	list_for_each_entry_safe(frag, n, &worklist, list) {
-+		list_del(&frag->list);
-+		kmem_free(frag);
-+	}
-+	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-+		list_del(&frag->list);
-+		kmem_free(frag);
-+	}
-+}
-+
-+/* Use the rmap entries covering this extent to verify the refcount. */
-+STATIC void
-+xfs_scrub_refcountbt_xref_rmap(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			bno,
-+	xfs_extlen_t			len,
-+	xfs_nlink_t			refcount)
-+{
-+	struct xfs_scrub_refcnt_check	refchk = {
-+		.sc = sc,
-+		.bno = bno,
-+		.len = len,
-+		.refcount = refcount,
-+		.seen = 0,
-+	};
-+	struct xfs_rmap_irec		low;
-+	struct xfs_rmap_irec		high;
-+	struct xfs_scrub_refcnt_frag	*frag;
-+	struct xfs_scrub_refcnt_frag	*n;
-+	int				error;
-+
-+	if (!sc->sa.rmap_cur)
-+		return;
-+
-+	/* Cross-reference with the rmapbt to confirm the refcount. */
-+	memset(&low, 0, sizeof(low));
-+	low.rm_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.rm_startblock = bno + len - 1;
-+
-+	INIT_LIST_HEAD(&refchk.fragments);
-+	error = xfs_rmap_query_range(sc->sa.rmap_cur, &low, &high,
-+			&xfs_scrub_refcountbt_rmap_check, &refchk);
-+	if (!xfs_scrub_should_xref(sc, &error, &sc->sa.rmap_cur))
-+		goto out_free;
-+
-+	xfs_scrub_refcountbt_process_rmap_fragments(&refchk);
-+	if (refcount != refchk.seen)
-+		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+
-+out_free:
-+	list_for_each_entry_safe(frag, n, &refchk.fragments, list) {
-+		list_del(&frag->list);
-+		kmem_free(frag);
-+	}
-+}
-+
- /* Cross-reference with the other btrees. */
- STATIC void
- xfs_scrub_refcountbt_xref(
-@@ -61,6 +329,7 @@ xfs_scrub_refcountbt_xref(
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
- 	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, len);
- 	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, len);
-+	xfs_scrub_refcountbt_xref_rmap(sc, bno, len, refcount);
- }
- 
- /* Scrub a refcountbt record. */
-@@ -70,6 +339,7 @@ xfs_scrub_refcountbt_rec(
- 	union xfs_btree_rec		*rec)
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	xfs_agblock_t			*cow_blocks = bs->private;
- 	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
- 	xfs_agblock_t			bno;
- 	xfs_extlen_t			len;
-@@ -85,6 +355,8 @@ xfs_scrub_refcountbt_rec(
- 	has_cowflag = (bno & XFS_REFC_COW_START);
- 	if ((refcount == 1 && !has_cowflag) || (refcount != 1 && has_cowflag))
- 		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-+	if (has_cowflag)
-+		(*cow_blocks) += len;
- 
- 	/* Check the extent. */
- 	bno &= ~XFS_REFC_COW_START;
-@@ -104,14 +376,53 @@ xfs_scrub_refcountbt_rec(
- 	return error;
- }
- 
-+/* Make sure we have as many refc blocks as the rmap says. */
-+STATIC void
-+xfs_scrub_refcount_xref_rmap(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_owner_info		*oinfo,
-+	xfs_filblks_t			cow_blocks)
-+{
-+	xfs_extlen_t			refcbt_blocks = 0;
-+	xfs_filblks_t			blocks;
-+	int				error;
-+
-+	/* Check that we saw as many refcbt blocks as the rmap knows about. */
-+	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
-+	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
-+		return;
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+			&blocks);
-+	if (xfs_scrub_should_xref(sc, &error, &sc->sa.rmap_cur) &&
-+	    blocks != refcbt_blocks)
-+		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+
-+	/* Check that we saw as many cow blocks as the rmap knows about. */
-+	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+			&blocks);
-+	if (xfs_scrub_should_xref(sc, &error, &sc->sa.rmap_cur) &&
-+	    blocks != cow_blocks)
-+		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+}
-+
- /* Scrub the refcount btree for some AG. */
- int
- xfs_scrub_refcountbt(
- 	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_owner_info		oinfo;
-+	xfs_agblock_t			cow_blocks = 0;
-+	int				error;
- 
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
--	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
--			&oinfo, NULL);
-+	error = xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
-+			&oinfo, &cow_blocks);
-+	if (error)
-+		return error;
-+
-+	if (sc->sa.rmap_cur)
-+		xfs_scrub_refcount_xref_rmap(sc, &oinfo, cow_blocks);
-+
-+	return error;
- }
+That's because we log the inode cluster in unlink when we modify the
+inode unlinked list. That's missing from all the unlinked inode
+manipulation reservations - some of them take into account modifying
+the inode cluster of another inode in the unlinked list (e.g. ifree)
+but they all fail to reserve space for logging the unlinked list
+pointer in the inode being unlinked/freed.
 
+> > > squashes in a couple of the fixes I've already
+> > > made and doesn't actually add a new allocfree res in some of the
+> > > create/alloc calculations (but rather refactors the existing allocfree
+> > > res to use the new helper). It's not clear to me if the latter is
+> > > intentional..?
+> > 
+> > Not sure what you are asking? I factored existing open-coded inobt
+> > reservations to use helpers so that I didn't have to modify the
+> > reservation in lots of places. Get it right in one place, all the
+> > others are correct too. Indeed, most of the cases I factored already
+> > had the allocfree reservation, so I'm not sure why we'd be adding a
+> > new one to those reservations?
+> > 
+> 
+> Understood wrt to the helpers. What I'm asking is why
+> xfs_calc_create_resv_alloc(), for example, doesn't actually add another
+> allocfree res if the intent was to add one for all inode tree related
+> ops..?
+
+Because the patch wasn't complete and finished and there's no
+guarantee I factored it correctly. You're still reading that patch
+as though it was a completely polished, finished patch, not a set of
+"noticed these things while thinking about the problem" notes.
+
+I factored the code first, never went back the create
+code because we were focussed on the problems in the iunlink
+reservations....
+
+> Using that example, my understanding is that tx should now have
+> an allocfree res for the inode chunk allocation and a new one for the
+> inobt insertion. The latter is the one that's now abstracted into the
+> helpers, yes..? That's the model I tried to follow for the rfc patch,
+> anyways.
+
+Sure, that's what needs to be done, as we've discussed.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
