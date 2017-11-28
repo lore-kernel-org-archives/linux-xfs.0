@@ -1,30 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25383 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750904AbdK1VUn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 16:20:43 -0500
-Date: Tue, 28 Nov 2017 13:20:01 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:28518 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751913AbdK1WFK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 17:05:10 -0500
+Date: Tue, 28 Nov 2017 14:04:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RESEND v6 1/3] xfs: Show realtime device stats on statfs
- calls if inherit flag set
-Message-ID: <20171128212001.GA21412@magnolia>
-References: <20171122224009.3533341-1-rwareing@fb.com>
- <20171122224009.3533341-2-rwareing@fb.com>
+Subject: Re: [PATCH v7 1/3] xfs: Show realtime device stats on statfs calls
+ if realtime flags set
+Message-ID: <20171128220440.GB21412@magnolia>
+References: <20171128215527.2510350-1-rwareing@fb.com>
+ <20171128215527.2510350-2-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171122224009.3533341-2-rwareing@fb.com>
+In-Reply-To: <20171128215527.2510350-2-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Richard Wareing <rwareing@fb.com>
 Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
 
-On Wed, Nov 22, 2017 at 02:40:07PM -0800, Richard Wareing wrote:
-> - Reports realtime device free blocks in statfs calls if inheritance
->   bit is set on the inode of directory.  This is a bit more intuitive,
->   especially for use-cases which are using a much larger device for
->   the realtime device.
+On Tue, Nov 28, 2017 at 01:55:25PM -0800, Richard Wareing wrote:
+> - Reports realtime device free blocks in statfs calls if (realtime)
+>   inheritance bit is set on the inode of directory, or realtime flag
+>   in the case of files.  This is a bit more intuitive, especially for
+>   use-cases which are using a much larger device for the realtime device.
 > - Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
 >   realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
 >   option.
@@ -32,7 +32,17 @@ On Wed, Nov 22, 2017 at 02:40:07PM -0800, Richard Wareing wrote:
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Richard Wareing <rwareing@fb.com>
+
+Looks ok for 4.16,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
 > ---
+> Changes since v6:
+> * statfs will now return realtime stats for the underlying filesystem if
+> inode has XFS_DIFLAG_REALTIME set, this provides consistent behavior along
+> the same lines as the XFS_DIFLAG_RTINHERIT flag is set on directories.
+> * Updated commit title + description to reflect change
+> 
 > Changes since v5:
 > * None
 > 
@@ -49,7 +59,6 @@ On Wed, Nov 22, 2017 at 02:40:07PM -0800, Richard Wareing wrote:
 > Changes since v2:
 > * Style updated per Christoph Hellwig's comment
 > * Fixed bug: statp->f_bavail = statp->f_bfree
-> 
 > 
 >  fs/xfs/xfs_linux.h | 2 ++
 >  fs/xfs/xfs_super.c | 8 ++++++++
@@ -71,7 +80,7 @@ On Wed, Nov 22, 2017 at 02:40:07PM -0800, Richard Wareing wrote:
 >  
 >  #endif /* __XFS_LINUX__ */
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f663022..3c9a989 100644
+> index f663022..07afadd 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
 > @@ -1153,6 +1153,14 @@ xfs_fs_statfs(
@@ -80,13 +89,7 @@ On Wed, Nov 22, 2017 at 02:40:07PM -0800, Richard Wareing wrote:
 >  		xfs_qm_statvfs(ip, statp);
 > +
 > +	if (XFS_IS_REALTIME_MOUNT(mp) &&
-> +	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
-
-For everyone else following at home: I asked on IRC, shouldn't we report
-rtdev stats for any file that has REALTIME, but not RTINHERIT, set?
-
---D
-
+> +	    (ip->i_d.di_flags & (XFS_DIFLAG_RTINHERIT | XFS_DIFLAG_REALTIME))) {
 > +		statp->f_blocks = sbp->sb_rblocks;
 > +		statp->f_bavail = statp->f_bfree =
 > +			sbp->sb_frextents * sbp->sb_rextsize;
