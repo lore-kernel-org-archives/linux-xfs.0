@@ -1,55 +1,263 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51572 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750962AbdKTJB6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Nov 2017 04:01:58 -0500
-From: shuwang@redhat.com
-Subject: [PATCH] xfs: fix memory leak in xfs_iext_free_last_leaf
-Date: Mon, 20 Nov 2017 17:01:28 +0800
-Message-Id: <20171120090128.11320-1-shuwang@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:1512 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751591AbdK1WJW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 17:09:22 -0500
+Date: Wed, 29 Nov 2017 09:09:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] xfs: amortize agfl block frees across multiple
+ transactions
+Message-ID: <20171128220919.GF5858@dastard>
+References: <20171127202434.43125-1-bfoster@redhat.com>
+ <20171127202434.43125-4-bfoster@redhat.com>
+ <20171127230734.GB5858@dastard>
+ <20171128135748.GC45759@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171128135748.GC45759@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, hch@lst.de
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, bfoster@redhat.com, sandeen@redhat.com, chuhu@redhat.com, liwang@redhat.com, yizhan@redhat.com, Shu Wang <shuwang@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Shu Wang <shuwang@redhat.com>
+On Tue, Nov 28, 2017 at 08:57:48AM -0500, Brian Foster wrote:
+> On Tue, Nov 28, 2017 at 10:07:34AM +1100, Dave Chinner wrote:
+> > On Mon, Nov 27, 2017 at 03:24:33PM -0500, Brian Foster wrote:
+> > > We've had rare reports of transaction overruns in
+> > > xfs_inactive_ifree() for quite some time. Analysis of a reproducing
+> > > metadump has shown the problem is essentially caused by performing
+> > > too many agfl block frees in a single transaction.
+> > > 
+> > > For example, an inode chunk is freed and the associated agfl fixup
+> > > algorithm discovers it needs to free a single agfl block before the
+> > > chunk free occurs. This single block ends up causing a space btree
+> > > join and adds one or more blocks back onto the agfl. This causes
+> > > xfs_alloc_fix_freelist() to free up to 3 blocks just to rectify a
+> > > single block discrepency.
+> > > 
+> > > The transaction overrun occurs under several other unfortunate
+> > > circumstances:
+> > > 
+> > >  - Each agfl block free is left+right contiguous. This requires 2
+> > >    record deletions and 1 insertion for the cntbt and thus requires
+> > >    more log reservation than normal.
+> > >  - The associated transaction is the first in the CIL ctx and thus
+> > >    the ctx header reservation is consumed.
+> > >  - The transaction reservation is larger than a log buffer and thus
+> > >    extra split header reservation is consumed.
+> > > 
+> > > As a result of the agfl and free space state of the filesystem, the
+> > > agfl fixup code has dirtied more cntbt buffer space than allowed by
+> > > the portion of the reservation allotted for block allocation. This
+> > > is all before the real allocation even starts!
+> > > 
+> > > Note that the log related conditions above are correctly covered by
+> > > the existing transaction reservation. The above demonstrates that
+> > > the reservation allotted for the context/split headers may help
+> > > suppress overruns in the more common case where that reservation
+> > > goes unused for its intended purpose.
+> > > 
+> > > To address this problem, update xfs_alloc_fix_freelist() to amortize
+> > > agfl block frees over multiple transactions. Free one block per
+> > > transaction so long as the agfl is less than half free. The agfl
+> > > minimum allocation requirement is dynamic, but is based on the
+> > > geometry of the associated btrees (i.e., level count) and therefore
+> > > should be easily rectified over multiple allocation transactions.
+> > > Further, there is no real harm in leaving extraneous blocks on the
+> > > agfl so long as there are enough free slots available for btree
+> > > blocks freed as a result of the upcoming allocation.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_alloc.c | 15 ++++++++++-----
+> > >  1 file changed, 10 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index 0da80019a917..d8d58e35da00 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -2117,11 +2117,6 @@ xfs_alloc_fix_freelist(
+> > >  	 * appropriately based on the recursion count and dirty state of the
+> > >  	 * buffer.
+> > >  	 *
+> > > -	 * XXX (dgc): When we have lots of free space, does this buy us
+> > > -	 * anything other than extra overhead when we need to put more blocks
+> > > -	 * back on the free list? Maybe we should only do this when space is
+> > > -	 * getting low or the AGFL is more than half full?
+> > > -	 *
+> > >  	 * The NOSHRINK flag prevents the AGFL from being shrunk if it's too
+> > >  	 * big; the NORMAP flag prevents AGFL expand/shrink operations from
+> > >  	 * updating the rmapbt.  Both flags are used in xfs_repair while we're
+> > > @@ -2151,6 +2146,16 @@ xfs_alloc_fix_freelist(
+> > >  			goto out_agbp_relse;
+> > >  		}
+> > >  		xfs_trans_binval(tp, bp);
+> > > +
+> > > +		/*
+> > > +		 * Freeing all extra agfl blocks adds too much log reservation
+> > > +		 * overhead to a single transaction, particularly considering
+> > > +		 * that freeing a block can cause a btree join and put one right
+> > > +		 * back on the agfl. Try to free one block per tx so long as
+> > > +		 * we've left enough free slots for the upcoming modifications.
+> > > +		 */
+> > > +		if (pag->pagf_flcount <= (XFS_AGFL_SIZE(mp) >> 1))
+> > > +			break;
+> > >  	}
+> > 
+> > In /theory/, this /should/ work. However, as the comment you removed
+> > implies, there are likely to be issues with this as we get near
+> > ENOSPC. We know that if we don't trim the AGFL right down to the
+> > minimum requested as we approach ENOSPC we can get premature ENOSPC
+> > events being reported that lead to filesystem shutdowns.  (e.g. need
+> > the very last free block for a BMBT block to complete a data extent
+> > allocation).  Hence I'd suggest that this needs to be aware of the
+> > low space allocation algorithm (i.e. dfops->dop_low is true) to trim
+> > the agfl right back when we are really short of space
+> > 
+> 
+> Hmm, shouldn't the worst case bmbt requirements be satisfied by the
+> block reservation of the transaction that maps the extent (or stored as
+> indirect reservation if delalloc)?
 
-found the issue by kmemleak.
-unreferenced object 0xffff8800674611c0 (size 16):
-    xfs_iext_insert+0x82a/0xa90 [xfs]
-    xfs_bmap_add_extent_hole_delay+0x1e5/0x5b0 [xfs]
-    xfs_bmapi_reserve_delalloc+0x483/0x530 [xfs]
-    xfs_file_iomap_begin+0xac8/0xd40 [xfs]
-    iomap_apply+0xb8/0x1b0
-    iomap_file_buffered_write+0xac/0xe0
-    xfs_file_buffered_aio_write+0x198/0x420 [xfs]
-    xfs_file_write_iter+0x23f/0x2a0 [xfs]
-    __vfs_write+0x23e/0x340
-    vfs_write+0xe9/0x240
-    SyS_write+0xa1/0x120
-    do_syscall_64+0xda/0x260
+That's checked against global free space when we do the initial
+reservation. It's not checked against AG free space until we make
+the allocation attempt.
 
-Signed-off-by: Shu Wang <shuwang@redhat.com>
----
- fs/xfs/libxfs/xfs_iext_tree.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The problem here is that if we don't leave enough space for the BMBT
+block in the same AG as the data extent was allocated we can end up
+with an ENOSPC on the BMBT block allocation because, say, AGF
+locking order and all the higher AGFs are already ENOSPC. That's a
+fatal ENOSPC error as the transaction is already dirty and will
+shutdown the filesystem on transaction cancel.
 
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index 19e546a41251..89bf16b4d937 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -850,9 +850,9 @@ static void
- xfs_iext_free_last_leaf(
- 	struct xfs_ifork	*ifp)
- {
--	ifp->if_u1.if_root = NULL;
- 	ifp->if_height--;
- 	kmem_free(ifp->if_u1.if_root);
-+	ifp->if_u1.if_root = NULL;
- }
- 
- void
+> I'm less concerned with premature
+> ENOSPC from contexts where it's not fatal..
+
+The definition of "premature ENOSPC" is "unexpected ENOSPC that
+causes a filesystem shutdown" :/
+
+>
+> IIRC, I think we've already
+> incorporated changes (Christoph's minfree stuff rings a bell) into the
+> allocator that explicitly prefer premature ENOSPC over potentially fatal
+> conditions, but I could be mistaken.
+
+Yes, but that doesn't take into account all the crazy AGFL
+manipulations that could occur as a result of trimming/extending the
+AGFL. We /assume/ that we don't need signification reservations to
+extend/trim the AGFL to what is required for the transaction. If we
+now how to free 50 blocks from the AGFL back to the freespace tree
+before we start the allocation/free operation, that's going to
+have some impact on the reservations we have.
+
+And think about 4k sector filesystems - there's close on 1000
+entries in the AGFL - this means we could have 500 blocks floating
+on the AGFL that would otherwise be in the freespace tree. IOWs,
+this change could have significant impact on freespace
+fragmentation because blocks aren't getting returned to the
+freespace tree where they merge with other small freespace extents
+to reform larger extents.
+
+It's these sorts of issues (i.e. filesystem aging) that might not
+show up for months of production use that we need to think about. It
+may be that a larger AGFL helps here because it keeps a working
+set of freespace tree blocks on the AGFL rather than having to
+go back to the freespace trees all the time, but this is something
+we need to measure, analyse and characterise before changing a
+critical piece of the allocation architecture....
+
+> We're also only talking about 256k
+> or so for half of the AGFL, less than that if we assume that some of
+> those blocks are actually required by the agfl and not slated to be
+> lazily freed. We could also think about explicitly fixing up agfl
+> surplus from other contexts (background, write -ENOSPC handling, etc.)
+> if it became that much of a problem.
+> 
+> I do think it's semi-reasonable from a conservative standpoint to
+> further restrict this behavior to !dop_low conditions, but I'm a little
+> concerned about creating an "open the floodgates" type situation when
+> the agfl is allowed to carry extra blocks and then all of a sudden the
+> free space state changes and one transaction is allowed to free a bunch
+> of blocks. Thoughts?
+
+That's exactly the sort of problem we need to measure, analyse
+and characterise before making this sort of change :/
+
+> I suppose we could incorporate logic that frees until/unless a join
+> occurs (i.e., the last free did not drop flcount), the latter being an
+> indication that we've probably logged as much as we should for agfl
+> fixups in the transaction. But that's also something we could just do
+> unconditionally as opposed to only under dop_low conditions. That might
+> be less aggressive of a change from current behavior.
+
+Heuristics will still need to be analysed and tested :/
+
+The complexity of doing this is why I left a small comment rather
+than actually making the change....
+
+> > I'm also concerned that it doesn't take into account that freeing
+> > a block from the AGFL could cause a freespace tree split to occur,
+> > thereby emptying the AGFL whilst consuming the entire log
+> > reservation for tree modifications. This leaves nothing in the log
+> > reservation for re-growing the AGFL to the minimum required, which
+> > we /must do/ before returning and could cause more splits/joins to
+> > occur.
+> > 
+> 
+> How is this different from the current code?
+
+It's not. I'm pointing out that while you're focussed on the
+problems with shortening the AGFL, the same problem exists with
+/extending the AGFL/.
+
+> This sounds to me like an
+> unconditional side effect of the fact that freeing an agfl block can
+> indirectly affect the agfl via the btree operations. IOW, freeing a
+> single extra block could require consuming one or more and trigger the
+> need for an allocation. I suspect the allocation could then very well
+> cause a join on the other tree and put more than one block back onto the
+> agfl.
+
+Yes, it could do that too. Remove a single block from an existing
+free extent, no change to the by-block btree. by-cnt now requires a
+record delete (full height join) followed by record insert elsewhere
+in the tree (full height split). So the attempt to add a block to
+the AGFL can actually shorten it if the by-cnt tree splits on
+insert. It can grow if the by-block or by-cnt tree joins on record
+removal.
+
+Either way, we've got the same problem of using the entire log
+reservation for AGFL modification when growing the AGFL as we do
+when trying to shrink the AGFL down.
+
+That's my point here - just hacking a limit into the shrink case
+doesn't address the problem at all - it just papers over one of the
+visible symptoms....
+
+> > IMO, there's a lot more to be concerned about here than just trying
+> > to work around the specific symptom observed in the given test case.
+> > This code is, unfortunately, really tricky and intricate and history
+> > tells us that the risk of unexpected regressions is extremely high,
+> > especially around ENOSPC related issues. Of all the patches in this
+> > series, this is the most dangerous and "iffy" of them and the
+> > one we should be most concerned and conservative about....
+> > 
+> 
+> Agreed. The impact is something that also has to be evaluated over a
+> sequence of transactions along with the more obvious impact on a single
+> transaction.
+
+The impact has to be measured over a far longer time frame than a
+few transactions. The fact it has impact on freespace reformation
+means it'll need accelerated aging tests done on it so we can be
+reasonably certain that it isn't going to bite us in extended
+production environments...
+
+Cheers,
+
+Dave.
 -- 
-2.13.5
-
+Dave Chinner
+david@fromorbit.com
