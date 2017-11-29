@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mga07.intel.com ([134.134.136.100]:31716 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754628AbdK2LiU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 06:38:20 -0500
+        id S1752530AbdK2Li1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 06:38:27 -0500
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 3/5] fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
-Date: Wed, 29 Nov 2017 13:38:01 +0200
-Message-Id: <1511955483-18275-4-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 5/5] fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to refcount_t
+Date: Wed, 29 Nov 2017 13:38:03 +0200
+Message-Id: <1511955483-18275-6-git-send-email-elena.reshetova@intel.com>
 In-Reply-To: <1511955483-18275-1-git-send-email-elena.reshetova@intel.com>
 References: <1511955483-18275-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -29,7 +29,7 @@ refcount_t type and API that prevents accidental counter overflows
 and underflows. This is important since overflows and underflows
 can lead to use-after-free situation and be exploitable.
 
-The variable xlog_ticket.t_ref is used as pure reference counter.
+The variable xfs_rui_log_item.rui_refcount is used as pure reference counter.
 Convert it to refcount_t and fix up the operations.
 
 **Important note for maintainers:
@@ -46,9 +46,9 @@ some rare cases it might matter.
 Please double check that you don't have some undocumented
 memory guarantees for this variable usage.
 
-For the xlog_ticket.t_ref it might make a difference
+For the xfs_rui_log_item.rui_refcount it might make a difference
 in following places:
- - xfs_log_ticket_put(): decrement in refcount_dec_and_test() only
+ - xfs_rui_release(): decrement in refcount_dec_and_test() only
    provides RELEASE ordering and control dependency on success
    vs. fully ordered atomic counterpart
 
@@ -57,58 +57,47 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- fs/xfs/xfs_log.c      | 10 +++++-----
- fs/xfs/xfs_log_priv.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_rmap_item.c | 6 +++---
+ fs/xfs/xfs_rmap_item.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a503af9..6e1528f 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3600,8 +3600,8 @@ void
- xfs_log_ticket_put(
- 	xlog_ticket_t	*ticket)
- {
--	ASSERT(atomic_read(&ticket->t_ref) > 0);
--	if (atomic_dec_and_test(&ticket->t_ref))
-+	ASSERT(refcount_read(&ticket->t_ref) > 0);
-+	if (refcount_dec_and_test(&ticket->t_ref))
- 		kmem_zone_free(xfs_log_ticket_zone, ticket);
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index f3b139c..f914829f 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -204,7 +204,7 @@ xfs_rui_init(
+ 	ruip->rui_format.rui_nextents = nextents;
+ 	ruip->rui_format.rui_id = (uintptr_t)(void *)ruip;
+ 	atomic_set(&ruip->rui_next_extent, 0);
+-	atomic_set(&ruip->rui_refcount, 2);
++	refcount_set(&ruip->rui_refcount, 2);
+ 
+ 	return ruip;
  }
- 
-@@ -3609,8 +3609,8 @@ xlog_ticket_t *
- xfs_log_ticket_get(
- 	xlog_ticket_t	*ticket)
+@@ -243,8 +243,8 @@ void
+ xfs_rui_release(
+ 	struct xfs_rui_log_item	*ruip)
  {
--	ASSERT(atomic_read(&ticket->t_ref) > 0);
--	atomic_inc(&ticket->t_ref);
-+	ASSERT(refcount_read(&ticket->t_ref) > 0);
-+	refcount_inc(&ticket->t_ref);
- 	return ticket;
- }
- 
-@@ -3732,7 +3732,7 @@ xlog_ticket_alloc(
- 
- 	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
- 
--	atomic_set(&tic->t_ref, 1);
-+	refcount_set(&tic->t_ref, 1);
- 	tic->t_task		= current;
- 	INIT_LIST_HEAD(&tic->t_queue);
- 	tic->t_unit_res		= unit_res;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 1299759..7482145 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -168,7 +168,7 @@ typedef struct xlog_ticket {
- 	struct list_head   t_queue;	 /* reserve/write queue */
- 	struct task_struct *t_task;	 /* task that owns this ticket */
- 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
--	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
-+	refcount_t	   t_ref;	 /* ticket reference count       : 4  */
- 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
- 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
- 	char		   t_ocnt;	 /* original count		 : 1  */
+-	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
+-	if (atomic_dec_and_test(&ruip->rui_refcount)) {
++	ASSERT(refcount_read(&ruip->rui_refcount) > 0);
++	if (refcount_dec_and_test(&ruip->rui_refcount)) {
+ 		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_rui_item_free(ruip);
+ 	}
+diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
+index 340c968..1e425a9 100644
+--- a/fs/xfs/xfs_rmap_item.h
++++ b/fs/xfs/xfs_rmap_item.h
+@@ -64,7 +64,7 @@ struct kmem_zone;
+  */
+ struct xfs_rui_log_item {
+ 	struct xfs_log_item		rui_item;
+-	atomic_t			rui_refcount;
++	refcount_t			rui_refcount;
+ 	atomic_t			rui_next_extent;
+ 	unsigned long			rui_flags;	/* misc flags */
+ 	struct xfs_rui_log_format	rui_format;
 -- 
 2.7.4
 
