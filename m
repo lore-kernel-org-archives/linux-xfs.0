@@ -1,102 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:34054 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753558AbdK1Vzb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 16:55:31 -0500
-Received: from pps.filterd (m0001255.ppops.net [127.0.0.1])
-        by mx0b-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vASLpbN3015751
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 13:55:31 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0b-00082601.pphosted.com with ESMTP id 2eh8cx9rqj-5
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2017 13:55:31 -0800
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v7 1/3] xfs: Show realtime device stats on statfs calls if realtime flags set
-Date: Tue, 28 Nov 2017 13:55:25 -0800
-Message-ID: <20171128215527.2510350-2-rwareing@fb.com>
-In-Reply-To: <20171128215527.2510350-1-rwareing@fb.com>
-References: <20171128215527.2510350-1-rwareing@fb.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:24023 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751924AbdK2BDE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:03:04 -0500
+Date: Wed, 29 Nov 2017 12:02:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 01/17] Add helper functions xfs_attr_set_args and
+ xfs_attr_remove_args
+Message-ID: <20171129010233.GI5858@dastard>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-2-git-send-email-allison.henderson@oracle.com>
+ <20171128195421.GY21412@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171128195421.GY21412@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
 
-- Reports realtime device free blocks in statfs calls if (realtime)
-  inheritance bit is set on the inode of directory, or realtime flag
-  in the case of files.  This is a bit more intuitive, especially for
-  use-cases which are using a much larger device for the realtime device.
-- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
-  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
-  option.
+On Tue, Nov 28, 2017 at 11:54:21AM -0800, Darrick J. Wong wrote:
+> On Fri, Nov 17, 2017 at 11:21:29AM -0700, Allison Henderson wrote:
+> > These sub-routines set or remove the attributes specified in
+> > @args. We will use this later for setting parent pointers as a
+> > deferred attribute operation.
+> > 
+> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_attr.c | 335 ++++++++++++++++++++++++++++-------------------
+> >  fs/xfs/libxfs/xfs_bmap.c |  55 ++++----
+> >  fs/xfs/libxfs/xfs_bmap.h |   1 +
+> >  fs/xfs/xfs_attr.h        |   2 +
+> >  4 files changed, 236 insertions(+), 157 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index 6249c92..e5f2960 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -168,6 +168,195 @@ xfs_attr_get(
+> >  }
+> >  
+> >  /*
+> > + * Set the attribute specified in @args. In the case of the parent attribute
+> > + * being set, we do not want to roll the transaction on shortform-to-leaf
+> > + * conversion, as the attribute must be added in the same transaction as the
+> > + * parent directory modifications. Hence @roll_trans needs to be set
+> > + * appropriately to control whether the transaction is committed during this
+> > + * function.
+> 
+> We have sufficient space in the single transaction case to do both, right?
+> 
+> > + */
+> > +int
+> > +xfs_attr_set_args(
+> > +	struct xfs_da_args	*args,
+> > +	int			flags,
+> > +	bool			roll_trans)
+> > +{
+> > +	struct xfs_inode	*dp = args->dp;
+> > +	struct xfs_mount        *mp = dp->i_mount;
+> > +	struct xfs_trans_res    tres;
+> > +	int			rsvd = 0;
+> > +	int			error = 0;
+> > +	int			sf_size;
+> > +
+> > +	/*
+> > +	 * New inodes setting the parent pointer attr will
+> > +	 * not have an attribute fork yet. So set the attribute
+> > +	 * fork appropriately
+> > +	 */
+> > +	if (XFS_IFORK_Q((args->dp)) == 0) {
+> > +		sf_size = sizeof(struct xfs_attr_sf_hdr) +
+> > +		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
+> > +		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
+> > +		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+> > +		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
+> > +	}
+> > +
+> > +	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+> > +			 M_RES(mp)->tr_attrsetrt.tr_logres * args->total;
+> > +	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
+> > +	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> 
+> /me raises eyebrows about declaring our own tres here, though it came
+> from the original code so I gues I can't complain too loudly.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Richard Wareing <rwareing@fb.com>
----
-Changes since v6:
-* statfs will now return realtime stats for the underlying filesystem if
-inode has XFS_DIFLAG_REALTIME set, this provides consistent behavior along
-the same lines as the XFS_DIFLAG_RTINHERIT flag is set on directories.
-* Updated commit title + description to reflect change
+Well, it takes into account the fact we don't log remote
+attributes. Hence for inline attributes we need to include their
+length in the log reservation, but we don't know what the length is
+until we are actually adding the attribute to the block...
 
-Changes since v5:
-* None
+> (Primarily because we use the transaction reservations to calculate the
+> minimum log size, so I would think we'd want this one included in those
+> calculations...)
 
-Changes since v4:
-* None
+We do take that into account in xfs_log_calc_max_attrsetm_res().
 
-Changes since v3:
-* Fixed accounting bug, we are not required to substract m_alloc_set_aside
-  as this is a data device only requirement.
-* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
-  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
-  for the inode.
+Cheers,
 
-Changes since v2:
-* Style updated per Christoph Hellwig's comment
-* Fixed bug: statp->f_bavail = statp->f_bfree
-
- fs/xfs/xfs_linux.h | 2 ++
- fs/xfs/xfs_super.c | 8 ++++++++
- 2 files changed, 10 insertions(+)
-
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index dcd1292..944b02d 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -278,8 +278,10 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- #define XFS_IS_REALTIME_INODE(ip)			\
- 	(((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME) &&	\
- 	 (ip)->i_mount->m_rtdev_targp)
-+#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
- #else
- #define XFS_IS_REALTIME_INODE(ip) (0)
-+#define XFS_IS_REALTIME_MOUNT(mp) (0)
- #endif
- 
- #endif /* __XFS_LINUX__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f663022..07afadd 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1153,6 +1153,14 @@ xfs_fs_statfs(
- 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
- 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
- 		xfs_qm_statvfs(ip, statp);
-+
-+	if (XFS_IS_REALTIME_MOUNT(mp) &&
-+	    (ip->i_d.di_flags & (XFS_DIFLAG_RTINHERIT | XFS_DIFLAG_REALTIME))) {
-+		statp->f_blocks = sbp->sb_rblocks;
-+		statp->f_bavail = statp->f_bfree =
-+			sbp->sb_frextents * sbp->sb_rextsize;
-+	}
-+
- 	return 0;
- }
- 
+Dave.
 -- 
-2.9.5
-
+Dave Chinner
+david@fromorbit.com
