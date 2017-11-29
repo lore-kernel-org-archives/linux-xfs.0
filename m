@@ -1,139 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39130 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751716AbdKIE1v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Nov 2017 23:27:51 -0500
-Subject: Re: [PATCH v3 2/3] xfs_io: Add RWF_NOWAIT to pwritev2()
-References: <20171010105802.31353-1-rgoldwyn@suse.de>
- <20171010105802.31353-2-rgoldwyn@suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9c9e611e-b38d-e85b-98dd-40009446095d@sandeen.net>
-Date: Wed, 8 Nov 2017 22:27:50 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:51272 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751439AbdK2BJm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:09:42 -0500
+Date: Tue, 28 Nov 2017 17:09:37 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] common/rc: report kmemleak errors
+Message-ID: <20171129010937.GB31372@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171010105802.31353-2-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, david@fromorbit.com, bfoster@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On 10/10/17 5:58 AM, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> This allows to make pwritev2() calls with RWF_NOWAIT,
-> which would fail in case the call blocks.
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> Changes since v2:
-> 	- ifdef around -N which set RWF_NOWAIT
-> ---
->  io/pwrite.c       | 10 +++++++++-
->  man/man8/xfs_io.8 |  6 ++++++
->  2 files changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 5ceb26c7..e06dfb46 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -53,6 +53,9 @@ pwrite_help(void)
->  #ifdef HAVE_PWRITEV
->  " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
->  #endif
-> +#ifdef HAVE_PWRITEV2
-> +" -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
-> +#endif
->  "\n"));
->  }
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This "-N" option didn't get added to the short help:
+If kmemleak is enabled, scan and report memory leaks after every test.
 
-void
-pwrite_init(void)
-{
-        pwrite_cmd.name = "pwrite";
-        pwrite_cmd.altname = "w";
-        pwrite_cmd.cfunc = pwrite_f;
-        pwrite_cmd.argmin = 2;
-        pwrite_cmd.argmax = -1;
-        pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-        pwrite_cmd.args =
-_("[-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] [-FBR [-Z N]] [-V N] off len");
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ check     |    2 ++
+ common/rc |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+)
 
-Is there any clean way to do that conditionally on the #ifdef as is done for long
-help?  Otherwise just more #ifdefs I guess.
-  
-> @@ -279,7 +282,7 @@ pwrite_f(
->  	init_cvtnum(&fsblocksize, &fssectsize);
->  	bsize = fsblocksize;
->  
-> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:qRs:S:uV:wWZ:")) != EOF) {
-> +	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:S:uV:wWZ:")) != EOF) {
->  		switch (c) {
->  		case 'b':
->  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-> @@ -308,6 +311,11 @@ pwrite_f(
->  		case 'i':
->  			infile = optarg;
->  			break;
-> +#ifdef HAVE_PWRITEV2
-> +		case 'N':
-> +			pwritev2_flags |= RWF_NOWAIT;
-> +			break;
-> +#endif
-
-If pwritev2 isn't present at build time, specifying -N gives somewhat unexpected behavior:
-
-xfs_io> pwrite -N 0 1k
-pwrite [-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] [-FBR [-Z N]] [-V N] off len -- writes a number of bytes at a specified offset
-xfs_io>
-
-vs a wholly unknown option:
-
-xfs_io> pwrite -K 0 1k
-pwrite: invalid option -- 'K'
-xfs_io>
-
-because you have 'N' in the getopt string.  I wonder if there's a better
-way to handle it besides moar ifdefs ... I guess this wouldn't be
-terrible:
-
-+		case 'N':
-+#ifdef HAVE_PWRITEV2
-+			pwritev2_flags |= RWF_NOWAIT;
-+#else
-+			printf(_("Not built with pwritev2 functionality\n"));
-+#endif
-+			break;
-
->  		case 's':
->  			skip = cvtnum(fsblocksize, fssectsize, optarg);
->  			if (skip < 0) {
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 0fd9b951..9c58914f 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -282,6 +282,12 @@ Use the vectored IO write syscall
->  with a number of blocksize length iovecs. The number of iovecs is set by the
->  .I vectors
->  parameter.
-> +.TP
-> +.B \-N
-> +Perform the
-> +.BR pwritev2 (2)
-> +call with
-> +.I RWF_NOWAIT.
-
-I guess maybe this should say something about "if it's built w/ pwritev2 functionality?"
-I'm less worried about this, tbh, especially if -N gives the explanation above
-if xfs_io doesn't have the support.
-
--Eric
-
->  .RE
->  .PD
->  .TP
-> 
+diff --git a/check b/check
+index b2d251a..469188e 100755
+--- a/check
++++ b/check
+@@ -497,6 +497,7 @@ _check_filesystems()
+ 	fi
+ }
+ 
++_init_kmemleak
+ _prepare_test_list
+ 
+ if $OPTIONS_HAVE_SECTIONS; then
+@@ -793,6 +794,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 		    n_try=`expr $n_try + 1`
+ 		    _check_filesystems
+ 		    _check_dmesg || err=true
++		    _check_kmemleak || err=true
+ 		fi
+ 
+ 	    fi
+diff --git a/common/rc b/common/rc
+index cb83918..6dc77d5 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3339,6 +3339,57 @@ _check_dmesg()
+ 	fi
+ }
+ 
++# set up kmemleak
++_init_kmemleak()
++{
++	local _kern_knob="/sys/kernel/debug/kmemleak"
++
++	if [ ! -w "${_kern_knob}" ]; then
++		return 0
++	fi
++
++	# Scan for all the memory leaks that have happened to date and
++	# clear them so that we can pinpoint leaks to tests accurately.
++	# Scan twice because the first write finishes before the scan
++	# does....
++	echo "scan" > "${_kern_knob}"
++	cat "${_kern_knob}" > /dev/null
++	echo "scan" > "${_kern_knob}"
++	cat "${_kern_knob}" > /dev/null
++	echo "clear" > "${_kern_knob}"
++}
++
++# check kmemleak log
++_check_kmemleak()
++{
++	local _kern_knob="/sys/kernel/debug/kmemleak"
++	local _leak_file="${RESULT_DIR}/check_kmemleak"
++
++	if [ ! -w "${_kern_knob}" ]; then
++		return 0
++	fi
++
++	# Tell the kernel to scan for memory leaks.  Apparently the write
++	# returns before the scan is complete, so do it twice in the hopes
++	# that twice is enough to capture all the leaks.
++	echo "scan" > "${_kern_knob}"
++	sed -e 's/age [0-9\.]*s/age XXXX/g' < "${_kern_knob}" > "${_leak_file}.new"
++	echo "scan" > "${_kern_knob}"
++	sed -e 's/age [0-9\.]*s/age XXXX/g' < "${_kern_knob}" > "${_leak_file}.new"
++
++	diff -u -N "${_leak_file}" "${_leak_file}.new" > $seqres.kmemleak
++	res=$?
++	mv "${_leak_file}.new" "${_leak_file}"
++
++	if [ $res -ne 0 ]; then
++		_dump_err "_check_kmemleak: something found in kmemleak (see $seqres.kmemleak)"
++		return 1
++	else
++		rm -f $seqres.kmemleak
++		return 0
++	fi
++}
++
+ # don't check dmesg log after test
+ _disable_dmesg_check()
+ {
