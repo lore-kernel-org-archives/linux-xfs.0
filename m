@@ -1,223 +1,508 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21667 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752229AbdK1WdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 17:33:20 -0500
-Date: Tue, 28 Nov 2017 14:33:08 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:19893 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751613AbdK2BZ5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:25:57 -0500
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1Pu0T014958
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:25:56 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1PtEg011490
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:25:56 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAT1Ptrg025680
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:25:55 GMT
+Subject: [PATCH 05/16] xfs: set up scrub cross-referencing helpers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 10/13] fstests: crash consistency fsx test using
- dm-log-writes
-Message-ID: <20171128223308.GC21412@magnolia>
-References: <1504638680-25682-1-git-send-email-amir73il@gmail.com>
- <1504638680-25682-11-git-send-email-amir73il@gmail.com>
- <CAOQ4uxi_SjKCJ97Knvh4S6UiD3jskHEqDja7wwc+-mXp4CNbEw@mail.gmail.com>
- <20171127150439.i4tpt4yhooxnoaiz@destiny>
- <CAOQ4uxiGryFy7GLZUa0EWcbT+50cMfBb8a2dYa1mZ7tEf+UURg@mail.gmail.com>
- <20171128172152.ktvpnwv233govfwl@destiny>
- <CAOQ4uxgeKdZnxXcvt10MG2kT4PTZ4eZH+-v2R0zPJXTcRvONeQ@mail.gmail.com>
- <20171128200035.26kqhetxtemnm7z4@destiny>
- <CAOQ4uxh2OX9Lbnauv-ip5GC_8oCJ38hYsjjvp0+JFGYLqRk7nw@mail.gmail.com>
- <CAOQ4uxhQu-1AK71zg4Ce0cJd+xRt3Gf9zMMVb=Rs00zFuWA3hQ@mail.gmail.com>
+Date: Tue, 28 Nov 2017 17:25:54 -0800
+Message-ID: <151191875457.8553.996068921490786157.stgit@magnolia>
+In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
+References: <151191872395.8553.15627872818207535470.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhQu-1AK71zg4Ce0cJd+xRt3Gf9zMMVb=Rs00zFuWA3hQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <jbacik@fb.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 28, 2017 at 11:17:01PM +0200, Amir Goldstein wrote:
-> On Tue, Nov 28, 2017 at 10:26 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > On Tue, Nov 28, 2017 at 10:00 PM, Josef Bacik <josef@toxicpanda.com> wrote:
-> >> On Tue, Nov 28, 2017 at 09:32:59PM +0200, Amir Goldstein wrote:
-> >>> On Tue, Nov 28, 2017 at 7:21 PM, Josef Bacik <josef@toxicpanda.com> wrote:
-> >>> > On Tue, Nov 28, 2017 at 06:48:43PM +0200, Amir Goldstein wrote:
-> >>> >> On Mon, Nov 27, 2017 at 5:04 PM, Josef Bacik <josef@toxicpanda.com> wrote:
-> >>> >> > On Mon, Nov 27, 2017 at 11:56:58AM +0200, Amir Goldstein wrote:
-> >>> >> >> On Tue, Sep 5, 2017 at 10:11 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> >>> >> >> > Cherry-picked the test from commit 70d41e17164b
-> >>> >> >> > in Josef Bacik's fstests tree (https://github.com/josefbacik/fstests).
-> >>> >> >> > Quoting from Josef's commit message:
-> >>> >> >> >
-> >>> >> >> >   The test just runs some ops and exits, then finds all of the good buffers
-> >>> >> >> >   in the directory we provided and:
-> >>> >> >> >   - replays up to the mark given
-> >>> >> >> >   - mounts the file system and compares the md5sum
-> >>> >> >> >   - unmounts and fsck's to check for metadata integrity
-> >>> >> >> >
-> >>> >> >> >   dm-log-writes will pretend to do discard and the replay-log tool will
-> >>> >> >> >   replay it properly depending on the underlying device, either by writing
-> >>> >> >> >   0's or actually calling the discard ioctl, so I've enabled discard in the
-> >>> >> >> >   test for maximum fun.
-> >>> >> >> >
-> >>> >> >> > [Amir:]
-> >>> >> >> > - Removed unneeded _test_falloc_support dynamic FSX_OPTS
-> >>> >> >> > - Fold repetitions into for loops
-> >>> >> >> > - Added place holders for using constant random seeds
-> >>> >> >> > - Add pre umount checkpint
-> >>> >> >> > - Add test to new 'replay' group
-> >>> >> >> > - Address review comments by Eryu Guan
-> >>> >> >> >
-> >>> >> >> > Cc: Josef Bacik <jbacik@fb.com>
-> >>> >> >> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> >>> >> >>
-> >>> >> >>
-> >>> >> >> Josef,
-> >>> >> >>
-> >>> >> >> As you know, this test is now merged to xfstest as generic/455.
-> >>> >> >> I have been running the test for a while on xfs and it occasionally
-> >>> >> >> reports inconsistencies which I try to investigate.
-> >>> >> >>
-> >>> >> >> In some of the reports, it appears that dm-log-writes may be exhibiting
-> >>> >> >> a reliability issue (see below).
-> >>> >> >>
-> >>> >> >
-> >>> >> > It's not a reliability issue, its a caching issue.  dm-log-writes is just
-> >>> >> > issuing bio's to the log device, and our destructor waits for all pending io
-> >>> >> > blocks to complete before exiting, so unless I've missed how dm is destroying
-> >>> >> > devices everything should be on disk.
-> >>> >> >
-> >>> >> > However since we replay in userspace we are going through the blockdevice's
-> >>> >> > pagecache, so we could have stale pages left in place which is screwing us up.
-> >>> >> > Will you try this patch and see if it fixes the problem?  Thanks,
-> >>> >> >
-> >>> >> > Josef
-> >>> >> >
-> >>> >> >
-> >>> >> > diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
-> >>> >> > index 8b80a9ce9ea9..1c502930af5e 100644
-> >>> >> > --- a/drivers/md/dm-log-writes.c
-> >>> >> > +++ b/drivers/md/dm-log-writes.c
-> >>> >> > @@ -545,6 +545,8 @@ static void log_writes_dtr(struct dm_target *ti)
-> >>> >> >                    !atomic_read(&lc->pending_blocks));
-> >>> >> >         kthread_stop(lc->log_kthread);
-> >>> >> >
-> >>> >> > +       invalidate_bdev(lc->logdev->bdev);
-> >>> >> > +       invalidate_bdev(lc->dev->bdev);
-> >>> >> >         WARN_ON(!list_empty(&lc->logging_blocks));
-> >>> >> >         WARN_ON(!list_empty(&lc->unflushed_blocks));
-> >>> >> >         dm_put_device(ti, lc->dev);
-> >>> >>
-> >>> >> Josef,
-> >>> >>
-> >>> >> With your patch OR with my xfstest patch that adds "sync" I did not yet see
-> >>> >> another problem of garbage fs after _log_writes_remove.
-> >>> >>
-> >>> >> I did however, encounter this error (failure to verify read data during fsx)
-> >>> >> from scratch/log-writes device (see attached full log).
-> >>> >>
-> >>> >> I will keep running the test to collect more information.
-> >>> >>
-> >>> >
-> >>> > That failure I'll lay at the feet of whatever fs you are testing ;).  I'm glad
-> >>> > my patch fixed the replay problem, I'll send that up.  Thanks,
-> >>> >
-> >>>
-> >>> O oh!. You are implying that xfs fails plain fsx and nobody noticed.
-> >>> That is not where I would place my bet.
-> >>>
-> >>
-> >> Why not?  This is one of the only tests that runs multiple threads of fsx at the
-> >> same time.  dm-log-writes does nothing special with the actual target disk, it
-> >> just clones the bio's as it gets them, sets the bdev for the normal device and
-> >> sends them on their way, there's no reason to think we're breaking that.
-> >> Furthermore fsx is in normal page cache mode, not O_DIRECT, so it's more likely
-> >> something else is going wrong and not dm-log-writes, unless there is so little
-> >> memory on the system that we are constantly reading cold-cache.  Thanks,
-> >>
-> >
-> > Very well, I'll run the same test on bare xfs for comparison.
-> >
-> 
-> Well, what do you know.
-> xfs crashed and burned after 18 rounds of 455 on test partition.
-> Same check fs error I blamed dm-log-writes for.
-> 
-> Darrick,
-> 
-> Attached the modified 455 test which runs fsx on test partition
-> and full log (+ dmesg with nothing of interest AFAICT).
-> xfs code is 4.14.0-rc8 + your patch
-> "xfs: log recovery should replay deferred ops in order"
-> 
-> The test was run on a 100G partition on a spinning disk.
-> 
-> Let me know what you think.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I didn't even get /that/ far; with 4.15-rc1 and a vanilla g/455 I see
-immediately:
+Create some helper functions that we'll use later to deal with problems
+we might encounter while cross referencing metadata with other metadata.
 
-[18395.236285] run fstests generic/457 at 2017-11-28 14:15:49
-[18395.561112] XFS (sdf): Unmounting Filesystem
-[18395.752713] XFS (sdf): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[18395.753469] XFS (sdf): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[18395.754259] XFS (sdf): Mounting V5 Filesystem
-[18395.757525] XFS (sdf): Ending clean mount
-[18395.796992] XFS (sdf): Unmounting Filesystem
-[18395.949561] XFS (dm-0): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[18395.950316] XFS (dm-0): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[18395.951103] XFS (dm-0): Mounting V5 Filesystem
-[18395.954946] XFS (dm-0): Ending clean mount
-[18396.132701] XFS (dm-0): Unmounting Filesystem
-[18396.309939] XFS (sdf): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[18396.310913] XFS (sdf): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[18396.311798] XFS (sdf): Mounting V5 Filesystem
-[18396.330304] XFS (sdf): Starting recovery (logdev: internal)
-[18396.334996] XFS (sdf): Metadata corruption detected at xfs_inode_buf_verify+0xc4/0x330 [xfs], xfs_inode block 0x80
-[18396.336389] XFS (sdf): Unmount and run xfs_repair
-[18396.336945] XFS (sdf): First 64 bytes of corrupted metadata buffer:
-[18396.337679] ffffc90004080000: 00 4e 41 ed 03 01 00 00 00 00 00 00 00 00 00 00  .NA.............
-[18396.338647] ffffc90004080010: 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[18396.339576] ffffc90004080020: 00 00 00 00 00 00 00 00 5a 1d e0 16 0b 69 8a 10  ........Z....i..
-[18396.340341] ffffc90004080030: 5a 1d e0 16 0b 69 8a 10 00 00 00 00 00 00 00 06  Z....i..........
-[18396.341091] XFS (sdf): bad inode magic/vsn daddr 128 #0 (magic=4e)
-[18396.341754] XFS (sdf): metadata I/O error: block 0x80 ("xlog_recover_do..(read#2)") error 117 numblks 32
-[18396.343131] XFS (sdf): log mount/recovery failed: error -117
-[18396.343852] XFS (sdf): log mount failed
-
-Off by one in the inode verifier... am I supposed to have Josef's patch?
-
-Also, fwiw I don't see any test failures (or interesting output) with
-your modified 455:
-
-[19344.527290] run fstests generic/455 at 2017-11-28 14:31:38
-[19344.948061] XFS (pmem4): Unmounting Filesystem
-[19345.098299] XFS (dm-0): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[19345.099328] XFS (dm-0): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[19345.100427] XFS (dm-0): Mounting V5 Filesystem
-[19345.105724] XFS (dm-0): Ending clean mount
-[19345.476248] XFS (dm-0): Unmounting Filesystem
-[19346.055840] XFS (pmem4): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[19346.057092] XFS (pmem4): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[19346.057883] XFS (pmem4): Mounting V5 Filesystem
-[19346.059640] XFS (pmem4): Ending clean mount
-[19346.084019] XFS (pmem4): Unmounting Filesystem
-[19346.492297] XFS (pmem4): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[19346.492950] XFS (pmem4): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[19346.493865] XFS (pmem4): Mounting V5 Filesystem
-[19346.495732] XFS (pmem4): Ending clean mount
-[19346.556181] XFS (pmem4): Unmounting Filesystem
-[19346.780951] XFS (pmem3): Unmounting Filesystem
-[19346.857051] XFS (pmem3): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[19346.858352] XFS (pmem3): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[19346.859053] XFS (pmem3): Mounting V5 Filesystem
-[19346.861319] XFS (pmem3): Ending clean mount
-[19346.940162] XFS (pmem3): Unmounting Filesystem
-[19346.980932] XFS (pmem3): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
-[19346.981640] XFS (pmem3): EXPERIMENTAL reflink feature enabled. Use at your own risk!
-[19346.982359] XFS (pmem3): Mounting V5 Filesystem
-[19346.984765] XFS (pmem3): Ending clean mount
-[19347.204449] XFS (pmem3): Unmounting Filesystem
-
-I think it's supposed to cycle more than that, right?
-
---D
-
-> 
-> Amir.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/btree.c  |   69 ++++++++++++++++++++-----
+ fs/xfs/scrub/btree.h  |    9 +++
+ fs/xfs/scrub/common.c |  138 +++++++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/scrub/common.h |   22 ++++++++
+ fs/xfs/scrub/scrub.c  |   10 ++++
+ fs/xfs/scrub/trace.h  |   22 ++++++++
+ 6 files changed, 248 insertions(+), 22 deletions(-)
 
 
-
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index df07661..8d48b5b1 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -42,12 +42,14 @@
+  * Check for btree operation errors.  See the section about handling
+  * operational errors in common.c.
+  */
+-bool
+-xfs_scrub_btree_process_error(
++static bool
++__xfs_scrub_btree_process_error(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_btree_cur		*cur,
+ 	int				level,
+-	int				*error)
++	int				*error,
++	bool				xref,
++	void				*ret_ip)
+ {
+ 	if (*error == 0)
+ 		return true;
+@@ -60,36 +62,78 @@ xfs_scrub_btree_process_error(
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
+ 		/* Note the badness but don't abort. */
+-		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++		sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
+ 		*error = 0;
+ 		/* fall through */
+ 	default:
+ 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+ 			trace_xfs_scrub_ifork_btree_op_error(sc, cur, level,
+-					*error, __return_address);
++					*error, ret_ip);
+ 		else
+ 			trace_xfs_scrub_btree_op_error(sc, cur, level,
+-					*error, __return_address);
++					*error, ret_ip);
+ 		break;
+ 	}
+ 	return false;
+ }
+ 
++bool
++xfs_scrub_btree_process_error(
++	struct xfs_scrub_context	*sc,
++	struct xfs_btree_cur		*cur,
++	int				level,
++	int				*error)
++{
++	return __xfs_scrub_btree_process_error(sc, cur, level, error, false,
++			__return_address);
++}
++
++bool
++xfs_scrub_btree_xref_process_error(
++	struct xfs_scrub_context	*sc,
++	struct xfs_btree_cur		*cur,
++	int				level,
++	int				*error)
++{
++	return __xfs_scrub_btree_process_error(sc, cur, level, error, true,
++			__return_address);
++}
++
+ /* Record btree block corruption. */
+-void
+-xfs_scrub_btree_set_corrupt(
++static void
++__xfs_scrub_btree_set_corrupt(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_btree_cur		*cur,
+-	int				level)
++	int				level,
++	bool				xref,
++	void				*ret_ip)
+ {
+-	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
+ 
+ 	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+ 		trace_xfs_scrub_ifork_btree_error(sc, cur, level,
+-				__return_address);
++				ret_ip);
+ 	else
+ 		trace_xfs_scrub_btree_error(sc, cur, level,
+-				__return_address);
++				ret_ip);
++}
++
++void
++xfs_scrub_btree_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	struct xfs_btree_cur		*cur,
++	int				level)
++{
++	__xfs_scrub_btree_set_corrupt(sc, cur, level, false, __return_address);
++}
++
++void
++xfs_scrub_btree_xref_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	struct xfs_btree_cur		*cur,
++	int				level)
++{
++	__xfs_scrub_btree_set_corrupt(sc, cur, level, true, __return_address);
+ }
+ 
+ /*
+@@ -512,5 +556,6 @@ xfs_scrub_btree(
+ 	}
+ 
+ out:
++
+ 	return error;
+ }
+diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
+index 4de825a6..e2b868e 100644
+--- a/fs/xfs/scrub/btree.h
++++ b/fs/xfs/scrub/btree.h
+@@ -26,10 +26,19 @@
+ bool xfs_scrub_btree_process_error(struct xfs_scrub_context *sc,
+ 		struct xfs_btree_cur *cur, int level, int *error);
+ 
++/* Check for btree xref operation errors. */
++bool xfs_scrub_btree_xref_process_error(struct xfs_scrub_context *sc,
++				struct xfs_btree_cur *cur, int level,
++				int *error);
++
+ /* Check for btree corruption. */
+ void xfs_scrub_btree_set_corrupt(struct xfs_scrub_context *sc,
+ 		struct xfs_btree_cur *cur, int level);
+ 
++/* Check for btree xref discrepancies. */
++void xfs_scrub_btree_xref_set_corrupt(struct xfs_scrub_context *sc,
++		struct xfs_btree_cur *cur, int level);
++
+ struct xfs_scrub_btree;
+ typedef int (*xfs_scrub_btree_rec_fn)(
+ 	struct xfs_scrub_btree	*bs,
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index ac95fe9..9d6730f 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -78,12 +78,14 @@
+  */
+ 
+ /* Check for operational errors. */
+-bool
+-xfs_scrub_process_error(
++static bool
++__xfs_scrub_process_error(
+ 	struct xfs_scrub_context	*sc,
+ 	xfs_agnumber_t			agno,
+ 	xfs_agblock_t			bno,
+-	int				*error)
++	int				*error,
++	bool				xref,
++	void				*ret_ip)
+ {
+ 	switch (*error) {
+ 	case 0:
+@@ -95,24 +97,48 @@ xfs_scrub_process_error(
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
+ 		/* Note the badness but don't abort. */
+-		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++		sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
+ 		*error = 0;
+ 		/* fall through */
+ 	default:
+ 		trace_xfs_scrub_op_error(sc, agno, bno, *error,
+-				__return_address);
++				ret_ip);
+ 		break;
+ 	}
+ 	return false;
+ }
+ 
+-/* Check for operational errors for a file offset. */
+ bool
+-xfs_scrub_fblock_process_error(
++xfs_scrub_process_error(
++	struct xfs_scrub_context	*sc,
++	xfs_agnumber_t			agno,
++	xfs_agblock_t			bno,
++	int				*error)
++{
++	return __xfs_scrub_process_error(sc, agno, bno, error, false,
++			__return_address);
++}
++
++bool
++xfs_scrub_xref_process_error(
++	struct xfs_scrub_context	*sc,
++	xfs_agnumber_t			agno,
++	xfs_agblock_t			bno,
++	int				*error)
++{
++	return __xfs_scrub_process_error(sc, agno, bno, error, true,
++			__return_address);
++}
++
++/* Check for operational errors for a file offset. */
++static bool
++__xfs_scrub_fblock_process_error(
+ 	struct xfs_scrub_context	*sc,
+ 	int				whichfork,
+ 	xfs_fileoff_t			offset,
+-	int				*error)
++	int				*error,
++	bool				xref,
++	void				*ret_ip)
+ {
+ 	switch (*error) {
+ 	case 0:
+@@ -124,17 +150,39 @@ xfs_scrub_fblock_process_error(
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
+ 		/* Note the badness but don't abort. */
+-		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++		sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
+ 		*error = 0;
+ 		/* fall through */
+ 	default:
+ 		trace_xfs_scrub_file_op_error(sc, whichfork, offset, *error,
+-				__return_address);
++				ret_ip);
+ 		break;
+ 	}
+ 	return false;
+ }
+ 
++bool
++xfs_scrub_fblock_process_error(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_fileoff_t			offset,
++	int				*error)
++{
++	return __xfs_scrub_fblock_process_error(sc, whichfork, offset, error,
++			false, __return_address);
++}
++
++bool
++xfs_scrub_fblock_xref_process_error(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_fileoff_t			offset,
++	int				*error)
++{
++	return __xfs_scrub_fblock_process_error(sc, whichfork, offset, error,
++			true, __return_address);
++}
++
+ /*
+  * Handling scrub corruption/optimization/warning checks.
+  *
+@@ -183,6 +231,16 @@ xfs_scrub_block_set_corrupt(
+ 	trace_xfs_scrub_block_error(sc, bp->b_bn, __return_address);
+ }
+ 
++/* Record a corruption while cross-referencing. */
++void
++xfs_scrub_block_xref_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*bp)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
++	trace_xfs_scrub_block_error(sc, bp->b_bn, __return_address);
++}
++
+ /*
+  * Record a corrupt inode.  The trace data will include the block given
+  * by bp if bp is given; otherwise it will use the block location of the
+@@ -198,6 +256,17 @@ xfs_scrub_ino_set_corrupt(
+ 	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
+ }
+ 
++/* Record a corruption while cross-referencing with an inode. */
++void
++xfs_scrub_ino_xref_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	xfs_ino_t			ino,
++	struct xfs_buf			*bp)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
++	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
++}
++
+ /* Record corruption in a block indexed by a file fork. */
+ void
+ xfs_scrub_fblock_set_corrupt(
+@@ -209,6 +278,17 @@ xfs_scrub_fblock_set_corrupt(
+ 	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
+ }
+ 
++/* Record a corruption while cross-referencing a fork block. */
++void
++xfs_scrub_fblock_xref_set_corrupt(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_fileoff_t			offset)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
++	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
++}
++
+ /*
+  * Warn about inodes that need administrative review but is not
+  * incorrect.
+@@ -572,3 +652,41 @@ xfs_scrub_setup_inode_contents(
+ 	/* scrub teardown will unlock and release the inode for us */
+ 	return error;
+ }
++
++/*
++ * Predicate that decides if we need to evaluate the cross-reference check.
++ * If there was an error accessing the cross-reference btree, just delete
++ * the cursor and skip the check.
++ */
++bool
++xfs_scrub_should_xref(
++	struct xfs_scrub_context	*sc,
++	int				*error,
++	struct xfs_btree_cur		**curpp)
++{
++	/* If not a btree cross-reference, just check the error code. */
++	if (curpp == NULL) {
++		if (*error == 0)
++			return true;
++		goto fail;
++	}
++
++	ASSERT(*curpp != NULL);
++	/* If no error or we've already given up on xref, just bail out. */
++	if (*error == 0 || *curpp == NULL)
++		return true;
++
++	/* xref error, delete cursor and bail out. */
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
++	xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
++	*curpp = NULL;
++fail:
++	trace_xfs_scrub_xref_error(sc, *error, __return_address);
++
++	/*
++	 * Errors encountered during cross-referencing with another
++	 * data structure should not cause this scrubber to abort.
++	 */
++	*error = 0;
++	return false;
++}
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 5c04385..47576d9 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -56,6 +56,11 @@ bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
+ 		xfs_fileoff_t offset, int *error);
+ 
++bool xfs_scrub_xref_process_error(struct xfs_scrub_context *sc,
++		xfs_agnumber_t agno, xfs_agblock_t bno, int *error);
++bool xfs_scrub_fblock_xref_process_error(struct xfs_scrub_context *sc,
++		int whichfork, xfs_fileoff_t offset, int *error);
++
+ void xfs_scrub_block_set_preen(struct xfs_scrub_context *sc,
+ 		struct xfs_buf *bp);
+ void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino,
+@@ -68,6 +73,13 @@ void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
+ void xfs_scrub_fblock_set_corrupt(struct xfs_scrub_context *sc, int whichfork,
+ 		xfs_fileoff_t offset);
+ 
++void xfs_scrub_block_xref_set_corrupt(struct xfs_scrub_context *sc,
++		struct xfs_buf *bp);
++void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
++		struct xfs_buf *bp);
++void xfs_scrub_fblock_xref_set_corrupt(struct xfs_scrub_context *sc,
++		int whichfork, xfs_fileoff_t offset);
++
+ void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino,
+ 		struct xfs_buf *bp);
+ void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
+@@ -76,6 +88,10 @@ void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
+ void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
+ int xfs_scrub_checkpoint_log(struct xfs_mount *mp);
+ 
++/* Are we set up for a cross-referencing operation? */
++bool xfs_scrub_should_xref(struct xfs_scrub_context *sc, int *error,
++			   struct xfs_btree_cur **curpp);
++
+ /* Setup functions */
+ int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
+ int xfs_scrub_setup_ag_header(struct xfs_scrub_context *sc,
+@@ -141,4 +157,10 @@ int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
+ int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
+ 				   struct xfs_inode *ip, unsigned int resblks);
+ 
++/* Figure out the correct corruption flag for whatever's wrong. */
++static inline __u32 xfs_scrub_corrupt_flag(bool xref)
++{
++	return xref ? XFS_SCRUB_OFLAG_XCORRUPT : XFS_SCRUB_OFLAG_CORRUPT;
++}
++
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 9c42c4e..c4ad1b7 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -111,6 +111,16 @@
+  * structure itself is corrupt, the CORRUPT flag will be set.  If
+  * the metadata is correct but otherwise suboptimal, the PREEN flag
+  * will be set.
++ *
++ * We perform secondary validation of filesystem metadata by
++ * cross-referencing every record with all other available metadata.
++ * For example, for block mapping extents, we verify that there are no
++ * records in the free space and inode btrees corresponding to that
++ * space extent and that there is a corresponding entry in the reverse
++ * mapping btree.  Inconsistent metadata is noted by setting the
++ * XCORRUPT flag; btree query function errors are noted by setting the
++ * XFAIL flag and deleting the cursor to prevent further attempts to
++ * cross-reference with a defective btree.
+  */
+ 
+ /*
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index c4ebfb5..81becf6 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -491,6 +491,28 @@ DEFINE_EVENT(xfs_scrub_sbtree_class, name, \
+ DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_rec);
+ DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_key);
+ 
++TRACE_EVENT(xfs_scrub_xref_error,
++	TP_PROTO(struct xfs_scrub_context *sc, int error, void *ret_ip),
++	TP_ARGS(sc, error, ret_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(int, type)
++		__field(int, error)
++		__field(void *, ret_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->mp->m_super->s_dev;
++		__entry->type = sc->sm->sm_type;
++		__entry->error = error;
++		__entry->ret_ip = ret_ip;
++	),
++	TP_printk("dev %d:%d type %u xref error %d ret_ip %pF",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->type,
++		  __entry->error,
++		  __entry->ret_ip)
++);
++
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+ 
+ #undef TRACE_INCLUDE_PATH
 
