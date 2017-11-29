@@ -1,44 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:37794 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752223AbdK3Qgt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 11:36:49 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:17363 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751791AbdK2Snb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:43:31 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vATIhUDM026125
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:43:30 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vATIhUC3013608
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:43:30 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vATIhT7P031163
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:43:30 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 15/17] Add parent pointers to rename
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-16-git-send-email-allison.henderson@oracle.com>
+ <20171128182040.GJ21412@magnolia>
+Message-ID: <58e89a7c-9cc7-73f7-5d3b-389ba951c75a@oracle.com>
+Date: Wed, 29 Nov 2017 11:43:29 -0700
 MIME-Version: 1.0
-In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
-From: Yu Chen <yu.chen.surf@gmail.com>
-Date: Fri, 1 Dec 2017 00:36:46 +0800
-Message-ID: <CADjb_WRG8hxJB3zY5_XnZqeQbCy3jYW5xJaS63_7FGztZymLzg@mail.gmail.com>
-Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20171128182040.GJ21412@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, Dan Williams <dan.j.williams@intel.com>, Linux PM list <linux-pm@vger.kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Zhang Rui <rui.zhang@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 30, 2017 at 7:23 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> This is a followup from the original RFC which proposed to start
-> to kill kthread freezing all together [0]. Instead of going straight
-> out to the jugular for kthread freezing this series only addresses
-> killing freezer calls on filesystems which implement freeze_fs, after
-> we let the kernel freeze these filesystems for us on suspend.
->
->
->   o xfs
->   o reiserfs
->   o nilfs2
->   o jfs
->   o f2fs
->   o ext4
->   o ext2
->   o btrfs
->
+On 11/28/2017 11:20 AM, Darrick J. Wong wrote:
 
-Thanks for your work on this!  I'll test xfs part first.
-BTW, is nfs able to be included in this set? I also encountered a
-freeze() failure
-due to nfs access during that stage recently.
--- 
-Thanks,
-Yu
+> On Fri, Nov 17, 2017 at 11:21:43AM -0700, Allison Henderson wrote:
+>> This patch removes the old parent pointer attribute during the
+>> rename operation, and re-adds the updated parent pointer
+>>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_dir2.c |  6 ++++--
+>>   fs/xfs/xfs_inode.c       | 26 ++++++++++++++++++++------
+>>   2 files changed, 24 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+>> index 25b370b..ed25203 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2.c
+>> @@ -324,10 +324,11 @@ xfs_dir_createname(
+>>   	else
+>>   		rval = xfs_dir2_node_addname(args);
+>>   
+>> +out_free:
+>>   	/* return the location that this entry was place in the parent inode */
+>>   	if (offset)
+>>   		*offset = args->offset;
+>> -out_free:
+>> +
+>>   	kmem_free(args);
+>>   	return rval;
+>>   }
+>> @@ -496,9 +497,10 @@ xfs_dir_removename(
+>>   		rval = xfs_dir2_leaf_removename(args);
+>>   	else
+>>   		rval = xfs_dir2_node_removename(args);
+>> +out_free:
+>>   	if (offset)
+>>   		*offset = args->offset;
+>> -out_free:
+>> +
+> Why do these labels need to be moved here?  The *offset = ... lines are
+> new, so why not put them in their final place in the patch that adds
+> those lines?
+Ok, if I recall correctly, I think I had found a bug where the offset 
+was not getting set when it should have, and fixed it when I added the 
+rename patch to the original set.  I will fold these down into their 
+respective patches.
+>>   	kmem_free(args);
+>>   	return rval;
+>>   }
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index a289a40..da5c761 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -2984,6 +2984,8 @@ xfs_rename(
+>>   	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
+>>   	int			spaceres;
+>>   	int			error;
+>> +	xfs_dir2_dataptr_t	new_diroffset;
+>> +	xfs_dir2_dataptr_t	old_diroffset;
+>>   
+>>   	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
+>>   
+>> @@ -3086,13 +3088,12 @@ xfs_rename(
+>>   		 */
+>>   		error = xfs_dir_createname(tp, target_dp, target_name,
+>>   					   src_ip->i_ino, &first_block, &dfops,
+>> -					   spaceres, NULL);
+>> +					   spaceres, &new_diroffset);
+>>   		if (error)
+>>   			goto out_bmap_cancel;
+>>   
+>>   		xfs_trans_ichgtime(tp, target_dp,
+>>   					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>> -
+> Huh?
+>
+Sorry, will fix
+>>   		if (new_parent && src_is_directory) {
+>>   			error = xfs_bumplink(tp, target_dp);
+>>   			if (error)
+>> @@ -3126,7 +3127,7 @@ xfs_rename(
+>>   		 */
+>>   		error = xfs_dir_replace(tp, target_dp, target_name,
+>>   					src_ip->i_ino, &first_block, &dfops,
+>> -					spaceres, NULL);
+>> +					spaceres, &new_diroffset);
+>>   		if (error)
+>>   			goto out_bmap_cancel;
+>>   
+>> @@ -3161,7 +3162,7 @@ xfs_rename(
+>>   		 */
+>>   		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+>>   					target_dp->i_ino, &first_block, &dfops,
+>> -					spaceres, NULL);
+>> +					spaceres, &new_diroffset);
+>>   		ASSERT(error != -EEXIST);
+>>   		if (error)
+>>   			goto out_bmap_cancel;
+>> @@ -3200,11 +3201,12 @@ xfs_rename(
+>>   	 */
+>>   	if (wip) {
+>>   		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+>> -					&first_block, &dfops, spaceres, NULL);
+>> +					&first_block, &dfops, spaceres,
+>> +					&old_diroffset);
+>>   	} else
+>>   		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+>>   					   &first_block, &dfops, spaceres,
+>> -					   NULL);
+>> +					   &old_diroffset);
+>>   	if (error)
+>>   		goto out_bmap_cancel;
+>>   
+>> @@ -3234,6 +3236,18 @@ xfs_rename(
+>>   		VFS_I(wip)->i_state &= ~I_LINKABLE;
+>>   	}
+>>   
+>> +	if (new_parent && xfs_sb_version_hasparent(&mp->m_sb)) {
+> I'm confused about checking new_parent -- does this cause us to forget
+> to update the pptr for a rename within a directory?
+>
+> I'm assuming that all of these directory operations will get their own
+> xfstests in time... (create a file, check pptr; hardlink a file, check
+> both pptrs; delete one of the links, check pptrs; check pptr after a
+> rename within a dir; check pptr after a rename between dirs; etc.)
+>
+> --D
+Oh, initially I had added this with the thought that we update parent 
+pointers when we get new parents, but I think you're right. We'll need 
+to update if the name changes too.  I will take out the new_parent 
+check.  Thx!
+>> +		error = xfs_parent_add(tp, target_dp, src_ip, target_name,
+>> +				       new_diroffset, &dfops, &first_block);
+>> +		if (error)
+>> +			goto out_bmap_cancel;
+>> +
+>> +		error = xfs_parent_remove(tp, src_dp, src_ip,
+>> +					  old_diroffset, &dfops, &first_block);
+>> +		if (error)
+>> +			goto out_bmap_cancel;
+>> +	}
+>> +
+>>   	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>>   	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+>>   	if (new_parent)
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message tomajordomo@vger.kernel.org
+>> More majordomo info athttp://vger.kernel.org/majordomo-info.html
+
