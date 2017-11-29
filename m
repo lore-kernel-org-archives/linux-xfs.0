@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54202 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:54168 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753293AbdK2XYN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 18:24:13 -0500
+        id S1753255AbdK2XYM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 18:24:12 -0500
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH 10/11] nilfs2: remove not needed freezing calls
-Date: Wed, 29 Nov 2017 15:23:55 -0800
-Message-Id: <20171129232356.28296-11-mcgrof@kernel.org>
+Subject: [PATCH 09/11] f2fs: remove not needed freezing calls
+Date: Wed, 29 Nov 2017 15:23:54 -0800
+Message-Id: <20171129232356.28296-10-mcgrof@kernel.org>
 In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
 References: <20171129232356.28296-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -64,79 +64,59 @@ expression task;
 Generated-by: Coccinelle SmPL
 Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- fs/nilfs2/segment.c | 48 ++++++++++++++++++++----------------------------
- 1 file changed, 20 insertions(+), 28 deletions(-)
+ fs/f2fs/gc.c      | 5 +----
+ fs/f2fs/segment.c | 6 +-----
+ 2 files changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/fs/nilfs2/segment.c b/fs/nilfs2/segment.c
-index 9f3ffba41533..407e12a60145 100644
---- a/fs/nilfs2/segment.c
-+++ b/fs/nilfs2/segment.c
-@@ -2543,6 +2543,8 @@ static int nilfs_segctor_thread(void *arg)
- 	struct nilfs_sc_info *sci = (struct nilfs_sc_info *)arg;
- 	struct the_nilfs *nilfs = sci->sc_super->s_fs_info;
- 	int timeout = 0;
-+	DEFINE_WAIT(wait);
-+	int should_sleep = 1;
+diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+index d844dcb80570..1032d6aa1756 100644
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -32,10 +32,9 @@ static int gc_thread_func(void *data)
  
- 	sci->sc_timer_task = current;
+ 	wait_ms = gc_th->min_sleep_time;
  
-@@ -2574,38 +2576,28 @@ static int nilfs_segctor_thread(void *arg)
- 		timeout = 0;
- 	}
+-	set_freezable();
+ 	do {
+ 		wait_event_interruptible_timeout(*wq,
+-				kthread_should_stop() || freezing(current) ||
++				kthread_should_stop() ||
+ 				gc_th->gc_wake,
+ 				msecs_to_jiffies(wait_ms));
  
-+	prepare_to_wait(&sci->sc_wait_daemon, &wait,
-+			TASK_INTERRUPTIBLE);
+@@ -43,8 +42,6 @@ static int gc_thread_func(void *data)
+ 		if (gc_th->gc_wake)
+ 			gc_th->gc_wake = 0;
  
--	if (freezing(current)) {
-+	if (sci->sc_seq_request != sci->sc_seq_done)
-+		should_sleep = 0;
-+	else if (sci->sc_flush_request)
-+		should_sleep = 0;
-+	else if (sci->sc_state & NILFS_SEGCTOR_COMMIT)
-+		should_sleep = time_before(jiffies,
-+				sci->sc_timer.expires);
-+
-+	if (should_sleep) {
- 		spin_unlock(&sci->sc_state_lock);
--		try_to_freeze();
-+		schedule();
- 		spin_lock(&sci->sc_state_lock);
--	} else {
--		DEFINE_WAIT(wait);
--		int should_sleep = 1;
+-		if (try_to_freeze())
+-			continue;
+ 		if (kthread_should_stop())
+ 			break;
+ 
+diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+index c117e0913f2a..a55e456e67ee 100644
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -1382,18 +1382,14 @@ static int issue_discard_thread(void *data)
+ 	unsigned int wait_ms = DEF_MIN_DISCARD_ISSUE_TIME;
+ 	int issued;
+ 
+-	set_freezable();
 -
--		prepare_to_wait(&sci->sc_wait_daemon, &wait,
--				TASK_INTERRUPTIBLE);
--
--		if (sci->sc_seq_request != sci->sc_seq_done)
--			should_sleep = 0;
--		else if (sci->sc_flush_request)
--			should_sleep = 0;
--		else if (sci->sc_state & NILFS_SEGCTOR_COMMIT)
--			should_sleep = time_before(jiffies,
--					sci->sc_timer.expires);
--
--		if (should_sleep) {
--			spin_unlock(&sci->sc_state_lock);
--			schedule();
--			spin_lock(&sci->sc_state_lock);
--		}
--		finish_wait(&sci->sc_wait_daemon, &wait);
--		timeout = ((sci->sc_state & NILFS_SEGCTOR_COMMIT) &&
--			   time_after_eq(jiffies, sci->sc_timer.expires));
--
--		if (nilfs_sb_dirty(nilfs) && nilfs_sb_need_update(nilfs))
--			set_nilfs_discontinued(nilfs);
- 	}
-+	finish_wait(&sci->sc_wait_daemon, &wait);
-+	timeout = ((sci->sc_state & NILFS_SEGCTOR_COMMIT) &&
-+		   time_after_eq(jiffies, sci->sc_timer.expires));
-+
-+	if (nilfs_sb_dirty(nilfs) && nilfs_sb_need_update(nilfs))
-+		set_nilfs_discontinued(nilfs);
- 	goto loop;
+ 	do {
+ 		init_discard_policy(&dpolicy, DPOLICY_BG,
+ 					dcc->discard_granularity);
  
-  end_thread:
+ 		wait_event_interruptible_timeout(*q,
+-				kthread_should_stop() || freezing(current) ||
++				kthread_should_stop() ||
+ 				dcc->discard_wake,
+ 				msecs_to_jiffies(wait_ms));
+-		if (try_to_freeze())
+-			continue;
+ 		if (kthread_should_stop())
+ 			return 0;
+ 
 -- 
 2.15.0
 
