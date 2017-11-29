@@ -1,96 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39474 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755703AbdKJD1a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2017 22:27:30 -0500
-Date: Thu, 9 Nov 2017 19:27:21 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_io: fix gcc-7 related printf warnings
-Message-ID: <20171110032721.GB25227@magnolia>
-References: <20171110013926.15289-1-david@fromorbit.com>
- <ac210659-80a1-1eec-3704-a79d650ada40@sandeen.net>
- <20171110032104.GA25227@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:43872 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752273AbdK2XFi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 18:05:38 -0500
+Date: Thu, 30 Nov 2017 00:05:32 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [RFC 5/5] pm: remove kernel thread freezing
+Message-ID: <20171129230531.GH16026@wotan.suse.de>
+References: <20171003185313.1017-1-mcgrof@kernel.org>
+ <20171003185313.1017-6-mcgrof@kernel.org>
+ <1862632.MOTT9GD8nq@aspire.rjw.lan>
+ <29004244.0jnB6Wc1z6@aspire.rjw.lan>
+ <20171004004756.GN2294@wotan.suse.de>
+ <1507079033.3075.3.camel@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171110032104.GA25227@magnolia>
+In-Reply-To: <1507079033.3075.3.camel@wdc.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>, "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "jgross@suse.com" <jgross@suse.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.cz" <jack@suse.cz>
 
-On Thu, Nov 09, 2017 at 07:21:04PM -0800, Darrick J. Wong wrote:
-> On Thu, Nov 09, 2017 at 07:43:59PM -0600, Eric Sandeen wrote:
-> > On 11/9/17 7:39 PM, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > New compiler, new checks, new warnings.
-> > > 
-> > > Fix the new [-Wformat-truncation=] warnings that io/fsmap.c is
-> > > throwing w/ gcc-7.2 because "%lld..%lld" requires a buffer 40
-> > > characters long, not 32.
-> > > 
-> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > 
-> > 2^63 is 19 chars, yup.
-> > 
-> > Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-> > 
-> > > ---
-> > >  io/fsmap.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/io/fsmap.c b/io/fsmap.c
-> > > index 448fb5356466..e46fdbaa148c 100644
-> > > --- a/io/fsmap.c
-> > > +++ b/io/fsmap.c
-> > > @@ -184,8 +184,8 @@ dump_map_verbose(
-> > >  	off64_t			agoff, bperag;
-> > >  	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
-> > >  	int			nr_w, dev_w;
-> > > -	char			rbuf[32], bbuf[32], abuf[32], obuf[32];
-> > > -	char			nbuf[32], dbuf[32], gbuf[32];
-> > > +	char			rbuf[40], bbuf[40], abuf[40], obuf[40];
-> > > +	char			nbuf[40], dbuf[40], gbuf[40];
+On Wed, Oct 04, 2017 at 01:03:54AM +0000, Bart Van Assche wrote:
+> On Wed, 2017-10-04 at 02:47 +0200, Luis R. Rodriguez wrote:
+> >   3) Lookup for kthreads which seem to generate IO -- address / review if
+> >      removal of the freezer API can be done somehow with a quescing. This
+> >      is currently for example being done on SCSI / md.
+> >  4) Only after all the above is done should we consider this patch or some
+> >     form of it.
 > 
-> Waitaminute.  The longest format string is bbuf, which gets
-> "[%lld..%lld]:".  The longest number %lld can print is
-> "-9223372036854775807" which requires 20 bytes.  Therefore, bbuf needs
-> 1 + 20 + 2 + 20 + 2 + 1 == 46 bytes, not 40.  rbuf and abuf have similar
-> problems, though I guess a 48-byte string will work for all.
-> 
-> Granted, it's snprintf so it'll just truncate the second number if it
-> has to, but seeing as this came from a gcc warning:
-> 
-> "fsmap.c:228:3: note: ‘snprintf’ output between 8 and 40 bytes into a
-> destination of size 32"
-> 
-> So am I just bad at math, or is gcc wrong here?
+> After having given this more thought, I think we should omit these last two
+> steps. Modifying the md driver such that it does not submit I/O requests while
+> processes are frozen requires either to use the freezer API or to open-code it.
+> I think there is general agreement in the kernel community that open-coding a
+> single mechanism in multiple drivers is wrong. Does this mean that instead of
+> removing the freezer API we should keep it and review all its users instead?
 
-Ah, dchinner points out on irc that gcc knows we (>> 9) the numbers
-before printing them so the maximum value is 36028797018963967, so
-40 bytes works.
+Agreed.
 
-gcc: 1, maintainer: 0
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> --D
-> 
-> > >  	char			owner[OWNER_BUF_SZ];
-> > >  	int			sunit, swidth;
-> > >  	int			flg = 0;
-> > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
