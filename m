@@ -1,81 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:31716 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752280AbdK2LiM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 06:38:12 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 0/5] v2 xfs refcount conversions
-Date: Wed, 29 Nov 2017 13:37:58 +0200
-Message-Id: <1511955483-18275-1-git-send-email-elena.reshetova@intel.com>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35444 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752963AbdK2MdQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 07:33:16 -0500
+Received: by mail-wm0-f52.google.com with SMTP id f9so5654574wmh.0
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 04:33:15 -0800 (PST)
+Date: Wed, 29 Nov 2017 13:33:12 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH V2] xfs: Properly retry failed dquot items in case of
+ error during buffer writeback
+Message-ID: <20171129123312.epsll4iv2hyuzrg3@odin.usersys.redhat.com>
+References: <20171128143101.18861-1-cmaiolino@redhat.com>
+ <20171128175553.GA47056@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171128175553.GA47056@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, peterz@infradead.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Dave,
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index d57c2db64e59..b2bafa284253 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -970,14 +970,19 @@ xfs_qm_dqflush_done(
+> >  	 * holding the lock before removing the dquot from the AIL.
+> >  	 */
+> >  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
+> > -	    lip->li_lsn == qip->qli_flush_lsn) {
+> > +	    ((lip->li_lsn == qip->qli_flush_lsn) ||
+> > +	     (lip->li_flags & XFS_LI_FAILED))) {
+> >  
+> >  		/* xfs_trans_ail_delete() drops the AIL lock. */
+> >  		spin_lock(&ailp->xa_lock);
+> > -		if (lip->li_lsn == qip->qli_flush_lsn)
+> > +		if (lip->li_lsn == qip->qli_flush_lsn) {
+> >  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+> > -		else
+> > +		} else if (lip->li_flags & XFS_LI_FAILED) {
+> > +			xfs_clear_li_failed(lip);
+> >  			spin_unlock(&ailp->xa_lock);
+> > +		} else {
+> > +			spin_unlock(&ailp->xa_lock);
+> > +		}
+> 
+> Nit, but the following looks a bit cleaner to me:
+> 
+> 		if ((ip->li_lsn == qip->qli_flush_lsn) {
+> 			xfs_trans_ail_delete(...);
+> 		} else {
+> 			/*
+> 			 * clear the failed state since we're about to drop the
+> 			 * flush lock
+> 			 */
+> 			if (lip->li_flags & XFS_LI_FAILED)
+> 				xfs_clear_li_failed(lip);
+> 			spin_unlock();
+> 		}
+> 
+> Otherwise looks good to me:
 
-Following our previous conversation I have updated each
-patch with a highlight of potential problematic places
-with regards to the memory ordering guarantees, as well
-as link to the document I am working on to clarify the
-matter.
+Either works for me, although I agree your version looks better. I'll just
+rewrite it and send a V3 with your review.
 
-While I didn't see any issues with these 5 particular
-conversions, of course I don't understand code anywhere
-good enough to make the final claim that "everything is
-100% ok".
-
-Please let me know what kind of other clarification or
-anything is needed that can help you to make the needed
-verification.
-
-Best Regards,
-Elena.
-
-
-
-Changes in v2:
-  - each patch now has a clarification on potential
-    problematic places with regards to the memory ordering
-    guarantees as well as reference to a hopefully soon to be
-    merged more extensive documentation on the
-    differences between atomic_t and refcount_t on ordering.
-  - Rebase on linux-next master.
-
-
-This series, for xfs, replaces atomic_t reference
-counters with the new refcount_t type and API (see include/linux/refcount.h).
-By doing this we prevent intentional or accidental
-underflows or overflows that can lead to use-after-free vulnerabilities.
-
-The patches are fully independent and can be cherry-picked separately.
-If there are no objections to the patches, please merge them via respective trees.
-
-Elena Reshetova (5):
-  fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to
-    refcount_t
-  fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to
-    refcount_t
-  fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
-  fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to
-    refcount_t
-  fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to
-    refcount_t
-
- fs/xfs/xfs_bmap_item.c     |  6 +++---
- fs/xfs/xfs_bmap_item.h     |  2 +-
- fs/xfs/xfs_extfree_item.c  |  6 +++---
- fs/xfs/xfs_extfree_item.h  |  2 +-
- fs/xfs/xfs_linux.h         |  1 +
- fs/xfs/xfs_log.c           | 10 +++++-----
- fs/xfs/xfs_log_priv.h      |  2 +-
- fs/xfs/xfs_refcount_item.c |  6 +++---
- fs/xfs/xfs_refcount_item.h |  2 +-
- fs/xfs/xfs_rmap_item.c     |  6 +++---
- fs/xfs/xfs_rmap_item.h     |  2 +-
- 11 files changed, 23 insertions(+), 22 deletions(-)
+Thanks
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  	}
+> >  
+> >  	/*
+> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> > index 2c7a1629e064..664dea105e76 100644
+> > --- a/fs/xfs/xfs_dquot_item.c
+> > +++ b/fs/xfs/xfs_dquot_item.c
+> > @@ -137,6 +137,26 @@ xfs_qm_dqunpin_wait(
+> >  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
+> >  }
+> >  
+> > +/*
+> > + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
+> > + * have been failed during writeback
+> > + *
+> > + * this informs the AIL that the dquot is already flush locked on the next push,
+> > + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
+> > + * dirty data makes it to disk.
+> > + */
+> > +STATIC void
+> > +xfs_dquot_item_error(
+> > +	struct xfs_log_item	*lip,
+> > +	struct xfs_buf		*bp)
+> > +{
+> > +	struct xfs_dquot	*dqp;
+> > +
+> > +	dqp = DQUOT_ITEM(lip)->qli_dquot;
+> > +	ASSERT(!completion_done(&dqp->q_flush));
+> > +	xfs_set_li_failed(lip, bp);
+> > +}
+> > +
+> >  STATIC uint
+> >  xfs_qm_dquot_logitem_push(
+> >  	struct xfs_log_item	*lip,
+> > @@ -144,13 +164,28 @@ xfs_qm_dquot_logitem_push(
+> >  					      __acquires(&lip->li_ailp->xa_lock)
+> >  {
+> >  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
+> > -	struct xfs_buf		*bp = NULL;
+> > +	struct xfs_buf		*bp = lip->li_buf;
+> >  	uint			rval = XFS_ITEM_SUCCESS;
+> >  	int			error;
+> >  
+> >  	if (atomic_read(&dqp->q_pincount) > 0)
+> >  		return XFS_ITEM_PINNED;
+> >  
+> > +	/*
+> > +	 * The buffer containing this item failed to be written back
+> > +	 * previously. Resubmit the buffer for IO
+> > +	 */
+> > +	if (lip->li_flags & XFS_LI_FAILED) {
+> > +		if (!xfs_buf_trylock(bp))
+> > +			return XFS_ITEM_LOCKED;
+> > +
+> > +		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
+> > +			rval = XFS_ITEM_FLUSHING;
+> > +
+> > +		xfs_buf_unlock(bp);
+> > +		return rval;
+> > +	}
+> > +
+> >  	if (!xfs_dqlock_nowait(dqp))
+> >  		return XFS_ITEM_LOCKED;
+> >  
+> > @@ -242,7 +277,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
+> >  	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
+> >  	.iop_committed	= xfs_qm_dquot_logitem_committed,
+> >  	.iop_push	= xfs_qm_dquot_logitem_push,
+> > -	.iop_committing = xfs_qm_dquot_logitem_committing
+> > +	.iop_committing = xfs_qm_dquot_logitem_committing,
+> > +	.iop_error	= xfs_dquot_item_error
+> >  };
+> >  
+> >  /*
+> > -- 
+> > 2.14.3
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-2.7.4
-
+Carlos
