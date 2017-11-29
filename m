@@ -1,410 +1,276 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55738 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:42576 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750923AbdK3QFc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 11:05:32 -0500
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH v7] generic: initial fiemap range query test
-Date: Thu, 30 Nov 2017 18:05:27 +0200
-Message-Id: <1512057927-15022-1-git-send-email-nborisov@suse.com>
+        id S1752180AbdK2SY4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 13:24:56 -0500
+Date: Wed, 29 Nov 2017 13:24:53 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/4] xfs: amortize agfl block frees across multiple
+ transactions
+Message-ID: <20171129182453.GA24696@bfoster.bfoster>
+References: <20171127202434.43125-1-bfoster@redhat.com>
+ <20171127202434.43125-4-bfoster@redhat.com>
+ <20171127230734.GB5858@dastard>
+ <20171128135748.GC45759@bfoster.bfoster>
+ <20171128220919.GF5858@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171128220919.GF5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net, Nikolay Borisov <nborisov@suse.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Fiemap gained support for passing in optional offset len
-which denote the range requested, so this patch adds
-testcases for this functionality. Aditionally, a special "ranged"
-argument is added to the require_xfs_io_command which checks
-for the presence of fiemap range support.
+On Wed, Nov 29, 2017 at 09:09:19AM +1100, Dave Chinner wrote:
+> On Tue, Nov 28, 2017 at 08:57:48AM -0500, Brian Foster wrote:
+> > On Tue, Nov 28, 2017 at 10:07:34AM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 27, 2017 at 03:24:33PM -0500, Brian Foster wrote:
+...
+> > > 
+> > > In /theory/, this /should/ work. However, as the comment you removed
+> > > implies, there are likely to be issues with this as we get near
+> > > ENOSPC. We know that if we don't trim the AGFL right down to the
+> > > minimum requested as we approach ENOSPC we can get premature ENOSPC
+> > > events being reported that lead to filesystem shutdowns.  (e.g. need
+> > > the very last free block for a BMBT block to complete a data extent
+> > > allocation).  Hence I'd suggest that this needs to be aware of the
+> > > low space allocation algorithm (i.e. dfops->dop_low is true) to trim
+> > > the agfl right back when we are really short of space
+> > > 
+> > 
+> > Hmm, shouldn't the worst case bmbt requirements be satisfied by the
+> > block reservation of the transaction that maps the extent (or stored as
+> > indirect reservation if delalloc)?
+> 
+> That's checked against global free space when we do the initial
+> reservation. It's not checked against AG free space until we make
+> the allocation attempt.
+> 
+> The problem here is that if we don't leave enough space for the BMBT
+> block in the same AG as the data extent was allocated we can end up
+> with an ENOSPC on the BMBT block allocation because, say, AGF
+> locking order and all the higher AGFs are already ENOSPC. That's a
+> fatal ENOSPC error as the transaction is already dirty and will
+> shutdown the filesystem on transaction cancel.
+> 
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
+I thought Christoph already addressed that problem in commit 255c516278
+("xfs: fix bogus minleft manipulations").
 
-For the time being this test is expected to fail on XFS. 
+If not, that sounds like something that would need to be fixed
+independent from whether the associated AGFL happens to hold surplus
+blocks. AFAICT that problem could occur whether blocks sit on the AGFL
+as a surplus, legitimately sit on the AGFL or are simply allocated for
+some other purpose.
 
-V7: 
- * Adjusted for 64k block size filesystem
- * Only use/require a test device and not a scratch device
+> > I'm less concerned with premature
+> > ENOSPC from contexts where it's not fatal..
+> 
+> The definition of "premature ENOSPC" is "unexpected ENOSPC that
+> causes a filesystem shutdown" :/
+> 
 
-V6:
- * Moved to generic tests and successfully ran against ext4/btrfs
- * Use pwrite to create the holes to make it even more generic
+That's a bit pedantic. We've had plenty of discussions on the list using
+"premature ENOSPC" to describe errors that aren't necessarily fatal for
+the fs. Eofblocks trimming, sparse inodes and the broader work the
+minleft fix referenced above was part of are just a few obvious
+examples of context.
 
- V5: 
-  * Drop changes to existing generic punch hole tests since 
-  the new fiemap implementation don't require them 
-  * Merge the common/rc change with this patch
-  * Added Data + Hole + Data and Hole + Data tests as per Eryu's request
-  * Adjusted output of some tests which fall in a hole, since holes are
-  truncated to passed range
-  * Simplified the logic to check for fiemap range support (Eryu)
+> >
+> > IIRC, I think we've already
+> > incorporated changes (Christoph's minfree stuff rings a bell) into the
+> > allocator that explicitly prefer premature ENOSPC over potentially fatal
+> > conditions, but I could be mistaken.
+> 
+> Yes, but that doesn't take into account all the crazy AGFL
+> manipulations that could occur as a result of trimming/extending the
+> AGFL. We /assume/ that we don't need signification reservations to
+> extend/trim the AGFL to what is required for the transaction. If we
+> now how to free 50 blocks from the AGFL back to the freespace tree
+> before we start the allocation/free operation, that's going to
+> have some impact on the reservations we have.
+> 
 
- V4: 
-  * Added test description
-  * Added new test for past-eof behavior
-  * Removed supported_generic_fs line
-  * Switched to using the "ranged" param require
-  * Revert v3 changes
+How does this patch exacerbate that problem? The current code performs N
+agfl frees per fixup* to drop below a dynamic watermark
+(xfs_alloc_min_freelist()). The patch changes that behavior to perform 1
+agfl free per fixup unless we're over a fixed watermark (1/2 agfl size).
+ISTM that how far we can exceed that watermark in a given fixup (to be
+rectified by the next) is on a similar order in either case (and if
+anything, it seems like we factor out the case of recursively populating
+the AGFL and shrinking the watermark at the same time).
 
- V3:
-  * Adjusted tests for '-r' fiemap param
-  * Tests for invalid -r combination
+* By fixup, I'm referring to one pass through xfs_alloc_fix_freelist().
 
- V2: No change
- V1: No change
+> And think about 4k sector filesystems - there's close on 1000
+> entries in the AGFL - this means we could have 500 blocks floating
+> on the AGFL that would otherwise be in the freespace tree. IOWs,
+> this change could have significant impact on freespace
+> fragmentation because blocks aren't getting returned to the
+> freespace tree where they merge with other small freespace extents
+> to reform larger extents.
+> 
 
- common/rc             |   7 ++
- tests/generic/900     | 107 +++++++++++++++++++++++++++
- tests/generic/900.out | 196 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/group   |   1 +
- 4 files changed, 311 insertions(+)
- create mode 100755 tests/generic/900
- create mode 100644 tests/generic/900.out
+Good point. I'm a little curious how we'd really end up with that many
+blocks on the agfl. The max requirement for the bnobt and cntbt is 4
+each for a 1TB AG. The rmapbt adds another optional dependency, but IIRC
+that only adds another 4 or 5 more blocks. I suppose this might require
+some kind of sequence where consecutive agfl fixups end up freeing a
+block that results in one or more full tree joins, and thus we populate
+the agfl much faster than we shrink it (since we'd remove 1 block at a
+time) for some period of time.
 
-diff --git a/common/rc b/common/rc
-index 4c053a5..a0d162a 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2056,6 +2056,13 @@ _require_xfs_io_command()
- 			-c "$command 4k 8k" $testfile 2>&1`
- 		;;
- 	"fiemap")
-+		# If 'ranged' is passed as argument then we check to see if fiemap supports
-+		# ranged query params
-+		if echo "$param" | grep -q "ranged"; then
-+			param=$(echo "$param" | sed "s/ranged//")
-+			$XFS_IO_PROG -c "help fiemap" | grep -q "\[offset \[len\]\]"
-+			[ $? -eq 0 ] || _notrun "xfs_io $command ranged support is missing"
-+		fi
- 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
- 			-c "fiemap -v $param" $testfile 2>&1`
- 		param_checked=1
-diff --git a/tests/generic/900 b/tests/generic/900
-new file mode 100755
-index 0000000..3f3019b
---- /dev/null
-+++ b/tests/generic/900
-@@ -0,0 +1,107 @@
-+#! /bin/bash
-+# FS QA Test No. 900
-+
-+# Test for the new ranged query functionality in xfs_io's fiemap command.
-+# This tests various combinations of hole + data layout being printed.
-+# Also the test used 16k holes to be compatible with 16k block filesystems
-+
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 SUSE Linux Products GmbH. All Rights Reserved.
-+# Author: Nikolay Borisov <nborisov@suse.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/punch
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_os Linux
-+_require_test
-+_require_xfs_io_command "truncate"
-+# ranged is a special argument which checks if fiemap supports
-+# [offset [len]] args
-+_require_xfs_io_command "fiemap" "ranged"
-+
-+file=$TEST_DIR/fiemap.$seq
-+rm -f $file
-+
-+# Create a file with 64k hole followed by 64k data, and this pattern
-+# repeats till it reaches 4M file size, so each extent has 64k data.
-+# But truncate file to its final size first, otherwise XFS would merge
-+# some extents due to speculative preallocation.
-+$XFS_IO_PROG -f -c "truncate 4m" $file
-+for i in {0..31}; do
-+	$XFS_IO_PROG -c "pwrite $(($i*128+64))k 64k" $file >/dev/null;
-+done
-+
-+# Query 1 data extent between 64k..64k range
-+echo "Basic data extent"
-+$XFS_IO_PROG -c "fiemap -v 64k 64k" $file | _filter_fiemap
-+
-+# Query data and hole extent
-+echo "Data + Hole"
-+$XFS_IO_PROG -c "fiemap -v 64k 80k" $file | _filter_fiemap
-+
-+echo "Hole + Data"
-+$XFS_IO_PROG -c "fiemap -v 0 65k" $file | _filter_fiemap
-+
-+echo "Hole + Data + Hole"
-+$XFS_IO_PROG -c "fiemap -v 0k 130k" $file | _filter_fiemap
-+
-+echo "Data + Hole + Data"
-+$XFS_IO_PROG -c "fiemap -v 64k 192k" $file | _filter_fiemap
-+
-+echo "Beginning with a hole"
-+$XFS_IO_PROG -c "fiemap -v 0 3k" $file | _filter_fiemap
-+
-+# Query for 0..160k that's 40 extents, more than the EXTENT_BATCH
-+echo "Query more than 32 extents"
-+$XFS_IO_PROG -c "fiemap -v 0 3m" $file | _filter_fiemap
-+
-+echo "Larger query than file size"
-+$XFS_IO_PROG -c "fiemap -v 0 5m" $file | _filter_fiemap
-+
-+# mapping past eof shouldn't print anything"
-+$XFS_IO_PROG -c "fiemap -v 5m" $file | _filter_fiemap
-+
-+echo "Skip first hole"
-+# check everything without the first hole
-+$XFS_IO_PROG -c "fiemap -v 64k" $file | _filter_fiemap
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/900.out b/tests/generic/900.out
-new file mode 100644
-index 0000000..3df6a3a
---- /dev/null
-+++ b/tests/generic/900.out
-@@ -0,0 +1,196 @@
-+QA output created by 900
-+Basic data extent
-+0: [128..255]: data
-+Data + Hole
-+0: [128..255]: data
-+1: [256..287]: hole
-+Hole + Data
-+0: [0..127]: hole
-+1: [128..255]: data
-+Hole + Data + Hole
-+0: [0..127]: hole
-+1: [128..255]: data
-+2: [256..259]: hole
-+Data + Hole + Data
-+0: [128..255]: data
-+1: [256..383]: hole
-+2: [384..511]: data
-+Beginning with a hole
-+Query more than 32 extents
-+0: [0..127]: hole
-+1: [128..255]: data
-+2: [256..383]: hole
-+3: [384..511]: data
-+4: [512..639]: hole
-+5: [640..767]: data
-+6: [768..895]: hole
-+7: [896..1023]: data
-+8: [1024..1151]: hole
-+9: [1152..1279]: data
-+10: [1280..1407]: hole
-+11: [1408..1535]: data
-+12: [1536..1663]: hole
-+13: [1664..1791]: data
-+14: [1792..1919]: hole
-+15: [1920..2047]: data
-+16: [2048..2175]: hole
-+17: [2176..2303]: data
-+18: [2304..2431]: hole
-+19: [2432..2559]: data
-+20: [2560..2687]: hole
-+21: [2688..2815]: data
-+22: [2816..2943]: hole
-+23: [2944..3071]: data
-+24: [3072..3199]: hole
-+25: [3200..3327]: data
-+26: [3328..3455]: hole
-+27: [3456..3583]: data
-+28: [3584..3711]: hole
-+29: [3712..3839]: data
-+30: [3840..3967]: hole
-+31: [3968..4095]: data
-+32: [4096..4223]: hole
-+33: [4224..4351]: data
-+34: [4352..4479]: hole
-+35: [4480..4607]: data
-+36: [4608..4735]: hole
-+37: [4736..4863]: data
-+38: [4864..4991]: hole
-+39: [4992..5119]: data
-+40: [5120..5247]: hole
-+41: [5248..5375]: data
-+42: [5376..5503]: hole
-+43: [5504..5631]: data
-+44: [5632..5759]: hole
-+45: [5760..5887]: data
-+46: [5888..6015]: hole
-+47: [6016..6143]: data
-+Larger query than file size
-+0: [0..127]: hole
-+1: [128..255]: data
-+2: [256..383]: hole
-+3: [384..511]: data
-+4: [512..639]: hole
-+5: [640..767]: data
-+6: [768..895]: hole
-+7: [896..1023]: data
-+8: [1024..1151]: hole
-+9: [1152..1279]: data
-+10: [1280..1407]: hole
-+11: [1408..1535]: data
-+12: [1536..1663]: hole
-+13: [1664..1791]: data
-+14: [1792..1919]: hole
-+15: [1920..2047]: data
-+16: [2048..2175]: hole
-+17: [2176..2303]: data
-+18: [2304..2431]: hole
-+19: [2432..2559]: data
-+20: [2560..2687]: hole
-+21: [2688..2815]: data
-+22: [2816..2943]: hole
-+23: [2944..3071]: data
-+24: [3072..3199]: hole
-+25: [3200..3327]: data
-+26: [3328..3455]: hole
-+27: [3456..3583]: data
-+28: [3584..3711]: hole
-+29: [3712..3839]: data
-+30: [3840..3967]: hole
-+31: [3968..4095]: data
-+32: [4096..4223]: hole
-+33: [4224..4351]: data
-+34: [4352..4479]: hole
-+35: [4480..4607]: data
-+36: [4608..4735]: hole
-+37: [4736..4863]: data
-+38: [4864..4991]: hole
-+39: [4992..5119]: data
-+40: [5120..5247]: hole
-+41: [5248..5375]: data
-+42: [5376..5503]: hole
-+43: [5504..5631]: data
-+44: [5632..5759]: hole
-+45: [5760..5887]: data
-+46: [5888..6015]: hole
-+47: [6016..6143]: data
-+48: [6144..6271]: hole
-+49: [6272..6399]: data
-+50: [6400..6527]: hole
-+51: [6528..6655]: data
-+52: [6656..6783]: hole
-+53: [6784..6911]: data
-+54: [6912..7039]: hole
-+55: [7040..7167]: data
-+56: [7168..7295]: hole
-+57: [7296..7423]: data
-+58: [7424..7551]: hole
-+59: [7552..7679]: data
-+60: [7680..7807]: hole
-+61: [7808..7935]: data
-+62: [7936..8063]: hole
-+63: [8064..8191]: data
-+Skip first hole
-+0: [128..255]: data
-+1: [256..383]: hole
-+2: [384..511]: data
-+3: [512..639]: hole
-+4: [640..767]: data
-+5: [768..895]: hole
-+6: [896..1023]: data
-+7: [1024..1151]: hole
-+8: [1152..1279]: data
-+9: [1280..1407]: hole
-+10: [1408..1535]: data
-+11: [1536..1663]: hole
-+12: [1664..1791]: data
-+13: [1792..1919]: hole
-+14: [1920..2047]: data
-+15: [2048..2175]: hole
-+16: [2176..2303]: data
-+17: [2304..2431]: hole
-+18: [2432..2559]: data
-+19: [2560..2687]: hole
-+20: [2688..2815]: data
-+21: [2816..2943]: hole
-+22: [2944..3071]: data
-+23: [3072..3199]: hole
-+24: [3200..3327]: data
-+25: [3328..3455]: hole
-+26: [3456..3583]: data
-+27: [3584..3711]: hole
-+28: [3712..3839]: data
-+29: [3840..3967]: hole
-+30: [3968..4095]: data
-+31: [4096..4223]: hole
-+32: [4224..4351]: data
-+33: [4352..4479]: hole
-+34: [4480..4607]: data
-+35: [4608..4735]: hole
-+36: [4736..4863]: data
-+37: [4864..4991]: hole
-+38: [4992..5119]: data
-+39: [5120..5247]: hole
-+40: [5248..5375]: data
-+41: [5376..5503]: hole
-+42: [5504..5631]: data
-+43: [5632..5759]: hole
-+44: [5760..5887]: data
-+45: [5888..6015]: hole
-+46: [6016..6143]: data
-+47: [6144..6271]: hole
-+48: [6272..6399]: data
-+49: [6400..6527]: hole
-+50: [6528..6655]: data
-+51: [6656..6783]: hole
-+52: [6784..6911]: data
-+53: [6912..7039]: hole
-+54: [7040..7167]: data
-+55: [7168..7295]: hole
-+56: [7296..7423]: data
-+57: [7424..7551]: hole
-+58: [7552..7679]: data
-+59: [7680..7807]: hole
-+60: [7808..7935]: data
-+61: [7936..8063]: hole
-+62: [8064..8191]: data
-diff --git a/tests/generic/group b/tests/generic/group
-index 6c3bb03..a043e98 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -472,3 +472,4 @@
- 467 auto quick exportfs
- 468 shutdown auto quick metadata
- 469 auto quick
-+900 auto quick
--- 
-2.7.4
+With regard to the impact on free space fragmentation.. I suppose we
+could mitigate that by setting the surplus limit to some multiple of the
+max possible agfl requirement instead of 1/2 the physical size of the
+agfl.
 
+We could also consider doing things like fixing up AGFL surpluses in a
+more safe contexts (i.e., in response to -ENOSPC on write where we also
+trim eofblocks, free up indlen reservations, etc.) or allowing a surplus
+block to be used in that BMBT block allocation failure scenario as a
+last resort to fs shutdown (and if there isn't a surplus block, then
+we'd be shutting down anyways). Note that I'm not currently convinced
+either of these are necessary, I'm just thinking out loud about how to
+deal with some of these potential hazards if they prove legitimate.
+
+> It's these sorts of issues (i.e. filesystem aging) that might not
+> show up for months of production use that we need to think about. It
+> may be that a larger AGFL helps here because it keeps a working
+> set of freespace tree blocks on the AGFL rather than having to
+> go back to the freespace trees all the time, but this is something
+> we need to measure, analyse and characterise before changing a
+> critical piece of the allocation architecture....
+> 
+
+I agree. I'm going to drop this patch from v2 for now because I don't
+want to hold up the other more straightforward transaction reservation
+fixes while we work out how best to fix this problem.
+
+> > We're also only talking about 256k
+> > or so for half of the AGFL, less than that if we assume that some of
+> > those blocks are actually required by the agfl and not slated to be
+> > lazily freed. We could also think about explicitly fixing up agfl
+> > surplus from other contexts (background, write -ENOSPC handling, etc.)
+> > if it became that much of a problem.
+> > 
+> > I do think it's semi-reasonable from a conservative standpoint to
+> > further restrict this behavior to !dop_low conditions, but I'm a little
+> > concerned about creating an "open the floodgates" type situation when
+> > the agfl is allowed to carry extra blocks and then all of a sudden the
+> > free space state changes and one transaction is allowed to free a bunch
+> > of blocks. Thoughts?
+> 
+> That's exactly the sort of problem we need to measure, analyse
+> and characterise before making this sort of change :/
+> 
+> > I suppose we could incorporate logic that frees until/unless a join
+> > occurs (i.e., the last free did not drop flcount), the latter being an
+> > indication that we've probably logged as much as we should for agfl
+> > fixups in the transaction. But that's also something we could just do
+> > unconditionally as opposed to only under dop_low conditions. That might
+> > be less aggressive of a change from current behavior.
+> 
+> Heuristics will still need to be analysed and tested :/
+> 
+> The complexity of doing this is why I left a small comment rather
+> than actually making the change....
+> 
+> > > I'm also concerned that it doesn't take into account that freeing
+> > > a block from the AGFL could cause a freespace tree split to occur,
+> > > thereby emptying the AGFL whilst consuming the entire log
+> > > reservation for tree modifications. This leaves nothing in the log
+> > > reservation for re-growing the AGFL to the minimum required, which
+> > > we /must do/ before returning and could cause more splits/joins to
+> > > occur.
+> > > 
+> > 
+> > How is this different from the current code?
+> 
+> It's not. I'm pointing out that while you're focussed on the
+> problems with shortening the AGFL, the same problem exists with
+> /extending the AGFL/.
+> 
+> > This sounds to me like an
+> > unconditional side effect of the fact that freeing an agfl block can
+> > indirectly affect the agfl via the btree operations. IOW, freeing a
+> > single extra block could require consuming one or more and trigger the
+> > need for an allocation. I suspect the allocation could then very well
+> > cause a join on the other tree and put more than one block back onto the
+> > agfl.
+> 
+> Yes, it could do that too. Remove a single block from an existing
+> free extent, no change to the by-block btree. by-cnt now requires a
+> record delete (full height join) followed by record insert elsewhere
+> in the tree (full height split). So the attempt to add a block to
+> the AGFL can actually shorten it if the by-cnt tree splits on
+> insert. It can grow if the by-block or by-cnt tree joins on record
+> removal.
+> 
+> Either way, we've got the same problem of using the entire log
+> reservation for AGFL modification when growing the AGFL as we do
+> when trying to shrink the AGFL down.
+> 
+> That's my point here - just hacking a limit into the shrink case
+> doesn't address the problem at all - it just papers over one of the
+> visible symptoms....
+> 
+
+Yes, it's clear that the current code allows for all sorts of
+theoretical avenues to transaction overrun. Hence my previous idea to
+roll the transaction once an AGFL fixup triggers a join or split. Even
+that may not be sufficient in certain scenarios.
+
+Moving on from that, this patch is a variant of your suggestion to allow
+leaving surplus blocks on the agfl up to a certain limit. It is
+intentionally a more isolated fix for the specific issue of performing
+too many independent allocations (frees) per transaction in this
+context.
+
+One approach doesn't have to preclude the other. I'm not aware of any
+pattern of overrun problems with this code over the however many years
+it has been in place, other than this one, however. Given that, I think
+it's perfectly reasonable to consider a shorter term solution so long as
+we're confident it doesn't introduce other problems.
+
+> > > IMO, there's a lot more to be concerned about here than just trying
+> > > to work around the specific symptom observed in the given test case.
+> > > This code is, unfortunately, really tricky and intricate and history
+> > > tells us that the risk of unexpected regressions is extremely high,
+> > > especially around ENOSPC related issues. Of all the patches in this
+> > > series, this is the most dangerous and "iffy" of them and the
+> > > one we should be most concerned and conservative about....
+> > > 
+> > 
+> > Agreed. The impact is something that also has to be evaluated over a
+> > sequence of transactions along with the more obvious impact on a single
+> > transaction.
+> 
+> The impact has to be measured over a far longer time frame than a
+> few transactions. The fact it has impact on freespace reformation
+> means it'll need accelerated aging tests done on it so we can be
+> reasonably certain that it isn't going to bite us in extended
+> production environments...
+> 
+
+That's exactly what I mean by a sequence. E.g., the effect on the agfl
+over time. Clearly, the longer the sequence, the more robust the
+results. I'm not sure where the idea that a few transactions would
+provide anything useful comes from. This probably needs to be evaluated
+over many cycles of fully depopulating and repopulating the space btrees
+in different ways.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
