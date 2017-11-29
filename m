@@ -1,132 +1,237 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28238 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:20691 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752221AbdK3R6Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 12:58:16 -0500
-Date: Thu, 30 Nov 2017 09:58:05 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [RFC PATCH 1/2] xfs: add the ability to join a buffer to a defer_ops
-Message-ID: <20171130175805.GC31372@magnolia>
+        with ESMTP id S1752078AbdK2SuN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:50:13 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 05/17] xfs: get directory offset when adding directory
+ name
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-6-git-send-email-allison.henderson@oracle.com>
+ <20171128190732.GU21412@magnolia>
+Message-ID: <ec7b1a3c-06a8-efd4-2930-14fa567a1153@oracle.com>
+Date: Wed, 29 Nov 2017 11:50:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20171128190732.GU21412@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: alex@zadarastorage.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com, libor.klepac@bcom.cz
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 11/28/2017 12:07 PM, Darrick J. Wong wrote:
 
-In certain cases we need to be able to maintain a buffer lock across a
-defer_finish call.  Since there could be many (large) transactions
-committed as a result of a defer_finish, we have to hold the buffer
-across the roll, then immediately rejoin the buffer and mark it dirty in
-each transaction to keep the log moving forward.
+> On Fri, Nov 17, 2017 at 11:21:33AM -0700, Allison Henderson wrote:
+>> From: Mark Tinguely<tinguely@sgi.com>
+>>
+>> Return the directory offset information when adding an entry to the
+>> directory.
+>>
+>> This offset will be used as the parent pointer offset in xfs_create,
+>> xfs_symlink, xfs_link and xfs_rename.
+>>
+>> [dchinner: forward ported and cleaned up]
+>> [dchinner: no s-o-b from Mark]
+>> [bfoster: rebased, use args->geo in dir code]
+>> [achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
+>>
+>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_da_btree.h   | 1 +
+>>   fs/xfs/libxfs/xfs_dir2.c       | 8 ++++++--
+>>   fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
+>>   fs/xfs/libxfs/xfs_dir2_block.c | 1 +
+>>   fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
+>>   fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
+>>   fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
+>>   fs/xfs/xfs_inode.c             | 9 +++++----
+>>   fs/xfs/xfs_symlink.c           | 2 +-
+>>   9 files changed, 22 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+>> index ae6de17..bce96d6 100644
+>> --- a/fs/xfs/libxfs/xfs_da_btree.h
+>> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+>> @@ -86,6 +86,7 @@ typedef struct xfs_da_args {
+>>   	int		rmtvaluelen2;	/* remote attr value length in bytes */
+>>   	int		op_flags;	/* operation flags */
+>>   	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
+>> +	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
+>>   } xfs_da_args_t;
+>>   
+>>   /*
+>> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+>> index ccf9783..a1ca460 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2.c
+>> @@ -268,7 +268,8 @@ xfs_dir_createname(
+>>   	xfs_ino_t		inum,		/* new entry inode number */
+>>   	xfs_fsblock_t		*first,		/* bmap's firstblock */
+>>   	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+>> -	xfs_extlen_t		total)		/* bmap's total block count */
+>> +	xfs_extlen_t		total,		/* bmap's total block count */
+>> +	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
+>>   {
+>>   	struct xfs_da_args	*args;
+>>   	int			rval;
+>> @@ -323,6 +324,9 @@ xfs_dir_createname(
+>>   	else
+>>   		rval = xfs_dir2_node_addname(args);
+>>   
+>> +	/* return the location that this entry was place in the parent inode */
+>> +	if (offset)
+>> +		*offset = args->offset;
+>>   out_free:
+> FWIW I think I complain later about this label moving in a subsequent
+> patch.... and you'll see this same comment two more times.  Downside of
+> reviewing in backwards order, I guess.
+>
+> --D
+>
+No worries, I'll get it moved where it needs to be
+>>   	kmem_free(args);
+>>   	return rval;
+>> @@ -570,7 +574,7 @@ xfs_dir_canenter(
+>>   	xfs_inode_t	*dp,
+>>   	struct xfs_name	*name)		/* name of entry to add */
+>>   {
+>> -	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
+>> +	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0, NULL);
+>>   }
+>>   
+>>   /*
+>> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+>> index 21c8f8b..e349900 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2.h
+>> +++ b/fs/xfs/libxfs/xfs_dir2.h
+>> @@ -131,7 +131,8 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
+>>   extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
+>>   				struct xfs_name *name, xfs_ino_t inum,
+>>   				xfs_fsblock_t *first,
+>> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
+>> +				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
+>> +				xfs_dir2_dataptr_t *offset);
+>>   extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+>>   				struct xfs_name *name, xfs_ino_t *inum,
+>>   				struct xfs_name *ci_name);
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+>> index 43c902f..79684d5 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+>> @@ -552,6 +552,7 @@ xfs_dir2_block_addname(
+>>   	dp->d_ops->data_put_ftype(dep, args->filetype);
+>>   	tagp = dp->d_ops->data_entry_tag_p(dep);
+>>   	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+>> +	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
+>>   	/*
+>>   	 * Clean up the bestfree array and log the header, tail, and entry.
+>>   	 */
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+>> index 27297a6..2ac7a7e 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+>> @@ -863,6 +863,8 @@ xfs_dir2_leaf_addname(
+>>   	dp->d_ops->data_put_ftype(dep, args->filetype);
+>>   	tagp = dp->d_ops->data_entry_tag_p(dep);
+>>   	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+>> +	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
+>> +						(char *)dep - (char *)hdr);
+>>   	/*
+>>   	 * Need to scan fix up the bestfree table.
+>>   	 */
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+>> index 682e2bf..8bc91f8 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+>> @@ -2022,6 +2022,8 @@ xfs_dir2_node_addname_int(
+>>   	dp->d_ops->data_put_ftype(dep, args->filetype);
+>>   	tagp = dp->d_ops->data_entry_tag_p(dep);
+>>   	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+>> +	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
+>> +						  (char *)dep - (char *)hdr);
+>>   	xfs_dir2_data_log_entry(args, dbp, dep);
+>>   	/*
+>>   	 * Rescan the block for bestfree if needed.
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+>> index be8b975..489bdef 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+>> @@ -407,6 +407,7 @@ xfs_dir2_sf_addname_easy(
+>>   	memcpy(sfep->name, args->name, sfep->namelen);
+>>   	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+>>   	dp->d_ops->sf_put_ftype(sfep, args->filetype);
+>> +	args->offset = xfs_dir2_byte_to_dataptr(offset);
+>>   
+>>   	/*
+>>   	 * Update the header and inode.
+>> @@ -498,6 +499,7 @@ xfs_dir2_sf_addname_hard(
+>>   	memcpy(sfep->name, args->name, sfep->namelen);
+>>   	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+>>   	dp->d_ops->sf_put_ftype(sfep, args->filetype);
+>> +	args->offset = xfs_dir2_byte_to_dataptr(offset);
+>>   	sfp->count++;
+>>   	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
+>>   		sfp->i8count++;
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 4ec5b7f..3abcb17 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -1252,7 +1252,8 @@ xfs_create(
+>>   
+>>   	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+>>   					&first_block, &dfops, resblks ?
+>> -					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
+>> +					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
+>> +					NULL);
+>>   	if (error) {
+>>   		ASSERT(error != -ENOSPC);
+>>   		goto out_trans_cancel;
+>> @@ -1495,7 +1496,7 @@ xfs_link(
+>>   	}
+>>   
+>>   	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+>> -					&first_block, &dfops, resblks);
+>> +				   &first_block, &dfops, resblks, NULL);
+>>   	if (error)
+>>   		goto error_return;
+>>   	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>> @@ -3031,8 +3032,8 @@ xfs_rename(
+>>   		 * to account for the ".." reference from the new entry.
+>>   		 */
+>>   		error = xfs_dir_createname(tp, target_dp, target_name,
+>> -						src_ip->i_ino, &first_block,
+>> -						&dfops, spaceres);
+>> +					   src_ip->i_ino, &first_block, &dfops,
+>> +					   spaceres, NULL);
+>>   		if (error)
+>>   			goto out_bmap_cancel;
+>>   
+>> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+>> index 68d3ca2..fc803ae 100644
+>> --- a/fs/xfs/xfs_symlink.c
+>> +++ b/fs/xfs/xfs_symlink.c
+>> @@ -363,7 +363,7 @@ xfs_symlink(
+>>   	 * Create the directory entry for the symlink.
+>>   	 */
+>>   	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+>> -					&first_block, &dfops, resblks);
+>> +				   &first_block, &dfops, resblks, NULL);
+>>   	if (error)
+>>   		goto out_bmap_cancel;
+>>   	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message tomajordomo@vger.kernel.org
+>> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=02ISa0rUacsoxueLmIUl9nJiJs3waUhjDqpEUPdTp9Y&s=uo_t9jIDLCSlKBgSmk2KhaRvYIkwpDH2sJeqhWGcSz8&e=
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message tomajordomo@vger.kernel.org
+> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=02ISa0rUacsoxueLmIUl9nJiJs3waUhjDqpEUPdTp9Y&s=uo_t9jIDLCSlKBgSmk2KhaRvYIkwpDH2sJeqhWGcSz8&e=
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_defer.c |   37 ++++++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_defer.h |    5 ++++-
- 2 files changed, 38 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 072ebfe..b5b3414 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -249,6 +249,10 @@ xfs_defer_trans_roll(
- 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
- 		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
- 
-+	/* Hold the (previously bjoin'd) buffer locked across the roll. */
-+	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
-+		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
-+
- 	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
- 
- 	/* Roll the transaction. */
-@@ -264,6 +268,12 @@ xfs_defer_trans_roll(
- 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
- 		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
- 
-+	/* Rejoin the buffers and dirty them so the log moves forward. */
-+	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
-+		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
-+		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
-+	}
-+
- 	return error;
- }
- 
-@@ -299,6 +309,29 @@ xfs_defer_ijoin(
- }
- 
- /*
-+ * Add this buffer to the deferred op.  Each joined buffer is relogged
-+ * each time we roll the transaction.
-+ */
-+int
-+xfs_defer_bjoin(
-+	struct xfs_defer_ops		*dop,
-+	struct xfs_buf			*bp)
-+{
-+	int				i;
-+
-+	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-+		if (dop->dop_bufs[i] == bp)
-+			return 0;
-+		else if (dop->dop_bufs[i] == NULL) {
-+			dop->dop_bufs[i] = bp;
-+			return 0;
-+		}
-+	}
-+
-+	return -EFSCORRUPTED;
-+}
-+
-+/*
-  * Finish all the pending work.  This involves logging intent items for
-  * any work items that wandered in since the last transaction roll (if
-  * one has even happened), rolling the transaction, and finishing the
-@@ -493,9 +526,7 @@ xfs_defer_init(
- 	struct xfs_defer_ops		*dop,
- 	xfs_fsblock_t			*fbp)
- {
--	dop->dop_committed = false;
--	dop->dop_low = false;
--	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-+	memset(dop, 0, sizeof(struct xfs_defer_ops));
- 	*fbp = NULLFSBLOCK;
- 	INIT_LIST_HEAD(&dop->dop_intake);
- 	INIT_LIST_HEAD(&dop->dop_pending);
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index d4f046d..045beac 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
- };
- 
- #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-+#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
- 
- struct xfs_defer_ops {
- 	bool			dop_committed;	/* did any trans commit? */
-@@ -66,8 +67,9 @@ struct xfs_defer_ops {
- 	struct list_head	dop_intake;	/* unlogged pending work */
- 	struct list_head	dop_pending;	/* logged pending work */
- 
--	/* relog these inodes with each roll */
-+	/* relog these with each roll */
- 	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-+	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
- };
- 
- void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-@@ -77,6 +79,7 @@ void xfs_defer_cancel(struct xfs_defer_ops *dop);
- void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
- int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-+int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
- 
- /* Description of a deferred type. */
- struct xfs_defer_op_type {
