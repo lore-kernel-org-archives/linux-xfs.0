@@ -1,294 +1,362 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43240 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750793AbdK1GAy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 01:00:54 -0500
-Date: Mon, 27 Nov 2017 22:00:40 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:19999 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752071AbdK2B0Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:26:16 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1QFfW015380
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:15 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1QF28022012
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:15 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAT1QEQf004482
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:14 GMT
+Subject: [PATCH 08/16] xfs: scrub should cross-reference with the bnobt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 06/12] libfrog: create a threaded workqueue
-Message-ID: <20171128060040.GG21412@magnolia>
-References: <151094960522.29763.11622891165765932168.stgit@magnolia>
- <151094964785.29763.1548614345004906846.stgit@magnolia>
+Date: Tue, 28 Nov 2017 17:26:13 -0800
+Message-ID: <151191877370.8553.3929060814685217149.stgit@magnolia>
+In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
+References: <151191872395.8553.15627872818207535470.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151094964785.29763.1548614345004906846.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a thread pool that queues and runs discrete work items.  This
-will be a namespaced version of the pool in repair/threads.c; a
-subsequent patch will switch repair over.  xfs_scrub will use the
-generic thread pool.
+When we're scrubbing various btrees, cross-reference the records with
+the bnobt to ensure that we don't also think the space is free.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: updated copyright information
----
- include/workqueue.h |   55 ++++++++++++++++
- libfrog/Makefile    |    3 +
- libfrog/workqueue.c |  174 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 231 insertions(+), 1 deletion(-)
- create mode 100644 include/workqueue.h
- create mode 100644 libfrog/workqueue.c
+ fs/xfs/scrub/agheader.c |   84 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/alloc.c    |   19 +++++++++++
+ fs/xfs/scrub/bmap.c     |   21 +++++++++++-
+ fs/xfs/scrub/btree.c    |   12 +++++++
+ fs/xfs/scrub/ialloc.c   |    1 +
+ fs/xfs/scrub/inode.c    |   15 ++++++++
+ fs/xfs/scrub/refcount.c |    1 +
+ fs/xfs/scrub/rmap.c     |    4 ++
+ fs/xfs/scrub/scrub.h    |    5 +++
+ 9 files changed, 161 insertions(+), 1 deletion(-)
 
-diff --git a/include/workqueue.h b/include/workqueue.h
-new file mode 100644
-index 0000000..b4b3541
---- /dev/null
-+++ b/include/workqueue.h
-@@ -0,0 +1,55 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ *
-+ * This code was adapted from repair/threads.h.
-+ */
-+#ifndef	_WORKQUEUE_H_
-+#define	_WORKQUEUE_H_
+
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 218476f..6b622a0 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -124,6 +124,20 @@ xfs_scrub_superblock_xref(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_buf			*bp)
+ {
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agnumber_t			agno = sc->sm->sm_agno;
++	xfs_agblock_t			bno;
++	int				error;
 +
-+struct workqueue;
++	bno = XFS_SB_BLOCK(mp);
 +
-+typedef void workqueue_func_t(struct workqueue *wq, uint32_t index, void *arg);
++	error = xfs_scrub_ag_init(sc, agno, &sc->sa);
++	if (!xfs_scrub_xref_process_error(sc, agno, bno, &error))
++		return;
 +
-+struct workqueue_item {
-+	struct workqueue	*queue;
-+	struct workqueue_item	*next;
-+	workqueue_func_t	*function;
-+	void			*arg;
-+	uint32_t		index;
-+};
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
 +
-+struct workqueue {
-+	void			*wq_ctx;
-+	pthread_t		*threads;
-+	struct workqueue_item	*next_item;
-+	struct workqueue_item	*last_item;
-+	pthread_mutex_t		lock;
-+	pthread_cond_t		wakeup;
-+	unsigned int		item_count;
-+	unsigned int		thread_count;
-+	bool			terminate;
-+};
-+
-+int workqueue_create(struct workqueue *wq, void *wq_ctx,
-+		unsigned int nr_workers);
-+int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
-+		uint32_t index, void *arg);
-+void workqueue_destroy(struct workqueue *wq);
-+
-+#endif	/* _WORKQUEUE_H_ */
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 3fd42a4..9a43621 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -14,7 +14,8 @@ CFILES = \
- avl64.c \
- list_sort.c \
- radix-tree.c \
--util.c
-+util.c \
-+workqueue.c
++	/* scrub teardown will take care of sc->sa for us */
+ }
  
- default: ltdepend $(LTLIBRARY)
+ /*
+@@ -408,11 +422,51 @@ xfs_scrub_superblock(
  
-diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-new file mode 100644
-index 0000000..66e8075
---- /dev/null
-+++ b/libfrog/workqueue.c
-@@ -0,0 +1,174 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ *
-+ * This code was adapted from repair/threads.c, which (at the time)
-+ * did not contain a copyright statement.
-+ */
-+#include <pthread.h>
-+#include <signal.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <errno.h>
-+#include <assert.h>
-+#include "workqueue.h"
-+
-+/* Main processing thread */
-+static void *
-+workqueue_thread(void *arg)
+ /* AGF */
+ 
++/* Tally freespace record lengths. */
++STATIC int
++xfs_scrub_agf_record_bno_lengths(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv)
 +{
-+	struct workqueue	*wq = arg;
-+	struct workqueue_item	*wi;
++	xfs_extlen_t			*blocks = priv;
 +
-+	/*
-+	 * Loop pulling work from the passed in work queue.
-+	 * Check for notification to exit after every chunk of work.
-+	 */
-+	while (1) {
-+		pthread_mutex_lock(&wq->lock);
-+
-+		/*
-+		 * Wait for work.
-+		 */
-+		while (wq->next_item == NULL && !wq->terminate) {
-+			assert(wq->item_count == 0);
-+			pthread_cond_wait(&wq->wakeup, &wq->lock);
-+		}
-+		if (wq->next_item == NULL && wq->terminate) {
-+			pthread_mutex_unlock(&wq->lock);
-+			break;
-+		}
-+
-+		/*
-+		 *  Dequeue work from the head of the list.
-+		 */
-+		assert(wq->item_count > 0);
-+		wi = wq->next_item;
-+		wq->next_item = wi->next;
-+		wq->item_count--;
-+
-+		pthread_mutex_unlock(&wq->lock);
-+
-+		(wi->function)(wi->queue, wi->index, wi->arg);
-+		free(wi);
-+	}
-+
-+	return NULL;
-+}
-+
-+/* Allocate a work queue and threads. */
-+int
-+workqueue_create(
-+	struct workqueue	*wq,
-+	void			*wq_ctx,
-+	unsigned int		nr_workers)
-+{
-+	unsigned int		i;
-+	int			err = 0;
-+
-+	memset(wq, 0, sizeof(*wq));
-+	pthread_cond_init(&wq->wakeup, NULL);
-+	pthread_mutex_init(&wq->lock, NULL);
-+
-+	wq->wq_ctx = wq_ctx;
-+	wq->thread_count = nr_workers;
-+	wq->threads = malloc(nr_workers * sizeof(pthread_t));
-+	wq->terminate = false;
-+
-+	for (i = 0; i < nr_workers; i++) {
-+		err = pthread_create(&wq->threads[i], NULL, workqueue_thread,
-+				wq);
-+		if (err)
-+			break;
-+	}
-+
-+	if (err)
-+		workqueue_destroy(wq);
-+	return err;
-+}
-+
-+/*
-+ * Create a work item consisting of a function and some arguments and
-+ * schedule the work item to be run via the thread pool.
-+ */
-+int
-+workqueue_add(
-+	struct workqueue	*wq,
-+	workqueue_func_t	func,
-+	uint32_t		index,
-+	void			*arg)
-+{
-+	struct workqueue_item	*wi;
-+
-+	if (wq->thread_count == 0) {
-+		func(wq, index, arg);
-+		return 0;
-+	}
-+
-+	wi = malloc(sizeof(struct workqueue_item));
-+	if (wi == NULL)
-+		return ENOMEM;
-+
-+	wi->function = func;
-+	wi->index = index;
-+	wi->arg = arg;
-+	wi->queue = wq;
-+	wi->next = NULL;
-+
-+	/* Now queue the new work structure to the work queue. */
-+	pthread_mutex_lock(&wq->lock);
-+	if (wq->next_item == NULL) {
-+		wq->next_item = wi;
-+		assert(wq->item_count == 0);
-+		pthread_cond_signal(&wq->wakeup);
-+	} else {
-+		wq->last_item->next = wi;
-+	}
-+	wq->last_item = wi;
-+	wq->item_count++;
-+	pthread_mutex_unlock(&wq->lock);
-+
++	(*blocks) += rec->ar_blockcount;
 +	return 0;
 +}
 +
-+/*
-+ * Wait for all pending work items to be processed and tear down the
-+ * workqueue.
-+ */
+ /* Cross-reference with the other btrees. */
+ STATIC void
+ xfs_scrub_agf_xref(
+ 	struct xfs_scrub_context	*sc)
+ {
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_agf			*agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	struct xfs_btree_cur		**pcur;
++	xfs_agblock_t			bno;
++	xfs_extlen_t			blocks;
++	int				error;
++
++	bno = XFS_AGF_BLOCK(mp);
++
++	error = xfs_scrub_ag_btcur_init(sc, &sc->sa);
++	if (error)
++		return;
++
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
++
++	/* Check agf_freeblks */
++	pcur = &sc->sa.bno_cur;
++	if (*pcur) {
++		blocks = 0;
++		error = xfs_alloc_query_all(*pcur,
++				xfs_scrub_agf_record_bno_lengths, &blocks);
++		if (xfs_scrub_should_xref(sc, &error, pcur) &&
++		    blocks != be32_to_cpu(agf->agf_freeblks))
++			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agf_bp);
++	}
++
++	/* scrub teardown will take care of sc->sa for us */
+ }
+ 
+ /* Scrub the AGF. */
+@@ -515,6 +569,7 @@ xfs_scrub_agfl_block_xref(
+ 	struct xfs_scrub_context	*sc,
+ 	xfs_agblock_t			bno)
+ {
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
+ }
+ 
+ /* Scrub an AGFL block. */
+@@ -558,6 +613,22 @@ STATIC void
+ xfs_scrub_agfl_xref(
+ 	struct xfs_scrub_context	*sc)
+ {
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agblock_t			bno;
++	int				error;
++
++	bno = XFS_AGFL_BLOCK(mp);
++
++	error = xfs_scrub_ag_btcur_init(sc, &sc->sa);
++	if (error)
++		return;
++
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
++
++	/*
++	 * Scrub teardown will take care of sc->sa for us.  Leave sc->sa
++	 * active so that the agfl block xref can use it too.
++	 */
+ }
+ 
+ /* Scrub the AGFL. */
+@@ -632,6 +703,19 @@ STATIC void
+ xfs_scrub_agi_xref(
+ 	struct xfs_scrub_context	*sc)
+ {
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agblock_t			bno;
++	int				error;
++
++	bno = XFS_AGI_BLOCK(mp);
++
++	error = xfs_scrub_ag_btcur_init(sc, &sc->sa);
++	if (error)
++		return;
++
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
++
++	/* scrub teardown will take care of sc->sa for us */
+ }
+ 
+ /* Scrub the AGI. */
+diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+index 0d95b84..3d6f8cc 100644
+--- a/fs/xfs/scrub/alloc.c
++++ b/fs/xfs/scrub/alloc.c
+@@ -114,3 +114,22 @@ xfs_scrub_cntbt(
+ {
+ 	return xfs_scrub_allocbt(sc, XFS_BTNUM_CNT);
+ }
++
++/* xref check that the extent is not free */
 +void
-+workqueue_destroy(
-+	struct workqueue	*wq)
++xfs_scrub_xref_not_free(
++	struct xfs_scrub_context	*sc,
++	struct xfs_btree_cur		**pcur,
++	xfs_agblock_t			bno,
++	xfs_extlen_t			len)
 +{
-+	unsigned int		i;
++	bool				is_freesp;
++	int				error;
 +
-+	pthread_mutex_lock(&wq->lock);
-+	wq->terminate = 1;
-+	pthread_mutex_unlock(&wq->lock);
++	if (!(*pcur))
++		return;
 +
-+	pthread_cond_broadcast(&wq->wakeup);
-+
-+	for (i = 0; i < wq->thread_count; i++)
-+		pthread_join(wq->threads[i], NULL);
-+
-+	free(wq->threads);
-+	pthread_mutex_destroy(&wq->lock);
-+	pthread_cond_destroy(&wq->wakeup);
-+	memset(wq, 0, sizeof(*wq));
++	error = xfs_alloc_has_record(*pcur, bno, len, &is_freesp);
++	if (xfs_scrub_should_xref(sc, &error, pcur) && is_freesp)
++		xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
 +}
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 684f08b..7ce135b 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -31,12 +31,12 @@
+ #include "xfs_sb.h"
+ #include "xfs_inode.h"
+ #include "xfs_inode_fork.h"
+-#include "xfs_alloc.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_rmap.h"
++#include "xfs_alloc.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -117,6 +117,25 @@ xfs_scrub_bmap_extent_xref(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_bmbt_irec		*irec)
+ {
++	struct xfs_scrub_ag		sa = { 0 };
++	struct xfs_mount		*mp = info->sc->mp;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	xfs_extlen_t			len;
++	int				error;
++
++	agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
++	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
++	len = irec->br_blockcount;
++
++	error = xfs_scrub_ag_init(info->sc, agno, &sa);
++	if (!xfs_scrub_fblock_process_error(info->sc, info->whichfork,
++			irec->br_startoff, &error))
++		return;
++
++	xfs_scrub_xref_not_free(info->sc, &sa.bno_cur, agbno, len);
++
++	xfs_scrub_ag_free(info->sc, &sa);
+ }
+ 
+ /* Scrub a single extent record. */
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 40fc26f..67b6248 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -378,9 +378,12 @@ xfs_scrub_btree_check_block_owner(
+ 	struct xfs_scrub_ag		sa = { 0 };
+ 	struct xfs_scrub_ag		*psa;
+ 	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++	bool				is_freesp;
+ 	int				error = 0;
+ 
+ 	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
++	bno = xfs_daddr_to_agbno(bs->cur->bc_mp, daddr);
+ 
+ 	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+ 		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
+@@ -392,6 +395,15 @@ xfs_scrub_btree_check_block_owner(
+ 		psa = &bs->sc->sa;
+ 	}
+ 
++	/* Cross-reference with the bnobt. */
++	if (psa->bno_cur) {
++		error = xfs_alloc_has_record(psa->bno_cur, bno, 1, &is_freesp);
++		if (xfs_scrub_should_xref(bs->sc, &error, &psa->bno_cur) &&
++		    is_freesp)
++			xfs_scrub_btree_xref_set_corrupt(bs->sc, psa->bno_cur,
++					0);
++	}
++
+ 	if (psa == &sa)
+ 		xfs_scrub_ag_free(bs->sc, &sa);
+ 
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 599d62a..4c4ef17c 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -67,6 +67,7 @@ xfs_scrub_iallocbt_chunk_xref(
+ 	xfs_agblock_t			bno,
+ 	xfs_extlen_t			len)
+ {
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
+ }
+ 
+ /* Is this chunk worth checking? */
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 9fc5cd3..3e3b34f 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -562,6 +562,21 @@ xfs_scrub_inode_xref(
+ 	xfs_ino_t			ino,
+ 	struct xfs_dinode		*dip)
+ {
++	struct xfs_scrub_ag		sa = { 0 };
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	int				error;
++
++	agno = XFS_INO_TO_AGNO(sc->mp, ino);
++	agbno = XFS_INO_TO_AGBNO(sc->mp, ino);
++
++	error = xfs_scrub_ag_init(sc, agno, &sa);
++	if (!xfs_scrub_xref_process_error(sc, agno, agbno, &error))
++		return;
++
++	xfs_scrub_xref_not_free(sc, &sa.bno_cur, agbno, 1);
++
++	xfs_scrub_ag_free(sc, &sa);
+ }
+ 
+ /* Scrub an inode. */
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index 5a3aa9b..19c303d 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -58,6 +58,7 @@ xfs_scrub_refcountbt_xref(
+ 	xfs_extlen_t			len,
+ 	xfs_nlink_t			refcount)
+ {
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
+ }
+ 
+ /* Scrub a refcountbt record. */
+diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
+index 80edddb..5c9646b 100644
+--- a/fs/xfs/scrub/rmap.c
++++ b/fs/xfs/scrub/rmap.c
+@@ -57,6 +57,10 @@ xfs_scrub_rmapbt_xref(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_rmap_irec		*irec)
+ {
++	xfs_agblock_t			bno = irec->rm_startblock;
++	xfs_extlen_t			len = irec->rm_blockcount;
++
++	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
+ }
+ 
+ /* Scrub an rmapbt record. */
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index e9ec041..0cbb39f6 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -112,4 +112,9 @@ xfs_scrub_quota(struct xfs_scrub_context *sc)
+ }
+ #endif
+ 
++/* cross-referencing helpers */
++void xfs_scrub_xref_not_free(struct xfs_scrub_context *sc,
++		struct xfs_btree_cur **pcur, xfs_agblock_t bno,
++		xfs_extlen_t len);
++
+ #endif	/* __XFS_SCRUB_SCRUB_H__ */
+
