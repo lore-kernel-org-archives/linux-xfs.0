@@ -1,156 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35444 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752963AbdK2MdQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 07:33:16 -0500
-Received: by mail-wm0-f52.google.com with SMTP id f9so5654574wmh.0
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 04:33:15 -0800 (PST)
-Date: Wed, 29 Nov 2017 13:33:12 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH V2] xfs: Properly retry failed dquot items in case of
- error during buffer writeback
-Message-ID: <20171129123312.epsll4iv2hyuzrg3@odin.usersys.redhat.com>
-References: <20171128143101.18861-1-cmaiolino@redhat.com>
- <20171128175553.GA47056@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:48650 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751077AbdK2Ob0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 09:31:26 -0500
+Date: Wed, 29 Nov 2017 09:31:24 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: tr_ifree transaction log reservation calculation
+Message-ID: <20171129143124.GB50847@bfoster.bfoster>
+References: <20171122204126.GA19041@bfoster.bfoster>
+ <20171123002401.GT5858@dastard>
+ <20171123143652.GA22032@bfoster.bfoster>
+ <20171123215457.GU5858@dastard>
+ <20171124145121.GA26516@bfoster.bfoster>
+ <20171125232010.GW5858@dastard>
+ <20171127184651.GA39719@bfoster.bfoster>
+ <20171127212946.GY5858@dastard>
+ <20171128132801.GA45759@bfoster.bfoster>
+ <20171128213408.GD5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171128175553.GA47056@bfoster.bfoster>
+In-Reply-To: <20171128213408.GD5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
 
-> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > index d57c2db64e59..b2bafa284253 100644
-> > --- a/fs/xfs/xfs_dquot.c
-> > +++ b/fs/xfs/xfs_dquot.c
-> > @@ -970,14 +970,19 @@ xfs_qm_dqflush_done(
-> >  	 * holding the lock before removing the dquot from the AIL.
-> >  	 */
-> >  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
-> > -	    lip->li_lsn == qip->qli_flush_lsn) {
-> > +	    ((lip->li_lsn == qip->qli_flush_lsn) ||
-> > +	     (lip->li_flags & XFS_LI_FAILED))) {
-> >  
-> >  		/* xfs_trans_ail_delete() drops the AIL lock. */
-> >  		spin_lock(&ailp->xa_lock);
-> > -		if (lip->li_lsn == qip->qli_flush_lsn)
-> > +		if (lip->li_lsn == qip->qli_flush_lsn) {
-> >  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
-> > -		else
-> > +		} else if (lip->li_flags & XFS_LI_FAILED) {
-> > +			xfs_clear_li_failed(lip);
-> >  			spin_unlock(&ailp->xa_lock);
-> > +		} else {
-> > +			spin_unlock(&ailp->xa_lock);
-> > +		}
-> 
-> Nit, but the following looks a bit cleaner to me:
-> 
-> 		if ((ip->li_lsn == qip->qli_flush_lsn) {
-> 			xfs_trans_ail_delete(...);
-> 		} else {
-> 			/*
-> 			 * clear the failed state since we're about to drop the
-> 			 * flush lock
-> 			 */
-> 			if (lip->li_flags & XFS_LI_FAILED)
-> 				xfs_clear_li_failed(lip);
-> 			spin_unlock();
-> 		}
-> 
-> Otherwise looks good to me:
-
-Either works for me, although I agree your version looks better. I'll just
-rewrite it and send a V3 with your review.
-
-Thanks
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  	}
-> >  
-> >  	/*
-> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> > index 2c7a1629e064..664dea105e76 100644
-> > --- a/fs/xfs/xfs_dquot_item.c
-> > +++ b/fs/xfs/xfs_dquot_item.c
-> > @@ -137,6 +137,26 @@ xfs_qm_dqunpin_wait(
-> >  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
-> >  }
-> >  
-> > +/*
-> > + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-> > + * have been failed during writeback
-> > + *
-> > + * this informs the AIL that the dquot is already flush locked on the next push,
-> > + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-> > + * dirty data makes it to disk.
-> > + */
-> > +STATIC void
-> > +xfs_dquot_item_error(
-> > +	struct xfs_log_item	*lip,
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	struct xfs_dquot	*dqp;
-> > +
-> > +	dqp = DQUOT_ITEM(lip)->qli_dquot;
-> > +	ASSERT(!completion_done(&dqp->q_flush));
-> > +	xfs_set_li_failed(lip, bp);
-> > +}
-> > +
-> >  STATIC uint
-> >  xfs_qm_dquot_logitem_push(
-> >  	struct xfs_log_item	*lip,
-> > @@ -144,13 +164,28 @@ xfs_qm_dquot_logitem_push(
-> >  					      __acquires(&lip->li_ailp->xa_lock)
-> >  {
-> >  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
-> > -	struct xfs_buf		*bp = NULL;
-> > +	struct xfs_buf		*bp = lip->li_buf;
-> >  	uint			rval = XFS_ITEM_SUCCESS;
-> >  	int			error;
-> >  
-> >  	if (atomic_read(&dqp->q_pincount) > 0)
-> >  		return XFS_ITEM_PINNED;
-> >  
-> > +	/*
-> > +	 * The buffer containing this item failed to be written back
-> > +	 * previously. Resubmit the buffer for IO
-> > +	 */
-> > +	if (lip->li_flags & XFS_LI_FAILED) {
-> > +		if (!xfs_buf_trylock(bp))
-> > +			return XFS_ITEM_LOCKED;
-> > +
-> > +		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-> > +			rval = XFS_ITEM_FLUSHING;
-> > +
-> > +		xfs_buf_unlock(bp);
-> > +		return rval;
-> > +	}
-> > +
-> >  	if (!xfs_dqlock_nowait(dqp))
-> >  		return XFS_ITEM_LOCKED;
-> >  
-> > @@ -242,7 +277,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
-> >  	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
-> >  	.iop_committed	= xfs_qm_dquot_logitem_committed,
-> >  	.iop_push	= xfs_qm_dquot_logitem_push,
-> > -	.iop_committing = xfs_qm_dquot_logitem_committing
-> > +	.iop_committing = xfs_qm_dquot_logitem_committing,
-> > +	.iop_error	= xfs_dquot_item_error
-> >  };
-> >  
-> >  /*
-> > -- 
-> > 2.14.3
+On Wed, Nov 29, 2017 at 08:34:08AM +1100, Dave Chinner wrote:
+> On Tue, Nov 28, 2017 at 08:28:02AM -0500, Brian Foster wrote:
+> > On Tue, Nov 28, 2017 at 08:29:46AM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 27, 2017 at 01:46:51PM -0500, Brian Foster wrote:
+> > > > Also, it looks like this makes some other changes that are not
+> > > > immediately clear to me,
+> > > 
+> > > Which ones?
+> > > 
 > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > The truncate and iunlink bits...
+> 
+> The truncate reservation includes a reservation for an inobt
+> modification. We *never* modify the inobt inside a truncate
+> transaction, so even if we ignore the fact it was wrong (like all
+> the others we are fixing), it really shouldn't be there.
+> 
+> THe commit message from the archive tree doesn't help explain it,
+> either. It just says (paraphrasing) "fix transaction reservation".
+> So I removed it.
+> 
 
--- 
-Carlos
+Ok..
+
+> As for the iunlink bit, you mean this the fact I added the on disk
+> inode cluster to the reservation in
+> xfs_calc_iunlink_add_reservation()?
+> 
+> That's because we log the inode cluster in unlink when we modify the
+> inode unlinked list. That's missing from all the unlinked inode
+> manipulation reservations - some of them take into account modifying
+> the inode cluster of another inode in the unlinked list (e.g. ifree)
+> but they all fail to reserve space for logging the unlinked list
+> pointer in the inode being unlinked/freed.
+> 
+
+This is clear to me now via the other thread. I'll incorporate both of
+these fixes, thanks.
+
+> > > > squashes in a couple of the fixes I've already
+> > > > made and doesn't actually add a new allocfree res in some of the
+> > > > create/alloc calculations (but rather refactors the existing allocfree
+> > > > res to use the new helper). It's not clear to me if the latter is
+> > > > intentional..?
+> > > 
+> > > Not sure what you are asking? I factored existing open-coded inobt
+> > > reservations to use helpers so that I didn't have to modify the
+> > > reservation in lots of places. Get it right in one place, all the
+> > > others are correct too. Indeed, most of the cases I factored already
+> > > had the allocfree reservation, so I'm not sure why we'd be adding a
+> > > new one to those reservations?
+> > > 
+> > 
+> > Understood wrt to the helpers. What I'm asking is why
+> > xfs_calc_create_resv_alloc(), for example, doesn't actually add another
+> > allocfree res if the intent was to add one for all inode tree related
+> > ops..?
+> 
+> Because the patch wasn't complete and finished and there's no
+> guarantee I factored it correctly. You're still reading that patch
+> as though it was a completely polished, finished patch, not a set of
+> "noticed these things while thinking about the problem" notes.
+> 
+
+Nope.. I skimmed it and was confused about a hunk that was reworked in a
+way that conflicted with my understanding of the intent. It's really
+that simple. I appreciate the psychological evaluation, but I think "no
+that's not intentional, it's just a bug/incomplete" would have sufficed.
+;)
+
+Brian
+
+> I factored the code first, never went back the create
+> code because we were focussed on the problems in the iunlink
+> reservations....
+> 
+> > Using that example, my understanding is that tx should now have
+> > an allocfree res for the inode chunk allocation and a new one for the
+> > inobt insertion. The latter is the one that's now abstracted into the
+> > helpers, yes..? That's the model I tried to follow for the rfc patch,
+> > anyways.
+> 
+> Sure, that's what needs to be done, as we've discussed.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
