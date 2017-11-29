@@ -1,116 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48650 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64226 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751077AbdK2Ob0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 09:31:26 -0500
-Date: Wed, 29 Nov 2017 09:31:24 -0500
+        id S1751077AbdK2Obj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 09:31:39 -0500
+Date: Wed, 29 Nov 2017 09:31:38 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: tr_ifree transaction log reservation calculation
-Message-ID: <20171129143124.GB50847@bfoster.bfoster>
-References: <20171122204126.GA19041@bfoster.bfoster>
- <20171123002401.GT5858@dastard>
- <20171123143652.GA22032@bfoster.bfoster>
- <20171123215457.GU5858@dastard>
- <20171124145121.GA26516@bfoster.bfoster>
- <20171125232010.GW5858@dastard>
- <20171127184651.GA39719@bfoster.bfoster>
- <20171127212946.GY5858@dastard>
- <20171128132801.GA45759@bfoster.bfoster>
- <20171128213408.GD5858@dastard>
+Subject: Re: [PATCH 2/4] xfs: include inobt buffers in ifree tx log
+ reservation
+Message-ID: <20171129143137.GC50847@bfoster.bfoster>
+References: <20171127202434.43125-1-bfoster@redhat.com>
+ <20171127202434.43125-3-bfoster@redhat.com>
+ <20171127222857.GA5858@dastard>
+ <20171128133001.GB45759@bfoster.bfoster>
+ <20171128213844.GE5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171128213408.GD5858@dastard>
+In-Reply-To: <20171128213844.GE5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <mark.tinguely@hpe.com>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 29, 2017 at 08:34:08AM +1100, Dave Chinner wrote:
-> On Tue, Nov 28, 2017 at 08:28:02AM -0500, Brian Foster wrote:
-> > On Tue, Nov 28, 2017 at 08:29:46AM +1100, Dave Chinner wrote:
-> > > On Mon, Nov 27, 2017 at 01:46:51PM -0500, Brian Foster wrote:
-> > > > Also, it looks like this makes some other changes that are not
-> > > > immediately clear to me,
+On Wed, Nov 29, 2017 at 08:38:44AM +1100, Dave Chinner wrote:
+> On Tue, Nov 28, 2017 at 08:30:02AM -0500, Brian Foster wrote:
+> > On Tue, Nov 28, 2017 at 09:28:57AM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 27, 2017 at 03:24:32PM -0500, Brian Foster wrote:
+> > > > The tr_ifree transaction handles inode unlinks and inode chunk
+> > > > frees. The current transaction calculation does not accurately
+> > > > reflect worst case changes to the inode btree, however. The inobt
+> > > > portion of the current transaction reservation only covers
+> > > > modification of a single inobt buffer (for the particular inode
+> > > > record). This is a historical artifact from the days before XFS
+> > > > supported full inode chunk removal.
+> > > > 
+> > > > When support for inode chunk removal was added in commit
+> > > > 254f6311ed1b ("Implement deletion of inode clusters in XFS."), the
+> > > > additional log reservation required for chunk removal was not added
+> > > > correctly. The new reservation only considered the header overhead
+> > > > of associated buffers rather than the full contents of the btrees
+> > > > and AGF and AGFL buffers affected by the transaction. The
+> > > > reservation for the free space btrees was subsequently fixed up in
+> > > > commit 5fe6abb82f76 ("Add space for inode and allocation btrees to
+> > > > ITRUNCATE log reservation"), but the res. for full inobt joins has
+> > > > never been added.
+> > > > 
+> > > > Update xfs_calc_ifree_reservation() to include a full inobt join in
+> > > > the reservation calculation. Refactor the undocumented +2 blocks for
+> > > > the AGF and AGFL buffers into the appropriate place so they are
+> > > > accounted as sectors (not FSBs) and update the associated comments.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_trans_resv.c | 11 +++++------
+> > > >  1 file changed, 5 insertions(+), 6 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > > > index 6bd916bd35e2..4cd7cd1e60da 100644
+> > > > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > > > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > > > @@ -490,10 +490,10 @@ xfs_calc_symlink_reservation(
+> > > >  /*
+> > > >   * In freeing an inode we can modify:
+> > > >   *    the inode being freed: inode size
+> > > > - *    the super block free inode counter: sector size
+> > > > + *    the super block free inode counter, AGF and AGFL: sector size
+> > > >   *    the agi hash list and counters: sector size
+> > > > - *    the inode btree entry: block size
+> > > >   *    the on disk inode before ours in the agi hash list: inode cluster size
+> > > > + *    the inode chunk is marked stale (headers only)
+> > > >   *    the inode btree: max depth * blocksize
+> > > >   *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> > > >   *    the finobt (record insertion, removal or modification)
+> > > > @@ -504,12 +504,11 @@ xfs_calc_ifree_reservation(
+> > > >  {
+> > > >  	return XFS_DQUOT_LOGRES(mp) +
+> > > >  		xfs_calc_inode_res(mp, 1) +
 > > > 
-> > > Which ones?
+> > >  *    the inode being freed: inode size
+> > > 
+> > > > -		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+> > > > -		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+> > > > +		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+> > > 
+> > >  *    the super block free inode counter, AGF and AGFL: sector size
+> > > 
+> > > 		[missing, hidden in calc_iunlink_remove]
+> > > 
+> > >  *    the agi hash list and counters: sector size
+> > > 
+> > > >  		xfs_calc_iunlink_remove_reservation(mp) +
+> > > 
+> > >  *    the on disk inode before ours in the agi hash list: inode cluster size
+> > > 
+> > > 		[missing]
+> > > 
+> > >  *    on-disk inode to log the di_next_unlinked: inode cluster size
+> > > 
+> > > Yes, check the xfs_iunlink_remove() code - we can log two inode
+> > > cluster buffers there: the one prior to us in the unlinked list,
+> > > and ours to reset the di_next_unlinked pointer to
+> > > null. IOWs, xfs_calc_iunlink_remove_reservation() needs to take into
+> > > account /2/ inode cluster buffers, not one.
 > > > 
 > > 
-> > The truncate and iunlink bits...
+> > I was wondering why this wouldn't be covered by the inode size included
+> > above, but looking at the code, I guess we log the agi unlinked changes
+> > directly in the cluster buffer. That means we have separate log items
+> > with independent reservation consumption between the unlinked list
+> > fixups and core inode.
+> > 
+> > I'll update xfs_calc_iunlink_remove_reservation() to include another
+> > cluster and add a comment.
 > 
-> The truncate reservation includes a reservation for an inobt
-> modification. We *never* modify the inobt inside a truncate
-> transaction, so even if we ignore the fact it was wrong (like all
-> the others we are fixing), it really shouldn't be there.
-> 
-> THe commit message from the archive tree doesn't help explain it,
-> either. It just says (paraphrasing) "fix transaction reservation".
-> So I removed it.
-> 
-
-Ok..
-
-> As for the iunlink bit, you mean this the fact I added the on disk
-> inode cluster to the reservation in
-> xfs_calc_iunlink_add_reservation()?
-> 
-> That's because we log the inode cluster in unlink when we modify the
-> inode unlinked list. That's missing from all the unlinked inode
-> manipulation reservations - some of them take into account modifying
-> the inode cluster of another inode in the unlinked list (e.g. ifree)
-> but they all fail to reserve space for logging the unlinked list
-> pointer in the inode being unlinked/freed.
+> And, as I mentioned in the other thread,
+> xfs_calc_iunlink_add_reservation() needs this fixup, too.
 > 
 
-This is clear to me now via the other thread. I'll incorporate both of
-these fixes, thanks.
+Right, thanks..
 
-> > > > squashes in a couple of the fixes I've already
-> > > > made and doesn't actually add a new allocfree res in some of the
-> > > > create/alloc calculations (but rather refactors the existing allocfree
-> > > > res to use the new helper). It's not clear to me if the latter is
-> > > > intentional..?
+> > 
+> > > >  		xfs_calc_buf_res(1, 0) +
 > > > 
-> > > Not sure what you are asking? I factored existing open-coded inobt
-> > > reservations to use helpers so that I didn't have to modify the
-> > > reservation in lots of places. Get it right in one place, all the
-> > > others are correct too. Indeed, most of the cases I factored already
-> > > had the allocfree reservation, so I'm not sure why we'd be adding a
-> > > new one to those reservations?
+> > > No idea what this is.
 > > > 
 > > 
-> > Understood wrt to the helpers. What I'm asking is why
-> > xfs_calc_create_resv_alloc(), for example, doesn't actually add another
-> > allocfree res if the intent was to add one for all inode tree related
-> > ops..?
+> > Same, I didn't want to remove it unless we could identify what it was
+> > originally intended for.
 > 
-> Because the patch wasn't complete and finished and there's no
-> guarantee I factored it correctly. You're still reading that patch
-> as though it was a completely polished, finished patch, not a set of
-> "noticed these things while thinking about the problem" notes.
+> It's only going to be a 128 bytes for a header, so I think we should
+> just remove it rather than keep some unknown magic in the
+> reservation. If it turns out to be critical, then we need to
+> understand exactly where it came from...
 > 
 
-Nope.. I skimmed it and was confused about a hunk that was reworked in a
-way that conflicted with my understanding of the intent. It's really
-that simple. I appreciate the psychological evaluation, but I think "no
-that's not intentional, it's just a bug/incomplete" would have sufficed.
-;)
+Fair enough. We're still adding reservation in the end so I'll drop this
+too.
 
 Brian
 
-> I factored the code first, never went back the create
-> code because we were focussed on the problems in the iunlink
-> reservations....
-> 
-> > Using that example, my understanding is that tx should now have
-> > an allocfree res for the inode chunk allocation and a new one for the
-> > inobt insertion. The latter is the one that's now abstracted into the
-> > helpers, yes..? That's the model I tried to follow for the rfc patch,
-> > anyways.
-> 
-> Sure, that's what needs to be done, as we've discussed.
-> 
 > Cheers,
 > 
 > Dave.
