@@ -1,87 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30961 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751276AbdKWGBk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Nov 2017 01:01:40 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAN61d43005609
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Nov 2017 06:01:39 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAN61dme020274
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Nov 2017 06:01:39 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vAN61cRe032068
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Nov 2017 06:01:39 GMT
-Date: Wed, 22 Nov 2017 22:01:37 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: always free inline data before resetting inode fork
- during ifree
-Message-ID: <20171123060137.GL2135@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:37738 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752379AbdK2MmW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 07:42:22 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3AD1913A55
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 12:42:22 +0000 (UTC)
+Received: from odin.usersys.redhat.com (ovpn-204-223.brq.redhat.com [10.40.204.223])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8D45C5D975
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 12:42:21 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH V3] xfs: Properly retry failed dquot items in case of error during buffer writeback
+Date: Wed, 29 Nov 2017 13:42:17 +0100
+Message-Id: <20171129124217.22861-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Once the inode item writeback errors is already fixed, it's time to fix the same
+problem in dquot code.
 
-In xfs_ifree, we reset the data/attr forks to extents format without
-bothering to free any inline data buffer that might still be around
-after all the blocks have been truncated off the file.  Prior to commit
-43518812d2 ("xfs: remove support for inlining data/extents into the
-inode fork") nobody noticed because the leftover inline data after
-truncation was small enough to fit inside the inline buffer inside the
-fork itself.
+Although there were no reports of users hitting this bug in dquot code (at least
+none I've seen), the bug is there and I was already planning to fix it when the
+correct approach to fix the inodes part was decided.
 
-However, now that we've removed the inline buffer, we /always/ have to
-free the inline data buffer or else we leak them like crazy.  This test
-was found by turning on kmemleak for generic/001 or generic/388.
+This patch aims to fix the same problem in dquot code, regarding failed buffers
+being unable to be resubmitted once they are flush locked.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Tested with the recently test-case sent to fstests list by Hou Tao.
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_inode.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 61d1cb7..8012741 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2401,6 +2401,24 @@ xfs_ifree_cluster(
+V3:
+	- Improve readability a bit in xfs_qm_dqflush_done(). Logic
+	  stays the same.
+V2:
+	- in xfs_dquot.c
+	  ..Add a couple of parentheses around lip->li_flags & XFS_LI_FAILED
+	- in xfs_dquot_item.c:
+	  ..Add missing blank line between variable definiton and code
+	  ..Initialize dqp pointer out of variable definition to shut up
+	    gcc's 'unused variable' warning
+ fs/xfs/xfs_dquot.c      | 14 +++++++++++---
+ fs/xfs/xfs_dquot_item.c | 40 ++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 49 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index d57c2db64e59..f248708c10ff 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -970,14 +970,22 @@ xfs_qm_dqflush_done(
+ 	 * holding the lock before removing the dquot from the AIL.
+ 	 */
+ 	if ((lip->li_flags & XFS_LI_IN_AIL) &&
+-	    lip->li_lsn == qip->qli_flush_lsn) {
++	    ((lip->li_lsn == qip->qli_flush_lsn) ||
++	     (lip->li_flags & XFS_LI_FAILED))) {
+ 
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+ 		spin_lock(&ailp->xa_lock);
+-		if (lip->li_lsn == qip->qli_flush_lsn)
++		if (lip->li_lsn == qip->qli_flush_lsn) {
+ 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+-		else
++		} else {
++			/*
++			 * Clear the failed state since we are about to drop the
++			 * flush lock
++			 */
++			if (lip->li_flags & XFS_LI_FAILED)
++				xfs_clear_li_failed(lip);
+ 			spin_unlock(&ailp->xa_lock);
++		}
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 2c7a1629e064..664dea105e76 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -137,6 +137,26 @@ xfs_qm_dqunpin_wait(
+ 	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
  }
  
- /*
-+ * Free any local-format buffers sitting around before we reset to
-+ * extents format.
++/*
++ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
++ * have been failed during writeback
++ *
++ * this informs the AIL that the dquot is already flush locked on the next push,
++ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
++ * dirty data makes it to disk.
 + */
-+static inline void
-+xfs_ifree_local_data(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
++STATIC void
++xfs_dquot_item_error(
++	struct xfs_log_item	*lip,
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_ifork	*ifp;
++	struct xfs_dquot	*dqp;
 +
-+	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-+		return;
-+
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
++	dqp = DQUOT_ITEM(lip)->qli_dquot;
++	ASSERT(!completion_done(&dqp->q_flush));
++	xfs_set_li_failed(lip, bp);
 +}
 +
-+/*
-  * This is called to return an inode to the inode free list.
-  * The inode should already be truncated to 0 length and have
-  * no pages associated with it.  This routine also assumes that
-@@ -2437,6 +2455,9 @@ xfs_ifree(
- 	if (error)
- 		return error;
+ STATIC uint
+ xfs_qm_dquot_logitem_push(
+ 	struct xfs_log_item	*lip,
+@@ -144,13 +164,28 @@ xfs_qm_dquot_logitem_push(
+ 					      __acquires(&lip->li_ailp->xa_lock)
+ {
+ 	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
+-	struct xfs_buf		*bp = NULL;
++	struct xfs_buf		*bp = lip->li_buf;
+ 	uint			rval = XFS_ITEM_SUCCESS;
+ 	int			error;
  
-+	xfs_ifree_local_data(ip, XFS_DATA_FORK);
-+	xfs_ifree_local_data(ip, XFS_ATTR_FORK);
+ 	if (atomic_read(&dqp->q_pincount) > 0)
+ 		return XFS_ITEM_PINNED;
+ 
++	/*
++	 * The buffer containing this item failed to be written back
++	 * previously. Resubmit the buffer for IO
++	 */
++	if (lip->li_flags & XFS_LI_FAILED) {
++		if (!xfs_buf_trylock(bp))
++			return XFS_ITEM_LOCKED;
 +
- 	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
- 	ip->i_d.di_flags = 0;
- 	ip->i_d.di_dmevmask = 0;
++		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
++			rval = XFS_ITEM_FLUSHING;
++
++		xfs_buf_unlock(bp);
++		return rval;
++	}
++
+ 	if (!xfs_dqlock_nowait(dqp))
+ 		return XFS_ITEM_LOCKED;
+ 
+@@ -242,7 +277,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
+ 	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
+ 	.iop_committed	= xfs_qm_dquot_logitem_committed,
+ 	.iop_push	= xfs_qm_dquot_logitem_push,
+-	.iop_committing = xfs_qm_dquot_logitem_committing
++	.iop_committing = xfs_qm_dquot_logitem_committing,
++	.iop_error	= xfs_dquot_item_error
+ };
+ 
+ /*
+-- 
+2.14.3
+
