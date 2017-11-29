@@ -1,120 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57671 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752150AbdK3QWB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 11:22:01 -0500
-Date: Thu, 30 Nov 2017 17:21:55 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 07/11] xfs: remove not needed freezing calls
-Message-ID: <20171130162155.GB28180@quack2.suse.cz>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
- <20171129232356.28296-8-mcgrof@kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:16572 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751474AbdK2Slx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:41:53 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 16/17] Add the parent pointer support to the superblock
+ version 5.
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-17-git-send-email-allison.henderson@oracle.com>
+ <20171128180804.GI21412@magnolia>
+Message-ID: <065f2473-bbb7-539b-4b04-24f49b46a6db@oracle.com>
+Date: Wed, 29 Nov 2017 11:41:45 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171129232356.28296-8-mcgrof@kernel.org>
+In-Reply-To: <20171128180804.GI21412@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-On Wed 29-11-17 15:23:52, Luis R. Rodriguez wrote:
-> This removes superflous freezer calls as they are no longer needed
-> as the VFS now performs filesystem freezing/thaw if the filesystem has
-> support for it.
-> 
-> The following Coccinelle rule was used as follows:
-> 
-> spatch --sp-file fs-freeze-cleanup.cocci --in-place fs/$FS/
+On 11/28/2017 11:08 AM, Darrick J. Wong wrote:
 
-I think your rule misses WQ_FREEZABLE flag for workqueues? That would be
-also good to get rid of...
+> On Fri, Nov 17, 2017 at 11:21:44AM -0700, Allison Henderson wrote:
+>> [dchinner: forward ported and cleaned up]
+>> [achender: rebased and added parent pointer attribute to
+>>             compatible attributes mask]
+>>
+>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>> v2: remove unrelated type clean up in xfs_format.h
+>>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_format.h | 7 +++++--
+>>   fs/xfs/libxfs/xfs_fs.h     | 1 +
+>>   fs/xfs/xfs_fsops.c         | 4 +++-
+>>   fs/xfs/xfs_super.c         | 4 ++++
+>>   4 files changed, 13 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>> index 121862a..f3e3132 100644
+>> --- a/fs/xfs/libxfs/xfs_format.h
+>> +++ b/fs/xfs/libxfs/xfs_format.h
+>> @@ -459,10 +459,12 @@ xfs_sb_has_compat_feature(
+>>   #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+>>   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+>>   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+>> +#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
+> Please make this line up, i.e.
+>
+> #define XFS_SB_FEAT_RO_COMPAT_PARENT<three spaces>(1 << 3)<two tabs>/* parent inode ptr */
+>
+> With that fixed,
+> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
+>
+> --D
+Alrighty will do, thanks!
+>>   #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>>   		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>>   		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+>> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+>> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+>> +		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+>>   #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+>>   static inline bool
+>>   xfs_sb_has_ro_compat_feature(
+>> @@ -558,7 +560,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>>   
+>>   static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>>   {
+>> -	return false; /* We'll enable this at the end of the set */
+>> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+>> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+>>   }
+>>   
+>>   /*
+>> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+>> index 8c61f21..b8108f8 100644
+>> --- a/fs/xfs/libxfs/xfs_fs.h
+>> +++ b/fs/xfs/libxfs/xfs_fs.h
+>> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+>>   #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+>>   #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+>>   #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
+>> +#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+>>   
+>>   /*
+>>    * Minimum and maximum sizes need for growth checks.
+>> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+>> index 8f22fc5..9a0ce52 100644
+>> --- a/fs/xfs/xfs_fsops.c
+>> +++ b/fs/xfs/xfs_fsops.c
+>> @@ -111,7 +111,9 @@ xfs_fs_geometry(
+>>   			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+>>   				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+>>   			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+>> -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+>> +				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
+>> +			(xfs_sb_version_hasparent(&mp->m_sb) ?
+>> +				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
+>>   		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+>>   				mp->m_sb.sb_logsectsize : BBSIZE;
+>>   		geo->rtsectsize = mp->m_sb.sb_blocksize;
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index ee68459..066266f 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -1675,6 +1675,10 @@ xfs_fs_fill_super(
+>>   	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
+>>   	}
+>>   
+>> +	if (xfs_sb_version_hasparent(&mp->m_sb))
+>> +		xfs_alert(mp,
+>> +	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
+>> +
+>>   	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>>   		xfs_alert(mp,
+>>   	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message tomajordomo@vger.kernel.org
+>> More majordomo info athttp://vger.kernel.org/majordomo-info.html
 
-								Honza
-
-> 
-> @ has_freeze_fs @
-> identifier super_ops;
-> expression freeze_op;
-> @@
-> 
-> struct super_operations super_ops = {
-> 	.freeze_fs = freeze_op,
-> };
-> 
-> @ remove_set_freezable depends on has_freeze_fs @
-> expression time;
-> statement S, S2, S3;
-> expression task;
-> @@
-> 
-> (
-> -	set_freezable();
-> |
-> -	if (try_to_freeze())
-> -		continue;
-> |
-> -	try_to_freeze();
-> |
-> -	freezable_schedule();
-> +	schedule();
-> |
-> -	freezable_schedule_timeout(time);
-> +	schedule_timeout(time);
-> |
-> -	if (freezing(task)) { S }
-> |
-> -	if (freezing(task)) { S }
-> -	else
-> 	{ S2 }
-> |
-> -	freezing(current)
-> )
-> 
-> Generated-by: Coccinelle SmPL
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  fs/xfs/xfs_trans_ail.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index cef89f7127d3..1f3dd10a9d00 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -513,7 +513,6 @@ xfsaild(
->  	long		tout = 0;	/* milliseconds */
->  
->  	current->flags |= PF_MEMALLOC;
-> -	set_freezable();
->  
->  	while (1) {
->  		if (tout && tout <= 20)
-> @@ -551,19 +550,17 @@ xfsaild(
->  		if (!xfs_ail_min(ailp) &&
->  		    ailp->xa_target == ailp->xa_target_prev) {
->  			spin_unlock(&ailp->xa_lock);
-> -			freezable_schedule();
-> +			schedule();
->  			tout = 0;
->  			continue;
->  		}
->  		spin_unlock(&ailp->xa_lock);
->  
->  		if (tout)
-> -			freezable_schedule_timeout(msecs_to_jiffies(tout));
-> +			schedule_timeout(msecs_to_jiffies(tout));
->  
->  		__set_current_state(TASK_RUNNING);
->  
-> -		try_to_freeze();
-> -
->  		tout = xfsaild_push(ailp);
->  	}
->  
-> -- 
-> 2.15.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
