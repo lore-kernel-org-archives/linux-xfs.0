@@ -1,116 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mga07.intel.com ([134.134.136.100]:31716 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754628AbdK2LiN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 06:38:13 -0500
+        id S1752280AbdK2LiM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 06:38:12 -0500
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 1/5] fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to refcount_t
-Date: Wed, 29 Nov 2017 13:37:59 +0200
-Message-Id: <1511955483-18275-2-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1511955483-18275-1-git-send-email-elena.reshetova@intel.com>
-References: <1511955483-18275-1-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 0/5] v2 xfs refcount conversions
+Date: Wed, 29 Nov 2017 13:37:58 +0200
+Message-Id: <1511955483-18275-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com
 Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, peterz@infradead.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>
 
-atomic_t variables are currently used to implement reference
-counters with the following properties:
- - counter is initialized to 1 using atomic_set()
- - a resource is freed upon counter reaching zero
- - once counter reaches zero, its further
-   increments aren't allowed
- - counter schema uses basic atomic operations
-   (set, inc, inc_not_zero, dec_and_test, etc.)
+Hi Dave,
 
-Such atomic variables should be converted to a newly provided
-refcount_t type and API that prevents accidental counter overflows
-and underflows. This is important since overflows and underflows
-can lead to use-after-free situation and be exploitable.
+Following our previous conversation I have updated each
+patch with a highlight of potential problematic places
+with regards to the memory ordering guarantees, as well
+as link to the document I am working on to clarify the
+matter.
 
-The variable xfs_bui_log_item.bui_refcount is used as pure reference counter.
-Convert it to refcount_t and fix up the operations.
+While I didn't see any issues with these 5 particular
+conversions, of course I don't understand code anywhere
+good enough to make the final claim that "everything is
+100% ok".
 
-**Important note for maintainers:
+Please let me know what kind of other clarification or
+anything is needed that can help you to make the needed
+verification.
 
-Some functions from refcount_t API defined in lib/refcount.c
-have different memory ordering guarantees than their atomic
-counterparts.
-The full comparison can be seen in
-https://lkml.org/lkml/2017/11/15/57 and it is hopefully soon
-in state to be merged to the documentation tree.
-Normally the differences should not matter since refcount_t provides
-enough guarantees to satisfy the refcounting use cases, but in
-some rare cases it might matter.
-Please double check that you don't have some undocumented
-memory guarantees for this variable usage.
+Best Regards,
+Elena.
 
-For the xfs_bui_log_item.bui_refcount it might make a difference
-in following places:
- - xfs_bui_release(): decrement in refcount_dec_and_test() only
-   provides RELEASE ordering and control dependency on success
-   vs. fully ordered atomic counterpart
 
-Suggested-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: David Windsor <dwindsor@gmail.com>
-Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
----
- fs/xfs/xfs_bmap_item.c | 6 +++---
- fs/xfs/xfs_bmap_item.h | 2 +-
- fs/xfs/xfs_linux.h     | 1 +
- 3 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index dd136f7..0f2e3d8 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -201,7 +201,7 @@ xfs_bui_init(
- 	buip->bui_format.bui_nextents = XFS_BUI_MAX_FAST_EXTENTS;
- 	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
- 	atomic_set(&buip->bui_next_extent, 0);
--	atomic_set(&buip->bui_refcount, 2);
-+	refcount_set(&buip->bui_refcount, 2);
- 
- 	return buip;
- }
-@@ -217,8 +217,8 @@ void
- xfs_bui_release(
- 	struct xfs_bui_log_item	*buip)
- {
--	ASSERT(atomic_read(&buip->bui_refcount) > 0);
--	if (atomic_dec_and_test(&buip->bui_refcount)) {
-+	ASSERT(refcount_read(&buip->bui_refcount) > 0);
-+	if (refcount_dec_and_test(&buip->bui_refcount)) {
- 		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_bui_item_free(buip);
- 	}
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index c867daa..7048b14 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -61,7 +61,7 @@ struct kmem_zone;
-  */
- struct xfs_bui_log_item {
- 	struct xfs_log_item		bui_item;
--	atomic_t			bui_refcount;
-+	refcount_t			bui_refcount;
- 	atomic_t			bui_next_extent;
- 	unsigned long			bui_flags;	/* misc flags */
- 	struct xfs_bui_log_format	bui_format;
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 99562ec..31658ac 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -20,6 +20,7 @@
- 
- #include <linux/types.h>
- #include <linux/uuid.h>
-+#include <linux/refcount.h>
- 
- /*
-  * Kernel specific type declarations for XFS
+Changes in v2:
+  - each patch now has a clarification on potential
+    problematic places with regards to the memory ordering
+    guarantees as well as reference to a hopefully soon to be
+    merged more extensive documentation on the
+    differences between atomic_t and refcount_t on ordering.
+  - Rebase on linux-next master.
+
+
+This series, for xfs, replaces atomic_t reference
+counters with the new refcount_t type and API (see include/linux/refcount.h).
+By doing this we prevent intentional or accidental
+underflows or overflows that can lead to use-after-free vulnerabilities.
+
+The patches are fully independent and can be cherry-picked separately.
+If there are no objections to the patches, please merge them via respective trees.
+
+Elena Reshetova (5):
+  fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
+  fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to
+    refcount_t
+
+ fs/xfs/xfs_bmap_item.c     |  6 +++---
+ fs/xfs/xfs_bmap_item.h     |  2 +-
+ fs/xfs/xfs_extfree_item.c  |  6 +++---
+ fs/xfs/xfs_extfree_item.h  |  2 +-
+ fs/xfs/xfs_linux.h         |  1 +
+ fs/xfs/xfs_log.c           | 10 +++++-----
+ fs/xfs/xfs_log_priv.h      |  2 +-
+ fs/xfs/xfs_refcount_item.c |  6 +++---
+ fs/xfs/xfs_refcount_item.h |  2 +-
+ fs/xfs/xfs_rmap_item.c     |  6 +++---
+ fs/xfs/xfs_rmap_item.h     |  2 +-
+ 11 files changed, 23 insertions(+), 22 deletions(-)
+
 -- 
 2.7.4
 
