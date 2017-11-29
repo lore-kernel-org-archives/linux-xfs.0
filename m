@@ -1,156 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37738 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:54132 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752379AbdK2MmW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 07:42:22 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3AD1913A55
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 12:42:22 +0000 (UTC)
-Received: from odin.usersys.redhat.com (ovpn-204-223.brq.redhat.com [10.40.204.223])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8D45C5D975
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 12:42:21 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH V3] xfs: Properly retry failed dquot items in case of error during buffer writeback
-Date: Wed, 29 Nov 2017 13:42:17 +0100
-Message-Id: <20171129124217.22861-1-cmaiolino@redhat.com>
+        id S1752838AbdK2XYL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 18:24:11 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH 08/11] ext4: remove not needed freezing calls
+Date: Wed, 29 Nov 2017 15:23:53 -0800
+Message-Id: <20171129232356.28296-9-mcgrof@kernel.org>
+In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org
+Cc: boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-Once the inode item writeback errors is already fixed, it's time to fix the same
-problem in dquot code.
+This removes superflous freezer calls as they are no longer needed
+as the VFS now performs filesystem freezing/thaw if the filesystem has
+support for it.
 
-Although there were no reports of users hitting this bug in dquot code (at least
-none I've seen), the bug is there and I was already planning to fix it when the
-correct approach to fix the inodes part was decided.
+The following Coccinelle rule was used as follows:
 
-This patch aims to fix the same problem in dquot code, regarding failed buffers
-being unable to be resubmitted once they are flush locked.
+spatch --sp-file fs-freeze-cleanup.cocci --in-place fs/$FS/
 
-Tested with the recently test-case sent to fstests list by Hou Tao.
+@ has_freeze_fs @
+identifier super_ops;
+expression freeze_op;
+@@
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+struct super_operations super_ops = {
+	.freeze_fs = freeze_op,
+};
+
+@ remove_set_freezable depends on has_freeze_fs @
+expression time;
+statement S, S2, S3;
+expression task;
+@@
+
+(
+-	set_freezable();
+|
+-	if (try_to_freeze())
+-		continue;
+|
+-	try_to_freeze();
+|
+-	freezable_schedule();
++	schedule();
+|
+-	freezable_schedule_timeout(time);
++	schedule_timeout(time);
+|
+-	if (freezing(task)) { S }
+|
+-	if (freezing(task)) { S }
+-	else
+	{ S2 }
+|
+-	freezing(current)
+)
+
+Generated-by: Coccinelle SmPL
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
+ fs/ext4/super.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-V3:
-	- Improve readability a bit in xfs_qm_dqflush_done(). Logic
-	  stays the same.
-V2:
-	- in xfs_dquot.c
-	  ..Add a couple of parentheses around lip->li_flags & XFS_LI_FAILED
-	- in xfs_dquot_item.c:
-	  ..Add missing blank line between variable definiton and code
-	  ..Initialize dqp pointer out of variable definition to shut up
-	    gcc's 'unused variable' warning
- fs/xfs/xfs_dquot.c      | 14 +++++++++++---
- fs/xfs/xfs_dquot_item.c | 40 ++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 49 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index d57c2db64e59..f248708c10ff 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -970,14 +970,22 @@ xfs_qm_dqflush_done(
- 	 * holding the lock before removing the dquot from the AIL.
- 	 */
- 	if ((lip->li_flags & XFS_LI_IN_AIL) &&
--	    lip->li_lsn == qip->qli_flush_lsn) {
-+	    ((lip->li_lsn == qip->qli_flush_lsn) ||
-+	     (lip->li_flags & XFS_LI_FAILED))) {
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 57a8fa451d3e..8a510b1c2d92 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -2980,8 +2980,6 @@ static int ext4_lazyinit_thread(void *arg)
+ 		}
+ 		mutex_unlock(&eli->li_list_mtx);
  
- 		/* xfs_trans_ail_delete() drops the AIL lock. */
- 		spin_lock(&ailp->xa_lock);
--		if (lip->li_lsn == qip->qli_flush_lsn)
-+		if (lip->li_lsn == qip->qli_flush_lsn) {
- 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
--		else
-+		} else {
-+			/*
-+			 * Clear the failed state since we are about to drop the
-+			 * flush lock
-+			 */
-+			if (lip->li_flags & XFS_LI_FAILED)
-+				xfs_clear_li_failed(lip);
- 			spin_unlock(&ailp->xa_lock);
-+		}
- 	}
- 
- 	/*
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index 2c7a1629e064..664dea105e76 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -137,6 +137,26 @@ xfs_qm_dqunpin_wait(
- 	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
- }
- 
-+/*
-+ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-+ * have been failed during writeback
-+ *
-+ * this informs the AIL that the dquot is already flush locked on the next push,
-+ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-+ * dirty data makes it to disk.
-+ */
-+STATIC void
-+xfs_dquot_item_error(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_dquot	*dqp;
-+
-+	dqp = DQUOT_ITEM(lip)->qli_dquot;
-+	ASSERT(!completion_done(&dqp->q_flush));
-+	xfs_set_li_failed(lip, bp);
-+}
-+
- STATIC uint
- xfs_qm_dquot_logitem_push(
- 	struct xfs_log_item	*lip,
-@@ -144,13 +164,28 @@ xfs_qm_dquot_logitem_push(
- 					      __acquires(&lip->li_ailp->xa_lock)
- {
- 	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
--	struct xfs_buf		*bp = NULL;
-+	struct xfs_buf		*bp = lip->li_buf;
- 	uint			rval = XFS_ITEM_SUCCESS;
- 	int			error;
- 
- 	if (atomic_read(&dqp->q_pincount) > 0)
- 		return XFS_ITEM_PINNED;
- 
-+	/*
-+	 * The buffer containing this item failed to be written back
-+	 * previously. Resubmit the buffer for IO
-+	 */
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		if (!xfs_buf_trylock(bp))
-+			return XFS_ITEM_LOCKED;
-+
-+		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-+			rval = XFS_ITEM_FLUSHING;
-+
-+		xfs_buf_unlock(bp);
-+		return rval;
-+	}
-+
- 	if (!xfs_dqlock_nowait(dqp))
- 		return XFS_ITEM_LOCKED;
- 
-@@ -242,7 +277,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
- 	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
- 	.iop_committed	= xfs_qm_dquot_logitem_committed,
- 	.iop_push	= xfs_qm_dquot_logitem_push,
--	.iop_committing = xfs_qm_dquot_logitem_committing
-+	.iop_committing = xfs_qm_dquot_logitem_committing,
-+	.iop_error	= xfs_dquot_item_error
- };
- 
- /*
+-		try_to_freeze();
+-
+ 		cur = jiffies;
+ 		if ((time_after_eq(cur, next_wakeup)) ||
+ 		    (MAX_JIFFY_OFFSET == next_wakeup)) {
 -- 
-2.14.3
+2.15.0
 
