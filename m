@@ -1,74 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:13708 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752795AbdK3RBU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 12:01:20 -0500
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Date: Thu, 30 Nov 2017 17:01:13 +0000
-Message-ID: <1512061271.2774.10.camel@wdc.com>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
-In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F40459AE4CEA404B98C5C89AD42D1429@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Received: from aserp1040.oracle.com ([141.146.126.69]:40113 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750902AbdK2Ssh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:48:37 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 09/17] xfs: define parent pointer xattr format
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-10-git-send-email-allison.henderson@oracle.com>
+ <20171128185907.GQ21412@magnolia>
+Message-ID: <cefe0510-eff2-4f25-278d-a4814800680d@oracle.com>
+Date: Wed, 29 Nov 2017 11:48:32 -0700
 MIME-Version: 1.0
+In-Reply-To: <20171128185907.GQ21412@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>
-Cc: "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "jgross@suse.com" <jgross@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "yu.chen.surf@gmail.com" <yu.chen.surf@gmail.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "jack@suse.cz" <jack@suse.cz>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-T24gV2VkLCAyMDE3LTExLTI5IGF0IDE1OjIzIC0wODAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
-ZToNCj4gVGhpcyBpcyBhIGZvbGxvd3VwIGZyb20gdGhlIG9yaWdpbmFsIFJGQyB3aGljaCBwcm9w
-b3NlZCB0byBzdGFydA0KPiB0byBraWxsIGt0aHJlYWQgZnJlZXppbmcgYWxsIHRvZ2V0aGVyIFsw
-XS4gSW5zdGVhZCBvZiBnb2luZyBzdHJhaWdodA0KPiBvdXQgdG8gdGhlIGp1Z3VsYXIgZm9yIGt0
-aHJlYWQgZnJlZXppbmcgdGhpcyBzZXJpZXMgb25seSBhZGRyZXNzZXMNCj4ga2lsbGluZyBmcmVl
-emVyIGNhbGxzIG9uIGZpbGVzeXN0ZW1zIHdoaWNoIGltcGxlbWVudCBmcmVlemVfZnMsIGFmdGVy
-DQo+IHdlIGxldCB0aGUga2VybmVsIGZyZWV6ZSB0aGVzZSBmaWxlc3lzdGVtcyBmb3IgdXMgb24g
-c3VzcGVuZC4NCj4gDQo+IFRoaXMgYXBwcm9hY2ggcHV0cyBvbiBhIHNsb3cgYnV0IHN0ZWFkeSBw
-YXRoIHRvd2FyZHMgdGhlIG9yaWdpbmFsIGdvYWwNCj4gdGhvdWdoLiBFYWNoIHN1YnN5c3RlbSBj
-b3VsZCBsb29rIGZvciBzaW1pbGFyIHNvbHV0aW9ucy4gRXZlbiB3aXRoDQo+IGZpbGVzeXN0ZW1z
-IHdlJ3JlIG5vdCBhbGwgZG9uZSB5ZXQsIGFmdGVyIHRoaXMgd2UnbGwgc3RpbGwgaGF2ZSB0bw0K
-PiBkZWNpZGUgd2hhdCB0byBkbyBhYm91dCBmaWxlc3lzdGVtcyB3aGljaCBkbyBub3QgaW1wbGVt
-ZW50IGZyZWV6ZV9mcygpLg0KPiANCj4gTW90aXZhdGlvbiBhbmQgcHJvYmxlbToNCj4gDQo+IGt0
-aHJlYWRzIGhhdmUgc29tZSBzZW1hbnRpY3MgZm9yIGZyZWV6aW5nLCB3aGljaCBoZWxwcyB0aGUg
-a2VybmVsDQo+IGZyZWV6ZSB0aGVtIHdoZW4gYSBzeXN0ZW0gaXMgZ29pbmcgdG8gc3VzcGVuZCBv
-ciBoaWJlcm5hdGlvbi4gVGhlc2UNCj4gc2VtYW50aWNzIGFyZSBub3Qgd2VsbCBkZWZpbmVkIHRo
-b3VnaCwgYW5kIGl0IGFjdHVhbGx5IHR1cm5zIG91dA0KPiBwcmV0dHkgaGFyZCB0byBnZXQgaXQg
-cmlnaHQuDQo+IA0KPiBXaXRob3V0IGEgcHJvcGVyIHNvbHV0aW9uIHN1c3BlbmQgYW5kIGhpYmVy
-bmF0aW9uIGFyZSBmcmFnaWxlIG9uIGZpbGVzeXN0ZW1zLA0KPiBpdCBjYW4gZWFzaWx5IGJyZWFr
-IHN1c3BlbmQgYW5kIGZpeGluZyBzdWNoIGlzc3VlcyBhcmUgaW4gbm8gd2F5IHRyaXZpYWwgWzFd
-DQo+IFsyXS4NCj4gDQo+IFByb3Bvc2VkIHNvbHV0aW9uOg0KPiANCj4gSW5zdGVhZCBvZiBmaXhp
-bmcgc3VjaCBzZW1hbnRpY3MgYW5kIHRyeWluZyB0byBnZXQgYWxsIGZpbGVzeXN0ZW1zIHRvIGRv
-IGl0DQo+IHJpZ2h0LCB3ZSBjYW4gZWFzaWx5IGRvIGF3YXkgd2l0aCBhbGwgZnJlZXppbmcgY2Fs
-bHMgaWYgdGhlIGZpbGVzeXN0ZW0NCj4gaW1wbGVtZW50cyBhIHByb3BlciBmcmVlemVfZnMoKSBj
-YWxsYmFjay4gVGhlIGZvbGxvd2luZyA5IGZpbGVzeXN0ZW1zIGhhdmUNCj4gZnJlZXplX2ZzKCkg
-aW1wbGVtZW50ZWQgYXMgc3VjaCB3ZSBjYW4gbGV0IHRoZSBrZXJuZWwgaXNzdWUgdGhlIGNhbGxi
-YWNrIHVwb24NCj4gc3VzcGVuZCBhbmQgdGhhdyBvbiByZXN1bWUgYXV0b21hdGljYWxseSBvbiBv
-dXIgYmVoYWxmLg0KPiANCj4gICBvIHhmcw0KPiAgIG8gcmVpc2VyZnMNCj4gICBvIG5pbGZzMg0K
-PiAgIG8gamZzDQo+ICAgbyBmMmZzDQo+ICAgbyBleHQ0DQo+ICAgbyBleHQyDQo+ICAgbyBidHJm
-cw0KPiANCj4gT2YgdGhlc2UsIHRoZSBmb2xsb3dpbmcgaGF2ZSBmcmVlemVyIGhlbHBlcnMsIHdo
-aWNoIGNhbiB0aGVuIGJlIHJlbW92ZWQNCj4gYWZ0ZXIgdGhlIGtlcm5lbCBhdXRvbWF0aWNhbHkg
-Y2FsbHMgZnJlZXplX2ZzIGZvciB1cyBvbiBzdXNwZW5kOg0KPiANCj4gICBvIHhmcw0KPiAgIG8g
-bmlsZnMyDQo+ICAgbyBqZnMNCj4gICBvIGYyZnMNCj4gICBvIGV4dDQNCj4gDQo+IEkndmUgdGVz
-dGVkIHRoaXMgb24gYSBzeXN0ZW0gd2l0aCBleHQ0IGFuZCBYRlMsIGFuZCBoYXZlIGxldCAwLWRh
-eSBnbyBhdA0KPiB3aXRob3V0IGlzc3Vlcy4gSSBoYXZlIGJyYW5jaGVzIGF2YWlsYWJlIGZvciBs
-aW51eC1uZXh0IFszXSBhbmQgTGludXMnDQo+IGxhdGVzdCB0cmVlIFs0XS4NCj4gDQo+IEZ1cnRo
-ZXIgdGVzdGluZywgdGhvdWdodHMsIHJldmlld3MsIGZsYW1lcyBhcmUgYWxsIGVxdWFsbHkgYXBw
-cmVjaWF0ZWQuDQoNCkhlbGxvIEx1aXMsDQoNCkl0J3MgZ3JlYXQgdG8gc2VlIHRoYXQgeW91IGFy
-ZSBtYWtpbmcgcHJvZ3Jlc3Mgd2l0aCB0aGlzIHdvcmsgOi0pIEhvd2V2ZXIsDQp3aGF0J3Mgbm90
-IGNsZWFyIHRvIG1lIGlzIHdoYXQgeW91ciAobG9uZy10ZXJtKSBwbGFuIGlzIGZvciBmcmVlemlu
-Zw0KZmlsZXN5c3RlbXMgdGhhdCBlLmcuIGV4aXN0IG9uIHRvcCBvZiBhIG1kIFJBSUQxIGJsb2Nr
-IGRldmljZT8gVGhlIG1kIHJlc3luYw0KdGhyZWFkIG11c3QgYmUgc3RvcHBlZCBiZWZvcmUgYSBz
-eXN0ZW0gaXMgZnJvemVuLiBUb2RheSB0aGUgbWQgZHJpdmVyIHVzZXMNCnRoZSBrdGhyZWFkIGZy
-ZWV6aW5nIG1lY2hhbmlzbSBmb3IgdGhhdCBwdXJwb3NlLiBEbyB5b3UgaGF2ZSBhIHBsYW4gZm9y
-DQpoYW5kbGluZyB0aGUgbW9yZSBjb21wbGljYXRlZCBzY2VuYXJpb3MsIGUuZy4gYSBmaWxlc3lz
-dGVtIHRoYXQgZXhpc3RzIG9uIHRvcA0Kb2YgYW4gbWQgZGV2aWNlIHdoZXJlIHRoZSBtZCBkZXZp
-Y2UgdXNlcyBvbmUgb3IgbW9yZSBmaWxlcyBhcyBiYWNraW5nIHN0b3JlDQphbmQgd2l0aCB0aGUg
-bG9vcCBkcml2ZXIgYmV0d2VlbiB0aGUgbWQgZGV2aWNlIGFuZCB0aGUgZmlsZXM/DQoNCkhvdyBh
-Ym91dCBmaWxlc3lzdGVtcyBpbXBsZW1lbnRlZCBpbiB1c2VyIHNwYWNlIHVzaW5nIHRoZSBGVVNF
-IGRyaXZlcj8NClBhdGNoIDYvMTEgb2YgdGhpcyBzZXJpZXMgZnJlZXplcyB1c2VyIHNwYWNlIHBy
-b2Nlc3NlcyBiZWZvcmUgZnJlZXppbmcNCmZpbGVzeXN0ZW1zLiBXaWxsIHRoYXQgd29yayBmb3Ig
-RlVTRSBmaWxlc3lzdGVtcz8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+On 11/28/2017 11:59 AM, Darrick J. Wong wrote:
+
+> On Fri, Nov 17, 2017 at 11:21:37AM -0700, Allison Henderson wrote:
+>> From: Dave Chinner<dchinner@redhat.com>
+>>
+>> We need to define the parent pointer attribute format before we
+>> start adding support for it into all the code that needs to use it.
+>> The EA format we will use encodes the following information:
+>>
+>> 	name={parent inode #, parent inode generation, dirent offset}
+>> 	value={dirent filename}
+>>
+>> The inode/gen gives all the information we need to reliably identify
+>> the parent without requiring child->parent lock ordering, and allows
+>> userspace to do pathname component level reconstruction without the
+>> kernel ever needing to verify the parent itself as part of ioctl
+>> calls.
+>>
+>> By using the dirent offset in the EA name, we have a method of
+>> knowing the exact parent pointer EA we need to modify/remove in
+>> rename/unlink without an unbound EA name search.
+>>
+>> By keeping the dirent name in the value, we have enough information
+>> to be able to validate and reconstruct damaged directory trees.
+>> While the diroffset of a filename alone is not unique enough to
+>> identify the child, the {diroffset,filename,child_inode} tuple is
+>> sufficient. That is, if the diroffset gets reused and points to a
+>> different filename, we can detect that from the contents of EA. If a
+>> link of the same name is created, then we can check whether it
+>> points at the same inode as the parent EA we current have.
+>>
+>> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
+>>
+>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+> Looks ok,
+> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
+Great!  Thx!
+>> ---
+>> v2: changed p_ino to xfs_ino_t and p_namelen to uint8_t
+>>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_format.h | 27 +++++++++++++++++++++++++++
+>>   1 file changed, 27 insertions(+)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>> index 23229f0..b9ea5bf 100644
+>> --- a/fs/xfs/libxfs/xfs_format.h
+>> +++ b/fs/xfs/libxfs/xfs_format.h
+>> @@ -18,6 +18,8 @@
+>>   #ifndef __XFS_FORMAT_H__
+>>   #define __XFS_FORMAT_H__
+>>   
+>> +#include "xfs_da_format.h"
+>> +
+>>   /*
+>>    * XFS On Disk Format Definitions
+>>    *
+>> @@ -1716,4 +1718,29 @@ struct xfs_acl {
+>>   #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+>>   #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+>>   
+>> +/*
+>> + * Parent pointer attribute format definition
+>> + *
+>> + * EA name encodes the parent inode number, generation and the offset of
+>> + * the dirent that points to the child inode. The EA value contains the
+>> + * same name as the dirent in the parent directory.
+>> + */
+>> +struct xfs_parent_name_rec {
+>> +	__be64	p_ino;
+>> +	__be32	p_gen;
+>> +	__be32	p_diroffset;
+>> +};
+>> +
+>> +/*
+>> + * incore version of the above, also contains name pointers so callers
+>> + * can pass/obtain all the parent pointer information in a single structure
+>> + */
+>> +struct xfs_parent_name_irec {
+>> +	xfs_ino_t		p_ino;
+>> +	uint32_t		p_gen;
+>> +	xfs_dir2_dataptr_t	p_diroffset;
+>> +	const char		*p_name;
+>> +	uint8_t			p_namelen;
+>> +};
+>> +
+>>   #endif /* __XFS_FORMAT_H__ */
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message tomajordomo@vger.kernel.org
+>> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=xYa1QFkMf-mQloqcjnFtS8TgbN6yHRlagSEr85e-sHc&s=gZ018F2EivpOHk9ZyNrB0BzKsaeKTdLo1m3lLF21j6M&e=
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message tomajordomo@vger.kernel.org
+> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=xYa1QFkMf-mQloqcjnFtS8TgbN6yHRlagSEr85e-sHc&s=gZ018F2EivpOHk9ZyNrB0BzKsaeKTdLo1m3lLF21j6M&e=
+
