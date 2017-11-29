@@ -1,145 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64226 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38616 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751077AbdK2Obj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 09:31:39 -0500
-Date: Wed, 29 Nov 2017 09:31:38 -0500
+        id S1750902AbdK2OcT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 09:32:19 -0500
+Date: Wed, 29 Nov 2017 09:32:17 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: include inobt buffers in ifree tx log
- reservation
-Message-ID: <20171129143137.GC50847@bfoster.bfoster>
+Subject: Re: [PATCH RFC 4/4] xfs: include an allocfree res for inobt
+ modifications
+Message-ID: <20171129143217.GD50847@bfoster.bfoster>
 References: <20171127202434.43125-1-bfoster@redhat.com>
- <20171127202434.43125-3-bfoster@redhat.com>
- <20171127222857.GA5858@dastard>
- <20171128133001.GB45759@bfoster.bfoster>
- <20171128213844.GE5858@dastard>
+ <20171127202434.43125-5-bfoster@redhat.com>
+ <20171127232719.GC5858@dastard>
+ <20171128140459.GD45759@bfoster.bfoster>
+ <20171128222637.GG5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171128213844.GE5858@dastard>
+In-Reply-To: <20171128222637.GG5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 29, 2017 at 08:38:44AM +1100, Dave Chinner wrote:
-> On Tue, Nov 28, 2017 at 08:30:02AM -0500, Brian Foster wrote:
-> > On Tue, Nov 28, 2017 at 09:28:57AM +1100, Dave Chinner wrote:
-> > > On Mon, Nov 27, 2017 at 03:24:32PM -0500, Brian Foster wrote:
-> > > > The tr_ifree transaction handles inode unlinks and inode chunk
-> > > > frees. The current transaction calculation does not accurately
-> > > > reflect worst case changes to the inode btree, however. The inobt
-> > > > portion of the current transaction reservation only covers
-> > > > modification of a single inobt buffer (for the particular inode
-> > > > record). This is a historical artifact from the days before XFS
-> > > > supported full inode chunk removal.
-> > > > 
-> > > > When support for inode chunk removal was added in commit
-> > > > 254f6311ed1b ("Implement deletion of inode clusters in XFS."), the
-> > > > additional log reservation required for chunk removal was not added
-> > > > correctly. The new reservation only considered the header overhead
-> > > > of associated buffers rather than the full contents of the btrees
-> > > > and AGF and AGFL buffers affected by the transaction. The
-> > > > reservation for the free space btrees was subsequently fixed up in
-> > > > commit 5fe6abb82f76 ("Add space for inode and allocation btrees to
-> > > > ITRUNCATE log reservation"), but the res. for full inobt joins has
-> > > > never been added.
-> > > > 
-> > > > Update xfs_calc_ifree_reservation() to include a full inobt join in
-> > > > the reservation calculation. Refactor the undocumented +2 blocks for
-> > > > the AGF and AGFL buffers into the appropriate place so they are
-> > > > accounted as sectors (not FSBs) and update the associated comments.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_trans_resv.c | 11 +++++------
-> > > >  1 file changed, 5 insertions(+), 6 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > > > index 6bd916bd35e2..4cd7cd1e60da 100644
-> > > > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > > > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > > > @@ -490,10 +490,10 @@ xfs_calc_symlink_reservation(
-> > > >  /*
-> > > >   * In freeing an inode we can modify:
-> > > >   *    the inode being freed: inode size
-> > > > - *    the super block free inode counter: sector size
-> > > > + *    the super block free inode counter, AGF and AGFL: sector size
-> > > >   *    the agi hash list and counters: sector size
-> > > > - *    the inode btree entry: block size
-> > > >   *    the on disk inode before ours in the agi hash list: inode cluster size
-> > > > + *    the inode chunk is marked stale (headers only)
-> > > >   *    the inode btree: max depth * blocksize
+On Wed, Nov 29, 2017 at 09:26:37AM +1100, Dave Chinner wrote:
+> On Tue, Nov 28, 2017 at 09:04:59AM -0500, Brian Foster wrote:
+> > On Tue, Nov 28, 2017 at 10:27:19AM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 27, 2017 at 03:24:34PM -0500, Brian Foster wrote:
+> > > >  STATIC uint
+> > > > @@ -415,8 +414,8 @@ __xfs_calc_create_reservation(
+> > > >   * For icreate we can allocate some inodes giving:
+> > > >   *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+> > > >   *    the superblock for the nlink flag: sector size
+> > > > - *    the inode btree: max depth * blocksize
 > > > >   *    the allocation btrees: 2 trees * (max depth - 1) * block size
-> > > >   *    the finobt (record insertion, removal or modification)
-> > > > @@ -504,12 +504,11 @@ xfs_calc_ifree_reservation(
+> > > > + *    the inobt (record insertion)
+> > > >   *    the finobt (record insertion)
+> > > >   */
+> > > >  STATIC uint
+> > > > @@ -425,10 +424,10 @@ xfs_calc_icreate_resv_alloc(
 > > > >  {
-> > > >  	return XFS_DQUOT_LOGRES(mp) +
-> > > >  		xfs_calc_inode_res(mp, 1) +
+> > > >  	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+> > > >  		mp->m_sb.sb_sectsize +
+> > > > -		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> > > >  		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> > > >  				 XFS_FSB_TO_B(mp, 1)) +
+> > > > -		xfs_calc_finobt_res(mp, 0, 0);
+> > > > +		xfs_calc_inobt_res(mp) +
+> > > > +		xfs_calc_finobt_res(mp);
+> > > >  }
 > > > 
-> > >  *    the inode being freed: inode size
+> > > 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+> > > 		mp->m_sb.sb_sectsize +
+> > > 		xfs_calc_inode_chunk_res(mp, false) +
+> > > 		xfs_calc_inobt_res(mp) +
+> > > 		xfs_calc_finobt_res(mp);
 > > > 
-> > > > -		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-> > > > -		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> > > > +		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> > > 
-> > >  *    the super block free inode counter, AGF and AGFL: sector size
-> > > 
-> > > 		[missing, hidden in calc_iunlink_remove]
-> > > 
-> > >  *    the agi hash list and counters: sector size
-> > > 
+> > 
+> > The icreate reservation doesn't currently include m_ialloc_blks at all.
+> > The helper, as defined above, adds a reservation for associated headers.
+> > Is that really necessary?  My understanding is that icreate doesn't log
+> > the inode chunk.
+> 
+> Right, it uses ordered buffers to avoid needing to log them.
+> 
+> > I suppose we could get around that by tweaking the
+> > parameter to take the size to reserve instead of a bool and pass a dummy
+> > value (i.e., negative) to avoid logging the chunk at all. A little ugly,
+> > but I could live with it.
+> 
+> I don't think that having an extra few hundred bytes of overhead in
+> the reservation is going to be noticable by anyone. I'd just
+> ignore the problem (as I did when suggesting this).
+> 
+
+I'm not as concerned with the overhead as much as I want to make sure
+the intent of the changes is clearly documented. The refactoring
+proposed in the other thread factors this out more cleanly than I
+originally anticipated, so it's a moot point now.
+
+> > > >  STATIC uint
+> > > > @@ -494,9 +493,14 @@ xfs_calc_symlink_reservation(
+> > > >   *    the agi hash list and counters: sector size
+> > > >   *    the on disk inode before ours in the agi hash list: inode cluster size
+> > > >   *    the inode chunk is marked stale (headers only)
+> > > > - *    the inode btree: max depth * blocksize
+> > > > - *    the allocation btrees: 2 trees * (max depth - 1) * block size
+> > > > + *    the inode btree
+> > > >   *    the finobt (record insertion, removal or modification)
+> > > > + *
+> > > > + * Note that the allocfree res. for the inode chunk itself is not included
+> > > > + * because the extent free occurs after a transaction roll. We could take the
+> > > > + * maximum of the pre/post roll operations, but the pre-roll reservation already
+> > > > + * includes at least one allocfree res. for the inobt and is thus guaranteed to
+> > > > + * be larger.
+> > > >   */
+> > > >  STATIC uint
+> > > >  xfs_calc_ifree_reservation(
+> > > > @@ -508,10 +512,8 @@ xfs_calc_ifree_reservation(
 > > > >  		xfs_calc_iunlink_remove_reservation(mp) +
-> > > 
-> > >  *    the on disk inode before ours in the agi hash list: inode cluster size
-> > > 
-> > > 		[missing]
-> > > 
-> > >  *    on-disk inode to log the di_next_unlinked: inode cluster size
-> > > 
-> > > Yes, check the xfs_iunlink_remove() code - we can log two inode
-> > > cluster buffers there: the one prior to us in the unlinked list,
-> > > and ours to reset the di_next_unlinked pointer to
-> > > null. IOWs, xfs_calc_iunlink_remove_reservation() needs to take into
-> > > account /2/ inode cluster buffers, not one.
-> > > 
-> > 
-> > I was wondering why this wouldn't be covered by the inode size included
-> > above, but looking at the code, I guess we log the agi unlinked changes
-> > directly in the cluster buffer. That means we have separate log items
-> > with independent reservation consumption between the unlinked list
-> > fixups and core inode.
-> > 
-> > I'll update xfs_calc_iunlink_remove_reservation() to include another
-> > cluster and add a comment.
-> 
-> And, as I mentioned in the other thread,
-> xfs_calc_iunlink_add_reservation() needs this fixup, too.
-> 
-
-Right, thanks..
-
-> > 
 > > > >  		xfs_calc_buf_res(1, 0) +
+> > > >  		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
+> > > > -		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+> > > > -		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> > > > -				 XFS_FSB_TO_B(mp, 1)) +
+> > > > -		xfs_calc_finobt_res(mp, 0, 1);
+> > > > +		xfs_calc_inobt_res(mp) +
+> > > > +		xfs_calc_finobt_res(mp);
+> > > >  }
 > > > 
-> > > No idea what this is.
+> > > 	.....
+> > > 		xfs_calc_iunlink_remove_reservation(mp) +
+> > > 		xfs_calc_buf_res(1, 0) +
+> > > 		xfs_calc_inode_chunk_res(mp, false) +
+> > > 		xfs_calc_inobt_res(mp) +
+> > > 		xfs_calc_finobt_res(mp);
 > > > 
 > > 
-> > Same, I didn't want to remove it unless we could identify what it was
-> > originally intended for.
+> > This covers the inode chunk invalidation, but also adds the allocfree
+> > res. for the chunk free where we technically don't need it (because the
+> > free is deferred, re: the comment above).
+> > 
+> > I guess I'm fine with just adding that one, but I'd update the comment
+> > above to point out that it's technically unecessary. Hm?
 > 
-> It's only going to be a 128 bytes for a header, so I think we should
-> just remove it rather than keep some unknown magic in the
-> reservation. If it turns out to be critical, then we need to
-> understand exactly where it came from...
+> *nod*
+> 
+> Though with sparse inodes, we might be freeing multiple extents,
+> right?  which means we probably need all the allocfree reservations
+> we can get....
 > 
 
-Fair enough. We're still adding reservation in the end so I'll drop this
-too.
+Yep good point, I suppose that is possible.
 
 Brian
 
+> > > This seems to make more sense to me - it's clear what the individual
+> > > components of the reservation are, and we can ensure that the
+> > > individual components have the necessary reservation independently
+> > > of the overall reservations that need them.
+> > > 
+> > 
+> > I agree in principle. I think the underlying helpers (and pushing down
+> > some of the associated documentation) help clearly declare the intent of
+> > the reservations, particularly when we include multiple factors of a
+> > single reservation and/or have situations where we don't technically
+> > have a definition of worst case, but want to define something logically
+> > reasonable (like the whole allocfree per inode tree thing).
+> 
+> Yup, that's pretty much what I was thinking.
+> 
 > Cheers,
 > 
 > Dave.
