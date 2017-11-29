@@ -1,55 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18094 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752433AbdK2Civ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 21:38:51 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT2coOF009425
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 02:38:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT2co1S009098
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 02:38:50 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vAT2coDn010886
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 02:38:50 GMT
-Date: Tue, 28 Nov 2017 18:38:49 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:51160 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752187AbdK2BJJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:09:09 -0500
+Date: Tue, 28 Nov 2017 17:09:04 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-documentation: master updated to 6b0e607
-Message-ID: <20171129023849.GG21412@magnolia>
+Subject: [PATCH] generic/388: use TIME_FACTOR to scale test duration
+Message-ID: <20171129010904.GA31372@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-Hi folks,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The master branch of the xfs-documentation repository at:
+Use TIME_FACTOR to increase the amount of time we spend testing log
+shutdown recovery.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/388 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-6b0e607 xfsdocs: fix description of directory free block nvalid and nused header fields
-
-New Commits:
-
-Darrick J. Wong (1):
-      [6b0e607] xfsdocs: fix description of directory free block nvalid and nused header fields
-
-
-Code Diffstat:
-
- design/XFS_Filesystem_Structure/directories.asciidoc | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+diff --git a/tests/generic/388 b/tests/generic/388
+index 2760208..4f5a63b 100755
+--- a/tests/generic/388
++++ b/tests/generic/388
+@@ -65,7 +65,7 @@ _scratch_mkfs >> $seqres.full 2>&1
+ _require_metadata_journaling $SCRATCH_DEV
+ _scratch_mount || _fail "mount failed"
+ 
+-for i in $(seq 1 50); do
++for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
+ 	($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
+ 		> /dev/null 2>&1
+ 
