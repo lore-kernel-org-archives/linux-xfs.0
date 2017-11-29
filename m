@@ -1,116 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33874 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752473AbdK3Q7v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 11:59:51 -0500
-Date: Thu, 30 Nov 2017 17:59:48 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 02/11] fs: provide unlocked helper thaw_super()
-Message-ID: <20171130165948.GF28180@quack2.suse.cz>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
- <20171129232356.28296-3-mcgrof@kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19856 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750902AbdK2SsW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:48:22 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 10/17] xfs: extent transaction reservations for parent
+ attributes
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-11-git-send-email-allison.henderson@oracle.com>
+ <20171128185802.GP21412@magnolia>
+Message-ID: <b69490be-02c4-0771-6d93-aded8791542a@oracle.com>
+Date: Wed, 29 Nov 2017 11:48:18 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171129232356.28296-3-mcgrof@kernel.org>
+In-Reply-To: <20171128185802.GP21412@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Wed 29-11-17 15:23:47, Luis R. Rodriguez wrote:
-> thaw_super() hold a write lock, however we wish to also enable
-> callers which already hold the write lock. To do this provide a helper
-> and make thaw_super() use it. This way, all that thaw_super() does
-> now is lock handling and active count management.
-> 
-> This change has no functional changes.
-> 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+On 11/28/2017 11:58 AM, Darrick J. Wong wrote:
 
-Looks good to me. You can add:
+> On Fri, Nov 17, 2017 at 11:21:38AM -0700, Allison Henderson wrote:
+>> From: Dave Chinner<dchinner@redhat.com>
+>>
+>> We need to add, remove or modify parent pointer attributes during
+>> create/link/unlink/rename operations atomically with the dirents in the parent
+>> directories being modified. This means they need to be modified in the same
+>> transaction as the parent directories, and so we need to add the required
+>> space for the attribute modifications to the transaction reservations.
+>>
+>> [achender: rebased, added xfs_sb_version_hasparent stub]
+>>
+>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_format.h     |   5 ++
+>>   fs/xfs/libxfs/xfs_trans_resv.c | 103 ++++++++++++++++++++++++++++++++---------
+>>   2 files changed, 85 insertions(+), 23 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>> index b9ea5bf..121862a 100644
+>> --- a/fs/xfs/libxfs/xfs_format.h
+>> +++ b/fs/xfs/libxfs/xfs_format.h
+>> @@ -556,6 +556,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>>   		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+>>   }
+>>   
+>> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>> +{
+>> +	return false; /* We'll enable this at the end of the set */
+>> +}
+>> +
+>>   /*
+>>    * end of superblock version macros
+>>    */
+>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+>> index 6bd916b..54399e2 100644
+>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+>> @@ -802,29 +802,30 @@ xfs_calc_sb_reservation(
+>>   	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>>   }
+>>   
+>> +/*
+>> + * Namespace reservations.
+>> + *
+>> + * These get tricky when parent pointers are enabled as we have attribute
+>> + * modifications occurring from within these transactions. Rather than confuse
+>> + * each of these reservation calculations with the conditional attribute
+>> + * reservations, add them here in a clear and concise manner. This assumes that
+>> + * the attribute reservations have already been calculated.
+>> + *
+>> + * Note that we only include the static attribute reservation here; the runtime
+>> + * reservation will have to be modified by the size of the attributes being
+>> + * added/removed/modified. See the comments on the attribute reservation
+>> + * calculations for more details.
+>> + *
+>> + * Note for rename: rename will vastly overestimate requirements. This will be
+>> + * addressed later when modifications are made to ensure parent attribute
+>> + * modifications can be done atomically with the rename operation.
+>> + */
+>>   void
+>> -xfs_trans_resv_calc(
+>> +xfs_calc_namespace_reservations(
+>>   	struct xfs_mount	*mp,
+>>   	struct xfs_trans_resv	*resp)
+>>   {
+>> -	/*
+>> -	 * The following transactions are logged in physical format and
+>> -	 * require a permanent reservation on space.
+>> -	 */
+>> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+>> -	else
+>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> -
+>> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> -		resp->tr_itruncate.tr_logcount =
+>> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+>> -	else
+>> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>>   
+>>   	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+>>   	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+>> @@ -846,15 +847,69 @@ xfs_trans_resv_calc(
+>>   	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+>>   	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>   
+>> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+>> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+>> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +
+>> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
+>> +		return;
+>> +
+>> +	/* rename can add/remove/modify 2 parent attributes */
+>> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
+>> +					     resp->tr_attrrm.tr_logres);
+>> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
+>> +					       resp->tr_attrrm.tr_logcount);
+>> +
+>> +	/* create will add 1 parent attribute */
+>> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* mkdir will add 1 parent attribute */
+>> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* link will add 1 parent attribute */
+>> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* symlink will add 1 parent attribute */
+>> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* remove will remove 1 parent attribute */
+>> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+>> +	resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
+> djwong, clearly reviewing patches in reverse order:
+>
+> This looks pretty similar to the function in the next patch; can they
+> be combined into a single helper?
+I think so, I'll see if I can get it consolidated
+>> +}
+>> +
+>> +void
+>> +xfs_trans_resv_calc(
+>> +	struct xfs_mount	*mp,
+>> +	struct xfs_trans_resv	*resp)
+>> +{
+>> +	/*
+>> +	 * The following transactions are logged in physical format and
+>> +	 * require a permanent reservation on space.
+>> +	 */
+>> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+>> +	else
+>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +
+>> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> +		resp->tr_itruncate.tr_logcount =
+>> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+>> +	else
+>> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +
+>>   	resp->tr_create_tmpfile.tr_logres =
+>>   			xfs_calc_create_tmpfile_reservation(mp);
+>>   	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>>   	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>   
+>> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+>> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+>> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> -
+>>   	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>>   	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>>   	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> @@ -886,6 +941,8 @@ xfs_trans_resv_calc(
+>>   		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>>   	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>   
+>> +	xfs_calc_namespace_reservations(mp, resp);
+>> +
+>>   	/*
+>>   	 * The following transactions are logged in logical format with
+>>   	 * a default log count.
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message tomajordomo@vger.kernel.org
+>> More majordomo info athttp://vger.kernel.org/majordomo-info.html
 
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  fs/super.c | 39 ++++++++++++++++++++++++++-------------
->  1 file changed, 26 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/super.c b/fs/super.c
-> index a7650ff22f0e..cecc279beecd 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -1493,21 +1493,13 @@ int freeze_super(struct super_block *sb)
->  }
->  EXPORT_SYMBOL(freeze_super);
->  
-> -/**
-> - * thaw_super -- unlock filesystem
-> - * @sb: the super to thaw
-> - *
-> - * Unlocks the filesystem and marks it writeable again after freeze_super().
-> - */
-> -int thaw_super(struct super_block *sb)
-> +/* Caller takes lock and handles active count */
-> +static int thaw_locked_super(struct super_block *sb)
->  {
->  	int error;
->  
-> -	down_write(&sb->s_umount);
-> -	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE) {
-> -		up_write(&sb->s_umount);
-> +	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE)
->  		return -EINVAL;
-> -	}
->  
->  	if (sb_rdonly(sb)) {
->  		sb->s_writers.frozen = SB_UNFROZEN;
-> @@ -1522,7 +1514,6 @@ int thaw_super(struct super_block *sb)
->  			printk(KERN_ERR
->  				"VFS:Filesystem thaw failed\n");
->  			lockdep_sb_freeze_release(sb);
-> -			up_write(&sb->s_umount);
->  			return error;
->  		}
->  	}
-> @@ -1531,7 +1522,29 @@ int thaw_super(struct super_block *sb)
->  	sb_freeze_unlock(sb);
->  out:
->  	wake_up(&sb->s_writers.wait_unfrozen);
-> -	deactivate_locked_super(sb);
->  	return 0;
->  }
-> +
-> +/**
-> + * thaw_super -- unlock filesystem
-> + * @sb: the super to thaw
-> + *
-> + * Unlocks the filesystem and marks it writeable again after freeze_super().
-> + */
-> +int thaw_super(struct super_block *sb)
-> +{
-> +	int error;
-> +
-> +	down_write(&sb->s_umount);
-> +	error = thaw_locked_super(sb);
-> +	if (error) {
-> +		up_write(&sb->s_umount);
-> +		goto out;
-> +	}
-> +
-> +	deactivate_locked_super(sb);
-> +
-> +out:
-> +	return error;
-> +}
->  EXPORT_SYMBOL(thaw_super);
-> -- 
-> 2.15.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
