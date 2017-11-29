@@ -1,230 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32908 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:54038 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751394AbdK3S6i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 13:58:38 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 133BE6A7DF
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:38 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D8B5960DCA
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:37 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 5/7] xfs: include an allocfree res for inobt modifications
-Date: Thu, 30 Nov 2017 13:58:34 -0500
-Message-Id: <20171130185836.18481-6-bfoster@redhat.com>
-In-Reply-To: <20171130185836.18481-1-bfoster@redhat.com>
-References: <20171130185836.18481-1-bfoster@redhat.com>
+        id S1752815AbdK2XYI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 18:24:08 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH 06/11] fs: freeze on suspend and thaw on resume
+Date: Wed, 29 Nov 2017 15:23:51 -0800
+Message-Id: <20171129232356.28296-7-mcgrof@kernel.org>
+In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org
+Cc: boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-Analysis of recent reports of log reservation overruns and code
-inspection has uncovered that the reservations associated with inode
-operations may not cover the worst case scenarios. In particular,
-many cases only include one allocfree res. for a particular
-operation even though said operations may also entail AGFL fixups
-and inode btree block allocations in addition to the actual inode
-chunk allocation. This can easily turn into two or three block
-allocations (or frees) per operation.
+This uses the existing filesystem freeze and thaw callbacks to
+freeze each filesystem on suspend/hibernation and thaw upon resume.
 
-In theory, the only way to define the worst case reservation is to
-include an allocfree res for each individual allocation in a
-transaction. Since that is impractical (we can perform multiple agfl
-fixups per tx and not every allocation results in a full tree
-operation), we need to find a reasonable compromise that addresses
-the deficiency in practice without blowing out the size of the
-transactions.
+This is needed so that we properly really stop IO in flight without
+races after userspace has been frozen. Without this we rely on
+kthread freezing and its semantics are loose and error prone.
+For instance, even though a kthread may use try_to_freeze() and end
+up being frozen we have no way of being sure that everything that
+has been spawned asynchronously from it (such as timers) have also
+been stopped as well.
 
-Since the inode btrees are not filled by the AGFL, record insertion
-and removal can directly result in block allocations and frees
-depending on the shape of the tree. These allocations and frees
-occur in the same transaction context as the inobt update itself,
-but are separate from the allocation/free that might be required for
-an inode chunk. Therefore, it makes sense to assume that an [f]inobt
-insert/remove can directly result in one or more block allocations
-on behalf of the tree.
+A long term advantage of also adding filesystem freeze / thawing
+supporting durign suspend / hibernation is that long term we may
+be able to eventually drop the kernel's thread freezing completely
+as it was originally added to stop disk IO in flight as we hibernate
+or suspend.
 
-Refactor the inode transaction reservations to include one allocfree
-res. per inode btree modification to cover allocations required by
-the tree itself. This separates the reservation required to allocate
-the inode chunk from the reservation required for inobt record
-insertion/removal. Apply the same logic to the finobt. This results
-in killing off the finobt modify condition because we no longer
-assume that the broader transaction reservation will cover finobt
-block allocations and finobt shape changes can occur in either of
-the inobt allocation or modify situations.
+This also implies that many kthread users exist which have been
+adding freezer semantics onto its kthreads without need. These also
+will need to be reviewed later.
 
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+This is based on prior work originally by Rafael Wysocki and later by
+Jiri Kosina.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c | 84 +++++++++++++++++++++---------------------
- 1 file changed, 43 insertions(+), 41 deletions(-)
+ fs/super.c             | 85 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/fs.h     | 13 ++++++++
+ kernel/power/process.c | 15 ++++++++-
+ 3 files changed, 112 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 037a1295d289..19f3a226a357 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -132,44 +132,43 @@ xfs_calc_inode_res(
+diff --git a/fs/super.c b/fs/super.c
+index 885711c1d35b..c3a2842e5690 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1648,3 +1648,88 @@ int thaw_super(struct super_block *sb)
+ 	return error;
  }
- 
- /*
-- * The free inode btree is a conditional feature and the log reservation
-- * requirements differ slightly from that of the traditional inode allocation
-- * btree. The finobt tracks records for inode chunks with at least one free
-- * inode. A record can be removed from the tree for an inode allocation
-- * or free and thus the finobt reservation is unconditional across:
-+ * Inode btree record insertion/removal modifies the inode btree and free space
-+ * btrees (since the inobt does not use the agfl). This requires the following
-+ * reservation:
-  *
-- * 	- inode allocation
-- * 	- inode free
-- * 	- inode chunk allocation
-+ * the inode btree: max depth * blocksize
-+ * the allocation btrees: 2 trees * (max depth - 1) * block size
-  *
-- * The 'modify' param indicates to include the record modification scenario. The
-- * 'alloc' param indicates to include the reservation for free space btree
-- * modifications on behalf of finobt modifications. This is required only for
-- * transactions that do not already account for free space btree modifications.
-+ * The caller must account for SB and AG header modifications, etc.
-+ */
-+STATIC uint
-+xfs_calc_inobt_res(
-+	struct xfs_mount	*mp)
+ EXPORT_SYMBOL(thaw_super);
++
++#ifdef CONFIG_PM_SLEEP
++static bool super_should_freeze(struct super_block *sb)
 +{
-+	return xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
-+				 XFS_FSB_TO_B(mp, 1));
++	if (!sb->s_root)
++		return false;
++	if (!(sb->s_flags & MS_BORN))
++		return false;
++	/*
++	 * We don't freeze virtual filesystems, we skip those filesystems with
++	 * no backing device.
++	 */
++	if (sb->s_bdi == &noop_backing_dev_info)
++		return false;
++	/* No need to freeze read-only filesystems */
++	if (sb->s_flags & MS_RDONLY)
++		return false;
++
++	return true;
 +}
 +
-+/*
-+ * The free inode btree is a conditional feature. The behavior differs slightly
-+ * from that of the traditional inode btree in that the finobt tracks records
-+ * for inode chunks with at least one free inode. A record can be removed from
-+ * the tree during individual inode allocation. Therefore the finobt
-+ * reservation is unconditional for both the inode chunk allocation and
-+ * individual inode allocation (modify) cases.
-  *
-- * the free inode btree: max depth * block size
-- * the allocation btrees: 2 trees * (max depth - 1) * block size
-- * the free inode btree entry: block size
-+ * Behavior aside, the reservation for finobt modification is equivalent to the
-+ * traditional inobt: cover a full finobt shape change plus block allocation.
-  */
- STATIC uint
- xfs_calc_finobt_res(
--	struct xfs_mount	*mp,
--	int			alloc,
--	int			modify)
-+	struct xfs_mount	*mp)
- {
--	uint res;
--
- 	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
- 		return 0;
++static int fs_suspend_freeze_sb(struct super_block *sb, void *priv)
++{
++	int error = 0;
++
++	spin_lock(&sb_lock);
++	if (!super_should_freeze(sb))
++		goto out;
++
++	pr_info("%s (%s): freezing\n", sb->s_type->name, sb->s_id);
++
++	spin_unlock(&sb_lock);
++
++	atomic_inc(&sb->s_active);
++	error = freeze_locked_super(sb, false);
++	if (error)
++		atomic_dec(&sb->s_active);
++
++	spin_lock(&sb_lock);
++	if (error && error != -EBUSY)
++		pr_notice("%s (%s): Unable to freeze, error=%d",
++			  sb->s_type->name, sb->s_id, error);
++
++out:
++	spin_unlock(&sb_lock);
++	return error;
++}
++
++int fs_suspend_freeze(void)
++{
++	return iterate_supers_reverse_excl(fs_suspend_freeze_sb, NULL);
++}
++
++static int fs_suspend_thaw_sb(struct super_block *sb, void *priv)
++{
++	int error = 0;
++
++	spin_lock(&sb_lock);
++	if (!super_should_freeze(sb))
++		goto out;
++
++	pr_info("%s (%s): thawing\n", sb->s_type->name, sb->s_id);
++
++	spin_unlock(&sb_lock);
++
++	error = thaw_locked_super(sb, false);
++	if (!error)
++		atomic_dec(&sb->s_active);
++
++	spin_lock(&sb_lock);
++	if (error && error != -EBUSY)
++		pr_notice("%s (%s): Unable to unfreeze, error=%d",
++			  sb->s_type->name, sb->s_id, error);
++
++out:
++	spin_unlock(&sb_lock);
++	return error;
++}
++
++int fs_resume_unfreeze(void)
++{
++	return iterate_supers_excl(fs_suspend_thaw_sb, NULL);
++}
++
++#endif
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index fe90b6542697..dbaa69c3a4cf 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2237,6 +2237,19 @@ extern int user_statfs(const char __user *, struct kstatfs *);
+ extern int fd_statfs(int, struct kstatfs *);
+ extern int freeze_super(struct super_block *super);
+ extern int thaw_super(struct super_block *super);
++#ifdef CONFIG_PM_SLEEP
++int fs_suspend_freeze(void);
++int fs_resume_unfreeze(void);
++#else
++static inline int fs_suspend_freeze(void)
++{
++	return 0;
++}
++static inline int fs_resume_unfreeze(void)
++{
++	return 0;
++}
++#endif
+ extern bool our_mnt(struct vfsmount *mnt);
+ extern __printf(2, 3)
+ int super_setup_bdi_name(struct super_block *sb, char *fmt, ...);
+diff --git a/kernel/power/process.c b/kernel/power/process.c
+index c326d7235c5f..7a44f8310968 100644
+--- a/kernel/power/process.c
++++ b/kernel/power/process.c
+@@ -145,6 +145,16 @@ int freeze_processes(void)
+ 	pr_cont("\n");
+ 	BUG_ON(in_atomic());
  
--	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
--	if (alloc)
--		res += xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--					XFS_FSB_TO_B(mp, 1));
--	if (modify)
--		res += (uint)XFS_FSB_TO_B(mp, 1);
--
--	return res;
-+	return xfs_calc_inobt_res(mp);
++	pr_info("Freezing filesystems ... ");
++	error = fs_suspend_freeze();
++	if (error) {
++		pr_cont("failed\n");
++		fs_resume_unfreeze();
++		thaw_processes();
++		return error;
++	}
++	pr_cont("done.\n");
++
+ 	/*
+ 	 * Now that the whole userspace is frozen we need to disbale
+ 	 * the OOM killer to disallow any further interference with
+@@ -154,8 +164,10 @@ int freeze_processes(void)
+ 	if (!error && !oom_killer_disable(msecs_to_jiffies(freeze_timeout_msecs)))
+ 		error = -EBUSY;
+ 
+-	if (error)
++	if (error) {
++		fs_resume_unfreeze();
+ 		thaw_processes();
++	}
+ 	return error;
  }
  
- /*
-@@ -373,7 +372,7 @@ xfs_calc_create_resv_modify(
- 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
- 		(uint)XFS_FSB_TO_B(mp, 1) +
- 		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_finobt_res(mp, 1, 1);
-+		xfs_calc_finobt_res(mp);
- }
+@@ -198,6 +210,7 @@ void thaw_processes(void)
+ 	pm_nosig_freezing = false;
  
- /*
-@@ -381,8 +380,8 @@ xfs_calc_create_resv_modify(
-  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-  *    the superblock for the nlink flag: sector size
-  *    the inode blocks allocated: mp->m_ialloc_blks * blocksize
-- *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inode btree (record insertion)
-  */
- STATIC uint
- xfs_calc_create_resv_alloc(
-@@ -391,9 +390,9 @@ xfs_calc_create_resv_alloc(
- 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		mp->m_sb.sb_sectsize +
- 		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_inobt_res(mp);
- }
+ 	oom_killer_enable();
++	fs_resume_unfreeze();
  
- STATIC uint
-@@ -409,8 +408,8 @@ __xfs_calc_create_reservation(
-  * For icreate we can allocate some inodes giving:
-  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-  *    the superblock for the nlink flag: sector size
-- *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inobt (record insertion)
-  *    the finobt (record insertion)
-  */
- STATIC uint
-@@ -419,10 +418,10 @@ xfs_calc_icreate_resv_alloc(
- {
- 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		mp->m_sb.sb_sectsize +
--		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
- 				 XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_finobt_res(mp, 0, 0);
-+		xfs_calc_inobt_res(mp) +
-+		xfs_calc_finobt_res(mp);
- }
+ 	pr_info("Restarting tasks ... ");
  
- STATIC uint
-@@ -487,9 +486,14 @@ xfs_calc_symlink_reservation(
-  *    the super block free inode counter, AGF and AGFL: sector size
-  *    the on disk inode (agi unlinked list removal)
-  *    the inode chunk is marked stale (headers only)
-- *    the inode btree: max depth * blocksize
-- *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inode btree
-  *    the finobt (record insertion, removal or modification)
-+ *
-+ * Note that the allocfree res. for the inode chunk itself is not included
-+ * because the extent free occurs after a transaction roll. We could take the
-+ * maximum of the pre/post roll operations, but the pre-roll reservation already
-+ * includes at least one allocfree res. for the inobt and is thus guaranteed to
-+ * be larger.
-  */
- STATIC uint
- xfs_calc_ifree_reservation(
-@@ -500,10 +504,8 @@ xfs_calc_ifree_reservation(
- 		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
- 		xfs_calc_iunlink_remove_reservation(mp) +
- 		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
--		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--				 XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_finobt_res(mp, 0, 1);
-+		xfs_calc_inobt_res(mp) +
-+		xfs_calc_finobt_res(mp);
- }
- 
- /*
 -- 
-2.13.6
+2.15.0
 
