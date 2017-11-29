@@ -1,95 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54910 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752452AbdK1HwW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Nov 2017 02:52:22 -0500
-Date: Tue, 28 Nov 2017 15:52:15 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v4] fstests: filter readonly mount error messages
-Message-ID: <20171128075215.GG2749@eguan.usersys.redhat.com>
-References: <20171123111031.6550-4-eguan@redhat.com>
- <20171124050144.23549-1-eguan@redhat.com>
- <CAOQ4uxgxRxByGHhePr3b4H+W1zEGxUX6Emj9PBzZpEKEs2iHog@mail.gmail.com>
- <20171124103814.gfvxw3ethkcvm6xa@ws.net.home>
- <CAOQ4uxjbnrgJG3PLVV6TvAS-Fjgskms_jWc5-b4DVmLhbVUdFg@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20153 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751846AbdK2B0x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Nov 2017 20:26:53 -0500
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vAT1Qql2015720
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:52 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vAT1Qpo4015506
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:52 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vAT1QprW004645
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 01:26:51 GMT
+Subject: [PATCH 14/16] xfs: scrub should cross-reference the realtime bitmap
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 28 Nov 2017 17:26:50 -0800
+Message-ID: <151191881065.8553.294883978147133548.stgit@magnolia>
+In-Reply-To: <151191872395.8553.15627872818207535470.stgit@magnolia>
+References: <151191872395.8553.15627872818207535470.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjbnrgJG3PLVV6TvAS-Fjgskms_jWc5-b4DVmLhbVUdFg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Karel Zak <kzak@redhat.com>, fstests <fstests@vger.kernel.org>, "Misono, Tomohiro" <misono.tomohiro@jp.fujitsu.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Nov 26, 2017 at 10:56:40AM +0200, Amir Goldstein wrote:
-> On Fri, Nov 24, 2017 at 12:38 PM, Karel Zak <kzak@redhat.com> wrote:
-> > On Fri, Nov 24, 2017 at 10:04:33AM +0200, Amir Goldstein wrote:
-> >> [cc: Karel Zak]
-> >>
-> >> On Fri, Nov 24, 2017 at 7:01 AM, Eryu Guan <eguan@redhat.com> wrote:
-> >> > util-linux commit 6dede2f2f7c5 ("libmount: support MS_RDONLY on
-> >> > write-protected devices") changed the error message on read-only
-> >> > block device, and in the failure case printed one line message
-> >> > instead of two (for details please see comments in common/filter),
-> >> > and this change broke generic/050 and overlay/035.
-> >> >
-> >> > Fix it by adding more filter rules to _filter_ro_mount and updating
-> >> > associated .out files to unify the output from both old and new
-> >> > util-linux versions.
-> >> >
-> >> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> >> > ---
-> >> > v4 (also passed with both old & new util-linux):
-> >> > - add more comments to explain the output differences between util-linux
-> >> >   versions
-> >> > - print out message directly instead of using perl variables
-> >> > - add word "device" to failed ro mount message
-> >>
-> >>
-> >> Eryu,
-> >>
-> >> This looks good and you can take it as an ACK on the series.
-> >>
-> >> I've CC'ed Karel, so maybe he thinks about us fstests guys before making
-> >> these sort of changes again...
-> >
-> > Frankly, we have never promised that things like warning messages (or
-> > another messages) are stable interface. It's fragile to depend on this
-> > stuff...
-> >
-> 
-> I know. No complains. Just wanted to inform you of the downstream
-> ripples.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Agreed.
+While we're scrubbing various btrees, cross-reference the records
+with the other metadata.
 
-> 
-> >> Thinking out loud, does xfstest even need to use mount program from
-> >> util-linux? Do we ever need anything other than the bare libc mount(2)?
-> >> We need it for -o loop, but that is the exception to the rule.
-> >
-> > Well, I don't think that create a parallel universe is the best
-> > solution.
-> >
-> 
-> I agree. However, xfstest uses 'mount' is a very particular way:
-> - User has to provide both block device and mount point
-> - xfstests already checks that those block device and mount point
->   are not in use in /proc/mounts *before* calling 'mount'
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_rtbitmap.c |   30 ++++++++++++++++++++++++++++++
+ fs/xfs/scrub/bmap.c          |    2 ++
+ fs/xfs/scrub/rtbitmap.c      |   20 ++++++++++++++++++++
+ fs/xfs/scrub/scrub.h         |    6 ++++++
+ fs/xfs/xfs_rtalloc.h         |    4 ++++
+ 5 files changed, 62 insertions(+)
 
-The problem is it's not a mount-only issue, outputs from other
-util-linux commands and commands from coreutils have been changing over
-time too, we really can't "fork" & maintain a local wrapper all the
-changing pieces. As long as fstests still go with the 'match golden
-image' path, it's not likely to avoid such problems completely. OTOH,
-the output changes are not so frequent (such a change per 3-4 years
-maybe?), I think the maintain burden of filters is much less than
-maintaining local wrappers of such commands.
 
-And commands like mount are fs-related, it's better to get them some
-(indirect) test coverage in fstests too, as we test other fs-specific
-userspace tools like xfsprogs, e2fsprogs etc.
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 3fb29a5..a3f25a2 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1097,3 +1097,33 @@ xfs_verify_rtbno(
+ {
+ 	return rtbno < mp->m_sb.sb_rblocks;
+ }
++
++/* Is the given extent all free? */
++int
++xfs_rtalloc_extent_is_free(
++	struct xfs_mount		*mp,
++	struct xfs_trans		*tp,
++	xfs_rtblock_t			start,
++	xfs_rtblock_t			len,
++	bool				*is_free)
++{
++	xfs_rtblock_t			end;
++	xfs_extlen_t			clen;
++	int				matches;
++	int				error;
++
++	*is_free = false;
++	while (len) {
++		clen = len > ~0U ? ~0U : len;
++		error = xfs_rtcheck_range(mp, tp, start, clen, 1, &end,
++				&matches);
++		if (error || !matches || end < start + clen)
++			return error;
++
++		len -= end - start;
++		start = end + 1;
++	}
++
++	*is_free = true;
++	return error;
++}
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 2b99f06..1e5ab53 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -276,6 +276,8 @@ xfs_scrub_bmap_rt_extent_xref(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_bmbt_irec		*irec)
+ {
++	xfs_scrub_xref_not_rtfree(info->sc, irec->br_startblock,
++			irec->br_blockcount);
+ }
+ 
+ /* Cross-reference a single datadev extent record. */
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index c6fedb6..810666d 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -106,3 +106,23 @@ xfs_scrub_rtsummary(
+ 	/* XXX: implement this some day */
+ 	return -ENOENT;
+ }
++
++
++/* xref check that the extent is not free in the rtbitmap */
++void
++xfs_scrub_xref_not_rtfree(
++	struct xfs_scrub_context	*sc,
++	xfs_fsblock_t			fsbno,
++	xfs_fsblock_t			len)
++{
++	bool				is_free;
++	int				error;
++
++	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, fsbno, len,
++			&is_free);
++	if (xfs_scrub_should_xref(sc, &error, NULL) && is_free)
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->mp->m_rbmip->i_ino,
++				NULL);
++	xfs_iunlock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++}
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 3ccfff2..a1cd43d 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -137,5 +137,11 @@ void xfs_scrub_xref_has_cow_staging(struct xfs_scrub_context *sc,
+ void xfs_scrub_xref_not_shared(struct xfs_scrub_context *sc,
+ 		struct xfs_btree_cur **pcur, xfs_agblock_t bno,
+ 		xfs_extlen_t len);
++#ifdef CONFIG_XFS_RT
++void xfs_scrub_xref_not_rtfree(struct xfs_scrub_context *sc,
++		xfs_fsblock_t fsbno, xfs_fsblock_t len);
++#else
++# define xfs_scrub_xref_not_rtfree(sc, fsbno, len)	do { } while (0)
++#endif
+ 
+ #endif	/* __XFS_SCRUB_SCRUB_H__ */
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index 3f30f84..540d506 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -139,6 +139,9 @@ int xfs_rtalloc_query_all(struct xfs_trans *tp,
+ 			  xfs_rtalloc_query_range_fn fn,
+ 			  void *priv);
+ bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
++int xfs_rtalloc_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
++			       xfs_rtblock_t start, xfs_rtblock_t len,
++			       bool *is_free);
+ #else
+ # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
+ # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+@@ -148,6 +151,7 @@ bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+ # define xfs_rtalloc_query_all(t,f,p)                   (ENOSYS)
+ # define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
+ # define xfs_verify_rtbno(m, r)			(false)
++# define xfs_rtalloc_extent_is_free(m,t,s,l,i)          (ENOSYS)
+ static inline int		/* error */
+ xfs_rtmount_init(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
 
-Thanks,
-Eryu
