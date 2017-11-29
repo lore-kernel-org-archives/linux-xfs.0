@@ -1,94 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:41540 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752939AbdK2XsQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 18:48:16 -0500
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:37463 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751596AbdK2Vht (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 16:37:49 -0500
+Date: Thu, 30 Nov 2017 08:37:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
+Message-ID: <20171129213746.GK5858@dastard>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+ <20171128203537.GZ21412@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171129232356.28296-6-mcgrof@kernel.org>
-References: <20171129232356.28296-1-mcgrof@kernel.org> <20171129232356.28296-6-mcgrof@kernel.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 30 Nov 2017 00:48:15 +0100
-Message-ID: <CAJZ5v0gO49=pXGEdi42Hka=Rf=SqVWp-QSJf9_+bGuOgsHMFig@mail.gmail.com>
-Subject: Re: [PATCH 05/11] fs: add iterate_supers_excl() and iterate_supers_reverse_excl()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171128203537.GZ21412@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, bart.vanassche@wdc.com, ming.lei@redhat.com, Ted Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jikos@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, linux-fsdevel@vger.kernel.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>, Todd Brandt <todd.e.brandt@linux.intel.com>, nborisov@suse.com, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Oliver Neukum <ONeukum@suse.com>, oleksandr@natalenko.name, Oleg Antonyan <oleg.b.antonyan@gmail.com>, Yu Chen <yu.chen.surf@gmail.com>, Dan Williams <dan.j.williams@intel.com>, Linux PM <linux-pm@vger.kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Nov 30, 2017 at 12:23 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> There are use cases where we wish to traverse the superblock list
-> but also capture errors, and in which case we want to avoid having
-> our callers issue a lock themselves since we can do the locking for
-> the callers. Provide a iterate_supers_excl() which calls a function
-> with the write lock held. If an error occurs we capture it and
-> propagate it.
->
-> Likewise there are use cases where we wish to traverse the superblock
-> list but in reverse order. The new iterate_supers_reverse_excl() helpers
-> does this but also also captures any errors encountered.
->
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  fs/super.c         | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/fs.h |  2 ++
->  2 files changed, 93 insertions(+)
->
-> diff --git a/fs/super.c b/fs/super.c
-> index a63513d187e8..885711c1d35b 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -605,6 +605,97 @@ void iterate_supers(void (*f)(struct super_block *, void *), void *arg)
->         spin_unlock(&sb_lock);
->  }
->
-> +/**
-> + *     iterate_supers_excl - exclusively call func for all active superblocks
-> + *     @f: function to call
-> + *     @arg: argument to pass to it
-> + *
-> + *     Scans the superblock list and calls given function, passing it
-> + *     locked superblock and given argument. Returns 0 unless an error
-> + *     occurred on calling the function on any superblock.
-> + */
-> +int iterate_supers_excl(int (*f)(struct super_block *, void *), void *arg)
-> +{
-> +       struct super_block *sb, *p = NULL;
-> +       int error = 0;
-> +
-> +       spin_lock(&sb_lock);
-> +       list_for_each_entry(sb, &super_blocks, s_list) {
-> +               if (hlist_unhashed(&sb->s_instances))
-> +                       continue;
-> +               sb->s_count++;
-> +               spin_unlock(&sb_lock);
+On Tue, Nov 28, 2017 at 12:35:37PM -0800, Darrick J. Wong wrote:
+> On Fri, Nov 17, 2017 at 11:21:45AM -0700, Allison Henderson wrote:
+> > This patch adds a new file ioctl to retrieve the parent
+> > pointer of a given inode
+> 
+> (Yes, it's time to start talking about actual use cases...)
+> 
+> At a bare minimum, this is what I pictured for the "return parents of
+> the open file" ioctl:
+> 
+> #define XFS_PPTR_MAXNAMELEN		255
+> 
+> struct xfs_pptr {
+> 	u64				pp_ino;
+> 	u32				pp_gen;
+> 	u8				pp_namelen;
+> 	u8				pp_name[XFS_PPTR_MAXNAMELEN];
+> };
 
-Can anything bad happen if the list is modified at this point by a
-concurrent thread?
+That's going to be a different size on 32bit and 64 bit platforms
+as the structure size is a multiple of 4 bytes, not 8 bytes.
+That will cause problems and need complex comapt ioctl translation.
+Better to make pp_namelen a u32 and that will make the structure
+64 bit aligned and sized on all platforms.
 
-> +
-> +               down_write(&sb->s_umount);
-> +               if (sb->s_root && (sb->s_flags & SB_BORN)) {
-> +                       error = f(sb, arg);
-> +                       if (error) {
-> +                               up_write(&sb->s_umount);
-> +                               spin_lock(&sb_lock);
-> +                               __put_super(sb);
-> +                               break;
-> +                       }
-> +               }
-> +               up_write(&sb->s_umount);
-> +
-> +               spin_lock(&sb_lock);
-> +               if (p)
-> +                       __put_super(p);
-> +               p = sb;
-> +       }
-> +       if (p)
-> +               __put_super(p);
-> +       spin_unlock(&sb_lock);
-> +
-> +       return error;
-> +}
-> +
+I'd allow more than u8 for the namelen. Yes, while we currently
+allow on 255 bytes for a name, it would make more sense to
+use a u32 here so that the structure size is a multiple of it's
+alignment rather than having a 4 byte hole in the array we don't
+fill out....
+
+> 
+> /* return parents of the handle, instead of the open fd */
+> #define XFS_PPTR_FLAG_HANDLE		(1u << 0)
+> 
+> struct xfs_pptr_info {
+> 	struct xfs_fsop_handlereq	pi_handle;
+> 	struct xfs_attrlist_cursor	pi_cursor;
+> 	u32				pi_flags;
+> 	u32				pi_reserved;
+> 	u32				pi_ptrs_size;
+> 	u32				pi_ptrs_used;
+> 	u64				pi_reserved2[6];
+> 	struct xfs_pptr			pi_ptrs[0];
+> };
+
+I thought gcc had started doing weird things with variable size
+array declarations like this (i.e. pi_ptrs[0]) because the exact
+behaviour is not defined in the C standard. i.e. we need to avoid
+adding new declarations that do this...
+
+
+> #define XFS_PPTR_INFO_SIZEOF(ptrs)	(sizeof(struct xfs_pptr_info) + \
+> 					((ptrs) * sizeof(struct xfs_pptr)));
+> static inline struct xfs_pptr_info *
+> xfs_pptr_alloc(
+> 	size_t			nr_ptrs)
+> {
+> 	struct xfs_pptr_info	*ppi;
+> 
+> 	ppi = malloc(XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+> 	if (!ppi)
+> 		return NULL;
+> 	memset(ppi, 0, XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+> 	ppi->pi_ptrs_size = nr_ptrs;
+> 	return ppi;
+> }
+> 
+> With the following example userspace program (that does no checking
+> whatsoever):
+> 
+> int main(int argc, char *argv[])
+> {
+> 	struct xfs_pptr_info	*ppi;
+> 	struct xfs_pptr		*pp;
+> 	int			fd;
+> 
+> 	fd = open(argv[1], O_RDONLY);
+> 	ppi = xfs_pptr_alloc(32);
+> 
+> 	while (ioctl(fd, XFS_IOC_GETPPOINTER, ppi) == 0 && ppi->pi_ptrs_used) {
+> 		for (i = 0; i < ppi->pi_ptrs_used; i++) {
+> 			printf("%llu:%u -> %s\n",
+> 					ppi->pi_ptrs[i].pp_ino,
+> 					ppi->pi_ptrs[i].pp_gen,
+> 					ppi->pi_ptrs[i].pp_name);
+> 		}
+> 	}
+> }
+
+Seems like a reasonable model to me.
+
+> I /also/ wonder if there's any interest in having a fallback for
+> non-pptr filesystems that walks the dentry->d_parent links (like
+> d_paths() does) back to the root.  Such a fallback will only work on an
+> opened dir or a file opened by path (i.e. not a handle), however, which
+> limits its appeal.
+
+I wouldn't bother complicating anything by trying to support
+filesytems that don't have parent pointer info. Just have
+non-parent-ptr filesystems return EOPNOTSUPP for the ioctl and be
+done with it...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
