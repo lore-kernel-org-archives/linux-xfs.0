@@ -1,145 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57174 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752250AbdK2UgI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 15:36:08 -0500
-Date: Wed, 29 Nov 2017 15:36:06 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: amortize agfl block frees across multiple
- transactions
-Message-ID: <20171129203605.GA25833@bfoster.bfoster>
-References: <20171127202434.43125-1-bfoster@redhat.com>
- <20171127202434.43125-4-bfoster@redhat.com>
- <20171127230734.GB5858@dastard>
- <20171128135748.GC45759@bfoster.bfoster>
- <20171128220919.GF5858@dastard>
- <20171129182453.GA24696@bfoster.bfoster>
+Received: from userp1040.oracle.com ([156.151.31.81]:30061 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751977AbdK2Ws5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 17:48:57 -0500
+Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+ <20171128203537.GZ21412@magnolia> <20171129213746.GK5858@dastard>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <3865fc6e-b496-0581-b9d4-7427fa69c825@oracle.com>
+Date: Wed, 29 Nov 2017 15:48:50 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171129182453.GA24696@bfoster.bfoster>
+In-Reply-To: <20171129213746.GK5858@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 29, 2017 at 01:24:53PM -0500, Brian Foster wrote:
-> On Wed, Nov 29, 2017 at 09:09:19AM +1100, Dave Chinner wrote:
-> > On Tue, Nov 28, 2017 at 08:57:48AM -0500, Brian Foster wrote:
-> > > On Tue, Nov 28, 2017 at 10:07:34AM +1100, Dave Chinner wrote:
-> > > > On Mon, Nov 27, 2017 at 03:24:33PM -0500, Brian Foster wrote:
-...
-> > > This sounds to me like an
-> > > unconditional side effect of the fact that freeing an agfl block can
-> > > indirectly affect the agfl via the btree operations. IOW, freeing a
-> > > single extra block could require consuming one or more and trigger the
-> > > need for an allocation. I suspect the allocation could then very well
-> > > cause a join on the other tree and put more than one block back onto the
-> > > agfl.
-> > 
-> > Yes, it could do that too. Remove a single block from an existing
-> > free extent, no change to the by-block btree. by-cnt now requires a
-> > record delete (full height join) followed by record insert elsewhere
-> > in the tree (full height split). So the attempt to add a block to
-> > the AGFL can actually shorten it if the by-cnt tree splits on
-> > insert. It can grow if the by-block or by-cnt tree joins on record
-> > removal.
-> > 
-> > Either way, we've got the same problem of using the entire log
-> > reservation for AGFL modification when growing the AGFL as we do
-> > when trying to shrink the AGFL down.
-> > 
-> > That's my point here - just hacking a limit into the shrink case
-> > doesn't address the problem at all - it just papers over one of the
-> > visible symptoms....
-> > 
-> 
-> Yes, it's clear that the current code allows for all sorts of
-> theoretical avenues to transaction overrun. Hence my previous idea to
-> roll the transaction once an AGFL fixup triggers a join or split. Even
-> that may not be sufficient in certain scenarios.
-> 
 
-Random thought from this afternoon...
 
-What do you think about unconditionally removing surplus agfl blocks as
-we do today, but defer them rather than free them immediately? We'd free
-up the agfl slots as needed so the allocation can proceed, but we'd
-eliminate the behavior where agfl frees recursively affect the agfl. The
-broader idea is that in the event where 2+ agfl frees are required,
-they'd now execute in a context where can enforce deterministic log
-consumption per tx (by also implementing the 2 frees per EFD idea, for
-example) until the agfl is rectified.
+On 11/29/2017 02:37 PM, Dave Chinner wrote:
+> On Tue, Nov 28, 2017 at 12:35:37PM -0800, Darrick J. Wong wrote:
+>> On Fri, Nov 17, 2017 at 11:21:45AM -0700, Allison Henderson wrote:
+>>> This patch adds a new file ioctl to retrieve the parent
+>>> pointer of a given inode
+>>
+>> (Yes, it's time to start talking about actual use cases...)
+>>
+>> At a bare minimum, this is what I pictured for the "return parents of
+>> the open file" ioctl:
+>>
+>> #define XFS_PPTR_MAXNAMELEN		255
+>>
+>> struct xfs_pptr {
+>> 	u64				pp_ino;
+>> 	u32				pp_gen;
+>> 	u8				pp_namelen;
+>> 	u8				pp_name[XFS_PPTR_MAXNAMELEN];
+>> };
+> 
+> That's going to be a different size on 32bit and 64 bit platforms
+> as the structure size is a multiple of 4 bytes, not 8 bytes.
+> That will cause problems and need complex comapt ioctl translation.
+> Better to make pp_namelen a u32 and that will make the structure
+> 64 bit aligned and sized on all platforms.
+> 
+> I'd allow more than u8 for the namelen. Yes, while we currently
+> allow on 255 bytes for a name, it would make more sense to
+> use a u32 here so that the structure size is a multiple of it's
+> alignment rather than having a 4 byte hole in the array we don't
+> fill out....
+> 
+>>
+>> /* return parents of the handle, instead of the open fd */
+>> #define XFS_PPTR_FLAG_HANDLE		(1u << 0)
+>>
+>> struct xfs_pptr_info {
+>> 	struct xfs_fsop_handlereq	pi_handle;
+>> 	struct xfs_attrlist_cursor	pi_cursor;
+>> 	u32				pi_flags;
+>> 	u32				pi_reserved;
+>> 	u32				pi_ptrs_size;
+>> 	u32				pi_ptrs_used;
+>> 	u64				pi_reserved2[6];
+>> 	struct xfs_pptr			pi_ptrs[0];
+>> };
+> 
+> I thought gcc had started doing weird things with variable size
+> array declarations like this (i.e. pi_ptrs[0]) because the exact
+> behaviour is not defined in the C standard. i.e. we need to avoid
+> adding new declarations that do this...
 
-I'd have to think a little more about whether the idea is sane.. It
-looks like we'd have to plumb dfops in through xfs_alloc_arg for
-starters. We could do the defer conditionally based on whether the
-caller passes dfops to facilitate incremental conversions. We also may
-be able to consider optimizations like putting deferred agfl blocks
-right back onto the agfl if there's a deficit by the time we get around
-to freeing them (rather than doing an agfl alloc only to free up
-deferred agfl blocks), but that's probably getting too far ahead for
-now.
+Oh, I think there's a few places in the set where I have declarations 
+like that.  Should they be some_array[1]; instead?
 
-This also doesn't help with extending the agfl, but I think that path is
-already more deterministic since we attempt to fill the deficit in as
-few allocs as possible. Thoughts?
-
-Brian
-
-> Moving on from that, this patch is a variant of your suggestion to allow
-> leaving surplus blocks on the agfl up to a certain limit. It is
-> intentionally a more isolated fix for the specific issue of performing
-> too many independent allocations (frees) per transaction in this
-> context.
 > 
-> One approach doesn't have to preclude the other. I'm not aware of any
-> pattern of overrun problems with this code over the however many years
-> it has been in place, other than this one, however. Given that, I think
-> it's perfectly reasonable to consider a shorter term solution so long as
-> we're confident it doesn't introduce other problems.
 > 
-> > > > IMO, there's a lot more to be concerned about here than just trying
-> > > > to work around the specific symptom observed in the given test case.
-> > > > This code is, unfortunately, really tricky and intricate and history
-> > > > tells us that the risk of unexpected regressions is extremely high,
-> > > > especially around ENOSPC related issues. Of all the patches in this
-> > > > series, this is the most dangerous and "iffy" of them and the
-> > > > one we should be most concerned and conservative about....
-> > > > 
-> > > 
-> > > Agreed. The impact is something that also has to be evaluated over a
-> > > sequence of transactions along with the more obvious impact on a single
-> > > transaction.
-> > 
-> > The impact has to be measured over a far longer time frame than a
-> > few transactions. The fact it has impact on freespace reformation
-> > means it'll need accelerated aging tests done on it so we can be
-> > reasonably certain that it isn't going to bite us in extended
-> > production environments...
-> > 
+>> #define XFS_PPTR_INFO_SIZEOF(ptrs)	(sizeof(struct xfs_pptr_info) + \
+>> 					((ptrs) * sizeof(struct xfs_pptr)));
+>> static inline struct xfs_pptr_info *
+>> xfs_pptr_alloc(
+>> 	size_t			nr_ptrs)
+>> {
+>> 	struct xfs_pptr_info	*ppi;
+>>
+>> 	ppi = malloc(XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+>> 	if (!ppi)
+>> 		return NULL;
+>> 	memset(ppi, 0, XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+>> 	ppi->pi_ptrs_size = nr_ptrs;
+>> 	return ppi;
+>> }
+>>
+>> With the following example userspace program (that does no checking
+>> whatsoever):
+>>
+>> int main(int argc, char *argv[])
+>> {
+>> 	struct xfs_pptr_info	*ppi;
+>> 	struct xfs_pptr		*pp;
+>> 	int			fd;
+>>
+>> 	fd = open(argv[1], O_RDONLY);
+>> 	ppi = xfs_pptr_alloc(32);
+>>
+>> 	while (ioctl(fd, XFS_IOC_GETPPOINTER, ppi) == 0 && ppi->pi_ptrs_used) {
+>> 		for (i = 0; i < ppi->pi_ptrs_used; i++) {
+>> 			printf("%llu:%u -> %s\n",
+>> 					ppi->pi_ptrs[i].pp_ino,
+>> 					ppi->pi_ptrs[i].pp_gen,
+>> 					ppi->pi_ptrs[i].pp_name);
+>> 		}
+>> 	}
+>> }
 > 
-> That's exactly what I mean by a sequence. E.g., the effect on the agfl
-> over time. Clearly, the longer the sequence, the more robust the
-> results. I'm not sure where the idea that a few transactions would
-> provide anything useful comes from. This probably needs to be evaluated
-> over many cycles of fully depopulating and repopulating the space btrees
-> in different ways.
+> Seems like a reasonable model to me.
 > 
-> Brian
+>> I /also/ wonder if there's any interest in having a fallback for
+>> non-pptr filesystems that walks the dentry->d_parent links (like
+>> d_paths() does) back to the root.  Such a fallback will only work on an
+>> opened dir or a file opened by path (i.e. not a handle), however, which
+>> limits its appeal.
 > 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I wouldn't bother complicating anything by trying to support
+> filesytems that don't have parent pointer info. Just have
+> non-parent-ptr filesystems return EOPNOTSUPP for the ioctl and be
+> done with it...
+> 
+> Cheers,
+> 
+> Dave.
+> 
