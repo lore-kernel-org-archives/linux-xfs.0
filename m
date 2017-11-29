@@ -1,194 +1,386 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6618 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751354AbdK3S6i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 13:58:38 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 136775F7BB
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:38 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D8BE560DCB
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:37 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 6/7] xfs: refactor inode chunk alloc/free tx reservation
-Date: Thu, 30 Nov 2017 13:58:35 -0500
-Message-Id: <20171130185836.18481-7-bfoster@redhat.com>
-In-Reply-To: <20171130185836.18481-1-bfoster@redhat.com>
-References: <20171130185836.18481-1-bfoster@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42190 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751695AbdK2Swj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:52:39 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vATIqcLU031420
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:52:38 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vATIqceY013381
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:52:38 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vATIqbID032359
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:52:38 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+ <20171128203537.GZ21412@magnolia>
+Message-ID: <13a1961e-73c5-4e1b-0583-4faf637102b9@oracle.com>
+Date: Wed, 29 Nov 2017 11:52:36 -0700
+MIME-Version: 1.0
+In-Reply-To: <20171128203537.GZ21412@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-The reservation for the various forms of inode allocation is
-scattered across several different functions. This includes two
-variants of chunk allocation (v5 icreate transactions vs. older
-create transactions) and the inode free transaction.
+On 11/28/2017 01:35 PM, Darrick J. Wong wrote:
 
-To clean up some of this code and clarify the purpose of specific
-allocfree reservations, continue the pattern of defining helper
-functions for smaller operational units of broader transactions.
-Refactor the reservation into an inode chunk alloc/free helper that
-considers the various conditions based on filesystem format.
-
-An inode chunk free involves an extent free and buffer
-invalidations. The latter requires reservation for log headers only.
-An inode chunk allocation modifies the free space btrees and logs
-the chunk on v4 supers. v5 supers initialize the inode chunk using
-ordered buffers and so do not log the chunk.
-
-As a side effect of this refactoring, add one more allocfree res to
-the ifree transaction. Technically this does not serve a specific
-purpose because inode chunks are freed via deferred operations and
-thus occur after a transaction roll. tr_ifree has a bit of a history
-of tx overruns caused by too many agfl fixups during sustained file
-deletion workloads, so add this extra reservation as a form of
-padding nonetheless.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_trans_resv.c | 67 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 52 insertions(+), 15 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 19f3a226a357..432dd7d7afea 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -34,6 +34,9 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- 
-+#define _ALLOC	true
-+#define _FREE	false
-+
- /*
-  * A buffer has a format structure overhead in the log in addition
-  * to the data, so we need to take this into account when reserving
-@@ -172,6 +175,41 @@ xfs_calc_finobt_res(
- }
- 
- /*
-+ * Calculate the reservation required to allocate or free an inode chunk. This
-+ * includes:
-+ *
-+ * the allocation btrees: 2 trees * (max depth - 1) * block size
-+ * the inode chunk: m_ialloc_blks * N
-+ *
-+ * The size N of the inode chunk reservation depends on whether it is for
-+ * allocation or free and which type of create transaction is in use. An inode
-+ * chunk free always invalidates the buffers and only requires reservation for
-+ * headers (N == 0). An inode chunk allocation requires a chunk sized
-+ * reservation on v4 and older superblocks to initialize the chunk. No chunk
-+ * reservation is required for allocation on v5 supers, which use ordered
-+ * buffers to initialize.
-+ */
-+STATIC uint
-+xfs_calc_inode_chunk_res(
-+	struct xfs_mount	*mp,
-+	bool			alloc)
-+{
-+	uint			res, size = 0;
-+
-+	res = xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
-+			       XFS_FSB_TO_B(mp, 1));
-+	if (alloc) {
-+		/* icreate tx uses ordered buffers */
-+		if (xfs_sb_version_hascrc(&mp->m_sb))
-+			return res;
-+		size = XFS_FSB_TO_B(mp, 1);
-+	}
-+
-+	res += xfs_calc_buf_res(mp->m_ialloc_blks, size);
-+	return res;
-+}
-+
-+/*
-  * Various log reservation values.
-  *
-  * These are based on the size of the file system block because that is what
-@@ -379,8 +417,7 @@ xfs_calc_create_resv_modify(
-  * For create we can allocate some inodes giving:
-  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-  *    the superblock for the nlink flag: sector size
-- *    the inode blocks allocated: mp->m_ialloc_blks * blocksize
-- *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inode chunk (allocation/init)
-  *    the inode btree (record insertion)
-  */
- STATIC uint
-@@ -389,9 +426,7 @@ xfs_calc_create_resv_alloc(
- {
- 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		mp->m_sb.sb_sectsize +
--		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_inode_chunk_res(mp, _ALLOC) +
- 		xfs_calc_inobt_res(mp);
- }
- 
-@@ -408,7 +443,7 @@ __xfs_calc_create_reservation(
-  * For icreate we can allocate some inodes giving:
-  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-  *    the superblock for the nlink flag: sector size
-- *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inode chunk (allocation, no init)
-  *    the inobt (record insertion)
-  *    the finobt (record insertion)
-  */
-@@ -418,8 +453,7 @@ xfs_calc_icreate_resv_alloc(
- {
- 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		mp->m_sb.sb_sectsize +
--		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_inode_chunk_res(mp, _ALLOC) +
- 		xfs_calc_inobt_res(mp) +
- 		xfs_calc_finobt_res(mp);
- }
-@@ -485,15 +519,15 @@ xfs_calc_symlink_reservation(
-  *    the inode being freed: inode size
-  *    the super block free inode counter, AGF and AGFL: sector size
-  *    the on disk inode (agi unlinked list removal)
-- *    the inode chunk is marked stale (headers only)
-+ *    the inode chunk (invalidated, headers only)
-  *    the inode btree
-  *    the finobt (record insertion, removal or modification)
-  *
-- * Note that the allocfree res. for the inode chunk itself is not included
-- * because the extent free occurs after a transaction roll. We could take the
-- * maximum of the pre/post roll operations, but the pre-roll reservation already
-- * includes at least one allocfree res. for the inobt and is thus guaranteed to
-- * be larger.
-+ * Note that the inode chunk res. includes an allocfree res. for freeing of the
-+ * inode chunk. This is technically extraneous because the inode chunk free is
-+ * deferred (it occurs after a transaction roll). Include the extra reservation
-+ * anyways since we've had reports of ifree transaction overruns due to too many
-+ * agfl fixups during inode chunk frees.
-  */
- STATIC uint
- xfs_calc_ifree_reservation(
-@@ -503,7 +537,7 @@ xfs_calc_ifree_reservation(
- 		xfs_calc_inode_res(mp, 1) +
- 		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
- 		xfs_calc_iunlink_remove_reservation(mp) +
--		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
-+		xfs_calc_inode_chunk_res(mp, _FREE) +
- 		xfs_calc_inobt_res(mp) +
- 		xfs_calc_finobt_res(mp);
- }
-@@ -795,6 +829,9 @@ xfs_calc_sb_reservation(
- 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
- }
- 
-+#undef _ALLOC
-+#undef _FREE
-+
- void
- xfs_trans_resv_calc(
- 	struct xfs_mount	*mp,
--- 
-2.13.6
+> On Fri, Nov 17, 2017 at 11:21:45AM -0700, Allison Henderson wrote:
+>> This patch adds a new file ioctl to retrieve the parent
+>> pointer of a given inode
+>>
+>> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++++
+>>   fs/xfs/libxfs/xfs_fs.h   |  1 +
+>>   fs/xfs/xfs_attr.h        |  2 ++
+>>   fs/xfs/xfs_attr_list.c   |  3 +++
+>>   fs/xfs/xfs_ioctl.c       | 48 +++++++++++++++++++++++++++++++++-
+>>   5 files changed, 120 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 9d4d883..d2be842 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -134,6 +134,73 @@ xfs_attr_get_ilocked(
+>>   		return xfs_attr_node_get(args);
+>>   }
+>>   
+>> +/*
+>> + * Get the parent pointer for a given inode
+>> + * Caller will need to allocate a buffer pointed to by xpnir->p_name
+>> + * and store the buffer size in xpnir->p_namelen.  The parent
+>> + * pointer will be stored in the given xfs_parent_name_irec
+>> + *
+>> + * Returns 0 on success and non zero on error
+>> + */
+>> +int
+>> +xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
+>> +			    struct xfs_parent_name_irec *xpnir)
+> Please fix the parameter list here.
+>
+>> +{
+>> +	struct attrlist			*alist;
+>> +	struct attrlist_ent		*aent;
+>> +	struct attrlist_cursor_kern     cursor;
+>> +	struct xfs_parent_name_rec	*xpnr;
+>> +	char				*namebuf;
+>> +	int                             error = 0;
+>> +	unsigned int                    flags = ATTR_PARENT;
+>> +
+>> +	/* Allocate a buffer to store the attribute names */
+>> +	namebuf = kmem_zalloc_large(XFS_XATTR_LIST_MAX, KM_SLEEP);
+>> +	if (!namebuf)
+>> +		return -ENOMEM;
+>> +
+>> +	/* Get all attribute names that have the ATTR_PARENT flag */
+>> +	memset(&cursor, 0, sizeof(struct attrlist_cursor_kern));
+>> +	error = xfs_attr_list(ip, namebuf, XFS_XATTR_LIST_MAX, flags, &cursor);
+>> +	if (error)
+>> +		goto out_kfree;
+>> +
+>> +	alist = (struct attrlist *)namebuf;
+>> +
+>> +	/* There should never be more than one parent pointer */
+>> +	ASSERT(alist->al_count == 1);
+> As mentioned earlier, this is not true.  Files can have multiple parents.
+>
+>> +	aent = (struct attrlist_ent *) &namebuf[alist->al_offset[0]];
+>> +	xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
+>> +
+>> +	/*
+>> +	 * The value of the parent pointer attribute should be the file name
+>> +	 * So we check the value length of the attribute entry against the name
+>> +	 * length of the parent name record to make sure the caller gave enough
+>> +	 * buffer space to store the file name (plus a null terminator)
+>> +	 */
+>> +	if (aent->a_valuelen >= xpnir->p_namelen) {
+>> +		error = -ERANGE;
+>> +		goto out_kfree;
+>> +	}
+>> +
+>> +	xpnir->p_namelen = aent->a_valuelen + 1;
+>> +	memset((void *)(xpnir->p_name), 0, xpnir->p_namelen);
+>> +	error = xfs_attr_get(ip, (char *)xpnr,
+>> +			     sizeof(struct xfs_parent_name_rec),
+>> +			     (unsigned char *)(xpnir->p_name),
+>> +			     (int *)&(xpnir->p_namelen), flags);
+>> +	if (error)
+>> +		goto out_kfree;
+>> +
+>> +	xfs_init_parent_name_irec(xpnir, xpnr);
+>> +
+>> +out_kfree:
+>> +	kmem_free(namebuf);
+>> +
+>> +	return error;
+>> +}
+>> +
+>>   /* Retrieve an extended attribute by name, and its value. */
+>>   int
+>>   xfs_attr_get(
+>> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+>> index b8108f8..2f9ca2c 100644
+>> --- a/fs/xfs/libxfs/xfs_fs.h
+>> +++ b/fs/xfs/libxfs/xfs_fs.h
+>> @@ -512,6 +512,7 @@ typedef struct xfs_swapext
+>>   #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+>>   #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+>>   /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+>> +#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_name_irec)
+> I don't think it's a good idea to expose internal data structures
+> directly to userspace, because that inhibits our ability to change the
+> in-core data structure.
+Yes, this part I already have that separated in my local copy
+> Furthermore, hardlinked files can have multiple parent pointers, so it's
+> not going to suffice to return a single parent pointer entry.  Given
+> that there can be potentially 2^32 parents, we're going to need a data
+> structure for the ioctl to store (in an opaque manner) the attribute
+> iteration cursor and have space to pass back some number of parent
+> pointers.
+>
+> (Yes, it's time to start talking about actual use cases...)
+>
+> At a bare minimum, this is what I pictured for the "return parents of
+> the open file" ioctl:
+>
+> #define XFS_PPTR_MAXNAMELEN		255
+>
+> struct xfs_pptr {
+> 	u64				pp_ino;
+> 	u32				pp_gen;
+> 	u8				pp_namelen;
+> 	u8				pp_name[XFS_PPTR_MAXNAMELEN];
+> };
+>
+> /* return parents of the handle, instead of the open fd */
+> #define XFS_PPTR_FLAG_HANDLE		(1u << 0)
+>
+> struct xfs_pptr_info {
+> 	struct xfs_fsop_handlereq	pi_handle;
+> 	struct xfs_attrlist_cursor	pi_cursor;
+> 	u32				pi_flags;
+> 	u32				pi_reserved;
+> 	u32				pi_ptrs_size;
+> 	u32				pi_ptrs_used;
+> 	u64				pi_reserved2[6];
+> 	struct xfs_pptr			pi_ptrs[0];
+> };
+>
+> #define XFS_PPTR_INFO_SIZEOF(ptrs)	(sizeof(struct xfs_pptr_info) + \
+> 					((ptrs) * sizeof(struct xfs_pptr)));
+>
+> static inline struct xfs_pptr_info *
+> xfs_pptr_alloc(
+> 	size_t			nr_ptrs)
+> {
+> 	struct xfs_pptr_info	*ppi;
+>
+> 	ppi = malloc(XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+> 	if (!ppi)
+> 		return NULL;
+> 	memset(ppi, 0, XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+> 	ppi->pi_ptrs_size = nr_ptrs;
+> 	return ppi;
+> }
+>
+> With the following example userspace program (that does no checking
+> whatsoever):
+>
+> int main(int argc, char *argv[])
+> {
+> 	struct xfs_pptr_info	*ppi;
+> 	struct xfs_pptr		*pp;
+> 	int			fd;
+>
+> 	fd = open(argv[1], O_RDONLY);
+> 	ppi = xfs_pptr_alloc(32);
+>
+> 	while (ioctl(fd, XFS_IOC_GETPPOINTER, ppi) == 0 && ppi->pi_ptrs_used) {
+> 		for (i = 0; i < ppi->pi_ptrs_used; i++) {
+> 			printf("%llu:%u -> %s\n",
+> 					ppi->pi_ptrs[i].pp_ino,
+> 					ppi->pi_ptrs[i].pp_gen,
+> 					ppi->pi_ptrs[i].pp_name);
+> 		}
+> 	}
+> }
+>
+> Notice here how we the userspace structure contains an opaque attribute
+> list cursor, so we can keep coming back for more parent pointers until
+> we run out of xattrs (and pi_ptrs_used == 0).  The kernel will copy its
+> internal cursor out to the userspace buffer as an opaque cookie prior to
+> returning.
+>
+>  From this simple implementation it shouldn't be difficult to finish the
+> parents_by_handle/parentpaths_by_handle functions in libhandle, though
+> given that they've never been implemented in Linux and we no longer care
+> about Irix, you've some flexibility to change those library functions if
+> that is convenient for setting up xfstests.
+Wow, ok that makes a lot of sense. I will follow your model here and get 
+it fleshed out.  Thank you!
+> Speaking of xfstests... what are the initial test cases?  I figured at
+> least the following:
+>
+> 0) mkfs with protofile, make sure the parent records get created
+> 1) create file, check parent records
+> 2) hardlink file, check both parent records
+> 3) delete one link of a hardlinked file, check parent records
+> 4) hardlink a file a few thousand times, check that the iteration
+>     scheme laid out above actually works
+> 5) rename a file within a directory, check the parent records
+> 6) rename a file across directories, check the parent records
+> 7) some sort of testing where we run out of space while updating pptrs
+> 8) add some error injection knobs to make sure that pptr replay actually
+>     works correctly
+>
+> Can you think of other test cases?
+I think that is a good start.  This looks similar to what I've been 
+doing by hand to stabilize things as I go along.  I'll have to work on 
+developing an inject knob for the last one.
+> For xfs_scrub, we want to be able to query the parents of any (damaged)
+> inode we find in the filesystem.  If the inode is so damaged we can't
+> open it (or it's a special file) then scrub has to construct a file
+> handle and pass that in via pi_handle.
+Alrighty, I will take a look at those routines and see if I can put 
+together something that reconstructs the parent pointers with out 
+opening the inode
+> I /also/ wonder if there's any interest in having a fallback for
+> non-pptr filesystems that walks the dentry->d_parent links (like
+> d_paths() does) back to the root.  Such a fallback will only work on an
+> opened dir or a file opened by path (i.e. not a handle), however, which
+> limits its appeal.
+>
+> --D
+You mean a way to get the parent pointer even if they chose not to 
+enable the feature flag?  I think its something we could investigate, 
+but I think you're right in that the limitations might not make it quite 
+as valuable.  IMHO I think maybe getting the full version working first 
+might give people a chance to appreciate what it can do, and if it turns 
+out to be something that people end up using a lot, then it might 
+generate more demand for the "light" version. :-)
+>>   /*
+>>    * ioctl commands that replace IRIX syssgi()'s
+>> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+>> index 0829687..0ec3458 100644
+>> --- a/fs/xfs/xfs_attr.h
+>> +++ b/fs/xfs/xfs_attr.h
+>> @@ -172,6 +172,8 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+>>   		int flags);
+>>   int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+>>   		size_t namelen, unsigned char *value, int valuelen, int flags);
+>> +int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
+>> +				struct xfs_parent_name_irec *xpnir);
+>>   int xfs_attr_set_args(struct xfs_da_args *args, int flags, bool roll_trans);
+>>   int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+>>   		size_t namelen, int flags);
+>> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+>> index 7740c8a..78fc477 100644
+>> --- a/fs/xfs/xfs_attr_list.c
+>> +++ b/fs/xfs/xfs_attr_list.c
+>> @@ -534,6 +534,9 @@ xfs_attr_put_listent(
+>>   	if (((context->flags & ATTR_ROOT) == 0) !=
+>>   	    ((flags & XFS_ATTR_ROOT) == 0))
+>>   		return;
+>> +	if (((context->flags & ATTR_PARENT) == 0) !=
+>> +	    ((flags & XFS_ATTR_PARENT) == 0))
+>> +		return;
+>>   
+>>   	arraytop = sizeof(*alist) +
+>>   			context->count * sizeof(alist->al_offset[0]);
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 4664314..5492607 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -44,6 +44,7 @@
+>>   #include "xfs_btree.h"
+>>   #include <linux/fsmap.h>
+>>   #include "xfs_fsmap.h"
+>> +#include "xfs_attr.h"
+>>   
+>>   #include <linux/capability.h>
+>>   #include <linux/cred.h>
+>> @@ -1710,6 +1711,50 @@ xfs_ioc_getfsmap(
+>>   	return 0;
+>>   }
+>>   
+>> +/*
+>> + * IOCTL routine to get the parent pointer of an inode and return it to user
+>> + * space.  Caller must pass an struct xfs_parent_name_irec with a name buffer
+>> + * large enough to hold the file name.  Returns 0 on success or non-zero on
+>> + * failure
+>> + */
+>> +STATIC int
+>> +xfs_ioc_get_parent_pointer(
+>> +	struct file			*filp,
+>> +	void				__user *arg)
+>> +{
+>> +	struct inode			*inode = file_inode(filp);
+>> +	struct xfs_inode		*ip = XFS_I(inode);
+>> +	struct xfs_parent_name_irec	xpnir;
+>> +	char				*uname;
+>> +	char				*kname;
+>> +	int				error = 0;
+>> +
+>> +	copy_from_user(&xpnir, arg, sizeof(struct xfs_parent_name_irec));
+>> +	uname = (char *)xpnir.p_name;
+>> +
+>> +	/*
+>> +	 * Use kernel space memory to get the parent pointer name.
+>> +	 * We'll copy it to the user space name back when we're done
+>> +	 */
+>> +	kname = kmem_zalloc_large(xpnir.p_namelen, KM_SLEEP);
+> Please sanity-check the amount of memory we try to allocate.
+>
+>> +	if (!kname)
+>> +		return -ENOMEM;
+>> +
+>> +	xpnir.p_name = kname;
+>> +	error = xfs_attr_get_parent_pointer(ip, &xpnir);
+>> +
+>> +	if (error)
+>> +		goto out;
+>> +
+>> +	copy_to_user(uname, xpnir.p_name, xpnir.p_namelen);
+>> +	xpnir.p_name = uname;
+>> +	copy_to_user(arg, &xpnir, sizeof(struct xfs_parent_name_irec));
+>> +
+>> +out:
+>> +	kmem_free(kname);
+>> +	return error;
+>> +}
+>> +
+>>   int
+>>   xfs_ioc_swapext(
+>>   	xfs_swapext_t	*sxp)
+>> @@ -1866,7 +1911,8 @@ xfs_file_ioctl(
+>>   		return xfs_ioc_getxflags(ip, arg);
+>>   	case XFS_IOC_SETXFLAGS:
+>>   		return xfs_ioc_setxflags(ip, filp, arg);
+>> -
+>> +	case XFS_IOC_GETPPOINTER:
+>> +		return xfs_ioc_get_parent_pointer(filp, arg);
+>>   	case XFS_IOC_FSSETDM: {
+>>   		struct fsdmidata	dmi;
+>>   
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message tomajordomo@vger.kernel.org
+>> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=4f7DOEYDfWf_ZRdBfE0cU7L0QfDJjKolv1tc2HeLeck&s=6K6iOFwNgQv30L_9mpWjoAPsnvxojOglPp6hADhWRb8&e=
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message tomajordomo@vger.kernel.org
+> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=4f7DOEYDfWf_ZRdBfE0cU7L0QfDJjKolv1tc2HeLeck&s=6K6iOFwNgQv30L_9mpWjoAPsnvxojOglPp6hADhWRb8&e=
 
