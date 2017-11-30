@@ -1,124 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40113 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750902AbdK2Ssh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:48:37 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH v3 09/17] xfs: define parent pointer xattr format
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-10-git-send-email-allison.henderson@oracle.com>
- <20171128185907.GQ21412@magnolia>
-Message-ID: <cefe0510-eff2-4f25-278d-a4814800680d@oracle.com>
-Date: Wed, 29 Nov 2017 11:48:32 -0700
+Received: from mx2.suse.de ([195.135.220.15]:34978 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752373AbdK3RNO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Nov 2017 12:13:14 -0500
+Date: Thu, 30 Nov 2017 18:13:10 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
+Message-ID: <20171130171310.GG28180@quack2.suse.cz>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-4-mcgrof@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20171128185907.GQ21412@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171129232356.28296-4-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/28/2017 11:59 AM, Darrick J. Wong wrote:
+On Wed 29-11-17 15:23:48, Luis R. Rodriguez wrote:
+> The question of whether or not a superblock is frozen needs to be
+> augmented in the future to account for differences between a user
+> initiated freeze and a kernel initiated freeze done automatically
+> on behalf of the kernel.
+> 
+> Provide helpers so that these can be used instead so that we don't
+> have to expand checks later in these same call sites as we expand
+> the definition of a frozen superblock.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 
-> On Fri, Nov 17, 2017 at 11:21:37AM -0700, Allison Henderson wrote:
->> From: Dave Chinner<dchinner@redhat.com>
->>
->> We need to define the parent pointer attribute format before we
->> start adding support for it into all the code that needs to use it.
->> The EA format we will use encodes the following information:
->>
->> 	name={parent inode #, parent inode generation, dirent offset}
->> 	value={dirent filename}
->>
->> The inode/gen gives all the information we need to reliably identify
->> the parent without requiring child->parent lock ordering, and allows
->> userspace to do pathname component level reconstruction without the
->> kernel ever needing to verify the parent itself as part of ioctl
->> calls.
->>
->> By using the dirent offset in the EA name, we have a method of
->> knowing the exact parent pointer EA we need to modify/remove in
->> rename/unlink without an unbound EA name search.
->>
->> By keeping the dirent name in the value, we have enough information
->> to be able to validate and reconstruct damaged directory trees.
->> While the diroffset of a filename alone is not unique enough to
->> identify the child, the {diroffset,filename,child_inode} tuple is
->> sufficient. That is, if the diroffset gets reused and points to a
->> different filename, we can detect that from the contents of EA. If a
->> link of the same name is created, then we can check whether it
->> points at the same inode as the parent EA we current have.
->>
->> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
->>
->> Signed-off-by: Dave Chinner<dchinner@redhat.com>
->> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
-> Looks ok,
-> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
-Great!  Thx!
->> ---
->> v2: changed p_ino to xfs_ino_t and p_namelen to uint8_t
->>
->> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_format.h | 27 +++++++++++++++++++++++++++
->>   1 file changed, 27 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> index 23229f0..b9ea5bf 100644
->> --- a/fs/xfs/libxfs/xfs_format.h
->> +++ b/fs/xfs/libxfs/xfs_format.h
->> @@ -18,6 +18,8 @@
->>   #ifndef __XFS_FORMAT_H__
->>   #define __XFS_FORMAT_H__
->>   
->> +#include "xfs_da_format.h"
->> +
->>   /*
->>    * XFS On Disk Format Definitions
->>    *
->> @@ -1716,4 +1718,29 @@ struct xfs_acl {
->>   #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
->>   #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
->>   
->> +/*
->> + * Parent pointer attribute format definition
->> + *
->> + * EA name encodes the parent inode number, generation and the offset of
->> + * the dirent that points to the child inode. The EA value contains the
->> + * same name as the dirent in the parent directory.
->> + */
->> +struct xfs_parent_name_rec {
->> +	__be64	p_ino;
->> +	__be32	p_gen;
->> +	__be32	p_diroffset;
->> +};
->> +
->> +/*
->> + * incore version of the above, also contains name pointers so callers
->> + * can pass/obtain all the parent pointer information in a single structure
->> + */
->> +struct xfs_parent_name_irec {
->> +	xfs_ino_t		p_ino;
->> +	uint32_t		p_gen;
->> +	xfs_dir2_dataptr_t	p_diroffset;
->> +	const char		*p_name;
->> +	uint8_t			p_namelen;
->> +};
->> +
->>   #endif /* __XFS_FORMAT_H__ */
->> -- 
->> 2.7.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message tomajordomo@vger.kernel.org
->> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=xYa1QFkMf-mQloqcjnFtS8TgbN6yHRlagSEr85e-sHc&s=gZ018F2EivpOHk9ZyNrB0BzKsaeKTdLo1m3lLF21j6M&e=
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message tomajordomo@vger.kernel.org
-> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=xYa1QFkMf-mQloqcjnFtS8TgbN6yHRlagSEr85e-sHc&s=gZ018F2EivpOHk9ZyNrB0BzKsaeKTdLo1m3lLF21j6M&e=
+So helpers are fine but...
 
+> +/**
+> + * sb_is_frozen_by_user - is superblock frozen by a user call
+> + * @sb: the super to check
+> + *
+> + * Returns true if the super freeze was initiated by userspace, for instance,
+> + * an ioctl call.
+> + */
+> +static inline bool sb_is_frozen_by_user(struct super_block *sb)
+> +{
+> +	return sb->s_writers.frozen == SB_FREEZE_COMPLETE;
+> +}
+
+... I dislike the _by_user() suffix as there may be different places that
+call freeze_super() (e.g. device mapper does this during some operations).
+Clearly we need to distinguish "by system suspend" and "the other" cases.
+So please make this clear in the naming.
+
+In fact, what might be a cleaner solution is to introduce a 'freeze_count'
+for superblock freezing (we already do have this for block devices). Then
+you don't need to differentiate these two cases - but you'd still need to
+properly handle cleanup if freezing of all superblocks fails in the middle.
+So I'm not 100% this works out nicely in the end. But it's certainly worth
+a consideration.
+
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
