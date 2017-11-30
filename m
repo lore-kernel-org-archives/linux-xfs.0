@@ -1,32 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52792 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750747AbdK3VlA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 16:41:00 -0500
-Subject: Re: [PATCH 3/5] xfs_io: pull xfs errortag definitions from libxfs
-References: <151094860143.27182.12022983202520916281.stgit@magnolia>
- <151094861922.27182.7656317389319451444.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <520b50ee-c60d-1f86-f4c9-c17395e4e085@sandeen.net>
-Date: Thu, 30 Nov 2017 15:40:58 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:17154 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751023AbdK3WYH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 17:24:07 -0500
+Date: Thu, 30 Nov 2017 14:23:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_io: add buf_lru_ref tag to inject table
+Message-ID: <20171130222357.GN21412@magnolia>
+References: <79e391ff-fbb5-baf9-bb36-776d956ccecf@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <151094861922.27182.7656317389319451444.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <79e391ff-fbb5-baf9-bb36-776d956ccecf@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 11/17/17 1:56 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 30, 2017 at 04:12:32PM -0600, Eric Sandeen wrote:
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+/me wonders if we could make so that the compiler complains about
+missing table entries here, but that's orthogonal to this patch so:
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
 > 
-> Use the libxfs definitions, don't provide our own.
+> it might be nice to also allow specification by number, but
+> for now just fix this up to match the currently-defined tags.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Yay
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> diff --git a/io/inject.c b/io/inject.c
+> index 9d0cf62..2f15854 100644
+> --- a/io/inject.c
+> +++ b/io/inject.c
+> @@ -62,6 +62,7 @@ error_tag(char *name)
+>  		{ XFS_ERRTAG_DROP_WRITES,		"drop_writes" },
+>  		{ XFS_ERRTAG_LOG_BAD_CRC,		"log_bad_crc" },
+>  		{ XFS_ERRTAG_LOG_ITEM_PIN,		"log_item_pin" },
+> +		{ XFS_ERRTAG_BUF_LRU_REF,		"buf_lru_ref" },
+>  		{ XFS_ERRTAG_MAX,			NULL }
+>  	};
+>  	int	count;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
