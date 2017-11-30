@@ -1,102 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39445 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751709AbdK2Sr3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:47:29 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vATIlTmV025407
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:47:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vATIlSbE028064
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:47:29 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vATIlSTj029053
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:47:28 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH v3 11/17] Add the extra space requirements for parent
- pointer attributes when calculating the minimum log size during mkfs
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-12-git-send-email-allison.henderson@oracle.com>
- <20171128185152.GN21412@magnolia>
-Message-ID: <0dcd4f0c-bd35-58fa-a924-32c2a356942d@oracle.com>
-Date: Wed, 29 Nov 2017 11:47:27 -0700
+Received: from mx2.suse.de ([195.135.220.15]:33874 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752473AbdK3Q7v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Nov 2017 11:59:51 -0500
+Date: Thu, 30 Nov 2017 17:59:48 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 02/11] fs: provide unlocked helper thaw_super()
+Message-ID: <20171130165948.GF28180@quack2.suse.cz>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-3-mcgrof@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20171128185152.GN21412@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171129232356.28296-3-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/28/2017 11:51 AM, Darrick J. Wong wrote:
+On Wed 29-11-17 15:23:47, Luis R. Rodriguez wrote:
+> thaw_super() hold a write lock, however we wish to also enable
+> callers which already hold the write lock. To do this provide a helper
+> and make thaw_super() use it. This way, all that thaw_super() does
+> now is lock handling and active count management.
+> 
+> This change has no functional changes.
+> 
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 
-> On Fri, Nov 17, 2017 at 11:21:39AM -0700, Allison Henderson wrote:
->> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_log_rlimit.c | 34 ++++++++++++++++++++++++++++++++++
->>   1 file changed, 34 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
->> index c105979..beec9bf 100644
->> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
->> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
->> @@ -39,6 +39,40 @@ xfs_log_calc_max_attrsetm_res(
->>   {
->>   	int			size;
->>   	int			nblks;
->> +	struct xfs_trans_resv   *resp = M_RES(mp);
->> +
->> +	/* Calculate extra space needed for parent pointer attributes */
->> +	if (!xfs_sb_version_hasparent(&mp->m_sb)) {
-> if (xfs_sb_version_hasparent()) ?
->
-> --D
-yeah I think you're right.   This means there's something wrong with the 
-check then, because it appears to succeed.  I will debug that, it's 
-probably the command line flag i added to mkfs.xfs to exercise it.
->> +
->> +		/* rename can add/remove/modify 2 parent attributes */
->> +		resp->tr_rename.tr_logres +=
->> +			2 * max(resp->tr_attrsetm.tr_logres,
->> +				resp->tr_attrrm.tr_logres);
->> +		resp->tr_rename.tr_logcount +=
->> +			2 * max(resp->tr_attrsetm.tr_logcount,
->> +				resp->tr_attrrm.tr_logcount);
->> +
->> +		/* create will add 1 parent attribute */
->> +		resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
->> +		resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +		/* mkdir will add 1 parent attribute */
->> +		resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
->> +		resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +		/* link will add 1 parent attribute */
->> +		resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
->> +		resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +		/* symlink will add 1 parent attribute */
->> +		resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
->> +		resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +		/* remove will remove 1 parent attribute */
->> +		resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
->> +		resp->tr_remove.tr_logcount = resp->tr_attrrm.tr_logcount;
->> +	}
->> +
->>   
->>   	size = xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize) -
->>   	       MAXNAMELEN - 1;
->> -- 
->> 2.7.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message tomajordomo@vger.kernel.org
->> More majordomo info athttp://vger.kernel.org/majordomo-info.html
+Looks good to me. You can add:
 
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  fs/super.c | 39 ++++++++++++++++++++++++++-------------
+>  1 file changed, 26 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/super.c b/fs/super.c
+> index a7650ff22f0e..cecc279beecd 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -1493,21 +1493,13 @@ int freeze_super(struct super_block *sb)
+>  }
+>  EXPORT_SYMBOL(freeze_super);
+>  
+> -/**
+> - * thaw_super -- unlock filesystem
+> - * @sb: the super to thaw
+> - *
+> - * Unlocks the filesystem and marks it writeable again after freeze_super().
+> - */
+> -int thaw_super(struct super_block *sb)
+> +/* Caller takes lock and handles active count */
+> +static int thaw_locked_super(struct super_block *sb)
+>  {
+>  	int error;
+>  
+> -	down_write(&sb->s_umount);
+> -	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE) {
+> -		up_write(&sb->s_umount);
+> +	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE)
+>  		return -EINVAL;
+> -	}
+>  
+>  	if (sb_rdonly(sb)) {
+>  		sb->s_writers.frozen = SB_UNFROZEN;
+> @@ -1522,7 +1514,6 @@ int thaw_super(struct super_block *sb)
+>  			printk(KERN_ERR
+>  				"VFS:Filesystem thaw failed\n");
+>  			lockdep_sb_freeze_release(sb);
+> -			up_write(&sb->s_umount);
+>  			return error;
+>  		}
+>  	}
+> @@ -1531,7 +1522,29 @@ int thaw_super(struct super_block *sb)
+>  	sb_freeze_unlock(sb);
+>  out:
+>  	wake_up(&sb->s_writers.wait_unfrozen);
+> -	deactivate_locked_super(sb);
+>  	return 0;
+>  }
+> +
+> +/**
+> + * thaw_super -- unlock filesystem
+> + * @sb: the super to thaw
+> + *
+> + * Unlocks the filesystem and marks it writeable again after freeze_super().
+> + */
+> +int thaw_super(struct super_block *sb)
+> +{
+> +	int error;
+> +
+> +	down_write(&sb->s_umount);
+> +	error = thaw_locked_super(sb);
+> +	if (error) {
+> +		up_write(&sb->s_umount);
+> +		goto out;
+> +	}
+> +
+> +	deactivate_locked_super(sb);
+> +
+> +out:
+> +	return error;
+> +}
+>  EXPORT_SYMBOL(thaw_super);
+> -- 
+> 2.15.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
