@@ -1,94 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f174.google.com ([209.85.213.174]:35453 "EHLO
-        mail-yb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750921AbdK3Ubn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 15:31:43 -0500
-Received: by mail-yb0-f174.google.com with SMTP id b186so3208486yba.2
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 12:31:43 -0800 (PST)
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:44207 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750890AbdK3Ucy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 15:32:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <20171122182949.GH2135@magnolia>
-References: <20171122182949.GH2135@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 30 Nov 2017 22:31:42 +0200
-Message-ID: <CAOQ4uxjeWvm1HAhkpxusc8=PXqFaxK+AnZrR5zGScEkEx=tHPQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: log recovery should replay deferred ops in order
+In-Reply-To: <20171130162155.GB28180@quack2.suse.cz>
+References: <20171129232356.28296-1-mcgrof@kernel.org> <20171129232356.28296-8-mcgrof@kernel.org>
+ <20171130162155.GB28180@quack2.suse.cz>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 30 Nov 2017 21:32:53 +0100
+Message-ID: <CAJZ5v0hrEWOMi+C0Cw+ij_P7fwh=d7KVHAKWWTc=C2SSw=2nkA@mail.gmail.com>
+Subject: Re: [PATCH 07/11] xfs: remove not needed freezing calls
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Hou Tao <houtao1@huawei.com>, Christoph Hellwig <hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, bart.vanassche@wdc.com, ming.lei@redhat.com, Ted Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jikos@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, linux-fsdevel@vger.kernel.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>, Todd Brandt <todd.e.brandt@linux.intel.com>, nborisov@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Oliver Neukum <ONeukum@suse.com>, oleksandr@natalenko.name, Oleg Antonyan <oleg.b.antonyan@gmail.com>, Yu Chen <yu.chen.surf@gmail.com>, Dan Williams <dan.j.williams@intel.com>, Linux PM <linux-pm@vger.kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Wed, Nov 22, 2017 at 8:29 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 30, 2017 at 5:21 PM, Jan Kara <jack@suse.cz> wrote:
+> On Wed 29-11-17 15:23:52, Luis R. Rodriguez wrote:
+>> This removes superflous freezer calls as they are no longer needed
+>> as the VFS now performs filesystem freezing/thaw if the filesystem has
+>> support for it.
+>>
+>> The following Coccinelle rule was used as follows:
+>>
+>> spatch --sp-file fs-freeze-cleanup.cocci --in-place fs/$FS/
 >
-> As part of testing log recovery with dm_log_writes, Amir Goldstein
-> discovered an error in the deferred ops recovery that lead to corruption
-> of the filesystem metadata if a reflink+rmap filesystem happened to shut
-> down midway through a CoW remap:
->
-> "This is what happens [after failed log recovery]:
->
-> "Phase 1 - find and verify superblock...
-> "Phase 2 - using internal log
-> "        - zero log...
-> "        - scan filesystem freespace and inode maps...
-> "        - found root inode chunk
-> "Phase 3 - for each AG...
-> "        - scan (but don't clear) agi unlinked lists...
-> "        - process known inodes and perform inode discovery...
-> "        - agno = 0
-> "data fork in regular inode 134 claims CoW block 376
-> "correcting nextents for inode 134
-> "bad data fork in inode 134
-> "would have cleared inode 134"
->
-> Hou Tao dissected the log contents of exactly such a crash:
->
-> "According to the implementation of xfs_defer_finish(), these ops should
-> be completed in the following sequence:
->
-> "Have been done:
-> "(1) CUI: Oper (160)
-> "(2) BUI: Oper (161)
-> "(3) CUD: Oper (194), for CUI Oper (160)
-> "(4) RUI A: Oper (197), free rmap [0x155, 2, -9]
->
-> "Should be done:
-> "(5) BUD: for BUI Oper (161)
-> "(6) RUI B: add rmap [0x155, 2, 137]
-> "(7) RUD: for RUI A
-> "(8) RUD: for RUI B
->
-> "Actually be done by xlog_recover_process_intents()
-> "(5) BUD: for BUI Oper (161)
-> "(6) RUI B: add rmap [0x155, 2, 137]
-> "(7) RUD: for RUI B
-> "(8) RUD: for RUI A
->
-> "So the rmap entry [0x155, 2, -9] for COW should be freed firstly,
-> then a new rmap entry [0x155, 2, 137] will be added. However, as we can see
-> from the log record in post_mount.log (generated after umount) and the trace
-> print, the new rmap entry [0x155, 2, 137] are added firstly, then the rmap
-> entry [0x155, 2, -9] are freed."
->
-> When reconstructing the internal log state from the log items found on
-> disk, it's required that deferred ops replay in exactly the same order
-> that they would have had the filesystem not gone down.  However,
-> replaying unfinished deferred ops can create /more/ deferred ops.  These
-> new deferred ops are finished in the wrong order.  This causes fs
-> corruption and replay crashes, so let's create a single defer_ops to
-> handle the subsequent ops created during replay, then use one single
-> transaction at the end of log recovery to ensure that everything is
-> replayed in the same order as they're supposed to be.
->
-> Reported-by: Amir Goldstein <amir73il@gmail.com>
-> Analyzed-by: Hou Tao <houtao1@huawei.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> I think your rule misses WQ_FREEZABLE flag for workqueues? That would be
+> also good to get rid of...
 
-Since it fixes the problem I reported and I couldn't link this patch
-with other crashes
-I found, you can add:
-Tested-by: Amir Goldstein <amir73il@gmail.com>
+We need that one (or equivalent) for the runtime PM workqueue at least.
+
+Thanks,
+Rafael
