@@ -1,72 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:36064 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750788AbdKSIug (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Nov 2017 03:50:36 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:37724 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751456AbdK3NrD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Nov 2017 08:47:03 -0500
+Date: Thu, 30 Nov 2017 08:47:03 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: ubsan fixes
+Message-ID: <20171130134702.GA3516@bfoster.bfoster>
+References: <151189079681.14861.10709810493861130558.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAFGhKbzyyKgQ-PyoU-3N_6q5YjvoVMrm9qqtnBS6Vq-EGR2ifA@mail.gmail.com>
-References: <20171116183306.103584007@linutronix.de> <20171116184358.475929943@linutronix.de>
- <CAFGhKbxbW87yowc7trkiczjXV=37SqswwmOriTdSoxCXzFk-0A@mail.gmail.com>
- <CA+55aFz06uWZwjdgod4wd=dCY3wbU+4SdbhgNwsNzMFqUn2SiA@mail.gmail.com> <CAFGhKbzyyKgQ-PyoU-3N_6q5YjvoVMrm9qqtnBS6Vq-EGR2ifA@mail.gmail.com>
-From: Charlemagne Lasse <charlemagnelasse@gmail.com>
-Date: Sun, 19 Nov 2017 09:50:35 +0100
-Message-ID: <CAFGhKbwRLzbLiJNQ_=iO1k_+WTbu2kZTR6Tff8LuZyazw0R4iA@mail.gmail.com>
-Subject: Re: [patch V2 02/11] LICENSES: Add the GPL 2.0 license
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151189079681.14861.10709810493861130558.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-2017-11-18 21:41 GMT+01:00 Charlemagne Lasse <charlemagnelasse@gmail.com>:
-> 2017-11-18 20:14 GMT+01:00 Linus Torvalds <torvalds@linux-foundation.org>:
->> You may be confusing things because of a newer version.
->>
-> <cut>
->> I refuse to change the original copyright wording due to idiotic
->> internal FSF politics that tried to change history.
->
+On Tue, Nov 28, 2017 at 09:39:56AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fix some complaints from the UBSAN about signed integer addition overflows.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-<cut>
-> And do you even know the best part: it is also not the version from your
-> COPYING file.
+Seems Ok:
 
-Let us check the non-whitespace differences (the whitespaces are
-completely different in this patch) between the Linux COPYING file
-and this patch:
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-<cut>
-> +Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-> +51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-
-This should have been "St." and not "Street"
-
-<cut>
-> +TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
-
-"GNU GENERAL PUBLIC LICENSE" missing before
-"TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION"
-
-<cut>
-> +    One line to give the program's name and a brief idea of what it does.
-
-This should have been
-
-<one line to give the program's name and a brief idea of what it does.>
-
-<cut>
-> +    You should have received a copy of the GNU General Public License along
-> +    with this program; if not, write to the Free Software Foundation, Inc.,
-> +    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-This should have been:
-
-51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-<cut>
-> +    signature of Ty Coon, 1 April 1989
-
-This should have been
-
-  <signature of Ty Coon>, 1 April 1989
+>  fs/xfs/xfs_aops.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index a3eeaba..b0cccf8 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -399,7 +399,7 @@ xfs_map_blocks(
+>  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+>  	ASSERT(offset <= mp->m_super->s_maxbytes);
+>  
+> -	if (offset + count > mp->m_super->s_maxbytes)
+> +	if ((xfs_ufsize_t)offset + count > mp->m_super->s_maxbytes)
+>  		count = mp->m_super->s_maxbytes - offset;
+>  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> @@ -1265,7 +1265,7 @@ xfs_map_trim_size(
+>  	if (mapping_size > size)
+>  		mapping_size = size;
+>  	if (offset < i_size_read(inode) &&
+> -	    offset + mapping_size >= i_size_read(inode)) {
+> +	    (xfs_ufsize_t)offset + mapping_size >= i_size_read(inode)) {
+>  		/* limit mapping to block that spans EOF */
+>  		mapping_size = roundup_64(i_size_read(inode) - offset,
+>  					  i_blocksize(inode));
+> @@ -1312,7 +1312,7 @@ xfs_get_blocks(
+>  	lockmode = xfs_ilock_data_map_shared(ip);
+>  
+>  	ASSERT(offset <= mp->m_super->s_maxbytes);
+> -	if (offset + size > mp->m_super->s_maxbytes)
+> +	if ((xfs_ufsize_t)offset + size > mp->m_super->s_maxbytes)
+>  		size = mp->m_super->s_maxbytes - offset;
+>  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
