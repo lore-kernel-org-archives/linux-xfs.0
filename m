@@ -1,56 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:25091 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750801AbdK3Ux5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 15:53:57 -0500
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Date: Thu, 30 Nov 2017 20:53:52 +0000
-Message-ID: <1512075231.2774.17.camel@wdc.com>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
-         <1512061271.2774.10.camel@wdc.com> <20171130194249.GK729@wotan.suse.de>
-In-Reply-To: <20171130194249.GK729@wotan.suse.de>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <8F388E6E5968B94FAA774C73F77B55F3@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Received: from userp1040.oracle.com ([156.151.31.81]:20658 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750768AbdK3VLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 16:11:40 -0500
+Date: Thu, 30 Nov 2017 13:11:34 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 17/17] Add parent pointer ioctl
+Message-ID: <20171130211134.GK21412@magnolia>
+References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
+ <1510942905-12897-18-git-send-email-allison.henderson@oracle.com>
+ <20171128203537.GZ21412@magnolia>
+ <20171129213746.GK5858@dastard>
+ <3865fc6e-b496-0581-b9d4-7427fa69c825@oracle.com>
+ <20171130000251.GL5858@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171130000251.GL5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "bmarzins@redhat.com" <bmarzins@redhat.com>, "mcgrof@kernel.org" <mcgrof@kernel.org>
-Cc: "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "jgross@suse.com" <jgross@suse.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "yu.chen.surf@gmail.com" <yu.chen.surf@gmail.com>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.cz" <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
 
-T24gVGh1LCAyMDE3LTExLTMwIGF0IDIwOjQyICswMTAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
-ZToNCj4gT24gVGh1LCBOb3YgMzAsIDIwMTcgYXQgMDU6MDE6MTNQTSArMDAwMCwgQmFydCBWYW4g
-QXNzY2hlIHdyb3RlOg0KPiA+IFRoZSBtZCByZXN5bmMNCj4gPiB0aHJlYWQgbXVzdCBiZSBzdG9w
-cGVkIGJlZm9yZSBhIHN5c3RlbSBpcyBmcm96ZW4uIFRvZGF5IHRoZSBtZCBkcml2ZXIgdXNlcw0K
-PiA+IHRoZSBrdGhyZWFkIGZyZWV6aW5nIG1lY2hhbmlzbSBmb3IgdGhhdCBwdXJwb3NlLiBEbyB5
-b3UgaGF2ZSBhIHBsYW4gZm9yDQo+ID4gaGFuZGxpbmcgdGhlIG1vcmUgY29tcGxpY2F0ZWQgc2Nl
-bmFyaW9zLCBlLmcuIGEgZmlsZXN5c3RlbSB0aGF0IGV4aXN0cyBvbiB0b3ANCj4gPiBvZiBhbiBt
-ZCBkZXZpY2Ugd2hlcmUgdGhlIG1kIGRldmljZSB1c2VzIG9uZSBvciBtb3JlIGZpbGVzIGFzIGJh
-Y2tpbmcgc3RvcmUNCj4gPiBhbmQgd2l0aCB0aGUgbG9vcCBkcml2ZXIgYmV0d2VlbiB0aGUgbWQg
-ZGV2aWNlIGFuZCB0aGUgZmlsZXM/DQo+IA0KPiBOb3BlIG5vdCB5ZXQuIEl0IHNlZW1zIHlvdSBo
-YXZlIGdpdmVuIHRoaXMgc29tZSB0aG91Z2h0IHRob3VnaCBzbyB5b3UncmUgDQo+IGhlbHAgaGVy
-ZSBpcyBncmVhdGx5IGFwcHJlY2lhdGVkLiBJbiBmYWN0IHRoZSB3YXkgd2Ugc2hvdWxkIHNlZSB0
-aGUgbG9uZw0KPiB0ZXJtICdraWxsIGt0aHJlYWQgZnJlZXppbmcnIGVmZm9ydCBzaG91bGQgYmUg
-YSBjb2xsYWJvcmF0aXZlIG9uZS4gSSd2ZQ0KPiBuZXZlciB0b3VjaGVkIG1kLCBzbyBmb2xrcyBt
-b3JlIGZhbWlsaWFyIHdpdGggbWQgc2hvdWxkIGdpdmUgdGhpcyBzb21lDQo+IHRob3VnaHQuDQo+
-IA0KPiBDYW4gZm9yIGluc3RhbmNlIG1kIHJlZ2lzdGVyX3BtX25vdGlmaWVyKCkgYW5kIHJlZ2lz
-dGVyX3N5c2NvcmVfb3BzKCkNCj4gYW5kIGRvIGhhbmR5IHdvcmsgdG8gcGF1c2Ugc29tZSB3b3Jr
-IHRvIHJlcGxhY2Uga3RocmVhZCBmcmVlemluZz8NCj4gTm90ZSB0aGF0IEkgYmVsaWV2ZSBhIHBt
-IG5vdGlmaWVyIGlzIG5lZWRlZCBpbiBjYXNlIHN5c2NvcmVfc3VzcGVuZCgpDQo+IGlzIG5vdCBj
-YWxsZWQsIHNheSBvbiBhIHN1c3BlbmQgZmFpbC4NCg0KU29ycnkgYnV0IEkgZG9uJ3QgdGhpbmsg
-dGhhdCBhIHNvbHV0aW9uIGNhbiBiZSBiYXNlZCBvbiBhIG5vdGlmaWVyIG1lY2hhbmlzbS4NCkZy
-ZWV6aW5nIGhhcyB0byBoYXBwZW4gaW4gdGhlIG9yZGVyIGluIHdoaWNoIGRyaXZlcnMgYW5kIGZp
-bGVzeXN0ZW1zIGhhdmUNCmJlZW4gc3RhY2tlZCAoZmlsZXN5c3RlbSA+IG1kIGRldmljZSA+IGZp
-bGVzeXN0ZW0gZm9yIHRoZSBhYm92ZSBleGFtcGxlKS4NClNpbmNlIHRoZSBvcmRlciBpbiB3aGlj
-aCBub3RpZmllcnMgYXJlIGNhbGxlZCBpcyByZWxhdGVkIHRvIHRoZSBvcmRlciBpbg0Kd2hpY2gg
-bm90aWZpZXJzIGhhdmUgYmVlbiByZWdpc3RlcmVkIEkgZG9uJ3QgdGhpbmsgdGhhdCBhIHNvbHV0
-aW9uIGZvciB0aGUNCmV4YW1wbGUgSSBkZXNjcmliZWQgY2FuIGJlIGJhc2VkIG9uIG5vdGlmaWVy
-cy4gV2hhdCBJIHRoaW5rIHdlIG5lZWQgaXMgYQ0KbWVjaGFuaXNtIGZvciB0cmF2ZXJzaW5nIHRo
-ZSBzdG9yYWdlIHN0YWNrIHRoYXQgaW5jbHVkZXMgYmxvY2sgZHJpdmVycyBhbmQNCmFuIGVxdWl2
-YWxlbnQgb2YgZnJlZXplX2ZzKCkgZm9yIGJsb2NrIGRyaXZlcnMuIEZyZWV6aW5nIHNob3VsZCBv
-Y2N1ciBieQ0KY2FsbGluZyB0aGUgZnJlZXplX2ZzKCkgbWV0aG9kcyBmb3IgZWFjaCBzdG9yYWdl
-IGxheWVyIHN0YXJ0aW5nIGF0IHRoZSB0b3Agb2YNCnRoZSBzdG9yYWdlIHN0YWNrIGFuZCBwcm9j
-ZWVkaW5nIHRvd2FyZHMgdGhlIGJvdHRvbS4NCg0KQmFydC4=
+On Thu, Nov 30, 2017 at 11:02:51AM +1100, Dave Chinner wrote:
+> On Wed, Nov 29, 2017 at 03:48:50PM -0700, Allison Henderson wrote:
+> > 
+> > 
+> > On 11/29/2017 02:37 PM, Dave Chinner wrote:
+> > >On Tue, Nov 28, 2017 at 12:35:37PM -0800, Darrick J. Wong wrote:
+> > >>On Fri, Nov 17, 2017 at 11:21:45AM -0700, Allison Henderson wrote:
+> > >>>This patch adds a new file ioctl to retrieve the parent
+> > >>>pointer of a given inode
+> > >>
+> > >>(Yes, it's time to start talking about actual use cases...)
+> > >>
+> > >>At a bare minimum, this is what I pictured for the "return parents of
+> > >>the open file" ioctl:
+> > >>
+> > >>#define XFS_PPTR_MAXNAMELEN		255
+> > >>
+> > >>struct xfs_pptr {
+> > >>	u64				pp_ino;
+> > >>	u32				pp_gen;
+> > >>	u8				pp_namelen;
+> > >>	u8				pp_name[XFS_PPTR_MAXNAMELEN];
+> > >>};
+> > >
+> > >That's going to be a different size on 32bit and 64 bit platforms
+> > >as the structure size is a multiple of 4 bytes, not 8 bytes.
+> > >That will cause problems and need complex comapt ioctl translation.
+> > >Better to make pp_namelen a u32 and that will make the structure
+> > >64 bit aligned and sized on all platforms.
+> > >
+> > >I'd allow more than u8 for the namelen. Yes, while we currently
+> > >allow on 255 bytes for a name, it would make more sense to
+> > >use a u32 here so that the structure size is a multiple of it's
+> > >alignment rather than having a 4 byte hole in the array we don't
+> > >fill out....
+
+Maybe this ought to get padded up to the nearest 8-byte boundary too.
+
+> > >
+> > >>
+> > >>/* return parents of the handle, instead of the open fd */
+> > >>#define XFS_PPTR_FLAG_HANDLE		(1u << 0)
+> > >>
+> > >>struct xfs_pptr_info {
+> > >>	struct xfs_fsop_handlereq	pi_handle;
+> > >>	struct xfs_attrlist_cursor	pi_cursor;
+> > >>	u32				pi_flags;
+> > >>	u32				pi_reserved;
+> > >>	u32				pi_ptrs_size;
+> > >>	u32				pi_ptrs_used;
+> > >>	u64				pi_reserved2[6];
+> > >>	struct xfs_pptr			pi_ptrs[0];
+> > >>};
+> > >
+> > >I thought gcc had started doing weird things with variable size
+> > >array declarations like this (i.e. pi_ptrs[0]) because the exact
+> > >behaviour is not defined in the C standard. i.e. we need to avoid
+> > >adding new declarations that do this...
+> > 
+> > Oh, I think there's a few places in the set where I have
+> > declarations like that.
+> 
+> Yup, there are quite a few, but IIRC we can't rely on them working
+> as they do right now in future compilers. So I'm pretty sure we need
+> to avoid these sorts of constructs if we can. Doing something like
+> this:
+
+If gcc starts bungling them, there's going to be a lot of stuff in
+include/uapi/ that breaks.  FIEMAP, FSMAP, the weird vfs dedupe ioctl...
+
+I think it'll be fine so long as we keep an eye on the structure size
+in xfs_ondisk.h.  If the structure size mutates we'll know because the
+ioctl will stop working with old userspace and/or we fail the build.
+
+Oh but we don't keep an eye on that stuff.  Sigh.
+
+> struct xfs_pptr_info {
+> 	struct xfs_fsop_handlereq	pi_handle;
+> 	struct xfs_attrlist_cursor	pi_cursor;
+> 	u32				pi_flags;
+> 	u32				pi_reserved;
+> 	u32				pi_ptrs_size;
+> 	u32				pi_ptrs_used;
+> 	u64				pi_reserved2[6];
+> 
+> 	/*
+> 	 * An array of struct xfs_pptr follows the header
+> 	 * information. Use XFS_PPINFO_TO_PP() to access the
+> 	 * parent pointer array entries.
+> 	 */
+> };
+> 
+> And providing an accessor function:
+> 
+> #define XFS_PPINFO_TO_PP(info, idx)	\
+> 	(&(((struct xfs_pptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
+
+Eww, macros. :)
+
+static inline struct xfs_pptr *
+xfs_ppinfo_to_pp(
+	struct xfs_pptr_info	*info,
+	unsigned int		idx)
+{
+	return (struct xfs_pptr *)((char *)(info + 1)) + (idx * sizeof(struct xfs_pptr));
+}
+
+> Will solve the problem.
+> 
+> > Should they be some_array[1]; instead?
+> 
+> That has problems, too. See, for example, commit ffeecc521302 ("xfs:
+> Fix xfs_attr_leafblock definition"), where gcc completely mangled
+> the code because it thought it could optimise away bits of the
+> structure and code that "weren't used".
+
+Especially no on the some_array[1], that bit us with the v5 AGFL...
+
+> > >>#define XFS_PPTR_INFO_SIZEOF(ptrs)	(sizeof(struct xfs_pptr_info) + \
+> > >>					((ptrs) * sizeof(struct xfs_pptr)));
+> > >>static inline struct xfs_pptr_info *
+> > >>xfs_pptr_alloc(
+> > >>	size_t			nr_ptrs)
+> > >>{
+> > >>	struct xfs_pptr_info	*ppi;
+> > >>
+> > >>	ppi = malloc(XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+> > >>	if (!ppi)
+> > >>		return NULL;
+> > >>	memset(ppi, 0, XFS_PPTR_INFO_SIZEOF(nr_ptrs));
+> > >>	ppi->pi_ptrs_size = nr_ptrs;
+> > >>	return ppi;
+> > >>}
+> > >>
+> > >>With the following example userspace program (that does no checking
+> > >>whatsoever):
+> > >>
+> > >>int main(int argc, char *argv[])
+> > >>{
+> > >>	struct xfs_pptr_info	*ppi;
+> > >>	struct xfs_pptr		*pp;
+> > >>	int			fd;
+> > >>
+> > >>	fd = open(argv[1], O_RDONLY);
+> > >>	ppi = xfs_pptr_alloc(32);
+> > >>
+> > >>	while (ioctl(fd, XFS_IOC_GETPPOINTER, ppi) == 0 && ppi->pi_ptrs_used) {
+> > >>		for (i = 0; i < ppi->pi_ptrs_used; i++) {
+> > >>			printf("%llu:%u -> %s\n",
+> > >>					ppi->pi_ptrs[i].pp_ino,
+> > >>					ppi->pi_ptrs[i].pp_gen,
+> > >>					ppi->pi_ptrs[i].pp_name);
+> 
+> And this becomes:
+> 
+> 		for (i = 0; i < ppi->pi_ptrs_used; i++) {
+> 			pp = XFS_PPINFO_TO_PP(ppi, i);
+> 			printf("%llu:%u -> %s\n", pp->pp_ino, pp->pp_gen,
+> 						  pp->pp_name);
+> 		}
+
+Funnily enough I've added more bits to this, maybe I should just send a
+real RFC patch to the list.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
