@@ -1,106 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53828 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:47906 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752787AbdK2XYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Nov 2017 18:24:01 -0500
+        id S1753002AbdK3AXE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Nov 2017 19:23:04 -0500
+Date: Thu, 30 Nov 2017 01:22:59 +0100
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Date: Wed, 29 Nov 2017 15:23:45 -0800
-Message-Id: <20171129232356.28296-1-mcgrof@kernel.org>
+Subject: Re: [PATCH 05/11] fs: add iterate_supers_excl() and
+ iterate_supers_reverse_excl()
+Message-ID: <20171130002259.GY729@wotan.suse.de>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-6-mcgrof@kernel.org>
+ <CAJZ5v0gO49=pXGEdi42Hka=Rf=SqVWp-QSJf9_+bGuOgsHMFig@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJZ5v0gO49=pXGEdi42Hka=Rf=SqVWp-QSJf9_+bGuOgsHMFig@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org
-Cc: boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, bart.vanassche@wdc.com, ming.lei@redhat.com, Ted Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jikos@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, linux-fsdevel@vger.kernel.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>, Todd Brandt <todd.e.brandt@linux.intel.com>, nborisov@suse.com, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Oliver Neukum <ONeukum@suse.com>, oleksandr@natalenko.name, Oleg Antonyan <oleg.b.antonyan@gmail.com>, Yu Chen <yu.chen.surf@gmail.com>, Dan Williams <dan.j.williams@intel.com>, Linux PM <linux-pm@vger.kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-This is a followup from the original RFC which proposed to start
-to kill kthread freezing all together [0]. Instead of going straight
-out to the jugular for kthread freezing this series only addresses
-killing freezer calls on filesystems which implement freeze_fs, after
-we let the kernel freeze these filesystems for us on suspend.
+On Thu, Nov 30, 2017 at 12:48:15AM +0100, Rafael J. Wysocki wrote:
+> On Thu, Nov 30, 2017 at 12:23 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> > +int iterate_supers_excl(int (*f)(struct super_block *, void *), void *arg)
+> > +{
+> > +       struct super_block *sb, *p = NULL;
+> > +       int error = 0;
+> > +
+> > +       spin_lock(&sb_lock);
+> > +       list_for_each_entry(sb, &super_blocks, s_list) {
+> > +               if (hlist_unhashed(&sb->s_instances))
+> > +                       continue;
+> > +               sb->s_count++;
+> > +               spin_unlock(&sb_lock);
+> 
+> Can anything bad happen if the list is modified at this point by a
+> concurrent thread?
 
-This approach puts on a slow but steady path towards the original goal
-though. Each subsystem could look for similar solutions. Even with
-filesystems we're not all done yet, after this we'll still have to
-decide what to do about filesystems which do not implement freeze_fs().
+The race is theoretical and applies to all users of iterate_supers() as well.
 
-Motivation and problem:
+Its certainly worth considering, however given other code is implicated its
+not a *new* issue or race. Its the best we can do with the current design.
 
-kthreads have some semantics for freezing, which helps the kernel
-freeze them when a system is going to suspend or hibernation. These
-semantics are not well defined though, and it actually turns out
-pretty hard to get it right.
+That said, as I looked at all this code I considered that perhaps super_blocks
+deserves its own RCU lock to enable us to do full swap operations on the list,
+without having to do these nasty releases in between.
 
-Without a proper solution suspend and hibernation are fragile on filesystems,
-it can easily break suspend and fixing such issues are in no way trivial [1]
-[2].
+If that's possible / desirable I'd consider it a welcomed future optimization,
+and I could give it a shot, however its unclear if this is a requirement for
+this feature at this time.
 
-Proposed solution:
-
-Instead of fixing such semantics and trying to get all filesystems to do it
-right, we can easily do away with all freezing calls if the filesystem
-implements a proper freeze_fs() callback. The following 9 filesystems have
-freeze_fs() implemented as such we can let the kernel issue the callback upon
-suspend and thaw on resume automatically on our behalf.
-
-  o xfs
-  o reiserfs
-  o nilfs2
-  o jfs
-  o f2fs
-  o ext4
-  o ext2
-  o btrfs
-
-Of these, the following have freezer helpers, which can then be removed
-after the kernel automaticaly calls freeze_fs for us on suspend:
-
-  o xfs
-  o nilfs2
-  o jfs
-  o f2fs
-  o ext4
-
-I've tested this on a system with ext4 and XFS, and have let 0-day go at
-without issues. I have branches availabe for linux-next [3] and Linus'
-latest tree [4].
-
-Further testing, thoughts, reviews, flames are all equally appreciated.
-
-[0] https://lkml.kernel.org/r/20171003185313.1017-1-mcgrof@kernel.org
-[1] https://bugzilla.suse.com/show_bug.cgi?id=1043449
-[2] https://lkml.kernel.org/r/20171113103139.GA18936@yu-chen.sh.intel.com
-[3] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20171129-fs-freeze-cleanup
-[4] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20171129-fs-freeze-cleanup
-
-Luis R. Rodriguez (11):
-  fs: provide unlocked helper for freeze_super()
-  fs: provide unlocked helper thaw_super()
-  fs: add frozen sb state helpers
-  fs: distinguish between user initiated freeze and kernel initiated
-    freeze
-  fs: add iterate_supers_excl() and iterate_supers_reverse_excl()
-  fs: freeze on suspend and thaw on resume
-  xfs: remove not needed freezing calls
-  ext4: remove not needed freezing calls
-  f2fs: remove not needed freezing calls
-  nilfs2: remove not needed freezing calls
-  jfs: remove not needed freezing calls
-
- fs/ext4/ext4_jbd2.c    |   2 +-
- fs/ext4/super.c        |   2 -
- fs/f2fs/gc.c           |   5 +-
- fs/f2fs/segment.c      |   6 +-
- fs/jfs/jfs_logmgr.c    |  11 +-
- fs/jfs/jfs_txnmgr.c    |  31 ++---
- fs/nilfs2/segment.c    |  48 ++++----
- fs/super.c             | 320 ++++++++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_trans.c     |   2 +-
- fs/xfs/xfs_trans_ail.c |   7 +-
- include/linux/fs.h     |  63 +++++++++-
- kernel/power/process.c |  15 ++-
- 12 files changed, 378 insertions(+), 134 deletions(-)
-
--- 
-2.15.0
-
+  Luis
