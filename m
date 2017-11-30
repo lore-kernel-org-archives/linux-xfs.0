@@ -1,146 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52558 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:43128 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751748AbdK3Vh4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 16:37:56 -0500
-Subject: Re: [PATCH 1/5] xfs_db: print structure padding fields consistently
-References: <151094860143.27182.12022983202520916281.stgit@magnolia>
- <151094860737.27182.5422098949147661107.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5fc6a92d-b7f7-2dae-862c-d266cc46df99@sandeen.net>
-Date: Thu, 30 Nov 2017 15:37:54 -0600
+        id S1750932AbdK3TFw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Nov 2017 14:05:52 -0500
+Date: Thu, 30 Nov 2017 20:05:48 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
+Message-ID: <20171130190548.GJ729@wotan.suse.de>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-4-mcgrof@kernel.org>
+ <20171130171310.GG28180@quack2.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <151094860737.27182.5422098949147661107.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171130171310.GG28180@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/17/17 1:56 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> We are very inconsistent about how we print padding fields in on-disk
-> structures -- sometimes we hide it from printall, sometimes we deviate
-> from unsigned hex values, etc.  Make this all consistent -- never hide
-> padding values, always print them as unsigned hex integers.
+On Thu, Nov 30, 2017 at 06:13:10PM +0100, Jan Kara wrote:
+> ... I dislike the _by_user() suffix as there may be different places that
+> call freeze_super() (e.g. device mapper does this during some operations).
+> Clearly we need to distinguish "by system suspend" and "the other" cases.
+> So please make this clear in the naming.
 
-I'm not sure I see the point to cluttering up structure printing
-with padding, and would prefer to hide them /all/ by default (and
-set them all to hex printing when explicitly asked for).
+Ah. How about sb_frozen_by_cb() ?
 
-Consistency is good but I'm not sure we need to consistently print
-values that are never even used...?
+> In fact, what might be a cleaner solution is to introduce a 'freeze_count'
+> for superblock freezing (we already do have this for block devices). Then
+> you don't need to differentiate these two cases - but you'd still need to
+> properly handle cleanup if freezing of all superblocks fails in the middle.
+> So I'm not 100% this works out nicely in the end. But it's certainly worth
+> a consideration.
 
--Eric
+Ah, there are three important reasons for doing it the way I did it which are
+easy to miss, unless you read the commit log message very carefully.
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  db/attr.c  |   10 +++++-----
->  db/dir2.c  |    4 ++--
->  db/dquot.c |    4 ++--
->  3 files changed, 9 insertions(+), 9 deletions(-)
-> 
-> 
-> diff --git a/db/attr.c b/db/attr.c
-> index 75fe239..ba8313c 100644
-> --- a/db/attr.c
-> +++ b/db/attr.c
-> @@ -73,7 +73,7 @@ const field_t	attr_blkinfo_flds[] = {
->  	{ "forw", FLDT_ATTRBLOCK, OI(BOFF(forw)), C1, 0, TYP_ATTR },
->  	{ "back", FLDT_ATTRBLOCK, OI(BOFF(back)), C1, 0, TYP_ATTR },
->  	{ "magic", FLDT_UINT16X, OI(BOFF(magic)), C1, 0, TYP_NONE },
-> -	{ "pad", FLDT_UINT16X, OI(BOFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad", FLDT_UINT16X, OI(BOFF(pad)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
->  
-> @@ -94,7 +94,7 @@ const field_t	attr_leaf_entry_flds[] = {
->  	{ "local", FLDT_UINT1,
->  	  OI(LEOFF(flags) + bitsz(uint8_t) - XFS_ATTR_LOCAL_BIT - 1), C1, 0,
->  	  TYP_NONE },
-> -	{ "pad2", FLDT_UINT8X, OI(LEOFF(pad2)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad2", FLDT_UINT8X, OI(LEOFF(pad2)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
->  
-> @@ -105,7 +105,7 @@ const field_t	attr_leaf_hdr_flds[] = {
->  	{ "usedbytes", FLDT_UINT16D, OI(LHOFF(usedbytes)), C1, 0, TYP_NONE },
->  	{ "firstused", FLDT_UINT16D, OI(LHOFF(firstused)), C1, 0, TYP_NONE },
->  	{ "holes", FLDT_UINT8D, OI(LHOFF(holes)), C1, 0, TYP_NONE },
-> -	{ "pad1", FLDT_UINT8X, OI(LHOFF(pad1)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad1", FLDT_UINT8X, OI(LHOFF(pad1)), C1, 0, TYP_NONE },
->  	{ "freemap", FLDT_ATTR_LEAF_MAP, OI(LHOFF(freemap)),
->  	  CI(XFS_ATTR_LEAF_MAPSIZE), FLD_ARRAY, TYP_NONE },
->  	{ NULL }
-> @@ -567,7 +567,7 @@ const field_t	attr3_leaf_hdr_flds[] = {
->  	{ "usedbytes", FLDT_UINT16D, OI(LH3OFF(usedbytes)), C1, 0, TYP_NONE },
->  	{ "firstused", FLDT_UINT16D, OI(LH3OFF(firstused)), C1, 0, TYP_NONE },
->  	{ "holes", FLDT_UINT8D, OI(LH3OFF(holes)), C1, 0, TYP_NONE },
-> -	{ "pad1", FLDT_UINT8X, OI(LH3OFF(pad1)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad1", FLDT_UINT8X, OI(LH3OFF(pad1)), C1, 0, TYP_NONE },
->  	{ "freemap", FLDT_ATTR_LEAF_MAP, OI(LH3OFF(freemap)),
->  	  CI(XFS_ATTR_LEAF_MAPSIZE), FLD_ARRAY, TYP_NONE },
->  	{ NULL }
-> @@ -589,7 +589,7 @@ const field_t	attr3_node_hdr_flds[] = {
->  	{ "info", FLDT_ATTR3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
->  	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
->  	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
-> -	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
-> +	{ "pad", FLDT_UINT32X, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
->  
-> diff --git a/db/dir2.c b/db/dir2.c
-> index 3e21a7b..bd9c6aa 100644
-> --- a/db/dir2.c
-> +++ b/db/dir2.c
-> @@ -171,7 +171,7 @@ const field_t	da_blkinfo_flds[] = {
->  	{ "forw", FLDT_DIRBLOCK, OI(DBOFF(forw)), C1, 0, TYP_INODATA },
->  	{ "back", FLDT_DIRBLOCK, OI(DBOFF(back)), C1, 0, TYP_INODATA },
->  	{ "magic", FLDT_UINT16X, OI(DBOFF(magic)), C1, 0, TYP_NONE },
-> -	{ "pad", FLDT_UINT16X, OI(DBOFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad", FLDT_UINT16X, OI(DBOFF(pad)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
->  
-> @@ -977,7 +977,7 @@ const field_t	da3_node_hdr_flds[] = {
->  	{ "info", FLDT_DA3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
->  	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
->  	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
-> -	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
-> +	{ "pad", FLDT_UINT32X, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
->  
-> diff --git a/db/dquot.c b/db/dquot.c
-> index 4e35df4..222c082 100644
-> --- a/db/dquot.c
-> +++ b/db/dquot.c
-> @@ -76,7 +76,7 @@ const field_t	disk_dquot_flds[] = {
->  	{ "btimer", FLDT_INT32D, OI(DOFF(btimer)), C1, 0, TYP_NONE },
->  	{ "iwarns", FLDT_QWARNCNT, OI(DOFF(iwarns)), C1, 0, TYP_NONE },
->  	{ "bwarns", FLDT_QWARNCNT, OI(DOFF(bwarns)), C1, 0, TYP_NONE },
-> -	{ "pad0", FLDT_INT32D, OI(DOFF(pad0)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad0", FLDT_UINT32X, OI(DOFF(pad0)), C1, 0, TYP_NONE },
->  	{ "rtb_hardlimit", FLDT_QCNT, OI(DOFF(rtb_hardlimit)), C1, 0,
->  	  TYP_NONE },
->  	{ "rtb_softlimit", FLDT_QCNT, OI(DOFF(rtb_softlimit)), C1, 0,
-> @@ -84,7 +84,7 @@ const field_t	disk_dquot_flds[] = {
->  	{ "rtbcount", FLDT_QCNT, OI(DOFF(rtbcount)), C1, 0, TYP_NONE },
->  	{ "rtbtimer", FLDT_INT32D, OI(DOFF(rtbtimer)), C1, 0, TYP_NONE },
->  	{ "rtbwarns", FLDT_QWARNCNT, OI(DOFF(rtbwarns)), C1, 0, TYP_NONE },
-> -	{ "pad", FLDT_UINT16X, OI(DOFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
-> +	{ "pad", FLDT_UINT16X, OI(DOFF(pad)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+0) The ioctl interface causes a failure to be sent back to userspace if
+you issue two consecutive freezes, or two thaws. Ie, once a filesystem is
+frozen, a secondary call will result in an error. Likewise for thaw.
+
+1) The new iterate supers stuff I added bail on the first error and return that
+error. If we kept the ioctl() interface error scheme we'd be erroring out
+if on suspend if userspace had already frozen a filesystem. Clearly that'd
+be silly so we need to distinguish between the automatic kernel freezing
+and the old userspace ioctl initiated interface, so that we can keep the
+old behaviour but allow in-kernel auto freeze on suspend to work properly.
+
+2) If we fail to suspend we need to then thaw up all filesystems. The order
+in which we try to freeze is in reverse order on the super_block list. If we
+fail though we iterate in proper order on the super_block list and thaw. If
+you had two filesystems this means that if a failure happened on freezing
+the first filesystem, we'd first thaw the other filesystem -- and because of
+0) if we don't distinguish between the ioctl interface or auto freezing, we'd
+also fail on thaw'ing given the other superblock wouldn't have been frozen.
+
+So we need to keep two separate approaches. The count stuff would not suffice
+to distinguish origin of source for freeze call.
+
+Come to think of it, I think I forgot to avoid thaw if the freeze was ioctl
+initiated..
+
+thaw_unlocked(bool cb_call)
+{
+  if (sb_frozen_by_cb(sb) && !cb_call)
+    return 0; /* skip as the user wanted to keep this fs frozen */
+  ...
+}
+
+Even though the kernel auto call is new I think we need to keep ioctl initiated
+frozen filesystems frozen to not break old userspace assumptions.
+
+So, keeping all this in mind, does a count method still suffice?
+
+  Luis
