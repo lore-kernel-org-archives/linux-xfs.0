@@ -1,173 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41432 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751709AbdK2SvC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:51:02 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vATIp1iY029834
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:51:02 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vATIp057019487
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:51:01 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vATIp04h003593
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2017 18:51:00 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH v3 03/17] Add xfs_attr_set_defered and
- xfs_attr_remove_defered
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-4-git-send-email-allison.henderson@oracle.com>
- <20171128191932.GW21412@magnolia>
-Message-ID: <48ed1f4c-b989-6308-dd3a-3f0639ac1ede@oracle.com>
-Date: Wed, 29 Nov 2017 11:50:59 -0700
-MIME-Version: 1.0
-In-Reply-To: <20171128191932.GW21412@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:54586 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750940AbdK3S6h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Nov 2017 13:58:37 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 803745D68B
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:37 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 63C035D9CB
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:37 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 2/7] xfs: include inobt buffers in ifree tx log reservation
+Date: Thu, 30 Nov 2017 13:58:31 -0500
+Message-Id: <20171130185836.18481-3-bfoster@redhat.com>
+In-Reply-To: <20171130185836.18481-1-bfoster@redhat.com>
+References: <20171130185836.18481-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 11/28/2017 12:19 PM, Darrick J. Wong wrote:
+The tr_ifree transaction handles inode unlinks and inode chunk
+frees. The current transaction calculation does not accurately
+reflect worst case changes to the inode btree, however. The inobt
+portion of the current transaction reservation only covers
+modification of a single inobt buffer (for the particular inode
+record). This is a historical artifact from the days before XFS
+supported full inode chunk removal.
 
->> Subject: [PATCH v3 03/17] Add xfs_attr_set_defered and xfs_attr_remove_defered
-> "deferred"
->
-> On Fri, Nov 17, 2017 at 11:21:31AM -0700, Allison Henderson wrote:
->> These routines set up set and start a new deferred attribute
->> operation.  These functions are meant to be called by other
->> code needing to initiate a deferred attribute operation.  We
->> will use these routines later in the parent pointer patches.
->>
->> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++
->>   fs/xfs/xfs_attr.h        |  5 ++++
->>   2 files changed, 67 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 716df0f..68dc7e04 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -469,6 +469,40 @@ xfs_attr_set(
->>   	return error;
->>   }
->>   
->> +/* Sets an attribute for an inode as a deferred operation */
->> +int
->> +xfs_attr_set_deferred(
->> +	struct xfs_inode	*dp,
->> +	struct xfs_defer_ops    *dfops,
->> +	void			*name,
->> +	unsigned int		namelen,
->> +	void			*value,
->> +	unsigned int		valuelen,
->> +	int			flags)
->> +{
->> +
->> +	struct xfs_attr_item     *new;
->> +
->> +	ASSERT(namelen != 0);
->> +	ASSERT(valuelen != 0);
-> We should stop the fs dead in its tracks here...
->
-> if (!namelen || !valuelen) {
-> 	ASSERT(0);
-> 	return -EFSCORRUPTED;
-> }
-Sure.  I didnt think we continued to execute after a failed assert. Is 
-the return statement reachable code?
->> +
->> +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
->> +			 KM_SLEEP|KM_NOFS);
->> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
->> +	new->xattri_ip = dp;
->> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
->> +	new->xattri_name_len = namelen;
->> +	new->xattri_value_len = valuelen;
->> +	new->xattri_flags = flags;
->> +	memcpy(&new->xattri_name_value[0], name, namelen);
->> +	memcpy(&new->xattri_name_value[namelen],
->> +		value, valuelen);
->> +
->> +	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
->> +
->> +	return 0;
->> +}
->> +
->>   /*
->>    * Generic handler routine to remove a name from an attribute list.
->>    * Transitions attribute list from Btree to shortform as necessary.
->> @@ -545,6 +579,34 @@ xfs_attr_remove(
->>   	return error;
->>   }
->>   
->> +/* Removes an attribute for an inode as a deferred operation */
->> +int
->> +xfs_attr_remove_deferred(
->> +	struct xfs_inode        *dp,
->> +	struct xfs_defer_ops    *dfops,
->> +	void			*name,
->> +	unsigned int		namelen,
->> +	int                     flags)
->> +{
->> +
->> +	struct xfs_attr_item     *new;
->> +
->> +	ASSERT(namelen != 0);
-> Same here.
->
->> +
->> +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
->> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
->> +	new->xattri_ip = dp;
->> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
->> +	new->xattri_name_len = namelen;
->> +	new->xattri_value_len = 0;
->> +	new->xattri_flags = flags;
->> +	memcpy(new->xattri_name_value, name, namelen);
->> +
->> +	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
->> +
->> +	return 0;
->> +}
->> +
->>   /*========================================================================
->>    * External routines when attribute list is inside the inode
->>    *========================================================================*/
->> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
->> index 3ef3c77..8d4762a 100644
->> --- a/fs/xfs/xfs_attr.h
->> +++ b/fs/xfs/xfs_attr.h
->> @@ -175,5 +175,10 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->>   int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
->>   		       const unsigned char *name, int flags);
->>   int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
->> +int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
->> +			  void *name, unsigned int name_len, void *value,
->> +			  unsigned int valuelen, int flags);
->> +int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
->> +			    void *name, unsigned int namelen, int flags);
-> All of these libxfs functions shouldn't be declared in a non-libxfs header.
->
-> --D
-Ok, will move
->>   
->>   #endif	/* __XFS_ATTR_H__ */
->> -- 
->> 2.7.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message tomajordomo@vger.kernel.org
->> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=Fpc-kg8nx9R7V_S5rLB6cTd7Q1hPGawg1Rion2qvk80&s=5zlzFr8rSR1c82zQ0g7vWVkvwHPG0JH4nii6W8HUe9M&e=
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message tomajordomo@vger.kernel.org
-> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=Fpc-kg8nx9R7V_S5rLB6cTd7Q1hPGawg1Rion2qvk80&s=5zlzFr8rSR1c82zQ0g7vWVkvwHPG0JH4nii6W8HUe9M&e=
+When support for inode chunk removal was added in commit
+254f6311ed1b ("Implement deletion of inode clusters in XFS."), the
+additional log reservation required for chunk removal was not added
+correctly. The new reservation only considered the header overhead
+of associated buffers rather than the full contents of the btrees
+and AGF and AGFL buffers affected by the transaction. The
+reservation for the free space btrees was subsequently fixed up in
+commit 5fe6abb82f76 ("Add space for inode and allocation btrees to
+ITRUNCATE log reservation"), but the res. for full inobt joins has
+never been added.
+
+Further review of the ifree reservation uncovered a couple more
+problems:
+
+- The undocumented +2 blocks are intended for the AGF and AGFL, but
+  are also not sized correctly and should be logged as full sectors
+  (not FSBs).
+- The additional single block header is undocumented and serves no
+  apparent purpose.
+
+Update xfs_calc_ifree_reservation() to include a full inobt join in
+the reservation calculation. Refactor the undocumented blocks
+appropriately and fix up the comments to reflect the current
+calculation.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_trans_resv.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 6bd916bd35e2..838566b85622 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -490,10 +490,9 @@ xfs_calc_symlink_reservation(
+ /*
+  * In freeing an inode we can modify:
+  *    the inode being freed: inode size
+- *    the super block free inode counter: sector size
+- *    the agi hash list and counters: sector size
+- *    the inode btree entry: block size
+- *    the on disk inode before ours in the agi hash list: inode cluster size
++ *    the super block free inode counter, AGF and AGFL: sector size
++ *    the on disk inode (agi unlinked list removal)
++ *    the inode chunk is marked stale (headers only)
+  *    the inode btree: max depth * blocksize
+  *    the allocation btrees: 2 trees * (max depth - 1) * block size
+  *    the finobt (record insertion, removal or modification)
+@@ -504,12 +503,10 @@ xfs_calc_ifree_reservation(
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+ 		xfs_calc_inode_res(mp, 1) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_iunlink_remove_reservation(mp) +
+-		xfs_calc_buf_res(1, 0) +
+-		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+-				 mp->m_in_maxlevels, 0) +
++		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
++		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_finobt_res(mp, 0, 1);
+-- 
+2.13.6
 
