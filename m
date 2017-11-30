@@ -1,81 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46259 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750752AbdK3Tmx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 14:42:53 -0500
-Date: Thu, 30 Nov 2017 20:42:49 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Message-ID: <20171130194249.GK729@wotan.suse.de>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
- <1512061271.2774.10.camel@wdc.com>
+Received: from mail-yb0-f174.google.com ([209.85.213.174]:35453 "EHLO
+        mail-yb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750921AbdK3Ubn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 15:31:43 -0500
+Received: by mail-yb0-f174.google.com with SMTP id b186so3208486yba.2
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 12:31:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1512061271.2774.10.camel@wdc.com>
+In-Reply-To: <20171122182949.GH2135@magnolia>
+References: <20171122182949.GH2135@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 30 Nov 2017 22:31:42 +0200
+Message-ID: <CAOQ4uxjeWvm1HAhkpxusc8=PXqFaxK+AnZrR5zGScEkEx=tHPQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: log recovery should replay deferred ops in order
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, Benjamin Marzinski <bmarzins@redhat.com>
-Cc: "pavel@ucw.cz" <pavel@ucw.cz>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "jikos@kernel.org" <jikos@kernel.org>, "len.brown@intel.com" <len.brown@intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>, "ONeukum@suse.com" <ONeukum@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "nborisov@suse.com" <nborisov@suse.com>, "oleg.b.antonyan@gmail.com" <oleg.b.antonyan@gmail.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "jgross@suse.com" <jgross@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "yu.chen.surf@gmail.com" <yu.chen.surf@gmail.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "jack@suse.cz" <jack@suse.cz>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Hou Tao <houtao1@huawei.com>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Nov 30, 2017 at 05:01:13PM +0000, Bart Van Assche wrote:
-> It's great to see that you are making progress with this work :-) However,
-> what's not clear to me is what your (long-term) plan is for freezing
-> filesystems that e.g. exist on top of a md RAID1 block device?
+On Wed, Nov 22, 2017 at 8:29 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> As part of testing log recovery with dm_log_writes, Amir Goldstein
+> discovered an error in the deferred ops recovery that lead to corruption
+> of the filesystem metadata if a reflink+rmap filesystem happened to shut
+> down midway through a CoW remap:
+>
+> "This is what happens [after failed log recovery]:
+>
+> "Phase 1 - find and verify superblock...
+> "Phase 2 - using internal log
+> "        - zero log...
+> "        - scan filesystem freespace and inode maps...
+> "        - found root inode chunk
+> "Phase 3 - for each AG...
+> "        - scan (but don't clear) agi unlinked lists...
+> "        - process known inodes and perform inode discovery...
+> "        - agno = 0
+> "data fork in regular inode 134 claims CoW block 376
+> "correcting nextents for inode 134
+> "bad data fork in inode 134
+> "would have cleared inode 134"
+>
+> Hou Tao dissected the log contents of exactly such a crash:
+>
+> "According to the implementation of xfs_defer_finish(), these ops should
+> be completed in the following sequence:
+>
+> "Have been done:
+> "(1) CUI: Oper (160)
+> "(2) BUI: Oper (161)
+> "(3) CUD: Oper (194), for CUI Oper (160)
+> "(4) RUI A: Oper (197), free rmap [0x155, 2, -9]
+>
+> "Should be done:
+> "(5) BUD: for BUI Oper (161)
+> "(6) RUI B: add rmap [0x155, 2, 137]
+> "(7) RUD: for RUI A
+> "(8) RUD: for RUI B
+>
+> "Actually be done by xlog_recover_process_intents()
+> "(5) BUD: for BUI Oper (161)
+> "(6) RUI B: add rmap [0x155, 2, 137]
+> "(7) RUD: for RUI B
+> "(8) RUD: for RUI A
+>
+> "So the rmap entry [0x155, 2, -9] for COW should be freed firstly,
+> then a new rmap entry [0x155, 2, 137] will be added. However, as we can see
+> from the log record in post_mount.log (generated after umount) and the trace
+> print, the new rmap entry [0x155, 2, 137] are added firstly, then the rmap
+> entry [0x155, 2, -9] are freed."
+>
+> When reconstructing the internal log state from the log items found on
+> disk, it's required that deferred ops replay in exactly the same order
+> that they would have had the filesystem not gone down.  However,
+> replaying unfinished deferred ops can create /more/ deferred ops.  These
+> new deferred ops are finished in the wrong order.  This causes fs
+> corruption and replay crashes, so let's create a single defer_ops to
+> handle the subsequent ops created during replay, then use one single
+> transaction at the end of log recovery to ensure that everything is
+> replayed in the same order as they're supposed to be.
+>
+> Reported-by: Amir Goldstein <amir73il@gmail.com>
+> Analyzed-by: Hou Tao <houtao1@huawei.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-The original approach of doing a full swing kill on kthread freezing helpers
-in one shot was too much. We must therefore approach this turtle style and
-carefully. This patch series currently only addresses filesystems which
-have a freeze_fs() callback implemented, that's it. The rest of the kernel
-needs more work.
-
-So this work is far as I've gotten so far.
-
-Note, it does *not* remove the kthread freezing API calls on any other drivers,
-as such that should still work.
-
-> The md resync
-> thread must be stopped before a system is frozen. Today the md driver uses
-> the kthread freezing mechanism for that purpose. Do you have a plan for
-> handling the more complicated scenarios, e.g. a filesystem that exists on top
-> of an md device where the md device uses one or more files as backing store
-> and with the loop driver between the md device and the files?
-
-Nope not yet. It seems you have given this some thought though so you're 
-help here is greatly appreciated. In fact the way we should see the long
-term 'kill kthread freezing' effort should be a collaborative one. I've
-never touched md, so folks more familiar with md should give this some
-thought.
-
-Can for instance md register_pm_notifier() and register_syscore_ops()
-and do handy work to pause some work to replace kthread freezing?
-Note that I believe a pm notifier is needed in case syscore_suspend()
-is not called, say on a suspend fail.
-
-> How about filesystems implemented in user space using the FUSE driver?
-
-Not sure, someone more familiar with FUSE drivers should chime in. Right
-now all this does is leverage filesystems which *do* implement freeze_fs()
-only, and removes the kthread freezing calls after that. That's all. It
-should not affect any other filesystems
-
-Likewise consider filesystems that implement freeze_super() instead (like gfs2)
-which don't hold sb->s_umount -- see commit 48b6bca6b7b8309 ("fs: add
-freeze_super/thaw_super fs hooks"). If its desirable to address those as well,
-it would seem a pair of non-locking iters somehow are needed. More work to
-be done.
-
-This all needs to be considered for the future as well.
-
-> Patch 6/11 of this series freezes user space processes before freezing
-> filesystems. Will that work for FUSE filesystems?
-
-It doesn't add new code which should negatively affect FUSE drivers.
-Long term if we wanted to address FUSE, it may require other work.
-
-In the future then fs_suspend_freeze() may need to work for different
-types of filesystems. Right now only filesystems which implement freeze_fs()
-are addressed.
-
-  Luis
+Since it fixes the problem I reported and I couldn't link this patch
+with other crashes
+I found, you can add:
+Tested-by: Amir Goldstein <amir73il@gmail.com>
