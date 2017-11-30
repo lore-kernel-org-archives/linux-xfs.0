@@ -1,34 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54630 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752063AbdK2T53 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 14:57:29 -0500
-Date: Wed, 29 Nov 2017 11:57:25 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Don't trim file extents during iomap
-Message-ID: <20171129195725.GA15157@infradead.org>
-References: <1511437203-4329-1-git-send-email-nborisov@suse.com>
- <20171127174434.GB19379@magnolia>
- <20171128014746.GC21412@magnolia>
- <154aef58-7f5a-9e69-f33c-2cff22efb009@suse.com>
- <20171129023034.GF21412@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171129023034.GF21412@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:50324 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751410AbdK3S6i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Nov 2017 13:58:38 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 19C4D461DC
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:38 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DB7A660BE5
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2017 18:58:37 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 7/7] xfs: eliminate duplicate icreate tx reservation functions
+Date: Thu, 30 Nov 2017 13:58:36 -0500
+Message-Id: <20171130185836.18481-8-bfoster@redhat.com>
+In-Reply-To: <20171130185836.18481-1-bfoster@redhat.com>
+References: <20171130185836.18481-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, hch@infradead.org, sandeen@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Tue, Nov 28, 2017 at 06:30:34PM -0800, Darrick J. Wong wrote:
-> Hey Christoph, what are the rules about ->iomap_begin passing back an
-> extent that extends outside the range that was requested?  Mr. Borisov
-> wants XFS fiemap to return the raw extent without trimming (apparently
-> to follow the ext4 fiemap behavior), but enabling XFS_BMAPI_ENTIRE
-> unconditionally causes xfstests regressions, which we cannot have.
+The create transaction reservation calculation has two different
+branches of code depending on whether the filesystem is a v5 format
+fs or older. Each branch considers the max reservation between the
+allocation case (new chunk allocation + record insert) and the
+modify case (chunk exists, record modification) of inode allocation.
 
-No rules yet as you see.  But I think the best plan in the long run
-is that the iomap.c code will trim any mapping if needed instead of having
-duplicate instance of the trimming code in the file systems.
+The modify case is the same for both superblock versions with the
+exception of the finobt. The finobt helper checks the feature bit,
+however, and so the modify case already shares the same code.
+
+Now that inode chunk allocation has been refactored into a helper
+that checks the superblock version to calculate the appropriate
+reservation for the create transaction, the only remaining
+difference between the create and icreate branches is the call to
+the finobt helper. As noted above, the finobt helper is a no-op when
+the feature is not enabled. Therefore, these branches are
+effectively duplicate and can be condensed.
+
+Remove the xfs_calc_create_*() branch of functions and update the
+various callers to use the xfs_calc_icreate_*() variant. The latter
+creates the same reservation size for v4 create transactions as the
+removed branch. As such, this patch does not result in transaction
+reservation changes.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_trans_resv.c | 52 +++++-------------------------------------
+ 1 file changed, 6 insertions(+), 46 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 432dd7d7afea..f91e6680b0c5 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -414,38 +414,12 @@ xfs_calc_create_resv_modify(
+ }
+ 
+ /*
+- * For create we can allocate some inodes giving:
+- *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+- *    the superblock for the nlink flag: sector size
+- *    the inode chunk (allocation/init)
+- *    the inode btree (record insertion)
+- */
+-STATIC uint
+-xfs_calc_create_resv_alloc(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		mp->m_sb.sb_sectsize +
+-		xfs_calc_inode_chunk_res(mp, _ALLOC) +
+-		xfs_calc_inobt_res(mp);
+-}
+-
+-STATIC uint
+-__xfs_calc_create_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX(xfs_calc_create_resv_alloc(mp),
+-		    xfs_calc_create_resv_modify(mp));
+-}
+-
+-/*
+  * For icreate we can allocate some inodes giving:
+  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+  *    the superblock for the nlink flag: sector size
+- *    the inode chunk (allocation, no init)
++ *    the inode chunk (allocation, optional init)
+  *    the inobt (record insertion)
+- *    the finobt (record insertion)
++ *    the finobt (optional, record insertion)
+  */
+ STATIC uint
+ xfs_calc_icreate_resv_alloc(
+@@ -467,26 +441,12 @@ xfs_calc_icreate_reservation(xfs_mount_t *mp)
+ }
+ 
+ STATIC uint
+-xfs_calc_create_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		return xfs_calc_icreate_reservation(mp);
+-	return __xfs_calc_create_reservation(mp);
+-
+-}
+-
+-STATIC uint
+ xfs_calc_create_tmpfile_reservation(
+ 	struct xfs_mount        *mp)
+ {
+ 	uint	res = XFS_DQUOT_LOGRES(mp);
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		res += xfs_calc_icreate_resv_alloc(mp);
+-	else
+-		res += xfs_calc_create_resv_alloc(mp);
+-
++	res += xfs_calc_icreate_resv_alloc(mp);
+ 	return res + xfs_calc_iunlink_add_reservation(mp);
+ }
+ 
+@@ -497,7 +457,7 @@ STATIC uint
+ xfs_calc_mkdir_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_create_reservation(mp);
++	return xfs_calc_icreate_reservation(mp);
+ }
+ 
+ 
+@@ -510,7 +470,7 @@ STATIC uint
+ xfs_calc_symlink_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_create_reservation(mp) +
++	return xfs_calc_icreate_reservation(mp) +
+ 	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
+ }
+ 
+@@ -872,7 +832,7 @@ xfs_trans_resv_calc(
+ 	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
+ 	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_create.tr_logres = xfs_calc_create_reservation(mp);
++	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp);
+ 	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+ 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-- 
+2.13.6
+
