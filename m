@@ -1,132 +1,229 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40265 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:46782 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751851AbdK2Ssy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Nov 2017 13:48:54 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH v3 08/17] xfs: add parent pointer support to attribute
- code
-References: <1510942905-12897-1-git-send-email-allison.henderson@oracle.com>
- <1510942905-12897-9-git-send-email-allison.henderson@oracle.com>
- <20171128190146.GR21412@magnolia>
-Message-ID: <86d16ea3-871b-5c2b-52bd-d2311e7a50c3@oracle.com>
-Date: Wed, 29 Nov 2017 11:48:47 -0700
+        with ESMTP id S1752264AbdK3Rz0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 12:55:26 -0500
+Date: Thu, 30 Nov 2017 09:55:14 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of an attribute
+Message-ID: <20171130175514.GI21412@magnolia>
+References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+ <1757414.A5ytRCBscU@libor-nb>
+ <20171121162428.GA6004@bfoster.bfoster>
+ <20171121185018.GB2135@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171128190146.GR21412@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20171121185018.GB2135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>, alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com
 
-On 11/28/2017 12:01 PM, Darrick J. Wong wrote:
+On Tue, Nov 21, 2017 at 10:50:18AM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 21, 2017 at 11:24:29AM -0500, Brian Foster wrote:
+> > On Tue, Nov 21, 2017 at 04:31:20PM +0100, Libor Klepáč wrote:
+> > > Hello again,
+> > > i'm sorry to bug you, but i would like to ask, if this patch made it to kernel 
+> > > yet?
+> > > I was looking on pull request messages and did not see it.
+> > > 
+> > > We were struck by "Metadata corruption detected at 
+> > > xfs_attr3_leaf_write_verify" under high load, after months without problem.
+> > > 
+> > > But we are still on 4.9.30 on this server, there is possibility to upgrade to 
+> > > 4.9.51 from backports.
+> > > 
+> > 
+> > IIRC, the issue that prevented this patch from being merged was that the
+> > buffer needed to be joined and relogged across deferred operations. That
+> > had a dependency on some rectoring of the buffer logging code, which has
+> > since been merged, but I don't recall seeing anything regarding a
+> > deferred op buffer relogging mechanism and using it here. Alex?
+> 
+> Correct, there's no such thing as deferred op buffer relogging.  If I
+> have time this week or next I can try to revisit what exactly we needed
+> to do to retain the buffer lock across transaction rolls in
+> defer_finish and try to cough up a patch, after which the original attr
+> fix from Alex should be refactored to use that mechanism.
+> 
+> (Not sure what we do about backporting to pre-defer_ops kernels...)
 
-> On Fri, Nov 17, 2017 at 11:21:36AM -0700, Allison Henderson wrote:
->> From: Mark Tinguely<tinguely@sgi.com>
->>
->> Add the new parent attribute type. XFS_ATTR_PARENT is used only for
->> parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
->>
->> [dchinner: forward ported and cleaned up]
->> [achender: rebased]
->>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->> Signed-off-by: Dave Chinner<dchinner@redhat.com>
->> Signed-off-by: Allison Henderson<allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c      |  2 +-
->>   fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
->>   fs/xfs/xfs_attr.h             |  2 ++
->>   3 files changed, 11 insertions(+), 5 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 61e8343..9d4d883 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -408,7 +408,7 @@ xfs_attr_set(
->>   	struct xfs_da_args	args;
->>   	struct xfs_defer_ops	dfops;
->>   	xfs_fsblock_t		firstblock;
->> -	int			rsvd = (flags & ATTR_ROOT) != 0;
->> +	bool			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
->>   	int			error, local;
->>   
->>   	XFS_STATS_INC(mp, xs_attr_set);
->> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
->> index 3771edc..5f94c84 100644
->> --- a/fs/xfs/libxfs/xfs_da_format.h
->> +++ b/fs/xfs/libxfs/xfs_da_format.h
->> @@ -758,24 +758,28 @@ struct xfs_attr3_icleaf_hdr {
->>   #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
->>   #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
->>   #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
->> +#define XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
-> Please fix the indenting to be consistent with the previous line.
->
-> Also, I think you can drop the word 'secure' from the comment.
->
+FWIW I will be sending some RFC patches to the list shortly that fix
+this problem on 4.15 kernels.  The new xfs_defer_bjoin code could use
+some careful scrutiny to make sure that I captured the gist of this
+thread accurately with regard to bhold/join/dirty'ing the bjoin'd buffer
+across the transaction roll in xfs_defer_finish.
+
+It doesn't blow up on any of the attr fstests, but that doesn't mean
+much. :)
+
+--D
+
+> 
 > --D
-Sure, will do
->>   #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
->>   #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
->>   #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
->>   #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
->> +#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
->>   #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
->>   
->>   /*
->>    * Conversion macros for converting namespace bits from argument flags
->>    * to ondisk flags.
->>    */
->> -#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
->> -#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
->> +#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
->> +#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
->>   #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
->>   #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
->>   #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
->> -					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
->> +					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
->> +					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
->>   #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
->> -					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
->> +					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
->> +					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
->>   
->>   /*
->>    * Alignment for namelist and valuelist entries (since they are mixed
->> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
->> index 10fc466..1f5c711 100644
->> --- a/fs/xfs/xfs_attr.h
->> +++ b/fs/xfs/xfs_attr.h
->> @@ -46,6 +46,7 @@ struct xfs_attr_list_context;
->>   #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
->>   #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
->>   #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
->> +#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
->>   
->>   #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
->>   #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
->> @@ -57,6 +58,7 @@ struct xfs_attr_list_context;
->>   	{ ATTR_SECURE,		"SECURE" }, \
->>   	{ ATTR_CREATE,		"CREATE" }, \
->>   	{ ATTR_REPLACE,		"REPLACE" }, \
->> +	{ ATTR_PARENT,		"PARENT" }, \
->>   	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
->>   	{ ATTR_KERNOVAL,	"KERNOVAL" }
->>   
->> -- 
->> 2.7.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message tomajordomo@vger.kernel.org
->> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=cw4rl4ETYQ8y0D8yfJB2arjNQvUaE97_EYK7UNsCxbg&s=vn0vqNAj9GZS70-TE3qqHTrOdb_AKX0RTwcKODDodzQ&e=
+> 
+> > Brian
+> > 
+> > > With regards,
+> > > Libor
+> > > 
+> > > 
+> > > On středa 9. srpna 2017 13:06:12 CET alex@zadarastorage.com wrote:
+> > > > From: Alex Lyakas <alex@zadarastorage.com>
+> > > > 
+> > > > The new attribute leaf buffer is not held locked across
+> > > > the transaction roll between the shortform->leaf modification
+> > > > and the addition of the new entry. As a result, the attribute
+> > > > buffer modification being made is not atomic from
+> > > > an operational perspective. Hence the AIL push can grab it in
+> > > > the transient state of "just created" after the initial
+> > > > transaction is rolled, because the buffer has been released.
+> > > > This leads to xfs_attr3_leaf_verify() asserting that
+> > > > hdr.count is zero, treating this as in-memory corruption,
+> > > > and shutting down the filesystem.
+> > > > 
+> > > > Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
+> > > >  fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
+> > > >  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
+> > > >  3 files changed, 23 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > > index de7b9bd..982e322 100644
+> > > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > > > @@ -216,10 +216,11 @@
+> > > >  	struct xfs_defer_ops	dfops;
+> > > >  	struct xfs_trans_res	tres;
+> > > >  	xfs_fsblock_t		firstblock;
+> > > >  	int			rsvd = (flags & ATTR_ROOT) != 0;
+> > > >  	int			error, err2, local;
+> > > > +	struct xfs_buf		*leaf_bp = NULL;
+> > > >  
+> > > >  	XFS_STATS_INC(mp, xs_attr_set);
+> > > >  
+> > > >  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+> > > >  		return -EIO;
+> > > > @@ -325,11 +326,17 @@
+> > > >  		/*
+> > > >  		 * It won't fit in the shortform, transform to a leaf block.
+> > > >  		 * GROT: another possible req'mt for a double-split btree op.
+> > > >  		 */
+> > > >  		xfs_defer_init(args.dfops, args.firstblock);
+> > > > -		error = xfs_attr_shortform_to_leaf(&args);
+> > > > +		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+> > > > +		/*
+> > > > +		 * Prevent the leaf buffer from being unlocked
+> > > > +		 * when "args.trans" transaction commits.
+> > > > +		 */
+> > > > +		if (leaf_bp)
+> > > > +			xfs_trans_bhold(args.trans, leaf_bp);
+> > > >  		if (!error)
+> > > >  			error = xfs_defer_finish(&args.trans, args.dfops, dp);
+> > > >  		if (error) {
+> > > >  			args.trans = NULL;
+> > > >  			xfs_defer_cancel(&dfops);
+> > > > @@ -343,10 +350,18 @@
+> > > >  
+> > > >  		error = xfs_trans_roll(&args.trans, dp);
+> > > >  		if (error)
+> > > >  			goto out;
+> > > >  
+> > > > +		/*
+> > > > +		 * Rejoin the leaf buffer to the new transaction.
+> > > > +		 * This allows a subsequent read to find the buffer in the
+> > > > +		 * transaction (and avoid a deadlock).
+> > > > +		 */
+> > > > +		xfs_trans_bjoin(args.trans, leaf_bp);
+> > > > +		/* Prevent from being released at the end of the function */
+> > > > +		leaf_bp = NULL;
+> > > >  	}
+> > > >  
+> > > >  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> > > >  		error = xfs_attr_leaf_addname(&args);
+> > > >  	else
+> > > > @@ -374,10 +389,12 @@
+> > > >  	return error;
+> > > >  
+> > > >  out:
+> > > >  	if (args.trans)
+> > > >  		xfs_trans_cancel(args.trans);
+> > > > +	if (leaf_bp)
+> > > > +		xfs_buf_relse(leaf_bp);
+> > > >  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> > > >  	return error;
+> > > >  }
+> > > >  
+> > > >  /*
+> > > > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > > > index c6c15e5..ab73e4b 100644
+> > > > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> > > > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > > > @@ -738,13 +738,14 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args 
+> > > *args,
+> > > >  	return -ENOATTR;
+> > > >  }
+> > > >  
+> > > >  /*
+> > > >   * Convert from using the shortform to the leaf.
+> > > > + * Upon success, return the leaf buffer.
+> > > >   */
+> > > >  int
+> > > > -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+> > > > +xfs_attr_shortform_to_leaf(xfs_da_args_t *args, struct xfs_buf **bpp)
+> > > >  {
+> > > >  	xfs_inode_t *dp;
+> > > >  	xfs_attr_shortform_t *sf;
+> > > >  	xfs_attr_sf_entry_t *sfe;
+> > > >  	xfs_da_args_t nargs;
+> > > > @@ -820,10 +821,11 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args 
+> > > *args,
+> > > >  		if (error)
+> > > >  			goto out;
+> > > >  		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+> > > >  	}
+> > > >  	error = 0;
+> > > > +	*bpp = bp;
+> > > >  
+> > > >  out:
+> > > >  	kmem_free(tmpbuffer);
+> > > >  	return error;
+> > > >  }
+> > > > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> > > > index f7dda0c..2b3c69df 100644
+> > > > --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> > > > +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> > > > @@ -46,11 +46,12 @@
+> > > >   */
+> > > >  void	xfs_attr_shortform_create(struct xfs_da_args *args);
+> > > >  void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+> > > >  int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+> > > >  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+> > > > -int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
+> > > > +int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+> > > > +					struct xfs_buf **bpp);
+> > > >  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+> > > >  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+> > > >  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+> > > >  void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+> > > >  
+> > > > 
+> > > 
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message tomajordomo@vger.kernel.org
-> More majordomo info athttps://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=cw4rl4ETYQ8y0D8yfJB2arjNQvUaE97_EYK7UNsCxbg&s=vn0vqNAj9GZS70-TE3qqHTrOdb_AKX0RTwcKODDodzQ&e=
-
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
