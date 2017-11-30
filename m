@@ -1,72 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37724 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751456AbdK3NrD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Nov 2017 08:47:03 -0500
-Date: Thu, 30 Nov 2017 08:47:03 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: ubsan fixes
-Message-ID: <20171130134702.GA3516@bfoster.bfoster>
-References: <151189079681.14861.10709810493861130558.stgit@magnolia>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:53676 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751224AbdK3VwA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Nov 2017 16:52:00 -0500
+Date: Thu, 30 Nov 2017 22:51:57 +0100
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
+Message-ID: <20171130215157.GB2808@amd>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="WhfpMioaduB5tiZL"
 Content-Disposition: inline
-In-Reply-To: <151189079681.14861.10709810493861130558.stgit@magnolia>
+In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 28, 2017 at 09:39:56AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fix some complaints from the UBSAN about signed integer addition overflows.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
 
-Seems Ok:
+--WhfpMioaduB5tiZL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Hi!
 
->  fs/xfs/xfs_aops.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index a3eeaba..b0cccf8 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -399,7 +399,7 @@ xfs_map_blocks(
->  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
->  	ASSERT(offset <= mp->m_super->s_maxbytes);
->  
-> -	if (offset + count > mp->m_super->s_maxbytes)
-> +	if ((xfs_ufsize_t)offset + count > mp->m_super->s_maxbytes)
->  		count = mp->m_super->s_maxbytes - offset;
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> @@ -1265,7 +1265,7 @@ xfs_map_trim_size(
->  	if (mapping_size > size)
->  		mapping_size = size;
->  	if (offset < i_size_read(inode) &&
-> -	    offset + mapping_size >= i_size_read(inode)) {
-> +	    (xfs_ufsize_t)offset + mapping_size >= i_size_read(inode)) {
->  		/* limit mapping to block that spans EOF */
->  		mapping_size = roundup_64(i_size_read(inode) - offset,
->  					  i_blocksize(inode));
-> @@ -1312,7 +1312,7 @@ xfs_get_blocks(
->  	lockmode = xfs_ilock_data_map_shared(ip);
->  
->  	ASSERT(offset <= mp->m_super->s_maxbytes);
-> -	if (offset + size > mp->m_super->s_maxbytes)
-> +	if ((xfs_ufsize_t)offset + size > mp->m_super->s_maxbytes)
->  		size = mp->m_super->s_maxbytes - offset;
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Proposed solution:
+>=20
+> Instead of fixing such semantics and trying to get all filesystems to do =
+it
+> right, we can easily do away with all freezing calls if the filesystem
+> implements a proper freeze_fs() callback. The following 9 filesystems have
+> freeze_fs() implemented as such we can let the kernel issue the callback =
+upon
+> suspend and thaw on resume automatically on our behalf.
+>=20
+>   o xfs
+>   o reiserfs
+>   o nilfs2
+>   o jfs
+>   o f2fs
+>   o ext4
+>   o ext2
+>   o btrfs
+>=20
+> Of these, the following have freezer helpers, which can then be removed
+> after the kernel automaticaly calls freeze_fs for us on suspend:
+>=20
+>   o xfs
+>   o nilfs2
+>   o jfs
+>   o f2fs
+>   o ext4
+>=20
+> I've tested this on a system with ext4 and XFS, and have let 0-day go at
+> without issues. I have branches availabe for linux-next [3] and Linus'
+> latest tree [4].
+
+Was hibernation tested? uswsusp?
+
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--WhfpMioaduB5tiZL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlogfX0ACgkQMOfwapXb+vKAXACgnqWMFQA+PKvI9Rq5vdZq0eqm
+DmkAn2v6+NlkogtL87tOprZw+w4DXzjv
+=rmjt
+-----END PGP SIGNATURE-----
+
+--WhfpMioaduB5tiZL--
