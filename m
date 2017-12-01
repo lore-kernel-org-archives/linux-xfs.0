@@ -1,317 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56151 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:43884 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752137AbdLALur (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Dec 2017 06:50:47 -0500
-Subject: Re: [PATCH v6] xfs_io: implement ranged fiemap query
-References: <1511277416-3191-1-git-send-email-nborisov@suse.com>
- <2ff0137c-85ff-fdb8-3ae8-da599ea75200@sandeen.net>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <9376b7fb-e40f-b64c-1e19-fa46757fe3e7@suse.com>
-Date: Fri, 1 Dec 2017 13:50:44 +0200
+        id S1752750AbdLANgV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Dec 2017 08:36:21 -0500
+Date: Fri, 1 Dec 2017 08:36:19 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 1/2] xfs: add the ability to join a buffer to a
+ defer_ops
+Message-ID: <20171201133618.GA22403@bfoster.bfoster>
+References: <20171130175805.GC31372@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <2ff0137c-85ff-fdb8-3ae8-da599ea75200@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171130175805.GC31372@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, eguan@redhat.com, Eric Sandeen <sandeen@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com, libor.klepac@bcom.cz
 
-
-
-On 21.11.2017 18:02, Eric Sandeen wrote:
-> Currently the fiemap implementation of xfs_io doesn't support making ranged
-> queries. This patch implements two optional arguments which take the starting
-> offset and the length of the region to be queried.
+On Thu, Nov 30, 2017 at 09:58:05AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When the end of the requested region falls within an extent boundary then we
-> print the whole extent (i.e. return all the information that the kernel has given
-> us). When the end offset falls within a hole then the printed hole range is
-> truncated to the requested one since we do not have information how long the
-> hole is.
+> In certain cases we need to be able to maintain a buffer lock across a
+> defer_finish call.  Since there could be many (large) transactions
+> committed as a result of a defer_finish, we have to hold the buffer
+> across the roll, then immediately rejoin the buffer and mark it dirty in
+> each transaction to keep the log moving forward.
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> [sandeen: simplify/rewrite ranged logic]
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-
-Ping on that, is ther anything stopping it from being merged?
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> V6: <sandeen>
->  * Update V5 changelog re: printed extents & end of range ;)
->  * rename "last" to "done"
->  * simplify loop control by setting done=1 in inner loop for all terminal conditions
->  * update manpage re: behavior details for ranged queries
+
+Seems about right to me. A couple things..
+
+>  fs/xfs/libxfs/xfs_defer.c |   37 ++++++++++++++++++++++++++++++++++---
+>  fs/xfs/libxfs/xfs_defer.h |    5 ++++-
+>  2 files changed, 38 insertions(+), 4 deletions(-)
 > 
-> V5: 
->  * Now based on Eric's simpler approach. 
->  * Fix printed-extent counting in print_plain & print_verbose
->  * Change while loop conditions to stop if full range has been mapped
-> 
-> V4: 
->  * Don't do any fiemap processing if passed offset is past EOF. Filesystems
->  might have custom handling for this. XFS for example pretends there is a 
->  hole. 
-> 
->  * Restore offset/len handling to using the optional params at the end of 
->  getopt and not using an additional '-r' param
-> 
-> V3: 
->  * Fixed a bug where incorrect extent index was shown if we didn't print a 
->  hole. This was due to statically returning 2 at the end of print_(plain|verbose)
->  Now, the actual number of printed extents inside the 2 functions is used. 
->  This bug is visible only with the -r parameter
-> 
->  * Fixed a bug where 1 additional extent would be printed. This was a result of 
->  the aforementioned bug fix, since now printing function can return 1 and still
->  have printed an extent and no hole. This can happen when you use -r parameter,
->  this is now fixed and a comment explaining it is put. 
-> 
->  * Reworked the handling of the new params by making them arguments to the 
->  -r parameter. 
-> 
-> V2:
->  * Incorporated Daricks feedback - removed variables which weren't introduced
->   until the next patch as a result the build with this patch was broken. This is 
->   fixed now
-> 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index bdcfacd..2f12652 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -49,6 +49,8 @@ fiemap_help(void)
->  " -l -- also displays the length of each extent in 512-byte blocks.\n"
->  " -n -- query n extents.\n"
->  " -v -- Verbose information\n"
-> +" offset is the starting offset to map, and is optional.  If offset is\n"
-> +" specified, mapping length may (optionally) be specified as well."
->  "\n"));
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 072ebfe..b5b3414 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -249,6 +249,10 @@ xfs_defer_trans_roll(
+>  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+>  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
+>  
+> +	/* Hold the (previously bjoin'd) buffer locked across the roll. */
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
+> +		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
+> +
+
+It seems more consistent to dirty the buffer in the tx here and
+bjoin+bhold it in the loop below.
+
+>  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
+>  
+>  	/* Roll the transaction. */
+> @@ -264,6 +268,12 @@ xfs_defer_trans_roll(
+>  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+>  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
+>  
+> +	/* Rejoin the buffers and dirty them so the log moves forward. */
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
+> +		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
+> +		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
+> +	}
+> +
+>  	return error;
 >  }
 >  
-> @@ -101,6 +103,7 @@ print_verbose(
->  	char			lbuf[48];
->  	char			bbuf[48];
->  	char			flgbuf[16];
-> +	int			num_printed = 0;
->  
->  	llast = BTOBBT(last_logical);
->  	lstart = BTOBBT(extent->fe_logical);
-> @@ -118,14 +121,15 @@ print_verbose(
->  			flg_w, _("FLAGS"));
->  	}
->  
-> -	if (lstart != llast) {
-> +	if (lstart > llast) {
->  		print_hole(foff_w, boff_w, tot_w, cur_extent, 0, false, llast,
->  			   lstart);
->  		cur_extent++;
-> +		num_printed++;
->  	}
->  
->  	if (cur_extent == max_extents)
-> -		return 1;
-> +		return num_printed;
->  
->  	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
->  		 (unsigned long long)lstart, lstart + len - 1ULL);
-> @@ -135,7 +139,9 @@ print_verbose(
->  	printf("%4d: %-*s %-*s %*llu %*s\n", cur_extent, foff_w, lbuf,
->  	       boff_w, bbuf, tot_w, (unsigned long long)len, flg_w, flgbuf);
->  
-> -	return 2;
-> +	num_printed++;
-> +
-> +	return num_printed;
->  }
->  
->  static int
-> @@ -149,29 +155,33 @@ print_plain(
->  	__u64			llast;
->  	__u64			block;
->  	__u64			len;
-> +	int			num_printed = 0;
->  
->  	llast = BTOBBT(last_logical);
->  	lstart = BTOBBT(extent->fe_logical);
->  	len = BTOBBT(extent->fe_length);
->  	block = BTOBBT(extent->fe_physical);
->  
-> -	if (lstart != llast) {
-> +	if (lstart > llast) {
->  		print_hole(0, 0, 0, cur_extent, lflag, true, llast, lstart);
->  		cur_extent++;
-> +		num_printed++;
->  	}
->  
->  	if (cur_extent == max_extents)
-> -		return 1;
-> +		return num_printed;
->  
->  	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
->  	       (unsigned long long)lstart, lstart + len - 1ULL,
->  	       (unsigned long long)block, block + len - 1ULL);
->  
-> +	num_printed++;
-> +
->  	if (lflag)
->  		printf(_(" %llu blocks\n"), (unsigned long long)len);
->  	else
->  		printf("\n");
-> -	return 2;
-> +	return num_printed;
+> @@ -299,6 +309,29 @@ xfs_defer_ijoin(
 >  }
 >  
 >  /*
-> @@ -222,7 +232,7 @@ fiemap_f(
->  	char		**argv)
+> + * Add this buffer to the deferred op.  Each joined buffer is relogged
+> + * each time we roll the transaction.
+> + */
+> +int
+> +xfs_defer_bjoin(
+> +	struct xfs_defer_ops		*dop,
+> +	struct xfs_buf			*bp)
+> +{
+> +	int				i;
+> +
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
+> +		if (dop->dop_bufs[i] == bp)
+> +			return 0;
+> +		else if (dop->dop_bufs[i] == NULL) {
+> +			dop->dop_bufs[i] = bp;
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	return -EFSCORRUPTED;
+
+I notice that this looks exactly like xfs_defer_join(), but is
+-EFSCORRUPTED the right error here? It probably doesn't matter that much
+given that if we hit this we've already lost, but I wonder if an error
+that more reflects a programming error as opposed to inconsistent fs
+might be more appropriate..? -EINVAL, -EBUSY?
+
+Brian
+
+> +}
+> +
+> +/*
+>   * Finish all the pending work.  This involves logging intent items for
+>   * any work items that wandered in since the last transaction roll (if
+>   * one has even happened), rolling the transaction, and finishing the
+> @@ -493,9 +526,7 @@ xfs_defer_init(
+>  	struct xfs_defer_ops		*dop,
+>  	xfs_fsblock_t			*fbp)
 >  {
->  	struct fiemap	*fiemap;
-> -	int		last = 0;
-> +	int		done = 0;
->  	int		lflag = 0;
->  	int		vflag = 0;
->  	int		fiemap_flags = FIEMAP_FLAG_SYNC;
-> @@ -235,9 +245,15 @@ fiemap_f(
->  	int		boff_w = 16;
->  	int		tot_w = 5;	/* 5 since its just one number */
->  	int		flg_w = 5;
-> -	__u64		last_logical = 0;
-> +	__u64		last_logical = 0;	/* last extent offset handled */
-> +	off64_t		start_offset = 0;	/* mapping start */
-> +	off64_t		length = -1LL;		/* mapping length */
-> +	off64_t		range_end = -1LL;	/* mapping end*/
-> +	size_t		fsblocksize, fssectsize;
->  	struct stat	st;
+> -	dop->dop_committed = false;
+> -	dop->dop_low = false;
+> -	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
+> +	memset(dop, 0, sizeof(struct xfs_defer_ops));
+>  	*fbp = NULLFSBLOCK;
+>  	INIT_LIST_HEAD(&dop->dop_intake);
+>  	INIT_LIST_HEAD(&dop->dop_pending);
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index d4f046d..045beac 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
+>  };
 >  
-> +	init_cvtnum(&fsblocksize, &fssectsize);
-> +
->  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
->  		switch (c) {
->  		case 'a':
-> @@ -257,6 +273,27 @@ fiemap_f(
->  		}
->  	}
+>  #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
+> +#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
 >  
-> +	/* Range start (optional) */
-> +	if (optind < argc) {
-> +		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +		if (start_offset < 0) {
-> +			printf("non-numeric offset argument -- %s\n", argv[optind]);
-> +			return 0;
-> +		}
-> +		last_logical = start_offset;
-> +		optind++;
-> +	}
-> +
-> +	/* Range length (optional if range start was specified) */
-> +	if (optind < argc) {
-> +		length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +		if (length < 0) {
-> +			printf("non-numeric len argument -- %s\n", argv[optind]);
-> +			return 0;
-> +		}
-> +		range_end = start_offset + length;
-> +	}
-> +
->  	map_size = sizeof(struct fiemap) +
->  		(EXTENT_BATCH * sizeof(struct fiemap_extent));
->  	fiemap = malloc(map_size);
-> @@ -269,12 +306,11 @@ fiemap_f(
+>  struct xfs_defer_ops {
+>  	bool			dop_committed;	/* did any trans commit? */
+> @@ -66,8 +67,9 @@ struct xfs_defer_ops {
+>  	struct list_head	dop_intake;	/* unlogged pending work */
+>  	struct list_head	dop_pending;	/* logged pending work */
 >  
->  	printf("%s:\n", file->name);
+> -	/* relog these inodes with each roll */
+> +	/* relog these with each roll */
+>  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
+> +	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
+>  };
 >  
-> -	while (!last && (cur_extent != max_extents)) {
-> -
-> +	while (!done) {
->  		memset(fiemap, 0, map_size);
->  		fiemap->fm_flags = fiemap_flags;
->  		fiemap->fm_start = last_logical;
-> -		fiemap->fm_length = -1LL;
-> +		fiemap->fm_length = range_end - last_logical;
->  		fiemap->fm_extent_count = EXTENT_BATCH;
+>  void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
+> @@ -77,6 +79,7 @@ void xfs_defer_cancel(struct xfs_defer_ops *dop);
+>  void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
+>  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
+>  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
+> +int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
 >  
->  		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> @@ -314,13 +350,23 @@ fiemap_f(
->  			cur_extent += num_printed;
->  			last_logical = extent->fe_logical + extent->fe_length;
->  
-> +			/* Kernel has told us there are no more extents */
->  			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
-> -				last = 1;
-> +				done = 1;
-> +				break;
-> +			}
-> +
-> +			/* We have exhausted the requested range */
-> +			if (last_logical >= range_end) {
-> +				done = 1;
->  				break;
->  			}
->  
-> -			if (cur_extent == max_extents)
-> +			/* We have printed requested nr of extents */
-> +			if (cur_extent == max_extents) {
-> +				done = 1;
->  				break;
-> +			}
->  		}
->  	}
->  
-> @@ -336,9 +382,12 @@ fiemap_f(
->  		return 0;
->  	}
->  
-> -	if (cur_extent && last_logical < st.st_size)
-> +	/* Print last hole to EOF or to end of requested range */
-> +	range_end = min((uint64_t)range_end, st.st_size);
-> +
-> +	if (cur_extent && last_logical < range_end)
->  		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
-> -			   BTOBBT(last_logical), BTOBBT(st.st_size));
-> +			   BTOBBT(last_logical), BTOBBT(range_end));
->  
->  out:
->  	free(fiemap);
-> @@ -353,7 +402,7 @@ fiemap_init(void)
->  	fiemap_cmd.argmin = 0;
->  	fiemap_cmd.argmax = -1;
->  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> -	fiemap_cmd.args = _("[-alv] [-n nx]");
-> +	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
->  	fiemap_cmd.oneline = _("print block mapping for a file");
->  	fiemap_cmd.help = fiemap_help;
->  
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 9bf1a47..fabf92f 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -304,11 +304,23 @@ Prints the block mapping for the current open file. Refer to the
->  .BR xfs_bmap (8)
->  manual page for complete documentation.
->  .TP
-> -.BI "fiemap [ \-alv ] [ \-n " nx " ]"
-> +.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
->  Prints the block mapping for the current open file using the fiemap
->  ioctl.  Options behave as described in the
->  .BR xfs_bmap (8)
->  manual page.
-> +.PP
-> +.RS
-> +Optionally, this command also supports passing the start offset
-> +from where to begin the mapping and the length of that region.
-> +The kernel will return any full extents which intersect with the requested
-> +range, and the
-> +.B fiemap
-> +command will print them in their entirety.  If the requested range starts
-> +or ends in a hole,
-> +.B fiemap
-> +will print the hole, truncated to the requested range.
-> +.RE
->  .TP
->  .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
->  Prints the mapping of disk blocks used by the filesystem hosting the current
-> 
+>  /* Description of a deferred type. */
+>  struct xfs_defer_op_type {
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
