@@ -1,25 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0078.hostedemail.com ([216.40.44.78]:53476 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752402AbdLCXUQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Dec 2017 18:20:16 -0500
-Message-ID: <1512343210.6321.39.camel@perches.com>
-Subject: Re: [PATCH] treewide: remove duplicate includes
-From: Joe Perches <joe@perches.com>
-Date: Sun, 03 Dec 2017 15:20:10 -0800
-In-Reply-To: <1512337779-16842-1-git-send-email-pravin.shedge4linux@gmail.com>
-References: <1512337779-16842-1-git-send-email-pravin.shedge4linux@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from userp1040.oracle.com ([156.151.31.81]:37497 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbdLAWlx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 17:41:53 -0500
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id vB1MfqtK006763
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Dec 2017 22:41:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vB1Mfp5I015337
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Dec 2017 22:41:52 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vB1Mfpa1027124
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Dec 2017 22:41:51 GMT
+Date: Fri, 1 Dec 2017 14:41:49 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: scrub inode nsec fields
+Message-ID: <20171201224149.GB21412@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pravin Shedge <pravin.shedge4linux@gmail.com>, gregkh@linuxfoundation.org, davem@davemloft.net, sstabellini@kernel.org, x86@kernel.org, mchehab@kernel.org, linux-xfs@vger.kernel.org, mcgrof@kernel.org, ast@kernel.org, shuah@kernel.org, namhyung@kernel.org, mhiramat@kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, devel@driverdev.osuosl.org, linux-security-module@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 2017-12-04 at 03:19 +0530, Pravin Shedge wrote:
-> These duplicate includes have been found with scripts/checkincludes.pl but
-> they have been removed manually to avoid removing false positives.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can you list the duplicates that were not removed as well please?
+Check that the nanosecond fields in each timestamp aren't larger
+than a billion.
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/inode.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 637b7a8..fc9bc59 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -380,6 +380,14 @@ xfs_scrub_dinode(
+ 		break;
+ 	}
+ 
++	/* di_[amc]time.nsec */
++	if (be32_to_cpu(dip->di_atime.t_nsec) >= NSEC_PER_SEC)
++		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++	if (be32_to_cpu(dip->di_mtime.t_nsec) >= NSEC_PER_SEC)
++		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++	if (be32_to_cpu(dip->di_ctime.t_nsec) >= NSEC_PER_SEC)
++		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++
+ 	/*
+ 	 * di_size.  xfs_dinode_verify checks for things that screw up
+ 	 * the VFS such as the upper bit being set and zero-length
+@@ -483,6 +491,8 @@ xfs_scrub_dinode(
+ 	}
+ 
+ 	if (dip->di_version >= 3) {
++		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
++			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+ 		xfs_scrub_inode_flags2(sc, bp, dip, ino, mode, flags, flags2);
+ 		xfs_scrub_inode_cowextsize(sc, bp, dip, ino, mode, flags,
+ 				flags2);
