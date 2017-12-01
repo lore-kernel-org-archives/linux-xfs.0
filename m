@@ -1,70 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28879 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750898AbdLAVvP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 16:51:15 -0500
-Date: Sat, 2 Dec 2017 08:51:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Message-ID: <20171201215111.GQ5858@dastard>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
- <CADjb_WRG8hxJB3zY5_XnZqeQbCy3jYW5xJaS63_7FGztZymLzg@mail.gmail.com>
- <nycvar.YFH.7.76.1711301740000.11505@cbobk.fhfr.pm>
- <1512155144.4322.13.camel@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24567 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbdLAXXu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 18:23:50 -0500
+Date: Fri, 1 Dec 2017 15:23:43 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 3/4] xfs: factor out scrub input checking
+Message-ID: <20171201232343.GD21412@magnolia>
+References: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
+ <1d269656-35e3-f54a-884d-9ba01ae3f5ba@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1512155144.4322.13.camel@redhat.com>
+In-Reply-To: <1d269656-35e3-f54a-884d-9ba01ae3f5ba@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Jiri Kosina <jikos@kernel.org>, Yu Chen <yu.chen.surf@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, Dan Williams <dan.j.williams@intel.com>, Linux PM list <linux-pm@vger.kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Zhang Rui <rui.zhang@intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 02:05:44PM -0500, Jeff Layton wrote:
-> On Thu, 2017-11-30 at 17:41 +0100, Jiri Kosina wrote:
-> > On Fri, 1 Dec 2017, Yu Chen wrote:
-> > 
-> > > BTW, is nfs able to be included in this set? I also encountered a 
-> > > freeze() failure due to nfs access during that stage recently.
-> > 
-> > The freezer usage in NFS is magnitudes more complicated, so it makes sense 
-> > to first go after the lower hanging fruit to figure out the viability of 
-> > the whole aproach in practice.
-> > 
-> 
-> Agreed that we should do this in stages. It doesn't help that freezer
-> handling in the client is a bit of a mess at this point...
-> 
-> At a high level for NFS, I think we need to have freeze_fs make the RPC
-> engine "park" newly issued RPCs for that fs' client onto a
-> rpc_wait_queue. Any RPC that has already been sent however, we need to
-> wait for a reply.
-> 
-> Once everything is quiesced we can return and call it frozen.
-> unfreeze_fs can then just have the engine stop parking RPCs and wake up
-> the waitq.
+From: Eric Sandeen <sandeen@sandeen.net>
 
-That seems pretty reasonable. freezing is expected to take a bit of
-time to run - local filesystems can do a fair bit of IO draining
-queues, inflight operations and bringing the journal into a
-consistent state on disk before declaring the filesystem is frozen.
+Do this before adding more core checks.
 
-> That should be enough to make suspend and resume work more reliably. If,
-> however, you're interested in making the cgroup freezer also work, then
-> we may need to do a bit more work to ensure that we don't end up with
-> frozen tasks squatting on VFS locks.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+[darrick: rename input validation function]
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/scrub.c |   75 +++++++++++++++++++++++++++++---------------------
+ 1 file changed, 44 insertions(+), 31 deletions(-)
 
-None of the existing freezing code gives those guarantees. In fact,
-freezing a filesystem pretty much guarantees the opposite - that
-tasks *will freeze when holding VFS locks* - and so the cgroup
-freezer is broken by design if it requires tasks to be frozen
-without holding any VFS/filesystem lock context. So I wouldn't
-really worry about the cgroup freezer....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index dc1f33a..182d2fe 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -285,47 +285,34 @@ xfs_scrub_experimental_warning(
+ "EXPERIMENTAL online scrub feature in use. Use at your own risk!");
+ }
+ 
+-/* Dispatch metadata scrubbing. */
+-int
+-xfs_scrub_metadata(
+-	struct xfs_inode		*ip,
++static int
++xfs_scrub_validate_inputs(
++	struct xfs_mount		*mp,
+ 	struct xfs_scrub_metadata	*sm)
+ {
+-	struct xfs_scrub_context	sc;
+-	struct xfs_mount		*mp = ip->i_mount;
++	int				error;
+ 	const struct xfs_scrub_meta_ops	*ops;
+-	bool				try_harder = false;
+-	int				error = 0;
+-
+-	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
+-		(sizeof(struct xfs_scrub_meta_ops) * XFS_SCRUB_TYPE_NR));
+-
+-	trace_xfs_scrub_start(ip, sm, error);
+-
+-	/* Forbidden if we are shut down or mounted norecovery. */
+-	error = -ESHUTDOWN;
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		goto out;
+-	error = -ENOTRECOVERABLE;
+-	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
+-		goto out;
+ 
+-	/* Check our inputs. */
+ 	error = -EINVAL;
++	/* Check our inputs. */
+ 	sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
+ 	if (sm->sm_flags & ~XFS_SCRUB_FLAGS_IN)
+ 		goto out;
+ 	if (memchr_inv(sm->sm_reserved, 0, sizeof(sm->sm_reserved)))
+ 		goto out;
+ 
+-	/* Do we know about this type of metadata? */
+ 	error = -ENOENT;
++	/* Do we know about this type of metadata? */
+ 	if (sm->sm_type >= XFS_SCRUB_TYPE_NR)
+ 		goto out;
+ 	ops = &meta_scrub_ops[sm->sm_type];
+ 	if (ops->setup == NULL || ops->scrub == NULL)
+ 		goto out;
++	/* Does this fs even support this type of metadata? */
++	if (ops->has && !ops->has(&mp->m_sb))
++		goto out;
+ 
++	error = -EOPNOTSUPP;
+ 	/*
+ 	 * We won't scrub any filesystem that doesn't have the ability
+ 	 * to record unwritten extents.  The option was made default in
+@@ -335,20 +322,46 @@ xfs_scrub_metadata(
+ 	 * We also don't support v1-v3 filesystems, which aren't
+ 	 * mountable.
+ 	 */
+-	error = -EOPNOTSUPP;
+ 	if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
+ 		goto out;
+ 
+-	/* Does this fs even support this type of metadata? */
+-	error = -ENOENT;
+-	if (ops->has && !ops->has(&mp->m_sb))
+-		goto out;
+-
+ 	/* We don't know how to repair anything yet. */
+-	error = -EOPNOTSUPP;
+ 	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
+ 		goto out;
+ 
++	error = 0;
++out:
++	return error;
++}
++
++/* Dispatch metadata scrubbing. */
++int
++xfs_scrub_metadata(
++	struct xfs_inode		*ip,
++	struct xfs_scrub_metadata	*sm)
++{
++	struct xfs_scrub_context	sc;
++	struct xfs_mount		*mp = ip->i_mount;
++	bool				try_harder = false;
++	int				error = 0;
++
++	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
++		(sizeof(struct xfs_scrub_meta_ops) * XFS_SCRUB_TYPE_NR));
++
++	trace_xfs_scrub_start(ip, sm, error);
++
++	/* Forbidden if we are shut down or mounted norecovery. */
++	error = -ESHUTDOWN;
++	if (XFS_FORCED_SHUTDOWN(mp))
++		goto out;
++	error = -ENOTRECOVERABLE;
++	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
++		goto out;
++
++	error = xfs_scrub_validate_inputs(mp, sm);
++	if (error)
++		goto out;
++
+ 	xfs_scrub_experimental_warning(mp);
+ 
+ retry_op:
+@@ -356,7 +369,7 @@ xfs_scrub_metadata(
+ 	memset(&sc, 0, sizeof(sc));
+ 	sc.mp = ip->i_mount;
+ 	sc.sm = sm;
+-	sc.ops = ops;
++	sc.ops = &meta_scrub_ops[sm->sm_type];
+ 	sc.try_harder = try_harder;
+ 	sc.sa.agno = NULLAGNUMBER;
+ 	error = sc.ops->setup(&sc, ip);
