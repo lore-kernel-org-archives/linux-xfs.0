@@ -1,37 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17458 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752385AbdLCVqE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Dec 2017 16:46:04 -0500
-Date: Mon, 4 Dec 2017 08:46:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 4/7] xfs: truncate transaction does not modify the
- inobt
-Message-ID: <20171203214601.GT5858@dastard>
-References: <20171130185836.18481-1-bfoster@redhat.com>
- <20171130185836.18481-5-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:18957 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750995AbdLAQj5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 11:39:57 -0500
+Date: Fri, 1 Dec 2017 08:39:44 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH 1/2] xfs: add the ability to join a buffer to a
+ defer_ops
+Message-ID: <20171201163944.GP21412@magnolia>
+References: <20171130175805.GC31372@magnolia>
+ <20171201133618.GA22403@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171130185836.18481-5-bfoster@redhat.com>
+In-Reply-To: <20171201133618.GA22403@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com, libor.klepac@bcom.cz
 
-On Thu, Nov 30, 2017 at 01:58:33PM -0500, Brian Foster wrote:
-> The truncate transaction does not ever modify the inode btree, but
-> includes an associated log reservation. Update
-> xfs_calc_itruncate_reservation() to remove the reservation
-> associated with inobt updates.
+On Fri, Dec 01, 2017 at 08:36:19AM -0500, Brian Foster wrote:
+> On Thu, Nov 30, 2017 at 09:58:05AM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > In certain cases we need to be able to maintain a buffer lock across a
+> > defer_finish call.  Since there could be many (large) transactions
+> > committed as a result of a defer_finish, we have to hold the buffer
+> > across the roll, then immediately rejoin the buffer and mark it dirty in
+> > each transaction to keep the log moving forward.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Seems about right to me. A couple things..
+> 
+> >  fs/xfs/libxfs/xfs_defer.c |   37 ++++++++++++++++++++++++++++++++++---
+> >  fs/xfs/libxfs/xfs_defer.h |    5 ++++-
+> >  2 files changed, 38 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> > index 072ebfe..b5b3414 100644
+> > --- a/fs/xfs/libxfs/xfs_defer.c
+> > +++ b/fs/xfs/libxfs/xfs_defer.c
+> > @@ -249,6 +249,10 @@ xfs_defer_trans_roll(
+> >  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+> >  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
+> >  
+> > +	/* Hold the (previously bjoin'd) buffer locked across the roll. */
+> > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
+> > +		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
+> > +
+> 
+> It seems more consistent to dirty the buffer in the tx here and
+> bjoin+bhold it in the loop below.
 
-Makes sense.
+I thought the purpose of calling bhold was to prevent the transaction
+commit (in xfs_trans_roll) from unlocking the buffer?  Therefore you'd
+bhold it before the _roll and then bjoin/dirty the still-locked buffer
+afterwards to attach the buffer as a dirty buffer to the new
+transaction.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> >  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
+> >  
+> >  	/* Roll the transaction. */
+> > @@ -264,6 +268,12 @@ xfs_defer_trans_roll(
+> >  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+> >  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
+> >  
+> > +	/* Rejoin the buffers and dirty them so the log moves forward. */
+> > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
+> > +		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
+> > +		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
+> > +	}
+> > +
+> >  	return error;
+> >  }
+> >  
+> > @@ -299,6 +309,29 @@ xfs_defer_ijoin(
+> >  }
+> >  
+> >  /*
+> > + * Add this buffer to the deferred op.  Each joined buffer is relogged
+> > + * each time we roll the transaction.
+> > + */
+> > +int
+> > +xfs_defer_bjoin(
+> > +	struct xfs_defer_ops		*dop,
+> > +	struct xfs_buf			*bp)
+> > +{
+> > +	int				i;
+> > +
+> > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
+> > +		if (dop->dop_bufs[i] == bp)
+> > +			return 0;
+> > +		else if (dop->dop_bufs[i] == NULL) {
+> > +			dop->dop_bufs[i] = bp;
+> > +			return 0;
+> > +		}
+> > +	}
+> > +
+> > +	return -EFSCORRUPTED;
+> 
+> I notice that this looks exactly like xfs_defer_join(), but is
+> -EFSCORRUPTED the right error here? It probably doesn't matter that much
+> given that if we hit this we've already lost, but I wonder if an error
+> that more reflects a programming error as opposed to inconsistent fs
+> might be more appropriate..? -EINVAL, -EBUSY?
 
--- 
-Dave Chinner
-david@fromorbit.com
+Yeah, I'm not sure what error code applies to "programmer messed up" :)
+
+Perhaps we should add an ASSERT(0) at the bottom of both functions.
+
+--D
+
+> Brian
+> 
+> > +}
+> > +
+> > +/*
+> >   * Finish all the pending work.  This involves logging intent items for
+> >   * any work items that wandered in since the last transaction roll (if
+> >   * one has even happened), rolling the transaction, and finishing the
+> > @@ -493,9 +526,7 @@ xfs_defer_init(
+> >  	struct xfs_defer_ops		*dop,
+> >  	xfs_fsblock_t			*fbp)
+> >  {
+> > -	dop->dop_committed = false;
+> > -	dop->dop_low = false;
+> > -	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
+> > +	memset(dop, 0, sizeof(struct xfs_defer_ops));
+> >  	*fbp = NULLFSBLOCK;
+> >  	INIT_LIST_HEAD(&dop->dop_intake);
+> >  	INIT_LIST_HEAD(&dop->dop_pending);
+> > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> > index d4f046d..045beac 100644
+> > --- a/fs/xfs/libxfs/xfs_defer.h
+> > +++ b/fs/xfs/libxfs/xfs_defer.h
+> > @@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
+> >  };
+> >  
+> >  #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
+> > +#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+> >  
+> >  struct xfs_defer_ops {
+> >  	bool			dop_committed;	/* did any trans commit? */
+> > @@ -66,8 +67,9 @@ struct xfs_defer_ops {
+> >  	struct list_head	dop_intake;	/* unlogged pending work */
+> >  	struct list_head	dop_pending;	/* logged pending work */
+> >  
+> > -	/* relog these inodes with each roll */
+> > +	/* relog these with each roll */
+> >  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
+> > +	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
+> >  };
+> >  
+> >  void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
+> > @@ -77,6 +79,7 @@ void xfs_defer_cancel(struct xfs_defer_ops *dop);
+> >  void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
+> >  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
+> >  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
+> > +int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
+> >  
+> >  /* Description of a deferred type. */
+> >  struct xfs_defer_op_type {
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
