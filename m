@@ -1,516 +1,482 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33965 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752808AbdLDVYu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:50 -0500
-Message-Id: <20171204212121.324506412@linutronix.de>
-Date: Mon, 04 Dec 2017 22:19:38 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V4 11/11] LICENSES: Add MPL-1.1 license
-References: <20171204211927.673291734@linutronix.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49345 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751675AbdLARCj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 12:02:39 -0500
+Date: Fri, 1 Dec 2017 09:02:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5] xfs_io: provide an interface to the scrub ioctls
+Message-ID: <20171201170232.GQ21412@magnolia>
+References: <151094860143.27182.12022983202520916281.stgit@magnolia>
+ <151094862514.27182.4461761345656503324.stgit@magnolia>
+ <397145d8-8337-a577-85a5-0d85a7cb03a6@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline; filename=LICENSES--Add-MPL-1.1-license.patch
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <397145d8-8337-a577-85a5-0d85a7cb03a6@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Add the full text of the Mozilla Public License 1.1 to the kernel tree.  It was
-copied directly from:
+On Thu, Nov 30, 2017 at 09:46:01PM -0600, Eric Sandeen wrote:
+> On 11/17/17 1:57 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a new xfs_io command to call the new XFS metadata scrub ioctl.
+> 
+> Looks pretty reasonable, a few things to prove I looked ;)
+> 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  io/Makefile       |    3 -
+> >  io/init.c         |    1 
+> >  io/io.h           |    2 
+> >  io/scrub.c        |  244 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  man/man8/xfs_io.8 |   10 ++
+> >  5 files changed, 259 insertions(+), 1 deletion(-)
+> >  create mode 100644 io/scrub.c
+> > 
+> > 
+> > diff --git a/io/Makefile b/io/Makefile
+> > index 050d6bd..b983bcc 100644
+> > --- a/io/Makefile
+> > +++ b/io/Makefile
+> > @@ -11,7 +11,8 @@ HFILES = init.h io.h
+> >  CFILES = init.c \
+> >  	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
+> >  	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
+> > -	pwrite.c reflink.c seek.c shutdown.c stat.c sync.c truncate.c utimes.c
+> > +	pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c sync.c truncate.c \
+> > +	utimes.c
+> >  
+> >  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
+> >  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+> > diff --git a/io/init.c b/io/init.c
+> > index 20d5f80..9e576fe 100644
+> > --- a/io/init.c
+> > +++ b/io/init.c
+> > @@ -84,6 +84,7 @@ init_commands(void)
+> >  	readdir_init();
+> >  	reflink_init();
+> >  	resblks_init();
+> > +	scrub_init();
+> >  	seek_init();
+> >  	sendfile_init();
+> >  	shutdown_init();
+> > diff --git a/io/io.h b/io/io.h
+> > index 3862985..82e142f 100644
+> > --- a/io/io.h
+> > +++ b/io/io.h
+> > @@ -185,3 +185,5 @@ extern void		fsmap_init(void);
+> >  #else
+> >  # define fsmap_init()	do { } while (0)
+> >  #endif
+> > +
+> > +extern void		scrub_init(void);
+> > diff --git a/io/scrub.c b/io/scrub.c
+> > new file mode 100644
+> > index 0000000..cd2a1ee
+> > --- /dev/null
+> > +++ b/io/scrub.c
+> > @@ -0,0 +1,244 @@
+> > +/*
+> > + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> > + *
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +#include <sys/uio.h>
+> > +#include <xfs/xfs.h>
+> > +#include "command.h"
+> > +#include "input.h"
+> > +#include "init.h"
+> > +#include "path.h"
+> > +#include "io.h"
+> > +
+> > +static struct cmdinfo scrub_cmd;
+> > +
+> > +/* Type info and names for the scrub types. */
+> > +enum scrub_type {
+> > +	ST_NONE,	/* disabled */
+> > +	ST_PERAG,	/* per-AG metadata */
+> > +	ST_FS,		/* per-FS metadata */
+> > +	ST_INODE,	/* per-inode metadata */
+> > +};
+> > +
+> > +struct scrub_descr {
+> > +	const char	*name;
+> > +	enum scrub_type	type;
+> > +};
+> > +
+> > +static const struct scrub_descr scrubbers[XFS_SCRUB_TYPE_NR] = {
+> > +	[XFS_SCRUB_TYPE_PROBE]		= {"probe",		ST_NONE},
+> > +	[XFS_SCRUB_TYPE_SB]		= {"sb",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_AGF]		= {"agf",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_AGFL]		= {"agfl",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_AGI]		= {"agi",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_BNOBT]		= {"bnobt",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_CNTBT]		= {"cntbt",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_INOBT]		= {"inobt",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_FINOBT]		= {"finobt",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_RMAPBT]		= {"rmapbt",		ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_REFCNTBT]	= {"refcountbt",	ST_PERAG},
+> > +	[XFS_SCRUB_TYPE_INODE]		= {"inode",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_BMBTD]		= {"bmapbtd",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_BMBTA]		= {"bmapbta",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_BMBTC]		= {"bmapbtc",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_DIR]		= {"directory",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_XATTR]		= {"xattr",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_SYMLINK]	= {"symlink",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_PARENT]		= {"parent",		ST_INODE},
+> > +	[XFS_SCRUB_TYPE_RTBITMAP]	= {"rtbitmap",		ST_FS},
+> > +	[XFS_SCRUB_TYPE_RTSUM]		= {"rtsummary",		ST_FS},
+> > +	[XFS_SCRUB_TYPE_UQUOTA]		= {"usrquota",		ST_FS},
+> > +	[XFS_SCRUB_TYPE_GQUOTA]		= {"grpquota",		ST_FS},
+> > +	[XFS_SCRUB_TYPE_PQUOTA]		= {"prjquota",		ST_FS},
+> > +};
+> > +
+> > +static void
+> > +scrub_help(void)
+> > +{
+> > +	const struct scrub_descr	*d;
+> > +	int				i;
+> > +
+> > +	printf(_("\n\
+> 
+> Do you really love\
+> the continuation\
+> lines?
 
-       https://spdx.org/licenses/MPL-1.1.html#licenseText
+I told you before,\
+if you review in haiku,\
+...oh wait, that ended. :)
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> no other command uses this format, they're more "-happy... *shrug*
+> 
+> > + Scrubs a piece of XFS filesystem metadata.  The first argument is the type\n\
+> > + of metadata to examine.  Allocation group number(s) can be specified to\n\
+> > + restrict the scrub operation to a subset of allocation groups.\n\
+> 
+> actually, only 1 number can be.  "An allocation group number can be ..."
+> 
+> > + Certain metadata types do not take AG numbers.\n\
+> > +\n\
+> > + Example:\n\
+> > + 'scrub inobt 3' - scrub the inode btree in AG 3.\n\
+> > + 'scrub bmapbtd 128 13525' - scrubs the extent map of inode 128 gen 13525.\n\
+> 
+> Hm, how is a user to know which format goes with which type?
 
----
- LICENSES/other/MPL-1.1 |  478 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 478 insertions(+)
+	printf(_(
+"\n"
+" Scrubs a piece of XFS filesystem metadata.  The first argument is the type\n"
+" of metadata to examine.  Allocation group metadata types take one AG number\n"
+" as the second parameter.  Inode metadata types act on the currently open file\n"
+" or (optionally) take an inode number and generation number to act upon as\n"
+" the second and third parameters.\n"
+"\n"
+" Example:\n"
+" 'scrub inobt 3' - scrub the inode btree in AG 3.\n"
+" 'scrub bmapbtd 128 13525' - scrubs the extent map of inode 128 gen 13525.\n"
+"\n"
+" Known metadata scrub types are:"));
 
---- /dev/null
-+++ b/LICENSES/other/MPL-1.1
-@@ -0,0 +1,478 @@
-+Valid-License-Identifier: MPL-1.1
-+SPDX-URL: https://spdx.org/licenses/MPL-1.1.html
-+Usage-Guide:
-+  To use the Mozilla Public License version 1.1 put the following SPDX
-+  tag/value pair into a comment according to the placement guidelines in
-+  the licensing rules documentation:
-+    SPDX-License-Identifier: MPL-1.1
-+License-Text:
-+
-+                          MOZILLA PUBLIC LICENSE
-+                                Version 1.1
-+
-+                              ---------------
-+
-+1. Definitions.
-+
-+     1.0.1. "Commercial Use" means distribution or otherwise making the
-+     Covered Code available to a third party.
-+
-+     1.1. "Contributor" means each entity that creates or contributes to
-+     the creation of Modifications.
-+
-+     1.2. "Contributor Version" means the combination of the Original
-+     Code, prior Modifications used by a Contributor, and the Modifications
-+     made by that particular Contributor.
-+
-+     1.3. "Covered Code" means the Original Code or Modifications or the
-+     combination of the Original Code and Modifications, in each case
-+     including portions thereof.
-+
-+     1.4. "Electronic Distribution Mechanism" means a mechanism generally
-+     accepted in the software development community for the electronic
-+     transfer of data.
-+
-+     1.5. "Executable" means Covered Code in any form other than Source
-+     Code.
-+
-+     1.6. "Initial Developer" means the individual or entity identified
-+     as the Initial Developer in the Source Code notice required by Exhibit
-+     A.
-+
-+     1.7. "Larger Work" means a work which combines Covered Code or
-+     portions thereof with code not governed by the terms of this License.
-+
-+     1.8. "License" means this document.
-+
-+     1.8.1. "Licensable" means having the right to grant, to the maximum
-+     extent possible, whether at the time of the initial grant or
-+     subsequently acquired, any and all of the rights conveyed herein.
-+
-+     1.9. "Modifications" means any addition to or deletion from the
-+     substance or structure of either the Original Code or any previous
-+     Modifications. When Covered Code is released as a series of files, a
-+     Modification is:
-+          A. Any addition to or deletion from the contents of a file
-+          containing Original Code or previous Modifications.
-+
-+          B. Any new file that contains any part of the Original Code or
-+          previous Modifications.
-+
-+     1.10. "Original Code" means Source Code of computer software code
-+     which is described in the Source Code notice required by Exhibit A as
-+     Original Code, and which, at the time of its release under this
-+     License is not already Covered Code governed by this License.
-+
-+     1.10.1. "Patent Claims" means any patent claim(s), now owned or
-+     hereafter acquired, including without limitation,  method, process,
-+     and apparatus claims, in any patent Licensable by grantor.
-+
-+     1.11. "Source Code" means the preferred form of the Covered Code for
-+     making modifications to it, including all modules it contains, plus
-+     any associated interface definition files, scripts used to control
-+     compilation and installation of an Executable, or source code
-+     differential comparisons against either the Original Code or another
-+     well known, available Covered Code of the Contributor's choice. The
-+     Source Code can be in a compressed or archival form, provided the
-+     appropriate decompression or de-archiving software is widely available
-+     for no charge.
-+
-+     1.12. "You" (or "Your")  means an individual or a legal entity
-+     exercising rights under, and complying with all of the terms of, this
-+     License or a future version of this License issued under Section 6.1.
-+     For legal entities, "You" includes any entity which controls, is
-+     controlled by, or is under common control with You. For purposes of
-+     this definition, "control" means (a) the power, direct or indirect,
-+     to cause the direction or management of such entity, whether by
-+     contract or otherwise, or (b) ownership of more than fifty percent
-+     (50%) of the outstanding shares or beneficial ownership of such
-+     entity.
-+
-+2. Source Code License.
-+
-+     2.1. The Initial Developer Grant.
-+     The Initial Developer hereby grants You a world-wide, royalty-free,
-+     non-exclusive license, subject to third party intellectual property
-+     claims:
-+          (a)  under intellectual property rights (other than patent or
-+          trademark) Licensable by Initial Developer to use, reproduce,
-+          modify, display, perform, sublicense and distribute the Original
-+          Code (or portions thereof) with or without Modifications, and/or
-+          as part of a Larger Work; and
-+
-+          (b) under Patents Claims infringed by the making, using or
-+          selling of Original Code, to make, have made, use, practice,
-+          sell, and offer for sale, and/or otherwise dispose of the
-+          Original Code (or portions thereof).
-+
-+          (c) the licenses granted in this Section 2.1(a) and (b) are
-+          effective on the date Initial Developer first distributes
-+          Original Code under the terms of this License.
-+
-+          (d) Notwithstanding Section 2.1(b) above, no patent license is
-+          granted: 1) for code that You delete from the Original Code; 2)
-+          separate from the Original Code;  or 3) for infringements caused
-+          by: i) the modification of the Original Code or ii) the
-+          combination of the Original Code with other software or devices.
-+
-+     2.2. Contributor Grant.
-+     Subject to third party intellectual property claims, each Contributor
-+     hereby grants You a world-wide, royalty-free, non-exclusive license
-+
-+          (a)  under intellectual property rights (other than patent or
-+          trademark) Licensable by Contributor, to use, reproduce, modify,
-+          display, perform, sublicense and distribute the Modifications
-+          created by such Contributor (or portions thereof) either on an
-+          unmodified basis, with other Modifications, as Covered Code
-+          and/or as part of a Larger Work; and
-+
-+          (b) under Patent Claims infringed by the making, using, or
-+          selling of  Modifications made by that Contributor either alone
-+          and/or in combination with its Contributor Version (or portions
-+          of such combination), to make, use, sell, offer for sale, have
-+          made, and/or otherwise dispose of: 1) Modifications made by that
-+          Contributor (or portions thereof); and 2) the combination of
-+          Modifications made by that Contributor with its Contributor
-+          Version (or portions of such combination).
-+
-+          (c) the licenses granted in Sections 2.2(a) and 2.2(b) are
-+          effective on the date Contributor first makes Commercial Use of
-+          the Covered Code.
-+
-+          (d)    Notwithstanding Section 2.2(b) above, no patent license is
-+          granted: 1) for any code that Contributor has deleted from the
-+          Contributor Version; 2)  separate from the Contributor Version;
-+          3)  for infringements caused by: i) third party modifications of
-+          Contributor Version or ii)  the combination of Modifications made
-+          by that Contributor with other software  (except as part of the
-+          Contributor Version) or other devices; or 4) under Patent Claims
-+          infringed by Covered Code in the absence of Modifications made by
-+          that Contributor.
-+
-+3. Distribution Obligations.
-+
-+     3.1. Application of License.
-+     The Modifications which You create or to which You contribute are
-+     governed by the terms of this License, including without limitation
-+     Section 2.2. The Source Code version of Covered Code may be
-+     distributed only under the terms of this License or a future version
-+     of this License released under Section 6.1, and You must include a
-+     copy of this License with every copy of the Source Code You
-+     distribute. You may not offer or impose any terms on any Source Code
-+     version that alters or restricts the applicable version of this
-+     License or the recipients' rights hereunder. However, You may include
-+     an additional document offering the additional rights described in
-+     Section 3.5.
-+
-+     3.2. Availability of Source Code.
-+     Any Modification which You create or to which You contribute must be
-+     made available in Source Code form under the terms of this License
-+     either on the same media as an Executable version or via an accepted
-+     Electronic Distribution Mechanism to anyone to whom you made an
-+     Executable version available; and if made available via Electronic
-+     Distribution Mechanism, must remain available for at least twelve (12)
-+     months after the date it initially became available, or at least six
-+     (6) months after a subsequent version of that particular Modification
-+     has been made available to such recipients. You are responsible for
-+     ensuring that the Source Code version remains available even if the
-+     Electronic Distribution Mechanism is maintained by a third party.
-+
-+     3.3. Description of Modifications.
-+     You must cause all Covered Code to which You contribute to contain a
-+     file documenting the changes You made to create that Covered Code and
-+     the date of any change. You must include a prominent statement that
-+     the Modification is derived, directly or indirectly, from Original
-+     Code provided by the Initial Developer and including the name of the
-+     Initial Developer in (a) the Source Code, and (b) in any notice in an
-+     Executable version or related documentation in which You describe the
-+     origin or ownership of the Covered Code.
-+
-+     3.4. Intellectual Property Matters
-+          (a) Third Party Claims.
-+          If Contributor has knowledge that a license under a third party's
-+          intellectual property rights is required to exercise the rights
-+          granted by such Contributor under Sections 2.1 or 2.2,
-+          Contributor must include a text file with the Source Code
-+          distribution titled "LEGAL" which describes the claim and the
-+          party making the claim in sufficient detail that a recipient will
-+          know whom to contact. If Contributor obtains such knowledge after
-+          the Modification is made available as described in Section 3.2,
-+          Contributor shall promptly modify the LEGAL file in all copies
-+          Contributor makes available thereafter and shall take other steps
-+          (such as notifying appropriate mailing lists or newsgroups)
-+          reasonably calculated to inform those who received the Covered
-+          Code that new knowledge has been obtained.
-+
-+          (b) Contributor APIs.
-+          If Contributor's Modifications include an application programming
-+          interface and Contributor has knowledge of patent licenses which
-+          are reasonably necessary to implement that API, Contributor must
-+          also include this information in the LEGAL file.
-+
-+               (c)    Representations.
-+          Contributor represents that, except as disclosed pursuant to
-+          Section 3.4(a) above, Contributor believes that Contributor's
-+          Modifications are Contributor's original creation(s) and/or
-+          Contributor has sufficient rights to grant the rights conveyed by
-+          this License.
-+
-+     3.5. Required Notices.
-+     You must duplicate the notice in Exhibit A in each file of the Source
-+     Code.  If it is not possible to put such notice in a particular Source
-+     Code file due to its structure, then You must include such notice in a
-+     location (such as a relevant directory) where a user would be likely
-+     to look for such a notice.  If You created one or more Modification(s)
-+     You may add your name as a Contributor to the notice described in
-+     Exhibit A.  You must also duplicate this License in any documentation
-+     for the Source Code where You describe recipients' rights or ownership
-+     rights relating to Covered Code.  You may choose to offer, and to
-+     charge a fee for, warranty, support, indemnity or liability
-+     obligations to one or more recipients of Covered Code. However, You
-+     may do so only on Your own behalf, and not on behalf of the Initial
-+     Developer or any Contributor. You must make it absolutely clear than
-+     any such warranty, support, indemnity or liability obligation is
-+     offered by You alone, and You hereby agree to indemnify the Initial
-+     Developer and every Contributor for any liability incurred by the
-+     Initial Developer or such Contributor as a result of warranty,
-+     support, indemnity or liability terms You offer.
-+
-+     3.6. Distribution of Executable Versions.
-+     You may distribute Covered Code in Executable form only if the
-+     requirements of Section 3.1-3.5 have been met for that Covered Code,
-+     and if You include a notice stating that the Source Code version of
-+     the Covered Code is available under the terms of this License,
-+     including a description of how and where You have fulfilled the
-+     obligations of Section 3.2. The notice must be conspicuously included
-+     in any notice in an Executable version, related documentation or
-+     collateral in which You describe recipients' rights relating to the
-+     Covered Code. You may distribute the Executable version of Covered
-+     Code or ownership rights under a license of Your choice, which may
-+     contain terms different from this License, provided that You are in
-+     compliance with the terms of this License and that the license for the
-+     Executable version does not attempt to limit or alter the recipient's
-+     rights in the Source Code version from the rights set forth in this
-+     License. If You distribute the Executable version under a different
-+     license You must make it absolutely clear that any terms which differ
-+     from this License are offered by You alone, not by the Initial
-+     Developer or any Contributor. You hereby agree to indemnify the
-+     Initial Developer and every Contributor for any liability incurred by
-+     the Initial Developer or such Contributor as a result of any such
-+     terms You offer.
-+
-+     3.7. Larger Works.
-+     You may create a Larger Work by combining Covered Code with other code
-+     not governed by the terms of this License and distribute the Larger
-+     Work as a single product. In such a case, You must make sure the
-+     requirements of this License are fulfilled for the Covered Code.
-+
-+4. Inability to Comply Due to Statute or Regulation.
-+
-+     If it is impossible for You to comply with any of the terms of this
-+     License with respect to some or all of the Covered Code due to
-+     statute, judicial order, or regulation then You must: (a) comply with
-+     the terms of this License to the maximum extent possible; and (b)
-+     describe the limitations and the code they affect. Such description
-+     must be included in the LEGAL file described in Section 3.4 and must
-+     be included with all distributions of the Source Code. Except to the
-+     extent prohibited by statute or regulation, such description must be
-+     sufficiently detailed for a recipient of ordinary skill to be able to
-+     understand it.
-+
-+5. Application of this License.
-+
-+     This License applies to code to which the Initial Developer has
-+     attached the notice in Exhibit A and to related Covered Code.
-+
-+6. Versions of the License.
-+
-+     6.1. New Versions.
-+     Netscape Communications Corporation ("Netscape") may publish revised
-+     and/or new versions of the License from time to time. Each version
-+     will be given a distinguishing version number.
-+
-+     6.2. Effect of New Versions.
-+     Once Covered Code has been published under a particular version of the
-+     License, You may always continue to use it under the terms of that
-+     version. You may also choose to use such Covered Code under the terms
-+     of any subsequent version of the License published by Netscape. No one
-+     other than Netscape has the right to modify the terms applicable to
-+     Covered Code created under this License.
-+
-+     6.3. Derivative Works.
-+     If You create or use a modified version of this License (which you may
-+     only do in order to apply it to code which is not already Covered Code
-+     governed by this License), You must (a) rename Your license so that
-+     the phrases "Mozilla", "MOZILLAPL", "MOZPL", "Netscape",
-+     "MPL", "NPL" or any confusingly similar phrase do not appear in your
-+     license (except to note that your license differs from this License)
-+     and (b) otherwise make it clear that Your version of the license
-+     contains terms which differ from the Mozilla Public License and
-+     Netscape Public License. (Filling in the name of the Initial
-+     Developer, Original Code or Contributor in the notice described in
-+     Exhibit A shall not of themselves be deemed to be modifications of
-+     this License.)
-+
-+7. DISCLAIMER OF WARRANTY.
-+
-+     COVERED CODE IS PROVIDED UNDER THIS LICENSE ON AN "AS IS" BASIS,
-+     WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
-+     WITHOUT LIMITATION, WARRANTIES THAT THE COVERED CODE IS FREE OF
-+     DEFECTS, MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE OR NON-INFRINGING.
-+     THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE COVERED CODE
-+     IS WITH YOU. SHOULD ANY COVERED CODE PROVE DEFECTIVE IN ANY RESPECT,
-+     YOU (NOT THE INITIAL DEVELOPER OR ANY OTHER CONTRIBUTOR) ASSUME THE
-+     COST OF ANY NECESSARY SERVICING, REPAIR OR CORRECTION. THIS DISCLAIMER
-+     OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE. NO USE OF
-+     ANY COVERED CODE IS AUTHORIZED HEREUNDER EXCEPT UNDER THIS DISCLAIMER.
-+
-+8. TERMINATION.
-+
-+     8.1.  This License and the rights granted hereunder will terminate
-+     automatically if You fail to comply with terms herein and fail to cure
-+     such breach within 30 days of becoming aware of the breach. All
-+     sublicenses to the Covered Code which are properly granted shall
-+     survive any termination of this License. Provisions which, by their
-+     nature, must remain in effect beyond the termination of this License
-+     shall survive.
-+
-+     8.2.  If You initiate litigation by asserting a patent infringement
-+     claim (excluding declatory judgment actions) against Initial Developer
-+     or a Contributor (the Initial Developer or Contributor against whom
-+     You file such action is referred to as "Participant")  alleging that:
-+
-+     (a)  such Participant's Contributor Version directly or indirectly
-+     infringes any patent, then any and all rights granted by such
-+     Participant to You under Sections 2.1 and/or 2.2 of this License
-+     shall, upon 60 days notice from Participant terminate prospectively,
-+     unless if within 60 days after receipt of notice You either: (i)
-+     agree in writing to pay Participant a mutually agreeable reasonable
-+     royalty for Your past and future use of Modifications made by such
-+     Participant, or (ii) withdraw Your litigation claim with respect to
-+     the Contributor Version against such Participant.  If within 60 days
-+     of notice, a reasonable royalty and payment arrangement are not
-+     mutually agreed upon in writing by the parties or the litigation claim
-+     is not withdrawn, the rights granted by Participant to You under
-+     Sections 2.1 and/or 2.2 automatically terminate at the expiration of
-+     the 60 day notice period specified above.
-+
-+     (b)  any software, hardware, or device, other than such Participant's
-+     Contributor Version, directly or indirectly infringes any patent, then
-+     any rights granted to You by such Participant under Sections 2.1(b)
-+     and 2.2(b) are revoked effective as of the date You first made, used,
-+     sold, distributed, or had made, Modifications made by that
-+     Participant.
-+
-+     8.3.  If You assert a patent infringement claim against Participant
-+     alleging that such Participant's Contributor Version directly or
-+     indirectly infringes any patent where such claim is resolved (such as
-+     by license or settlement) prior to the initiation of patent
-+     infringement litigation, then the reasonable value of the licenses
-+     granted by such Participant under Sections 2.1 or 2.2 shall be taken
-+     into account in determining the amount or value of any payment or
-+     license.
-+
-+     8.4.  In the event of termination under Sections 8.1 or 8.2 above,
-+     all end user license agreements (excluding distributors and resellers)
-+     which have been validly granted by You or any distributor hereunder
-+     prior to termination shall survive termination.
-+
-+9. LIMITATION OF LIABILITY.
-+
-+     UNDER NO CIRCUMSTANCES AND UNDER NO LEGAL THEORY, WHETHER TORT
-+     (INCLUDING NEGLIGENCE), CONTRACT, OR OTHERWISE, SHALL YOU, THE INITIAL
-+     DEVELOPER, ANY OTHER CONTRIBUTOR, OR ANY DISTRIBUTOR OF COVERED CODE,
-+     OR ANY SUPPLIER OF ANY OF SUCH PARTIES, BE LIABLE TO ANY PERSON FOR
-+     ANY INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES OF ANY
-+     CHARACTER INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF GOODWILL,
-+     WORK STOPPAGE, COMPUTER FAILURE OR MALFUNCTION, OR ANY AND ALL OTHER
-+     COMMERCIAL DAMAGES OR LOSSES, EVEN IF SUCH PARTY SHALL HAVE BEEN
-+     INFORMED OF THE POSSIBILITY OF SUCH DAMAGES. THIS LIMITATION OF
-+     LIABILITY SHALL NOT APPLY TO LIABILITY FOR DEATH OR PERSONAL INJURY
-+     RESULTING FROM SUCH PARTY'S NEGLIGENCE TO THE EXTENT APPLICABLE LAW
-+     PROHIBITS SUCH LIMITATION. SOME JURISDICTIONS DO NOT ALLOW THE
-+     EXCLUSION OR LIMITATION OF INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO
-+     THIS EXCLUSION AND LIMITATION MAY NOT APPLY TO YOU.
-+
-+10. U.S. GOVERNMENT END USERS.
-+
-+     The Covered Code is a "commercial item," as that term is defined in
-+     48 C.F.R. 2.101 (Oct. 1995), consisting of "commercial computer
-+     software" and "commercial computer software documentation," as such
-+     terms are used in 48 C.F.R. 12.212 (Sept. 1995). Consistent with 48
-+     C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4 (June 1995),
-+     all U.S. Government End Users acquire Covered Code with only those
-+     rights set forth herein.
-+
-+11. MISCELLANEOUS.
-+
-+     This License represents the complete agreement concerning subject
-+     matter hereof. If any provision of this License is held to be
-+     unenforceable, such provision shall be reformed only to the extent
-+     necessary to make it enforceable. This License shall be governed by
-+     California law provisions (except to the extent applicable law, if
-+     any, provides otherwise), excluding its conflict-of-law provisions.
-+     With respect to disputes in which at least one party is a citizen of,
-+     or an entity chartered or registered to do business in the United
-+     States of America, any litigation relating to this License shall be
-+     subject to the jurisdiction of the Federal Courts of the Northern
-+     District of California, with venue lying in Santa Clara County,
-+     California, with the losing party responsible for costs, including
-+     without limitation, court costs and reasonable attorneys' fees and
-+     expenses. The application of the United Nations Convention on
-+     Contracts for the International Sale of Goods is expressly excluded.
-+     Any law or regulation which provides that the language of a contract
-+     shall be construed against the drafter shall not apply to this
-+     License.
-+
-+12. RESPONSIBILITY FOR CLAIMS.
-+
-+     As between Initial Developer and the Contributors, each party is
-+     responsible for claims and damages arising, directly or indirectly,
-+     out of its utilization of rights under this License and You agree to
-+     work with Initial Developer and Contributors to distribute such
-+     responsibility on an equitable basis. Nothing herein is intended or
-+     shall be deemed to constitute any admission of liability.
-+
-+13. MULTIPLE-LICENSED CODE.
-+
-+     Initial Developer may designate portions of the Covered Code as
-+     "Multiple-Licensed".  "Multiple-Licensed" means that the Initial
-+     Developer permits you to utilize portions of the Covered Code under
-+     Your choice of the MPL or the alternative licenses, if any, specified
-+     by the Initial Developer in the file described in Exhibit A.
-+
-+EXHIBIT A -Mozilla Public License.
-+
-+     ``The contents of this file are subject to the Mozilla Public License
-+     Version 1.1 (the "License"); you may not use this file except in
-+     compliance with the License. You may obtain a copy of the License at
-+     https://www.mozilla.org/MPL/
-+
-+     Software distributed under the License is distributed on an "AS IS"
-+     basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-+     License for the specific language governing rights and limitations
-+     under the License.
-+
-+     The Original Code is ______________________________________.
-+
-+     The Initial Developer of the Original Code is ________________________.
-+     Portions created by ______________________ are Copyright (C) ______
-+     _______________________. All Rights Reserved.
-+
-+     Contributor(s): ______________________________________.
-+
-+     Alternatively, the contents of this file may be used under the terms
-+     of the _____ license (the  "[___] License"), in which case the
-+     provisions of [______] License are applicable instead of those
-+     above.  If you wish to allow use of your version of this file only
-+     under the terms of the [____] License and not to allow others to use
-+     your version of this file under the MPL, indicate your decision by
-+     deleting  the provisions above and replace  them with the notice and
-+     other provisions required by the [___] License.  If you do not delete
-+     the provisions above, a recipient may use your version of this file
-+     under either the MPL or the [___] License."
-+
-+     [NOTE: The text of this Exhibit A may differ slightly from the text of
-+     the notices in the Source Code files of the Original Code. You should
-+     use the text of this Exhibit A rather than the text found in the
-+     Original Code Source Code for Your Modifications.]
+> 
+> > +\n\
+> > + Known metadata scrub types are:"));
+> > +	for (i = 0, d = scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++)
+> > +		printf(" %s", d->name);
+> > +	printf("\n");
+> > +}
+> > +
+> > +static void
+> > +scrub_ioctl(
+> > +	int				fd,
+> > +	int				type,
+> > +	uint64_t			control,
+> > +	uint32_t			control2)
+> > +{
+> > +	struct xfs_scrub_metadata	meta;
+> > +	const struct scrub_descr	*sc;
+> > +	int				error;
+> > +
+> > +	sc = &scrubbers[type];
+> > +	memset(&meta, 0, sizeof(meta));
+> > +	meta.sm_type = type;
+> > +	switch (sc->type) {
+> > +	case ST_PERAG:
+> > +		meta.sm_agno = control;
+> > +		break;
+> > +	case ST_INODE:
+> > +		meta.sm_ino = control;
+> > +		meta.sm_gen = control2;
+> > +		break;
+> > +	case ST_NONE:
+> > +	case ST_FS:
+> > +		/* no control parameters */
+> > +		break;
+> > +	}
+> > +	meta.sm_flags = 0;
+> > +
+> > +	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
+> > +	if (error)
+> > +		perror("scrub");
+> > +	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > +		printf(_("Corruption detected.\n"));
+> > +	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
+> > +		printf(_("Optimization possible.\n"));
+> > +	if (meta.sm_flags & XFS_SCRUB_OFLAG_XFAIL)
+> > +		printf(_("Cross-referencing failed.\n"));
+> > +	if (meta.sm_flags & XFS_SCRUB_OFLAG_XCORRUPT)
+> > +		printf(_("Corruption detected during cross-referencing.\n"));
+> > +	if (meta.sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
+> > +		printf(_("Scan was not complete.\n"));
+> > +}
+> > +
+> > +static int
+> > +parse_args(
+> > +	int				argc,
+> > +	char				**argv,
+> > +	struct cmdinfo			*cmdinfo,
+> > +	void				(*fn)(int, int, uint64_t, uint32_t))
+> > +{
+> > +	char				*p;
+> > +	int				type = -1;
+> > +	int				i, c;
+> > +	uint64_t			control = 0;
+> > +	uint32_t			control2 = 0;
+> > +	const struct scrub_descr	*d = NULL;
+> > +
+> > +	while ((c = getopt(argc, argv, "")) != EOF) {
+> > +		switch (c) {
+> > +		default:
+> > +			return command_usage(cmdinfo);
+> > +		}
+> > +	}
+> > +	if (optind > argc - 1)
+> > +		return command_usage(cmdinfo);
+> > +
+> > +	for (i = 0, d = scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++) {
+> > +		if (strcmp(d->name, argv[optind]) == 0) {
+> > +			type = i;
+> > +			break;
+> > +		}
+> > +	}
+> > +	optind++;
+> > +
+> > +	if (type < 0) {
+> 		("unknown type %s\n", argv[optind]) ?
+> 
+> > +		return command_usage(cmdinfo);
+> 	}
 
+Ok.
 
+> > +
+> > +	switch (d->type) {
+> > +	case ST_INODE:
+> > +		if (optind == argc) {
+> > +			control = 0;
+> > +			control2 = 0;
+> > +		} else if (optind == argc - 2) {
+> > +			control = strtoull(argv[optind], &p, 0);
+> > +			if (*p != '\0') {
+> > +				fprintf(stderr,
+> > +					_("Bad inode number %s.\n"), argv[i]);
+> 
+> I don't think this does what you think it does ;)  (i s/b optind?)
+
+Inconceivable!
+
+> xfs_io> scrub bmapbtd foo bar
+> Bad inode number croatian.
+> 
+> (!)
+
+Fixed, thanks.
+
+> > +				return 0;
+> > +			}
+> > +			control2 = strtoul(argv[optind + 1], &p, 0);
+> > +			if (*p != '\0') {
+> > +				fprintf(stderr,
+> > +					_("Bad generation number %s.\n"), argv[i]);
+> 
+> [optind + 1]
+> 
+> > +				return 0;
+> > +			}
+> > +		} else {
+> > +			fprintf(stderr,
+> > +				_("Must specify inode number and generation.\n"));
+> > +			return 0;
+> > +		}
+> > +		break;
+> > +	case ST_PERAG:
+> > +	case ST_NONE:
+> > +		if (optind != argc - 1) {
+> > +			fprintf(stderr,
+> > +				_("Must specify AG number.\n"));
+> 
+> since any arg count mismatch issues this warning, i.e.:
+> 
+> xfs_io> scrub inobt 1 2 3
+> Must specify AG number.
+> 
+> I wonder if "a single AG number" would be more clear.
+
+Yes.
+
+> (And the same treatment for i.e. "a single inode number and generation")
+> 
+> Also: does ST_NONE: (just "probe?") really take an AG number?  A quick
+> look at the kernel makes me think that gives -EINVAL?
+
+The probe scrubber used to echo back whatever the agno in oflags, but that
+went away in the review process so ST_NONE/ST_FS can go at the bottom where
+default clause is currently.
+
+> 
+> > +			return 0;
+> > +		}
+> > +		control = strtoul(argv[optind], &p, 0);
+> > +		if (*p != '\0') {
+> > +			fprintf(stderr,
+> > +				_("Bad AG number %s.\n"), argv[i]);
+> > +			return 0;
+> > +		}
+> > +		break;
+> > +	default:
+> 
+> is this ST_FS: then?  Seems odd to catch it under default, wouldn't it make
+> sense to have it explicit here, and
+> 
+>         ST_FS:
+> > +		if (optind != argc) {
+> > +			fprintf(stderr,
+> > +				_("No parameters allowed.\n"));
+> > +			return 0;
+> > +		}
+>         default:
+> 		ASSERT(0) 
+> 
+> or something?
+
+Yes, done.
+
+> > +	}
+> > +	fn(file->fd, type, control, control2);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int
+> > +scrub_f(
+> > +	int				argc,
+> > +	char				**argv)
+> > +{
+> > +	return parse_args(argc, argv, &scrub_cmd, scrub_ioctl);
+> 
+> is there any reason to have parse_args factored out of the scrub_f function?
+
+Yes, repair_f will use the same parse_args some day.
+
+> > +}
+> > +
+> > +void
+> > +scrub_init(void)
+> > +{
+> > +	scrub_cmd.name = "scrub";
+> > +	scrub_cmd.altname = "sc";
+> > +	scrub_cmd.cfunc = scrub_f;
+> > +	scrub_cmd.argmin = 1;
+> > +	scrub_cmd.argmax = -1;
+> > +	scrub_cmd.flags = CMD_NOMAP_OK;
+> > +	scrub_cmd.args =
+> > +_("type [agno...]");
+> 
+> don't need to outdent such a short string, no other command does.
+> 
+> > +	scrub_cmd.oneline => +		_("scrubs filesystem metadata");
+> 
+> This can also be on the same line
+
+Will fix the outdent and bad help text.
+
+> > +	scrub_cmd.help = scrub_help;
+> > +
+> > +	add_command(&scrub_cmd);
+> > +}
+> > diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> > index 9bf1a47..ed10ba6 100644
+> > --- a/man/man8/xfs_io.8
+> > +++ b/man/man8/xfs_io.8
+> > @@ -1119,6 +1119,16 @@ version of policy structure (numeric)
+> >  .BR get_encpolicy
+> >  On filesystems that support encryption, display the encryption policy of the
+> >  current file.
+> > +.TP
+> > +.BI "scrub " type " [ " agnumber... " | " "ino" " " "gen" " ]"
+> > +Scrub internal XFS filesystem metadata.  The
+> > +.BI type
+> > +parameter specifies which type of metadata to scrub.
+> > +For AG metadata, AG numbers can optionally be specified to restrict the
+> 
+> "an AG number can optionally ..."
+> 
+> > +scrub operation to a particular set of allocation groups.
+> 
+> "... to that allocation group."
+> 
+> > +By default, all allocation groups are scrubbed.
+> > +For file metadata, the scrub is applied to the open file unless the
+> 
+> a specific inode number and and ... (?)
+> 
+> > +inode number and generation number are specified.
+> 
+> I think explaining the generation number would be useful, i.e. where
+> does it come from, how is it found, how does the ioctl use it?
+> (is that too much?)
+
+I don't know that I really /want/ people using the raw handle interface
+since (afaik) the only way to get the generation number is BULKSTAT or
+xfs_db.  If you're going to use the raw xfs_io interface then you had
+better know some about how inodes work in xfs.
+
+> >  
+> >  .SH SEE ALSO
+> >  .BR mkfs.xfs (8),
+> 
+> add the scrub ioctl manpage here too, and/or in the main scrub section?
+
+Next patch, but sure?  Dunno, we don't link to the getfsmap manpage but
+we have an xfs_io command for it.
+
+--D
+
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
