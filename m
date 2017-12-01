@@ -1,45 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53310 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:43952 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752562AbdLEIYI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Dec 2017 03:24:08 -0500
-Date: Tue, 5 Dec 2017 16:24:06 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v7] generic: initial fiemap range query test
-Message-ID: <20171205082406.GK2749@eguan.usersys.redhat.com>
-References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
+        id S1751921AbdLAWZ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Dec 2017 17:25:58 -0500
+Subject: Re: [PATCH 4/4] xfs: move all scrub input checking to
+ xfs_scrub_validate
+References: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
+ <b60a6557-ca8c-6118-8013-09677d529adb@sandeen.net>
+ <20171201222437.GW21412@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1d1f489e-9a24-1b00-05a9-1892f0a6c02b@sandeen.net>
+Date: Fri, 1 Dec 2017 16:25:57 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1512057927-15022-1-git-send-email-nborisov@suse.com>
+In-Reply-To: <20171201222437.GW21412@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Nov 30, 2017 at 06:05:27PM +0200, Nikolay Borisov wrote:
-> Fiemap gained support for passing in optional offset len
-> which denote the range requested, so this patch adds
-> testcases for this functionality. Aditionally, a special "ranged"
-> argument is added to the require_xfs_io_command which checks
-> for the presence of fiemap range support.
+
+
+On 12/1/17 4:24 PM, Darrick J. Wong wrote:
+>> diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+>> index e9ec041..47f098c 100644
+>> --- a/fs/xfs/scrub/scrub.h
+>> +++ b/fs/xfs/scrub/scrub.h
+>> @@ -22,7 +22,17 @@
+>>  
+>>  struct xfs_scrub_context;
+>>  
+>> +/* Type info and names for the scrub types. */
+>> +enum scrub_type {
+> enum xfs_scrub_type ?
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
-> 
-> For the time being this test is expected to fail on XFS. 
-> 
-> V7: 
->  * Adjusted for 64k block size filesystem
->  * Only use/require a test device and not a scratch device
 
-v7 looks good to me, test passes on ppc64 hosts too, thanks!
+Oh, sure.  I can resend or feel free to fix it on the way in if that's
+all there is.
 
-But it seems that it's not decided yet whether xfs should trim the
-ranged fiemap query request, I'd like to see the expected behavior
-decided first. (BTW, v7 passes with latest RHEL7 kernel too, seems
-extents are not trimmed there.)
-
-Thanks,
-Eryu
+-Eric
