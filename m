@@ -1,155 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43884 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34940 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752750AbdLANgV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Dec 2017 08:36:21 -0500
-Date: Fri, 1 Dec 2017 08:36:19 -0500
+        id S1752488AbdLANhn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Dec 2017 08:37:43 -0500
+Date: Fri, 1 Dec 2017 08:37:42 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 1/2] xfs: add the ability to join a buffer to a
- defer_ops
-Message-ID: <20171201133618.GA22403@bfoster.bfoster>
-References: <20171130175805.GC31372@magnolia>
+Subject: Re: [RFC PATCH 2/2] The new attribute leaf buffer is not held locked
+ across the transaction
+Message-ID: <20171201133741.GB22403@bfoster.bfoster>
+References: <20171130175810.GJ21412@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171130175805.GC31372@magnolia>
+In-Reply-To: <20171130175810.GJ21412@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com, libor.klepac@bcom.cz
 
-On Thu, Nov 30, 2017 at 09:58:05AM -0800, Darrick J. Wong wrote:
+On Thu, Nov 30, 2017 at 09:58:10AM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In certain cases we need to be able to maintain a buffer lock across a
-> defer_finish call.  Since there could be many (large) transactions
-> committed as a result of a defer_finish, we have to hold the buffer
-> across the roll, then immediately rejoin the buffer and mark it dirty in
-> each transaction to keep the log moving forward.
+> The new attribute leaf buffer is not held locked across the transaction
+> roll between the shortform->leaf modification and the addition of the
+> new entry.  As a result, the attribute buffer modification being made is
+> not atomic from an operational perspective.  Hence the AIL push can grab
+> it in the transient state of "just created" after the initial
+> transaction is rolled, because the buffer has been released.  This leads
+> to xfs_attr3_leaf_verify() asserting that hdr.count is zero, treating
+> this as in-memory corruption, and shutting down the filesystem.
 > 
+> Darrick ported the original patch to 4.15 and reworked it use the
+> xfs_defer_bjoin helper and hold/join the buffer correctly across the
+> second transaction roll.
+> 
+> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Seems about right to me. A couple things..
-
->  fs/xfs/libxfs/xfs_defer.c |   37 ++++++++++++++++++++++++++++++++++---
->  fs/xfs/libxfs/xfs_defer.h |    5 ++++-
->  2 files changed, 38 insertions(+), 4 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c      |   19 +++++++++++++++----
+>  fs/xfs/libxfs/xfs_attr_leaf.c |    9 ++++++---
+>  fs/xfs/libxfs/xfs_attr_leaf.h |    3 ++-
+>  3 files changed, 23 insertions(+), 8 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 072ebfe..b5b3414 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -249,6 +249,10 @@ xfs_defer_trans_roll(
->  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
->  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 6249c92..dc7bcf7 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -212,6 +212,7 @@ xfs_attr_set(
+>  	int			flags)
+>  {
+>  	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_buf		*leaf_bp = NULL;
+>  	struct xfs_da_args	args;
+>  	struct xfs_defer_ops	dfops;
+>  	struct xfs_trans_res	tres;
+> @@ -327,9 +328,15 @@ xfs_attr_set(
+>  		 * GROT: another possible req'mt for a double-split btree op.
+>  		 */
+>  		xfs_defer_init(args.dfops, args.firstblock);
+> -		error = xfs_attr_shortform_to_leaf(&args);
+> +		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+>  		if (error)
+>  			goto out_defer_cancel;
+> +		/*
+> +		 * Prevent the leaf buffer from being unlocked so that a
+> +		 * concurrent AIL push cannot grab the half-baked leaf
+> +		 * buffer and run into problems with the write verifier.
+> +		 */
+> +		xfs_defer_bjoin(args.dfops, leaf_bp);
+>  		xfs_defer_ijoin(args.dfops, dp);
+>  		error = xfs_defer_finish(&args.trans, args.dfops);
+>  		if (error)
+> @@ -337,13 +344,15 @@ xfs_attr_set(
 >  
-> +	/* Hold the (previously bjoin'd) buffer locked across the roll. */
-> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
-> +		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
-> +
+>  		/*
+>  		 * Commit the leaf transformation.  We'll need another (linked)
+> -		 * transaction to add the new attribute to the leaf.
+> +		 * transaction to add the new attribute to the leaf, which
+> +		 * means that we have to hold & join the leaf buffer here too.
+>  		 */
+> -
+> +		xfs_trans_bhold(args.trans, leaf_bp);
 
-It seems more consistent to dirty the buffer in the tx here and
-bjoin+bhold it in the loop below.
-
->  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
->  
->  	/* Roll the transaction. */
-> @@ -264,6 +268,12 @@ xfs_defer_trans_roll(
->  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
->  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
->  
-> +	/* Rejoin the buffers and dirty them so the log moves forward. */
-> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
-> +		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
-> +		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
-> +	}
-> +
->  	return error;
->  }
->  
-> @@ -299,6 +309,29 @@ xfs_defer_ijoin(
->  }
->  
->  /*
-> + * Add this buffer to the deferred op.  Each joined buffer is relogged
-> + * each time we roll the transaction.
-> + */
-> +int
-> +xfs_defer_bjoin(
-> +	struct xfs_defer_ops		*dop,
-> +	struct xfs_buf			*bp)
-> +{
-> +	int				i;
-> +
-> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-> +		if (dop->dop_bufs[i] == bp)
-> +			return 0;
-> +		else if (dop->dop_bufs[i] == NULL) {
-> +			dop->dop_bufs[i] = bp;
-> +			return 0;
-> +		}
-> +	}
-> +
-> +	return -EFSCORRUPTED;
-
-I notice that this looks exactly like xfs_defer_join(), but is
--EFSCORRUPTED the right error here? It probably doesn't matter that much
-given that if we hit this we've already lost, but I wonder if an error
-that more reflects a programming error as opposed to inconsistent fs
-might be more appropriate..? -EINVAL, -EBUSY?
+If I follow correctly, I think the change to xfs_defer_trans_roll()
+would mean we'd need to dirty the buffer here to relog it (rather than
+bhold it). That is essentially what xfs_trans_roll_inode() does for the
+inode, so we could refactor that function into a more generic helper
+that also receives an optional bp to dirty in the tx and rejoin after
+the roll. That would also eliminate the need for the bjoin call below
+(though we should retain an update to the comment above to remind us of
+the behavior ;).
 
 Brian
 
-> +}
-> +
-> +/*
->   * Finish all the pending work.  This involves logging intent items for
->   * any work items that wandered in since the last transaction roll (if
->   * one has even happened), rolling the transaction, and finishing the
-> @@ -493,9 +526,7 @@ xfs_defer_init(
->  	struct xfs_defer_ops		*dop,
->  	xfs_fsblock_t			*fbp)
+>  		error = xfs_trans_roll_inode(&args.trans, dp);
+>  		if (error)
+>  			goto out;
+> -
+> +		xfs_trans_bjoin(args.trans, leaf_bp);
+> +		leaf_bp = NULL;
+>  	}
+>  
+>  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> @@ -376,6 +385,8 @@ xfs_attr_set(
+>  	xfs_defer_cancel(&dfops);
+>  	args.trans = NULL;
+>  out:
+> +	if (leaf_bp)
+> +		xfs_trans_brelse(args.trans, leaf_bp);
+>  	if (args.trans)
+>  		xfs_trans_cancel(args.trans);
+>  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 8e59375..ebfa477 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -739,10 +739,13 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
+>  }
+>  
+>  /*
+> - * Convert from using the shortform to the leaf.
+> + * Convert from using the shortform to the leaf.  On success, return the
+> + * buffer so that we can keep it locked until we're totally done with it.
+>   */
+>  int
+> -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+> +xfs_attr_shortform_to_leaf(
+> +	struct xfs_da_args	*args,
+> +	struct xfs_buf		**leaf_bp)
 >  {
-> -	dop->dop_committed = false;
-> -	dop->dop_low = false;
-> -	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> +	memset(dop, 0, sizeof(struct xfs_defer_ops));
->  	*fbp = NULLFSBLOCK;
->  	INIT_LIST_HEAD(&dop->dop_intake);
->  	INIT_LIST_HEAD(&dop->dop_pending);
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index d4f046d..045beac 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
->  };
->  
->  #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-> +#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
->  
->  struct xfs_defer_ops {
->  	bool			dop_committed;	/* did any trans commit? */
-> @@ -66,8 +67,9 @@ struct xfs_defer_ops {
->  	struct list_head	dop_intake;	/* unlogged pending work */
->  	struct list_head	dop_pending;	/* logged pending work */
->  
-> -	/* relog these inodes with each roll */
-> +	/* relog these with each roll */
->  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-> +	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
->  };
->  
->  void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-> @@ -77,6 +79,7 @@ void xfs_defer_cancel(struct xfs_defer_ops *dop);
->  void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
->  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
->  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-> +int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
->  
->  /* Description of a deferred type. */
->  struct xfs_defer_op_type {
+>  	xfs_inode_t *dp;
+>  	xfs_attr_shortform_t *sf;
+> @@ -822,7 +825,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+>  		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+>  	}
+>  	error = 0;
+> -
+> +	*leaf_bp = bp;
+>  out:
+>  	kmem_free(tmpbuffer);
+>  	return error;
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index c97f1fe..4da08af 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -48,7 +48,8 @@ void	xfs_attr_shortform_create(struct xfs_da_args *args);
+>  void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+>  int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+>  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+> -int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
+> +int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+> +			struct xfs_buf **leaf_bp);
+>  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+>  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+>  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
