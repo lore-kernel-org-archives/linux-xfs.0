@@ -1,160 +1,400 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:26695
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752359AbdLCWmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Dec 2017 17:42:08 -0500
-Date: Mon, 4 Dec 2017 09:42:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Internal error XFS_WANT_CORRUPTED_GOTO at line 3505 of file
- fs/xfs/libxfs/xfs_btree.c. Caller xfs_free_ag_extent+0x35d/0x7a0 [xfs]
-Message-ID: <20171203224205.GY5858@dastard>
-References: <CAC=E7cXGoFiGc7GtCP3s9x9rfu9pssryVtB_FMUZaGhwHRPBYw@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20197 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbdLATDI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 14:03:08 -0500
+Date: Fri, 1 Dec 2017 11:03:03 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 5/5] man: describe the metadata scrubbing ioctl
+Message-ID: <20171201190303.GU21412@magnolia>
+References: <151094860143.27182.12022983202520916281.stgit@magnolia>
+ <151094863117.27182.9043322726761011548.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAC=E7cXGoFiGc7GtCP3s9x9rfu9pssryVtB_FMUZaGhwHRPBYw@mail.gmail.com>
+In-Reply-To: <151094863117.27182.9043322726761011548.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chiluk <chiluk+linuxxfs@indeed.com>
-Cc: connor+linuxxfs@indeed.com, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 01, 2017 at 05:09:08PM -0600, Dave Chiluk wrote:
-> We have now hit the below stack trace or a very similar stack trace roughly
-> 6 times in our mesos clusters. My best guess given code analysis is that we
-> are unable to allocate a new node in the allocation group btree free-list
-> (*or something much weirder).  There is plenty of ram and "space" left on
-> the filesystem at this point though.
-> 
-> vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvkernel:
-> XFS (dm-4): Internal error XFS_WANT_CORRUPTED_GOTO at line 3505 of file
-> fs/xfs/libxfs/xfs_btree.c. Caller xfs_free_ag_extent+0x35d/0x7a0 [xfs]
-> kernel: CPU: 18 PID: 9896 Comm: mesos-slave Not tainted
-> 4.10.10-1.el7.elrepo.x86_64 #1
-> kernel: Hardware name: Supermicro PIO-618U-TR4T+-ST031/X10DRU-i+, BIOS 2.0
-> 12/17/2015
-> kernel: Call Trace:
-> kernel: dump_stack+0x63/0x87
-> kernel: xfs_error_report+0x3b/0x40 [xfs]
-> kernel: ? xfs_free_ag_extent+0x35d/0x7a0 [xfs]
-> kernel: xfs_btree_insert+0x1b0/0x1c0 [xfs]
-> kernel: xfs_free_ag_extent+0x35d/0x7a0 [xfs]
-> kernel: xfs_free_extent+0xbb/0x150 [xfs]
-> kernel: xfs_trans_free_extent+0x4f/0x110 [xfs]
-> kernel: ? xfs_trans_add_item+0x5d/0x90 [xfs]
-> kernel: xfs_extent_free_finish_item+0x26/0x40 [xfs]
-> kernel: xfs_defer_finish+0x149/0x410 [xfs]
-> kernel: xfs_remove+0x281/0x330 [xfs]
-> kernel: xfs_vn_unlink+0x55/0xa0 [xfs]
-> kernel: vfs_rmdir+0xb6/0x130
-> kernel: do_rmdir+0x1b3/0x1d0
-> kernel: SyS_rmdir+0x16/0x20
-> kernel: do_syscall_64+0x67/0x180
-> kernel: entry_SYSCALL64_slow_path+0x25/0x25
-> kernel: RIP: 0033:0x7f85d8d92397
-> kernel: RSP: 002b:00007f85cef9b758 EFLAGS: 00000246 ORIG_RAX:
-> 0000000000000054
-> kernel: RAX: ffffffffffffffda RBX: 00007f858c00b4c0 RCX: 00007f85d8d92397
-> kernel: RDX: 00007f858c09ad70 RSI: 0000000000000000 RDI: 00007f858c09ad70
-> kernel: RBP: 00007f85cef9bc30 R08: 0000000000000001 R09: 0000000000000002
-> kernel: R10: 0000006f74656c67 R11: 0000000000000246 R12: 00007f85cef9c640
-> kernel: R13: 00007f85cef9bc50 R14: 00007f85cef9bcc0 R15: 00007f85cef9bc40
-> kernel: XFS (dm-4): xfs_do_force_shutdown(0x8) called from line 236 of file
-> fs/xfs/libxfs/xfs_defer.c. Return address = 0xffffffffa028f087
-> kernel: XFS (dm-4): Corruption of in-memory data detected. Shutting down
-> filesystem
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
-> Attempts to unmount and repair the filesystem also fail, but the error from
-> the above trace was accidentally lost when the machine got re-installed.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Should unmount just fine, unless you still have apps running with
-active references to the filesystems. Without xfs_repair output,
-however, we have no idea whether this was caused by corruption or
-some other problem.
+Document the XFS-specific metadata scrub/repair ioctl's behavior,
+arguments, and side effects.
 
-> I found this thread
-> https://www.centos.org/forums/viewtopic.php?t=15898#p75290 about someone
-> hitting something similar. It was only similar in-so-much as it was an
-> XFS_WANT_CORRUPTED_GOTO and he had a ton of allocation groups.  So I
-> checked our allocation group count and discovered it to be 1729
-> 
-> vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-> $ xfs_info /dev/mapper/rootvg-var_lv
-> meta-data=/dev/mapper/rootvg-var_lv isize=512 agcount=1729, agsize=163776
-> blks
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/Makefile                        |    2 
+ man/man2/Makefile                   |   22 ++
+ man/man2/ioctl_xfs_scrub_metadata.2 |  318 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 341 insertions(+), 1 deletion(-)
+ create mode 100644 man/man2/Makefile
+ create mode 100644 man/man2/ioctl_xfs_scrub_metadata.2
 
-/me shakes his head.
-
-That filesystem started as a 2.5GB image and was grown to 1TB on
-deployment. What could possibly go wrong?
-
-> = sectsz=512 attr=2, projid32bit=1
-> = crc=1 finobt=0 spinodes=0
-> data = bsize=4096 blocks=283115520, imaxpct=25
-> = sunit=64 swidth=64 blks
-> naming =version 2 bsize=4096 ascii-ci=0 ftype=1
-> log =internal bsize=4096 blocks=2560, version=2
-> = sectsz=512 sunit=64 blks, lazy-count=1
-> realtime =none extsz=4096 blocks=0, rtextents=0
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
-> This high agcount is due to the fact we deploy all of our nodes with a
-> script, and then xfs_growfs the filesystem to the usable amount of space
-> from there *(like pretty much every major automated deployment).  So my
-> questions are.
-> 1.  Has the above stack trace been seen before or solved?
-
-If I had a dollar for every time I've seen this sort of error
-report, I'd have retired years ago.....
-
-> I could not find
-> any commits to that effect
-
-... because it's a general indicator of corruption, not necessarily
-an implementation bug.
-
-> 2.  Could this issue be the result our high number of allocation groups?
-
-Maybe. Probably not, though. High numbers of tiny allocation groups
-have other problems that really, really suck (like seeking you disks
-to pieces, premature filesystem aging performance degradataion,
-etc), but free space tree corruption is not one of them.
-
-> 3.  What is the best way to deploy xfs when we know we will be immediately
-> growing the filesystem?
-
-Use xfs_copy to create, store and deploy filesystem images. That's
-what it was designed for in the first place - to remove the disk
-imaging bottleneck in hardware manufacturing lines 15-20 years ago.
-
-xfs_copy gives you minimum space filesystem image storage because it
-knows exactly what blocks in the filesystem contain data that needs
-to be copied. It also does an efficient sparse copy onto the
-destination device, and can image multiple devices with the same
-golden image concurrently.
-
-IOWs, make the golden image on a filesystem as large as you can and
-image it with xfs_copy rather than making it as small as you can to
-minimise the amount of empty space you have to copy with somethign
-like "cp" or "dd". The difference in AG size will be substantially
-larger in the xfs_copy based image and largely minimise the "grow
-tiny to really large results in many AGs" vector.
-
-I do find it kinda amusing these newfangled data center management
-tools are rediscovering these well once-well-known "production line"
-scale problems that were originally solved back in the 80s and 90s....
-
-> 4.  If this is all due to the high number of allocation groups, shouldn't
-> xfs_growfs at least warn when growing would result in a ridiculous number
-> of allocation groups?
-
-That doesn't stop people doing silly things, unfortunately. It just
-conditions them to ignore warnings....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/man/Makefile b/man/Makefile
+index 863284c..cae891f 100644
+--- a/man/Makefile
++++ b/man/Makefile
+@@ -5,7 +5,7 @@
+ TOPDIR = ..
+ include $(TOPDIR)/include/builddefs
+ 
+-SUBDIRS = man3 man5 man8
++SUBDIRS = man2 man3 man5 man8
+ 
+ default : $(SUBDIRS)
+ 
+diff --git a/man/man2/Makefile b/man/man2/Makefile
+new file mode 100644
+index 0000000..8aecde3
+--- /dev/null
++++ b/man/man2/Makefile
+@@ -0,0 +1,22 @@
++#
++# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
++#
++
++TOPDIR = ../..
++include $(TOPDIR)/include/builddefs
++
++MAN_SECTION	= 2
++
++MAN_PAGES	= $(shell echo *.$(MAN_SECTION))
++MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
++LSRCFILES	= $(MAN_PAGES)
++
++default : $(MAN_PAGES)
++
++include $(BUILDRULES)
++
++install :
++
++install-dev : default
++	$(INSTALL) -m 755 -d $(MAN_DEST)
++	$(INSTALL_MAN)
+diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
+new file mode 100644
+index 0000000..a0403e6
+--- /dev/null
++++ b/man/man2/ioctl_xfs_scrub_metadata.2
+@@ -0,0 +1,318 @@
++.\" Copyright (c) 2017, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" This is free documentation; you can redistribute it and/or
++.\" modify it under the terms of the GNU General Public License as
++.\" published by the Free Software Foundation; either version 2 of
++.\" the License, or (at your option) any later version.
++.\"
++.\" The GNU General Public License's references to "object code"
++.\" and "executables" are to be interpreted as the output of any
++.\" document formatting or typesetting system, including
++.\" intermediate and printed output.
++.\"
++.\" This manual is distributed in the hope that it will be useful,
++.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
++.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++.\" GNU General Public License for more details.
++.\"
++.\" You should have received a copy of the GNU General Public
++.\" License along with this manual; if not, see
++.\" <http://www.gnu.org/licenses/>.
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-SCRUB-METADATA 2 2017-12-01 "XFS"
++.SH NAME
++ioctl_xfs_scrub_metadata \- check XFS filesystem metadata
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " dest_fd ", XFS_IOC_SCRUB_METADATA, struct xfs_scrub_metadata *" arg );
++.SH DESCRIPTION
++This XFS ioctl asks the kernel driver to examine a piece of filesystem
++metadata for errors or suboptimal metadata.
++Examination includes running metadata verifiers, checking records
++for obviously incorrect or impossible values, and cross-referencing each
++record with any other available metadata in the filesystem.
++This ioctl can also try to repair or optimize metadata, though this may
++block normal filesystem operations for a long period of time.
++The type and location of the metadata to scrub is conveyed in a structure
++of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_scrub_metadata {
++	__u32 sm_type;
++	__u32 sm_flags;
++	__u64 sm_ino;
++	__u32 sm_gen;
++	__u32 sm_agno;
++	__u64 sm_reserved[5];
++};
++.fi
++.in
++.PP
++The field
++.I sm_reserved
++must be zero.
++.PP
++The field
++.I sm_type
++indicates the type of metadata to check:
++.RS 0.4i
++.TP
++.B XFS_SCRUB_TYPE_PROBE
++Probe the kernel to see if it is willing to try to check or repair this
++filesystem.
++.BR sm_agno ", " sm_ino ", and " sm_gen
++must be zero.
++
++.PD 0
++.PP
++.nf
++.B XFS_SCRUB_TYPE_SB
++.B XFS_SCRUB_TYPE_AGF
++.B XFS_SCRUB_TYPE_AGFL
++.fi
++.TP
++.B XFS_SCRUB_TYPE_AGI
++Examine a given allocation group's superblock, free space header, free
++block list, or inode header, respectively.
++Headers are checked for obviously incorrect values and cross-referenced
++against the allocation group's metadata btrees, if possible.
++The allocation group number must be given in
++.BR sm_agno "."
++.BR sm_ino " and " sm_gen
++must be zero.
++
++.PP
++.nf
++.B XFS_SCRUB_TYPE_BNOBT
++.B XFS_SCRUB_TYPE_CNTBT
++.B XFS_SCRUB_TYPE_INOBT
++.B XFS_SCRUB_TYPE_FINOBT
++.B XFS_SCRUB_TYPE_RMAPBT
++.fi
++.TP
++.B XFS_SCRUB_TYPE_REFCNTBT
++Examine a given allocation group's two free space btrees, two inode
++btrees, reverse mapping btrees, or reference count btrees, respectively.
++Records are checked for obviously incorrect values and cross-referenced
++with other allocation group metadata records to ensure that there are no
++conflicts.
++The allocation group number must be given in
++.BR sm_agno "."
++.BR sm_ino " and " sm_gen
++must be zero.
++
++.TP
++.B XFS_SCRUB_TYPE_INODE
++Examine a given inode record for obviously incorrect values and
++discrepancies with the rest of filesystem metadata.
++Parent pointers are checked for impossible inode values and are then
++followed up to the parent directory to ensure that the linkage is
++correct.
++The inode to examine may be specified either through
++.B sm_ino
++and
++.BR sm_gen "; "
++if not specified, then the file described by
++.B dest_fd
++will be examined.
++.B sm_agno
++must be zero.
++
++.PP
++.nf
++.B XFS_SCRUB_TYPE_BMBTD
++.B XFS_SCRUB_TYPE_BMBTA
++.B XFS_SCRUB_TYPE_BMBTC
++.fi
++.TP
++.B XFS_SCRUB_TYPE_PARENT
++Examine a given inode's data block map, extended attribute block map,
++copy on write block map, or parent inode pointer.
++Inode records are examined for obviously incorrect values and
++discrepancies with the three block map types.
++The block maps are checked for obviously wrong values and
++cross-referenced with the allocation group space extent metadata for
++discrepancies.
++The inode to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
++
++.TP
++.B XFS_SCRUB_TYPE_XATTR
++Examine the extended attribute records and indices of a given inode for
++incorrect pointers and other signs of damage.
++The inode to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
++
++.TP
++.B XFS_SCRUB_TYPE_DIR
++Examine the entries in a given directory for invalid data or dangling pointers.
++The directory to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
++
++.TP
++.B XFS_SCRUB_TYPE_SYMLINK
++Examine the target of a symbolic link for obvious pathname problems.
++The link to examine can be specified in the same manner as
++.BR XFS_SCRUB_TYPE_INODE "."
++
++.PP
++.nf
++.B XFS_SCRUB_TYPE_RTBITMAP
++.fi
++.TP
++.B XFS_SCRUB_TYPE_RTSUM
++Examine the realtime block bitmap and realtime summary inodes for
++corruption.
++
++.PP
++.nf
++.B XFS_SCRUB_TYPE_UQUOTA
++.B XFS_SCRUB_TYPE_GQUOTA
++.fi
++.TP
++.B XFS_SCRUB_TYPE_PQUOTA
++Examine all user, group, or project quota records for corruption.
++.RE
++
++.PD 1
++.PP
++The field
++.I sm_flags
++control the behavior of the scrub operation and provide more information
++about the outcome of the operation.
++If none of the
++.B XFS_SCRUB_OFLAG_*
++flags are set upon return, the metadata is clean.
++.RS 0.4i
++.TP
++.B XFS_SCRUB_IFLAG_REPAIR
++If the caller sets this flag, the kernel driver will examine the
++metadata and try to fix all problems and to optimize metadata when
++possible.
++If no errors occur during the repair operation, the check is performed a
++second time to determine whether the repair succeeded.
++If errors occur, the call returns an error status immediately.
++.TP
++.B XFS_SCRUB_OFLAG_CORRUPT
++The metadata was corrupt when the call returned.
++If
++.B XFS_SCRUB_IFLAG_REPAIR
++was specified, then an attempted repair failed to fix the problem.
++Unmount the filesystem and run
++.B xfs_repair
++to fix the filesystem.
++.TP
++.B XFS_SCRUB_OFLAG_PREEN
++The metadata is ok, but some aspect of the metadata could be optimized
++to increase performance.
++Call again with
++.B XFS_SCRUB_IFLAG_REPAIR
++to optimize the metadata.
++.TP
++.B XFS_SCRUB_OFLAG_XFAIL
++Filesystem errors were encountered when accessing other metadata to
++cross-reference the records attached to this metadata object.
++.TP
++.B XFS_SCRUB_OFLAG_XCORRUPT
++Discrepancies were found when cross-referencing the records attached to
++this metadata object against all other available metadata in the system.
++.TP
++.B XFS_SCRUB_OFLAG_INCOMPLETE
++The checker was unable to complete its check of all records.
++.TP
++.B XFS_SCRUB_OFLAG_WARNING
++The checker encountered a metadata object with potentially problematic
++records.
++However, the records were not obviously corrupt.
++.RE
++.PP
++For metadata checkers that operate on inodes or inode metadata, the fields
++.IR sm_ino " and " sm_gen
++are the inode number and generation number of the inode to check.
++If the inode number is zero, the inode represented by
++.I dest_fd
++is used instead.
++If the generation number of the inode does not match
++.IR sm_gen ", "
++the call will return an error code for the invalid argument.
++The
++.I sm_agno
++field must be zero.
++.PP
++For metadata checkers that operate on allocation group metadata, the field
++.I sm_agno
++indicates the allocation group in which to find the metadata.
++The
++.IR sm_ino " and " sm_gen
++fields must be zero.
++.PP
++For metadata checkers that operate on filesystem-wide metadata, no
++further arguments are required.
++.IR sm_agno ", " sm_ino ", and " sm_gen
++must all be zero.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EBUSY
++The filesystem object is busy; the operation will have to be tried again.
++.TP
++.B EFSCORRUPTED
++Severe filesystem corruption was detected and could not be repaired.
++Unmount the filesystem and run
++.B xfs_repair
++to fix the filesystem.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B ENOENT
++The specified metadata object does not exist.
++For example, this error code is returned for a
++.B XFS_SCRUB_TYPE_REFCNTBT
++request on a filesystem that does not support reflink.
++.TP
++.B ENOMEM
++There was not sufficient memory to perform the scrub or repair operation.
++Some operations (most notably reference count checking) require large
++amounts of memory.
++.TP
++.B ENOSPC
++There is not enough free disk space to attempt a repair.
++.TP
++.B ENOTRECOVERABLE
++Filesystem was mounted in
++.B norecovery
++mode and therefore has an unclean log.
++Neither scrub nor repair operations can be attempted with an unclean
++log.
++.TP
++.B ENOTTY
++Online scrubbing or repair were not enabled.
++.TP
++.B EOPNOTSUPP
++Repairs of the requested metadata object are not supported.
++.TP
++.B EROFS
++Filesystem is read-only and a repair was requested.
++.TP
++.B ESHUTDOWN
++Filesystem is shut down due to previous errors.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH NOTES
++These operations may block other filesystem operations for a long time.
++A calling process can stop the operation by being sent a fatal
++signal, but non-fatal signals are blocked.
++.SH SEE ALSO
++.BR ioctl (2)
++.BR xfs_scrub (8)
++.BR xfs_repair (8)
