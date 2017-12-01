@@ -1,400 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20197 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751298AbdLATDI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 14:03:08 -0500
-Date: Fri, 1 Dec 2017 11:03:03 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 5/5] man: describe the metadata scrubbing ioctl
-Message-ID: <20171201190303.GU21412@magnolia>
-References: <151094860143.27182.12022983202520916281.stgit@magnolia>
- <151094863117.27182.9043322726761011548.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:46256 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750914AbdLAVNb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Dec 2017 16:13:31 -0500
+Date: Fri, 1 Dec 2017 22:13:27 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
+Message-ID: <20171201211327.GQ729@wotan.suse.de>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-4-mcgrof@kernel.org>
+ <20171130171310.GG28180@quack2.suse.cz>
+ <20171130190548.GJ729@wotan.suse.de>
+ <20171201114724.GC8365@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151094863117.27182.9043322726761011548.stgit@magnolia>
+In-Reply-To: <20171201114724.GC8365@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Dec 01, 2017 at 12:47:24PM +0100, Jan Kara wrote:
+> On Thu 30-11-17 20:05:48, Luis R. Rodriguez wrote:
+> > On Thu, Nov 30, 2017 at 06:13:10PM +0100, Jan Kara wrote:
+> > > ... I dislike the _by_user() suffix as there may be different places that
+> > > call freeze_super() (e.g. device mapper does this during some operations).
+> > > Clearly we need to distinguish "by system suspend" and "the other" cases.
+> > > So please make this clear in the naming.
+> > 
+> > Ah. How about sb_frozen_by_cb() ?
+> 
+> And what does 'cb' stand for? :)
 
-Document the XFS-specific metadata scrub/repair ioctl's behavior,
-arguments, and side effects.
+Callback. But let me think about bdev usage a bit and we can worry about the
+bikeshedding later.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/Makefile                        |    2 
- man/man2/Makefile                   |   22 ++
- man/man2/ioctl_xfs_scrub_metadata.2 |  318 +++++++++++++++++++++++++++++++++++
- 3 files changed, 341 insertions(+), 1 deletion(-)
- create mode 100644 man/man2/Makefile
- create mode 100644 man/man2/ioctl_xfs_scrub_metadata.2
+> > > In fact, what might be a cleaner solution is to introduce a 'freeze_count'
+> > > for superblock freezing (we already do have this for block devices). Then
+> > > you don't need to differentiate these two cases - but you'd still need to
+> > > properly handle cleanup if freezing of all superblocks fails in the middle.
+> > > So I'm not 100% this works out nicely in the end. But it's certainly worth
+> > > a consideration.
+> > 
+> > Ah, there are three important reasons for doing it the way I did it which are
+> > easy to miss, unless you read the commit log message very carefully.
+> > 
+> > 0) The ioctl interface causes a failure to be sent back to userspace if
+> > you issue two consecutive freezes, or two thaws. Ie, once a filesystem is
+> > frozen, a secondary call will result in an error. Likewise for thaw.
+> 
+> Yep. But also note that there's *another* interface to filesystem freezing
+> which behaves differently - freeze_bdev() (used internally by dm). That
+> interface uses the counter and freezing of already frozen device succeeds.
 
-diff --git a/man/Makefile b/man/Makefile
-index 863284c..cae891f 100644
---- a/man/Makefile
-+++ b/man/Makefile
-@@ -5,7 +5,7 @@
- TOPDIR = ..
- include $(TOPDIR)/include/builddefs
+Ah... so freeze_bdev() semantics matches the same semantics I was looking
+for.
+
+> IOW it is a mess.
+
+To say the least.
+
+> We cannot change the behavior of the ioctl but we could
+> still provide an in-kernel interface to freeze_super() with the same
+> semantics as freeze_bdev() which might be easier to use by suspend - maybe
+> we could call it 'exclusive' (for the current freeze_super() semantics) and
+> 'non-exclusive' (for the freeze_bdev() semantics) since this is very much
+> like O_EXCL open of block devices...
+
+Sure, now typically I see we make exclusive calls with the postfix _excl() so
+I take it you'd be OK in renaming freeze_super() freeze_super_excl() eventually
+then?
+
+I totally missed freeze_bdev() otherwise I think I would have picked up on the
+shared semantics stuff and I would have just made a helper out of what
+freeze_bdev() uses, and then have both in-kernel and freeze_bdev() use it.
+
+I'll note that its still not perfectly clear if really the semantics behind
+freeze_bdev() match what I described above fully. That still needs to be
+vetted for. For instance, does thaw_bdev() keep a superblock frozen if we
+an ioctl initiated freeze had occurred before? If so then great. Otherwise
+I think we'll need to distinguish the ioctl interface. Worst possible case
+is that bdev semantics and in-kernel semantics differ somehow, then that
+will really create a holy fucking mess.
+
+> > 1) The new iterate supers stuff I added bail on the first error and return that
+> > error. If we kept the ioctl() interface error scheme we'd be erroring out
+> > if on suspend if userspace had already frozen a filesystem. Clearly that'd
+> > be silly so we need to distinguish between the automatic kernel freezing
+> > and the old userspace ioctl initiated interface, so that we can keep the
+> > old behaviour but allow in-kernel auto freeze on suspend to work properly.
+> 
+> This would work fine with the non-exclusive semantics I believe.
+
+Groovy.
+
+> > 2) If we fail to suspend we need to then thaw up all filesystems. The order
+> > in which we try to freeze is in reverse order on the super_block list. If we
+> > fail though we iterate in proper order on the super_block list and thaw. If
+> > you had two filesystems this means that if a failure happened on freezing
+> > the first filesystem, we'd first thaw the other filesystem -- and because of
+> > 0) if we don't distinguish between the ioctl interface or auto freezing, we'd
+> > also fail on thaw'ing given the other superblock wouldn't have been frozen.
+> > 
+> > So we need to keep two separate approaches. The count stuff would not suffice
+> > to distinguish origin of source for freeze call.
+> > 
+> > Come to think of it, I think I forgot to avoid thaw if the freeze was ioctl
+> > initiated..
+> > 
+> > thaw_unlocked(bool cb_call)
+> > {
+> >   if (sb_frozen_by_cb(sb) && !cb_call)
+> >     return 0; /* skip as the user wanted to keep this fs frozen */
+> >   ...
+> > }
+> > 
+> > Even though the kernel auto call is new I think we need to keep ioctl initiated
+> > frozen filesystems frozen to not break old userspace assumptions.
+> > 
+> > So, keeping all this in mind, does a count method still suffice?
+> 
+> The count method would need a different error recovery method - i.e. if you
+> fail freezing filesystems somewhere in the middle of iteration through
+> superblock list, you'd need to iterate from that point on to the superblock
+> where you've started. This is somewhat more complicated than your approach
+> but it seems cleaner to me:
+> 
+> 1) Function freezing all superblocks either succeeds and all superblocks
+> are frozen or fails and no superblocks are (additionally) frozen.
+
+To be clear, for now this would just be, all superblocks that support
+freeze_fs() are frozen :)
+
+> 2) It is not that normal users + one special user (who owns the "flag" in
+> the superblock in form of a special freeze state) setup. We'd simply have
+> exclusive and non-exclusive users of superblock freezing and there can be
+> arbitrary numbers of them.
+
+Sorry I did not understand this point. Can you rephrase perhaps a bit?
+
+Anyway, I just tried implementing this and it seemed rather easy to
+use a pivot, however note that then freeze_processes() which calls
+fs_suspend_freeze() would somehow need to pass the failed sb... do
+we want to have let fs_suspend_freeze() pass a parameter to be set
+to the failed sb of it failed? Locking-wise this seems racy.
+
+So I mean, adding support to thaw using a pivot, the failed sb is
+rather easy:
+
+diff --git a/fs/super.c b/fs/super.c
+index 885711c1d35b..8cb6f38652d8 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -614,13 +614,21 @@ void iterate_supers(void (*f)(struct super_block *, void *), void *arg)
+  *	locked superblock and given argument. Returns 0 unless an error
+  *	occurred on calling the function on any superblock.
+  */
+-int iterate_supers_excl(int (*f)(struct super_block *, void *), void *arg)
++int iterate_supers_excl(int (*f)(struct super_block *, void *), void *arg,
++			struct super_block *pivot)
+ {
+ 	struct super_block *sb, *p = NULL;
+ 	int error = 0;
  
--SUBDIRS = man3 man5 man8
-+SUBDIRS = man2 man3 man5 man8
- 
- default : $(SUBDIRS)
- 
-diff --git a/man/man2/Makefile b/man/man2/Makefile
-new file mode 100644
-index 0000000..8aecde3
---- /dev/null
-+++ b/man/man2/Makefile
-@@ -0,0 +1,22 @@
-+#
-+# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+
-+TOPDIR = ../..
-+include $(TOPDIR)/include/builddefs
-+
-+MAN_SECTION	= 2
-+
-+MAN_PAGES	= $(shell echo *.$(MAN_SECTION))
-+MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
-+LSRCFILES	= $(MAN_PAGES)
-+
-+default : $(MAN_PAGES)
-+
-+include $(BUILDRULES)
-+
-+install :
-+
-+install-dev : default
-+	$(INSTALL) -m 755 -d $(MAN_DEST)
-+	$(INSTALL_MAN)
-diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
-new file mode 100644
-index 0000000..a0403e6
---- /dev/null
-+++ b/man/man2/ioctl_xfs_scrub_metadata.2
-@@ -0,0 +1,318 @@
-+.\" Copyright (c) 2017, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" This is free documentation; you can redistribute it and/or
-+.\" modify it under the terms of the GNU General Public License as
-+.\" published by the Free Software Foundation; either version 2 of
-+.\" the License, or (at your option) any later version.
-+.\"
-+.\" The GNU General Public License's references to "object code"
-+.\" and "executables" are to be interpreted as the output of any
-+.\" document formatting or typesetting system, including
-+.\" intermediate and printed output.
-+.\"
-+.\" This manual is distributed in the hope that it will be useful,
-+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+.\" GNU General Public License for more details.
-+.\"
-+.\" You should have received a copy of the GNU General Public
-+.\" License along with this manual; if not, see
-+.\" <http://www.gnu.org/licenses/>.
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-SCRUB-METADATA 2 2017-12-01 "XFS"
-+.SH NAME
-+ioctl_xfs_scrub_metadata \- check XFS filesystem metadata
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.PP
-+.BI "int ioctl(int " dest_fd ", XFS_IOC_SCRUB_METADATA, struct xfs_scrub_metadata *" arg );
-+.SH DESCRIPTION
-+This XFS ioctl asks the kernel driver to examine a piece of filesystem
-+metadata for errors or suboptimal metadata.
-+Examination includes running metadata verifiers, checking records
-+for obviously incorrect or impossible values, and cross-referencing each
-+record with any other available metadata in the filesystem.
-+This ioctl can also try to repair or optimize metadata, though this may
-+block normal filesystem operations for a long period of time.
-+The type and location of the metadata to scrub is conveyed in a structure
-+of the following form:
-+.PP
-+.in +4n
-+.nf
-+struct xfs_scrub_metadata {
-+	__u32 sm_type;
-+	__u32 sm_flags;
-+	__u64 sm_ino;
-+	__u32 sm_gen;
-+	__u32 sm_agno;
-+	__u64 sm_reserved[5];
-+};
-+.fi
-+.in
-+.PP
-+The field
-+.I sm_reserved
-+must be zero.
-+.PP
-+The field
-+.I sm_type
-+indicates the type of metadata to check:
-+.RS 0.4i
-+.TP
-+.B XFS_SCRUB_TYPE_PROBE
-+Probe the kernel to see if it is willing to try to check or repair this
-+filesystem.
-+.BR sm_agno ", " sm_ino ", and " sm_gen
-+must be zero.
-+
-+.PD 0
-+.PP
-+.nf
-+.B XFS_SCRUB_TYPE_SB
-+.B XFS_SCRUB_TYPE_AGF
-+.B XFS_SCRUB_TYPE_AGFL
-+.fi
-+.TP
-+.B XFS_SCRUB_TYPE_AGI
-+Examine a given allocation group's superblock, free space header, free
-+block list, or inode header, respectively.
-+Headers are checked for obviously incorrect values and cross-referenced
-+against the allocation group's metadata btrees, if possible.
-+The allocation group number must be given in
-+.BR sm_agno "."
-+.BR sm_ino " and " sm_gen
-+must be zero.
-+
-+.PP
-+.nf
-+.B XFS_SCRUB_TYPE_BNOBT
-+.B XFS_SCRUB_TYPE_CNTBT
-+.B XFS_SCRUB_TYPE_INOBT
-+.B XFS_SCRUB_TYPE_FINOBT
-+.B XFS_SCRUB_TYPE_RMAPBT
-+.fi
-+.TP
-+.B XFS_SCRUB_TYPE_REFCNTBT
-+Examine a given allocation group's two free space btrees, two inode
-+btrees, reverse mapping btrees, or reference count btrees, respectively.
-+Records are checked for obviously incorrect values and cross-referenced
-+with other allocation group metadata records to ensure that there are no
-+conflicts.
-+The allocation group number must be given in
-+.BR sm_agno "."
-+.BR sm_ino " and " sm_gen
-+must be zero.
-+
-+.TP
-+.B XFS_SCRUB_TYPE_INODE
-+Examine a given inode record for obviously incorrect values and
-+discrepancies with the rest of filesystem metadata.
-+Parent pointers are checked for impossible inode values and are then
-+followed up to the parent directory to ensure that the linkage is
-+correct.
-+The inode to examine may be specified either through
-+.B sm_ino
-+and
-+.BR sm_gen "; "
-+if not specified, then the file described by
-+.B dest_fd
-+will be examined.
-+.B sm_agno
-+must be zero.
-+
-+.PP
-+.nf
-+.B XFS_SCRUB_TYPE_BMBTD
-+.B XFS_SCRUB_TYPE_BMBTA
-+.B XFS_SCRUB_TYPE_BMBTC
-+.fi
-+.TP
-+.B XFS_SCRUB_TYPE_PARENT
-+Examine a given inode's data block map, extended attribute block map,
-+copy on write block map, or parent inode pointer.
-+Inode records are examined for obviously incorrect values and
-+discrepancies with the three block map types.
-+The block maps are checked for obviously wrong values and
-+cross-referenced with the allocation group space extent metadata for
-+discrepancies.
-+The inode to examine can be specified in the same manner as
-+.BR XFS_SCRUB_TYPE_INODE "."
-+
-+.TP
-+.B XFS_SCRUB_TYPE_XATTR
-+Examine the extended attribute records and indices of a given inode for
-+incorrect pointers and other signs of damage.
-+The inode to examine can be specified in the same manner as
-+.BR XFS_SCRUB_TYPE_INODE "."
-+
-+.TP
-+.B XFS_SCRUB_TYPE_DIR
-+Examine the entries in a given directory for invalid data or dangling pointers.
-+The directory to examine can be specified in the same manner as
-+.BR XFS_SCRUB_TYPE_INODE "."
-+
-+.TP
-+.B XFS_SCRUB_TYPE_SYMLINK
-+Examine the target of a symbolic link for obvious pathname problems.
-+The link to examine can be specified in the same manner as
-+.BR XFS_SCRUB_TYPE_INODE "."
-+
-+.PP
-+.nf
-+.B XFS_SCRUB_TYPE_RTBITMAP
-+.fi
-+.TP
-+.B XFS_SCRUB_TYPE_RTSUM
-+Examine the realtime block bitmap and realtime summary inodes for
-+corruption.
-+
-+.PP
-+.nf
-+.B XFS_SCRUB_TYPE_UQUOTA
-+.B XFS_SCRUB_TYPE_GQUOTA
-+.fi
-+.TP
-+.B XFS_SCRUB_TYPE_PQUOTA
-+Examine all user, group, or project quota records for corruption.
-+.RE
-+
-+.PD 1
-+.PP
-+The field
-+.I sm_flags
-+control the behavior of the scrub operation and provide more information
-+about the outcome of the operation.
-+If none of the
-+.B XFS_SCRUB_OFLAG_*
-+flags are set upon return, the metadata is clean.
-+.RS 0.4i
-+.TP
-+.B XFS_SCRUB_IFLAG_REPAIR
-+If the caller sets this flag, the kernel driver will examine the
-+metadata and try to fix all problems and to optimize metadata when
-+possible.
-+If no errors occur during the repair operation, the check is performed a
-+second time to determine whether the repair succeeded.
-+If errors occur, the call returns an error status immediately.
-+.TP
-+.B XFS_SCRUB_OFLAG_CORRUPT
-+The metadata was corrupt when the call returned.
-+If
-+.B XFS_SCRUB_IFLAG_REPAIR
-+was specified, then an attempted repair failed to fix the problem.
-+Unmount the filesystem and run
-+.B xfs_repair
-+to fix the filesystem.
-+.TP
-+.B XFS_SCRUB_OFLAG_PREEN
-+The metadata is ok, but some aspect of the metadata could be optimized
-+to increase performance.
-+Call again with
-+.B XFS_SCRUB_IFLAG_REPAIR
-+to optimize the metadata.
-+.TP
-+.B XFS_SCRUB_OFLAG_XFAIL
-+Filesystem errors were encountered when accessing other metadata to
-+cross-reference the records attached to this metadata object.
-+.TP
-+.B XFS_SCRUB_OFLAG_XCORRUPT
-+Discrepancies were found when cross-referencing the records attached to
-+this metadata object against all other available metadata in the system.
-+.TP
-+.B XFS_SCRUB_OFLAG_INCOMPLETE
-+The checker was unable to complete its check of all records.
-+.TP
-+.B XFS_SCRUB_OFLAG_WARNING
-+The checker encountered a metadata object with potentially problematic
-+records.
-+However, the records were not obviously corrupt.
-+.RE
-+.PP
-+For metadata checkers that operate on inodes or inode metadata, the fields
-+.IR sm_ino " and " sm_gen
-+are the inode number and generation number of the inode to check.
-+If the inode number is zero, the inode represented by
-+.I dest_fd
-+is used instead.
-+If the generation number of the inode does not match
-+.IR sm_gen ", "
-+the call will return an error code for the invalid argument.
-+The
-+.I sm_agno
-+field must be zero.
-+.PP
-+For metadata checkers that operate on allocation group metadata, the field
-+.I sm_agno
-+indicates the allocation group in which to find the metadata.
-+The
-+.IR sm_ino " and " sm_gen
-+fields must be zero.
-+.PP
-+For metadata checkers that operate on filesystem-wide metadata, no
-+further arguments are required.
-+.IR sm_agno ", " sm_ino ", and " sm_gen
-+must all be zero.
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EBUSY
-+The filesystem object is busy; the operation will have to be tried again.
-+.TP
-+.B EFSCORRUPTED
-+Severe filesystem corruption was detected and could not be repaired.
-+Unmount the filesystem and run
-+.B xfs_repair
-+to fix the filesystem.
-+.TP
-+.B EINVAL
-+One or more of the arguments specified is invalid.
-+.TP
-+.B ENOENT
-+The specified metadata object does not exist.
-+For example, this error code is returned for a
-+.B XFS_SCRUB_TYPE_REFCNTBT
-+request on a filesystem that does not support reflink.
-+.TP
-+.B ENOMEM
-+There was not sufficient memory to perform the scrub or repair operation.
-+Some operations (most notably reference count checking) require large
-+amounts of memory.
-+.TP
-+.B ENOSPC
-+There is not enough free disk space to attempt a repair.
-+.TP
-+.B ENOTRECOVERABLE
-+Filesystem was mounted in
-+.B norecovery
-+mode and therefore has an unclean log.
-+Neither scrub nor repair operations can be attempted with an unclean
-+log.
-+.TP
-+.B ENOTTY
-+Online scrubbing or repair were not enabled.
-+.TP
-+.B EOPNOTSUPP
-+Repairs of the requested metadata object are not supported.
-+.TP
-+.B EROFS
-+Filesystem is read-only and a repair was requested.
-+.TP
-+.B ESHUTDOWN
-+Filesystem is shut down due to previous errors.
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH NOTES
-+These operations may block other filesystem operations for a long time.
-+A calling process can stop the operation by being sent a fatal
-+signal, but non-fatal signals are blocked.
-+.SH SEE ALSO
-+.BR ioctl (2)
-+.BR xfs_scrub (8)
-+.BR xfs_repair (8)
+ 	spin_lock(&sb_lock);
+ 	list_for_each_entry(sb, &super_blocks, s_list) {
++		/* If we have a pivot, start work on the next item */
++		if (pivot) {
++			if (sb != pivot)
++				continue;
++			pivot = NULL;
++			continue;
++		}
+ 		if (hlist_unhashed(&sb->s_instances))
+ 			continue;
+ 		sb->s_count++;
+
+But we'd still need to to give enough context to let thaw use the failed sb
+as a pivot.
+
+  Luis
