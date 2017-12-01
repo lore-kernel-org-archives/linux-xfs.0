@@ -1,348 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36040 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdLATCt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 14:02:49 -0500
-Date: Fri, 1 Dec 2017 11:02:44 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/5] xfs_io: provide an interface to the scrub ioctls
-Message-ID: <20171201190244.GT21412@magnolia>
-References: <151094860143.27182.12022983202520916281.stgit@magnolia>
- <151094862514.27182.4461761345656503324.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:56007 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752317AbdLALra (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Dec 2017 06:47:30 -0500
+Date: Fri, 1 Dec 2017 12:47:24 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
+Message-ID: <20171201114724.GC8365@quack2.suse.cz>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-4-mcgrof@kernel.org>
+ <20171130171310.GG28180@quack2.suse.cz>
+ <20171130190548.GJ729@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151094862514.27182.4461761345656503324.stgit@magnolia>
+In-Reply-To: <20171130190548.GJ729@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu 30-11-17 20:05:48, Luis R. Rodriguez wrote:
+> On Thu, Nov 30, 2017 at 06:13:10PM +0100, Jan Kara wrote:
+> > ... I dislike the _by_user() suffix as there may be different places that
+> > call freeze_super() (e.g. device mapper does this during some operations).
+> > Clearly we need to distinguish "by system suspend" and "the other" cases.
+> > So please make this clear in the naming.
+> 
+> Ah. How about sb_frozen_by_cb() ?
 
-Create a new xfs_io command to call the new XFS metadata scrub ioctl.
+And what does 'cb' stand for? :)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- io/Makefile       |    3 -
- io/init.c         |    1 
- io/io.h           |    2 
- io/scrub.c        |  252 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_io.8 |    8 ++
- 5 files changed, 265 insertions(+), 1 deletion(-)
- create mode 100644 io/scrub.c
+> > In fact, what might be a cleaner solution is to introduce a 'freeze_count'
+> > for superblock freezing (we already do have this for block devices). Then
+> > you don't need to differentiate these two cases - but you'd still need to
+> > properly handle cleanup if freezing of all superblocks fails in the middle.
+> > So I'm not 100% this works out nicely in the end. But it's certainly worth
+> > a consideration.
+> 
+> Ah, there are three important reasons for doing it the way I did it which are
+> easy to miss, unless you read the commit log message very carefully.
+> 
+> 0) The ioctl interface causes a failure to be sent back to userspace if
+> you issue two consecutive freezes, or two thaws. Ie, once a filesystem is
+> frozen, a secondary call will result in an error. Likewise for thaw.
 
-diff --git a/io/Makefile b/io/Makefile
-index 6725936..58ae298 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -11,7 +11,8 @@ HFILES = init.h io.h
- CFILES = init.c \
- 	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
- 	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
--	pwrite.c reflink.c seek.c shutdown.c stat.c sync.c truncate.c utimes.c
-+	pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c sync.c truncate.c \
-+	utimes.c
- 
- LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
-diff --git a/io/init.c b/io/init.c
-index 20d5f80..9e576fe 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -84,6 +84,7 @@ init_commands(void)
- 	readdir_init();
- 	reflink_init();
- 	resblks_init();
-+	scrub_init();
- 	seek_init();
- 	sendfile_init();
- 	shutdown_init();
-diff --git a/io/io.h b/io/io.h
-index 3862985..82e142f 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -185,3 +185,5 @@ extern void		fsmap_init(void);
- #else
- # define fsmap_init()	do { } while (0)
- #endif
-+
-+extern void		scrub_init(void);
-diff --git a/io/scrub.c b/io/scrub.c
-new file mode 100644
-index 0000000..cd26997
---- /dev/null
-+++ b/io/scrub.c
-@@ -0,0 +1,252 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <sys/uio.h>
-+#include <xfs/xfs.h>
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "path.h"
-+#include "io.h"
-+
-+static struct cmdinfo scrub_cmd;
-+
-+/* Type info and names for the scrub types. */
-+enum scrub_type {
-+	ST_NONE,	/* disabled */
-+	ST_PERAG,	/* per-AG metadata */
-+	ST_FS,		/* per-FS metadata */
-+	ST_INODE,	/* per-inode metadata */
-+};
-+
-+struct scrub_descr {
-+	const char	*name;
-+	enum scrub_type	type;
-+};
-+
-+static const struct scrub_descr scrubbers[XFS_SCRUB_TYPE_NR] = {
-+	[XFS_SCRUB_TYPE_PROBE]		= {"probe",		ST_NONE},
-+	[XFS_SCRUB_TYPE_SB]		= {"sb",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_AGF]		= {"agf",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_AGFL]		= {"agfl",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_AGI]		= {"agi",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_BNOBT]		= {"bnobt",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_CNTBT]		= {"cntbt",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_INOBT]		= {"inobt",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_FINOBT]		= {"finobt",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_RMAPBT]		= {"rmapbt",		ST_PERAG},
-+	[XFS_SCRUB_TYPE_REFCNTBT]	= {"refcountbt",	ST_PERAG},
-+	[XFS_SCRUB_TYPE_INODE]		= {"inode",		ST_INODE},
-+	[XFS_SCRUB_TYPE_BMBTD]		= {"bmapbtd",		ST_INODE},
-+	[XFS_SCRUB_TYPE_BMBTA]		= {"bmapbta",		ST_INODE},
-+	[XFS_SCRUB_TYPE_BMBTC]		= {"bmapbtc",		ST_INODE},
-+	[XFS_SCRUB_TYPE_DIR]		= {"directory",		ST_INODE},
-+	[XFS_SCRUB_TYPE_XATTR]		= {"xattr",		ST_INODE},
-+	[XFS_SCRUB_TYPE_SYMLINK]	= {"symlink",		ST_INODE},
-+	[XFS_SCRUB_TYPE_PARENT]		= {"parent",		ST_INODE},
-+	[XFS_SCRUB_TYPE_RTBITMAP]	= {"rtbitmap",		ST_FS},
-+	[XFS_SCRUB_TYPE_RTSUM]		= {"rtsummary",		ST_FS},
-+	[XFS_SCRUB_TYPE_UQUOTA]		= {"usrquota",		ST_FS},
-+	[XFS_SCRUB_TYPE_GQUOTA]		= {"grpquota",		ST_FS},
-+	[XFS_SCRUB_TYPE_PQUOTA]		= {"prjquota",		ST_FS},
-+};
-+
-+static void
-+scrub_help(void)
-+{
-+	const struct scrub_descr	*d;
-+	int				i;
-+
-+	printf(_(
-+"\n"
-+" Scrubs a piece of XFS filesystem metadata.  The first argument is the type\n"
-+" of metadata to examine.  Allocation group metadata types take one AG number\n"
-+" as the second parameter.  Inode metadata types act on the currently open file\n"
-+" or (optionally) take an inode number and generation number to act upon as\n"
-+" the second and third parameters.\n"
-+"\n"
-+" Example:\n"
-+" 'scrub inobt 3' - scrub the inode btree in AG 3.\n"
-+" 'scrub bmapbtd 128 13525' - scrubs the extent map of inode 128 gen 13525.\n"
-+"\n"
-+" Known metadata scrub types are:"));
-+	for (i = 0, d = scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++)
-+		printf(" %s", d->name);
-+	printf("\n");
-+}
-+
-+static void
-+scrub_ioctl(
-+	int				fd,
-+	int				type,
-+	uint64_t			control,
-+	uint32_t			control2)
-+{
-+	struct xfs_scrub_metadata	meta;
-+	const struct scrub_descr	*sc;
-+	int				error;
-+
-+	sc = &scrubbers[type];
-+	memset(&meta, 0, sizeof(meta));
-+	meta.sm_type = type;
-+	switch (sc->type) {
-+	case ST_PERAG:
-+		meta.sm_agno = control;
-+		break;
-+	case ST_INODE:
-+		meta.sm_ino = control;
-+		meta.sm_gen = control2;
-+		break;
-+	case ST_NONE:
-+	case ST_FS:
-+		/* no control parameters */
-+		break;
-+	}
-+	meta.sm_flags = 0;
-+
-+	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
-+	if (error)
-+		perror("scrub");
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		printf(_("Corruption detected.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
-+		printf(_("Optimization possible.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_XFAIL)
-+		printf(_("Cross-referencing failed.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_XCORRUPT)
-+		printf(_("Corruption detected during cross-referencing.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
-+		printf(_("Scan was not complete.\n"));
-+}
-+
-+static int
-+parse_args(
-+	int				argc,
-+	char				**argv,
-+	struct cmdinfo			*cmdinfo,
-+	void				(*fn)(int, int, uint64_t, uint32_t))
-+{
-+	char				*p;
-+	int				type = -1;
-+	int				i, c;
-+	uint64_t			control = 0;
-+	uint32_t			control2 = 0;
-+	const struct scrub_descr	*d = NULL;
-+
-+	while ((c = getopt(argc, argv, "")) != EOF) {
-+		switch (c) {
-+		default:
-+			return command_usage(cmdinfo);
-+		}
-+	}
-+	if (optind > argc - 1)
-+		return command_usage(cmdinfo);
-+
-+	for (i = 0, d = scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++) {
-+		if (strcmp(d->name, argv[optind]) == 0) {
-+			type = i;
-+			break;
-+		}
-+	}
-+	optind++;
-+
-+	if (type < 0) {
-+		printf(_("Unknown type '%s'.\n"), argv[optind]);
-+		return command_usage(cmdinfo);
-+	}
-+
-+	switch (d->type) {
-+	case ST_INODE:
-+		if (optind == argc) {
-+			control = 0;
-+			control2 = 0;
-+		} else if (optind == argc - 2) {
-+			control = strtoull(argv[optind], &p, 0);
-+			if (*p != '\0') {
-+				fprintf(stderr,
-+					_("Bad inode number '%s'.\n"),
-+					argv[optind]);
-+				return 0;
-+			}
-+			control2 = strtoul(argv[optind + 1], &p, 0);
-+			if (*p != '\0') {
-+				fprintf(stderr,
-+					_("Bad generation number '%s'.\n"),
-+					argv[optind + 1]);
-+				return 0;
-+			}
-+		} else {
-+			fprintf(stderr,
-+				_("Must specify inode number and generation.\n"));
-+			return 0;
-+		}
-+		break;
-+	case ST_PERAG:
-+		if (optind != argc - 1) {
-+			fprintf(stderr,
-+				_("Must specify one AG number.\n"));
-+			return 0;
-+		}
-+		control = strtoul(argv[optind], &p, 0);
-+		if (*p != '\0') {
-+			fprintf(stderr,
-+				_("Bad AG number '%s'.\n"), argv[optind]);
-+			return 0;
-+		}
-+		break;
-+	case ST_FS:
-+	case ST_NONE:
-+		if (optind != argc) {
-+			fprintf(stderr,
-+				_("No parameters allowed.\n"));
-+			return 0;
-+		}
-+		break;
-+	default:
-+		ASSERT(0);
-+		break;
-+	}
-+	fn(file->fd, type, control, control2);
-+
-+	return 0;
-+}
-+
-+static int
-+scrub_f(
-+	int				argc,
-+	char				**argv)
-+{
-+	return parse_args(argc, argv, &scrub_cmd, scrub_ioctl);
-+}
-+
-+void
-+scrub_init(void)
-+{
-+	scrub_cmd.name = "scrub";
-+	scrub_cmd.altname = "sc";
-+	scrub_cmd.cfunc = scrub_f;
-+	scrub_cmd.argmin = 1;
-+	scrub_cmd.argmax = -1;
-+	scrub_cmd.flags = CMD_NOMAP_OK;
-+	scrub_cmd.args = _("type [agno|ino gen]");
-+	scrub_cmd.oneline = _("scrubs filesystem metadata");
-+	scrub_cmd.help = scrub_help;
-+
-+	add_command(&scrub_cmd);
-+}
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 9bf1a47..2c594b1 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1119,6 +1119,14 @@ version of policy structure (numeric)
- .BR get_encpolicy
- On filesystems that support encryption, display the encryption policy of the
- current file.
-+.TP
-+.BI "scrub " type " [ " agnumber " | " "ino" " " "gen" " ]"
-+Scrub internal XFS filesystem metadata.  The
-+.BI type
-+parameter specifies which type of metadata to scrub.
-+For AG metadata, one AG number must be specified.
-+For file metadata, the scrub is applied to the open file unless the
-+inode number and generation number are specified.
- 
- .SH SEE ALSO
- .BR mkfs.xfs (8),
+Yep. But also note that there's *another* interface to filesystem freezing
+which behaves differently - freeze_bdev() (used internally by dm). That
+interface uses the counter and freezing of already frozen device succeeds.
+IOW it is a mess. We cannot change the behavior of the ioctl but we could
+still provide an in-kernel interface to freeze_super() with the same
+semantics as freeze_bdev() which might be easier to use by suspend - maybe
+we could call it 'exclusive' (for the current freeze_super() semantics) and
+'non-exclusive' (for the freeze_bdev() semantics) since this is very much
+like O_EXCL open of block devices...
+
+> 1) The new iterate supers stuff I added bail on the first error and return that
+> error. If we kept the ioctl() interface error scheme we'd be erroring out
+> if on suspend if userspace had already frozen a filesystem. Clearly that'd
+> be silly so we need to distinguish between the automatic kernel freezing
+> and the old userspace ioctl initiated interface, so that we can keep the
+> old behaviour but allow in-kernel auto freeze on suspend to work properly.
+
+This would work fine with the non-exclusive semantics I believe.
+
+> 2) If we fail to suspend we need to then thaw up all filesystems. The order
+> in which we try to freeze is in reverse order on the super_block list. If we
+> fail though we iterate in proper order on the super_block list and thaw. If
+> you had two filesystems this means that if a failure happened on freezing
+> the first filesystem, we'd first thaw the other filesystem -- and because of
+> 0) if we don't distinguish between the ioctl interface or auto freezing, we'd
+> also fail on thaw'ing given the other superblock wouldn't have been frozen.
+> 
+> So we need to keep two separate approaches. The count stuff would not suffice
+> to distinguish origin of source for freeze call.
+> 
+> Come to think of it, I think I forgot to avoid thaw if the freeze was ioctl
+> initiated..
+> 
+> thaw_unlocked(bool cb_call)
+> {
+>   if (sb_frozen_by_cb(sb) && !cb_call)
+>     return 0; /* skip as the user wanted to keep this fs frozen */
+>   ...
+> }
+> 
+> Even though the kernel auto call is new I think we need to keep ioctl initiated
+> frozen filesystems frozen to not break old userspace assumptions.
+> 
+> So, keeping all this in mind, does a count method still suffice?
+
+The count method would need a different error recovery method - i.e. if you
+fail freezing filesystems somewhere in the middle of iteration through
+superblock list, you'd need to iterate from that point on to the superblock
+where you've started. This is somewhat more complicated than your approach
+but it seems cleaner to me:
+
+1) Function freezing all superblocks either succeeds and all superblocks
+are frozen or fails and no superblocks are (additionally) frozen.
+
+2) It is not that normal users + one special user (who owns the "flag" in
+the superblock in form of a special freeze state) setup. We'd simply have
+exclusive and non-exclusive users of superblock freezing and there can be
+arbitrary numbers of them.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
