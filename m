@@ -1,174 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18957 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbdLAQj5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Dec 2017 11:39:57 -0500
-Date: Fri, 1 Dec 2017 08:39:44 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 1/2] xfs: add the ability to join a buffer to a
- defer_ops
-Message-ID: <20171201163944.GP21412@magnolia>
-References: <20171130175805.GC31372@magnolia>
- <20171201133618.GA22403@bfoster.bfoster>
+Received: from sandeen.net ([63.231.237.45]:43132 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750965AbdLAWOQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Dec 2017 17:14:16 -0500
+Subject: [PATCH 3/4] xfs: factor out scrub input checking
+References: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1d269656-35e3-f54a-884d-9ba01ae3f5ba@sandeen.net>
+Date: Fri, 1 Dec 2017 16:14:15 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171201133618.GA22403@bfoster.bfoster>
+In-Reply-To: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com, libor.klepac@bcom.cz
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 08:36:19AM -0500, Brian Foster wrote:
-> On Thu, Nov 30, 2017 at 09:58:05AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In certain cases we need to be able to maintain a buffer lock across a
-> > defer_finish call.  Since there could be many (large) transactions
-> > committed as a result of a defer_finish, we have to hold the buffer
-> > across the roll, then immediately rejoin the buffer and mark it dirty in
-> > each transaction to keep the log moving forward.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> Seems about right to me. A couple things..
-> 
-> >  fs/xfs/libxfs/xfs_defer.c |   37 ++++++++++++++++++++++++++++++++++---
-> >  fs/xfs/libxfs/xfs_defer.h |    5 ++++-
-> >  2 files changed, 38 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > index 072ebfe..b5b3414 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.c
-> > +++ b/fs/xfs/libxfs/xfs_defer.c
-> > @@ -249,6 +249,10 @@ xfs_defer_trans_roll(
-> >  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> >  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
-> >  
-> > +	/* Hold the (previously bjoin'd) buffer locked across the roll. */
-> > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
-> > +		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
-> > +
-> 
-> It seems more consistent to dirty the buffer in the tx here and
-> bjoin+bhold it in the loop below.
+Do this before adding more core checks.
 
-I thought the purpose of calling bhold was to prevent the transaction
-commit (in xfs_trans_roll) from unlocking the buffer?  Therefore you'd
-bhold it before the _roll and then bjoin/dirty the still-locked buffer
-afterwards to attach the buffer as a dirty buffer to the new
-transaction.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> >  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
-> >  
-> >  	/* Roll the transaction. */
-> > @@ -264,6 +268,12 @@ xfs_defer_trans_roll(
-> >  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> >  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
-> >  
-> > +	/* Rejoin the buffers and dirty them so the log moves forward. */
-> > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
-> > +		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
-> > +		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
-> > +	}
-> > +
-> >  	return error;
-> >  }
-> >  
-> > @@ -299,6 +309,29 @@ xfs_defer_ijoin(
-> >  }
-> >  
-> >  /*
-> > + * Add this buffer to the deferred op.  Each joined buffer is relogged
-> > + * each time we roll the transaction.
-> > + */
-> > +int
-> > +xfs_defer_bjoin(
-> > +	struct xfs_defer_ops		*dop,
-> > +	struct xfs_buf			*bp)
-> > +{
-> > +	int				i;
-> > +
-> > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-> > +		if (dop->dop_bufs[i] == bp)
-> > +			return 0;
-> > +		else if (dop->dop_bufs[i] == NULL) {
-> > +			dop->dop_bufs[i] = bp;
-> > +			return 0;
-> > +		}
-> > +	}
-> > +
-> > +	return -EFSCORRUPTED;
-> 
-> I notice that this looks exactly like xfs_defer_join(), but is
-> -EFSCORRUPTED the right error here? It probably doesn't matter that much
-> given that if we hit this we've already lost, but I wonder if an error
-> that more reflects a programming error as opposed to inconsistent fs
-> might be more appropriate..? -EINVAL, -EBUSY?
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index dc1f33a..16932f9 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -285,47 +285,34 @@
+ "EXPERIMENTAL online scrub feature in use. Use at your own risk!");
+ }
+ 
+-/* Dispatch metadata scrubbing. */
+-int
+-xfs_scrub_metadata(
+-	struct xfs_inode		*ip,
++static int
++xfs_scrub_validate(
++	struct xfs_mount		*mp,
+ 	struct xfs_scrub_metadata	*sm)
+ {
+-	struct xfs_scrub_context	sc;
+-	struct xfs_mount		*mp = ip->i_mount;
++	int				error;
+ 	const struct xfs_scrub_meta_ops	*ops;
+-	bool				try_harder = false;
+-	int				error = 0;
+-
+-	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
+-		(sizeof(struct xfs_scrub_meta_ops) * XFS_SCRUB_TYPE_NR));
+-
+-	trace_xfs_scrub_start(ip, sm, error);
+-
+-	/* Forbidden if we are shut down or mounted norecovery. */
+-	error = -ESHUTDOWN;
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		goto out;
+-	error = -ENOTRECOVERABLE;
+-	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
+-		goto out;
+ 
+-	/* Check our inputs. */
+ 	error = -EINVAL;
++	/* Check our inputs. */
+ 	sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
+ 	if (sm->sm_flags & ~XFS_SCRUB_FLAGS_IN)
+ 		goto out;
+ 	if (memchr_inv(sm->sm_reserved, 0, sizeof(sm->sm_reserved)))
+ 		goto out;
+ 
+-	/* Do we know about this type of metadata? */
+ 	error = -ENOENT;
++	/* Do we know about this type of metadata? */
+ 	if (sm->sm_type >= XFS_SCRUB_TYPE_NR)
+ 		goto out;
+ 	ops = &meta_scrub_ops[sm->sm_type];
+ 	if (ops->setup == NULL || ops->scrub == NULL)
+ 		goto out;
++	/* Does this fs even support this type of metadata? */
++	if (ops->has && !ops->has(&mp->m_sb))
++		goto out;
+ 
++	error = -EOPNOTSUPP;
+ 	/*
+ 	 * We won't scrub any filesystem that doesn't have the ability
+ 	 * to record unwritten extents.  The option was made default in
+@@ -335,20 +322,46 @@
+ 	 * We also don't support v1-v3 filesystems, which aren't
+ 	 * mountable.
+ 	 */
+-	error = -EOPNOTSUPP;
+ 	if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
+ 		goto out;
+ 
+-	/* Does this fs even support this type of metadata? */
+-	error = -ENOENT;
+-	if (ops->has && !ops->has(&mp->m_sb))
+-		goto out;
+-
+ 	/* We don't know how to repair anything yet. */
+-	error = -EOPNOTSUPP;
+ 	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
+ 		goto out;
+ 
++	error = 0;
++out:
++	return error;
++}
++
++/* Dispatch metadata scrubbing. */
++int
++xfs_scrub_metadata(
++	struct xfs_inode		*ip,
++	struct xfs_scrub_metadata	*sm)
++{
++	struct xfs_scrub_context	sc;
++	struct xfs_mount		*mp = ip->i_mount;
++	bool				try_harder = false;
++	int				error = 0;
++
++	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
++		(sizeof(struct xfs_scrub_meta_ops) * XFS_SCRUB_TYPE_NR));
++
++	trace_xfs_scrub_start(ip, sm, error);
++
++	/* Forbidden if we are shut down or mounted norecovery. */
++	error = -ESHUTDOWN;
++	if (XFS_FORCED_SHUTDOWN(mp))
++		goto out;
++	error = -ENOTRECOVERABLE;
++	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
++		goto out;
++
++	error = xfs_scrub_validate(mp, sm);
++	if (error)
++		goto out;
++
+ 	xfs_scrub_experimental_warning(mp);
+ 
+ retry_op:
+@@ -356,7 +369,7 @@
+ 	memset(&sc, 0, sizeof(sc));
+ 	sc.mp = ip->i_mount;
+ 	sc.sm = sm;
+-	sc.ops = ops;
++	sc.ops = &meta_scrub_ops[sm->sm_type]; 
+ 	sc.try_harder = try_harder;
+ 	sc.sa.agno = NULLAGNUMBER;
+ 	error = sc.ops->setup(&sc, ip);
 
-Yeah, I'm not sure what error code applies to "programmer messed up" :)
 
-Perhaps we should add an ASSERT(0) at the bottom of both functions.
-
---D
-
-> Brian
-> 
-> > +}
-> > +
-> > +/*
-> >   * Finish all the pending work.  This involves logging intent items for
-> >   * any work items that wandered in since the last transaction roll (if
-> >   * one has even happened), rolling the transaction, and finishing the
-> > @@ -493,9 +526,7 @@ xfs_defer_init(
-> >  	struct xfs_defer_ops		*dop,
-> >  	xfs_fsblock_t			*fbp)
-> >  {
-> > -	dop->dop_committed = false;
-> > -	dop->dop_low = false;
-> > -	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> > +	memset(dop, 0, sizeof(struct xfs_defer_ops));
-> >  	*fbp = NULLFSBLOCK;
-> >  	INIT_LIST_HEAD(&dop->dop_intake);
-> >  	INIT_LIST_HEAD(&dop->dop_pending);
-> > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> > index d4f046d..045beac 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.h
-> > +++ b/fs/xfs/libxfs/xfs_defer.h
-> > @@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
-> >  };
-> >  
-> >  #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-> > +#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
-> >  
-> >  struct xfs_defer_ops {
-> >  	bool			dop_committed;	/* did any trans commit? */
-> > @@ -66,8 +67,9 @@ struct xfs_defer_ops {
-> >  	struct list_head	dop_intake;	/* unlogged pending work */
-> >  	struct list_head	dop_pending;	/* logged pending work */
-> >  
-> > -	/* relog these inodes with each roll */
-> > +	/* relog these with each roll */
-> >  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-> > +	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
-> >  };
-> >  
-> >  void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-> > @@ -77,6 +79,7 @@ void xfs_defer_cancel(struct xfs_defer_ops *dop);
-> >  void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
-> >  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-> >  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-> > +int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
-> >  
-> >  /* Description of a deferred type. */
-> >  struct xfs_defer_op_type {
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
