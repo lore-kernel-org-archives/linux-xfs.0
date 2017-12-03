@@ -1,41 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52268 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34584 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753987AbdLDQSl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Dec 2017 11:18:41 -0500
-Date: Mon, 4 Dec 2017 17:18:39 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Display project quotas without
-Message-ID: <20171204161839.GC17047@quack2.suse.cz>
-References: <CAL4D3QFpES1U1pCQ3md2Jiiqm0E5L5KhG4T77gnyEiom-EZBgw@mail.gmail.com>
+        id S1752438AbdLCXHF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 3 Dec 2017 18:07:05 -0500
+Date: Mon, 4 Dec 2017 00:07:02 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] treewide: remove duplicate includes
+Message-ID: <20171203230702.GT729@wotan.suse.de>
+References: <1512337779-16842-1-git-send-email-pravin.shedge4linux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAL4D3QFpES1U1pCQ3md2Jiiqm0E5L5KhG4T77gnyEiom-EZBgw@mail.gmail.com>
+In-Reply-To: <1512337779-16842-1-git-send-email-pravin.shedge4linux@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Romeo Theriault <romeotheriault@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Pravin Shedge <pravin.shedge4linux@gmail.com>
+Cc: gregkh@linuxfoundation.org, davem@davemloft.net, sstabellini@kernel.org, x86@kernel.org, mchehab@kernel.org, linux-xfs@vger.kernel.org, mcgrof@kernel.org, ast@kernel.org, shuah@kernel.org, namhyung@kernel.org, mhiramat@kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, devel@driverdev.osuosl.org, linux-security-module@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed 22-11-17 02:52:40, Romeo Theriault wrote:
-> Hello, Is it possible to display project quotas without the
-> /etc/projid file? I have a need to display the quotas without this (or
-> the /etc/project file) and just display the quotas with the id's.
+On Mon, Dec 04, 2017 at 03:19:39AM +0530, Pravin Shedge wrote:
+> These duplicate includes have been found with scripts/checkincludes.pl but
+> they have been removed manually to avoid removing false positives.
 > 
-> For example,
+> Unit Testing:
 > 
-> xfs_quota -x -c 'report -p'
-> 
-> displays nothing until I add a /etc/projid file.
-> 
-> Anyway around this? Using xfs_db or xfs_io somehow?
+> - build successful
+> - LTP testsuite passes.
+> - checkpatch.pl passes
 
-Well, you could install recent version of quota-tools and then use
-repquota(8) command to display quotas. It works also for XFS and does not
-need /etc/projid file.
+Can you get 0day to test it?
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+  Luis
