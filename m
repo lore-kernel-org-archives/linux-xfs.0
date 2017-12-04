@@ -1,35 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17555 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752434AbdLCWFL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Dec 2017 17:05:11 -0500
-Date: Mon, 4 Dec 2017 09:04:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: scrub inode nsec fields
-Message-ID: <20171203220435.GX5858@dastard>
-References: <20171201224149.GB21412@magnolia>
+Received: from Galois.linutronix.de ([146.0.238.70]:33945 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752758AbdLDVYp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:45 -0500
+Message-Id: <20171204212121.061502182@linutronix.de>
+Date: Mon, 04 Dec 2017 22:19:35 +0100
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch V4 08/11] LICENSES: Add the MIT license
+References: <20171204211927.673291734@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171201224149.GB21412@magnolia>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Disposition: inline; filename=LICENSES_Add_the_MIT_license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Fri, Dec 01, 2017 at 02:41:49PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Check that the nanosecond fields in each timestamp aren't larger
-> than a billion.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Add the full text of the MIT license to the kernel tree.  It was copied
+directly from:
 
-looks fine.
+  https://spdx.org/licenses/MIT.html#licenseText
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Add the required tags for reference and tooling.
 
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ LICENSES/preferred/MIT |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 LICENSES/MIT
+
+--- /dev/null
++++ b/LICENSES/preferred/MIT
+@@ -0,0 +1,30 @@
++Valid-License-Identifier: MIT
++SPDX-URL: https://spdx.org/licenses/MIT.html
++Usage-Guide:
++  To use the MIT License put the following SPDX tag/value pair into a
++  comment according to the placement guidelines in the licensing rules
++  documentation:
++    SPDX-License-Identifier: MIT
++License-Text:
++
++MIT License
++
++Copyright (c) <year> <copyright holders>
++
++Permission is hereby granted, free of charge, to any person obtaining a
++copy of this software and associated documentation files (the "Software"),
++to deal in the Software without restriction, including without limitation
++the rights to use, copy, modify, merge, publish, distribute, sublicense,
++and/or sell copies of the Software, and to permit persons to whom the
++Software is furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in
++all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++DEALINGS IN THE SOFTWARE.
+
+
