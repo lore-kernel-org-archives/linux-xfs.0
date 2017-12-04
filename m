@@ -1,56 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:6930 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752734AbdLCVya (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Dec 2017 16:54:30 -0500
-Date: Mon, 4 Dec 2017 08:54:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 7/7] xfs: eliminate duplicate icreate tx reservation
- functions
-Message-ID: <20171203215428.GV5858@dastard>
-References: <20171130185836.18481-1-bfoster@redhat.com>
- <20171130185836.18481-8-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:59946 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751701AbdLDVTn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Dec 2017 16:19:43 -0500
+Subject: Re: [PATCH v2 5/5] man: describe the metadata scrubbing ioctl
+References: <151094860143.27182.12022983202520916281.stgit@magnolia>
+ <151094863117.27182.9043322726761011548.stgit@magnolia>
+ <20171201190303.GU21412@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7b011210-dcba-87f1-179e-b7e862bb6e38@sandeen.net>
+Date: Mon, 4 Dec 2017 15:19:42 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171130185836.18481-8-bfoster@redhat.com>
+In-Reply-To: <20171201190303.GU21412@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 30, 2017 at 01:58:36PM -0500, Brian Foster wrote:
-> The create transaction reservation calculation has two different
-> branches of code depending on whether the filesystem is a v5 format
-> fs or older. Each branch considers the max reservation between the
-> allocation case (new chunk allocation + record insert) and the
-> modify case (chunk exists, record modification) of inode allocation.
+On 12/1/17 1:03 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The modify case is the same for both superblock versions with the
-> exception of the finobt. The finobt helper checks the feature bit,
-> however, and so the modify case already shares the same code.
+> Document the XFS-specific metadata scrub/repair ioctl's behavior,
+> arguments, and side effects.
 > 
-> Now that inode chunk allocation has been refactored into a helper
-> that checks the superblock version to calculate the appropriate
-> reservation for the create transaction, the only remaining
-> difference between the create and icreate branches is the call to
-> the finobt helper. As noted above, the finobt helper is a no-op when
-> the feature is not enabled. Therefore, these branches are
-> effectively duplicate and can be condensed.
-> 
-> Remove the xfs_calc_create_*() branch of functions and update the
-> various callers to use the xfs_calc_icreate_*() variant. The latter
-> creates the same reservation size for v4 create transactions as the
-> removed branch. As such, this patch does not result in transaction
-> reservation changes.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Nice simplification. Looks good.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
