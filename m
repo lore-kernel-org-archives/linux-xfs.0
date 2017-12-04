@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33891 "EHLO
+Received: from Galois.linutronix.de ([146.0.238.70]:33890 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752521AbdLDVYi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:38 -0500
-Message-Id: <20171204212120.735039805@linutronix.de>
-Date: Mon, 04 Dec 2017 22:19:31 +0100
+        with ESMTP id S1752489AbdLDVYh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:37 -0500
+Message-Id: <20171204212120.655531871@linutronix.de>
+Date: Mon, 04 Dec 2017 22:19:30 +0100
 From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V4 04/11] LICENSES: Add the LGPL-2.1 license
+Subject: [patch V4 03/11] LICENSES: Add the LGPL 2.0 license
 References: <20171204211927.673291734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline; filename=LICENSES--Add-the-LGPL-2.1-license.patch
+Content-Disposition: inline; filename=LICENSES--Add-the-LGPL-2.0-license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-Add the full text of the LGPL 2.1 license to the kernel tree.  It was
+Add the full text of the LGPL 2.0 license to the kernel tree.  It was
 copied directly from:
 
-   https://spdx.org/licenses/LGPL-2.1.html#licenseText
+   https://spdx.org/licenses/LGPL-2.0.html#licenseText
 
 Add the required tags for reference and tooling.
 
@@ -29,40 +29,38 @@ Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
 Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-
 ---
- LICENSES/preferred/LGPL-2.1 |  503 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 503 insertions(+)
+ LICENSES/preferred/LGPL-2.0 |  487 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 487 insertions(+)
 
 --- /dev/null
-+++ b/LICENSES/preferred/LGPL-2.1
-@@ -0,0 +1,503 @@
-+Valid-License-Identifier: LGPL-2.1
-+Valid-License-Identifier: LGPL-2.1+
-+SPDX-URL: https://spdx.org/licenses/LGPL-2.1.html
++++ b/LICENSES/preferred/LGPL-2.0
+@@ -0,0 +1,487 @@
++Valid-License-Identifier: LGPL-2.0
++Valid-License-Identifier: LGPL-2.0+
++SPDX-URL: https://spdx.org/licenses/LGPL-2.0.html
 +Usage-Guide:
 +  To use this license in source code, put one of the following SPDX
 +  tag/value pairs into a comment according to the placement
 +  guidelines in the licensing rules documentation.
-+  For 'GNU Lesser General Public License (LGPL) version 2.1 only' use:
-+    SPDX-License-Identifier: LGPL-2.1
-+  For 'GNU Lesser General Public License (LGPL) version 2.1 or any later
++  For 'GNU Library General Public License (LGPL) version 2.0 only' use:
++    SPDX-License-Identifier: LGPL-2.0
++  For 'GNU Library General Public License (LGPL) version 2.0 or any later
 +  version' use:
-+    SPDX-License-Identifier: LGPL-2.1+
++    SPDX-License-Identifier: LGPL-2.0+
 +License-Text:
 +
-+GNU LESSER GENERAL PUBLIC LICENSE
-+Version 2.1, February 1999
++GNU LIBRARY GENERAL PUBLIC LICENSE
++Version 2, June 1991
 +
-+Copyright (C) 1991, 1999 Free Software Foundation, Inc.
-+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++Copyright (C) 1991 Free Software Foundation, Inc.
++51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 +
 +Everyone is permitted to copy and distribute verbatim copies of this
 +license document, but changing it is not allowed.
 +
-+[This is the first released version of the Lesser GPL. It also counts as
-+the successor of the GNU Library Public License, version 2, hence the
-+version number 2.1.]
++[This is the first released version of the library GPL. It is numbered 2
++because it goes with version 2 of the ordinary GPL.]
 +
 +Preamble
 +
@@ -71,104 +69,95 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +intended to guarantee your freedom to share and change free software--to
 +make sure the software is free for all its users.
 +
-+This license, the Lesser General Public License, applies to some specially
-+designated software packages--typically libraries--of the Free Software
-+Foundation and other authors who decide to use it. You can use it too, but
-+we suggest you first think carefully about whether this license or the
-+ordinary General Public License is the better strategy to use in any
-+particular case, based on the explanations below.
++This license, the Library General Public License, applies to some specially
++designated Free Software Foundation software, and to any other libraries
++whose authors decide to use it. You can use it for your libraries, too.
 +
-+When we speak of free software, we are referring to freedom of use, not
-+price. Our General Public Licenses are designed to make sure that you have
-+the freedom to distribute copies of free software (and charge for this
-+service if you wish); that you receive source code or can get it if you
-+want it; that you can change the software and use pieces of it in new free
-+programs; and that you are informed that you can do these things.
++When we speak of free software, we are referring to freedom, not price. Our
++General Public Licenses are designed to make sure that you have the freedom
++to distribute copies of free software (and charge for this service if you
++wish), that you receive source code or can get it if you want it, that you
++can change the software or use pieces of it in new free programs; and that
++you know you can do these things.
 +
-+To protect your rights, we need to make restrictions that forbid
-+distributors to deny you these rights or to ask you to surrender these
-+rights. These restrictions translate to certain responsibilities for you if
-+you distribute copies of the library or if you modify it.
++To protect your rights, we need to make restrictions that forbid anyone to
++deny you these rights or to ask you to surrender the rights. These
++restrictions translate to certain responsibilities for you if you
++distribute copies of the library, or if you modify it.
 +
 +For example, if you distribute copies of the library, whether gratis or for
 +a fee, you must give the recipients all the rights that we gave you. You
 +must make sure that they, too, receive or can get the source code. If you
-+link other code with the library, you must provide complete object files to
-+the recipients, so that they can relink them with the library after making
++link a program with the library, you must provide complete object files to
++the recipients so that they can relink them with the library, after making
 +changes to the library and recompiling it. And you must show them these
 +terms so they know their rights.
 +
-+We protect your rights with a two-step method: (1) we copyright the
-+library, and (2) we offer you this license, which gives you legal
-+permission to copy, distribute and/or modify the library.
++Our method of protecting your rights has two steps: (1) copyright the
++library, and (2) offer you this license which gives you legal permission to
++copy, distribute and/or modify the library.
 +
-+To protect each distributor, we want to make it very clear that there is no
-+warranty for the free library. Also, if the library is modified by someone
-+else and passed on, the recipients should know that what they have is not
-+the original version, so that the original author's reputation will not be
-+affected by problems that might be introduced by others.
++Also, for each distributor's protection, we want to make certain that
++everyone understands that there is no warranty for this free library. If
++the library is modified by someone else and passed on, we want its
++recipients to know that what they have is not the original version, so that
++any problems introduced by others will not reflect on the original authors'
++reputations.
 +
-+Finally, software patents pose a constant threat to the existence of any
-+free program. We wish to make sure that a company cannot effectively
-+restrict the users of a free program by obtaining a restrictive license
-+from a patent holder. Therefore, we insist that any patent license obtained
-+for a version of the library must be consistent with the full freedom of
-+use specified in this license.
++Finally, any free program is threatened constantly by software patents. We
++wish to avoid the danger that companies distributing free software will
++individually obtain patent licenses, thus in effect transforming the
++program into proprietary software. To prevent this, we have made it clear
++that any patent must be licensed for everyone's free use or not licensed at
++all.
 +
 +Most GNU software, including some libraries, is covered by the ordinary GNU
-+General Public License. This license, the GNU Lesser General Public
-+License, applies to certain designated libraries, and is quite different
-+from the ordinary General Public License. We use this license for certain
-+libraries in order to permit linking those libraries into non-free
-+programs.
++General Public License, which was designed for utility programs. This
++license, the GNU Library General Public License, applies to certain
++designated libraries. This license is quite different from the ordinary
++one; be sure to read it in full, and don't assume that anything in it is
++the same as in the ordinary license.
 +
-+When a program is linked with a library, whether statically or using a
-+shared library, the combination of the two is legally speaking a combined
-+work, a derivative of the original library. The ordinary General Public
-+License therefore permits such linking only if the entire combination fits
-+its criteria of freedom. The Lesser General Public License permits more lax
-+criteria for linking other code with the library.
++The reason we have a separate public license for some libraries is that
++they blur the distinction we usually make between modifying or adding to a
++program and simply using it. Linking a program with a library, without
++changing the library, is in some sense simply using the library, and is
++analogous to running a utility program or application program. However, in
++a textual and legal sense, the linked executable is a combined work, a
++derivative of the original library, and the ordinary General Public License
++treats it as such.
 +
-+We call this license the "Lesser" General Public License because it does
-+Less to protect the user's freedom than the ordinary General Public
-+License. It also provides other free software developers Less of an
-+advantage over competing non-free programs. These disadvantages are the
-+reason we use the ordinary General Public License for many
-+libraries. However, the Lesser license provides advantages in certain
-+special circumstances.
++Because of this blurred distinction, using the ordinary General Public
++License for libraries did not effectively promote software sharing, because
++most developers did not use the libraries. We concluded that weaker
++conditions might promote sharing better.
 +
-+For example, on rare occasions, there may be a special need to encourage
-+the widest possible use of a certain library, so that it becomes a de-facto
-+standard. To achieve this, non-free programs must be allowed to use the
-+library. A more frequent case is that a free library does the same job as
-+widely used non-free libraries. In this case, there is little to gain by
-+limiting the free library to free software only, so we use the Lesser
-+General Public License.
-+
-+In other cases, permission to use a particular library in non-free programs
-+enables a greater number of people to use a large body of free
-+software. For example, permission to use the GNU C Library in non-free
-+programs enables many more people to use the whole GNU operating system, as
-+well as its variant, the GNU/Linux operating system.
-+
-+Although the Lesser General Public License is Less protective of the users'
-+freedom, it does ensure that the user of a program that is linked with the
-+Library has the freedom and the wherewithal to run that program using a
-+modified version of the Library.
++However, unrestricted linking of non-free programs would deprive the users
++of those programs of all benefit from the free status of the libraries
++themselves. This Library General Public License is intended to permit
++developers of non-free programs to use free libraries, while preserving
++your freedom as a user of such programs to change the free libraries that
++are incorporated in them. (We have not seen how to achieve this as regards
++changes in header files, but we have achieved it as regards changes in the
++actual functions of the Library.) The hope is that this will lead to faster
++development of free libraries.
 +
 +The precise terms and conditions for copying, distribution and modification
 +follow. Pay close attention to the difference between a "work based on the
 +library" and a "work that uses the library". The former contains code
-+derived from the library, whereas the latter must be combined with the
-+library in order to run.
++derived from the library, while the latter only works together with the
++library.
++
++Note that it is possible for a library to be covered by the ordinary
++General Public License rather than by this special one.
 +
 +TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 +
-+0. This License Agreement applies to any software library or other program
-+   which contains a notice placed by the copyright holder or other
-+   authorized party saying it may be distributed under the terms of this
-+   Lesser General Public License (also called "this License"). Each
-+   licensee is addressed as "you".
++0. This License Agreement applies to any software library which contains a
++   notice placed by the copyright holder or other authorized party saying
++   it may be distributed under the terms of this Library General Public
++   License (also called "this License"). Each licensee is addressed as
++   "you".
 +
 +   A "library" means a collection of software functions and/or data
 +   prepared so as to be conveniently linked with application programs
@@ -188,13 +177,13 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +   definition files, plus the scripts used to control compilation and
 +   installation of the library.
 +
-+    Activities other than copying, distribution and modification are not
-+    covered by this License; they are outside its scope. The act of running
-+    a program using the Library is not restricted, and output from such a
-+    program is covered only if its contents constitute a work based on the
-+    Library (independent of the use of the Library in a tool for writing
-+    it). Whether that is true depends on what the Library does and what the
-+    program that uses the Library does.
++   Activities other than copying, distribution and modification are not
++   covered by this License; they are outside its scope. The act of running
++   a program using the Library is not restricted, and output from such a
++   program is covered only if its contents constitute a work based on the
++   Library (independent of the use of the Library in a tool for writing
++   it). Whether that is true depends on what the Library does and what the
++   program that uses the Library does.
 +
 +1. You may copy and distribute verbatim copies of the Library's complete
 +   source code as you receive it, in any medium, provided that you
@@ -228,11 +217,11 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +      remains meaningful.
 +
 +   (For example, a function in a library to compute square roots has a
-+    purpose that is entirely well-defined independent of the
-+    application. Therefore, Subsection 2d requires that any
-+    application-supplied function or table used by this function must be
-+    optional: if the application does not supply it, the square root
-+    function must still compute square roots.)
++   purpose that is entirely well-defined independent of the
++   application. Therefore, Subsection 2d requires that any
++   application-supplied function or table used by this function must be
++   optional: if the application does not supply it, the square root
++   function must still compute square roots.)
 +
 +   These requirements apply to the modified work as a whole. If
 +   identifiable sections of that work are not derived from the Library, and
@@ -314,7 +303,7 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +   6. Any executables containing that work also fall under Section 6,
 +   whether or not they are linked directly with the Library itself.
 +
-+6. As an exception to the Sections above, you may also combine or link a
++6. As an exception to the Sections above, you may also compile or link a
 +   "work that uses the Library" with the Library to produce a work
 +   containing portions of the Library, and distribute that work under terms
 +   of your choice, provided that the terms permit modification of the work
@@ -339,29 +328,21 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +      definitions files in the Library will not necessarily be able to
 +      recompile the application to use the modified definitions.)
 +
-+   b) Use a suitable shared library mechanism for linking with the
-+      Library. A suitable mechanism is one that (1) uses at run time a copy
-+      of the library already present on the user's computer system, rather
-+      than copying library functions into the executable, and (2) will
-+      operate properly with a modified version of the library, if the user
-+      installs one, as long as the modified version is interface-compatible
-+      with the version that the work was made with.
-+
-+   c) Accompany the work with a written offer, valid for at least three
++   b) Accompany the work with a written offer, valid for at least three
 +      years, to give the same user the materials specified in Subsection
 +      6a, above, for a charge no more than the cost of performing this
 +      distribution.
 +
-+   d) If distribution of the work is made by offering access to copy from a
++   c) If distribution of the work is made by offering access to copy from a
 +      designated place, offer equivalent access to copy the above specified
 +      materials from the same place.
 +
-+   e) Verify that the user has already received a copy of these materials
++   d) Verify that the user has already received a copy of these materials
 +      or that you have already sent this user a copy.
 +
 +   For an executable, the required form of the "work that uses the Library"
 +   must include any data and utility programs needed for reproducing the
-+   executable from it. However, as a special exception, the materials to be
++   executable from it. However, as a special exception, the source code
 +   distributed need not include anything that is normally distributed (in
 +   either source or binary form) with the major components (compiler,
 +   kernel, and so on) of the operating system on which the executable runs,
@@ -410,7 +391,7 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +    subject to these terms and conditions. You may not impose any further
 +    restrictions on the recipients' exercise of the rights granted
 +    herein. You are not responsible for enforcing compliance by third
-+    parties with this License.
++    parties to this License.
 +
 +11. If, as a consequence of a court judgment or allegation of patent
 +    infringement or for any other reason (not limited to patent issues),
@@ -453,7 +434,7 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +    limitation as if written in the body of this License.
 +
 +13. The Free Software Foundation may publish revised and/or new versions of
-+    the Lesser General Public License from time to time. Such new versions
++    the Library General Public License from time to time. Such new versions
 +    will be similar in spirit to the present version, but may differ in
 +    detail to address new problems or concerns.
 +
@@ -515,19 +496,20 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +Copyright (C) year name of author
 +
 +This library is free software; you can redistribute it and/or modify it
-+under the terms of the GNU Lesser General Public License as published by
-+the Free Software Foundation; either version 2.1 of the License, or (at
-+your option) any later version.
++under the terms of the GNU Library General Public License as published by
++the Free Software Foundation; either version 2 of the License, or (at your
++option) any later version.
 +
 +This library is distributed in the hope that it will be useful, but WITHOUT
 +ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
-+for more details.
++FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
++License for more details.
 +
-+You should have received a copy of the GNU Lesser General Public License
++You should have received a copy of the GNU Library General Public License
 +along with this library; if not, write to the Free Software Foundation,
-+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA Also add
-+information on how to contact you by electronic and paper mail.
++Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
++
++Also add information on how to contact you by electronic and paper mail.
 +
 +You should also get your employer (if you work as a programmer) or your
 +school, if any, to sign a "copyright disclaimer" for the library, if
@@ -539,6 +521,7 @@ Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 +
 +signature of Ty Coon, 1 April 1990
 +Ty Coon, President of Vice
++
 +That's all there is to it!
 
 
