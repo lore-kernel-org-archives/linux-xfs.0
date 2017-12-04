@@ -1,34 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33885 "EHLO
+Received: from Galois.linutronix.de ([146.0.238.70]:33893 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751846AbdLDVYg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:36 -0500
-Message-Id: <20171204211927.673291734@linutronix.de>
-Date: Mon, 04 Dec 2017 22:19:27 +0100
+        with ESMTP id S1752615AbdLDVYi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:38 -0500
+Message-Id: <20171204212120.814133926@linutronix.de>
+Date: Mon, 04 Dec 2017 22:19:32 +0100
 From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V4 00/11] LICENSES: Add documentation and initial License files
+Subject: [patch V4 05/11] LICENSES: Add the BSD 2-clause "Simplified" license
+References: <20171204211927.673291734@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Disposition: inline;
+ filename=LICENSES_Add_the_BSD_2-clause_Simplified_license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-This is the 4th version of the licensing rules documentation.
+Add the full text of the BSD 2-clause "Simplified" license to the kernel
+tree.  It was copied directly from:
 
-Changes since v3:
+   https://spdx.org/licenses/BSD-2-Clause.html#licenseText
 
- - Addressed the review comments
+Add the required tags for reference and tooling.
 
- - Replaced the GPL-2.0 license text with the one from the kernel COPYING
-   file and added the nice explanation from Philippe to the changelog.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
- - Picked up Reviewed-by tags
+---
+ LICENSES/preferred/BSD-2-Clause |   32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+ create mode 100644 LICENSES/BSD-2-Clause
 
-Thanks to everyone who provided input!
-
-Thanks,
-
-        tglx
-
+--- /dev/null
++++ b/LICENSES/preferred/BSD-2-Clause
+@@ -0,0 +1,32 @@
++Valid-License-Identifier: BSD-2-Clause
++SPDX-URL: https://spdx.org/licenses/BSD-2-Clause.html
++Usage-Guide:
++  To use the BSD 2-clause "Simplified" License put the following SPDX
++  tag/value pair into a comment according to the placement guidelines in
++  the licensing rules documentation:
++    SPDX-License-Identifier: BSD-2-Clause
++License-Text:
++
++Copyright (c) <year> <owner> . All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are met:
++
++1. Redistributions of source code must retain the above copyright notice,
++   this list of conditions and the following disclaimer.
++
++2. Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++
++THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGE.
 
 
