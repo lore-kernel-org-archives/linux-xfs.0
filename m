@@ -1,145 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60681 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753344AbdLFAmN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:13 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 40/73] pagevec: Use xa_tag_t
-Date: Tue,  5 Dec 2017 16:41:26 -0800
-Message-Id: <20171206004159.3755-41-willy@infradead.org>
-In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
-References: <20171206004159.3755-1-willy@infradead.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:59408 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751793AbdLDXIg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 18:08:36 -0500
+Date: Mon, 4 Dec 2017 12:53:12 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 10/13] fstests: crash consistency fsx test using
+ dm-log-writes
+Message-ID: <20171204205312.GB4910@magnolia>
+References: <CAOQ4uxiGryFy7GLZUa0EWcbT+50cMfBb8a2dYa1mZ7tEf+UURg@mail.gmail.com>
+ <20171128172152.ktvpnwv233govfwl@destiny>
+ <CAOQ4uxgeKdZnxXcvt10MG2kT4PTZ4eZH+-v2R0zPJXTcRvONeQ@mail.gmail.com>
+ <20171128200035.26kqhetxtemnm7z4@destiny>
+ <CAOQ4uxh2OX9Lbnauv-ip5GC_8oCJ38hYsjjvp0+JFGYLqRk7nw@mail.gmail.com>
+ <CAOQ4uxhQu-1AK71zg4Ce0cJd+xRt3Gf9zMMVb=Rs00zFuWA3hQ@mail.gmail.com>
+ <20171128223308.GC21412@magnolia>
+ <CAOQ4uxhj0-SBO_6cORsdJURmyrwvv_nxBRhKjMAb-PvxyeU6ew@mail.gmail.com>
+ <CAOQ4uxhXWxkre7L7RDvpH8E4cwsHGZzVHKmCpBESfTUZhmQpUg@mail.gmail.com>
+ <CAOQ4uxjBQ9ZzPe9GKCRYCjNFv3jP8NMAVQDb=LiNqNcEeRp47w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjBQ9ZzPe9GKCRYCjNFv3jP8NMAVQDb=LiNqNcEeRp47w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <jbacik@fb.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+On Mon, Dec 04, 2017 at 10:17:30PM +0200, Amir Goldstein wrote:
+> On Thu, Nov 30, 2017 at 10:28 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > On Wed, Nov 29, 2017 at 5:33 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+> [...]
+> > So far I was able to determine that your patch
+> > "xfs: log recovery should replay deferred ops in order" is NOT the
+> > cause of the problem.
+> > This took some time, because at one point it took me 23 hr to get to
+> > the dirty log
+> > in test partition with modified 455 (no dm-log-writes).
+> >
+> > Attached metadump of corrupt test partition.
+> > The xfs code this test was running with is v4.14-rc8.
+> > I did not try to bisect any further because of the time it takes per commit.
+> >
+> > Let me know if you need any other info or if you want me to run the test
+> > on my setup for specific patch and/or bisection points.
+> >
+> 
+> I figured out what was going on in my test setup.
+> The answer was in the attached dmesg, but I overlooked it:
+> 
+> [33816.533286] ata3.00: failed command: FLUSH CACHE EXT
+> [33816.533294] ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 21
+>                         res 40/00:00:20:44:ba/00:00:0c:00:00/40 Emask
+> 0x10 (ATA bus error)
+> [33816.533300] ata3.00: status: { DRDY }
+> [33816.533309] ata3: hard resetting link
+> 
+> It appears that that test machine had a faulty SATA cable.
+> 
+> This is probably more cruel to fs than a dm-flakey/dm-log-writes test...
 
-Removes sparse warnings.
+Not as bad as the time when I discovered that one of my UASP bridges was
+arbitrarily injecting 'USBUSBUSB' into bus transfers.
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- fs/btrfs/extent_io.c    | 4 ++--
- fs/ext4/inode.c         | 2 +-
- fs/f2fs/data.c          | 2 +-
- fs/gfs2/aops.c          | 2 +-
- include/linux/pagevec.h | 8 +++++---
- mm/swap.c               | 4 ++--
- 6 files changed, 12 insertions(+), 10 deletions(-)
+> Cable replaced. Back to sanity. Sorry for the noise.
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 94f734e7e66f..b8b5b4562d50 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -3795,7 +3795,7 @@ int btree_write_cache_pages(struct address_space *mapping,
- 	pgoff_t index;
- 	pgoff_t end;		/* Inclusive */
- 	int scanned = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-@@ -3922,7 +3922,7 @@ static int extent_write_cache_pages(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int range_whole = 0;
- 	int scanned = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	/*
- 	 * We have to hold onto the inode so that ordered extents can do their
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 7df2c5644e59..2534304daec3 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -2605,7 +2605,7 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
- 	long left = mpd->wbc->nr_to_write;
- 	pgoff_t index = mpd->first_page;
- 	pgoff_t end = mpd->last_page;
--	int tag;
-+	xa_tag_t tag;
- 	int i, err = 0;
- 	int blkbits = mpd->inode->i_blkbits;
- 	ext4_lblk_t lblk;
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 8f51ac47b77f..c8f6d9806896 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -1640,7 +1640,7 @@ static int f2fs_write_cache_pages(struct address_space *mapping,
- 	pgoff_t last_idx = ULONG_MAX;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 
-diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-index 1daf15a1f00c..c78ecd008191 100644
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -369,7 +369,7 @@ static int gfs2_write_cache_jdata(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-diff --git a/include/linux/pagevec.h b/include/linux/pagevec.h
-index 5fb6580f7f23..5168901bf06d 100644
---- a/include/linux/pagevec.h
-+++ b/include/linux/pagevec.h
-@@ -9,6 +9,8 @@
- #ifndef _LINUX_PAGEVEC_H
- #define _LINUX_PAGEVEC_H
- 
-+#include <linux/xarray.h>
-+
- /* 14 pointers + two long's align the pagevec structure to a power of two */
- #define PAGEVEC_SIZE	14
- 
-@@ -40,12 +42,12 @@ static inline unsigned pagevec_lookup(struct pagevec *pvec,
- 
- unsigned pagevec_lookup_range_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag);
-+		xa_tag_t tag);
- unsigned pagevec_lookup_range_nr_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag, unsigned max_pages);
-+		xa_tag_t tag, unsigned max_pages);
- static inline unsigned pagevec_lookup_tag(struct pagevec *pvec,
--		struct address_space *mapping, pgoff_t *index, int tag)
-+		struct address_space *mapping, pgoff_t *index, xa_tag_t tag)
- {
- 	return pagevec_lookup_range_tag(pvec, mapping, index, (pgoff_t)-1, tag);
- }
-diff --git a/mm/swap.c b/mm/swap.c
-index 8d7773cb2c3f..31d79479dacf 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -991,7 +991,7 @@ EXPORT_SYMBOL(pagevec_lookup_range);
- 
- unsigned pagevec_lookup_range_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag)
-+		xa_tag_t tag)
- {
- 	pvec->nr = find_get_pages_range_tag(mapping, index, end, tag,
- 					PAGEVEC_SIZE, pvec->pages);
-@@ -1001,7 +1001,7 @@ EXPORT_SYMBOL(pagevec_lookup_range_tag);
- 
- unsigned pagevec_lookup_range_nr_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag, unsigned max_pages)
-+		xa_tag_t tag, unsigned max_pages)
- {
- 	pvec->nr = find_get_pages_range_tag(mapping, index, end, tag,
- 		min_t(unsigned int, max_pages, PAGEVEC_SIZE), pvec->pages);
--- 
-2.15.0
+:)
+
+--D
+
+> Amir.
+
 
