@@ -1,189 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47396 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:52268 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752837AbdLDMV5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Dec 2017 07:21:57 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 251AD4DD49
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Dec 2017 12:21:57 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EB997619B9
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Dec 2017 12:21:56 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 6/7] xfs: refactor inode chunk alloc/free tx reservation
-Date: Mon,  4 Dec 2017 07:21:55 -0500
-Message-Id: <20171204122155.36510-1-bfoster@redhat.com>
-In-Reply-To: <20171130185836.18481-7-bfoster@redhat.com>
-References: <20171130185836.18481-7-bfoster@redhat.com>
+        id S1753987AbdLDQSl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Dec 2017 11:18:41 -0500
+Date: Mon, 4 Dec 2017 17:18:39 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Display project quotas without
+Message-ID: <20171204161839.GC17047@quack2.suse.cz>
+References: <CAL4D3QFpES1U1pCQ3md2Jiiqm0E5L5KhG4T77gnyEiom-EZBgw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAL4D3QFpES1U1pCQ3md2Jiiqm0E5L5KhG4T77gnyEiom-EZBgw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Romeo Theriault <romeotheriault@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-The reservation for the various forms of inode allocation is
-scattered across several different functions. This includes two
-variants of chunk allocation (v5 icreate transactions vs. older
-create transactions) and the inode free transaction.
+On Wed 22-11-17 02:52:40, Romeo Theriault wrote:
+> Hello, Is it possible to display project quotas without the
+> /etc/projid file? I have a need to display the quotas without this (or
+> the /etc/project file) and just display the quotas with the id's.
+> 
+> For example,
+> 
+> xfs_quota -x -c 'report -p'
+> 
+> displays nothing until I add a /etc/projid file.
+> 
+> Anyway around this? Using xfs_db or xfs_io somehow?
 
-To clean up some of this code and clarify the purpose of specific
-allocfree reservations, continue the pattern of defining helper
-functions for smaller operational units of broader transactions.
-Refactor the reservation into an inode chunk alloc/free helper that
-considers the various conditions based on filesystem format.
+Well, you could install recent version of quota-tools and then use
+repquota(8) command to display quotas. It works also for XFS and does not
+need /etc/projid file.
 
-An inode chunk free involves an extent free and buffer
-invalidations. The latter requires reservation for log headers only.
-An inode chunk allocation modifies the free space btrees and logs
-the chunk on v4 supers. v5 supers initialize the inode chunk using
-ordered buffers and so do not log the chunk.
-
-As a side effect of this refactoring, add one more allocfree res to
-the ifree transaction. Technically this does not serve a specific
-purpose because inode chunks are freed via deferred operations and
-thus occur after a transaction roll. tr_ifree has a bit of a history
-of tx overruns caused by too many agfl fixups during sustained file
-deletion workloads, so add this extra reservation as a form of
-padding nonetheless.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
-
-v3:
-- Drop undefs.
-
- fs/xfs/libxfs/xfs_trans_resv.c | 64 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 49 insertions(+), 15 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 19f3a226a357..75259a1346eb 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -34,6 +34,9 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- 
-+#define _ALLOC	true
-+#define _FREE	false
-+
- /*
-  * A buffer has a format structure overhead in the log in addition
-  * to the data, so we need to take this into account when reserving
-@@ -172,6 +175,41 @@ xfs_calc_finobt_res(
- }
- 
- /*
-+ * Calculate the reservation required to allocate or free an inode chunk. This
-+ * includes:
-+ *
-+ * the allocation btrees: 2 trees * (max depth - 1) * block size
-+ * the inode chunk: m_ialloc_blks * N
-+ *
-+ * The size N of the inode chunk reservation depends on whether it is for
-+ * allocation or free and which type of create transaction is in use. An inode
-+ * chunk free always invalidates the buffers and only requires reservation for
-+ * headers (N == 0). An inode chunk allocation requires a chunk sized
-+ * reservation on v4 and older superblocks to initialize the chunk. No chunk
-+ * reservation is required for allocation on v5 supers, which use ordered
-+ * buffers to initialize.
-+ */
-+STATIC uint
-+xfs_calc_inode_chunk_res(
-+	struct xfs_mount	*mp,
-+	bool			alloc)
-+{
-+	uint			res, size = 0;
-+
-+	res = xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
-+			       XFS_FSB_TO_B(mp, 1));
-+	if (alloc) {
-+		/* icreate tx uses ordered buffers */
-+		if (xfs_sb_version_hascrc(&mp->m_sb))
-+			return res;
-+		size = XFS_FSB_TO_B(mp, 1);
-+	}
-+
-+	res += xfs_calc_buf_res(mp->m_ialloc_blks, size);
-+	return res;
-+}
-+
-+/*
-  * Various log reservation values.
-  *
-  * These are based on the size of the file system block because that is what
-@@ -379,8 +417,7 @@ xfs_calc_create_resv_modify(
-  * For create we can allocate some inodes giving:
-  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-  *    the superblock for the nlink flag: sector size
-- *    the inode blocks allocated: mp->m_ialloc_blks * blocksize
-- *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inode chunk (allocation/init)
-  *    the inode btree (record insertion)
-  */
- STATIC uint
-@@ -389,9 +426,7 @@ xfs_calc_create_resv_alloc(
- {
- 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		mp->m_sb.sb_sectsize +
--		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
--		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_inode_chunk_res(mp, _ALLOC) +
- 		xfs_calc_inobt_res(mp);
- }
- 
-@@ -408,7 +443,7 @@ __xfs_calc_create_reservation(
-  * For icreate we can allocate some inodes giving:
-  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-  *    the superblock for the nlink flag: sector size
-- *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the inode chunk (allocation, no init)
-  *    the inobt (record insertion)
-  *    the finobt (record insertion)
-  */
-@@ -418,8 +453,7 @@ xfs_calc_icreate_resv_alloc(
- {
- 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		mp->m_sb.sb_sectsize +
--		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
--				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_inode_chunk_res(mp, _ALLOC) +
- 		xfs_calc_inobt_res(mp) +
- 		xfs_calc_finobt_res(mp);
- }
-@@ -485,15 +519,15 @@ xfs_calc_symlink_reservation(
-  *    the inode being freed: inode size
-  *    the super block free inode counter, AGF and AGFL: sector size
-  *    the on disk inode (agi unlinked list removal)
-- *    the inode chunk is marked stale (headers only)
-+ *    the inode chunk (invalidated, headers only)
-  *    the inode btree
-  *    the finobt (record insertion, removal or modification)
-  *
-- * Note that the allocfree res. for the inode chunk itself is not included
-- * because the extent free occurs after a transaction roll. We could take the
-- * maximum of the pre/post roll operations, but the pre-roll reservation already
-- * includes at least one allocfree res. for the inobt and is thus guaranteed to
-- * be larger.
-+ * Note that the inode chunk res. includes an allocfree res. for freeing of the
-+ * inode chunk. This is technically extraneous because the inode chunk free is
-+ * deferred (it occurs after a transaction roll). Include the extra reservation
-+ * anyways since we've had reports of ifree transaction overruns due to too many
-+ * agfl fixups during inode chunk frees.
-  */
- STATIC uint
- xfs_calc_ifree_reservation(
-@@ -503,7 +537,7 @@ xfs_calc_ifree_reservation(
- 		xfs_calc_inode_res(mp, 1) +
- 		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
- 		xfs_calc_iunlink_remove_reservation(mp) +
--		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
-+		xfs_calc_inode_chunk_res(mp, _FREE) +
- 		xfs_calc_inobt_res(mp) +
- 		xfs_calc_finobt_res(mp);
- }
+								Honza
 -- 
-2.13.6
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
