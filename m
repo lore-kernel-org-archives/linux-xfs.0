@@ -1,112 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46306 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752231AbdLDMRM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Dec 2017 07:17:12 -0500
-Date: Mon, 4 Dec 2017 07:17:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 6/7] xfs: refactor inode chunk alloc/free tx
- reservation
-Message-ID: <20171204121711.GA35976@bfoster.bfoster>
-References: <20171130185836.18481-1-bfoster@redhat.com>
- <20171130185836.18481-7-bfoster@redhat.com>
- <20171203215204.GU5858@dastard>
+Received: from Galois.linutronix.de ([146.0.238.70]:33926 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752734AbdLDVYn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:43 -0500
+Message-Id: <20171204212120.905739645@linutronix.de>
+Date: Mon, 04 Dec 2017 22:19:33 +0100
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch V4 06/11] LICENSES: Add the BSD 3-clause "New" or "Revised"
+ License
+References: <20171204211927.673291734@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171203215204.GU5858@dastard>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Disposition: inline;
+ filename=LICENSES_Add_the_BSD_3-clause_New_Revised_license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Mon, Dec 04, 2017 at 08:52:04AM +1100, Dave Chinner wrote:
-> On Thu, Nov 30, 2017 at 01:58:35PM -0500, Brian Foster wrote:
-> > The reservation for the various forms of inode allocation is
-> > scattered across several different functions. This includes two
-> > variants of chunk allocation (v5 icreate transactions vs. older
-> > create transactions) and the inode free transaction.
-> > 
-> > To clean up some of this code and clarify the purpose of specific
-> > allocfree reservations, continue the pattern of defining helper
-> > functions for smaller operational units of broader transactions.
-> > Refactor the reservation into an inode chunk alloc/free helper that
-> > considers the various conditions based on filesystem format.
-> > 
-> > An inode chunk free involves an extent free and buffer
-> > invalidations. The latter requires reservation for log headers only.
-> > An inode chunk allocation modifies the free space btrees and logs
-> > the chunk on v4 supers. v5 supers initialize the inode chunk using
-> > ordered buffers and so do not log the chunk.
-> > 
-> > As a side effect of this refactoring, add one more allocfree res to
-> > the ifree transaction. Technically this does not serve a specific
-> > purpose because inode chunks are freed via deferred operations and
-> > thus occur after a transaction roll. tr_ifree has a bit of a history
-> > of tx overruns caused by too many agfl fixups during sustained file
-> > deletion workloads, so add this extra reservation as a form of
-> > padding nonetheless.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> 
-> Minor quibble below, otherwise looks fine.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_resv.c | 67 ++++++++++++++++++++++++++++++++----------
-> >  1 file changed, 52 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index 19f3a226a357..432dd7d7afea 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -34,6 +34,9 @@
-> >  #include "xfs_trans_space.h"
-> >  #include "xfs_trace.h"
-> >  
-> > +#define _ALLOC	true
-> > +#define _FREE	false
-> > +
-> >  /*
-> >   * A buffer has a format structure overhead in the log in addition
-> >   * to the data, so we need to take this into account when reserving
-> 
-> These are defined at the top of the file so most functions see
-> them (i.e. scope is the file wide)....
-> 
-> > @@ -795,6 +829,9 @@ xfs_calc_sb_reservation(
-> >  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
-> >  }
-> >  
-> > +#undef _ALLOC
-> > +#undef _FREE
-> > +
-> >  void
-> >  xfs_trans_resv_calc(
-> >  	struct xfs_mount	*mp,
-> 
-> ... so why bother undef'ing them seemingly at random in the middle of
-> the file? Doesn't seem necessary, and will just be more code to
-> move around in future...
-> 
+Add the full text of the BSD 3-clause "New" or "Revised" License to the
+kernel tree.  It was copied directly from:
 
-The intent was to limit them to the reservation calculation functions,
-just for clarity I suppose. It just happens to encompass most of the
-file and start at the top (just about everything within the ifdef/undef
-is local scope). I'm fine with it either way, however. I'll post a v3
-without the undefs.. thanks for the review!
+  https://spdx.org/licenses/BSD-3-Clause.html#licenseText
 
-Brian
+Add the required tags for reference and tooling.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ LICENSES/preferred/BSD-3-Clause |   36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+ create mode 100644 LICENSES/BSD-3-Clause
+
+--- /dev/null
++++ b/LICENSES/preferred/BSD-3-Clause
+@@ -0,0 +1,36 @@
++Valid-License-Identifier: BSD-3-Clause
++SPDX-URL: https://spdx.org/licenses/BSD-3-Clause.html
++Usage-Guide:
++  To use the BSD 3-clause "New" or "Revised" License put the following SPDX
++  tag/value pair into a comment according to the placement guidelines in
++  the licensing rules documentation:
++    SPDX-License-Identifier: BSD-3-Clause
++License-Text:
++
++Copyright (c) <year> <owner> . All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are met:
++
++1. Redistributions of source code must retain the above copyright notice,
++   this list of conditions and the following disclaimer.
++
++2. Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++
++3. Neither the name of the copyright holder nor the names of its
++   contributors may be used to endorse or promote products derived from this
++   software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGE.
+
+
