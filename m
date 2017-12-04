@@ -1,176 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51346 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753354AbdLFAmN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:13 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 46/73] shmem: Convert shmem_add_to_page_cache to XArray
-Date: Tue,  5 Dec 2017 16:41:32 -0800
-Message-Id: <20171206004159.3755-47-willy@infradead.org>
-In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
-References: <20171206004159.3755-1-willy@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:42532 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750995AbdLDXyK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Dec 2017 18:54:10 -0500
+Subject: [PATCH 1/5 V2] xfs_db: print structure padding fields consistently
+References: <151094860143.27182.12022983202520916281.stgit@magnolia>
+ <151094860737.27182.5422098949147661107.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <bb3d13c6-d692-7ac4-852e-00f8523cffef@sandeen.net>
+Date: Mon, 4 Dec 2017 17:54:09 -0600
+MIME-Version: 1.0
+In-Reply-To: <151094860737.27182.5422098949147661107.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This removes the last caller of radix_tree_maybe_preload_order().
-Simpler code, unless we run out of memory for new xa_nodes partway through
-inserting entries into the xarray.  Hopefully we can support multi-index
-entries in the page cache soon and all the awful code goes away.
+We are very inconsistent about how we print padding fields in on-disk
+structures -- sometimes we hide it from printall, sometimes we deviate
+from unsigned hex values, etc.  Make this all consistent -- always hide
+padding values when printing the whole structure, always print them as
+unsigned hex integers when explicitly requested.
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[sandeen: switch to never-print instead of always-print]
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- mm/shmem.c | 87 ++++++++++++++++++++++++++++----------------------------------
- 1 file changed, 39 insertions(+), 48 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index e4a2eb1336be..54fbfc2c6c09 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -558,9 +558,10 @@ static unsigned long shmem_unused_huge_shrink(struct shmem_sb_info *sbinfo,
-  */
- static int shmem_add_to_page_cache(struct page *page,
- 				   struct address_space *mapping,
--				   pgoff_t index, void *expected)
-+				   pgoff_t index, void *expected, gfp_t gfp)
- {
--	int error, nr = hpage_nr_pages(page);
-+	XA_STATE(xas, &mapping->pages, index);
-+	unsigned int i, nr = compound_order(page);
+V2: constant-ify by never printing instead of always printing,
+    but still make format consistent.
+
+diff --git a/db/attr.c b/db/attr.c
+index 75fe239..9cbb20d 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -589,7 +589,7 @@ const field_t	attr3_node_hdr_flds[] = {
+ 	{ "info", FLDT_ATTR3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
+ 	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
+ 	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
+-	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
++	{ "pad", FLDT_UINT32X, OI(H3OFF(__pad32)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ NULL }
+ };
  
- 	VM_BUG_ON_PAGE(PageTail(page), page);
- 	VM_BUG_ON_PAGE(index != round_down(index, nr), page);
-@@ -569,49 +570,47 @@ static int shmem_add_to_page_cache(struct page *page,
- 	VM_BUG_ON(expected && PageTransHuge(page));
+diff --git a/db/dir2.c b/db/dir2.c
+index 3e21a7b..7f7ea5a 100644
+--- a/db/dir2.c
++++ b/db/dir2.c
+@@ -977,7 +977,7 @@ const field_t	da3_node_hdr_flds[] = {
+ 	{ "info", FLDT_DA3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
+ 	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
+ 	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
+-	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
++	{ "pad", FLDT_UINT32X, OI(H3OFF(__pad32)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ NULL }
+ };
  
- 	page_ref_add(page, nr);
--	page->mapping = mapping;
- 	page->index = index;
-+	page->mapping = mapping;
- 
--	xa_lock_irq(&mapping->pages);
--	if (PageTransHuge(page)) {
--		void __rcu **results;
--		pgoff_t idx;
--		int i;
--
--		error = 0;
--		if (radix_tree_gang_lookup_slot(&mapping->pages,
--					&results, &idx, index, 1) &&
--				idx < index + HPAGE_PMD_NR) {
--			error = -EEXIST;
-+	do {
-+		xas_lock_irq(&xas);
-+		xas_create_range(&xas, index + nr - 1);
-+		if (xas_error(&xas))
-+			goto unlock;
-+		for (i = 0; i < nr; i++) {
-+			void *entry = xas_load(&xas);
-+			if (entry != expected)
-+				xas_set_err(&xas, -ENOENT);
-+			if (xas_error(&xas))
-+				goto undo;
-+			xas_store(&xas, page + i);
-+			xas_next(&xas);
- 		}
--
--		if (!error) {
--			for (i = 0; i < HPAGE_PMD_NR; i++) {
--				error = radix_tree_insert(&mapping->pages,
--						index + i, page + i);
--				VM_BUG_ON(error);
--			}
-+		if (PageTransHuge(page)) {
- 			count_vm_event(THP_FILE_ALLOC);
-+			__inc_node_page_state(page, NR_SHMEM_THPS);
- 		}
--	} else if (!expected) {
--		error = radix_tree_insert(&mapping->pages, index, page);
--	} else {
--		error = shmem_xa_replace(mapping, index, expected, page);
--	}
--
--	if (!error) {
- 		mapping->nrpages += nr;
--		if (PageTransHuge(page))
--			__inc_node_page_state(page, NR_SHMEM_THPS);
- 		__mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, nr);
- 		__mod_node_page_state(page_pgdat(page), NR_SHMEM, nr);
--		xa_unlock_irq(&mapping->pages);
--	} else {
-+		goto unlock;
-+undo:
-+		while (i-- > 0) {
-+			xas_store(&xas, NULL);
-+			xas_prev(&xas);
-+		}
-+unlock:
-+		xas_unlock_irq(&xas);
-+	} while (xas_nomem(&xas, gfp));
-+
-+	if (xas_error(&xas)) {
- 		page->mapping = NULL;
--		xa_unlock_irq(&mapping->pages);
- 		page_ref_sub(page, nr);
-+		return xas_error(&xas);
- 	}
--	return error;
-+
-+	return 0;
- }
- 
- /*
-@@ -1159,7 +1158,7 @@ static int shmem_unuse_inode(struct shmem_inode_info *info,
- 	 */
- 	if (!error)
- 		error = shmem_add_to_page_cache(*pagep, mapping, index,
--						radswap);
-+						radswap, gfp);
- 	if (error != -ENOMEM) {
- 		/*
- 		 * Truncation and eviction use free_swap_and_cache(), which
-@@ -1677,7 +1676,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 				false);
- 		if (!error) {
- 			error = shmem_add_to_page_cache(page, mapping, index,
--						swp_to_radix_entry(swap));
-+						swp_to_radix_entry(swap), gfp);
- 			/*
- 			 * We already confirmed swap under page lock, and make
- 			 * no memory allocation here, so usually no possibility
-@@ -1783,13 +1782,8 @@ alloc_nohuge:		page = shmem_alloc_and_acct_page(gfp, inode,
- 				PageTransHuge(page));
- 		if (error)
- 			goto unacct;
--		error = radix_tree_maybe_preload_order(gfp & GFP_RECLAIM_MASK,
--				compound_order(page));
--		if (!error) {
--			error = shmem_add_to_page_cache(page, mapping, hindex,
--							NULL);
--			radix_tree_preload_end();
--		}
-+		error = shmem_add_to_page_cache(page, mapping, hindex,
-+						NULL, gfp & GFP_RECLAIM_MASK);
- 		if (error) {
- 			mem_cgroup_cancel_charge(page, memcg,
- 					PageTransHuge(page));
-@@ -2256,11 +2250,8 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
- 	if (ret)
- 		goto out_release;
- 
--	ret = radix_tree_maybe_preload(gfp & GFP_RECLAIM_MASK);
--	if (!ret) {
--		ret = shmem_add_to_page_cache(page, mapping, pgoff, NULL);
--		radix_tree_preload_end();
--	}
-+	ret = shmem_add_to_page_cache(page, mapping, pgoff, NULL,
-+						gfp & GFP_RECLAIM_MASK);
- 	if (ret)
- 		goto out_release_uncharge;
- 
--- 
-2.15.0
+diff --git a/db/dquot.c b/db/dquot.c
+index 4e35df4..4fd1289 100644
+--- a/db/dquot.c
++++ b/db/dquot.c
+@@ -76,7 +76,7 @@ const field_t	disk_dquot_flds[] = {
+ 	{ "btimer", FLDT_INT32D, OI(DOFF(btimer)), C1, 0, TYP_NONE },
+ 	{ "iwarns", FLDT_QWARNCNT, OI(DOFF(iwarns)), C1, 0, TYP_NONE },
+ 	{ "bwarns", FLDT_QWARNCNT, OI(DOFF(bwarns)), C1, 0, TYP_NONE },
+-	{ "pad0", FLDT_INT32D, OI(DOFF(pad0)), C1, FLD_SKIPALL, TYP_NONE },
++	{ "pad0", FLDT_UINT32X, OI(DOFF(pad0)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ "rtb_hardlimit", FLDT_QCNT, OI(DOFF(rtb_hardlimit)), C1, 0,
+ 	  TYP_NONE },
+ 	{ "rtb_softlimit", FLDT_QCNT, OI(DOFF(rtb_softlimit)), C1, 0,
 
