@@ -1,51 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43004 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750921AbdLAWMf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Dec 2017 17:12:35 -0500
-Subject: [PATCH 1/4] xfs: add scrub to XFS_BUILD_OPTIONS
-References: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f5769e20-970a-53f5-4fc7-2afd11304ce2@sandeen.net>
-Date: Fri, 1 Dec 2017 16:12:34 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:33395 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751286AbdLDS1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 13:27:46 -0500
+Date: Mon, 4 Dec 2017 10:27:31 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] treewide: remove duplicate includes
+Message-ID: <20171204182731.GA4903@magnolia>
+References: <1512337779-16842-1-git-send-email-pravin.shedge4linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1512337779-16842-1-git-send-email-pravin.shedge4linux@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Pravin Shedge <pravin.shedge4linux@gmail.com>
+Cc: gregkh@linuxfoundation.org, davem@davemloft.net, sstabellini@kernel.org, x86@kernel.org, mchehab@kernel.org, linux-xfs@vger.kernel.org, mcgrof@kernel.org, ast@kernel.org, shuah@kernel.org, namhyung@kernel.org, mhiramat@kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, devel@driverdev.osuosl.org, linux-security-module@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Advertise this config option along with the others.
+On Mon, Dec 04, 2017 at 03:19:39AM +0530, Pravin Shedge wrote:
+> These duplicate includes have been found with scripts/checkincludes.pl but
+> they have been removed manually to avoid removing false positives.
+> 
+> Unit Testing:
+> 
+> - build successful
+> - LTP testsuite passes.
+> - checkpatch.pl passes
+> 
+> Signed-off-by: Pravin Shedge <pravin.shedge4linux@gmail.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+<supersnip>
 
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index fcc5dfc..8cee8e8 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -44,6 +44,12 @@
- # define XFS_REALTIME_STRING
- #endif
- 
-+#ifdef CONFIG_XFS_ONLINE_SCRUB
-+# define XFS_SCRUB_STRING	"scrub, "
-+#else
-+# define XFS_SCRUB_STRING
-+#endif
-+
- #ifdef DEBUG
- # define XFS_DBG_STRING		"debug"
- #else
-@@ -54,6 +60,7 @@
- #define XFS_BUILD_OPTIONS	XFS_ACL_STRING \
- 				XFS_SECURITY_STRING \
- 				XFS_REALTIME_STRING \
-+				XFS_SCRUB_STRING \
- 				XFS_DBG_STRING /* DBG must be last */
- 
- struct xfs_inode;
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index 9c42c4e..ab3aef2 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
 
+These look reasonable, but please send me (and linux-xfs) the three
+xfs changes separately so that I can add them to the xfs tree.
+
+(Also, thank you for cc'ing the xfs list for this treewide change...)
+
+--D
