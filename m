@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42532 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:42580 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750995AbdLDXyK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Dec 2017 18:54:10 -0500
-Subject: [PATCH 1/5 V2] xfs_db: print structure padding fields consistently
+        id S1750995AbdLDXyp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Dec 2017 18:54:45 -0500
+Subject: [PATCH 2/5 V2] xfs_db: add missing padding fields
 References: <151094860143.27182.12022983202520916281.stgit@magnolia>
- <151094860737.27182.5422098949147661107.stgit@magnolia>
+ <151094861330.27182.13544522894298156345.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bb3d13c6-d692-7ac4-852e-00f8523cffef@sandeen.net>
-Date: Mon, 4 Dec 2017 17:54:09 -0600
+Message-ID: <5a7bec9c-999f-983e-2683-e7b55109f713@sandeen.net>
+Date: Mon, 4 Dec 2017 17:54:44 -0600
 MIME-Version: 1.0
-In-Reply-To: <151094860737.27182.5422098949147661107.stgit@magnolia>
+In-Reply-To: <151094861330.27182.13544522894298156345.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -22,58 +22,82 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We are very inconsistent about how we print padding fields in on-disk
-structures -- sometimes we hide it from printall, sometimes we deviate
-from unsigned hex values, etc.  Make this all consistent -- always hide
-padding values when printing the whole structure, always print them as
-unsigned hex integers when explicitly requested.
+Several data structures are missing padding fields from their field
+definitions.  Add them so that they can be printed out if explicitly
+requested.
+
+Fix the AGI field order to be consistent with the structure
+definition while we're at it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[sandeen: switch to never-print instead of always-print]
+[sandeen: make them available but not printed by default]
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-V2: constant-ify by never printing instead of always printing,
-    but still make format consistent.
+v2: make available but not printed by default
 
-diff --git a/db/attr.c b/db/attr.c
-index 75fe239..9cbb20d 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -589,7 +589,7 @@ const field_t	attr3_node_hdr_flds[] = {
- 	{ "info", FLDT_ATTR3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
- 	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
- 	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
--	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
-+	{ "pad", FLDT_UINT32X, OI(H3OFF(__pad32)), C1, FLD_SKIPALL, TYP_NONE },
+diff --git a/db/agi.c b/db/agi.c
+index fb69210..fab146e 100644
+--- a/db/agi.c
++++ b/db/agi.c
+@@ -55,8 +55,9 @@ const field_t	agi_flds[] = {
+ 	{ "unlinked", FLDT_AGINONN, OI(OFF(unlinked)),
+ 	  CI(XFS_AGI_UNLINKED_BUCKETS), FLD_ARRAY, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+-	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "pad32", FLDT_UINT32X, OI(OFF(pad32)), C1, FLD_SKIPALL, TYP_NONE },
++	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_FINOBT },
+ 	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
  	{ NULL }
- };
- 
 diff --git a/db/dir2.c b/db/dir2.c
-index 3e21a7b..7f7ea5a 100644
+index 7f7ea5a..0bd3437 100644
 --- a/db/dir2.c
 +++ b/db/dir2.c
-@@ -977,7 +977,7 @@ const field_t	da3_node_hdr_flds[] = {
- 	{ "info", FLDT_DA3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
- 	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
- 	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
--	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
-+	{ "pad", FLDT_UINT32X, OI(H3OFF(__pad32)), C1, FLD_SKIPALL, TYP_NONE },
+@@ -940,6 +940,7 @@ const field_t	dir3_data_hdr_flds[] = {
+ 	{ "hdr", FLDT_DIR3_BLKHDR, OI(DH3OFF(hdr)), C1, 0, TYP_NONE },
+ 	{ "bestfree", FLDT_DIR2_DATA_FREE, OI(DH3OFF(best_free)),
+ 	  CI(XFS_DIR2_DATA_FD_COUNT), FLD_ARRAY, TYP_NONE },
++	{ "pad", FLDT_UINT32X, OI(DH3OFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
  	{ NULL }
  };
  
-diff --git a/db/dquot.c b/db/dquot.c
-index 4e35df4..4fd1289 100644
---- a/db/dquot.c
-+++ b/db/dquot.c
-@@ -76,7 +76,7 @@ const field_t	disk_dquot_flds[] = {
- 	{ "btimer", FLDT_INT32D, OI(DOFF(btimer)), C1, 0, TYP_NONE },
- 	{ "iwarns", FLDT_QWARNCNT, OI(DOFF(iwarns)), C1, 0, TYP_NONE },
- 	{ "bwarns", FLDT_QWARNCNT, OI(DOFF(bwarns)), C1, 0, TYP_NONE },
--	{ "pad0", FLDT_INT32D, OI(DOFF(pad0)), C1, FLD_SKIPALL, TYP_NONE },
-+	{ "pad0", FLDT_UINT32X, OI(DOFF(pad0)), C1, FLD_SKIPALL, TYP_NONE },
- 	{ "rtb_hardlimit", FLDT_QCNT, OI(DOFF(rtb_hardlimit)), C1, 0,
- 	  TYP_NONE },
- 	{ "rtb_softlimit", FLDT_QCNT, OI(DOFF(rtb_softlimit)), C1, 0,
+@@ -948,6 +949,7 @@ const field_t	dir3_leaf_hdr_flds[] = {
+ 	{ "info", FLDT_DA3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
+ 	{ "count", FLDT_UINT16D, OI(LH3OFF(count)), C1, 0, TYP_NONE },
+ 	{ "stale", FLDT_UINT16D, OI(LH3OFF(stale)), C1, 0, TYP_NONE },
++	{ "pad", FLDT_UINT32X, OI(LH3OFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ NULL }
+ };
+ 
+@@ -957,6 +959,7 @@ const field_t	dir3_free_hdr_flds[] = {
+ 	{ "firstdb", FLDT_INT32D, OI(FH3OFF(firstdb)), C1, 0, TYP_NONE },
+ 	{ "nvalid", FLDT_INT32D, OI(FH3OFF(nvalid)), C1, 0, TYP_NONE },
+ 	{ "nused", FLDT_INT32D, OI(FH3OFF(nused)), C1, 0, TYP_NONE },
++	{ "pad", FLDT_UINT32X, OI(FH3OFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ NULL }
+ };
+ 
+diff --git a/db/inode.c b/db/inode.c
+index 6f971c6..b3f53d3 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -102,6 +102,7 @@ const field_t	inode_core_flds[] = {
+ 	  inode_core_projid_count, FLD_COUNT, TYP_NONE },
+ 	{ "projid_hi", FLDT_UINT16D, OI(COFF(projid_hi)),
+ 	  inode_core_projid_count, FLD_COUNT, TYP_NONE },
++	{ "pad", FLDT_UINT8X, OI(OFF(pad)), CI(6), FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
+ 	{ "uid", FLDT_UINT32D, OI(COFF(uid)), C1, 0, TYP_NONE },
+ 	{ "gid", FLDT_UINT32D, OI(COFF(gid)), C1, 0, TYP_NONE },
+ 	{ "flushiter", FLDT_UINT16D, OI(COFF(flushiter)), C1, 0, TYP_NONE },
+@@ -173,6 +174,7 @@ const field_t	inode_v3_flds[] = {
+ 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
+ 	{ "cowextsize", FLDT_EXTLEN, OI(COFF(cowextsize)), C1, 0, TYP_NONE },
++	{ "pad2", FLDT_UINT8X, OI(OFF(pad2)), CI(12), FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
+ 	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
+ 	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
 
