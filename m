@@ -1,88 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51118 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752499AbdLEGuT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 01:50:19 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vB56mYfQ060477
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Dec 2017 01:50:18 -0500
-Received: from e06smtp12.uk.ibm.com (e06smtp12.uk.ibm.com [195.75.94.108])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2enkugdtgy-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Dec 2017 01:50:18 -0500
-Received: from localhost
-        by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <heiko.carstens@de.ibm.com>;
-        Tue, 5 Dec 2017 06:50:10 -0000
-Date: Tue, 5 Dec 2017 07:50:03 +0100
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [patch V4 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38348 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750740AbdLEHgN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 02:36:13 -0500
+Date: Tue, 5 Dec 2017 08:36:20 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [patch V4 02/11] LICENSES: Add the GPL 2.0 license
+Message-ID: <20171205073620.GB15358@kroah.com>
 References: <20171204211927.673291734@linutronix.de>
- <20171204212120.484179273@linutronix.de>
+ <20171204212120.575886112@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171204212120.484179273@linutronix.de>
-Message-Id: <20171205065003.GB7782@osiris>
+In-Reply-To: <20171204212120.575886112@linutronix.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Mon, Dec 04, 2017 at 10:19:28PM +0100, Thomas Gleixner wrote:
-> +3. Syntax:
-> +
-> +   A <SPDX License Expression> is either an SPDX short form license
-> +   identifier found on the SPDX License List, or when multiple licenses
-> +   apply, an expression consisting of keywords "AND", "OR", and "WITH"
-> +   separating SPDX short form license identifiers surrounded by "(", ")".
+On Mon, Dec 04, 2017 at 10:19:29PM +0100, Thomas Gleixner wrote:
+> Add the full text of the GPL 2.0 license to the LICENSES directory.  It was
+> copied directly from the COPYING file in the kernel source tree as it
+> differs from the public available version of the license in various places
+> including the FSF.
+> 
+> Philippe did some research on the GPL2.0 history:
+> 
+>   There is NO trustworthy version of an official GPL 2.0 text: the FSF
+>   official texts are all fubar (if only in small and subtle ways). The FSF
+>   texts should be authoritative, but then which one? They published more
+>   GPL 2.0 versions than most. So we would be hard pressed to blame SPDX or
+>   the OSI for having their own minor variant.
+> 
+>   Then in digging further, I found the ONE true original GPL with a file
+>   time stamp on June 2 1991, 01:50 (AM?, PM? unknown time zone?)  ! in an
+>   old GCC archive.
+> 
+>   For the posterity and everyone's enjoyment I have built a git history
+>   of GPL 2.0 Mark1 to Mark6
+> 
+>   See https://github.com/pombredanne/gpl-history/commits/master/COPYING
+> 
+>   I also added a shorter history of the Linux COPYING text. The first
+>   version in Linus's git tree is based on the very fine and well tuned GPL
+>   2 Mark4, the first fully Y2K compliant version of the GPL 2, as you can
+>   see from the diffs with the former Mark3: that was dangerously stuck in
+>   the last century.
+> 
+>   The current version in is based on a rare GPL 2.0 Mark5.1 aka "Franklin
+>   St", that I do not have in my history yet and spells "Franklin St."
+>   rather than "Franklin Street."  Therefore there is likely another GPL 2.0
+>   version between Mark4 and Mark5 that I have yet to find and may not have
+>   been caught by the archive.org spiders. Here help and patches welcomed:
+>   this is likely an important missing link.
+> 
+>   Further information about this archaelogical research;
+>   
+>   http://lkml.kernel.org/r/CAOFm3uEzRMf261+O-Nm+9HDoEn9RbFjH=5J9i1C2GgMUg2G4LA@mail.gmail.com
+> 
+> Add the required tags for reference and tooling.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
-Here it is stated that SPDX identifiers using the keyword WITH must be
-surrounded by braces.
-
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note)
-> +      // SPDX-License-Identifier: (GPL-2.0+ WITH Linux-syscall-note)
-
-Just like this example.
-
-> +   File format examples::
-> +
-> +      SPDX-Exception-Identifier: Linux-syscall-note
-> +      SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
-> +      SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
-> +      Usage-Guidance:
-> +        This exception is used together with one of the above SPDX-Licenses
-> +	to mark user-space API (uapi) header files so they can be included
-> +	into non GPL compliant user-space application code.
-> +        To use this exception add it with the keyword WITH to one of the
-> +	identifiers in the SPDX-Licenses tag:
-> +	  SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
-
-But here it comes without braces.
-
-> +      Exception-Text:
-> +        Full exception text
-> +
-> +   ::
-> +
-> +      SPDX-Exception-Identifier: GCC-exception-2.0
-> +      SPDX-URL: https://spdx.org/licenses/GCC-exception-2.0.html
-> +      SPDX-Licenses: GPL-2.0, GPL-2.0+
-> +      Usage-Guidance:
-> +        The "GCC Runtime Library exception 2.0" is used together with one
-> +	of the above SPDX-Licenses for code imported from the GCC runtime
-> +	library.
-> +        To use this exception add it with the keyword WITH to one of the
-> +	identifiers in the SPDX-Licenses tag:
-> +	  SPDX-License-Identifier: <SPDX-License> WITH GCC-exception-2.0
-
-Here as well.
-
-The whole kernel now got SPDX-License-Identifiers that look like this:
-
-SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
-
-So this looks inconsistent to me, or did I miss something?
-
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
