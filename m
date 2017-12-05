@@ -1,91 +1,309 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46760 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752929AbdLFAFD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:05:03 -0500
-Date: Tue, 5 Dec 2017 16:03:53 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [xfsprogs PATCH v2 1/3] xfs_io: fix compiler warnings in
- getfsmap code
-Message-ID: <20171206000353.GH19219@magnolia>
+Received: from mga01.intel.com ([192.55.52.88]:65530 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753175AbdLEX5J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Dec 2017 18:57:09 -0500
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [xfsprogs PATCH v2 3/3] xfs_io: add a new 'log_writes' command
+Date: Tue,  5 Dec 2017 16:56:51 -0700
+Message-Id: <20171205235651.17102-4-ross.zwisler@linux.intel.com>
+In-Reply-To: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
 References: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
- <20171205235651.17102-2-ross.zwisler@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171205235651.17102-2-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On Tue, Dec 05, 2017 at 04:56:49PM -0700, Ross Zwisler wrote:
-> I recently upgraded my compiler from
-> 	gcc (GCC) 6.4.1 20170727 (Red Hat 6.4.1-1)
-> to
-> 	gcc (GCC) 7.2.1 20170915 (Red Hat 7.2.1-2)
-> and started getting a bunch of compiler warnings in io/fsmap.c:
-> 
->   fsmap.c: In function ‘fsmap_f’:
->   fsmap.c:228:40: warning: ‘%lld’ directive output may be truncated writing
->   between 1 and 17 bytes into a region of size between 12 and 28
->   [-Wformat-truncation=]
->      snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
->   ^~~~
->   fsmap.c:228:32: note: directive argument in the range [0, 36028797018963967]
->      snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
->   ^~~~~~~~~~~~~~~
->   fsmap.c:228:3: note: ‘snprintf’ output between 8 and 40 bytes into a
->   destination of size 32
->      snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
->      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->   (long long)BTOBBT(p->fmr_physical),
->   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->   (long long)BTOBBT(p->fmr_physical + p->fmr_length - 1));
->   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> The issue is that 'bbuf' is only defined to be 32 characters wide, but each
-> signed long long can potentially print as many as 19 characters
-> (9223372036854775807 is the max value).  The format we're using for bbuf is
-> "[%lld..%lld]:" which has 2 signed long longs plus 6 other characters
-> "[..]:\0", which means it's possible we'll print up to 44 characters,
-> overflowing our 32 char buffer.
-> 
-> Fix this by bumping all the buffer sizes in dump_map_verbose() to 64
-> characters.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
+log marks.  It's helpful to allow users of xfs_io to adds these marks from
+within xfs_io instead of waiting until after xfs_io exits because then they
+are able to replay the dm-log-writes log up to immediately after another
+xfs_io operation such as mwrite.  This isolates the log replay from other
+operations that happen as part of xfs_io exiting (file handles being
+closed, mmaps being torn down, etc.).  This also allows users to insert
+multiple marks between different xfs_io commands.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Dave Chinner <david@fromorbit.com>
+---
+ configure.ac            |   1 +
+ debian/control          |   2 +-
+ include/builddefs.in    |   2 +
+ io/Makefile             |   6 +++
+ io/init.c               |   1 +
+ io/io.h                 |   6 +++
+ io/log_writes.c         | 101 ++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/Makefile             |   1 +
+ m4/package_devmapper.m4 |  11 ++++++
+ man/man8/xfs_io.8       |  23 ++++++++++-
+ 10 files changed, 152 insertions(+), 2 deletions(-)
+ create mode 100644 io/log_writes.c
+ create mode 100644 m4/package_devmapper.m4
 
-> Fixes: 3fcab549a234 ("xfs_io: support the new getfsmap ioctl")
-> ---
->  io/fsmap.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/io/fsmap.c b/io/fsmap.c
-> index 448fb535..3d8a6700 100644
-> --- a/io/fsmap.c
-> +++ b/io/fsmap.c
-> @@ -184,8 +184,8 @@ dump_map_verbose(
->  	off64_t			agoff, bperag;
->  	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
->  	int			nr_w, dev_w;
-> -	char			rbuf[32], bbuf[32], abuf[32], obuf[32];
-> -	char			nbuf[32], dbuf[32], gbuf[32];
-> +	char			rbuf[64], bbuf[64], abuf[64], obuf[64];
-> +	char			nbuf[64], dbuf[64], gbuf[64];
->  	char			owner[OWNER_BUF_SZ];
->  	int			sunit, swidth;
->  	int			flg = 0;
-> -- 
-> 2.14.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/configure.ac b/configure.ac
+index f3325aa0..f83d5817 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -164,6 +164,7 @@ AC_NEED_INTERNAL_FSXATTR
+ AC_HAVE_GETFSMAP
+ AC_HAVE_STATFS_FLAGS
+ AC_HAVE_MAP_SYNC
++AC_HAVE_DEVMAPPER
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/debian/control b/debian/control
+index ad816622..5c26e3d7 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,7 +3,7 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
++Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev
+ Standards-Version: 3.9.1
+ Homepage: http://xfs.org/
+ 
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 126f7e95..66bdbfa2 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -35,6 +35,7 @@ LIBTERMCAP = @libtermcap@
+ LIBEDITLINE = @libeditline@
+ LIBREADLINE = @libreadline@
+ LIBBLKID = @libblkid@
++LIBDEVMAPPER = @libdevmapper@
+ LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+ LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
+ LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
+@@ -116,6 +117,7 @@ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+ HAVE_GETFSMAP = @have_getfsmap@
+ HAVE_STATFS_FLAGS = @have_statfs_flags@
+ HAVE_MAP_SYNC = @have_map_sync@
++HAVE_DEVMAPPER = @have_devmapper@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/io/Makefile b/io/Makefile
+index 2987ee11..b7585a1b 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -107,6 +107,12 @@ ifeq ($(HAVE_MAP_SYNC),yes)
+ LCFLAGS += -DHAVE_MAP_SYNC
+ endif
+ 
++ifeq ($(HAVE_DEVMAPPER),yes)
++CFILES += log_writes.c
++LLDLIBS += $(LIBDEVMAPPER)
++LCFLAGS += -DHAVE_DEVMAPPER
++endif
++
+ # On linux we get fsmap from the system or define it ourselves
+ # so include this based on platform type.  If this reverts to only
+ # the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
+diff --git a/io/init.c b/io/init.c
+index 20d5f80d..34d87b5f 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -72,6 +72,7 @@ init_commands(void)
+ 	help_init();
+ 	imap_init();
+ 	inject_init();
++	log_writes_init();
+ 	madvise_init();
+ 	mincore_init();
+ 	mmap_init();
+diff --git a/io/io.h b/io/io.h
+index 8b2753b3..9349cc75 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -186,3 +186,9 @@ extern void		fsmap_init(void);
+ #else
+ # define fsmap_init()	do { } while (0)
+ #endif
++
++#ifdef HAVE_DEVMAPPER
++extern void		log_writes_init(void);
++#else
++#define log_writes_init()	do { } while (0)
++#endif
+diff --git a/io/log_writes.c b/io/log_writes.c
+new file mode 100644
+index 00000000..37c0024f
+--- /dev/null
++++ b/io/log_writes.c
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (c) 2017 Intel Corporation.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "platform_defs.h"
++#include <libdevmapper.h>
++#include "command.h"
++#include "init.h"
++
++static cmdinfo_t log_writes_cmd;
++
++static void
++mark_log(const char *device, const char *mark)
++{
++	struct dm_task *dmt;
++	const int size = 80;
++	char message[size];
++	int len;
++
++	len = snprintf(message, size, "mark %s", mark);
++	if (len >= size) {
++		printf("mark '%s' is too long\n", mark);
++		return;
++	}
++
++	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
++		return;
++
++	if (!dm_task_set_name(dmt, device))
++		goto out;
++
++	if (!dm_task_set_sector(dmt, 0))
++		goto out;
++
++	if (!dm_task_set_message(dmt, message))
++		goto out;
++
++	dm_task_run(dmt);
++out:
++	dm_task_destroy(dmt);
++}
++
++static int
++log_writes_f(
++	int			argc,
++	char			**argv)
++{
++	const char *device = NULL;
++	const char *mark = NULL;
++	int c;
++
++	while ((c = getopt(argc, argv, "d:m:")) != EOF) {
++		switch (c) {
++		case 'd':
++			device = optarg;
++			break;
++		case 'm':
++			mark = optarg;
++			break;
++		default:
++			return command_usage(&log_writes_cmd);
++		}
++	}
++
++	if (device == NULL || mark == NULL)
++		return command_usage(&log_writes_cmd);
++
++	mark_log(device, mark);
++	return 0;
++}
++
++void
++log_writes_init(void)
++{
++	log_writes_cmd.name = "log_writes";
++	log_writes_cmd.altname = "lw";
++	log_writes_cmd.cfunc = log_writes_f;
++	log_writes_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK
++				| CMD_FLAG_ONESHOT;
++	log_writes_cmd.argmin = 0;
++	log_writes_cmd.argmax = -1;
++	log_writes_cmd.args = _("-d device -m mark");
++	log_writes_cmd.oneline =
++		_("create mark <mark> in the dm-log-writes log specified by <device>");
++
++	add_command(&log_writes_cmd);
++}
+diff --git a/m4/Makefile b/m4/Makefile
+index 4706121b..77f2edda 100644
+--- a/m4/Makefile
++++ b/m4/Makefile
+@@ -15,6 +15,7 @@ CONFIGURE = \
+ LSRCFILES = \
+ 	manual_format.m4 \
+ 	package_blkid.m4 \
++	package_devmapper.m4 \
+ 	package_globals.m4 \
+ 	package_libcdev.m4 \
+ 	package_pthread.m4 \
+diff --git a/m4/package_devmapper.m4 b/m4/package_devmapper.m4
+new file mode 100644
+index 00000000..821f283c
+--- /dev/null
++++ b/m4/package_devmapper.m4
+@@ -0,0 +1,11 @@
++#
++# See if libdevmapper is available on the system.
++#
++AC_DEFUN([AC_HAVE_DEVMAPPER],
++[ AC_SEARCH_LIBS([dm_task_create], [devmapper],
++        libdevmapper="-ldevmapper"
++        have_devmapper=yes,
++        have_devmapper=no,)
++    AC_SUBST(have_devmapper)
++    AC_SUBST(libdevmapper)
++])
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 1693f7f1..4fce6d39 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -1123,7 +1123,27 @@ version of policy structure (numeric)
+ .BR get_encpolicy
+ On filesystems that support encryption, display the encryption policy of the
+ current file.
++.RE
++.PD
++.TP
++.BI "log_writes \-d " device " \-m "  mark
++Create a mark named
++.I mark
++in the dm-log-writes log specified by
++.I device.
++This is intended to be equivalent to the shell command:
+ 
++.B dmsetup message
++.I device
++.B 0 mark
++.I mark
++.PD
++.RE
++.TP
++.B lw
++See the
++.B log_writes
++command.
+ .SH SEE ALSO
+ .BR mkfs.xfs (8),
+ .BR xfsctl (3),
+@@ -1141,4 +1161,5 @@ current file.
+ .BR open (2),
+ .BR pread (2),
+ .BR pwrite (2),
+-.BR readdir (3).
++.BR readdir (3),
++.BR dmsetup (8).
+-- 
+2.14.3
+
