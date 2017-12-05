@@ -1,58 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55444 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751937AbdLESz0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Dec 2017 13:55:26 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3208D3AAF0
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2017 18:55:26 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0667E7A1E1
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2017 18:55:26 +0000 (UTC)
-Date: Tue, 5 Dec 2017 13:55:24 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: extfree log recovery and owner (rmapbt) updates
-Message-ID: <20171205185524.GB42206@bfoster.bfoster>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31413 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752633AbdLES7o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 13:59:44 -0500
+Date: Tue, 5 Dec 2017 10:59:36 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
+ creations
+Message-ID: <20171205185936.GE19219@magnolia>
+References: <20170821082404.3387-1-hch@lst.de>
+ <20170823202213.GA4796@magnolia>
+ <20170824004755.GC21024@dastard>
+ <20170829180445.GU4757@magnolia>
+ <20170903072513.GA14807@lst.de>
+ <20170903153150.GE4073@magnolia>
+ <20171205013422.GC19219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171205013422.GC19219@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-Hi,
+On Mon, Dec 04, 2017 at 05:34:22PM -0800, Darrick J. Wong wrote:
+> On Sun, Sep 03, 2017 at 08:31:50AM -0700, Darrick J. Wong wrote:
+> > On Sun, Sep 03, 2017 at 09:25:13AM +0200, Christoph Hellwig wrote:
+> > > Looks like this didn't make the 4.14 for-next branch either.  I guess
+> > > we'll just consider it for the next round?
+> > 
+> > Yes, it caused a number of new xfstests failures due to new ENOSPC
+> > messages in the golden output so I decided to defer action on it until
+> > someone can assess and fix the problems appropriately.  The worst part
+> > was that the new failures are intermittent.
+> 
+> Heh, a customer slammed right into this, so I'll try to pick up this
+> patch again and fix all the xfstests....
 
-I've been playing around with deferring AGFL block frees and noticed
-something funky going on with xfs_bmap_add_free() and owner info. We
-pass the extent owner info to xfs_bmap_add_free() in various places to
-transfer this info to the deferred free processing context.
-Subsequently, xfs_trans_free_extent() -> ... -> xfs_free_ag_extent()
-uses the owner info to remove the rmapbt entry associated with the
-extent. The rmapbt update occurs at the time the extent is freed.
+I fixed most of the auto group regressions with small fixes to xfstests,
+but xfs/013 is a problem because once we run out of space to create new
+dirX we simply get nothing.  Will have to study the behavior of that
+test in more depth...
 
-If the system crashes immediately after the initial transaction commits,
-however, EFI recovery calls xfs_trans_free_extent() with an "unknown"
-owner. I see a reference to using a "wildcard" in this context in some
-of the old rmapbt commits, but it looks like this codepath skips the
-rmapbt update altogether if oi_owner == XFS_RMAP_OWN_UNKNOWN. A quick
-test that shuts down the fs immediately after a transaction commits that
-logs an EFI for a freed inode chunk leaves the fs inconsistent after log
-recovery, with a bit of a cryptic message from repair:
+--D
 
-  unknown block state, ag 0, block 24
-
-It does look like the associated rmapbt entry still exists in the tree
-even though the extent has been freed (from xfs_db -c fsmap):
-
-5: 0/24 len 8 owner -7 offset 0 bmbt 0 attrfork 0 extflag 0                                                            
-
-So what is supposed to be going on here? Should the rmapbt entry be
-removed unconditionally during recovery, or should a separate rmapbt
-update item be deferred (as in the bunmapi case, for example) rather
-than passing oinfo along with the TYPE_FREE deferred item? Or something
-else entirely..?
-
-Brian
+> --D
+> 
+> > --D
+> > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
