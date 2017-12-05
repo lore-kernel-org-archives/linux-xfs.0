@@ -1,55 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31413 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752633AbdLES7o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 13:59:44 -0500
-Date: Tue, 5 Dec 2017 10:59:36 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
- creations
-Message-ID: <20171205185936.GE19219@magnolia>
-References: <20170821082404.3387-1-hch@lst.de>
- <20170823202213.GA4796@magnolia>
- <20170824004755.GC21024@dastard>
- <20170829180445.GU4757@magnolia>
- <20170903072513.GA14807@lst.de>
- <20170903153150.GE4073@magnolia>
- <20171205013422.GC19219@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:47096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751989AbdLEUxU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Dec 2017 15:53:20 -0500
+Date: Tue, 5 Dec 2017 15:53:18 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/4] xfs: amortize agfl block frees across multiple
+ transactions
+Message-ID: <20171205205317.GC42206@bfoster.bfoster>
+References: <20171127202434.43125-1-bfoster@redhat.com>
+ <20171127202434.43125-4-bfoster@redhat.com>
+ <20171127230734.GB5858@dastard>
+ <20171128135748.GC45759@bfoster.bfoster>
+ <20171128220919.GF5858@dastard>
+ <20171129182453.GA24696@bfoster.bfoster>
+ <20171129203605.GA25833@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171205013422.GC19219@magnolia>
+In-Reply-To: <20171129203605.GA25833@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 04, 2017 at 05:34:22PM -0800, Darrick J. Wong wrote:
-> On Sun, Sep 03, 2017 at 08:31:50AM -0700, Darrick J. Wong wrote:
-> > On Sun, Sep 03, 2017 at 09:25:13AM +0200, Christoph Hellwig wrote:
-> > > Looks like this didn't make the 4.14 for-next branch either.  I guess
-> > > we'll just consider it for the next round?
+On Wed, Nov 29, 2017 at 03:36:06PM -0500, Brian Foster wrote:
+> On Wed, Nov 29, 2017 at 01:24:53PM -0500, Brian Foster wrote:
+> > On Wed, Nov 29, 2017 at 09:09:19AM +1100, Dave Chinner wrote:
+> > > On Tue, Nov 28, 2017 at 08:57:48AM -0500, Brian Foster wrote:
+> > > > On Tue, Nov 28, 2017 at 10:07:34AM +1100, Dave Chinner wrote:
+> > > > > On Mon, Nov 27, 2017 at 03:24:33PM -0500, Brian Foster wrote:
+> ...
+> > > > This sounds to me like an
+> > > > unconditional side effect of the fact that freeing an agfl block can
+> > > > indirectly affect the agfl via the btree operations. IOW, freeing a
+> > > > single extra block could require consuming one or more and trigger the
+> > > > need for an allocation. I suspect the allocation could then very well
+> > > > cause a join on the other tree and put more than one block back onto the
+> > > > agfl.
+> > > 
+> > > Yes, it could do that too. Remove a single block from an existing
+> > > free extent, no change to the by-block btree. by-cnt now requires a
+> > > record delete (full height join) followed by record insert elsewhere
+> > > in the tree (full height split). So the attempt to add a block to
+> > > the AGFL can actually shorten it if the by-cnt tree splits on
+> > > insert. It can grow if the by-block or by-cnt tree joins on record
+> > > removal.
+> > > 
+> > > Either way, we've got the same problem of using the entire log
+> > > reservation for AGFL modification when growing the AGFL as we do
+> > > when trying to shrink the AGFL down.
+> > > 
+> > > That's my point here - just hacking a limit into the shrink case
+> > > doesn't address the problem at all - it just papers over one of the
+> > > visible symptoms....
+> > > 
 > > 
-> > Yes, it caused a number of new xfstests failures due to new ENOSPC
-> > messages in the golden output so I decided to defer action on it until
-> > someone can assess and fix the problems appropriately.  The worst part
-> > was that the new failures are intermittent.
-> 
-> Heh, a customer slammed right into this, so I'll try to pick up this
-> patch again and fix all the xfstests....
-
-I fixed most of the auto group regressions with small fixes to xfstests,
-but xfs/013 is a problem because once we run out of space to create new
-dirX we simply get nothing.  Will have to study the behavior of that
-test in more depth...
-
---D
-
-> --D
-> 
-> > --D
+> > Yes, it's clear that the current code allows for all sorts of
+> > theoretical avenues to transaction overrun. Hence my previous idea to
+> > roll the transaction once an AGFL fixup triggers a join or split. Even
+> > that may not be sufficient in certain scenarios.
 > > 
+> 
+> Random thought from this afternoon...
+> 
+> What do you think about unconditionally removing surplus agfl blocks as
+> we do today, but defer them rather than free them immediately? We'd free
+> up the agfl slots as needed so the allocation can proceed, but we'd
+> eliminate the behavior where agfl frees recursively affect the agfl. The
+> broader idea is that in the event where 2+ agfl frees are required,
+> they'd now execute in a context where can enforce deterministic log
+> consumption per tx (by also implementing the 2 frees per EFD idea, for
+> example) until the agfl is rectified.
+> 
+> I'd have to think a little more about whether the idea is sane.. It
+> looks like we'd have to plumb dfops in through xfs_alloc_arg for
+> starters. We could do the defer conditionally based on whether the
+> caller passes dfops to facilitate incremental conversions. We also may
+> be able to consider optimizations like putting deferred agfl blocks
+> right back onto the agfl if there's a deficit by the time we get around
+> to freeing them (rather than doing an agfl alloc only to free up
+> deferred agfl blocks), but that's probably getting too far ahead for
+> now.
+> 
+> This also doesn't help with extending the agfl, but I think that path is
+> already more deterministic since we attempt to fill the deficit in as
+> few allocs as possible. Thoughts?
+> 
+
+I've hacked on the above a bit.. enough to at least determine that
+deferring AGFL frees does avoid the reservation overrun (without any of
+the recent transaction reservation fixes). To avoid the overrun, I had
+to defer AGFL frees from the inobt (xfs_inobt_free_block()) path and
+from the deferred ops xfs_trans_extent_free() path. To this point, I
+don't see any fundamental reason why we couldn't defer AGFL frees from
+any other path as well so long as we have a dfops structure available in
+the associated context.
+
+We'd have to deal with the following caveats due to how AGFL blocks
+differ from typical blocks freed via xfs_bmap_add_free():
+
+1.) AGFL blocks are accounted against different allocation counters.
+2.) AGFL blocks are not marked busy on free (in fact, they are possibly
+already on the busy list by the time they are freed).
+
+I've currently hacked around these problems using the OWN_AG owner info
+to handle AGFL blocks appropriately down in xfs_trans_free_extent().
+What I think may provide a cleaner implementation is to define a new
+deferred ops type specific to AGFL frees. This would be a subset of
+XFS_DEFER_OPS_TYPE_FREE and share nearly all of the implementation
+outside of ->finish_item(). The latter would be replaced with a callout
+that handles AGFL blocks as noted. Thoughts?
+
+With regard to AGFL allocation, I've not seen any overrun issues
+associated with that path. A thought that comes to mind for dealing with
+a problem in that area is to further genericize the above to do some
+kind of post alloc. fixup when we know an agfl block was consumed. For
+example, tag the perag as deficient for another context (thread/wq) to
+rectify or defer a more generic AGFL fixup item from agfl block
+consumption. We'd still have to implement some kind of serialization or
+do the alloc directly in the worst case, but the idea is that hopefully
+that would be rare and in most cases all AGFL fixups would now occur
+with a full tx reservation available for the fixup (agfl fixup-ahead, if
+you will). That would probably require some experimentation to
+determine how effective it would be without resorting to nasty locking
+tricks and whatnot.
+
+Note that I don't think anything as involved as the latter is currently
+necessary. As such, it's just unsubstantiated handwaving around how we
+could potentially evolve from deferred agfl frees to a more generic
+solution that covered all AGFL fixups.
+
+Brian
+
+> Brian
+> 
+> > Moving on from that, this patch is a variant of your suggestion to allow
+> > leaving surplus blocks on the agfl up to a certain limit. It is
+> > intentionally a more isolated fix for the specific issue of performing
+> > too many independent allocations (frees) per transaction in this
+> > context.
+> > 
+> > One approach doesn't have to preclude the other. I'm not aware of any
+> > pattern of overrun problems with this code over the however many years
+> > it has been in place, other than this one, however. Given that, I think
+> > it's perfectly reasonable to consider a shorter term solution so long as
+> > we're confident it doesn't introduce other problems.
+> > 
+> > > > > IMO, there's a lot more to be concerned about here than just trying
+> > > > > to work around the specific symptom observed in the given test case.
+> > > > > This code is, unfortunately, really tricky and intricate and history
+> > > > > tells us that the risk of unexpected regressions is extremely high,
+> > > > > especially around ENOSPC related issues. Of all the patches in this
+> > > > > series, this is the most dangerous and "iffy" of them and the
+> > > > > one we should be most concerned and conservative about....
+> > > > > 
+> > > > 
+> > > > Agreed. The impact is something that also has to be evaluated over a
+> > > > sequence of transactions along with the more obvious impact on a single
+> > > > transaction.
+> > > 
+> > > The impact has to be measured over a far longer time frame than a
+> > > few transactions. The fact it has impact on freespace reformation
+> > > means it'll need accelerated aging tests done on it so we can be
+> > > reasonably certain that it isn't going to bite us in extended
+> > > production environments...
+> > > 
+> > 
+> > That's exactly what I mean by a sequence. E.g., the effect on the agfl
+> > over time. Clearly, the longer the sequence, the more robust the
+> > results. I'm not sure where the idea that a few transactions would
+> > provide anything useful comes from. This probably needs to be evaluated
+> > over many cycles of fully depopulating and repopulating the space btrees
+> > in different ways.
+> > 
+> > Brian
+> > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
 > > > --
 > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > > the body of a message to majordomo@vger.kernel.org
