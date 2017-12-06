@@ -1,71 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33945 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752758AbdLDVYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Dec 2017 16:24:45 -0500
-Message-Id: <20171204212121.061502182@linutronix.de>
-Date: Mon, 04 Dec 2017 22:19:35 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V4 08/11] LICENSES: Add the MIT license
-References: <20171204211927.673291734@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline; filename=LICENSES_Add_the_MIT_license.patch
+Received: from bombadil.infradead.org ([65.50.211.133]:42565 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753371AbdLFAmP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:15 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v4 57/73] dax: Convert dax_unlock_mapping_entry to XArray
+Date: Tue,  5 Dec 2017 16:41:43 -0800
+Message-Id: <20171206004159.3755-58-willy@infradead.org>
+In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
+References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Add the full text of the MIT license to the kernel tree.  It was copied
-directly from:
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-  https://spdx.org/licenses/MIT.html#licenseText
+Replace slot_locked() with dax_locked() and inline unlock_slot() into
+its only caller.
 
-Add the required tags for reference and tooling.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- LICENSES/preferred/MIT |   30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
- create mode 100644 LICENSES/MIT
+ fs/dax.c | 50 ++++++++++++++++----------------------------------
+ 1 file changed, 16 insertions(+), 34 deletions(-)
 
---- /dev/null
-+++ b/LICENSES/preferred/MIT
-@@ -0,0 +1,30 @@
-+Valid-License-Identifier: MIT
-+SPDX-URL: https://spdx.org/licenses/MIT.html
-+Usage-Guide:
-+  To use the MIT License put the following SPDX tag/value pair into a
-+  comment according to the placement guidelines in the licensing rules
-+  documentation:
-+    SPDX-License-Identifier: MIT
-+License-Text:
+diff --git a/fs/dax.c b/fs/dax.c
+index 86bacca51eed..03bfa599f75c 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -73,6 +73,11 @@ fs_initcall(init_dax_wait_table);
+ #define DAX_ZERO_PAGE	(1UL << 2)
+ #define DAX_EMPTY	(1UL << 3)
+ 
++static bool dax_locked(void *entry)
++{
++	return xa_to_value(entry) & DAX_ENTRY_LOCK;
++}
 +
-+MIT License
-+
-+Copyright (c) <year> <copyright holders>
-+
-+Permission is hereby granted, free of charge, to any person obtaining a
-+copy of this software and associated documentation files (the "Software"),
-+to deal in the Software without restriction, including without limitation
-+the rights to use, copy, modify, merge, publish, distribute, sublicense,
-+and/or sell copies of the Software, and to permit persons to whom the
-+Software is furnished to do so, subject to the following conditions:
-+
-+The above copyright notice and this permission notice shall be included in
-+all copies or substantial portions of the Software.
-+
-+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-+DEALINGS IN THE SOFTWARE.
-
+ static unsigned long dax_radix_sector(void *entry)
+ {
+ 	return xa_to_value(entry) >> DAX_SHIFT;
+@@ -182,17 +187,6 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+ 		__wake_up(wq, TASK_NORMAL, wake_all ? 0 : 1, &key);
+ }
+ 
+-/*
+- * Check whether the given slot is locked. The function must be called with
+- * mapping xa_lock held
+- */
+-static inline int slot_locked(struct address_space *mapping, void **slot)
+-{
+-	unsigned long entry = xa_to_value(
+-		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
+-	return entry & DAX_ENTRY_LOCK;
+-}
+-
+ /*
+  * Mark the given slot is locked. The function must be called with
+  * mapping xa_lock held
+@@ -206,19 +200,6 @@ static inline void *lock_slot(struct address_space *mapping, void **slot)
+ 	return entry;
+ }
+ 
+-/*
+- * Mark the given slot is unlocked. The function must be called with
+- * mapping xa_lock held
+- */
+-static inline void *unlock_slot(struct address_space *mapping, void **slot)
+-{
+-	unsigned long v = xa_to_value(
+-		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
+-	void *entry = xa_mk_value(v & ~DAX_ENTRY_LOCK);
+-	radix_tree_replace_slot(&mapping->pages, slot, entry);
+-	return entry;
+-}
+-
+ /*
+  * Lookup entry in radix tree, wait for it to become unlocked if it is
+  * a data value entry and return it. The caller must call
+@@ -242,8 +223,7 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
+ 					  &slot);
+ 		if (!entry ||
+-		    WARN_ON_ONCE(!xa_is_value(entry)) ||
+-		    !slot_locked(mapping, slot)) {
++		    WARN_ON_ONCE(!xa_is_value(entry)) || !dax_locked(entry)) {
+ 			if (slotp)
+ 				*slotp = slot;
+ 			return entry;
+@@ -262,17 +242,19 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ static void dax_unlock_mapping_entry(struct address_space *mapping,
+ 				     pgoff_t index)
+ {
+-	void *entry, **slot;
++	XA_STATE(xas, &mapping->pages, index);
++	void *entry;
+ 
+-	xa_lock_irq(&mapping->pages);
+-	entry = __radix_tree_lookup(&mapping->pages, index, NULL, &slot);
+-	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) ||
+-			 !slot_locked(mapping, slot))) {
+-		xa_unlock_irq(&mapping->pages);
++	xas_lock_irq(&xas);
++	entry = xas_load(&xas);
++	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) || !dax_locked(entry))) {
++		xas_unlock_irq(&xas);
+ 		return;
+ 	}
+-	unlock_slot(mapping, slot);
+-	xa_unlock_irq(&mapping->pages);
++	entry = xa_mk_value(xa_to_value(entry) & ~DAX_ENTRY_LOCK);
++	xas_store(&xas, entry);
++	/* Safe to not call xas_pause here -- we don't touch the array after */
++	xas_unlock_irq(&xas);
+ 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+ }
+ 
+-- 
+2.15.0
 
