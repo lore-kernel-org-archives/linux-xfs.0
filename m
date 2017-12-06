@@ -1,58 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43535 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752242AbdLEQwj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 11:52:39 -0500
-Date: Tue, 5 Dec 2017 08:51:27 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v7] generic: initial fiemap range query test
-Message-ID: <20171205165127.GD19219@magnolia>
-References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
- <20171205082406.GK2749@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171205082406.GK2749@eguan.usersys.redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:47025 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753331AbdLFAmM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:12 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v4 35/73] mm: Convert __do_page_cache_readahead to XArray
+Date: Tue,  5 Dec 2017 16:41:21 -0800
+Message-Id: <20171206004159.3755-36-willy@infradead.org>
+In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
+References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 05, 2017 at 04:24:06PM +0800, Eryu Guan wrote:
-> On Thu, Nov 30, 2017 at 06:05:27PM +0200, Nikolay Borisov wrote:
-> > Fiemap gained support for passing in optional offset len
-> > which denote the range requested, so this patch adds
-> > testcases for this functionality. Aditionally, a special "ranged"
-> > argument is added to the require_xfs_io_command which checks
-> > for the presence of fiemap range support.
-> > 
-> > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> > ---
-> > 
-> > For the time being this test is expected to fail on XFS. 
-> > 
-> > V7: 
-> >  * Adjusted for 64k block size filesystem
-> >  * Only use/require a test device and not a scratch device
-> 
-> v7 looks good to me, test passes on ppc64 hosts too, thanks!
-> 
-> But it seems that it's not decided yet whether xfs should trim the
-> ranged fiemap query request, I'd like to see the expected behavior
-> decided first. (BTW, v7 passes with latest RHEL7 kernel too, seems
-> extents are not trimmed there.)
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-The iomap callers need to tell iomap_apply if they want exactly the
-range they asked for and no more (most of the write paths) or if they
-can handle outside ranges (fiemap), and then we can turn on
-XFS_BMAPI_ENTIRE reporting in xfs_iomap_begin.
+This one is trivial.
 
---D
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ mm/readahead.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-> Thanks,
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/mm/readahead.c b/mm/readahead.c
+index f64b31b3a84a..66bcaffd47f0 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -174,9 +174,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 		if (page_offset > end_index)
+ 			break;
+ 
+-		rcu_read_lock();
+-		page = radix_tree_lookup(&mapping->pages, page_offset);
+-		rcu_read_unlock();
++		page = xa_load(&mapping->pages, page_offset);
+ 		if (page && !xa_is_value(page))
+ 			continue;
+ 
+-- 
+2.15.0
+
