@@ -1,153 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46366 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdLFOGv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 09:06:51 -0500
-Date: Wed, 6 Dec 2017 06:06:48 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
-Message-ID: <20171206140648.GB32044@bombadil.infradead.org>
-References: <20171206004159.3755-1-willy@infradead.org>
- <20171206004159.3755-73-willy@infradead.org>
- <20171206012901.GZ4094@dastard>
- <20171206020208.GK26021@bombadil.infradead.org>
- <20171206031456.GE4094@dastard>
- <20171206044549.GO26021@bombadil.infradead.org>
- <20171206084404.GF4094@dastard>
+Received: from sandeen.net ([63.231.237.45]:40046 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751788AbdLFP2u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Dec 2017 10:28:50 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 4545A3262
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Dec 2017 09:28:12 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 70c1cce
+Message-ID: <fbe15ea6-9668-afa0-728e-47480098faff@sandeen.net>
+Date: Wed, 6 Dec 2017 09:28:48 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171206084404.GF4094@dastard>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="RJQB3BThUM6GrUMTpnVPeabdAbwPgXexe"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Dec 06, 2017 at 07:44:04PM +1100, Dave Chinner wrote:
-> On Tue, Dec 05, 2017 at 08:45:49PM -0800, Matthew Wilcox wrote:
-> > That said, using xa_cmpxchg() in the dquot code looked like the right
-> > thing to do?  Since we'd dropped the qi mutex and the ILOCK, it looks
-> > entirely reasonable for another thread to come in and set up the dquot.
-> > But I'm obviously quite ignorant of the XFS internals, so maybe there's
-> > something else going on that makes this essentially a "can't happen".
-> 
-> It's no different to the inode cache code, which drops the RCU
-> lock on lookup miss, instantiates the new inode (maybe reading it
-> off disk), then locks the tree and attempts to insert it. Both cases
-> use "insert if empty, otherwise retry lookup from start" semantics.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--RJQB3BThUM6GrUMTpnVPeabdAbwPgXexe
+Content-Type: multipart/mixed; boundary="M35dhQVdM55P6LDc0cnPxi6L0LKGdpdnT";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <fbe15ea6-9668-afa0-728e-47480098faff@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 70c1cce
 
-Ah.  I had my focus set a little narrow on the inode cache code and didn't
-recognise the pattern.
+--M35dhQVdM55P6LDc0cnPxi6L0LKGdpdnT
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Why do you sleep for one jiffy after encountering a miss, then seeing
-someone else insert the inode for you?
+Hi folks,
 
-> cmpxchg is for replacing a known object in a store - it's not really
-> intended for doing initial inserts after a lookup tells us there is
-> nothing in the store.  The radix tree "insert only if empty" makes
-> sense here, because it naturally takes care of lookup/insert races
-> via the -EEXIST mechanism.
-> 
-> I think that providing xa_store_excl() (which would return -EEXIST
-> if the entry is not empty) would be a better interface here, because
-> it matches the semantics of lookup cache population used all over
-> the kernel....
+The for-next branch of the xfsprogs repository at:
 
-I'm not thrilled with xa_store_excl(), but I need to think about that
-a bit more.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> > I'm quite happy to have normal API variants that don't save/restore
-> > interrupts.  Just need to come up with good names ... I don't think
-> > xa_store_noirq() is a good name, but maybe you do?
-> 
-> I'd prefer not to have to deal with such things at all. :P
-> 
-> How many subsystems actually require irq safety in the XA locking
-> code? Make them use irqsafe versions, not make everyone else use
-> "noirq" versions, as is the convention for the rest of the kernel
-> code....
+has just been updated.
 
-Hard to say how many existing radix tree users require the irq safety.
-Also hard to say how many potential users (people currently using
-linked lists, people using resizable arrays, etc) need irq safety.
-My thinking was "make it safe by default and let people who know better
-have a way to opt out", but there's definitely something to be said for
-"make it fast by default and let people who need the unusual behaviour
-type those extra few letters".
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-So, you're arguing for providing xa_store(), xa_store_irq(), xa_store_bh()
-and xa_store_irqsafe()?  (at least on demand, as users come to light?)
-At least the read side doesn't require any variants; everybody can use
-RCU for read side protection.
+The new head of the for-next branch is commit:
 
-("safe", not "save" because I wouldn't make the caller provide the
-"flags" argument).
+70c1cce xfs_db: add missing padding fields
 
-> > At least, not today.  One of the future plans is to allow xa_nodes to
-> > be allocated from ZONE_MOVABLE.  In order to do that, we have to be
-> > able to tell which lock protects any given node.  With the XArray,
-> > we can find that out (xa_node->root->xa_lock); with the radix tree,
-> > we don't even know what kind of lock protects the tree.
-> 
-> Yup, this is a prime example of why we shouldn't be creating
-> external dependencies by smearing the locking context outside the XA
-> structure itself. It's not a stretch to see something like a
-> ZONE_MOVEABLE dependency because some other object indexed in a XA
-> is stored in the same page as the xa_node that points to it, and
-> both require the same xa_lock to move/update...
+mkfs refactoring comes next.
 
-That is a bit of a stretch.  Christoph Lameter and I had a discussion about it
-here: https://www.spinics.net/lists/linux-mm/msg122902.html
+New Commits:
 
-There's no situation where you need to acquire two locks in order to
-free an object; you'd create odd locking dependencies between objects
-if you did that (eg we already have a locking dependency between pag_ici
-and perag from __xfs_inode_set_eofblocks_tag).  It'd be a pretty horrible
-shrinker design where you had to get all the locks on all the objects,
-regardless of what locking order the real code had.
+Darrick J. Wong (17):
+      [904d971] xfs_io: pull xfs errortag definitions from libxfs
+      [813c67c] xfs_io: provide an interface to the scrub ioctls
+      [5591018] man: describe the metadata scrubbing ioctl
+      [5caa042] libfrog: move all the userspace support stuff into a new =
+library
+      [24f4f99] libfrog: move libxfs_log2_roundup to libfrog
+      [1ca68d6] libfrog: add bit manipulation functions
+      [b28b84c] libfrog: move list_sort out of libxfs
+      [67f3faf] libfrog: promote avl64 code from xfs_repair
+      [f434fd9] libfrog: create a threaded workqueue
+      [695fc50] libfrog: move topology code out of libxcmd
+      [b95410d] libfrog: move conversion factors out of libxcmd
+      [bd987fe] libfrog: move paths.c out of libxcmd
+      [ce1abf9] libfrog: add missing function fs_table_destroy
+      [852fe01] libhandle: add missing destructor
+      [62843f3] xfs_repair: remove old workqueue stuff in favor of libfro=
+g code
+      [31df6ad] xfs_db: print structure padding fields consistently
+      [70c1cce] xfs_db: add missing padding fields
 
-> > There are other costs to not having a lock.  The lockdep/RCU
-> > analysis done on the radix tree code is none.  Because we have
-> > no idea what lock might protect any individual radix tree, we use
-> > rcu_dereference_raw(), disabling lockdep's ability to protect us.
-> 
-> Unfortunately for you, I don't find arguments along the lines of
-> "lockdep will save us" at all convincing.  lockdep already throws
-> too many false positives to be useful as a tool that reliably and
-> accurately points out rare, exciting, complex, intricate locking
-> problems.
+Dave Chinner (1):
+      [41198ef] xfs_io: fix gcc-7 related printf warnings
 
-But it does reliably and accurately point out "dude, you forgot to take
-the lock".  It's caught a number of real problems in my own testing that
-you never got to see.
+Eric Sandeen (1):
+      [fc60b66] xfs_io: add buf_lru_ref tag to inject table
 
-> That problem has not gone away - very few people who read and have
-> to maintain this code understandxs all the nasty little intricacies
-> of RCU lookups.  Hiding /more/ of the locking semantics from the
-> programmers makes it even harder to explain why the algorithm is
-> safe. If the rules are basic (e.g. all radix tree lookups use RCU
-> locking) then it's easier for everyone to understand, review and
-> keep the code working correctly because there's almost no scope for
-> getting it wrong.
+Nikolay Borisov (1):
+      [7c18973] xfs_io: implement ranged fiemap query
 
-Couldn't agree more.  Using RCU is subtle, and the parts of the kernel
-that use calls like radix_tree_lookup_slot() are frequently buggy,
-not least because the sparse annotations were missing until I added
-them recently.  That's why the XArray makes sure it has the RCU lock
-for you on anything that needs it.
 
-Not that helps you ... you need to hold the RCU lock yourself because
-your data are protected by RCU.  I did wonder if you could maybe
-improve performance slightly by using something like the page cache's
-get_speculative, re-check scheme, but I totally understand your desire
-to not make this so hard to understand.
+Code Diffstat:
 
-> BTW, something else I just noticed: all the comments in XFS that
-> talk about the radix trees would need updating.
+ Makefile                            |   6 +-
+ copy/Makefile                       |   4 +-
+ db/Makefile                         |   4 +-
+ db/agi.c                            |   3 +-
+ db/attr.c                           |   2 +-
+ db/dir2.c                           |   5 +-
+ db/dquot.c                          |   2 +-
+ db/inode.c                          |   2 +
+ debian/rules                        |   2 +-
+ growfs/Makefile                     |   4 +-
+ {repair =3D> include}/avl64.h         |   0
+ include/bitops.h                    |  58 ++++++
+ include/builddefs.in                |   1 +
+ include/convert.h                   |  37 ++++
+ include/handle.h                    |   2 +
+ include/input.h                     |  15 +-
+ include/libfrog.h                   |  23 +++
+ include/libxfs.h                    |   2 +-
+ include/workqueue.h                 |  55 ++++++
+ include/xfs.h                       |   4 +
+ io/Makefile                         |   7 +-
+ io/fiemap.c                         |  81 ++++++--
+ io/fsmap.c                          |   4 +-
+ io/init.c                           |   1 +
+ io/inject.c                         |  37 +---
+ io/io.h                             |   2 +
+ io/scrub.c                          | 252 +++++++++++++++++++++++
+ libfrog/Makefile                    |  38 ++++
+ {repair =3D> libfrog}/avl64.c         |   4 +-
+ libfrog/convert.c                   | 384 ++++++++++++++++++++++++++++++=
+++++++
+ {libxfs =3D> libfrog}/list_sort.c     |   7 +-
+ {libxcmd =3D> libfrog}/paths.c        |  20 ++
+ {libxcmd =3D> libfrog}/projects.c     |   0
+ {libxfs =3D> libfrog}/radix-tree.c    |  26 +--
+ {libxcmd =3D> libfrog}/topology.c     |   0
+ libfrog/util.c                      |  36 ++++
+ libfrog/workqueue.c                 | 174 ++++++++++++++++
+ libhandle/handle.c                  |  13 ++
+ libxcmd/Makefile                    |  10 +-
+ libxcmd/input.c                     | 375 ------------------------------=
+-----
+ libxfs/Makefile                     |   2 -
+ libxfs/util.c                       |  12 --
+ logprint/Makefile                   |   4 +-
+ man/Makefile                        |   2 +-
+ man/man2/Makefile                   |  22 +++
+ man/man2/ioctl_xfs_scrub_metadata.2 | 318 +++++++++++++++++++++++++++++
+ man/man8/xfs_io.8                   |  22 ++-
+ mdrestore/Makefile                  |   4 +-
+ mkfs/Makefile                       |   5 +-
+ mkfs/maxtrres.c                     |   4 +-
+ mkfs/xfs_mkfs.c                     |   4 +-
+ quota/Makefile                      |   4 +-
+ repair/Makefile                     |  10 +-
+ repair/phase3.c                     |  16 +-
+ repair/phase4.c                     |  26 +--
+ repair/phase6.c                     |   4 +-
+ repair/phase7.c                     |   9 +-
+ repair/prefetch.c                   |  20 +-
+ repair/prefetch.h                   |   4 +-
+ repair/sb.c                         |   4 +-
+ repair/scan.c                       |  16 +-
+ repair/slab.c                       |   4 +-
+ repair/threads.c                    | 125 ++----------
+ repair/threads.h                    |  38 +---
+ spaceman/Makefile                   |   4 +-
+ 65 files changed, 1677 insertions(+), 708 deletions(-)
+ rename {repair =3D> include}/avl64.h (100%)
+ create mode 100644 include/convert.h
+ create mode 100644 include/libfrog.h
+ create mode 100644 include/workqueue.h
+ create mode 100644 io/scrub.c
+ create mode 100644 libfrog/Makefile
+ rename {repair =3D> libfrog}/avl64.c (99%)
+ create mode 100644 libfrog/convert.c
+ rename {libxfs =3D> libfrog}/list_sort.c (98%)
+ rename {libxcmd =3D> libfrog}/paths.c (97%)
+ rename {libxcmd =3D> libfrog}/projects.c (100%)
+ rename {libxfs =3D> libfrog}/radix-tree.c (97%)
+ rename {libxcmd =3D> libfrog}/topology.c (100%)
+ create mode 100644 libfrog/util.c
+ create mode 100644 libfrog/workqueue.c
+ create mode 100644 man/man2/Makefile
+ create mode 100644 man/man2/ioctl_xfs_scrub_metadata.2
 
-I know ... I've been trying to resist the urge to fix comments and spend
-more of my time on getting the code working.  It's frustrating to see
-people use "radix tree" when what they really mean was "page cache".
-Our abstractions leak like sieves.
 
+--M35dhQVdM55P6LDc0cnPxi6L0LKGdpdnT--
+
+--RJQB3BThUM6GrUMTpnVPeabdAbwPgXexe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlooDLEACgkQIK4WkuE9
+3uDodxAAiuZz7PQesKyPUoYT75th8jrqJ91WcBYPEX/8rcxLWRz7AXnmvO5jVN2E
+T/g8+opvOigEaUMhz27ZSl0/mrkNsE/sUZfAyVrUr/nab6WlVCnAdrcpOPFF+zX5
+BAJ4lwb2cLXlbuwcs7HeeD8CRC5JU4ZkmNneA3urlEmZZ3fWzyjDvKPk+W19g36Q
+hjZ8DR6Uj2qmcp+0MQ5hxr9Ns0KXH+7C9QNe4YBBFQoLW+/qlQKC4YQ0JmStoTQ2
+wA8MXgGgL4lUpe2J8ygrf7Ai11vh+02xEBEzSxtaY9JayxLlw5g8NZZqFmZLw4VP
+vICE4ciaf5KagXub/qIkfjUt5fBSydSoqGWJUdT4gnvKy58z7ydUOAVz4K6IakrP
+9v9MYCj3XH1HuvxC+oRvoofJrkT7suDWe5HKc3u+ams1nXGLpap7tpAbY/H5Z5Nf
+IxkjVBsMFFEbevQVbLsYoqhNebsaEo3UgwBSGm/qVq3ftYYDlOG1FYepXKNa/7a2
+K/6gypakmsg0saYzcPzgN7XUQffLusFiyaFlaTH3v2xkhkSeD1KPf3fDSP7uVVcH
++f2mnzRznV1COBOUSV6E0t5PW/7vYyQGYR7Gm+TaoxtIj6n7rsEfN1YKz7ey6fRU
+uPWcjtfB8voShTAY3RQPe1mdqXwpnknUWX3aGQL5PHWUKaMTZWA=
+=0Ys2
+-----END PGP SIGNATURE-----
+
+--RJQB3BThUM6GrUMTpnVPeabdAbwPgXexe--
