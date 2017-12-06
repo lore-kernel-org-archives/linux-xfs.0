@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43520 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37062 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753125AbdLFAmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:09 -0500
+        with ESMTP id S1753409AbdLFAmR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:17 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 12/73] xarray: Add xa_cmpxchg
-Date: Tue,  5 Dec 2017 16:40:58 -0800
-Message-Id: <20171206004159.3755-13-willy@infradead.org>
+Subject: [PATCH v4 67/73] vmalloc: Convert to XArray
+Date: Tue,  5 Dec 2017 16:41:53 -0800
+Message-Id: <20171206004159.3755-68-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,79 +16,117 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This works like doing cmpxchg() on an array entry.  Code which wants
-the radix_tree_insert() semantic of not overwriting an existing entry
-can cmpxchg() with NULL and get the action it wants.  Plus, instead of
-having an error returned, they get the value currently stored in the
-array, which often saves them a subsequent lookup.
+The radix tree of vmap blocks is simpler to express as an XArray.
+Saves a couple of hundred bytes of text and eliminates a user of the
+radix tree preload API.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h |  2 ++
- lib/xarray.c           | 37 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+)
+ mm/vmalloc.c | 39 +++++++++++++--------------------------
+ 1 file changed, 13 insertions(+), 26 deletions(-)
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 6f1f55d9fc94..a570d7d9a252 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -72,6 +72,8 @@ static inline void xa_init(struct xarray *xa)
+diff --git a/mm/vmalloc.c b/mm/vmalloc.c
+index 673942094328..3a46efc27525 100644
+--- a/mm/vmalloc.c
++++ b/mm/vmalloc.c
+@@ -23,7 +23,7 @@
+ #include <linux/list.h>
+ #include <linux/notifier.h>
+ #include <linux/rbtree.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/rcupdate.h>
+ #include <linux/pfn.h>
+ #include <linux/kmemleak.h>
+@@ -821,12 +821,11 @@ struct vmap_block {
+ static DEFINE_PER_CPU(struct vmap_block_queue, vmap_block_queue);
  
- void *xa_load(struct xarray *, unsigned long index);
- void *xa_store(struct xarray *, unsigned long index, void *entry, gfp_t);
-+void *xa_cmpxchg(struct xarray *, unsigned long index,
-+			void *old, void *entry, gfp_t);
+ /*
+- * Radix tree of vmap blocks, indexed by address, to quickly find a vmap block
++ * XArray of vmap blocks, indexed by address, to quickly find a vmap block
+  * in the free path. Could get rid of this if we change the API to return a
+  * "cookie" from alloc, to be passed to free. But no big deal yet.
+  */
+-static DEFINE_SPINLOCK(vmap_block_tree_lock);
+-static RADIX_TREE(vmap_block_tree, GFP_ATOMIC);
++static DEFINE_XARRAY(vmap_block_tree);
  
- /**
-  * xa_erase() - Erase this entry from the XArray.
-diff --git a/lib/xarray.c b/lib/xarray.c
-index fbbb02c25b6d..6625b1763123 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -852,6 +852,43 @@ void *xa_store(struct xarray *xa, unsigned long index, void *entry, gfp_t gfp)
- }
- EXPORT_SYMBOL(xa_store);
+ /*
+  * We should probably have a fallback mechanism to allocate virtual memory
+@@ -865,8 +864,8 @@ static void *new_vmap_block(unsigned int order, gfp_t gfp_mask)
+ 	struct vmap_block *vb;
+ 	struct vmap_area *va;
+ 	unsigned long vb_idx;
+-	int node, err;
+-	void *vaddr;
++	int node;
++	void *ret, *vaddr;
  
-+/**
-+ * xa_cmpxchg() - Conditionally replace an entry in the XArray.
-+ * @xa: XArray.
-+ * @index: Index into array.
-+ * @old: Old value to test against.
-+ * @entry: New value to place in array.
-+ * @gfp: Allocation flags.
-+ *
-+ * If the entry at @index is the same as @old, replace it with @entry.
-+ * If the return value is equal to @old, then the exchange was successful.
-+ *
-+ * Return: The old value at this index or ERR_PTR() if an error happened.
-+ */
-+void *xa_cmpxchg(struct xarray *xa, unsigned long index,
-+			void *old, void *entry, gfp_t gfp)
-+{
-+	XA_STATE(xas, xa, index);
-+	unsigned long flags;
-+	void *curr;
-+
-+	if (WARN_ON_ONCE(xa_is_internal(entry)))
-+		return ERR_PTR(-EINVAL);
-+
-+	do {
-+		xa_lock_irqsave(xa, flags);
-+		curr = xas_create(&xas);
-+		if (curr == old)
-+			xas_store(&xas, entry);
-+		xa_unlock_irqrestore(xa, flags);
-+	} while (xas_nomem(&xas, gfp));
-+
-+	if (xas_error(&xas))
-+		curr = ERR_PTR(xas_error(&xas));
-+	return curr;
-+}
-+EXPORT_SYMBOL(xa_cmpxchg);
-+
- /**
-  * __xa_set_tag() - Set this tag on this entry while locked.
-  * @xa: XArray.
+ 	node = numa_node_id();
+ 
+@@ -883,13 +882,6 @@ static void *new_vmap_block(unsigned int order, gfp_t gfp_mask)
+ 		return ERR_CAST(va);
+ 	}
+ 
+-	err = radix_tree_preload(gfp_mask);
+-	if (unlikely(err)) {
+-		kfree(vb);
+-		free_vmap_area(va);
+-		return ERR_PTR(err);
+-	}
+-
+ 	vaddr = vmap_block_vaddr(va->va_start, 0);
+ 	spin_lock_init(&vb->lock);
+ 	vb->va = va;
+@@ -902,11 +894,12 @@ static void *new_vmap_block(unsigned int order, gfp_t gfp_mask)
+ 	INIT_LIST_HEAD(&vb->free_list);
+ 
+ 	vb_idx = addr_to_vb_idx(va->va_start);
+-	spin_lock(&vmap_block_tree_lock);
+-	err = radix_tree_insert(&vmap_block_tree, vb_idx, vb);
+-	spin_unlock(&vmap_block_tree_lock);
+-	BUG_ON(err);
+-	radix_tree_preload_end();
++	ret = xa_store(&vmap_block_tree, vb_idx, vb, gfp_mask);
++	if (IS_ERR(ret)) {
++		kfree(vb);
++		free_vmap_area(va);
++		return ret;
++	}
+ 
+ 	vbq = &get_cpu_var(vmap_block_queue);
+ 	spin_lock(&vbq->lock);
+@@ -923,9 +916,7 @@ static void free_vmap_block(struct vmap_block *vb)
+ 	unsigned long vb_idx;
+ 
+ 	vb_idx = addr_to_vb_idx(vb->va->va_start);
+-	spin_lock(&vmap_block_tree_lock);
+-	tmp = radix_tree_delete(&vmap_block_tree, vb_idx);
+-	spin_unlock(&vmap_block_tree_lock);
++	tmp = xa_erase(&vmap_block_tree, vb_idx);
+ 	BUG_ON(tmp != vb);
+ 
+ 	free_vmap_area_noflush(vb->va);
+@@ -1031,7 +1022,6 @@ static void *vb_alloc(unsigned long size, gfp_t gfp_mask)
+ static void vb_free(const void *addr, unsigned long size)
+ {
+ 	unsigned long offset;
+-	unsigned long vb_idx;
+ 	unsigned int order;
+ 	struct vmap_block *vb;
+ 
+@@ -1045,10 +1035,7 @@ static void vb_free(const void *addr, unsigned long size)
+ 	offset = (unsigned long)addr & (VMAP_BLOCK_SIZE - 1);
+ 	offset >>= PAGE_SHIFT;
+ 
+-	vb_idx = addr_to_vb_idx((unsigned long)addr);
+-	rcu_read_lock();
+-	vb = radix_tree_lookup(&vmap_block_tree, vb_idx);
+-	rcu_read_unlock();
++	vb = xa_load(&vmap_block_tree, addr_to_vb_idx((unsigned long)addr));
+ 	BUG_ON(!vb);
+ 
+ 	vunmap_page_range((unsigned long)addr, (unsigned long)addr + size);
 -- 
 2.15.0
 
