@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33964 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37428 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753367AbdLFAmP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:15 -0500
+        with ESMTP id S1753361AbdLFAmO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:14 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 53/73] fs: Convert writeback to XArray
-Date: Tue,  5 Dec 2017 16:41:39 -0800
-Message-Id: <20171206004159.3755-54-willy@infradead.org>
+Subject: [PATCH v4 48/73] shmem: Convert shmem_free_swap to XArray
+Date: Tue,  5 Dec 2017 16:41:34 -0800
+Message-Id: <20171206004159.3755-49-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,65 +16,37 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-A couple of short loops.
+This is a perfect use for xa_cmpxchg().  Note the use of 0 for GFP
+flags; we won't be allocating memory.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/fs-writeback.c | 27 ++++++++++-----------------
- 1 file changed, 10 insertions(+), 17 deletions(-)
+ mm/shmem.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index a3c2352507f6..18ad86ccba96 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -339,9 +339,9 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
- 	struct address_space *mapping = inode->i_mapping;
- 	struct bdi_writeback *old_wb = inode->i_wb;
- 	struct bdi_writeback *new_wb = isw->new_wb;
--	struct radix_tree_iter iter;
-+	XA_STATE(xas, &mapping->pages, 0);
-+	struct page *page;
- 	bool switched = false;
--	void **slot;
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 768d470a03da..ca45ff493587 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -635,16 +635,13 @@ static void shmem_delete_from_page_cache(struct page *page, void *radswap)
+ }
  
- 	/*
- 	 * By the time control reaches here, RCU grace period has passed
-@@ -373,27 +373,20 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
- 	/*
- 	 * Count and transfer stats.  Note that PAGECACHE_TAG_DIRTY points
- 	 * to possibly dirty pages while PAGECACHE_TAG_WRITEBACK points to
--	 * pages actually under underwriteback.
-+	 * pages actually under writeback.
- 	 */
--	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
--				   PAGECACHE_TAG_DIRTY) {
--		struct page *page = radix_tree_deref_slot_protected(slot,
--						&mapping->pages.xa_lock);
--		if (likely(page) && PageDirty(page)) {
-+	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_DIRTY) {
-+		if (PageDirty(page)) {
- 			dec_wb_stat(old_wb, WB_RECLAIMABLE);
- 			inc_wb_stat(new_wb, WB_RECLAIMABLE);
- 		}
- 	}
+ /*
+- * Remove swap entry from radix tree, free the swap and its page cache.
++ * Remove swap entry from page cache, free the swap and its page cache.
+  */
+ static int shmem_free_swap(struct address_space *mapping,
+ 			   pgoff_t index, void *radswap)
+ {
+-	void *old;
++	void *old = xa_cmpxchg(&mapping->pages, index, radswap, NULL, 0);
  
--	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
--				   PAGECACHE_TAG_WRITEBACK) {
--		struct page *page = radix_tree_deref_slot_protected(slot,
--						&mapping->pages.xa_lock);
--		if (likely(page)) {
--			WARN_ON_ONCE(!PageWriteback(page));
--			dec_wb_stat(old_wb, WB_WRITEBACK);
--			inc_wb_stat(new_wb, WB_WRITEBACK);
--		}
-+	xas_set(&xas, 0);
-+	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_WRITEBACK) {
-+		WARN_ON_ONCE(!PageWriteback(page));
-+		dec_wb_stat(old_wb, WB_WRITEBACK);
-+		inc_wb_stat(new_wb, WB_WRITEBACK);
- 	}
- 
- 	wb_get(new_wb);
+-	xa_lock_irq(&mapping->pages);
+-	old = radix_tree_delete_item(&mapping->pages, index, radswap);
+-	xa_unlock_irq(&mapping->pages);
+ 	if (old != radswap)
+ 		return -ENOENT;
+ 	free_swap_and_cache(radix_to_swp_entry(radswap));
 -- 
 2.15.0
 
