@@ -1,60 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40078 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752073AbdLGAvZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Dec 2017 19:51:25 -0500
-Subject: Re: [PATCH] libxfs: libxfs_nproc should never return negative numbers
-References: <20171206234917.GM4910@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <a6c8f1a1-2706-1805-aae4-7608258c6a61@redhat.com>
-Date: Wed, 6 Dec 2017 18:51:23 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:57096 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751598AbdLFXtW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 18:49:22 -0500
+Date: Wed, 6 Dec 2017 15:49:17 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] libxfs: libxfs_nproc should never return negative numbers
+Message-ID: <20171206234917.GM4910@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171206234917.GM4910@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs <linux-xfs@vger.kernel.org>
 
-On 12/6/17 5:49 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Prevent libxfs_nproc from returning a negative/zero CPU count if
-> platform_nproc happens to error out.
-> 
-> Fixes-coverity-id: 1425909
-> Fixes-coverity-id: 1425910
-> Fixes-coverity-id: 1425913
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-3 birds, one stone, probably worth it :)
+Prevent libxfs_nproc from returning a negative/zero CPU count if
+platform_nproc happens to error out.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Fixes-coverity-id: 1425909
+Fixes-coverity-id: 1425910
+Fixes-coverity-id: 1425913
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/init.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  libxfs/init.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index a007b3b..302f088 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -910,7 +910,12 @@ libxfs_report(FILE *fp)
->  int
->  libxfs_nproc(void)
->  {
-> -	return platform_nproc();
-> +	int	nr;
-> +
-> +	nr = platform_nproc();
-> +	if (nr < 1)
-> +		nr = 1;
-> +	return nr;
->  }
->  
->  unsigned long
-> 
-
+diff --git a/libxfs/init.c b/libxfs/init.c
+index a007b3b..302f088 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -910,7 +910,12 @@ libxfs_report(FILE *fp)
+ int
+ libxfs_nproc(void)
+ {
+-	return platform_nproc();
++	int	nr;
++
++	nr = platform_nproc();
++	if (nr < 1)
++		nr = 1;
++	return nr;
+ }
+ 
+ unsigned long
