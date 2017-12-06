@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50577 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60327 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753380AbdLFAmP (ORCPT
+        with ESMTP id S1753382AbdLFAmP (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:15 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 56/73] lustre: Convert to XArray
-Date: Tue,  5 Dec 2017 16:41:42 -0800
-Message-Id: <20171206004159.3755-57-willy@infradead.org>
+Subject: [PATCH v4 58/73] dax: Convert lock_slot to XArray
+Date: Tue,  5 Dec 2017 16:41:44 -0800
+Message-Id: <20171206004159.3755-59-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,83 +18,105 @@ From: Matthew Wilcox <mawilcox@microsoft.com>
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/staging/lustre/lustre/llite/glimpse.c   | 12 +++++-------
- drivers/staging/lustre/lustre/mdc/mdc_request.c | 16 ++++++++--------
- 2 files changed, 13 insertions(+), 15 deletions(-)
+ fs/dax.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/lustre/lustre/llite/glimpse.c b/drivers/staging/lustre/lustre/llite/glimpse.c
-index 5f2843da911c..25232fdf5797 100644
---- a/drivers/staging/lustre/lustre/llite/glimpse.c
-+++ b/drivers/staging/lustre/lustre/llite/glimpse.c
-@@ -57,7 +57,7 @@ static const struct cl_lock_descr whole_file = {
- };
+diff --git a/fs/dax.c b/fs/dax.c
+index 03bfa599f75c..d2007a17d257 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -188,15 +188,13 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+ }
  
  /*
-- * Check whether file has possible unwriten pages.
-+ * Check whether file has possible unwritten pages.
-  *
-  * \retval 1    file is mmap-ed or has dirty pages
-  *	 0    otherwise
-@@ -66,16 +66,14 @@ blkcnt_t dirty_cnt(struct inode *inode)
+- * Mark the given slot is locked. The function must be called with
+- * mapping xa_lock held
++ * Mark the given slot as locked.  Must be called with xa_lock held.
+  */
+-static inline void *lock_slot(struct address_space *mapping, void **slot)
++static inline void *lock_slot(struct xa_state *xas)
  {
- 	blkcnt_t cnt = 0;
- 	struct vvp_object *vob = cl_inode2vvp(inode);
--	void	      *results[1];
- 
--	if (inode->i_mapping)
--		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->pages,
--						  results, 0, 1,
--						  PAGECACHE_TAG_DIRTY);
-+	if (inode->i_mapping && xa_tagged(&inode->i_mapping->pages,
-+				PAGECACHE_TAG_DIRTY))
-+		cnt = 1;
- 	if (cnt == 0 && atomic_read(&vob->vob_mmap_cnt) > 0)
- 		cnt = 1;
- 
--	return (cnt > 0) ? 1 : 0;
-+	return cnt;
+-	unsigned long v = xa_to_value(
+-		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
++	unsigned long v = xa_to_value(xas_load(xas));
+ 	void *entry = xa_mk_value(v | DAX_ENTRY_LOCK);
+-	radix_tree_replace_slot(&mapping->pages, slot, entry);
++	xas_store(xas, entry);
+ 	return entry;
  }
  
- int cl_glimpse_lock(const struct lu_env *env, struct cl_io *io,
-diff --git a/drivers/staging/lustre/lustre/mdc/mdc_request.c b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-index 2ec79a6b17da..ea23247e9e02 100644
---- a/drivers/staging/lustre/lustre/mdc/mdc_request.c
-+++ b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-@@ -934,17 +934,18 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 	 * hash _smaller_ than one we are looking for.
- 	 */
- 	unsigned long offset = hash_x_index(*hash, hash64);
-+	XA_STATE(xas, &mapping->pages, offset);
- 	struct page *page;
--	int found;
+@@ -247,7 +245,7 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
  
--	xa_lock_irq(&mapping->pages);
--	found = radix_tree_gang_lookup(&mapping->pages,
--				       (void **)&page, offset, 1);
--	if (found > 0 && !xa_is_value(page)) {
-+	xas_lock_irq(&xas);
-+	page = xas_find(&xas, ULONG_MAX);
-+	if (xa_is_value(page))
-+		page = NULL;
-+	if (page) {
- 		struct lu_dirpage *dp;
- 
- 		get_page(page);
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		/*
- 		 * In contrast to find_lock_page() we are sure that directory
- 		 * page cannot be truncated (while DLM lock is held) and,
-@@ -992,8 +993,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 			page = ERR_PTR(-EIO);
- 		}
- 	} else {
--		xa_unlock_irq(&mapping->pages);
--		page = NULL;
-+		xas_unlock_irq(&xas);
+ 	xas_lock_irq(&xas);
+ 	entry = xas_load(&xas);
+-	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) || !dax_locked(entry))) {
++	if (WARN_ON_ONCE(!xa_is_value(entry) || !dax_locked(entry))) {
+ 		xas_unlock_irq(&xas);
+ 		return;
  	}
- 	return page;
- }
+@@ -306,6 +304,7 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
+ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		unsigned long size_flag)
+ {
++	XA_STATE(xas, &mapping->pages, index);
+ 	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
+ 	void *entry, **slot;
+ 
+@@ -344,7 +343,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 			 * Make sure 'entry' remains valid while we drop
+ 			 * mapping xa_lock.
+ 			 */
+-			entry = lock_slot(mapping, slot);
++			entry = lock_slot(&xas);
+ 		}
+ 
+ 		xa_unlock_irq(&mapping->pages);
+@@ -411,7 +410,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		xa_unlock_irq(&mapping->pages);
+ 		return entry;
+ 	}
+-	entry = lock_slot(mapping, slot);
++	entry = lock_slot(&xas);
+  out_unlock:
+ 	xa_unlock_irq(&mapping->pages);
+ 	return entry;
+@@ -643,6 +642,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 		pgoff_t index, void *entry)
+ {
+ 	struct radix_tree_root *pages = &mapping->pages;
++	XA_STATE(xas, pages, index);
+ 	void *entry2, **slot, *kaddr;
+ 	long ret = 0, id;
+ 	sector_t sector;
+@@ -679,7 +679,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	if (!radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE))
+ 		goto put_unlocked;
+ 	/* Lock the entry to serialize with page faults */
+-	entry = lock_slot(mapping, slot);
++	entry = lock_slot(&xas);
+ 	/*
+ 	 * We can clear the tag now but we have to be careful so that concurrent
+ 	 * dax_writeback_one() calls for the same index cannot finish before we
+@@ -1504,8 +1504,9 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
+ 				  pfn_t pfn)
+ {
+ 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+-	void *entry, **slot;
+ 	pgoff_t index = vmf->pgoff;
++	XA_STATE(xas, &mapping->pages, index);
++	void *entry, **slot;
+ 	int vmf_ret, error;
+ 
+ 	xa_lock_irq(&mapping->pages);
+@@ -1521,7 +1522,7 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
+ 		return VM_FAULT_NOPAGE;
+ 	}
+ 	radix_tree_tag_set(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
+-	entry = lock_slot(mapping, slot);
++	entry = lock_slot(&xas);
+ 	xa_unlock_irq(&mapping->pages);
+ 	switch (pe_size) {
+ 	case PE_SIZE_PTE:
 -- 
 2.15.0
 
