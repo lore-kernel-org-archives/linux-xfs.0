@@ -1,142 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:18565 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:11847 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754345AbdLFDPB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 22:15:01 -0500
-Date: Wed, 6 Dec 2017 14:14:56 +1100
+        by vger.kernel.org with ESMTP id S1752456AbdLFV5O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 16:57:14 -0500
+Date: Thu, 7 Dec 2017 08:57:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
-Message-ID: <20171206031456.GE4094@dastard>
-References: <20171206004159.3755-1-willy@infradead.org>
- <20171206004159.3755-73-willy@infradead.org>
- <20171206012901.GZ4094@dastard>
- <20171206020208.GK26021@bombadil.infradead.org>
+Subject: Re: [PATCH v7] generic: initial fiemap range query test
+Message-ID: <20171206215711.GG5858@dastard>
+References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
+ <20171206174506.GI19219@magnolia>
+ <0d1b5c25-9187-1405-17a2-1e44b65c53a8@suse.com>
+ <20171206210659.GE6896@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171206020208.GK26021@bombadil.infradead.org>
+In-Reply-To: <20171206210659.GE6896@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Nikolay Borisov <nborisov@suse.com>, eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
 
-On Tue, Dec 05, 2017 at 06:02:08PM -0800, Matthew Wilcox wrote:
-> On Wed, Dec 06, 2017 at 12:36:48PM +1100, Dave Chinner wrote:
-> > > -	if (radix_tree_preload(GFP_NOFS))
-> > > -		return -ENOMEM;
-> > > -
-> > >  	INIT_LIST_HEAD(&elem->list_node);
-> > >  	elem->key = key;
-> > >  
-> > > -	spin_lock(&mru->lock);
-> > > -	error = radix_tree_insert(&mru->store, key, elem);
-> > > -	radix_tree_preload_end();
-> > > -	if (!error)
-> > > -		_xfs_mru_cache_list_insert(mru, elem);
-> > > -	spin_unlock(&mru->lock);
-> > > +	do {
-> > > +		xas_lock(&xas);
-> > > +		xas_store(&xas, elem);
-> > > +		error = xas_error(&xas);
-> > > +		if (!error)
-> > > +			_xfs_mru_cache_list_insert(mru, elem);
-> > > +		xas_unlock(&xas);
-> > > +	} while (xas_nomem(&xas, GFP_NOFS));
+On Wed, Dec 06, 2017 at 01:06:59PM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 06, 2017 at 10:51:39PM +0200, Nikolay Borisov wrote:
+> > On  6.12.2017 19:45, Darrick J. Wong wrote:
+> > > On Thu, Nov 30, 2017 at 06:05:27PM +0200, Nikolay Borisov wrote:
+> > >> new file mode 100644
+> > >> index 0000000..3df6a3a
+> > >> --- /dev/null
+> > >> +++ b/tests/generic/900.out
+> > >> @@ -0,0 +1,196 @@
+> > >> +QA output created by 900
+> > >> +Basic data extent
+> > >> +0: [128..255]: data
+> > >> +Data + Hole
+> > >> +0: [128..255]: data
+> > >> +1: [256..287]: hole
+> > >> +Hole + Data
+> > >> +0: [0..127]: hole
+> > >> +1: [128..255]: data
+> > > 
+> > > This fails on XFS:
+> > > 
+> > > $ xfs_io -c "fiemap -v 0 65k" file
+> > > moo:
+> > >  EXT: FILE-OFFSET      BLOCK-RANGE        TOTAL FLAGS
+> > >    0: [0..127]:        hole                 128
+> > >    1: [128..135]:      74391184..74391191     8   0x0
+> > > 
+> > > (Note the records are trimmed to sector 135, or 65k)
+> > > 
+> > > Compare to ext4:
+> > > 
+> > > $ xfs_io -c "fiemap -v 0k 65k" file
+> > > moo:
+> > >  EXT: FILE-OFFSET      BLOCK-RANGE            TOTAL FLAGS
+> > >    0: [0..127]:        hole                     128
+> > >    1: [128..255]:      2510790784..2510790911   128   0x0
+> > > 
+> > > (ext4 doesn't bother trimming)
+> > > 
+> > > Documentation/filesystems/fiemap.txt says "...the logical offset of the
+> > > 1st returned extent may start before fm_start, and the range covered by
+> > > the last returned extent may end after fm_length", so both behaviors are
+> > > allowed.
 > > 
-> > Ok, so why does this have a retry loop on ENOMEM despite the
-> > existing code handling that error? And why put such a loop in this
-> > code and not any of the other XFS code that used
-> > radix_tree_preload() and is arguably much more important to avoid
-> > ENOMEM on insert (e.g. the inode cache)?
+> > So how do you propose the test to deal with the fact that XFS is the
+> > only file system (of the mainstream ones at least) that trims the extents?
 > 
-> If we need more nodes in the tree, xas_store() will try to allocate them
-> with GFP_NOWAIT | __GFP_NOWARN.  If that fails, it signals it in xas_error().
-> xas_nomem() will notice that we're in an ENOMEM situation, and allocate
-> a node using your preferred GFP flags (NOIO in your case).  Then we retry,
-> guaranteeing forward progress. [1]
+> Put:
 > 
-> The other conversions use the normal API instead of the advanced API, so
-> all of this gets hidden away.  For example, the inode cache does this:
+> test "$FSTYP" = "xfs" && _notrun "This is tested by xfs/XXX"
 > 
-> +       curr = xa_cmpxchg(&pag->pag_ici_xa, agino, NULL, ip, GFP_NOFS);
-> 
-> and xa_cmpxchg internally does:
-> 
->         do {
->                 xa_lock_irqsave(xa, flags);
->                 curr = xas_create(&xas);
->                 if (curr == old)
->                         xas_store(&xas, entry);
->                 xa_unlock_irqrestore(xa, flags);
->         } while (xas_nomem(&xas, gfp));
+> in this test and then duplicate it as some xfs/ test with whatever the
+> correct output is on xfs.  Also add some checks for fiemap -a since we
+> actually have attribute block maps on xfs.
 
-Ah, OK, that's not obvious from the code changes. :/
+No, please don't do stupid things like this to work around
+unpredictable output from a *newly implemented command*.
 
-However, it's probably overkill for XFS. In all the cases, when we
-insert there should be no entry in the tree - the
-radix tree insert error handling code there was simply catching
-"should never happen" cases and handling it without crashing.
+There's a *simple answer* to this problem: fix the new command's
+output.
 
-Now that I've looked at this, I have to say that having a return
-value of NULL meaning "success" is quite counter-intuitive. That's
-going to fire my "that looks so wrong" detector every time I look at
-the code and notice it's erroring out on a non-null return value
-that isn't a PTR_ERR case....
+That is: the user asked for a specific range, so the command itself
+should trim the map returned by the kernel to only display the exact
+range the user asked for.  Then it doesn't matter if the underlying
+filesystem trims the extents or not, because the we're going to do
+that anyway in userspace.
 
-Also, there's no need for irqsave/restore() locking contexts here as
-we never access these caches from interrupt contexts. That's just
-going to be extra overhead, especially on workloads that run 10^6
-inodes inodes through the cache every second. That's a problem
-caused by driving the locks into the XA structure and then needing
-to support callers that require irq safety....
+> (let's see if hch/dchinner come in and NAK the whole thing on the
+> grounds that FIEMAP is a debugging interface anyway...)
 
-> > Also, I really don't like the pattern of using xa_lock()/xa_unlock()
-> > to protect access to an external structure. i.e. the mru->lock
-> > context is protecting multiple fields and operations in the MRU
-> > structure, not just the radix tree operations. Turning that around
-> > so that a larger XFS structure and algorithm is now protected by an
-> > opaque internal lock from generic storage structure the forms part
-> > of the larger structure seems like a bad design pattern to me...
-> 
-> It's the design pattern I've always intended to use.  Naturally, the
-> xfs radix trees weren't my initial target; it was the page cache, and
-> the page cache does the same thing; uses the tree_lock to protect both
-> the radix tree and several other fields in that same data structure.
-> 
-> I'm open to argument on this though ... particularly if you have a better
-> design pattern in mind!
-
-I don't mind structures having internal locking - I have a problem
-with leaking them into contexts outside the structure they protect.
-That way lies madness - you can't change the internal locking in
-future because of external dependencies, and the moment you need
-something different externally we've got to go back to an external
-lock anyway.
-
-This is demonstrated by the way you converted the XFS dquot tree -
-you didn't replace the dquot tree lock with the internal xa_lock
-because it's a mutex and we have to sleep holding it. IOWs, we've
-added another layer of locking here, not simplified the code.
-
-What I really see here is that  we have inconsistent locking
-patterns w.r.t. XA stores inside XFS - some have an external mutex
-to cover a wider scope, some use xa_lock/xa_unlock to span multiple
-operations, some directly access the internal xa lock via direct
-spin_lock/unlock(...xa_lock) calls and non-locking XA call variants.
-In some places you remove explicit rcu_read_lock() calls because the
-internal xa_lock implies RCU, but in other places we still need them
-because we have to protect the objects the tree points to, not just
-the tree....
-
-IOWs, there's no consistent pattern to the changes you've made to
-the XFS code. The existing radix tree code has clear, consistent
-locking, tagging and lookup patterns. In contrast, each conversion
-to the XA code has resulted in a different solution for each radix
-tree conversion. Yes, there's been a small reduction in the amoutn
-of code in converting to the XA API, but it comes at the cost of
-consistency and ease of understanding the code that uses the radix
-tree API.
+I've stayed out of it as much as I can, but when I see spiralling
+stupidity^Wcomplexity like this I'm going to open my big mouth and
+put my foot as far into it as I can. :/
 
 Cheers,
 
