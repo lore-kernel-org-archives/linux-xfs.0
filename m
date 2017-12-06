@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39018 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40028 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753397AbdLFAmR (ORCPT
+        with ESMTP id S1753410AbdLFAmR (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:17 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 54/73] nilfs2: Convert to XArray
-Date: Tue,  5 Dec 2017 16:41:40 -0800
-Message-Id: <20171206004159.3755-55-willy@infradead.org>
+Subject: [PATCH v4 71/73] xfs: Convert xfs dquot to XArray
+Date: Tue,  5 Dec 2017 16:41:57 -0800
+Message-Id: <20171206004159.3755-72-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,207 +16,243 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-I'm not 100% convinced that the rewrite of nilfs_copy_back_pages is
-correct, but it will at least have different bugs from the current
-version.
+This is a pretty straight-forward conversion.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/nilfs2/btnode.c | 37 +++++++++++-----------------
- fs/nilfs2/page.c   | 72 +++++++++++++++++++++++++++++++-----------------------
- 2 files changed, 56 insertions(+), 53 deletions(-)
+ fs/xfs/xfs_dquot.c | 33 +++++++++++++++++----------------
+ fs/xfs/xfs_qm.c    | 32 ++++++++++++++++----------------
+ fs/xfs/xfs_qm.h    | 18 +++++++++---------
+ 3 files changed, 42 insertions(+), 41 deletions(-)
 
-diff --git a/fs/nilfs2/btnode.c b/fs/nilfs2/btnode.c
-index 9e2a00207436..92cf58e244f9 100644
---- a/fs/nilfs2/btnode.c
-+++ b/fs/nilfs2/btnode.c
-@@ -177,42 +177,36 @@ int nilfs_btnode_prepare_change_key(struct address_space *btnc,
- 	ctxt->newbh = NULL;
- 
- 	if (inode->i_blkbits == PAGE_SHIFT) {
--		lock_page(obh->b_page);
--		/*
--		 * We cannot call radix_tree_preload for the kernels older
--		 * than 2.6.23, because it is not exported for modules.
--		 */
-+		void *entry;
-+		struct page *opage = obh->b_page;
-+		lock_page(opage);
- retry:
--		err = radix_tree_preload(GFP_NOFS & ~__GFP_HIGHMEM);
--		if (err)
--			goto failed_unlock;
- 		/* BUG_ON(oldkey != obh->b_page->index); */
--		if (unlikely(oldkey != obh->b_page->index))
--			NILFS_PAGE_BUG(obh->b_page,
-+		if (unlikely(oldkey != opage->index))
-+			NILFS_PAGE_BUG(opage,
- 				       "invalid oldkey %lld (newkey=%lld)",
- 				       (unsigned long long)oldkey,
- 				       (unsigned long long)newkey);
- 
--		xa_lock_irq(&btnc->pages);
--		err = radix_tree_insert(&btnc->pages, newkey, obh->b_page);
--		xa_unlock_irq(&btnc->pages);
-+		entry = xa_cmpxchg(&btnc->pages, newkey, NULL, opage, GFP_NOFS);
- 		/*
- 		 * Note: page->index will not change to newkey until
- 		 * nilfs_btnode_commit_change_key() will be called.
- 		 * To protect the page in intermediate state, the page lock
- 		 * is held.
- 		 */
--		radix_tree_preload_end();
--		if (!err)
-+		if (!entry)
- 			return 0;
--		else if (err != -EEXIST)
-+		if (IS_ERR(entry)) {
-+			err = PTR_ERR(entry);
- 			goto failed_unlock;
-+		}
- 
- 		err = invalidate_inode_pages2_range(btnc, newkey, newkey);
- 		if (!err)
- 			goto retry;
- 		/* fallback to copy mode */
--		unlock_page(obh->b_page);
-+		unlock_page(opage);
- 	}
- 
- 	nbh = nilfs_btnode_create_block(btnc, newkey);
-@@ -252,9 +246,8 @@ void nilfs_btnode_commit_change_key(struct address_space *btnc,
- 		mark_buffer_dirty(obh);
- 
- 		xa_lock_irq(&btnc->pages);
--		radix_tree_delete(&btnc->pages, oldkey);
--		radix_tree_tag_set(&btnc->pages, newkey,
--				   PAGECACHE_TAG_DIRTY);
-+		__xa_erase(&btnc->pages, oldkey);
-+		__xa_set_tag(&btnc->pages, newkey, PAGECACHE_TAG_DIRTY);
- 		xa_unlock_irq(&btnc->pages);
- 
- 		opage->index = obh->b_blocknr = newkey;
-@@ -283,9 +276,7 @@ void nilfs_btnode_abort_change_key(struct address_space *btnc,
- 		return;
- 
- 	if (nbh == NULL) {	/* blocksize == pagesize */
--		xa_lock_irq(&btnc->pages);
--		radix_tree_delete(&btnc->pages, newkey);
--		xa_unlock_irq(&btnc->pages);
-+		xa_erase(&btnc->pages, newkey);
- 		unlock_page(ctxt->bh->b_page);
- 	} else
- 		brelse(nbh);
-diff --git a/fs/nilfs2/page.c b/fs/nilfs2/page.c
-index 1c6703efde9e..31d20f624971 100644
---- a/fs/nilfs2/page.c
-+++ b/fs/nilfs2/page.c
-@@ -304,10 +304,10 @@ int nilfs_copy_dirty_pages(struct address_space *dmap,
- void nilfs_copy_back_pages(struct address_space *dmap,
- 			   struct address_space *smap)
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e2a466df5dd1..a35fcc37770b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -44,7 +44,7 @@
+  * Lock order:
+  *
+  * ip->i_lock
+- *   qi->qi_tree_lock
++ *   qi->qi_xa_lock
+  *     dquot->q_qlock (xfs_dqlock() and friends)
+  *       dquot->q_flush (xfs_dqflock() and friends)
+  *       qi->qi_lru_lock
+@@ -752,8 +752,8 @@ xfs_qm_dqget(
+ 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
  {
-+	XA_STATE(xas, &dmap->pages, 0);
- 	struct pagevec pvec;
- 	unsigned int i, n;
- 	pgoff_t index = 0;
--	int err;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+-	struct xfs_dquot	*dqp;
++	struct xarray		*xa = xfs_dquot_xa(qi, type);
++	struct xfs_dquot	*dqp, *curr;
+ 	int			error;
  
- 	pagevec_init(&pvec);
- repeat:
-@@ -317,43 +317,56 @@ void nilfs_copy_back_pages(struct address_space *dmap,
- 
- 	for (i = 0; i < pagevec_count(&pvec); i++) {
- 		struct page *page = pvec.pages[i], *dpage;
--		pgoff_t offset = page->index;
-+		xas_set(&xas, page->index);
- 
- 		lock_page(page);
--		dpage = find_lock_page(dmap, offset);
-+		do {
-+			xas_lock_irq(&xas);
-+			dpage = xas_create(&xas);
-+			if (!xas_error(&xas))
-+				break;
-+			xas_unlock_irq(&xas);
-+			if (!xas_nomem(&xas, GFP_NOFS)) {
-+				unlock_page(page);
-+				/*
-+				 * Callers have a touching faith that this
-+				 * function cannot fail.  Just leak the page.
-+				 * Other pages may be salvagable if the
-+				 * xarray doesn't need to allocate memory
-+				 * to store them.
-+				 */
-+				WARN_ON(1);
-+				page->mapping = NULL;
-+				put_page(page);
-+				goto shadow_remove;
-+			}
-+		} while (1);
-+
- 		if (dpage) {
--			/* override existing page on the destination cache */
-+			get_page(dpage);
-+			xas_unlock_irq(&xas);
-+			lock_page(dpage);
-+			/* override existing page in the destination cache */
- 			WARN_ON(PageDirty(dpage));
- 			nilfs_copy_page(dpage, page, 0);
- 			unlock_page(dpage);
- 			put_page(dpage);
- 		} else {
--			struct page *page2;
--
--			/* move the page to the destination cache */
--			xa_lock_irq(&smap->pages);
--			page2 = radix_tree_delete(&smap->pages, offset);
--			WARN_ON(page2 != page);
--
--			smap->nrpages--;
--			xa_unlock_irq(&smap->pages);
--
--			xa_lock_irq(&dmap->pages);
--			err = radix_tree_insert(&dmap->pages, offset, page);
--			if (unlikely(err < 0)) {
--				WARN_ON(err == -EEXIST);
--				page->mapping = NULL;
--				put_page(page); /* for cache */
--			} else {
--				page->mapping = dmap;
--				dmap->nrpages++;
--				if (PageDirty(page))
--					radix_tree_tag_set(&dmap->pages,
--							   offset,
--							   PAGECACHE_TAG_DIRTY);
--			}
-+			xas_store(&xas, page);
-+			page->mapping = dmap;
-+			dmap->nrpages++;
-+			if (PageDirty(page))
-+				xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
- 			xa_unlock_irq(&dmap->pages);
- 		}
-+
-+shadow_remove:
-+		/* remove the page from the shadow cache */
-+		xa_lock_irq(&smap->pages);
-+		WARN_ON(__xa_erase(&smap->pages, xas.xa_index) != page);
-+		smap->nrpages--;
-+		xa_unlock_irq(&smap->pages);
-+
- 		unlock_page(page);
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -772,13 +772,14 @@ xfs_qm_dqget(
  	}
- 	pagevec_release(&pvec);
-@@ -476,8 +489,7 @@ int __nilfs_clear_page_dirty(struct page *page)
- 	if (mapping) {
- 		xa_lock_irq(&mapping->pages);
- 		if (test_bit(PG_dirty, &page->flags)) {
--			radix_tree_tag_clear(&mapping->pages,
--					     page_index(page),
-+			__xa_clear_tag(&mapping->pages, page_index(page),
- 					     PAGECACHE_TAG_DIRTY);
- 			xa_unlock_irq(&mapping->pages);
- 			return clear_page_dirty_for_io(page);
+ 
+ restart:
+-	mutex_lock(&qi->qi_tree_lock);
+-	dqp = radix_tree_lookup(tree, id);
++	mutex_lock(&qi->qi_xa_lock);
++	dqp = xa_load(xa, id);
++found:
+ 	if (dqp) {
+ 		xfs_dqlock(dqp);
+ 		if (dqp->dq_flags & XFS_DQ_FREEING) {
+ 			xfs_dqunlock(dqp);
+-			mutex_unlock(&qi->qi_tree_lock);
++			mutex_unlock(&qi->qi_xa_lock);
+ 			trace_xfs_dqget_freeing(dqp);
+ 			delay(1);
+ 			goto restart;
+@@ -788,7 +789,7 @@ xfs_qm_dqget(
+ 		if (flags & XFS_QMOPT_DQNEXT) {
+ 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 				xfs_dqunlock(dqp);
+-				mutex_unlock(&qi->qi_tree_lock);
++				mutex_unlock(&qi->qi_xa_lock);
+ 				error = xfs_dq_get_next_id(mp, type, &id);
+ 				if (error)
+ 					return error;
+@@ -797,14 +798,14 @@ xfs_qm_dqget(
+ 		}
+ 
+ 		dqp->q_nrefs++;
+-		mutex_unlock(&qi->qi_tree_lock);
++		mutex_unlock(&qi->qi_xa_lock);
+ 
+ 		trace_xfs_dqget_hit(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dqcachehits);
+ 		*O_dqpp = dqp;
+ 		return 0;
+ 	}
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
+ 
+ 	/*
+@@ -854,20 +855,20 @@ xfs_qm_dqget(
+ 		}
+ 	}
+ 
+-	mutex_lock(&qi->qi_tree_lock);
+-	error = radix_tree_insert(tree, id, dqp);
+-	if (unlikely(error)) {
+-		WARN_ON(error != -EEXIST);
++	mutex_lock(&qi->qi_xa_lock);
++	curr = xa_cmpxchg(xa, id, NULL, dqp, GFP_NOFS);
++	if (unlikely(curr)) {
++		WARN_ON(IS_ERR(curr));
+ 
+ 		/*
+ 		 * Duplicate found. Just throw away the new dquot and start
+ 		 * over.
+ 		 */
+-		mutex_unlock(&qi->qi_tree_lock);
+ 		trace_xfs_dqget_dup(dqp);
+ 		xfs_qm_dqdestroy(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
+-		goto restart;
++		dqp = curr;
++		goto found;
+ 	}
+ 
+ 	/*
+@@ -877,7 +878,7 @@ xfs_qm_dqget(
+ 	dqp->q_nrefs = 1;
+ 
+ 	qi->qi_dquots++;
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 
+ 	/* If we are asked to find next active id, keep looking */
+ 	if (flags & XFS_QMOPT_DQNEXT) {
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 010a13a201aa..5a75836faf92 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -67,7 +67,7 @@ xfs_qm_dquot_walk(
+ 	void			*data)
+ {
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
++	struct xarray		*xa = xfs_dquot_xa(qi, type);
+ 	uint32_t		next_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+@@ -83,11 +83,11 @@ xfs_qm_dquot_walk(
+ 		int		error = 0;
+ 		int		i;
+ 
+-		mutex_lock(&qi->qi_tree_lock);
+-		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
+-					next_index, XFS_DQ_LOOKUP_BATCH);
++		mutex_lock(&qi->qi_xa_lock);
++		nr_found = xa_get_entries(xa, (void **)batch, next_index,
++					ULONG_MAX, XFS_DQ_LOOKUP_BATCH);
+ 		if (!nr_found) {
+-			mutex_unlock(&qi->qi_tree_lock);
++			mutex_unlock(&qi->qi_xa_lock);
+ 			break;
+ 		}
+ 
+@@ -105,7 +105,7 @@ xfs_qm_dquot_walk(
+ 				last_error = error;
+ 		}
+ 
+-		mutex_unlock(&qi->qi_tree_lock);
++		mutex_unlock(&qi->qi_xa_lock);
+ 
+ 		/* bail out if the filesystem is corrupted.  */
+ 		if (last_error == -EFSCORRUPTED) {
+@@ -178,8 +178,8 @@ xfs_qm_dqpurge(
+ 	xfs_dqfunlock(dqp);
+ 	xfs_dqunlock(dqp);
+ 
+-	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+-			  be32_to_cpu(dqp->q_core.d_id));
++	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
+ 	qi->qi_dquots--;
+ 
+ 	/*
+@@ -623,10 +623,10 @@ xfs_qm_init_quotainfo(
+ 	if (error)
+ 		goto out_free_lru;
+ 
+-	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
+-	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
+-	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
+-	mutex_init(&qinf->qi_tree_lock);
++	xa_init(&qinf->qi_uquota_xa);
++	xa_init(&qinf->qi_gquota_xa);
++	xa_init(&qinf->qi_pquota_xa);
++	mutex_init(&qinf->qi_xa_lock);
+ 
+ 	/* mutex used to serialize quotaoffs */
+ 	mutex_init(&qinf->qi_quotaofflock);
+@@ -1606,12 +1606,12 @@ xfs_qm_dqfree_one(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 
+-	mutex_lock(&qi->qi_tree_lock);
+-	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+-			  be32_to_cpu(dqp->q_core.d_id));
++	mutex_lock(&qi->qi_xa_lock);
++	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
+ 
+ 	qi->qi_dquots--;
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 
+ 	xfs_qm_dqdestroy(dqp);
+ }
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2975a822e9f0..946f929f7bfb 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -67,10 +67,10 @@ struct xfs_def_quota {
+  * The mount structure keeps a pointer to this.
+  */
+ typedef struct xfs_quotainfo {
+-	struct radix_tree_root qi_uquota_tree;
+-	struct radix_tree_root qi_gquota_tree;
+-	struct radix_tree_root qi_pquota_tree;
+-	struct mutex qi_tree_lock;
++	struct xarray	qi_uquota_xa;
++	struct xarray	qi_gquota_xa;
++	struct xarray	qi_pquota_xa;
++	struct mutex	qi_xa_lock;
+ 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
+ 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+@@ -91,18 +91,18 @@ typedef struct xfs_quotainfo {
+ 	struct shrinker  qi_shrinker;
+ } xfs_quotainfo_t;
+ 
+-static inline struct radix_tree_root *
+-xfs_dquot_tree(
++static inline struct xarray *
++xfs_dquot_xa(
+ 	struct xfs_quotainfo	*qi,
+ 	int			type)
+ {
+ 	switch (type) {
+ 	case XFS_DQ_USER:
+-		return &qi->qi_uquota_tree;
++		return &qi->qi_uquota_xa;
+ 	case XFS_DQ_GROUP:
+-		return &qi->qi_gquota_tree;
++		return &qi->qi_gquota_xa;
+ 	case XFS_DQ_PROJ:
+-		return &qi->qi_pquota_tree;
++		return &qi->qi_pquota_xa;
+ 	default:
+ 		ASSERT(0);
+ 	}
 -- 
 2.15.0
 
