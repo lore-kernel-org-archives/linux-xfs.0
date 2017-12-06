@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47920 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60052 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753388AbdLFAmR (ORCPT
+        with ESMTP id S1753391AbdLFAmR (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:17 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 64/73] dax: Convert grab_mapping_entry to XArray
-Date: Tue,  5 Dec 2017 16:41:50 -0800
-Message-Id: <20171206004159.3755-65-willy@infradead.org>
+Subject: [PATCH v4 59/73] dax: More XArray conversion
+Date: Tue,  5 Dec 2017 16:41:45 -0800
+Message-Id: <20171206004159.3755-60-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,163 +16,261 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+This time, we want to convert get_unlocked_mapping_entry() to use the
+XArray.  That has a ripple effect, causing us to change the waitqueues
+to hash on the address of the xarray rather than the address of the
+mapping (functionally equivalent), and create a lot of on-the-stack
+xa_state which are only used as a container for passing the xarray and
+the index down to deeper function calls.
+
+Also rename dax_wake_mapping_entry_waiter() to dax_wake_entry().
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 98 +++++++++++++++++-----------------------------------------------
- 1 file changed, 26 insertions(+), 72 deletions(-)
+ fs/dax.c | 80 +++++++++++++++++++++++++++++-----------------------------------
+ 1 file changed, 36 insertions(+), 44 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index de85ce87d333..c663d82e8ba3 100644
+index d2007a17d257..ad984dece12e 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -44,6 +44,7 @@
+@@ -120,7 +120,7 @@ static int dax_is_empty_entry(void *entry)
+  * DAX radix tree locking
+  */
+ struct exceptional_entry_key {
+-	struct address_space *mapping;
++	struct xarray *xa;
+ 	pgoff_t entry_start;
+ };
  
- /* The 'colour' (ie low bits) within a PMD of a page offset.  */
- #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
-+#define PMD_ORDER	(PMD_SHIFT - PAGE_SHIFT)
+@@ -129,9 +129,10 @@ struct wait_exceptional_entry_queue {
+ 	struct exceptional_entry_key key;
+ };
  
- static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+-static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
+-		pgoff_t index, void *entry, struct exceptional_entry_key *key)
++static wait_queue_head_t *dax_entry_waitqueue(struct xa_state *xas,
++		void *entry, struct exceptional_entry_key *key)
+ {
++	unsigned long index = xas->xa_index;
+ 	unsigned long hash;
  
-@@ -89,10 +90,10 @@ static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
- 			DAX_ENTRY_LOCK);
+ 	/*
+@@ -142,10 +143,10 @@ static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
+ 	if (dax_is_pmd_entry(entry))
+ 		index &= ~PG_PMD_COLOUR;
+ 
+-	key->mapping = mapping;
++	key->xa = xas->xa;
+ 	key->entry_start = index;
+ 
+-	hash = hash_long((unsigned long)mapping ^ index, DAX_WAIT_TABLE_BITS);
++	hash = hash_long((unsigned long)xas->xa ^ index, DAX_WAIT_TABLE_BITS);
+ 	return wait_table + hash;
  }
  
--static unsigned int dax_radix_order(void *entry)
-+static unsigned int dax_entry_order(void *entry)
- {
- 	if (xa_to_value(entry) & DAX_PMD)
--		return PMD_SHIFT - PAGE_SHIFT;
-+		return PMD_ORDER;
- 	return 0;
+@@ -156,26 +157,23 @@ static int wake_exceptional_entry_func(wait_queue_entry_t *wait, unsigned int mo
+ 	struct wait_exceptional_entry_queue *ewait =
+ 		container_of(wait, struct wait_exceptional_entry_queue, wait);
+ 
+-	if (key->mapping != ewait->key.mapping ||
++	if (key->xa != ewait->key.xa ||
+ 	    key->entry_start != ewait->key.entry_start)
+ 		return 0;
+ 	return autoremove_wake_function(wait, mode, sync, NULL);
  }
  
-@@ -299,10 +300,11 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ /*
+- * We do not necessarily hold the mapping xa_lock when we call this
+- * function so it is possible that 'entry' is no longer a valid item in the
+- * radix tree.  This is okay because all we really need to do is to find the
+- * correct waitqueue where tasks might be waiting for that old 'entry' and
+- * wake them.
++ * @entry may no longer be the entry at the index in the array.  The
++ * important information it's conveying is whether the entry at this
++ * index *used* to be a PMD entry..
+  */
+-static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+-		pgoff_t index, void *entry, bool wake_all)
++static void dax_wake_entry(struct xa_state *xas, void *entry, bool wake_all)
  {
- 	XA_STATE(xas, &mapping->pages, index);
- 	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
+ 	struct exceptional_entry_key key;
+ 	wait_queue_head_t *wq;
+ 
+-	wq = dax_entry_waitqueue(mapping, index, entry, &key);
++	wq = dax_entry_waitqueue(xas, entry, &key);
+ 
+ 	/*
+ 	 * Checking for locked entry and prepare_to_wait_exclusive() happens
+@@ -207,10 +205,9 @@ static inline void *lock_slot(struct xa_state *xas)
+  *
+  * The function must be called with mapping xa_lock held.
+  */
+-static void *get_unlocked_mapping_entry(struct address_space *mapping,
+-					pgoff_t index, void ***slotp)
++static void *get_unlocked_mapping_entry(struct xa_state *xas)
+ {
 -	void *entry, **slot;
 +	void *entry;
+ 	struct wait_exceptional_entry_queue ewait;
+ 	wait_queue_head_t *wq;
  
-+	xas_set_order(&xas, index, size_flag ? PMD_ORDER : 0);
- restart:
--	xa_lock_irq(&mapping->pages);
-+	xas_lock_irq(&xas);
- 	entry = get_unlocked_mapping_entry(&xas);
+@@ -218,22 +215,19 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 	ewait.wait.func = wake_exceptional_entry_func;
  
- 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
-@@ -326,84 +328,36 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		}
- 	}
- 
--	/* No entry for given index? Make sure radix tree is big enough. */
--	if (!entry || pmd_downgrade) {
--		int err;
--
--		if (pmd_downgrade) {
--			/*
--			 * Make sure 'entry' remains valid while we drop
--			 * mapping xa_lock.
--			 */
--			entry = lock_slot(&xas);
+ 	for (;;) {
+-		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
+-					  &slot);
+-		if (!entry ||
+-		    WARN_ON_ONCE(!xa_is_value(entry)) || !dax_locked(entry)) {
+-			if (slotp)
+-				*slotp = slot;
++		entry = xas_load(xas);
++		if (!entry || WARN_ON_ONCE(!xa_is_value(entry)) ||
++		    !dax_locked(entry))
+ 			return entry;
 -		}
--
+ 
+-		wq = dax_entry_waitqueue(mapping, index, entry, &ewait.key);
++		wq = dax_entry_waitqueue(xas, entry, &ewait.key);
+ 		prepare_to_wait_exclusive(wq, &ewait.wait,
+ 					  TASK_UNINTERRUPTIBLE);
 -		xa_unlock_irq(&mapping->pages);
-+	if (pmd_downgrade) {
-+		entry = lock_slot(&xas);
- 		/*
- 		 * Besides huge zero pages the only other thing that gets
- 		 * downgraded are empty entries which don't need to be
- 		 * unmapped.
- 		 */
--		if (pmd_downgrade && dax_is_zero_entry(entry))
-+		if (dax_is_zero_entry(entry)) {
-+			xas_pause(&xas);
-+			xas_unlock_irq(&xas);
- 			unmap_mapping_range(mapping,
- 				(index << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
--
--		err = radix_tree_preload(
--				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
--		if (err) {
--			if (pmd_downgrade)
--				put_locked_mapping_entry(mapping, index);
--			return ERR_PTR(err);
-+			xas_lock_irq(&xas);
- 		}
++		xas_pause(xas);
++		xas_unlock_irq(xas);
+ 		schedule();
+ 		finish_wait(wq, &ewait.wait);
 -		xa_lock_irq(&mapping->pages);
--
--		if (!entry) {
--			/*
--			 * We needed to drop the pages lock while calling
--			 * radix_tree_preload() and we didn't have an entry to
--			 * lock.  See if another thread inserted an entry at
--			 * our index during this time.
--			 */
--			entry = __radix_tree_lookup(&mapping->pages, index,
--					NULL, &slot);
--			if (entry) {
--				radix_tree_preload_end();
--				xa_unlock_irq(&mapping->pages);
--				goto restart;
--			}
--		}
--
--		if (pmd_downgrade) {
--			radix_tree_delete(&mapping->pages, index);
--			mapping->nrexceptional--;
--			dax_wake_entry(&xas, entry, true);
--		}
--
-+		xas_store(&xas, NULL);
-+		mapping->nrexceptional--;
-+		dax_wake_entry(&xas, entry, true);
-+	}
-+	if (!entry || pmd_downgrade) {
- 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
--
--		err = __radix_tree_insert(&mapping->pages, index,
--				dax_radix_order(entry), entry);
--		radix_tree_preload_end();
--		if (err) {
--			xa_unlock_irq(&mapping->pages);
--			/*
--			 * Our insertion of a DAX entry failed, most likely
--			 * because we were inserting a PMD entry and it
--			 * collided with a PTE sized entry at a different
--			 * index in the PMD range.  We haven't inserted
--			 * anything into the radix tree and have no waiters to
--			 * wake.
--			 */
--			return ERR_PTR(err);
--		}
--		/* Good, we have inserted empty locked entry into the tree. */
--		mapping->nrexceptional++;
--		xa_unlock_irq(&mapping->pages);
--		return entry;
-+		xas_store(&xas, entry);
-+		if (!xas_error(&xas))
-+			mapping->nrexceptional++;
-+	} else {
-+		entry = lock_slot(&xas);
++		xas_lock_irq(xas);
  	}
--	entry = lock_slot(&xas);
-  out_unlock:
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
-+	if (xas_nomem(&xas, GFP_NOIO))
-+		goto restart;
- 	return entry;
  }
  
-@@ -683,7 +637,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	 * worry about partial PMD writebacks.
- 	 */
- 	sector = dax_radix_sector(entry);
--	size = PAGE_SIZE << dax_radix_order(entry);
-+	size = PAGE_SIZE << dax_entry_order(entry);
+@@ -253,7 +247,7 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
+ 	xas_store(&xas, entry);
+ 	/* Safe to not call xas_pause here -- we don't touch the array after */
+ 	xas_unlock_irq(&xas);
+-	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
++	dax_wake_entry(&xas, entry, false);
+ }
  
- 	id = dax_read_lock();
- 	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
+ static void put_locked_mapping_entry(struct address_space *mapping,
+@@ -266,14 +260,13 @@ static void put_locked_mapping_entry(struct address_space *mapping,
+  * Called when we are done with radix tree entry we looked up via
+  * get_unlocked_mapping_entry() and which we didn't lock in the end.
+  */
+-static void put_unlocked_mapping_entry(struct address_space *mapping,
+-				       pgoff_t index, void *entry)
++static void put_unlocked_mapping_entry(struct xa_state *xas, void *entry)
+ {
+ 	if (!entry)
+ 		return;
+ 
+ 	/* We have to wake up next waiter for the radix tree entry lock */
+-	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
++	dax_wake_entry(xas, entry, false);
+ }
+ 
+ /*
+@@ -310,7 +303,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 
+ restart:
+ 	xa_lock_irq(&mapping->pages);
+-	entry = get_unlocked_mapping_entry(mapping, index, &slot);
++	entry = get_unlocked_mapping_entry(&xas);
+ 
+ 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
+ 		entry = ERR_PTR(-EIO);
+@@ -320,8 +313,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 	if (entry) {
+ 		if (size_flag & DAX_PMD) {
+ 			if (dax_is_pte_entry(entry)) {
+-				put_unlocked_mapping_entry(mapping, index,
+-						entry);
++				put_unlocked_mapping_entry(&xas, entry);
+ 				entry = ERR_PTR(-EEXIST);
+ 				goto out_unlock;
+ 			}
+@@ -384,8 +376,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		if (pmd_downgrade) {
+ 			radix_tree_delete(&mapping->pages, index);
+ 			mapping->nrexceptional--;
+-			dax_wake_mapping_entry_waiter(mapping, index, entry,
+-					true);
++			dax_wake_entry(&xas, entry, true);
+ 		}
+ 
+ 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
+@@ -419,12 +410,13 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 					  pgoff_t index, bool trunc)
+ {
++	XA_STATE(xas, &mapping->pages, index);
+ 	int ret = 0;
+ 	void *entry;
+ 	struct radix_tree_root *pages = &mapping->pages;
+ 
+ 	xa_lock_irq(&mapping->pages);
+-	entry = get_unlocked_mapping_entry(mapping, index, NULL);
++	entry = get_unlocked_mapping_entry(&xas);
+ 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
+ 		goto out;
+ 	if (!trunc &&
+@@ -435,7 +427,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+ out:
+-	put_unlocked_mapping_entry(mapping, index, entry);
++	put_unlocked_mapping_entry(&xas, entry);
+ 	xa_unlock_irq(&mapping->pages);
+ 	return ret;
+ }
+@@ -643,7 +635,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ {
+ 	struct radix_tree_root *pages = &mapping->pages;
+ 	XA_STATE(xas, pages, index);
+-	void *entry2, **slot, *kaddr;
++	void *entry2, *kaddr;
+ 	long ret = 0, id;
+ 	sector_t sector;
+ 	pgoff_t pgoff;
+@@ -658,7 +650,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 		return -EIO;
+ 
+ 	xa_lock_irq(&mapping->pages);
+-	entry2 = get_unlocked_mapping_entry(mapping, index, &slot);
++	entry2 = get_unlocked_mapping_entry(&xas);
+ 	/* Entry got punched out / reallocated? */
+ 	if (!entry2 || WARN_ON_ONCE(!xa_is_value(entry2)))
+ 		goto put_unlocked;
+@@ -736,7 +728,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	return ret;
+ 
+  put_unlocked:
+-	put_unlocked_mapping_entry(mapping, index, entry2);
++	put_unlocked_mapping_entry(&xas, entry2);
+ 	xa_unlock_irq(&mapping->pages);
+ 	return ret;
+ }
+@@ -1506,16 +1498,16 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
+ 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+ 	pgoff_t index = vmf->pgoff;
+ 	XA_STATE(xas, &mapping->pages, index);
+-	void *entry, **slot;
++	void *entry;
+ 	int vmf_ret, error;
+ 
+ 	xa_lock_irq(&mapping->pages);
+-	entry = get_unlocked_mapping_entry(mapping, index, &slot);
++	entry = get_unlocked_mapping_entry(&xas);
+ 	/* Did we race with someone splitting entry or so? */
+ 	if (!entry ||
+ 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
+ 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
+-		put_unlocked_mapping_entry(mapping, index, entry);
++		put_unlocked_mapping_entry(&xas, entry);
+ 		xa_unlock_irq(&mapping->pages);
+ 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
+ 						      VM_FAULT_NOPAGE);
 -- 
 2.15.0
 
