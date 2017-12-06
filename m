@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49595 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:57038 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753356AbdLFAmN (ORCPT
+        with ESMTP id S1753347AbdLFAmN (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:13 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 47/73] shmem: Convert shmem_alloc_hugepage to XArray
-Date: Tue,  5 Dec 2017 16:41:33 -0800
-Message-Id: <20171206004159.3755-48-willy@infradead.org>
+Subject: [PATCH v4 28/73] page cache: Remove stray radix comment
+Date: Tue,  5 Dec 2017 16:41:14 -0800
+Message-Id: <20171206004159.3755-29-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,45 +16,24 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-xa_find() is a slightly easier API to use than
-radix_tree_gang_lookup_slot() because it contains its own RCU locking.
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/shmem.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ mm/filemap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 54fbfc2c6c09..768d470a03da 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1413,23 +1413,16 @@ static struct page *shmem_alloc_hugepage(gfp_t gfp,
- 		struct shmem_inode_info *info, pgoff_t index)
- {
- 	struct vm_area_struct pvma;
--	struct inode *inode = &info->vfs_inode;
--	struct address_space *mapping = inode->i_mapping;
--	pgoff_t idx, hindex;
--	void __rcu **results;
-+	struct address_space *mapping = info->vfs_inode.i_mapping;
-+	pgoff_t hindex;
- 	struct page *page;
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 9e6158cfbaeb..79d0731b8762 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2601,7 +2601,7 @@ static struct page *do_read_cache_page(struct address_space *mapping,
+ 			put_page(page);
+ 			if (err == -EEXIST)
+ 				goto repeat;
+-			/* Presumably ENOMEM for radix tree node */
++			/* Presumably ENOMEM for xarray node */
+ 			return ERR_PTR(err);
+ 		}
  
- 	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGE_PAGECACHE))
- 		return NULL;
- 
- 	hindex = round_down(index, HPAGE_PMD_NR);
--	rcu_read_lock();
--	if (radix_tree_gang_lookup_slot(&mapping->pages, &results, &idx,
--				hindex, 1) && idx < hindex + HPAGE_PMD_NR) {
--		rcu_read_unlock();
-+	if (xa_find(&mapping->pages, &hindex, hindex + HPAGE_PMD_NR - 1))
- 		return NULL;
--	}
--	rcu_read_unlock();
- 
- 	shmem_pseudo_vma_init(&pvma, info, hindex);
- 	page = alloc_pages_vma(gfp | __GFP_COMP | __GFP_NORETRY | __GFP_NOWARN,
 -- 
 2.15.0
 
