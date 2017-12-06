@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52550 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:50577 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753387AbdLFAmQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:16 -0500
+        with ESMTP id S1753380AbdLFAmP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:15 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 63/73] dax: Convert dax_insert_mapping_entry to XArray
-Date: Tue,  5 Dec 2017 16:41:49 -0800
-Message-Id: <20171206004159.3755-64-willy@infradead.org>
+Subject: [PATCH v4 56/73] lustre: Convert to XArray
+Date: Tue,  5 Dec 2017 16:41:42 -0800
+Message-Id: <20171206004159.3755-57-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,59 +18,83 @@ From: Matthew Wilcox <mawilcox@microsoft.com>
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+ drivers/staging/lustre/lustre/llite/glimpse.c   | 12 +++++-------
+ drivers/staging/lustre/lustre/mdc/mdc_request.c | 16 ++++++++--------
+ 2 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 619aff70583f..de85ce87d333 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -498,9 +498,9 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 				      void *entry, sector_t sector,
- 				      unsigned long flags, bool dirty)
+diff --git a/drivers/staging/lustre/lustre/llite/glimpse.c b/drivers/staging/lustre/lustre/llite/glimpse.c
+index 5f2843da911c..25232fdf5797 100644
+--- a/drivers/staging/lustre/lustre/llite/glimpse.c
++++ b/drivers/staging/lustre/lustre/llite/glimpse.c
+@@ -57,7 +57,7 @@ static const struct cl_lock_descr whole_file = {
+ };
+ 
+ /*
+- * Check whether file has possible unwriten pages.
++ * Check whether file has possible unwritten pages.
+  *
+  * \retval 1    file is mmap-ed or has dirty pages
+  *	 0    otherwise
+@@ -66,16 +66,14 @@ blkcnt_t dirty_cnt(struct inode *inode)
  {
--	struct radix_tree_root *pages = &mapping->pages;
- 	void *new_entry;
- 	pgoff_t index = vmf->pgoff;
-+	XA_STATE(xas, &mapping->pages, index);
+ 	blkcnt_t cnt = 0;
+ 	struct vvp_object *vob = cl_inode2vvp(inode);
+-	void	      *results[1];
  
- 	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-@@ -516,7 +516,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 					PAGE_SIZE, 0);
- 	}
+-	if (inode->i_mapping)
+-		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->pages,
+-						  results, 0, 1,
+-						  PAGECACHE_TAG_DIRTY);
++	if (inode->i_mapping && xa_tagged(&inode->i_mapping->pages,
++				PAGECACHE_TAG_DIRTY))
++		cnt = 1;
+ 	if (cnt == 0 && atomic_read(&vob->vob_mmap_cnt) > 0)
+ 		cnt = 1;
  
--	xa_lock_irq(&mapping->pages);
-+	xas_lock_irq(&xas);
- 	new_entry = dax_radix_locked_entry(sector, flags);
- 
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
-@@ -528,21 +528,15 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 		 * existing entry is a PMD, we will just leave the PMD in the
- 		 * tree and dirty it if necessary.
- 		 */
--		struct radix_tree_node *node;
--		void **slot;
--		void *ret;
--
--		ret = __radix_tree_lookup(pages, index, &node, &slot);
--		WARN_ON_ONCE(ret != entry);
--		__radix_tree_replace(pages, node, slot,
--				     new_entry, NULL);
-+		void *prev = xas_store(&xas, new_entry);
-+		WARN_ON_ONCE(prev != entry);
- 		entry = new_entry;
- 	}
- 
- 	if (dirty)
--		radix_tree_tag_set(pages, index, PAGECACHE_TAG_DIRTY);
-+		xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
- 
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
- 	return entry;
+-	return (cnt > 0) ? 1 : 0;
++	return cnt;
  }
  
+ int cl_glimpse_lock(const struct lu_env *env, struct cl_io *io,
+diff --git a/drivers/staging/lustre/lustre/mdc/mdc_request.c b/drivers/staging/lustre/lustre/mdc/mdc_request.c
+index 2ec79a6b17da..ea23247e9e02 100644
+--- a/drivers/staging/lustre/lustre/mdc/mdc_request.c
++++ b/drivers/staging/lustre/lustre/mdc/mdc_request.c
+@@ -934,17 +934,18 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
+ 	 * hash _smaller_ than one we are looking for.
+ 	 */
+ 	unsigned long offset = hash_x_index(*hash, hash64);
++	XA_STATE(xas, &mapping->pages, offset);
+ 	struct page *page;
+-	int found;
+ 
+-	xa_lock_irq(&mapping->pages);
+-	found = radix_tree_gang_lookup(&mapping->pages,
+-				       (void **)&page, offset, 1);
+-	if (found > 0 && !xa_is_value(page)) {
++	xas_lock_irq(&xas);
++	page = xas_find(&xas, ULONG_MAX);
++	if (xa_is_value(page))
++		page = NULL;
++	if (page) {
+ 		struct lu_dirpage *dp;
+ 
+ 		get_page(page);
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		/*
+ 		 * In contrast to find_lock_page() we are sure that directory
+ 		 * page cannot be truncated (while DLM lock is held) and,
+@@ -992,8 +993,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
+ 			page = ERR_PTR(-EIO);
+ 		}
+ 	} else {
+-		xa_unlock_irq(&mapping->pages);
+-		page = NULL;
++		xas_unlock_irq(&xas);
+ 	}
+ 	return page;
+ }
 -- 
 2.15.0
 
