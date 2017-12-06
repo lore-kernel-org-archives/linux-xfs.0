@@ -1,49 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48311 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdLFSii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 13:38:38 -0500
-Date: Wed, 6 Dec 2017 10:38:07 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: make iomap_begin functions trim iomaps consistently
-Message-ID: <20171206183807.GD6896@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3444 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751604AbdLFWQn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 17:16:43 -0500
+Date: Thu, 7 Dec 2017 09:16:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v7] generic: initial fiemap range query test
+Message-ID: <20171206221603.GH5858@dastard>
+References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
+ <20171206174506.GI19219@magnolia>
+ <0d1b5c25-9187-1405-17a2-1e44b65c53a8@suse.com>
+ <20171206210659.GE6896@magnolia>
+ <20171206215711.GG5858@dastard>
+ <61675ab2-0943-e5d7-8c94-247d3ef68a05@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <61675ab2-0943-e5d7-8c94-247d3ef68a05@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Nikolay Borisov <nborisov@suse.com>, eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Dec 06, 2017 at 04:01:58PM -0600, Eric Sandeen wrote:
+> On 12/6/17 3:57 PM, Dave Chinner wrote:
+> 
+> > There's a *simple answer* to this problem: fix the new command's
+> > output.
+> > 
+> > That is: the user asked for a specific range, so the command itself
+> > should trim the map returned by the kernel to only display the exact
+> > range the user asked for.  Then it doesn't matter if the underlying
+> > filesystem trims the extents or not, because the we're going to do
+> > that anyway in userspace.
+> 
+> I have a different opinion:
+> 
+> xfs_io is a debugging tool; the fiemap command sends an ioctl to the kernel.
+> 
+> Ranged fiemap queries are a real thing; you put numbers into the kernel,
+> and you get numbers out of the kernel.
+> 
+> IMNSO, xfs_io should present to the user /what the kernel returned/,
+> and not re-interpret it to fit some other notion of correctness if we
+> don't like what the kernel told us.
 
-Historically, the XFS iomap_begin function only returned mappings for
-exactly the range queried, i.e. it doesn't do XFS_BMAPI_ENTIRE lookups.
-The current vfs iomap consumers are only set up to deal with trimmed
-mappings.  xfs_xattr_iomap_begin does BMAPI_ENTIRE lookups, which is
-inconsistent with the current iomap usage.  Remove the flag so that both
-iomap_begin functions behave the same way.
+I hardly think "trimming to the range the user asked for" is
+"re-interpreting what the kernel told us". It's limiting output
+range to exactly what the user asked for - the output is still
+correct regardless of how it's filtered to match what the user asked
+for....
 
-FWIW this also fixes a behavioral regression in xattr FIEMAP that was
-introduced in 4.8 wherein attr fork extents are no longer trimmed like
-they used to be.
+> If you want to have some user-friendlier behavior where xfs_io layers
+> behaviors on top of what the kernel provides, then add a "-t" argument for trim,
+> but hiding ioctl inconsistencies by filtering them through xfs_io sounds
+> like the wrong approach to me.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iomap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Just filter the last output in the test, then, so it looks like
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 33eb4fb..7ab52a8 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1213,7 +1213,7 @@ xfs_xattr_iomap_begin(
- 
- 	ASSERT(ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL);
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
--			       &nimaps, XFS_BMAPI_ENTIRE | XFS_BMAPI_ATTRFORK);
-+			       &nimaps, XFS_BMAPI_ATTRFORK);
- out_unlock:
- 	xfs_iunlock(ip, lockmode);
- 
+2: [128..XXX] data
+
+There is absolutely no excuse for creating multiple tests to support
+a small difference in trailing extent range output from different
+filesystem.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
