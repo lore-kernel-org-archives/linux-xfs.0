@@ -1,103 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42580 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750995AbdLDXyp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Dec 2017 18:54:45 -0500
-Subject: [PATCH 2/5 V2] xfs_db: add missing padding fields
-References: <151094860143.27182.12022983202520916281.stgit@magnolia>
- <151094861330.27182.13544522894298156345.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5a7bec9c-999f-983e-2683-e7b55109f713@sandeen.net>
-Date: Mon, 4 Dec 2017 17:54:44 -0600
-MIME-Version: 1.0
-In-Reply-To: <151094861330.27182.13544522894298156345.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:46400 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753340AbdLFAmN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:13 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v4 37/73] mm: Convert huge_memory to XArray
+Date: Tue,  5 Dec 2017 16:41:23 -0800
+Message-Id: <20171206004159.3755-38-willy@infradead.org>
+In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
+References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Several data structures are missing padding fields from their field
-definitions.  Add them so that they can be printed out if explicitly
-requested.
+Quite a straightforward conversion.
 
-Fix the AGI field order to be consistent with the structure
-definition while we're at it.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[sandeen: make them available but not printed by default]
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
+ mm/huge_memory.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-v2: make available but not printed by default
-
-diff --git a/db/agi.c b/db/agi.c
-index fb69210..fab146e 100644
---- a/db/agi.c
-+++ b/db/agi.c
-@@ -55,8 +55,9 @@ const field_t	agi_flds[] = {
- 	{ "unlinked", FLDT_AGINONN, OI(OFF(unlinked)),
- 	  CI(XFS_AGI_UNLINKED_BUCKETS), FLD_ARRAY, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
--	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "pad32", FLDT_UINT32X, OI(OFF(pad32)), C1, FLD_SKIPALL, TYP_NONE },
-+	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_FINOBT },
- 	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
- 	{ NULL }
-diff --git a/db/dir2.c b/db/dir2.c
-index 7f7ea5a..0bd3437 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -940,6 +940,7 @@ const field_t	dir3_data_hdr_flds[] = {
- 	{ "hdr", FLDT_DIR3_BLKHDR, OI(DH3OFF(hdr)), C1, 0, TYP_NONE },
- 	{ "bestfree", FLDT_DIR2_DATA_FREE, OI(DH3OFF(best_free)),
- 	  CI(XFS_DIR2_DATA_FD_COUNT), FLD_ARRAY, TYP_NONE },
-+	{ "pad", FLDT_UINT32X, OI(DH3OFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
- 	{ NULL }
- };
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 28909c475ee5..5a41b00d86bd 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2379,7 +2379,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
+ 	if (PageAnon(head) && !PageSwapCache(head)) {
+ 		page_ref_inc(page_tail);
+ 	} else {
+-		/* Additional pin to radix tree */
++		/* Additional pin to page cache */
+ 		page_ref_add(page_tail, 2);
+ 	}
  
-@@ -948,6 +949,7 @@ const field_t	dir3_leaf_hdr_flds[] = {
- 	{ "info", FLDT_DA3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
- 	{ "count", FLDT_UINT16D, OI(LH3OFF(count)), C1, 0, TYP_NONE },
- 	{ "stale", FLDT_UINT16D, OI(LH3OFF(stale)), C1, 0, TYP_NONE },
-+	{ "pad", FLDT_UINT32X, OI(LH3OFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
- 	{ NULL }
- };
+@@ -2450,13 +2450,13 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	ClearPageCompound(head);
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+-		/* Additional pin to radix tree of swap cache */
++		/* Additional pin to swap cache */
+ 		if (PageSwapCache(head))
+ 			page_ref_add(head, 2);
+ 		else
+ 			page_ref_inc(head);
+ 	} else {
+-		/* Additional pin to radix tree */
++		/* Additional pin to page cache */
+ 		page_ref_add(head, 2);
+ 		xa_unlock(&head->mapping->pages);
+ 	}
+@@ -2568,7 +2568,7 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
+ {
+ 	int extra_pins;
  
-@@ -957,6 +959,7 @@ const field_t	dir3_free_hdr_flds[] = {
- 	{ "firstdb", FLDT_INT32D, OI(FH3OFF(firstdb)), C1, 0, TYP_NONE },
- 	{ "nvalid", FLDT_INT32D, OI(FH3OFF(nvalid)), C1, 0, TYP_NONE },
- 	{ "nused", FLDT_INT32D, OI(FH3OFF(nused)), C1, 0, TYP_NONE },
-+	{ "pad", FLDT_UINT32X, OI(FH3OFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
- 	{ NULL }
- };
+-	/* Additional pins from radix tree */
++	/* Additional pins from page cache */
+ 	if (PageAnon(page))
+ 		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0;
+ 	else
+@@ -2664,17 +2664,14 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	spin_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
  
-diff --git a/db/inode.c b/db/inode.c
-index 6f971c6..b3f53d3 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -102,6 +102,7 @@ const field_t	inode_core_flds[] = {
- 	  inode_core_projid_count, FLD_COUNT, TYP_NONE },
- 	{ "projid_hi", FLDT_UINT16D, OI(COFF(projid_hi)),
- 	  inode_core_projid_count, FLD_COUNT, TYP_NONE },
-+	{ "pad", FLDT_UINT8X, OI(OFF(pad)), CI(6), FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
- 	{ "uid", FLDT_UINT32D, OI(COFF(uid)), C1, 0, TYP_NONE },
- 	{ "gid", FLDT_UINT32D, OI(COFF(gid)), C1, 0, TYP_NONE },
- 	{ "flushiter", FLDT_UINT16D, OI(COFF(flushiter)), C1, 0, TYP_NONE },
-@@ -173,6 +174,7 @@ const field_t	inode_v3_flds[] = {
- 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
- 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
- 	{ "cowextsize", FLDT_EXTLEN, OI(COFF(cowextsize)), C1, 0, TYP_NONE },
-+	{ "pad2", FLDT_UINT8X, OI(OFF(pad2)), CI(12), FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
- 	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
- 	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
+ 	if (mapping) {
+-		void **pslot;
++		XA_STATE(xas, &mapping->pages, page_index(head));
+ 
+-		xa_lock(&mapping->pages);
+-		pslot = radix_tree_lookup_slot(&mapping->pages,
+-				page_index(head));
+ 		/*
+-		 * Check if the head page is present in radix tree.
++		 * Check if the head page is present in page cache.
+ 		 * We assume all tail are present too, if head is there.
+ 		 */
+-		if (radix_tree_deref_slot_protected(pslot,
+-					&mapping->pages.xa_lock) != head)
++		xa_lock(&mapping->pages);
++		if (xas_load(&xas) != head)
+ 			goto fail;
+ 	}
+ 
+-- 
+2.15.0
 
