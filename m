@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59532 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:38478 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753330AbdLFAmL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:11 -0500
+        with ESMTP id S1753312AbdLFAmK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:10 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 34/73] mm: Convert cgroup writeback to XArray
-Date: Tue,  5 Dec 2017 16:41:20 -0800
-Message-Id: <20171206004159.3755-35-willy@infradead.org>
+Subject: [PATCH v4 14/73] xarray: Add xas_for_each_tag
+Date: Tue,  5 Dec 2017 16:41:00 -0800
+Message-Id: <20171206004159.3755-15-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,134 +16,199 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is a fairly naive conversion, leaving in place the GFP_ATOMIC
-allocation.  By switching the locking around, we could use GFP_KERNEL
-and probably simplify the error handling.
+This iterator operates across each tagged entry in the specified range.
+We do not yet have a user for an xa_for_each_tag iterator, but it would
+be straight-forward to add one if needed.  This commit also includes
+xas_find_tag() and xas_next_tag().
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/backing-dev-defs.h |  2 +-
- include/linux/backing-dev.h      |  2 +-
- mm/backing-dev.c                 | 28 ++++++++++++++++------------
- 3 files changed, 18 insertions(+), 14 deletions(-)
+ include/linux/xarray.h | 68 +++++++++++++++++++++++++++++++++++++++++++
+ lib/xarray.c           | 78 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 146 insertions(+)
 
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index bfe86b54f6c1..074a54aad33c 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -187,7 +187,7 @@ struct backing_dev_info {
- 	struct bdi_writeback wb;  /* the root writeback info for this bdi */
- 	struct list_head wb_list; /* list of all wbs */
- #ifdef CONFIG_CGROUP_WRITEBACK
--	struct radix_tree_root cgwb_tree; /* radix tree of active cgroup wbs */
-+	struct xarray cgwb_xa;		/* radix tree of active cgroup wbs */
- 	struct rb_root cgwb_congested_tree; /* their congested states */
- #else
- 	struct bdi_writeback_congested *wb_congested;
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 9038f6c1eeda..50f666d23527 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -271,7 +271,7 @@ static inline struct bdi_writeback *wb_find_current(struct backing_dev_info *bdi
- 	if (!memcg_css->parent)
- 		return &bdi->wb;
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index a62baf6f1a28..4e61ebd406f5 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -554,6 +554,7 @@ void *xas_find(struct xa_state *, unsigned long max);
+ bool xas_get_tag(const struct xa_state *, xa_tag_t);
+ void xas_set_tag(const struct xa_state *, xa_tag_t);
+ void xas_clear_tag(const struct xa_state *, xa_tag_t);
++void *xas_find_tag(struct xa_state *, unsigned long max, xa_tag_t);
+ void xas_init_tags(const struct xa_state *);
  
--	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+	wb = xa_load(&bdi->cgwb_xa, memcg_css->id);
+ bool xas_nomem(struct xa_state *, gfp_t);
+@@ -676,6 +677,55 @@ static inline void *xas_next_entry(struct xa_state *xas, unsigned long max)
+ 	return entry;
+ }
  
- 	/*
- 	 * %current's blkcg equals the effective blkcg of its memcg.  No
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 84b2dc76f140..7aa2d893f929 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -417,8 +417,8 @@ static void wb_exit(struct bdi_writeback *wb)
- #include <linux/memcontrol.h>
- 
++/* Private */
++static inline unsigned int xas_find_chunk(struct xa_state *xas, bool advance,
++		xa_tag_t tag)
++{
++	unsigned long *addr = xas->xa_node->tags[(__force unsigned)tag];
++	unsigned int offset = xas->xa_offset;
++
++	if (advance)
++		offset++;
++	if (XA_CHUNK_SIZE == BITS_PER_LONG) {
++		unsigned long data = *addr & (~0UL << offset);
++		if (data)
++			return __ffs(data);
++		return XA_CHUNK_SIZE;
++	}
++
++	return find_next_bit(addr, XA_CHUNK_SIZE, offset);
++}
++
++/**
++ * xas_next_tag() - Advance iterator to next tagged entry.
++ * @xas: XArray operation state.
++ * @max: Highest index to return.
++ * @tag: Tag to search for.
++ *
++ * xas_next_tag() is an inline function to optimise xarray traversal for
++ * speed.  It is equivalent to calling xas_find_tag(), and will call
++ * xas_find_tag() for all the hard cases.
++ *
++ * Return: The next tagged entry after the one currently referred to by @xas.
++ */
++static inline void *xas_next_tag(struct xa_state *xas, unsigned long max,
++								xa_tag_t tag)
++{
++	struct xa_node *node = xas->xa_node;
++	unsigned int offset;
++
++	if (unlikely(xas_not_node(node) || xa_node_shift(node)))
++		return xas_find_tag(xas, max, tag);
++	offset = xas_find_chunk(xas, true, tag);
++	xas->xa_offset = offset;
++	xas->xa_index = (xas->xa_index & ~XA_CHUNK_MASK) + offset;
++	if (xas->xa_index > max)
++		return NULL;
++	if (offset == XA_CHUNK_SIZE)
++		return xas_find_tag(xas, max, tag);
++	return xa_entry(xas->xa, node, offset);
++}
++
  /*
-- * cgwb_lock protects bdi->cgwb_tree, bdi->cgwb_congested_tree,
-- * blkcg->cgwb_list, and memcg->cgwb_list.  bdi->cgwb_tree is also RCU
-+ * cgwb_lock protects bdi->cgwb_xa, bdi->cgwb_congested_tree,
-+ * blkcg->cgwb_list, and memcg->cgwb_list.  bdi->cgwb_xa is also RCU
-  * protected.
-  */
- static DEFINE_SPINLOCK(cgwb_lock);
-@@ -539,7 +539,7 @@ static void cgwb_kill(struct bdi_writeback *wb)
- {
- 	lockdep_assert_held(&cgwb_lock);
+  * If iterating while holding a lock, drop the lock and reschedule
+  * every %XA_CHECK_SCHED loops.
+@@ -701,6 +751,24 @@ enum {
+ 	for (entry = xas_find(xas, max); entry; \
+ 	     entry = xas_next_entry(xas, max))
  
--	WARN_ON(!radix_tree_delete(&wb->bdi->cgwb_tree, wb->memcg_css->id));
-+	WARN_ON(xa_erase(&wb->bdi->cgwb_xa, wb->memcg_css->id) != wb);
- 	list_del(&wb->memcg_node);
- 	list_del(&wb->blkcg_node);
- 	percpu_ref_kill(&wb->refcnt);
-@@ -571,7 +571,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
++/**
++ * xas_for_each_tag() - Iterate over a range of an XArray
++ * @xas: XArray operation state.
++ * @entry: Entry retrieved from array.
++ * @max: Maximum index to retrieve from array.
++ * @tag: Tag to search for.
++ *
++ * The loop body will be executed for each tagged entry in the xarray
++ * between the current xas position and @max.  @entry will be set to
++ * the entry retrieved from the xarray.  It is safe to delete entries
++ * from the array in the loop body.  You should hold either the RCU lock
++ * or the xa_lock while iterating.  If you need to drop the lock, call
++ * xas_pause() first.
++ */
++#define xas_for_each_tag(xas, entry, max, tag) \
++	for (entry = xas_find_tag(xas, max, tag); entry; \
++	     entry = xas_next_tag(xas, max, tag))
++
+ /* Internal functions, mostly shared between radix-tree.c, xarray.c and idr.c */
+ void xas_destroy(struct xa_state *);
  
- 	/* look up again under lock and discard on blkcg mismatch */
- 	spin_lock_irqsave(&cgwb_lock, flags);
--	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+	wb = xa_load(&bdi->cgwb_xa, memcg_css->id);
- 	if (wb && wb->blkcg_css != blkcg_css) {
- 		cgwb_kill(wb);
- 		wb = NULL;
-@@ -615,13 +615,18 @@ static int cgwb_create(struct backing_dev_info *bdi,
- 	if (test_bit(WB_registered, &bdi->wb.state) &&
- 	    blkcg_cgwb_list->next && memcg_cgwb_list->next) {
- 		/* we might have raced another instance of this function */
--		ret = radix_tree_insert(&bdi->cgwb_tree, memcg_css->id, wb);
--		if (!ret) {
-+		void *curr = xa_cmpxchg(&bdi->cgwb_xa, memcg_css->id, NULL,
-+					wb, GFP_ATOMIC);
-+		if (!curr) {
- 			list_add_tail_rcu(&wb->bdi_node, &bdi->wb_list);
- 			list_add(&wb->memcg_node, memcg_cgwb_list);
- 			list_add(&wb->blkcg_node, blkcg_cgwb_list);
- 			css_get(memcg_css);
- 			css_get(blkcg_css);
-+		} else if (IS_ERR(curr)) {
-+			ret = PTR_ERR(curr);
-+		} else {
-+			ret = -EEXIST;
- 		}
- 	}
- 	spin_unlock_irqrestore(&cgwb_lock, flags);
-@@ -682,7 +687,7 @@ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+diff --git a/lib/xarray.c b/lib/xarray.c
+index ac4ff3daf476..f9eaac2d85f9 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -858,6 +858,84 @@ void *xas_find(struct xa_state *xas, unsigned long max)
+ }
+ EXPORT_SYMBOL_GPL(xas_find);
  
- 	do {
- 		rcu_read_lock();
--		wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+		wb = xa_load(&bdi->cgwb_xa, memcg_css->id);
- 		if (wb) {
- 			struct cgroup_subsys_state *blkcg_css;
- 
-@@ -704,7 +709,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
- {
- 	int ret;
- 
--	INIT_RADIX_TREE(&bdi->cgwb_tree, GFP_ATOMIC);
-+	xa_init(&bdi->cgwb_xa);
- 	bdi->cgwb_congested_tree = RB_ROOT;
- 
- 	ret = wb_init(&bdi->wb, bdi, 1, GFP_KERNEL);
-@@ -717,15 +722,14 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
- 
- static void cgwb_bdi_unregister(struct backing_dev_info *bdi)
- {
--	struct radix_tree_iter iter;
--	void **slot;
-+	XA_STATE(xas, &bdi->cgwb_xa, 0);
- 	struct bdi_writeback *wb;
- 
- 	WARN_ON(test_bit(WB_registered, &bdi->wb.state));
- 
- 	spin_lock_irq(&cgwb_lock);
--	radix_tree_for_each_slot(slot, &bdi->cgwb_tree, &iter, 0)
--		cgwb_kill(*slot);
-+	xas_for_each(&xas, wb, ULONG_MAX)
-+		cgwb_kill(wb);
- 
- 	while (!list_empty(&bdi->wb_list)) {
- 		wb = list_first_entry(&bdi->wb_list, struct bdi_writeback,
++/**
++ * xas_find_tag() - Find the next tagged entry in the XArray.
++ * @xas: XArray operation state.
++ * @max: Highest index to return.
++ * @tag: Tag number to search for.
++ *
++ * If the xas has not yet been walked to an entry, return the tagged entry
++ * which has an index >= xas.xa_index.  If it has been walked, the entry
++ * currently being pointed at has been processed, and so we move to the
++ * next tagged entry.
++ *
++ * If no tagged entry is found and the array is smaller than @max, @xas is
++ * set to the restart state and xas->xa_index is set to the smallest index
++ * not yet in the array.  This allows @xas to be immediately passed to
++ * xas_create().
++ *
++ * Return: The entry, if found, otherwise NULL.
++ */
++void *xas_find_tag(struct xa_state *xas, unsigned long max, xa_tag_t tag)
++{
++	bool advance = true;
++	unsigned int offset;
++	void *entry;
++
++	if (xas_error(xas))
++		return NULL;
++
++	if (!xas->xa_node) {
++		xas->xa_index = 1;
++		goto out;
++	} else if (xas_top(xas->xa_node)) {
++		advance = false;
++		entry = xa_head(xas->xa);
++		if (xas->xa_index > max_index(entry))
++			goto out;
++		if (!xa_is_node(entry)) {
++			if (xa_tagged(xas->xa, tag)) {
++				xas->xa_node = NULL;
++				return entry;
++			}
++			xas->xa_index = 1;
++			goto out;
++		}
++		xas->xa_node = xa_to_node(entry);
++		xas->xa_offset = xas->xa_index >> xas->xa_node->shift;
++	}
++
++	while (xas->xa_index <= max) {
++		if (unlikely(xas->xa_offset == XA_CHUNK_SIZE)) {
++			xas->xa_offset = xas->xa_node->offset + 1;
++			xas->xa_node = xa_parent(xas->xa, xas->xa_node);
++			if (!xas->xa_node)
++				break;
++			advance = false;
++			continue;
++		}
++
++		offset = xas_find_chunk(xas, advance, tag);
++		xas_add(xas, offset - xas->xa_offset);
++		if (offset == XA_CHUNK_SIZE) {
++			advance = false;
++			continue;
++		}
++
++		entry = xa_entry(xas->xa, xas->xa_node, xas->xa_offset);
++		if (!xa_is_node(entry))
++			return entry;
++		xas->xa_node = xa_to_node(entry);
++		xas->xa_offset = get_offset(xas->xa_index, xas->xa_node);
++	}
++
++ out:
++	if (!xas->xa_node)
++		xas->xa_node = XAS_BOUNDS;
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(xas_find_tag);
++
+ /**
+  * __xa_init() - Initialise an empty XArray.
+  * @xa: XArray.
 -- 
 2.15.0
 
