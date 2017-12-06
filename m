@@ -1,28 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33659 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751718AbdLGADA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Dec 2017 19:03:00 -0500
-Date: Thu, 7 Dec 2017 01:02:59 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
-        creations
-Message-ID: <20171207000259.GA18701@lst.de>
-References: <20170821082404.3387-1-hch@lst.de> <20170823202213.GA4796@magnolia> <20170824004755.GC21024@dastard> <20170829180445.GU4757@magnolia> <20170903072513.GA14807@lst.de> <20170903153150.GE4073@magnolia> <20171205013422.GC19219@magnolia> <20171205185936.GE19219@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:48642 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751288AbdLFGFL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 01:05:11 -0500
+Date: Wed, 6 Dec 2017 16:43:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [xfsprogs PATCH v2 3/3] xfs_io: add a new 'log_writes' command
+Message-ID: <20171206054354.GE5858@dastard>
+References: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
+ <20171205235651.17102-4-ross.zwisler@linux.intel.com>
+ <20171206002946.GD5858@dastard>
+ <20171206043813.GA31657@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171205185936.GE19219@magnolia>
+In-Reply-To: <20171206043813.GA31657@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>
 
-On Tue, Dec 05, 2017 at 10:59:36AM -0800, Darrick J. Wong wrote:
-> I fixed most of the auto group regressions with small fixes to xfstests,
-> but xfs/013 is a problem because once we run out of space to create new
-> dirX we simply get nothing.  Will have to study the behavior of that
-> test in more depth...
+On Tue, Dec 05, 2017 at 09:38:13PM -0700, Ross Zwisler wrote:
+> On Wed, Dec 06, 2017 at 11:29:46AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 05, 2017 at 04:56:51PM -0700, Ross Zwisler wrote:
+> > > Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
+> > > log marks.  It's helpful to allow users of xfs_io to adds these marks from
+> > > within xfs_io instead of waiting until after xfs_io exits because then they
+> > > are able to replay the dm-log-writes log up to immediately after another
+> > > xfs_io operation such as mwrite.  This isolates the log replay from other
+> > > operations that happen as part of xfs_io exiting (file handles being
+> > > closed, mmaps being torn down, etc.).  This also allows users to insert
+> > > multiple marks between different xfs_io commands.
+> > > 
+> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > 
+> > having just looked at the xfs_io mess, this new command needs to set
+> > "exitcode = 1" on failure. I haven't looked at anything else in the
+> > patch.
+> 
+> Ah, yea, I did think it was odd that when hitting errors in xfs_io it always
+> still returned 0.  I'll fix up for the next version.  Is someone else working
+> on making the rest of the error cases in xfs_io return 1 as well, or should I
+> throw that at the front of the series?
 
-With what kind of config do you see xfs/013 failures?
+I sent a patch earlier today to do exactly that.
+
+https://marc.info/?l=fstests&m=151252000511167&w=2
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
