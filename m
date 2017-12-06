@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55677 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52550 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753400AbdLFAmS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:18 -0500
+        with ESMTP id S1753387AbdLFAmQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:16 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 65/73] dax: Fix sparse warning
-Date: Tue,  5 Dec 2017 16:41:51 -0800
-Message-Id: <20171206004159.3755-66-willy@infradead.org>
+Subject: [PATCH v4 63/73] dax: Convert dax_insert_mapping_entry to XArray
+Date: Tue,  5 Dec 2017 16:41:49 -0800
+Message-Id: <20171206004159.3755-64-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,26 +16,61 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-sparse doesn't know that follow_pte_pmd conditionally acquires the ptl,
-so add an annotation to let it know what's going on.
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/dax.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index c663d82e8ba3..7a86ff1153dd 100644
+index 619aff70583f..de85ce87d333 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -531,6 +531,7 @@ static void dax_mapping_entry_mkclean(struct address_space *mapping,
- 		 */
- 		if (follow_pte_pmd(vma->vm_mm, address, &start, &end, &ptep, &pmdp, &ptl))
- 			continue;
-+		__acquire(ptl); /* Conditionally acquired above */
+@@ -498,9 +498,9 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 				      void *entry, sector_t sector,
+ 				      unsigned long flags, bool dirty)
+ {
+-	struct radix_tree_root *pages = &mapping->pages;
+ 	void *new_entry;
+ 	pgoff_t index = vmf->pgoff;
++	XA_STATE(xas, &mapping->pages, index);
  
- 		/*
- 		 * No need to call mmu_notifier_invalidate_range() as we are
+ 	if (dirty)
+ 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+@@ -516,7 +516,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 					PAGE_SIZE, 0);
+ 	}
+ 
+-	xa_lock_irq(&mapping->pages);
++	xas_lock_irq(&xas);
+ 	new_entry = dax_radix_locked_entry(sector, flags);
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+@@ -528,21 +528,15 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 		 * existing entry is a PMD, we will just leave the PMD in the
+ 		 * tree and dirty it if necessary.
+ 		 */
+-		struct radix_tree_node *node;
+-		void **slot;
+-		void *ret;
+-
+-		ret = __radix_tree_lookup(pages, index, &node, &slot);
+-		WARN_ON_ONCE(ret != entry);
+-		__radix_tree_replace(pages, node, slot,
+-				     new_entry, NULL);
++		void *prev = xas_store(&xas, new_entry);
++		WARN_ON_ONCE(prev != entry);
+ 		entry = new_entry;
+ 	}
+ 
+ 	if (dirty)
+-		radix_tree_tag_set(pages, index, PAGECACHE_TAG_DIRTY);
++		xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
+ 
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
+ 	return entry;
+ }
+ 
 -- 
 2.15.0
 
