@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57451 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40306 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753275AbdLFAmK (ORCPT
+        with ESMTP id S1753274AbdLFAmK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:10 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 00/73] XArray version 4
-Date: Tue,  5 Dec 2017 16:40:46 -0800
-Message-Id: <20171206004159.3755-1-willy@infradead.org>
+Subject: [PATCH v4 08/73] xarray: Add documentation
+Date: Tue,  5 Dec 2017 16:40:54 -0800
+Message-Id: <20171206004159.3755-9-willy@infradead.org>
+In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
+References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -14,287 +16,315 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-I looked through some notes and decided this was version 4 of the XArray.
-Last posted two weeks ago, this version includes a *lot* of changes.
-I'd like to thank Dave Chinner for his feedback, encouragement and
-distracting ideas for improvement, which I'll get to once this is merged.
+This is documentation on how to use the XArray, not details about its
+internal implementation.
 
-Highlights:
- - Over 2000 words of documentation in patch 8!  And lots more kernel-doc.
- - The page cache is now fully converted to the XArray.
- - Many more tests in the test-suite.
-
-This patch set is not for applying.  0day is still reporting problems,
-and I'd feel bad for eating someone's data.  These patches apply on top
-of a set of prepatory patches which just aren't interesting.  If you
-want to see the patches applied to a tree, I suggest pulling my git tree:
-http://git.infradead.org/users/willy/linux-dax.git/shortlog/refs/heads/xarray-2017-12-04
-I also left out the idr_preload removals.  They're still in the git tree,
-but I'm not looking for feedback on them.
-
-Changes since v3:
-
-XArray API differences:
- - Store a pointer to the struct xarray in the xa_state (changes almost
-   every prototype in the advanced API).
- - Added xas_lock() etc to operate on the XArray stored in the xa_state.
- - Added xa_erase() as a synonym for xa_store(..., NULL, 0).
- - Added __xa_erase() which is an exact replacement for radix_tree_delete();
-   it assumes you are holding the xa_lock.
- - Renamed xa_next() to xa_find_after().
- - Renamed xas_next() to xas_next_entry().
- - Renamed xas_prev_any() and xas_next_any() to xas_prev() and xas_next().
- - Changed the semantics of xas_prev() and xas_next() substantially
-   (see their kernel-doc).
- - Renamed skip entry to zero entry.
- - Introduced a new XAS_BOUNDS state to distinguish between an xa_state
-   that has not been walked and an xa_state that has walked off the
-   current end of the array.
- - Changed xas_set_err() to take a negative errno, not a positive one.
-   XAS_ERROR still takes a positive errno, but this is an undocumented
-   internal part of the implementation, not an API.
- - Changed behaviour when returning a multi-index entry; xas.xa_index
-   is now always set to the first (canonical) index of this entry.
-   Before, it was never rewound.  Eg if you have an entry occupying
-   indices 4-7, and called xas_load() with xas.xa_index set to 6, it
-   will now set xas.xa_index to 4.
- - Changed xas_nomem() to release any allocated memory if there is no
-   ENOMEM error.  This means that (unless the user explicitly bypasses
-   calling xas_nomem() on some path), there's no need to call xas_destroy()
-   and it is removed from the API.
- - Added xas_create_range() for the benefit of our current hugepage users.
-   I hope to be able to remove it again once they are converted to use
-   multi-index entries.
- - Add xa_get_maybe_tag() which will call xa_get_entries() if you specify
-   XA_NO_TAG and xa_get_tagged otherwise.
-
-IDR API differences:
- - Removed the IDR cyclic API change (decided not to do it after all).
- - Made idr_alloc_ul() and idr_alloc_u32() assign the ID before inserting
-   the pointer into the IDR, so a lookup cannot find an uninitialised object.
-
-Bug fixes:
- - Made INIT_RADIX_TREE() initialise the xa_lock correctly so lockdep
-   doesn't whine about it.
- - Fixed a locking bug in the IPC IDR conversion.
- - If we call xas_store(&xas, NULL) and that causes the XArray to shrink,
-   set the xas to the XAS_BOUNDS state so we don't dereference a pointer
-   to a node which has been passed to RCU free.  This is only a problem
-   on !SMP machines.
- - Fixed bug when shrinking the XArray to a single entry at index 0.
- - Fixed bug where we could scan off the end of the slot array when storing
-   a NULL.
- - Made xas_pause() not do anything if we're in an error state.  Before, it
-   would have dereferenced a NULL pointer.
- - Fixed a bug in xa_find_after().  it just plain didn't work.  Now there is
-   a test-case for it.
-
-Conversions:
- - Converted backing dev cgroup code from radix tree to XArray.
- - Converted the USB XHCI driver from radix tree to XArray.
- - Moved btrfs_page_exists_in_range() guts to page cache code.
- - Renamed page_cache_{next,prev}_hole() to ..._gap().  The page cache
-   doesn't cache holes.
- - Finished the page cache conversion.
-
-Miscellaneous:
- - Documentation.  Lots and lots of documentation.  xarray.rst, more XArray
-   kernel-doc and also IDR kernel-doc which has been missing for years.
- - Added MAINTAINERS entry for XArray/IDR.
- - Deleted the now-unused parts of the radix tree API (see git tree).
- - Added XA_DEBUG code and enable it in test-suite.
- - Improved code generation for initialising xa_state by explicitly
-   initialising the struct padding (stupid gcc).
- - Stub out more code if CONFIG_RADIX_TREE_MULTIORDER isn't enabled.
- - Added more tests to the test-suite.
- - Removed the IDR preload conversions from this patch set (see git tree).
-
-Matthew Wilcox (73):
-  xfs: Rename xa_ elements to ail_
-  xarray: Add the xa_lock to the radix_tree_root
-  page cache: Use xa_lock
-  xarray: Replace exceptional entries
-  xarray: Change definition of sibling entries
-  xarray: Add definition of struct xarray
-  xarray: Define struct xa_node
-  xarray: Add documentation
-  xarray: Add xa_load
-  xarray: Add xa_get_tag, xa_set_tag and xa_clear_tag
-  xarray: Add xa_store
-  xarray: Add xa_cmpxchg
-  xarray: Add xa_for_each
-  xarray: Add xas_for_each_tag
-  xarray: Add xa_get_entries, xa_get_tagged and xa_get_maybe_tag
-  xarray: Add xa_destroy
-  xarray: Add xas_next and xas_prev
-  xarray: Add xas_create_range
-  xarray: Add MAINTAINERS entry
-  idr: Convert to XArray
-  ida: Convert to XArray
-  page cache: Convert hole search to XArray
-  page cache: Add page_cache_range_empty function
-  page cache: Add and replace pages using the XArray
-  page cache: Convert page deletion to XArray
-  page cache: Convert page cache lookups to XArray
-  page cache: Convert delete_batch to XArray
-  page cache: Remove stray radix comment
-  mm: Convert page-writeback to XArray
-  mm: Convert workingset to XArray
-  mm: Convert truncate to XArray
-  mm: Convert add_to_swap_cache to XArray
-  mm: Convert delete_from_swap_cache to XArray
-  mm: Convert cgroup writeback to XArray
-  mm: Convert __do_page_cache_readahead to XArray
-  mm: Convert page migration to XArray
-  mm: Convert huge_memory to XArray
-  mm: Convert collapse_shmem to XArray
-  mm: Convert khugepaged_scan_shmem to XArray
-  pagevec: Use xa_tag_t
-  shmem: Convert replace to XArray
-  shmem: Convert shmem_confirm_swap to XArray
-  shmem: Convert find_swap_entry to XArray
-  shmem: Convert shmem_tag_pins to XArray
-  shmem: Convert shmem_wait_for_pins to XArray
-  shmem: Convert shmem_add_to_page_cache to XArray
-  shmem: Convert shmem_alloc_hugepage to XArray
-  shmem: Convert shmem_free_swap to XArray
-  shmem: Convert shmem_partial_swap_usage to XArray
-  shmem: Comment fixups
-  btrfs: Convert page cache to XArray
-  fs: Convert buffer to XArray
-  fs: Convert writeback to XArray
-  nilfs2: Convert to XArray
-  f2fs: Convert to XArray
-  lustre: Convert to XArray
-  dax: Convert dax_unlock_mapping_entry to XArray
-  dax: Convert lock_slot to XArray
-  dax: More XArray conversion
-  dax: Convert __dax_invalidate_mapping_entry to XArray
-  dax: Convert dax_writeback_one to XArray
-  dax: Convert dax_insert_pfn_mkwrite to XArray
-  dax: Convert dax_insert_mapping_entry to XArray
-  dax: Convert grab_mapping_entry to XArray
-  dax: Fix sparse warning
-  page cache: Finish XArray conversion
-  vmalloc: Convert to XArray
-  brd: Convert to XArray
-  xfs: Convert m_perag_tree to XArray
-  xfs: Convert pag_ici_root to XArray
-  xfs: Convert xfs dquot to XArray
-  xfs: Convert mru cache to XArray
-  usb: Convert xhci-mem to XArray
-
- Documentation/cgroup-v1/memory.txt              |    2 +-
- Documentation/core-api/index.rst                |    1 +
- Documentation/core-api/xarray.rst               |  287 +++++
- Documentation/vm/page_migration                 |   14 +-
- MAINTAINERS                                     |   12 +
- arch/arm/include/asm/cacheflush.h               |    6 +-
- arch/nios2/include/asm/cacheflush.h             |    6 +-
- arch/parisc/include/asm/cacheflush.h            |    6 +-
- arch/powerpc/include/asm/book3s/64/pgtable.h    |    4 +-
- arch/powerpc/include/asm/nohash/64/pgtable.h    |    4 +-
- drivers/block/brd.c                             |   87 +-
- drivers/gpu/drm/i915/i915_gem.c                 |   17 +-
- drivers/staging/lustre/lustre/llite/glimpse.c   |   12 +-
- drivers/staging/lustre/lustre/mdc/mdc_request.c |   16 +-
- drivers/usb/host/xhci-mem.c                     |   70 +-
- drivers/usb/host/xhci.h                         |    6 +-
- fs/afs/write.c                                  |    2 +-
- fs/btrfs/btrfs_inode.h                          |    7 +-
- fs/btrfs/compression.c                          |    6 +-
- fs/btrfs/extent_io.c                            |   16 +-
- fs/btrfs/inode.c                                |   70 --
- fs/buffer.c                                     |   22 +-
- fs/cifs/file.c                                  |    2 +-
- fs/dax.c                                        |  382 +++---
- fs/ext4/inode.c                                 |    2 +-
- fs/f2fs/data.c                                  |    9 +-
- fs/f2fs/dir.c                                   |    5 +-
- fs/f2fs/gc.c                                    |    2 +-
- fs/f2fs/inline.c                                |    6 +-
- fs/f2fs/node.c                                  |   10 +-
- fs/fs-writeback.c                               |   37 +-
- fs/gfs2/aops.c                                  |    2 +-
- fs/inode.c                                      |   11 +-
- fs/nfs/blocklayout/blocklayout.c                |    2 +-
- fs/nilfs2/btnode.c                              |   41 +-
- fs/nilfs2/page.c                                |   78 +-
- fs/proc/task_mmu.c                              |    2 +-
- fs/xfs/libxfs/xfs_sb.c                          |   11 +-
- fs/xfs/libxfs/xfs_sb.h                          |    2 +-
- fs/xfs/xfs_buf_item.c                           |   10 +-
- fs/xfs/xfs_dquot.c                              |   37 +-
- fs/xfs/xfs_dquot_item.c                         |   11 +-
- fs/xfs/xfs_icache.c                             |  142 +--
- fs/xfs/xfs_icache.h                             |   10 +-
- fs/xfs/xfs_inode.c                              |   24 +-
- fs/xfs/xfs_inode_item.c                         |   22 +-
- fs/xfs/xfs_log.c                                |    6 +-
- fs/xfs/xfs_log_recover.c                        |   80 +-
- fs/xfs/xfs_mount.c                              |   22 +-
- fs/xfs/xfs_mount.h                              |    6 +-
- fs/xfs/xfs_mru_cache.c                          |   72 +-
- fs/xfs/xfs_qm.c                                 |   32 +-
- fs/xfs/xfs_qm.h                                 |   18 +-
- fs/xfs/xfs_trans.c                              |   18 +-
- fs/xfs/xfs_trans_ail.c                          |  152 +--
- fs/xfs/xfs_trans_buf.c                          |    4 +-
- fs/xfs/xfs_trans_priv.h                         |   42 +-
- include/linux/backing-dev-defs.h                |    2 +-
- include/linux/backing-dev.h                     |   14 +-
- include/linux/fs.h                              |   68 +-
- include/linux/idr.h                             |  173 ++-
- include/linux/mm.h                              |    2 +-
- include/linux/pagemap.h                         |   16 +-
- include/linux/pagevec.h                         |    8 +-
- include/linux/radix-tree.h                      |   95 +-
- include/linux/swap.h                            |    5 +-
- include/linux/swapops.h                         |   19 +-
- include/linux/xarray.h                          |  887 +++++++++++++
- kernel/pid.c                                    |    2 +-
- lib/Makefile                                    |    2 +-
- lib/idr.c                                       |  617 +++++----
- lib/radix-tree.c                                |  413 ++----
- lib/xarray.c                                    | 1520 +++++++++++++++++++++++
- mm/backing-dev.c                                |   28 +-
- mm/filemap.c                                    |  746 ++++-------
- mm/huge_memory.c                                |   23 +-
- mm/khugepaged.c                                 |  182 ++-
- mm/madvise.c                                    |    2 +-
- mm/memcontrol.c                                 |    4 +-
- mm/migrate.c                                    |   41 +-
- mm/mincore.c                                    |    2 +-
- mm/page-writeback.c                             |   78 +-
- mm/readahead.c                                  |   10 +-
- mm/rmap.c                                       |    4 +-
- mm/shmem.c                                      |  311 ++---
- mm/swap.c                                       |    6 +-
- mm/swap_state.c                                 |  124 +-
- mm/truncate.c                                   |   45 +-
- mm/vmalloc.c                                    |   39 +-
- mm/vmscan.c                                     |   14 +-
- mm/workingset.c                                 |   78 +-
- tools/include/linux/spinlock.h                  |    2 +
- tools/testing/radix-tree/.gitignore             |    2 +
- tools/testing/radix-tree/Makefile               |   15 +-
- tools/testing/radix-tree/idr-test.c             |   29 +-
- tools/testing/radix-tree/linux/bug.h            |    1 +
- tools/testing/radix-tree/linux/kconfig.h        |    1 +
- tools/testing/radix-tree/linux/rcupdate.h       |    2 +
- tools/testing/radix-tree/linux/xarray.h         |    3 +
- tools/testing/radix-tree/multiorder.c           |   53 +-
- tools/testing/radix-tree/regression1.c          |   68 +-
- tools/testing/radix-tree/test.c                 |    8 +-
- tools/testing/radix-tree/xarray-test.c          |  468 +++++++
- 103 files changed, 5309 insertions(+), 2908 deletions(-)
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ Documentation/core-api/index.rst  |   1 +
+ Documentation/core-api/xarray.rst | 281 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 282 insertions(+)
  create mode 100644 Documentation/core-api/xarray.rst
- create mode 100644 include/linux/xarray.h
- create mode 100644 lib/xarray.c
- create mode 100644 tools/testing/radix-tree/linux/kconfig.h
- create mode 100644 tools/testing/radix-tree/linux/xarray.h
- create mode 100644 tools/testing/radix-tree/xarray-test.c
 
+diff --git a/Documentation/core-api/index.rst b/Documentation/core-api/index.rst
+index d5bbe035316d..eb16ba30aeb6 100644
+--- a/Documentation/core-api/index.rst
++++ b/Documentation/core-api/index.rst
+@@ -18,6 +18,7 @@ Core utilities
+    local_ops
+    workqueue
+    genericirq
++   xarray
+    flexible-arrays
+    librs
+    genalloc
+diff --git a/Documentation/core-api/xarray.rst b/Documentation/core-api/xarray.rst
+new file mode 100644
+index 000000000000..871161539242
+--- /dev/null
++++ b/Documentation/core-api/xarray.rst
+@@ -0,0 +1,281 @@
++======
++XArray
++======
++
++Overview
++========
++
++The XArray is an abstract data type which behaves like a very large array
++of pointers.  It meets many of the same needs as a hash or a conventional
++resizable array.  Unlike a hash, it allows you to sensibly go to the
++next or previous entry in a cache-efficient manner.  In contrast to
++a resizable array, there is no need for copying data or changing MMU
++mappings in order to grow the array.  It is more memory-efficient,
++parallelisable and cache friendly than a doubly-linked list.  It takes
++advantage of RCU to perform lookups without locking.
++
++The XArray implementation is efficient when the indices used are
++densely clustered; hashing the object and using the hash as the index
++will not perform well.  The XArray is optimised for small indices,
++but still has good performance with large indices.  If your index is
++larger than ULONG_MAX then the XArray is not the data type for you.
++The most important user of the XArray is the page cache.
++
++A freshly-initialised XArray contains a ``NULL`` pointer at every index.
++Each non-``NULL`` entry in the array has three bits associated with
++it called tags.  Each tag may be flipped on or off independently of
++the others.  You can search for entries with a given tag set.
++
++Normal pointers may be stored in the XArray directly.  They must be 4-byte
++aligned, which is true for any pointer returned from :c:func:`kmalloc` and
++:c:func:`alloc_page`.  It isn't true for arbitrary user-space pointers,
++nor for function pointers.  You can store pointers to statically allocated
++objects, as long as those objects have an alignment of at least 4.
++
++The XArray does not support storing :c:func:`IS_ERR` pointers; some
++conflict with data values and others conflict with entries the XArray
++uses for its own purposes.  If you need to store special values which
++cannot be confused with real kernel pointers, the values 4, 8, ... 4092
++are available.
++
++You can also store integers between 0 and ``LONG_MAX`` in the XArray.
++You must first convert it into an entry using :c:func:`xa_mk_value`.
++When you retrieve an entry from the XArray, you can check whether it is
++a data value by calling :c:func:`xa_is_value`, and convert it back to
++an integer by calling :c:func:`xa_to_value`.
++
++An unusual feature of the XArray is the ability to create entries which
++occupy a range of indices.  Once stored to, looking up any index in
++the range will return the same entry as looking up any other index in
++the range.  Setting a tag on one index will set it on all of them.
++Storing to any index will store to all of them.  Multi-index entries can
++be explicitly split into smaller entries, or storing ``NULL`` into any
++entry will cause the XArray to forget about the range.
++
++Normal API
++==========
++
++Start by initialising an XArray, either with :c:func:`DEFINE_XARRAY`
++for statically allocated XArrays or :c:func:`xa_init` for dynamically
++allocated ones.
++
++You can then set entries using :c:func:`xa_store` and get entries
++using :c:func:`xa_load`.  xa_store will overwrite any entry with the
++new entry and return the previous entry stored at that index.  If you
++store %NULL, the XArray does not need to allocate memory.  You can call
++:c:func:`xa_erase` to avoid inventing a GFP flags value.  There is no
++difference between an entry that has never been stored to and one that
++has most recently had %NULL stored to it.
++
++You can conditionally replace an entry at an index by using
++:c:func:`xa_cmpxchg`.  Like :c:func:`cmpxchg`, it will only succeed if
++the entry at that index has the 'old' value.  It also returns the entry
++which was at that index; if it returns the same entry which was passed as
++'old', then :c:func:`xa_cmpxchg` succeeded.
++
++You can enquire whether a tag is set on an entry by using
++:c:func:`xa_get_tag`.  If the entry is not ``NULL``, you can set a tag
++on it by using :c:func:`xa_set_tag` and remove the tag from an entry by
++calling :c:func:`xa_clear_tag`.  You can ask whether any entry in the
++XArray has a particular tag set by calling :c:func:`xa_tagged`.
++
++You can copy entries out of the XArray into a plain array by
++calling :c:func:`xa_get_entries` and copy tagged entries by calling
++:c:func:`xa_get_tagged`.  Or you can iterate over the non-``NULL``
++entries in place in the XArray by calling :c:func:`xa_for_each`.
++You may prefer to use :c:func:`xa_find` or :c:func:`xa_find_after`
++to move to the next present entry in the XArray.
++
++Finally, you can remove all entries from an XArray by calling
++:c:func:`xa_destroy`.  If the XArray entries are pointers, you may
++wish to free the entries first.  You can do this by iterating over
++all non-``NULL`` entries in the XArray using the :c:func:`xa_for_each`
++iterator.
++
++When using the Normal API, you do not have to worry about locking.
++The XArray uses RCU and an irq-safe spinlock to synchronise access to
++the XArray:
++
++No lock needed:
++ * :c:func:`xa_empty`
++ * :c:func:`xa_tagged`
++
++Takes RCU read lock:
++ * :c:func:`xa_load`
++ * :c:func:`xa_for_each`
++ * :c:func:`xa_find`
++ * :c:func:`xa_find_after`
++ * :c:func:`xa_get_entries`
++ * :c:func:`xa_get_tagged`
++ * :c:func:`xa_get_tag`
++
++Takes xa_lock internally:
++ * :c:func:`xa_store`
++ * :c:func:`xa_cmpxchg`
++ * :c:func:`xa_destroy`
++ * :c:func:`xa_set_tag`
++ * :c:func:`xa_clear_tag`
++
++The :c:func:`xa_store` and :c:func:`xa_cmpxchg` functions take a gfp_t
++parameter in case the XArray needs to allocate memory to store this entry.
++If the entry being stored is ``NULL``, no memory allocation needs to be
++performed, and the GFP flags specified here will be ignored.
++
++Advanced API
++============
++
++The advanced API offers more flexibility and better performance at the
++cost of an interface which can be harder to use and has fewer safeguards.
++No locking is done for you by the advanced API, and you are required
++to use the xa_lock while modifying the array.  You can choose whether
++to use the xa_lock or the RCU lock while doing read-only operations on
++the array.  You can mix advanced and normal operations on the same array;
++indeed the normal API is implemented in terms of the advanced API.  The
++advanced API is only available to modules with a GPL-compatible license.
++
++The advanced API is based around the xa_state.  This is an opaque data
++structure which you declare on the stack using the :c:func:`XA_STATE`
++macro.  This macro initialises the xa_state ready to start walking
++around the XArray.  It is used as a cursor to maintain the position
++in the XArray and let you compose various operations together without
++having to restart from the top every time.
++
++The xa_state is also used to store errors.  You can call
++:c:func:`xas_error` to retrieve the error.  All operations check whether
++the xa_state is in an error state before proceeding, so there's no need
++for you to check for an error after each call; you can make multiple
++calls in succession and only check at a convenient point.  The only error
++currently generated by the xarray code itself is %ENOMEM, but it supports
++arbitrary errors in case you want to call :c:func:`xas_set_err` yourself.
++
++If the xa_state is holding an %ENOMEM error, calling :c:func:`xas_nomem`
++will attempt to allocate more memory using the specified gfp flags and
++cache it in the xa_state for the next attempt.  The idea is that you take
++the xa_lock, attempt the operation and drop the lock.  The operation
++attempts to allocate memory while holding the lock, but it is more
++likely to fail.  Once you have dropped the lock, :c:func:`xas_nomem`
++can try harder to allocate more memory.  It will return ``true`` if it
++is worth retrying the operation (ie that there was a memory error *and*
++more memory was allocated.  If it has previously allocated memory, and
++that memory wasn't used, and there is no error (or some error that isn't
++%ENOMEM), then it will free the memory previously allocated.
++
++Some users wish to hold the xa_lock for their own purpose while performing
++one simple XArray operation, and then some other operation of their
++own, protected by the same lock.  While they could declare an xa_state
++and use it to call one of the usual advanced API functions, it is a
++little cumbersome.  These interfaces are added on demand; at the moment,
++:c:func:`__xa_erase`, :c:func:`__xa_set_tag` and :c:func:`__xa_clear_tag`
++are available.
++
++Internal Entries
++----------------
++
++The XArray reserves some entries for its own purposes.  These are never
++exposed through the normal API, but when using the advanced API, it's
++possible to see them.  Usually the best way to handle them is to pass them
++to :c:func:`xas_retry`, and retry the operation if it returns ``true``.
++
++.. flat-table::
++   :widths: 1 1 6
++
++   * - Name
++     - Test
++     - Usage
++
++   * - Node
++     - :c:func:`xa_is_node`
++     - An XArray node.  Should never be visible; all functions should recurse
++       into an XArray node.
++
++   * - Sibling
++     - :c:func:`xa_is_sibling`
++     - A non-canonical entry for a multi-index entry.  The value indicates
++       which slot in this node has the canonical entry.
++
++   * - Retry
++     - :c:func:`xa_is_retry`
++     - This entry is currently being modified by a thread which has the
++       xa_lock.  The node containing this entry may be freed at the end of
++       this RCU period.  You should restart the lookup from the head of the
++       array.
++
++Other internal entries may be added in the future.  As far as possible, they
++will be handled by :c:func:`xas_retry`.
++
++Additional functionality
++------------------------
++
++The :c:func:`xas_create` function ensures that there is somewhere in the
++XArray to store an entry.  It will store ENOMEM in the xa_state if it
++cannot allocate memory.  You do not normally need to call this function
++yourself as it is called by :c:func:`xas_store`.
++
++You can use :c:func:`xas_init_tags` to reset the tags on an entry
++to their default state.  This is usually all tags clear, unless the
++XArray is marked with ``XA_FLAGS_TRACK_FREE``, in which case tag 0 is set
++and all other tags are clear.  Replacing one entry with another using
++:c:func:`xas_store` will not reset the tags on that entry; if you want
++the tags reset, you should do that explicitly.
++
++The :c:func:`xas_load` will walk the xa_state as close to the entry
++as it can.  If you know the xa_state has already been walked to the
++entry and need to check that the entry hasn't changed, you can use
++:c:func:`xas_reload` to save a function call.
++
++If you need to move to a different index in the XArray, call
++:c:func:`xas_set`.  This reinitialises the cursor which will generally
++have the effect of making the next operation walk the cursor to the
++desired spot in the tree.  If you want to move to the next or previous
++index, call :c:func:`xas_next` or :c:func:`xas_prev`.  Setting the index
++does not walk the cursor around the array so does not require a lock to
++be held, while moving to the next or previous index does.
++
++You can create a multi-index entry by using :c:func:`xas_set_order`.
++If a load or find operation finds a multi-index entry, the index in the
++xa_state will be the one searched for, and not necessarily the
++lowest or highest index used by the entry.
++Currently the only supported multi-index entries supported are powers
++of two, but there are two potential users of arbitrary ranges, so that
++functionality may be added soon.
++
++You can search for the next present entry using :c:func:`xas_find`.  This
++is the equivalent of both :c:func:`xa_find` and :c:func:`xa_find_after`;
++if the cursor has been walked to an entry, then it will find the next
++entry after the one currently referenced.  If not, it will return the
++entry at the index of the xa_state.  Using :c:func:`xas_next_entry` to
++move to the next present entry instead of :c:func:`xas_find` will save
++a function call in the majority of cases at the expense of emitting more
++inline code.
++
++The :c:func:`xas_find_tag` function is similar, returning the first tagged
++entry after the entry referenced by the xa_state if it has already been
++walked, and returning the entry at the index of the xa_state if it is
++tagged, and the xa_state has not been walked.  The :c:func:`xas_next_tag`
++function is the equivalent of :c:func:`xas_next_entry`.
++
++When iterating over a range of the XArray using :c:func:`xas_for_each`
++or :c:func:`xas_for_each_tag`, it may be necessary to temporarily stop
++the iteration.  The :c:func:`xas_pause` function exists for this purpose.
++After you have done the necessary work and wish to resume, the xa_state
++is in an appropriate state to continue the iteration after the entry
++you last processed.  If you have interrupts disabled while iterating,
++then it is good manners to pause the iteration and reenable interrupts
++every ``XA_CHECK_SCHED`` entries.
++
++The :c:func:`xas_get_tag`, :c:func:`xas_set_tag` and
++:c:func:`xas_clear_tag` functions require the xa_state cursor to have
++been moved to the appropriate location in the xarray; they will do
++nothing if you have called :c:func:`xas_pause` or :c:func:`xas_set`
++immediately before.
++
++You can call :c:func:`xas_set_update` to have a callback function
++called each time the XArray updates a node.  This is used by the page
++cache workingset code to maintain its list of nodes which contain only
++shadow entries.
++
++Functions and structures
++========================
++
++.. kernel-doc:: include/linux/xarray.h
++.. kernel-doc:: lib/xarray.c
 -- 
 2.15.0
 
