@@ -1,121 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60709 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753304AbdLFAmK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:10 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 07/73] xarray: Define struct xa_node
-Date: Tue,  5 Dec 2017 16:40:53 -0800
-Message-Id: <20171206004159.3755-8-willy@infradead.org>
-In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63329 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753274AbdLFBns (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 20:43:48 -0500
+Date: Wed, 6 Dec 2017 12:36:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
+Message-ID: <20171206012901.GZ4094@dastard>
 References: <20171206004159.3755-1-willy@infradead.org>
+ <20171206004159.3755-73-willy@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171206004159.3755-73-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
+To: Matthew Wilcox <willy@infradead.org>
 Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+On Tue, Dec 05, 2017 at 04:41:58PM -0800, Matthew Wilcox wrote:
+> From: Matthew Wilcox <mawilcox@microsoft.com>
+> 
+> This eliminates a call to radix_tree_preload().
 
-This is a direct replacement for struct radix_tree_node.  Use a #define
-so that radix tree users continue to work without change.
+.....
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- include/linux/radix-tree.h | 29 +++--------------------------
- include/linux/xarray.h     | 24 ++++++++++++++++++++++++
- 2 files changed, 27 insertions(+), 26 deletions(-)
+>  void
+> @@ -431,24 +424,24 @@ xfs_mru_cache_insert(
+>  	unsigned long		key,
+>  	struct xfs_mru_cache_elem *elem)
+>  {
+> +	XA_STATE(xas, &mru->store, key);
+>  	int			error;
+>  
+>  	ASSERT(mru && mru->lists);
+>  	if (!mru || !mru->lists)
+>  		return -EINVAL;
+>  
+> -	if (radix_tree_preload(GFP_NOFS))
+> -		return -ENOMEM;
+> -
+>  	INIT_LIST_HEAD(&elem->list_node);
+>  	elem->key = key;
+>  
+> -	spin_lock(&mru->lock);
+> -	error = radix_tree_insert(&mru->store, key, elem);
+> -	radix_tree_preload_end();
+> -	if (!error)
+> -		_xfs_mru_cache_list_insert(mru, elem);
+> -	spin_unlock(&mru->lock);
+> +	do {
+> +		xas_lock(&xas);
+> +		xas_store(&xas, elem);
+> +		error = xas_error(&xas);
+> +		if (!error)
+> +			_xfs_mru_cache_list_insert(mru, elem);
+> +		xas_unlock(&xas);
+> +	} while (xas_nomem(&xas, GFP_NOFS));
 
-diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
-index f31a278de8eb..f46e3de57115 100644
---- a/include/linux/radix-tree.h
-+++ b/include/linux/radix-tree.h
-@@ -32,6 +32,7 @@
- 
- /* Keep unconverted code working */
- #define radix_tree_root		xarray
-+#define radix_tree_node		xa_node
- 
- /*
-  * The bottom two bits of the slot determine how the remaining bits in the
-@@ -60,41 +61,17 @@ static inline bool radix_tree_is_internal_node(void *ptr)
- 
- /*** radix-tree API starts here ***/
- 
--#define RADIX_TREE_MAX_TAGS 3
--
- #define RADIX_TREE_MAP_SHIFT	XA_CHUNK_SHIFT
- #define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
- #define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
- 
--#define RADIX_TREE_TAG_LONGS	\
--	((RADIX_TREE_MAP_SIZE + BITS_PER_LONG - 1) / BITS_PER_LONG)
-+#define RADIX_TREE_MAX_TAGS	XA_MAX_TAGS
-+#define RADIX_TREE_TAG_LONGS	XA_TAG_LONGS
- 
- #define RADIX_TREE_INDEX_BITS  (8 /* CHAR_BIT */ * sizeof(unsigned long))
- #define RADIX_TREE_MAX_PATH (DIV_ROUND_UP(RADIX_TREE_INDEX_BITS, \
- 					  RADIX_TREE_MAP_SHIFT))
- 
--/*
-- * @count is the count of every non-NULL element in the ->slots array
-- * whether that is a data entry, a retry entry, a user pointer,
-- * a sibling entry or a pointer to the next level of the tree.
-- * @exceptional is the count of every element in ->slots which is
-- * either a data entry or a sibling entry for data.
-- */
--struct radix_tree_node {
--	unsigned char	shift;		/* Bits remaining in each slot */
--	unsigned char	offset;		/* Slot offset in parent */
--	unsigned char	count;		/* Total entry count */
--	unsigned char	exceptional;	/* Exceptional entry count */
--	struct radix_tree_node *parent;		/* Used when ascending tree */
--	struct radix_tree_root *root;		/* The tree we belong to */
--	union {
--		struct list_head private_list;	/* For tree user */
--		struct rcu_head	rcu_head;	/* Used when freeing node */
--	};
--	void __rcu	*slots[RADIX_TREE_MAP_SIZE];
--	unsigned long	tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];
--};
--
- /* The top bits of xa_flags are used to store the root tags and the IDR flag */
- #define ROOT_IS_IDR	((__force gfp_t)(1 << __GFP_BITS_SHIFT))
- #define ROOT_TAG_SHIFT	(__GFP_BITS_SHIFT + 1)
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index dcdac2053ea6..1aff0069458b 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -133,6 +133,30 @@ static inline bool xa_is_value(void *entry)
- #endif
- #define XA_CHUNK_SIZE		(1UL << XA_CHUNK_SHIFT)
- #define XA_CHUNK_MASK		(XA_CHUNK_SIZE - 1)
-+#define XA_MAX_TAGS		3
-+#define XA_TAG_LONGS		DIV_ROUND_UP(XA_CHUNK_SIZE, BITS_PER_LONG)
-+
-+/*
-+ * @count is the count of every non-NULL element in the ->slots array
-+ * whether that is a data value entry, a retry entry, a user pointer,
-+ * a sibling entry or a pointer to the next level of the tree.
-+ * @exceptional is the count of every element in ->slots which is
-+ * either a data value entry or a sibling entry for a data value.
-+ */
-+struct xa_node {
-+	unsigned char	shift;		/* Bits remaining in each slot */
-+	unsigned char	offset;		/* Slot offset in parent */
-+	unsigned char	count;		/* Total entry count */
-+	unsigned char	exceptional;	/* Exceptional entry count */
-+	struct xa_node *parent;		/* Used when ascending tree */
-+	struct xarray *	root;		/* The tree we belong to */
-+	union {
-+		struct list_head private_list;	/* For tree user */
-+		struct rcu_head	rcu_head;	/* Used when freeing node */
-+	};
-+	void __rcu	*slots[XA_CHUNK_SIZE];
-+	unsigned long	tags[XA_MAX_TAGS][XA_TAG_LONGS];
-+};
- 
- /*
-  * Internal entries have the bottom two bits set to the value 10b.  Most
+Ok, so why does this have a retry loop on ENOMEM despite the
+existing code handling that error? And why put such a loop in this
+code and not any of the other XFS code that used
+radix_tree_preload() and is arguably much more important to avoid
+ENOMEM on insert (e.g. the inode cache)?
+
+Also, I really don't like the pattern of using xa_lock()/xa_unlock()
+to protect access to an external structure. i.e. the mru->lock
+context is protecting multiple fields and operations in the MRU
+structure, not just the radix tree operations. Turning that around
+so that a larger XFS structure and algorithm is now protected by an
+opaque internal lock from generic storage structure the forms part
+of the larger structure seems like a bad design pattern to me...
+
+Cheers,
+
+Dave.
 -- 
-2.15.0
-
+Dave Chinner
+david@fromorbit.com
