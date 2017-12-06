@@ -1,49 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:8582 "EHLO mga06.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60406 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752034AbdLFX6b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Dec 2017 18:58:31 -0500
-Date: Wed, 6 Dec 2017 16:58:29 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v4 00/73] XArray version 4
-Message-ID: <20171206235829.GA28086@linux.intel.com>
-References: <20171206004159.3755-1-willy@infradead.org>
+        id S1753333AbdLFI2N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Dec 2017 03:28:13 -0500
+Date: Wed, 6 Dec 2017 16:28:10 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v7] generic: initial fiemap range query test
+Message-ID: <20171206082810.GS2749@eguan.usersys.redhat.com>
+References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
+ <20171205082406.GK2749@eguan.usersys.redhat.com>
+ <20171205165127.GD19219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
+In-Reply-To: <20171205165127.GD19219@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
 
-On Tue, Dec 05, 2017 at 04:40:46PM -0800, Matthew Wilcox wrote:
-> From: Matthew Wilcox <mawilcox@microsoft.com>
+On Tue, Dec 05, 2017 at 08:51:27AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 05, 2017 at 04:24:06PM +0800, Eryu Guan wrote:
+> > On Thu, Nov 30, 2017 at 06:05:27PM +0200, Nikolay Borisov wrote:
+> > > Fiemap gained support for passing in optional offset len
+> > > which denote the range requested, so this patch adds
+> > > testcases for this functionality. Aditionally, a special "ranged"
+> > > argument is added to the require_xfs_io_command which checks
+> > > for the presence of fiemap range support.
+> > > 
+> > > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> > > ---
+> > > 
+> > > For the time being this test is expected to fail on XFS. 
+> > > 
+> > > V7: 
+> > >  * Adjusted for 64k block size filesystem
+> > >  * Only use/require a test device and not a scratch device
+> > 
+> > v7 looks good to me, test passes on ppc64 hosts too, thanks!
+> > 
+> > But it seems that it's not decided yet whether xfs should trim the
+> > ranged fiemap query request, I'd like to see the expected behavior
+> > decided first. (BTW, v7 passes with latest RHEL7 kernel too, seems
+> > extents are not trimmed there.)
 > 
-> I looked through some notes and decided this was version 4 of the XArray.
-> Last posted two weeks ago, this version includes a *lot* of changes.
-> I'd like to thank Dave Chinner for his feedback, encouragement and
-> distracting ideas for improvement, which I'll get to once this is merged.
-> 
-> Highlights:
->  - Over 2000 words of documentation in patch 8!  And lots more kernel-doc.
->  - The page cache is now fully converted to the XArray.
->  - Many more tests in the test-suite.
-> 
-> This patch set is not for applying.  0day is still reporting problems,
-> and I'd feel bad for eating someone's data.  These patches apply on top
-> of a set of prepatory patches which just aren't interesting.  If you
-> want to see the patches applied to a tree, I suggest pulling my git tree:
-> http://git.infradead.org/users/willy/linux-dax.git/shortlog/refs/heads/xarray-2017-12-04
-> I also left out the idr_preload removals.  They're still in the git tree,
-> but I'm not looking for feedback on them.
+> The iomap callers need to tell iomap_apply if they want exactly the
+> range they asked for and no more (most of the write paths) or if they
+> can handle outside ranges (fiemap), and then we can turn on
+> XFS_BMAPI_ENTIRE reporting in xfs_iomap_begin.
 
-Hey Matthew,
+That means.. I can merge the test as-is?
 
-Maybe I missed this from a previous version, but can you explain the
-motivation for replacing the radix tree with an xarray?  (I think this should
-probably still be part of the cover letter?)  Do we have a performance problem
-we need to solve?  A code complexity issue we need to solve?  Something else?
-
-- Ross
+Thanks,
+Eryu
