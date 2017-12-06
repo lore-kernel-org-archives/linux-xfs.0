@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60052 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35843 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753391AbdLFAmR (ORCPT
+        with ESMTP id S1753401AbdLFAmR (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:17 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 59/73] dax: More XArray conversion
-Date: Tue,  5 Dec 2017 16:41:45 -0800
-Message-Id: <20171206004159.3755-60-willy@infradead.org>
+Subject: [PATCH v4 70/73] xfs: Convert pag_ici_root to XArray
+Date: Tue,  5 Dec 2017 16:41:56 -0800
+Message-Id: <20171206004159.3755-71-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,261 +16,448 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This time, we want to convert get_unlocked_mapping_entry() to use the
-XArray.  That has a ripple effect, causing us to change the waitqueues
-to hash on the address of the xarray rather than the address of the
-mapping (functionally equivalent), and create a lot of on-the-stack
-xa_state which are only used as a container for passing the xarray and
-the index down to deeper function calls.
-
-Also rename dax_wake_mapping_entry_waiter() to dax_wake_entry().
+Rename pag_ici_root to pag_ici_xa and use XArray APIs instead of radix
+tree APIs.  Shorter code, typechecking on tag numbers, better error
+checking in xfs_reclaim_inode(), and eliminates a call to
+radix_tree_preload().
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 80 +++++++++++++++++++++++++++++-----------------------------------
- 1 file changed, 36 insertions(+), 44 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c |   2 +-
+ fs/xfs/libxfs/xfs_sb.h |   2 +-
+ fs/xfs/xfs_icache.c    | 107 +++++++++++++++++++------------------------------
+ fs/xfs/xfs_icache.h    |   4 +-
+ fs/xfs/xfs_inode.c     |  24 ++++-------
+ fs/xfs/xfs_mount.c     |   3 +-
+ fs/xfs/xfs_mount.h     |   3 +-
+ 7 files changed, 54 insertions(+), 91 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index d2007a17d257..ad984dece12e 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -120,7 +120,7 @@ static int dax_is_empty_entry(void *entry)
-  * DAX radix tree locking
-  */
- struct exceptional_entry_key {
--	struct address_space *mapping;
-+	struct xarray *xa;
- 	pgoff_t entry_start;
- };
- 
-@@ -129,9 +129,10 @@ struct wait_exceptional_entry_queue {
- 	struct exceptional_entry_key key;
- };
- 
--static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
--		pgoff_t index, void *entry, struct exceptional_entry_key *key)
-+static wait_queue_head_t *dax_entry_waitqueue(struct xa_state *xas,
-+		void *entry, struct exceptional_entry_key *key)
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 3b0b65eb8224..8fb7c216c761 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -76,7 +76,7 @@ struct xfs_perag *
+ xfs_perag_get_tag(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		first,
+-	int			tag)
++	xa_tag_t		tag)
  {
-+	unsigned long index = xas->xa_index;
- 	unsigned long hash;
- 
- 	/*
-@@ -142,10 +143,10 @@ static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
- 	if (dax_is_pmd_entry(entry))
- 		index &= ~PG_PMD_COLOUR;
- 
--	key->mapping = mapping;
-+	key->xa = xas->xa;
- 	key->entry_start = index;
- 
--	hash = hash_long((unsigned long)mapping ^ index, DAX_WAIT_TABLE_BITS);
-+	hash = hash_long((unsigned long)xas->xa ^ index, DAX_WAIT_TABLE_BITS);
- 	return wait_table + hash;
- }
- 
-@@ -156,26 +157,23 @@ static int wake_exceptional_entry_func(wait_queue_entry_t *wait, unsigned int mo
- 	struct wait_exceptional_entry_queue *ewait =
- 		container_of(wait, struct wait_exceptional_entry_queue, wait);
- 
--	if (key->mapping != ewait->key.mapping ||
-+	if (key->xa != ewait->key.xa ||
- 	    key->entry_start != ewait->key.entry_start)
- 		return 0;
- 	return autoremove_wake_function(wait, mode, sync, NULL);
- }
- 
- /*
-- * We do not necessarily hold the mapping xa_lock when we call this
-- * function so it is possible that 'entry' is no longer a valid item in the
-- * radix tree.  This is okay because all we really need to do is to find the
-- * correct waitqueue where tasks might be waiting for that old 'entry' and
-- * wake them.
-+ * @entry may no longer be the entry at the index in the array.  The
-+ * important information it's conveying is whether the entry at this
-+ * index *used* to be a PMD entry..
+ 	XA_STATE(xas, &mp->m_perag_xa, first);
+ 	struct xfs_perag	*pag;
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index 961e6475a309..d2de90b8f39c 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -23,7 +23,7 @@
   */
--static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
--		pgoff_t index, void *entry, bool wake_all)
-+static void dax_wake_entry(struct xa_state *xas, void *entry, bool wake_all)
+ extern struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
+ extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
+-					   int tag);
++					   xa_tag_t tag);
+ extern void	xfs_perag_put(struct xfs_perag *pag);
+ extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
+ 
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f56e500d89e2..edd44e190f3e 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -186,7 +186,7 @@ xfs_perag_set_reclaim_tag(
  {
- 	struct exceptional_entry_key key;
- 	wait_queue_head_t *wq;
+ 	struct xfs_mount	*mp = pag->pag_mount;
  
--	wq = dax_entry_waitqueue(mapping, index, entry, &key);
-+	wq = dax_entry_waitqueue(xas, entry, &key);
- 
- 	/*
- 	 * Checking for locked entry and prepare_to_wait_exclusive() happens
-@@ -207,10 +205,9 @@ static inline void *lock_slot(struct xa_state *xas)
-  *
-  * The function must be called with mapping xa_lock held.
-  */
--static void *get_unlocked_mapping_entry(struct address_space *mapping,
--					pgoff_t index, void ***slotp)
-+static void *get_unlocked_mapping_entry(struct xa_state *xas)
- {
--	void *entry, **slot;
-+	void *entry;
- 	struct wait_exceptional_entry_queue ewait;
- 	wait_queue_head_t *wq;
- 
-@@ -218,22 +215,19 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 	ewait.wait.func = wake_exceptional_entry_func;
- 
- 	for (;;) {
--		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
--					  &slot);
--		if (!entry ||
--		    WARN_ON_ONCE(!xa_is_value(entry)) || !dax_locked(entry)) {
--			if (slotp)
--				*slotp = slot;
-+		entry = xas_load(xas);
-+		if (!entry || WARN_ON_ONCE(!xa_is_value(entry)) ||
-+		    !dax_locked(entry))
- 			return entry;
--		}
- 
--		wq = dax_entry_waitqueue(mapping, index, entry, &ewait.key);
-+		wq = dax_entry_waitqueue(xas, entry, &ewait.key);
- 		prepare_to_wait_exclusive(wq, &ewait.wait,
- 					  TASK_UNINTERRUPTIBLE);
--		xa_unlock_irq(&mapping->pages);
-+		xas_pause(xas);
-+		xas_unlock_irq(xas);
- 		schedule();
- 		finish_wait(wq, &ewait.wait);
--		xa_lock_irq(&mapping->pages);
-+		xas_lock_irq(xas);
- 	}
- }
- 
-@@ -253,7 +247,7 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
- 	xas_store(&xas, entry);
- 	/* Safe to not call xas_pause here -- we don't touch the array after */
- 	xas_unlock_irq(&xas);
--	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-+	dax_wake_entry(&xas, entry, false);
- }
- 
- static void put_locked_mapping_entry(struct address_space *mapping,
-@@ -266,14 +260,13 @@ static void put_locked_mapping_entry(struct address_space *mapping,
-  * Called when we are done with radix tree entry we looked up via
-  * get_unlocked_mapping_entry() and which we didn't lock in the end.
-  */
--static void put_unlocked_mapping_entry(struct address_space *mapping,
--				       pgoff_t index, void *entry)
-+static void put_unlocked_mapping_entry(struct xa_state *xas, void *entry)
- {
- 	if (!entry)
+-	lockdep_assert_held(&pag->pag_ici_lock);
++	lockdep_assert_held(&pag->pag_ici_xa.xa_lock);
+ 	if (pag->pag_ici_reclaimable++)
  		return;
  
- 	/* We have to wake up next waiter for the radix tree entry lock */
--	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-+	dax_wake_entry(xas, entry, false);
+@@ -205,7 +205,7 @@ xfs_perag_clear_reclaim_tag(
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
+ 
+-	lockdep_assert_held(&pag->pag_ici_lock);
++	lockdep_assert_held(&pag->pag_ici_xa.xa_lock);
+ 	if (--pag->pag_ici_reclaimable)
+ 		return;
+ 
+@@ -228,16 +228,16 @@ xfs_inode_set_reclaim_tag(
+ 	struct xfs_perag	*pag;
+ 
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+-	spin_lock(&pag->pag_ici_lock);
++	xa_lock(&pag->pag_ici_xa);
+ 	spin_lock(&ip->i_flags_lock);
+ 
+-	radix_tree_tag_set(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino),
++	__xa_set_tag(&pag->pag_ici_xa, XFS_INO_TO_AGINO(mp, ip->i_ino),
+ 			   XFS_ICI_RECLAIM_TAG);
+ 	xfs_perag_set_reclaim_tag(pag);
+ 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+ 
+ 	spin_unlock(&ip->i_flags_lock);
+-	spin_unlock(&pag->pag_ici_lock);
++	xa_unlock(&pag->pag_ici_xa);
+ 	xfs_perag_put(pag);
  }
  
- /*
-@@ -310,7 +303,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+@@ -246,7 +246,7 @@ xfs_inode_clear_reclaim_tag(
+ 	struct xfs_perag	*pag,
+ 	xfs_ino_t		ino)
+ {
+-	radix_tree_tag_clear(&pag->pag_ici_root,
++	__xa_clear_tag(&pag->pag_ici_xa,
+ 			     XFS_INO_TO_AGINO(pag->pag_mount, ino),
+ 			     XFS_ICI_RECLAIM_TAG);
+ 	xfs_perag_clear_reclaim_tag(pag);
+@@ -367,8 +367,8 @@ xfs_iget_cache_hit(
+ 		/*
+ 		 * We need to set XFS_IRECLAIM to prevent xfs_reclaim_inode
+ 		 * from stomping over us while we recycle the inode.  We can't
+-		 * clear the radix tree reclaimable tag yet as it requires
+-		 * pag_ici_lock to be held exclusive.
++		 * clear the xarray reclaimable tag yet as it requires
++		 * pag_ici_xa.xa_lock to be held exclusive.
+ 		 */
+ 		ip->i_flags |= XFS_IRECLAIM;
  
- restart:
- 	xa_lock_irq(&mapping->pages);
--	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry = get_unlocked_mapping_entry(&xas);
- 
- 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
- 		entry = ERR_PTR(-EIO);
-@@ -320,8 +313,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 	if (entry) {
- 		if (size_flag & DAX_PMD) {
- 			if (dax_is_pte_entry(entry)) {
--				put_unlocked_mapping_entry(mapping, index,
--						entry);
-+				put_unlocked_mapping_entry(&xas, entry);
- 				entry = ERR_PTR(-EEXIST);
- 				goto out_unlock;
- 			}
-@@ -384,8 +376,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		if (pmd_downgrade) {
- 			radix_tree_delete(&mapping->pages, index);
- 			mapping->nrexceptional--;
--			dax_wake_mapping_entry_waiter(mapping, index, entry,
--					true);
-+			dax_wake_entry(&xas, entry, true);
+@@ -393,7 +393,7 @@ xfs_iget_cache_hit(
+ 			goto out_error;
  		}
  
- 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
-@@ -419,12 +410,13 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 					  pgoff_t index, bool trunc)
+-		spin_lock(&pag->pag_ici_lock);
++		xa_lock(&pag->pag_ici_xa);
+ 		spin_lock(&ip->i_flags_lock);
+ 
+ 		/*
+@@ -410,7 +410,7 @@ xfs_iget_cache_hit(
+ 		init_rwsem(&inode->i_rwsem);
+ 
+ 		spin_unlock(&ip->i_flags_lock);
+-		spin_unlock(&pag->pag_ici_lock);
++		xa_unlock(&pag->pag_ici_xa);
+ 	} else {
+ 		/* If the VFS inode is being torn down, pause and try again. */
+ 		if (!igrab(inode)) {
+@@ -451,7 +451,7 @@ xfs_iget_cache_miss(
+ 	int			flags,
+ 	int			lock_flags)
  {
-+	XA_STATE(xas, &mapping->pages, index);
- 	int ret = 0;
- 	void *entry;
- 	struct radix_tree_root *pages = &mapping->pages;
+-	struct xfs_inode	*ip;
++	struct xfs_inode	*ip, *curr;
+ 	int			error;
+ 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
+ 	int			iflags;
+@@ -471,17 +471,6 @@ xfs_iget_cache_miss(
+ 		goto out_destroy;
+ 	}
  
- 	xa_lock_irq(&mapping->pages);
--	entry = get_unlocked_mapping_entry(mapping, index, NULL);
-+	entry = get_unlocked_mapping_entry(&xas);
- 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
- 		goto out;
- 	if (!trunc &&
-@@ -435,7 +427,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	mapping->nrexceptional--;
- 	ret = 1;
- out:
--	put_unlocked_mapping_entry(mapping, index, entry);
-+	put_unlocked_mapping_entry(&xas, entry);
- 	xa_unlock_irq(&mapping->pages);
- 	return ret;
- }
-@@ -643,7 +635,7 @@ static int dax_writeback_one(struct block_device *bdev,
+-	/*
+-	 * Preload the radix tree so we can insert safely under the
+-	 * write spinlock. Note that we cannot sleep inside the preload
+-	 * region. Since we can be called from transaction context, don't
+-	 * recurse into the file system.
+-	 */
+-	if (radix_tree_preload(GFP_NOFS)) {
+-		error = -EAGAIN;
+-		goto out_destroy;
+-	}
+-
+ 	/*
+ 	 * Because the inode hasn't been added to the radix-tree yet it can't
+ 	 * be found by another thread, so we can do the non-sleeping lock here.
+@@ -509,23 +498,18 @@ xfs_iget_cache_miss(
+ 	xfs_iflags_set(ip, iflags);
+ 
+ 	/* insert the new inode */
+-	spin_lock(&pag->pag_ici_lock);
+-	error = radix_tree_insert(&pag->pag_ici_root, agino, ip);
+-	if (unlikely(error)) {
+-		WARN_ON(error != -EEXIST);
++	curr = xa_cmpxchg(&pag->pag_ici_xa, agino, NULL, ip, GFP_NOFS);
++	if (unlikely(curr)) {
++		WARN_ON(IS_ERR(curr));
+ 		XFS_STATS_INC(mp, xs_ig_dup);
+ 		error = -EAGAIN;
+-		goto out_preload_end;
++		goto out_unlock;
+ 	}
+-	spin_unlock(&pag->pag_ici_lock);
+-	radix_tree_preload_end();
+ 
+ 	*ipp = ip;
+ 	return 0;
+ 
+-out_preload_end:
+-	spin_unlock(&pag->pag_ici_lock);
+-	radix_tree_preload_end();
++out_unlock:
+ 	if (lock_flags)
+ 		xfs_iunlock(ip, lock_flags);
+ out_destroy:
+@@ -592,7 +576,7 @@ xfs_iget(
+ again:
+ 	error = 0;
+ 	rcu_read_lock();
+-	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
++	ip = xa_load(&pag->pag_ici_xa, agino);
+ 
+ 	if (ip) {
+ 		error = xfs_iget_cache_hit(pag, ip, ino, flags, lock_flags);
+@@ -731,7 +715,7 @@ xfs_inode_ag_walk(
+ 					   void *args),
+ 	int			flags,
+ 	void			*args,
+-	int			tag,
++	xa_tag_t		tag,
+ 	int			iter_flags)
  {
- 	struct radix_tree_root *pages = &mapping->pages;
- 	XA_STATE(xas, pages, index);
--	void *entry2, **slot, *kaddr;
-+	void *entry2, *kaddr;
- 	long ret = 0, id;
- 	sector_t sector;
- 	pgoff_t pgoff;
-@@ -658,7 +650,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 		return -EIO;
+ 	uint32_t		first_index;
+@@ -752,15 +736,8 @@ xfs_inode_ag_walk(
  
- 	xa_lock_irq(&mapping->pages);
--	entry2 = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry2 = get_unlocked_mapping_entry(&xas);
- 	/* Entry got punched out / reallocated? */
- 	if (!entry2 || WARN_ON_ONCE(!xa_is_value(entry2)))
- 		goto put_unlocked;
-@@ -736,7 +728,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	return ret;
+ 		rcu_read_lock();
  
-  put_unlocked:
--	put_unlocked_mapping_entry(mapping, index, entry2);
-+	put_unlocked_mapping_entry(&xas, entry2);
- 	xa_unlock_irq(&mapping->pages);
- 	return ret;
+-		if (tag == -1)
+-			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+-					(void **)batch, first_index,
+-					XFS_LOOKUP_BATCH);
+-		else
+-			nr_found = radix_tree_gang_lookup_tag(
+-					&pag->pag_ici_root,
+-					(void **) batch, first_index,
+-					XFS_LOOKUP_BATCH, tag);
++		nr_found = xa_get_maybe_tag(&pag->pag_ici_xa, (void **)batch,
++				first_index, ULONG_MAX, XFS_LOOKUP_BATCH, tag);
+ 
+ 		if (!nr_found) {
+ 			rcu_read_unlock();
+@@ -896,8 +873,8 @@ xfs_inode_ag_iterator_flags(
+ 	ag = 0;
+ 	while ((pag = xfs_perag_get(mp, ag))) {
+ 		ag = pag->pag_agno + 1;
+-		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1,
+-					  iter_flags);
++		error = xfs_inode_ag_walk(mp, pag, execute, flags, args,
++					  XFS_ICI_NO_TAG, iter_flags);
+ 		xfs_perag_put(pag);
+ 		if (error) {
+ 			last_error = error;
+@@ -926,7 +903,7 @@ xfs_inode_ag_iterator_tag(
+ 					   void *args),
+ 	int			flags,
+ 	void			*args,
+-	int			tag)
++	xa_tag_t		tag)
+ {
+ 	struct xfs_perag	*pag;
+ 	int			error = 0;
+@@ -1040,7 +1017,7 @@ xfs_reclaim_inode(
+ 	int			sync_mode)
+ {
+ 	struct xfs_buf		*bp = NULL;
+-	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
++	xfs_ino_t		ino = ip->i_ino;
+ 	int			error;
+ 
+ restart:
+@@ -1128,16 +1105,15 @@ xfs_reclaim_inode(
+ 	/*
+ 	 * Remove the inode from the per-AG radix tree.
+ 	 *
+-	 * Because radix_tree_delete won't complain even if the item was never
+-	 * added to the tree assert that it's been there before to catch
+-	 * problems with the inode life time early on.
++	 * Check that it was there before to catch problems with the
++	 * inode life time early on.
+ 	 */
+-	spin_lock(&pag->pag_ici_lock);
+-	if (!radix_tree_delete(&pag->pag_ici_root,
+-				XFS_INO_TO_AGINO(ip->i_mount, ino)))
++	xa_lock(&pag->pag_ici_xa);
++	if (__xa_erase(&pag->pag_ici_xa,
++				XFS_INO_TO_AGINO(ip->i_mount, ino)) != ip)
+ 		ASSERT(0);
+ 	xfs_perag_clear_reclaim_tag(pag);
+-	spin_unlock(&pag->pag_ici_lock);
++	xa_unlock(&pag->pag_ici_xa);
+ 
+ 	/*
+ 	 * Here we do an (almost) spurious inode lock in order to coordinate
+@@ -1213,9 +1189,8 @@ xfs_reclaim_inodes_ag(
+ 			int	i;
+ 
+ 			rcu_read_lock();
+-			nr_found = radix_tree_gang_lookup_tag(
+-					&pag->pag_ici_root,
+-					(void **)batch, first_index,
++			nr_found = xa_get_tagged(&pag->pag_ici_xa,
++					(void **)batch, first_index, ULONG_MAX,
+ 					XFS_LOOKUP_BATCH,
+ 					XFS_ICI_RECLAIM_TAG);
+ 			if (!nr_found) {
+@@ -1450,7 +1425,7 @@ __xfs_icache_free_eofblocks(
+ 	struct xfs_eofblocks	*eofb,
+ 	int			(*execute)(struct xfs_inode *ip, int flags,
+ 					   void *args),
+-	int			tag)
++	xa_tag_t		tag)
+ {
+ 	int flags = SYNC_TRYLOCK;
+ 
+@@ -1546,10 +1521,10 @@ __xfs_inode_set_eofblocks_tag(
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+-	spin_lock(&pag->pag_ici_lock);
++	xa_lock(&pag->pag_ici_xa);
+ 
+-	tagged = radix_tree_tagged(&pag->pag_ici_root, tag);
+-	radix_tree_tag_set(&pag->pag_ici_root,
++	tagged = xa_tagged(&pag->pag_ici_xa, tag);
++	__xa_set_tag(&pag->pag_ici_xa,
+ 			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino), tag);
+ 	if (!tagged) {
+ 		/* propagate the eofblocks tag up into the perag radix tree */
+@@ -1563,7 +1538,7 @@ __xfs_inode_set_eofblocks_tag(
+ 		set_tp(ip->i_mount, pag->pag_agno, -1, _RET_IP_);
+ 	}
+ 
+-	spin_unlock(&pag->pag_ici_lock);
++	xa_unlock(&pag->pag_ici_xa);
+ 	xfs_perag_put(pag);
  }
-@@ -1506,16 +1498,16 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
- 	pgoff_t index = vmf->pgoff;
- 	XA_STATE(xas, &mapping->pages, index);
--	void *entry, **slot;
-+	void *entry;
- 	int vmf_ret, error;
  
- 	xa_lock_irq(&mapping->pages);
--	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry = get_unlocked_mapping_entry(&xas);
- 	/* Did we race with someone splitting entry or so? */
- 	if (!entry ||
- 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
- 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
--		put_unlocked_mapping_entry(mapping, index, entry);
-+		put_unlocked_mapping_entry(&xas, entry);
- 		xa_unlock_irq(&mapping->pages);
- 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
- 						      VM_FAULT_NOPAGE);
+@@ -1592,11 +1567,11 @@ __xfs_inode_clear_eofblocks_tag(
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+-	spin_lock(&pag->pag_ici_lock);
++	xa_lock(&pag->pag_ici_xa);
+ 
+-	radix_tree_tag_clear(&pag->pag_ici_root,
++	__xa_clear_tag(&pag->pag_ici_xa,
+ 			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino), tag);
+-	if (!radix_tree_tagged(&pag->pag_ici_root, tag)) {
++	if (!xa_tagged(&pag->pag_ici_xa, tag)) {
+ 		/* clear the eofblocks tag from the perag radix tree */
+ 		xa_clear_tag(&ip->i_mount->m_perag_xa,
+ 				     XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+@@ -1604,7 +1579,7 @@ __xfs_inode_clear_eofblocks_tag(
+ 		clear_tp(ip->i_mount, pag->pag_agno, -1, _RET_IP_);
+ 	}
+ 
+-	spin_unlock(&pag->pag_ici_lock);
++	xa_unlock(&pag->pag_ici_xa);
+ 	xfs_perag_put(pag);
+ }
+ 
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index bd04d5adadfe..436e7f0b1ecc 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -35,7 +35,7 @@ struct xfs_eofblocks {
+ /*
+  * tags for inode radix tree
+  */
+-#define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
++#define XFS_ICI_NO_TAG		XA_NO_TAG /* special flag for an untagged lookup
+ 					   in xfs_inode_ag_iterator */
+ #define XFS_ICI_RECLAIM_TAG	XA_TAG_0 /* inode is to be reclaimed */
+ #define XFS_ICI_EOFBLOCKS_TAG	XA_TAG_1 /* inode has blocks beyond EOF */
+@@ -90,7 +90,7 @@ int xfs_inode_ag_iterator_flags(struct xfs_mount *mp,
+ 	int flags, void *args, int iter_flags);
+ int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
+-	int flags, void *args, int tag);
++	int flags, void *args, xa_tag_t tag);
+ 
+ static inline int
+ xfs_fs_eofblocks_from_user(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 801274126648..605ac6c11056 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2309,7 +2309,7 @@ xfs_ifree_cluster(
+ 		for (i = 0; i < inodes_per_cluster; i++) {
+ retry:
+ 			rcu_read_lock();
+-			ip = radix_tree_lookup(&pag->pag_ici_root,
++			ip = xa_load(&pag->pag_ici_xa,
+ 					XFS_INO_TO_AGINO(mp, (inum + i)));
+ 
+ 			/* Inode not in memory, nothing to do */
+@@ -3207,7 +3207,7 @@ xfs_iflush_cluster(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
+-	unsigned long		first_index, mask;
++	unsigned long		first_index, last_index, mask;
+ 	unsigned long		inodes_per_cluster;
+ 	int			cilist_size;
+ 	struct xfs_inode	**cilist;
+@@ -3225,12 +3225,12 @@ xfs_iflush_cluster(
+ 	if (!cilist)
+ 		goto out_put;
+ 
+-	mask = ~(((mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog)) - 1);
+-	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
++	mask = (((mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog)) - 1);
++	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & ~mask;
++	last_index = first_index | mask;
+ 	rcu_read_lock();
+-	/* really need a gang lookup range call here */
+-	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)cilist,
+-					first_index, inodes_per_cluster);
++	nr_found = xa_get_entries(&pag->pag_ici_xa, (void**)cilist, first_index,
++					last_index, inodes_per_cluster);
+ 	if (nr_found == 0)
+ 		goto out_free;
+ 
+@@ -3251,16 +3251,6 @@ xfs_iflush_cluster(
+ 			spin_unlock(&cip->i_flags_lock);
+ 			continue;
+ 		}
+-
+-		/*
+-		 * Once we fall off the end of the cluster, no point checking
+-		 * any more inodes in the list because they will also all be
+-		 * outside the cluster.
+-		 */
+-		if ((XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
+-			spin_unlock(&cip->i_flags_lock);
+-			break;
+-		}
+ 		spin_unlock(&cip->i_flags_lock);
+ 
+ 		/*
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 0541aeb8449c..fc517e424fae 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -210,9 +210,8 @@ xfs_initialize_perag(
+ 			goto out_unwind_new_pags;
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+-		spin_lock_init(&pag->pag_ici_lock);
+ 		mutex_init(&pag->pag_ici_reclaim_lock);
+-		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
++		xa_init(&pag->pag_ici_xa);
+ 		if (xfs_buf_hash_init(pag))
+ 			goto out_free_pag;
+ 		init_waitqueue_head(&pag->pagb_wait);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 6e5ad7b26f46..ab0f706d2fd7 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -374,8 +374,7 @@ typedef struct xfs_perag {
+ 
+ 	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+ 
+-	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
+-	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
++	struct xarray	pag_ici_xa;	/* incore inode cache */
+ 	int		pag_ici_reclaimable;	/* reclaimable inodes */
+ 	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
+ 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
 -- 
 2.15.0
 
