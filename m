@@ -1,37 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39354 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750978AbdLFEw5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 23:52:57 -0500
-Date: Tue, 5 Dec 2017 20:52:54 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
-Message-ID: <20171206045254.GP26021@bombadil.infradead.org>
+Received: from mga06.intel.com ([134.134.136.31]:8582 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752034AbdLFX6b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Dec 2017 18:58:31 -0500
+Date: Wed, 6 Dec 2017 16:58:29 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 00/73] XArray version 4
+Message-ID: <20171206235829.GA28086@linux.intel.com>
 References: <20171206004159.3755-1-willy@infradead.org>
- <20171206004159.3755-73-willy@infradead.org>
- <20171206012901.GZ4094@dastard>
- <20171206020208.GK26021@bombadil.infradead.org>
- <20171206031456.GE4094@dastard>
- <20171206044549.GO26021@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171206044549.GO26021@bombadil.infradead.org>
+In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 05, 2017 at 08:45:49PM -0800, Matthew Wilcox wrote:
-> The dquot code is just going to have to live with the fact that there's
-> additional locking going on that it doesn't need.  I'm open to getting
-> rid of the irqsafety, but we can't give up the spinlock protection
-> without giving up the RCU/lockdep analysis and the ability to move nodes.
-> I don't suppose the dquot code can 
+On Tue, Dec 05, 2017 at 04:40:46PM -0800, Matthew Wilcox wrote:
+> From: Matthew Wilcox <mawilcox@microsoft.com>
+> 
+> I looked through some notes and decided this was version 4 of the XArray.
+> Last posted two weeks ago, this version includes a *lot* of changes.
+> I'd like to thank Dave Chinner for his feedback, encouragement and
+> distracting ideas for improvement, which I'll get to once this is merged.
+> 
+> Highlights:
+>  - Over 2000 words of documentation in patch 8!  And lots more kernel-doc.
+>  - The page cache is now fully converted to the XArray.
+>  - Many more tests in the test-suite.
+> 
+> This patch set is not for applying.  0day is still reporting problems,
+> and I'd feel bad for eating someone's data.  These patches apply on top
+> of a set of prepatory patches which just aren't interesting.  If you
+> want to see the patches applied to a tree, I suggest pulling my git tree:
+> http://git.infradead.org/users/willy/linux-dax.git/shortlog/refs/heads/xarray-2017-12-04
+> I also left out the idr_preload removals.  They're still in the git tree,
+> but I'm not looking for feedback on them.
 
-Oops, thought I'd finished writing this paragraph.
+Hey Matthew,
 
-I don't suppose the dquot code can be restructured to use the xa_lock to
-protect, say, qi_dquots?  I suspect not, since you wouldn't know which
-of the three xarray locks to use.
+Maybe I missed this from a previous version, but can you explain the
+motivation for replacing the radix tree with an xarray?  (I think this should
+probably still be part of the cover letter?)  Do we have a performance problem
+we need to solve?  A code complexity issue we need to solve?  Something else?
+
+- Ross
