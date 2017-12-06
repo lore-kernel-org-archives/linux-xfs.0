@@ -1,93 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47864 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752212AbdLFUsE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 15:48:04 -0500
-Date: Wed, 6 Dec 2017 12:47:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [xfsprogs PATCH v2 1/3] xfs_io: fix compiler warnings in
- getfsmap code
-Message-ID: <20171206204749.GM19219@magnolia>
-References: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
- <20171205235651.17102-2-ross.zwisler@linux.intel.com>
- <20171206002743.GC5858@dastard>
- <20171206201014.GA27401@linux.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37566 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751809AbdLFUts (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Dec 2017 15:49:48 -0500
+Date: Wed, 6 Dec 2017 15:49:46 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: always honor OWN_UNKNOWN rmap removal requests
+Message-ID: <20171206204945.GB46723@bfoster.bfoster>
+References: <20171205185524.GB42206@bfoster.bfoster>
+ <20171205233420.GG19219@magnolia>
+ <20171206141406.GA46723@bfoster.bfoster>
+ <20171206175300.GJ19219@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171206201014.GA27401@linux.intel.com>
+In-Reply-To: <20171206175300.GJ19219@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Dec 06, 2017 at 01:10:14PM -0700, Ross Zwisler wrote:
-> On Wed, Dec 06, 2017 at 11:27:43AM +1100, Dave Chinner wrote:
-> > On Tue, Dec 05, 2017 at 04:56:49PM -0700, Ross Zwisler wrote:
-> > > I recently upgraded my compiler from
-> > > 	gcc (GCC) 6.4.1 20170727 (Red Hat 6.4.1-1)
-> > > to
-> > > 	gcc (GCC) 7.2.1 20170915 (Red Hat 7.2.1-2)
-> > > and started getting a bunch of compiler warnings in io/fsmap.c:
+On Wed, Dec 06, 2017 at 09:53:00AM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 06, 2017 at 09:14:07AM -0500, Brian Foster wrote:
+> > On Tue, Dec 05, 2017 at 03:34:20PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > >   fsmap.c: In function ‘fsmap_f’:
-> > >   fsmap.c:228:40: warning: ‘%lld’ directive output may be truncated writing
-> > >   between 1 and 17 bytes into a region of size between 12 and 28
-> > >   [-Wformat-truncation=]
-> > >      snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
-> > >   ^~~~
-> > >   fsmap.c:228:32: note: directive argument in the range [0, 36028797018963967]
-> > >      snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
-> > >   ^~~~~~~~~~~~~~~
-> > >   fsmap.c:228:3: note: ‘snprintf’ output between 8 and 40 bytes into a
-> > >   destination of size 32
-> > >      snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
-> > >      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > >   (long long)BTOBBT(p->fmr_physical),
-> > >   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > >   (long long)BTOBBT(p->fmr_physical + p->fmr_length - 1));
-> > >   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > > Calling xfs_rmap_free with an unknown owner is supposed to remove any
+> > > rmaps covering that range regardless of owner.  This is used by the EFI
+> > > recovery code to say "we're freeing this, it mustn't be owned by
+> > > anything anymore", but for whatever reason xfs_free_ag_extent filters
+> > > them out.
 > > > 
-> > > The issue is that 'bbuf' is only defined to be 32 characters wide, but each
-> > > signed long long can potentially print as many as 19 characters
-> > > (9223372036854775807 is the max value).  The format we're using for bbuf is
-> > > "[%lld..%lld]:" which has 2 signed long longs plus 6 other characters
-> > > "[..]:\0", which means it's possible we'll print up to 44 characters,
-> > > overflowing our 32 char buffer.
+> > > Therefore, remove the filter and make xfs_rmap_unmap actually treat it
+> > > as a wildcard owner -- free anything that's already there, and if
+> > > there's no owner at all then that's fine too.
 > > > 
-> > > Fix this by bumping all the buffer sizes in dump_map_verbose() to 64
-> > > characters.
+> > > There are two existing callers of bmap_add_free that take care the rmap
+> > > deferred ops themselves and use OWN_UNKNOWN to skip the EFI-based rmap
+> > > cleanup; convert these to use OWN_NULL, and ensure that the RUI gets
+> > > added to the defer ops ahead of any EFI.
 > > > 
-> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Fixes: 3fcab549a234 ("xfs_io: support the new getfsmap ioctl")
+> > > Lastly, now that xfs_free_extent filters out OWN_NULL rmap free requests,
+> > > growfs will have to consult directly with the rmap to ensure that there
+> > > aren't any rmaps in the grown region.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
 > > 
-> > FYI, I posted a fix for this weeks ago. I think Eric has already
-> > picked it up, but it hasn't been pushed out into the for-next branch
-> > yet.
+...
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > > index 5f3a3d9..fd0e630 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > > @@ -484,10 +484,17 @@ xfs_rmap_unmap(
+> > >  	XFS_WANT_CORRUPTED_GOTO(mp, (flags & XFS_RMAP_UNWRITTEN) ==
+> > >  			(ltrec.rm_flags & XFS_RMAP_UNWRITTEN), out_error);
+> > >  
+> > > -	/* Make sure the extent we found covers the entire freeing range. */
+> > > -	XFS_WANT_CORRUPTED_GOTO(mp, ltrec.rm_startblock <= bno &&
+> > > -		ltrec.rm_startblock + ltrec.rm_blockcount >=
+> > > -		bno + len, out_error);
+> > > +	/*
+> > > +	 * Make sure the extent we found covers the entire freeing range.
+> > > +	 * If this is a wildcard free, we're already done, otherwise there's
+> > > +	 * something wrong with the rmapbt.
+> > > +	 */
+> > 
+> > What does this mean by "we're already done?" This logic appears to mean
+> > that we don't do anything (as opposed to throwing an error). I think the
+> > comment would be more clear if it pointed out that/why we have nothing
+> > to do here (due to OWN_UNKNOWN). I.e., caller passed in a wildcard and
+> > we essentially didn't find a match..?
 > 
-> I'm seeing similar new compiler warnings when compiling xfstests:
+> "Make sure the extent we found covers the entire freeing range.  Passing
+> in an owner of OWN_UNKNOWN means that the caller wants to remove any
+> reverse mapping that may exist for this range of blocks regardless of
+> owner; if there are no mappings at all, we're done."
 > 
-> write_log.c: In function ‘wlog_open’:
-> write_log.c:124:37: warning: ‘%s’ directive writing up to 1023 bytes into a region of size 224 [-Wformat-overflow=]
->     "Could not open write_log - open(%s, %#o, %#o) failed:  %s\n",
->                                      ^~
-> write_log.c:124:4: note: directive argument in the range [1089, 2047]
->     "Could not open write_log - open(%s, %#o, %#o) failed:  %s\n",
->     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> etc.
-> 
-> I don't see any patches posted that fix these, as of yet.  As far as you know,
-> am I correct in thinking that these still need to be fixed?
 
-It sure looks that way.
+Looking at this again, I find it a bit confusing how this check seems to
+double as a "nothing to do" in the unknown case and a corruption error
+otherwise. For example, is something still technically wrong if we get
+an UNKNOWN unmap request (aka an extent free) to unmap a range that
+overlaps with but starts before or extends past the range in the rmapbt?
+I could easily be missing something here, but otherwise I wonder if this
+would be better as separate checks so we don't lose some of the error
+checking coverage.
 
---D
+Brian
 
-> - Ross
+> > > +	if (ltrec.rm_startblock > bno ||
+> > > +	    ltrec.rm_startblock + ltrec.rm_blockcount < bno + len) {
+> > > +		if (owner == XFS_RMAP_OWN_UNKNOWN)
+> > > +			goto out_done;
+> > > +		XFS_WANT_CORRUPTED_GOTO(mp, false, out_error);
+> > > +	}
+> > >  
+> > 
+> > Also... unrelated, but is this check immediately below really intending
+> > to ignore owner inconsistencies for all !inode owners?
+> 
+> I had my eye on that one too, though I think that could be a
+> freestanding cleanup.
+> 
+> > >  	/* Make sure the owner matches what we expect to find in the tree. */
+> > >  	XFS_WANT_CORRUPTED_GOTO(mp, owner == ltrec.rm_owner ||
+> > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > index 8f22fc5..60a2e12 100644
+> > > --- a/fs/xfs/xfs_fsops.c
+> > > +++ b/fs/xfs/xfs_fsops.c
+> > > @@ -571,6 +571,11 @@ xfs_growfs_data_private(
+> > >  		 * this doesn't actually exist in the rmap btree.
+> > >  		 */
+> > >  		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+> > > +		error = xfs_rmap_free(tp, bp, agno,
+> > > +				be32_to_cpu(agf->agf_length) - new,
+> > > +				new, &oinfo);
+> > > +		if (error)
+> > > +			goto error0;
+> > 
+> > OWN_NULL makes sense from the perspective of needing to avoid some error
+> > down in the free code where we need to free some space without needing
+> > to remove an owner, but what is the purpose of the above? It doesn't
+> > look like this really does anything beyond checking that the associated
+> > space is beyond the end of the rmapbt. If that's the intent, then it
+> > probably makes sense to update this comment as well.
+> 
+> Yes, that's exactly the intent.
+> 
+> Hmm, come to think of it, the rmap xref patch adds a
+> xfs_rmap_has_record helper that does exactly what we want here (decides
+> if there are any records covering this range).
+> 
+> --D
+> 
+> > Brian
+> > 
+> > >  		error = xfs_free_extent(tp,
+> > >  				XFS_AGB_TO_FSB(mp, agno,
+> > >  					be32_to_cpu(agf->agf_length) - new),
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
