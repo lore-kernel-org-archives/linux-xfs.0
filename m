@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38478 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60183 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753312AbdLFAmK (ORCPT
+        with ESMTP id S1753311AbdLFAmK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:10 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 14/73] xarray: Add xas_for_each_tag
-Date: Tue,  5 Dec 2017 16:41:00 -0800
-Message-Id: <20171206004159.3755-15-willy@infradead.org>
+Subject: [PATCH v4 05/73] xarray: Change definition of sibling entries
+Date: Tue,  5 Dec 2017 16:40:51 -0800
+Message-Id: <20171206004159.3755-6-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,199 +16,287 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This iterator operates across each tagged entry in the specified range.
-We do not yet have a user for an xa_for_each_tag iterator, but it would
-be straight-forward to add one if needed.  This commit also includes
-xas_find_tag() and xas_next_tag().
+Instead of storing a pointer to the slot containing the canonical entry,
+store the offset of the slot.  Produces slightly more efficient code
+(~300 bytes) and simplifies the implementation.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h | 68 +++++++++++++++++++++++++++++++++++++++++++
- lib/xarray.c           | 78 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 146 insertions(+)
+ include/linux/xarray.h | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/radix-tree.c       | 65 +++++++++++----------------------------
+ 2 files changed, 100 insertions(+), 47 deletions(-)
 
 diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index a62baf6f1a28..4e61ebd406f5 100644
+index e55f5cfd14ed..2c45d87a3476 100644
 --- a/include/linux/xarray.h
 +++ b/include/linux/xarray.h
-@@ -554,6 +554,7 @@ void *xas_find(struct xa_state *, unsigned long max);
- bool xas_get_tag(const struct xa_state *, xa_tag_t);
- void xas_set_tag(const struct xa_state *, xa_tag_t);
- void xas_clear_tag(const struct xa_state *, xa_tag_t);
-+void *xas_find_tag(struct xa_state *, unsigned long max, xa_tag_t);
- void xas_init_tags(const struct xa_state *);
- 
- bool xas_nomem(struct xa_state *, gfp_t);
-@@ -676,6 +677,55 @@ static inline void *xas_next_entry(struct xa_state *xas, unsigned long max)
- 	return entry;
+@@ -58,6 +58,8 @@ static inline bool xa_is_value(void *entry)
+ 	return (unsigned long)entry & 1;
  }
  
++/* Everything below here is the Advanced API.  Proceed with caution. */
++
+ #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
+ #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
+ #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
+@@ -71,4 +73,84 @@ static inline bool xa_is_value(void *entry)
+ 				spin_unlock_irqrestore(&(xa)->xa_lock, flags)
+ #define xa_lock_held(xa)	lockdep_is_held(&(xa)->xa_lock)
+ 
++/*
++ * The xarray is constructed out of a set of 'chunks' of pointers.  Choosing
++ * the best chunk size requires some tradeoffs.  A power of two recommends
++ * itself so that we can walk the tree based purely on shifts and masks.
++ * Generally, the larger the better; as the number of slots per level of the
++ * tree increases, the less tall the tree needs to be.  But that needs to be
++ * balanced against the memory consumption of each node.  On a 64-bit system,
++ * xa_node is currently 576 bytes, and we get 7 of them per 4kB page.  If we
++ * doubled the number of slots per node, we'd get only 3 nodes per 4kB page.
++ */
++#ifndef XA_CHUNK_SHIFT
++#define XA_CHUNK_SHIFT		(CONFIG_BASE_SMALL ? 4 : 6)
++#endif
++#define XA_CHUNK_SIZE		(1UL << XA_CHUNK_SHIFT)
++#define XA_CHUNK_MASK		(XA_CHUNK_SIZE - 1)
++
++/*
++ * Internal entries have the bottom two bits set to the value 10b.  Most
++ * internal entries are pointers to the next node in the tree.  Since the
++ * kernel unmaps page 0 to trap NULL pointer dereferences, we can use values
++ * 0-1023 for special purposes.  Values 0-62 are used for sibling
++ * entries.  Value 256 is used for the retry entry.
++ */
++
 +/* Private */
-+static inline unsigned int xas_find_chunk(struct xa_state *xas, bool advance,
-+		xa_tag_t tag)
++static inline void *xa_mk_internal(unsigned long v)
 +{
-+	unsigned long *addr = xas->xa_node->tags[(__force unsigned)tag];
-+	unsigned int offset = xas->xa_offset;
++	return (void *)((v << 2) | 2);
++}
 +
-+	if (advance)
-+		offset++;
-+	if (XA_CHUNK_SIZE == BITS_PER_LONG) {
-+		unsigned long data = *addr & (~0UL << offset);
-+		if (data)
-+			return __ffs(data);
-+		return XA_CHUNK_SIZE;
-+	}
-+
-+	return find_next_bit(addr, XA_CHUNK_SIZE, offset);
++/* Private */
++static inline unsigned long xa_to_internal(void *entry)
++{
++	return (unsigned long)entry >> 2;
 +}
 +
 +/**
-+ * xas_next_tag() - Advance iterator to next tagged entry.
-+ * @xas: XArray operation state.
-+ * @max: Highest index to return.
-+ * @tag: Tag to search for.
++ * xa_is_internal() - Is the entry an internal entry?
++ * @entry: Entry retrieved from the XArray
 + *
-+ * xas_next_tag() is an inline function to optimise xarray traversal for
-+ * speed.  It is equivalent to calling xas_find_tag(), and will call
-+ * xas_find_tag() for all the hard cases.
-+ *
-+ * Return: The next tagged entry after the one currently referred to by @xas.
++ * Return: %true if the entry is an internal entry.
 + */
-+static inline void *xas_next_tag(struct xa_state *xas, unsigned long max,
-+								xa_tag_t tag)
++static inline bool xa_is_internal(void *entry)
 +{
-+	struct xa_node *node = xas->xa_node;
-+	unsigned int offset;
-+
-+	if (unlikely(xas_not_node(node) || xa_node_shift(node)))
-+		return xas_find_tag(xas, max, tag);
-+	offset = xas_find_chunk(xas, true, tag);
-+	xas->xa_offset = offset;
-+	xas->xa_index = (xas->xa_index & ~XA_CHUNK_MASK) + offset;
-+	if (xas->xa_index > max)
-+		return NULL;
-+	if (offset == XA_CHUNK_SIZE)
-+		return xas_find_tag(xas, max, tag);
-+	return xa_entry(xas->xa, node, offset);
++	return ((unsigned long)entry & 3) == 2;
 +}
 +
- /*
-  * If iterating while holding a lock, drop the lock and reschedule
-  * every %XA_CHECK_SCHED loops.
-@@ -701,6 +751,24 @@ enum {
- 	for (entry = xas_find(xas, max); entry; \
- 	     entry = xas_next_entry(xas, max))
- 
-+/**
-+ * xas_for_each_tag() - Iterate over a range of an XArray
-+ * @xas: XArray operation state.
-+ * @entry: Entry retrieved from array.
-+ * @max: Maximum index to retrieve from array.
-+ * @tag: Tag to search for.
-+ *
-+ * The loop body will be executed for each tagged entry in the xarray
-+ * between the current xas position and @max.  @entry will be set to
-+ * the entry retrieved from the xarray.  It is safe to delete entries
-+ * from the array in the loop body.  You should hold either the RCU lock
-+ * or the xa_lock while iterating.  If you need to drop the lock, call
-+ * xas_pause() first.
-+ */
-+#define xas_for_each_tag(xas, entry, max, tag) \
-+	for (entry = xas_find_tag(xas, max, tag); entry; \
-+	     entry = xas_next_tag(xas, max, tag))
++/* Private */
++static inline bool xa_is_node(void *entry)
++{
++	return xa_is_internal(entry) && (unsigned long)entry > 4096;
++}
 +
- /* Internal functions, mostly shared between radix-tree.c, xarray.c and idr.c */
- void xas_destroy(struct xa_state *);
++/* Private */
++static inline void *xa_mk_sibling(unsigned int offset)
++{
++	return xa_mk_internal(offset);
++}
++
++/* Private */
++static inline unsigned long xa_to_sibling(void *entry)
++{
++	return xa_to_internal(entry);
++}
++
++/**
++ * xa_is_sibling() - Is the entry a sibling entry?
++ * @entry: Entry retrieved from the XArray
++ *
++ * Return: %true if the entry is a sibling entry.
++ */
++static inline bool xa_is_sibling(void *entry)
++{
++	return IS_ENABLED(CONFIG_RADIX_TREE_MULTIORDER) &&
++		xa_is_internal(entry) &&
++		(entry < xa_mk_sibling(XA_CHUNK_SIZE - 1));
++}
++
++#define XA_RETRY_ENTRY		xa_mk_internal(256)
++
+ #endif /* _LINUX_XARRAY_H */
+diff --git a/lib/radix-tree.c b/lib/radix-tree.c
+index cda7a730e591..0a7a21dd9398 100644
+--- a/lib/radix-tree.c
++++ b/lib/radix-tree.c
+@@ -37,6 +37,7 @@
+ #include <linux/rcupdate.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
++#include <linux/xarray.h>
  
-diff --git a/lib/xarray.c b/lib/xarray.c
-index ac4ff3daf476..f9eaac2d85f9 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -858,6 +858,84 @@ void *xas_find(struct xa_state *xas, unsigned long max)
+ 
+ /* Number of nodes in fully populated tree of given height */
+@@ -97,24 +98,7 @@ static inline void *node_to_entry(void *ptr)
+ 	return (void *)((unsigned long)ptr | RADIX_TREE_INTERNAL_NODE);
  }
- EXPORT_SYMBOL_GPL(xas_find);
  
-+/**
-+ * xas_find_tag() - Find the next tagged entry in the XArray.
-+ * @xas: XArray operation state.
-+ * @max: Highest index to return.
-+ * @tag: Tag number to search for.
-+ *
-+ * If the xas has not yet been walked to an entry, return the tagged entry
-+ * which has an index >= xas.xa_index.  If it has been walked, the entry
-+ * currently being pointed at has been processed, and so we move to the
-+ * next tagged entry.
-+ *
-+ * If no tagged entry is found and the array is smaller than @max, @xas is
-+ * set to the restart state and xas->xa_index is set to the smallest index
-+ * not yet in the array.  This allows @xas to be immediately passed to
-+ * xas_create().
-+ *
-+ * Return: The entry, if found, otherwise NULL.
-+ */
-+void *xas_find_tag(struct xa_state *xas, unsigned long max, xa_tag_t tag)
-+{
-+	bool advance = true;
-+	unsigned int offset;
-+	void *entry;
-+
-+	if (xas_error(xas))
-+		return NULL;
-+
-+	if (!xas->xa_node) {
-+		xas->xa_index = 1;
-+		goto out;
-+	} else if (xas_top(xas->xa_node)) {
-+		advance = false;
-+		entry = xa_head(xas->xa);
-+		if (xas->xa_index > max_index(entry))
-+			goto out;
-+		if (!xa_is_node(entry)) {
-+			if (xa_tagged(xas->xa, tag)) {
-+				xas->xa_node = NULL;
-+				return entry;
-+			}
-+			xas->xa_index = 1;
-+			goto out;
-+		}
-+		xas->xa_node = xa_to_node(entry);
-+		xas->xa_offset = xas->xa_index >> xas->xa_node->shift;
-+	}
-+
-+	while (xas->xa_index <= max) {
-+		if (unlikely(xas->xa_offset == XA_CHUNK_SIZE)) {
-+			xas->xa_offset = xas->xa_node->offset + 1;
-+			xas->xa_node = xa_parent(xas->xa, xas->xa_node);
-+			if (!xas->xa_node)
-+				break;
-+			advance = false;
-+			continue;
-+		}
-+
-+		offset = xas_find_chunk(xas, advance, tag);
-+		xas_add(xas, offset - xas->xa_offset);
-+		if (offset == XA_CHUNK_SIZE) {
-+			advance = false;
-+			continue;
-+		}
-+
-+		entry = xa_entry(xas->xa, xas->xa_node, xas->xa_offset);
-+		if (!xa_is_node(entry))
-+			return entry;
-+		xas->xa_node = xa_to_node(entry);
-+		xas->xa_offset = get_offset(xas->xa_index, xas->xa_node);
-+	}
-+
-+ out:
-+	if (!xas->xa_node)
-+		xas->xa_node = XAS_BOUNDS;
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(xas_find_tag);
-+
- /**
-  * __xa_init() - Initialise an empty XArray.
-  * @xa: XArray.
+-#define RADIX_TREE_RETRY	node_to_entry(NULL)
+-
+-#ifdef CONFIG_RADIX_TREE_MULTIORDER
+-/* Sibling slots point directly to another slot in the same node */
+-static inline
+-bool is_sibling_entry(const struct radix_tree_node *parent, void *node)
+-{
+-	void __rcu **ptr = node;
+-	return (parent->slots <= ptr) &&
+-			(ptr < parent->slots + RADIX_TREE_MAP_SIZE);
+-}
+-#else
+-static inline
+-bool is_sibling_entry(const struct radix_tree_node *parent, void *node)
+-{
+-	return false;
+-}
+-#endif
++#define RADIX_TREE_RETRY	XA_RETRY_ENTRY
+ 
+ static inline unsigned long
+ get_slot_offset(const struct radix_tree_node *parent, void __rcu **slot)
+@@ -128,16 +112,10 @@ static unsigned int radix_tree_descend(const struct radix_tree_node *parent,
+ 	unsigned int offset = (index >> parent->shift) & RADIX_TREE_MAP_MASK;
+ 	void __rcu **entry = rcu_dereference_raw(parent->slots[offset]);
+ 
+-#ifdef CONFIG_RADIX_TREE_MULTIORDER
+-	if (radix_tree_is_internal_node(entry)) {
+-		if (is_sibling_entry(parent, entry)) {
+-			void __rcu **sibentry;
+-			sibentry = (void __rcu **) entry_to_node(entry);
+-			offset = get_slot_offset(parent, sibentry);
+-			entry = rcu_dereference_raw(*sibentry);
+-		}
++	if (xa_is_sibling(entry)) {
++		offset = xa_to_sibling(entry);
++		entry = rcu_dereference_raw(parent->slots[offset]);
+ 	}
+-#endif
+ 
+ 	*nodep = (void *)entry;
+ 	return offset;
+@@ -299,10 +277,10 @@ static void dump_node(struct radix_tree_node *node, unsigned long index)
+ 		} else if (!radix_tree_is_internal_node(entry)) {
+ 			pr_debug("radix entry %p offset %ld indices %lu-%lu parent %p\n",
+ 					entry, i, first, last, node);
+-		} else if (is_sibling_entry(node, entry)) {
++		} else if (xa_is_sibling(entry)) {
+ 			pr_debug("radix sblng %p offset %ld indices %lu-%lu parent %p val %p\n",
+ 					entry, i, first, last, node,
+-					*(void **)entry_to_node(entry));
++					node->slots[xa_to_sibling(entry)]);
+ 		} else {
+ 			dump_node(entry_to_node(entry), first);
+ 		}
+@@ -872,8 +850,7 @@ static void radix_tree_free_nodes(struct radix_tree_node *node)
+ 
+ 	for (;;) {
+ 		void *entry = rcu_dereference_raw(child->slots[offset]);
+-		if (radix_tree_is_internal_node(entry) &&
+-					!is_sibling_entry(child, entry)) {
++		if (xa_is_node(entry)) {
+ 			child = entry_to_node(entry);
+ 			offset = 0;
+ 			continue;
+@@ -895,7 +872,7 @@ static void radix_tree_free_nodes(struct radix_tree_node *node)
+ static inline int insert_entries(struct radix_tree_node *node,
+ 		void __rcu **slot, void *item, unsigned order, bool replace)
+ {
+-	struct radix_tree_node *child;
++	void *sibling;
+ 	unsigned i, n, tag, offset, tags = 0;
+ 
+ 	if (node) {
+@@ -913,7 +890,7 @@ static inline int insert_entries(struct radix_tree_node *node,
+ 		offset = offset & ~(n - 1);
+ 		slot = &node->slots[offset];
+ 	}
+-	child = node_to_entry(slot);
++	sibling = xa_mk_sibling(offset);
+ 
+ 	for (i = 0; i < n; i++) {
+ 		if (slot[i]) {
+@@ -930,7 +907,7 @@ static inline int insert_entries(struct radix_tree_node *node,
+ 	for (i = 0; i < n; i++) {
+ 		struct radix_tree_node *old = rcu_dereference_raw(slot[i]);
+ 		if (i) {
+-			rcu_assign_pointer(slot[i], child);
++			rcu_assign_pointer(slot[i], sibling);
+ 			for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++)
+ 				if (tags & (1 << tag))
+ 					tag_clear(node, tag, offset + i);
+@@ -940,9 +917,7 @@ static inline int insert_entries(struct radix_tree_node *node,
+ 				if (tags & (1 << tag))
+ 					tag_set(node, tag, offset);
+ 		}
+-		if (radix_tree_is_internal_node(old) &&
+-					!is_sibling_entry(node, old) &&
+-					(old != RADIX_TREE_RETRY))
++		if (xa_is_node(old))
+ 			radix_tree_free_nodes(old);
+ 		if (xa_is_value(old))
+ 			node->exceptional--;
+@@ -1101,10 +1076,10 @@ static inline void replace_sibling_entries(struct radix_tree_node *node,
+ 				void __rcu **slot, int count, int exceptional)
+ {
+ #ifdef CONFIG_RADIX_TREE_MULTIORDER
+-	void *ptr = node_to_entry(slot);
+-	unsigned offset = get_slot_offset(node, slot) + 1;
++	unsigned offset = get_slot_offset(node, slot);
++	void *ptr = xa_mk_sibling(offset);
+ 
+-	while (offset < RADIX_TREE_MAP_SIZE) {
++	while (++offset < RADIX_TREE_MAP_SIZE) {
+ 		if (rcu_dereference_raw(node->slots[offset]) != ptr)
+ 			break;
+ 		if (count < 0) {
+@@ -1112,7 +1087,6 @@ static inline void replace_sibling_entries(struct radix_tree_node *node,
+ 			node->count--;
+ 		}
+ 		node->exceptional += exceptional;
+-		offset++;
+ 	}
+ #endif
+ }
+@@ -1311,8 +1285,7 @@ int radix_tree_split(struct radix_tree_root *root, unsigned long index,
+ 			tags |= 1 << tag;
+ 
+ 	for (end = offset + 1; end < RADIX_TREE_MAP_SIZE; end++) {
+-		if (!is_sibling_entry(parent,
+-				rcu_dereference_raw(parent->slots[end])))
++		if (!xa_is_sibling(rcu_dereference_raw(parent->slots[end])))
+ 			break;
+ 		for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++)
+ 			if (tags & (1 << tag))
+@@ -1608,11 +1581,9 @@ static void set_iter_tags(struct radix_tree_iter *iter,
+ static void __rcu **skip_siblings(struct radix_tree_node **nodep,
+ 			void __rcu **slot, struct radix_tree_iter *iter)
+ {
+-	void *sib = node_to_entry(slot - 1);
+-
+ 	while (iter->index < iter->next_index) {
+ 		*nodep = rcu_dereference_raw(*slot);
+-		if (*nodep && *nodep != sib)
++		if (*nodep && !xa_is_sibling(*nodep))
+ 			return slot;
+ 		slot++;
+ 		iter->index = __radix_tree_iter_add(iter, 1);
+@@ -1763,7 +1734,7 @@ void __rcu **radix_tree_next_chunk(const struct radix_tree_root *root,
+ 				while (++offset	< RADIX_TREE_MAP_SIZE) {
+ 					void *slot = rcu_dereference_raw(
+ 							node->slots[offset]);
+-					if (is_sibling_entry(node, slot))
++					if (xa_is_sibling(slot))
+ 						continue;
+ 					if (slot)
+ 						break;
 -- 
 2.15.0
 
