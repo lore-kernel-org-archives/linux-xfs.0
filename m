@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44304 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60709 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753301AbdLFAmK (ORCPT
+        with ESMTP id S1753304AbdLFAmK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Dec 2017 19:42:10 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 27/73] page cache: Convert delete_batch to XArray
-Date: Tue,  5 Dec 2017 16:41:13 -0800
-Message-Id: <20171206004159.3755-28-willy@infradead.org>
+Subject: [PATCH v4 07/73] xarray: Define struct xa_node
+Date: Tue,  5 Dec 2017 16:40:53 -0800
+Message-Id: <20171206004159.3755-8-willy@infradead.org>
 In-Reply-To: <20171206004159.3755-1-willy@infradead.org>
 References: <20171206004159.3755-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,75 +16,106 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Rename the function from page_cache_tree_delete_batch to just
-page_cache_delete_batch.
+This is a direct replacement for struct radix_tree_node.  Use a #define
+so that radix tree users continue to work without change.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/filemap.c | 21 +++++++--------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
+ include/linux/radix-tree.h | 29 +++--------------------------
+ include/linux/xarray.h     | 24 ++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 26 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 6c9cad248e7f..9e6158cfbaeb 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -276,7 +276,7 @@ void delete_from_page_cache(struct page *page)
- EXPORT_SYMBOL(delete_from_page_cache);
+diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
+index f31a278de8eb..f46e3de57115 100644
+--- a/include/linux/radix-tree.h
++++ b/include/linux/radix-tree.h
+@@ -32,6 +32,7 @@
+ 
+ /* Keep unconverted code working */
+ #define radix_tree_root		xarray
++#define radix_tree_node		xa_node
  
  /*
-- * page_cache_tree_delete_batch - delete several pages from page cache
-+ * page_cache_delete_batch - delete several pages from page cache
-  * @mapping: the mapping to which pages belong
-  * @pvec: pagevec with pages to delete
-  *
-@@ -289,23 +289,18 @@ EXPORT_SYMBOL(delete_from_page_cache);
-  *
-  * The function expects xa_lock to be held.
-  */
--static void
--page_cache_tree_delete_batch(struct address_space *mapping,
-+static void page_cache_delete_batch(struct address_space *mapping,
- 			     struct pagevec *pvec)
- {
--	struct radix_tree_iter iter;
--	void **slot;
-+	XA_STATE(xas, &mapping->pages, pvec->pages[0]->index);
- 	int total_pages = 0;
- 	int i = 0, tail_pages = 0;
- 	struct page *page;
--	pgoff_t start;
+  * The bottom two bits of the slot determine how the remaining bits in the
+@@ -60,41 +61,17 @@ static inline bool radix_tree_is_internal_node(void *ptr)
  
--	start = pvec->pages[0]->index;
--	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
-+	xas_set_update(&xas, workingset_lookup_update(mapping));
-+	xas_for_each(&xas, page, ULONG_MAX) {
- 		if (i >= pagevec_count(pvec) && !tail_pages)
- 			break;
--		page = radix_tree_deref_slot_protected(slot,
--						       &mapping->pages.xa_lock);
- 		if (xa_is_value(page))
- 			continue;
- 		if (!tail_pages) {
-@@ -328,9 +323,7 @@ page_cache_tree_delete_batch(struct address_space *mapping,
- 		} else {
- 			tail_pages--;
- 		}
--		radix_tree_clear_tags(&mapping->pages, iter.node, slot);
--		__radix_tree_replace(&mapping->pages, iter.node, slot, NULL,
--				workingset_lookup_update(mapping));
-+		xas_store(&xas, NULL);
- 		total_pages++;
- 	}
- 	mapping->nrpages -= total_pages;
-@@ -351,7 +344,7 @@ void delete_from_page_cache_batch(struct address_space *mapping,
+ /*** radix-tree API starts here ***/
  
- 		unaccount_page_cache_page(mapping, pvec->pages[i]);
- 	}
--	page_cache_tree_delete_batch(mapping, pvec);
-+	page_cache_delete_batch(mapping, pvec);
- 	xa_unlock_irqrestore(&mapping->pages, flags);
+-#define RADIX_TREE_MAX_TAGS 3
+-
+ #define RADIX_TREE_MAP_SHIFT	XA_CHUNK_SHIFT
+ #define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
+ #define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
  
- 	for (i = 0; i < pagevec_count(pvec); i++)
+-#define RADIX_TREE_TAG_LONGS	\
+-	((RADIX_TREE_MAP_SIZE + BITS_PER_LONG - 1) / BITS_PER_LONG)
++#define RADIX_TREE_MAX_TAGS	XA_MAX_TAGS
++#define RADIX_TREE_TAG_LONGS	XA_TAG_LONGS
+ 
+ #define RADIX_TREE_INDEX_BITS  (8 /* CHAR_BIT */ * sizeof(unsigned long))
+ #define RADIX_TREE_MAX_PATH (DIV_ROUND_UP(RADIX_TREE_INDEX_BITS, \
+ 					  RADIX_TREE_MAP_SHIFT))
+ 
+-/*
+- * @count is the count of every non-NULL element in the ->slots array
+- * whether that is a data entry, a retry entry, a user pointer,
+- * a sibling entry or a pointer to the next level of the tree.
+- * @exceptional is the count of every element in ->slots which is
+- * either a data entry or a sibling entry for data.
+- */
+-struct radix_tree_node {
+-	unsigned char	shift;		/* Bits remaining in each slot */
+-	unsigned char	offset;		/* Slot offset in parent */
+-	unsigned char	count;		/* Total entry count */
+-	unsigned char	exceptional;	/* Exceptional entry count */
+-	struct radix_tree_node *parent;		/* Used when ascending tree */
+-	struct radix_tree_root *root;		/* The tree we belong to */
+-	union {
+-		struct list_head private_list;	/* For tree user */
+-		struct rcu_head	rcu_head;	/* Used when freeing node */
+-	};
+-	void __rcu	*slots[RADIX_TREE_MAP_SIZE];
+-	unsigned long	tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];
+-};
+-
+ /* The top bits of xa_flags are used to store the root tags and the IDR flag */
+ #define ROOT_IS_IDR	((__force gfp_t)(1 << __GFP_BITS_SHIFT))
+ #define ROOT_TAG_SHIFT	(__GFP_BITS_SHIFT + 1)
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index dcdac2053ea6..1aff0069458b 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -133,6 +133,30 @@ static inline bool xa_is_value(void *entry)
+ #endif
+ #define XA_CHUNK_SIZE		(1UL << XA_CHUNK_SHIFT)
+ #define XA_CHUNK_MASK		(XA_CHUNK_SIZE - 1)
++#define XA_MAX_TAGS		3
++#define XA_TAG_LONGS		DIV_ROUND_UP(XA_CHUNK_SIZE, BITS_PER_LONG)
++
++/*
++ * @count is the count of every non-NULL element in the ->slots array
++ * whether that is a data value entry, a retry entry, a user pointer,
++ * a sibling entry or a pointer to the next level of the tree.
++ * @exceptional is the count of every element in ->slots which is
++ * either a data value entry or a sibling entry for a data value.
++ */
++struct xa_node {
++	unsigned char	shift;		/* Bits remaining in each slot */
++	unsigned char	offset;		/* Slot offset in parent */
++	unsigned char	count;		/* Total entry count */
++	unsigned char	exceptional;	/* Exceptional entry count */
++	struct xa_node *parent;		/* Used when ascending tree */
++	struct xarray *	root;		/* The tree we belong to */
++	union {
++		struct list_head private_list;	/* For tree user */
++		struct rcu_head	rcu_head;	/* Used when freeing node */
++	};
++	void __rcu	*slots[XA_CHUNK_SIZE];
++	unsigned long	tags[XA_MAX_TAGS][XA_TAG_LONGS];
++};
+ 
+ /*
+  * Internal entries have the bottom two bits set to the value 10b.  Most
 -- 
 2.15.0
 
