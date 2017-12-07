@@ -1,36 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47336 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750862AbdLGWkB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 17:40:01 -0500
-Date: Thu, 7 Dec 2017 14:39:56 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: Lockdep is less useful than it was
-Message-ID: <20171207223956.GD26792@bombadil.infradead.org>
-References: <20171206004159.3755-1-willy@infradead.org>
- <20171206004159.3755-73-willy@infradead.org>
- <20171206012901.GZ4094@dastard>
- <20171206020208.GK26021@bombadil.infradead.org>
- <20171206031456.GE4094@dastard>
- <20171206044549.GO26021@bombadil.infradead.org>
- <20171206084404.GF4094@dastard>
- <20171206140648.GB32044@bombadil.infradead.org>
- <20171207160634.il3vt5d6a4v5qesi@thunk.org>
- <20171207223803.GC26792@bombadil.infradead.org>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:58347 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750931AbdLGWl3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 17:41:29 -0500
+Date: Fri, 8 Dec 2017 09:41:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC 2/4] xfs: defer agfl block frees when dfops is
+ available
+Message-ID: <20171207224126.GJ4094@dastard>
+References: <20171207185810.48757-1-bfoster@redhat.com>
+ <20171207185810.48757-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171207223803.GC26792@bombadil.infradead.org>
+In-Reply-To: <20171207185810.48757-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: mingo@kernel.org, byungchul.park@lge.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 07, 2017 at 02:38:03PM -0800, Matthew Wilcox wrote:
-> You need to get LOCKDEP_CROSSRELEASE off.  I'd revert patches
-> e26f34a407aec9c65bce2bc0c838fabe4f051fc6 and
-> b483cf3bc249d7af706390efa63d6671e80d1c09
+On Thu, Dec 07, 2017 at 01:58:08PM -0500, Brian Foster wrote:
+> The AGFL fixup code executes before every block allocation/free and
+> rectifies the AGFL based on the current, dynamic allocation
+> requirements of the fs. The AGFL must hold a minimum number of
+> blocks to satisfy a worst case split of the free space btrees caused
+> by the impending allocation operation. The AGFL is also updated to
+> maintain the implicit requirement for a minimum number of free slots
+> to satisfy a worst case join of the free space btrees.
+> 
+> Since the AGFL caches individual blocks, AGFL reduction typically
+> involves multiple, single block frees. We've had reports of
+> transaction overrun problems during certain workloads that boil down
+> to AGFL reduction freeing multiple blocks and consuming more space
+> in the log than was reserved for the transaction.
+> 
+> Since the objective of freeing AGFL blocks is to ensure free AGFL
+> free slots are available for the upcoming allocation, one way to
+> address this problem is to release surplus blocks from the AGFL
+> immediately but defer the free of those blocks (similar to how
+> file-mapped blocks are unmapped from the file in one transaction and
+> freed via a deferred operation) until the transaction is rolled.
+> This turns AGFL reduction into an operation with predictable log
+> reservation consumption.
+> 
+> Add the capability to defer AGFL block frees when a deferred ops
+> list is handed to the AGFL fixup code. Deferring AGFL frees is a
+> conditional behavior based on whether the caller has populated the
+> new dfops field of the xfs_alloc_arg structure. A bit of
+> customization is required to handle deferred completion processing
+> because AGFL blocks are accounted against a separate reservation
+> pool and AGFL are not inserted into the extent busy list when freed
+> (they are inserted when used and released back to the AGFL). Reuse
+> the majority of the existing deferred extent free infrastructure and
+> customize it appropriately to handle AGFL blocks.
 
-Oops.  I meant to revert 2dcd5adfb7401b762ddbe4b86dcacc2f3de6b97b.
-Or you could cherry-pick b483cf3bc249d7af706390efa63d6671e80d1c09.
+Ok, so it uses the EFI/EFD to make sure that the block freeing is
+logged and replayed. So my question is:
+
+> +/*
+> + * AGFL blocks are accounted differently in the reserve pools and are not
+> + * inserted into the busy extent list.
+> + */
+> +STATIC int
+> +xfs_agfl_free_finish_item(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_defer_ops		*dop,
+> +	struct list_head		*item,
+> +	void				*done_item,
+> +	void				**state)
+> +{
+
+How does this function get called by log recovery when processing
+the EFI as there is no flag in the EFI that says this was a AGFL
+block?
+
+That said, I haven't traced through whether this matters or not,
+but I suspect it does because freelist frees use XFS_AG_RESV_AGFL
+and that avoids accounting the free to the superblock counters
+because the block is already accounted as free space....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
