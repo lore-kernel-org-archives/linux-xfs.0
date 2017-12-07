@@ -1,179 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50658 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50418 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932117AbdLGRbx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Dec 2017 12:31:53 -0500
-Date: Thu, 7 Dec 2017 11:31:51 -0600
+        id S1752576AbdLGRiR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Dec 2017 12:38:17 -0500
+Date: Thu, 7 Dec 2017 11:38:14 -0600
 From: Bill O'Donnell <billodo@redhat.com>
 Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20171207173150.GA21174@redhat.com>
+Message-ID: <20171207173814.GA27563@redhat.com>
 References: <20170814081806.GA3924@debian.home>
+ <20171207173150.GA21174@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170814081806.GA3924@debian.home>
+In-Reply-To: <20171207173150.GA21174@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
+To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
 
-On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
-> When changing a file's ACL mask, xfs_set_acl() will first set the group
-> bits of i_mode to the value of the mask, and only then set the actual
-> extended attribute representing the new ACL.
+On Thu, Dec 07, 2017 at 11:31:51AM -0600, Bill O'Donnell wrote:
+> On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
+> > When changing a file's ACL mask, xfs_set_acl() will first set the group
+> > bits of i_mode to the value of the mask, and only then set the actual
+> > extended attribute representing the new ACL.
+> > 
+> > If the second part fails (due to lack of space, for example) and the
+> > file had no ACL attribute to begin with, the system will from now on
+> > assume that the mask permission bits are actual group permission bits,
+> > potentially granting access to the wrong users.
+> > 
+> > To prevent this, perform the mode update and the ACL update as part of
+> > the same transaction, and restore the original mode to the vfs inode in
+> > case of failure. This requires a change in how extended attributes are
+> > deleted: commit the transaction even if there was no attribute to
+> > remove, to log the standard inode fields.
+> > 
+> > Signed-off-by: Ernesto A. Fernández <ernesto.mnd.fernandez@gmail.com>
+> > ---
+> > This issue is covered by generic/449 in xfstests. Several other filesystems
 > 
-> If the second part fails (due to lack of space, for example) and the
-> file had no ACL attribute to begin with, the system will from now on
-> assume that the mask permission bits are actual group permission bits,
-> potentially granting access to the wrong users.
-> 
-> To prevent this, perform the mode update and the ACL update as part of
-> the same transaction, and restore the original mode to the vfs inode in
-> case of failure. This requires a change in how extended attributes are
-> deleted: commit the transaction even if there was no attribute to
-> remove, to log the standard inode fields.
-> 
-> Signed-off-by: Ernesto A. Fernández <ernesto.mnd.fernandez@gmail.com>
-> ---
-> This issue is covered by generic/449 in xfstests. Several other filesystems
+> Sorry, I'm coming into this late, and might be missing something...
+> is there a particular xfs configuration that you've set up on which
+> generic/449 fails? On 4.15-rc1, I see no failures of g/449.
 
-Sorry, I'm coming into this late, and might be missing something...
-is there a particular xfs configuration that you've set up on which
-generic/449 fails? On 4.15-rc1, I see no failures of g/449.
+Oh, I see this was merged and fixes g/449:
+commit 67f2ffe31d1a683170c2ba0ecc643e42a5fdd397
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Oct 9 11:37:23 2017 -0700
 
-Thanks-
-Bill
+    xfs: don't change inode mode if ACL update fails
 
 
 
-> are affected by this, some of them have already applied patches:
->   - 397e434 ext4: preserve i_mode if __ext4_set_acl() fails
->   - f070e5a jfs: preserve i_mode if __jfs_set_acl() fails
->   - fcea8ae reiserfs: preserve i_mode if __reiserfs_set_acl() fails
->   - fe26569 ext2: preserve i_mode if ext2_set_acl() fails
-> The test won't exactly pass after this patch is applied. It will fail
-> differently, this time claiming that the filesystem is inconsistent. This
-> probably has something to do with setting too many extended attributes, as
-> it goes away if you change the attribute size in the test from 1k to 64k.
 > 
->  fs/xfs/libxfs/xfs_attr.c | 13 +++++++++++--
->  fs/xfs/xfs_acl.c         | 39 ++++++++++++++-------------------------
->  2 files changed, 25 insertions(+), 27 deletions(-)
+> Thanks-
+> Bill
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index de7b9bd..c3193e1 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -395,6 +395,7 @@ xfs_attr_remove(
->  	struct xfs_defer_ops	dfops;
->  	xfs_fsblock_t		firstblock;
->  	int			error;
-> +	int			noattr = 0;
->  
->  	XFS_STATS_INC(mp, xs_attr_remove);
->  
-> @@ -438,7 +439,12 @@ xfs_attr_remove(
->  	xfs_trans_ijoin(args.trans, dp, 0);
->  
->  	if (!xfs_inode_hasattr(dp)) {
-> -		error = -ENOATTR;
-> +		/*
-> +		 * Commit even if there is no attr to remove, because when
-> +		 * setting ACLs the caller may be changing the mode in the
-> +		 * same transaction.
-> +		 */
-> +		noattr = 1;
->  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
->  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
->  		error = xfs_attr_shortform_remove(&args);
-> @@ -458,7 +464,7 @@ xfs_attr_remove(
->  	if (mp->m_flags & XFS_MOUNT_WSYNC)
->  		xfs_trans_set_sync(args.trans);
->  
-> -	if ((flags & ATTR_KERNOTIME) == 0)
-> +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
->  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
->  
->  	/*
-> @@ -468,6 +474,9 @@ xfs_attr_remove(
->  	error = xfs_trans_commit(args.trans);
->  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
->  
-> +	if (!error && noattr)
-> +		error = -ENOATTR;
-> +
->  	return error;
->  
->  out:
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index 7034e17..1fe4363 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
->  	return error;
->  }
->  
-> -static int
-> -xfs_set_mode(struct inode *inode, umode_t mode)
-> -{
-> -	int error = 0;
-> -
-> -	if (mode != inode->i_mode) {
-> -		struct iattr iattr;
-> -
-> -		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
-> -		iattr.ia_mode = mode;
-> -		iattr.ia_ctime = current_time(inode);
-> -
-> -		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
-> -	}
-> -
-> -	return error;
-> -}
-> -
->  int
->  xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
->  {
->  	int error = 0;
-> +	int mode_changed = 0;
-> +	umode_t old_mode = inode->i_mode;
-> +	struct timespec old_ctime = inode->i_ctime;
->  
->  	if (!acl)
->  		goto set_acl;
-> @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
->  		return error;
->  
->  	if (type == ACL_TYPE_ACCESS) {
-> -		umode_t mode;
-> -
-> -		error = posix_acl_update_mode(inode, &mode, &acl);
-> -		if (error)
-> -			return error;
-> -		error = xfs_set_mode(inode, mode);
-> +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
->  		if (error)
->  			return error;
-> +		inode->i_ctime = current_time(inode);
-> +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> +		mode_changed = 1;
->  	}
->  
->   set_acl:
-> -	return __xfs_set_acl(inode, acl, type);
-> +	error = __xfs_set_acl(inode, acl, type);
-> +	if (error && mode_changed) {
-> +		inode->i_mode = old_mode;
-> +		inode->i_ctime = old_ctime;
-> +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> +	}
-> +	return error;
->  }
-> -- 
-> 2.1.4
 > 
+> 
+> > are affected by this, some of them have already applied patches:
+> >   - 397e434 ext4: preserve i_mode if __ext4_set_acl() fails
+> >   - f070e5a jfs: preserve i_mode if __jfs_set_acl() fails
+> >   - fcea8ae reiserfs: preserve i_mode if __reiserfs_set_acl() fails
+> >   - fe26569 ext2: preserve i_mode if ext2_set_acl() fails
+> > The test won't exactly pass after this patch is applied. It will fail
+> > differently, this time claiming that the filesystem is inconsistent. This
+> > probably has something to do with setting too many extended attributes, as
+> > it goes away if you change the attribute size in the test from 1k to 64k.
+> > 
+> >  fs/xfs/libxfs/xfs_attr.c | 13 +++++++++++--
+> >  fs/xfs/xfs_acl.c         | 39 ++++++++++++++-------------------------
+> >  2 files changed, 25 insertions(+), 27 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index de7b9bd..c3193e1 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -395,6 +395,7 @@ xfs_attr_remove(
+> >  	struct xfs_defer_ops	dfops;
+> >  	xfs_fsblock_t		firstblock;
+> >  	int			error;
+> > +	int			noattr = 0;
+> >  
+> >  	XFS_STATS_INC(mp, xs_attr_remove);
+> >  
+> > @@ -438,7 +439,12 @@ xfs_attr_remove(
+> >  	xfs_trans_ijoin(args.trans, dp, 0);
+> >  
+> >  	if (!xfs_inode_hasattr(dp)) {
+> > -		error = -ENOATTR;
+> > +		/*
+> > +		 * Commit even if there is no attr to remove, because when
+> > +		 * setting ACLs the caller may be changing the mode in the
+> > +		 * same transaction.
+> > +		 */
+> > +		noattr = 1;
+> >  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> >  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+> >  		error = xfs_attr_shortform_remove(&args);
+> > @@ -458,7 +464,7 @@ xfs_attr_remove(
+> >  	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> >  		xfs_trans_set_sync(args.trans);
+> >  
+> > -	if ((flags & ATTR_KERNOTIME) == 0)
+> > +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
+> >  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
+> >  
+> >  	/*
+> > @@ -468,6 +474,9 @@ xfs_attr_remove(
+> >  	error = xfs_trans_commit(args.trans);
+> >  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> >  
+> > +	if (!error && noattr)
+> > +		error = -ENOATTR;
+> > +
+> >  	return error;
+> >  
+> >  out:
+> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> > index 7034e17..1fe4363 100644
+> > --- a/fs/xfs/xfs_acl.c
+> > +++ b/fs/xfs/xfs_acl.c
+> > @@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+> >  	return error;
+> >  }
+> >  
+> > -static int
+> > -xfs_set_mode(struct inode *inode, umode_t mode)
+> > -{
+> > -	int error = 0;
+> > -
+> > -	if (mode != inode->i_mode) {
+> > -		struct iattr iattr;
+> > -
+> > -		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
+> > -		iattr.ia_mode = mode;
+> > -		iattr.ia_ctime = current_time(inode);
+> > -
+> > -		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
+> > -	}
+> > -
+> > -	return error;
+> > -}
+> > -
+> >  int
+> >  xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+> >  {
+> >  	int error = 0;
+> > +	int mode_changed = 0;
+> > +	umode_t old_mode = inode->i_mode;
+> > +	struct timespec old_ctime = inode->i_ctime;
+> >  
+> >  	if (!acl)
+> >  		goto set_acl;
+> > @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+> >  		return error;
+> >  
+> >  	if (type == ACL_TYPE_ACCESS) {
+> > -		umode_t mode;
+> > -
+> > -		error = posix_acl_update_mode(inode, &mode, &acl);
+> > -		if (error)
+> > -			return error;
+> > -		error = xfs_set_mode(inode, mode);
+> > +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
+> >  		if (error)
+> >  			return error;
+> > +		inode->i_ctime = current_time(inode);
+> > +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
+> > +		mode_changed = 1;
+> >  	}
+> >  
+> >   set_acl:
+> > -	return __xfs_set_acl(inode, acl, type);
+> > +	error = __xfs_set_acl(inode, acl, type);
+> > +	if (error && mode_changed) {
+> > +		inode->i_mode = old_mode;
+> > +		inode->i_ctime = old_ctime;
+> > +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
+> > +	}
+> > +	return error;
+> >  }
+> > -- 
+> > 2.1.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
