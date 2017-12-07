@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50418 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752576AbdLGRiR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Dec 2017 12:38:17 -0500
-Date: Thu, 7 Dec 2017 11:38:14 -0600
-From: Bill O'Donnell <billodo@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:59434 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752495AbdLGRnR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 12:43:17 -0500
+Date: Thu, 7 Dec 2017 09:43:09 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20171207173814.GA27563@redhat.com>
+Message-ID: <20171207174309.GU19219@magnolia>
 References: <20170814081806.GA3924@debian.home>
  <20171207173150.GA21174@redhat.com>
 MIME-Version: 1.0
@@ -17,7 +17,8 @@ In-Reply-To: <20171207173150.GA21174@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>, linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
 
 On Thu, Dec 07, 2017 at 11:31:51AM -0600, Bill O'Donnell wrote:
 > On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
@@ -44,16 +45,13 @@ On Thu, Dec 07, 2017 at 11:31:51AM -0600, Bill O'Donnell wrote:
 > is there a particular xfs configuration that you've set up on which
 > generic/449 fails? On 4.15-rc1, I see no failures of g/449.
 
-Oh, I see this was merged and fixes g/449:
-commit 67f2ffe31d1a683170c2ba0ecc643e42a5fdd397
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Oct 9 11:37:23 2017 -0700
+Fixed in:
+67f2ffe31d1 ("xfs: don't change inode mode if ACL update fails")
 
-    xfs: don't change inode mode if ACL update fails
+(I think...)
 
+--D
 
-
-> 
 > Thanks-
 > Bill
 > 
