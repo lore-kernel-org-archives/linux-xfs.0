@@ -1,678 +1,1210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42322 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751559AbdLTCxv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 21:53:51 -0500
-Date: Tue, 19 Dec 2017 18:53:46 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/7] mkfs: support arbitrary conflict specification
-Message-ID: <20171220025346.GL12613@magnolia>
-References: <20171218091158.14537-1-david@fromorbit.com>
- <20171218091158.14537-5-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36142 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754127AbdLGOFW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Dec 2017 09:05:22 -0500
+Date: Thu, 7 Dec 2017 09:05:20 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_io: fix exitcode handling (was Re: generic/399 and
+ xfs_io pwrite command)
+Message-ID: <20171207140519.GB3486@bfoster.bfoster>
+References: <7235f31f-5427-ff12-11f9-cba98431e71c@tuxera.com>
+ <20171204222842.GX4094@dastard>
+ <35d2712c-b036-d017-2d42-f74bbc4444a9@tuxera.com>
+ <20171205211850.GA5858@dastard>
+ <20171206002638.GB5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171218091158.14537-5-david@fromorbit.com>
+In-Reply-To: <20171206002638.GB5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Ari Sundholm <ari@tuxera.com>, fstests@vger.kernel.org, Emil Karlson <jkarlson@tuxera.com>, linux-xfs@vger.kernel.org
 
-On Mon, Dec 18, 2017 at 08:11:55PM +1100, Dave Chinner wrote:
+On Wed, Dec 06, 2017 at 11:26:38AM +1100, Dave Chinner wrote:
+> On Wed, Dec 06, 2017 at 08:18:50AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 05, 2017 at 04:23:43PM +0200, Ari Sundholm wrote:
+> > > On 12/05/2017 12:28 AM, Dave Chinner wrote:
+> > > >On Thu, Nov 30, 2017 at 04:21:47PM +0200, Ari Sundholm wrote:
+...
+> 
+> xfs_io: set exitcode on failure appropriately
+> 
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Currently the conflict table is a single dimension, allowing
-> conflicts to be specified in the same option table. however, we
-> have conflicts that span option tables (e.g. sector size) and
-> so we need to encode both the table and the option that conflicts.
-> 
-> Add support for a two dimensional conflict definition and convert
-> all the code over to use it.
+> Many operations don't set the exitcode when they fail, resulting
+> in xfs_io exiting with a zero (no failure) exit code despite the
+> command failing and returning an error. Fix this.
 > 
 > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > ---
->  mkfs/xfs_mkfs.c | 257 ++++++++++++++++++++++++++++----------------------------
->  1 file changed, 130 insertions(+), 127 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 7cc5ee2ddb9d..2272700807dc 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -125,7 +125,10 @@ struct opt_params {
->  		bool		str_seen;
->  		bool		convert;
->  		bool		is_power_2;
-> -		int		conflicts[MAX_CONFLICTS];
-> +		struct _conflict {
-> +			struct opt_params	*opts;
-> +			int			subopt;
-> +		}		conflicts[MAX_CONFLICTS];
->  		long long	minval;
->  		long long	maxval;
->  		long long	defaultval;
-> @@ -143,8 +146,8 @@ struct opt_params bopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = B_LOG,
-> -		  .conflicts = { B_SIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &bopts, B_SIZE },
-> +				 { &bopts, LAST_CONFLICT } },
-
-Hmm.  The LAST_CONFLICT entry doesn't require an *opts pointer, right?
-
-It feels a little funny to me that the last entry isn't:
-
-{ NULL, LAST_CONFLICT }
-
-...since we're not actually doing anything with bopts in that last
-entry, but that might be a matter of taste (aka I punt to sandeen) :)
-
---D
-
->  		  .minval = XFS_MIN_BLOCKSIZE_LOG,
->  		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -152,8 +155,8 @@ struct opt_params bopts = {
->  		{ .index = B_SIZE,
->  		  .convert = true,
->  		  .is_power_2 = true,
-> -		  .conflicts = { B_LOG,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &bopts, B_LOG },
-> +				 { &bopts, LAST_CONFLICT } },
->  		  .minval = XFS_MIN_BLOCKSIZE,
->  		  .maxval = XFS_MAX_BLOCKSIZE,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -200,84 +203,84 @@ struct opt_params dopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = D_AGCOUNT,
-> -		  .conflicts = { D_AGSIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_AGSIZE },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .minval = 1,
->  		  .maxval = XFS_MAX_AGNUMBER,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_FILE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = D_NAME,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SIZE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = XFS_AG_MIN_BYTES,
->  		  .maxval = LLONG_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SUNIT,
-> -		  .conflicts = { D_NOALIGN,
-> -				 D_SU,
-> -				 D_SW,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_NOALIGN },
-> +				 { &dopts, D_SU },
-> +				 { &dopts, D_SW },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SWIDTH,
-> -		  .conflicts = { D_NOALIGN,
-> -				 D_SU,
-> -				 D_SW,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_NOALIGN },
-> +				 { &dopts, D_SU },
-> +				 { &dopts, D_SW },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_AGSIZE,
-> -		  .conflicts = { D_AGCOUNT,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_AGCOUNT },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = XFS_AG_MIN_BYTES,
->  		  .maxval = XFS_AG_MAX_BYTES,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SU,
-> -		  .conflicts = { D_NOALIGN,
-> -				 D_SUNIT,
-> -				 D_SWIDTH,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_NOALIGN },
-> +				 { &dopts, D_SUNIT },
-> +				 { &dopts, D_SWIDTH },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SW,
-> -		  .conflicts = { D_NOALIGN,
-> -				 D_SUNIT,
-> -				 D_SWIDTH,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_NOALIGN },
-> +				 { &dopts, D_SUNIT },
-> +				 { &dopts, D_SWIDTH },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SECTLOG,
-> -		  .conflicts = { D_SECTSIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_SECTSIZE },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SECTSIZE,
-> -		  .conflicts = { D_SECTLOG,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_SECTLOG },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
-> @@ -285,35 +288,35 @@ struct opt_params dopts = {
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_NOALIGN,
-> -		  .conflicts = { D_SU,
-> -				 D_SW,
-> -				 D_SUNIT,
-> -				 D_SWIDTH,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, D_SU },
-> +				 { &dopts, D_SW },
-> +				 { &dopts, D_SUNIT },
-> +				 { &dopts, D_SWIDTH },
-> +				 { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = D_RTINHERIT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .minval = 1,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = D_PROJINHERIT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_EXTSZINHERIT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_COWEXTSIZE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &dopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -345,57 +348,57 @@ struct opt_params iopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = I_ALIGN,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = I_LOG,
-> -		  .conflicts = { I_PERBLOCK,
-> -				 I_SIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, I_PERBLOCK },
-> +				 { &iopts, I_SIZE },
-> +				 { &iopts, LAST_CONFLICT } },
->  		  .minval = XFS_DINODE_MIN_LOG,
->  		  .maxval = XFS_DINODE_MAX_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_MAXPCT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 100,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_PERBLOCK,
-> -		  .conflicts = { I_LOG,
-> -				 I_SIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, I_LOG },
-> +				 { &iopts, I_SIZE },
-> +				 { &iopts, LAST_CONFLICT } },
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_INODE_PERBLOCK,
->  		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_SIZE,
-> -		  .conflicts = { I_PERBLOCK,
-> -				 I_LOG,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, I_PERBLOCK },
-> +				 { &iopts, I_LOG },
-> +				 { &iopts, LAST_CONFLICT } },
->  		  .is_power_2 = true,
->  		  .minval = XFS_DINODE_MIN_SIZE,
->  		  .maxval = XFS_DINODE_MAX_SIZE,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_ATTR,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 2,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_PROJID32BIT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = I_SPINODES,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &iopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
-> @@ -434,68 +437,68 @@ struct opt_params lopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = L_AGNUM,
-> -		  .conflicts = { L_DEV,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_DEV },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_INTERNAL,
-> -		  .conflicts = { L_FILE,
-> -				 L_DEV,
-> -				 L_SECTLOG,
-> -				 L_SECTSIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_FILE },
-> +				 { &lopts, L_DEV },
-> +				 { &lopts, L_SECTLOG },
-> +				 { &lopts, L_SECTSIZE },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = L_SIZE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
->  		  .maxval = XFS_MAX_LOG_BYTES,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_VERSION,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, LAST_CONFLICT } },
->  		  .minval = 1,
->  		  .maxval = 2,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SUNIT,
-> -		  .conflicts = { L_SU,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_SU },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .minval = 1,
->  		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SU,
-> -		  .conflicts = { L_SUNIT,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_SUNIT },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = BBTOB(1),
->  		  .maxval = XLOG_MAX_RECORD_BSIZE,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_DEV,
-> -		  .conflicts = { L_AGNUM,
-> -				 L_INTERNAL,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_AGNUM },
-> +				 { &lopts, L_INTERNAL },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SECTLOG,
-> -		  .conflicts = { L_SECTSIZE,
-> -				 L_INTERNAL,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_SECTSIZE },
-> +				 { &lopts, L_INTERNAL },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SECTSIZE,
-> -		  .conflicts = { L_SECTLOG,
-> -				 L_INTERNAL,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_SECTLOG },
-> +				 { &lopts, L_INTERNAL },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
-> @@ -503,20 +506,20 @@ struct opt_params lopts = {
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_FILE,
-> -		  .conflicts = { L_INTERNAL,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_INTERNAL },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = L_NAME,
-> -		  .conflicts = { L_AGNUM,
-> -				 L_INTERNAL,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, L_AGNUM },
-> +				 { &lopts, L_INTERNAL },
-> +				 { &lopts, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_LAZYSBCNTR,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &lopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
-> @@ -539,15 +542,15 @@ struct opt_params nopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = N_LOG,
-> -		  .conflicts = { N_SIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &nopts, N_SIZE },
-> +				 { &nopts, LAST_CONFLICT } },
->  		  .minval = XFS_MIN_REC_DIRSIZE,
->  		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = N_SIZE,
-> -		  .conflicts = { N_LOG,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &nopts, N_LOG },
-> +				 { &nopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .is_power_2 = true,
->  		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
-> @@ -555,13 +558,13 @@ struct opt_params nopts = {
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = N_VERSION,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &nopts, LAST_CONFLICT } },
->  		  .minval = 2,
->  		  .maxval = 2,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = N_FTYPE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &nopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
-> @@ -588,38 +591,38 @@ struct opt_params ropts = {
->  	},
->  	.subopt_params = {
->  		{ .index = R_EXTSIZE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &ropts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = XFS_MIN_RTEXTSIZE,
->  		  .maxval = XFS_MAX_RTEXTSIZE,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_SIZE,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &ropts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .minval = 0,
->  		  .maxval = LLONG_MAX,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_DEV,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &ropts, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_FILE,
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &ropts, LAST_CONFLICT } },
->  		},
->  		{ .index = R_NAME,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &ropts, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_NOALIGN,
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &ropts, LAST_CONFLICT } },
->  		},
->  	},
->  };
-> @@ -639,25 +642,25 @@ struct opt_params sopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = S_LOG,
-> -		  .conflicts = { S_SIZE,
-> -				 S_SECTSIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &sopts, S_SIZE },
-> +				 { &sopts, S_SECTSIZE },
-> +				 { &sopts, LAST_CONFLICT } },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = S_SECTLOG,
-> -		  .conflicts = { S_SIZE,
-> -				 S_SECTSIZE,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &sopts, S_SIZE },
-> +				 { &sopts, S_SECTSIZE },
-> +				 { &sopts, LAST_CONFLICT } },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = S_SIZE,
-> -		  .conflicts = { S_LOG,
-> -				 S_SECTLOG,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &sopts, S_LOG },
-> +				 { &sopts, S_SECTLOG },
-> +				 { &sopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
-> @@ -665,9 +668,9 @@ struct opt_params sopts = {
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = S_SECTSIZE,
-> -		  .conflicts = { S_LOG,
-> -				 S_SECTLOG,
-> -				 LAST_CONFLICT },
-> +		  .conflicts = { { &sopts, S_LOG },
-> +				 { &sopts, S_SECTLOG },
-> +				 { &sopts, LAST_CONFLICT } },
->  		  .convert = true,
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
-> @@ -694,29 +697,29 @@ struct opt_params mopts = {
->  	},
->  	.subopt_params = {
->  		{ .index = M_CRC,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &mopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = M_FINOBT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &mopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = M_UUID,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &mopts, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = M_RMAPBT,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &mopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
->  		{ .index = M_REFLINK,
-> -		  .conflicts = { LAST_CONFLICT },
-> +		  .conflicts = { { &mopts, LAST_CONFLICT } },
->  		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
-> @@ -925,13 +928,14 @@ usage( void )
+...
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index d1dfc5a5e33a..9b737eff4c02 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -92,6 +92,7 @@ copy_range_f(int argc, char **argv)
+>  	int ret;
+>  	int fd;
 >  
->  static void
->  conflict(
-> -	char		opt,
-> -	const char	*tab[],
-> -	int		oldidx,
-> -	int		newidx)
-> +	struct opt_params       *opts,
-> +	int			option,
-> +	struct opt_params       *con_opts,
-> +	int			conflict)
->  {
->  	fprintf(stderr, _("Cannot specify both -%c %s and -%c %s\n"),
-> -		opt, tab[oldidx], opt, tab[newidx]);
-> +			opts->name, opts->subopts[option],
-> +			con_opts->name, con_opts->subopts[conflict]);
->  	usage();
+> +	exitcode = 1;
+>  	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
+>  		switch (opt) {
+>  		case 's':
+> @@ -132,6 +133,8 @@ copy_range_f(int argc, char **argv)
+>  
+>  	ret = copy_file_range(fd, &src, &dst, len);
+>  	close(fd);
+> +	if (ret >= 0)
+> +		exitcode = 0;
+
+I don't think it's appropriate to blindly overwrite the global exitcode
+value like this. What about the case where multiple commands are chained
+together? Should we expect an error code if any of the commands failed
+or only the last?
+
+For example:
+
+  xfs_io -c "pwrite ..." <file>
+
+... returns an error if the write fails, while:
+
+  xfs_io -c "pwrite ..." -c "fadvise ..." <file>
+
+... would never so long as the fadvise succeeds.
+
+Brian
+
+>  	return ret;
 >  }
 >  
-> @@ -1342,14 +1346,13 @@ check_opt(
->  
->  	/* check for conflicts with the option */
->  	for (i = 0; i < MAX_CONFLICTS; i++) {
-> -		int conflict_opt = sp->conflicts[i];
-> +		struct _conflict *con = &sp->conflicts[i];
->  
-> -		if (conflict_opt == LAST_CONFLICT)
-> +		if (con->subopt == LAST_CONFLICT)
->  			break;
-> -		if (opts->subopt_params[conflict_opt].seen ||
-> -		    opts->subopt_params[conflict_opt].str_seen)
-> -			conflict(opts->name, opts->subopts,
-> -				 conflict_opt, index);
-> +		if (con->opts->subopt_params[con->subopt].seen ||
-> +		    con->opts->subopt_params[con->subopt].str_seen)
-> +			conflict(opts, index, con->opts, con->subopt);
+> diff --git a/io/cowextsize.c b/io/cowextsize.c
+> index c4cd6de24da5..d5872449cb60 100644
+> --- a/io/cowextsize.c
+> +++ b/io/cowextsize.c
+> @@ -53,6 +53,7 @@ get_cowextsize(const char *path, int fd)
+>  	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+>  		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  		return 0;
 >  	}
+>  	printf("[%u] %s\n", fsx.fsx_cowextsize, path);
+> @@ -67,11 +68,13 @@ set_cowextsize(const char *path, int fd, long extsz)
+>  
+>  	if (fstat64(fd, &stat) < 0) {
+>  		perror("fstat64");
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+>  		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> @@ -86,6 +89,7 @@ set_cowextsize(const char *path, int fd, long extsz)
+>  	if ((xfsctl(path, fd, FS_IOC_FSSETXATTR, &fsx)) < 0) {
+>  		printf("%s: XFS_IOC_FSSETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> @@ -168,6 +172,7 @@ cowextsize_f(
+>  		if (cowextsize < 0) {
+>  			printf(_("non-numeric cowextsize argument -- %s\n"),
+>  				argv[optind]);
+> +			exitcode = 1;
+>  			return 0;
+>  		}
+>  	} else {
+> diff --git a/io/encrypt.c b/io/encrypt.c
+> index 26ab97ce614b..3351e0ff8666 100644
+> --- a/io/encrypt.c
+> +++ b/io/encrypt.c
+> @@ -192,6 +192,7 @@ set_encpolicy_f(int argc, char **argv)
+>  	struct fscrypt_policy policy;
+>  
+>  	/* Initialize the policy structure with default values */
+> +	exitcode = 1;
+>  	memset(&policy, 0, sizeof(policy));
+>  	policy.contents_encryption_mode = FS_ENCRYPTION_MODE_AES_256_XTS;
+>  	policy.filenames_encryption_mode = FS_ENCRYPTION_MODE_AES_256_CTS;
+> @@ -269,10 +270,10 @@ set_encpolicy_f(int argc, char **argv)
+>  	if (ioctl(file->fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy) < 0) {
+>  		fprintf(stderr, "%s: failed to set encryption policy: %s\n",
+>  			file->name, strerror(errno));
+> -		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> +	exitcode = 0;
+>  	return 0;
 >  }
 >  
-> @@ -1491,13 +1494,13 @@ data_opts_parser(
->  		break;
->  	case D_SECTLOG:
->  		if (cli->sectorsize)
-> -			conflict('d', opts->subopts, D_SECTSIZE, D_SECTLOG);
-> +			conflict(opts, D_SECTSIZE, opts, D_SECTLOG);
->  		sectorlog = getnum(value, opts, D_SECTLOG);
->  		cli->sectorsize = 1 << sectorlog;
->  		break;
->  	case D_SECTSIZE:
->  		if (cli->sectorsize)
-> -			conflict('d', opts->subopts, D_SECTSIZE, D_SECTLOG);
-> +			conflict(opts, D_SECTSIZE, opts, D_SECTLOG);
->  		cli->sectorsize = getnum(value, opts, D_SECTSIZE);
->  		break;
->  	case D_RTINHERIT:
-> @@ -1724,7 +1727,7 @@ sector_opts_parser(
->  	case S_LOG:
->  	case S_SECTLOG:
->  		if (cli->sectorsize)
-> -			conflict('s', opts->subopts, S_SECTSIZE, S_SECTLOG);
-> +			conflict(opts, S_SECTSIZE, opts, S_SECTLOG);
->  		sectorlog = getnum(value, opts, S_SECTLOG);
->  		cli->sectorsize = 1 << sectorlog;
->  		cli->lsectorsize = cli->sectorsize;
-> @@ -1732,7 +1735,7 @@ sector_opts_parser(
->  	case S_SIZE:
->  	case S_SECTSIZE:
->  		if (cli->sectorsize)
-> -			conflict('s', opts->subopts, S_SECTLOG, S_SECTSIZE);
-> +			conflict(opts, S_SECTSIZE, opts, S_SECTLOG);
->  		cli->sectorsize = getnum(value, opts, S_SECTSIZE);
->  		cli->lsectorsize = cli->sectorsize;
->  		break;
-> -- 
-> 2.15.0
-> 
+> diff --git a/io/fadvise.c b/io/fadvise.c
+> index 46174f34680e..9cc91a5712e1 100644
+> --- a/io/fadvise.c
+> +++ b/io/fadvise.c
+> @@ -54,6 +54,7 @@ fadvise_f(
+>  	off64_t		offset = 0, length = 0;
+>  	int		c, range = 0, advise = POSIX_FADV_NORMAL;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "dnrsw")) != EOF) {
+>  		switch (c) {
+>  		case 'd':	/* Don't need these pages */
+> @@ -107,6 +108,7 @@ fadvise_f(
+>  		perror("fadvise");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index bdcfacdb2811..d97f53ae8d79 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -238,6 +238,7 @@ fiemap_f(
+>  	__u64		last_logical = 0;
+>  	struct stat	st;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+> @@ -263,7 +264,6 @@ fiemap_f(
+>  	if (!fiemap) {
+>  		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
+>  			progname, map_size);
+> -		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> @@ -282,7 +282,6 @@ fiemap_f(
+>  			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+>  				"%s\n", progname, file->name, strerror(errno));
+>  			free(fiemap);
+> -			exitcode = 1;
+>  			return 0;
+>  		}
+>  
+> @@ -332,7 +331,6 @@ fiemap_f(
+>  		fprintf(stderr, "%s: fstat failed: %s\n", progname,
+>  			strerror(errno));
+>  		free(fiemap);
+> -		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> @@ -341,6 +339,7 @@ fiemap_f(
+>  			   BTOBBT(last_logical), BTOBBT(st.st_size));
+>  
+>  out:
+> +	exitcode = 0;
+>  	free(fiemap);
+>  	return 0;
+>  }
+> diff --git a/io/file.c b/io/file.c
+> index 349b19cdc420..2afb42e60620 100644
+> --- a/io/file.c
+> +++ b/io/file.c
+> @@ -79,6 +79,7 @@ file_f(
+>  	i = atoi(argv[1]);
+>  	if (i < 0 || i >= filecount) {
+>  		printf(_("value %d is out of range (0-%d)\n"), i, filecount-1);
+> +		exitcode = 1;
+>  	} else {
+>  		file = &filetable[i];
+>  		filelist_f();
+> diff --git a/io/fsmap.c b/io/fsmap.c
+> index 448fb5356466..4e3ae7ca2bab 100644
+> --- a/io/fsmap.c
+> +++ b/io/fsmap.c
+> @@ -404,6 +404,7 @@ fsmap_f(
+>  	bool			dumped_flags = false;
+>  	int			dflag, lflag, rflag;
+>  
+> +	exitcode = 1;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  
+>  	dflag = lflag = rflag = 0;
+> @@ -466,7 +467,6 @@ fsmap_f(
+>  			fprintf(stderr,
+>  				_("%s: can't get geometry [\"%s\"]: %s\n"),
+>  				progname, file->name, strerror(errno));
+> -			exitcode = 1;
+>  			return 0;
+>  		}
+>  	}
+> @@ -476,7 +476,6 @@ fsmap_f(
+>  	if (head == NULL) {
+>  		fprintf(stderr, _("%s: malloc of %zu bytes failed.\n"),
+>  			progname, fsmap_sizeof(map_size));
+> -		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> @@ -509,7 +508,6 @@ fsmap_f(
+>  				progname, head->fmh_iflags, file->name,
+>  				strerror(errno));
+>  			free(head);
+> -			exitcode = 1;
+>  			return 0;
+>  		}
+>  		if (head->fmh_entries > map_size + 2) {
+> @@ -548,7 +546,6 @@ fsmap_f(
+>  				progname, head->fmh_iflags, file->name,
+>  				strerror(errno));
+>  			free(head);
+> -			exitcode = 1;
+>  			return 0;
+>  		}
+>  
+> @@ -571,6 +568,7 @@ fsmap_f(
+>  	if (dumped_flags)
+>  		dump_verbose_key();
+>  
+> +	exitcode = 0;
+>  	free(head);
+>  	return 0;
+>  }
+> diff --git a/io/fsync.c b/io/fsync.c
+> index 9fe5e2f50c62..61061c401a04 100644
+> --- a/io/fsync.c
+> +++ b/io/fsync.c
+> @@ -31,6 +31,7 @@ fsync_f(
+>  {
+>  	if (fsync(file->fd) < 0) {
+>  		perror("fsync");
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	return 0;
+> @@ -43,6 +44,7 @@ fdatasync_f(
+>  {
+>  	if (fdatasync(file->fd) < 0) {
+>  		perror("fdatasync");
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	return 0;
+> diff --git a/io/getrusage.c b/io/getrusage.c
+> index cf1f2afd19a8..9fc51709a73e 100644
+> --- a/io/getrusage.c
+> +++ b/io/getrusage.c
+> @@ -62,6 +62,7 @@ getrusage_f(
+>  
+>  	if (getrusage(RUSAGE_SELF, &rusage) < 0) {
+>  		perror("getrusage");
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+> diff --git a/io/imap.c b/io/imap.c
+> index f52238e0c450..410e1662b76c 100644
+> --- a/io/imap.c
+> +++ b/io/imap.c
+> @@ -39,8 +39,10 @@ imap_f(int argc, char **argv)
+>  		nent = atoi(argv[1]);
+>  
+>  	t = malloc(nent * sizeof(*t));
+> -	if (!t)
+> +	if (!t) {
+> +		exitcode = 1;
+>  		return 0;
+> +	}
+>  
+>  	bulkreq.lastip  = &last;
+>  	bulkreq.icount  = nent;
+> diff --git a/io/inject.c b/io/inject.c
+> index 964ebfe13bd6..db0795023a64 100644
+> --- a/io/inject.c
+> +++ b/io/inject.c
+> @@ -156,6 +156,7 @@ inject_f(
+>  			command = XFS_IOC_ERROR_CLEARALL;
+>  		if ((xfsctl(file->name, file->fd, command, &error)) < 0) {
+>  			perror("XFS_IOC_ERROR_INJECTION");
+> +			exitcode = 1;
+>  			continue;
+>  		}
+>  	}
+> diff --git a/io/link.c b/io/link.c
+> index 9b2e8a970942..55bb806024eb 100644
+> --- a/io/link.c
+> +++ b/io/link.c
+> @@ -47,6 +47,7 @@ flink_f(
+>  
+>  	if (linkat(file->fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) < 0) {
+>  		perror("flink");
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	return 0;
+> diff --git a/io/madvise.c b/io/madvise.c
+> index 1d8b53cb516f..fbfe35cc1c13 100644
+> --- a/io/madvise.c
+> +++ b/io/madvise.c
+> @@ -57,6 +57,7 @@ madvise_f(
+>  	int		advise = MADV_NORMAL, c;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "drsw")) != EOF) {
+>  		switch (c) {
+>  		case 'd':	/* Don't need these pages */
+> @@ -111,6 +112,7 @@ madvise_f(
+>  		perror("madvise");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/mincore.c b/io/mincore.c
+> index 9e0d3a620319..09a165737705 100644
+> --- a/io/mincore.c
+> +++ b/io/mincore.c
+> @@ -37,6 +37,7 @@ mincore_f(
+>  	unsigned char	*vec;
+>  	int		i;
+>  
+> +	exitcode = 1;
+>  	if (argc == 1) {
+>  		offset = mapping->offset;
+>  		length = mapping->length;
+> @@ -106,6 +107,7 @@ mincore_f(
+>  			(unsigned long)(current - previous));
+>  
+>  	free(vec);
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/mmap.c b/io/mmap.c
+> index 7a8150e3d517..b0c1f764b8c4 100644
+> --- a/io/mmap.c
+> +++ b/io/mmap.c
+> @@ -121,6 +121,7 @@ mapset_f(
+>  	i = atoi(argv[1]);
+>  	if (i < 0 || i >= mapcount) {
+>  		printf("value %d is out of range (0-%d)\n", i, mapcount);
+> +		exitcode = 1;
+>  	} else {
+>  		mapping = &maptable[i];
+>  		maplist_f();
+> @@ -163,6 +164,7 @@ mmap_f(
+>  	size_t		blocksize, sectsize;
+>  	int		c, prot = 0;
+>  
+> +	exitcode = 1;
+>  	if (argc == 1) {
+>  		if (mapping)
+>  			return maplist_f();
+> @@ -263,6 +265,7 @@ mmap_f(
+>  	mapping->offset = offset;
+>  	mapping->name = filename;
+>  	mapping->prot = prot;
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -294,6 +297,7 @@ msync_f(
+>  	int		c, flags = 0;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "ais")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+> @@ -336,9 +340,12 @@ msync_f(
+>  	if (!start)
+>  		return 0;
+>  
+> -	if (msync(start, length, flags) < 0)
+> +	if (msync(start, length, flags) < 0) {
+>  		perror("msync");
+> +		return 0;
+> +	}
+>  
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -380,6 +387,7 @@ mread_f(
+>  	int		dump = 0, rflag = 0, c;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "frv")) != EOF) {
+>  		switch (c) {
+>  		case 'f':
+> @@ -467,6 +475,7 @@ mread_f(
+>  			}
+>  		}
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -478,6 +487,7 @@ munmap_f(
+>  	ssize_t		length;
+>  	unsigned int	offset;
+>  
+> +	exitcode = 1;
+>  	if (munmap(mapping->addr, mapping->length) < 0) {
+>  		perror("munmap");
+>  		return 0;
+> @@ -503,6 +513,7 @@ munmap_f(
+>  		mapping = maptable = NULL;
+>  	}
+>  	maplist_f();
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -538,6 +549,7 @@ mwrite_f(
+>  	int		c;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "rS:")) != EOF) {
+>  		switch (c) {
+>  		case 'r':
+> @@ -590,6 +602,7 @@ mwrite_f(
+>  			((char *)mapping->addr)[tmp] = seed;
+>  	}
+>  
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -622,6 +635,7 @@ mremap_f(
+>  	int		c;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	init_cvtnum(&blocksize, &sectsize);
+>  
+>  	while ((c = getopt(argc, argv, "f:m")) != EOF) {
+> @@ -655,13 +669,14 @@ mremap_f(
+>  	else
+>  		new_addr = mremap(mapping->addr, mapping->length,
+>  		                  new_length, flags, new_addr);
+> -	if (new_addr == MAP_FAILED)
+> +	if (new_addr == MAP_FAILED) {
+>  		perror("mremap");
+> -	else {
+> -		mapping->addr = new_addr;
+> -		mapping->length = new_length;
+> +		return 0;
+>  	}
+>  
+> +	mapping->addr = new_addr;
+> +	mapping->length = new_length;
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  #endif /* HAVE_MREMAP */
+> diff --git a/io/open.c b/io/open.c
+> index 1abcb2ff2a01..0523f68263ec 100644
+> --- a/io/open.c
+> +++ b/io/open.c
+> @@ -209,6 +209,7 @@ open_f(
+>  	struct xfs_fsop_geom	geometry = { 0 };
+>  	struct fs_path	fsp;
+>  
+> +	exitcode = 1;
+>  	if (argc == 1) {
+>  		if (file)
+>  			return stat_f(argc, argv);
+> @@ -277,7 +278,10 @@ open_f(
+>  	if (!platform_test_xfs_fd(fd))
+>  		flags |= IO_FOREIGN;
+>  
+> -	addfile(argv[optind], fd, &geometry, flags, &fsp);
+> +	if (addfile(argv[optind], fd, &geometry, flags, &fsp) != 0)
+> +		return 0;
+> +
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -289,6 +293,7 @@ close_f(
+>  	size_t		length;
+>  	unsigned int	offset;
+>  
+> +	exitcode = 1;
+>  	if (close(file->fd) < 0) {
+>  		perror("close");
+>  		return 0;
+> @@ -314,6 +319,7 @@ close_f(
+>  		file = filetable = NULL;
+>  	}
+>  	filelist_f();
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -346,9 +352,12 @@ lsproj_callback(
+>  	if ((fd = open(path, O_RDONLY)) == -1) {
+>  		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  	} else {
+>  		if (getprojid(path, fd, &projid) == 0)
+>  			printf("[%u] %s\n", (unsigned int)projid, path);
+> +		else
+> +			exitcode = 1;
+>  		close(fd);
+>  	}
+>  	return 0;
+> @@ -384,9 +393,10 @@ lsproj_f(
+>  	if (recurse_all || recurse_dir)
+>  		nftw(file->name, lsproj_callback,
+>  			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+> -	else if (getprojid(file->name, file->fd, &projid) < 0)
+> +	else if (getprojid(file->name, file->fd, &projid) < 0) {
+>  		perror("getprojid");
+> -	else
+> +		exitcode = 1;
+> +	} else
+>  		printf(_("projid = %u\n"), (unsigned int)projid);
+>  	return 0;
+>  }
+> @@ -418,9 +428,12 @@ chproj_callback(
+>  	if ((fd = open(path, O_RDONLY)) == -1) {
+>  		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  	} else {
+> -		if (setprojid(path, fd, prid) < 0)
+> +		if (setprojid(path, fd, prid) < 0) {
+> +			exitcode = 1;
+>  			perror("setprojid");
+> +		}
+>  		close(fd);
+>  	}
+>  	return 0;
+> @@ -455,14 +468,17 @@ chproj_f(
+>  	prid = prid_from_string(argv[optind]);
+>  	if (prid == -1) {
+>  		printf(_("invalid project ID -- %s\n"), argv[optind]);
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+>  	if (recurse_all || recurse_dir)
+>  		nftw(file->name, chproj_callback,
+>  			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+> -	else if (setprojid(file->name, file->fd, prid) < 0)
+> +	else if (setprojid(file->name, file->fd, prid) < 0) {
+>  		perror("setprojid");
+> +		exitcode = 1;
+> +	}
+>  	return 0;
+>  }
+>  
+> @@ -486,6 +502,7 @@ get_extsize(const char *path, int fd)
+>  	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+>  		printf("%s: FS_IOC_FSGETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	printf("[%u] %s\n", fsx.fsx_extsize, path);
+> @@ -498,6 +515,7 @@ set_extsize(const char *path, int fd, long extsz)
+>  	struct fsxattr	fsx;
+>  	struct stat	stat;
+>  
+> +	exitcode = 1;
+>  	if (fstat(fd, &stat) < 0) {
+>  		perror("fstat");
+>  		return 0;
+> @@ -524,6 +542,7 @@ set_extsize(const char *path, int fd, long extsz)
+>  		return 0;
+>  	}
+>  
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -542,6 +561,7 @@ get_extsize_callback(
+>  	if ((fd = open(path, O_RDONLY)) == -1) {
+>  		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  	} else {
+>  		get_extsize(path, fd);
+>  		close(fd);
+> @@ -564,6 +584,7 @@ set_extsize_callback(
+>  	if ((fd = open(path, O_RDONLY)) == -1) {
+>  		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+>  			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  	} else {
+>  		set_extsize(path, fd, extsize);
+>  		close(fd);
+> @@ -601,6 +622,7 @@ extsize_f(
+>  		if (extsize < 0) {
+>  			printf(_("non-numeric extsize argument -- %s\n"),
+>  				argv[optind]);
+> +			exitcode = 1;
+>  			return 0;
+>  		}
+>  	} else {
+> diff --git a/io/parent.c b/io/parent.c
+> index 1968516d2c00..4653ddf3789a 100644
+> --- a/io/parent.c
+> +++ b/io/parent.c
+> @@ -387,6 +387,7 @@ parent_f(int argc, char **argv)
+>  	if (!fs) {
+>  		fprintf(stderr, _("file argument, \"%s\", is not in a mounted XFS filesystem\n"),
+>  			file->name);
+> +		exitcode = 1;
+>  		return 1;
+>  	}
+>  	mntpt = fs->fs_dir;
+> diff --git a/io/pread.c b/io/pread.c
+> index 60650aa340f6..7e9425fe21e8 100644
+> --- a/io/pread.c
+> +++ b/io/pread.c
+> @@ -390,6 +390,7 @@ pread_f(
+>  	int		eof = 0, direction = IO_FORWARD;
+>  	int		c;
+>  
+> +	exitcode = 1;
+>  	Cflag = qflag = uflag = vflag = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+> @@ -488,6 +489,8 @@ pread_f(
+>  	}
+>  	if (c < 0)
+>  		return 0;
+> +
+> +	exitcode = 0;
+>  	if (qflag)
+>  		return 0;
+>  	gettimeofday(&t2, NULL);
+> diff --git a/io/prealloc.c b/io/prealloc.c
+> index 1a1c9ca37da2..2ddde9023760 100644
+> --- a/io/prealloc.c
+> +++ b/io/prealloc.c
+> @@ -88,6 +88,7 @@ allocsp_f(
+>  {
+>  	xfs_flock64_t	segment;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -95,6 +96,7 @@ allocsp_f(
+>  		perror("XFS_IOC_ALLOCSP64");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -105,6 +107,7 @@ freesp_f(
+>  {
+>  	xfs_flock64_t	segment;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -112,6 +115,7 @@ freesp_f(
+>  		perror("XFS_IOC_FREESP64");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -122,6 +126,7 @@ resvsp_f(
+>  {
+>  	xfs_flock64_t	segment;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -129,6 +134,7 @@ resvsp_f(
+>  		perror("XFS_IOC_RESVSP64");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -139,6 +145,7 @@ unresvsp_f(
+>  {
+>  	xfs_flock64_t	segment;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -146,6 +153,7 @@ unresvsp_f(
+>  		perror("XFS_IOC_UNRESVSP64");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -156,6 +164,7 @@ zero_f(
+>  {
+>  	xfs_flock64_t	segment;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -163,6 +172,7 @@ zero_f(
+>  		perror("XFS_IOC_ZERO_RANGE");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -198,6 +208,7 @@ fallocate_f(
+>  	int		mode = 0;
+>  	int		c;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "cikpu")) != EOF) {
+>  		switch (c) {
+>  		case 'c':
+> @@ -230,6 +241,7 @@ fallocate_f(
+>  		perror("fallocate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -241,6 +253,7 @@ fpunch_f(
+>  	xfs_flock64_t	segment;
+>  	int		mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -249,6 +262,7 @@ fpunch_f(
+>  		perror("fallocate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -260,6 +274,7 @@ fcollapse_f(
+>  	xfs_flock64_t	segment;
+>  	int		mode = FALLOC_FL_COLLAPSE_RANGE;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -268,6 +283,7 @@ fcollapse_f(
+>  		perror("fallocate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -279,6 +295,7 @@ finsert_f(
+>  	xfs_flock64_t	segment;
+>  	int		mode = FALLOC_FL_INSERT_RANGE;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[1], argv[2], &segment))
+>  		return 0;
+>  
+> @@ -287,6 +304,7 @@ finsert_f(
+>  		perror("fallocate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -299,6 +317,7 @@ fzero_f(
+>  	int		mode = FALLOC_FL_ZERO_RANGE;
+>  	int		index = 1;
+>  
+> +	exitcode = 1;
+>  	if (strncmp(argv[index], "-k", 3) == 0) {
+>  		mode |= FALLOC_FL_KEEP_SIZE;
+>  		index++;
+> @@ -312,6 +331,7 @@ fzero_f(
+>  		perror("fallocate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> @@ -324,6 +344,7 @@ funshare_f(
+>  	int		mode = FALLOC_FL_UNSHARE_RANGE;
+>  	int		index = 1;
+>  
+> +	exitcode = 1;
+>  	if (!offset_length(argv[index], argv[index + 1], &segment))
+>  		return 0;
+>  
+> @@ -332,6 +353,7 @@ funshare_f(
+>  		perror("fallocate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  #endif	/* HAVE_FALLOCATE */
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index a89edfd0496f..ca262bc40b25 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -295,6 +295,7 @@ pwrite_f(
+>  	int		c, fd = -1;
+>  	int		pwritev2_flags = 0;
+>  
+> +	exitcode = 1;
+>  	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+> @@ -446,6 +447,8 @@ pwrite_f(
+>  			goto done;
+>  		}
+>  	}
+> +
+> +	exitcode = 0;
+>  	if (qflag)
+>  		goto done;
+>  	gettimeofday(&t2, NULL);
+> diff --git a/io/readdir.c b/io/readdir.c
+> index ca7a881d27e4..65fe51d2ca68 100644
+> --- a/io/readdir.c
+> +++ b/io/readdir.c
+> @@ -149,6 +149,7 @@ readdir_f(
+>  	DIR *dir;
+>  	int dfd;
+>  
+> +	exitcode = 1;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  
+>  	while ((c = getopt(argc, argv, "l:o:v")) != EOF) {
+> @@ -169,12 +170,12 @@ readdir_f(
+>  
+>  	dfd = dup(file->fd);
+>  	if (dfd < 0)
+> -		return -1;
+> +		return 0;
+>  
+>  	dir = fdopendir(dfd);
+>  	if (!dir) {
+>  		close(dfd);
+> -		return -1;
+> +		return 0;
+>  	}
+>  
+>  	if (offset == -1) {
+> @@ -199,6 +200,7 @@ readdir_f(
+>  	printf(_("%s, %d ops, %s (%s/sec and %.4f ops/sec)\n"),
+>  		s1, cnt, ts, s2, tdiv(cnt, t2));
+>  
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/reflink.c b/io/reflink.c
+> index f584e8f1fe43..86a20b2c629e 100644
+> --- a/io/reflink.c
+> +++ b/io/reflink.c
+> @@ -75,6 +75,7 @@ dedupe_ioctl(
+>  		error = ioctl(fd, XFS_IOC_FILE_EXTENT_SAME, args);
+>  		if (error) {
+>  			perror("XFS_IOC_FILE_EXTENT_SAME");
+> +			exitcode = 1;
+>  			goto done;
+>  		}
+>  		if (info->status < 0) {
+> @@ -139,24 +140,29 @@ dedupe_f(
+>  	soffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+>  	if (soffset < 0) {
+>  		printf(_("non-numeric src offset argument -- %s\n"), argv[optind]);
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	optind++;
+>  	doffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+>  	if (doffset < 0) {
+>  		printf(_("non-numeric dest offset argument -- %s\n"), argv[optind]);
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  	optind++;
+>  	count = cvtnum(fsblocksize, fssectsize, argv[optind]);
+>  	if (count < 0) {
+>  		printf(_("non-positive length argument -- %s\n"), argv[optind]);
+> +		exitcode = 1;
+>  		return 0;
+>  	}
+>  
+>  	fd = openfile(infile, NULL, IO_READONLY, 0, NULL);
+> -	if (fd < 0)
+> +	if (fd < 0) {
+> +		exitcode = 1;
+>  		return 0;
+> +	}
+>  
+>  	gettimeofday(&t1, NULL);
+>  	total = dedupe_ioctl(fd, soffset, doffset, count, &ops);
+> @@ -237,6 +243,7 @@ reflink_f(
+>  	struct timeval	t1, t2;
+>  	int		c, ops = 0, fd = -1;
+>  
+> +	exitcode = 1;
+>  	condensed = quiet_flag = 0;
+>  	doffset = soffset = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+> @@ -284,7 +291,11 @@ clone_all:
+>  
+>  	gettimeofday(&t1, NULL);
+>  	total = reflink_ioctl(fd, soffset, doffset, count, &ops);
+> -	if (ops == 0 || quiet_flag)
+> +	if (ops == 0)
+> +		goto done;
+> +
+> +	exitcode = 0;
+> +	if (quiet_flag)
+>  		goto done;
+>  	gettimeofday(&t2, NULL);
+>  	t2 = tsub(t2, t1);
+> diff --git a/io/resblks.c b/io/resblks.c
+> index 06903f5bb748..33da10711a0b 100644
+> --- a/io/resblks.c
+> +++ b/io/resblks.c
+> @@ -32,6 +32,7 @@ resblks_f(
+>  	xfs_fsop_resblks_t	res;
+>  	long long		blks;
+>  
+> +	exitcode = 1;
+>  	if (argc == 2) {
+>  		blks = cvtnum(file->geom.blocksize, file->geom.sectsize, argv[1]);
+>  		if (blks < 0) {
+> @@ -51,6 +52,7 @@ resblks_f(
+>  			(unsigned long long) res.resblks);
+>  	printf(_("available reserved blocks = %llu\n"),
+>  			(unsigned long long) res.resblks_avail);
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/seek.c b/io/seek.c
+> index 871b47262f03..e43a8f05ea36 100644
+> --- a/io/seek.c
+> +++ b/io/seek.c
+> @@ -111,6 +111,7 @@ seek_f(
+>  	int		flag;
+>  	int		startflag;
+>  
+> +	exitcode = 1;
+>  	flag = startflag = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  
+> @@ -186,9 +187,11 @@ found_hole:
+>  	for (c = 0; flag; c++) {
+>  		if (offset == -1) {
+>  			/* print error or eof if the only entry */
+> -			if (errno != ENXIO || c == 0 )
+> +			if (errno != ENXIO || c == 0 ) {
+>  				seek_output(startflag, seekinfo[current].name,
+>  					    start, offset);
+> +				exitcode = 0;
+> +			}
+>  			return 0;	/* stop on error or EOF */
+>  		}
+>  
+> @@ -210,6 +213,7 @@ found_hole:
+>  		if (offset != -1 && offset <= start)
+>  			goto bad_result;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  
+>  bad_result:
+> diff --git a/io/sendfile.c b/io/sendfile.c
+> index 063fa7f48114..ce6b9f127e4e 100644
+> --- a/io/sendfile.c
+> +++ b/io/sendfile.c
+> @@ -85,6 +85,7 @@ sendfile_f(
+>  	int		Cflag, qflag;
+>  	int		c, fd = -1;
+>  
+> +	exitcode = 1;
+>  	Cflag = qflag = 0;
+>  	init_cvtnum(&blocksize, &sectsize);
+>  	while ((c = getopt(argc, argv, "Cf:i:q")) != EOF) {
+> @@ -146,6 +147,8 @@ sendfile_f(
+>  	c = send_buffer(offset, count, fd, &total);
+>  	if (c < 0)
+>  		goto done;
+> +
+> +	exitcode = 0;
+>  	if (qflag)
+>  		goto done;
+>  	gettimeofday(&t2, NULL);
+> diff --git a/io/shutdown.c b/io/shutdown.c
+> index 022a0e9a07ae..6374c973b44d 100644
+> --- a/io/shutdown.c
+> +++ b/io/shutdown.c
+> @@ -30,6 +30,7 @@ shutdown_f(
+>  {
+>  	int		c, flag = XFS_FSOP_GOING_FLAGS_NOLOGFLUSH;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "fv")) != -1) {
+>  		switch (c) {
+>  		case 'f':
+> @@ -44,6 +45,7 @@ shutdown_f(
+>  		perror("XFS_IOC_GOINGDOWN");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/stat.c b/io/stat.c
+> index 41d421525791..2e5e90f7a172 100644
+> --- a/io/stat.c
+> +++ b/io/stat.c
+> @@ -137,6 +137,7 @@ stat_f(
+>  	struct stat	st;
+>  	int		c, verbose = 0, raw = 0;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "rv")) != EOF) {
+>  		switch (c) {
+>  		case 'r':
+> @@ -157,6 +158,7 @@ stat_f(
+>  		perror("fstat");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  
+>  	if (raw)
+>  		return dump_raw_stat(&st);
+> @@ -193,6 +195,7 @@ statfs_f(
+>  	printf(_("fd.path = \"%s\"\n"), file->name);
+>  	if (platform_fstatfs(file->fd, &st) < 0) {
+>  		perror("fstatfs");
+> +		exitcode = 1;
+>  	} else {
+>  		printf(_("statfs.f_bsize = %lld\n"), (long long) st.f_bsize);
+>  		printf(_("statfs.f_blocks = %lld\n"), (long long) st.f_blocks);
+> @@ -207,6 +210,7 @@ statfs_f(
+>  		return 0;
+>  	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
+>  		perror("XFS_IOC_FSGEOMETRY_V1");
+> +		exitcode = 1;
+>  	} else {
+>  		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
+>  		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
+> @@ -223,6 +227,7 @@ statfs_f(
+>  	}
+>  	if ((xfsctl(file->name, file->fd, XFS_IOC_FSCOUNTS, &fscounts)) < 0) {
+>  		perror("XFS_IOC_FSCOUNTS");
+> +		exitcode = 1;
+>  	} else {
+>  		printf(_("counts.freedata = %llu\n"),
+>  			(unsigned long long) fscounts.freedata);
+> @@ -315,6 +320,7 @@ statx_f(
+>  	int		atflag = 0;
+>  	unsigned int	mask = STATX_ALL;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
+>  		switch (c) {
+>  		case 'm':
+> @@ -358,6 +364,7 @@ statx_f(
+>  		perror("statx");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  
+>  	if (raw)
+>  		return dump_raw_statx(&stx);
+> diff --git a/io/sync_file_range.c b/io/sync_file_range.c
+> index 7e4f3e6da397..2a9965b098d2 100644
+> --- a/io/sync_file_range.c
+> +++ b/io/sync_file_range.c
+> @@ -46,6 +46,7 @@ sync_range_f(
+>  	int		c, sync_mode = 0;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	while ((c = getopt(argc, argv, "abw")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+> @@ -87,6 +88,7 @@ sync_range_f(
+>  		perror("sync_file_range");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/truncate.c b/io/truncate.c
+> index 20bada82c4aa..d741e36860b6 100644
+> --- a/io/truncate.c
+> +++ b/io/truncate.c
+> @@ -31,6 +31,7 @@ truncate_f(
+>  	off64_t		offset;
+>  	size_t		blocksize, sectsize;
+>  
+> +	exitcode = 1;
+>  	init_cvtnum(&blocksize, &sectsize);
+>  	offset = cvtnum(blocksize, sectsize, argv[1]);
+>  	if (offset < 0) {
+> @@ -42,6 +43,7 @@ truncate_f(
+>  		perror("ftruncate");
+>  		return 0;
+>  	}
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
+> diff --git a/io/utimes.c b/io/utimes.c
+> index faf9b8d55dbc..9fcb44c22bc0 100755
+> --- a/io/utimes.c
+> +++ b/io/utimes.c
+> @@ -44,6 +44,7 @@ utimes_f(
+>  	struct timespec t[2];
+>  	int result;
+>  
+> +	exitcode = 1;
+>  	/* Get the timestamps */
+>  	result = timespec_from_string(argv[1], argv[2], &t[0]);
+>  	if (result) {
+> @@ -62,6 +63,7 @@ utimes_f(
+>  		return 0;
+>  	}
+>  
+> +	exitcode = 0;
+>  	return 0;
+>  }
+>  
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
