@@ -1,163 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41683 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdLGV5G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 16:57:06 -0500
-Date: Thu, 7 Dec 2017 13:57:01 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 7/7] xfs: eliminate duplicate icreate tx reservation
- functions
-Message-ID: <20171207215701.GB19219@magnolia>
-References: <20171130185836.18481-1-bfoster@redhat.com>
- <20171130185836.18481-8-bfoster@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10772 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752132AbdLGWYF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 17:24:05 -0500
+Date: Fri, 8 Dec 2017 09:24:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC 1/4] xfs: create agfl block free helper function
+Message-ID: <20171207222403.GI4094@dastard>
+References: <20171207185810.48757-1-bfoster@redhat.com>
+ <20171207185810.48757-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171130185836.18481-8-bfoster@redhat.com>
+In-Reply-To: <20171207185810.48757-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 30, 2017 at 01:58:36PM -0500, Brian Foster wrote:
-> The create transaction reservation calculation has two different
-> branches of code depending on whether the filesystem is a v5 format
-> fs or older. Each branch considers the max reservation between the
-> allocation case (new chunk allocation + record insert) and the
-> modify case (chunk exists, record modification) of inode allocation.
-> 
-> The modify case is the same for both superblock versions with the
-> exception of the finobt. The finobt helper checks the feature bit,
-> however, and so the modify case already shares the same code.
-> 
-> Now that inode chunk allocation has been refactored into a helper
-> that checks the superblock version to calculate the appropriate
-> reservation for the create transaction, the only remaining
-> difference between the create and icreate branches is the call to
-> the finobt helper. As noted above, the finobt helper is a no-op when
-> the feature is not enabled. Therefore, these branches are
-> effectively duplicate and can be condensed.
-> 
-> Remove the xfs_calc_create_*() branch of functions and update the
-> various callers to use the xfs_calc_icreate_*() variant. The latter
-> creates the same reservation size for v4 create transactions as the
-> removed branch. As such, this patch does not result in transaction
-> reservation changes.
+On Thu, Dec 07, 2017 at 01:58:07PM -0500, Brian Foster wrote:
+> Refactor the AGFL block free code into a new helper such that it can
+> be invoked from deferred context. No functional changes.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Looks ok for 4.16, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+That's a good cleanup by itself - I think I have a patch hanging
+around somewhere that does this, too :P
 
-> ---
->  fs/xfs/libxfs/xfs_trans_resv.c | 52 +++++-------------------------------------
->  1 file changed, 6 insertions(+), 46 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 432dd7d7afea..f91e6680b0c5 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -414,38 +414,12 @@ xfs_calc_create_resv_modify(
->  }
->  
->  /*
-> - * For create we can allocate some inodes giving:
-> - *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
-> - *    the superblock for the nlink flag: sector size
-> - *    the inode chunk (allocation/init)
-> - *    the inode btree (record insertion)
-> - */
-> -STATIC uint
-> -xfs_calc_create_resv_alloc(
-> -	struct xfs_mount	*mp)
-> -{
-> -	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
-> -		mp->m_sb.sb_sectsize +
-> -		xfs_calc_inode_chunk_res(mp, _ALLOC) +
-> -		xfs_calc_inobt_res(mp);
-> -}
-> -
-> -STATIC uint
-> -__xfs_calc_create_reservation(
-> -	struct xfs_mount	*mp)
-> -{
-> -	return XFS_DQUOT_LOGRES(mp) +
-> -		MAX(xfs_calc_create_resv_alloc(mp),
-> -		    xfs_calc_create_resv_modify(mp));
-> -}
-> -
-> -/*
->   * For icreate we can allocate some inodes giving:
->   *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
->   *    the superblock for the nlink flag: sector size
-> - *    the inode chunk (allocation, no init)
-> + *    the inode chunk (allocation, optional init)
->   *    the inobt (record insertion)
-> - *    the finobt (record insertion)
-> + *    the finobt (optional, record insertion)
->   */
->  STATIC uint
->  xfs_calc_icreate_resv_alloc(
-> @@ -467,26 +441,12 @@ xfs_calc_icreate_reservation(xfs_mount_t *mp)
->  }
->  
->  STATIC uint
-> -xfs_calc_create_reservation(
-> -	struct xfs_mount	*mp)
-> -{
-> -	if (xfs_sb_version_hascrc(&mp->m_sb))
-> -		return xfs_calc_icreate_reservation(mp);
-> -	return __xfs_calc_create_reservation(mp);
-> -
-> -}
-> -
-> -STATIC uint
->  xfs_calc_create_tmpfile_reservation(
->  	struct xfs_mount        *mp)
->  {
->  	uint	res = XFS_DQUOT_LOGRES(mp);
->  
-> -	if (xfs_sb_version_hascrc(&mp->m_sb))
-> -		res += xfs_calc_icreate_resv_alloc(mp);
-> -	else
-> -		res += xfs_calc_create_resv_alloc(mp);
-> -
-> +	res += xfs_calc_icreate_resv_alloc(mp);
->  	return res + xfs_calc_iunlink_add_reservation(mp);
->  }
->  
-> @@ -497,7 +457,7 @@ STATIC uint
->  xfs_calc_mkdir_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return xfs_calc_create_reservation(mp);
-> +	return xfs_calc_icreate_reservation(mp);
->  }
->  
->  
-> @@ -510,7 +470,7 @@ STATIC uint
->  xfs_calc_symlink_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return xfs_calc_create_reservation(mp) +
-> +	return xfs_calc_icreate_reservation(mp) +
->  	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
->  }
->  
-> @@ -872,7 +832,7 @@ xfs_trans_resv_calc(
->  	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
->  	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->  
-> -	resp->tr_create.tr_logres = xfs_calc_create_reservation(mp);
-> +	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp);
->  	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
->  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->  
-> -- 
-> 2.13.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
