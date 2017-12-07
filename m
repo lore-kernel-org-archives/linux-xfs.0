@@ -1,48 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42498 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751944AbdLHSOt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Dec 2017 13:14:49 -0500
-Date: Fri, 8 Dec 2017 10:14:38 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: Lockdep is less useful than it was
-Message-ID: <20171208181438.GA6406@bombadil.infradead.org>
-References: <20171206004159.3755-73-willy@infradead.org>
- <20171206012901.GZ4094@dastard>
- <20171206020208.GK26021@bombadil.infradead.org>
- <20171206031456.GE4094@dastard>
- <20171206044549.GO26021@bombadil.infradead.org>
- <20171206084404.GF4094@dastard>
- <20171206140648.GB32044@bombadil.infradead.org>
- <20171207160634.il3vt5d6a4v5qesi@thunk.org>
- <20171207223803.GC26792@bombadil.infradead.org>
- <20171208152717.fx5w66wvyrfx6vrz@thunk.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:50265 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbdLGVoP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 16:44:15 -0500
+Date: Thu, 7 Dec 2017 13:44:10 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 4/7] xfs: truncate transaction does not modify the
+ inobt
+Message-ID: <20171207214410.GY19219@magnolia>
+References: <20171130185836.18481-1-bfoster@redhat.com>
+ <20171130185836.18481-5-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171208152717.fx5w66wvyrfx6vrz@thunk.org>
+In-Reply-To: <20171130185836.18481-5-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@kernel.org, byungchul.park@lge.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 08, 2017 at 10:27:17AM -0500, Theodore Ts'o wrote:
-> So if you are adding complexity to the kernel with the argument,
-> "lockdep will save us", I'm with Dave --- it's just not a believable
-> argument.
+On Thu, Nov 30, 2017 at 01:58:33PM -0500, Brian Foster wrote:
+> The truncate transaction does not ever modify the inode btree, but
+> includes an associated log reservation. Update
+> xfs_calc_itruncate_reservation() to remove the reservation
+> associated with inobt updates.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-I think that's a gross misrepresentation of what I'm doing.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-At the moment, the radix tree actively disables the RCU checking that
-enabling lockdep would give us.  It has to, because it has no idea what
-lock protects any individual access to the radix tree.  The XArray can
-use the RCU checking because it knows that every reference is protected
-by either the spinlock or the RCU lock.
-
-Dave was saying that he has a tree which has to be protected by a mutex
-because of where it is in the locking hierarchy, and I was vigorously
-declining his proposal of allowing him to skip taking the spinlock.
-
-And yes, we have bugs today that I assume we only stumble across every
-few billion years (or only on alpha, or only if our compiler gets more
-aggressive) because we have missing rcu_dereference annotations.
+> ---
+>  fs/xfs/libxfs/xfs_trans_resv.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 173b1bc13ffe..037a1295d289 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -232,8 +232,6 @@ xfs_calc_write_reservation(
+>   *    the super block to reflect the freed blocks: sector size
+>   *    worst case split in allocation btrees per extent assuming 4 extents:
+>   *		4 exts * 2 trees * (2 * max depth - 1) * block size
+> - *    the inode btree: max depth * blocksize
+> - *    the allocation btrees: 2 trees * (max depth - 1) * block size
+>   */
+>  STATIC uint
+>  xfs_calc_itruncate_reservation(
+> @@ -245,12 +243,7 @@ xfs_calc_itruncate_reservation(
+>  				      XFS_FSB_TO_B(mp, 1))),
+>  		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+>  		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+> -				      XFS_FSB_TO_B(mp, 1)) +
+> -		    xfs_calc_buf_res(5, 0) +
+> -		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -				     XFS_FSB_TO_B(mp, 1)) +
+> -		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+> -				     mp->m_in_maxlevels, 0)));
+> +				      XFS_FSB_TO_B(mp, 1))));
+>  }
+>  
+>  /*
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
