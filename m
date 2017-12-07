@@ -1,30 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45440 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752100AbdLHRrs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Dec 2017 12:47:48 -0500
-Date: Fri, 8 Dec 2017 10:47:47 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [fstests PATCH v6 2/2] generic: add test for DAX MAP_SYNC support
-Message-ID: <20171208174747.GA4308@linux.intel.com>
-References: <20171207103657.GF2749@eguan.usersys.redhat.com>
- <20171207231950.9023-1-ross.zwisler@linux.intel.com>
- <20171208063610.GH2749@eguan.usersys.redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:59775 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751014AbdLGVmE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 16:42:04 -0500
+Date: Thu, 7 Dec 2017 13:41:59 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 3/7] xfs: fix up agi unlinked list reservations
+Message-ID: <20171207214159.GX19219@magnolia>
+References: <20171130185836.18481-1-bfoster@redhat.com>
+ <20171130185836.18481-4-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171208063610.GH2749@eguan.usersys.redhat.com>
+In-Reply-To: <20171130185836.18481-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 08, 2017 at 02:36:10PM +0800, Eryu Guan wrote:
+On Thu, Nov 30, 2017 at 01:58:32PM -0500, Brian Foster wrote:
+> The current AGI unlinked list addition and removal reservations do
+> not reflect the worst case log usage. An unlinked list removal can
+> log up to two on-disk inode clusters but only includes reservation
+> for one. An unlinked list addition logs the on-disk cluster but
+> includes reservation for an in-core inode.
+> 
+> Update the AGI unlinked list reservation helpers to calculate the
+> correct worst case reservation for the associated operations.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-> (Test was re-numbered as generic/470, BTW.)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks!  For future reference, does the pattern of us submitting tests with
-high numbers (generic/999) to avoid merge conflicts and asking you to renumber
-them when you merge work for you?  Or would you prefer that we number our
-tests to the next available, which may change from submission to submission?
+> ---
+>  fs/xfs/libxfs/xfs_trans_resv.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 838566b85622..173b1bc13ffe 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -282,13 +282,14 @@ xfs_calc_rename_reservation(
+>   * For removing an inode from unlinked list at first, we can modify:
+>   *    the agi hash list and counters: sector size
+>   *    the on disk inode before ours in the agi hash list: inode cluster size
+> + *    the on disk inode in the agi hash list: inode cluster size
+>   */
+>  STATIC uint
+>  xfs_calc_iunlink_remove_reservation(
+>  	struct xfs_mount        *mp)
+>  {
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+> -	       max_t(uint, XFS_FSB_TO_B(mp, 1), mp->m_inode_cluster_size);
+> +	       2 * max_t(uint, XFS_FSB_TO_B(mp, 1), mp->m_inode_cluster_size);
+>  }
+>  
+>  /*
+> @@ -320,13 +321,13 @@ xfs_calc_link_reservation(
+>  /*
+>   * For adding an inode to unlinked list we can modify:
+>   *    the agi hash list: sector size
+> - *    the unlinked inode: inode size
+> + *    the on disk inode: inode cluster size
+>   */
+>  STATIC uint
+>  xfs_calc_iunlink_add_reservation(xfs_mount_t *mp)
+>  {
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+> -		xfs_calc_inode_res(mp, 1);
+> +		max_t(uint, XFS_FSB_TO_B(mp, 1), mp->m_inode_cluster_size);
+>  }
+>  
+>  /*
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
