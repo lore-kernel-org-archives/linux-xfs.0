@@ -1,72 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34018 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751610AbdLFXBL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Dec 2017 18:01:11 -0500
-Subject: Re: [PATCH v7] generic: initial fiemap range query test
-References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
- <20171206174506.GI19219@magnolia>
- <0d1b5c25-9187-1405-17a2-1e44b65c53a8@suse.com>
- <20171206210659.GE6896@magnolia> <20171206215711.GG5858@dastard>
- <61675ab2-0943-e5d7-8c94-247d3ef68a05@sandeen.net>
- <20171206221603.GH5858@dastard> <20171206224627.GO19219@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <99fbcf74-7508-286e-590a-25e90ad904e1@sandeen.net>
-Date: Wed, 6 Dec 2017 17:01:09 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:35382 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751815AbdLGATR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 19:19:17 -0500
+Date: Wed, 6 Dec 2017 16:19:11 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
+ creations
+Message-ID: <20171207001911.GR19219@magnolia>
+References: <20170821082404.3387-1-hch@lst.de>
+ <20170823202213.GA4796@magnolia>
+ <20170824004755.GC21024@dastard>
+ <20170829180445.GU4757@magnolia>
+ <20170903072513.GA14807@lst.de>
+ <20170903153150.GE4073@magnolia>
+ <20171205013422.GC19219@magnolia>
+ <20171205185936.GE19219@magnolia>
+ <20171207000259.GA18701@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20171206224627.GO19219@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171207000259.GA18701@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: Nikolay Borisov <nborisov@suse.com>, eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-
-
-On 12/6/17 4:46 PM, Darrick J. Wong wrote:
-> On Thu, Dec 07, 2017 at 09:16:03AM +1100, Dave Chinner wrote:
->> On Wed, Dec 06, 2017 at 04:01:58PM -0600, Eric Sandeen wrote:
->>> On 12/6/17 3:57 PM, Dave Chinner wrote:
->>>
->>>> There's a *simple answer* to this problem: fix the new command's
->>>> output.
->>>>
->>>> That is: the user asked for a specific range, so the command itself
->>>> should trim the map returned by the kernel to only display the exact
->>>> range the user asked for.  Then it doesn't matter if the underlying
->>>> filesystem trims the extents or not, because the we're going to do
->>>> that anyway in userspace.
->>>
->>> I have a different opinion:
->>>
->>> xfs_io is a debugging tool; the fiemap command sends an ioctl to the kernel.
->>>
->>> Ranged fiemap queries are a real thing; you put numbers into the kernel,
->>> and you get numbers out of the kernel.
->>>
->>> IMNSO, xfs_io should present to the user /what the kernel returned/,
->>> and not re-interpret it to fit some other notion of correctness if we
->>> don't like what the kernel told us.
->>
->> I hardly think "trimming to the range the user asked for" is
->> "re-interpreting what the kernel told us". It's limiting output
->> range to exactly what the user asked for - the output is still
->> correct regardless of how it's filtered to match what the user asked
->> for....
+On Thu, Dec 07, 2017 at 01:02:59AM +0100, Christoph Hellwig wrote:
+> On Tue, Dec 05, 2017 at 10:59:36AM -0800, Darrick J. Wong wrote:
+> > I fixed most of the auto group regressions with small fixes to xfstests,
+> > but xfs/013 is a problem because once we run out of space to create new
+> > dirX we simply get nothing.  Will have to study the behavior of that
+> > test in more depth...
 > 
-> ...except that xfs_io is a tool we use to debug the garbage that FIEMAP
-> sprays back at userspace, so it absolutely should not be hiding things
-> like this from the test suite:
+> With what kind of config do you see xfs/013 failures?
 
-That's the point I was trying, I guess badly, to make.  If I send a patch
-for xfs which essentially does this in fiemap:
+MKFS_OPTIONS='-m rmapbt=1,reflink=1 -i sparse=1'
 
-if (ranged_query && last_block_in_range_allocated)
-   last_extent.length += 42;
+I /think/ the fix is that the cp -Rl can sometimes fail to create
+dir$((i+1)) because we happen to hit exactly the point where the cleaner
+hasn't caught up with fsstress and so the dir$((i+1)) creation
+transaction fails with ENOSPC.  AFAICT if I change that to:
 
-have I introduced a bug or not?
+while ! test -d $SCRATCH_MNT/dir$((i+1)); do
+	cp -Rl ...
+done
 
--Eric
+then xfs/013 exercises the finobt just fine and doesn't fail.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
