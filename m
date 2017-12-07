@@ -1,272 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33324 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753003AbdLGNAe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Dec 2017 08:00:34 -0500
-Date: Thu, 7 Dec 2017 08:00:14 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH] xfs: always honor OWN_UNKNOWN rmap removal requests
-Message-ID: <20171207130013.GA3486@bfoster.bfoster>
-References: <20171205185524.GB42206@bfoster.bfoster>
- <20171205233420.GG19219@magnolia>
- <20171206141406.GA46723@bfoster.bfoster>
- <20171206175300.GJ19219@magnolia>
- <20171206204945.GB46723@bfoster.bfoster>
- <20171206220605.GN19219@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:29398 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750993AbdLGXsu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 18:48:50 -0500
+Date: Fri, 8 Dec 2017 10:46:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_io: fix exitcode handling (was Re: generic/399 and
+ xfs_io pwrite command)
+Message-ID: <20171207234631.GI5858@dastard>
+References: <7235f31f-5427-ff12-11f9-cba98431e71c@tuxera.com>
+ <20171204222842.GX4094@dastard>
+ <35d2712c-b036-d017-2d42-f74bbc4444a9@tuxera.com>
+ <20171205211850.GA5858@dastard>
+ <20171206002638.GB5858@dastard>
+ <20171207140519.GB3486@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171206220605.GN19219@magnolia>
+In-Reply-To: <20171207140519.GB3486@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Ari Sundholm <ari@tuxera.com>, fstests@vger.kernel.org, Emil Karlson <jkarlson@tuxera.com>, linux-xfs@vger.kernel.org
 
-On Wed, Dec 06, 2017 at 02:06:05PM -0800, Darrick J. Wong wrote:
-> On Wed, Dec 06, 2017 at 03:49:46PM -0500, Brian Foster wrote:
-> > On Wed, Dec 06, 2017 at 09:53:00AM -0800, Darrick J. Wong wrote:
-> > > On Wed, Dec 06, 2017 at 09:14:07AM -0500, Brian Foster wrote:
-> > > > On Tue, Dec 05, 2017 at 03:34:20PM -0800, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > 
-> > > > > Calling xfs_rmap_free with an unknown owner is supposed to remove any
-> > > > > rmaps covering that range regardless of owner.  This is used by the EFI
-> > > > > recovery code to say "we're freeing this, it mustn't be owned by
-> > > > > anything anymore", but for whatever reason xfs_free_ag_extent filters
-> > > > > them out.
-> > > > > 
-> > > > > Therefore, remove the filter and make xfs_rmap_unmap actually treat it
-> > > > > as a wildcard owner -- free anything that's already there, and if
-> > > > > there's no owner at all then that's fine too.
-> > > > > 
-> > > > > There are two existing callers of bmap_add_free that take care the rmap
-> > > > > deferred ops themselves and use OWN_UNKNOWN to skip the EFI-based rmap
-> > > > > cleanup; convert these to use OWN_NULL, and ensure that the RUI gets
-> > > > > added to the defer ops ahead of any EFI.
-> > > > > 
-> > > > > Lastly, now that xfs_free_extent filters out OWN_NULL rmap free requests,
-> > > > > growfs will have to consult directly with the rmap to ensure that there
-> > > > > aren't any rmaps in the grown region.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > ---
-> > > > 
-> > ...
-> > > > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > > > > index 5f3a3d9..fd0e630 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > > > > @@ -484,10 +484,17 @@ xfs_rmap_unmap(
-> > > > >  	XFS_WANT_CORRUPTED_GOTO(mp, (flags & XFS_RMAP_UNWRITTEN) ==
-> > > > >  			(ltrec.rm_flags & XFS_RMAP_UNWRITTEN), out_error);
-> > > > >  
-> > > > > -	/* Make sure the extent we found covers the entire freeing range. */
-> > > > > -	XFS_WANT_CORRUPTED_GOTO(mp, ltrec.rm_startblock <= bno &&
-> > > > > -		ltrec.rm_startblock + ltrec.rm_blockcount >=
-> > > > > -		bno + len, out_error);
-> > > > > +	/*
-> > > > > +	 * Make sure the extent we found covers the entire freeing range.
-> > > > > +	 * If this is a wildcard free, we're already done, otherwise there's
-> > > > > +	 * something wrong with the rmapbt.
-> > > > > +	 */
-> > > > 
-> > > > What does this mean by "we're already done?" This logic appears to mean
-> > > > that we don't do anything (as opposed to throwing an error). I think the
-> > > > comment would be more clear if it pointed out that/why we have nothing
-> > > > to do here (due to OWN_UNKNOWN). I.e., caller passed in a wildcard and
-> > > > we essentially didn't find a match..?
-> > > 
-> > > "Make sure the extent we found covers the entire freeing range.  Passing
-> > > in an owner of OWN_UNKNOWN means that the caller wants to remove any
-> > > reverse mapping that may exist for this range of blocks regardless of
-> > > owner; if there are no mappings at all, we're done."
-> > > 
+On Thu, Dec 07, 2017 at 09:05:20AM -0500, Brian Foster wrote:
+> On Wed, Dec 06, 2017 at 11:26:38AM +1100, Dave Chinner wrote:
+> > On Wed, Dec 06, 2017 at 08:18:50AM +1100, Dave Chinner wrote:
+> > > On Tue, Dec 05, 2017 at 04:23:43PM +0200, Ari Sundholm wrote:
+> > > > On 12/05/2017 12:28 AM, Dave Chinner wrote:
+> > > > >On Thu, Nov 30, 2017 at 04:21:47PM +0200, Ari Sundholm wrote:
+> ...
 > > 
-> > Looking at this again, I find it a bit confusing how this check seems to
-> > double as a "nothing to do" in the unknown case and a corruption error
-> > otherwise. For example, is something still technically wrong if we get
-> > an UNKNOWN unmap request (aka an extent free) to unmap a range that
-> > overlaps with but starts before or extends past the range in the rmapbt?
-> 
-> I .... hmm, bear with my stream of consciousness:
-> 
-> Start with the assumption that for each rmap free request there is
-> exactly one rmap that overlaps with the request (X and Y are existing
-> rmaps, R is the range we want to remove):
-> 
-> XXXXX....YYYY
->    RR
-> 
-> XXXXX....YYYY
->          RR
-> 
-> XXXXX....YYYY
->  RR
-> 
-> XXXXX....YYYY
-> RRRRR
-> 
-> (Note that we also assume that the rmapbt never has two mergeable
-> records.  rm_blockcount is 32-bit which is large enough to cover an
-> entire AG if need be.)
-> 
-> On the regular logging path, we have two choices: (1) pass the owner to
-> xfs_free_extent and let the EFI-finish remove the rmap, or (2) queue our
-> own deferred rmap unmap and pass OWN_NULL to bmap_add_free in which case
-> the EFI-finish will not try to remove an rmap.
-> 
-> If we have to log-recover (1), then neither the rmap nor the free space
-> btrees got updated, so there should be a single rmap covering the whole
-> EFI extent.  The EFI recovery will do an OWN_UNKNOWN rmap free, which
-> will find that full rmap and remove as necessary.
-> 
-> If we have to log-recover (2) then (assuming we queued the RUI before
-> the EFI like we're supposed to) the RUI recovery will remove the
-> rmapping and the EFI recovery's OWN_UNKNOWN rmap free will find nothing.
-> 
-> So far so good?  Let's see what happens if our assumption is false:
-> 
-> XXXXX....YYYY
->   RRRRR
-> 
-> XXXXX....YYYY
->       RRRRR
-> 
-> XXXXX....YYYY
->    RRRRRRRR
-> 
-> Then we started with a filesystem that only had a partial rmapping for a
-> mapped region.  For a known-owner removal we'll only ever see rmap X and
-> trigger this corruption report.  This holds true even for an
-> unknown-owner removal, so I think you're definitely onto something here.
-> The rework of this hunk was incorrect; I should have left it alone.
-> 
-> XXXXX....YYYY
->       RR
-> 
-> So this is this case where EFI recovery needs to delete an rmap and
-> there's already nothing there, ideally because a previous RUI already
-> did the work for us.
-> 
-> I /think/ the proper fix is that if ltrec precedes the range being
-> removed then we increment to check the next extent, and if there's no
-> overlap with the right extent (or no right extent), then the rmappings
-> were already cleared out and therefore we can just exit:
-> 
-
-ACK, that is much more clear. A nit..
-
-> /*
->  * If we're doing an unknown-owner removal and there are no rmaps
->  * overlapping the other end of range, we're done.
->  */
-
-To me, this implies that the overlap case is a valid one. I'd prefer
-something a bit more explicit, e.g.:
-
-"On unknown-owner removal, we expect to find the full range in the
-rmapbt or not at all. If no rmaps overlap the range, we're done.
-Otherwise, all sanity checks apply except for the rmap owner."
-
-Thanks for the breakdown!
-
-Brian
-
-> if (owner == UNKNOWN && ltrec.rm_startblock + ltrec.rm_blockcount <= bno) {
-> 	struct xfs_rmap_irec	rtrec;
-> 
-> 	xfs_btree_increment(rmap_cur, &has);
-> 	if (!has)
-> 		return 0;
-> 	xfs_btree_getrec(rmap_cur, &rtrec);
-> 	if (rtrec.rm_startblock > bno + len)
-> 		return 0;
-> }
-> 
-> /* Make sure the extent we found covers the entire freeing range. */
-> XFS_WANT_CORRUPTED_GOTO(mp, ltrec.rm_startblock <= bno &&
-> 	ltrec.rm_startblock + ltrec.rm_blockcount >=
-> 	bno + len, out_error);
-> 
-> Good catch!  This whole thing has turned my brain into a lump of
-> spaghetti.  Well that and the three simultaneous internal bug hunts...
-> 
-> --D
-> 
-> > I could easily be missing something here, but otherwise I wonder if this
-> > would be better as separate checks so we don't lose some of the error
-> > checking coverage.
+> > xfs_io: set exitcode on failure appropriately
 > > 
-> > Brian
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > > > > +	if (ltrec.rm_startblock > bno ||
-> > > > > +	    ltrec.rm_startblock + ltrec.rm_blockcount < bno + len) {
-> > > > > +		if (owner == XFS_RMAP_OWN_UNKNOWN)
-> > > > > +			goto out_done;
-> > > > > +		XFS_WANT_CORRUPTED_GOTO(mp, false, out_error);
-> > > > > +	}
-> > > > >  
-> > > > 
-> > > > Also... unrelated, but is this check immediately below really intending
-> > > > to ignore owner inconsistencies for all !inode owners?
-> > > 
-> > > I had my eye on that one too, though I think that could be a
-> > > freestanding cleanup.
-> > > 
-> > > > >  	/* Make sure the owner matches what we expect to find in the tree. */
-> > > > >  	XFS_WANT_CORRUPTED_GOTO(mp, owner == ltrec.rm_owner ||
-> > > > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > > > > index 8f22fc5..60a2e12 100644
-> > > > > --- a/fs/xfs/xfs_fsops.c
-> > > > > +++ b/fs/xfs/xfs_fsops.c
-> > > > > @@ -571,6 +571,11 @@ xfs_growfs_data_private(
-> > > > >  		 * this doesn't actually exist in the rmap btree.
-> > > > >  		 */
-> > > > >  		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
-> > > > > +		error = xfs_rmap_free(tp, bp, agno,
-> > > > > +				be32_to_cpu(agf->agf_length) - new,
-> > > > > +				new, &oinfo);
-> > > > > +		if (error)
-> > > > > +			goto error0;
-> > > > 
-> > > > OWN_NULL makes sense from the perspective of needing to avoid some error
-> > > > down in the free code where we need to free some space without needing
-> > > > to remove an owner, but what is the purpose of the above? It doesn't
-> > > > look like this really does anything beyond checking that the associated
-> > > > space is beyond the end of the rmapbt. If that's the intent, then it
-> > > > probably makes sense to update this comment as well.
-> > > 
-> > > Yes, that's exactly the intent.
-> > > 
-> > > Hmm, come to think of it, the rmap xref patch adds a
-> > > xfs_rmap_has_record helper that does exactly what we want here (decides
-> > > if there are any records covering this range).
-> > > 
-> > > --D
-> > > 
-> > > > Brian
-> > > > 
-> > > > >  		error = xfs_free_extent(tp,
-> > > > >  				XFS_AGB_TO_FSB(mp, agno,
-> > > > >  					be32_to_cpu(agf->agf_length) - new),
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Many operations don't set the exitcode when they fail, resulting
+> > in xfs_io exiting with a zero (no failure) exit code despite the
+> > command failing and returning an error. Fix this.
+> > 
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > ---
+> ...
+> > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> > index d1dfc5a5e33a..9b737eff4c02 100644
+> > --- a/io/copy_file_range.c
+> > +++ b/io/copy_file_range.c
+> > @@ -92,6 +92,7 @@ copy_range_f(int argc, char **argv)
+> >  	int ret;
+> >  	int fd;
+> >  
+> > +	exitcode = 1;
+> >  	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
+> >  		switch (opt) {
+> >  		case 's':
+> > @@ -132,6 +133,8 @@ copy_range_f(int argc, char **argv)
+> >  
+> >  	ret = copy_file_range(fd, &src, &dst, len);
+> >  	close(fd);
+> > +	if (ret >= 0)
+> > +		exitcode = 0;
+> 
+> I don't think it's appropriate to blindly overwrite the global exitcode
+> value like this. What about the case where multiple commands are chained
+> together? Should we expect an error code if any of the commands failed
+> or only the last?
+> 
+> For example:
+> 
+>   xfs_io -c "pwrite ..." <file>
+> 
+> ... returns an error if the write fails, while:
+> 
+>   xfs_io -c "pwrite ..." -c "fadvise ..." <file>
+> 
+> ... would never so long as the fadvise succeeds.
+
+Yup, I mentioned that this would be a problem on IRC. The patch fixes
+the interactive and the single command cases, but won't work for
+chained commands as you rightly point out.
+
+To fix it properly, it's going to take a lot more than 15 minutes of
+time. We're going to have to change how errors are returned to and
+propagated through the libxcmd infrastruture, how we handle "fatal
+error, don't continue" conditions through the libxcmd command loop,
+etc. If we want to stop at the first error, then we've got to go
+change all the return values from xfs_io commands to return non-zero
+on error. We still have to set the exitcode as per this patch,
+because the non-zero return value simply says "stop parsing input"
+and doesn't affect the exit code of the program.
+
+Given that xfs_quota, xfs_io, xfs_db, and xfs_spaceman all use the
+same libxcmd infrastructure, we've got to make the changes
+consistently across all of those utilities. This will require an
+audit of all the commands first to determine if there's anything
+special in any of those utilities, then changing all the code, then
+testing all the CLI parsing still works correctly.  xfs_quota, as
+usual, will be the problem child that causes us lots of pain here.
+
+I'm not planning on doing all this in the near future, so I did the
+next best thing that would only affect xfs_io behaviour. i.e.
+directly manipulate the exitcode as many of the existing xfs_io
+commands already do.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
