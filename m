@@ -1,205 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43228 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56498 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752546AbdLGRvD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Dec 2017 12:51:03 -0500
-Date: Thu, 7 Dec 2017 11:51:01 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20171207175101.GA2874@redhat.com>
-References: <20170814081806.GA3924@debian.home>
- <20171207173150.GA21174@redhat.com>
- <20171207174309.GU19219@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20171207174309.GU19219@magnolia>
+        id S1752506AbdLGS6L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Dec 2017 13:58:11 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 89D5676525
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2017 18:58:11 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6EF5E7C564
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2017 18:58:11 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC 0/4] xfs: defer agfl block frees
+Date: Thu,  7 Dec 2017 13:58:06 -0500
+Message-Id: <20171207185810.48757-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>, linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Dec 07, 2017 at 09:43:09AM -0800, Darrick J. Wong wrote:
-> On Thu, Dec 07, 2017 at 11:31:51AM -0600, Bill O'Donnell wrote:
-> > On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
-> > > When changing a file's ACL mask, xfs_set_acl() will first set the group
-> > > bits of i_mode to the value of the mask, and only then set the actual
-> > > extended attribute representing the new ACL.
-> > > 
-> > > If the second part fails (due to lack of space, for example) and the
-> > > file had no ACL attribute to begin with, the system will from now on
-> > > assume that the mask permission bits are actual group permission bits,
-> > > potentially granting access to the wrong users.
-> > > 
-> > > To prevent this, perform the mode update and the ACL update as part of
-> > > the same transaction, and restore the original mode to the vfs inode in
-> > > case of failure. This requires a change in how extended attributes are
-> > > deleted: commit the transaction even if there was no attribute to
-> > > remove, to log the standard inode fields.
-> > > 
-> > > Signed-off-by: Ernesto A. Fernández <ernesto.mnd.fernandez@gmail.com>
-> > > ---
-> > > This issue is covered by generic/449 in xfstests. Several other filesystems
-> > 
-> > Sorry, I'm coming into this late, and might be missing something...
-> > is there a particular xfs configuration that you've set up on which
-> > generic/449 fails? On 4.15-rc1, I see no failures of g/449.
-> 
-> Fixed in:
-> 67f2ffe31d1 ("xfs: don't change inode mode if ACL update fails")
-> 
-> (I think...)
+Hi all,
 
-Correct.
-Thanks-
-Bill
+This is an experiment I've been hacking on based on some of the recent
+discussions around log reservation deficiences due to unpredictable AGFL
+fixup behavior[1] and a previous attempt to address the problem[2].
 
+This RFC series introduces the ability to defer AGFL block frees much
+like the way we already defer frees of file-mapped extents. The intent
+is to disconnect freeing of surplus AGFL blocks from making those free
+AGFL slots available for an impending allocation. In turn, this creates
+conditions where AGFL fixups have more consistent and predictable log
+reservation consumption. AGFL block allocation behavior does not change
+since most AGFL deficiences can be satisfied by a single allocation
+request (whereas AGFL blocks are generally freed one at a time,
+requiring multiple cycles through the allocator).
 
-> 
-> --D
-> 
-> > Thanks-
-> > Bill
-> > 
-> > 
-> > 
-> > > are affected by this, some of them have already applied patches:
-> > >   - 397e434 ext4: preserve i_mode if __ext4_set_acl() fails
-> > >   - f070e5a jfs: preserve i_mode if __jfs_set_acl() fails
-> > >   - fcea8ae reiserfs: preserve i_mode if __reiserfs_set_acl() fails
-> > >   - fe26569 ext2: preserve i_mode if ext2_set_acl() fails
-> > > The test won't exactly pass after this patch is applied. It will fail
-> > > differently, this time claiming that the filesystem is inconsistent. This
-> > > probably has something to do with setting too many extended attributes, as
-> > > it goes away if you change the attribute size in the test from 1k to 64k.
-> > > 
-> > >  fs/xfs/libxfs/xfs_attr.c | 13 +++++++++++--
-> > >  fs/xfs/xfs_acl.c         | 39 ++++++++++++++-------------------------
-> > >  2 files changed, 25 insertions(+), 27 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > index de7b9bd..c3193e1 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > @@ -395,6 +395,7 @@ xfs_attr_remove(
-> > >  	struct xfs_defer_ops	dfops;
-> > >  	xfs_fsblock_t		firstblock;
-> > >  	int			error;
-> > > +	int			noattr = 0;
-> > >  
-> > >  	XFS_STATS_INC(mp, xs_attr_remove);
-> > >  
-> > > @@ -438,7 +439,12 @@ xfs_attr_remove(
-> > >  	xfs_trans_ijoin(args.trans, dp, 0);
-> > >  
-> > >  	if (!xfs_inode_hasattr(dp)) {
-> > > -		error = -ENOATTR;
-> > > +		/*
-> > > +		 * Commit even if there is no attr to remove, because when
-> > > +		 * setting ACLs the caller may be changing the mode in the
-> > > +		 * same transaction.
-> > > +		 */
-> > > +		noattr = 1;
-> > >  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> > >  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> > >  		error = xfs_attr_shortform_remove(&args);
-> > > @@ -458,7 +464,7 @@ xfs_attr_remove(
-> > >  	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> > >  		xfs_trans_set_sync(args.trans);
-> > >  
-> > > -	if ((flags & ATTR_KERNOTIME) == 0)
-> > > +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
-> > >  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
-> > >  
-> > >  	/*
-> > > @@ -468,6 +474,9 @@ xfs_attr_remove(
-> > >  	error = xfs_trans_commit(args.trans);
-> > >  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> > >  
-> > > +	if (!error && noattr)
-> > > +		error = -ENOATTR;
-> > > +
-> > >  	return error;
-> > >  
-> > >  out:
-> > > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> > > index 7034e17..1fe4363 100644
-> > > --- a/fs/xfs/xfs_acl.c
-> > > +++ b/fs/xfs/xfs_acl.c
-> > > @@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> > >  	return error;
-> > >  }
-> > >  
-> > > -static int
-> > > -xfs_set_mode(struct inode *inode, umode_t mode)
-> > > -{
-> > > -	int error = 0;
-> > > -
-> > > -	if (mode != inode->i_mode) {
-> > > -		struct iattr iattr;
-> > > -
-> > > -		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
-> > > -		iattr.ia_mode = mode;
-> > > -		iattr.ia_ctime = current_time(inode);
-> > > -
-> > > -		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
-> > > -	}
-> > > -
-> > > -	return error;
-> > > -}
-> > > -
-> > >  int
-> > >  xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> > >  {
-> > >  	int error = 0;
-> > > +	int mode_changed = 0;
-> > > +	umode_t old_mode = inode->i_mode;
-> > > +	struct timespec old_ctime = inode->i_ctime;
-> > >  
-> > >  	if (!acl)
-> > >  		goto set_acl;
-> > > @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> > >  		return error;
-> > >  
-> > >  	if (type == ACL_TYPE_ACCESS) {
-> > > -		umode_t mode;
-> > > -
-> > > -		error = posix_acl_update_mode(inode, &mode, &acl);
-> > > -		if (error)
-> > > -			return error;
-> > > -		error = xfs_set_mode(inode, mode);
-> > > +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
-> > >  		if (error)
-> > >  			return error;
-> > > +		inode->i_ctime = current_time(inode);
-> > > +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> > > +		mode_changed = 1;
-> > >  	}
-> > >  
-> > >   set_acl:
-> > > -	return __xfs_set_acl(inode, acl, type);
-> > > +	error = __xfs_set_acl(inode, acl, type);
-> > > +	if (error && mode_changed) {
-> > > +		inode->i_mode = old_mode;
-> > > +		inode->i_ctime = old_ctime;
-> > > +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> > > +	}
-> > > +	return error;
-> > >  }
-> > > -- 
-> > > 2.1.4
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This series survives the overrun reproducer associated with [1], even
+without the transaction fixups in [3] (that also work around the
+overrun). It also survives an xfstests run without any obvious problems.
+
+This is RFC for a few reasons. First, this is obviously a sensitive area
+of code that requires thorough analysis. This also requires more
+thorough stress testing than it has seen so far. Finally, the behavior
+changes are intentionally limited to target the reproducer workload. A
+proper series should probably include updates to consistently defer AGFL
+block frees from all possible inobt contexts, for example. I'm not so
+sure that is necessary/appropriate for other allocator callers, however,
+but is worth consideration.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+[1] https://marc.info/?l=linux-xfs&m=151127676203410&w=2
+[2] https://marc.info/?l=linux-xfs&m=151181428131889&w=2
+[3] https://marc.info/?l=linux-xfs&m=151206831911206&w=2
+
+Brian Foster (4):
+  xfs: create agfl block free helper function
+  xfs: defer agfl block frees when dfops is available
+  xfs: defer agfl block frees on extent frees
+  xfs: defer agfl frees on inobt allocs during chunk removal
+
+ fs/xfs/libxfs/xfs_alloc.c          | 91 ++++++++++++++++++++++++++++++++------
+ fs/xfs/libxfs/xfs_alloc.h          |  8 +++-
+ fs/xfs/libxfs/xfs_defer.h          |  1 +
+ fs/xfs/libxfs/xfs_ialloc.c         | 16 +++----
+ fs/xfs/libxfs/xfs_ialloc_btree.c   | 11 +++--
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |  4 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |  2 +-
+ fs/xfs/libxfs/xfs_rmap.c           |  2 +-
+ fs/xfs/scrub/common.c              |  8 ++--
+ fs/xfs/xfs_extfree_item.c          |  2 +-
+ fs/xfs/xfs_fsops.c                 |  2 +-
+ fs/xfs/xfs_itable.c                |  4 +-
+ fs/xfs/xfs_trace.h                 |  2 +
+ fs/xfs/xfs_trans.h                 |  3 +-
+ fs/xfs/xfs_trans_extfree.c         | 77 ++++++++++++++++++++++++++++++--
+ 15 files changed, 189 insertions(+), 44 deletions(-)
+
+-- 
+2.13.6
+
