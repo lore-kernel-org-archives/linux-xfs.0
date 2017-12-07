@@ -1,216 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38834 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751950AbdLGAfe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 19:35:34 -0500
-Date: Wed, 6 Dec 2017 16:35:22 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 1/2] xfs: add the ability to join a buffer to a
- defer_ops
-Message-ID: <20171207003522.GS19219@magnolia>
-References: <20171130175805.GC31372@magnolia>
- <20171201133618.GA22403@bfoster.bfoster>
- <20171201163944.GP21412@magnolia>
- <20171201173656.GC22403@bfoster.bfoster>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:29670 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751941AbdLGAmJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 19:42:09 -0500
+Date: Thu, 7 Dec 2017 11:38:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
+Message-ID: <20171207003843.GG4094@dastard>
+References: <20171206004159.3755-1-willy@infradead.org>
+ <20171206004159.3755-73-willy@infradead.org>
+ <20171206012901.GZ4094@dastard>
+ <20171206020208.GK26021@bombadil.infradead.org>
+ <20171206031456.GE4094@dastard>
+ <20171206044549.GO26021@bombadil.infradead.org>
+ <20171206084404.GF4094@dastard>
+ <20171206140648.GB32044@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171201173656.GC22403@bfoster.bfoster>
+In-Reply-To: <20171206140648.GB32044@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: alex@zadarastorage.com, linux-xfs@vger.kernel.org, david@fromorbit.com, libor.klepac@bcom.cz
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Dec 01, 2017 at 12:36:56PM -0500, Brian Foster wrote:
-> On Fri, Dec 01, 2017 at 08:39:44AM -0800, Darrick J. Wong wrote:
-> > On Fri, Dec 01, 2017 at 08:36:19AM -0500, Brian Foster wrote:
-> > > On Thu, Nov 30, 2017 at 09:58:05AM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > In certain cases we need to be able to maintain a buffer lock across a
-> > > > defer_finish call.  Since there could be many (large) transactions
-> > > > committed as a result of a defer_finish, we have to hold the buffer
-> > > > across the roll, then immediately rejoin the buffer and mark it dirty in
-> > > > each transaction to keep the log moving forward.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > 
-> > > Seems about right to me. A couple things..
-> > > 
-> > > >  fs/xfs/libxfs/xfs_defer.c |   37 ++++++++++++++++++++++++++++++++++---
-> > > >  fs/xfs/libxfs/xfs_defer.h |    5 ++++-
-> > > >  2 files changed, 38 insertions(+), 4 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > > > index 072ebfe..b5b3414 100644
-> > > > --- a/fs/xfs/libxfs/xfs_defer.c
-> > > > +++ b/fs/xfs/libxfs/xfs_defer.c
-> > > > @@ -249,6 +249,10 @@ xfs_defer_trans_roll(
-> > > >  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> > > >  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
-> > > >  
-> > > > +	/* Hold the (previously bjoin'd) buffer locked across the roll. */
-> > > > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
-> > > > +		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
-> > > > +
-> > > 
-> > > It seems more consistent to dirty the buffer in the tx here and
-> > > bjoin+bhold it in the loop below.
+On Wed, Dec 06, 2017 at 06:06:48AM -0800, Matthew Wilcox wrote:
+> On Wed, Dec 06, 2017 at 07:44:04PM +1100, Dave Chinner wrote:
+> > On Tue, Dec 05, 2017 at 08:45:49PM -0800, Matthew Wilcox wrote:
+> > > That said, using xa_cmpxchg() in the dquot code looked like the right
+> > > thing to do?  Since we'd dropped the qi mutex and the ILOCK, it looks
+> > > entirely reasonable for another thread to come in and set up the dquot.
+> > > But I'm obviously quite ignorant of the XFS internals, so maybe there's
+> > > something else going on that makes this essentially a "can't happen".
 > > 
-> > I thought the purpose of calling bhold was to prevent the transaction
-> > commit (in xfs_trans_roll) from unlocking the buffer?  Therefore you'd
-> > bhold it before the _roll and then bjoin/dirty the still-locked buffer
-> > afterwards to attach the buffer as a dirty buffer to the new
-> > transaction.
-> > 
+> > It's no different to the inode cache code, which drops the RCU
+> > lock on lookup miss, instantiates the new inode (maybe reading it
+> > off disk), then locks the tree and attempts to insert it. Both cases
+> > use "insert if empty, otherwise retry lookup from start" semantics.
 > 
-> Yeah, but that wouldn't necessarily change.. I guess what I overlooked
-> before is that xfs_defer_bjoin() doesn't actually hold the buffer in the
-> current tp, so we'd have to start off with call to do that in the
-> current transaction. All in all, what throws me off a bit is that I'd
-> expect the same semantics/behavior for buffers in this situation as we
-> have for inodes...
+> Ah.  I had my focus set a little narrow on the inode cache code and didn't
+> recognise the pattern.
 > 
-> xfs_attr_set() joins the inode the transaction without transferring the
-> lock (which is analogous to _bjoin() + _bhold()). It does some real
-> work, defer_ijoin()'s the inode and finishes deferred ops.
-> xfs_defer_finish() ultimately returns with a transaction that holds the
-> inode with a clean log item descriptor.
+> Why do you sleep for one jiffy after encountering a miss, then seeing
+> someone else insert the inode for you?
+
+The sleep is a backoff that allows whatever we raced with to
+complete, be it a hit that raced with an inode being reclaimed and
+removed, or a miss that raced with another insert. Ideally we'd
+sleep on the XFS_INEW bit, similar to the vfs I_NEW flag, but it's
+not quite that simple with the reclaim side of things...
+
+> > cmpxchg is for replacing a known object in a store - it's not really
+> > intended for doing initial inserts after a lookup tells us there is
+> > nothing in the store.  The radix tree "insert only if empty" makes
+> > sense here, because it naturally takes care of lookup/insert races
+> > via the -EEXIST mechanism.
+> > 
+> > I think that providing xa_store_excl() (which would return -EEXIST
+> > if the entry is not empty) would be a better interface here, because
+> > it matches the semantics of lookup cache population used all over
+> > the kernel....
 > 
-> The analogous behavior for buffers in my mind is for xfs_attr_set() to
-> bhold the buffer to the current transaction, defer_bjoin() it and
-> ultimately return from xfs_defer_finish() with the buffer held, but not
-> yet dirtied, in the current transaction. Hm?
+> I'm not thrilled with xa_store_excl(), but I need to think about that
+> a bit more.
 
-Ahhh, ok.  In my head I had designed this as "I have this locked buffer,
-now do whatever you have to do to ensure that it doesn't get unlocked in
-defer_finish." whereas the strategy for inodes is "I have this locked
-inode that won't unlock until I tell it to, so do whatever you must to
-ensure that it gets relogged in defer_finish and is still
-locked-and-wont-unlock."
+Not fussed about the name - I just think we need a function that
+matches the insert semantics of the code....
 
-I can do the same with buffers -- "I have this locked buffer that won't
-unlock until I tell it to, so do what you have to do to ensure it gets
-relogged and is still locked-and-wont-unlock after defer_finish."
-
---D
-
-> Brian
+> > > I'm quite happy to have normal API variants that don't save/restore
+> > > interrupts.  Just need to come up with good names ... I don't think
+> > > xa_store_noirq() is a good name, but maybe you do?
+> > 
+> > I'd prefer not to have to deal with such things at all. :P
+> > 
+> > How many subsystems actually require irq safety in the XA locking
+> > code? Make them use irqsafe versions, not make everyone else use
+> > "noirq" versions, as is the convention for the rest of the kernel
+> > code....
 > 
-> > > >  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
-> > > >  
-> > > >  	/* Roll the transaction. */
-> > > > @@ -264,6 +268,12 @@ xfs_defer_trans_roll(
-> > > >  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> > > >  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
-> > > >  
-> > > > +	/* Rejoin the buffers and dirty them so the log moves forward. */
-> > > > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
-> > > > +		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
-> > > > +		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
-> > > > +	}
-> > > > +
-> > > >  	return error;
-> > > >  }
-> > > >  
-> > > > @@ -299,6 +309,29 @@ xfs_defer_ijoin(
-> > > >  }
-> > > >  
-> > > >  /*
-> > > > + * Add this buffer to the deferred op.  Each joined buffer is relogged
-> > > > + * each time we roll the transaction.
-> > > > + */
-> > > > +int
-> > > > +xfs_defer_bjoin(
-> > > > +	struct xfs_defer_ops		*dop,
-> > > > +	struct xfs_buf			*bp)
-> > > > +{
-> > > > +	int				i;
-> > > > +
-> > > > +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-> > > > +		if (dop->dop_bufs[i] == bp)
-> > > > +			return 0;
-> > > > +		else if (dop->dop_bufs[i] == NULL) {
-> > > > +			dop->dop_bufs[i] = bp;
-> > > > +			return 0;
-> > > > +		}
-> > > > +	}
-> > > > +
-> > > > +	return -EFSCORRUPTED;
-> > > 
-> > > I notice that this looks exactly like xfs_defer_join(), but is
-> > > -EFSCORRUPTED the right error here? It probably doesn't matter that much
-> > > given that if we hit this we've already lost, but I wonder if an error
-> > > that more reflects a programming error as opposed to inconsistent fs
-> > > might be more appropriate..? -EINVAL, -EBUSY?
+> Hard to say how many existing radix tree users require the irq safety.
+
+The mapping tree requires it because it gets called from IO
+completion contexts to clear page writeback state, but I don't know
+about any of the others.
+
+> Also hard to say how many potential users (people currently using
+> linked lists, people using resizable arrays, etc) need irq safety.
+> My thinking was "make it safe by default and let people who know better
+> have a way to opt out", but there's definitely something to be said for
+> "make it fast by default and let people who need the unusual behaviour
+> type those extra few letters".
+> 
+> So, you're arguing for providing xa_store(), xa_store_irq(), xa_store_bh()
+> and xa_store_irqsafe()?  (at least on demand, as users come to light?)
+> At least the read side doesn't require any variants; everybody can use
+> RCU for read side protection.
+
+That would follow the pattern of the rest of the kernel APIs, though
+I think it might be cleaner to simply state the locking requirement
+to xa_init() and keep all those details completely internal rather
+than encoding them into API calls. After all, the "irqsafe-ness" of
+the locking needs to be consistent across the entire XA instance....
+
+> ("safe", not "save" because I wouldn't make the caller provide the
+> "flags" argument).
+> 
+> > > At least, not today.  One of the future plans is to allow xa_nodes to
+> > > be allocated from ZONE_MOVABLE.  In order to do that, we have to be
+> > > able to tell which lock protects any given node.  With the XArray,
+> > > we can find that out (xa_node->root->xa_lock); with the radix tree,
+> > > we don't even know what kind of lock protects the tree.
 > > 
-> > Yeah, I'm not sure what error code applies to "programmer messed up" :)
-> > 
-> > Perhaps we should add an ASSERT(0) at the bottom of both functions.
-> > 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > +}
-> > > > +
-> > > > +/*
-> > > >   * Finish all the pending work.  This involves logging intent items for
-> > > >   * any work items that wandered in since the last transaction roll (if
-> > > >   * one has even happened), rolling the transaction, and finishing the
-> > > > @@ -493,9 +526,7 @@ xfs_defer_init(
-> > > >  	struct xfs_defer_ops		*dop,
-> > > >  	xfs_fsblock_t			*fbp)
-> > > >  {
-> > > > -	dop->dop_committed = false;
-> > > > -	dop->dop_low = false;
-> > > > -	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> > > > +	memset(dop, 0, sizeof(struct xfs_defer_ops));
-> > > >  	*fbp = NULLFSBLOCK;
-> > > >  	INIT_LIST_HEAD(&dop->dop_intake);
-> > > >  	INIT_LIST_HEAD(&dop->dop_pending);
-> > > > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> > > > index d4f046d..045beac 100644
-> > > > --- a/fs/xfs/libxfs/xfs_defer.h
-> > > > +++ b/fs/xfs/libxfs/xfs_defer.h
-> > > > @@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
-> > > >  };
-> > > >  
-> > > >  #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-> > > > +#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
-> > > >  
-> > > >  struct xfs_defer_ops {
-> > > >  	bool			dop_committed;	/* did any trans commit? */
-> > > > @@ -66,8 +67,9 @@ struct xfs_defer_ops {
-> > > >  	struct list_head	dop_intake;	/* unlogged pending work */
-> > > >  	struct list_head	dop_pending;	/* logged pending work */
-> > > >  
-> > > > -	/* relog these inodes with each roll */
-> > > > +	/* relog these with each roll */
-> > > >  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-> > > > +	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
-> > > >  };
-> > > >  
-> > > >  void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-> > > > @@ -77,6 +79,7 @@ void xfs_defer_cancel(struct xfs_defer_ops *dop);
-> > > >  void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
-> > > >  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-> > > >  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-> > > > +int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
-> > > >  
-> > > >  /* Description of a deferred type. */
-> > > >  struct xfs_defer_op_type {
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Yup, this is a prime example of why we shouldn't be creating
+> > external dependencies by smearing the locking context outside the XA
+> > structure itself. It's not a stretch to see something like a
+> > ZONE_MOVEABLE dependency because some other object indexed in a XA
+> > is stored in the same page as the xa_node that points to it, and
+> > both require the same xa_lock to move/update...
+> 
+> That is a bit of a stretch.  Christoph Lameter and I had a discussion about it
+> here: https://www.spinics.net/lists/linux-mm/msg122902.html
+> 
+> There's no situation where you need to acquire two locks in order to
+> free an object;
+
+ZONE_MOVEABLE is for moving migratable objects, not freeing
+unreferenced objects. i.e. it's used to indicate the active objects
+can be moved to a different location whilst it has other objects
+pointing to it. This requires atomically swapping all the external
+pointer references to the object so everything sees either the old
+object before the move or the new object after the move. While the
+move is in progress, we have to stall anything that could possibly
+reference the object and in general that means we have lock up all
+the objects that point to the object being moved.
+
+For things like inodes, we have *lots* of external references to
+them, and so we'd have to stall all of those external references
+to update them once movement is complete. Lots of locks to hold
+there, potentially including the xa_lock for the trees that index
+the inode.
+
+Hence if we are trying to migrate multiple objects at a time (i.e.
+the bulk slab page clearing case) then we've got to lock up multiple
+refrenceing objects and structure that may have overlapping
+dependencies and so could end up trying to get the same locks that
+other objects in the page already hold.
+
+It's an utter mess - xa_node might be simple, but the general case
+for slab objects in ZONE_MOVEABLE is anything but simple.  That's
+the reason we've never made any progress on generic slab
+defragmentation in the past 12-13 years - we haven't worked out how
+to solve this fundamental "atomically update all external references
+to the object being moved" problem.
+
+> you'd create odd locking dependencies between objects
+> if you did that (eg we already have a locking dependency between pag_ici
+> and perag from __xfs_inode_set_eofblocks_tag)
+
+You missed this one: xfs_inode_set_reclaim_tag()
+
+It nests pag->pag_ici_lock - ip->i_flags_lock - mp->m_perag_lock
+in one pass because we've got an inode flag and tags in two separate
+radix trees we need to update atomically....
+
+Also, that's called in the evict() path so, yeah, we're actually
+nesting multiple locks to get the inode into a state where we can
+reclaim it...
+
+> It'd be a pretty horrible
+> shrinker design where you had to get all the locks on all the objects,
+> regardless of what locking order the real code had.
+
+The shrinker (i.e. memory reclaim) doesn't need to do that - only
+object migration does. They operate on vastly different object
+contexts and should not be conflated.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
