@@ -1,102 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41110 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:60932 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdLGVkt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 16:40:49 -0500
-Date: Thu, 7 Dec 2017 13:40:45 -0800
+        with ESMTP id S1752212AbdLGVeK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 16:34:10 -0500
+Date: Thu, 7 Dec 2017 13:34:04 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/7] xfs: include inobt buffers in ifree tx log
- reservation
-Message-ID: <20171207214045.GW19219@magnolia>
+Subject: Re: [PATCH v2 1/7] xfs: print transaction log reservation on overrun
+Message-ID: <20171207213404.GV19219@magnolia>
 References: <20171130185836.18481-1-bfoster@redhat.com>
- <20171130185836.18481-3-bfoster@redhat.com>
+ <20171130185836.18481-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171130185836.18481-3-bfoster@redhat.com>
+In-Reply-To: <20171130185836.18481-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 30, 2017 at 01:58:31PM -0500, Brian Foster wrote:
-> The tr_ifree transaction handles inode unlinks and inode chunk
-> frees. The current transaction calculation does not accurately
-> reflect worst case changes to the inode btree, however. The inobt
-> portion of the current transaction reservation only covers
-> modification of a single inobt buffer (for the particular inode
-> record). This is a historical artifact from the days before XFS
-> supported full inode chunk removal.
+On Thu, Nov 30, 2017 at 01:58:30PM -0500, Brian Foster wrote:
+> The transaction dump code displays the content and reservation
+> consumption of a particular transaction in the event of an overrun.
+> It currently displays the reservation associated with the
+> transaction ticket, but not the original reservation attached to the
+> transaction.
 > 
-> When support for inode chunk removal was added in commit
-> 254f6311ed1b ("Implement deletion of inode clusters in XFS."), the
-> additional log reservation required for chunk removal was not added
-> correctly. The new reservation only considered the header overhead
-> of associated buffers rather than the full contents of the btrees
-> and AGF and AGFL buffers affected by the transaction. The
-> reservation for the free space btrees was subsequently fixed up in
-> commit 5fe6abb82f76 ("Add space for inode and allocation btrees to
-> ITRUNCATE log reservation"), but the res. for full inobt joins has
-> never been added.
+> The latter value reflects the original transaction reservation
+> calculation before additional reservation overhead is assigned, such
+> as for the CIL context header and potential split region headers.
 > 
-> Further review of the ifree reservation uncovered a couple more
-> problems:
-> 
-> - The undocumented +2 blocks are intended for the AGF and AGFL, but
->   are also not sized correctly and should be logged as full sectors
->   (not FSBs).
-> - The additional single block header is undocumented and serves no
->   apparent purpose.
-> 
-> Update xfs_calc_ifree_reservation() to include a full inobt join in
-> the reservation calculation. Refactor the undocumented blocks
-> appropriately and fix up the comments to reflect the current
-> calculation.
+> Update xlog_print_trans() to also print the original transaction
+> reservation in the event of overrun. This provides a reference point
+> to identify how much reservation overhead was added to a particular
+> ticket by xfs_log_calc_unit_res().
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  fs/xfs/libxfs/xfs_trans_resv.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
+>  fs/xfs/xfs_log.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 6bd916bd35e2..838566b85622 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -490,10 +490,9 @@ xfs_calc_symlink_reservation(
->  /*
->   * In freeing an inode we can modify:
->   *    the inode being freed: inode size
-> - *    the super block free inode counter: sector size
-> - *    the agi hash list and counters: sector size
-> - *    the inode btree entry: block size
-> - *    the on disk inode before ours in the agi hash list: inode cluster size
-> + *    the super block free inode counter, AGF and AGFL: sector size
-> + *    the on disk inode (agi unlinked list removal)
-> + *    the inode chunk is marked stale (headers only)
->   *    the inode btree: max depth * blocksize
->   *    the allocation btrees: 2 trees * (max depth - 1) * block size
->   *    the finobt (record insertion, removal or modification)
-> @@ -504,12 +503,10 @@ xfs_calc_ifree_reservation(
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
->  		xfs_calc_inode_res(mp, 1) +
-> -		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-> -		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> +		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
->  		xfs_calc_iunlink_remove_reservation(mp) +
-> -		xfs_calc_buf_res(1, 0) +
-> -		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
-> -				 mp->m_in_maxlevels, 0) +
-> +		xfs_calc_buf_res(mp->m_ialloc_blks, 0) +
-> +		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
->  		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1)) +
->  		xfs_calc_finobt_res(mp, 0, 1);
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 38d4227895ae..3a37fa1ed25e 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -2117,7 +2117,9 @@ xlog_print_trans(
+>  
+>  	/* dump core transaction and ticket info */
+>  	xfs_warn(mp, "transaction summary:");
+> -	xfs_warn(mp, "  flags	= 0x%x", tp->t_flags);
+> +	xfs_warn(mp, "  log res   = %d", tp->t_log_res);
+> +	xfs_warn(mp, "  log count = %d", tp->t_log_count);
+> +	xfs_warn(mp, "  flags     = 0x%x", tp->t_flags);
+>  
+>  	xlog_print_tic_res(mp, tp->t_ticket);
+>  
 > -- 
 > 2.13.6
 > 
