@@ -1,175 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41040 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751305AbdLMX7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:46 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNl94G024521
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:45 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2eudq605ye-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:45 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNv2Rh031253
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:57:02 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNv2aj017809
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:57:02 GMT
-Subject: [PATCH 06/15] xfs: check btree block ownership with bnobt/rmapbt
- when scrubbing btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Dec 2017 15:56:59 -0800
-Message-ID: <151320941912.30154.12716654369265862672.stgit@magnolia>
-In-Reply-To: <151320938254.30154.1046660005648421683.stgit@magnolia>
-References: <151320938254.30154.1046660005648421683.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10272 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753761AbdLHWg7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Dec 2017 17:36:59 -0500
+Date: Sat, 9 Dec 2017 09:36:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
+Message-ID: <20171208223654.GP5858@dastard>
+References: <fd7130d7-9066-524e-1053-a61eeb27cb36@lge.com>
+ <Pine.LNX.4.44L0.1712081228430.1371-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1712081228430.1371-100000@iolanthe.rowland.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Byungchul Park <byungchul.park@lge.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <willy@infradead.org>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Dec 08, 2017 at 12:35:07PM -0500, Alan Stern wrote:
+> On Fri, 8 Dec 2017, Byungchul Park wrote:
+> 
+> > I'm sorry to hear that.. If I were you, I would also get
+> > annoyed. And.. thanks for explanation.
+> > 
+> > But, I think assigning lock classes properly and checking
+> > relationship of the classes to detect deadlocks is reasonable.
+> > 
+> > In my opinion about the common lockdep stuff, there are 2
+> > problems on it.
+> > 
+> > 1) Firstly, it's hard to assign lock classes *properly*. By
+> > default, it relies on the caller site of lockdep_init_map(),
+> > but we need to assign another class manually, where ordering
+> > rules are complicated so cannot rely on the caller site. That
+> > *only* can be done by experts of the subsystem.
 
-When scanning a metadata btree block, cross-reference the block location
-with the free space btree and the reverse mapping btree to ensure that
-the rmapbt knows about the block and the bnobt does not.  Add a
-mechanism to defer checks when we happen to be scanning the bnobt/rmapbt
-itself because it's less efficient to repeatedly clone and destroy the
-cursor.
+Sure, but that's not the issue here. The issue here is the lack of
+communication with subsystem experts and that the annotation
+complexity warnings given immediately by the subsystem experts were
+completely ignored...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/btree.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 92 insertions(+)
+> > I think if they want to get benifit from lockdep, they have no
+> > choice but to assign classes manually with the domain knowledge,
+> > or use *lockdep_set_novalidate_class()* to invalidate locks
+> > making the developers annoyed and not want to use the checking
+> > for them.
+> 
+> Lockdep's no_validate class is used when the locking patterns are too
+> complicated for lockdep to understand.  Basically, it tells lockdep to
+> ignore those locks.
 
+Let me just point out two things here:
 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 8d48b5b1..40fc26f 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -359,6 +359,80 @@ xfs_scrub_btree_block_check_siblings(
- 	return error;
- }
- 
-+struct check_owner {
-+	struct list_head	list;
-+	xfs_daddr_t		daddr;
-+	int			level;
-+};
-+
-+/*
-+ * Make sure this btree block isn't in the free list and that there's
-+ * an rmap record for it.
-+ */
-+STATIC int
-+xfs_scrub_btree_check_block_owner(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	xfs_daddr_t			daddr)
-+{
-+	struct xfs_scrub_ag		sa = { 0 };
-+	struct xfs_scrub_ag		*psa;
-+	xfs_agnumber_t			agno;
-+	int				error = 0;
-+
-+	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
-+
-+	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
-+		if (!xfs_scrub_btree_xref_process_error(bs->sc, bs->cur,
-+				level, &error))
-+			return error;
-+		psa = &sa;
-+	} else {
-+		psa = &bs->sc->sa;
-+	}
-+
-+	if (psa == &sa)
-+		xfs_scrub_ag_free(bs->sc, &sa);
-+
-+	return error;
-+}
-+
-+/* Check the owner of a btree block. */
-+STATIC int
-+xfs_scrub_btree_check_owner(
-+	struct xfs_scrub_btree		*bs,
-+	int				level,
-+	struct xfs_buf			*bp)
-+{
-+	struct xfs_btree_cur		*cur = bs->cur;
-+	struct check_owner		*co;
-+
-+	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) && bp == NULL)
-+		return 0;
-+
-+	/*
-+	 * We want to cross-reference each btree block with the bnobt
-+	 * and the rmapbt.  We cannot cross-reference the bnobt or
-+	 * rmapbt while scanning the bnobt or rmapbt, respectively,
-+	 * because we cannot alter the cursor and we'd prefer not to
-+	 * duplicate cursors.  Therefore, save the buffer daddr for
-+	 * later scanning.
-+	 */
-+	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
-+		co = kmem_alloc(sizeof(struct check_owner),
-+				KM_MAYFAIL | KM_NOFS);
-+		if (!co)
-+			return -ENOMEM;
-+		co->level = level;
-+		co->daddr = XFS_BUF_ADDR(bp);
-+		list_add_tail(&co->list, &bs->to_check);
-+		return 0;
-+	}
-+
-+	return xfs_scrub_btree_check_block_owner(bs, level, XFS_BUF_ADDR(bp));
-+}
-+
- /*
-  * Grab and scrub a btree block given a btree pointer.  Returns block
-  * and buffer pointers (if applicable) if they're ok to use.
-@@ -395,6 +469,14 @@ xfs_scrub_btree_get_block(
- 	}
- 
- 	/*
-+	 * Check the block's owner; this function absorbs error codes
-+	 * for us.
-+	 */
-+	error = xfs_scrub_btree_check_owner(bs, level, *pbp);
-+	if (error)
-+		return error;
-+
-+	/*
- 	 * Check the block's siblings; this function absorbs error codes
- 	 * for us.
- 	 */
-@@ -465,6 +547,8 @@ xfs_scrub_btree(
- 	struct xfs_btree_block		*block;
- 	int				level;
- 	struct xfs_buf			*bp;
-+	struct check_owner		*co;
-+	struct check_owner		*n;
- 	int				i;
- 	int				error = 0;
- 
-@@ -556,6 +640,14 @@ xfs_scrub_btree(
- 	}
- 
- out:
-+	/* Process deferred owner checks on btree blocks. */
-+	list_for_each_entry_safe(co, n, &bs.to_check, list) {
-+		if (!error)
-+			error = xfs_scrub_btree_check_block_owner(&bs,
-+					co->level, co->daddr);
-+		list_del(&co->list);
-+		kmem_free(co);
-+	}
- 
- 	return error;
- }
+	1. Using lockdep_set_novalidate_class() for anything other
+	than device->mutex will throw checkpatch warnings. Nice. (*)
 
+	2. lockdep_set_novalidate_class() is completely undocumented
+	- it's the first I've ever heard of this functionality. i.e.
+	nobody has ever told us there is a mechanism to turn off
+	validation of an object; we've *always* been told to "change
+	your code and/or fix your annotations" when discussing
+	lockdep deficiencies. (**)
+
+> The device core uses that class.  The tree of struct devices, each with
+> its own lock, gets used in many different and complicated ways.  
+> Lockdep can't understand this -- it doesn't have the ability to
+> represent an arbitrarily deep hierarchical tree of locks -- so we tell
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+That largely describes the in-memory structure of XFS, except we
+have a forest of lock trees, not just one....
+
+> it to ignore the device locks.
+> 
+> It sounds like XFS may need to do the same thing with its semaphores.
+
+Who-ever adds semaphore checking to lockdep can add those
+annotations. The externalisation of the development cost of new
+lockdep functionality is one of the problems here.
+
+-Dave.
+
+(*) checkpatch.pl is considered mostly harmful round here, too,
+but that's another rant....
+
+(**) the frequent occurrence of "core code/devs aren't held to the
+same rules/standard as everyone else" is another rant I have stored
+up for a rainy day.
+
+-- 
+Dave Chinner
+david@fromorbit.com
