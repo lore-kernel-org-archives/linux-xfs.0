@@ -1,91 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:32000 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752633AbdLHKSZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Dec 2017 05:18:25 -0500
-Subject: Re: Google Chrome cause locks held in system (kernel 4.15 rc2)
-References: <1512705038.7843.6.camel@gmail.com>
- <20171208040556.GG19219@magnolia>
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Message-ID: <b60ae517-b9ca-a07f-36cf-ed11eb3c9180@I-love.SAKURA.ne.jp>
-Date: Fri, 8 Dec 2017 19:18:15 +0900
+Received: from aserp2120.oracle.com ([141.146.126.78]:46886 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750822AbdLHE2A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 23:28:00 -0500
+Date: Thu, 7 Dec 2017 20:27:56 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/5] mkfs: remove use-once default macros
+Message-ID: <20171208042756.GL19219@magnolia>
+References: <ba4823ed-fabd-d02c-42f3-40c8d5aa44a6@redhat.com>
+ <bf7aac6f-dc75-d00f-d6ec-23599a8b156a@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20171208040556.GG19219@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bf7aac6f-dc75-d00f-d6ec-23599a8b156a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, mikhail <mikhail.v.gavrilov@gmail.com>
-Cc: linux-xfs@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Darrick J. Wong wrote:
-> On Fri, Dec 08, 2017 at 08:50:38AM +0500, mikhail wrote:
-> > Hi,
-> > 
-> > can anybody said what here happens?
-> > And which info needed for fixing it?
-> > Thanks.
-> > 
-> > [16712.376081] INFO: task tracker-store:27121 blocked for more than 120
-> > seconds.
-> > [16712.376088]       Not tainted 4.15.0-rc2-amd-vega+ #10
-> > [16712.376092] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > disables this message.
-> > [16712.376095] tracker-store   D13400 27121   1843 0x00000000
-> > [16712.376102] Call Trace:
-> > [16712.376114]  ? __schedule+0x2e3/0xb90
-> > [16712.376123]  ? wait_for_completion+0x146/0x1e0
-> > [16712.376128]  schedule+0x2f/0x90
-> > [16712.376132]  schedule_timeout+0x236/0x540
-> > [16712.376143]  ? mark_held_locks+0x4e/0x80
-> > [16712.376147]  ? _raw_spin_unlock_irq+0x29/0x40
-> > [16712.376153]  ? wait_for_completion+0x146/0x1e0
-> > [16712.376158]  wait_for_completion+0x16e/0x1e0
-> > [16712.376162]  ? wake_up_q+0x70/0x70
-> > [16712.376204]  ? xfs_buf_read_map+0x134/0x2f0 [xfs]
-> > [16712.376234]  xfs_buf_submit_wait+0xaf/0x520 [xfs]
+On Thu, Dec 07, 2017 at 10:18:42PM -0600, Eric Sandeen wrote:
+> sb_feat was a weird mishmash of hardcoded defaults and macros
+> (which were used in only this place).
 > 
-> Stuck waiting for a directory block to read.  Slow disk?  Bad media?
+> Make it consistent by removing the use-once macros, and remove
+> the unused XFS_DFL_LOG_SIZE while we're in here.
 > 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Most likely cause is that I/O was getting very slow due to memory pressure.
-Running memory consuming processes (e.g. web browsers) and file writing
-processes might generate stresses like this report.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I can't tell whether this report is a real deadlock/lockup or just a slowdown,
-for currently we don't have means for checking whether memory allocation was
-making progress or not.
-
-The OOM killer is not invoked for allocation requests without __GFP_FS flag.
-Therefore, GFP_NOIO / GFP_NOFS allocation requests have possibility of hanging
-up the system. We can reproduce such hang up using artificial stress (e.g.
-http://lkml.kernel.org/r/201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp ),
-but this problem will not be addressed unless it is proven to occur using real
-workloads. It is a too much request for averaged users to prove that their systems
-hung up due to this problem.
-
-In order to avoid silent hang up, Linux 4.9 got warn_alloc() calls which
-"synchronously" prints messages when a memory allocation request took more than
-10 seconds. But since it was confirmed that concurrent warn_alloc() calls can
-hang up the system, warn_alloc() was reverted in Linux 4.15-rc1
-( https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/mm/page_alloc.c?id=400e22499dd92613 ).
-Therefore, unfortunately your kernel does not allow you to check whether memory
-allocation was making progress or not.
-
-I have been proposing a watchdog which extends khungtaskd so that the system can
-print useful information "asynchronously" without locking up the system (e.g.
-http://lkml.kernel.org/r/1495331504-12480-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp
-http://lkml.kernel.org/r/1510833448-19918-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp ).
-But since OOM livelock is the least attractive domain, I'm stuck with zero advocate.
-The watchdog did not get in time for obtaining information in your case, sorry.
-
-For now, you can try setting /proc/sys/kernel/hung_task_warnings to -1, for the
-default setting of /proc/sys/kernel/hung_task_warnings is 10 which means that
-"INFO: task $commname:$pid blocked for more than 120 seconds." is printed for
-only 10 times (like this report did) and makes it impossible for users to judge
-whether the hung situation continued or not. There is SysRq-t and SysRq-m, but I
-don't expect that current SysRq can give you enough information for analyzing
-this problem.
-
+> ---
+>  include/xfs_multidisk.h | 3 ---
+>  mkfs/xfs_mkfs.c         | 4 ++--
+>  2 files changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+> index e5f53b7..54913d8 100644
+> --- a/include/xfs_multidisk.h
+> +++ b/include/xfs_multidisk.h
+> @@ -29,10 +29,7 @@
+>  #define	XFS_MIN_DATA_BLOCKS	100
+>  #define	XFS_MIN_INODE_PERBLOCK	2		/* min inodes per block */
+>  #define	XFS_DFL_IMAXIMUM_PCT	25		/* max % of space for inodes */
+> -#define	XFS_IFLAG_ALIGN		true		/* -i align defaults on */
+>  #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
+> -#define	XFS_DFL_DIR_VERSION	2		/* default directory version */
+> -#define	XFS_DFL_LOG_SIZE	1000		/* default log size, blocks */
+>  #define	XFS_DFL_LOG_FACTOR	5		/* default log size, factor */
+>  						/* with max trans reservation */
+>  #define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 3f6315d..a321ff2 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3850,8 +3850,8 @@ main(
+>  		.sb_feat = {
+>  			.log_version = 2,
+>  			.attr_version = 2,
+> -			.dir_version = XFS_DFL_DIR_VERSION,
+> -			.inode_align = XFS_IFLAG_ALIGN,
+> +			.dir_version = 2,
+> +			.inode_align = true,
+>  			.nci = false,
+>  			.lazy_sb_counters = true,
+>  			.projid32bit = true,
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
