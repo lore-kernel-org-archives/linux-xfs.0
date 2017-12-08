@@ -1,70 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34894 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbdLHENR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Dec 2017 23:13:17 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4D8D6614304
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2017 22:13:14 -0600 (CST)
-Subject: [PATCH 1/5] mkfs: Don't emit default config message yet
+Received: from userp2120.oracle.com ([156.151.31.85]:50794 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750930AbdLHESe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 23:18:34 -0500
+Date: Thu, 7 Dec 2017 20:18:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/5] mkfs: invert project id width boolean name
+Message-ID: <20171208041828.GH19219@magnolia>
 References: <ba4823ed-fabd-d02c-42f3-40c8d5aa44a6@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <62f67117-150d-e456-d9dd-3a19938cb03a@sandeen.net>
-Date: Thu, 7 Dec 2017 22:13:15 -0600
+ <c22e3212-3e1c-ed6d-e1cc-4f0396265c52@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <ba4823ed-fabd-d02c-42f3-40c8d5aa44a6@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c22e3212-3e1c-ed6d-e1cc-4f0396265c52@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Until we have more than one possible source of configuration,
-there is no need to emit the only possibility and clutter
-the output.  We can decide how it should all look when we
-get more than one source.
+On Thu, Dec 07, 2017 at 10:15:58PM -0600, Eric Sandeen wrote:
+> It's a bit nuts that we have a projid32bit mkfs option, but
+> we carry around the inverse of its value in "projid16bit" - 
+> just flip it around for sanity.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Apply some i18n to the config description, though.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
- mkfs/xfs_mkfs.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index e38810f..0f7dd92 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3845,7 +3845,7 @@ main(
- 
- 	/* build time defaults */
- 	struct mkfs_default_params	dft = {
--		.source = "package build definitions",
-+		.source = _("package build definitions"),
- 		.sectorsize = XFS_MIN_SECTORSIZE,
- 		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
- 		.sb_feat = {
-@@ -3881,10 +3881,12 @@ main(
- 	 * defaults. If a file exists in <package location>, read in the new
- 	 * default values and overwrite them in the &dft structure. This way the
- 	 * new defaults will apply before we parse the CLI, and the CLI will
--	 * still be able to override them. Emit a message to indicate where the
--	 * defaults being used came from.
-+	 * still be able to override them. When more than one source is
-+	 * implemented, emit a message to indicate where the defaults being
-+	 * used came from.
-+	 *
-+	 * printf(_("Default configuration sourced from %s\n"), dft.source);
- 	 */
--	printf(_("Default configuration sourced from %s\n"), dft.source);
- 
- 	/* copy new defaults into CLI parsing structure */
- 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
--- 
-1.8.3.1
-
+> ---
+>  mkfs/xfs_mkfs.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d30f73d..f6e2fad 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -763,7 +763,7 @@ struct sb_feat_args {
+>  	bool	inode_align;
+>  	bool	nci;
+>  	bool	lazy_sb_counters;
+> -	bool	projid16bit;
+> +	bool	projid32bit;
+>  	bool	crcs_enabled;
+>  	bool	dirftype;
+>  	bool	finobt;
+> @@ -1551,7 +1551,7 @@ inode_opts_parser(
+>  		cli->sb_feat.attr_version = getnum(value, &iopts, I_ATTR);
+>  		break;
+>  	case I_PROJID32BIT:
+> -		cli->sb_feat.projid16bit = !getnum(value, &iopts, I_PROJID32BIT);
+> +		cli->sb_feat.projid32bit = getnum(value, &iopts, I_PROJID32BIT);
+>  		break;
+>  	case I_SPINODES:
+>  		cli->sb_feat.spinodes = getnum(value, &iopts, I_SPINODES);
+> @@ -2037,7 +2037,7 @@ _("V2 attribute format always enabled on CRC enabled filesytems\n"));
+>  
+>  		/* 32 bit project quota always on */
+>  		/* attr2 always on */
+> -		if (cli->sb_feat.projid16bit) {
+> +		if (!cli->sb_feat.projid32bit) {
+>  			fprintf(stderr,
+>  _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+>  			usage();
+> @@ -2905,7 +2905,7 @@ sb_set_features(
+>  	sbp->sb_features2 = 0;
+>  	if (fp->lazy_sb_counters)
+>  		sbp->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+> -	if (!fp->projid16bit)
+> +	if (fp->projid32bit)
+>  		sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
+>  	if (fp->parent_pointers)
+>  		sbp->sb_features2 |= XFS_SB_VERSION2_PARENTBIT;
+> @@ -3219,7 +3219,7 @@ print_mkfs_cfg(
+>  "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+>  		dfile, cfg->inodesize, (long long)cfg->agcount,
+>  			(long long)cfg->agsize,
+> -		"", cfg->sectorsize, fp->attr_version, !fp->projid16bit,
+> +		"", cfg->sectorsize, fp->attr_version, fp->projid32bit,
+>  		"", fp->crcs_enabled, fp->finobt, fp->spinodes, fp->rmapbt,
+>  			fp->reflink,
+>  		"", cfg->blocksize, (long long)cfg->dblocks, cfg->imaxpct,
+> @@ -3854,7 +3854,7 @@ main(
+>  			.inode_align = XFS_IFLAG_ALIGN,
+>  			.nci = false,
+>  			.lazy_sb_counters = true,
+> -			.projid16bit = false,
+> +			.projid32bit = true,
+>  			.crcs_enabled = true,
+>  			.dirftype = true,
+>  			.finobt = true,
+> -- 
+> 1.8.3.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
