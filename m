@@ -1,145 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54316 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752366AbdLHDoG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 22:44:06 -0500
-Subject: [PATCH 3/5] xfs: queue deferred rmap ops for cow staging extent
- alloc/free in the right order
+Received: from userp2130.oracle.com ([156.151.31.86]:57196 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752572AbdLHD7a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 22:59:30 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vB83vIOW114506
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Dec 2017 03:59:30 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2eqk3s00re-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Dec 2017 03:59:30 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vB83t0pH021518
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Dec 2017 03:55:00 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vB83sxvE008211
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Dec 2017 03:55:00 GMT
+Date: Thu, 7 Dec 2017 19:54:57 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 07 Dec 2017 19:39:24 -0800
-Message-ID: <151270436416.12194.13108400111854379733.stgit@magnolia>
-In-Reply-To: <151270433736.12194.14709247629624139846.stgit@magnolia>
-References: <151270433736.12194.14709247629624139846.stgit@magnolia>
+Subject: [RFCRAP DONOTMERGE PATCH 0/2] xfs: parent pointers
+Message-ID: <20171208035457.GD19219@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, libor.klepac@bcom.cz, bfoster@redhat.com, alex@zadarastorage.com, david@fromorbit.com
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Under the deferred rmap operation scheme, there's a certain order in
-which the rmap deferred ops have to be queued to maintain integrity
-during log replay.  For alloc/map operations that order is cui -> rui;
-for free/unmap operations that order is cui -> rui -> efi.  However, the
-initial refcount code got the ordering wrong in the free side of things
-because it queued refcount free op and an EFI and the refcount free op
-queued a rmap free op, resulting in the order cui -> efi -> rui.
+So I've been working in my spare time (ha ha) to build a prototype
+parent pointer ioctl backend so that I can play around with the
+userspace side of things -- namely (cough) having xfs_scrub be able to
+resolve an (ino, gen) tuple back to a user-friendly file path.
 
-If we fail before the efd finishes, the efi recovery will try to do a
-wildcard rmap removal and the subsequent rui will fail to find the rmap
-and blow up.  This didn't ever happen due to other screws up in handling
-unknown owner rmap removals, but those other screw ups broke recovery in
-other ways, so fix the ordering to follow the intended rules.
+The first ugly patch attacks the dentry cache to use d_parent to provide
+one of the parents of some file.  Obviously, this is totally deficient
+as we can only report one parent and the file has to have been opened
+via path at some previous point in time, and I bet the locking is
+totally wrong.  It's too ugly to live but it /does/ function as a stub.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_refcount.c |   52 +++++++++++++++---------------------------
- 1 file changed, 19 insertions(+), 33 deletions(-)
+The second patch implements two iterators atop the parent pointer ioctl
+we've been tossing around on the mailing list -- one to return parents
+of an open file/file handle, and a second one to return all the paths of
+an open file/file handle, and plunges it into (part of) xfs_scrub and
+the xfs_io parent command.  Note that I'm expecting xfs_scrub/xfs_repair
+to take over parent pointer checking and fixing, so I removed the
+checker function from xfs_io.
 
+This is _not_ a substitute for Allison's parent pointer patches, as
+they provide the meat of the real feature... but seeing how much
+bikeshedding ioctls invite, we might as well start the reconciliation
+process now.
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 585b35d..c40d267 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1488,27 +1488,12 @@ __xfs_refcount_cow_alloc(
- 	xfs_extlen_t		aglen,
- 	struct xfs_defer_ops	*dfops)
- {
--	int			error;
--
- 	trace_xfs_refcount_cow_increase(rcur->bc_mp, rcur->bc_private.a.agno,
- 			agbno, aglen);
- 
- 	/* Add refcount btree reservation */
--	error = xfs_refcount_adjust_cow(rcur, agbno, aglen,
-+	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
- 			XFS_REFCOUNT_ADJUST_COW_ALLOC, dfops);
--	if (error)
--		return error;
--
--	/* Add rmap entry */
--	if (xfs_sb_version_hasrmapbt(&rcur->bc_mp->m_sb)) {
--		error = xfs_rmap_alloc_extent(rcur->bc_mp, dfops,
--				rcur->bc_private.a.agno,
--				agbno, aglen, XFS_RMAP_OWN_COW);
--		if (error)
--			return error;
--	}
--
--	return error;
- }
- 
- /*
-@@ -1521,27 +1506,12 @@ __xfs_refcount_cow_free(
- 	xfs_extlen_t		aglen,
- 	struct xfs_defer_ops	*dfops)
- {
--	int			error;
--
- 	trace_xfs_refcount_cow_decrease(rcur->bc_mp, rcur->bc_private.a.agno,
- 			agbno, aglen);
- 
- 	/* Remove refcount btree reservation */
--	error = xfs_refcount_adjust_cow(rcur, agbno, aglen,
-+	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
- 			XFS_REFCOUNT_ADJUST_COW_FREE, dfops);
--	if (error)
--		return error;
--
--	/* Remove rmap entry */
--	if (xfs_sb_version_hasrmapbt(&rcur->bc_mp->m_sb)) {
--		error = xfs_rmap_free_extent(rcur->bc_mp, dfops,
--				rcur->bc_private.a.agno,
--				agbno, aglen, XFS_RMAP_OWN_COW);
--		if (error)
--			return error;
--	}
--
--	return error;
- }
- 
- /* Record a CoW staging extent in the refcount btree. */
-@@ -1552,11 +1522,19 @@ xfs_refcount_alloc_cow_extent(
- 	xfs_fsblock_t			fsb,
- 	xfs_extlen_t			len)
- {
-+	int				error;
-+
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return 0;
- 
--	return __xfs_refcount_add(mp, dfops, XFS_REFCOUNT_ALLOC_COW,
-+	error = __xfs_refcount_add(mp, dfops, XFS_REFCOUNT_ALLOC_COW,
- 			fsb, len);
-+	if (error)
-+		return error;
-+
-+	/* Add rmap entry */
-+	return xfs_rmap_alloc_extent(mp, dfops, XFS_FSB_TO_AGNO(mp, fsb),
-+			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
- }
- 
- /* Forget a CoW staging event in the refcount btree. */
-@@ -1567,9 +1545,17 @@ xfs_refcount_free_cow_extent(
- 	xfs_fsblock_t			fsb,
- 	xfs_extlen_t			len)
- {
-+	int				error;
-+
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return 0;
- 
-+	/* Remove rmap entry */
-+	error = xfs_rmap_free_extent(mp, dfops, XFS_FSB_TO_AGNO(mp, fsb),
-+			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
-+	if (error)
-+		return error;
-+
- 	return __xfs_refcount_add(mp, dfops, XFS_REFCOUNT_FREE_COW,
- 			fsb, len);
- }
-
+--D
