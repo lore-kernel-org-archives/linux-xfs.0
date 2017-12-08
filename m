@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54310 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:54316 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752165AbdLHDoG (ORCPT
+        with ESMTP id S1752366AbdLHDoG (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 22:44:06 -0500
-Subject: [PATCH 4/5] xfs: always honor OWN_UNKNOWN rmap removal requests
+Subject: [PATCH 3/5] xfs: queue deferred rmap ops for cow staging extent
+ alloc/free in the right order
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 07 Dec 2017 19:39:30 -0800
-Message-ID: <151270437043.12194.913067484200015085.stgit@magnolia>
+Date: Thu, 07 Dec 2017 19:39:24 -0800
+Message-ID: <151270436416.12194.13108400111854379733.stgit@magnolia>
 In-Reply-To: <151270433736.12194.14709247629624139846.stgit@magnolia>
 References: <151270433736.12194.14709247629624139846.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,154 +21,125 @@ Cc: linux-xfs@vger.kernel.org, libor.klepac@bcom.cz, bfoster@redhat.com, alex@za
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Calling xfs_rmap_free with an unknown owner is supposed to remove any
-rmaps covering that range regardless of owner.  This is used by the EFI
-recovery code to say "we're freeing this, it mustn't be owned by
-anything anymore", but for whatever reason xfs_free_ag_extent filters
-them out.
+Under the deferred rmap operation scheme, there's a certain order in
+which the rmap deferred ops have to be queued to maintain integrity
+during log replay.  For alloc/map operations that order is cui -> rui;
+for free/unmap operations that order is cui -> rui -> efi.  However, the
+initial refcount code got the ordering wrong in the free side of things
+because it queued refcount free op and an EFI and the refcount free op
+queued a rmap free op, resulting in the order cui -> efi -> rui.
 
-Therefore, remove the filter and make xfs_rmap_unmap actually treat it
-as a wildcard owner -- free anything that's already there, and if
-there's no owner at all then that's fine too.
-
-There are two existing callers of bmap_add_free that take care the rmap
-deferred ops themselves and use OWN_UNKNOWN to skip the EFI-based rmap
-cleanup; convert these to use OWN_NULL (via helpers), and now we really
-require that an RUI (if any) gets added to the defer ops before any EFI.
-
-Lastly, now that xfs_free_extent filters out OWN_NULL rmap free requests,
-growfs will have to consult directly with the rmap to ensure that there
-aren't any rmaps in the grown region.
+If we fail before the efd finishes, the efi recovery will try to do a
+wildcard rmap removal and the subsequent rui will fail to find the rmap
+and blow up.  This didn't ever happen due to other screws up in handling
+unknown owner rmap removals, but those other screw ups broke recovery in
+other ways, so fix the ordering to follow the intended rules.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |    4 ++--
- fs/xfs/libxfs/xfs_rmap.c  |   25 +++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rmap.h  |   16 +++++++++++++++-
- fs/xfs/xfs_extfree_item.c |    2 +-
- fs/xfs/xfs_fsops.c        |    5 +++++
- 5 files changed, 48 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |   52 +++++++++++++++---------------------------
+ 1 file changed, 19 insertions(+), 33 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 0da8001..83ed771 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -702,7 +702,7 @@ xfs_alloc_ag_vextent(
- 	ASSERT(args->agbno % args->alignment == 0);
- 
- 	/* if not file data, insert new block into the reverse map btree */
--	if (args->oinfo.oi_owner != XFS_RMAP_OWN_UNKNOWN) {
-+	if (!xfs_rmap_should_skip_owner_update(&args->oinfo)) {
- 		error = xfs_rmap_alloc(args->tp, args->agbp, args->agno,
- 				       args->agbno, args->len, &args->oinfo);
- 		if (error)
-@@ -1682,7 +1682,7 @@ xfs_free_ag_extent(
- 	bno_cur = cnt_cur = NULL;
- 	mp = tp->t_mountp;
- 
--	if (oinfo->oi_owner != XFS_RMAP_OWN_UNKNOWN) {
-+	if (!xfs_rmap_should_skip_owner_update(oinfo)) {
- 		error = xfs_rmap_free(tp, agbp, agno, bno, len, oinfo);
- 		if (error)
- 			goto error0;
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index dd019ce..7465cfb 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -444,6 +444,30 @@ xfs_rmap_unmap(
- 		goto out_done;
- 	}
- 
-+	/*
-+	 * If we're doing an unknown-owner removal for EFI recovery, we expect
-+	 * to find the full range in the rmapbt or nothing at all.  If we
-+	 * don't find any rmaps overlapping either end of the range, we're
-+	 * done.  Hopefully this means that the EFI creator already queued
-+	 * (and finished) a RUI to remove the rmap.
-+	 */
-+	if (owner == XFS_RMAP_OWN_UNKNOWN &&
-+	    ltrec.rm_startblock + ltrec.rm_blockcount <= bno) {
-+		struct xfs_rmap_irec    rtrec;
-+
-+		error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			goto out_error;
-+		if (i == 0)
-+			goto out_done;
-+		error = xfs_rmap_get_rec(cur, &rtrec, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+		if (rtrec.rm_startblock >= bno + len)
-+			goto out_done;
-+	}
-+
- 	/* Make sure the unwritten flag matches. */
- 	XFS_WANT_CORRUPTED_GOTO(mp, (flags & XFS_RMAP_UNWRITTEN) ==
- 			(ltrec.rm_flags & XFS_RMAP_UNWRITTEN), out_error);
-@@ -664,6 +688,7 @@ xfs_rmap_map(
- 		flags |= XFS_RMAP_UNWRITTEN;
- 	trace_xfs_rmap_map(mp, cur->bc_private.a.agno, bno, len,
- 			unwritten, oinfo);
-+	ASSERT(!xfs_rmap_should_skip_owner_update(oinfo));
- 
- 	/*
- 	 * For the initial lookup, look for an exact match or the left-adjacent
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 466ede6..0fcd5b1 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -61,7 +61,21 @@ static inline void
- xfs_rmap_skip_owner_update(
- 	struct xfs_owner_info	*oi)
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 585b35d..c40d267 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1488,27 +1488,12 @@ __xfs_refcount_cow_alloc(
+ 	xfs_extlen_t		aglen,
+ 	struct xfs_defer_ops	*dfops)
  {
--	oi->oi_owner = XFS_RMAP_OWN_UNKNOWN;
-+	xfs_rmap_ag_owner(oi, XFS_RMAP_OWN_NULL);
-+}
-+
-+static inline bool
-+xfs_rmap_should_skip_owner_update(
-+	struct xfs_owner_info	*oi)
-+{
-+	return oi->oi_owner == XFS_RMAP_OWN_NULL;
-+}
-+
-+static inline void
-+xfs_rmap_any_owner_update(
-+	struct xfs_owner_info	*oi)
-+{
-+	xfs_rmap_ag_owner(oi, XFS_RMAP_OWN_UNKNOWN);
+-	int			error;
+-
+ 	trace_xfs_refcount_cow_increase(rcur->bc_mp, rcur->bc_private.a.agno,
+ 			agbno, aglen);
+ 
+ 	/* Add refcount btree reservation */
+-	error = xfs_refcount_adjust_cow(rcur, agbno, aglen,
++	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
+ 			XFS_REFCOUNT_ADJUST_COW_ALLOC, dfops);
+-	if (error)
+-		return error;
+-
+-	/* Add rmap entry */
+-	if (xfs_sb_version_hasrmapbt(&rcur->bc_mp->m_sb)) {
+-		error = xfs_rmap_alloc_extent(rcur->bc_mp, dfops,
+-				rcur->bc_private.a.agno,
+-				agbno, aglen, XFS_RMAP_OWN_COW);
+-		if (error)
+-			return error;
+-	}
+-
+-	return error;
  }
  
- /* Reverse mapping functions. */
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 44f8c54..64da906 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -538,7 +538,7 @@ xfs_efi_recover(
- 		return error;
- 	efdp = xfs_trans_get_efd(tp, efip, efip->efi_format.efi_nextents);
+ /*
+@@ -1521,27 +1506,12 @@ __xfs_refcount_cow_free(
+ 	xfs_extlen_t		aglen,
+ 	struct xfs_defer_ops	*dfops)
+ {
+-	int			error;
+-
+ 	trace_xfs_refcount_cow_decrease(rcur->bc_mp, rcur->bc_private.a.agno,
+ 			agbno, aglen);
  
--	xfs_rmap_skip_owner_update(&oinfo);
-+	xfs_rmap_any_owner_update(&oinfo);
- 	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
- 		extp = &efip->efi_format.efi_extents[i];
- 		error = xfs_trans_free_extent(tp, efdp, extp->ext_start,
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8f22fc5..60a2e12 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -571,6 +571,11 @@ xfs_growfs_data_private(
- 		 * this doesn't actually exist in the rmap btree.
- 		 */
- 		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
-+		error = xfs_rmap_free(tp, bp, agno,
-+				be32_to_cpu(agf->agf_length) - new,
-+				new, &oinfo);
-+		if (error)
-+			goto error0;
- 		error = xfs_free_extent(tp,
- 				XFS_AGB_TO_FSB(mp, agno,
- 					be32_to_cpu(agf->agf_length) - new),
+ 	/* Remove refcount btree reservation */
+-	error = xfs_refcount_adjust_cow(rcur, agbno, aglen,
++	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
+ 			XFS_REFCOUNT_ADJUST_COW_FREE, dfops);
+-	if (error)
+-		return error;
+-
+-	/* Remove rmap entry */
+-	if (xfs_sb_version_hasrmapbt(&rcur->bc_mp->m_sb)) {
+-		error = xfs_rmap_free_extent(rcur->bc_mp, dfops,
+-				rcur->bc_private.a.agno,
+-				agbno, aglen, XFS_RMAP_OWN_COW);
+-		if (error)
+-			return error;
+-	}
+-
+-	return error;
+ }
+ 
+ /* Record a CoW staging extent in the refcount btree. */
+@@ -1552,11 +1522,19 @@ xfs_refcount_alloc_cow_extent(
+ 	xfs_fsblock_t			fsb,
+ 	xfs_extlen_t			len)
+ {
++	int				error;
++
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return 0;
+ 
+-	return __xfs_refcount_add(mp, dfops, XFS_REFCOUNT_ALLOC_COW,
++	error = __xfs_refcount_add(mp, dfops, XFS_REFCOUNT_ALLOC_COW,
+ 			fsb, len);
++	if (error)
++		return error;
++
++	/* Add rmap entry */
++	return xfs_rmap_alloc_extent(mp, dfops, XFS_FSB_TO_AGNO(mp, fsb),
++			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
+ }
+ 
+ /* Forget a CoW staging event in the refcount btree. */
+@@ -1567,9 +1545,17 @@ xfs_refcount_free_cow_extent(
+ 	xfs_fsblock_t			fsb,
+ 	xfs_extlen_t			len)
+ {
++	int				error;
++
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return 0;
+ 
++	/* Remove rmap entry */
++	error = xfs_rmap_free_extent(mp, dfops, XFS_FSB_TO_AGNO(mp, fsb),
++			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
++	if (error)
++		return error;
++
+ 	return __xfs_refcount_add(mp, dfops, XFS_REFCOUNT_FREE_COW,
+ 			fsb, len);
+ }
 
