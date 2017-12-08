@@ -1,181 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:26512 "EHLO mga05.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58166 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750862AbdLGXUB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Dec 2017 18:20:01 -0500
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [fstests PATCH v6 2/2] generic: add test for DAX MAP_SYNC support
-Date: Thu,  7 Dec 2017 16:19:50 -0700
-Message-Id: <20171207231950.9023-1-ross.zwisler@linux.intel.com>
-In-Reply-To: <20171207103657.GF2749@eguan.usersys.redhat.com>
+        id S1753410AbdLHOPJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Dec 2017 09:15:09 -0500
+Date: Fri, 8 Dec 2017 09:15:06 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_io: fix exitcode handling (was Re: generic/399 and
+ xfs_io pwrite command)
+Message-ID: <20171208141506.GA55826@bfoster.bfoster>
+References: <7235f31f-5427-ff12-11f9-cba98431e71c@tuxera.com>
+ <20171204222842.GX4094@dastard>
+ <35d2712c-b036-d017-2d42-f74bbc4444a9@tuxera.com>
+ <20171205211850.GA5858@dastard>
+ <20171206002638.GB5858@dastard>
+ <20171207140519.GB3486@bfoster.bfoster>
+ <20171207234631.GI5858@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171207234631.GI5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, Amir Goldstein <amir73il@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ari Sundholm <ari@tuxera.com>, fstests@vger.kernel.org, Emil Karlson <jkarlson@tuxera.com>, linux-xfs@vger.kernel.org
 
-This test creates a file and writes to it via an mmap(), but never syncs
-via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
+On Fri, Dec 08, 2017 at 10:46:31AM +1100, Dave Chinner wrote:
+> On Thu, Dec 07, 2017 at 09:05:20AM -0500, Brian Foster wrote:
+> > On Wed, Dec 06, 2017 at 11:26:38AM +1100, Dave Chinner wrote:
+> > > On Wed, Dec 06, 2017 at 08:18:50AM +1100, Dave Chinner wrote:
+> > > > On Tue, Dec 05, 2017 at 04:23:43PM +0200, Ari Sundholm wrote:
+> > > > > On 12/05/2017 12:28 AM, Dave Chinner wrote:
+> > > > > >On Thu, Nov 30, 2017 at 04:21:47PM +0200, Ari Sundholm wrote:
+> > ...
+> > > 
+> > > xfs_io: set exitcode on failure appropriately
+> > > 
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Many operations don't set the exitcode when they fail, resulting
+> > > in xfs_io exiting with a zero (no failure) exit code despite the
+> > > command failing and returning an error. Fix this.
+> > > 
+> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > ...
+> > > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> > > index d1dfc5a5e33a..9b737eff4c02 100644
+> > > --- a/io/copy_file_range.c
+> > > +++ b/io/copy_file_range.c
+> > > @@ -92,6 +92,7 @@ copy_range_f(int argc, char **argv)
+> > >  	int ret;
+> > >  	int fd;
+> > >  
+> > > +	exitcode = 1;
+> > >  	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
+> > >  		switch (opt) {
+> > >  		case 's':
+> > > @@ -132,6 +133,8 @@ copy_range_f(int argc, char **argv)
+> > >  
+> > >  	ret = copy_file_range(fd, &src, &dst, len);
+> > >  	close(fd);
+> > > +	if (ret >= 0)
+> > > +		exitcode = 0;
+> > 
+> > I don't think it's appropriate to blindly overwrite the global exitcode
+> > value like this. What about the case where multiple commands are chained
+> > together? Should we expect an error code if any of the commands failed
+> > or only the last?
+> > 
+> > For example:
+> > 
+> >   xfs_io -c "pwrite ..." <file>
+> > 
+> > ... returns an error if the write fails, while:
+> > 
+> >   xfs_io -c "pwrite ..." -c "fadvise ..." <file>
+> > 
+> > ... would never so long as the fadvise succeeds.
+> 
+> Yup, I mentioned that this would be a problem on IRC. The patch fixes
+> the interactive and the single command cases, but won't work for
+> chained commands as you rightly point out.
+> 
+> To fix it properly, it's going to take a lot more than 15 minutes of
+> time. We're going to have to change how errors are returned to and
+> propagated through the libxcmd infrastruture, how we handle "fatal
+> error, don't continue" conditions through the libxcmd command loop,
+> etc. If we want to stop at the first error, then we've got to go
+> change all the return values from xfs_io commands to return non-zero
+> on error. We still have to set the exitcode as per this patch,
+> because the non-zero return value simply says "stop parsing input"
+> and doesn't affect the exit code of the program.
+> 
+> Given that xfs_quota, xfs_io, xfs_db, and xfs_spaceman all use the
+> same libxcmd infrastructure, we've got to make the changes
+> consistently across all of those utilities. This will require an
+> audit of all the commands first to determine if there's anything
+> special in any of those utilities, then changing all the code, then
+> testing all the CLI parsing still works correctly.  xfs_quota, as
+> usual, will be the problem child that causes us lots of pain here.
+> 
+> I'm not planning on doing all this in the near future, so I did the
+> next best thing that would only affect xfs_io behaviour. i.e.
+> directly manipulate the exitcode as many of the existing xfs_io
+> commands already do.
+> 
 
-If MAP_SYNC is working the dm-log-writes replay will show the test file
-with 1 MiB of on-media block allocations.  This is because each allocating
-page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-(which you can test by removing the "-S" flag to xfs_io mmap) the file
-will be smaller or missing entirely.
+Sure, I don't dispute the broader work required to fix everything up
+properly and I don't take issue with modifying exitcode directly in
+principle. I just don't see how any of this necessitates breaking the
+chained command case for the those commands that we are trying to fix
+up, particularly when the problem seems easily avoidable. See below for
+a tweak to the fadvise example..
 
-Note that dm-log-writes doesn't track the data that we write via the
-mmap(), so we can't do any data integrity checking.  We can only verify
-that the metadata writes for the page faults happened.
+(I notice that I mistakenly dropped the return code from
+command_usage(), but you get the idea (and it hardcodes to 0)).
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Brian
 
----
+--- 8< ---
 
-Changes since v5:
- - Addressed Eryu's comments.  Thanks for the review.
-
----
- common/dmlogwrites    | 19 ++++++++++++
- tests/generic/999     | 80 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/999.out |  2 ++
- tests/generic/group   |  1 +
- 4 files changed, 102 insertions(+)
- create mode 100755 tests/generic/999
- create mode 100644 tests/generic/999.out
-
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index 05829dbc..c235ee49 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -28,6 +28,25 @@ _require_log_writes()
- 	_require_test_program "log-writes/replay-log"
+diff --git a/io/fadvise.c b/io/fadvise.c
+index 9cc91a57..f802ce1b 100644
+--- a/io/fadvise.c
++++ b/io/fadvise.c
+@@ -54,7 +54,6 @@ fadvise_f(
+ 	off64_t		offset = 0, length = 0;
+ 	int		c, range = 0, advise = POSIX_FADV_NORMAL;
+ 
+-	exitcode = 1;
+ 	while ((c = getopt(argc, argv, "dnrsw")) != EOF) {
+ 		switch (c) {
+ 		case 'd':	/* Don't need these pages */
+@@ -78,37 +77,43 @@ fadvise_f(
+ 			range = 1;
+ 			break;
+ 		default:
+-			return command_usage(&fadvise_cmd);
++			goto usage;
+ 		}
+ 	}
+ 	if (range) {
+ 		size_t	blocksize, sectsize;
+ 
+ 		if (optind != argc - 2)
+-			return command_usage(&fadvise_cmd);
++			goto usage;
+ 		init_cvtnum(&blocksize, &sectsize);
+ 		offset = cvtnum(blocksize, sectsize, argv[optind]);
+ 		if (offset < 0) {
+ 			printf(_("non-numeric offset argument -- %s\n"),
+ 				argv[optind]);
+-			return 0;
++			goto seterror;
+ 		}
+ 		optind++;
+ 		length = cvtnum(blocksize, sectsize, argv[optind]);
+ 		if (length < 0) {
+ 			printf(_("non-numeric length argument -- %s\n"),
+ 				argv[optind]);
+-			return 0;
++			goto seterror;
+ 		}
+ 	} else if (optind != argc) {
+-		return command_usage(&fadvise_cmd);
++		goto usage;
+ 	}
+ 
+ 	if (posix_fadvise(file->fd, offset, length, advise) < 0) {
+ 		perror("fadvise");
+-		return 0;
++		goto seterror;
+ 	}
+-	exitcode = 0;
++
++	return 0;
++
++usage:
++	command_usage(&fadvise_cmd);
++seterror:
++	exitcode = 1;
+ 	return 0;
  }
  
-+_require_log_writes_dax()
-+{
-+	[ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
-+		_notrun "This test requires a valid \$LOGWRITES_DEV"
-+
-+	_require_dm_target log-writes
-+	_require_test_program "log-writes/replay-log"
-+
-+	_log_writes_init
-+	_log_writes_mkfs > /dev/null 2>&1
-+	_log_writes_mount -o dax
-+	# Check options to be sure. XFS ignores dax option
-+	# and goes on if dev underneath does not support dax.
-+	_fs_options $LOGWRITES_DMDEV | grep -qw "dax" || \
-+		_notrun "$LOGWRITES_DMDEV $FSTYP does not support -o dax"
-+	_log_writes_unmount
-+	_log_writes_remove
-+}
-+
- _log_writes_init()
- {
- 	local BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-diff --git a/tests/generic/999 b/tests/generic/999
-new file mode 100755
-index 00000000..e20faa8f
---- /dev/null
-+++ b/tests/generic/999
-@@ -0,0 +1,80 @@
-+#! /bin/bash
-+# FS QA Test No. 999
-+#
-+# Use dm-log-writes to verify that MAP_SYNC actually syncs metadata during
-+# page faults.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	_log_writes_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmlogwrites
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_log_writes_dax
-+_require_xfs_io_command "mmap" "-S"
-+_require_xfs_io_command "log_writes"
-+
-+_log_writes_init
-+_log_writes_mkfs >> $seqres.full 2>&1
-+_log_writes_mount -o dax
-+
-+LEN=$((1024 * 1024)) # 1 MiB
-+
-+$XFS_IO_PROG -t -c "truncate $LEN" -c "mmap -S 0 $LEN" -c "mwrite 0 $LEN" \
-+	-c "log_writes -d $LOGWRITES_NAME -m preunmap" \
-+	-f $SCRATCH_MNT/test
-+
-+# Unmount the scratch dir and tear down the log writes target
-+_log_writes_unmount
-+_log_writes_remove
-+_check_scratch_fs
-+
-+# destroy previous filesystem so we can be sure our rebuild works
-+_scratch_mkfs >> $seqres.full 2>&1
-+
-+# check pre-unmap state
-+_log_writes_replay_log preunmap
-+_scratch_mount
-+
-+# We should see $SCRATCH_MNT/test as having 1 MiB in block allocations
-+du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-+
-+status=0
-+exit
-diff --git a/tests/generic/999.out b/tests/generic/999.out
-new file mode 100644
-index 00000000..611289b6
---- /dev/null
-+++ b/tests/generic/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+1.0M SCRATCH_MNT/test
-diff --git a/tests/generic/group b/tests/generic/group
-index 6c3bb03a..ae88aa03 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -472,3 +472,4 @@
- 467 auto quick exportfs
- 468 shutdown auto quick metadata
- 469 auto quick
-+999 auto quick dax
--- 
-2.14.3
-
