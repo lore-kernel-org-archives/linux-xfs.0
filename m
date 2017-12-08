@@ -1,186 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58166 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753410AbdLHOPJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Dec 2017 09:15:09 -0500
-Date: Fri, 8 Dec 2017 09:15:06 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_io: fix exitcode handling (was Re: generic/399 and
- xfs_io pwrite command)
-Message-ID: <20171208141506.GA55826@bfoster.bfoster>
-References: <7235f31f-5427-ff12-11f9-cba98431e71c@tuxera.com>
- <20171204222842.GX4094@dastard>
- <35d2712c-b036-d017-2d42-f74bbc4444a9@tuxera.com>
- <20171205211850.GA5858@dastard>
- <20171206002638.GB5858@dastard>
- <20171207140519.GB3486@bfoster.bfoster>
- <20171207234631.GI5858@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28894 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752312AbdLHAQ2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 19:16:28 -0500
+Date: Fri, 8 Dec 2017 11:14:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Lockdep is less useful than it was
+Message-ID: <20171208001401.GM4094@dastard>
+References: <20171206004159.3755-1-willy@infradead.org>
+ <20171206004159.3755-73-willy@infradead.org>
+ <20171206012901.GZ4094@dastard>
+ <20171206020208.GK26021@bombadil.infradead.org>
+ <20171206031456.GE4094@dastard>
+ <20171206044549.GO26021@bombadil.infradead.org>
+ <20171206084404.GF4094@dastard>
+ <20171206140648.GB32044@bombadil.infradead.org>
+ <20171207160634.il3vt5d6a4v5qesi@thunk.org>
+ <20171207223803.GC26792@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171207234631.GI5858@dastard>
+In-Reply-To: <20171207223803.GC26792@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ari Sundholm <ari@tuxera.com>, fstests@vger.kernel.org, Emil Karlson <jkarlson@tuxera.com>, linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@kernel.org, byungchul.park@lge.com
 
-On Fri, Dec 08, 2017 at 10:46:31AM +1100, Dave Chinner wrote:
-> On Thu, Dec 07, 2017 at 09:05:20AM -0500, Brian Foster wrote:
-> > On Wed, Dec 06, 2017 at 11:26:38AM +1100, Dave Chinner wrote:
-> > > On Wed, Dec 06, 2017 at 08:18:50AM +1100, Dave Chinner wrote:
-> > > > On Tue, Dec 05, 2017 at 04:23:43PM +0200, Ari Sundholm wrote:
-> > > > > On 12/05/2017 12:28 AM, Dave Chinner wrote:
-> > > > > >On Thu, Nov 30, 2017 at 04:21:47PM +0200, Ari Sundholm wrote:
-> > ...
-> > > 
-> > > xfs_io: set exitcode on failure appropriately
-> > > 
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Many operations don't set the exitcode when they fail, resulting
-> > > in xfs_io exiting with a zero (no failure) exit code despite the
-> > > command failing and returning an error. Fix this.
-> > > 
-> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > ...
-> > > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> > > index d1dfc5a5e33a..9b737eff4c02 100644
-> > > --- a/io/copy_file_range.c
-> > > +++ b/io/copy_file_range.c
-> > > @@ -92,6 +92,7 @@ copy_range_f(int argc, char **argv)
-> > >  	int ret;
-> > >  	int fd;
-> > >  
-> > > +	exitcode = 1;
-> > >  	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
-> > >  		switch (opt) {
-> > >  		case 's':
-> > > @@ -132,6 +133,8 @@ copy_range_f(int argc, char **argv)
-> > >  
-> > >  	ret = copy_file_range(fd, &src, &dst, len);
-> > >  	close(fd);
-> > > +	if (ret >= 0)
-> > > +		exitcode = 0;
+On Thu, Dec 07, 2017 at 02:38:03PM -0800, Matthew Wilcox wrote:
+> On Thu, Dec 07, 2017 at 11:06:34AM -0500, Theodore Ts'o wrote:
+> > The problem is that if it has too many false positives --- and it's
+> > gotten *way* worse with the completion callback "feature", people will
+> > just stop using Lockdep as being too annyoing and a waste of developer
+> > time when trying to figure what is a legitimate locking bug versus
+> > lockdep getting confused.
 > > 
-> > I don't think it's appropriate to blindly overwrite the global exitcode
-> > value like this. What about the case where multiple commands are chained
-> > together? Should we expect an error code if any of the commands failed
-> > or only the last?
-> > 
-> > For example:
-> > 
-> >   xfs_io -c "pwrite ..." <file>
-> > 
-> > ... returns an error if the write fails, while:
-> > 
-> >   xfs_io -c "pwrite ..." -c "fadvise ..." <file>
-> > 
-> > ... would never so long as the fadvise succeeds.
+> > <Rant>I can't even disable the new Lockdep feature which is throwing
+> > lots of new false positives --- it's just all or nothing.</Rant>
 > 
-> Yup, I mentioned that this would be a problem on IRC. The patch fixes
-> the interactive and the single command cases, but won't work for
-> chained commands as you rightly point out.
+> You *can* ... but it's way more hacking Kconfig than you ought to have
+> to do (which is a separate rant ...)
 > 
-> To fix it properly, it's going to take a lot more than 15 minutes of
-> time. We're going to have to change how errors are returned to and
-> propagated through the libxcmd infrastruture, how we handle "fatal
-> error, don't continue" conditions through the libxcmd command loop,
-> etc. If we want to stop at the first error, then we've got to go
-> change all the return values from xfs_io commands to return non-zero
-> on error. We still have to set the exitcode as per this patch,
-> because the non-zero return value simply says "stop parsing input"
-> and doesn't affect the exit code of the program.
+> You need to get LOCKDEP_CROSSRELEASE off.  I'd revert patches
+> e26f34a407aec9c65bce2bc0c838fabe4f051fc6 and
+> b483cf3bc249d7af706390efa63d6671e80d1c09
 > 
-> Given that xfs_quota, xfs_io, xfs_db, and xfs_spaceman all use the
-> same libxcmd infrastructure, we've got to make the changes
-> consistently across all of those utilities. This will require an
-> audit of all the commands first to determine if there's anything
-> special in any of those utilities, then changing all the code, then
-> testing all the CLI parsing still works correctly.  xfs_quota, as
-> usual, will be the problem child that causes us lots of pain here.
+> I think it was a mistake to force these on for everybody; they have a
+> much higher false-positive rate than the rest of lockdep, so as you say
+> forcing them on leads to fewer people using *any* of lockdep.
 > 
-> I'm not planning on doing all this in the near future, so I did the
-> next best thing that would only affect xfs_io behaviour. i.e.
-> directly manipulate the exitcode as many of the existing xfs_io
-> commands already do.
-> 
+> The bug you're hitting isn't Byungchul's fault; it's an annotation
+> problem.  The same kind of annotation problem that we used to have with
+> dozens of other places in the kernel which are now fixed.
 
-Sure, I don't dispute the broader work required to fix everything up
-properly and I don't take issue with modifying exitcode directly in
-principle. I just don't see how any of this necessitates breaking the
-chained command case for the those commands that we are trying to fix
-up, particularly when the problem seems easily avoidable. See below for
-a tweak to the fadvise example..
+That's one of the fundamental problem with lockdep - it throws the
+difficulty of solving all these new false positives onto the
+developers who know nothing about lockdep and don't follow it's
+development. And until they do solve them - especially in critical
+subsystems that everyone uses like the storage stack - lockdep is
+essentially worthless.
 
-(I notice that I mistakenly dropped the return code from
-command_usage(), but you get the idea (and it hardcodes to 0)).
+> If you didn't
+> have to hack Kconfig to get rid of this problem, you'd be happier, right?
 
-Brian
+I'd be much happier if it wasn't turned on by default in the first
+place.  We gave plenty of warnings that there were still unsolved
+false positive problems with the new checks in the storage stack.
 
---- 8< ---
+Cheers,
 
-diff --git a/io/fadvise.c b/io/fadvise.c
-index 9cc91a57..f802ce1b 100644
---- a/io/fadvise.c
-+++ b/io/fadvise.c
-@@ -54,7 +54,6 @@ fadvise_f(
- 	off64_t		offset = 0, length = 0;
- 	int		c, range = 0, advise = POSIX_FADV_NORMAL;
- 
--	exitcode = 1;
- 	while ((c = getopt(argc, argv, "dnrsw")) != EOF) {
- 		switch (c) {
- 		case 'd':	/* Don't need these pages */
-@@ -78,37 +77,43 @@ fadvise_f(
- 			range = 1;
- 			break;
- 		default:
--			return command_usage(&fadvise_cmd);
-+			goto usage;
- 		}
- 	}
- 	if (range) {
- 		size_t	blocksize, sectsize;
- 
- 		if (optind != argc - 2)
--			return command_usage(&fadvise_cmd);
-+			goto usage;
- 		init_cvtnum(&blocksize, &sectsize);
- 		offset = cvtnum(blocksize, sectsize, argv[optind]);
- 		if (offset < 0) {
- 			printf(_("non-numeric offset argument -- %s\n"),
- 				argv[optind]);
--			return 0;
-+			goto seterror;
- 		}
- 		optind++;
- 		length = cvtnum(blocksize, sectsize, argv[optind]);
- 		if (length < 0) {
- 			printf(_("non-numeric length argument -- %s\n"),
- 				argv[optind]);
--			return 0;
-+			goto seterror;
- 		}
- 	} else if (optind != argc) {
--		return command_usage(&fadvise_cmd);
-+		goto usage;
- 	}
- 
- 	if (posix_fadvise(file->fd, offset, length, advise) < 0) {
- 		perror("fadvise");
--		return 0;
-+		goto seterror;
- 	}
--	exitcode = 0;
-+
-+	return 0;
-+
-+usage:
-+	command_usage(&fadvise_cmd);
-+seterror:
-+	exitcode = 1;
- 	return 0;
- }
- 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
