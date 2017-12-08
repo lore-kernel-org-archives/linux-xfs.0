@@ -1,57 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35382 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751815AbdLGATR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Dec 2017 19:19:17 -0500
-Date: Wed, 6 Dec 2017 16:19:11 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
- creations
-Message-ID: <20171207001911.GR19219@magnolia>
-References: <20170821082404.3387-1-hch@lst.de>
- <20170823202213.GA4796@magnolia>
- <20170824004755.GC21024@dastard>
- <20170829180445.GU4757@magnolia>
- <20170903072513.GA14807@lst.de>
- <20170903153150.GE4073@magnolia>
- <20171205013422.GC19219@magnolia>
- <20171205185936.GE19219@magnolia>
- <20171207000259.GA18701@lst.de>
+Received: from sandeen.net ([63.231.237.45]:35392 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750941AbdLHESn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Dec 2017 23:18:43 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 31AED615CE5
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2017 22:18:41 -0600 (CST)
+Subject: [PATCH 5/5] mkfs: remove use-once default macros
+References: <ba4823ed-fabd-d02c-42f3-40c8d5aa44a6@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <bf7aac6f-dc75-d00f-d6ec-23599a8b156a@sandeen.net>
+Date: Thu, 7 Dec 2017 22:18:42 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171207000259.GA18701@lst.de>
+In-Reply-To: <ba4823ed-fabd-d02c-42f3-40c8d5aa44a6@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 01:02:59AM +0100, Christoph Hellwig wrote:
-> On Tue, Dec 05, 2017 at 10:59:36AM -0800, Darrick J. Wong wrote:
-> > I fixed most of the auto group regressions with small fixes to xfstests,
-> > but xfs/013 is a problem because once we run out of space to create new
-> > dirX we simply get nothing.  Will have to study the behavior of that
-> > test in more depth...
-> 
-> With what kind of config do you see xfs/013 failures?
+sb_feat was a weird mishmash of hardcoded defaults and macros
+(which were used in only this place).
 
-MKFS_OPTIONS='-m rmapbt=1,reflink=1 -i sparse=1'
+Make it consistent by removing the use-once macros, and remove
+the unused XFS_DFL_LOG_SIZE while we're in here.
 
-I /think/ the fix is that the cp -Rl can sometimes fail to create
-dir$((i+1)) because we happen to hit exactly the point where the cleaner
-hasn't caught up with fsstress and so the dir$((i+1)) creation
-transaction fails with ENOSPC.  AFAICT if I change that to:
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ include/xfs_multidisk.h | 3 ---
+ mkfs/xfs_mkfs.c         | 4 ++--
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-while ! test -d $SCRATCH_MNT/dir$((i+1)); do
-	cp -Rl ...
-done
+diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+index e5f53b7..54913d8 100644
+--- a/include/xfs_multidisk.h
++++ b/include/xfs_multidisk.h
+@@ -29,10 +29,7 @@
+ #define	XFS_MIN_DATA_BLOCKS	100
+ #define	XFS_MIN_INODE_PERBLOCK	2		/* min inodes per block */
+ #define	XFS_DFL_IMAXIMUM_PCT	25		/* max % of space for inodes */
+-#define	XFS_IFLAG_ALIGN		true		/* -i align defaults on */
+ #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
+-#define	XFS_DFL_DIR_VERSION	2		/* default directory version */
+-#define	XFS_DFL_LOG_SIZE	1000		/* default log size, blocks */
+ #define	XFS_DFL_LOG_FACTOR	5		/* default log size, factor */
+ 						/* with max trans reservation */
+ #define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3f6315d..a321ff2 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3850,8 +3850,8 @@ main(
+ 		.sb_feat = {
+ 			.log_version = 2,
+ 			.attr_version = 2,
+-			.dir_version = XFS_DFL_DIR_VERSION,
+-			.inode_align = XFS_IFLAG_ALIGN,
++			.dir_version = 2,
++			.inode_align = true,
+ 			.nci = false,
+ 			.lazy_sb_counters = true,
+ 			.projid32bit = true,
+-- 
+1.8.3.1
 
-then xfs/013 exercises the finobt just fine and doesn't fail.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
