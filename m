@@ -1,77 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44574 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750930AbdLHE05 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 23:26:57 -0500
-Date: Thu, 7 Dec 2017 20:21:53 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/5] mkfs: Don't emit default config message yet
-Message-ID: <20171208042153.GI19219@magnolia>
-References: <ba4823ed-fabd-d02c-42f3-40c8d5aa44a6@redhat.com>
- <62f67117-150d-e456-d9dd-3a19938cb03a@sandeen.net>
+Received: from www262.sakura.ne.jp ([202.181.97.72]:32000 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752633AbdLHKSZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Dec 2017 05:18:25 -0500
+Subject: Re: Google Chrome cause locks held in system (kernel 4.15 rc2)
+References: <1512705038.7843.6.camel@gmail.com>
+ <20171208040556.GG19219@magnolia>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Message-ID: <b60ae517-b9ca-a07f-36cf-ed11eb3c9180@I-love.SAKURA.ne.jp>
+Date: Fri, 8 Dec 2017 19:18:15 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <62f67117-150d-e456-d9dd-3a19938cb03a@sandeen.net>
+In-Reply-To: <20171208040556.GG19219@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, mikhail <mikhail.v.gavrilov@gmail.com>
+Cc: linux-xfs@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-On Thu, Dec 07, 2017 at 10:13:15PM -0600, Eric Sandeen wrote:
-> Until we have more than one possible source of configuration,
-> there is no need to emit the only possibility and clutter
-> the output.  We can decide how it should all look when we
-> get more than one source.
+Darrick J. Wong wrote:
+> On Fri, Dec 08, 2017 at 08:50:38AM +0500, mikhail wrote:
+> > Hi,
+> > 
+> > can anybody said what here happens?
+> > And which info needed for fixing it?
+> > Thanks.
+> > 
+> > [16712.376081] INFO: task tracker-store:27121 blocked for more than 120
+> > seconds.
+> > [16712.376088]       Not tainted 4.15.0-rc2-amd-vega+ #10
+> > [16712.376092] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> > disables this message.
+> > [16712.376095] tracker-store   D13400 27121   1843 0x00000000
+> > [16712.376102] Call Trace:
+> > [16712.376114]  ? __schedule+0x2e3/0xb90
+> > [16712.376123]  ? wait_for_completion+0x146/0x1e0
+> > [16712.376128]  schedule+0x2f/0x90
+> > [16712.376132]  schedule_timeout+0x236/0x540
+> > [16712.376143]  ? mark_held_locks+0x4e/0x80
+> > [16712.376147]  ? _raw_spin_unlock_irq+0x29/0x40
+> > [16712.376153]  ? wait_for_completion+0x146/0x1e0
+> > [16712.376158]  wait_for_completion+0x16e/0x1e0
+> > [16712.376162]  ? wake_up_q+0x70/0x70
+> > [16712.376204]  ? xfs_buf_read_map+0x134/0x2f0 [xfs]
+> > [16712.376234]  xfs_buf_submit_wait+0xaf/0x520 [xfs]
 > 
-> Apply some i18n to the config description, though.
+> Stuck waiting for a directory block to read.  Slow disk?  Bad media?
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok, I guess,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Most likely cause is that I/O was getting very slow due to memory pressure.
+Running memory consuming processes (e.g. web browsers) and file writing
+processes might generate stresses like this report.
 
-(I wonder why Dave put the printf in there, but I'll let him answer that.)
+I can't tell whether this report is a real deadlock/lockup or just a slowdown,
+for currently we don't have means for checking whether memory allocation was
+making progress or not.
 
-> ---
-> 
->  mkfs/xfs_mkfs.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index e38810f..0f7dd92 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3845,7 +3845,7 @@ main(
->  
->  	/* build time defaults */
->  	struct mkfs_default_params	dft = {
-> -		.source = "package build definitions",
-> +		.source = _("package build definitions"),
->  		.sectorsize = XFS_MIN_SECTORSIZE,
->  		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
->  		.sb_feat = {
-> @@ -3881,10 +3881,12 @@ main(
->  	 * defaults. If a file exists in <package location>, read in the new
->  	 * default values and overwrite them in the &dft structure. This way the
->  	 * new defaults will apply before we parse the CLI, and the CLI will
-> -	 * still be able to override them. Emit a message to indicate where the
-> -	 * defaults being used came from.
-> +	 * still be able to override them. When more than one source is
-> +	 * implemented, emit a message to indicate where the defaults being
-> +	 * used came from.
-> +	 *
-> +	 * printf(_("Default configuration sourced from %s\n"), dft.source);
->  	 */
-> -	printf(_("Default configuration sourced from %s\n"), dft.source);
->  
->  	/* copy new defaults into CLI parsing structure */
->  	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The OOM killer is not invoked for allocation requests without __GFP_FS flag.
+Therefore, GFP_NOIO / GFP_NOFS allocation requests have possibility of hanging
+up the system. We can reproduce such hang up using artificial stress (e.g.
+http://lkml.kernel.org/r/201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp ),
+but this problem will not be addressed unless it is proven to occur using real
+workloads. It is a too much request for averaged users to prove that their systems
+hung up due to this problem.
+
+In order to avoid silent hang up, Linux 4.9 got warn_alloc() calls which
+"synchronously" prints messages when a memory allocation request took more than
+10 seconds. But since it was confirmed that concurrent warn_alloc() calls can
+hang up the system, warn_alloc() was reverted in Linux 4.15-rc1
+( https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/mm/page_alloc.c?id=400e22499dd92613 ).
+Therefore, unfortunately your kernel does not allow you to check whether memory
+allocation was making progress or not.
+
+I have been proposing a watchdog which extends khungtaskd so that the system can
+print useful information "asynchronously" without locking up the system (e.g.
+http://lkml.kernel.org/r/1495331504-12480-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp
+http://lkml.kernel.org/r/1510833448-19918-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp ).
+But since OOM livelock is the least attractive domain, I'm stuck with zero advocate.
+The watchdog did not get in time for obtaining information in your case, sorry.
+
+For now, you can try setting /proc/sys/kernel/hung_task_warnings to -1, for the
+default setting of /proc/sys/kernel/hung_task_warnings is 10 which means that
+"INFO: task $commname:$pid blocked for more than 120 seconds." is printed for
+only 10 times (like this report did) and makes it impossible for users to judge
+whether the hung situation continued or not. There is SysRq-t and SysRq-m, but I
+don't expect that current SysRq can give you enough information for analyzing
+this problem.
+
