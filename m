@@ -1,52 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:43129 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbdLILKL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Dec 2017 06:10:11 -0500
-Received: by mail-wm0-f46.google.com with SMTP id n138so6934478wmg.2
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Dec 2017 03:10:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20171204211927.673291734@linutronix.de>
-References: <20171204211927.673291734@linutronix.de>
-From: Philippe Ombredanne <pombredanne@nexb.com>
-Date: Sat, 9 Dec 2017 12:09:29 +0100
-Message-ID: <CAOFm3uFE+24wEX2FhhcWM2hcpQLK3j74OczZht=TwyYi9xGG8w@mail.gmail.com>
-Subject: Re: [patch V4 00/11] LICENSES: Add documentation and initial License files
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:36690 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751191AbdLIMba (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Dec 2017 07:31:30 -0500
+Received: by mail-lf0-f53.google.com with SMTP id f20so14504830lfe.3
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Dec 2017 04:31:29 -0800 (PST)
+Message-ID: <1512822686.4168.4.camel@gmail.com>
+Subject: Re: Google Chrome cause locks held in system (kernel 4.15 rc2)
+From: mikhail <mikhail.v.gavrilov@gmail.com>
+Date: Sat, 09 Dec 2017 17:31:26 +0500
+In-Reply-To: <20171208040556.GG19219@magnolia>
+References: <1512705038.7843.6.camel@gmail.com>
+         <20171208040556.GG19219@magnolia>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-Thomas,
+On Thu, 2017-12-07 at 20:05 -0800, Darrick J. Wong wrote:
+> > Hi, can anybody said what here happens? And which info needed for
+> > fixing it? Thanks. [16712.376081] INFO: task tracker-store:27121
+> > blocked for more than 120 seconds. [16712.376088] Not tainted
+> > 4.15.0-rc2-amd-vega+ #10 [16712.376092] "echo 0 >
+> > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > [16712.376095] tracker-store D13400 27121 1843 0x00000000
+> > [16712.376102] Call Trace: [16712.376114] ? __schedule+0x2e3/0xb90
+> > [16712.376123] ? wait_for_completion+0x146/0x1e0 [16712.376128]
+> > schedule+0x2f/0x90 [16712.376132] schedule_timeout+0x236/0x540
+> > [16712.376143] ? mark_held_locks+0x4e/0x80 [16712.376147] ?
+> > _raw_spin_unlock_irq+0x29/0x40 [16712.376153] ?
+> > wait_for_completion+0x146/0x1e0 [16712.376158]
+> > wait_for_completion+0x16e/0x1e0 [16712.376162] ?
+> > wake_up_q+0x70/0x70 [16712.376204] ? xfs_buf_read_map+0x134/0x2f0
+> > [xfs] [16712.376234] xfs_buf_submit_wait+0xaf/0x520 [xfs]
+> 
+> 
 
-On Mon, Dec 4, 2017 at 10:19 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> This is the 4th version of the licensing rules documentation.
->
-> Changes since v3:
->
->  - Addressed the review comments
->
->  - Replaced the GPL-2.0 license text with the one from the kernel COPYING
->    file and added the nice explanation from Philippe to the changelog.
->
->  - Picked up Reviewed-by tags
->
-> Thanks to everyone who provided input!
->
-> Thanks,
->
->         tglx
->
+Stuck waiting for a directory block to read. 
+> Slow disk? 
+Usual Seagate SATA3 HDD with 7200rpms
 
-With the comments I sent separately about "boiler plates" vs.
-boilerplate and the proposed "parens" doc updates for the quirk
-spotted by eagle-eyed Heiko, my Reviewed-by still stands for the whole
-patch set.
+> Bad media?
+No. If there were problems with the hard drive, we would see errors in
+the logs.
 
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Any way you can sure in this if look at smartctl output for HDD.
 
--- 
-Cordially
-Philippe Ombredanne
+https://paste.fedoraproject.org/paste/EsELRXoiKzlkR5PYhVmJeg
+
