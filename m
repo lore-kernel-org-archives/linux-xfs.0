@@ -1,50 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from synagogue.naos.co.nz ([203.171.38.148]:43862 "EHLO
-        synagogue.naos.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935036AbdLSC2k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 21:28:40 -0500
-Subject: Re: Rationale for hardware RAID 10 su, sw values in FAQ
-References: <b8c45869-849f-5124-f74f-68da0f9f34d7@mcneill.gen.nz>
- <20170927004302.GB3666@dastard>
- <db821c38-1307-0681-ffc2-4400ffd8d27a@mcneill.gen.nz>
- <20170927043308.GC3666@dastard>
- <c7ade829-9385-c517-581b-8dc73def5693@mcneill.gen.nz>
-From: Ewen McNeill <xfs@ewen.mcneill.gen.nz>
-Message-ID: <0dbebe1a-4704-0880-87cc-f029921b6c7f@mcneill.gen.nz>
-Date: Tue, 19 Dec 2017 15:19:32 +1300
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62698 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752414AbdLKVGK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Dec 2017 16:06:10 -0500
+Date: Tue, 12 Dec 2017 08:06:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS on RBD crash
+Message-ID: <20171211210607.GS5858@dastard>
+References: <CADb94503vRdng4T_sTGimZPWhmZE4D9BAC0_OKCGDBAc06PMVw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <c7ade829-9385-c517-581b-8dc73def5693@mcneill.gen.nz>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADb94503vRdng4T_sTGimZPWhmZE4D9BAC0_OKCGDBAc06PMVw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Gorbachev <ag@iss-integration.com>
 Cc: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Sat, Dec 09, 2017 at 04:01:34PM -0500, Alex Gorbachev wrote:
+> I have experienced a crash today (in a sense of filesystem going
+> offline) of a 25TB XFS filesystem.  Tried searching the list and
+> google, and not much specific info I can use, so very much appreciate
+> any insight:
 
-On 28/09/17 12:36, Ewen McNeill wrote:
-> Perhaps the perfect is the enemy of the good here.  Would it help if I 
-> were to write up some text covering:
-> [... storage media/RAID considerations for xfs layout ...]
+freespace tree corruption. No idea what the cause might have been.
+
+> System: Ubuntu 16.04, kernel 4.10.17-041017-generic
 > 
-> (No promises when, but "October" seems plausible if this would be useful.)
+> Mount info:
+> 
+> /dev/rbd0 on /srv/exports/sclun63 type xfs
+> (rw,relatime,attr2,inode64,logbsize=256k,sunit=8192,swidth=8192,noquota)
+                                           ^^^^^^^^^^^^^^^^^^^^^^
+Why?
 
-So... October proved not to be plausible.  But I'm still considering 
-writing something, perhaps while it's quieter over late December/early 
-January.
+> xfs_repair (had to do -L):
 
-AFAICT the relevant "TODO" section of:
+Because the corrupted metadata was in the log, causing mount to
+fail, and that's why you zeroed the log?
 
-https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/tree/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc
+> root@roc01r-scd224:~# xfs_repair -L /dev/rbd0
+> Phase 1 - find and verify superblock...
+>         - reporting progress in intervals of 15 minutes
+> Phase 2 - using internal log
+>         - zero log...
+> ALERT: The filesystem has valuable metadata changes in a log which is being
+> destroyed because the -L option was used.
+>         - scan filesystem freespace and inode maps...
+> freeblk count 3 != flcount 4 in ag 47
 
-is unchanged.
+Those are from trashing the log, I think.
 
-If it's still useful to write something, I'll see if there's a quiet 
-"home" day over the holidays to write a page or so about the 
-considerations I'm aware of as a SysAdmin.
+> sb_ifree 667, counted 615
+> sb_fdblocks 3930698117, counted 1111093367
 
-Ewen
+That's a major discrepancy - superblock said ~16TB free, repair
+counted only 5TB free. And the inode count is off, too - had you
+been removing files recently?
 
+>         - 15:06:10: scanning filesystem freespace - 193 of 193
+
+Lots of AGs for a small filesystem - this filesystem has been grown
+several times?
+
+>         - 15:10:22: check for inodes claiming duplicate blocks - 896
+> of 896 inodes done
+
+Only ~900 files in the filesystem? 
+
+> No other errors in logs, Ceph or hardware.
+
+And no error reported from xfs_repair, either. So the corruption
+occurred in memory and was captured by the log, which you zeroed
+to run xfs_repair.
+
+So there's really nothing left for us to analyse and debug.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
