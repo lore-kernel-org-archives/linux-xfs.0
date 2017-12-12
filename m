@@ -1,67 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:50368 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1752077AbdLLPvi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Dec 2017 10:51:38 -0500
-Date: Tue, 12 Dec 2017 10:51:37 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
-In-Reply-To: <1513035963.3036.17.camel@perches.com>
-Message-ID: <Pine.LNX.4.44L0.1712121041240.1358-100000@iolanthe.rowland.org>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60807 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752707AbdLLXaq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Dec 2017 18:30:46 -0500
+Date: Wed, 13 Dec 2017 10:30:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: include the XFS magic number in magic.h
+Message-ID: <20171212233031.GX5858@dastard>
+References: <1513088469.3476.48.camel@linux.vnet.ibm.com>
+ <20171212142615.GA25327@infradead.org>
+ <1513089296.3476.52.camel@linux.vnet.ibm.com>
+ <20171212143647.GA10887@infradead.org>
+ <1513091096.3476.66.camel@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1513091096.3476.66.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joe Perches <joe@perches.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Whitcroft <apw@shadowen.org>, Dave Chinner <david@fromorbit.com>, Byungchul Park <byungchul.park@lge.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 11 Dec 2017, Joe Perches wrote:
-
-> >  - I don't understand the error for xa_head here:
+On Tue, Dec 12, 2017 at 10:04:56AM -0500, Mimi Zohar wrote:
+> On Tue, 2017-12-12 at 06:36 -0800, Christoph Hellwig wrote:
+> > On Tue, Dec 12, 2017 at 09:34:56AM -0500, Mimi Zohar wrote:
+> > > On Tue, 2017-12-12 at 06:26 -0800, Christoph Hellwig wrote:
+> > > > On Tue, Dec 12, 2017 at 09:21:09AM -0500, Mimi Zohar wrote:
+> > > > > Move the XFS_SB_MAGIC definition to magic.h.
+> > > > 
+> > > > NACK.  We want to keep the XFS code self-contained and no other part
+> > > > of the kernel has any business knowing it anyway.
+> > > 
+> > > IMA policy rules can be defined in terms of magic numbers, but they
+> > > need to be defined in magic.h.  Please reconsider...
 > > 
-> > struct xarray {
-> >         spinlock_t      xa_lock;
-> >         gfp_t           xa_flags;
-> >         void __rcu *    xa_head;
-> > };
-> > 
-> >    Do people really think that:
-> > 
-> > struct xarray {
-> >         spinlock_t      xa_lock;
-> >         gfp_t           xa_flags;
-> >         void __rcu	*xa_head;
-> > };
-> > 
-> >    is more aesthetically pleasing?  And not just that, but it's an *error*
-> >    so the former is *RIGHT* and this is *WRONG*.  And not just a matter
-
-Not sure what was meant here.  Neither one is *WRONG* in the sense of 
-being invalid C code.  In the sense of what checkpatch will accept, the 
-former is *WRONG* and the latter is *RIGHT* -- the opposite of what 
-was written.
-
-> >    of taste?
+> > That is completely bogus, and it should not be supported in any way.
+> > File systems magic numbers are internal implementation details.
 > 
-> No opinion really.
-> That's from Andy Whitcroft's original implementation.
+> Perhaps policies in general shouldn't differentiate between file
+> systems, but it definitely simplifies testing.
 
-This one, at least, is easy to explain.  The original version tends to
-lead to bugs, or easily misunderstood code.  Consider if another
-variable was added to the declaration; it could easily turn into:
+How does specifying a filesystem type in a generic layer's policy
+implementation help testing?
 
-	void __rcu *	xa_head, xa_head2;
+> For example, currently IMA-appraisal only supports storing file
+> signatures as xattrs, but support for appended signatures is being
+> added.  Per file system rules could require different types of file
+> signatures.
 
-(The compiler will reject this, but it wouldn't if the underlying type
-had been int instead of void.)
+What's an "appended signature", and why is the filesystem
+independent xattr interface insufficient for storing this
+information?
 
-Doing it the other way makes the meaning a lot more clear:
+Cheers,
 
-	void __rcu	*xa_head, *xa_head2;
-
-This is an idiom specifically intended to reduce the likelihood of 
-errors.  Rather like avoiding assignments inside conditionals.
-
-Alan Stern
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
