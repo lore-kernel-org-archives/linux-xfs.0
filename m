@@ -1,114 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57696 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753327AbdLHOQb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Dec 2017 09:16:31 -0500
-Date: Fri, 8 Dec 2017 09:16:30 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC 2/4] xfs: defer agfl block frees when dfops is
- available
-Message-ID: <20171208141629.GB55826@bfoster.bfoster>
-References: <20171207185810.48757-1-bfoster@redhat.com>
- <20171207185810.48757-3-bfoster@redhat.com>
- <20171207224126.GJ4094@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171207224126.GJ4094@dastard>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38232 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751400AbdLLOfE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Dec 2017 09:35:04 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vBCEYheR019036
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2017 09:35:04 -0500
+Received: from e06smtp11.uk.ibm.com (e06smtp11.uk.ibm.com [195.75.94.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2etehsg50x-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2017 09:35:03 -0500
+Received: from localhost
+        by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+        Tue, 12 Dec 2017 14:34:59 -0000
+Subject: Re: [PATCH] xfs: include the XFS magic number in magic.h
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Date: Tue, 12 Dec 2017 09:34:56 -0500
+In-Reply-To: <20171212142615.GA25327@infradead.org>
+References: <1513088469.3476.48.camel@linux.vnet.ibm.com>
+         <20171212142615.GA25327@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Message-Id: <1513089296.3476.52.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 09:41:26AM +1100, Dave Chinner wrote:
-> On Thu, Dec 07, 2017 at 01:58:08PM -0500, Brian Foster wrote:
-> > The AGFL fixup code executes before every block allocation/free and
-> > rectifies the AGFL based on the current, dynamic allocation
-> > requirements of the fs. The AGFL must hold a minimum number of
-> > blocks to satisfy a worst case split of the free space btrees caused
-> > by the impending allocation operation. The AGFL is also updated to
-> > maintain the implicit requirement for a minimum number of free slots
-> > to satisfy a worst case join of the free space btrees.
-> > 
-> > Since the AGFL caches individual blocks, AGFL reduction typically
-> > involves multiple, single block frees. We've had reports of
-> > transaction overrun problems during certain workloads that boil down
-> > to AGFL reduction freeing multiple blocks and consuming more space
-> > in the log than was reserved for the transaction.
-> > 
-> > Since the objective of freeing AGFL blocks is to ensure free AGFL
-> > free slots are available for the upcoming allocation, one way to
-> > address this problem is to release surplus blocks from the AGFL
-> > immediately but defer the free of those blocks (similar to how
-> > file-mapped blocks are unmapped from the file in one transaction and
-> > freed via a deferred operation) until the transaction is rolled.
-> > This turns AGFL reduction into an operation with predictable log
-> > reservation consumption.
-> > 
-> > Add the capability to defer AGFL block frees when a deferred ops
-> > list is handed to the AGFL fixup code. Deferring AGFL frees is a
-> > conditional behavior based on whether the caller has populated the
-> > new dfops field of the xfs_alloc_arg structure. A bit of
-> > customization is required to handle deferred completion processing
-> > because AGFL blocks are accounted against a separate reservation
-> > pool and AGFL are not inserted into the extent busy list when freed
-> > (they are inserted when used and released back to the AGFL). Reuse
-> > the majority of the existing deferred extent free infrastructure and
-> > customize it appropriately to handle AGFL blocks.
+On Tue, 2017-12-12 at 06:26 -0800, Christoph Hellwig wrote:
+> On Tue, Dec 12, 2017 at 09:21:09AM -0500, Mimi Zohar wrote:
+> > Move the XFS_SB_MAGIC definition to magic.h.
 > 
-> Ok, so it uses the EFI/EFD to make sure that the block freeing is
-> logged and replayed. So my question is:
-> 
-> > +/*
-> > + * AGFL blocks are accounted differently in the reserve pools and are not
-> > + * inserted into the busy extent list.
-> > + */
-> > +STATIC int
-> > +xfs_agfl_free_finish_item(
-> > +	struct xfs_trans		*tp,
-> > +	struct xfs_defer_ops		*dop,
-> > +	struct list_head		*item,
-> > +	void				*done_item,
-> > +	void				**state)
-> > +{
-> 
-> How does this function get called by log recovery when processing
-> the EFI as there is no flag in the EFI that says this was a AGFL
-> block?
-> 
+> NACK.  We want to keep the XFS code self-contained and no other part
+> of the kernel has any business knowing it anyway.
 
-It doesn't...
+IMA policy rules can be defined in terms of magic numbers, but they
+need to be defined in magic.h.  Please reconsider...
 
-> That said, I haven't traced through whether this matters or not,
-> but I suspect it does because freelist frees use XFS_AG_RESV_AGFL
-> and that avoids accounting the free to the superblock counters
-> because the block is already accounted as free space....
-> 
+Mimi
 
-I don't think it does matter. I actually tested log recovery precisely
-for this question, to see whether the traditional EFI recovery path
-would disrupt accounting or anything and I didn't reproduce any problems
-(well, except for that rmap record cleanup failure thing).
-
-However, I do still need to trace through and understand why that is, to
-know for sure that there aren't any problems lurking here (and if not, I
-should probably document it), but I suspect the reason is that the
-differences between how agfl and regular blocks are handled here only
-affect in-core state of the AG reservation pools. These are all
-reinitialized from zero on a subsequent mount based on the on-disk state
-(... but good point, and I will try to confirm that before posting a
-non-RFC variant).
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
