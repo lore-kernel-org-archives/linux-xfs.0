@@ -1,33 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42425 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751026AbdLNAqf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Dec 2017 19:46:35 -0500
-Date: Thu, 14 Dec 2017 01:44:28 +0100
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH] fs/*/Kconfig: drop links to 404-compliant
- http://acl.bestbits.at
-Message-ID: <20171214004428.GF3553@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <20171213053825.10903-1-kilobyte@angband.pl>
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:39044 "EHLO
+        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752811AbdLMQQP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 11:16:15 -0500
+Received: by mail-lf0-f49.google.com with SMTP id l81so3276595lfl.6
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 08:16:15 -0800 (PST)
+Received: from odin.usersys.redhat.com (nat-pool-brq-t.redhat.com. [213.175.37.10])
+        by smtp.gmail.com with ESMTPSA id l136sm391087lfb.46.2017.12.13.08.16.12
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 13 Dec 2017 08:16:13 -0800 (PST)
+Date: Wed, 13 Dec 2017 17:16:11 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: fallocate behavior on -ENOSPC for blocks past EOF
+Message-ID: <20171213161611.53oavmzhnsum2fqc@odin.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171213053825.10903-1-kilobyte@angband.pl>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Adam Borowski <kilobyte@angband.pl>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Jonathan Corbet <corbet@lwn.net>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Eric Van Hensbergen <ericvh@gmail.com>, Ron Minnich <rminnich@sandia.gov>, Latchesar Ionkov <lucho@ionkov.net>, v9fs-developer@lists.sourceforge.net, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Yan, Zheng" <zyan@redhat.com>, Sage Weil <sage@redhat.com>, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org, Steve French <sfrench@samba.org>, linux-cifs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>, linux-f2fs-devel@lists.sourceforge.net, David Woodhouse <dwmw2@infradead.org>, linux-mtd@lists.infradead.org, Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Dec 13, 2017 at 06:38:25AM +0100, Adam Borowski wrote:
-> This link is replicated in most filesystems' config stanzas.  Referring
-> to an archived version of that site is pointless as it mostly deals with
-> patches; user documentation is available elsewhere.
-> 
-> Signed-off-by: Adam Borowski <kilobyte@angband.pl>
-> ---
+We have talked a bit about it on irc before but iirc we didn't end on any
+conclusion about it.
 
->  fs/btrfs/Kconfig                   |  3 ---
+Current fallocate behavior on XFS in case it hits -ENOSPC in the middle of the
+reservation is kind of weird now when these new blocks are allocated past EOF.
 
-Acked-by: David Sterba <dsterba@suse.com>
+We end up not changing the i_size to match the partial blocks allocated even if
+fallocate is not called with KEEP_SIZE.
+
+Such behavior is confusing some users of fallocate, and I've been talking to
+Eric if wouldn't be better to update the i_size to match the partially allocated
+blocks IF KEEP_SIZE has not been used.
+
+I know though that fallocate behavior is kind of undefined in this case, but I
+wonder if is there anything we could agree to improve to make it less confusing
+for fallocate users, or at least agree if this is the behavior we want in XFS.
+
+Maybe is worth to mention though, that by now, we release any unwritten extent
+past EOF at certain points in the code (/me don't remember exactly where by
+now).
+
+I didn't have time to come back to this issue before, so, sorry about the lack
+of more details, but let me know if anybody needs more specific details about
+this and I'll get more data.
+
+Cheers
+
+
+
+-- 
+Carlos
