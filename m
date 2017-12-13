@@ -1,101 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41362 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750739AbdLMGSf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 01:18:35 -0500
-Subject: [PATCH 4/8] xfs: fix tests to handle removal of no-alloc create
- nonfeature
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 12 Dec 2017 22:03:42 -0800
-Message-ID: <151314502196.18893.14496524309954254435.stgit@magnolia>
-In-Reply-To: <151314499003.18893.8687182548758898133.stgit@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:54278 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750785AbdLMIne (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 03:43:34 -0500
+Date: Wed, 13 Dec 2017 00:43:31 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: include the XFS magic number in magic.h
+Message-ID: <20171213084331.GA19323@infradead.org>
+References: <1513088469.3476.48.camel@linux.vnet.ibm.com>
+ <20171212142615.GA25327@infradead.org>
+ <1513089296.3476.52.camel@linux.vnet.ibm.com>
+ <20171212143647.GA10887@infradead.org>
+ <1513091096.3476.66.camel@linux.vnet.ibm.com>
+ <20171212233031.GX5858@dastard>
+ <1513122931.3476.97.camel@linux.vnet.ibm.com>
+ <20171213001342.GY5858@dastard>
+ <1513128072.3476.121.camel@linux.vnet.ibm.com>
+ <20171213025928.GZ5858@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171213025928.GZ5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Dec 13, 2017 at 01:59:28PM +1100, Dave Chinner wrote:
+> IOWs, if you need to identify a filesystem *type*, using internal
+> magic numbers is not the way to do it. selinux, for example, checks
+> sb->s_type->name quite a lot....
 
-We're removing from XFS the ability to perform no-allocation file
-creation.  This was added years ago because someone at SGI demanded that
-we still be able to create (empty?) files with zero free blocks
-remaining so long as there were free inodes and space in existing
-directory blocks.  This came at an unacceptable risk of ENOSPC'ing
-midway through a transaction and shutting down the fs, so we're removing
-it for the create case.
-
-However, some tests fail as a result, so fix them to be more flexible
-about not failing when a dir/file creation fails due to ENOSPC.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/013 |    6 ++++--
- tests/xfs/014 |    3 +++
- tests/xfs/104 |    2 +-
- tests/xfs/109 |    2 +-
- 4 files changed, 9 insertions(+), 4 deletions(-)
-
-
-diff --git a/tests/xfs/013 b/tests/xfs/013
-index 80298ca..394b9bc 100755
---- a/tests/xfs/013
-+++ b/tests/xfs/013
-@@ -145,8 +145,10 @@ $FSSTRESS_PROG -d $SCRATCH_MNT/fsstress -n 9999999 -p 2 -S t \
- for i in $(seq 1 $LOOPS)
- do
- 	# hard link the content of the current directory to the next
--	cp -Rl $SCRATCH_MNT/dir$i $SCRATCH_MNT/dir$((i+1)) 2>&1 | \
--		filter_enospc
-+	while ! test -d $SCRATCH_MNT/dir$((i+1)); do
-+		cp -Rl $SCRATCH_MNT/dir$i $SCRATCH_MNT/dir$((i+1)) 2>&1 | \
-+			filter_enospc
-+	done
- 
- 	# do a random replacement of files in the new directory
- 	_rand_replace $SCRATCH_MNT/dir$((i+1)) $COUNT
-diff --git a/tests/xfs/014 b/tests/xfs/014
-index 875ab40..08cd001 100755
---- a/tests/xfs/014
-+++ b/tests/xfs/014
-@@ -112,6 +112,9 @@ _test_enospc()
- 	# consume 1/2 of the current preallocation across the set of 4 writers
- 	write_size=$((TOTAL_PREALLOC / 2 / 4))
- 	for i in $(seq 0 3); do
-+		touch $dir/file.$i
-+	done
-+	for i in $(seq 0 3); do
- 		$XFS_IO_PROG -f -c "pwrite 0 $write_size" $dir/file.$i \
- 			>> $seqres.full &
- 	done
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index 785027e..c3b5977 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -65,7 +65,7 @@ _stress_scratch()
- 	# -w ensures that the only ops are ones which cause write I/O
- 	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
- 	    -n $nops $FSSTRESS_AVOID`
--	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full &
-+	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
- }
- 
- # real QA test starts here
-diff --git a/tests/xfs/109 b/tests/xfs/109
-index e0fdec3..2625f15 100755
---- a/tests/xfs/109
-+++ b/tests/xfs/109
-@@ -79,7 +79,7 @@ allocate()
- 			while [ $j -lt 100 ]; do
- 				$XFS_IO_PROG -f -c 'pwrite -b 64k 0 16m' $file \
- 					>/dev/null 2>&1
--				rm $file
-+				test -e $file && rm $file
- 				let j=$j+1
- 			done
- 		} &
-
+And that is bad enough to start with.  It should check for specific
+features, and not the file system driver name.
