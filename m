@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45272 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:45422 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751029AbdLMX7g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:36 -0500
+        with ESMTP id S1751029AbdLMX7p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:45 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlKmv100137
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:35 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2eue5b01rb-1
+        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlITp100005
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:44 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2eue5b01tf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:35 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNxZn3027671
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:44 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNwRb0004299
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:35 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNxZa3019041
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:35 GMT
-Subject: [PATCH 13/13] xfs: scrub in-core metadata
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:28 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBDNwR2Y008815
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:27 GMT
+Subject: [PATCH 02/13] xfs: remove XFS_WANT_CORRUPTED_RETURN from dir3 data
+ verifiers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Dec 2017 15:59:32 -0800
-Message-ID: <151320957218.30654.113836892237178906.stgit@magnolia>
+Date: Wed, 13 Dec 2017 15:58:25 -0800
+Message-ID: <151320950500.30654.7534958032611175786.stgit@magnolia>
 In-Reply-To: <151320949282.30654.14805160700975182459.stgit@magnolia>
 References: <151320949282.30654.14805160700975182459.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,198 +35,246 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Whenever we load a buffer, explicitly re-call the structure verifier to
-ensure that memory isn't corrupting things.
+Since __xfs_dir3_data_check verifies on-disk metadata, we can't have it
+noisily blowing asserts and hanging the system on corrupt data coming in
+off the disk.  Instead, have it return a boolean like all the other
+checker functions, and only have it noisily fail if we fail in debug
+mode.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/agheader.c |    3 +++
- fs/xfs/scrub/btree.c    |    4 ++++
- fs/xfs/scrub/common.c   |   23 +++++++++++++++++++++++
- fs/xfs/scrub/common.h   |    2 ++
- fs/xfs/scrub/dabtree.c  |   22 ++++++++++++++++++++++
- fs/xfs/scrub/dir.c      |    4 ++++
- 6 files changed, 58 insertions(+)
+ fs/xfs/libxfs/xfs_dir2_block.c |    4 --
+ fs/xfs/libxfs/xfs_dir2_data.c  |  100 +++++++++++++++++++++-------------------
+ fs/xfs/libxfs/xfs_dir2_priv.h  |   10 +++-
+ 3 files changed, 61 insertions(+), 53 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 1503cbc..2632e00 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -571,6 +571,7 @@ xfs_scrub_agf(
- 			&sc->sa.agf_bp, &sc->sa.agfl_bp);
- 	if (!xfs_scrub_process_error(sc, agno, XFS_AGF_BLOCK(sc->mp), &error))
- 		goto out;
-+	xfs_scrub_buffer_recheck(sc, sc->sa.agf_bp);
- 
- 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
- 
-@@ -742,6 +743,7 @@ xfs_scrub_agfl(
- 		goto out;
- 	if (!sc->sa.agf_bp)
- 		return -EFSCORRUPTED;
-+	xfs_scrub_buffer_recheck(sc, sc->sa.agfl_bp);
- 
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
-@@ -855,6 +857,7 @@ xfs_scrub_agi(
- 			&sc->sa.agf_bp, &sc->sa.agfl_bp);
- 	if (!xfs_scrub_process_error(sc, agno, XFS_AGI_BLOCK(sc->mp), &error))
- 		goto out;
-+	xfs_scrub_buffer_recheck(sc, sc->sa.agi_bp);
- 
- 	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
- 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 26149cb..b30f30b 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -312,6 +312,8 @@ xfs_scrub_btree_block_check_sibling(
- 	pp = xfs_btree_ptr_addr(ncur, ncur->bc_ptrs[level + 1], pblock);
- 	if (!xfs_scrub_btree_ptr_ok(bs, level + 1, pp))
- 		goto out;
-+	if (pbp)
-+		xfs_scrub_buffer_recheck(bs->sc, pbp);
- 
- 	if (xfs_btree_diff_two_ptrs(cur, pp, sibling))
- 		xfs_scrub_btree_set_corrupt(bs->sc, cur, level);
-@@ -481,6 +483,8 @@ xfs_scrub_btree_get_block(
- 		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
- 		return 0;
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 43c902f..e427249 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -78,9 +78,7 @@ xfs_dir3_block_verify(
+ 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
+ 			return false;
  	}
-+	if (*pbp)
-+		xfs_scrub_buffer_recheck(bs->sc, *pbp);
+-	if (__xfs_dir3_data_check(NULL, bp))
+-		return false;
+-	return true;
++	return __xfs_dir3_data_check(NULL, bp);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index 8727a43..af15f705 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -36,9 +36,9 @@
+ /*
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+- * Return 0 is the buffer is good, otherwise an error.
++ * Return true if the buffer is good.
+  */
+-int
++bool
+ __xfs_dir3_data_check(
+ 	struct xfs_inode	*dp,		/* incore inode pointer */
+ 	struct xfs_buf		*bp)		/* data block's buffer */
+@@ -90,16 +90,16 @@ __xfs_dir3_data_check(
+ 		 * so just ensure that the count falls somewhere inside the
+ 		 * block right now.
+ 		 */
+-		XFS_WANT_CORRUPTED_RETURN(mp, be32_to_cpu(btp->count) <
+-			((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry));
++		if (be32_to_cpu(btp->count) >=
++		    ((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry))
++			return false;
+ 		break;
+ 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+ 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+ 		endp = (char *)hdr + geo->blksize;
+ 		break;
+ 	default:
+-		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
+-		return -EFSCORRUPTED;
++		return false;
+ 	}
  
  	/*
- 	 * Check the block's owner; this function absorbs error codes
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index c36a91b..1e1d843 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -729,3 +729,26 @@ xfs_scrub_should_xref(
- 	*error = 0;
- 	return false;
- }
-+
-+/* Run the structure verifiers on in-memory buffers to detect bad memory. */
-+void
-+xfs_scrub_buffer_recheck(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp)
-+{
-+	xfs_failaddr_t			fa;
-+
-+	if (bp->b_ops == NULL) {
-+		xfs_scrub_block_set_corrupt(sc, bp);
-+		return;
-+	}
-+	if (bp->b_ops->verify_struct == NULL) {
-+		xfs_scrub_set_incomplete(sc);
-+		return;
-+	}
-+	fa = bp->b_ops->verify_struct(bp);
-+	if (!fa)
-+		return;
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 4f6a6e1..4db5e11 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -165,4 +165,6 @@ static inline __u32 xfs_scrub_corrupt_flag(bool xref)
- 	return xref ? XFS_SCRUB_OFLAG_XCORRUPT : XFS_SCRUB_OFLAG_CORRUPT;
- }
- 
-+void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
-+
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index d94edd9..bffdb7d 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -233,11 +233,28 @@ xfs_scrub_da_btree_write_verify(
- 		return;
+@@ -108,22 +108,25 @@ __xfs_dir3_data_check(
+ 	bf = ops->data_bestfree_p(hdr);
+ 	count = lastfree = freeseen = 0;
+ 	if (!bf[0].length) {
+-		XFS_WANT_CORRUPTED_RETURN(mp, !bf[0].offset);
++		if (bf[0].offset)
++			return false;
+ 		freeseen |= 1 << 0;
  	}
- }
-+static void *
-+xfs_scrub_da_btree_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_da_blkinfo	*info = bp->b_addr;
-+
-+	switch (be16_to_cpu(info->magic)) {
-+	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
-+		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
-+		return bp->b_ops->verify_struct(bp);
-+	default:
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		return bp->b_ops->verify_struct(bp);
-+	}
-+}
- 
- static const struct xfs_buf_ops xfs_scrub_da_btree_buf_ops = {
- 	.name = "xfs_scrub_da_btree",
- 	.verify_read = xfs_scrub_da_btree_read_verify,
- 	.verify_write = xfs_scrub_da_btree_write_verify,
-+	.verify_struct = xfs_scrub_da_btree_verify,
- };
- 
- /* Check a block's sibling. */
-@@ -276,6 +293,9 @@ xfs_scrub_da_btree_block_check_sibling(
- 		xfs_scrub_da_set_corrupt(ds, level);
- 		return error;
+ 	if (!bf[1].length) {
+-		XFS_WANT_CORRUPTED_RETURN(mp, !bf[1].offset);
++		if (bf[1].offset)
++			return false;
+ 		freeseen |= 1 << 1;
  	}
-+	if (ds->state->altpath.blk[level].bp)
-+		xfs_scrub_buffer_recheck(ds->sc,
-+				ds->state->altpath.blk[level].bp);
+ 	if (!bf[2].length) {
+-		XFS_WANT_CORRUPTED_RETURN(mp, !bf[2].offset);
++		if (bf[2].offset)
++			return false;
+ 		freeseen |= 1 << 2;
+ 	}
  
- 	/* Compare upper level pointer to sibling pointer. */
- 	if (ds->state->altpath.blk[level].blkno != sibling)
-@@ -358,6 +378,8 @@ xfs_scrub_da_btree_block(
- 			&xfs_scrub_da_btree_buf_ops);
- 	if (!xfs_scrub_da_process_error(ds, level, &error))
- 		goto out_nobuf;
-+	if (blk->bp)
-+		xfs_scrub_buffer_recheck(ds->sc, blk->bp);
- 
+-	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[0].length) >=
+-						be16_to_cpu(bf[1].length));
+-	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[1].length) >=
+-						be16_to_cpu(bf[2].length));
++	if (be16_to_cpu(bf[0].length) < be16_to_cpu(bf[1].length))
++		return false;
++	if (be16_to_cpu(bf[1].length) < be16_to_cpu(bf[2].length))
++		return false;
  	/*
- 	 * We didn't find a dir btree root block, which means that
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 69e1efd..0a4e768 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -237,6 +237,7 @@ xfs_scrub_dir_rec(
- 		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
- 		goto out;
+ 	 * Loop over the data/unused entries.
+ 	 */
+@@ -135,22 +138,23 @@ __xfs_dir3_data_check(
+ 		 * doesn't need to be there.
+ 		 */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			XFS_WANT_CORRUPTED_RETURN(mp, lastfree == 0);
+-			XFS_WANT_CORRUPTED_RETURN(mp, endp >=
+-					p + be16_to_cpu(dup->length));
+-			XFS_WANT_CORRUPTED_RETURN(mp,
+-				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+-					       (char *)dup - (char *)hdr);
++			if (lastfree != 0)
++				return false;
++			if (endp < p + be16_to_cpu(dup->length))
++				return false;
++			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
++			    (char *)dup - (char *)hdr)
++				return false;
+ 			dfp = xfs_dir2_data_freefind(hdr, bf, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+-				XFS_WANT_CORRUPTED_RETURN(mp,
+-					(freeseen & (1 << i)) == 0);
++				if ((freeseen & (1 << i)) != 0)
++					return false;
+ 				freeseen |= 1 << i;
+ 			} else {
+-				XFS_WANT_CORRUPTED_RETURN(mp,
+-					be16_to_cpu(dup->length) <=
+-						be16_to_cpu(bf[2].length));
++				if (be16_to_cpu(dup->length) >
++				    be16_to_cpu(bf[2].length))
++					return false;
+ 			}
+ 			p += be16_to_cpu(dup->length);
+ 			lastfree = 1;
+@@ -163,16 +167,17 @@ __xfs_dir3_data_check(
+ 		 * The linear search is crude but this is DEBUG code.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)p;
+-		XFS_WANT_CORRUPTED_RETURN(mp, dep->namelen != 0);
+-		XFS_WANT_CORRUPTED_RETURN(mp,
+-			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
+-		XFS_WANT_CORRUPTED_RETURN(mp, endp >=
+-				p + ops->data_entsize(dep->namelen));
+-		XFS_WANT_CORRUPTED_RETURN(mp,
+-			be16_to_cpu(*ops->data_entry_tag_p(dep)) ==
+-					       (char *)dep - (char *)hdr);
+-		XFS_WANT_CORRUPTED_RETURN(mp,
+-				ops->data_get_ftype(dep) < XFS_DIR3_FT_MAX);
++		if (dep->namelen == 0)
++			return false;
++		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
++			return false;
++		if (endp < p + ops->data_entsize(dep->namelen))
++			return false;
++		if (be16_to_cpu(*ops->data_entry_tag_p(dep)) !=
++		    (char *)dep - (char *)hdr)
++			return false;
++		if (ops->data_get_ftype(dep) >= XFS_DIR3_FT_MAX)
++			return false;
+ 		count++;
+ 		lastfree = 0;
+ 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+@@ -188,31 +193,32 @@ __xfs_dir3_data_check(
+ 				    be32_to_cpu(lep[i].hashval) == hash)
+ 					break;
+ 			}
+-			XFS_WANT_CORRUPTED_RETURN(mp,
+-						  i < be32_to_cpu(btp->count));
++			if (i >= be32_to_cpu(btp->count))
++				return false;
+ 		}
+ 		p += ops->data_entsize(dep->namelen);
  	}
-+	xfs_scrub_buffer_recheck(ds->sc, bp);
- 
- 	/* Retrieve the entry, sanity check it, and compare hashes. */
- 	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
-@@ -324,6 +325,7 @@ xfs_scrub_directory_data_bestfree(
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+ 	 */
+-	XFS_WANT_CORRUPTED_RETURN(mp, freeseen == 7);
++	if (freeseen != 7)
++		return false;
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+ 	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
+ 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
+ 			if (lep[i].address ==
+ 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 				stale++;
+-			if (i > 0)
+-				XFS_WANT_CORRUPTED_RETURN(mp,
+-					be32_to_cpu(lep[i].hashval) >=
+-						be32_to_cpu(lep[i - 1].hashval));
++			if (i > 0 && be32_to_cpu(lep[i].hashval) <
++				     be32_to_cpu(lep[i - 1].hashval))
++				return false;
+ 		}
+-		XFS_WANT_CORRUPTED_RETURN(mp, count ==
+-			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
+-		XFS_WANT_CORRUPTED_RETURN(mp, stale == be32_to_cpu(btp->stale));
++		if (count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale))
++			return false;
++		if (stale != be32_to_cpu(btp->stale))
++			return false;
  	}
- 	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
- 		goto out;
-+	xfs_scrub_buffer_recheck(sc, bp);
+-	return 0;
++	return true;
+ }
  
- 	/* XXX: Check xfs_dir3_data_hdr.pad is zero once we start setting it. */
+ static bool
+@@ -235,9 +241,7 @@ xfs_dir3_data_verify(
+ 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC))
+ 			return false;
+ 	}
+-	if (__xfs_dir3_data_check(NULL, bp))
+-		return false;
+-	return true;
++	return __xfs_dir3_data_check(NULL, bp);
+ }
  
-@@ -474,6 +476,7 @@ xfs_scrub_directory_leaf1_bestfree(
- 	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
- 	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
- 		goto out;
-+	xfs_scrub_buffer_recheck(sc, bp);
+ /*
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 4badd26..45c68d0 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -39,12 +39,18 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
  
- 	leaf = bp->b_addr;
- 	d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-@@ -559,6 +562,7 @@ xfs_scrub_directory_free_bestfree(
- 	error = xfs_dir2_free_read(sc->tp, sc->ip, lblk, &bp);
- 	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
- 		goto out;
-+	xfs_scrub_buffer_recheck(sc, bp);
+ /* xfs_dir2_data.c */
+ #ifdef DEBUG
+-#define	xfs_dir3_data_check(dp,bp) __xfs_dir3_data_check(dp, bp);
++#define	xfs_dir3_data_check(dp, bp) \
++do { \
++	if (!__xfs_dir3_data_check((dp), (bp))) { \
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, \
++				(bp)->b_target->bt_mount, (bp)->b_addr); \
++	} \
++} while (0)
+ #else
+ #define	xfs_dir3_data_check(dp,bp)
+ #endif
  
- 	if (xfs_sb_version_hascrc(&sc->mp->m_sb)) {
- 		struct xfs_dir3_free_hdr	*hdr3 = bp->b_addr;
+-extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++extern bool __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+ extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
+ extern int xfs_dir3_data_readahead(struct xfs_inode *dp, xfs_dablk_t bno,
 
