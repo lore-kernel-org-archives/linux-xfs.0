@@ -1,119 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:63335 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750749AbdLMBKc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Dec 2017 20:10:32 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
-Date: Wed, 13 Dec 2017 02:09:49 +0100
-Message-ID: <7282138.2afjHhBgNp@aspire.rjw.lan>
-In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
+Received: from imap.thunk.org ([74.207.234.97]:37918 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753845AbdLMCL2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Dec 2017 21:11:28 -0500
+Date: Tue, 12 Dec 2017 21:11:24 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 1/9] generic/381: use username fsgqa-381
+Message-ID: <20171213021124.ok3me6bpvfa4mgmo@thunk.org>
+References: <20171213004519.29340-1-mcgrof@kernel.org>
+ <20171213004519.29340-2-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171213004519.29340-2-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday, November 30, 2017 12:23:45 AM CET Luis R. Rodriguez wrote:
-> This is a followup from the original RFC which proposed to start
-> to kill kthread freezing all together [0]. Instead of going straight
-> out to the jugular for kthread freezing this series only addresses
-> killing freezer calls on filesystems which implement freeze_fs, after
-> we let the kernel freeze these filesystems for us on suspend.
+On Tue, Dec 12, 2017 at 04:45:11PM -0800, Luis R. Rodriguez wrote:
+> Some systems are not allowing usernames prefixed with a number now.
+> One can however use numbers as a postfix so use that.
 > 
-> This approach puts on a slow but steady path towards the original goal
-> though. Each subsystem could look for similar solutions. Even with
-> filesystems we're not all done yet, after this we'll still have to
-> decide what to do about filesystems which do not implement freeze_fs().
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  README                |  2 +-
+>  tests/generic/381     | 16 ++++++++--------
+>  tests/generic/381.out |  4 ++--
+>  3 files changed, 11 insertions(+), 11 deletions(-)
 > 
-> Motivation and problem:
-> 
-> kthreads have some semantics for freezing, which helps the kernel
-> freeze them when a system is going to suspend or hibernation. These
-> semantics are not well defined though, and it actually turns out
-> pretty hard to get it right.
-> 
-> Without a proper solution suspend and hibernation are fragile on filesystems,
-> it can easily break suspend and fixing such issues are in no way trivial [1]
-> [2].
-> 
-> Proposed solution:
-> 
-> Instead of fixing such semantics and trying to get all filesystems to do it
-> right, we can easily do away with all freezing calls if the filesystem
-> implements a proper freeze_fs() callback. The following 9 filesystems have
-> freeze_fs() implemented as such we can let the kernel issue the callback upon
-> suspend and thaw on resume automatically on our behalf.
-> 
->   o xfs
->   o reiserfs
->   o nilfs2
->   o jfs
->   o f2fs
->   o ext4
->   o ext2
->   o btrfs
-> 
-> Of these, the following have freezer helpers, which can then be removed
-> after the kernel automaticaly calls freeze_fs for us on suspend:
-> 
->   o xfs
->   o nilfs2
->   o jfs
->   o f2fs
->   o ext4
-> 
-> I've tested this on a system with ext4 and XFS, and have let 0-day go at
-> without issues. I have branches availabe for linux-next [3] and Linus'
-> latest tree [4].
-> 
-> Further testing, thoughts, reviews, flames are all equally appreciated.
-> 
-> [0] https://lkml.kernel.org/r/20171003185313.1017-1-mcgrof@kernel.org
-> [1] https://bugzilla.suse.com/show_bug.cgi?id=1043449
-> [2] https://lkml.kernel.org/r/20171113103139.GA18936@yu-chen.sh.intel.com
-> [3] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20171129-fs-freeze-cleanup
-> [4] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20171129-fs-freeze-cleanup
-> 
-> Luis R. Rodriguez (11):
->   fs: provide unlocked helper for freeze_super()
->   fs: provide unlocked helper thaw_super()
->   fs: add frozen sb state helpers
->   fs: distinguish between user initiated freeze and kernel initiated
->     freeze
->   fs: add iterate_supers_excl() and iterate_supers_reverse_excl()
->   fs: freeze on suspend and thaw on resume
->   xfs: remove not needed freezing calls
->   ext4: remove not needed freezing calls
->   f2fs: remove not needed freezing calls
->   nilfs2: remove not needed freezing calls
->   jfs: remove not needed freezing calls
-> 
->  fs/ext4/ext4_jbd2.c    |   2 +-
->  fs/ext4/super.c        |   2 -
->  fs/f2fs/gc.c           |   5 +-
->  fs/f2fs/segment.c      |   6 +-
->  fs/jfs/jfs_logmgr.c    |  11 +-
->  fs/jfs/jfs_txnmgr.c    |  31 ++---
->  fs/nilfs2/segment.c    |  48 ++++----
->  fs/super.c             | 320 ++++++++++++++++++++++++++++++++++++++++---------
->  fs/xfs/xfs_trans.c     |   2 +-
->  fs/xfs/xfs_trans_ail.c |   7 +-
->  include/linux/fs.h     |  63 +++++++++-
->  kernel/power/process.c |  15 ++-
->  12 files changed, 378 insertions(+), 134 deletions(-)
-> 
+> diff --git a/README b/README
+> index ed69332e774e..e05142be1a87 100644
+> --- a/README
+> +++ b/README
+> @@ -20,7 +20,7 @@ _______________________
+>  - run make
+>  - run make install
+>  - create fsgqa test user ("sudo useradd fsgqa")
+> -- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
+> +- create fsgqa-381 test user ("sudo useradd fsgqa-381")
 
-I'm assuming an update of this to be posted due to the comments from Jan
-on patch [3/11] and patch [7/11] probably.
+I'd suggest using the username "fsgqa2" so that other tests that want
+to use a second username can do so using a more logically name username.
 
-Is there anything else that needs to be addressed?
-
-Thanks,
-Rafael
-
-
+       	 		     	- Ted
