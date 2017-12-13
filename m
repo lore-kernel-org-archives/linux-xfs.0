@@ -1,53 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48184 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbdLGGJA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 01:09:00 -0500
-Date: Wed, 6 Dec 2017 22:08:54 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:45834 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750795AbdLMGUV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 01:20:21 -0500
+Date: Tue, 12 Dec 2017 22:18:25 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] libhandle: zap fdhash_head in fshandle_destroy
-Message-ID: <20171207060854.GT19219@magnolia>
-References: <20171206175401.GK19219@magnolia>
+Subject: [ZOMG RFCRAP PATCH 0/2] xfs: horrifying eBPF hacks
+Message-ID: <20171213061825.GO19219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171206175401.GK19219@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Richard Wareing <rwareing@fb.com>, david@fromorbit.com, hch@infradead.org
 
-On Wed, Dec 06, 2017 at 09:54:01AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Set fdhash_head to zero once we've destroyed the handle list to avoid
-> dangling pointer problems.
+Heh.
 
-Ping?
+So here's a kernel patch that builds on Josef's eBPF return value
+override patch series to provide an eBPF-kprobe-overridable hook
+function so that administrators can program XFS to redirect a file to
+the rt device or the data device depending on their own funny
+constraints any time that the system is doing the first write into an
+empty file.
 
-(The xfsprogs update announcement said to resend, but meh.)
+The second patch is against Brendan Gregg's bcc repository; it adds a
+python script to compile and inject a sample eBPF program that behaves
+(roughly) the same as Richard's earlier patches.
+
+Soooo... rather than dumping a bunch of static code into XFS to support
+his particular usecase, we're building him an eBPF Bazooka and telling
+him to have fun. :P
+
+(More generally, it's a science fair project for letting people
+customize XFS behavior with eBPF in a controlled manner.)
 
 --D
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  libhandle/handle.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/libhandle/handle.c b/libhandle/handle.c
-> index e6971dd..878d14d 100644
-> --- a/libhandle/handle.c
-> +++ b/libhandle/handle.c
-> @@ -73,6 +73,7 @@ fshandle_destroy(void)
->  		free(h);
->  		h = nexth;
->  	}
-> +	fdhash_head = NULL;
->  }
->  
->  int
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
