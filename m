@@ -1,70 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:9875 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751326AbdLMWpz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 17:45:55 -0500
-Date: Thu, 14 Dec 2017 09:45:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/8] xfs/068: fix variability problems in file/dir count
- output
-Message-ID: <20171213224552.GB4094@dastard>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314505158.18893.11894289091110903029.stgit@magnolia>
- <20171213222046.GA4094@dastard>
- <20171213222352.GI13436@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:58704 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750785AbdLMWtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Dec 2017 17:49:53 -0500
+Date: Wed, 13 Dec 2017 14:49:50 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.15-rc4
+Message-ID: <20171213224950.GR19219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171213222352.GI13436@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Wed, Dec 13, 2017 at 02:23:52PM -0800, Darrick J. Wong wrote:
-> On Thu, Dec 14, 2017 at 09:20:46AM +1100, Dave Chinner wrote:
-> > On Tue, Dec 12, 2017 at 10:04:11PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > In this test we use fsstress to create some number of files and then
-> > > exercise xfsdump/xfsrestore on them.  Depending on the fsstress config
-> > > we may end up with a different number of files than is hardcoded in the
-> > > golden output (particularly after adding reflink support to fsstress)
-> > > and thereby fail the test.  Since we're not really testing how many
-> > > files fsstress can create, just turn the counts into XXX/YYY.
-> > 
-> > Hmmmm. those numbers were in the golden output specifically because
-> > fsstress is supposed to be deterministic for a given random seed.
-> > What it is supposed to be testing is that xfsdump actually dumped
-> > all the files that were created, and xfs-restore was able to process
-> > them all. If either barf on a file, they'll silently skip it, and
-> > the numbers won't come out properly.
-> > 
-> > The typical class of bug this test finds is bulkstat iteration
-> > problems - if bulkstat misses an inode it shouldn't, then the
-> > xfsrestore numbers come out wrong. By making the data set
-> > non-deterministic and not checking the numbers, we end up losing the
-> > ability of this test to check bulkstat iteration and dump/restore
-> > completeness....
-> 
-> Ah, fun.  Ok, in that case I think the correct fix for this problem is
-> to turn off clonerange/deduperange in the fsstress command line so that
-> we get back to deterministic(?) counts...
+Hi Linus,
 
-Why aren't the clonerange/deduperange operations deterministic?
-Shouldn't these always do the same thing from the POV of
-xfsdump/restore?
+Here are a few more bug fixes & cleanups for 4.15-rc4.
 
-> ...unless a better solution to count the number of dirs/files and compare
-> to whatever xfsrestore says?
+--D
 
-Haven't looked recently, but there were reasons for doing it this
-way that I don't recall off the top of my head...
+The following changes since commit 373b0589dc8d58bc09c9a28d03611ae4fb216057:
 
-Cheers,
+  xfs: Properly retry failed dquot items in case of error during buffer writeback (2017-11-30 08:47:40 -0800)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.15-fixes-5
+
+for you to fetch changes up to b7e0b6ff54dd92febbb1914ab93cd6a21622e169:
+
+  xfs: make iomap_begin functions trim iomaps consistently (2017-12-08 17:51:05 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- Clean up duplicate includes
+- Remove ancient 'no-alloc' crap code that occasionally caused hard fs
+  shutdowns due to lack of proper space reservations
+- Fix regression in FIEMAP behavior when reporting xattr extents
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: remove "no-allocation" reservations for file creations
+
+Darrick J. Wong (1):
+      xfs: make iomap_begin functions trim iomaps consistently
+
+Pravin Shedge (1):
+      fs: xfs: remove duplicate includes
+
+ fs/xfs/libxfs/xfs_ialloc.c | 10 +++-------
+ fs/xfs/libxfs/xfs_ialloc.h |  1 -
+ fs/xfs/scrub/scrub.c       |  1 -
+ fs/xfs/scrub/trace.c       |  1 -
+ fs/xfs/xfs_inode.c         | 33 +++++++--------------------------
+ fs/xfs/xfs_inode.h         |  2 +-
+ fs/xfs/xfs_iomap.c         |  2 +-
+ fs/xfs/xfs_qm.c            |  4 ++--
+ fs/xfs/xfs_reflink.c       |  2 --
+ fs/xfs/xfs_symlink.c       | 15 +--------------
+ fs/xfs/xfs_trace.c         |  1 -
+ 11 files changed, 15 insertions(+), 57 deletions(-)
