@@ -1,72 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:5951 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752908AbdLMVlc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 16:41:32 -0500
-Date: Thu, 14 Dec 2017 08:41:29 +1100
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40295 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751129AbdLMWM0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 17:12:26 -0500
+Date: Thu, 14 Dec 2017 09:12:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/9] generic/381: use username fsgqa-381
-Message-ID: <20171213214129.GV4094@dastard>
-References: <20171213004519.29340-1-mcgrof@kernel.org>
- <20171213004519.29340-2-mcgrof@kernel.org>
+Subject: Re: [PATCH 4/8] xfs: fix tests to handle removal of no-alloc create
+ nonfeature
+Message-ID: <20171213221223.GZ4094@dastard>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314502196.18893.14496524309954254435.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171213004519.29340-2-mcgrof@kernel.org>
+In-Reply-To: <151314502196.18893.14496524309954254435.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Dec 12, 2017 at 04:45:11PM -0800, Luis R. Rodriguez wrote:
-> Some systems are not allowing usernames prefixed with a number now.
-> One can however use numbers as a postfix so use that.
+On Tue, Dec 12, 2017 at 10:03:42PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  README                |  2 +-
->  tests/generic/381     | 16 ++++++++--------
->  tests/generic/381.out |  4 ++--
->  3 files changed, 11 insertions(+), 11 deletions(-)
+> We're removing from XFS the ability to perform no-allocation file
+> creation.  This was added years ago because someone at SGI demanded that
+> we still be able to create (empty?) files with zero free blocks
+
+Just to correct the record, it wasn't SGI that demanded this - it
+was implemented by SGI a long, long time ago (~1998) in response to
+customer demands.
+
+> remaining so long as there were free inodes and space in existing
+> directory blocks.  This came at an unacceptable risk of ENOSPC'ing
+> midway through a transaction and shutting down the fs, so we're removing
+> it for the create case.
+
+Well, 20 years later we consider it an unacceptible risk. :P
+
+> However, some tests fail as a result, so fix them to be more flexible
+> about not failing when a dir/file creation fails due to ENOSPC.
 > 
-> diff --git a/README b/README
-> index ed69332e774e..e05142be1a87 100644
-> --- a/README
-> +++ b/README
-> @@ -20,7 +20,7 @@ _______________________
->  - run make
->  - run make install
->  - create fsgqa test user ("sudo useradd fsgqa")
-> -- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
-> +- create fsgqa-381 test user ("sudo useradd fsgqa-381")
->  	
->  ______________________
->  USING THE FSQA SUITE
-> diff --git a/tests/generic/381 b/tests/generic/381
-> index 006f0d879638..cdc29c2e029e 100755
-> --- a/tests/generic/381
-> +++ b/tests/generic/381
-> @@ -3,7 +3,7 @@
->  #
->  # Test xfs_quota when user or names beginning with digits.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-This isn't a "test names with digits" test, but "test names begining
-with digits" test.  Changing the username to not begin with digits
-invalidates the entire purpose of the test which is to ensure that
-xfs_quota can differentiate between UIDs and names beginning with
-numbers....
+Looks fine.
 
-So from that perspective, NAK.
-
-IF there are distros not allowing usernames to start with digits,
-then this test needs a _requires check and to _notrun on those
-systems.
-
-Cheers,
-
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
