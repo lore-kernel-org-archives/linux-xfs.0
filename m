@@ -1,64 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10718 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751076AbdLMXvR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:51:17 -0500
-Date: Thu, 14 Dec 2017 10:44:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 8/8] xfs/068: fix clonerange problems in file/dir
- count output
-Message-ID: <20171213234404.GF5858@dastard>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314505158.18893.11894289091110903029.stgit@magnolia>
- <20171213232805.GI6896@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42853 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750751AbdLMX41 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:56:27 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlIX7099983
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:27 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2eue5b017n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:27 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNuPUh030285
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:26 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBDNuPXp007848
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:25 GMT
+Subject: [PATCH v10.1 00/15] xfs: online scrub xref support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 13 Dec 2017 15:56:22 -0800
+Message-ID: <151320938254.30154.1046660005648421683.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171213232805.GI6896@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Dec 13, 2017 at 03:28:05PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In this test we use a fixed sequence of operations in fsstress to create
-> some number of files and dirs and then exercise xfsdump/xfsrestore on
-> them.  Since clonerange/deduperange are not supported on all xfs
-> configurations, detect if they're in fsstress and disable them so that
-> we always execute exactly the same sequence of operations no matter how
-> the filesystem is configured.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/068 |    8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/tests/xfs/068 b/tests/xfs/068
-> index 7151e28..f95a539 100755
-> --- a/tests/xfs/068
-> +++ b/tests/xfs/068
-> @@ -43,6 +43,14 @@ trap "rm -rf $tmp.*; exit \$status" 0 1 2 3 15
->  _supported_fs xfs
->  _supported_os Linux
->  
-> +# Remove fsstress commands that aren't supported on all xfs configs
-> +if $FSSTRESS_PROG | grep -q clonerange; then
-> +	FSSTRESS_AVOID="-f clonerange=0 $FSSTRESS_AVOID"
-> +fi
-> +if $FSSTRESS_PROG | grep -q deduperange; then
-> +	FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
-> +fi
-> +
+Hi all,
 
-I'd put this inside _create_dumpdir_stress_num as it's supposed to
-DTRT for the dump/restore that follows. Otherwise looks fine.
+This is the tenth revision of a patchset that adds to XFS kernel
+support for online metadata scrubbing and repair.  There aren't any
+on-disk format changes.  The overview of the online scrub functionality
+isn't any different than it was with the first kernel series, so I'll
+dive into what's in this set.
 
-Cheers,
+Today's submission is the third of four parts; it adds to the various
+metadata scrubbers the ability to cross-reference other metadata.  If
+a given record has a corresponding record somewhere else (e.g. each
+inobt record has a corresponding rmapbt record for inodes) or lacks a
+corresponding record elsewhere (e.g. each bmbt record does /not/ match
+to any bnobt records) then we can be far more certain of the
+filesystem's correctness.  We try to augment each scrubber with as many
+cross-reference checks as we possibly can, though we are careful to
+avoid deadlocks by taking locks in the wrong order.  In particular, we
+cannot check rmap records against inode bmbts (we lock inode and then
+AG); we must only check inode bmbt records against the rmap.  This means
+that the userspace driver program must be careful not to claim that the
+scrub is finished unless it has scanned everything.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.15-rc3.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to eat your data.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
