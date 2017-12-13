@@ -1,27 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44813 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750886AbdLMX7A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:00 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlJfE100069
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:59 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2eue5b01mk-1
+Received: from userp2120.oracle.com ([156.151.31.85]:39658 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751029AbdLMX7G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:06 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNl9TP024434
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:06 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2eudq605mf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:59 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNwwSJ015334
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:06 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNx4Ce005608
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:58 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBDNwwgl026829
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:58 GMT
-Subject: [PATCH 07/13] xfs: create structure verifier function for shortform
- xattrs
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:05 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNx4QJ012018
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:04 GMT
+Subject: [PATCH 08/13] xfs: create structure verifier function for short
+ form symlinks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Dec 2017 15:58:55 -0800
-Message-ID: <151320953564.30654.16063573622569255317.stgit@magnolia>
+Date: Wed, 13 Dec 2017 15:59:01 -0800
+Message-ID: <151320954167.30654.14171605803183811747.stgit@magnolia>
 In-Reply-To: <151320949282.30654.14805160700975182459.stgit@magnolia>
 References: <151320949282.30654.14805160700975182459.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,107 +35,68 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a function to perform structure verification for short form
-extended attributes.
+Create a function to check the structure of short form symlink targets.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |   70 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_attr_leaf.h |    1 +
- 2 files changed, 71 insertions(+)
+ fs/xfs/libxfs/xfs_shared.h         |    1 +
+ fs/xfs/libxfs/xfs_symlink_remote.c |   36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 1274872..a5033f0 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -873,6 +873,76 @@ xfs_attr_shortform_allfit(
- 	return xfs_attr_shortform_bytesfit(dp, bytes);
- }
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index c6f4eb4..67ccb1a 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -143,5 +143,6 @@ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
+ 			uint32_t size, struct xfs_buf *bp);
+ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++xfs_failaddr_t xfs_symlink_shortform_verify(struct xfs_inode *ip);
  
-+/* Verify the consistency of an inline attribute fork. */
+ #endif /* __XFS_SHARED_H__ */
+diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+index b6ef6cb..5d9642e 100644
+--- a/fs/xfs/libxfs/xfs_symlink_remote.c
++++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+@@ -210,3 +210,39 @@ xfs_symlink_local_to_remote(
+ 	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsymlink_hdr) +
+ 					ifp->if_bytes - 1);
+ }
++
++/* Verify the consistency of an inline symlink. */
 +xfs_failaddr_t
-+xfs_attr_shortform_verify(
-+	struct xfs_inode		*ip)
++xfs_symlink_shortform_verify(
++	struct xfs_inode	*ip)
 +{
-+	struct xfs_attr_shortform	*sfp;
-+	struct xfs_attr_sf_entry	*sfep;
-+	struct xfs_attr_sf_entry	*next_sfep;
-+	char				*endp;
-+	struct xfs_ifork		*ifp;
-+	int				i;
-+	int				size;
++	char			*sfp;
++	char			*endp;
++	struct xfs_ifork	*ifp;
++	int			size;
 +
-+	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
-+	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
-+	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
++	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	sfp = (char *)ifp->if_u1.if_data;
 +	size = ifp->if_bytes;
++	endp = sfp + size;
 +
-+	/*
-+	 * Give up if the attribute is way too short.
-+	 */
-+	if (size < sizeof(struct xfs_attr_sf_hdr))
++	/* Zero length symlinks can exist while we're deleting a remote one. */
++	if (size == 0)
++		return NULL;
++
++	/* No negative sizes or overly long symlink targets. */
++	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
 +		return __this_address;
 +
-+	endp = (char *)sfp + size;
-+
-+	/* Check all reported entries */
-+	sfep = &sfp->list[0];
-+	for (i = 0; i < sfp->hdr.count; i++) {
-+		/*
-+		 * struct xfs_attr_sf_entry has a variable length.
-+		 * Check the fixed-offset parts of the structure are
-+		 * within the data buffer.
-+		 */
-+		if (((char *)sfep + sizeof(*sfep)) >= endp)
++	/* No NULLs in the target either. */
++	for (; sfp < endp; sfp++) {
++		if (*sfp == 0)
 +			return __this_address;
-+
-+		/* Don't allow names with known bad length. */
-+		if (sfep->namelen == 0)
-+			return __this_address;
-+
-+		/*
-+		 * Check that the variable-length part of the structure is
-+		 * within the data buffer.  The next entry starts after the
-+		 * name component, so nextentry is an acceptable test.
-+		 */
-+		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
-+		if ((char *)next_sfep > endp)
-+			return __this_address;
-+
-+		/*
-+		 * Check for unknown flags.  Short form doesn't support
-+		 * the incomplete or local bits.
-+		 */
-+		if (sfep->flags & ~(XFS_ATTR_ROOT | XFS_ATTR_SECURE))
-+			return __this_address;
-+
-+		/* Check for invalid namespace combinations. */
-+		if ((sfep->flags & XFS_ATTR_ROOT) &&
-+		    (sfep->flags & XFS_ATTR_SECURE))
-+			return __this_address;
-+
-+		sfep = next_sfep;
 +	}
-+	if ((void *)sfep != (void *)endp)
-+		return __this_address;
 +
++	/* We /did/ null-terminate the buffer, right? */
++	if (*endp != 0)
++		return __this_address;
 +	return NULL;
 +}
-+
- /*
-  * Convert a leaf attribute list to shortform attribute list
-  */
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index 894124e..4da08af 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -53,6 +53,7 @@ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
- int	xfs_attr_shortform_remove(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
-+xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
- void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
- 
- /*
 
