@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45597 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:45719 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751326AbdLMX7r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:47 -0500
+        with ESMTP id S1751305AbdLMX7s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:48 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlIfh099986
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:46 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2eue5b0226-1
+        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlJ5e100068
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:48 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2eue5b0264-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:46 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNvQMq023680
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:47 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNuiLC001045
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:57:27 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNvQQa011313
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:57:26 GMT
-Subject: [PATCH 10/15] xfs: cross-reference inode btrees during scrub
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:44 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNuhId017634
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:43 GMT
+Subject: [PATCH 03/15] xfs: add scrub cross-referencing helpers for the rmap
+ btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Dec 2017 15:57:23 -0800
-Message-ID: <151320944342.30154.8949174634358427217.stgit@magnolia>
+Date: Wed, 13 Dec 2017 15:56:41 -0800
+Message-ID: <151320940094.30154.1283303553948424575.stgit@magnolia>
 In-Reply-To: <151320938254.30154.1046660005648421683.stgit@magnolia>
 References: <151320938254.30154.1046660005648421683.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,257 +35,95 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cross-reference the inode btrees with the other metadata when we
-scrub the filesystem.
+Add a couple of functions to the rmap btrees that will be used
+to cross-reference metadata against the rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/agheader.c |   25 +++++++++++++++++++
- fs/xfs/scrub/alloc.c    |    3 ++
- fs/xfs/scrub/bmap.c     |    2 +
- fs/xfs/scrub/ialloc.c   |   63 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/inode.c    |    2 +
- fs/xfs/scrub/refcount.c |    2 +
- fs/xfs/scrub/rmap.c     |    6 ++++
- fs/xfs/scrub/scrub.h    |    6 ++++
- 8 files changed, 109 insertions(+)
+ fs/xfs/libxfs/xfs_rmap.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    5 ++++
+ 2 files changed, 63 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index c7bfa20..1c2d521 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -119,6 +119,8 @@ xfs_scrub_superblock_xref(
- 		return;
- 
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, 1);
- 
- 	/* scrub teardown will take care of sc->sa for us */
- }
-@@ -475,6 +477,9 @@ xfs_scrub_agf_xref(
- 		break;
- 	}
- 
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, 1);
-+
- 	/* scrub teardown will take care of sc->sa for us */
- }
- 
-@@ -579,6 +584,8 @@ xfs_scrub_agfl_block_xref(
- 	xfs_agblock_t			bno)
- {
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, 1);
- }
- 
- /* Scrub an AGFL block. */
-@@ -633,6 +640,8 @@ xfs_scrub_agfl_xref(
- 		return;
- 
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, 1);
- 
- 	/*
- 	 * Scrub teardown will take care of sc->sa for us.  Leave sc->sa
-@@ -713,7 +722,11 @@ xfs_scrub_agi_xref(
- 	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_btree_cur		**pcur;
-+	struct xfs_agi			*agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
- 	xfs_agblock_t			bno;
-+	xfs_agino_t			icount;
-+	xfs_agino_t			freecount;
- 	int				error;
- 
- 	bno = XFS_AGI_BLOCK(mp);
-@@ -723,6 +736,18 @@ xfs_scrub_agi_xref(
- 		return;
- 
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, 1);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, 1);
-+
-+	/* Check agi_count/agi_freecount */
-+	pcur = &sc->sa.ino_cur;
-+	if (*pcur) {
-+		error = xfs_ialloc_count_inodes(*pcur, &icount, &freecount);
-+		if (xfs_scrub_should_xref(sc, &error, pcur) &&
-+		    (be32_to_cpu(agi->agi_count) != icount ||
-+		     be32_to_cpu(agi->agi_freecount) != freecount))
-+			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agi_bp);
-+	}
- 
- 	/* scrub teardown will take care of sc->sa for us */
- }
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 9a28e3d..cd709f4 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -94,6 +94,9 @@ xfs_scrub_allocbt_xref(
- 			xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
- 		break;
- 	}
-+
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, len);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, len);
- }
- 
- /* Scrub a bnobt/cntbt record. */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 7ce135b..a0274d3 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -134,6 +134,8 @@ xfs_scrub_bmap_extent_xref(
- 		return;
- 
- 	xfs_scrub_xref_not_free(info->sc, &sa.bno_cur, agbno, len);
-+	xfs_scrub_xref_not_inodes(info->sc, &sa.ino_cur, agbno, len);
-+	xfs_scrub_xref_not_inodes(info->sc, &sa.fino_cur, agbno, len);
- 
- 	xfs_scrub_ag_free(info->sc, &sa);
- }
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 4c4ef17c..da07393 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -67,7 +67,29 @@ xfs_scrub_iallocbt_chunk_xref(
- 	xfs_agblock_t			bno,
- 	xfs_extlen_t			len)
- {
-+	struct xfs_btree_cur		**pcur;
-+	bool				has_irec;
-+	int				error;
-+
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
-+
-+	/*
-+	 * If we're checking the finobt, cross-reference with the inobt.
-+	 * Otherwise we're checking the inobt; if there is an finobt,
-+	 * make sure we have a record or not depending on freecount.
-+	 */
-+	if (sc->sm->sm_type == XFS_SCRUB_TYPE_FINOBT)
-+		pcur = &sc->sa.ino_cur;
-+	else
-+		pcur = &sc->sa.fino_cur;
-+	if (*pcur) {
-+		error = xfs_ialloc_has_inode_record(*pcur,
-+				agino, agino, &has_irec);
-+		if (xfs_scrub_should_xref(sc, &error, pcur) &&
-+		    ((irec->ir_freecount > 0 && !has_irec) ||
-+		     (irec->ir_freecount == 0 && has_irec)))
-+			xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
-+	}
- }
- 
- /* Is this chunk worth checking? */
-@@ -351,3 +373,44 @@ xfs_scrub_finobt(
- {
- 	return xfs_scrub_iallocbt(sc, XFS_BTNUM_FINO);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 50db920..ea78ec3 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2387,3 +2387,61 @@ xfs_rmap_compare(
+ 	else
+ 		return 0;
  }
 +
-+static inline void
-+__xfs_scrub_xref_check_inodes(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		**pcur,
-+	xfs_agblock_t			bno,
-+	xfs_extlen_t			len,
-+	bool				fs_ok)
++/* Is there a record covering a given extent? */
++int
++xfs_rmap_has_record(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	bool			*exists)
 +{
-+	bool				has_inodes;
-+	int				error;
++	union xfs_btree_irec	low;
++	union xfs_btree_irec	high;
 +
-+	if (!(*pcur))
-+		return;
++	memset(&low, 0, sizeof(low));
++	low.r.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.r.rm_startblock = bno + len - 1;
 +
-+	error = xfs_ialloc_has_inodes_at_extent(*pcur, bno, len, &has_inodes);
-+	if (xfs_scrub_should_xref(sc, &error, pcur) && has_inodes != fs_ok)
-+		xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
++	return xfs_btree_has_record(cur, &low, &high, exists);
 +}
 +
-+/* xref check that the extent is not covered by inodes */
-+void
-+xfs_scrub_xref_not_inodes(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		**pcur,
-+	xfs_agblock_t			bno,
-+	xfs_extlen_t			len)
++/* Is there a record covering a given extent? */
++int
++xfs_rmap_record_exists(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo,
++	bool			*has_rmap)
 +{
-+	__xfs_scrub_xref_check_inodes(sc, pcur, bno, len, false);
-+}
++	uint64_t		owner;
++	uint64_t		offset;
++	unsigned int		flags;
++	int			stat;
++	struct xfs_rmap_irec	irec;
++	int			error;
 +
-+/* xref check that the extent is covered by inodes */
-+void
-+xfs_scrub_xref_are_inodes(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		**pcur,
-+	xfs_agblock_t			bno,
-+	xfs_extlen_t			len)
-+{
-+	__xfs_scrub_xref_check_inodes(sc, pcur, bno, len, true);
-+}
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index e6038c1..bb5172c 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -597,6 +597,8 @@ xfs_scrub_inode_xref(
- 		return;
- 
- 	xfs_scrub_xref_not_free(sc, &sa.bno_cur, agbno, 1);
-+	xfs_scrub_xref_are_inodes(sc, &sc->sa.ino_cur, agbno, 1);
-+	xfs_scrub_xref_are_inodes(sc, &sc->sa.fino_cur, agbno, 1);
- 
- 	xfs_scrub_ag_free(sc, &sa);
- }
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 19c303d..8add281 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -59,6 +59,8 @@ xfs_scrub_refcountbt_xref(
- 	xfs_nlink_t			refcount)
- {
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, len);
-+	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, len);
- }
- 
- /* Scrub a refcountbt record. */
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 5c9646b..8d49556 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -61,6 +61,12 @@ xfs_scrub_rmapbt_xref(
- 	xfs_extlen_t			len = irec->rm_blockcount;
- 
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
-+	if (irec->rm_owner == XFS_RMAP_OWN_INODES) {
-+		xfs_scrub_xref_are_inodes(sc, &sc->sa.ino_cur, bno, len);
-+	} else {
-+		xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, len);
-+		xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, len);
++	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
++
++	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*has_rmap = false;
++		return 0;
 +	}
- }
++
++	error = xfs_rmap_get_rec(cur, &irec, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*has_rmap = false;
++		return 0;
++	}
++
++	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
++		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 0fcd5b1..380e53b 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -233,5 +233,10 @@ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
+ union xfs_btree_rec;
+ int xfs_rmap_btrec_to_irec(union xfs_btree_rec *rec,
+ 		struct xfs_rmap_irec *irec);
++int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, bool *exists);
++int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
  
- /* Scrub an rmapbt record. */
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index e75ff0e..768df35 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -127,5 +127,11 @@ xfs_scrub_quota(struct xfs_scrub_context *sc)
- void xfs_scrub_xref_not_free(struct xfs_scrub_context *sc,
- 		struct xfs_btree_cur **pcur, xfs_agblock_t bno,
- 		xfs_extlen_t len);
-+void xfs_scrub_xref_not_inodes(struct xfs_scrub_context *sc,
-+		struct xfs_btree_cur **pcur, xfs_agblock_t bno,
-+		xfs_extlen_t len);
-+void xfs_scrub_xref_are_inodes(struct xfs_scrub_context *sc,
-+		struct xfs_btree_cur **pcur, xfs_agblock_t bno,
-+		xfs_extlen_t len);
- 
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
+ #endif	/* __XFS_RMAP_H__ */
 
