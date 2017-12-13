@@ -1,50 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:33648 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752909AbdLMOEd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 09:04:33 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vBDE4K5Z104507
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 09:04:32 -0500
-Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2eu5k5g94m-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 09:04:32 -0500
-Received: from localhost
-        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Wed, 13 Dec 2017 14:04:29 -0000
-Subject: Re: [PATCH] xfs: include the XFS magic number in magic.h
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Date: Wed, 13 Dec 2017 09:04:25 -0500
-In-Reply-To: <20171213025928.GZ5858@dastard>
-References: <1513088469.3476.48.camel@linux.vnet.ibm.com>
-         <20171212142615.GA25327@infradead.org>
-         <1513089296.3476.52.camel@linux.vnet.ibm.com>
-         <20171212143647.GA10887@infradead.org>
-         <1513091096.3476.66.camel@linux.vnet.ibm.com>
-         <20171212233031.GX5858@dastard>
-         <1513122931.3476.97.camel@linux.vnet.ibm.com>
-         <20171213001342.GY5858@dastard>
-         <1513128072.3476.121.camel@linux.vnet.ibm.com>
-         <20171213025928.GZ5858@dastard>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1513173865.7839.3.camel@linux.vnet.ibm.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:60150 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753144AbdLMVuQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 16:50:16 -0500
+Date: Thu, 14 Dec 2017 08:50:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/9] tests/xfs/group: add group for tests which require a
+ logdev
+Message-ID: <20171213215013.GW4094@dastard>
+References: <20171213004519.29340-1-mcgrof@kernel.org>
+ <20171213004519.29340-6-mcgrof@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171213004519.29340-6-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2017-12-13 at 13:59 +1100, Dave Chinner wrote:
+On Tue, Dec 12, 2017 at 04:45:15PM -0800, Luis R. Rodriguez wrote:
+> This should make it easy to run these separately or exclude them.
 
-> IOWs, if you need to identify a filesystem *type*, using internal
-> magic numbers is not the way to do it. selinux, for example, checks
-> sb->s_type->name quite a lot....
+These should notrun automatically if you don't have an external log
+device configured. Every test should either work with an external
+logdev or explicitly notrun them, so I'm not sure what you're trying
+to acheive here....
 
-Thanks, this works fine.  Is there a defined max name length?
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  tests/xfs/group | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index d23006041ea2..cce98847de53 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -42,7 +42,7 @@
+>  042 fsr ioctl auto
+>  043 dump ioctl tape
+>  044 other auto
+> -045 other auto quick
+> +045 other auto quick logdev
 
-Mimi
+This change also looks wrong because:
 
+xfs/044  [not run] This test requires a valid $SCRATCH_LOGDEV
+xfs/045 1s ... 1s
+
+xfs/044 is the external logdev test, and xfs/045 is a
+duplicate uuid mount test that has nothign to do with external
+log devices.
+
+And, FWIW, we already have a "log" group to indicate tests that
+exercise the log, and that mostly includes all the tests that use
+external logs. It would be better to tag all the tests that exercise
+the log with "log" rather than create some new group that doesn't
+really provide any added benefit....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
