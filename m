@@ -1,109 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37272 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752910AbdLMAp0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Dec 2017 19:45:26 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH 1/9] generic/381: use username fsgqa-381
-Date: Tue, 12 Dec 2017 16:45:11 -0800
-Message-Id: <20171213004519.29340-2-mcgrof@kernel.org>
-In-Reply-To: <20171213004519.29340-1-mcgrof@kernel.org>
-References: <20171213004519.29340-1-mcgrof@kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:63335 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750749AbdLMBKc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Dec 2017 20:10:32 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH 00/11] fs: use freeze_fs on suspend/hibernate
+Date: Wed, 13 Dec 2017 02:09:49 +0100
+Message-ID: <7282138.2afjHhBgNp@aspire.rjw.lan>
+In-Reply-To: <20171129232356.28296-1-mcgrof@kernel.org>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, jack@suse.cz, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Some systems are not allowing usernames prefixed with a number now.
-One can however use numbers as a postfix so use that.
+On Thursday, November 30, 2017 12:23:45 AM CET Luis R. Rodriguez wrote:
+> This is a followup from the original RFC which proposed to start
+> to kill kthread freezing all together [0]. Instead of going straight
+> out to the jugular for kthread freezing this series only addresses
+> killing freezer calls on filesystems which implement freeze_fs, after
+> we let the kernel freeze these filesystems for us on suspend.
+> 
+> This approach puts on a slow but steady path towards the original goal
+> though. Each subsystem could look for similar solutions. Even with
+> filesystems we're not all done yet, after this we'll still have to
+> decide what to do about filesystems which do not implement freeze_fs().
+> 
+> Motivation and problem:
+> 
+> kthreads have some semantics for freezing, which helps the kernel
+> freeze them when a system is going to suspend or hibernation. These
+> semantics are not well defined though, and it actually turns out
+> pretty hard to get it right.
+> 
+> Without a proper solution suspend and hibernation are fragile on filesystems,
+> it can easily break suspend and fixing such issues are in no way trivial [1]
+> [2].
+> 
+> Proposed solution:
+> 
+> Instead of fixing such semantics and trying to get all filesystems to do it
+> right, we can easily do away with all freezing calls if the filesystem
+> implements a proper freeze_fs() callback. The following 9 filesystems have
+> freeze_fs() implemented as such we can let the kernel issue the callback upon
+> suspend and thaw on resume automatically on our behalf.
+> 
+>   o xfs
+>   o reiserfs
+>   o nilfs2
+>   o jfs
+>   o f2fs
+>   o ext4
+>   o ext2
+>   o btrfs
+> 
+> Of these, the following have freezer helpers, which can then be removed
+> after the kernel automaticaly calls freeze_fs for us on suspend:
+> 
+>   o xfs
+>   o nilfs2
+>   o jfs
+>   o f2fs
+>   o ext4
+> 
+> I've tested this on a system with ext4 and XFS, and have let 0-day go at
+> without issues. I have branches availabe for linux-next [3] and Linus'
+> latest tree [4].
+> 
+> Further testing, thoughts, reviews, flames are all equally appreciated.
+> 
+> [0] https://lkml.kernel.org/r/20171003185313.1017-1-mcgrof@kernel.org
+> [1] https://bugzilla.suse.com/show_bug.cgi?id=1043449
+> [2] https://lkml.kernel.org/r/20171113103139.GA18936@yu-chen.sh.intel.com
+> [3] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20171129-fs-freeze-cleanup
+> [4] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20171129-fs-freeze-cleanup
+> 
+> Luis R. Rodriguez (11):
+>   fs: provide unlocked helper for freeze_super()
+>   fs: provide unlocked helper thaw_super()
+>   fs: add frozen sb state helpers
+>   fs: distinguish between user initiated freeze and kernel initiated
+>     freeze
+>   fs: add iterate_supers_excl() and iterate_supers_reverse_excl()
+>   fs: freeze on suspend and thaw on resume
+>   xfs: remove not needed freezing calls
+>   ext4: remove not needed freezing calls
+>   f2fs: remove not needed freezing calls
+>   nilfs2: remove not needed freezing calls
+>   jfs: remove not needed freezing calls
+> 
+>  fs/ext4/ext4_jbd2.c    |   2 +-
+>  fs/ext4/super.c        |   2 -
+>  fs/f2fs/gc.c           |   5 +-
+>  fs/f2fs/segment.c      |   6 +-
+>  fs/jfs/jfs_logmgr.c    |  11 +-
+>  fs/jfs/jfs_txnmgr.c    |  31 ++---
+>  fs/nilfs2/segment.c    |  48 ++++----
+>  fs/super.c             | 320 ++++++++++++++++++++++++++++++++++++++++---------
+>  fs/xfs/xfs_trans.c     |   2 +-
+>  fs/xfs/xfs_trans_ail.c |   7 +-
+>  include/linux/fs.h     |  63 +++++++++-
+>  kernel/power/process.c |  15 ++-
+>  12 files changed, 378 insertions(+), 134 deletions(-)
+> 
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- README                |  2 +-
- tests/generic/381     | 16 ++++++++--------
- tests/generic/381.out |  4 ++--
- 3 files changed, 11 insertions(+), 11 deletions(-)
+I'm assuming an update of this to be posted due to the comments from Jan
+on patch [3/11] and patch [7/11] probably.
 
-diff --git a/README b/README
-index ed69332e774e..e05142be1a87 100644
---- a/README
-+++ b/README
-@@ -20,7 +20,7 @@ _______________________
- - run make
- - run make install
- - create fsgqa test user ("sudo useradd fsgqa")
--- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
-+- create fsgqa-381 test user ("sudo useradd fsgqa-381")
- 	
- ______________________
- USING THE FSQA SUITE
-diff --git a/tests/generic/381 b/tests/generic/381
-index 006f0d879638..cdc29c2e029e 100755
---- a/tests/generic/381
-+++ b/tests/generic/381
-@@ -3,7 +3,7 @@
- #
- # Test xfs_quota when user or names beginning with digits.
- # For example, create a 'limit' for a user or group named
--# '12345678-abcd', then query this user and group.
-+# 'fsgqa-381', then query this user and group.
- #
- #-----------------------------------------------------------------------
- # Copyright (c) 2015 Red Hat Inc. All Rights Reserved.
-@@ -53,9 +53,9 @@ _require_scratch
- _require_quota
- _require_xfs_quota_foreign
- 
--# need user and group named 123456-fsgqa
--_require_user 123456-fsgqa
--_require_group 123456-fsgqa
-+# need user and group named fsgqa-381
-+_require_user fsgqa-381
-+_require_group fsgqa-381
- 
- _scratch_mkfs >/dev/null 2>&1
- _qmount_option "usrquota,grpquota"
-@@ -63,17 +63,17 @@ _qmount
- 
- # user test
- echo "== user test =="
--$XFS_QUOTA_PROG -x -c "limit -u bsoft=100m bhard=200m 123456-fsgqa" $SCRATCH_MNT
-+$XFS_QUOTA_PROG -x -c "limit -u bsoft=100m bhard=200m fsgqa-381" $SCRATCH_MNT
- echo "=== quota command output ==="
--$XFS_QUOTA_PROG -c "quota -u -b -N -v 123456-fsgqa" $SCRATCH_MNT | _filter_quota
-+$XFS_QUOTA_PROG -c "quota -u -b -N -v fsgqa-381" $SCRATCH_MNT | _filter_quota
- echo "=== report command output ==="
- $XFS_QUOTA_PROG -x -c "report -u -b -N" $SCRATCH_MNT | grep -v "^root " | _filter_quota
- 
- # group test
- echo "== group test =="
--$XFS_QUOTA_PROG -x -c "limit -g bsoft=100m bhard=200m 123456-fsgqa" $SCRATCH_MNT
-+$XFS_QUOTA_PROG -x -c "limit -g bsoft=100m bhard=200m fsgqa-381" $SCRATCH_MNT
- echo "=== quota command output ==="
--$XFS_QUOTA_PROG -c "quota -g -b -N -v 123456-fsgqa" $SCRATCH_MNT | _filter_quota
-+$XFS_QUOTA_PROG -c "quota -g -b -N -v fsgqa-381 " $SCRATCH_MNT | _filter_quota
- echo "=== report command output ==="
- $XFS_QUOTA_PROG -x -c "report -u -b -N" $SCRATCH_MNT | grep -v "^root " | _filter_quota
- 
-diff --git a/tests/generic/381.out b/tests/generic/381.out
-index 50a1a27b0167..cc0ee4a1bb95 100644
---- a/tests/generic/381.out
-+++ b/tests/generic/381.out
-@@ -3,11 +3,11 @@ QA output created by 381
- === quota command output ===
- SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
- === report command output ===
--123456-fsgqa 0 102400 204800 00 [--------]
-+fsgqa-381 0 102400 204800 00 [--------]
- 
- == group test ==
- === quota command output ===
- SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
- === report command output ===
--123456-fsgqa 0 102400 204800 00 [--------]
-+fsgqa-381 0 102400 204800 00 [--------]
- 
--- 
-2.15.0
+Is there anything else that needs to be addressed?
+
+Thanks,
+Rafael
+
 
