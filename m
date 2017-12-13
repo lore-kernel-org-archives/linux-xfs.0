@@ -1,51 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40295 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:1156 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751129AbdLMWM0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 17:12:26 -0500
-Date: Thu, 14 Dec 2017 09:12:23 +1100
+        by vger.kernel.org with ESMTP id S1751128AbdLMWUt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 17:20:49 -0500
+Date: Thu, 14 Dec 2017 09:20:46 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/8] xfs: fix tests to handle removal of no-alloc create
- nonfeature
-Message-ID: <20171213221223.GZ4094@dastard>
+Subject: Re: [PATCH 8/8] xfs/068: fix variability problems in file/dir count
+ output
+Message-ID: <20171213222046.GA4094@dastard>
 References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314502196.18893.14496524309954254435.stgit@magnolia>
+ <151314505158.18893.11894289091110903029.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151314502196.18893.14496524309954254435.stgit@magnolia>
+In-Reply-To: <151314505158.18893.11894289091110903029.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Dec 12, 2017 at 10:03:42PM -0800, Darrick J. Wong wrote:
+On Tue, Dec 12, 2017 at 10:04:11PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We're removing from XFS the ability to perform no-allocation file
-> creation.  This was added years ago because someone at SGI demanded that
-> we still be able to create (empty?) files with zero free blocks
+> In this test we use fsstress to create some number of files and then
+> exercise xfsdump/xfsrestore on them.  Depending on the fsstress config
+> we may end up with a different number of files than is hardcoded in the
+> golden output (particularly after adding reflink support to fsstress)
+> and thereby fail the test.  Since we're not really testing how many
+> files fsstress can create, just turn the counts into XXX/YYY.
 
-Just to correct the record, it wasn't SGI that demanded this - it
-was implemented by SGI a long, long time ago (~1998) in response to
-customer demands.
+Hmmmm. those numbers were in the golden output specifically because
+fsstress is supposed to be deterministic for a given random seed.
+What it is supposed to be testing is that xfsdump actually dumped
+all the files that were created, and xfs-restore was able to process
+them all. If either barf on a file, they'll silently skip it, and
+the numbers won't come out properly.
 
-> remaining so long as there were free inodes and space in existing
-> directory blocks.  This came at an unacceptable risk of ENOSPC'ing
-> midway through a transaction and shutting down the fs, so we're removing
-> it for the create case.
+The typical class of bug this test finds is bulkstat iteration
+problems - if bulkstat misses an inode it shouldn't, then the
+xfsrestore numbers come out wrong. By making the data set
+non-deterministic and not checking the numbers, we end up losing the
+ability of this test to check bulkstat iteration and dump/restore
+completeness....
 
-Well, 20 years later we consider it an unacceptible risk. :P
+Cheers,
 
-> However, some tests fail as a result, so fix them to be more flexible
-> about not failing when a dir/file creation fails due to ENOSPC.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Looks fine.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
