@@ -1,91 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37139 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750745AbdLMXAy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Dec 2017 18:00:54 -0500
-Date: Thu, 14 Dec 2017 00:00:52 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 5/9] tests/xfs/group: add group for tests which require a
- logdev
-Message-ID: <20171213230052.GJ16026@wotan.suse.de>
-References: <20171213004519.29340-1-mcgrof@kernel.org>
- <20171213004519.29340-6-mcgrof@kernel.org>
- <20171213215013.GW4094@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:56090 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750751AbdLMXRy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:17:54 -0500
+Date: Wed, 13 Dec 2017 15:17:45 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 8/8] xfs/068: fix variability problems in file/dir count
+ output
+Message-ID: <20171213231745.GS19219@magnolia>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314505158.18893.11894289091110903029.stgit@magnolia>
+ <20171213222046.GA4094@dastard>
+ <20171213222352.GI13436@magnolia>
+ <20171213224552.GB4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171213215013.GW4094@dastard>
+In-Reply-To: <20171213224552.GB4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Dec 14, 2017 at 08:50:13AM +1100, Dave Chinner wrote:
-> On Tue, Dec 12, 2017 at 04:45:15PM -0800, Luis R. Rodriguez wrote:
-> > This should make it easy to run these separately or exclude them.
-> 
-> These should notrun automatically if you don't have an external log
-> device configured. Every test should either work with an external
-> logdev or explicitly notrun them, so I'm not sure what you're trying
-> to acheive here....
-
-The way I'm splitting up tests is one first run with a basic xfs section
-on a configuration file, with no external log, which pretty much runs all
-tests but excludes all which require external or funky configurations.
-
-A secondary pass then goes through these extra groups and then runs tests
-only for the previously excluded groups but with their own respective
-section. So for instance in this case I have:
-
-[xfs]
-....
-[logdev_xfs]
-...
-
-Automatic detection if the requirements are met is fine, but this doesn't 
-let me easily use say:
-
-	./check -s logdev_xfs -g logdev
-
+On Thu, Dec 14, 2017 at 09:45:53AM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 02:23:52PM -0800, Darrick J. Wong wrote:
+> > On Thu, Dec 14, 2017 at 09:20:46AM +1100, Dave Chinner wrote:
+> > > On Tue, Dec 12, 2017 at 10:04:11PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > In this test we use fsstress to create some number of files and then
+> > > > exercise xfsdump/xfsrestore on them.  Depending on the fsstress config
+> > > > we may end up with a different number of files than is hardcoded in the
+> > > > golden output (particularly after adding reflink support to fsstress)
+> > > > and thereby fail the test.  Since we're not really testing how many
+> > > > files fsstress can create, just turn the counts into XXX/YYY.
+> > > 
+> > > Hmmmm. those numbers were in the golden output specifically because
+> > > fsstress is supposed to be deterministic for a given random seed.
+> > > What it is supposed to be testing is that xfsdump actually dumped
+> > > all the files that were created, and xfs-restore was able to process
+> > > them all. If either barf on a file, they'll silently skip it, and
+> > > the numbers won't come out properly.
+> > > 
+> > > The typical class of bug this test finds is bulkstat iteration
+> > > problems - if bulkstat misses an inode it shouldn't, then the
+> > > xfsrestore numbers come out wrong. By making the data set
+> > > non-deterministic and not checking the numbers, we end up losing the
+> > > ability of this test to check bulkstat iteration and dump/restore
+> > > completeness....
 > > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> > ---
-> >  tests/xfs/group | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index d23006041ea2..cce98847de53 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -42,7 +42,7 @@
-> >  042 fsr ioctl auto
-> >  043 dump ioctl tape
-> >  044 other auto
-> > -045 other auto quick
-> > +045 other auto quick logdev
+> > Ah, fun.  Ok, in that case I think the correct fix for this problem is
+> > to turn off clonerange/deduperange in the fsstress command line so that
+> > we get back to deterministic(?) counts...
 > 
-> This change also looks wrong because:
+> Why aren't the clonerange/deduperange operations deterministic?
+> Shouldn't these always do the same thing from the POV of
+> xfsdump/restore?
+
+The operations themselves are deterministic, but adding the two commands
+for clone & dedupe changed the size of the ops table, which means that
+fsstress pursues a different sequence of operations for a given nproc
+and seed input.  Furthermore, the outcome of the operations will differ
+depending on whether or not the xfs supports reflink, because a
+clonerange that fails with EOPNOTSUPP causes the commands' frequency to
+be zeroed in the command table.
+
+--D
+
+> > ...unless a better solution to count the number of dirs/files and compare
+> > to whatever xfsrestore says?
 > 
-> xfs/044  [not run] This test requires a valid $SCRATCH_LOGDEV
-> xfs/045 1s ... 1s
+> Haven't looked recently, but there were reasons for doing it this
+> way that I don't recall off the top of my head...
 > 
-> xfs/044 is the external logdev test, and xfs/045 is a
-> duplicate uuid mount test that has nothign to do with external
-> log devices.
-
-I see...
-
-> And, FWIW, we already have a "log" group to indicate tests that
-> exercise the log, and that mostly includes all the tests that use
-> external logs. It would be better to tag all the tests that exercise
-> the log with "log" rather than create some new group that doesn't
-> really provide any added benefit....
-
-So for my case would one better goal be to just run check without the external
-one and one with the external log?
-
-  ./check -s xfs -g log
-  ./check -s logdev_xfs -g log
-
-  Luis
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
