@@ -1,55 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50120 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbdLMX2M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:28:12 -0500
-Date: Wed, 13 Dec 2017 15:28:05 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 8/8] xfs/068: fix clonerange problems in file/dir count
- output
-Message-ID: <20171213232805.GI6896@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314505158.18893.11894289091110903029.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41396 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751035AbdLMXrA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:47:00 -0500
+Date: Thu, 14 Dec 2017 10:39:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/9] tests/xfs/group: add group for tests which require a
+ logdev
+Message-ID: <20171213233914.GD5858@dastard>
+References: <20171213004519.29340-1-mcgrof@kernel.org>
+ <20171213004519.29340-6-mcgrof@kernel.org>
+ <20171213215013.GW4094@dastard>
+ <20171213230052.GJ16026@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151314505158.18893.11894289091110903029.stgit@magnolia>
+In-Reply-To: <20171213230052.GJ16026@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Dec 14, 2017 at 12:00:52AM +0100, Luis R. Rodriguez wrote:
+> On Thu, Dec 14, 2017 at 08:50:13AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 12, 2017 at 04:45:15PM -0800, Luis R. Rodriguez wrote:
+> > > This should make it easy to run these separately or exclude them.
+> > 
+> > These should notrun automatically if you don't have an external log
+> > device configured. Every test should either work with an external
+> > logdev or explicitly notrun them, so I'm not sure what you're trying
+> > to acheive here....
+> 
+> The way I'm splitting up tests is one first run with a basic xfs section
+> on a configuration file, with no external log, which pretty much runs all
+> tests but excludes all which require external or funky configurations.
+> 
+> A secondary pass then goes through these extra groups and then runs tests
+> only for the previously excluded groups but with their own respective
+> section. So for instance in this case I have:
+> 
+> [xfs]
+> ....
+> [logdev_xfs]
+> ...
 
-In this test we use a fixed sequence of operations in fsstress to create
-some number of files and dirs and then exercise xfsdump/xfsrestore on
-them.  Since clonerange/deduperange are not supported on all xfs
-configurations, detect if they're in fsstress and disable them so that
-we always execute exactly the same sequence of operations no matter how
-the filesystem is configured.
+Which seems to me like a misguided attempt to optimise test
+runtimes. i.e. this doesn't provide test coverage of external log
+behaviour in all the cases that need to be tested.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/068 |    8 ++++++++
- 1 file changed, 8 insertions(+)
+Data integrity code paths are affected by having an external log. IO
+ordering changes with external logs, which can expose update/crash
+recovery problems. external logs can expose data IO race conditions
+that are masked by interleaved log IO. etc, etc, etc.
 
-diff --git a/tests/xfs/068 b/tests/xfs/068
-index 7151e28..f95a539 100755
---- a/tests/xfs/068
-+++ b/tests/xfs/068
-@@ -43,6 +43,14 @@ trap "rm -rf $tmp.*; exit \$status" 0 1 2 3 15
- _supported_fs xfs
- _supported_os Linux
- 
-+# Remove fsstress commands that aren't supported on all xfs configs
-+if $FSSTRESS_PROG | grep -q clonerange; then
-+	FSSTRESS_AVOID="-f clonerange=0 $FSSTRESS_AVOID"
-+fi
-+if $FSSTRESS_PROG | grep -q deduperange; then
-+	FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
-+fi
-+
- _create_dumpdir_stress_num 4096
- _do_dump_restore
- 
+You can't just run an internal log test then add couple of extra
+external log tests and say "external logs work fine".
+
+> Automatic detection if the requirements are met is fine, but this doesn't 
+> let me easily use say:
+> 
+> 	./check -s logdev_xfs -g logdev
+
+You can do that if we ignore the fact that a large number of tests
+need to be run on both internal and external log devices to cover
+the differences in behaviour between them.
+
+> > And, FWIW, we already have a "log" group to indicate tests that
+> > exercise the log, and that mostly includes all the tests that use
+> > external logs. It would be better to tag all the tests that exercise
+> > the log with "log" rather than create some new group that doesn't
+> > really provide any added benefit....
+> 
+> So for my case would one better goal be to just run check without the external
+> one and one with the external log?
+
+See above. Your test coverage assumptions are wrong, so what you are
+trying to do really doesn't tell you whether external logs work
+correctly or not. It's worse that not testing external logs at all,
+because it gives the false impression that they have been
+exhaustively tested and work just fine when that really isn't the
+case.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
