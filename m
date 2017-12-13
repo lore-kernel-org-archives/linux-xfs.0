@@ -1,73 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41888 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752298AbdLLOVR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Dec 2017 09:21:17 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vBCEKOd6011524
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2017 09:21:17 -0500
-Received: from e06smtp12.uk.ibm.com (e06smtp12.uk.ibm.com [195.75.94.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2ete6v7j99-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2017 09:21:15 -0500
-Received: from localhost
-        by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Tue, 12 Dec 2017 14:21:13 -0000
-Subject: [PATCH] xfs: include the XFS magic number in magic.h
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Date: Tue, 12 Dec 2017 09:21:09 -0500
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1513088469.3476.48.camel@linux.vnet.ibm.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:5951 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752908AbdLMVlc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 16:41:32 -0500
+Date: Thu, 14 Dec 2017 08:41:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/9] generic/381: use username fsgqa-381
+Message-ID: <20171213214129.GV4094@dastard>
+References: <20171213004519.29340-1-mcgrof@kernel.org>
+ <20171213004519.29340-2-mcgrof@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171213004519.29340-2-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Move the XFS_SB_MAGIC definition to magic.h.
+On Tue, Dec 12, 2017 at 04:45:11PM -0800, Luis R. Rodriguez wrote:
+> Some systems are not allowing usernames prefixed with a number now.
+> One can however use numbers as a postfix so use that.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  README                |  2 +-
+>  tests/generic/381     | 16 ++++++++--------
+>  tests/generic/381.out |  4 ++--
+>  3 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/README b/README
+> index ed69332e774e..e05142be1a87 100644
+> --- a/README
+> +++ b/README
+> @@ -20,7 +20,7 @@ _______________________
+>  - run make
+>  - run make install
+>  - create fsgqa test user ("sudo useradd fsgqa")
+> -- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
+> +- create fsgqa-381 test user ("sudo useradd fsgqa-381")
+>  	
+>  ______________________
+>  USING THE FSQA SUITE
+> diff --git a/tests/generic/381 b/tests/generic/381
+> index 006f0d879638..cdc29c2e029e 100755
+> --- a/tests/generic/381
+> +++ b/tests/generic/381
+> @@ -3,7 +3,7 @@
+>  #
+>  # Test xfs_quota when user or names beginning with digits.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Signed-off-by: Mimi Zohar <zohar@linux.vnet.ibm.com>
----
- fs/xfs/libxfs/xfs_format.h | 3 ++-
- include/uapi/linux/magic.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+This isn't a "test names with digits" test, but "test names begining
+with digits" test.  Changing the username to not begin with digits
+invalidates the entire purpose of the test which is to ensure that
+xfs_quota can differentiate between UIDs and names beginning with
+numbers....
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 1acb584fc5f7..05f7d83e5f88 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -18,6 +18,8 @@
- #ifndef __XFS_FORMAT_H__
- #define __XFS_FORMAT_H__
- 
-+#include <linux/magic.h>
-+
- /*
-  * XFS On Disk Format Definitions
-  *
-@@ -38,7 +40,6 @@ struct xfs_ifork;
-  * Fits into a sector-sized buffer at address 0 of each allocation group.
-  * Only the first of these is ever updated except during growfs.
-  */
--#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
- #define	XFS_SB_VERSION_1	1		/* 5.3, 6.0.1, 6.1 */
- #define	XFS_SB_VERSION_2	2		/* 6.2 - attributes */
- #define	XFS_SB_VERSION_3	3		/* 6.2 - new inode version */
-diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
-index 1a6fee974116..f6a641826e79 100644
---- a/include/uapi/linux/magic.h
-+++ b/include/uapi/linux/magic.h
-@@ -67,6 +67,7 @@
- #define TRACEFS_MAGIC          0x74726163
- 
- #define V9FS_MAGIC		0x01021997
-+#define XFS_SB_MAGIC		0x58465342
- 
- #define BDEVFS_MAGIC            0x62646576
- #define DAXFS_MAGIC             0x64646178
+So from that perspective, NAK.
+
+IF there are distros not allowing usernames to start with digits,
+then this test needs a _requires check and to _notrun on those
+systems.
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
