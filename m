@@ -1,65 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58704 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:37139 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750785AbdLMWtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Dec 2017 17:49:53 -0500
-Date: Wed, 13 Dec 2017 14:49:50 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: fixes for 4.15-rc4
-Message-ID: <20171213224950.GR19219@magnolia>
+        id S1750745AbdLMXAy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Dec 2017 18:00:54 -0500
+Date: Thu, 14 Dec 2017 00:00:52 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 5/9] tests/xfs/group: add group for tests which require a
+ logdev
+Message-ID: <20171213230052.GJ16026@wotan.suse.de>
+References: <20171213004519.29340-1-mcgrof@kernel.org>
+ <20171213004519.29340-6-mcgrof@kernel.org>
+ <20171213215013.GW4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171213215013.GW4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Linus,
+On Thu, Dec 14, 2017 at 08:50:13AM +1100, Dave Chinner wrote:
+> On Tue, Dec 12, 2017 at 04:45:15PM -0800, Luis R. Rodriguez wrote:
+> > This should make it easy to run these separately or exclude them.
+> 
+> These should notrun automatically if you don't have an external log
+> device configured. Every test should either work with an external
+> logdev or explicitly notrun them, so I'm not sure what you're trying
+> to acheive here....
 
-Here are a few more bug fixes & cleanups for 4.15-rc4.
+The way I'm splitting up tests is one first run with a basic xfs section
+on a configuration file, with no external log, which pretty much runs all
+tests but excludes all which require external or funky configurations.
 
---D
+A secondary pass then goes through these extra groups and then runs tests
+only for the previously excluded groups but with their own respective
+section. So for instance in this case I have:
 
-The following changes since commit 373b0589dc8d58bc09c9a28d03611ae4fb216057:
+[xfs]
+....
+[logdev_xfs]
+...
 
-  xfs: Properly retry failed dquot items in case of error during buffer writeback (2017-11-30 08:47:40 -0800)
+Automatic detection if the requirements are met is fine, but this doesn't 
+let me easily use say:
 
-are available in the git repository at:
+	./check -s logdev_xfs -g logdev
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.15-fixes-5
+> > 
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > ---
+> >  tests/xfs/group | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index d23006041ea2..cce98847de53 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -42,7 +42,7 @@
+> >  042 fsr ioctl auto
+> >  043 dump ioctl tape
+> >  044 other auto
+> > -045 other auto quick
+> > +045 other auto quick logdev
+> 
+> This change also looks wrong because:
+> 
+> xfs/044  [not run] This test requires a valid $SCRATCH_LOGDEV
+> xfs/045 1s ... 1s
+> 
+> xfs/044 is the external logdev test, and xfs/045 is a
+> duplicate uuid mount test that has nothign to do with external
+> log devices.
 
-for you to fetch changes up to b7e0b6ff54dd92febbb1914ab93cd6a21622e169:
+I see...
 
-  xfs: make iomap_begin functions trim iomaps consistently (2017-12-08 17:51:05 -0800)
+> And, FWIW, we already have a "log" group to indicate tests that
+> exercise the log, and that mostly includes all the tests that use
+> external logs. It would be better to tag all the tests that exercise
+> the log with "log" rather than create some new group that doesn't
+> really provide any added benefit....
 
-----------------------------------------------------------------
-Changes since last update:
-- Clean up duplicate includes
-- Remove ancient 'no-alloc' crap code that occasionally caused hard fs
-  shutdowns due to lack of proper space reservations
-- Fix regression in FIEMAP behavior when reporting xattr extents
+So for my case would one better goal be to just run check without the external
+one and one with the external log?
 
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      xfs: remove "no-allocation" reservations for file creations
+  ./check -s xfs -g log
+  ./check -s logdev_xfs -g log
 
-Darrick J. Wong (1):
-      xfs: make iomap_begin functions trim iomaps consistently
-
-Pravin Shedge (1):
-      fs: xfs: remove duplicate includes
-
- fs/xfs/libxfs/xfs_ialloc.c | 10 +++-------
- fs/xfs/libxfs/xfs_ialloc.h |  1 -
- fs/xfs/scrub/scrub.c       |  1 -
- fs/xfs/scrub/trace.c       |  1 -
- fs/xfs/xfs_inode.c         | 33 +++++++--------------------------
- fs/xfs/xfs_inode.h         |  2 +-
- fs/xfs/xfs_iomap.c         |  2 +-
- fs/xfs/xfs_qm.c            |  4 ++--
- fs/xfs/xfs_reflink.c       |  2 --
- fs/xfs/xfs_symlink.c       | 15 +--------------
- fs/xfs/xfs_trace.c         |  1 -
- 11 files changed, 15 insertions(+), 57 deletions(-)
+  Luis
