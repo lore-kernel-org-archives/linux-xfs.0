@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34790 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:44652 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbdLMGDY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 01:03:24 -0500
-Subject: [PATCH 1/8] common/rc: report kmemleak errors
+        with ESMTP id S1750745AbdLMGIk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 01:08:40 -0500
+Subject: [PATCH 3/8] generic/45[34]: test line draw characters in file/attr
+ names
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 12 Dec 2017 22:03:18 -0800
-Message-ID: <151314499847.18893.9855359031542704591.stgit@magnolia>
+Date: Tue, 12 Dec 2017 22:03:34 -0800
+Message-ID: <151314501414.18893.5214683551573210558.stgit@magnolia>
 In-Reply-To: <151314499003.18893.8687182548758898133.stgit@magnolia>
 References: <151314499003.18893.8687182548758898133.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,96 +21,60 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If kmemleak is enabled, scan and report memory leaks after every test.
+Try to draw a multiline rectangular outline in a file name and xattr
+name, just to see if we can.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- check     |    2 ++
- common/rc |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 54 insertions(+)
+ tests/generic/453 |    5 +++++
+ tests/generic/454 |    5 +++++
+ 2 files changed, 10 insertions(+)
 
 
-diff --git a/check b/check
-index b2d251a..469188e 100755
---- a/check
-+++ b/check
-@@ -497,6 +497,7 @@ _check_filesystems()
- 	fi
- }
+diff --git a/tests/generic/453 b/tests/generic/453
+index 38adc8d..424412e 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -109,6 +109,9 @@ setf "urk\xc0\xafmoo" "FAKESLASH"
+ # Emoji: octopus butterfly owl giraffe
+ setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
  
-+_init_kmemleak
- _prepare_test_list
++# Line draw characters, because why not?
++setf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
++
+ ls -la $testdir >> $seqres.full
  
- if $OPTIONS_HAVE_SECTIONS; then
-@@ -793,6 +794,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 		    n_try=`expr $n_try + 1`
- 		    _check_filesystems
- 		    _check_dmesg || err=true
-+		    _check_kmemleak || err=true
- 		fi
+ echo "Test files"
+@@ -130,6 +133,8 @@ testf "urk\xc0\xafmoo" "FAKESLASH"
  
- 	    fi
-diff --git a/common/rc b/common/rc
-index cb83918..a2bed36 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3339,6 +3339,58 @@ _check_dmesg()
- 	fi
- }
+ testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
  
-+# capture the kmemleak report
-+_capture_kmemleak()
-+{
-+	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local _leak_file="$1"
++testf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
 +
-+	# Tell the kernel to scan for memory leaks.  Apparently the write
-+	# returns before the scan is complete, so do it twice in the hopes
-+	# that twice is enough to capture all the leaks.
-+	echo "scan" > "${_kern_knob}"
-+	cat "${_kern_knob}" > /dev/null
-+	echo "scan" > "${_kern_knob}"
-+	cat "${_kern_knob}" > "${_leak_file}"
-+	echo "clear" > "${_kern_knob}"
-+}
+ echo "Uniqueness of inodes?"
+ stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
+ 	if [ "${nr}" -gt 1 ]; then
+diff --git a/tests/generic/454 b/tests/generic/454
+index f77ab77..24727ab 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -107,6 +107,9 @@ setf "urk\xc0\xafmoo" "FAKESLASH"
+ # Emoji: octopus butterfly owl giraffe
+ setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
+ 
++# Line draw characters, because why not?
++setf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
 +
-+# set up kmemleak
-+_init_kmemleak()
-+{
-+	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
+ $GETFATTR_PROG --absolute-names -d "${testfile}" >> $seqres.full
+ 
+ echo "Test files"
+@@ -128,6 +131,8 @@ testf "urk\xc0\xafmoo" "FAKESLASH"
+ 
+ testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt" "octopus butterfly owl giraffe emoji"
+ 
++testf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
 +
-+	if [ ! -w "${_kern_knob}" ]; then
-+		return 0
-+	fi
-+
-+	# Disable the automatic scan so that we can control it completely,
-+	# then dump all the leaks recorded so far.
-+	echo "scan=off" > "${_kern_knob}"
-+	_capture_kmemleak /dev/null
-+}
-+
-+# check kmemleak log
-+_check_kmemleak()
-+{
-+	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local _leak_file="${seqres}.kmemleak"
-+
-+	if [ ! -w "${_kern_knob}" ]; then
-+		return 0
-+	fi
-+
-+	# Capture and report any leaks
-+	_capture_kmemleak "${_leak_file}"
-+	if [ -s "${_leak_file}" ]; then
-+		_dump_err "_check_kmemleak: something found in kmemleak (see ${_leak_file})"
-+		return 1
-+	else
-+		rm -f "${_leak_file}"
-+		return 0
-+	fi
-+}
-+
- # don't check dmesg log after test
- _disable_dmesg_check()
- {
+ echo "Uniqueness of keys?"
+ crazy_keys="$($GETFATTR_PROG --absolute-names -d "${testfile}" | egrep -c '(french_|chinese_|greek_|arabic_|urk)')"
+ expected_keys=11
 
