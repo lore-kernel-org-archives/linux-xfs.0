@@ -1,103 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60018 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750784AbdLMWpJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 17:45:09 -0500
-Date: Wed, 13 Dec 2017 14:45:01 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/8] xfs: fix tests to handle removal of no-alloc create
- nonfeature
-Message-ID: <20171213224501.GH6896@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:9875 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751326AbdLMWpz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 17:45:55 -0500
+Date: Thu, 14 Dec 2017 09:45:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 8/8] xfs/068: fix variability problems in file/dir count
+ output
+Message-ID: <20171213224552.GB4094@dastard>
 References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314502196.18893.14496524309954254435.stgit@magnolia>
+ <151314505158.18893.11894289091110903029.stgit@magnolia>
+ <20171213222046.GA4094@dastard>
+ <20171213222352.GI13436@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151314502196.18893.14496524309954254435.stgit@magnolia>
+In-Reply-To: <20171213222352.GI13436@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Dec 13, 2017 at 02:23:52PM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 14, 2017 at 09:20:46AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 12, 2017 at 10:04:11PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > In this test we use fsstress to create some number of files and then
+> > > exercise xfsdump/xfsrestore on them.  Depending on the fsstress config
+> > > we may end up with a different number of files than is hardcoded in the
+> > > golden output (particularly after adding reflink support to fsstress)
+> > > and thereby fail the test.  Since we're not really testing how many
+> > > files fsstress can create, just turn the counts into XXX/YYY.
+> > 
+> > Hmmmm. those numbers were in the golden output specifically because
+> > fsstress is supposed to be deterministic for a given random seed.
+> > What it is supposed to be testing is that xfsdump actually dumped
+> > all the files that were created, and xfs-restore was able to process
+> > them all. If either barf on a file, they'll silently skip it, and
+> > the numbers won't come out properly.
+> > 
+> > The typical class of bug this test finds is bulkstat iteration
+> > problems - if bulkstat misses an inode it shouldn't, then the
+> > xfsrestore numbers come out wrong. By making the data set
+> > non-deterministic and not checking the numbers, we end up losing the
+> > ability of this test to check bulkstat iteration and dump/restore
+> > completeness....
+> 
+> Ah, fun.  Ok, in that case I think the correct fix for this problem is
+> to turn off clonerange/deduperange in the fsstress command line so that
+> we get back to deterministic(?) counts...
 
-We're removing from XFS the ability to perform no-allocation file
-creation.  This was added years ago because some customer of SGI
-demanded that we still be able to create (empty?) files with zero free
-blocks remaining so long as there were free inodes and space in existing
-directory blocks.  This came at an unacceptable risk of ENOSPC'ing
-midway through a transaction and shutting down the fs, so we're removing
-it for the create case having changed our minds 20 years later.
+Why aren't the clonerange/deduperange operations deterministic?
+Shouldn't these always do the same thing from the POV of
+xfsdump/restore?
 
-However, some tests fail as a result, so fix them to be more flexible
-about not failing when a dir/file creation fails due to ENOSPC.
+> ...unless a better solution to count the number of dirs/files and compare
+> to whatever xfsrestore says?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
-v2: fix commit message
----
- tests/xfs/013 |    6 ++++--
- tests/xfs/014 |    3 +++
- tests/xfs/104 |    2 +-
- tests/xfs/109 |    2 +-
- 4 files changed, 9 insertions(+), 4 deletions(-)
+Haven't looked recently, but there were reasons for doing it this
+way that I don't recall off the top of my head...
 
-diff --git a/tests/xfs/013 b/tests/xfs/013
-index 80298ca..394b9bc 100755
---- a/tests/xfs/013
-+++ b/tests/xfs/013
-@@ -145,8 +145,10 @@ $FSSTRESS_PROG -d $SCRATCH_MNT/fsstress -n 9999999 -p 2 -S t \
- for i in $(seq 1 $LOOPS)
- do
- 	# hard link the content of the current directory to the next
--	cp -Rl $SCRATCH_MNT/dir$i $SCRATCH_MNT/dir$((i+1)) 2>&1 | \
--		filter_enospc
-+	while ! test -d $SCRATCH_MNT/dir$((i+1)); do
-+		cp -Rl $SCRATCH_MNT/dir$i $SCRATCH_MNT/dir$((i+1)) 2>&1 | \
-+			filter_enospc
-+	done
- 
- 	# do a random replacement of files in the new directory
- 	_rand_replace $SCRATCH_MNT/dir$((i+1)) $COUNT
-diff --git a/tests/xfs/014 b/tests/xfs/014
-index 875ab40..08cd001 100755
---- a/tests/xfs/014
-+++ b/tests/xfs/014
-@@ -112,6 +112,9 @@ _test_enospc()
- 	# consume 1/2 of the current preallocation across the set of 4 writers
- 	write_size=$((TOTAL_PREALLOC / 2 / 4))
- 	for i in $(seq 0 3); do
-+		touch $dir/file.$i
-+	done
-+	for i in $(seq 0 3); do
- 		$XFS_IO_PROG -f -c "pwrite 0 $write_size" $dir/file.$i \
- 			>> $seqres.full &
- 	done
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index 785027e..c3b5977 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -65,7 +65,7 @@ _stress_scratch()
- 	# -w ensures that the only ops are ones which cause write I/O
- 	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
- 	    -n $nops $FSSTRESS_AVOID`
--	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full &
-+	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
- }
- 
- # real QA test starts here
-diff --git a/tests/xfs/109 b/tests/xfs/109
-index e0fdec3..2625f15 100755
---- a/tests/xfs/109
-+++ b/tests/xfs/109
-@@ -79,7 +79,7 @@ allocate()
- 			while [ $j -lt 100 ]; do
- 				$XFS_IO_PROG -f -c 'pwrite -b 64k 0 16m' $file \
- 					>/dev/null 2>&1
--				rm $file
-+				test -e $file && rm $file
- 				let j=$j+1
- 			done
- 		} &
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
