@@ -1,166 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36904 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753748AbdLNSPM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 13:15:12 -0500
-Date: Thu, 14 Dec 2017 10:15:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] common/rc: report kmemleak errors
-Message-ID: <20171214181508.GJ6896@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314499847.18893.9855359031542704591.stgit@magnolia>
- <20171214093718.GH2749@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171214093718.GH2749@eguan.usersys.redhat.com>
+Received: from smtprelay0169.hostedemail.com ([216.40.44.169]:44917 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754027AbdLNSXt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 13:23:49 -0500
+Message-ID: <1513275822.27409.73.camel@perches.com>
+Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
+From: Joe Perches <joe@perches.com>
+Date: Thu, 14 Dec 2017 10:23:42 -0800
+In-Reply-To: <20171211224301.GA3925@bombadil.infradead.org>
+References: <fd7130d7-9066-524e-1053-a61eeb27cb36@lge.com>
+         <Pine.LNX.4.44L0.1712081228430.1371-100000@iolanthe.rowland.org>
+         <20171208223654.GP5858@dastard> <1512838818.26342.7.camel@perches.com>
+         <20171211214300.GT5858@dastard> <1513030348.3036.5.camel@perches.com>
+         <20171211224301.GA3925@bombadil.infradead.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Alan Stern <stern@rowland.harvard.edu>, Byungchul Park <byungchul.park@lge.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
 
-On Thu, Dec 14, 2017 at 05:37:18PM +0800, Eryu Guan wrote:
-> On Tue, Dec 12, 2017 at 10:03:18PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If kmemleak is enabled, scan and report memory leaks after every test.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  check     |    2 ++
-> >  common/rc |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 54 insertions(+)
-> > 
-> > 
-> > diff --git a/check b/check
-> > index b2d251a..469188e 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -497,6 +497,7 @@ _check_filesystems()
-> >  	fi
-> >  }
-> >  
-> > +_init_kmemleak
-> >  _prepare_test_list
-> >  
-> >  if $OPTIONS_HAVE_SECTIONS; then
-> > @@ -793,6 +794,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
-> >  		    n_try=`expr $n_try + 1`
-> >  		    _check_filesystems
-> >  		    _check_dmesg || err=true
-> > +		    _check_kmemleak || err=true
-> >  		fi
-> >  
-> >  	    fi
-> > diff --git a/common/rc b/common/rc
-> > index cb83918..a2bed36 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3339,6 +3339,58 @@ _check_dmesg()
-> >  	fi
-> >  }
-> >  
-> > +# capture the kmemleak report
-> > +_capture_kmemleak()
-> > +{
-> > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> > +	local _leak_file="$1"
-> > +
-> > +	# Tell the kernel to scan for memory leaks.  Apparently the write
-> > +	# returns before the scan is complete, so do it twice in the hopes
-> > +	# that twice is enough to capture all the leaks.
-> > +	echo "scan" > "${_kern_knob}"
-> > +	cat "${_kern_knob}" > /dev/null
-> > +	echo "scan" > "${_kern_knob}"
-> > +	cat "${_kern_knob}" > "${_leak_file}"
-> > +	echo "clear" > "${_kern_knob}"
+On Mon, 2017-12-11 at 14:43 -0800, Matthew Wilcox wrote:
+>  - There's no warning for the first paragraph of section 6:
 > 
-> Hmm, two scans seem not enough either, I could see false positive easily
-> in a 'quick' group run, because some leaks are not reported immediately
-> after the test but after next test or next few tests. e.g. I saw
-> generic/008 (tested on XFS) being reported as leaking memory, and from
-> 008.kmemleak I saw:
+> 6) Functions
+> ------------
 > 
-> unreferenced object 0xffff880277679800 (size 512):
->   comm "nametest", pid 25007, jiffies 4300176958 (age 9.854s)
-> ...
+> Functions should be short and sweet, and do just one thing.  They should
+> fit on one or two screenfuls of text (the ISO/ANSI screen size is 80x24,
+> as we all know), and do one thing and do that well.
 > 
-> But "nametest" is only used in generic/007, the leak should be triggered
-> by generic/007 too, but 007 was reported as PASS in my case.
-> 
-> Not sure what's the best way to deal with these false positive, adding
-> more scans seem to work, but that's ugly and requires more test time..
-> What do you think?
+>    I'm not expecting you to be able to write a perl script that checks
+>    the first line, but we have way too many 200-plus line functions in
+>    the kernel.  I'd like a warning on anything over 200 lines (a factor
+>    of 4 over Linus's stated goal).
 
-I'm not sure either -- the brief scan I made of mm/kmemleak.c didn't
-reveal anything obvious that would explain the behavior we see.  It
-might just take a while for determine positively that an item isn't
-gray.
+Perhaps something like this?
 
-We could change the message to state that found leaks might have
-resulted from the previous test?  That's rather unsatisfying, but I
-don't know what else to do.
+(very very lightly tested, more testing appreciated)
+---
+ scripts/checkpatch.pl | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Or maybe a sleep 1 in between scans to see if that makes it more likely
-to attribute a leak to the correct test?  I don't anticipate running
-xfstests with kmemleak=on too terribly often, so the extra ~700s won't
-bother me too much.
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index 4306b7616cdd..523aead40b87 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -59,6 +59,7 @@ my $conststructsfile = "$D/const_structs.checkpatch";
+ my $typedefsfile = "";
+ my $color = "auto";
+ my $allow_c99_comments = 1;
++my $max_function_length = 200;
+ 
+ sub help {
+ 	my ($exitcode) = @_;
+@@ -2202,6 +2203,7 @@ sub process {
+ 	my $realcnt = 0;
+ 	my $here = '';
+ 	my $context_function;		#undef'd unless there's a known function
++	my $context_function_linenum;
+ 	my $in_comment = 0;
+ 	my $comment_edge = 0;
+ 	my $first_line = 0;
+@@ -2341,6 +2343,7 @@ sub process {
+ 			} else {
+ 				undef $context_function;
+ 			}
++			undef $context_function_linenum;
+ 			next;
+ 
+ # track the line number as we move through the hunk, note that
+@@ -3200,11 +3203,18 @@ sub process {
+ 		if ($sline =~ /^\+\{\s*$/ &&
+ 		    $prevline =~ /^\+(?:(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*)?($Ident)\(/) {
+ 			$context_function = $1;
++			$context_function_linenum = $realline;
+ 		}
+ 
+ # check if this appears to be the end of function declaration
+ 		if ($sline =~ /^\+\}\s*$/) {
++			if (defined($context_function_linenum) &&
++			    ($realline - $context_function_linenum) > $max_function_length) {
++				WARN("LONG_FUNCTION",
++				     "'$context_function' function definition is " . ($realline - $context_function_linenum) . " lines, perhaps refactor\n" . $herecurr);
++			}
+ 			undef $context_function;
++			undef $context_function_linenum;
+ 		}
+ 
+ # check indentation of any line with a bare else
+@@ -5983,6 +5993,7 @@ sub process {
+ 		    defined $stat &&
+ 		    $stat =~ /^.\s*(?:$Storage\s+)?$Type\s*($Ident)\s*$balanced_parens\s*{/s) {
+ 			$context_function = $1;
++			$context_function_linenum = $realline;
+ 
+ # check for multiline function definition with misplaced open brace
+ 			my $ok = 0;
 
---D
-
-> Otherwise the whole check kmemleak framework looks fine to me.
-> 
-> Thanks,
-> Eryu
-> 
-> > +}
-> > +
-> > +# set up kmemleak
-> > +_init_kmemleak()
-> > +{
-> > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> > +
-> > +	if [ ! -w "${_kern_knob}" ]; then
-> > +		return 0
-> > +	fi
-> > +
-> > +	# Disable the automatic scan so that we can control it completely,
-> > +	# then dump all the leaks recorded so far.
-> > +	echo "scan=off" > "${_kern_knob}"
-> > +	_capture_kmemleak /dev/null
-> > +}
-> > +
-> > +# check kmemleak log
-> > +_check_kmemleak()
-> > +{
-> > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> > +	local _leak_file="${seqres}.kmemleak"
-> > +
-> > +	if [ ! -w "${_kern_knob}" ]; then
-> > +		return 0
-> > +	fi
-> > +
-> > +	# Capture and report any leaks
-> > +	_capture_kmemleak "${_leak_file}"
-> > +	if [ -s "${_leak_file}" ]; then
-> > +		_dump_err "_check_kmemleak: something found in kmemleak (see ${_leak_file})"
-> > +		return 1
-> > +	else
-> > +		rm -f "${_leak_file}"
-> > +		return 0
-> > +	fi
-> > +}
-> > +
-> >  # don't check dmesg log after test
-> >  _disable_dmesg_check()
-> >  {
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
