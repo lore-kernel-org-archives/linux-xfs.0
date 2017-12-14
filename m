@@ -1,280 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45422 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751029AbdLMX7p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:45 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlITp100005
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:44 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2eue5b01tf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:44 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNwRb0004299
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:28 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBDNwR2Y008815
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:58:27 GMT
-Subject: [PATCH 02/13] xfs: remove XFS_WANT_CORRUPTED_RETURN from dir3 data
- verifiers
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Dec 2017 15:58:25 -0800
-Message-ID: <151320950500.30654.7534958032611175786.stgit@magnolia>
-In-Reply-To: <151320949282.30654.14805160700975182459.stgit@magnolia>
-References: <151320949282.30654.14805160700975182459.stgit@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:12994 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752154AbdLNVf4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 16:35:56 -0500
+Date: Fri, 15 Dec 2017 08:35:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 8/8] xfs/068: fix clonerange problems in file/dir
+ count output
+Message-ID: <20171214213541.GH5858@dastard>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314505158.18893.11894289091110903029.stgit@magnolia>
+ <20171213232805.GI6896@magnolia>
+ <20171213234404.GF5858@dastard>
+ <CAOQ4uxhXDVPAzv4jNsgsnbuuN4Hm_yGJKS4hBTzQBp+8hw18_Q@mail.gmail.com>
+ <20171214074947.GG2749@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171214074947.GG2749@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Dec 14, 2017 at 03:49:47PM +0800, Eryu Guan wrote:
+> On Thu, Dec 14, 2017 at 08:52:32AM +0200, Amir Goldstein wrote:
+> > On Thu, Dec 14, 2017 at 1:44 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > > On Wed, Dec 13, 2017 at 03:28:05PM -0800, Darrick J. Wong wrote:
+> > >> From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >>
+> > >> In this test we use a fixed sequence of operations in fsstress to create
+> > >> some number of files and dirs and then exercise xfsdump/xfsrestore on
+> > >> them.  Since clonerange/deduperange are not supported on all xfs
+> > >> configurations, detect if they're in fsstress and disable them so that
+> > >> we always execute exactly the same sequence of operations no matter how
+> > >> the filesystem is configured.
+> > >>
+> > >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > >> ---
+> > >>  tests/xfs/068 |    8 ++++++++
+> > >>  1 file changed, 8 insertions(+)
+> > >>
+> > >> diff --git a/tests/xfs/068 b/tests/xfs/068
+> > >> index 7151e28..f95a539 100755
+> > >> --- a/tests/xfs/068
+> > >> +++ b/tests/xfs/068
+> > >> @@ -43,6 +43,14 @@ trap "rm -rf $tmp.*; exit \$status" 0 1 2 3 15
+> > >>  _supported_fs xfs
+> > >>  _supported_os Linux
+> > >>
+> > >> +# Remove fsstress commands that aren't supported on all xfs configs
+> > >> +if $FSSTRESS_PROG | grep -q clonerange; then
+> > >> +     FSSTRESS_AVOID="-f clonerange=0 $FSSTRESS_AVOID"
+> > >> +fi
+> > >> +if $FSSTRESS_PROG | grep -q deduperange; then
+> > >> +     FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
+> > >> +fi
+> > >> +
+> > >
+> > > I'd put this inside _create_dumpdir_stress_num as it's supposed to
+> > > DTRT for the dump/restore that follows. Otherwise looks fine.
+> > >
+> > 
+> > Guys,
+> > 
+> > Please take a look at the only 2 changes in the history of this test.
+> > I would like to make sure we are not in a loop:
+> > 
+> > 5d36d85 xfs/068: update golden output due to new operations in fsstress
+> > 6e5194d fsstress: Add fallocate insert range operation
+> > 
+> > The first change excludes the new insert op (by dchinner on commit)
+> > The second change re-includes insert op, does not exclude new
+> > mread/mwrite ops and updates golden output, following this discussion:
+> > https://marc.info/?l=fstests&m=149014697111838&w=2
+> > (the referenced thread ends with a ? to Dave, but was followed by v6..v8
+> >  that were "silently acked" by Dave).
+> > 
+> > I personally argued that the blacklist approach to xfs/068 is fragile and indeed
+> > this is the third time the test breaks in the history I know of,
+> > because of added
+> > fsstress ops. Fine. As long as we at least stay consistent with a decision about
+> > update golden output vs. exclude ops and document the decision in a comment
+> > with the reasoning, so we won't have to repeat this discussion next time.
+> 
+> I think the fundamental problem of xfs/068 is the hardcoded file numbers
+> in .out file, perhaps we should calculate the expected number of
+> files/dirs to be dumped/restored before the dump test and extract the
+> actual restored number of files/dirs from xfsrestore output and do a
+> comparison. (or save the whole tree structure for comparison? I haven't
+> done any test yet, just some random thoughts for now.)
 
-Since __xfs_dir3_data_check verifies on-disk metadata, we can't have it
-noisily blowing asserts and hanging the system on corrupt data coming in
-off the disk.  Instead, have it return a boolean like all the other
-checker functions, and only have it noisily fail if we fail in debug
-mode.
+Or we don't waste any more time on trying to make a reliable, stable
+regression test that has a history of detecting bulkstat regressions
+work differently?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2_block.c |    4 --
- fs/xfs/libxfs/xfs_dir2_data.c  |  100 +++++++++++++++++++++-------------------
- fs/xfs/libxfs/xfs_dir2_priv.h  |   10 +++-
- 3 files changed, 61 insertions(+), 53 deletions(-)
+Indeed, the problem here is our "turn on new functionality in
+fsstress as it is added" process will always break older tests that
+require fixed functionality to test.  Having tests fail when we do
+this is perfectly reasonable - it means we have to consider whether
+that new fsstress operation is valid for the test being run. 
 
+Making tests silently accept new operations that may not be valid
+for the thing being tested doesn't improve our test coverage. What
+it does is take away a warning canary that tells us we may have
+broken something we didn't intend to break. e.g. maybe this test is
+telling us reflink breaks xfsdump or xfsrestore? That's the point of
+having hard coded numbers in the golden output - any change whether
+intended, expected or otherwise requires us to go look at whether
+that new functionality has broken xfsdump/restore.
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 43c902f..e427249 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -78,9 +78,7 @@ xfs_dir3_block_verify(
- 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
- 			return false;
- 	}
--	if (__xfs_dir3_data_check(NULL, bp))
--		return false;
--	return true;
-+	return __xfs_dir3_data_check(NULL, bp);
- }
- 
- static void
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 8727a43..af15f705 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -36,9 +36,9 @@
- /*
-  * Check the consistency of the data block.
-  * The input can also be a block-format directory.
-- * Return 0 is the buffer is good, otherwise an error.
-+ * Return true if the buffer is good.
-  */
--int
-+bool
- __xfs_dir3_data_check(
- 	struct xfs_inode	*dp,		/* incore inode pointer */
- 	struct xfs_buf		*bp)		/* data block's buffer */
-@@ -90,16 +90,16 @@ __xfs_dir3_data_check(
- 		 * so just ensure that the count falls somewhere inside the
- 		 * block right now.
- 		 */
--		XFS_WANT_CORRUPTED_RETURN(mp, be32_to_cpu(btp->count) <
--			((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry));
-+		if (be32_to_cpu(btp->count) >=
-+		    ((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry))
-+			return false;
- 		break;
- 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 		endp = (char *)hdr + geo->blksize;
- 		break;
- 	default:
--		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
--		return -EFSCORRUPTED;
-+		return false;
- 	}
- 
- 	/*
-@@ -108,22 +108,25 @@ __xfs_dir3_data_check(
- 	bf = ops->data_bestfree_p(hdr);
- 	count = lastfree = freeseen = 0;
- 	if (!bf[0].length) {
--		XFS_WANT_CORRUPTED_RETURN(mp, !bf[0].offset);
-+		if (bf[0].offset)
-+			return false;
- 		freeseen |= 1 << 0;
- 	}
- 	if (!bf[1].length) {
--		XFS_WANT_CORRUPTED_RETURN(mp, !bf[1].offset);
-+		if (bf[1].offset)
-+			return false;
- 		freeseen |= 1 << 1;
- 	}
- 	if (!bf[2].length) {
--		XFS_WANT_CORRUPTED_RETURN(mp, !bf[2].offset);
-+		if (bf[2].offset)
-+			return false;
- 		freeseen |= 1 << 2;
- 	}
- 
--	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[0].length) >=
--						be16_to_cpu(bf[1].length));
--	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[1].length) >=
--						be16_to_cpu(bf[2].length));
-+	if (be16_to_cpu(bf[0].length) < be16_to_cpu(bf[1].length))
-+		return false;
-+	if (be16_to_cpu(bf[1].length) < be16_to_cpu(bf[2].length))
-+		return false;
- 	/*
- 	 * Loop over the data/unused entries.
- 	 */
-@@ -135,22 +138,23 @@ __xfs_dir3_data_check(
- 		 * doesn't need to be there.
- 		 */
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			XFS_WANT_CORRUPTED_RETURN(mp, lastfree == 0);
--			XFS_WANT_CORRUPTED_RETURN(mp, endp >=
--					p + be16_to_cpu(dup->length));
--			XFS_WANT_CORRUPTED_RETURN(mp,
--				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
--					       (char *)dup - (char *)hdr);
-+			if (lastfree != 0)
-+				return false;
-+			if (endp < p + be16_to_cpu(dup->length))
-+				return false;
-+			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
-+			    (char *)dup - (char *)hdr)
-+				return false;
- 			dfp = xfs_dir2_data_freefind(hdr, bf, dup);
- 			if (dfp) {
- 				i = (int)(dfp - bf);
--				XFS_WANT_CORRUPTED_RETURN(mp,
--					(freeseen & (1 << i)) == 0);
-+				if ((freeseen & (1 << i)) != 0)
-+					return false;
- 				freeseen |= 1 << i;
- 			} else {
--				XFS_WANT_CORRUPTED_RETURN(mp,
--					be16_to_cpu(dup->length) <=
--						be16_to_cpu(bf[2].length));
-+				if (be16_to_cpu(dup->length) >
-+				    be16_to_cpu(bf[2].length))
-+					return false;
- 			}
- 			p += be16_to_cpu(dup->length);
- 			lastfree = 1;
-@@ -163,16 +167,17 @@ __xfs_dir3_data_check(
- 		 * The linear search is crude but this is DEBUG code.
- 		 */
- 		dep = (xfs_dir2_data_entry_t *)p;
--		XFS_WANT_CORRUPTED_RETURN(mp, dep->namelen != 0);
--		XFS_WANT_CORRUPTED_RETURN(mp,
--			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
--		XFS_WANT_CORRUPTED_RETURN(mp, endp >=
--				p + ops->data_entsize(dep->namelen));
--		XFS_WANT_CORRUPTED_RETURN(mp,
--			be16_to_cpu(*ops->data_entry_tag_p(dep)) ==
--					       (char *)dep - (char *)hdr);
--		XFS_WANT_CORRUPTED_RETURN(mp,
--				ops->data_get_ftype(dep) < XFS_DIR3_FT_MAX);
-+		if (dep->namelen == 0)
-+			return false;
-+		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
-+			return false;
-+		if (endp < p + ops->data_entsize(dep->namelen))
-+			return false;
-+		if (be16_to_cpu(*ops->data_entry_tag_p(dep)) !=
-+		    (char *)dep - (char *)hdr)
-+			return false;
-+		if (ops->data_get_ftype(dep) >= XFS_DIR3_FT_MAX)
-+			return false;
- 		count++;
- 		lastfree = 0;
- 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-@@ -188,31 +193,32 @@ __xfs_dir3_data_check(
- 				    be32_to_cpu(lep[i].hashval) == hash)
- 					break;
- 			}
--			XFS_WANT_CORRUPTED_RETURN(mp,
--						  i < be32_to_cpu(btp->count));
-+			if (i >= be32_to_cpu(btp->count))
-+				return false;
- 		}
- 		p += ops->data_entsize(dep->namelen);
- 	}
- 	/*
- 	 * Need to have seen all the entries and all the bestfree slots.
- 	 */
--	XFS_WANT_CORRUPTED_RETURN(mp, freeseen == 7);
-+	if (freeseen != 7)
-+		return false;
- 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
- 			if (lep[i].address ==
- 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
- 				stale++;
--			if (i > 0)
--				XFS_WANT_CORRUPTED_RETURN(mp,
--					be32_to_cpu(lep[i].hashval) >=
--						be32_to_cpu(lep[i - 1].hashval));
-+			if (i > 0 && be32_to_cpu(lep[i].hashval) <
-+				     be32_to_cpu(lep[i - 1].hashval))
-+				return false;
- 		}
--		XFS_WANT_CORRUPTED_RETURN(mp, count ==
--			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
--		XFS_WANT_CORRUPTED_RETURN(mp, stale == be32_to_cpu(btp->stale));
-+		if (count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale))
-+			return false;
-+		if (stale != be32_to_cpu(btp->stale))
-+			return false;
- 	}
--	return 0;
-+	return true;
- }
- 
- static bool
-@@ -235,9 +241,7 @@ xfs_dir3_data_verify(
- 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC))
- 			return false;
- 	}
--	if (__xfs_dir3_data_check(NULL, bp))
--		return false;
--	return true;
-+	return __xfs_dir3_data_check(NULL, bp);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 4badd26..45c68d0 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -39,12 +39,18 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
- 
- /* xfs_dir2_data.c */
- #ifdef DEBUG
--#define	xfs_dir3_data_check(dp,bp) __xfs_dir3_data_check(dp, bp);
-+#define	xfs_dir3_data_check(dp, bp) \
-+do { \
-+	if (!__xfs_dir3_data_check((dp), (bp))) { \
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, \
-+				(bp)->b_target->bt_mount, (bp)->b_addr); \
-+	} \
-+} while (0)
- #else
- #define	xfs_dir3_data_check(dp,bp)
- #endif
- 
--extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-+extern bool __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
- extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
- extern int xfs_dir3_data_readahead(struct xfs_inode *dp, xfs_dablk_t bno,
+That's what regression tests are for, and taking that away from the
+test under the guise of "easier test maintenance" is misguided.
+Regression tests require validation and checking when new
+functionality is added to the tools they use. Having old tests fail
+when new features are added is exactly what we want the regression
+tests to do, otherwise we'll miss regressions that the current code
+actually catches.
 
+> Currently, xfs/068 will easily break if there's user-defined
+> FSSTRESS_AVOID, e.g. FSSTRESS_AVOID="-ffallocate=0", and that's totally
+> legal test configuration.
+
+I think that's a strawman argument - who tests XFS without fallocate
+enabled these days? Indeed, fsstress will still be doing
+preallocation via the old ALLOCSP and RESVSP ioctls that predate
+fallocate....
+
+> IHMO we really should fix xfs/068 first to avoid hitting the same
+> problem again and again.
+
+IMO, we should not be changing the way old tests work, especially
+those that have, in the past, been very good at exposing bugs in
+kernel interfaces.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
