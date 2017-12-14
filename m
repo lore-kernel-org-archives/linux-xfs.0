@@ -1,34 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54975 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:38615 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753099AbdLNQkf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 11:40:35 -0500
-Date: Thu, 14 Dec 2017 08:40:35 -0800
+        with ESMTP id S1753090AbdLNQlg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 11:41:36 -0500
+Date: Thu, 14 Dec 2017 08:41:35 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] xfs: allow CoW remap transactions to use reserve
- blocks
-Message-ID: <20171214164035.GF32616@infradead.org>
-References: <151295857424.30614.8269461794142248028.stgit@magnolia>
- <151295861910.30614.17925324546800268919.stgit@magnolia>
+Subject: Re: Traversing XFS mounted VM puts process in D state
+Message-ID: <20171214164135.GG32616@infradead.org>
+References: <CAHsD-6DNpb2+dE-yVUis35=AGOS0GoFnpT42A2vktW5HCOthMQ@mail.gmail.com>
+ <20171208013819.GN4094@dastard>
+ <CAHsD-6BuJe0LbnkJGT=gtqLmQQYLbpk0z9hZvAYme2OSH6LXgA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151295861910.30614.17925324546800268919.stgit@magnolia>
+In-Reply-To: <CAHsD-6BuJe0LbnkJGT=gtqLmQQYLbpk0z9hZvAYme2OSH6LXgA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dinesh Pathak <dinesh.pathak@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, rupesh bajaj <rupesh.bajaj@gmail.com>
 
-On Sun, Dec 10, 2017 at 06:16:59PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Since we as yet have no way of holding on to the indlen blocks that are
-> reserved as part of CoW fork delalloc reservations, let the CoW remap
-> transaction dip into the reserves so that we avoid failing writes.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Dec 08, 2017 at 02:00:19PM +0530, Dinesh Pathak wrote:
+> Hi Dave, Thanks for your time. The above link only reports a similar
+> bug, which has same kernel trace, which we found on internet. Our
+> client machine, where traversal is done, is using CentOS.
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Then you need to report it to your friendly CentOS maintainer, or
+try to reproduce it with mainline.
