@@ -1,98 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38784 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753537AbdLNRzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Dec 2017 12:55:06 -0500
-Date: Thu, 14 Dec 2017 18:55:03 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 4/9] build: update AC_PACKAGE_WANT_GDBM() and
- src/dbtest.c to build
-Message-ID: <20171214175503.GL16026@wotan.suse.de>
-References: <20171213004519.29340-1-mcgrof@kernel.org>
- <20171213004519.29340-5-mcgrof@kernel.org>
- <20171214055102.GE2749@eguan.usersys.redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:36904 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753748AbdLNSPM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 13:15:12 -0500
+Date: Thu, 14 Dec 2017 10:15:08 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/8] common/rc: report kmemleak errors
+Message-ID: <20171214181508.GJ6896@magnolia>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314499847.18893.9855359031542704591.stgit@magnolia>
+ <20171214093718.GH2749@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171214055102.GE2749@eguan.usersys.redhat.com>
+In-Reply-To: <20171214093718.GH2749@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eryu Guan <eguan@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Dec 14, 2017 at 01:51:02PM +0800, Eryu Guan wrote:
-> On Tue, Dec 12, 2017 at 04:45:14PM -0800, Luis R. Rodriguez wrote:
-> > Modern gdbm-devel packages bundle together gdbm.h and ndbm.h.
-> > The old m4 macro had detection support for some old gdbm libraries
-> > but not for new ones.
+On Thu, Dec 14, 2017 at 05:37:18PM +0800, Eryu Guan wrote:
+> On Tue, Dec 12, 2017 at 10:03:18PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > We fix compilation of src/dbtest.c by making the autoconf helper
-> > check for this new arrangement:
+> > If kmemleak is enabled, scan and report memory leaks after every test.
 > > 
-> > If both gdbm.h and gdbm.h are found define set both gdbm_ndbm_=true,
->                      ^^^^^^ ndbm.h?
-> > and have_db=true, and define HAVE_GDBM_H. The src/dbtest.c already
-> > had a HAVE_GDBM_H but there was never a respective autoconf settter for
-> > it. We can just re-use this and fix it for new arrangement.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  check     |    2 ++
+> >  common/rc |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 54 insertions(+)
 > > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > 
+> > diff --git a/check b/check
+> > index b2d251a..469188e 100755
+> > --- a/check
+> > +++ b/check
+> > @@ -497,6 +497,7 @@ _check_filesystems()
+> >  	fi
+> >  }
+> >  
+> > +_init_kmemleak
+> >  _prepare_test_list
+> >  
+> >  if $OPTIONS_HAVE_SECTIONS; then
+> > @@ -793,6 +794,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
+> >  		    n_try=`expr $n_try + 1`
+> >  		    _check_filesystems
+> >  		    _check_dmesg || err=true
+> > +		    _check_kmemleak || err=true
+> >  		fi
+> >  
+> >  	    fi
+> > diff --git a/common/rc b/common/rc
+> > index cb83918..a2bed36 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -3339,6 +3339,58 @@ _check_dmesg()
+> >  	fi
+> >  }
+> >  
+> > +# capture the kmemleak report
+> > +_capture_kmemleak()
+> > +{
+> > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
+> > +	local _leak_file="$1"
+> > +
+> > +	# Tell the kernel to scan for memory leaks.  Apparently the write
+> > +	# returns before the scan is complete, so do it twice in the hopes
+> > +	# that twice is enough to capture all the leaks.
+> > +	echo "scan" > "${_kern_knob}"
+> > +	cat "${_kern_knob}" > /dev/null
+> > +	echo "scan" > "${_kern_knob}"
+> > +	cat "${_kern_knob}" > "${_leak_file}"
+> > +	echo "clear" > "${_kern_knob}"
 > 
-> This looks fine to me.
+> Hmm, two scans seem not enough either, I could see false positive easily
+> in a 'quick' group run, because some leaks are not reported immediately
+> after the test but after next test or next few tests. e.g. I saw
+> generic/008 (tested on XFS) being reported as leaking memory, and from
+> 008.kmemleak I saw:
 > 
-> The only system I have by hand that have both <gdbm.h> and <ndbm.h> but
-> not any <gdbm/[gn]dbm.h> is openSUSE Tumbleweed.
+> unreferenced object 0xffff880277679800 (size 512):
+>   comm "nametest", pid 25007, jiffies 4300176958 (age 9.854s)
+> ...
+> 
+> But "nametest" is only used in generic/007, the leak should be triggered
+> by generic/007 too, but 007 was reported as PASS in my case.
+> 
+> Not sure what's the best way to deal with these false positive, adding
+> more scans seem to work, but that's ugly and requires more test time..
+> What do you think?
 
-Indeed, openSUSE and SLE releases.
+I'm not sure either -- the brief scan I made of mm/kmemleak.c didn't
+reveal anything obvious that would explain the behavior we see.  It
+might just take a while for determine positively that an item isn't
+gray.
 
-> Without this patch,
-> dbtest was not built on openSUSE, and was built successfully with this
-> patch applied.
+We could change the message to state that found leaks might have
+resulted from the previous test?  That's rather unsatisfying, but I
+don't know what else to do.
 
-Yeap.
+Or maybe a sleep 1 in between scans to see if that makes it more likely
+to attribute a leak to the correct test?  I don't anticipate running
+xfstests with kmemleak=on too terribly often, so the extra ~700s won't
+bother me too much.
 
-> And dbtest is still built on RHEL6/7 and Fedora.
+--D
 
-Feel free to modify the commit log accordingly then. Curious, what packages
-does Fedora/ RHEL6/7 use for the requirement here?
-
-We just have one:
-
-$ rpm -ql gdbm-devel-1.12-1.282.x86_64
-/usr/bin/gdbm_dump
-/usr/bin/gdbm_load
-/usr/bin/gdbmtool
-/usr/include/dbm.h
-/usr/include/gdbm.h
-/usr/include/ndbm.h
-/usr/lib64/libgdbm.a
-/usr/lib64/libgdbm.so
-/usr/lib64/libgdbm_compat.a
-/usr/lib64/libgdbm_compat.so
-/usr/lib64/libndbm.a
-/usr/lib64/libndbm.so
-/usr/share/info/gdbm.info.gz
-/usr/share/man/man1/gdbm_dump.1.gz
-/usr/share/man/man1/gdbm_load.1.gz
-/usr/share/man/man1/gdbmtool.1.gz
-/usr/share/man/man3/gdbm.3.gz
-
-> BTW, I'll queue patch 3 and this patch for next fstests release, while
-> other patches seem not necessary,
-
-I think patch 2 is fine too.
-
-> I agreed with Dave that groups are not
-> for excluding tests, the required tools and environments should be
-> detected by tests and _notrun if not met.
-
-Yeah makes sense now. I think we should also document when adding
-a group makes sense as well.
-
-> (The README change looks fine,
-> but it doesn't apply due to the "fsgqa-381" change, so I drop it too for
-> now.)
-
-Feel free to modify it, its not a big deal.
-
-  Luis
+> Otherwise the whole check kmemleak framework looks fine to me.
+> 
+> Thanks,
+> Eryu
+> 
+> > +}
+> > +
+> > +# set up kmemleak
+> > +_init_kmemleak()
+> > +{
+> > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
+> > +
+> > +	if [ ! -w "${_kern_knob}" ]; then
+> > +		return 0
+> > +	fi
+> > +
+> > +	# Disable the automatic scan so that we can control it completely,
+> > +	# then dump all the leaks recorded so far.
+> > +	echo "scan=off" > "${_kern_knob}"
+> > +	_capture_kmemleak /dev/null
+> > +}
+> > +
+> > +# check kmemleak log
+> > +_check_kmemleak()
+> > +{
+> > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
+> > +	local _leak_file="${seqres}.kmemleak"
+> > +
+> > +	if [ ! -w "${_kern_knob}" ]; then
+> > +		return 0
+> > +	fi
+> > +
+> > +	# Capture and report any leaks
+> > +	_capture_kmemleak "${_leak_file}"
+> > +	if [ -s "${_leak_file}" ]; then
+> > +		_dump_err "_check_kmemleak: something found in kmemleak (see ${_leak_file})"
+> > +		return 1
+> > +	else
+> > +		rm -f "${_leak_file}"
+> > +		return 0
+> > +	fi
+> > +}
+> > +
+> >  # don't check dmesg log after test
+> >  _disable_dmesg_check()
+> >  {
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
