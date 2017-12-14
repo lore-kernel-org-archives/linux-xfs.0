@@ -1,95 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10272 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753761AbdLHWg7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Dec 2017 17:36:59 -0500
-Date: Sat, 9 Dec 2017 09:36:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 72/73] xfs: Convert mru cache to XArray
-Message-ID: <20171208223654.GP5858@dastard>
-References: <fd7130d7-9066-524e-1053-a61eeb27cb36@lge.com>
- <Pine.LNX.4.44L0.1712081228430.1371-100000@iolanthe.rowland.org>
+Received: from mx2.mpynet.fi ([82.197.21.85]:16561 "EHLO mx2.mpynet.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751538AbdLNMLh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Dec 2017 07:11:37 -0500
+Subject: Re: [PATCH] xfs_io: fix exitcode handling (was Re: generic/399 and
+ xfs_io pwrite command)
+References: <7235f31f-5427-ff12-11f9-cba98431e71c@tuxera.com>
+ <20171204222842.GX4094@dastard>
+ <35d2712c-b036-d017-2d42-f74bbc4444a9@tuxera.com>
+ <20171205211850.GA5858@dastard> <20171206002638.GB5858@dastard>
+From: Ari Sundholm <ari@tuxera.com>
+Message-ID: <27b82a44-b889-212f-af74-cad35c103c86@tuxera.com>
+Date: Thu, 14 Dec 2017 14:11:32 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1712081228430.1371-100000@iolanthe.rowland.org>
+In-Reply-To: <20171206002638.GB5858@dastard>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Byungchul Park <byungchul.park@lge.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <willy@infradead.org>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, Emil Karlson <jkarlson@tuxera.com>, linux-xfs@vger.kernel.org
 
-On Fri, Dec 08, 2017 at 12:35:07PM -0500, Alan Stern wrote:
-> On Fri, 8 Dec 2017, Byungchul Park wrote:
+On 12/06/2017 02:26 AM, Dave Chinner wrote:
+> On Wed, Dec 06, 2017 at 08:18:50AM +1100, Dave Chinner wrote:
+>> On Tue, Dec 05, 2017 at 04:23:43PM +0200, Ari Sundholm wrote:
+>>> On 12/05/2017 12:28 AM, Dave Chinner wrote:
+>>>> On Thu, Nov 30, 2017 at 04:21:47PM +0200, Ari Sundholm wrote:
+>>>>> Hi!
+>>>>>
+>>>>> While debugging an issue, we found out that generic/399 seems to
+>>>>> rely on a behavior that is specific to ext4 in the following section
+>>>>> of code:
+>>>>> ----------------8<--------snip--------8<------------------------------
+>>>>> #
+>>>>> # Write files of 1 MB of all the same byte until we hit ENOSPC.
+>>>>> Note that we
+>>>>> # must not create sparse files, since the contents of sparse files are not
+>>>>> # stored on-disk.  Also, we create multiple files rather than one big file
+>>>>> # because we want to test for reuse of per-file keys.
+>>>>> #
+>>>>> total_file_size=0
+>>>>> i=1
+>>>>> while true; do
+>>>>> 	file=$SCRATCH_MNT/encrypted_dir/file$i
+>>>>> 	if ! $XFS_IO_PROG -f $file -c 'pwrite 0 1M' &> $tmp.out; then
+>>>>> 		if ! grep -q 'No space left on device' $tmp.out; then
+>>>>> 			echo "FAIL: unexpected pwrite failure"
+>>>>> 			cat $tmp.out
+>>>>> 		elif [ -e $file ]; then
+>>>>> 			total_file_size=$((total_file_size + $(stat -c %s $file)))
+>>>>> 		fi
+>>>>> 		break
+>>>>> 	fi
+>>>>> 	total_file_size=$((total_file_size + $(stat -c %s $file)))
+>>>>> 	i=$((i + 1))
+>>>>> 	if [ $i -gt $fs_size_in_mb ]; then
+>>>>> 		echo "FAIL: filesystem never filled up!"
+>>>>> 		break
+>>>>> 	fi
+>>>>> done
+>>>>> ----------------8<--------snip--------8<------------------------------
+>>>>>
+>>>>> What happens with ext4 is that the xfs_io command gives a nonzero
+>>>>> exit value not when the pwrite command fails with ENOSPC but during
+>>>>> the *next* iteration when opening the file fails with ENOSPC. Turns
+>>>>> out the pwrite command failing does not cause xfs_io to give a
+>>>>> nonzero exit value.
+>>>>
+>>>> That implies ext4 is returning zero bytes written to the pwrite()
+>>>> call rather than ENOSPC. i.e.:
+>>>>
+>>>>                  bytes = do_pwrite(file->fd, off, cnt, buffersize,
+>>>>                                  pwritev2_flags);
+>>>>                  if (bytes == 0)
+>>>>                          break;
+>>>>                  if (bytes < 0) {
+>>>>                          perror("pwrite");
+>>>>                          return -1;
+>>>>                  }
+>>>>
+>>>> So if it's exiting with no error, then we can't have got an error
+>>> >from ext4 at ENOSPC. If that's the case, it probably should be
+>>>> considered an ext4 bug, not an issue with xfs_io...
+>>>>
+>>>
+>>> No, according to what we've observed, that is not what happens. The
+>>> pwrite() call does fail and errno is ENOSPC after the call. The
+>>> immediate problem is that xfs_io does not reflect this failure in
+>>> its exit value and thus the check in generic/399 does not work in
+>>> this case. Only when open() fails during the next iteration does
+>>> xfs_io give a nonzero exit value and cause the check in the test
+>>> case to allow the test case to end successfully.
+>>
+>> Ah, io/pwrite.c fails to set exitcode on failure iappropriately
+>> before returning. Looks like there is a bunch of xfs_io commands
+>> that fail to do this properly.
+>>
+>>> What is specific to ext4 here is, as stated in my original message,
+>>> that open() fails.
+>>
+>> Because there are no more inodes to allocate (i.e. inode table is
+>> full) and so attempts to create more fail with ENOSPC. The xfs_io
+>> open command set exitcode appropriately, and that's why it finally
+>> triggers a test abort.
+>>
+>> Looks like xfs_io does need fixing to set exitcode appropriately on
+>> all failures...
 > 
-> > I'm sorry to hear that.. If I were you, I would also get
-> > annoyed. And.. thanks for explanation.
-> > 
-> > But, I think assigning lock classes properly and checking
-> > relationship of the classes to detect deadlocks is reasonable.
-> > 
-> > In my opinion about the common lockdep stuff, there are 2
-> > problems on it.
-> > 
-> > 1) Firstly, it's hard to assign lock classes *properly*. By
-> > default, it relies on the caller site of lockdep_init_map(),
-> > but we need to assign another class manually, where ordering
-> > rules are complicated so cannot rely on the caller site. That
-> > *only* can be done by experts of the subsystem.
-
-Sure, but that's not the issue here. The issue here is the lack of
-communication with subsystem experts and that the annotation
-complexity warnings given immediately by the subsystem experts were
-completely ignored...
-
-> > I think if they want to get benifit from lockdep, they have no
-> > choice but to assign classes manually with the domain knowledge,
-> > or use *lockdep_set_novalidate_class()* to invalidate locks
-> > making the developers annoyed and not want to use the checking
-> > for them.
+> Try the patch below.
 > 
-> Lockdep's no_validate class is used when the locking patterns are too
-> complicated for lockdep to understand.  Basically, it tells lockdep to
-> ignore those locks.
 
-Let me just point out two things here:
+Thanks, I'll try it. Sorry for the late response (was on vacation).
 
-	1. Using lockdep_set_novalidate_class() for anything other
-	than device->mutex will throw checkpatch warnings. Nice. (*)
-
-	2. lockdep_set_novalidate_class() is completely undocumented
-	- it's the first I've ever heard of this functionality. i.e.
-	nobody has ever told us there is a mechanism to turn off
-	validation of an object; we've *always* been told to "change
-	your code and/or fix your annotations" when discussing
-	lockdep deficiencies. (**)
-
-> The device core uses that class.  The tree of struct devices, each with
-> its own lock, gets used in many different and complicated ways.  
-> Lockdep can't understand this -- it doesn't have the ability to
-> represent an arbitrarily deep hierarchical tree of locks -- so we tell
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-That largely describes the in-memory structure of XFS, except we
-have a forest of lock trees, not just one....
-
-> it to ignore the device locks.
+> Cheers,
 > 
-> It sounds like XFS may need to do the same thing with its semaphores.
+> Dave.
+> 
 
-Who-ever adds semaphore checking to lockdep can add those
-annotations. The externalisation of the development cost of new
-lockdep functionality is one of the problems here.
-
--Dave.
-
-(*) checkpatch.pl is considered mostly harmful round here, too,
-but that's another rant....
-
-(**) the frequent occurrence of "core code/devs aren't held to the
-same rules/standard as everyone else" is another rant I have stored
-up for a rainy day.
-
--- 
-Dave Chinner
-david@fromorbit.com
