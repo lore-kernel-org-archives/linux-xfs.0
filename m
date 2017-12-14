@@ -1,144 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53150 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751461AbdLNJhV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Dec 2017 04:37:21 -0500
-Date: Thu, 14 Dec 2017 17:37:18 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 1/8] common/rc: report kmemleak errors
-Message-ID: <20171214093718.GH2749@eguan.usersys.redhat.com>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314499847.18893.9855359031542704591.stgit@magnolia>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:44808 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750795AbdLNKkG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Dec 2017 05:40:06 -0500
+Subject: Re: [PATCH] fs/*/Kconfig: drop links to 404-compliant
+ http://acl.bestbits.at
+References: <20171213053825.10903-1-kilobyte@angband.pl>
+From: Chao Yu <yuchao0@huawei.com>
+Message-ID: <8b0816ac-186e-77ec-68d9-d28e90d0d5d1@huawei.com>
+Date: Thu, 14 Dec 2017 18:39:40 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151314499847.18893.9855359031542704591.stgit@magnolia>
+In-Reply-To: <20171213053825.10903-1-kilobyte@angband.pl>
+Content-Type: text/plain; charset="windows-1252"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Adam Borowski <kilobyte@angband.pl>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Jonathan Corbet <corbet@lwn.net>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Eric Van Hensbergen <ericvh@gmail.com>, Ron Minnich <rminnich@sandia.gov>, Latchesar Ionkov <lucho@ionkov.net>, v9fs-developer@lists.sourceforge.net, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Yan, Zheng" <zyan@redhat.com>, Sage Weil <sage@redhat.com>, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org, Steve French <sfrench@samba.org>, linux-cifs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, David Woodhouse <dwmw2@infradead.org>, linux-mtd@lists.infradead.org, Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue, Dec 12, 2017 at 10:03:18PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 2017/12/13 13:38, Adam Borowski wrote:
+> This link is replicated in most filesystems' config stanzas.  Referring
+> to an archived version of that site is pointless as it mostly deals with
+> patches; user documentation is available elsewhere.
 > 
-> If kmemleak is enabled, scan and report memory leaks after every test.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  check     |    2 ++
->  common/rc |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 54 insertions(+)
-> 
-> 
-> diff --git a/check b/check
-> index b2d251a..469188e 100755
-> --- a/check
-> +++ b/check
-> @@ -497,6 +497,7 @@ _check_filesystems()
->  	fi
->  }
+> Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+
+[skip]
+
+> diff --git a/fs/f2fs/Kconfig b/fs/f2fs/Kconfig
+> index 378c221d68a9..9a20ef42fadd 100644
+> --- a/fs/f2fs/Kconfig
+> +++ b/fs/f2fs/Kconfig
+> @@ -35,8 +35,7 @@ config F2FS_FS_XATTR
+>  	default y
+>  	help
+>  	  Extended attributes are name:value pairs associated with inodes by
+> -	  the kernel or by users (see the attr(5) manual page, or visit
+> -	  <http://acl.bestbits.at/> for details).
+> +	  the kernel or by users (see the attr(5) manual page for details).
 >  
-> +_init_kmemleak
->  _prepare_test_list
+>  	  If unsure, say N.
 >  
->  if $OPTIONS_HAVE_SECTIONS; then
-> @@ -793,6 +794,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
->  		    n_try=`expr $n_try + 1`
->  		    _check_filesystems
->  		    _check_dmesg || err=true
-> +		    _check_kmemleak || err=true
->  		fi
+> @@ -49,9 +48,6 @@ config F2FS_FS_POSIX_ACL
+>  	  Posix Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
 >  
->  	    fi
-> diff --git a/common/rc b/common/rc
-> index cb83918..a2bed36 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -3339,6 +3339,58 @@ _check_dmesg()
->  	fi
->  }
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
 >  
-> +# capture the kmemleak report
-> +_capture_kmemleak()
-> +{
-> +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> +	local _leak_file="$1"
-> +
-> +	# Tell the kernel to scan for memory leaks.  Apparently the write
-> +	# returns before the scan is complete, so do it twice in the hopes
-> +	# that twice is enough to capture all the leaks.
-> +	echo "scan" > "${_kern_knob}"
-> +	cat "${_kern_knob}" > /dev/null
-> +	echo "scan" > "${_kern_knob}"
-> +	cat "${_kern_knob}" > "${_leak_file}"
-> +	echo "clear" > "${_kern_knob}"
+>  config F2FS_FS_SECURITY
 
-Hmm, two scans seem not enough either, I could see false positive easily
-in a 'quick' group run, because some leaks are not reported immediately
-after the test but after next test or next few tests. e.g. I saw
-generic/008 (tested on XFS) being reported as leaking memory, and from
-008.kmemleak I saw:
+Looks good to me.
 
-unreferenced object 0xffff880277679800 (size 512):
-  comm "nametest", pid 25007, jiffies 4300176958 (age 9.854s)
-...
-
-But "nametest" is only used in generic/007, the leak should be triggered
-by generic/007 too, but 007 was reported as PASS in my case.
-
-Not sure what's the best way to deal with these false positive, adding
-more scans seem to work, but that's ugly and requires more test time..
-What do you think?
-
-Otherwise the whole check kmemleak framework looks fine to me.
+Acked-by: Chao Yu <yuchao0@huawei.com>
 
 Thanks,
-Eryu
 
-> +}
-> +
-> +# set up kmemleak
-> +_init_kmemleak()
-> +{
-> +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> +
-> +	if [ ! -w "${_kern_knob}" ]; then
-> +		return 0
-> +	fi
-> +
-> +	# Disable the automatic scan so that we can control it completely,
-> +	# then dump all the leaks recorded so far.
-> +	echo "scan=off" > "${_kern_knob}"
-> +	_capture_kmemleak /dev/null
-> +}
-> +
-> +# check kmemleak log
-> +_check_kmemleak()
-> +{
-> +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> +	local _leak_file="${seqres}.kmemleak"
-> +
-> +	if [ ! -w "${_kern_knob}" ]; then
-> +		return 0
-> +	fi
-> +
-> +	# Capture and report any leaks
-> +	_capture_kmemleak "${_leak_file}"
-> +	if [ -s "${_leak_file}" ]; then
-> +		_dump_err "_check_kmemleak: something found in kmemleak (see ${_leak_file})"
-> +		return 1
-> +	else
-> +		rm -f "${_leak_file}"
-> +		return 0
-> +	fi
-> +}
-> +
->  # don't check dmesg log after test
->  _disable_dmesg_check()
->  {
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
