@@ -1,41 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:43520 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753416AbdLNQ7t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 11:59:49 -0500
-Date: Thu, 14 Dec 2017 08:57:19 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/5] xfs: add the ability to join a held buffer to a
- defer_ops
-Message-ID: <20171214165719.GT19219@magnolia>
-References: <151270433736.12194.14709247629624139846.stgit@magnolia>
- <151270434945.12194.16466347732765177795.stgit@magnolia>
- <20171214164220.GH32616@infradead.org>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:46759 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753703AbdLNRii (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 12:38:38 -0500
+Received: by mail-wm0-f52.google.com with SMTP id r78so12906991wme.5
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2017 09:38:38 -0800 (PST)
+From: Avi Kivity <avi@scylladb.com>
+Subject: Detecting RWF_NOWAIT support
+Message-ID: <b45afd09-5fa8-74ac-4ba4-9dc9074e30cf@scylladb.com>
+Date: Thu, 14 Dec 2017 19:38:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171214164220.GH32616@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, libor.klepac@bcom.cz, bfoster@redhat.com, alex@zadarastorage.com, david@fromorbit.com
+To: Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 14, 2017 at 08:42:20AM -0800, Christoph Hellwig wrote:
-> Looks good,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Although I wonder if for both inodes and buffers we eventually
-> want lists instead of arrays to hold the attached objects.
+I'm looking to add support for RWF_NOWAIT within a linux-aio iocb. 
+Naturally, I need to detect at runtime whether the kernel support 
+RWF_NOWAIT or not.
 
-We will if we ever want more than two inodes/buffers held per dfops, but
-for now it doesn't seem necessary (and has the same overhead for the
-dfops as a list_head).
 
---D
+The only method I could find was to issue an I/O with RWF_NOWAIT set, 
+and look for errors. This is somewhat less than perfect:
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  - from the error, I can't tell whether RWF_NOWAIT was the problem, or 
+something else. If I enable a number of new features, I have to run 
+through all combinations to figure out which ones are supported and 
+which are not.
+
+  - RWF_NOWAIT support is per-filesystem, so I can't just remember not 
+to enable RWF_NOWAIT globally, I have to track it per file.
+
+
+Did I miss another method of detecting RWF_NOWAIT?
+
