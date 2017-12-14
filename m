@@ -1,113 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f194.google.com ([209.85.213.194]:36434 "EHLO
+Received: from mail-yb0-f194.google.com ([209.85.213.194]:36258 "EHLO
         mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750720AbdLNGjj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 01:39:39 -0500
+        with ESMTP id S1750873AbdLNGwd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 01:52:33 -0500
 MIME-Version: 1.0
-In-Reply-To: <151314503583.18893.15475795025536691678.stgit@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia> <151314503583.18893.15475795025536691678.stgit@magnolia>
+In-Reply-To: <20171213234404.GF5858@dastard>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314505158.18893.11894289091110903029.stgit@magnolia> <20171213232805.GI6896@magnolia>
+ <20171213234404.GF5858@dastard>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 14 Dec 2017 08:39:38 +0200
-Message-ID: <CAOQ4uxh-msvkXA0Uyh9DfYicM6QGAohuaOZdwVpkKrfNPpvDTA@mail.gmail.com>
-Subject: Re: [PATCH 6/8] fsstress: implement the clonerange/deduperange ioctls
+Date: Thu, 14 Dec 2017 08:52:32 +0200
+Message-ID: <CAOQ4uxhXDVPAzv4jNsgsnbuuN4Hm_yGJKS4hBTzQBp+8hw18_Q@mail.gmail.com>
+Subject: Re: [PATCH v2 8/8] xfs/068: fix clonerange problems in file/dir count output
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 8:03 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Dec 14, 2017 at 1:44 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Dec 13, 2017 at 03:28:05PM -0800, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> In this test we use a fixed sequence of operations in fsstress to create
+>> some number of files and dirs and then exercise xfsdump/xfsrestore on
+>> them.  Since clonerange/deduperange are not supported on all xfs
+>> configurations, detect if they're in fsstress and disable them so that
+>> we always execute exactly the same sequence of operations no matter how
+>> the filesystem is configured.
+>>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> ---
+>>  tests/xfs/068 |    8 ++++++++
+>>  1 file changed, 8 insertions(+)
+>>
+>> diff --git a/tests/xfs/068 b/tests/xfs/068
+>> index 7151e28..f95a539 100755
+>> --- a/tests/xfs/068
+>> +++ b/tests/xfs/068
+>> @@ -43,6 +43,14 @@ trap "rm -rf $tmp.*; exit \$status" 0 1 2 3 15
+>>  _supported_fs xfs
+>>  _supported_os Linux
+>>
+>> +# Remove fsstress commands that aren't supported on all xfs configs
+>> +if $FSSTRESS_PROG | grep -q clonerange; then
+>> +     FSSTRESS_AVOID="-f clonerange=0 $FSSTRESS_AVOID"
+>> +fi
+>> +if $FSSTRESS_PROG | grep -q deduperange; then
+>> +     FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
+>> +fi
+>> +
 >
-> Mix it up a bit by reflinking and deduping data blocks when possible.
+> I'd put this inside _create_dumpdir_stress_num as it's supposed to
+> DTRT for the dump/restore that follows. Otherwise looks fine.
 >
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  ltp/fsstress.c |  440 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 440 insertions(+)
->
->
-> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> index 96f48b1..e2dfa5e 100644
-> --- a/ltp/fsstress.c
-> +++ b/ltp/fsstress.c
-> @@ -68,7 +68,9 @@ typedef enum {
->         OP_BULKSTAT,
->         OP_BULKSTAT1,
->         OP_CHOWN,
-> +       OP_CLONERANGE,
->         OP_CREAT,
-> +       OP_DEDUPERANGE,
->         OP_DREAD,
->         OP_DWRITE,
->         OP_FALLOCATE,
-> @@ -174,7 +176,9 @@ void        awrite_f(int, long);
->  void   bulkstat_f(int, long);
->  void   bulkstat1_f(int, long);
->  void   chown_f(int, long);
-> +void   clonerange_f(int, long);
->  void   creat_f(int, long);
-> +void   deduperange_f(int, long);
->  void   dread_f(int, long);
->  void   dwrite_f(int, long);
->  void   fallocate_f(int, long);
-> @@ -221,7 +225,9 @@ opdesc_t    ops[] = {
->         { OP_BULKSTAT, "bulkstat", bulkstat_f, 1, 0 },
->         { OP_BULKSTAT1, "bulkstat1", bulkstat1_f, 1, 0 },
->         { OP_CHOWN, "chown", chown_f, 3, 1 },
-> +       { OP_CLONERANGE, "clonerange", clonerange_f, 4, 1 },
->         { OP_CREAT, "creat", creat_f, 4, 1 },
-> +       { OP_DEDUPERANGE, "deduperange", deduperange_f, 4, 1},
->         { OP_DREAD, "dread", dread_f, 4, 0 },
->         { OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
->         { OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
-> @@ -1312,6 +1318,16 @@ make_freq_table(void)
->         }
->  }
->
-> +void
-> +free_freq_table(void)
-> +{
-> +       if (!freq_table)
-> +               return;
-> +       free(freq_table);
-> +       freq_table = NULL;
-> +       freq_table_size = 0;
-> +}
-> +
->  int
->  mkdir_path(pathname_t *name, mode_t mode)
->  {
-> @@ -2189,6 +2205,430 @@ chown_f(int opno, long r)
->         free_pathname(&f);
->  }
->
-> +static void
-> +disable_op(opty_t opt)
-> +{
-> +       opdesc_t        *p;
-> +
-> +       for (p = ops; p < ops_end; p++) {
-> +               if (opt == p->op) {
-> +                       p->freq = 0;
-> +                       free_freq_table();
-> +                       make_freq_table();
-> +                       return;
-> +               }
-> +       }
-> +}
-> +
 
-If we want to go down the path of runtime disable ops, the question is:
-Why disable_op clonerange/deduperange and not disable_op
-insert/collapse/zero/punch? there are probably other ops as well.
-This is also inconsistent by the fact that build time disable of
-neither FALLOC nor LONERANGE/DEDUPERANGE will not
-change the random op sequence, while runtime disable will.
+Guys,
 
-This is related to the conversation of the golden output of xfs/068.
-Will take my arguments there now...
+Please take a look at the only 2 changes in the history of this test.
+I would like to make sure we are not in a loop:
 
+5d36d85 xfs/068: update golden output due to new operations in fsstress
+6e5194d fsstress: Add fallocate insert range operation
+
+The first change excludes the new insert op (by dchinner on commit)
+The second change re-includes insert op, does not exclude new
+mread/mwrite ops and updates golden output, following this discussion:
+https://marc.info/?l=fstests&m=149014697111838&w=2
+(the referenced thread ends with a ? to Dave, but was followed by v6..v8
+ that were "silently acked" by Dave).
+
+I personally argued that the blacklist approach to xfs/068 is fragile and indeed
+this is the third time the test breaks in the history I know of,
+because of added
+fsstress ops. Fine. As long as we at least stay consistent with a decision about
+update golden output vs. exclude ops and document the decision in a comment
+with the reasoning, so we won't have to repeat this discussion next time.
+
+Darrick,
+
+IMO, we should follow the path of updating golden output and instead of
+dropping clone/dedupe from ops table in runtime, you should make them
+a noop or ignore the error, keeping the random sequence unchanged.
+This is more or less what happens with insert/collapse (error is ignored)
+already, so it would be weird to make exceptions.
+
+For reference, fsx does disable insert/collapse/zero/punch at runtime
+and that does change the random sequence of fsx.
+
+Cheers,
 Amir.
