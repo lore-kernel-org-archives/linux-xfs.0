@@ -1,511 +1,335 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45518 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751357AbdLMX7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Dec 2017 18:59:46 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBDNlJXh100085
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:46 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2eue5b029h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:59:45 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNuugu011452
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:56 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBDNuus5017779
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2017 23:56:56 GMT
-Subject: [PATCH 05/15] xfs: set up scrub cross-referencing helpers
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Dec 2017 15:56:53 -0800
-Message-ID: <151320941300.30154.10726085437382772116.stgit@magnolia>
-In-Reply-To: <151320938254.30154.1046660005648421683.stgit@magnolia>
-References: <151320938254.30154.1046660005648421683.stgit@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:41834 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752633AbdLNTyh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Dec 2017 14:54:37 -0500
+Date: Thu, 14 Dec 2017 11:54:35 -0800
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [PATCH] fs/*/Kconfig: drop links to 404-compliant
+ http://acl.bestbits.at
+Message-ID: <20171214195435.GD35234@jaegeuk-macbookpro.roam.corp.google.com>
+References: <20171213053825.10903-1-kilobyte@angband.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171213053825.10903-1-kilobyte@angband.pl>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Adam Borowski <kilobyte@angband.pl>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Jonathan Corbet <corbet@lwn.net>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Eric Van Hensbergen <ericvh@gmail.com>, Ron Minnich <rminnich@sandia.gov>, Latchesar Ionkov <lucho@ionkov.net>, v9fs-developer@lists.sourceforge.net, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Yan, Zheng" <zyan@redhat.com>, Sage Weil <sage@redhat.com>, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org, Steve French <sfrench@samba.org>, linux-cifs@vger.kernel.org, Chao Yu <yuchao0@huawei.com>, linux-f2fs-devel@lists.sourceforge.net, David Woodhouse <dwmw2@infradead.org>, linux-mtd@lists.infradead.org, Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 12/13, Adam Borowski wrote:
+> This link is replicated in most filesystems' config stanzas.  Referring
+> to an archived version of that site is pointless as it mostly deals with
+> patches; user documentation is available elsewhere.
+> 
+> Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+> ---
+> Sending this as one piece; if you guys would instead prefer this chopped
+> into tiny per-filesystem bits, please say so.
+> 
+> 
+>  Documentation/filesystems/ext2.txt |  2 --
+>  Documentation/filesystems/ext4.txt |  7 +++----
+>  fs/9p/Kconfig                      |  3 ---
+>  fs/Kconfig                         |  6 +-----
+>  fs/btrfs/Kconfig                   |  3 ---
+>  fs/ceph/Kconfig                    |  3 ---
+>  fs/cifs/Kconfig                    | 15 +++++++--------
+>  fs/ext2/Kconfig                    |  6 +-----
+>  fs/ext4/Kconfig                    |  3 ---
+>  fs/f2fs/Kconfig                    |  6 +-----
 
-Create some helper functions that we'll use later to deal with problems
-we might encounter while cross referencing metadata with other metadata.
+Acked-by: Jaegeuk Kim <jaegeuk@kernel.org>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/btree.c  |   69 ++++++++++++++++++++-----
- fs/xfs/scrub/btree.h  |    9 +++
- fs/xfs/scrub/common.c |  138 +++++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/scrub/common.h |   22 ++++++++
- fs/xfs/scrub/scrub.c  |   10 ++++
- fs/xfs/scrub/trace.h  |   22 ++++++++
- 6 files changed, 248 insertions(+), 22 deletions(-)
-
-
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index df07661..8d48b5b1 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -42,12 +42,14 @@
-  * Check for btree operation errors.  See the section about handling
-  * operational errors in common.c.
-  */
--bool
--xfs_scrub_btree_process_error(
-+static bool
-+__xfs_scrub_btree_process_error(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_btree_cur		*cur,
- 	int				level,
--	int				*error)
-+	int				*error,
-+	bool				xref,
-+	void				*ret_ip)
- {
- 	if (*error == 0)
- 		return true;
-@@ -60,36 +62,78 @@ xfs_scrub_btree_process_error(
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
--		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
- 		*error = 0;
- 		/* fall through */
- 	default:
- 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
- 			trace_xfs_scrub_ifork_btree_op_error(sc, cur, level,
--					*error, __return_address);
-+					*error, ret_ip);
- 		else
- 			trace_xfs_scrub_btree_op_error(sc, cur, level,
--					*error, __return_address);
-+					*error, ret_ip);
- 		break;
- 	}
- 	return false;
- }
- 
-+bool
-+xfs_scrub_btree_process_error(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	int				*error)
-+{
-+	return __xfs_scrub_btree_process_error(sc, cur, level, error, false,
-+			__return_address);
-+}
-+
-+bool
-+xfs_scrub_btree_xref_process_error(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	int				*error)
-+{
-+	return __xfs_scrub_btree_process_error(sc, cur, level, error, true,
-+			__return_address);
-+}
-+
- /* Record btree block corruption. */
--void
--xfs_scrub_btree_set_corrupt(
-+static void
-+__xfs_scrub_btree_set_corrupt(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_btree_cur		*cur,
--	int				level)
-+	int				level,
-+	bool				xref,
-+	void				*ret_ip)
- {
--	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
- 
- 	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
- 		trace_xfs_scrub_ifork_btree_error(sc, cur, level,
--				__return_address);
-+				ret_ip);
- 	else
- 		trace_xfs_scrub_btree_error(sc, cur, level,
--				__return_address);
-+				ret_ip);
-+}
-+
-+void
-+xfs_scrub_btree_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level)
-+{
-+	__xfs_scrub_btree_set_corrupt(sc, cur, level, false, __return_address);
-+}
-+
-+void
-+xfs_scrub_btree_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level)
-+{
-+	__xfs_scrub_btree_set_corrupt(sc, cur, level, true, __return_address);
- }
- 
- /*
-@@ -512,5 +556,6 @@ xfs_scrub_btree(
- 	}
- 
- out:
-+
- 	return error;
- }
-diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-index 4de825a6..e2b868e 100644
---- a/fs/xfs/scrub/btree.h
-+++ b/fs/xfs/scrub/btree.h
-@@ -26,10 +26,19 @@
- bool xfs_scrub_btree_process_error(struct xfs_scrub_context *sc,
- 		struct xfs_btree_cur *cur, int level, int *error);
- 
-+/* Check for btree xref operation errors. */
-+bool xfs_scrub_btree_xref_process_error(struct xfs_scrub_context *sc,
-+				struct xfs_btree_cur *cur, int level,
-+				int *error);
-+
- /* Check for btree corruption. */
- void xfs_scrub_btree_set_corrupt(struct xfs_scrub_context *sc,
- 		struct xfs_btree_cur *cur, int level);
- 
-+/* Check for btree xref discrepancies. */
-+void xfs_scrub_btree_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		struct xfs_btree_cur *cur, int level);
-+
- struct xfs_scrub_btree;
- typedef int (*xfs_scrub_btree_rec_fn)(
- 	struct xfs_scrub_btree	*bs,
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 98452ad..effdcfa 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -78,12 +78,14 @@
-  */
- 
- /* Check for operational errors. */
--bool
--xfs_scrub_process_error(
-+static bool
-+__xfs_scrub_process_error(
- 	struct xfs_scrub_context	*sc,
- 	xfs_agnumber_t			agno,
- 	xfs_agblock_t			bno,
--	int				*error)
-+	int				*error,
-+	bool				xref,
-+	void				*ret_ip)
- {
- 	switch (*error) {
- 	case 0:
-@@ -95,24 +97,48 @@ xfs_scrub_process_error(
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
--		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
- 		*error = 0;
- 		/* fall through */
- 	default:
- 		trace_xfs_scrub_op_error(sc, agno, bno, *error,
--				__return_address);
-+				ret_ip);
- 		break;
- 	}
- 	return false;
- }
- 
--/* Check for operational errors for a file offset. */
- bool
--xfs_scrub_fblock_process_error(
-+xfs_scrub_process_error(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agnumber_t			agno,
-+	xfs_agblock_t			bno,
-+	int				*error)
-+{
-+	return __xfs_scrub_process_error(sc, agno, bno, error, false,
-+			__return_address);
-+}
-+
-+bool
-+xfs_scrub_xref_process_error(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agnumber_t			agno,
-+	xfs_agblock_t			bno,
-+	int				*error)
-+{
-+	return __xfs_scrub_process_error(sc, agno, bno, error, true,
-+			__return_address);
-+}
-+
-+/* Check for operational errors for a file offset. */
-+static bool
-+__xfs_scrub_fblock_process_error(
- 	struct xfs_scrub_context	*sc,
- 	int				whichfork,
- 	xfs_fileoff_t			offset,
--	int				*error)
-+	int				*error,
-+	bool				xref,
-+	void				*ret_ip)
- {
- 	switch (*error) {
- 	case 0:
-@@ -124,17 +150,39 @@ xfs_scrub_fblock_process_error(
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
--		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		sc->sm->sm_flags |= xfs_scrub_corrupt_flag(xref);
- 		*error = 0;
- 		/* fall through */
- 	default:
- 		trace_xfs_scrub_file_op_error(sc, whichfork, offset, *error,
--				__return_address);
-+				ret_ip);
- 		break;
- 	}
- 	return false;
- }
- 
-+bool
-+xfs_scrub_fblock_process_error(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	int				*error)
-+{
-+	return __xfs_scrub_fblock_process_error(sc, whichfork, offset, error,
-+			false, __return_address);
-+}
-+
-+bool
-+xfs_scrub_fblock_xref_process_error(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	int				*error)
-+{
-+	return __xfs_scrub_fblock_process_error(sc, whichfork, offset, error,
-+			true, __return_address);
-+}
-+
- /*
-  * Handling scrub corruption/optimization/warning checks.
-  *
-@@ -183,6 +231,16 @@ xfs_scrub_block_set_corrupt(
- 	trace_xfs_scrub_block_error(sc, bp->b_bn, __return_address);
- }
- 
-+/* Record a corruption while cross-referencing. */
-+void
-+xfs_scrub_block_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	trace_xfs_scrub_block_error(sc, bp->b_bn, __return_address);
-+}
-+
- /*
-  * Record a corrupt inode.  The trace data will include the block given
-  * by bp if bp is given; otherwise it will use the block location of the
-@@ -198,6 +256,17 @@ xfs_scrub_ino_set_corrupt(
- 	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
- }
- 
-+/* Record a corruption while cross-referencing with an inode. */
-+void
-+xfs_scrub_ino_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	xfs_ino_t			ino,
-+	struct xfs_buf			*bp)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
-+}
-+
- /* Record corruption in a block indexed by a file fork. */
- void
- xfs_scrub_fblock_set_corrupt(
-@@ -209,6 +278,17 @@ xfs_scrub_fblock_set_corrupt(
- 	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
- }
- 
-+/* Record a corruption while cross-referencing a fork block. */
-+void
-+xfs_scrub_fblock_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
-+}
-+
- /*
-  * Warn about inodes that need administrative review but is not
-  * incorrect.
-@@ -564,3 +644,41 @@ xfs_scrub_setup_inode_contents(
- 	/* scrub teardown will unlock and release the inode for us */
- 	return error;
- }
-+
-+/*
-+ * Predicate that decides if we need to evaluate the cross-reference check.
-+ * If there was an error accessing the cross-reference btree, just delete
-+ * the cursor and skip the check.
-+ */
-+bool
-+xfs_scrub_should_xref(
-+	struct xfs_scrub_context	*sc,
-+	int				*error,
-+	struct xfs_btree_cur		**curpp)
-+{
-+	/* If not a btree cross-reference, just check the error code. */
-+	if (curpp == NULL) {
-+		if (*error == 0)
-+			return true;
-+		goto fail;
-+	}
-+
-+	ASSERT(*curpp != NULL);
-+	/* If no error or we've already given up on xref, just bail out. */
-+	if (*error == 0 || *curpp == NULL)
-+		return true;
-+
-+	/* xref error, delete cursor and bail out. */
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
-+	xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
-+	*curpp = NULL;
-+fail:
-+	trace_xfs_scrub_xref_error(sc, *error, __return_address);
-+
-+	/*
-+	 * Errors encountered during cross-referencing with another
-+	 * data structure should not cause this scrubber to abort.
-+	 */
-+	*error = 0;
-+	return false;
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index fe12053..0e12a10 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -56,6 +56,11 @@ bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset, int *error);
- 
-+bool xfs_scrub_xref_process_error(struct xfs_scrub_context *sc,
-+		xfs_agnumber_t agno, xfs_agblock_t bno, int *error);
-+bool xfs_scrub_fblock_xref_process_error(struct xfs_scrub_context *sc,
-+		int whichfork, xfs_fileoff_t offset, int *error);
-+
- void xfs_scrub_block_set_preen(struct xfs_scrub_context *sc,
- 		struct xfs_buf *bp);
- void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino,
-@@ -68,6 +73,13 @@ void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
- void xfs_scrub_fblock_set_corrupt(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset);
- 
-+void xfs_scrub_block_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		struct xfs_buf *bp);
-+void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
-+		struct xfs_buf *bp);
-+void xfs_scrub_fblock_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		int whichfork, xfs_fileoff_t offset);
-+
- void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino,
- 		struct xfs_buf *bp);
- void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
-@@ -76,6 +88,10 @@ void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
- void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
- int xfs_scrub_checkpoint_log(struct xfs_mount *mp);
- 
-+/* Are we set up for a cross-referencing operation? */
-+bool xfs_scrub_should_xref(struct xfs_scrub_context *sc, int *error,
-+			   struct xfs_btree_cur **curpp);
-+
- /* Setup functions */
- int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
- int xfs_scrub_setup_ag_allocbt(struct xfs_scrub_context *sc,
-@@ -139,4 +155,10 @@ int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
- int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
- 				   struct xfs_inode *ip, unsigned int resblks);
- 
-+/* Figure out the correct corruption flag for whatever's wrong. */
-+static inline __u32 xfs_scrub_corrupt_flag(bool xref)
-+{
-+	return xref ? XFS_SCRUB_OFLAG_XCORRUPT : XFS_SCRUB_OFLAG_CORRUPT;
-+}
-+
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index b98084d..93cbe5f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -111,6 +111,16 @@
-  * structure itself is corrupt, the CORRUPT flag will be set.  If
-  * the metadata is correct but otherwise suboptimal, the PREEN flag
-  * will be set.
-+ *
-+ * We perform secondary validation of filesystem metadata by
-+ * cross-referencing every record with all other available metadata.
-+ * For example, for block mapping extents, we verify that there are no
-+ * records in the free space and inode btrees corresponding to that
-+ * space extent and that there is a corresponding entry in the reverse
-+ * mapping btree.  Inconsistent metadata is noted by setting the
-+ * XCORRUPT flag; btree query function errors are noted by setting the
-+ * XFAIL flag and deleting the cursor to prevent further attempts to
-+ * cross-reference with a defective btree.
-  */
- 
- /*
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index c4ebfb5..81becf6 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -491,6 +491,28 @@ DEFINE_EVENT(xfs_scrub_sbtree_class, name, \
- DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_rec);
- DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_key);
- 
-+TRACE_EVENT(xfs_scrub_xref_error,
-+	TP_PROTO(struct xfs_scrub_context *sc, int error, void *ret_ip),
-+	TP_ARGS(sc, error, ret_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, type)
-+		__field(int, error)
-+		__field(void *, ret_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->type = sc->sm->sm_type;
-+		__entry->error = error;
-+		__entry->ret_ip = ret_ip;
-+	),
-+	TP_printk("dev %d:%d type %u xref error %d ret_ip %pF",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->type,
-+		  __entry->error,
-+		  __entry->ret_ip)
-+);
-+
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
- 
- #undef TRACE_INCLUDE_PATH
-
+>  fs/hfsplus/Kconfig                 |  3 ---
+>  fs/jffs2/Kconfig                   |  6 +-----
+>  fs/jfs/Kconfig                     |  3 ---
+>  fs/reiserfs/Kconfig                |  6 +-----
+>  fs/xfs/Kconfig                     |  3 ---
+>  15 files changed, 15 insertions(+), 60 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/ext2.txt b/Documentation/filesystems/ext2.txt
+> index 55755395d3dc..81c0becab225 100644
+> --- a/Documentation/filesystems/ext2.txt
+> +++ b/Documentation/filesystems/ext2.txt
+> @@ -49,12 +49,10 @@ sb=n				Use alternate superblock at this location.
+>  
+>  user_xattr			Enable "user." POSIX Extended Attributes
+>  				(requires CONFIG_EXT2_FS_XATTR).
+> -				See also http://acl.bestbits.at
+>  nouser_xattr			Don't support "user." extended attributes.
+>  
+>  acl				Enable POSIX Access Control Lists support
+>  				(requires CONFIG_EXT2_FS_POSIX_ACL).
+> -				See also http://acl.bestbits.at
+>  noacl				Don't support POSIX ACLs.
+>  
+>  nobh				Do not attach buffer_heads to file pagecache.
+> diff --git a/Documentation/filesystems/ext4.txt b/Documentation/filesystems/ext4.txt
+> index 75236c0c2ac2..8cd63e16f171 100644
+> --- a/Documentation/filesystems/ext4.txt
+> +++ b/Documentation/filesystems/ext4.txt
+> @@ -202,15 +202,14 @@ inode_readahead_blks=n	This tuning parameter controls the maximum
+>  			the buffer cache.  The default value is 32 blocks.
+>  
+>  nouser_xattr		Disables Extended User Attributes.  See the
+> -			attr(5) manual page and http://acl.bestbits.at/
+> -			for more information about extended attributes.
+> +			attr(5) manual page for more information about
+> +			extended attributes.
+>  
+>  noacl			This option disables POSIX Access Control List
+>  			support. If ACL support is enabled in the kernel
+>  			configuration (CONFIG_EXT4_FS_POSIX_ACL), ACL is
+>  			enabled by default on mount. See the acl(5) manual
+> -			page and http://acl.bestbits.at/ for more information
+> -			about acl.
+> +			page for more information about acl.
+>  
+>  bsddf		(*)	Make 'df' act like BSD.
+>  minixdf			Make 'df' act like Minix.
+> diff --git a/fs/9p/Kconfig b/fs/9p/Kconfig
+> index 6489e1fc1afd..11045d8e356a 100644
+> --- a/fs/9p/Kconfig
+> +++ b/fs/9p/Kconfig
+> @@ -25,9 +25,6 @@ config 9P_FS_POSIX_ACL
+>  	  POSIX Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  endif
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index 7aee6d699fd6..0ed56752f208 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -167,17 +167,13 @@ config TMPFS_POSIX_ACL
+>  	  files for sound to work properly.  In short, if you're not sure,
+>  	  say Y.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  config TMPFS_XATTR
+>  	bool "Tmpfs extended attributes"
+>  	depends on TMPFS
+>  	default n
+>  	help
+>  	  Extended attributes are name:value pairs associated with inodes by
+> -	  the kernel or by users (see the attr(5) manual page, or visit
+> -	  <http://acl.bestbits.at/> for details).
+> +	  the kernel or by users (see the attr(5) manual page for details).
+>  
+>  	  Currently this enables support for the trusted.* and
+>  	  security.* namespaces.
+> diff --git a/fs/btrfs/Kconfig b/fs/btrfs/Kconfig
+> index 2e558227931a..273351ee4c46 100644
+> --- a/fs/btrfs/Kconfig
+> +++ b/fs/btrfs/Kconfig
+> @@ -38,9 +38,6 @@ config BTRFS_FS_POSIX_ACL
+>  	  POSIX Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config BTRFS_FS_CHECK_INTEGRITY
+> diff --git a/fs/ceph/Kconfig b/fs/ceph/Kconfig
+> index 264e9bf83ff3..52095f473464 100644
+> --- a/fs/ceph/Kconfig
+> +++ b/fs/ceph/Kconfig
+> @@ -34,7 +34,4 @@ config CEPH_FS_POSIX_ACL
+>  	  POSIX Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+> diff --git a/fs/cifs/Kconfig b/fs/cifs/Kconfig
+> index d5b2e12b5d02..e73d25f4b97a 100644
+> --- a/fs/cifs/Kconfig
+> +++ b/fs/cifs/Kconfig
+> @@ -108,14 +108,13 @@ config CIFS_XATTR
+>          depends on CIFS
+>          help
+>            Extended attributes are name:value pairs associated with inodes by
+> -          the kernel or by users (see the attr(5) manual page, or visit
+> -          <http://acl.bestbits.at/> for details).  CIFS maps the name of
+> -          extended attributes beginning with the user namespace prefix
+> -          to SMB/CIFS EAs. EAs are stored on Windows servers without the
+> -          user namespace prefix, but their names are seen by Linux cifs clients
+> -          prefaced by the user namespace prefix. The system namespace
+> -          (used by some filesystems to store ACLs) is not supported at
+> -          this time.
+> +          the kernel or by users (see the attr(5) manual page for details).
+> +          CIFS maps the name of extended attributes beginning with the user
+> +          namespace prefix to SMB/CIFS EAs.  EAs are stored on Windows
+> +          servers without the user namespace prefix, but their names are
+> +          seen by Linux cifs clients prefaced by the user namespace prefix.
+> +          The system namespace (used by some filesystems to store ACLs) is
+> +          not supported at this time.
+>  
+>            If unsure, say Y.
+>  
+> diff --git a/fs/ext2/Kconfig b/fs/ext2/Kconfig
+> index c634874e12d9..894e4c53d1d2 100644
+> --- a/fs/ext2/Kconfig
+> +++ b/fs/ext2/Kconfig
+> @@ -13,8 +13,7 @@ config EXT2_FS_XATTR
+>  	depends on EXT2_FS
+>  	help
+>  	  Extended attributes are name:value pairs associated with inodes by
+> -	  the kernel or by users (see the attr(5) manual page, or visit
+> -	  <http://acl.bestbits.at/> for details).
+> +	  the kernel or by users (see the attr(5) manual page for details).
+>  
+>  	  If unsure, say N.
+>  
+> @@ -26,9 +25,6 @@ config EXT2_FS_POSIX_ACL
+>  	  Posix Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the Posix ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config EXT2_FS_SECURITY
+> diff --git a/fs/ext4/Kconfig b/fs/ext4/Kconfig
+> index 73b850f5659c..a453cc87082b 100644
+> --- a/fs/ext4/Kconfig
+> +++ b/fs/ext4/Kconfig
+> @@ -82,9 +82,6 @@ config EXT4_FS_POSIX_ACL
+>  	  POSIX Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config EXT4_FS_SECURITY
+> diff --git a/fs/f2fs/Kconfig b/fs/f2fs/Kconfig
+> index 378c221d68a9..9a20ef42fadd 100644
+> --- a/fs/f2fs/Kconfig
+> +++ b/fs/f2fs/Kconfig
+> @@ -35,8 +35,7 @@ config F2FS_FS_XATTR
+>  	default y
+>  	help
+>  	  Extended attributes are name:value pairs associated with inodes by
+> -	  the kernel or by users (see the attr(5) manual page, or visit
+> -	  <http://acl.bestbits.at/> for details).
+> +	  the kernel or by users (see the attr(5) manual page for details).
+>  
+>  	  If unsure, say N.
+>  
+> @@ -49,9 +48,6 @@ config F2FS_FS_POSIX_ACL
+>  	  Posix Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config F2FS_FS_SECURITY
+> diff --git a/fs/hfsplus/Kconfig b/fs/hfsplus/Kconfig
+> index 24bc20fd42f7..7cc8b4acf66a 100644
+> --- a/fs/hfsplus/Kconfig
+> +++ b/fs/hfsplus/Kconfig
+> @@ -20,9 +20,6 @@ config HFSPLUS_FS_POSIX_ACL
+>  	  POSIX Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  It needs to understand that POSIX ACLs are treated only under
+>  	  Linux. POSIX ACLs doesn't mean something under Mac OS X.
+>  	  Mac OS X beginning with version 10.4 ("Tiger") support NFSv4 ACLs,
+> diff --git a/fs/jffs2/Kconfig b/fs/jffs2/Kconfig
+> index d8bb6c411e96..ad850c5bf2ca 100644
+> --- a/fs/jffs2/Kconfig
+> +++ b/fs/jffs2/Kconfig
+> @@ -68,8 +68,7 @@ config JFFS2_FS_XATTR
+>  	default n
+>  	help
+>  	  Extended attributes are name:value pairs associated with inodes by
+> -	  the kernel or by users (see the attr(5) manual page, or visit
+> -	  <http://acl.bestbits.at/> for details).
+> +	  the kernel or by users (see the attr(5) manual page for details).
+>  
+>  	  If unsure, say N.
+>  
+> @@ -82,9 +81,6 @@ config JFFS2_FS_POSIX_ACL
+>  	  Posix Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the Posix ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config JFFS2_FS_SECURITY
+> diff --git a/fs/jfs/Kconfig b/fs/jfs/Kconfig
+> index 57cef19951db..851de78fdabb 100644
+> --- a/fs/jfs/Kconfig
+> +++ b/fs/jfs/Kconfig
+> @@ -16,9 +16,6 @@ config JFS_POSIX_ACL
+>  	  Posix Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the Posix ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config JFS_SECURITY
+> diff --git a/fs/reiserfs/Kconfig b/fs/reiserfs/Kconfig
+> index 7cd46666ba2c..86e71c0caf48 100644
+> --- a/fs/reiserfs/Kconfig
+> +++ b/fs/reiserfs/Kconfig
+> @@ -57,8 +57,7 @@ config REISERFS_FS_XATTR
+>  	depends on REISERFS_FS
+>  	help
+>  	  Extended attributes are name:value pairs associated with inodes by
+> -	  the kernel or by users (see the attr(5) manual page, or visit
+> -	  <http://acl.bestbits.at/> for details).
+> +	  the kernel or by users (see the attr(5) manual page for details).
+>  
+>  	  If unsure, say N.
+>  
+> @@ -70,9 +69,6 @@ config REISERFS_FS_POSIX_ACL
+>  	  Posix Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the Posix ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N
+>  
+>  config REISERFS_FS_SECURITY
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index f42fcf1b5465..46bcf0e649f5 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -48,9 +48,6 @@ config XFS_POSIX_ACL
+>  	  POSIX Access Control Lists (ACLs) support permissions for users and
+>  	  groups beyond the owner/group/world scheme.
+>  
+> -	  To learn more about Access Control Lists, visit the POSIX ACLs for
+> -	  Linux website <http://acl.bestbits.at/>.
+> -
+>  	  If you don't know what Access Control Lists are, say N.
+>  
+>  config XFS_RT
+> -- 
+> 2.15.1
