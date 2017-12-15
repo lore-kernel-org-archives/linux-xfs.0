@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47986 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54394 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756862AbdLOWGV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:06:21 -0500
+        with ESMTP id S1756380AbdLOWGT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:06:19 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 37/78] mm: Convert page migration to XArray
-Date: Fri, 15 Dec 2017 14:04:09 -0800
-Message-Id: <20171215220450.7899-38-willy@infradead.org>
+Subject: [PATCH v5 52/78] btrfs: Convert page cache to XArray
+Date: Fri, 15 Dec 2017 14:04:24 -0800
+Message-Id: <20171215220450.7899-53-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -19,129 +19,43 @@ From: Matthew Wilcox <mawilcox@microsoft.com>
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/migrate.c | 41 ++++++++++++++++-------------------------
- 1 file changed, 16 insertions(+), 25 deletions(-)
+ fs/btrfs/compression.c | 4 +---
+ fs/btrfs/extent_io.c   | 6 ++----
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 75d19904dd9a..7122fec9b075 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -322,7 +322,7 @@ void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep,
- 	page = migration_entry_to_page(entry);
+diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
+index e687d06cd97c..4174b166e235 100644
+--- a/fs/btrfs/compression.c
++++ b/fs/btrfs/compression.c
+@@ -449,9 +449,7 @@ static noinline int add_ra_bio_pages(struct inode *inode,
+ 		if (pg_index > end_index)
+ 			break;
  
- 	/*
--	 * Once radix-tree replacement of page migration started, page_count
-+	 * Once page cache replacement of page migration started, page_count
- 	 * *must* be zero. And, we don't want to call wait_on_page_locked()
- 	 * against a page without get_page().
- 	 * So, we use get_page_unless_zero(), here. Even failed, page fault
-@@ -437,10 +437,10 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 		struct buffer_head *head, enum migrate_mode mode,
- 		int extra_count)
- {
-+	XA_STATE(xas, &mapping->pages, page_index(page));
- 	struct zone *oldzone, *newzone;
- 	int dirty;
- 	int expected_count = 1 + extra_count;
--	void **pslot;
+-		rcu_read_lock();
+-		page = radix_tree_lookup(&mapping->pages, pg_index);
+-		rcu_read_unlock();
++		page = xa_load(&mapping->pages, pg_index);
+ 		if (page && !xa_is_value(page)) {
+ 			misses++;
+ 			if (misses > 4)
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index 4301cbf4e31f..fd5e9d887328 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -5197,11 +5197,9 @@ void clear_extent_buffer_dirty(struct extent_buffer *eb)
  
- 	/*
- 	 * Device public or private pages have an extra refcount as they are
-@@ -466,21 +466,16 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 	oldzone = page_zone(page);
- 	newzone = page_zone(newpage);
- 
--	xa_lock_irq(&mapping->pages);
--
--	pslot = radix_tree_lookup_slot(&mapping->pages,
-- 					page_index(page));
-+	xas_lock_irq(&xas);
- 
- 	expected_count += 1 + page_has_private(page);
--	if (page_count(page) != expected_count ||
--		radix_tree_deref_slot_protected(pslot,
--					&mapping->pages.xa_lock) != page) {
--		xa_unlock_irq(&mapping->pages);
-+	if (page_count(page) != expected_count || xas_load(&xas) != page) {
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
- 	if (!page_ref_freeze(page, expected_count)) {
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
-@@ -494,7 +489,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 	if (mode == MIGRATE_ASYNC && head &&
- 			!buffer_migrate_lock_buffers(head, mode)) {
- 		page_ref_unfreeze(page, expected_count);
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
-@@ -522,7 +517,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 		SetPageDirty(newpage);
- 	}
- 
--	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
-+	xas_store(&xas, newpage);
- 
- 	/*
- 	 * Drop cache reference from old page by unfreezing
-@@ -531,7 +526,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 	 */
- 	page_ref_unfreeze(page, expected_count - 1);
- 
--	xa_unlock(&mapping->pages);
-+	xas_unlock(&xas);
- 	/* Leave irq disabled to prevent preemption while updating stats */
- 
- 	/*
-@@ -571,22 +566,18 @@ EXPORT_SYMBOL(migrate_page_move_mapping);
- int migrate_huge_page_move_mapping(struct address_space *mapping,
- 				   struct page *newpage, struct page *page)
- {
-+	XA_STATE(xas, &mapping->pages, page_index(page));
- 	int expected_count;
--	void **pslot;
--
--	xa_lock_irq(&mapping->pages);
--
--	pslot = radix_tree_lookup_slot(&mapping->pages, page_index(page));
- 
-+	xas_lock_irq(&xas);
- 	expected_count = 2 + page_has_private(page);
--	if (page_count(page) != expected_count ||
--		radix_tree_deref_slot_protected(pslot, &mapping->pages.xa_lock) != page) {
--		xa_unlock_irq(&mapping->pages);
-+	if (page_count(page) != expected_count || xas_load(&xas) != page) {
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
- 	if (!page_ref_freeze(page, expected_count)) {
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
-@@ -595,11 +586,11 @@ int migrate_huge_page_move_mapping(struct address_space *mapping,
- 
- 	get_page(newpage);
- 
--	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
-+	xas_store(&xas, newpage);
- 
- 	page_ref_unfreeze(page, expected_count - 1);
- 
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
- 
- 	return MIGRATEPAGE_SUCCESS;
- }
+ 		clear_page_dirty_for_io(page);
+ 		xa_lock_irq(&page->mapping->pages);
+-		if (!PageDirty(page)) {
+-			radix_tree_tag_clear(&page->mapping->pages,
+-						page_index(page),
++		if (!PageDirty(page))
++			__xa_clear_tag(&page->mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_DIRTY);
+-		}
+ 		xa_unlock_irq(&page->mapping->pages);
+ 		ClearPageError(page);
+ 		unlock_page(page);
 -- 
 2.15.1
 
