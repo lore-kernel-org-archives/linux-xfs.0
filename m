@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50697 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54055 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756521AbdLOWFd (ORCPT
+        with ESMTP id S1756713AbdLOWFd (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:33 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 19/78] xarray: Add xas_create_range
-Date: Fri, 15 Dec 2017 14:03:51 -0800
-Message-Id: <20171215220450.7899-20-willy@infradead.org>
+Subject: [PATCH v5 61/78] dax: Convert __dax_invalidate_mapping_entry to XArray
+Date: Fri, 15 Dec 2017 14:04:33 -0800
+Message-Id: <20171215220450.7899-62-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,61 +17,47 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This hopefully temporary function is useful for users who have not yet
-been converted to multi-index entries.
+Simple now that we already have an xa_state!
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h |  2 ++
- lib/xarray.c           | 22 ++++++++++++++++++++++
- 2 files changed, 24 insertions(+)
+ fs/dax.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 2d889208b68d..bcc321fb280f 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -685,6 +685,8 @@ void xas_init_tags(const struct xa_state *);
- bool xas_nomem(struct xa_state *, gfp_t);
- void xas_pause(struct xa_state *);
+diff --git a/fs/dax.c b/fs/dax.c
+index 2629ffa70575..d3894c15609a 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -413,24 +413,24 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	XA_STATE(xas, &mapping->pages, index);
+ 	int ret = 0;
+ 	void *entry;
+-	struct radix_tree_root *pages = &mapping->pages;
  
-+void xas_create_range(struct xa_state *, unsigned long max);
-+
- /**
-  * xas_reload() - Refetch an entry from the xarray.
-  * @xas: XArray operation state.
-diff --git a/lib/xarray.c b/lib/xarray.c
-index a4975aeedf6b..e3be7c0c2e35 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -605,6 +605,28 @@ void *xas_create(struct xa_state *xas)
+ 	xa_lock_irq(&mapping->pages);
+ 	entry = get_unlocked_mapping_entry(&xas);
+ 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
+ 		goto out;
+ 	if (!trunc &&
+-	    (radix_tree_tag_get(pages, index, PAGECACHE_TAG_DIRTY) ||
+-	     radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE)))
++	    (xas_get_tag(&xas, PAGECACHE_TAG_DIRTY) ||
++	     xas_get_tag(&xas, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
+-	radix_tree_delete(pages, index);
++	xas_store(&xas, NULL);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+ out:
+ 	put_unlocked_mapping_entry(&xas, entry);
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
+ 	return ret;
  }
- EXPORT_SYMBOL_GPL(xas_create);
- 
-+/**
-+ * xas_create_range() - Ensure that stores to this range will succeed
-+ * @xas: XArray operation state.
-+ * @max: The highest index to create a slot for.
-+ *
-+ * Creates all of the slots in the range between the current position of
-+ * @xas and @max.  This is for the benefit of users who have not yet been
-+ * converted to multi-index entries.
-+ *
-+ * The implementation is naive.
-+ */
-+void xas_create_range(struct xa_state *xas, unsigned long max)
-+{
-+	XA_STATE(tmp, xas->xa, xas->xa_index);
 +
-+	do {
-+		xas_create(&tmp);
-+		xas_set(&tmp, tmp.xa_index + XA_CHUNK_SIZE);
-+	} while (tmp.xa_index < max);
-+}
-+EXPORT_SYMBOL_GPL(xas_create_range);
-+
- static void store_siblings(struct xa_state *xas,
- 				void *entry, int *countp, int *valuesp)
- {
+ /*
+  * Delete DAX entry at @index from @mapping.  Wait for it
+  * to be unlocked before deleting it.
 -- 
 2.15.1
 
