@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59663 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47986 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756598AbdLOWF2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:28 -0500
+        with ESMTP id S1756862AbdLOWGV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:06:21 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 73/78] xfs: Convert xfs dquot to XArray
-Date: Fri, 15 Dec 2017 14:04:45 -0800
-Message-Id: <20171215220450.7899-74-willy@infradead.org>
+Subject: [PATCH v5 37/78] mm: Convert page migration to XArray
+Date: Fri, 15 Dec 2017 14:04:09 -0800
+Message-Id: <20171215220450.7899-38-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,249 +17,131 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is a pretty straight-forward conversion.
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/xfs/xfs_dquot.c | 38 +++++++++++++++++++++-----------------
- fs/xfs/xfs_qm.c    | 32 ++++++++++++++++----------------
- fs/xfs/xfs_qm.h    | 18 +++++++++---------
- 3 files changed, 46 insertions(+), 42 deletions(-)
+ mm/migrate.c | 41 ++++++++++++++++-------------------------
+ 1 file changed, 16 insertions(+), 25 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index e2a466df5dd1..c6832db23ca8 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -44,7 +44,7 @@
-  * Lock order:
-  *
-  * ip->i_lock
-- *   qi->qi_tree_lock
-+ *   qi->qi_xa_lock
-  *     dquot->q_qlock (xfs_dqlock() and friends)
-  *       dquot->q_flush (xfs_dqflock() and friends)
-  *       qi->qi_lru_lock
-@@ -752,8 +752,8 @@ xfs_qm_dqget(
- 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
+diff --git a/mm/migrate.c b/mm/migrate.c
+index 75d19904dd9a..7122fec9b075 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -322,7 +322,7 @@ void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep,
+ 	page = migration_entry_to_page(entry);
+ 
+ 	/*
+-	 * Once radix-tree replacement of page migration started, page_count
++	 * Once page cache replacement of page migration started, page_count
+ 	 * *must* be zero. And, we don't want to call wait_on_page_locked()
+ 	 * against a page without get_page().
+ 	 * So, we use get_page_unless_zero(), here. Even failed, page fault
+@@ -437,10 +437,10 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 		struct buffer_head *head, enum migrate_mode mode,
+ 		int extra_count)
  {
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
--	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
--	struct xfs_dquot	*dqp;
-+	struct xarray		*xa = xfs_dquot_xa(qi, type);
-+	struct xfs_dquot	*dqp, *duplicate;
- 	int			error;
- 
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-@@ -772,23 +772,24 @@ xfs_qm_dqget(
- 	}
- 
- restart:
--	mutex_lock(&qi->qi_tree_lock);
--	dqp = radix_tree_lookup(tree, id);
-+	mutex_lock(&qi->qi_xa_lock);
-+	dqp = xa_load(xa, id);
-+found:
- 	if (dqp) {
- 		xfs_dqlock(dqp);
- 		if (dqp->dq_flags & XFS_DQ_FREEING) {
- 			xfs_dqunlock(dqp);
--			mutex_unlock(&qi->qi_tree_lock);
-+			mutex_unlock(&qi->qi_xa_lock);
- 			trace_xfs_dqget_freeing(dqp);
- 			delay(1);
- 			goto restart;
- 		}
- 
--		/* uninit / unused quota found in radix tree, keep looking  */
-+		/* uninit / unused quota found, keep looking  */
- 		if (flags & XFS_QMOPT_DQNEXT) {
- 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
- 				xfs_dqunlock(dqp);
--				mutex_unlock(&qi->qi_tree_lock);
-+				mutex_unlock(&qi->qi_xa_lock);
- 				error = xfs_dq_get_next_id(mp, type, &id);
- 				if (error)
- 					return error;
-@@ -797,14 +798,14 @@ xfs_qm_dqget(
- 		}
- 
- 		dqp->q_nrefs++;
--		mutex_unlock(&qi->qi_tree_lock);
-+		mutex_unlock(&qi->qi_xa_lock);
- 
- 		trace_xfs_dqget_hit(dqp);
- 		XFS_STATS_INC(mp, xs_qm_dqcachehits);
- 		*O_dqpp = dqp;
- 		return 0;
- 	}
--	mutex_unlock(&qi->qi_tree_lock);
-+	mutex_unlock(&qi->qi_xa_lock);
- 	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
++	XA_STATE(xas, &mapping->pages, page_index(page));
+ 	struct zone *oldzone, *newzone;
+ 	int dirty;
+ 	int expected_count = 1 + extra_count;
+-	void **pslot;
  
  	/*
-@@ -854,20 +855,23 @@ xfs_qm_dqget(
- 		}
+ 	 * Device public or private pages have an extra refcount as they are
+@@ -466,21 +466,16 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 	oldzone = page_zone(page);
+ 	newzone = page_zone(newpage);
+ 
+-	xa_lock_irq(&mapping->pages);
+-
+-	pslot = radix_tree_lookup_slot(&mapping->pages,
+- 					page_index(page));
++	xas_lock_irq(&xas);
+ 
+ 	expected_count += 1 + page_has_private(page);
+-	if (page_count(page) != expected_count ||
+-		radix_tree_deref_slot_protected(pslot,
+-					&mapping->pages.xa_lock) != page) {
+-		xa_unlock_irq(&mapping->pages);
++	if (page_count(page) != expected_count || xas_load(&xas) != page) {
++		xas_unlock_irq(&xas);
+ 		return -EAGAIN;
  	}
  
--	mutex_lock(&qi->qi_tree_lock);
--	error = radix_tree_insert(tree, id, dqp);
--	if (unlikely(error)) {
--		WARN_ON(error != -EEXIST);
-+	mutex_lock(&qi->qi_xa_lock);
-+	duplicate = xa_cmpxchg(xa, id, NULL, dqp, GFP_NOFS);
-+	if (unlikely(duplicate)) {
-+		if (xa_is_err(duplicate)) {
-+			mutex_unlock(&qi->qi_xa_lock);
-+			return xa_err(duplicate);
-+		}
- 
- 		/*
- 		 * Duplicate found. Just throw away the new dquot and start
- 		 * over.
- 		 */
--		mutex_unlock(&qi->qi_tree_lock);
- 		trace_xfs_dqget_dup(dqp);
- 		xfs_qm_dqdestroy(dqp);
- 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
--		goto restart;
-+		dqp = duplicate;
-+		goto found;
+ 	if (!page_ref_freeze(page, expected_count)) {
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		return -EAGAIN;
  	}
+ 
+@@ -494,7 +489,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 	if (mode == MIGRATE_ASYNC && head &&
+ 			!buffer_migrate_lock_buffers(head, mode)) {
+ 		page_ref_unfreeze(page, expected_count);
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -522,7 +517,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 		SetPageDirty(newpage);
+ 	}
+ 
+-	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
++	xas_store(&xas, newpage);
  
  	/*
-@@ -877,7 +881,7 @@ xfs_qm_dqget(
- 	dqp->q_nrefs = 1;
+ 	 * Drop cache reference from old page by unfreezing
+@@ -531,7 +526,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 	 */
+ 	page_ref_unfreeze(page, expected_count - 1);
  
- 	qi->qi_dquots++;
--	mutex_unlock(&qi->qi_tree_lock);
-+	mutex_unlock(&qi->qi_xa_lock);
+-	xa_unlock(&mapping->pages);
++	xas_unlock(&xas);
+ 	/* Leave irq disabled to prevent preemption while updating stats */
  
- 	/* If we are asked to find next active id, keep looking */
- 	if (flags & XFS_QMOPT_DQNEXT) {
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec952dfad359..c8bc3be157e0 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -67,7 +67,7 @@ xfs_qm_dquot_walk(
- 	void			*data)
+ 	/*
+@@ -571,22 +566,18 @@ EXPORT_SYMBOL(migrate_page_move_mapping);
+ int migrate_huge_page_move_mapping(struct address_space *mapping,
+ 				   struct page *newpage, struct page *page)
  {
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
--	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
-+	struct xarray		*xa = xfs_dquot_xa(qi, type);
- 	uint32_t		next_index;
- 	int			last_error = 0;
- 	int			skipped;
-@@ -83,11 +83,11 @@ xfs_qm_dquot_walk(
- 		int		error = 0;
- 		int		i;
++	XA_STATE(xas, &mapping->pages, page_index(page));
+ 	int expected_count;
+-	void **pslot;
+-
+-	xa_lock_irq(&mapping->pages);
+-
+-	pslot = radix_tree_lookup_slot(&mapping->pages, page_index(page));
  
--		mutex_lock(&qi->qi_tree_lock);
--		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
--					next_index, XFS_DQ_LOOKUP_BATCH);
-+		mutex_lock(&qi->qi_xa_lock);
-+		nr_found = xa_get_entries(xa, (void **)batch, next_index,
-+					ULONG_MAX, XFS_DQ_LOOKUP_BATCH);
- 		if (!nr_found) {
--			mutex_unlock(&qi->qi_tree_lock);
-+			mutex_unlock(&qi->qi_xa_lock);
- 			break;
- 		}
++	xas_lock_irq(&xas);
+ 	expected_count = 2 + page_has_private(page);
+-	if (page_count(page) != expected_count ||
+-		radix_tree_deref_slot_protected(pslot, &mapping->pages.xa_lock) != page) {
+-		xa_unlock_irq(&mapping->pages);
++	if (page_count(page) != expected_count || xas_load(&xas) != page) {
++		xas_unlock_irq(&xas);
+ 		return -EAGAIN;
+ 	}
  
-@@ -105,7 +105,7 @@ xfs_qm_dquot_walk(
- 				last_error = error;
- 		}
+ 	if (!page_ref_freeze(page, expected_count)) {
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		return -EAGAIN;
+ 	}
  
--		mutex_unlock(&qi->qi_tree_lock);
-+		mutex_unlock(&qi->qi_xa_lock);
+@@ -595,11 +586,11 @@ int migrate_huge_page_move_mapping(struct address_space *mapping,
  
- 		/* bail out if the filesystem is corrupted.  */
- 		if (last_error == -EFSCORRUPTED) {
-@@ -178,8 +178,8 @@ xfs_qm_dqpurge(
- 	xfs_dqfunlock(dqp);
- 	xfs_dqunlock(dqp);
+ 	get_page(newpage);
  
--	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
--			  be32_to_cpu(dqp->q_core.d_id));
-+	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
-+			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
- 	qi->qi_dquots--;
+-	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
++	xas_store(&xas, newpage);
  
- 	/*
-@@ -623,10 +623,10 @@ xfs_qm_init_quotainfo(
- 	if (error)
- 		goto out_free_lru;
+ 	page_ref_unfreeze(page, expected_count - 1);
  
--	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
--	mutex_init(&qinf->qi_tree_lock);
-+	xa_init(&qinf->qi_uquota_xa);
-+	xa_init(&qinf->qi_gquota_xa);
-+	xa_init(&qinf->qi_pquota_xa);
-+	mutex_init(&qinf->qi_xa_lock);
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
  
- 	/* mutex used to serialize quotaoffs */
- 	mutex_init(&qinf->qi_quotaofflock);
-@@ -1606,12 +1606,12 @@ xfs_qm_dqfree_one(
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
- 
--	mutex_lock(&qi->qi_tree_lock);
--	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
--			  be32_to_cpu(dqp->q_core.d_id));
-+	mutex_lock(&qi->qi_xa_lock);
-+	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
-+			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
- 
- 	qi->qi_dquots--;
--	mutex_unlock(&qi->qi_tree_lock);
-+	mutex_unlock(&qi->qi_xa_lock);
- 
- 	xfs_qm_dqdestroy(dqp);
+ 	return MIGRATEPAGE_SUCCESS;
  }
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 2975a822e9f0..946f929f7bfb 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -67,10 +67,10 @@ struct xfs_def_quota {
-  * The mount structure keeps a pointer to this.
-  */
- typedef struct xfs_quotainfo {
--	struct radix_tree_root qi_uquota_tree;
--	struct radix_tree_root qi_gquota_tree;
--	struct radix_tree_root qi_pquota_tree;
--	struct mutex qi_tree_lock;
-+	struct xarray	qi_uquota_xa;
-+	struct xarray	qi_gquota_xa;
-+	struct xarray	qi_pquota_xa;
-+	struct mutex	qi_xa_lock;
- 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
- 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
- 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
-@@ -91,18 +91,18 @@ typedef struct xfs_quotainfo {
- 	struct shrinker  qi_shrinker;
- } xfs_quotainfo_t;
- 
--static inline struct radix_tree_root *
--xfs_dquot_tree(
-+static inline struct xarray *
-+xfs_dquot_xa(
- 	struct xfs_quotainfo	*qi,
- 	int			type)
- {
- 	switch (type) {
- 	case XFS_DQ_USER:
--		return &qi->qi_uquota_tree;
-+		return &qi->qi_uquota_xa;
- 	case XFS_DQ_GROUP:
--		return &qi->qi_gquota_tree;
-+		return &qi->qi_gquota_xa;
- 	case XFS_DQ_PROJ:
--		return &qi->qi_pquota_tree;
-+		return &qi->qi_pquota_xa;
- 	default:
- 		ASSERT(0);
- 	}
 -- 
 2.15.1
 
