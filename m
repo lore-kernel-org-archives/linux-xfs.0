@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49367 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59663 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756592AbdLOWF2 (ORCPT
+        with ESMTP id S1756598AbdLOWF2 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:28 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 65/78] dax: Convert grab_mapping_entry to XArray
-Date: Fri, 15 Dec 2017 14:04:37 -0800
-Message-Id: <20171215220450.7899-66-willy@infradead.org>
+Subject: [PATCH v5 73/78] xfs: Convert xfs dquot to XArray
+Date: Fri, 15 Dec 2017 14:04:45 -0800
+Message-Id: <20171215220450.7899-74-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,163 +17,249 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+This is a pretty straight-forward conversion.
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 98 +++++++++++++++++-----------------------------------------------
- 1 file changed, 26 insertions(+), 72 deletions(-)
+ fs/xfs/xfs_dquot.c | 38 +++++++++++++++++++++-----------------
+ fs/xfs/xfs_qm.c    | 32 ++++++++++++++++----------------
+ fs/xfs/xfs_qm.h    | 18 +++++++++---------
+ 3 files changed, 46 insertions(+), 42 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index a3e795ad2493..f591ab5be590 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -44,6 +44,7 @@
- 
- /* The 'colour' (ie low bits) within a PMD of a page offset.  */
- #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
-+#define PMD_ORDER	(PMD_SHIFT - PAGE_SHIFT)
- 
- static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
- 
-@@ -89,10 +90,10 @@ static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
- 			DAX_ENTRY_LOCK);
- }
- 
--static unsigned int dax_radix_order(void *entry)
-+static unsigned int dax_entry_order(void *entry)
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e2a466df5dd1..c6832db23ca8 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -44,7 +44,7 @@
+  * Lock order:
+  *
+  * ip->i_lock
+- *   qi->qi_tree_lock
++ *   qi->qi_xa_lock
+  *     dquot->q_qlock (xfs_dqlock() and friends)
+  *       dquot->q_flush (xfs_dqflock() and friends)
+  *       qi->qi_lru_lock
+@@ -752,8 +752,8 @@ xfs_qm_dqget(
+ 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
  {
- 	if (xa_to_value(entry) & DAX_PMD)
--		return PMD_SHIFT - PAGE_SHIFT;
-+		return PMD_ORDER;
- 	return 0;
- }
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+-	struct xfs_dquot	*dqp;
++	struct xarray		*xa = xfs_dquot_xa(qi, type);
++	struct xfs_dquot	*dqp, *duplicate;
+ 	int			error;
  
-@@ -299,10 +300,11 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- {
- 	XA_STATE(xas, &mapping->pages, index);
- 	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
--	void *entry, **slot;
-+	void *entry;
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -772,23 +772,24 @@ xfs_qm_dqget(
+ 	}
  
-+	xas_set_order(&xas, index, size_flag ? PMD_ORDER : 0);
  restart:
--	xa_lock_irq(&mapping->pages);
-+	xas_lock_irq(&xas);
- 	entry = get_unlocked_mapping_entry(&xas);
+-	mutex_lock(&qi->qi_tree_lock);
+-	dqp = radix_tree_lookup(tree, id);
++	mutex_lock(&qi->qi_xa_lock);
++	dqp = xa_load(xa, id);
++found:
+ 	if (dqp) {
+ 		xfs_dqlock(dqp);
+ 		if (dqp->dq_flags & XFS_DQ_FREEING) {
+ 			xfs_dqunlock(dqp);
+-			mutex_unlock(&qi->qi_tree_lock);
++			mutex_unlock(&qi->qi_xa_lock);
+ 			trace_xfs_dqget_freeing(dqp);
+ 			delay(1);
+ 			goto restart;
+ 		}
  
- 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
-@@ -326,84 +328,36 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+-		/* uninit / unused quota found in radix tree, keep looking  */
++		/* uninit / unused quota found, keep looking  */
+ 		if (flags & XFS_QMOPT_DQNEXT) {
+ 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 				xfs_dqunlock(dqp);
+-				mutex_unlock(&qi->qi_tree_lock);
++				mutex_unlock(&qi->qi_xa_lock);
+ 				error = xfs_dq_get_next_id(mp, type, &id);
+ 				if (error)
+ 					return error;
+@@ -797,14 +798,14 @@ xfs_qm_dqget(
+ 		}
+ 
+ 		dqp->q_nrefs++;
+-		mutex_unlock(&qi->qi_tree_lock);
++		mutex_unlock(&qi->qi_xa_lock);
+ 
+ 		trace_xfs_dqget_hit(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dqcachehits);
+ 		*O_dqpp = dqp;
+ 		return 0;
+ 	}
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
+ 
+ 	/*
+@@ -854,20 +855,23 @@ xfs_qm_dqget(
  		}
  	}
  
--	/* No entry for given index? Make sure radix tree is big enough. */
--	if (!entry || pmd_downgrade) {
--		int err;
--
--		if (pmd_downgrade) {
--			/*
--			 * Make sure 'entry' remains valid while we drop
--			 * xa_lock.
--			 */
--			entry = lock_slot(&xas);
--		}
--
--		xa_unlock_irq(&mapping->pages);
-+	if (pmd_downgrade) {
-+		entry = lock_slot(&xas);
+-	mutex_lock(&qi->qi_tree_lock);
+-	error = radix_tree_insert(tree, id, dqp);
+-	if (unlikely(error)) {
+-		WARN_ON(error != -EEXIST);
++	mutex_lock(&qi->qi_xa_lock);
++	duplicate = xa_cmpxchg(xa, id, NULL, dqp, GFP_NOFS);
++	if (unlikely(duplicate)) {
++		if (xa_is_err(duplicate)) {
++			mutex_unlock(&qi->qi_xa_lock);
++			return xa_err(duplicate);
++		}
+ 
  		/*
- 		 * Besides huge zero pages the only other thing that gets
- 		 * downgraded are empty entries which don't need to be
- 		 * unmapped.
+ 		 * Duplicate found. Just throw away the new dquot and start
+ 		 * over.
  		 */
--		if (pmd_downgrade && dax_is_zero_entry(entry))
-+		if (dax_is_zero_entry(entry)) {
-+			xas_pause(&xas);
-+			xas_unlock_irq(&xas);
- 			unmap_mapping_range(mapping,
- 				(index << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
--
--		err = radix_tree_preload(
--				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
--		if (err) {
--			if (pmd_downgrade)
--				put_locked_mapping_entry(mapping, index);
--			return ERR_PTR(err);
-+			xas_lock_irq(&xas);
- 		}
--		xa_lock_irq(&mapping->pages);
--
--		if (!entry) {
--			/*
--			 * We needed to drop the pages lock while calling
--			 * radix_tree_preload() and we didn't have an entry to
--			 * lock.  See if another thread inserted an entry at
--			 * our index during this time.
--			 */
--			entry = __radix_tree_lookup(&mapping->pages, index,
--					NULL, &slot);
--			if (entry) {
--				radix_tree_preload_end();
--				xa_unlock_irq(&mapping->pages);
--				goto restart;
--			}
--		}
--
--		if (pmd_downgrade) {
--			radix_tree_delete(&mapping->pages, index);
--			mapping->nrexceptional--;
--			dax_wake_entry(&xas, entry, true);
--		}
--
-+		xas_store(&xas, NULL);
-+		mapping->nrexceptional--;
-+		dax_wake_entry(&xas, entry, true);
-+	}
-+	if (!entry || pmd_downgrade) {
- 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
--
--		err = __radix_tree_insert(&mapping->pages, index,
--				dax_radix_order(entry), entry);
--		radix_tree_preload_end();
--		if (err) {
--			xa_unlock_irq(&mapping->pages);
--			/*
--			 * Our insertion of a DAX entry failed, most likely
--			 * because we were inserting a PMD entry and it
--			 * collided with a PTE sized entry at a different
--			 * index in the PMD range.  We haven't inserted
--			 * anything into the radix tree and have no waiters to
--			 * wake.
--			 */
--			return ERR_PTR(err);
--		}
--		/* Good, we have inserted empty locked entry into the tree. */
--		mapping->nrexceptional++;
--		xa_unlock_irq(&mapping->pages);
--		return entry;
-+		xas_store(&xas, entry);
-+		if (!xas_error(&xas))
-+			mapping->nrexceptional++;
-+	} else {
-+		entry = lock_slot(&xas);
+-		mutex_unlock(&qi->qi_tree_lock);
+ 		trace_xfs_dqget_dup(dqp);
+ 		xfs_qm_dqdestroy(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
+-		goto restart;
++		dqp = duplicate;
++		goto found;
  	}
--	entry = lock_slot(&xas);
-  out_unlock:
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
-+	if (xas_nomem(&xas, GFP_NOIO))
-+		goto restart;
- 	return entry;
+ 
+ 	/*
+@@ -877,7 +881,7 @@ xfs_qm_dqget(
+ 	dqp->q_nrefs = 1;
+ 
+ 	qi->qi_dquots++;
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 
+ 	/* If we are asked to find next active id, keep looking */
+ 	if (flags & XFS_QMOPT_DQNEXT) {
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ec952dfad359..c8bc3be157e0 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -67,7 +67,7 @@ xfs_qm_dquot_walk(
+ 	void			*data)
+ {
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
++	struct xarray		*xa = xfs_dquot_xa(qi, type);
+ 	uint32_t		next_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+@@ -83,11 +83,11 @@ xfs_qm_dquot_walk(
+ 		int		error = 0;
+ 		int		i;
+ 
+-		mutex_lock(&qi->qi_tree_lock);
+-		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
+-					next_index, XFS_DQ_LOOKUP_BATCH);
++		mutex_lock(&qi->qi_xa_lock);
++		nr_found = xa_get_entries(xa, (void **)batch, next_index,
++					ULONG_MAX, XFS_DQ_LOOKUP_BATCH);
+ 		if (!nr_found) {
+-			mutex_unlock(&qi->qi_tree_lock);
++			mutex_unlock(&qi->qi_xa_lock);
+ 			break;
+ 		}
+ 
+@@ -105,7 +105,7 @@ xfs_qm_dquot_walk(
+ 				last_error = error;
+ 		}
+ 
+-		mutex_unlock(&qi->qi_tree_lock);
++		mutex_unlock(&qi->qi_xa_lock);
+ 
+ 		/* bail out if the filesystem is corrupted.  */
+ 		if (last_error == -EFSCORRUPTED) {
+@@ -178,8 +178,8 @@ xfs_qm_dqpurge(
+ 	xfs_dqfunlock(dqp);
+ 	xfs_dqunlock(dqp);
+ 
+-	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+-			  be32_to_cpu(dqp->q_core.d_id));
++	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
+ 	qi->qi_dquots--;
+ 
+ 	/*
+@@ -623,10 +623,10 @@ xfs_qm_init_quotainfo(
+ 	if (error)
+ 		goto out_free_lru;
+ 
+-	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
+-	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
+-	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
+-	mutex_init(&qinf->qi_tree_lock);
++	xa_init(&qinf->qi_uquota_xa);
++	xa_init(&qinf->qi_gquota_xa);
++	xa_init(&qinf->qi_pquota_xa);
++	mutex_init(&qinf->qi_xa_lock);
+ 
+ 	/* mutex used to serialize quotaoffs */
+ 	mutex_init(&qinf->qi_quotaofflock);
+@@ -1606,12 +1606,12 @@ xfs_qm_dqfree_one(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 
+-	mutex_lock(&qi->qi_tree_lock);
+-	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+-			  be32_to_cpu(dqp->q_core.d_id));
++	mutex_lock(&qi->qi_xa_lock);
++	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
+ 
+ 	qi->qi_dquots--;
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 
+ 	xfs_qm_dqdestroy(dqp);
  }
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2975a822e9f0..946f929f7bfb 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -67,10 +67,10 @@ struct xfs_def_quota {
+  * The mount structure keeps a pointer to this.
+  */
+ typedef struct xfs_quotainfo {
+-	struct radix_tree_root qi_uquota_tree;
+-	struct radix_tree_root qi_gquota_tree;
+-	struct radix_tree_root qi_pquota_tree;
+-	struct mutex qi_tree_lock;
++	struct xarray	qi_uquota_xa;
++	struct xarray	qi_gquota_xa;
++	struct xarray	qi_pquota_xa;
++	struct mutex	qi_xa_lock;
+ 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
+ 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+@@ -91,18 +91,18 @@ typedef struct xfs_quotainfo {
+ 	struct shrinker  qi_shrinker;
+ } xfs_quotainfo_t;
  
-@@ -683,7 +637,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	 * worry about partial PMD writebacks.
- 	 */
- 	sector = dax_radix_sector(entry);
--	size = PAGE_SIZE << dax_radix_order(entry);
-+	size = PAGE_SIZE << dax_entry_order(entry);
- 
- 	id = dax_read_lock();
- 	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
+-static inline struct radix_tree_root *
+-xfs_dquot_tree(
++static inline struct xarray *
++xfs_dquot_xa(
+ 	struct xfs_quotainfo	*qi,
+ 	int			type)
+ {
+ 	switch (type) {
+ 	case XFS_DQ_USER:
+-		return &qi->qi_uquota_tree;
++		return &qi->qi_uquota_xa;
+ 	case XFS_DQ_GROUP:
+-		return &qi->qi_gquota_tree;
++		return &qi->qi_gquota_xa;
+ 	case XFS_DQ_PROJ:
+-		return &qi->qi_pquota_tree;
++		return &qi->qi_pquota_xa;
+ 	default:
+ 		ASSERT(0);
+ 	}
 -- 
 2.15.1
 
