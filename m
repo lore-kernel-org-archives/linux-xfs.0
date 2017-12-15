@@ -1,135 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40030 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752508AbdLNUUv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 15:20:51 -0500
-Date: Thu, 14 Dec 2017 12:20:43 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:53685 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754424AbdLOANA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Dec 2017 19:13:00 -0500
+Date: Thu, 14 Dec 2017 16:12:57 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] fsstress: implement the clonerange/deduperange ioctls
-Message-ID: <20171214202043.GK6896@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314503583.18893.15475795025536691678.stgit@magnolia>
- <CAOQ4uxh-msvkXA0Uyh9DfYicM6QGAohuaOZdwVpkKrfNPpvDTA@mail.gmail.com>
- <20171214073246.GF2749@eguan.usersys.redhat.com>
+Subject: Re: [PATCH 01/13] xfs: refactor long-format btree header
+ verification routines
+Message-ID: <20171215001257.GN13436@magnolia>
+References: <151320949282.30654.14805160700975182459.stgit@magnolia>
+ <151320949899.30654.10787297507975715065.stgit@magnolia>
+ <20171214220613.GJ5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171214073246.GF2749@eguan.usersys.redhat.com>
+In-Reply-To: <20171214220613.GJ5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 14, 2017 at 03:32:46PM +0800, Eryu Guan wrote:
-> On Thu, Dec 14, 2017 at 08:39:38AM +0200, Amir Goldstein wrote:
-> > On Wed, Dec 13, 2017 at 8:03 AM, Darrick J. Wong
-> > <darrick.wong@oracle.com> wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Mix it up a bit by reflinking and deduping data blocks when possible.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  ltp/fsstress.c |  440 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  1 file changed, 440 insertions(+)
-> > >
-> > >
-> > > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> > > index 96f48b1..e2dfa5e 100644
-> > > --- a/ltp/fsstress.c
-> > > +++ b/ltp/fsstress.c
-> > > @@ -68,7 +68,9 @@ typedef enum {
-> > >         OP_BULKSTAT,
-> > >         OP_BULKSTAT1,
-> > >         OP_CHOWN,
-> > > +       OP_CLONERANGE,
-> > >         OP_CREAT,
-> > > +       OP_DEDUPERANGE,
-> > >         OP_DREAD,
-> > >         OP_DWRITE,
-> > >         OP_FALLOCATE,
-> > > @@ -174,7 +176,9 @@ void        awrite_f(int, long);
-> > >  void   bulkstat_f(int, long);
-> > >  void   bulkstat1_f(int, long);
-> > >  void   chown_f(int, long);
-> > > +void   clonerange_f(int, long);
-> > >  void   creat_f(int, long);
-> > > +void   deduperange_f(int, long);
-> > >  void   dread_f(int, long);
-> > >  void   dwrite_f(int, long);
-> > >  void   fallocate_f(int, long);
-> > > @@ -221,7 +225,9 @@ opdesc_t    ops[] = {
-> > >         { OP_BULKSTAT, "bulkstat", bulkstat_f, 1, 0 },
-> > >         { OP_BULKSTAT1, "bulkstat1", bulkstat1_f, 1, 0 },
-> > >         { OP_CHOWN, "chown", chown_f, 3, 1 },
-> > > +       { OP_CLONERANGE, "clonerange", clonerange_f, 4, 1 },
-> > >         { OP_CREAT, "creat", creat_f, 4, 1 },
-> > > +       { OP_DEDUPERANGE, "deduperange", deduperange_f, 4, 1},
-> > >         { OP_DREAD, "dread", dread_f, 4, 0 },
-> > >         { OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
-> > >         { OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
-> > > @@ -1312,6 +1318,16 @@ make_freq_table(void)
-> > >         }
-> > >  }
-> > >
-> > > +void
-> > > +free_freq_table(void)
-> > > +{
-> > > +       if (!freq_table)
-> > > +               return;
-> > > +       free(freq_table);
-> > > +       freq_table = NULL;
-> > > +       freq_table_size = 0;
-> > > +}
-> > > +
-> > >  int
-> > >  mkdir_path(pathname_t *name, mode_t mode)
-> > >  {
-> > > @@ -2189,6 +2205,430 @@ chown_f(int opno, long r)
-> > >         free_pathname(&f);
-> > >  }
-> > >
-> > > +static void
-> > > +disable_op(opty_t opt)
-> > > +{
-> > > +       opdesc_t        *p;
-> > > +
-> > > +       for (p = ops; p < ops_end; p++) {
-> > > +               if (opt == p->op) {
-> > > +                       p->freq = 0;
-> > > +                       free_freq_table();
-> > > +                       make_freq_table();
-> > > +                       return;
-> > > +               }
-> > > +       }
-> > > +}
-> > > +
+On Fri, Dec 15, 2017 at 09:06:14AM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:58:19PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > If we want to go down the path of runtime disable ops, the question is:
-> > Why disable_op clonerange/deduperange and not disable_op
-> > insert/collapse/zero/punch? there are probably other ops as well.
-> > This is also inconsistent by the fact that build time disable of
-> > neither FALLOC nor LONERANGE/DEDUPERANGE will not
-> > change the random op sequence, while runtime disable will.
+> > Create two helper functions to verify the headers of a long format
+> > btree block.  We'll use this later for the realtime rmapbt.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> .....
 > 
-> That's a good point. I don't think we want to disable unsupported
-> operations dynamically, fsstress just accepts/ignores whatever result
-> the operation gives and just prints the errno to log in verbose mode.
+> > +bool
+> > +xfs_btree_lblock_verify(
+> > +	struct xfs_buf		*bp,
+> > +	unsigned int		max_recs)
+> > +{
+> > +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> > +	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+> > +
+> > +	/* numrecs verification */
+> > +	if (be16_to_cpu(block->bb_numrecs) > max_recs)
+> > +		return false;
+> > +
+> > +	/* sibling pointer verification */
+> > +	if (!block->bb_u.l.bb_leftsib ||
+> > +	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
+> > +	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
+> > +		return false;
+> > +	if (!block->bb_u.l.bb_rightsib ||
+> > +	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
+> > +	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
+> 
+> XFS_FSB_SANITY_CHECK() is the same thing as xfs_verify_fsbno(),
+> right? Perhaps they should be converted at the same time so we can
+> get rid of XFS_FSB_SANITY_CHECK()?
 
-Ok, I'll remove all the auto-disabling stuff & resubmit.
+Oops, yes.  Fixed.
 
 --D
 
-> Thanks,
-> Eryu
 > 
-> > 
-> > This is related to the conversation of the golden output of xfs/068.
-> > Will take my arguments there now...
-> > 
-> > Amir.
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
