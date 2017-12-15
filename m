@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35868 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40817 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756608AbdLOWF3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:29 -0500
+        with ESMTP id S1756507AbdLOWF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:28 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 07/78] xarray: Add definition of struct xarray
-Date: Fri, 15 Dec 2017 14:03:39 -0800
-Message-Id: <20171215220450.7899-8-willy@infradead.org>
+Subject: [PATCH v5 01/78] xfs: Rename xa_ elements to ail_
+Date: Fri, 15 Dec 2017 14:03:33 -0800
+Message-Id: <20171215220450.7899-2-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,628 +17,1128 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is a direct replacement for struct radix_tree_root.  Some of the
-struct members have changed name; convert those, and use a #define so
-that radix_tree users continue to work without change.
+This is a simple rename, except that xa_ail becomes ail_head.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/radix-tree.h               | 31 ++++---------
- include/linux/xarray.h                   | 57 ++++++++++++++++++++++++
- lib/Makefile                             |  2 +-
- lib/idr.c                                |  4 +-
- lib/radix-tree.c                         | 75 ++++++++++++++++----------------
- lib/xarray.c                             | 40 +++++++++++++++++
- tools/include/linux/spinlock.h           |  1 +
- tools/testing/radix-tree/.gitignore      |  1 +
- tools/testing/radix-tree/Makefile        |  8 +++-
- tools/testing/radix-tree/linux/bug.h     |  1 +
- tools/testing/radix-tree/linux/kconfig.h |  1 +
- tools/testing/radix-tree/linux/xarray.h  |  2 +
- tools/testing/radix-tree/multiorder.c    |  6 +--
- tools/testing/radix-tree/test.c          |  6 +--
- 14 files changed, 163 insertions(+), 72 deletions(-)
- create mode 100644 lib/xarray.c
- create mode 100644 tools/testing/radix-tree/linux/kconfig.h
- create mode 100644 tools/testing/radix-tree/linux/xarray.h
+ fs/xfs/xfs_buf_item.c    |  10 ++--
+ fs/xfs/xfs_dquot.c       |   4 +-
+ fs/xfs/xfs_dquot_item.c  |  11 ++--
+ fs/xfs/xfs_inode_item.c  |  22 +++----
+ fs/xfs/xfs_log.c         |   6 +-
+ fs/xfs/xfs_log_recover.c |  80 ++++++++++++-------------
+ fs/xfs/xfs_trans.c       |  18 +++---
+ fs/xfs/xfs_trans_ail.c   | 152 +++++++++++++++++++++++------------------------
+ fs/xfs/xfs_trans_buf.c   |   4 +-
+ fs/xfs/xfs_trans_priv.h  |  42 ++++++-------
+ 10 files changed, 175 insertions(+), 174 deletions(-)
 
-diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
-index 3e4d700bd1bd..260fef3c9bc2 100644
---- a/include/linux/radix-tree.h
-+++ b/include/linux/radix-tree.h
-@@ -30,6 +30,9 @@
- #include <linux/types.h>
- #include <linux/xarray.h>
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index e0a0af0946f2..6c5035544a93 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -459,7 +459,7 @@ xfs_buf_item_unpin(
+ 			bp->b_fspriv = NULL;
+ 			bp->b_iodone = NULL;
+ 		} else {
+-			spin_lock(&ailp->xa_lock);
++			spin_lock(&ailp->ail_lock);
+ 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+ 			ASSERT(bp->b_fspriv == NULL);
+@@ -1056,13 +1056,13 @@ xfs_buf_do_callbacks_fail(
+ 	struct xfs_log_item	*lip = bp->b_fspriv;
+ 	struct xfs_ail		*ailp = lip->li_ailp;
  
-+/* Keep unconverted code working */
-+#define radix_tree_root		xarray
-+
- /*
-  * The bottom two bits of the slot determine how the remaining bits in the
-  * slot are interpreted:
-@@ -59,10 +62,7 @@ static inline bool radix_tree_is_internal_node(void *ptr)
- 
- #define RADIX_TREE_MAX_TAGS 3
- 
--#ifndef RADIX_TREE_MAP_SHIFT
--#define RADIX_TREE_MAP_SHIFT	(CONFIG_BASE_SMALL ? 4 : 6)
--#endif
--
-+#define RADIX_TREE_MAP_SHIFT	XA_CHUNK_SHIFT
- #define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
- #define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
- 
-@@ -95,35 +95,20 @@ struct radix_tree_node {
- 	unsigned long	tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];
- };
- 
--/* The top bits of gfp_mask are used to store the root tags and the IDR flag */
-+/* The top bits of xa_flags are used to store the root tags and the IDR flag */
- #define ROOT_IS_IDR	((__force gfp_t)(1 << __GFP_BITS_SHIFT))
- #define ROOT_TAG_SHIFT	(__GFP_BITS_SHIFT + 1)
- 
--struct radix_tree_root {
--	spinlock_t		xa_lock;
--	gfp_t			gfp_mask;
--	struct radix_tree_node	__rcu *rnode;
--};
--
--#define RADIX_TREE_INIT(name, mask)	{				\
--	.xa_lock = __SPIN_LOCK_UNLOCKED(name.xa_lock),			\
--	.gfp_mask = (mask),						\
--	.rnode = NULL,							\
--}
-+#define RADIX_TREE_INIT(name, mask)	__XARRAY_INIT(name, mask)
- 
- #define RADIX_TREE(name, mask) \
- 	struct radix_tree_root name = RADIX_TREE_INIT(name, mask)
- 
--#define INIT_RADIX_TREE(root, mask)					\
--do {									\
--	spin_lock_init(&(root)->xa_lock);				\
--	(root)->gfp_mask = (mask);					\
--	(root)->rnode = NULL;						\
--} while (0)
-+#define INIT_RADIX_TREE(root, mask) __xa_init(root, mask)
- 
- static inline bool radix_tree_empty(const struct radix_tree_root *root)
- {
--	return root->rnode == NULL;
-+	return root->xa_head == NULL;
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	for (; lip; lip = next) {
+ 		next = lip->li_bio_list;
+ 		if (lip->li_ops->iop_error)
+ 			lip->li_ops->iop_error(lip, bp);
+ 	}
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
  }
  
- /**
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index f175350560fd..920f5a809df6 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -10,9 +10,66 @@
-  */
+ static bool
+@@ -1215,7 +1215,7 @@ xfs_buf_iodone(
+ 	 *
+ 	 * Either way, AIL is useless if we're forcing a shutdown.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 	xfs_buf_item_free(BUF_ITEM(lip));
+ }
+@@ -1236,7 +1236,7 @@ xfs_buf_resubmit_failed_buffers(
+ 	/*
+ 	 * Clear XFS_LI_FAILED flag from all items before resubmit
+ 	 *
+-	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
++	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller  this
+ 	 * function already have it acquired
+ 	 */
+ 	for (; lip; lip = next) {
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index f248708c10ff..e2a466df5dd1 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -974,7 +974,7 @@ xfs_qm_dqflush_done(
+ 	     (lip->li_flags & XFS_LI_FAILED))) {
  
- #include <linux/bug.h>
-+#include <linux/compiler.h>
-+#include <linux/kconfig.h>
- #include <linux/spinlock.h>
- #include <linux/types.h>
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+-		spin_lock(&ailp->xa_lock);
++		spin_lock(&ailp->ail_lock);
+ 		if (lip->li_lsn == qip->qli_flush_lsn) {
+ 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 		} else {
+@@ -984,7 +984,7 @@ xfs_qm_dqflush_done(
+ 			 */
+ 			if (lip->li_flags & XFS_LI_FAILED)
+ 				xfs_clear_li_failed(lip);
+-			spin_unlock(&ailp->xa_lock);
++			spin_unlock(&ailp->ail_lock);
+ 		}
+ 	}
  
-+/**
-+ * struct xarray - The anchor of the XArray.
-+ * @xa_lock: Lock that protects the contents of the XArray.
-+ *
-+ * To use the xarray, define it statically or embed it in your data structure.
-+ * It is a very small data structure, so it does not usually make sense to
-+ * allocate it separately and keep a pointer to it in your data structure.
-+ *
-+ * You may use the xa_lock to protect your own data structures as well.
-+ */
-+/*
-+ * If all of the entries in the array are NULL, @xa_head is a NULL pointer.
-+ * If the only non-NULL entry in the array is at index 0, @xa_head is that
-+ * entry.  If any other entry in the array is non-NULL, @xa_head points
-+ * to an @xa_node.
-+ */
-+struct xarray {
-+	spinlock_t	xa_lock;
-+/* private: The rest of the data structure is not to be used directly. */
-+	gfp_t		xa_flags;
-+	void __rcu *	xa_head;
-+};
-+
-+#define __XARRAY_INIT(name, flags) {				\
-+	.xa_lock = __SPIN_LOCK_UNLOCKED(name.xa_lock),		\
-+	.xa_flags = flags,					\
-+	.xa_head = NULL,					\
-+}
-+
-+#define XARRAY_INIT(name) __XARRAY_INIT(name, 0)
-+
-+/**
-+ * DEFINE_XARRAY() - Define an XArray
-+ * @name: A string that names your XArray
-+ *
-+ * This is intended for file scope definitions of XArrays.  It declares
-+ * and initialises an empty XArray with the chosen name.  It is equivalent
-+ * to calling xa_init() on the array, but it does the initialisation at
-+ * compiletime instead of runtime.
-+ */
-+#define DEFINE_XARRAY(name) struct xarray name = XARRAY_INIT(name)
-+
-+void __xa_init(struct xarray *, gfp_t flags);
-+
-+/**
-+ * xa_init() - Initialise an empty XArray.
-+ * @xa: XArray.
-+ *
-+ * An empty XArray is full of NULL entries.
-+ */
-+static inline void xa_init(struct xarray *xa)
-+{
-+	__xa_init(xa, 0);
-+}
-+
- #define BITS_PER_XA_VALUE	(BITS_PER_LONG - 1)
- 
- /**
-diff --git a/lib/Makefile b/lib/Makefile
-index d11c48ec8ffd..6aa523acc7c1 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -18,7 +18,7 @@ KCOV_INSTRUMENT_debugobjects.o := n
- KCOV_INSTRUMENT_dynamic_debug.o := n
- 
- lib-y := ctype.o string.o vsprintf.o cmdline.o \
--	 rbtree.o radix-tree.o dump_stack.o timerqueue.o\
-+	 rbtree.o radix-tree.o dump_stack.o timerqueue.o xarray.o \
- 	 idr.o int_sqrt.o extable.o \
- 	 sha1.o chacha20.o irq_regs.o argv_split.o \
- 	 flex_proportions.o ratelimit.o show_mem.o \
-diff --git a/lib/idr.c b/lib/idr.c
-index 48c53890adc0..b9aa08e198a2 100644
---- a/lib/idr.c
-+++ b/lib/idr.c
-@@ -35,8 +35,8 @@ int idr_alloc_ul(struct idr *idr, void *ptr, unsigned long *nextid,
- 	if (WARN_ON_ONCE(radix_tree_is_internal_node(ptr)))
- 		return -EINVAL;
- 
--	if (WARN_ON_ONCE(!(idr->idr_rt.gfp_mask & ROOT_IS_IDR)))
--		idr->idr_rt.gfp_mask |= IDR_RT_MARKER;
-+	if (WARN_ON_ONCE(!(idr->idr_rt.xa_flags & ROOT_IS_IDR)))
-+		idr->idr_rt.xa_flags |= IDR_RT_MARKER;
- 
- 	radix_tree_iter_init(&iter, *nextid);
- 	slot = idr_get_free(&idr->idr_rt, &iter, gfp, max);
-diff --git a/lib/radix-tree.c b/lib/radix-tree.c
-index 0a7a21dd9398..930eb7d298d7 100644
---- a/lib/radix-tree.c
-+++ b/lib/radix-tree.c
-@@ -123,7 +123,7 @@ static unsigned int radix_tree_descend(const struct radix_tree_node *parent,
- 
- static inline gfp_t root_gfp_mask(const struct radix_tree_root *root)
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 664dea105e76..62637a226601 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -160,8 +160,9 @@ xfs_dquot_item_error(
+ STATIC uint
+ xfs_qm_dquot_logitem_push(
+ 	struct xfs_log_item	*lip,
+-	struct list_head	*buffer_list) __releases(&lip->li_ailp->xa_lock)
+-					      __acquires(&lip->li_ailp->xa_lock)
++	struct list_head	*buffer_list)
++		__releases(&lip->li_ailp->ail_lock)
++		__acquires(&lip->li_ailp->ail_lock)
  {
--	return root->gfp_mask & __GFP_BITS_MASK;
-+	return root->xa_flags & __GFP_BITS_MASK;
+ 	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
+ 	struct xfs_buf		*bp = lip->li_buf;
+@@ -208,7 +209,7 @@ xfs_qm_dquot_logitem_push(
+ 		goto out_unlock;
+ 	}
+ 
+-	spin_unlock(&lip->li_ailp->xa_lock);
++	spin_unlock(&lip->li_ailp->ail_lock);
+ 
+ 	error = xfs_qm_dqflush(dqp, &bp);
+ 	if (error) {
+@@ -220,7 +221,7 @@ xfs_qm_dquot_logitem_push(
+ 		xfs_buf_relse(bp);
+ 	}
+ 
+-	spin_lock(&lip->li_ailp->xa_lock);
++	spin_lock(&lip->li_ailp->ail_lock);
+ out_unlock:
+ 	xfs_dqunlock(dqp);
+ 	return rval;
+@@ -403,7 +404,7 @@ xfs_qm_qoffend_logitem_committed(
+ 	 * Delete the qoff-start logitem from the AIL.
+ 	 * xfs_trans_ail_delete() drops the AIL lock.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	xfs_trans_ail_delete(ailp, &qfs->qql_item, SHUTDOWN_LOG_IO_ERROR);
+ 
+ 	kmem_free(qfs->qql_item.li_lv_shadow);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 6ee5c3bf19ad..071acd4249a0 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -501,8 +501,8 @@ STATIC uint
+ xfs_inode_item_push(
+ 	struct xfs_log_item	*lip,
+ 	struct list_head	*buffer_list)
+-		__releases(&lip->li_ailp->xa_lock)
+-		__acquires(&lip->li_ailp->xa_lock)
++		__releases(&lip->li_ailp->ail_lock)
++		__acquires(&lip->li_ailp->ail_lock)
+ {
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+@@ -561,7 +561,7 @@ xfs_inode_item_push(
+ 	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+ 	ASSERT(iip->ili_logged == 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+ 
+-	spin_unlock(&lip->li_ailp->xa_lock);
++	spin_unlock(&lip->li_ailp->ail_lock);
+ 
+ 	error = xfs_iflush(ip, &bp);
+ 	if (!error) {
+@@ -570,7 +570,7 @@ xfs_inode_item_push(
+ 		xfs_buf_relse(bp);
+ 	}
+ 
+-	spin_lock(&lip->li_ailp->xa_lock);
++	spin_lock(&lip->li_ailp->ail_lock);
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 	return rval;
+@@ -774,7 +774,7 @@ xfs_iflush_done(
+ 		bool			mlip_changed = false;
+ 
+ 		/* this is an opencoded batch version of xfs_trans_ail_delete */
+-		spin_lock(&ailp->xa_lock);
++		spin_lock(&ailp->ail_lock);
+ 		for (blip = lip; blip; blip = blip->li_bio_list) {
+ 			if (INODE_ITEM(blip)->ili_logged &&
+ 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
+@@ -785,15 +785,15 @@ xfs_iflush_done(
+ 		}
+ 
+ 		if (mlip_changed) {
+-			if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+-				xlog_assign_tail_lsn_locked(ailp->xa_mount);
+-			if (list_empty(&ailp->xa_ail))
+-				wake_up_all(&ailp->xa_empty);
++			if (!XFS_FORCED_SHUTDOWN(ailp->ail_mount))
++				xlog_assign_tail_lsn_locked(ailp->ail_mount);
++			if (list_empty(&ailp->ail_head))
++				wake_up_all(&ailp->ail_empty);
+ 		}
+-		spin_unlock(&ailp->xa_lock);
++		spin_unlock(&ailp->ail_lock);
+ 
+ 		if (mlip_changed)
+-			xfs_log_space_wake(ailp->xa_mount);
++			xfs_log_space_wake(ailp->ail_mount);
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a503af96d780..7148625eebf2 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1148,7 +1148,7 @@ xlog_assign_tail_lsn_locked(
+ 	struct xfs_log_item	*lip;
+ 	xfs_lsn_t		tail_lsn;
+ 
+-	assert_spin_locked(&mp->m_ail->xa_lock);
++	assert_spin_locked(&mp->m_ail->ail_lock);
+ 
+ 	/*
+ 	 * To make sure we always have a valid LSN for the log tail we keep
+@@ -1171,9 +1171,9 @@ xlog_assign_tail_lsn(
+ {
+ 	xfs_lsn_t		tail_lsn;
+ 
+-	spin_lock(&mp->m_ail->xa_lock);
++	spin_lock(&mp->m_ail->ail_lock);
+ 	tail_lsn = xlog_assign_tail_lsn_locked(mp);
+-	spin_unlock(&mp->m_ail->xa_lock);
++	spin_unlock(&mp->m_ail->ail_lock);
+ 
+ 	return tail_lsn;
+ }
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 28d1abfe835e..d871761626fb 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3424,7 +3424,7 @@ xlog_recover_efi_pass2(
+ 	}
+ 	atomic_set(&efip->efi_next_extent, efi_formatp->efi_nextents);
+ 
+-	spin_lock(&log->l_ailp->xa_lock);
++	spin_lock(&log->l_ailp->ail_lock);
+ 	/*
+ 	 * The EFI has two references. One for the EFD and one for EFI to ensure
+ 	 * it makes it into the AIL. Insert the EFI into the AIL directly and
+@@ -3467,7 +3467,7 @@ xlog_recover_efd_pass2(
+ 	 * Search for the EFI with the id in the EFD format structure in the
+ 	 * AIL.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	while (lip != NULL) {
+ 		if (lip->li_type == XFS_LI_EFI) {
+@@ -3477,9 +3477,9 @@ xlog_recover_efd_pass2(
+ 				 * Drop the EFD reference to the EFI. This
+ 				 * removes the EFI from the AIL and frees it.
+ 				 */
+-				spin_unlock(&ailp->xa_lock);
++				spin_unlock(&ailp->ail_lock);
+ 				xfs_efi_release(efip);
+-				spin_lock(&ailp->xa_lock);
++				spin_lock(&ailp->ail_lock);
+ 				break;
+ 			}
+ 		}
+@@ -3487,7 +3487,7 @@ xlog_recover_efd_pass2(
+ 	}
+ 
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	return 0;
+ }
+@@ -3520,7 +3520,7 @@ xlog_recover_rui_pass2(
+ 	}
+ 	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
+ 
+-	spin_lock(&log->l_ailp->xa_lock);
++	spin_lock(&log->l_ailp->ail_lock);
+ 	/*
+ 	 * The RUI has two references. One for the RUD and one for RUI to ensure
+ 	 * it makes it into the AIL. Insert the RUI into the AIL directly and
+@@ -3560,7 +3560,7 @@ xlog_recover_rud_pass2(
+ 	 * Search for the RUI with the id in the RUD format structure in the
+ 	 * AIL.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	while (lip != NULL) {
+ 		if (lip->li_type == XFS_LI_RUI) {
+@@ -3570,9 +3570,9 @@ xlog_recover_rud_pass2(
+ 				 * Drop the RUD reference to the RUI. This
+ 				 * removes the RUI from the AIL and frees it.
+ 				 */
+-				spin_unlock(&ailp->xa_lock);
++				spin_unlock(&ailp->ail_lock);
+ 				xfs_rui_release(ruip);
+-				spin_lock(&ailp->xa_lock);
++				spin_lock(&ailp->ail_lock);
+ 				break;
+ 			}
+ 		}
+@@ -3580,7 +3580,7 @@ xlog_recover_rud_pass2(
+ 	}
+ 
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	return 0;
+ }
+@@ -3636,7 +3636,7 @@ xlog_recover_cui_pass2(
+ 	}
+ 	atomic_set(&cuip->cui_next_extent, cui_formatp->cui_nextents);
+ 
+-	spin_lock(&log->l_ailp->xa_lock);
++	spin_lock(&log->l_ailp->ail_lock);
+ 	/*
+ 	 * The CUI has two references. One for the CUD and one for CUI to ensure
+ 	 * it makes it into the AIL. Insert the CUI into the AIL directly and
+@@ -3677,7 +3677,7 @@ xlog_recover_cud_pass2(
+ 	 * Search for the CUI with the id in the CUD format structure in the
+ 	 * AIL.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	while (lip != NULL) {
+ 		if (lip->li_type == XFS_LI_CUI) {
+@@ -3687,9 +3687,9 @@ xlog_recover_cud_pass2(
+ 				 * Drop the CUD reference to the CUI. This
+ 				 * removes the CUI from the AIL and frees it.
+ 				 */
+-				spin_unlock(&ailp->xa_lock);
++				spin_unlock(&ailp->ail_lock);
+ 				xfs_cui_release(cuip);
+-				spin_lock(&ailp->xa_lock);
++				spin_lock(&ailp->ail_lock);
+ 				break;
+ 			}
+ 		}
+@@ -3697,7 +3697,7 @@ xlog_recover_cud_pass2(
+ 	}
+ 
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	return 0;
+ }
+@@ -3755,7 +3755,7 @@ xlog_recover_bui_pass2(
+ 	}
+ 	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
+ 
+-	spin_lock(&log->l_ailp->xa_lock);
++	spin_lock(&log->l_ailp->ail_lock);
+ 	/*
+ 	 * The RUI has two references. One for the RUD and one for RUI to ensure
+ 	 * it makes it into the AIL. Insert the RUI into the AIL directly and
+@@ -3796,7 +3796,7 @@ xlog_recover_bud_pass2(
+ 	 * Search for the BUI with the id in the BUD format structure in the
+ 	 * AIL.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	while (lip != NULL) {
+ 		if (lip->li_type == XFS_LI_BUI) {
+@@ -3806,9 +3806,9 @@ xlog_recover_bud_pass2(
+ 				 * Drop the BUD reference to the BUI. This
+ 				 * removes the BUI from the AIL and frees it.
+ 				 */
+-				spin_unlock(&ailp->xa_lock);
++				spin_unlock(&ailp->ail_lock);
+ 				xfs_bui_release(buip);
+-				spin_lock(&ailp->xa_lock);
++				spin_lock(&ailp->ail_lock);
+ 				break;
+ 			}
+ 		}
+@@ -3816,7 +3816,7 @@ xlog_recover_bud_pass2(
+ 	}
+ 
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	return 0;
+ }
+@@ -4649,9 +4649,9 @@ xlog_recover_process_efi(
+ 	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+ 		return 0;
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	error = xfs_efi_recover(mp, efip);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 
+ 	return error;
+ }
+@@ -4667,9 +4667,9 @@ xlog_recover_cancel_efi(
+ 
+ 	efip = container_of(lip, struct xfs_efi_log_item, efi_item);
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	xfs_efi_release(efip);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
  }
  
- static inline void tag_set(struct radix_tree_node *node, unsigned int tag,
-@@ -146,32 +146,32 @@ static inline int tag_get(const struct radix_tree_node *node, unsigned int tag,
+ /* Recover the RUI if necessary. */
+@@ -4689,9 +4689,9 @@ xlog_recover_process_rui(
+ 	if (test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags))
+ 		return 0;
  
- static inline void root_tag_set(struct radix_tree_root *root, unsigned tag)
- {
--	root->gfp_mask |= (__force gfp_t)(1 << (tag + ROOT_TAG_SHIFT));
-+	root->xa_flags |= (__force gfp_t)(1 << (tag + ROOT_TAG_SHIFT));
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	error = xfs_rui_recover(mp, ruip);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 
+ 	return error;
+ }
+@@ -4707,9 +4707,9 @@ xlog_recover_cancel_rui(
+ 
+ 	ruip = container_of(lip, struct xfs_rui_log_item, rui_item);
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	xfs_rui_release(ruip);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
  }
  
- static inline void root_tag_clear(struct radix_tree_root *root, unsigned tag)
- {
--	root->gfp_mask &= (__force gfp_t)~(1 << (tag + ROOT_TAG_SHIFT));
-+	root->xa_flags &= (__force gfp_t)~(1 << (tag + ROOT_TAG_SHIFT));
+ /* Recover the CUI if necessary. */
+@@ -4730,9 +4730,9 @@ xlog_recover_process_cui(
+ 	if (test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags))
+ 		return 0;
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	error = xfs_cui_recover(mp, cuip, dfops);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 
+ 	return error;
+ }
+@@ -4748,9 +4748,9 @@ xlog_recover_cancel_cui(
+ 
+ 	cuip = container_of(lip, struct xfs_cui_log_item, cui_item);
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	xfs_cui_release(cuip);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
  }
  
- static inline void root_tag_clear_all(struct radix_tree_root *root)
- {
--	root->gfp_mask &= (1 << ROOT_TAG_SHIFT) - 1;
-+	root->xa_flags &= (__force gfp_t)((1 << ROOT_TAG_SHIFT) - 1);
+ /* Recover the BUI if necessary. */
+@@ -4771,9 +4771,9 @@ xlog_recover_process_bui(
+ 	if (test_bit(XFS_BUI_RECOVERED, &buip->bui_flags))
+ 		return 0;
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	error = xfs_bui_recover(mp, buip, dfops);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 
+ 	return error;
+ }
+@@ -4789,9 +4789,9 @@ xlog_recover_cancel_bui(
+ 
+ 	buip = container_of(lip, struct xfs_bui_log_item, bui_item);
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	xfs_bui_release(buip);
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
  }
  
- static inline int root_tag_get(const struct radix_tree_root *root, unsigned tag)
- {
--	return (__force int)root->gfp_mask & (1 << (tag + ROOT_TAG_SHIFT));
-+	return (__force int)root->xa_flags & (1 << (tag + ROOT_TAG_SHIFT));
- }
- 
- static inline unsigned root_tags_get(const struct radix_tree_root *root)
- {
--	return (__force unsigned)root->gfp_mask >> ROOT_TAG_SHIFT;
-+	return (__force unsigned)root->xa_flags >> ROOT_TAG_SHIFT;
- }
- 
- static inline bool is_idr(const struct radix_tree_root *root)
- {
--	return !!(root->gfp_mask & ROOT_IS_IDR);
-+	return !!(root->xa_flags & ROOT_IS_IDR);
- }
- 
- /*
-@@ -290,12 +290,12 @@ static void dump_node(struct radix_tree_node *node, unsigned long index)
- /* For debug */
- static void radix_tree_dump(struct radix_tree_root *root)
- {
--	pr_debug("radix root: %p rnode %p tags %x\n",
--			root, root->rnode,
--			root->gfp_mask >> ROOT_TAG_SHIFT);
--	if (!radix_tree_is_internal_node(root->rnode))
-+	pr_debug("radix root: %p xa_head %p tags %x\n",
-+			root, root->xa_head,
-+			root->xa_flags >> ROOT_TAG_SHIFT);
-+	if (!radix_tree_is_internal_node(root->xa_head))
- 		return;
--	dump_node(entry_to_node(root->rnode), 0);
-+	dump_node(entry_to_node(root->xa_head), 0);
- }
- 
- static void dump_ida_node(void *entry, unsigned long index)
-@@ -339,9 +339,9 @@ static void dump_ida_node(void *entry, unsigned long index)
- static void ida_dump(struct ida *ida)
- {
- 	struct radix_tree_root *root = &ida->ida_rt;
--	pr_debug("ida: %p node %p free %d\n", ida, root->rnode,
--				root->gfp_mask >> ROOT_TAG_SHIFT);
--	dump_ida_node(root->rnode, 0);
-+	pr_debug("ida: %p node %p free %d\n", ida, root->xa_head,
-+				root->xa_flags >> ROOT_TAG_SHIFT);
-+	dump_ida_node(root->xa_head, 0);
- }
+ /* Is this log item a deferred action intent? */
+@@ -4879,7 +4879,7 @@ xlog_recover_process_intents(
  #endif
  
-@@ -575,7 +575,7 @@ int radix_tree_maybe_preload_order(gfp_t gfp_mask, int order)
- static unsigned radix_tree_load_root(const struct radix_tree_root *root,
- 		struct radix_tree_node **nodep, unsigned long *maxindex)
- {
--	struct radix_tree_node *node = rcu_dereference_raw(root->rnode);
-+	struct radix_tree_node *node = rcu_dereference_raw(root->xa_head);
- 
- 	*nodep = node;
- 
-@@ -604,7 +604,7 @@ static int radix_tree_extend(struct radix_tree_root *root, gfp_t gfp,
- 	while (index > shift_maxindex(maxshift))
- 		maxshift += RADIX_TREE_MAP_SHIFT;
- 
--	entry = rcu_dereference_raw(root->rnode);
-+	entry = rcu_dereference_raw(root->xa_head);
- 	if (!entry && (!is_idr(root) || root_tag_get(root, IDR_FREE)))
- 		goto out;
- 
-@@ -632,7 +632,7 @@ static int radix_tree_extend(struct radix_tree_root *root, gfp_t gfp,
- 		if (radix_tree_is_internal_node(entry)) {
- 			entry_to_node(entry)->parent = node;
- 		} else if (xa_is_value(entry)) {
--			/* Moving an exceptional root->rnode to a node */
-+			/* Moving an exceptional root->xa_head to a node */
- 			node->exceptional = 1;
- 		}
- 		/*
-@@ -641,7 +641,7 @@ static int radix_tree_extend(struct radix_tree_root *root, gfp_t gfp,
- 		 */
- 		node->slots[0] = (void __rcu *)entry;
- 		entry = node_to_entry(node);
--		rcu_assign_pointer(root->rnode, entry);
-+		rcu_assign_pointer(root->xa_head, entry);
- 		shift += RADIX_TREE_MAP_SHIFT;
- 	} while (shift <= maxshift);
+ 	ailp = log->l_ailp;
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ #if defined(DEBUG) || defined(XFS_WARN)
+ 	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
+@@ -4933,7 +4933,7 @@ xlog_recover_process_intents(
+ 	}
  out:
-@@ -658,7 +658,7 @@ static inline bool radix_tree_shrink(struct radix_tree_root *root,
- 	bool shrunk = false;
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	if (error)
+ 		xfs_defer_cancel(&dfops);
+ 	else
+@@ -4956,7 +4956,7 @@ xlog_recover_cancel_intents(
+ 	struct xfs_ail		*ailp;
  
- 	for (;;) {
--		struct radix_tree_node *node = rcu_dereference_raw(root->rnode);
-+		struct radix_tree_node *node = rcu_dereference_raw(root->xa_head);
- 		struct radix_tree_node *child;
+ 	ailp = log->l_ailp;
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	while (lip != NULL) {
+ 		/*
+@@ -4990,7 +4990,7 @@ xlog_recover_cancel_intents(
+ 	}
  
- 		if (!radix_tree_is_internal_node(node))
-@@ -686,9 +686,9 @@ static inline bool radix_tree_shrink(struct radix_tree_root *root,
- 		 * moving the node from one part of the tree to another: if it
- 		 * was safe to dereference the old pointer to it
- 		 * (node->slots[0]), it will be safe to dereference the new
--		 * one (root->rnode) as far as dependent read barriers go.
-+		 * one (root->xa_head) as far as dependent read barriers go.
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index a87f657f59c9..756e01999c24 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -781,8 +781,8 @@ xfs_log_item_batch_insert(
+ {
+ 	int	i;
+ 
+-	spin_lock(&ailp->xa_lock);
+-	/* xfs_trans_ail_update_bulk drops ailp->xa_lock */
++	spin_lock(&ailp->ail_lock);
++	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
+ 	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
+ 
+ 	for (i = 0; i < nr_items; i++) {
+@@ -825,9 +825,9 @@ xfs_trans_committed_bulk(
+ 	struct xfs_ail_cursor	cur;
+ 	int			i = 0;
+ 
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	/* unpin all the log items */
+ 	for (lv = log_vector; lv; lv = lv->lv_next ) {
+@@ -847,7 +847,7 @@ xfs_trans_committed_bulk(
+ 		 * object into the AIL as we are in a shutdown situation.
  		 */
--		root->rnode = (void __rcu *)child;
-+		root->xa_head = (void __rcu *)child;
- 		if (is_idr(root) && !tag_get(node, IDR_FREE, 0))
- 			root_tag_clear(root, IDR_FREE);
- 
-@@ -736,9 +736,8 @@ static bool delete_node(struct radix_tree_root *root,
- 
- 		if (node->count) {
- 			if (node_to_entry(node) ==
--					rcu_dereference_raw(root->rnode))
--				deleted |= radix_tree_shrink(root,
--								update_node);
-+					rcu_dereference_raw(root->xa_head))
-+				deleted |= radix_tree_shrink(root, update_node);
- 			return deleted;
+ 		if (aborted) {
+-			ASSERT(XFS_FORCED_SHUTDOWN(ailp->xa_mount));
++			ASSERT(XFS_FORCED_SHUTDOWN(ailp->ail_mount));
+ 			lip->li_ops->iop_unpin(lip, 1);
+ 			continue;
  		}
- 
-@@ -753,7 +752,7 @@ static bool delete_node(struct radix_tree_root *root,
+@@ -861,11 +861,11 @@ xfs_trans_committed_bulk(
+ 			 * not affect the AIL cursor the bulk insert path is
+ 			 * using.
  			 */
- 			if (!is_idr(root))
- 				root_tag_clear_all(root);
--			root->rnode = NULL;
-+			root->xa_head = NULL;
+-			spin_lock(&ailp->xa_lock);
++			spin_lock(&ailp->ail_lock);
+ 			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
+ 				xfs_trans_ail_update(ailp, lip, item_lsn);
+ 			else
+-				spin_unlock(&ailp->xa_lock);
++				spin_unlock(&ailp->ail_lock);
+ 			lip->li_ops->iop_unpin(lip, 0);
+ 			continue;
  		}
+@@ -883,9 +883,9 @@ xfs_trans_committed_bulk(
+ 	if (i)
+ 		xfs_log_item_batch_insert(ailp, &cur, log_items, i, commit_lsn);
  
- 		WARN_ON_ONCE(!list_empty(&node->private_list));
-@@ -778,7 +777,7 @@ static bool delete_node(struct radix_tree_root *root,
-  *	at position @index in the radix tree @root.
-  *
-  *	Until there is more than one item in the tree, no nodes are
-- *	allocated and @root->rnode is used as a direct slot instead of
-+ *	allocated and @root->xa_head is used as a direct slot instead of
-  *	pointing to a node, in which case *@nodep will be NULL.
-  *
-  *	Returns -ENOMEM, or 0 for success.
-@@ -788,7 +787,7 @@ int __radix_tree_create(struct radix_tree_root *root, unsigned long index,
- 			void __rcu ***slotp)
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index cef89f7127d3..d4a2445215e6 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -40,7 +40,7 @@ xfs_ail_check(
  {
- 	struct radix_tree_node *node = NULL, *child;
--	void __rcu **slot = (void __rcu **)&root->rnode;
-+	void __rcu **slot = (void __rcu **)&root->xa_head;
- 	unsigned long maxindex;
- 	unsigned int shift, offset = 0;
- 	unsigned long max = index | ((1UL << order) - 1);
-@@ -804,7 +803,7 @@ int __radix_tree_create(struct radix_tree_root *root, unsigned long index,
- 		if (error < 0)
- 			return error;
- 		shift = error;
--		child = rcu_dereference_raw(root->rnode);
-+		child = rcu_dereference_raw(root->xa_head);
- 	}
+ 	xfs_log_item_t	*prev_lip;
  
- 	while (shift > order) {
-@@ -995,7 +994,7 @@ EXPORT_SYMBOL(__radix_tree_insert);
-  *	tree @root.
-  *
-  *	Until there is more than one item in the tree, no nodes are
-- *	allocated and @root->rnode is used as a direct slot instead of
-+ *	allocated and @root->xa_head is used as a direct slot instead of
-  *	pointing to a node, in which case *@nodep will be NULL.
-  */
- void *__radix_tree_lookup(const struct radix_tree_root *root,
-@@ -1008,7 +1007,7 @@ void *__radix_tree_lookup(const struct radix_tree_root *root,
+-	if (list_empty(&ailp->xa_ail))
++	if (list_empty(&ailp->ail_head))
+ 		return;
  
-  restart:
- 	parent = NULL;
--	slot = (void __rcu **)&root->rnode;
-+	slot = (void __rcu **)&root->xa_head;
- 	radix_tree_load_root(root, &node, &maxindex);
- 	if (index > maxindex)
- 		return NULL;
-@@ -1160,9 +1159,9 @@ void __radix_tree_replace(struct radix_tree_root *root,
  	/*
- 	 * This function supports replacing exceptional entries and
- 	 * deleting entries, but that needs accounting against the
--	 * node unless the slot is root->rnode.
-+	 * node unless the slot is root->xa_head.
+@@ -48,11 +48,11 @@ xfs_ail_check(
  	 */
--	WARN_ON_ONCE(!node && (slot != (void __rcu **)&root->rnode) &&
-+	WARN_ON_ONCE(!node && (slot != (void __rcu **)&root->xa_head) &&
- 			(count || exceptional));
- 	replace_slot(slot, item, node, count, exceptional);
+ 	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
+ 	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
+-	if (&prev_lip->li_ail != &ailp->xa_ail)
++	if (&prev_lip->li_ail != &ailp->ail_head)
+ 		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
  
-@@ -1714,7 +1713,7 @@ void __rcu **radix_tree_next_chunk(const struct radix_tree_root *root,
- 		iter->tags = 1;
- 		iter->node = NULL;
- 		__set_iter_shift(iter, 0);
--		return (void __rcu **)&root->rnode;
-+		return (void __rcu **)&root->xa_head;
- 	}
+ 	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
+-	if (&prev_lip->li_ail != &ailp->xa_ail)
++	if (&prev_lip->li_ail != &ailp->ail_head)
+ 		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
  
- 	do {
-@@ -2108,7 +2107,7 @@ void __rcu **idr_get_free(struct radix_tree_root *root,
- 			      unsigned long max)
+ 
+@@ -69,10 +69,10 @@ static xfs_log_item_t *
+ xfs_ail_max(
+ 	struct xfs_ail  *ailp)
  {
- 	struct radix_tree_node *node = NULL, *child;
--	void __rcu **slot = (void __rcu **)&root->rnode;
-+	void __rcu **slot = (void __rcu **)&root->xa_head;
- 	unsigned long maxindex, start = iter->next_index;
- 	unsigned int shift, offset = 0;
+-	if (list_empty(&ailp->xa_ail))
++	if (list_empty(&ailp->ail_head))
+ 		return NULL;
  
-@@ -2124,7 +2123,7 @@ void __rcu **idr_get_free(struct radix_tree_root *root,
- 		if (error < 0)
- 			return ERR_PTR(error);
- 		shift = error;
--		child = rcu_dereference_raw(root->rnode);
-+		child = rcu_dereference_raw(root->xa_head);
- 	}
- 
- 	while (shift) {
-@@ -2187,10 +2186,10 @@ void __rcu **idr_get_free(struct radix_tree_root *root,
-  */
- void idr_destroy(struct idr *idr)
- {
--	struct radix_tree_node *node = rcu_dereference_raw(idr->idr_rt.rnode);
-+	struct radix_tree_node *node = rcu_dereference_raw(idr->idr_rt.xa_head);
- 	if (radix_tree_is_internal_node(node))
- 		radix_tree_free_nodes(node);
--	idr->idr_rt.rnode = NULL;
-+	idr->idr_rt.xa_head = NULL;
- 	root_tag_set(&idr->idr_rt, IDR_FREE);
+-	return list_entry(ailp->xa_ail.prev, xfs_log_item_t, li_ail);
++	return list_entry(ailp->ail_head.prev, xfs_log_item_t, li_ail);
  }
- EXPORT_SYMBOL(idr_destroy);
-diff --git a/lib/xarray.c b/lib/xarray.c
-new file mode 100644
-index 000000000000..24591b3ea84d
---- /dev/null
-+++ b/lib/xarray.c
-@@ -0,0 +1,40 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/*
-+ * XArray implementation
-+ * Copyright (c) 2017 Microsoft Corporation
-+ * Author: Matthew Wilcox <mawilcox@microsoft.com>
-+ */
-+
-+#include <linux/export.h>
-+#include <linux/xarray.h>
-+
-+/*
-+ * Coding conventions in this file:
-+ *
-+ * @xa is used to refer to the entire xarray.
-+ * @xas is the 'xarray operation state'.  It may be either a pointer to
-+ * an xa_state, or an xa_state stored on the stack.  This is an unfortunate
-+ * ambiguity.
-+ * @index is the index of the entry being operated on
-+ * @tag is an xa_tag_t; a small number indicating one of the tag bits.
-+ * @node refers to an xa_node; usually the primary one being operated on by
-+ * this function.
-+ * @offset is the index into the slots array inside an xa_node.
-+ * @parent refers to the @xa_node closer to the head than @node.
-+ * @entry refers to something stored in a slot in the xarray
-+ */
-+
-+/**
-+ * __xa_init() - Initialise an empty XArray with flags.
-+ * @xa: XArray.
-+ * @flags: XA_FLAG values.
-+ *
-+ * If you don't kow what an XA_FLAG is, use xa_init().
-+ */
-+void __xa_init(struct xarray *xa, gfp_t flags)
-+{
-+	spin_lock_init(&xa->xa_lock);
-+	xa->xa_flags = flags;
-+	xa->xa_head = NULL;
-+}
-+EXPORT_SYMBOL(__xa_init);
-diff --git a/tools/include/linux/spinlock.h b/tools/include/linux/spinlock.h
-index b21b586b9854..34fed5c38da2 100644
---- a/tools/include/linux/spinlock.h
-+++ b/tools/include/linux/spinlock.h
-@@ -8,6 +8,7 @@
- #define spinlock_t		pthread_mutex_t
- #define DEFINE_SPINLOCK(x)	pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER;
- #define __SPIN_LOCK_UNLOCKED(x)	(pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER
-+#define spin_lock_init(x)	pthread_mutex_init(x, NULL);
  
- #define spin_lock_irqsave(x, f)		(void)f, pthread_mutex_lock(x)
- #define spin_unlock_irqrestore(x, f)	(void)f, pthread_mutex_unlock(x)
-diff --git a/tools/testing/radix-tree/.gitignore b/tools/testing/radix-tree/.gitignore
-index d4706c0ffceb..8d4df7a72a8e 100644
---- a/tools/testing/radix-tree/.gitignore
-+++ b/tools/testing/radix-tree/.gitignore
-@@ -4,3 +4,4 @@ idr-test
- main
- multiorder
- radix-tree.c
-+xarray.c
-diff --git a/tools/testing/radix-tree/Makefile b/tools/testing/radix-tree/Makefile
-index fa7ee369b3c9..3868bc189199 100644
---- a/tools/testing/radix-tree/Makefile
-+++ b/tools/testing/radix-tree/Makefile
-@@ -4,7 +4,7 @@ CFLAGS += -I. -I../../include -g -O2 -Wall -D_LGPL_SOURCE -fsanitize=address
- LDFLAGS += -fsanitize=address
- LDLIBS+= -lpthread -lurcu
- TARGETS = main idr-test multiorder
--CORE_OFILES := radix-tree.o idr.o linux.o test.o find_bit.o
-+CORE_OFILES := xarray.o radix-tree.o idr.o linux.o test.o find_bit.o
- OFILES = main.o $(CORE_OFILES) regression1.o regression2.o regression3.o \
- 	 tag_check.o multiorder.o idr-test.o iteration_check.o benchmark.o
- 
-@@ -33,9 +33,13 @@ vpath %.c ../../lib
- $(OFILES): Makefile *.h */*.h generated/map-shift.h \
- 	../../include/linux/*.h \
- 	../../include/asm/*.h \
-+	../../../include/linux/xarray.h \
- 	../../../include/linux/radix-tree.h \
- 	../../../include/linux/idr.h
- 
-+xarray.c: ../../../lib/xarray.c
-+	sed -e 's/^static //' -e 's/__always_inline //' -e 's/inline //' < $< > $@
-+
- radix-tree.c: ../../../lib/radix-tree.c
- 	sed -e 's/^static //' -e 's/__always_inline //' -e 's/inline //' < $< > $@
- 
-@@ -46,6 +50,6 @@ idr.c: ../../../lib/idr.c
- 
- mapshift:
- 	@if ! grep -qws $(SHIFT) generated/map-shift.h; then		\
--		echo "#define RADIX_TREE_MAP_SHIFT $(SHIFT)" >		\
-+		echo "#define XA_CHUNK_SHIFT $(SHIFT)" >		\
- 				generated/map-shift.h;			\
- 	fi
-diff --git a/tools/testing/radix-tree/linux/bug.h b/tools/testing/radix-tree/linux/bug.h
-index 23b8ed52f8c8..03dc8a57eb99 100644
---- a/tools/testing/radix-tree/linux/bug.h
-+++ b/tools/testing/radix-tree/linux/bug.h
-@@ -1 +1,2 @@
-+#include <stdio.h>
- #include "asm/bug.h"
-diff --git a/tools/testing/radix-tree/linux/kconfig.h b/tools/testing/radix-tree/linux/kconfig.h
-new file mode 100644
-index 000000000000..6c8675859913
---- /dev/null
-+++ b/tools/testing/radix-tree/linux/kconfig.h
-@@ -0,0 +1 @@
-+#include "../../../../include/linux/kconfig.h"
-diff --git a/tools/testing/radix-tree/linux/xarray.h b/tools/testing/radix-tree/linux/xarray.h
-new file mode 100644
-index 000000000000..df3812cda376
---- /dev/null
-+++ b/tools/testing/radix-tree/linux/xarray.h
-@@ -0,0 +1,2 @@
-+#include "generated/map-shift.h"
-+#include "../../../../include/linux/xarray.h"
-diff --git a/tools/testing/radix-tree/multiorder.c b/tools/testing/radix-tree/multiorder.c
-index 684e76f79f4a..24293a2fd82d 100644
---- a/tools/testing/radix-tree/multiorder.c
-+++ b/tools/testing/radix-tree/multiorder.c
-@@ -191,13 +191,13 @@ static void multiorder_shrink(unsigned long index, int order)
- 
- 	assert(item_insert_order(&tree, 0, order) == 0);
- 
--	node = tree.rnode;
-+	node = tree.xa_head;
- 
- 	assert(item_insert(&tree, index) == 0);
--	assert(node != tree.rnode);
-+	assert(node != tree.xa_head);
- 
- 	assert(item_delete(&tree, index) != 0);
--	assert(node == tree.rnode);
-+	assert(node == tree.xa_head);
- 
- 	for (i = 0; i < max; i++) {
- 		struct item *item = item_lookup(&tree, i);
-diff --git a/tools/testing/radix-tree/test.c b/tools/testing/radix-tree/test.c
-index 0d69c49177c6..6e1cc2040817 100644
---- a/tools/testing/radix-tree/test.c
-+++ b/tools/testing/radix-tree/test.c
-@@ -262,7 +262,7 @@ static int verify_node(struct radix_tree_node *slot, unsigned int tag,
- 
- void verify_tag_consistency(struct radix_tree_root *root, unsigned int tag)
+ /*
+@@ -84,7 +84,7 @@ xfs_ail_next(
+ 	struct xfs_ail  *ailp,
+ 	xfs_log_item_t  *lip)
  {
--	struct radix_tree_node *node = root->rnode;
-+	struct radix_tree_node *node = root->xa_head;
- 	if (!radix_tree_is_internal_node(node))
- 		return;
- 	verify_node(node, tag, !!root_tag_get(root, tag));
-@@ -292,13 +292,13 @@ void item_kill_tree(struct radix_tree_root *root)
+-	if (lip->li_ail.next == &ailp->xa_ail)
++	if (lip->li_ail.next == &ailp->ail_head)
+ 		return NULL;
+ 
+ 	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
+@@ -105,11 +105,11 @@ xfs_ail_min_lsn(
+ 	xfs_lsn_t	lsn = 0;
+ 	xfs_log_item_t	*lip;
+ 
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_ail_min(ailp);
+ 	if (lip)
+ 		lsn = lip->li_lsn;
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	return lsn;
+ }
+@@ -124,11 +124,11 @@ xfs_ail_max_lsn(
+ 	xfs_lsn_t       lsn = 0;
+ 	xfs_log_item_t  *lip;
+ 
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_ail_max(ailp);
+ 	if (lip)
+ 		lsn = lip->li_lsn;
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+ 	return lsn;
+ }
+@@ -146,7 +146,7 @@ xfs_trans_ail_cursor_init(
+ 	struct xfs_ail_cursor	*cur)
+ {
+ 	cur->item = NULL;
+-	list_add_tail(&cur->list, &ailp->xa_cursors);
++	list_add_tail(&cur->list, &ailp->ail_cursors);
+ }
+ 
+ /*
+@@ -194,7 +194,7 @@ xfs_trans_ail_cursor_clear(
+ {
+ 	struct xfs_ail_cursor	*cur;
+ 
+-	list_for_each_entry(cur, &ailp->xa_cursors, list) {
++	list_for_each_entry(cur, &ailp->ail_cursors, list) {
+ 		if (cur->item == lip)
+ 			cur->item = (struct xfs_log_item *)
+ 					((uintptr_t)cur->item | 1);
+@@ -222,7 +222,7 @@ xfs_trans_ail_cursor_first(
+ 		goto out;
+ 	}
+ 
+-	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
++	list_for_each_entry(lip, &ailp->ail_head, li_ail) {
+ 		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0)
+ 			goto out;
+ 	}
+@@ -241,7 +241,7 @@ __xfs_trans_ail_cursor_last(
+ {
+ 	xfs_log_item_t		*lip;
+ 
+-	list_for_each_entry_reverse(lip, &ailp->xa_ail, li_ail) {
++	list_for_each_entry_reverse(lip, &ailp->ail_head, li_ail) {
+ 		if (XFS_LSN_CMP(lip->li_lsn, lsn) <= 0)
+ 			return lip;
+ 	}
+@@ -310,7 +310,7 @@ xfs_ail_splice(
+ 	if (lip)
+ 		list_splice(list, &lip->li_ail);
+ 	else
+-		list_splice(list, &ailp->xa_ail);
++		list_splice(list, &ailp->ail_head);
+ }
+ 
+ /*
+@@ -335,17 +335,17 @@ xfsaild_push_item(
+ 	 * If log item pinning is enabled, skip the push and track the item as
+ 	 * pinned. This can help induce head-behind-tail conditions.
+ 	 */
+-	if (XFS_TEST_ERROR(false, ailp->xa_mount, XFS_ERRTAG_LOG_ITEM_PIN))
++	if (XFS_TEST_ERROR(false, ailp->ail_mount, XFS_ERRTAG_LOG_ITEM_PIN))
+ 		return XFS_ITEM_PINNED;
+ 
+-	return lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
++	return lip->li_ops->iop_push(lip, &ailp->ail_buf_list);
+ }
+ 
+ static long
+ xfsaild_push(
+ 	struct xfs_ail		*ailp)
+ {
+-	xfs_mount_t		*mp = ailp->xa_mount;
++	xfs_mount_t		*mp = ailp->ail_mount;
+ 	struct xfs_ail_cursor	cur;
+ 	xfs_log_item_t		*lip;
+ 	xfs_lsn_t		lsn;
+@@ -360,30 +360,30 @@ xfsaild_push(
+ 	 * buffers the last time we ran, force the log first and wait for it
+ 	 * before pushing again.
+ 	 */
+-	if (ailp->xa_log_flush && ailp->xa_last_pushed_lsn == 0 &&
+-	    (!list_empty_careful(&ailp->xa_buf_list) ||
++	if (ailp->ail_log_flush && ailp->ail_last_pushed_lsn == 0 &&
++	    (!list_empty_careful(&ailp->ail_buf_list) ||
+ 	     xfs_ail_min_lsn(ailp))) {
+-		ailp->xa_log_flush = 0;
++		ailp->ail_log_flush = 0;
+ 
+ 		XFS_STATS_INC(mp, xs_push_ail_flush);
+ 		xfs_log_force(mp, XFS_LOG_SYNC);
+ 	}
+ 
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 
+-	/* barrier matches the xa_target update in xfs_ail_push() */
++	/* barrier matches the ail_target update in xfs_ail_push() */
+ 	smp_rmb();
+-	target = ailp->xa_target;
+-	ailp->xa_target_prev = target;
++	target = ailp->ail_target;
++	ailp->ail_target_prev = target;
+ 
+-	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
++	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->ail_last_pushed_lsn);
+ 	if (!lip) {
+ 		/*
+ 		 * If the AIL is empty or our push has reached the end we are
+ 		 * done now.
+ 		 */
+ 		xfs_trans_ail_cursor_done(&cur);
+-		spin_unlock(&ailp->xa_lock);
++		spin_unlock(&ailp->ail_lock);
+ 		goto out_done;
+ 	}
+ 
+@@ -404,7 +404,7 @@ xfsaild_push(
+ 			XFS_STATS_INC(mp, xs_push_ail_success);
+ 			trace_xfs_ail_push(lip);
+ 
+-			ailp->xa_last_pushed_lsn = lsn;
++			ailp->ail_last_pushed_lsn = lsn;
+ 			break;
+ 
+ 		case XFS_ITEM_FLUSHING:
+@@ -423,7 +423,7 @@ xfsaild_push(
+ 			trace_xfs_ail_flushing(lip);
+ 
+ 			flushing++;
+-			ailp->xa_last_pushed_lsn = lsn;
++			ailp->ail_last_pushed_lsn = lsn;
+ 			break;
+ 
+ 		case XFS_ITEM_PINNED:
+@@ -431,7 +431,7 @@ xfsaild_push(
+ 			trace_xfs_ail_pinned(lip);
+ 
+ 			stuck++;
+-			ailp->xa_log_flush++;
++			ailp->ail_log_flush++;
+ 			break;
+ 		case XFS_ITEM_LOCKED:
+ 			XFS_STATS_INC(mp, xs_push_ail_locked);
+@@ -468,10 +468,10 @@ xfsaild_push(
+ 		lsn = lip->li_lsn;
+ 	}
+ 	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+-	if (xfs_buf_delwri_submit_nowait(&ailp->xa_buf_list))
+-		ailp->xa_log_flush++;
++	if (xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list))
++		ailp->ail_log_flush++;
+ 
+ 	if (!count || XFS_LSN_CMP(lsn, target) >= 0) {
+ out_done:
+@@ -481,7 +481,7 @@ xfsaild_push(
+ 		 * AIL before we start the next scan from the start of the AIL.
+ 		 */
+ 		tout = 50;
+-		ailp->xa_last_pushed_lsn = 0;
++		ailp->ail_last_pushed_lsn = 0;
+ 	} else if (((stuck + flushing) * 100) / count > 90) {
+ 		/*
+ 		 * Either there is a lot of contention on the AIL or we are
+@@ -494,7 +494,7 @@ xfsaild_push(
+ 		 * the restart to issue a log force to unpin the stuck items.
+ 		 */
+ 		tout = 20;
+-		ailp->xa_last_pushed_lsn = 0;
++		ailp->ail_last_pushed_lsn = 0;
+ 	} else {
+ 		/*
+ 		 * Assume we have more work to do in a short while.
+@@ -536,26 +536,26 @@ xfsaild(
+ 			break;
  		}
- 	}
- 	assert(radix_tree_gang_lookup(root, (void **)items, 0, 32) == 0);
--	assert(root->rnode == NULL);
-+	assert(root->xa_head == NULL);
+ 
+-		spin_lock(&ailp->xa_lock);
++		spin_lock(&ailp->ail_lock);
+ 
+ 		/*
+ 		 * Idle if the AIL is empty and we are not racing with a target
+ 		 * update. We check the AIL after we set the task to a sleep
+-		 * state to guarantee that we either catch an xa_target update
++		 * state to guarantee that we either catch an ail_target update
+ 		 * or that a wake_up resets the state to TASK_RUNNING.
+ 		 * Otherwise, we run the risk of sleeping indefinitely.
+ 		 *
+-		 * The barrier matches the xa_target update in xfs_ail_push().
++		 * The barrier matches the ail_target update in xfs_ail_push().
+ 		 */
+ 		smp_rmb();
+ 		if (!xfs_ail_min(ailp) &&
+-		    ailp->xa_target == ailp->xa_target_prev) {
+-			spin_unlock(&ailp->xa_lock);
++		    ailp->ail_target == ailp->ail_target_prev) {
++			spin_unlock(&ailp->ail_lock);
+ 			freezable_schedule();
+ 			tout = 0;
+ 			continue;
+ 		}
+-		spin_unlock(&ailp->xa_lock);
++		spin_unlock(&ailp->ail_lock);
+ 
+ 		if (tout)
+ 			freezable_schedule_timeout(msecs_to_jiffies(tout));
+@@ -592,8 +592,8 @@ xfs_ail_push(
+ 	xfs_log_item_t	*lip;
+ 
+ 	lip = xfs_ail_min(ailp);
+-	if (!lip || XFS_FORCED_SHUTDOWN(ailp->xa_mount) ||
+-	    XFS_LSN_CMP(threshold_lsn, ailp->xa_target) <= 0)
++	if (!lip || XFS_FORCED_SHUTDOWN(ailp->ail_mount) ||
++	    XFS_LSN_CMP(threshold_lsn, ailp->ail_target) <= 0)
+ 		return;
+ 
+ 	/*
+@@ -601,10 +601,10 @@ xfs_ail_push(
+ 	 * the XFS_AIL_PUSHING_BIT.
+ 	 */
+ 	smp_wmb();
+-	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
++	xfs_trans_ail_copy_lsn(ailp, &ailp->ail_target, &threshold_lsn);
+ 	smp_wmb();
+ 
+-	wake_up_process(ailp->xa_task);
++	wake_up_process(ailp->ail_task);
  }
  
- void tree_verify_min_height(struct radix_tree_root *root, int maxindex)
+ /*
+@@ -630,18 +630,18 @@ xfs_ail_push_all_sync(
+ 	struct xfs_log_item	*lip;
+ 	DEFINE_WAIT(wait);
+ 
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	while ((lip = xfs_ail_max(ailp)) != NULL) {
+-		prepare_to_wait(&ailp->xa_empty, &wait, TASK_UNINTERRUPTIBLE);
+-		ailp->xa_target = lip->li_lsn;
+-		wake_up_process(ailp->xa_task);
+-		spin_unlock(&ailp->xa_lock);
++		prepare_to_wait(&ailp->ail_empty, &wait, TASK_UNINTERRUPTIBLE);
++		ailp->ail_target = lip->li_lsn;
++		wake_up_process(ailp->ail_task);
++		spin_unlock(&ailp->ail_lock);
+ 		schedule();
+-		spin_lock(&ailp->xa_lock);
++		spin_lock(&ailp->ail_lock);
+ 	}
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 
+-	finish_wait(&ailp->xa_empty, &wait);
++	finish_wait(&ailp->ail_empty, &wait);
+ }
+ 
+ /*
+@@ -672,7 +672,7 @@ xfs_trans_ail_update_bulk(
+ 	struct xfs_ail_cursor	*cur,
+ 	struct xfs_log_item	**log_items,
+ 	int			nr_items,
+-	xfs_lsn_t		lsn) __releases(ailp->xa_lock)
++	xfs_lsn_t		lsn) __releases(ailp->ail_lock)
  {
- 	unsigned shift;
--	struct radix_tree_node *node = root->rnode;
-+	struct radix_tree_node *node = root->xa_head;
- 	if (!radix_tree_is_internal_node(node)) {
- 		assert(maxindex == 0);
- 		return;
+ 	xfs_log_item_t		*mlip;
+ 	int			mlip_changed = 0;
+@@ -705,13 +705,13 @@ xfs_trans_ail_update_bulk(
+ 		xfs_ail_splice(ailp, cur, &tmp, lsn);
+ 
+ 	if (mlip_changed) {
+-		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+-			xlog_assign_tail_lsn_locked(ailp->xa_mount);
+-		spin_unlock(&ailp->xa_lock);
++		if (!XFS_FORCED_SHUTDOWN(ailp->ail_mount))
++			xlog_assign_tail_lsn_locked(ailp->ail_mount);
++		spin_unlock(&ailp->ail_lock);
+ 
+-		xfs_log_space_wake(ailp->xa_mount);
++		xfs_log_space_wake(ailp->ail_mount);
+ 	} else {
+-		spin_unlock(&ailp->xa_lock);
++		spin_unlock(&ailp->ail_lock);
+ 	}
+ }
+ 
+@@ -756,13 +756,13 @@ void
+ xfs_trans_ail_delete(
+ 	struct xfs_ail		*ailp,
+ 	struct xfs_log_item	*lip,
+-	int			shutdown_type) __releases(ailp->xa_lock)
++	int			shutdown_type) __releases(ailp->ail_lock)
+ {
+-	struct xfs_mount	*mp = ailp->xa_mount;
++	struct xfs_mount	*mp = ailp->ail_mount;
+ 	bool			mlip_changed;
+ 
+ 	if (!(lip->li_flags & XFS_LI_IN_AIL)) {
+-		spin_unlock(&ailp->xa_lock);
++		spin_unlock(&ailp->ail_lock);
+ 		if (!XFS_FORCED_SHUTDOWN(mp)) {
+ 			xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+ 	"%s: attempting to delete a log item that is not in the AIL",
+@@ -776,13 +776,13 @@ xfs_trans_ail_delete(
+ 	if (mlip_changed) {
+ 		if (!XFS_FORCED_SHUTDOWN(mp))
+ 			xlog_assign_tail_lsn_locked(mp);
+-		if (list_empty(&ailp->xa_ail))
+-			wake_up_all(&ailp->xa_empty);
++		if (list_empty(&ailp->ail_head))
++			wake_up_all(&ailp->ail_empty);
+ 	}
+ 
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ 	if (mlip_changed)
+-		xfs_log_space_wake(ailp->xa_mount);
++		xfs_log_space_wake(ailp->ail_mount);
+ }
+ 
+ int
+@@ -795,16 +795,16 @@ xfs_trans_ail_init(
+ 	if (!ailp)
+ 		return -ENOMEM;
+ 
+-	ailp->xa_mount = mp;
+-	INIT_LIST_HEAD(&ailp->xa_ail);
+-	INIT_LIST_HEAD(&ailp->xa_cursors);
+-	spin_lock_init(&ailp->xa_lock);
+-	INIT_LIST_HEAD(&ailp->xa_buf_list);
+-	init_waitqueue_head(&ailp->xa_empty);
++	ailp->ail_mount = mp;
++	INIT_LIST_HEAD(&ailp->ail_head);
++	INIT_LIST_HEAD(&ailp->ail_cursors);
++	spin_lock_init(&ailp->ail_lock);
++	INIT_LIST_HEAD(&ailp->ail_buf_list);
++	init_waitqueue_head(&ailp->ail_empty);
+ 
+-	ailp->xa_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
+-			ailp->xa_mount->m_fsname);
+-	if (IS_ERR(ailp->xa_task))
++	ailp->ail_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
++			ailp->ail_mount->m_fsname);
++	if (IS_ERR(ailp->ail_task))
+ 		goto out_free_ailp;
+ 
+ 	mp->m_ail = ailp;
+@@ -821,6 +821,6 @@ xfs_trans_ail_destroy(
+ {
+ 	struct xfs_ail	*ailp = mp->m_ail;
+ 
+-	kthread_stop(ailp->xa_task);
++	kthread_stop(ailp->ail_task);
+ 	kmem_free(ailp);
+ }
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 3ba7a96a8abd..b8871bcfe00b 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -429,8 +429,8 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 	 * If the fs has shutdown and we dropped the last reference, it may fall
+ 	 * on us to release a (possibly dirty) bli if it never made it to the
+ 	 * AIL (e.g., the aborted unpin already happened and didn't release it
+-	 * due to our reference). Since we're already shutdown and need xa_lock,
+-	 * just force remove from the AIL and release the bli here.
++	 * due to our reference). Since we're already shutdown and need
++	 * ail_lock, just force remove from the AIL and release the bli here.
+ 	 */
+ 	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
+ 		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index b317a3644c00..be24b0c8a332 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -65,17 +65,17 @@ struct xfs_ail_cursor {
+  * Eventually we need to drive the locking in here as well.
+  */
+ struct xfs_ail {
+-	struct xfs_mount	*xa_mount;
+-	struct task_struct	*xa_task;
+-	struct list_head	xa_ail;
+-	xfs_lsn_t		xa_target;
+-	xfs_lsn_t		xa_target_prev;
+-	struct list_head	xa_cursors;
+-	spinlock_t		xa_lock;
+-	xfs_lsn_t		xa_last_pushed_lsn;
+-	int			xa_log_flush;
+-	struct list_head	xa_buf_list;
+-	wait_queue_head_t	xa_empty;
++	struct xfs_mount	*ail_mount;
++	struct task_struct	*ail_task;
++	struct list_head	ail_head;
++	xfs_lsn_t		ail_target;
++	xfs_lsn_t		ail_target_prev;
++	struct list_head	ail_cursors;
++	spinlock_t		ail_lock;
++	xfs_lsn_t		ail_last_pushed_lsn;
++	int			ail_log_flush;
++	struct list_head	ail_buf_list;
++	wait_queue_head_t	ail_empty;
+ };
+ 
+ /*
+@@ -84,7 +84,7 @@ struct xfs_ail {
+ void	xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
+ 				struct xfs_ail_cursor *cur,
+ 				struct xfs_log_item **log_items, int nr_items,
+-				xfs_lsn_t lsn) __releases(ailp->xa_lock);
++				xfs_lsn_t lsn) __releases(ailp->ail_lock);
+ /*
+  * Return a pointer to the first item in the AIL.  If the AIL is empty, then
+  * return NULL.
+@@ -93,7 +93,7 @@ static inline struct xfs_log_item *
+ xfs_ail_min(
+ 	struct xfs_ail  *ailp)
+ {
+-	return list_first_entry_or_null(&ailp->xa_ail, struct xfs_log_item,
++	return list_first_entry_or_null(&ailp->ail_head, struct xfs_log_item,
+ 					li_ail);
+ }
+ 
+@@ -101,14 +101,14 @@ static inline void
+ xfs_trans_ail_update(
+ 	struct xfs_ail		*ailp,
+ 	struct xfs_log_item	*lip,
+-	xfs_lsn_t		lsn) __releases(ailp->xa_lock)
++	xfs_lsn_t		lsn) __releases(ailp->ail_lock)
+ {
+ 	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
+ }
+ 
+ bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
+ void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
+-		int shutdown_type) __releases(ailp->xa_lock);
++		int shutdown_type) __releases(ailp->ail_lock);
+ 
+ static inline void
+ xfs_trans_ail_remove(
+@@ -117,12 +117,12 @@ xfs_trans_ail_remove(
+ {
+ 	struct xfs_ail		*ailp = lip->li_ailp;
+ 
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	/* xfs_trans_ail_delete() drops the AIL lock */
+ 	if (lip->li_flags & XFS_LI_IN_AIL)
+ 		xfs_trans_ail_delete(ailp, lip, shutdown_type);
+ 	else
+-		spin_unlock(&ailp->xa_lock);
++		spin_unlock(&ailp->ail_lock);
+ }
+ 
+ void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
+@@ -149,9 +149,9 @@ xfs_trans_ail_copy_lsn(
+ 	xfs_lsn_t	*src)
+ {
+ 	ASSERT(sizeof(xfs_lsn_t) == 8);	/* don't lock if it shrinks */
+-	spin_lock(&ailp->xa_lock);
++	spin_lock(&ailp->ail_lock);
+ 	*dst = *src;
+-	spin_unlock(&ailp->xa_lock);
++	spin_unlock(&ailp->ail_lock);
+ }
+ #else
+ static inline void
+@@ -172,7 +172,7 @@ xfs_clear_li_failed(
+ 	struct xfs_buf	*bp = lip->li_buf;
+ 
+ 	ASSERT(lip->li_flags & XFS_LI_IN_AIL);
+-	lockdep_assert_held(&lip->li_ailp->xa_lock);
++	lockdep_assert_held(&lip->li_ailp->ail_lock);
+ 
+ 	if (lip->li_flags & XFS_LI_FAILED) {
+ 		lip->li_flags &= ~XFS_LI_FAILED;
+@@ -186,7 +186,7 @@ xfs_set_li_failed(
+ 	struct xfs_log_item	*lip,
+ 	struct xfs_buf		*bp)
+ {
+-	lockdep_assert_held(&lip->li_ailp->xa_lock);
++	lockdep_assert_held(&lip->li_ailp->ail_lock);
+ 
+ 	if (!(lip->li_flags & XFS_LI_FAILED)) {
+ 		xfs_buf_hold(bp);
 -- 
 2.15.1
 
