@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45210 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37714 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756453AbdLOWFU (ORCPT
+        with ESMTP id S1756493AbdLOWFU (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:20 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 33/78] mm: Convert truncate to XArray
-Date: Fri, 15 Dec 2017 14:04:05 -0800
-Message-Id: <20171215220450.7899-34-willy@infradead.org>
+Subject: [PATCH v5 63/78] dax: Convert dax_insert_pfn_mkwrite to XArray
+Date: Fri, 15 Dec 2017 14:04:35 -0800
+Message-Id: <20171215220450.7899-64-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,51 +17,41 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is essentially xa_cmpxchg() with the locking handled above us,
-and it doesn't have to handle replacing a NULL entry.
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/truncate.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ fs/dax.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 69bb743dd7e5..70323c347298 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -33,15 +33,12 @@
- static inline void __clear_shadow_entry(struct address_space *mapping,
- 				pgoff_t index, void *entry)
- {
--	struct radix_tree_node *node;
--	void **slot;
-+	XA_STATE(xas, &mapping->pages, index);
+diff --git a/fs/dax.c b/fs/dax.c
+index d6dd779e1b46..9cfd4fcc0b0d 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1498,21 +1498,21 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
+ 	void *entry;
+ 	int vmf_ret, error;
  
--	if (!__radix_tree_lookup(&mapping->pages, index, &node, &slot))
-+	xas_set_update(&xas, workingset_update_node);
-+	if (xas_load(&xas) != entry)
- 		return;
--	if (*slot != entry)
--		return;
--	__radix_tree_replace(&mapping->pages, node, slot, NULL,
--			     workingset_update_node);
-+	xas_store(&xas, NULL);
- 	mapping->nrexceptional--;
- }
- 
-@@ -746,10 +743,10 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 		index++;
+-	xa_lock_irq(&mapping->pages);
++	xas_lock_irq(&xas);
+ 	entry = get_unlocked_mapping_entry(&xas);
+ 	/* Did we race with someone splitting entry or so? */
+ 	if (!entry ||
+ 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
+ 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
+ 		put_unlocked_mapping_entry(&xas, entry);
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
+ 						      VM_FAULT_NOPAGE);
+ 		return VM_FAULT_NOPAGE;
  	}
- 	/*
--	 * For DAX we invalidate page tables after invalidating radix tree.  We
-+	 * For DAX we invalidate page tables after invalidating page cache.  We
- 	 * could invalidate page tables while invalidating each entry however
- 	 * that would be expensive. And doing range unmapping before doesn't
--	 * work as we have no cheap way to find whether radix tree entry didn't
-+	 * work as we have no cheap way to find whether page cache entry didn't
- 	 * get remapped later.
- 	 */
- 	if (dax_mapping(mapping)) {
+-	radix_tree_tag_set(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
++	xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
+ 	entry = lock_slot(&xas);
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
+ 	switch (pe_size) {
+ 	case PE_SIZE_PTE:
+ 		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
 -- 
 2.15.1
 
