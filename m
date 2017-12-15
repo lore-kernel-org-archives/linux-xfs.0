@@ -1,66 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36500 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754900AbdLOIz2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Dec 2017 03:55:28 -0500
-Date: Fri, 15 Dec 2017 16:55:26 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 0/8] weekly fstests changes
-Message-ID: <20171215085526.GL2749@eguan.usersys.redhat.com>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:38160 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755360AbdLOMeX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 07:34:23 -0500
+Date: Fri, 15 Dec 2017 04:34:17 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Naming of tag operations in the XArray
+Message-ID: <20171215123417.GA10348@bombadil.infradead.org>
+References: <20171206004159.3755-1-willy@infradead.org>
+ <20171206004159.3755-9-willy@infradead.org>
+ <66ad068b-1973-ca41-7bbf-8a0634cc488d@infradead.org>
+ <20171215042214.GA17444@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151314499003.18893.8687182548758898133.stgit@magnolia>
+In-Reply-To: <20171215042214.GA17444@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 12, 2017 at 10:03:10PM -0800, Darrick J. Wong wrote:
-> Hi all,
+On Thu, Dec 14, 2017 at 08:22:14PM -0800, Matthew Wilcox wrote:
+> On Mon, Dec 11, 2017 at 03:10:22PM -0800, Randy Dunlap wrote:
+> > > +A freshly-initialised XArray contains a ``NULL`` pointer at every index.
+> > > +Each non-``NULL`` entry in the array has three bits associated with
+> > > +it called tags.  Each tag may be flipped on or off independently of
+> > > +the others.  You can search for entries with a given tag set.
+> > 
+> > Only tags that are set, or search for entries with some tag(s) cleared?
+> > Or is that like a mathematical set?
 > 
-> Here's the usual weekly pile of fstests changes. :)
+> hmm ...
 > 
-> We start with the same patch as last time that scans kmemleak for leaks
-> after each test.
+> "Each tag may be set or cleared independently of the others.  You can
+> search for entries which have a particular tag set."
 > 
-> Then we move on to a fix in the scrub probe code because upstream
-> xfsprogs changed xfs_io syntax again.
-> 
-> Third is a patch that adds Unicode linedraw character tests to the two
-> tests that check that we can store arbitrary byte patterns without
-> screwing things up.
-> 
-> The fourth patch amends various xfs tests to deal with our slow removal
-> of zero-alloc transactions, which is causing unexpected fs shutdowns
-> when free space nears zero.
+> Doesn't completely remove the ambiguity, but I can't think of how to phrase
+> that better ...
 
-I'm taking patch 2-4 for this week's update, I'll need more time to look
-at & test & think more about the other patches.
+Thinking about this some more ...
 
-Thanks,
-Eryu
+At the moment, the pieces of the API which deal with tags look like this:
 
-> 
-> The fifth patch adds a new test to invoke dm-error on a fsstress run;
-> this test simulates (for the filesystem) an internal "yank all the disk
-> cables out" test.
-> 
-> The sixth patch adds FICLONERANGE/FIDEDUPERANGE support to fsstress.
-> This was helpful in finding a bunch of unhandled corner cases in the xfs
-> reflink implementation.
-> 
-> Patch seven test write-only fsstress to maximize testing of write paths
-> where coding mistakes cannot be backed out of so easily.
-> 
-> The final patch in the series fixes the dir/file counts that are
-> hardcoded in the xfs/068 golden output, since with fsstress doing
-> reflink now we might get a lot more "files" than we used to.
-> 
-> --D
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+bool xa_tagged(const struct xarray *, xa_tag_t)
+bool xa_get_tag(struct xarray *, unsigned long index, xa_tag_t);
+void xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
+void xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
+int xa_get_tagged(struct xarray *, void **dst, unsigned long start,
+                        unsigned long max, unsigned int n, xa_tag_t);
+
+bool xas_get_tag(const struct xa_state *, xa_tag_t);
+void xas_set_tag(const struct xa_state *, xa_tag_t);
+void xas_clear_tag(const struct xa_state *, xa_tag_t);
+void *xas_find_tag(struct xa_state *, unsigned long max, xa_tag_t);
+xas_for_each_tag(xas, entry, max, tag) { }
+
+(at some point there will be an xa_for_each_tag too, there just hasn't
+been a user yet).
+
+I'm always ambivalent about using the word 'get' in an API because it has
+two common meanings; (increment a refcount) and (return the state).  How
+would people feel about these names instead:
+
+bool xa_any_tagged(xa, tag);
+bool xa_is_tagged(xa, index, tag);
+void xa_tag(xa, index, tag);
+void xa_untag(xa, index, tag);
+int xa_select(xa, dst, start, max, n, tag);
+
+bool xas_is_tagged(xas, tag);
+void xas_tag(xas, tag);
+void xas_untag(xas, tag);
+void *xas_find_tag(xas, max, tag);
+xas_for_each_tag(xas, entry, max, tag) { }
+
+(the last two are unchanged)
+
