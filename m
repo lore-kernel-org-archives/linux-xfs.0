@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50149 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34124 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756435AbdLOWFU (ORCPT
+        with ESMTP id S1756330AbdLOWFU (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:20 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 06/78] xarray: Change definition of sibling entries
-Date: Fri, 15 Dec 2017 14:03:38 -0800
-Message-Id: <20171215220450.7899-7-willy@infradead.org>
+Subject: [PATCH v5 77/78] irqdomain: Convert to XArray
+Date: Fri, 15 Dec 2017 14:04:49 -0800
+Message-Id: <20171215220450.7899-78-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,287 +17,230 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Instead of storing a pointer to the slot containing the canonical entry,
-store the offset of the slot.  Produces slightly more efficient code
-(~300 bytes) and simplifies the implementation.
+In a non-critical path, irqdomain wants to know how many entries are
+stored in the xarray, so add xa_count().  This is a pretty straightforward
+conversion; mostly just removing now-redundant locking.  The only thing
+of note is just how much simpler irq_domain_fix_revmap() becomes.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++
- lib/radix-tree.c       | 65 +++++++++++----------------------------
- 2 files changed, 100 insertions(+), 47 deletions(-)
+ include/linux/irqdomain.h | 10 ++++------
+ include/linux/xarray.h    |  1 +
+ kernel/irq/irqdomain.c    | 39 ++++++++++-----------------------------
+ lib/xarray.c              | 25 +++++++++++++++++++++++++
+ 4 files changed, 40 insertions(+), 35 deletions(-)
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 49fffc354431..f175350560fd 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -49,6 +49,17 @@ static inline bool xa_is_value(const void *entry)
- 	return (unsigned long)entry & 1;
- }
- 
-+/**
-+ * xa_is_internal() - Is the entry an internal entry?
-+ * @entry: Entry retrieved from the XArray
-+ *
-+ * Return: %true if the entry is an internal entry.
-+ */
-+static inline bool xa_is_internal(const void *entry)
-+{
-+	return ((unsigned long)entry & 3) == 2;
-+}
-+
- #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
- #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
- #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
-@@ -61,4 +72,75 @@ static inline bool xa_is_value(const void *entry)
- #define xa_unlock_irqrestore(xa, flags) \
- 				spin_unlock_irqrestore(&(xa)->xa_lock, flags)
- 
-+/* Everything below here is the Advanced API.  Proceed with caution. */
-+
-+/*
-+ * The xarray is constructed out of a set of 'chunks' of pointers.  Choosing
-+ * the best chunk size requires some tradeoffs.  A power of two recommends
-+ * itself so that we can walk the tree based purely on shifts and masks.
-+ * Generally, the larger the better; as the number of slots per level of the
-+ * tree increases, the less tall the tree needs to be.  But that needs to be
-+ * balanced against the memory consumption of each node.  On a 64-bit system,
-+ * xa_node is currently 576 bytes, and we get 7 of them per 4kB page.  If we
-+ * doubled the number of slots per node, we'd get only 3 nodes per 4kB page.
-+ */
-+#ifndef XA_CHUNK_SHIFT
-+#define XA_CHUNK_SHIFT		(CONFIG_BASE_SMALL ? 4 : 6)
-+#endif
-+#define XA_CHUNK_SIZE		(1UL << XA_CHUNK_SHIFT)
-+#define XA_CHUNK_MASK		(XA_CHUNK_SIZE - 1)
-+
-+/*
-+ * Internal entries have the bottom two bits set to the value 10b.  Most
-+ * internal entries are pointers to the next node in the tree.  Since the
-+ * kernel unmaps page 0 to trap NULL pointer dereferences, we can use values
-+ * 0-1023 for special purposes.  Values 0-62 are used for sibling
-+ * entries.  Value 256 is used for the retry entry.
-+ */
-+
-+/* Private */
-+static inline void *xa_mk_internal(unsigned long v)
-+{
-+	return (void *)((v << 2) | 2);
-+}
-+
-+/* Private */
-+static inline unsigned long xa_to_internal(const void *entry)
-+{
-+	return (unsigned long)entry >> 2;
-+}
-+
-+/* Private */
-+static inline bool xa_is_node(const void *entry)
-+{
-+	return xa_is_internal(entry) && (unsigned long)entry > 4096;
-+}
-+
-+/* Private */
-+static inline void *xa_mk_sibling(unsigned int offset)
-+{
-+	return xa_mk_internal(offset);
-+}
-+
-+/* Private */
-+static inline unsigned long xa_to_sibling(const void *entry)
-+{
-+	return xa_to_internal(entry);
-+}
-+
-+/**
-+ * xa_is_sibling() - Is the entry a sibling entry?
-+ * @entry: Entry retrieved from the XArray
-+ *
-+ * Return: %true if the entry is a sibling entry.
-+ */
-+static inline bool xa_is_sibling(const void *entry)
-+{
-+	return IS_ENABLED(CONFIG_RADIX_TREE_MULTIORDER) &&
-+		xa_is_internal(entry) &&
-+		(entry < xa_mk_sibling(XA_CHUNK_SIZE - 1));
-+}
-+
-+#define XA_RETRY_ENTRY		xa_mk_internal(256)
-+
- #endif /* _LINUX_XARRAY_H */
-diff --git a/lib/radix-tree.c b/lib/radix-tree.c
-index cda7a730e591..0a7a21dd9398 100644
---- a/lib/radix-tree.c
-+++ b/lib/radix-tree.c
-@@ -37,6 +37,7 @@
- #include <linux/rcupdate.h>
- #include <linux/slab.h>
- #include <linux/string.h>
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index a34355d19546..0efccfb9e9f1 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -33,8 +33,7 @@
+ #include <linux/types.h>
+ #include <linux/irqhandler.h>
+ #include <linux/of.h>
+-#include <linux/mutex.h>
+-#include <linux/radix-tree.h>
 +#include <linux/xarray.h>
  
+ struct device_node;
+ struct irq_domain;
+@@ -151,7 +150,7 @@ struct irq_domain_chip_generic;
+  * @revmap_direct_max_irq: The largest hwirq that can be set for controllers that
+  *                         support direct mapping
+  * @revmap_size: Size of the linear map table @linear_revmap[]
+- * @revmap_tree: Radix map tree for hwirqs that don't fit in the linear map
++ * @revmap_array: hwirqs that don't fit in the linear map
+  * @linear_revmap: Linear table of hwirq->virq reverse mappings
+  */
+ struct irq_domain {
+@@ -177,8 +176,7 @@ struct irq_domain {
+ 	irq_hw_number_t hwirq_max;
+ 	unsigned int revmap_direct_max_irq;
+ 	unsigned int revmap_size;
+-	struct radix_tree_root revmap_tree;
+-	struct mutex revmap_tree_mutex;
++	struct xarray revmap_array;
+ 	unsigned int linear_revmap[];
+ };
  
- /* Number of nodes in fully populated tree of given height */
-@@ -97,24 +98,7 @@ static inline void *node_to_entry(void *ptr)
- 	return (void *)((unsigned long)ptr | RADIX_TREE_INTERNAL_NODE);
+@@ -378,7 +376,7 @@ extern void irq_dispose_mapping(unsigned int virq);
+  * This is a fast path alternative to irq_find_mapping() that can be
+  * called directly by irq controller code to save a handful of
+  * instructions. It is always safe to call, but won't find irqs mapped
+- * using the radix tree.
++ * using the xarray.
+  */
+ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ 					     irq_hw_number_t hwirq)
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index eba544f26b70..6af8b30a9310 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -145,6 +145,7 @@ int xa_get_entries(struct xarray *, void **dst, unsigned long start,
+ 			unsigned long max, unsigned int n);
+ int xa_get_tagged(struct xarray *, void **dst, unsigned long start,
+ 			unsigned long max, unsigned int n, xa_tag_t);
++unsigned long xa_count(struct xarray *);
+ 
+ /**
+  * xa_get_maybe_tag() - Copy entries from the XArray into a normal array.
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 4f4f60015e8a..8225fe042f8a 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -114,7 +114,7 @@ EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
+ /**
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+  * @fwnode: firmware node for the interrupt controller
+- * @size: Size of linear map; 0 for radix mapping only
++ * @size: Size of linear map; 0 for xarray mapping only
+  * @hwirq_max: Maximum number of interrupts supported by controller
+  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
+  *              direct mapping
+@@ -209,8 +209,7 @@ struct irq_domain *__irq_domain_add(struct fwnode_handle *fwnode, int size,
+ 	of_node_get(of_node);
+ 
+ 	/* Fill structure */
+-	INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
+-	mutex_init(&domain->revmap_tree_mutex);
++	xa_init(&domain->revmap_array);
+ 	domain->ops = ops;
+ 	domain->host_data = host_data;
+ 	domain->hwirq_max = hwirq_max;
+@@ -241,7 +240,7 @@ void irq_domain_remove(struct irq_domain *domain)
+ 	mutex_lock(&irq_domain_mutex);
+ 	debugfs_remove_domain_dir(domain);
+ 
+-	WARN_ON(!radix_tree_empty(&domain->revmap_tree));
++	WARN_ON(!xa_empty(&domain->revmap_array));
+ 
+ 	list_del(&domain->link);
+ 
+@@ -462,9 +461,7 @@ static void irq_domain_clear_mapping(struct irq_domain *domain,
+ 	if (hwirq < domain->revmap_size) {
+ 		domain->linear_revmap[hwirq] = 0;
+ 	} else {
+-		mutex_lock(&domain->revmap_tree_mutex);
+-		radix_tree_delete(&domain->revmap_tree, hwirq);
+-		mutex_unlock(&domain->revmap_tree_mutex);
++		xa_erase(&domain->revmap_array, hwirq);
+ 	}
  }
  
--#define RADIX_TREE_RETRY	node_to_entry(NULL)
--
--#ifdef CONFIG_RADIX_TREE_MULTIORDER
--/* Sibling slots point directly to another slot in the same node */
--static inline
--bool is_sibling_entry(const struct radix_tree_node *parent, void *node)
--{
--	void __rcu **ptr = node;
--	return (parent->slots <= ptr) &&
--			(ptr < parent->slots + RADIX_TREE_MAP_SIZE);
--}
--#else
--static inline
--bool is_sibling_entry(const struct radix_tree_node *parent, void *node)
--{
--	return false;
--}
--#endif
-+#define RADIX_TREE_RETRY	XA_RETRY_ENTRY
- 
- static inline unsigned long
- get_slot_offset(const struct radix_tree_node *parent, void __rcu **slot)
-@@ -128,16 +112,10 @@ static unsigned int radix_tree_descend(const struct radix_tree_node *parent,
- 	unsigned int offset = (index >> parent->shift) & RADIX_TREE_MAP_MASK;
- 	void __rcu **entry = rcu_dereference_raw(parent->slots[offset]);
- 
--#ifdef CONFIG_RADIX_TREE_MULTIORDER
--	if (radix_tree_is_internal_node(entry)) {
--		if (is_sibling_entry(parent, entry)) {
--			void __rcu **sibentry;
--			sibentry = (void __rcu **) entry_to_node(entry);
--			offset = get_slot_offset(parent, sibentry);
--			entry = rcu_dereference_raw(*sibentry);
--		}
-+	if (xa_is_sibling(entry)) {
-+		offset = xa_to_sibling(entry);
-+		entry = rcu_dereference_raw(parent->slots[offset]);
+@@ -475,9 +472,7 @@ static void irq_domain_set_mapping(struct irq_domain *domain,
+ 	if (hwirq < domain->revmap_size) {
+ 		domain->linear_revmap[hwirq] = irq_data->irq;
+ 	} else {
+-		mutex_lock(&domain->revmap_tree_mutex);
+-		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
+-		mutex_unlock(&domain->revmap_tree_mutex);
++		xa_store(&domain->revmap_array, hwirq, irq_data, GFP_KERNEL);
  	}
--#endif
- 
- 	*nodep = (void *)entry;
- 	return offset;
-@@ -299,10 +277,10 @@ static void dump_node(struct radix_tree_node *node, unsigned long index)
- 		} else if (!radix_tree_is_internal_node(entry)) {
- 			pr_debug("radix entry %p offset %ld indices %lu-%lu parent %p\n",
- 					entry, i, first, last, node);
--		} else if (is_sibling_entry(node, entry)) {
-+		} else if (xa_is_sibling(entry)) {
- 			pr_debug("radix sblng %p offset %ld indices %lu-%lu parent %p val %p\n",
- 					entry, i, first, last, node,
--					*(void **)entry_to_node(entry));
-+					node->slots[xa_to_sibling(entry)]);
- 		} else {
- 			dump_node(entry_to_node(entry), first);
- 		}
-@@ -872,8 +850,7 @@ static void radix_tree_free_nodes(struct radix_tree_node *node)
- 
- 	for (;;) {
- 		void *entry = rcu_dereference_raw(child->slots[offset]);
--		if (radix_tree_is_internal_node(entry) &&
--					!is_sibling_entry(child, entry)) {
-+		if (xa_is_node(entry)) {
- 			child = entry_to_node(entry);
- 			offset = 0;
- 			continue;
-@@ -895,7 +872,7 @@ static void radix_tree_free_nodes(struct radix_tree_node *node)
- static inline int insert_entries(struct radix_tree_node *node,
- 		void __rcu **slot, void *item, unsigned order, bool replace)
- {
--	struct radix_tree_node *child;
-+	void *sibling;
- 	unsigned i, n, tag, offset, tags = 0;
- 
- 	if (node) {
-@@ -913,7 +890,7 @@ static inline int insert_entries(struct radix_tree_node *node,
- 		offset = offset & ~(n - 1);
- 		slot = &node->slots[offset];
- 	}
--	child = node_to_entry(slot);
-+	sibling = xa_mk_sibling(offset);
- 
- 	for (i = 0; i < n; i++) {
- 		if (slot[i]) {
-@@ -930,7 +907,7 @@ static inline int insert_entries(struct radix_tree_node *node,
- 	for (i = 0; i < n; i++) {
- 		struct radix_tree_node *old = rcu_dereference_raw(slot[i]);
- 		if (i) {
--			rcu_assign_pointer(slot[i], child);
-+			rcu_assign_pointer(slot[i], sibling);
- 			for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++)
- 				if (tags & (1 << tag))
- 					tag_clear(node, tag, offset + i);
-@@ -940,9 +917,7 @@ static inline int insert_entries(struct radix_tree_node *node,
- 				if (tags & (1 << tag))
- 					tag_set(node, tag, offset);
- 		}
--		if (radix_tree_is_internal_node(old) &&
--					!is_sibling_entry(node, old) &&
--					(old != RADIX_TREE_RETRY))
-+		if (xa_is_node(old))
- 			radix_tree_free_nodes(old);
- 		if (xa_is_value(old))
- 			node->exceptional--;
-@@ -1101,10 +1076,10 @@ static inline void replace_sibling_entries(struct radix_tree_node *node,
- 				void __rcu **slot, int count, int exceptional)
- {
- #ifdef CONFIG_RADIX_TREE_MULTIORDER
--	void *ptr = node_to_entry(slot);
--	unsigned offset = get_slot_offset(node, slot) + 1;
-+	unsigned offset = get_slot_offset(node, slot);
-+	void *ptr = xa_mk_sibling(offset);
- 
--	while (offset < RADIX_TREE_MAP_SIZE) {
-+	while (++offset < RADIX_TREE_MAP_SIZE) {
- 		if (rcu_dereference_raw(node->slots[offset]) != ptr)
- 			break;
- 		if (count < 0) {
-@@ -1112,7 +1087,6 @@ static inline void replace_sibling_entries(struct radix_tree_node *node,
- 			node->count--;
- 		}
- 		node->exceptional += exceptional;
--		offset++;
- 	}
- #endif
  }
-@@ -1311,8 +1285,7 @@ int radix_tree_split(struct radix_tree_root *root, unsigned long index,
- 			tags |= 1 << tag;
  
- 	for (end = offset + 1; end < RADIX_TREE_MAP_SIZE; end++) {
--		if (!is_sibling_entry(parent,
--				rcu_dereference_raw(parent->slots[end])))
-+		if (!xa_is_sibling(rcu_dereference_raw(parent->slots[end])))
- 			break;
- 		for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++)
- 			if (tags & (1 << tag))
-@@ -1608,11 +1581,9 @@ static void set_iter_tags(struct radix_tree_iter *iter,
- static void __rcu **skip_siblings(struct radix_tree_node **nodep,
- 			void __rcu **slot, struct radix_tree_iter *iter)
- {
--	void *sib = node_to_entry(slot - 1);
+@@ -585,7 +580,7 @@ EXPORT_SYMBOL_GPL(irq_domain_associate_many);
+  * This routine is used for irq controllers which can choose the hardware
+  * interrupt numbers they generate. In such a case it's simplest to use
+  * the linux irq as the hardware interrupt number. It still uses the linear
+- * or radix tree to store the mapping, but the irq controller can optimize
++ * or xarray to store the mapping, but the irq controller can optimize
+  * the revmap path by using the hwirq directly.
+  */
+ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+@@ -890,9 +885,7 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
+ 	if (hwirq < domain->revmap_size)
+ 		return domain->linear_revmap[hwirq];
+ 
+-	rcu_read_lock();
+-	data = radix_tree_lookup(&domain->revmap_tree, hwirq);
+-	rcu_read_unlock();
++	data = xa_load(&domain->revmap_array, hwirq);
+ 	return data ? data->irq : 0;
+ }
+ EXPORT_SYMBOL_GPL(irq_find_mapping);
+@@ -943,8 +936,6 @@ static int virq_debug_show(struct seq_file *m, void *private)
+ 	unsigned long flags;
+ 	struct irq_desc *desc;
+ 	struct irq_domain *domain;
+-	struct radix_tree_iter iter;
+-	void __rcu **slot;
+ 	int i;
+ 
+ 	seq_printf(m, " %-16s  %-6s  %-10s  %-10s  %s\n",
+@@ -953,7 +944,6 @@ static int virq_debug_show(struct seq_file *m, void *private)
+ 	list_for_each_entry(domain, &irq_domain_list, link) {
+ 		struct device_node *of_node;
+ 		const char *name;
 -
- 	while (iter->index < iter->next_index) {
- 		*nodep = rcu_dereference_raw(*slot);
--		if (*nodep && *nodep != sib)
-+		if (*nodep && !xa_is_sibling(*nodep))
- 			return slot;
- 		slot++;
- 		iter->index = __radix_tree_iter_add(iter, 1);
-@@ -1763,7 +1734,7 @@ void __rcu **radix_tree_next_chunk(const struct radix_tree_root *root,
- 				while (++offset	< RADIX_TREE_MAP_SIZE) {
- 					void *slot = rcu_dereference_raw(
- 							node->slots[offset]);
--					if (is_sibling_entry(node, slot))
-+					if (xa_is_sibling(slot))
- 						continue;
- 					if (slot)
- 						break;
+ 		int count = 0;
+ 
+ 		of_node = irq_domain_get_of_node(domain);
+@@ -965,8 +955,7 @@ static int virq_debug_show(struct seq_file *m, void *private)
+ 		else
+ 			name = "";
+ 
+-		radix_tree_for_each_slot(slot, &domain->revmap_tree, &iter, 0)
+-			count++;
++		count = xa_count(&domain->revmap_array);
+ 		seq_printf(m, "%c%-16s  %6u  %10u  %10u  %s\n",
+ 			   domain == irq_default_domain ? '*' : ' ', domain->name,
+ 			   domain->revmap_size + count, domain->revmap_size,
+@@ -1452,17 +1441,9 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
+ /* The irq_data was moved, fix the revmap to refer to the new location */
+ static void irq_domain_fix_revmap(struct irq_data *d)
+ {
+-	void __rcu **slot;
+-
+ 	if (d->hwirq < d->domain->revmap_size)
+-		return; /* Not using radix tree. */
+-
+-	/* Fix up the revmap. */
+-	mutex_lock(&d->domain->revmap_tree_mutex);
+-	slot = radix_tree_lookup_slot(&d->domain->revmap_tree, d->hwirq);
+-	if (slot)
+-		radix_tree_replace_slot(&d->domain->revmap_tree, slot, d);
+-	mutex_unlock(&d->domain->revmap_tree_mutex);
++		return;
++	xa_store(&d->domain->revmap_array, d->hwirq, d, GFP_KERNEL);
+ }
+ 
+ /**
+diff --git a/lib/xarray.c b/lib/xarray.c
+index 013e81281465..b94f71e30007 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -1518,6 +1518,31 @@ int xa_get_tagged(struct xarray *xa, void **dst, unsigned long start,
+ }
+ EXPORT_SYMBOL(xa_get_tagged);
+ 
++/**
++ * xa_count() - Count the number of present entries in the XArray
++ * @xa: XArray.
++ *
++ * This function walks the XArray counting how many entries are present.
++ * If every entry in the XArray is full, this function will return 0.  If
++ * this is a theoretical possibility, check xa_empty() first.
++ *
++ * This is a naive implementation; faster implementations are possible.
++ * If speed is important, consider maintaining a count variable in your
++ * own data structure.
++ */
++unsigned long xa_count(struct xarray *xa)
++{
++	XA_STATE(xas, xa, 0);
++	void *p;
++	unsigned long count = 0;
++
++	xas_for_each(&xas, p, ULONG_MAX)
++		count++;
++
++	return count;
++}
++EXPORT_SYMBOL(xa_count);
++
+ /**
+  * xa_destroy() - Free all internal data structures.
+  * @xa: XArray.
 -- 
 2.15.1
 
