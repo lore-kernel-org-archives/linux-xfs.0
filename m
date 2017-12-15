@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58021 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:33508 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756663AbdLOWF2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:28 -0500
+        with ESMTP id S1756269AbdLOWFS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:18 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 76/78] md: Convert raid5-cache to XArray
-Date: Fri, 15 Dec 2017 14:04:48 -0800
-Message-Id: <20171215220450.7899-77-willy@infradead.org>
+Subject: [PATCH v5 40/78] mm: Convert khugepaged_scan_shmem to XArray
+Date: Fri, 15 Dec 2017 14:04:12 -0800
+Message-Id: <20171215220450.7899-41-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,228 +17,57 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is the first user of the radix tree I've converted which was
-storing numbers rather than pointers.  I'm fairly pleased with how
-well it came out.  There's less boiler-plate involved than there was
-with the radix tree, so that's a win.  It does use the advanced API,
-and I think that's a signal that there needs to be a separate API for
-using the XArray for only integers.
+Slightly shorter and easier to read code.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/md/raid5-cache.c | 119 ++++++++++++++++-------------------------------
- 1 file changed, 40 insertions(+), 79 deletions(-)
+ mm/khugepaged.c | 17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 39f31f07ffe9..2c8ad0ed9b48 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -158,9 +158,8 @@ struct r5l_log {
- 	/* to disable write back during in degraded mode */
- 	struct work_struct disable_writeback_work;
- 
--	/* to for chunk_aligned_read in writeback mode, details below */
--	spinlock_t tree_lock;
--	struct radix_tree_root big_stripe_tree;
-+	/* for chunk_aligned_read in writeback mode, details below */
-+	struct xarray big_stripe;
- };
- 
- /*
-@@ -170,9 +169,8 @@ struct r5l_log {
-  * chunk contains 64 4kB-page, so this chunk contain 64 stripes). For
-  * chunk_aligned_read, these stripes are grouped into one "big_stripe".
-  * For each big_stripe, we count how many stripes of this big_stripe
-- * are in the write back cache. These data are tracked in a radix tree
-- * (big_stripe_tree). We use radix_tree item pointer as the counter.
-- * r5c_tree_index() is used to calculate keys for the radix tree.
-+ * are in the write back cache. This counter is tracked in an xarray
-+ * (big_stripe). r5c_index() is used to calculate the index.
-  *
-  * chunk_aligned_read() calls r5c_big_stripe_cached() to look up
-  * big_stripe of each chunk in the tree. If this big_stripe is in the
-@@ -180,9 +178,9 @@ struct r5l_log {
-  * rcu_read_lock().
-  *
-  * It is necessary to remember whether a stripe is counted in
-- * big_stripe_tree. Instead of adding new flag, we reuses existing flags:
-+ * big_stripe. Instead of adding new flag, we reuses existing flags:
-  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
-- * two flags are set, the stripe is counted in big_stripe_tree. This
-+ * two flags are set, the stripe is counted in big_stripe. This
-  * requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
-  * r5c_try_caching_write(); and moving clear_bit of
-  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE to
-@@ -190,23 +188,13 @@ struct r5l_log {
-  */
- 
- /*
-- * radix tree requests lowest 2 bits of data pointer to be 2b'00.
-- * So it is necessary to left shift the counter by 2 bits before using it
-- * as data pointer of the tree.
-- */
--#define R5C_RADIX_COUNT_SHIFT 2
--
--/*
-- * calculate key for big_stripe_tree
-+ * calculate key for big_stripe
-  *
-  * sect: align_bi->bi_iter.bi_sector or sh->sector
-  */
--static inline sector_t r5c_tree_index(struct r5conf *conf,
--				      sector_t sect)
-+static inline sector_t r5c_index(struct r5conf *conf, sector_t sect)
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 9f49d0cd61c2..15f1b2d81a69 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1534,8 +1534,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 		pgoff_t start, struct page **hpage)
  {
--	sector_t offset;
+ 	struct page *page = NULL;
+-	struct radix_tree_iter iter;
+-	void **slot;
++	XA_STATE(xas, &mapping->pages, start);
+ 	int present, swap;
+ 	int node = NUMA_NO_NODE;
+ 	int result = SCAN_SUCCEED;
+@@ -1544,17 +1543,11 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 	swap = 0;
+ 	memset(khugepaged_node_load, 0, sizeof(khugepaged_node_load));
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+-		if (iter.index >= start + HPAGE_PMD_NR)
+-			break;
 -
--	offset = sector_div(sect, conf->chunk_sectors);
-+	sector_div(sect, conf->chunk_sectors);
- 	return sect;
- }
+-		page = radix_tree_deref_slot(slot);
+-		if (radix_tree_deref_retry(page)) {
+-			slot = radix_tree_iter_retry(&iter);
++	xas_for_each(&xas, page, start + HPAGE_PMD_NR - 1) {
++		if (xas_retry(&xas, page))
+ 			continue;
+-		}
  
-@@ -2646,10 +2634,6 @@ int r5c_try_caching_write(struct r5conf *conf,
- 	int i;
- 	struct r5dev *dev;
- 	int to_cache = 0;
--	void **pslot;
--	sector_t tree_index;
--	int ret;
--	uintptr_t refcount;
+-		if (radix_tree_exception(page)) {
++		if (xa_is_value(page)) {
+ 			if (++swap > khugepaged_max_ptes_swap) {
+ 				result = SCAN_EXCEED_SWAP_PTE;
+ 				break;
+@@ -1593,7 +1586,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 		present++;
  
- 	BUG_ON(!r5c_is_writeback(log));
- 
-@@ -2697,39 +2681,29 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 		if (need_resched()) {
+-			slot = radix_tree_iter_resume(slot, &iter);
++			xas_pause(&xas);
+ 			cond_resched_rcu();
  		}
  	}
- 
--	/* if the stripe is not counted in big_stripe_tree, add it now */
-+	/* if the stripe is not counted in big_stripe, add it now */
- 	if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
- 	    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
--		tree_index = r5c_tree_index(conf, sh->sector);
--		spin_lock(&log->tree_lock);
--		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
--					       tree_index);
--		if (pslot) {
--			refcount = (uintptr_t)radix_tree_deref_slot_protected(
--				pslot, &log->tree_lock) >>
--				R5C_RADIX_COUNT_SHIFT;
--			radix_tree_replace_slot(
--				&log->big_stripe_tree, pslot,
--				(void *)((refcount + 1) << R5C_RADIX_COUNT_SHIFT));
--		} else {
--			/*
--			 * this radix_tree_insert can fail safely, so no
--			 * need to call radix_tree_preload()
--			 */
--			ret = radix_tree_insert(
--				&log->big_stripe_tree, tree_index,
--				(void *)(1 << R5C_RADIX_COUNT_SHIFT));
--			if (ret) {
--				spin_unlock(&log->tree_lock);
--				r5c_make_stripe_write_out(sh);
--				return -EAGAIN;
--			}
-+		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
-+		void *entry;
-+
-+		/* Caller would rather handle failures than supply GFP flags */
-+		xas_lock(&xas);
-+		entry = xas_create(&xas);
-+		if (entry)
-+			entry = xa_mk_value(xa_to_value(entry) + 1);
-+		else
-+			entry = xa_mk_value(1);
-+		xas_store(&xas, entry);
-+		xas_unlock(&xas);
-+		if (xas_error(&xas)) {
-+			r5c_make_stripe_write_out(sh);
-+			return -EAGAIN;
- 		}
--		spin_unlock(&log->tree_lock);
- 
- 		/*
- 		 * set STRIPE_R5C_PARTIAL_STRIPE, this shows the stripe is
--		 * counted in the radix tree
-+		 * counted in big_stripe
- 		 */
- 		set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
- 		atomic_inc(&conf->r5c_cached_partial_stripes);
-@@ -2812,9 +2786,6 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 	struct r5l_log *log = conf->log;
- 	int i;
- 	int do_wakeup = 0;
--	sector_t tree_index;
--	void **pslot;
--	uintptr_t refcount;
- 
- 	if (!log || !test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags))
- 		return;
-@@ -2852,24 +2823,21 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 	atomic_dec(&log->stripe_in_journal_count);
- 	r5c_update_log_state(log);
- 
--	/* stop counting this stripe in big_stripe_tree */
-+	/* stop counting this stripe in big_stripe */
- 	if (test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) ||
- 	    test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
--		tree_index = r5c_tree_index(conf, sh->sector);
--		spin_lock(&log->tree_lock);
--		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
--					       tree_index);
--		BUG_ON(pslot == NULL);
--		refcount = (uintptr_t)radix_tree_deref_slot_protected(
--			pslot, &log->tree_lock) >>
--			R5C_RADIX_COUNT_SHIFT;
--		if (refcount == 1)
--			radix_tree_delete(&log->big_stripe_tree, tree_index);
-+		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
-+		void *entry;
-+
-+		xas_lock(&xas);
-+		entry = xas_load(&xas);
-+		BUG_ON(!entry);
-+		if (entry == xa_mk_value(1))
-+			entry = NULL;
- 		else
--			radix_tree_replace_slot(
--				&log->big_stripe_tree, pslot,
--				(void *)((refcount - 1) << R5C_RADIX_COUNT_SHIFT));
--		spin_unlock(&log->tree_lock);
-+			entry = xa_mk_value(xa_to_value(entry) - 1);
-+		xas_store(&xas, entry);
-+		xas_unlock(&xas);
- 	}
- 
- 	if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
-@@ -2949,16 +2917,10 @@ int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
- bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect)
- {
- 	struct r5l_log *log = conf->log;
--	sector_t tree_index;
--	void *slot;
- 
- 	if (!log)
- 		return false;
--
--	WARN_ON_ONCE(!rcu_read_lock_held());
--	tree_index = r5c_tree_index(conf, sect);
--	slot = radix_tree_lookup(&log->big_stripe_tree, tree_index);
--	return slot != NULL;
-+	return xa_load(&log->big_stripe, r5c_index(conf, sect)) != NULL;
- }
- 
- static int r5l_load_log(struct r5l_log *log)
-@@ -3112,8 +3074,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	if (!log->meta_pool)
- 		goto out_mempool;
- 
--	spin_lock_init(&log->tree_lock);
--	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT | __GFP_NOWARN);
-+	xa_init(&log->big_stripe);
- 
- 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
- 						 log->rdev->mddev, "reclaim");
 -- 
 2.15.1
 
