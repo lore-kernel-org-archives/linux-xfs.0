@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60698 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:51172 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756345AbdLOWFT (ORCPT
+        with ESMTP id S1756434AbdLOWFT (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:19 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 57/78] lustre: Convert to XArray
-Date: Fri, 15 Dec 2017 14:04:29 -0800
-Message-Id: <20171215220450.7899-58-willy@infradead.org>
+Subject: [PATCH v5 17/78] xarray: Add xa_destroy
+Date: Fri, 15 Dec 2017 14:03:49 -0800
+Message-Id: <20171215220450.7899-18-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,85 +17,63 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+This function frees all the internal memory allocated to the xarray
+and reinitialises it to be empty.
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/staging/lustre/lustre/llite/glimpse.c   | 12 +++++-------
- drivers/staging/lustre/lustre/mdc/mdc_request.c | 16 ++++++++--------
- 2 files changed, 13 insertions(+), 15 deletions(-)
+ include/linux/xarray.h |  1 +
+ lib/xarray.c           | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/staging/lustre/lustre/llite/glimpse.c b/drivers/staging/lustre/lustre/llite/glimpse.c
-index 5f2843da911c..25232fdf5797 100644
---- a/drivers/staging/lustre/lustre/llite/glimpse.c
-+++ b/drivers/staging/lustre/lustre/llite/glimpse.c
-@@ -57,7 +57,7 @@ static const struct cl_lock_descr whole_file = {
- };
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 1367d694eebd..fea81383a301 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -77,6 +77,7 @@ void *xa_load(struct xarray *, unsigned long index);
+ void *xa_store(struct xarray *, unsigned long index, void *entry, gfp_t);
+ void *xa_cmpxchg(struct xarray *, unsigned long index,
+ 			void *old, void *entry, gfp_t);
++void xa_destroy(struct xarray *);
  
- /*
-- * Check whether file has possible unwriten pages.
-+ * Check whether file has possible unwritten pages.
-  *
-  * \retval 1    file is mmap-ed or has dirty pages
-  *	 0    otherwise
-@@ -66,16 +66,14 @@ blkcnt_t dirty_cnt(struct inode *inode)
+ /**
+  * xa_erase() - Erase this entry from the XArray.
+diff --git a/lib/xarray.c b/lib/xarray.c
+index e73ae7b57fc9..a51fa1e1f74f 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -1418,6 +1418,31 @@ int xa_get_tagged(struct xarray *xa, void **dst, unsigned long start,
+ }
+ EXPORT_SYMBOL(xa_get_tagged);
+ 
++/**
++ * xa_destroy() - Free all internal data structures.
++ * @xa: XArray.
++ *
++ * After calling this function, the XArray is empty and has freed all memory
++ * allocated for its internal data structures.  You are responsible for
++ * freeing the objects referenced by the XArray.
++ */
++void xa_destroy(struct xarray *xa)
++{
++	XA_STATE(xas, xa, 0);
++	void *entry;
++
++	xas.xa_node = NULL;
++	xa_lock(xa);
++	entry = xa_head_locked(xa);
++	RCU_INIT_POINTER(xa->xa_head, NULL);
++	xas_init_tags(&xas);
++	/* lockdep checks we're still holding the lock in xas_free_nodes() */
++	if (xa_is_node(entry))
++		xas_free_nodes(&xas, xa_to_node(entry));
++	xa_unlock(xa);
++}
++EXPORT_SYMBOL(xa_destroy);
++
+ #ifdef XA_DEBUG
+ void xa_dump_node(const struct xa_node *node)
  {
- 	blkcnt_t cnt = 0;
- 	struct vvp_object *vob = cl_inode2vvp(inode);
--	void	      *results[1];
- 
--	if (inode->i_mapping)
--		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->pages,
--						  results, 0, 1,
--						  PAGECACHE_TAG_DIRTY);
-+	if (inode->i_mapping && xa_tagged(&inode->i_mapping->pages,
-+				PAGECACHE_TAG_DIRTY))
-+		cnt = 1;
- 	if (cnt == 0 && atomic_read(&vob->vob_mmap_cnt) > 0)
- 		cnt = 1;
- 
--	return (cnt > 0) ? 1 : 0;
-+	return cnt;
- }
- 
- int cl_glimpse_lock(const struct lu_env *env, struct cl_io *io,
-diff --git a/drivers/staging/lustre/lustre/mdc/mdc_request.c b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-index 2ec79a6b17da..ea23247e9e02 100644
---- a/drivers/staging/lustre/lustre/mdc/mdc_request.c
-+++ b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-@@ -934,17 +934,18 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 	 * hash _smaller_ than one we are looking for.
- 	 */
- 	unsigned long offset = hash_x_index(*hash, hash64);
-+	XA_STATE(xas, &mapping->pages, offset);
- 	struct page *page;
--	int found;
- 
--	xa_lock_irq(&mapping->pages);
--	found = radix_tree_gang_lookup(&mapping->pages,
--				       (void **)&page, offset, 1);
--	if (found > 0 && !xa_is_value(page)) {
-+	xas_lock_irq(&xas);
-+	page = xas_find(&xas, ULONG_MAX);
-+	if (xa_is_value(page))
-+		page = NULL;
-+	if (page) {
- 		struct lu_dirpage *dp;
- 
- 		get_page(page);
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		/*
- 		 * In contrast to find_lock_page() we are sure that directory
- 		 * page cannot be truncated (while DLM lock is held) and,
-@@ -992,8 +993,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 			page = ERR_PTR(-EIO);
- 		}
- 	} else {
--		xa_unlock_irq(&mapping->pages);
--		page = NULL;
-+		xas_unlock_irq(&xas);
- 	}
- 	return page;
- }
 -- 
 2.15.1
 
