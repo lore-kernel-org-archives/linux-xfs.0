@@ -1,141 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57800 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755663AbdLOUlP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Dec 2017 15:41:15 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH] generic/381: enable on systems which allows usernames that begin with digits
-Date: Fri, 15 Dec 2017 12:41:07 -0800
-Message-Id: <20171215204107.17690-1-mcgrof@kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:32803 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756523AbdLOWFU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:20 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v5 51/78] shmem: Comment fixups
+Date: Fri, 15 Dec 2017 14:04:23 -0800
+Message-Id: <20171215220450.7899-52-willy@infradead.org>
+In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
+References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
 
-Some systems are not allowing usernames prefixed with a number now, this
-test however relies on the assumption that you can end up with usernames
-of such type, given the purpose of the test is to ensure that xfs_quota
-can differentiate between UIDs and names beginning with numbers.
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-systemd >= 232 (circa 2017) no longer allows usernames starting with digits
-[0], there is a systemd exploit (CVE-2017-1000082 [1]) for why that was done,
-however even upstream shadow useradd also does not allow similar user types
-since shadow version v4.0.1 (circa 2007) [2] but there no easy way to check
-shadow's useradd's version.
+Remove the last mentions of radix tree from various comments.
 
-You can still shoehorn in these types of users by manually editing files,
-but that's just shooting yourself on the foot given all the precautions
-taken now by userspace, so just check for the systemd version for now as
-requirement for running this test.
-
-[0] https://github.com/systemd/systemd/issues/6237
-[1] https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-1000082
-[2] https://github.com/shadow-maint/shadow/commit/9db6abfa42c946b4046f4b2fe67dc43ba862eb0e
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- README            |  7 +++++--
- common/config     |  1 +
- common/rc         | 42 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/381 |  1 +
- 4 files changed, 49 insertions(+), 2 deletions(-)
+ mm/shmem.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/README b/README
-index ed69332e774e..aff7bdae7cb4 100644
---- a/README
-+++ b/README
-@@ -20,8 +20,11 @@ _______________________
- - run make
- - run make install
- - create fsgqa test user ("sudo useradd fsgqa")
--- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
--	
-+- Only on systems which allow usernames that start with a digit (older
-+  than  systemd 232 and/or has shadow older than v4.0.1), create the
-+  123456-fsgqa test user:
-+    sudo useradd 123456-fsgqa
-+
- ______________________
- USING THE FSQA SUITE
- ______________________
-diff --git a/common/config b/common/config
-index d0fbfe55a6d2..88fd5dd455b9 100644
---- a/common/config
-+++ b/common/config
-@@ -199,6 +199,7 @@ export UBIUPDATEVOL_PROG="`set_prog_path ubiupdatevol`"
- export THIN_CHECK_PROG="$(set_prog_path thin_check)"
- export PYTHON2_PROG="`set_prog_path python2`"
- export SQLITE3_PROG="`set_prog_path sqlite3`"
-+export SYSTEMCTL_PROG="`set_prog_path systemctl`"
- 
- # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
- # newer systems have udevadm command but older systems like RHEL5 don't.
-diff --git a/common/rc b/common/rc
-index 4c053a53711a..445e3471869e 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1983,6 +1983,48 @@ _cat_group()
- 	cat /etc/group
+diff --git a/mm/shmem.c b/mm/shmem.c
+index ecf05645509b..3cfc247e4796 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -743,7 +743,7 @@ void shmem_unlock_mapping(struct address_space *mapping)
  }
  
-+# requires systemd
-+#
-+_require_systemd()
-+{
-+    _require_command "$SYSTEMCTL_PROG" systemctl
-+}
-+
-+# gets your version of systemd
-+#
-+_get_systemd_version()
-+{
-+    _require_systemd
-+    $SYSTEMCTL_PROG --version | head -1 | awk '{print $2}'
-+}
-+
-+#  checks if you have a version of systemd older than the one specified
-+#
-+_systemd_version_lessthan()
-+{
-+    _require_systemd
-+    version="$(_get_systemd_version)"
-+    test_version=$1
-+
-+    if [ "$version" -lt "$test_version" ]; then
-+        return 0
-+    else
-+        return 1
-+    fi
-+}
-+
-+# check that userames that start with a digit are allowed
-+#
-+_require_user_digit_allowed()
-+{
-+    if [ ! -x "$SYSTEMCTL_PROG" ]; then
-+	return 0
-+    fi
-+    req_systemd="232"
-+    _systemd_version_lessthan $req_systemd
-+    [ "$?" == "0" ] || _notrun "runs only on old systemd version < $req_systemd"
-+}
-+
- # check for a user on the machine, fsgqa as default
- #
- _require_user()
-diff --git a/tests/generic/381 b/tests/generic/381
-index 006f0d879638..533ca27125cb 100755
---- a/tests/generic/381
-+++ b/tests/generic/381
-@@ -54,6 +54,7 @@ _require_quota
- _require_xfs_quota_foreign
+ /*
+- * Remove range of pages and swap entries from radix tree, and free them.
++ * Remove range of pages and swap entries from page cache, and free them.
+  * If !unfalloc, truncate or punch hole; if unfalloc, undo failed fallocate.
+  */
+ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+@@ -1118,10 +1118,10 @@ static int shmem_unuse_inode(struct shmem_inode_info *info,
+ 		 * We needed to drop mutex to make that restrictive page
+ 		 * allocation, but the inode might have been freed while we
+ 		 * dropped it: although a racing shmem_evict_inode() cannot
+-		 * complete without emptying the radix_tree, our page lock
++		 * complete without emptying the page cache, our page lock
+ 		 * on this swapcache page is not enough to prevent that -
+ 		 * free_swap_and_cache() of our swap entry will only
+-		 * trylock_page(), removing swap from radix_tree whatever.
++		 * trylock_page(), removing swap from page cache whatever.
+ 		 *
+ 		 * We must not proceed to shmem_add_to_page_cache() if the
+ 		 * inode has been freed, but of course we cannot rely on
+@@ -1187,7 +1187,7 @@ int shmem_unuse(swp_entry_t swap, struct page *page)
+ 			false);
+ 	if (error)
+ 		goto out;
+-	/* No radix_tree_preload: swap entry keeps a place for page in tree */
++	/* No memory allocation: swap entry occupies the slot for the page */
+ 	error = -EAGAIN;
  
- # need user and group named 123456-fsgqa
-+_require_user_digit_allowed
- _require_user 123456-fsgqa
- _require_group 123456-fsgqa
+ 	mutex_lock(&shmem_swaplist_mutex);
+@@ -1862,7 +1862,7 @@ alloc_nohuge:		page = shmem_alloc_and_acct_page(gfp, inode,
+ 		spin_unlock_irq(&info->lock);
+ 		goto repeat;
+ 	}
+-	if (error == -EEXIST)	/* from above or from radix_tree_insert */
++	if (error == -EEXIST)
+ 		goto repeat;
+ 	return error;
+ }
+@@ -2474,7 +2474,7 @@ static ssize_t shmem_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ }
  
+ /*
+- * llseek SEEK_DATA or SEEK_HOLE through the radix_tree.
++ * llseek SEEK_DATA or SEEK_HOLE through the page cache.
+  */
+ static pgoff_t shmem_seek_hole_data(struct address_space *mapping,
+ 				    pgoff_t index, pgoff_t end, int whence)
+@@ -2562,7 +2562,7 @@ static loff_t shmem_file_llseek(struct file *file, loff_t offset, int whence)
+ }
+ 
+ /*
+- * We need a tag: a new tag would expand every radix_tree_node by 8 bytes,
++ * We need a tag: a new tag would expand every xa_node by 8 bytes,
+  * so reuse a tag which we firmly believe is never set or cleared on shmem.
+  */
+ #define SHMEM_TAG_PINNED        PAGECACHE_TAG_TOWRITE
 -- 
-2.15.0
+2.15.1
 
