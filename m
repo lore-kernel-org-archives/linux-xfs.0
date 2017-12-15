@@ -1,269 +1,344 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45721 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756401AbdLOWFU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:20 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 60/78] dax: More XArray conversion
-Date: Fri, 15 Dec 2017 14:04:32 -0800
-Message-Id: <20171215220450.7899-61-willy@infradead.org>
-In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
-References: <20171215220450.7899-1-willy@infradead.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:41183 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755596AbdLOT7B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 14:59:01 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171213053825.10903-1-kilobyte@angband.pl>
+References: <20171213053825.10903-1-kilobyte@angband.pl>
+From: Steve French <smfrench@gmail.com>
+Date: Fri, 15 Dec 2017 13:58:39 -0600
+Message-ID: <CAH2r5mt907N1RdRmSwqSPiJh7r989C3NrxJ51GBET1Q0-Qrokg@mail.gmail.com>
+Subject: Re: [PATCH] fs/*/Kconfig: drop links to 404-compliant http://acl.bestbits.at
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+To: Adam Borowski <kilobyte@angband.pl>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, linux-ext4@vger.kernel.org, Ron Minnich <rminnich@sandia.gov>, Latchesar Ionkov <lucho@ionkov.net>, v9fs-developer@lists.sourceforge.net, linux-btrfs@vger.kernel.org, "Yan, Zheng" <zyan@redhat.com>, linux-cifs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+Acked-by: Steve French <smfrench@gmail.com>
 
-This time, we want to convert get_unlocked_mapping_entry() to use the
-XArray.  That has a ripple effect, causing us to change the waitqueues
-to hash on the address of the xarray rather than the address of the
-mapping (functionally equivalent), and create a lot of on-the-stack
-xa_state which are only used as a container for passing the xarray and
-the index down to deeper function calls.
+On Tue, Dec 12, 2017 at 11:38 PM, Adam Borowski <kilobyte@angband.pl> wrote:
+> This link is replicated in most filesystems' config stanzas.  Referring
+> to an archived version of that site is pointless as it mostly deals with
+> patches; user documentation is available elsewhere.
+>
+> Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+> ---
+> Sending this as one piece; if you guys would instead prefer this chopped
+> into tiny per-filesystem bits, please say so.
+>
+>
+>  Documentation/filesystems/ext2.txt |  2 --
+>  Documentation/filesystems/ext4.txt |  7 +++----
+>  fs/9p/Kconfig                      |  3 ---
+>  fs/Kconfig                         |  6 +-----
+>  fs/btrfs/Kconfig                   |  3 ---
+>  fs/ceph/Kconfig                    |  3 ---
+>  fs/cifs/Kconfig                    | 15 +++++++--------
+>  fs/ext2/Kconfig                    |  6 +-----
+>  fs/ext4/Kconfig                    |  3 ---
+>  fs/f2fs/Kconfig                    |  6 +-----
+>  fs/hfsplus/Kconfig                 |  3 ---
+>  fs/jffs2/Kconfig                   |  6 +-----
+>  fs/jfs/Kconfig                     |  3 ---
+>  fs/reiserfs/Kconfig                |  6 +-----
+>  fs/xfs/Kconfig                     |  3 ---
+>  15 files changed, 15 insertions(+), 60 deletions(-)
+>
+> diff --git a/Documentation/filesystems/ext2.txt b/Documentation/filesystems/ext2.txt
+> index 55755395d3dc..81c0becab225 100644
+> --- a/Documentation/filesystems/ext2.txt
+> +++ b/Documentation/filesystems/ext2.txt
+> @@ -49,12 +49,10 @@ sb=n                                Use alternate superblock at this location.
+>
+>  user_xattr                     Enable "user." POSIX Extended Attributes
+>                                 (requires CONFIG_EXT2_FS_XATTR).
+> -                               See also http://acl.bestbits.at
+>  nouser_xattr                   Don't support "user." extended attributes.
+>
+>  acl                            Enable POSIX Access Control Lists support
+>                                 (requires CONFIG_EXT2_FS_POSIX_ACL).
+> -                               See also http://acl.bestbits.at
+>  noacl                          Don't support POSIX ACLs.
+>
+>  nobh                           Do not attach buffer_heads to file pagecache.
+> diff --git a/Documentation/filesystems/ext4.txt b/Documentation/filesystems/ext4.txt
+> index 75236c0c2ac2..8cd63e16f171 100644
+> --- a/Documentation/filesystems/ext4.txt
+> +++ b/Documentation/filesystems/ext4.txt
+> @@ -202,15 +202,14 @@ inode_readahead_blks=n    This tuning parameter controls the maximum
+>                         the buffer cache.  The default value is 32 blocks.
+>
+>  nouser_xattr           Disables Extended User Attributes.  See the
+> -                       attr(5) manual page and http://acl.bestbits.at/
+> -                       for more information about extended attributes.
+> +                       attr(5) manual page for more information about
+> +                       extended attributes.
+>
+>  noacl                  This option disables POSIX Access Control List
+>                         support. If ACL support is enabled in the kernel
+>                         configuration (CONFIG_EXT4_FS_POSIX_ACL), ACL is
+>                         enabled by default on mount. See the acl(5) manual
+> -                       page and http://acl.bestbits.at/ for more information
+> -                       about acl.
+> +                       page for more information about acl.
+>
+>  bsddf          (*)     Make 'df' act like BSD.
+>  minixdf                        Make 'df' act like Minix.
+> diff --git a/fs/9p/Kconfig b/fs/9p/Kconfig
+> index 6489e1fc1afd..11045d8e356a 100644
+> --- a/fs/9p/Kconfig
+> +++ b/fs/9p/Kconfig
+> @@ -25,9 +25,6 @@ config 9P_FS_POSIX_ACL
+>           POSIX Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  endif
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index 7aee6d699fd6..0ed56752f208 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -167,17 +167,13 @@ config TMPFS_POSIX_ACL
+>           files for sound to work properly.  In short, if you're not sure,
+>           say Y.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>  config TMPFS_XATTR
+>         bool "Tmpfs extended attributes"
+>         depends on TMPFS
+>         default n
+>         help
+>           Extended attributes are name:value pairs associated with inodes by
+> -         the kernel or by users (see the attr(5) manual page, or visit
+> -         <http://acl.bestbits.at/> for details).
+> +         the kernel or by users (see the attr(5) manual page for details).
+>
+>           Currently this enables support for the trusted.* and
+>           security.* namespaces.
+> diff --git a/fs/btrfs/Kconfig b/fs/btrfs/Kconfig
+> index 2e558227931a..273351ee4c46 100644
+> --- a/fs/btrfs/Kconfig
+> +++ b/fs/btrfs/Kconfig
+> @@ -38,9 +38,6 @@ config BTRFS_FS_POSIX_ACL
+>           POSIX Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config BTRFS_FS_CHECK_INTEGRITY
+> diff --git a/fs/ceph/Kconfig b/fs/ceph/Kconfig
+> index 264e9bf83ff3..52095f473464 100644
+> --- a/fs/ceph/Kconfig
+> +++ b/fs/ceph/Kconfig
+> @@ -34,7 +34,4 @@ config CEPH_FS_POSIX_ACL
+>           POSIX Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+> diff --git a/fs/cifs/Kconfig b/fs/cifs/Kconfig
+> index d5b2e12b5d02..e73d25f4b97a 100644
+> --- a/fs/cifs/Kconfig
+> +++ b/fs/cifs/Kconfig
+> @@ -108,14 +108,13 @@ config CIFS_XATTR
+>          depends on CIFS
+>          help
+>            Extended attributes are name:value pairs associated with inodes by
+> -          the kernel or by users (see the attr(5) manual page, or visit
+> -          <http://acl.bestbits.at/> for details).  CIFS maps the name of
+> -          extended attributes beginning with the user namespace prefix
+> -          to SMB/CIFS EAs. EAs are stored on Windows servers without the
+> -          user namespace prefix, but their names are seen by Linux cifs clients
+> -          prefaced by the user namespace prefix. The system namespace
+> -          (used by some filesystems to store ACLs) is not supported at
+> -          this time.
+> +          the kernel or by users (see the attr(5) manual page for details).
+> +          CIFS maps the name of extended attributes beginning with the user
+> +          namespace prefix to SMB/CIFS EAs.  EAs are stored on Windows
+> +          servers without the user namespace prefix, but their names are
+> +          seen by Linux cifs clients prefaced by the user namespace prefix.
+> +          The system namespace (used by some filesystems to store ACLs) is
+> +          not supported at this time.
+>
+>            If unsure, say Y.
+>
+> diff --git a/fs/ext2/Kconfig b/fs/ext2/Kconfig
+> index c634874e12d9..894e4c53d1d2 100644
+> --- a/fs/ext2/Kconfig
+> +++ b/fs/ext2/Kconfig
+> @@ -13,8 +13,7 @@ config EXT2_FS_XATTR
+>         depends on EXT2_FS
+>         help
+>           Extended attributes are name:value pairs associated with inodes by
+> -         the kernel or by users (see the attr(5) manual page, or visit
+> -         <http://acl.bestbits.at/> for details).
+> +         the kernel or by users (see the attr(5) manual page for details).
+>
+>           If unsure, say N.
+>
+> @@ -26,9 +25,6 @@ config EXT2_FS_POSIX_ACL
+>           Posix Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the Posix ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config EXT2_FS_SECURITY
+> diff --git a/fs/ext4/Kconfig b/fs/ext4/Kconfig
+> index 73b850f5659c..a453cc87082b 100644
+> --- a/fs/ext4/Kconfig
+> +++ b/fs/ext4/Kconfig
+> @@ -82,9 +82,6 @@ config EXT4_FS_POSIX_ACL
+>           POSIX Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config EXT4_FS_SECURITY
+> diff --git a/fs/f2fs/Kconfig b/fs/f2fs/Kconfig
+> index 378c221d68a9..9a20ef42fadd 100644
+> --- a/fs/f2fs/Kconfig
+> +++ b/fs/f2fs/Kconfig
+> @@ -35,8 +35,7 @@ config F2FS_FS_XATTR
+>         default y
+>         help
+>           Extended attributes are name:value pairs associated with inodes by
+> -         the kernel or by users (see the attr(5) manual page, or visit
+> -         <http://acl.bestbits.at/> for details).
+> +         the kernel or by users (see the attr(5) manual page for details).
+>
+>           If unsure, say N.
+>
+> @@ -49,9 +48,6 @@ config F2FS_FS_POSIX_ACL
+>           Posix Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config F2FS_FS_SECURITY
+> diff --git a/fs/hfsplus/Kconfig b/fs/hfsplus/Kconfig
+> index 24bc20fd42f7..7cc8b4acf66a 100644
+> --- a/fs/hfsplus/Kconfig
+> +++ b/fs/hfsplus/Kconfig
+> @@ -20,9 +20,6 @@ config HFSPLUS_FS_POSIX_ACL
+>           POSIX Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           It needs to understand that POSIX ACLs are treated only under
+>           Linux. POSIX ACLs doesn't mean something under Mac OS X.
+>           Mac OS X beginning with version 10.4 ("Tiger") support NFSv4 ACLs,
+> diff --git a/fs/jffs2/Kconfig b/fs/jffs2/Kconfig
+> index d8bb6c411e96..ad850c5bf2ca 100644
+> --- a/fs/jffs2/Kconfig
+> +++ b/fs/jffs2/Kconfig
+> @@ -68,8 +68,7 @@ config JFFS2_FS_XATTR
+>         default n
+>         help
+>           Extended attributes are name:value pairs associated with inodes by
+> -         the kernel or by users (see the attr(5) manual page, or visit
+> -         <http://acl.bestbits.at/> for details).
+> +         the kernel or by users (see the attr(5) manual page for details).
+>
+>           If unsure, say N.
+>
+> @@ -82,9 +81,6 @@ config JFFS2_FS_POSIX_ACL
+>           Posix Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the Posix ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config JFFS2_FS_SECURITY
+> diff --git a/fs/jfs/Kconfig b/fs/jfs/Kconfig
+> index 57cef19951db..851de78fdabb 100644
+> --- a/fs/jfs/Kconfig
+> +++ b/fs/jfs/Kconfig
+> @@ -16,9 +16,6 @@ config JFS_POSIX_ACL
+>           Posix Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the Posix ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config JFS_SECURITY
+> diff --git a/fs/reiserfs/Kconfig b/fs/reiserfs/Kconfig
+> index 7cd46666ba2c..86e71c0caf48 100644
+> --- a/fs/reiserfs/Kconfig
+> +++ b/fs/reiserfs/Kconfig
+> @@ -57,8 +57,7 @@ config REISERFS_FS_XATTR
+>         depends on REISERFS_FS
+>         help
+>           Extended attributes are name:value pairs associated with inodes by
+> -         the kernel or by users (see the attr(5) manual page, or visit
+> -         <http://acl.bestbits.at/> for details).
+> +         the kernel or by users (see the attr(5) manual page for details).
+>
+>           If unsure, say N.
+>
+> @@ -70,9 +69,6 @@ config REISERFS_FS_POSIX_ACL
+>           Posix Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the Posix ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N
+>
+>  config REISERFS_FS_SECURITY
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index f42fcf1b5465..46bcf0e649f5 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -48,9 +48,6 @@ config XFS_POSIX_ACL
+>           POSIX Access Control Lists (ACLs) support permissions for users and
+>           groups beyond the owner/group/world scheme.
+>
+> -         To learn more about Access Control Lists, visit the POSIX ACLs for
+> -         Linux website <http://acl.bestbits.at/>.
+> -
+>           If you don't know what Access Control Lists are, say N.
+>
+>  config XFS_RT
+> --
+> 2.15.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-cifs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Also rename dax_wake_mapping_entry_waiter() to dax_wake_entry().
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- fs/dax.c | 72 +++++++++++++++++++++++++++++-----------------------------------
- 1 file changed, 33 insertions(+), 39 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 46a4d83b1b46..2629ffa70575 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -120,7 +120,7 @@ static int dax_is_empty_entry(void *entry)
-  * DAX radix tree locking
-  */
- struct exceptional_entry_key {
--	struct address_space *mapping;
-+	struct xarray *xa;
- 	pgoff_t entry_start;
- };
- 
-@@ -129,9 +129,10 @@ struct wait_exceptional_entry_queue {
- 	struct exceptional_entry_key key;
- };
- 
--static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
--		pgoff_t index, void *entry, struct exceptional_entry_key *key)
-+static wait_queue_head_t *dax_entry_waitqueue(struct xa_state *xas,
-+		void *entry, struct exceptional_entry_key *key)
- {
-+	unsigned long index = xas->xa_index;
- 	unsigned long hash;
- 
- 	/*
-@@ -142,10 +143,10 @@ static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
- 	if (dax_is_pmd_entry(entry))
- 		index &= ~PG_PMD_COLOUR;
- 
--	key->mapping = mapping;
-+	key->xa = xas->xa;
- 	key->entry_start = index;
- 
--	hash = hash_long((unsigned long)mapping ^ index, DAX_WAIT_TABLE_BITS);
-+	hash = hash_long((unsigned long)xas->xa ^ index, DAX_WAIT_TABLE_BITS);
- 	return wait_table + hash;
- }
- 
-@@ -156,7 +157,7 @@ static int wake_exceptional_entry_func(wait_queue_entry_t *wait, unsigned int mo
- 	struct wait_exceptional_entry_queue *ewait =
- 		container_of(wait, struct wait_exceptional_entry_queue, wait);
- 
--	if (key->mapping != ewait->key.mapping ||
-+	if (key->xa != ewait->key.xa ||
- 	    key->entry_start != ewait->key.entry_start)
- 		return 0;
- 	return autoremove_wake_function(wait, mode, sync, NULL);
-@@ -167,13 +168,12 @@ static int wake_exceptional_entry_func(wait_queue_entry_t *wait, unsigned int mo
-  * The important information it's conveying is whether the entry at
-  * this index used to be a PMD entry.
-  */
--static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
--		pgoff_t index, void *entry, bool wake_all)
-+static void dax_wake_entry(struct xa_state *xas, void *entry, bool wake_all)
- {
- 	struct exceptional_entry_key key;
- 	wait_queue_head_t *wq;
- 
--	wq = dax_entry_waitqueue(mapping, index, entry, &key);
-+	wq = dax_entry_waitqueue(xas, entry, &key);
- 
- 	/*
- 	 * Checking for locked entry and prepare_to_wait_exclusive() happens
-@@ -205,10 +205,9 @@ static inline void *lock_slot(struct xa_state *xas)
-  *
-  * Must be called with xa_lock held.
-  */
--static void *get_unlocked_mapping_entry(struct address_space *mapping,
--					pgoff_t index, void ***slotp)
-+static void *get_unlocked_mapping_entry(struct xa_state *xas)
- {
--	void *entry, **slot;
-+	void *entry;
- 	struct wait_exceptional_entry_queue ewait;
- 	wait_queue_head_t *wq;
- 
-@@ -216,22 +215,19 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 	ewait.wait.func = wake_exceptional_entry_func;
- 
- 	for (;;) {
--		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
--					  &slot);
--		if (!entry ||
--		    WARN_ON_ONCE(!xa_is_value(entry)) || !dax_locked(entry)) {
--			if (slotp)
--				*slotp = slot;
-+		entry = xas_load(xas);
-+		if (!entry || WARN_ON_ONCE(!xa_is_value(entry)) ||
-+		    !dax_locked(entry))
- 			return entry;
--		}
- 
--		wq = dax_entry_waitqueue(mapping, index, entry, &ewait.key);
-+		wq = dax_entry_waitqueue(xas, entry, &ewait.key);
- 		prepare_to_wait_exclusive(wq, &ewait.wait,
- 					  TASK_UNINTERRUPTIBLE);
--		xa_unlock_irq(&mapping->pages);
-+		xas_pause(xas);
-+		xas_unlock_irq(xas);
- 		schedule();
- 		finish_wait(wq, &ewait.wait);
--		xa_lock_irq(&mapping->pages);
-+		xas_lock_irq(xas);
- 	}
- }
- 
-@@ -251,7 +247,7 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
- 	xas_store(&xas, entry);
- 	/* Safe to not call xas_pause here -- we don't touch the array after */
- 	xas_unlock_irq(&xas);
--	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-+	dax_wake_entry(&xas, entry, false);
- }
- 
- static void put_locked_mapping_entry(struct address_space *mapping,
-@@ -264,14 +260,13 @@ static void put_locked_mapping_entry(struct address_space *mapping,
-  * Called when we are done with radix tree entry we looked up via
-  * get_unlocked_mapping_entry() and which we didn't lock in the end.
-  */
--static void put_unlocked_mapping_entry(struct address_space *mapping,
--				       pgoff_t index, void *entry)
-+static void put_unlocked_mapping_entry(struct xa_state *xas, void *entry)
- {
- 	if (!entry)
- 		return;
- 
- 	/* We have to wake up next waiter for the radix tree entry lock */
--	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-+	dax_wake_entry(xas, entry, false);
- }
- 
- /*
-@@ -308,7 +303,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 
- restart:
- 	xa_lock_irq(&mapping->pages);
--	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry = get_unlocked_mapping_entry(&xas);
- 
- 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
- 		entry = ERR_PTR(-EIO);
-@@ -318,8 +313,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 	if (entry) {
- 		if (size_flag & DAX_PMD) {
- 			if (dax_is_pte_entry(entry)) {
--				put_unlocked_mapping_entry(mapping, index,
--						entry);
-+				put_unlocked_mapping_entry(&xas, entry);
- 				entry = ERR_PTR(-EEXIST);
- 				goto out_unlock;
- 			}
-@@ -382,8 +376,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		if (pmd_downgrade) {
- 			radix_tree_delete(&mapping->pages, index);
- 			mapping->nrexceptional--;
--			dax_wake_mapping_entry_waiter(mapping, index, entry,
--					true);
-+			dax_wake_entry(&xas, entry, true);
- 		}
- 
- 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
-@@ -417,12 +410,13 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 					  pgoff_t index, bool trunc)
- {
-+	XA_STATE(xas, &mapping->pages, index);
- 	int ret = 0;
- 	void *entry;
- 	struct radix_tree_root *pages = &mapping->pages;
- 
- 	xa_lock_irq(&mapping->pages);
--	entry = get_unlocked_mapping_entry(mapping, index, NULL);
-+	entry = get_unlocked_mapping_entry(&xas);
- 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
- 		goto out;
- 	if (!trunc &&
-@@ -433,7 +427,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	mapping->nrexceptional--;
- 	ret = 1;
- out:
--	put_unlocked_mapping_entry(mapping, index, entry);
-+	put_unlocked_mapping_entry(&xas, entry);
- 	xa_unlock_irq(&mapping->pages);
- 	return ret;
- }
-@@ -641,7 +635,7 @@ static int dax_writeback_one(struct block_device *bdev,
- {
- 	struct radix_tree_root *pages = &mapping->pages;
- 	XA_STATE(xas, pages, index);
--	void *entry2, **slot, *kaddr;
-+	void *entry2, *kaddr;
- 	long ret = 0, id;
- 	sector_t sector;
- 	pgoff_t pgoff;
-@@ -656,7 +650,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 		return -EIO;
- 
- 	xa_lock_irq(&mapping->pages);
--	entry2 = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry2 = get_unlocked_mapping_entry(&xas);
- 	/* Entry got punched out / reallocated? */
- 	if (!entry2 || WARN_ON_ONCE(!xa_is_value(entry2)))
- 		goto put_unlocked;
-@@ -734,7 +728,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	return ret;
- 
-  put_unlocked:
--	put_unlocked_mapping_entry(mapping, index, entry2);
-+	put_unlocked_mapping_entry(&xas, entry2);
- 	xa_unlock_irq(&mapping->pages);
- 	return ret;
- }
-@@ -1504,16 +1498,16 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
- 	pgoff_t index = vmf->pgoff;
- 	XA_STATE(xas, &mapping->pages, index);
--	void *entry, **slot;
-+	void *entry;
- 	int vmf_ret, error;
- 
- 	xa_lock_irq(&mapping->pages);
--	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry = get_unlocked_mapping_entry(&xas);
- 	/* Did we race with someone splitting entry or so? */
- 	if (!entry ||
- 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
- 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
--		put_unlocked_mapping_entry(mapping, index, entry);
-+		put_unlocked_mapping_entry(&xas, entry);
- 		xa_unlock_irq(&mapping->pages);
- 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
- 						      VM_FAULT_NOPAGE);
 -- 
-2.15.1
+Thanks,
 
+Steve
