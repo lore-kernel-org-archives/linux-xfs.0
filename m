@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47290 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:47450 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755650AbdLORLW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 12:11:22 -0500
+        with ESMTP id S1755406AbdLORL2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 12:11:28 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBFH7rsj168194
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:21 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2evje0r1dt-1
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBFH7Ba1167640
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:27 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2evje0r1eb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:21 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:27 +0000
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBKEi023536
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBRmR001244
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:21 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBFHBKnA016737
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:20 GMT
-Subject: [PATCH 1/4] xfs: track cowblocks separately in i_flags
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:27 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBFHBQ5J016753
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:26 GMT
+Subject: [PATCH 2/4] xfs: don't be so eager to clear the cowblocks tag on
+ truncate
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 15 Dec 2017 09:11:19 -0800
-Message-ID: <151335787965.26575.17711793213679430025.stgit@magnolia>
+Date: Fri, 15 Dec 2017 09:11:25 -0800
+Message-ID: <151335788573.26575.10453091656387965703.stgit@magnolia>
 In-Reply-To: <151335786780.26575.15542999972223359181.stgit@magnolia>
 References: <151335786780.26575.15542999972223359181.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,122 +35,67 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The EOFBLOCKS/COWBLOCKS tags are totally separate things, so track them
-with separate i_flags.  Right now we're abusing IEOFBLOCKS for both,
-which is totally bogus because we won't tag the inode with COWBLOCKS if
-IEOFBLOCKS was set by a previous tagging of the inode with EOFBLOCKS.
-Found by wiring up clonerange to fsstress in xfs/017.
+Currently, xfs_itruncate_extents clears the cowblocks tag if i_cnextents
+is zero.  This is wrong, since i_cnextents only tracks real extents in
+the CoW fork, which means that we could have some delayed CoW
+reservations still in there that will now never get cleaned.
+
+Fix a further bug where we /don't/ clear the reflink iflag if there are
+any attribute blocks -- really, it's only safe to clear the reflink flag
+if there are no data fork extents and no cow fork extents.
+
+Found by adding clonerange to fsstress in xfs/017.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c |   33 ++++++++++++++++++++++++---------
- fs/xfs/xfs_inode.h  |    1 +
- 2 files changed, 25 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_inode.c |   28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 43005fb..58d2d42 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1536,8 +1536,23 @@ xfs_inode_free_quota_eofblocks(
- 	return __xfs_inode_free_quota_eofblocks(ip, xfs_icache_free_eofblocks);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b41952a..6f95bdb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1487,6 +1487,24 @@ xfs_link(
+ 	return error;
  }
  
-+static inline unsigned long
-+xfs_iflag_for_tag(
-+	int		tag)
++/* Clear the reflink flag and the cowblocks tag if possible. */
++static void
++xfs_itruncate_clear_reflink_flags(
++	struct xfs_inode	*ip)
 +{
-+	switch (tag) {
-+	case XFS_ICI_EOFBLOCKS_TAG:
-+		return XFS_IEOFBLOCKS;
-+	case XFS_ICI_COWBLOCKS_TAG:
-+		return XFS_ICOWBLOCKS;
-+	default:
-+		ASSERT(0);
-+		return 0;
-+	}
++	struct xfs_ifork	*dfork;
++	struct xfs_ifork	*cfork;
++
++	if (!xfs_is_reflink_inode(ip))
++		return;
++	dfork = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	cfork = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	if (dfork->if_bytes == 0 && cfork->if_bytes == 0)
++		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++	if (cfork->if_bytes == 0)
++		xfs_inode_clear_cowblocks_tag(ip);
 +}
 +
- static void
--__xfs_inode_set_eofblocks_tag(
-+__xfs_inode_set_blocks_tag(
- 	xfs_inode_t	*ip,
- 	void		(*execute)(struct xfs_mount *mp),
- 	void		(*set_tp)(struct xfs_mount *mp, xfs_agnumber_t agno,
-@@ -1552,10 +1567,10 @@ __xfs_inode_set_eofblocks_tag(
- 	 * Don't bother locking the AG and looking up in the radix trees
- 	 * if we already know that we have the tag set.
- 	 */
--	if (ip->i_flags & XFS_IEOFBLOCKS)
-+	if (ip->i_flags & xfs_iflag_for_tag(tag))
- 		return;
- 	spin_lock(&ip->i_flags_lock);
--	ip->i_flags |= XFS_IEOFBLOCKS;
-+	ip->i_flags |= xfs_iflag_for_tag(tag);
- 	spin_unlock(&ip->i_flags_lock);
- 
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-@@ -1587,13 +1602,13 @@ xfs_inode_set_eofblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_set_eofblocks_tag(ip);
--	return __xfs_inode_set_eofblocks_tag(ip, xfs_queue_eofblocks,
-+	return __xfs_inode_set_blocks_tag(ip, xfs_queue_eofblocks,
- 			trace_xfs_perag_set_eofblocks,
- 			XFS_ICI_EOFBLOCKS_TAG);
- }
- 
- static void
--__xfs_inode_clear_eofblocks_tag(
-+__xfs_inode_clear_blocks_tag(
- 	xfs_inode_t	*ip,
- 	void		(*clear_tp)(struct xfs_mount *mp, xfs_agnumber_t agno,
- 				    int error, unsigned long caller_ip),
-@@ -1603,7 +1618,7 @@ __xfs_inode_clear_eofblocks_tag(
- 	struct xfs_perag *pag;
- 
- 	spin_lock(&ip->i_flags_lock);
--	ip->i_flags &= ~XFS_IEOFBLOCKS;
-+	ip->i_flags &= ~xfs_iflag_for_tag(tag);
- 	spin_unlock(&ip->i_flags_lock);
- 
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-@@ -1630,7 +1645,7 @@ xfs_inode_clear_eofblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_clear_eofblocks_tag(ip);
--	return __xfs_inode_clear_eofblocks_tag(ip,
-+	return __xfs_inode_clear_blocks_tag(ip,
- 			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
- }
- 
-@@ -1724,7 +1739,7 @@ xfs_inode_set_cowblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_set_cowblocks_tag(ip);
--	return __xfs_inode_set_eofblocks_tag(ip, xfs_queue_cowblocks,
-+	return __xfs_inode_set_blocks_tag(ip, xfs_queue_cowblocks,
- 			trace_xfs_perag_set_cowblocks,
- 			XFS_ICI_COWBLOCKS_TAG);
- }
-@@ -1734,6 +1749,6 @@ xfs_inode_clear_cowblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_clear_cowblocks_tag(ip);
--	return __xfs_inode_clear_eofblocks_tag(ip,
-+	return __xfs_inode_clear_blocks_tag(ip,
- 			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
- }
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index b2136af..d383e39 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -232,6 +232,7 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
-  * log recovery to replay a bmap operation on the inode.
-  */
- #define XFS_IRECOVERY		(1 << 11)
-+#define XFS_ICOWBLOCKS		(1 << 12)/* has the cowblocks tag set */
- 
  /*
-  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+  * Free up the underlying blocks past new_size.  The new size must be smaller
+  * than the current size.  This routine can be used both for the attribute and
+@@ -1583,15 +1601,7 @@ xfs_itruncate_extents(
+ 	if (error)
+ 		goto out;
+ 
+-	/*
+-	 * Clear the reflink flag if there are no data fork blocks and
+-	 * there are no extents staged in the cow fork.
+-	 */
+-	if (xfs_is_reflink_inode(ip) && ip->i_cnextents == 0) {
+-		if (ip->i_d.di_nblocks == 0)
+-			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+-		xfs_inode_clear_cowblocks_tag(ip);
+-	}
++	xfs_itruncate_clear_reflink_flags(ip);
+ 
+ 	/*
+ 	 * Always re-log the inode so that our permanent transaction can keep
 
