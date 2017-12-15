@@ -1,111 +1,141 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59042 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:57800 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935123AbdLRRZn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 12:25:43 -0500
-Message-ID: <1513617938.3422.31.camel@kernel.org>
-Subject: Re: [PATCH v3 16/19] fs: only set S_VERSION when updating times if
- necessary
-From: Jeff Layton <jlayton@kernel.org>
-Date: Mon, 18 Dec 2017 12:25:38 -0500
-In-Reply-To: <20171218160736.GE30350@quack2.suse.cz>
-References: <20171218151156.14565-1-jlayton@kernel.org>
-         <20171218151156.14565-17-jlayton@kernel.org>
-         <20171218160736.GE30350@quack2.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1755663AbdLOUlP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Dec 2017 15:41:15 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH] generic/381: enable on systems which allows usernames that begin with digits
+Date: Fri, 15 Dec 2017 12:41:07 -0800
+Message-Id: <20171215204107.17690-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Mon, 2017-12-18 at 17:07 +0100, Jan Kara wrote:
-> On Mon 18-12-17 10:11:53, Jeff Layton wrote:
-> > From: Jeff Layton <jlayton@redhat.com>
-> > 
-> > We only really need to update i_version if someone has queried for it
-> > since we last incremented it. By doing that, we can avoid having to
-> > update the inode if the times haven't changed.
-> > 
-> > If the times have changed, then we go ahead and forcibly increment the
-> > counter, under the assumption that we'll be going to the storage
-> > anyway, and the increment itself is relatively cheap.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> > ---
-> >  fs/inode.c | 20 ++++++++++++++------
-> >  1 file changed, 14 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 03102d6ef044..83f6cfc3cde7 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -19,6 +19,7 @@
-> >  #include <linux/ratelimit.h>
-> >  #include <linux/list_lru.h>
-> >  #include <trace/events/writeback.h>
-> > +#include <linux/iversion.h>
-> >  #include "internal.h"
-> >  
-> >  /*
-> > @@ -1634,17 +1635,24 @@ static int relatime_need_update(const struct path *path, struct inode *inode,
-> >  int generic_update_time(struct inode *inode, struct timespec *time, int flags)
-> >  {
-> >  	int iflags = I_DIRTY_TIME;
-> > +	bool dirty = false;
-> >  
-> > -	if (flags & S_ATIME)
-> > +	if (flags & S_ATIME) {
-> >  		inode->i_atime = *time;
-> > +		dirty |= !(inode->i_sb->s_flags & SB_LAZYTIME);
-> > +	}
-> >  	if (flags & S_VERSION)
-> > -		inode_inc_iversion(inode);
-> > -	if (flags & S_CTIME)
-> > +		dirty |= inode_maybe_inc_iversion(inode, dirty);
-> > +	if (flags & S_CTIME) {
-> >  		inode->i_ctime = *time;
-> > -	if (flags & S_MTIME)
-> > +		dirty = true;
-> > +	}
-> > +	if (flags & S_MTIME) {
-> >  		inode->i_mtime = *time;
-> > +		dirty = true;
-> > +	}
-> 
-> The SB_LAZYTIME handling is wrong here. That option is not only about atime
-> handling but rather about all inode time stamps. So you rather need
-> something like:
-> 
-> 	if (flags & (S_ATIME | S_CTIME | S_MTIME) &&
-> 	    !(inode->i_sb->s_flags & SB_LAZYTIME))
-> 		dirty = true;
-> 
-> 								Honza
-> 
+Some systems are not allowing usernames prefixed with a number now, this
+test however relies on the assumption that you can end up with usernames
+of such type, given the purpose of the test is to ensure that xfs_quota
+can differentiate between UIDs and names beginning with numbers.
 
-Thanks. I misunderstood that. Will fix.
+systemd >= 232 (circa 2017) no longer allows usernames starting with digits
+[0], there is a systemd exploit (CVE-2017-1000082 [1]) for why that was done,
+however even upstream shadow useradd also does not allow similar user types
+since shadow version v4.0.1 (circa 2007) [2] but there no easy way to check
+shadow's useradd's version.
 
-> >  
-> > -	if (!(inode->i_sb->s_flags & SB_LAZYTIME) || (flags & S_VERSION))
-> > +	if (dirty)
-> >  		iflags |= I_DIRTY_SYNC;
-> >  	__mark_inode_dirty(inode, iflags);
-> >  	return 0;
-> > @@ -1863,7 +1871,7 @@ int file_update_time(struct file *file)
-> >  	if (!timespec_equal(&inode->i_ctime, &now))
-> >  		sync_it |= S_CTIME;
-> >  
-> > -	if (IS_I_VERSION(inode))
-> > +	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
-> >  		sync_it |= S_VERSION;
-> >  
-> >  	if (!sync_it)
-> > -- 
-> > 2.14.3
-> > 
+You can still shoehorn in these types of users by manually editing files,
+but that's just shooting yourself on the foot given all the precautions
+taken now by userspace, so just check for the systemd version for now as
+requirement for running this test.
 
+[0] https://github.com/systemd/systemd/issues/6237
+[1] https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-1000082
+[2] https://github.com/shadow-maint/shadow/commit/9db6abfa42c946b4046f4b2fe67dc43ba862eb0e
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ README            |  7 +++++--
+ common/config     |  1 +
+ common/rc         | 42 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/381 |  1 +
+ 4 files changed, 49 insertions(+), 2 deletions(-)
+
+diff --git a/README b/README
+index ed69332e774e..aff7bdae7cb4 100644
+--- a/README
++++ b/README
+@@ -20,8 +20,11 @@ _______________________
+ - run make
+ - run make install
+ - create fsgqa test user ("sudo useradd fsgqa")
+-- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
+-	
++- Only on systems which allow usernames that start with a digit (older
++  than  systemd 232 and/or has shadow older than v4.0.1), create the
++  123456-fsgqa test user:
++    sudo useradd 123456-fsgqa
++
+ ______________________
+ USING THE FSQA SUITE
+ ______________________
+diff --git a/common/config b/common/config
+index d0fbfe55a6d2..88fd5dd455b9 100644
+--- a/common/config
++++ b/common/config
+@@ -199,6 +199,7 @@ export UBIUPDATEVOL_PROG="`set_prog_path ubiupdatevol`"
+ export THIN_CHECK_PROG="$(set_prog_path thin_check)"
+ export PYTHON2_PROG="`set_prog_path python2`"
+ export SQLITE3_PROG="`set_prog_path sqlite3`"
++export SYSTEMCTL_PROG="`set_prog_path systemctl`"
+ 
+ # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+ # newer systems have udevadm command but older systems like RHEL5 don't.
+diff --git a/common/rc b/common/rc
+index 4c053a53711a..445e3471869e 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1983,6 +1983,48 @@ _cat_group()
+ 	cat /etc/group
+ }
+ 
++# requires systemd
++#
++_require_systemd()
++{
++    _require_command "$SYSTEMCTL_PROG" systemctl
++}
++
++# gets your version of systemd
++#
++_get_systemd_version()
++{
++    _require_systemd
++    $SYSTEMCTL_PROG --version | head -1 | awk '{print $2}'
++}
++
++#  checks if you have a version of systemd older than the one specified
++#
++_systemd_version_lessthan()
++{
++    _require_systemd
++    version="$(_get_systemd_version)"
++    test_version=$1
++
++    if [ "$version" -lt "$test_version" ]; then
++        return 0
++    else
++        return 1
++    fi
++}
++
++# check that userames that start with a digit are allowed
++#
++_require_user_digit_allowed()
++{
++    if [ ! -x "$SYSTEMCTL_PROG" ]; then
++	return 0
++    fi
++    req_systemd="232"
++    _systemd_version_lessthan $req_systemd
++    [ "$?" == "0" ] || _notrun "runs only on old systemd version < $req_systemd"
++}
++
+ # check for a user on the machine, fsgqa as default
+ #
+ _require_user()
+diff --git a/tests/generic/381 b/tests/generic/381
+index 006f0d879638..533ca27125cb 100755
+--- a/tests/generic/381
++++ b/tests/generic/381
+@@ -54,6 +54,7 @@ _require_quota
+ _require_xfs_quota_foreign
+ 
+ # need user and group named 123456-fsgqa
++_require_user_digit_allowed
+ _require_user 123456-fsgqa
+ _require_group 123456-fsgqa
+ 
 -- 
-Jeff Layton <jlayton@kernel.org>
+2.15.0
+
