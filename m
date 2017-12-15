@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45981 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:38838 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756412AbdLOWFd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:33 -0500
+        with ESMTP id S1756698AbdLOWFe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:34 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 66/78] dax: Fix sparse warning
-Date: Fri, 15 Dec 2017 14:04:38 -0800
-Message-Id: <20171215220450.7899-67-willy@infradead.org>
+Subject: [PATCH v5 46/78] shmem: Convert shmem_wait_for_pins to XArray
+Date: Fri, 15 Dec 2017 14:04:18 -0800
+Message-Id: <20171215220450.7899-47-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,26 +17,106 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-sparse doesn't know that follow_pte_pmd conditionally acquires the ptl,
-so add an annotation to let it know what's going on.
+As with shmem_tag_pins(), hold the lock around the entire loop instead
+of acquiring & dropping it for each entry we're going to untag.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 1 +
- 1 file changed, 1 insertion(+)
+ mm/shmem.c | 59 ++++++++++++++++++++++++-----------------------------------
+ 1 file changed, 24 insertions(+), 35 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index f591ab5be590..6ef727af30f0 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -531,6 +531,7 @@ static void dax_mapping_entry_mkclean(struct address_space *mapping,
- 		 */
- 		if (follow_pte_pmd(vma->vm_mm, address, &start, &end, &ptep, &pmdp, &ptl))
- 			continue;
-+		__acquire(ptl); /* Conditionally acquired above */
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 2f41c7ceea18..e4a2eb1336be 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -2636,9 +2636,7 @@ static void shmem_tag_pins(struct address_space *mapping)
+  */
+ static int shmem_wait_for_pins(struct address_space *mapping)
+ {
+-	struct radix_tree_iter iter;
+-	void **slot;
+-	pgoff_t start;
++	XA_STATE(xas, &mapping->pages, 0);
+ 	struct page *page;
+ 	int error, scan;
  
- 		/*
- 		 * No need to call mmu_notifier_invalidate_range() as we are
+@@ -2646,7 +2644,9 @@ static int shmem_wait_for_pins(struct address_space *mapping)
+ 
+ 	error = 0;
+ 	for (scan = 0; scan <= LAST_SCAN; scan++) {
+-		if (!radix_tree_tagged(&mapping->pages, SHMEM_TAG_PINNED))
++		unsigned int tagged = 0;
++
++		if (!xas_tagged(&xas, SHMEM_TAG_PINNED))
+ 			break;
+ 
+ 		if (!scan)
+@@ -2654,45 +2654,34 @@ static int shmem_wait_for_pins(struct address_space *mapping)
+ 		else if (schedule_timeout_killable((HZ << scan) / 200))
+ 			scan = LAST_SCAN;
+ 
+-		start = 0;
+-		rcu_read_lock();
+-		radix_tree_for_each_tagged(slot, &mapping->pages, &iter,
+-					   start, SHMEM_TAG_PINNED) {
+-
+-			page = radix_tree_deref_slot(slot);
+-			if (radix_tree_exception(page)) {
+-				if (radix_tree_deref_retry(page)) {
+-					slot = radix_tree_iter_retry(&iter);
+-					continue;
+-				}
+-
+-				page = NULL;
+-			}
+-
+-			if (page &&
+-			    page_count(page) - page_mapcount(page) != 1) {
+-				if (scan < LAST_SCAN)
+-					goto continue_resched;
+-
++		xas_set(&xas, 0);
++		xas_lock_irq(&xas);
++		xas_for_each_tag(&xas, page, ULONG_MAX, SHMEM_TAG_PINNED) {
++			bool clear = true;
++			if (xa_is_value(page))
++				continue;
++			if (page_count(page) - page_mapcount(page) != 1) {
+ 				/*
+ 				 * On the last scan, we clean up all those tags
+ 				 * we inserted; but make a note that we still
+ 				 * found pages pinned.
+ 				 */
+-				error = -EBUSY;
++				if (scan == LAST_SCAN)
++					error = -EBUSY;
++				else
++					clear = false;
+ 			}
++			if (clear)
++				xas_clear_tag(&xas, SHMEM_TAG_PINNED);
++			if (++tagged % XA_CHECK_SCHED)
++				continue;
+ 
+-			xa_lock_irq(&mapping->pages);
+-			radix_tree_tag_clear(&mapping->pages,
+-					     iter.index, SHMEM_TAG_PINNED);
+-			xa_unlock_irq(&mapping->pages);
+-continue_resched:
+-			if (need_resched()) {
+-				slot = radix_tree_iter_resume(slot, &iter);
+-				cond_resched_rcu();
+-			}
++			xas_pause(&xas);
++			xas_unlock_irq(&xas);
++			cond_resched();
++			xas_lock_irq(&xas);
+ 		}
+-		rcu_read_unlock();
++		xas_unlock_irq(&xas);
+ 	}
+ 
+ 	return error;
 -- 
 2.15.1
 
