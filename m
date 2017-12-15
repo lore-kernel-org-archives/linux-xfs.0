@@ -1,45 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57850 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755650AbdLOUlV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Dec 2017 15:41:21 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH] tests/xfs/040: document purpose
-Date: Fri, 15 Dec 2017 12:41:18 -0800
-Message-Id: <20171215204118.17740-1-mcgrof@kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:43148 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756381AbdLOWFS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:18 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v5 21/78] xarray: Add ability to store errno values
+Date: Fri, 15 Dec 2017 14:03:53 -0800
+Message-Id: <20171215220450.7899-22-willy@infradead.org>
+In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
+References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
 
-Getting xfs/040 to "pass" takes a bit of effort, however the effort
-to require updating xfsprogs is purely an xfsprogs maintainer task
-only. There no functional gain by users of xfs or a QA team to get
-this test to pass. This is not trivial from the current description
-so document this.
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+While the radix tree offers no ability to store IS_ERR pointers,
+documenting that the XArray does not led to some concern.  Here is a
+sanctioned way to store errnos in the XArray.  I'm concerned that it
+will confuse people who can't tell the difference between xa_is_err()
+and xa_is_errno(), so I've added copious kernel-doc to help them tell
+the difference.
+
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- tests/xfs/040 | 5 +++++
- 1 file changed, 5 insertions(+)
+ Documentation/core-api/xarray.rst      |  9 ++++---
+ include/linux/xarray.h                 | 46 +++++++++++++++++++++++++++++++++-
+ tools/testing/radix-tree/xarray-test.c |  8 +++++-
+ 3 files changed, 57 insertions(+), 6 deletions(-)
 
-diff --git a/tests/xfs/040 b/tests/xfs/040
-index fadb888cbfaf..a0abc42f3720 100755
---- a/tests/xfs/040
-+++ b/tests/xfs/040
-@@ -3,6 +3,11 @@
- #
- # compare-libxfs test
- #
-+# The purpose of this test is only to nag the maintainer of xfsprogs to try to
-+# keep xfsprogs's libxfs files in sync with the latest kernel's libxfs. There
-+# is no functional need for anyone to actually run this test to confirm
-+# proper XFS functionalilty, this is an xfsprogs maintainer test.
-+#
- #-----------------------------------------------------------------------
- # Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- #
+diff --git a/Documentation/core-api/xarray.rst b/Documentation/core-api/xarray.rst
+index 706081bfe92f..57a494026d96 100644
+--- a/Documentation/core-api/xarray.rst
++++ b/Documentation/core-api/xarray.rst
+@@ -42,11 +42,12 @@ When you retrieve an entry from the XArray, you can check whether it is
+ a value entry by calling :c:func:`xa_is_value`, and convert it back to
+ an integer by calling :c:func:`xa_to_value`.
+ 
+-The XArray does not support storing :c:func:`IS_ERR` pointers as some
++The XArray does not support storing :c:func:`IS_ERR` pointers because some
+ conflict with value entries or internal entries.  If you need to store
+-error numbers in the array, you can store ``(errno << 2)`` as these values
+-will be aligned to a multiple of 4 and are not valid kernel pointers.
+-The values 4, 8, ... 4092 are also not valid kernel pointers.
++error numbers in the array, you can encode them into error entries
++with :c:func:`xa_mk_errno`, check whether a returned entry is an error
++with :c:func:`xa_is_errno` and convert it back into an errno with
++:c:func:`xa_to_errno`.
+ 
+ An unusual feature of the XArray is the ability to create entries which
+ occupy a range of indices.  Once stored to, looking up any index in
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index bcc321fb280f..e0f8eb06b874 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -231,6 +231,50 @@ static inline bool xa_is_value(const void *entry)
+ 	return (unsigned long)entry & 1;
+ }
+ 
++/**
++ * xa_mk_errno() - Create an XArray entry from an error number.
++ * @error: Error number to store in XArray.
++ *
++ * Return: An entry suitable for storing in the XArray.
++ */
++static inline void *xa_mk_errno(long error)
++{
++	return (void *)(error << 2);
++}
++
++/**
++ * xa_to_errno() - Get error number stored in an XArray entry.
++ * @entry: XArray entry.
++ *
++ * Calling this function on an entry which is not an xa_is_errno() will
++ * yield unpredictable results.  Do not confuse this function with xa_err();
++ * this function is for errnos which have been stored in the XArray, and
++ * that function is for errors returned from the XArray implementation.
++ *
++ * Return: The error number stored in the XArray entry.
++ */
++static inline long xa_to_errno(const void *entry)
++{
++	return (long)entry >> 2;
++}
++
++/**
++ * xa_is_errno() - Determine if an entry is an errno.
++ * @entry: XArray entry.
++ *
++ * Do not confuse this function with xa_is_err(); that function tells you
++ * whether the XArray implementation returned an error; this function
++ * tells you whether the entry you successfully stored in the XArray
++ * represented an errno.  If you have never stored an errno in the XArray,
++ * you do not have to check this.
++ *
++ * Return: True if the entry is an errno, false if it is a pointer.
++ */
++static inline bool xa_is_errno(const void *entry)
++{
++	return (((unsigned long)entry & 3) == 0) && (entry > (void *)-4096);
++}
++
+ /**
+  * xa_is_internal() - Is the entry an internal entry?
+  * @entry: Entry retrieved from the XArray
+@@ -277,7 +321,7 @@ static inline int xa_err(void *entry)
+ 
+ /**
+  * xa_store_empty() - Store this entry in the XArray unless another entry is
+- * 			already present.
++ *			already present.
+  * @xa: XArray.
+  * @index: Index into array.
+  * @entry: New entry.
+diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
+index 43111786ebdd..b843cedf3988 100644
+--- a/tools/testing/radix-tree/xarray-test.c
++++ b/tools/testing/radix-tree/xarray-test.c
+@@ -29,7 +29,13 @@ void check_xa_err(struct xarray *xa)
+ 	assert(xa_err(xa_store(xa, 1, xa_mk_value(0), GFP_KERNEL)) == 0);
+ 	assert(xa_err(xa_store(xa, 1, NULL, 0)) == 0);
+ // kills the test-suite :-(
+-//     assert(xa_err(xa_store(xa, 0, xa_mk_internal(0), 0)) == -EINVAL);
++//	assert(xa_err(xa_store(xa, 0, xa_mk_internal(0), 0)) == -EINVAL);
++
++	assert(xa_err(xa_store(xa, 0, xa_mk_errno(-ENOMEM), GFP_KERNEL)) == 0);
++	assert(xa_err(xa_load(xa, 0)) == 0);
++	assert(xa_is_errno(xa_load(xa, 0)) == true);
++	assert(xa_to_errno(xa_load(xa, 0)) == -ENOMEM);
++	xa_erase(xa, 0);
+ }
+ 
+ void check_xa_tag(struct xarray *xa)
 -- 
-2.15.0
+2.15.1
 
