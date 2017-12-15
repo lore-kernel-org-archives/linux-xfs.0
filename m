@@ -1,45 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56066 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36500 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753549AbdLOIlO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Dec 2017 03:41:14 -0500
-Date: Fri, 15 Dec 2017 16:41:12 +0800
+        id S1754900AbdLOIz2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Dec 2017 03:55:28 -0500
+Date: Fri, 15 Dec 2017 16:55:26 +0800
 From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v7] generic: initial fiemap range query test
-Message-ID: <20171215084112.GK2749@eguan.usersys.redhat.com>
-References: <1512057927-15022-1-git-send-email-nborisov@suse.com>
- <e0093be7-fbbc-de22-4dd1-429e9f1734d0@suse.com>
+Subject: Re: [PATCH 0/8] weekly fstests changes
+Message-ID: <20171215085526.GL2749@eguan.usersys.redhat.com>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e0093be7-fbbc-de22-4dd1-429e9f1734d0@suse.com>
+In-Reply-To: <151314499003.18893.8687182548758898133.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, sandeen@sandeen.net
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Dec 15, 2017 at 10:33:16AM +0200, Nikolay Borisov wrote:
+On Tue, Dec 12, 2017 at 10:03:10PM -0800, Darrick J. Wong wrote:
+> Hi all,
 > 
+> Here's the usual weekly pile of fstests changes. :)
 > 
-> On 30.11.2017 18:05, Nikolay Borisov wrote:
-> > Fiemap gained support for passing in optional offset len
-> > which denote the range requested, so this patch adds
-> > testcases for this functionality. Aditionally, a special "ranged"
-> > argument is added to the require_xfs_io_command which checks
-> > for the presence of fiemap range support.
-> > 
-> > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> We start with the same patch as last time that scans kmemleak for leaks
+> after each test.
 > 
-> SO what's the final verdit, even though to be honest I got a bit annoyed
-> at the way the whole situation with fiemap untangled and dunno if I have
-> the willpower to make any more adjustments to this test.
+> Then we move on to a fix in the scrub probe code because upstream
+> xfsprogs changed xfs_io syntax again.
+> 
+> Third is a patch that adds Unicode linedraw character tests to the two
+> tests that check that we can store arbitrary byte patterns without
+> screwing things up.
+> 
+> The fourth patch amends various xfs tests to deal with our slow removal
+> of zero-alloc transactions, which is causing unexpected fs shutdowns
+> when free space nears zero.
 
-I tend to take the patch as-is for now, and let it fail on XFS with the
-hope that the failure will drive further discussions and fixes on the
-test or kernel when we have a final conclusion.
-
-Please let me know if I should drop the patch.
+I'm taking patch 2-4 for this week's update, I'll need more time to look
+at & test & think more about the other patches.
 
 Thanks,
 Eryu
+
+> 
+> The fifth patch adds a new test to invoke dm-error on a fsstress run;
+> this test simulates (for the filesystem) an internal "yank all the disk
+> cables out" test.
+> 
+> The sixth patch adds FICLONERANGE/FIDEDUPERANGE support to fsstress.
+> This was helpful in finding a bunch of unhandled corner cases in the xfs
+> reflink implementation.
+> 
+> Patch seven test write-only fsstress to maximize testing of write paths
+> where coding mistakes cannot be backed out of so easily.
+> 
+> The final patch in the series fixes the dir/file counts that are
+> hardcoded in the xfs/068 golden output, since with fsstress doing
+> reflink now we might get a lot more "files" than we used to.
+> 
+> --D
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
