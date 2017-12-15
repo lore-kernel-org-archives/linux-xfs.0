@@ -1,99 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60697 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755495AbdLORKo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 12:10:44 -0500
-Date: Fri, 15 Dec 2017 09:10:12 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Storing errors in the XArray
-Message-ID: <20171215171012.GA11918@bombadil.infradead.org>
-References: <20171206004159.3755-1-willy@infradead.org>
- <20171206004159.3755-9-willy@infradead.org>
- <66ad068b-1973-ca41-7bbf-8a0634cc488d@infradead.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:47290 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755650AbdLORLW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 12:11:22 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBFH7rsj168194
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:21 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2evje0r1dt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:21 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBKEi023536
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:21 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBFHBKnA016737
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:20 GMT
+Subject: [PATCH 1/4] xfs: track cowblocks separately in i_flags
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 15 Dec 2017 09:11:19 -0800
+Message-ID: <151335787965.26575.17711793213679430025.stgit@magnolia>
+In-Reply-To: <151335786780.26575.15542999972223359181.stgit@magnolia>
+References: <151335786780.26575.15542999972223359181.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <66ad068b-1973-ca41-7bbf-8a0634cc488d@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 11, 2017 at 03:10:22PM -0800, Randy Dunlap wrote:
-> > +The XArray does not support storing :c:func:`IS_ERR` pointers; some
-> > +conflict with data values and others conflict with entries the XArray
-> > +uses for its own purposes.  If you need to store special values which
-> > +cannot be confused with real kernel pointers, the values 4, 8, ... 4092
-> > +are available.
-> 
-> or if I know that they values are errno-range values, I can just shift them
-> left by 2 to store them and then shift them right by 2 to use them?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On further thought, I like this idea so much, it's worth writing helpers
-for this usage.  And test-suite (also doubles as a demonstration of how
-to use it).
+The EOFBLOCKS/COWBLOCKS tags are totally separate things, so track them
+with separate i_flags.  Right now we're abusing IEOFBLOCKS for both,
+which is totally bogus because we won't tag the inode with COWBLOCKS if
+IEOFBLOCKS was set by a previous tagging of the inode with EOFBLOCKS.
+Found by wiring up clonerange to fsstress in xfs/017.
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index c616e9319c7c..53aa251df57a 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -232,6 +232,39 @@ static inline bool xa_is_value(const void *entry)
- 	return (unsigned long)entry & 1;
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_icache.c |   33 ++++++++++++++++++++++++---------
+ fs/xfs/xfs_inode.h  |    1 +
+ 2 files changed, 25 insertions(+), 9 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 43005fb..58d2d42 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1536,8 +1536,23 @@ xfs_inode_free_quota_eofblocks(
+ 	return __xfs_inode_free_quota_eofblocks(ip, xfs_icache_free_eofblocks);
  }
  
-+/**
-+ * xa_mk_errno() - Create an XArray entry from an error number.
-+ * @error: Error number to store in XArray.
-+ *
-+ * Return: An entry suitable for storing in the XArray.
-+ */
-+static inline void *xa_mk_errno(long error)
++static inline unsigned long
++xfs_iflag_for_tag(
++	int		tag)
 +{
-+	return (void *)(error << 2);
++	switch (tag) {
++	case XFS_ICI_EOFBLOCKS_TAG:
++		return XFS_IEOFBLOCKS;
++	case XFS_ICI_COWBLOCKS_TAG:
++		return XFS_ICOWBLOCKS;
++	default:
++		ASSERT(0);
++		return 0;
++	}
 +}
 +
-+/**
-+ * xa_to_errno() - Get error number stored in an XArray entry.
-+ * @entry: XArray entry.
-+ *
-+ * Return: The error number stored in the XArray entry.
-+ */
-+static inline unsigned long xa_to_errno(const void *entry)
-+{
-+	return (long)entry >> 2;
-+}
-+
-+/**
-+ * xa_is_errno() - Determine if an entry is an errno.
-+ * @entry: XArray entry.
-+ *
-+ * Return: True if the entry is an errno, false if it is a pointer.
-+ */
-+static inline bool xa_is_errno(const void *entry)
-+{
-+	return (((unsigned long)entry & 3) == 0) && (entry > (void *)-4096);
-+}
-+
- /**
-  * xa_is_internal() - Is the entry an internal entry?
-  * @entry: Entry retrieved from the XArray
-diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
-index 43111786ebdd..b843cedf3988 100644
---- a/tools/testing/radix-tree/xarray-test.c
-+++ b/tools/testing/radix-tree/xarray-test.c
-@@ -29,7 +29,13 @@ void check_xa_err(struct xarray *xa)
- 	assert(xa_err(xa_store(xa, 1, xa_mk_value(0), GFP_KERNEL)) == 0);
- 	assert(xa_err(xa_store(xa, 1, NULL, 0)) == 0);
- // kills the test-suite :-(
--//     assert(xa_err(xa_store(xa, 0, xa_mk_internal(0), 0)) == -EINVAL);
-+//	assert(xa_err(xa_store(xa, 0, xa_mk_internal(0), 0)) == -EINVAL);
-+
-+	assert(xa_err(xa_store(xa, 0, xa_mk_errno(-ENOMEM), GFP_KERNEL)) == 0);
-+	assert(xa_err(xa_load(xa, 0)) == 0);
-+	assert(xa_is_errno(xa_load(xa, 0)) == true);
-+	assert(xa_to_errno(xa_load(xa, 0)) == -ENOMEM);
-+	xa_erase(xa, 0);
+ static void
+-__xfs_inode_set_eofblocks_tag(
++__xfs_inode_set_blocks_tag(
+ 	xfs_inode_t	*ip,
+ 	void		(*execute)(struct xfs_mount *mp),
+ 	void		(*set_tp)(struct xfs_mount *mp, xfs_agnumber_t agno,
+@@ -1552,10 +1567,10 @@ __xfs_inode_set_eofblocks_tag(
+ 	 * Don't bother locking the AG and looking up in the radix trees
+ 	 * if we already know that we have the tag set.
+ 	 */
+-	if (ip->i_flags & XFS_IEOFBLOCKS)
++	if (ip->i_flags & xfs_iflag_for_tag(tag))
+ 		return;
+ 	spin_lock(&ip->i_flags_lock);
+-	ip->i_flags |= XFS_IEOFBLOCKS;
++	ip->i_flags |= xfs_iflag_for_tag(tag);
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+@@ -1587,13 +1602,13 @@ xfs_inode_set_eofblocks_tag(
+ 	xfs_inode_t	*ip)
+ {
+ 	trace_xfs_inode_set_eofblocks_tag(ip);
+-	return __xfs_inode_set_eofblocks_tag(ip, xfs_queue_eofblocks,
++	return __xfs_inode_set_blocks_tag(ip, xfs_queue_eofblocks,
+ 			trace_xfs_perag_set_eofblocks,
+ 			XFS_ICI_EOFBLOCKS_TAG);
  }
  
- void check_xa_tag(struct xarray *xa)
+ static void
+-__xfs_inode_clear_eofblocks_tag(
++__xfs_inode_clear_blocks_tag(
+ 	xfs_inode_t	*ip,
+ 	void		(*clear_tp)(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 				    int error, unsigned long caller_ip),
+@@ -1603,7 +1618,7 @@ __xfs_inode_clear_eofblocks_tag(
+ 	struct xfs_perag *pag;
+ 
+ 	spin_lock(&ip->i_flags_lock);
+-	ip->i_flags &= ~XFS_IEOFBLOCKS;
++	ip->i_flags &= ~xfs_iflag_for_tag(tag);
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+@@ -1630,7 +1645,7 @@ xfs_inode_clear_eofblocks_tag(
+ 	xfs_inode_t	*ip)
+ {
+ 	trace_xfs_inode_clear_eofblocks_tag(ip);
+-	return __xfs_inode_clear_eofblocks_tag(ip,
++	return __xfs_inode_clear_blocks_tag(ip,
+ 			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
+ }
+ 
+@@ -1724,7 +1739,7 @@ xfs_inode_set_cowblocks_tag(
+ 	xfs_inode_t	*ip)
+ {
+ 	trace_xfs_inode_set_cowblocks_tag(ip);
+-	return __xfs_inode_set_eofblocks_tag(ip, xfs_queue_cowblocks,
++	return __xfs_inode_set_blocks_tag(ip, xfs_queue_cowblocks,
+ 			trace_xfs_perag_set_cowblocks,
+ 			XFS_ICI_COWBLOCKS_TAG);
+ }
+@@ -1734,6 +1749,6 @@ xfs_inode_clear_cowblocks_tag(
+ 	xfs_inode_t	*ip)
+ {
+ 	trace_xfs_inode_clear_cowblocks_tag(ip);
+-	return __xfs_inode_clear_eofblocks_tag(ip,
++	return __xfs_inode_clear_blocks_tag(ip,
+ 			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
+ }
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index b2136af..d383e39 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -232,6 +232,7 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+  * log recovery to replay a bmap operation on the inode.
+  */
+ #define XFS_IRECOVERY		(1 << 11)
++#define XFS_ICOWBLOCKS		(1 << 12)/* has the cowblocks tag set */
+ 
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+
