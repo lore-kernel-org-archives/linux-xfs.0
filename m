@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39861 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58021 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755972AbdLOWFa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:30 -0500
+        with ESMTP id S1756663AbdLOWF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:28 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 13/78] xarray: Add xa_cmpxchg
-Date: Fri, 15 Dec 2017 14:03:45 -0800
-Message-Id: <20171215220450.7899-14-willy@infradead.org>
+Subject: [PATCH v5 76/78] md: Convert raid5-cache to XArray
+Date: Fri, 15 Dec 2017 14:04:48 -0800
+Message-Id: <20171215220450.7899-77-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,155 +17,228 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This works like doing cmpxchg() on an array entry.  Code which wants
-the radix_tree_insert() semantic of not overwriting an existing entry
-can cmpxchg() with NULL and get the action it wants.  Plus, instead of
-having an error returned, they get the value currently stored in the
-array, which often saves them a subsequent lookup.
+This is the first user of the radix tree I've converted which was
+storing numbers rather than pointers.  I'm fairly pleased with how
+well it came out.  There's less boiler-plate involved than there was
+with the radix tree, so that's a win.  It does use the advanced API,
+and I think that's a signal that there needs to be a separate API for
+using the XArray for only integers.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h | 33 +++++++++++++++++++++++++
- lib/xarray.c           | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 98 insertions(+)
+ drivers/md/raid5-cache.c | 119 ++++++++++++++++-------------------------------
+ 1 file changed, 40 insertions(+), 79 deletions(-)
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 05873095bc7f..56db23edac82 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -75,6 +75,8 @@ static inline void xa_init(struct xarray *xa)
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 39f31f07ffe9..2c8ad0ed9b48 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -158,9 +158,8 @@ struct r5l_log {
+ 	/* to disable write back during in degraded mode */
+ 	struct work_struct disable_writeback_work;
  
- void *xa_load(struct xarray *, unsigned long index);
- void *xa_store(struct xarray *, unsigned long index, void *entry, gfp_t);
-+void *xa_cmpxchg(struct xarray *, unsigned long index,
-+			void *old, void *entry, gfp_t);
+-	/* to for chunk_aligned_read in writeback mode, details below */
+-	spinlock_t tree_lock;
+-	struct radix_tree_root big_stripe_tree;
++	/* for chunk_aligned_read in writeback mode, details below */
++	struct xarray big_stripe;
+ };
  
- /**
-  * xa_erase() - Erase this entry from the XArray.
-@@ -216,6 +218,32 @@ static inline int xa_err(void *entry)
- 	return 0;
+ /*
+@@ -170,9 +169,8 @@ struct r5l_log {
+  * chunk contains 64 4kB-page, so this chunk contain 64 stripes). For
+  * chunk_aligned_read, these stripes are grouped into one "big_stripe".
+  * For each big_stripe, we count how many stripes of this big_stripe
+- * are in the write back cache. These data are tracked in a radix tree
+- * (big_stripe_tree). We use radix_tree item pointer as the counter.
+- * r5c_tree_index() is used to calculate keys for the radix tree.
++ * are in the write back cache. This counter is tracked in an xarray
++ * (big_stripe). r5c_index() is used to calculate the index.
+  *
+  * chunk_aligned_read() calls r5c_big_stripe_cached() to look up
+  * big_stripe of each chunk in the tree. If this big_stripe is in the
+@@ -180,9 +178,9 @@ struct r5l_log {
+  * rcu_read_lock().
+  *
+  * It is necessary to remember whether a stripe is counted in
+- * big_stripe_tree. Instead of adding new flag, we reuses existing flags:
++ * big_stripe. Instead of adding new flag, we reuses existing flags:
+  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
+- * two flags are set, the stripe is counted in big_stripe_tree. This
++ * two flags are set, the stripe is counted in big_stripe. This
+  * requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
+  * r5c_try_caching_write(); and moving clear_bit of
+  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE to
+@@ -190,23 +188,13 @@ struct r5l_log {
+  */
+ 
+ /*
+- * radix tree requests lowest 2 bits of data pointer to be 2b'00.
+- * So it is necessary to left shift the counter by 2 bits before using it
+- * as data pointer of the tree.
+- */
+-#define R5C_RADIX_COUNT_SHIFT 2
+-
+-/*
+- * calculate key for big_stripe_tree
++ * calculate key for big_stripe
+  *
+  * sect: align_bi->bi_iter.bi_sector or sh->sector
+  */
+-static inline sector_t r5c_tree_index(struct r5conf *conf,
+-				      sector_t sect)
++static inline sector_t r5c_index(struct r5conf *conf, sector_t sect)
+ {
+-	sector_t offset;
+-
+-	offset = sector_div(sect, conf->chunk_sectors);
++	sector_div(sect, conf->chunk_sectors);
+ 	return sect;
  }
  
-+/**
-+ * xa_store_empty() - Store this entry in the XArray unless another entry is
-+ * 			already present.
-+ * @xa: XArray.
-+ * @index: Index into array.
-+ * @entry: New entry.
-+ * @gfp: Memory allocation flags.
-+ *
-+ * If you would rather see the existing entry in the array, use xa_cmpxchg().
-+ * This function is for users who don't care what the entry is, only that
-+ * one is present.
-+ *
-+ * Return: -EEXIST if another entry was present, 0 if the store succeeded,
-+ * or another negative errno if a different error happened (eg -ENOMEM).
-+ */
-+static inline int xa_store_empty(struct xarray *xa, unsigned long index,
-+		void *entry, gfp_t gfp)
-+{
-+	void *curr = xa_cmpxchg(xa, index, NULL, entry, gfp);
-+	if (!curr)
-+		return 0;
-+	if (xa_is_err(curr))
-+		return xa_err(curr);
-+	return -EEXIST;
-+}
-+
- #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
- #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
- #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
-@@ -242,9 +270,14 @@ enum xa_ctx {
- void *__xa_erase(struct xarray *, unsigned long index);
- void *___xa_store(struct xarray *, unsigned long index,
- 		void *entry, gfp_t, enum xa_ctx);
-+void *___xa_cmpxchg(struct xarray *, unsigned long index, void *old,
-+		void *entry, gfp_t, enum xa_ctx);
- #define __xa_store(x, i, e, g)		___xa_store(x, i, e, g, XA_CTX_PRC)
- #define __xa_store_bh(x, i, e, g)	___xa_store(x, i, e, g, XA_CTX_BH)
- #define __xa_store_irq(x, i, e, g)	___xa_store(x, i, e, g, XA_CTX_IRQ)
-+#define __xa_cmpxchg(x, i, o, e, g)	___xa_cmpxchg(x, i, o, e, g, XA_CTX_PRC)
-+#define __xa_cmpxchg_bh(x, i, o, e, g)	___xa_cmpxchg(x, i, o, e, g, XA_CTX_BH)
-+#define __xa_cmpxchg_irq(x, i, o, e, g) ___xa_cmpxchg(x, i, o, e, g, XA_CTX_IRQ)
- void __xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
- void __xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
+@@ -2646,10 +2634,6 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 	int i;
+ 	struct r5dev *dev;
+ 	int to_cache = 0;
+-	void **pslot;
+-	sector_t tree_index;
+-	int ret;
+-	uintptr_t refcount;
  
-diff --git a/lib/xarray.c b/lib/xarray.c
-index 64f88ce23392..ef3340471e5c 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -921,6 +921,71 @@ void *___xa_store(struct xarray *xa, unsigned long index, void *entry,
- }
- EXPORT_SYMBOL(___xa_store);
+ 	BUG_ON(!r5c_is_writeback(log));
  
-+/**
-+ * xa_cmpxchg() - Conditionally replace an entry in the XArray.
-+ * @xa: XArray.
-+ * @index: Index into array.
-+ * @old: Old value to test against.
-+ * @entry: New value to place in array.
-+ * @gfp: Allocation flags.
-+ *
-+ * If the entry at @index is the same as @old, replace it with @entry.
-+ * If the return value is equal to @old, then the exchange was successful.
-+ *
-+ * Return: The old value at this index or xa_err() if an error happened.
-+ */
-+void *xa_cmpxchg(struct xarray *xa, unsigned long index,
-+			void *old, void *entry, gfp_t gfp)
-+{
-+	XA_STATE(xas, xa, index);
-+	void *curr;
+@@ -2697,39 +2681,29 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 		}
+ 	}
+ 
+-	/* if the stripe is not counted in big_stripe_tree, add it now */
++	/* if the stripe is not counted in big_stripe, add it now */
+ 	if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
+ 	    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
+-		tree_index = r5c_tree_index(conf, sh->sector);
+-		spin_lock(&log->tree_lock);
+-		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
+-					       tree_index);
+-		if (pslot) {
+-			refcount = (uintptr_t)radix_tree_deref_slot_protected(
+-				pslot, &log->tree_lock) >>
+-				R5C_RADIX_COUNT_SHIFT;
+-			radix_tree_replace_slot(
+-				&log->big_stripe_tree, pslot,
+-				(void *)((refcount + 1) << R5C_RADIX_COUNT_SHIFT));
+-		} else {
+-			/*
+-			 * this radix_tree_insert can fail safely, so no
+-			 * need to call radix_tree_preload()
+-			 */
+-			ret = radix_tree_insert(
+-				&log->big_stripe_tree, tree_index,
+-				(void *)(1 << R5C_RADIX_COUNT_SHIFT));
+-			if (ret) {
+-				spin_unlock(&log->tree_lock);
+-				r5c_make_stripe_write_out(sh);
+-				return -EAGAIN;
+-			}
++		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
++		void *entry;
 +
-+	if (WARN_ON_ONCE(xa_is_internal(entry)))
-+		return XA_ERROR(-EINVAL);
-+
-+	do {
++		/* Caller would rather handle failures than supply GFP flags */
 +		xas_lock(&xas);
-+		curr = xas_create(&xas);
-+		if (curr == old)
-+			xas_store(&xas, entry);
++		entry = xas_create(&xas);
++		if (entry)
++			entry = xa_mk_value(xa_to_value(entry) + 1);
++		else
++			entry = xa_mk_value(1);
++		xas_store(&xas, entry);
 +		xas_unlock(&xas);
-+	} while (xas_nomem(&xas, gfp));
++		if (xas_error(&xas)) {
++			r5c_make_stripe_write_out(sh);
++			return -EAGAIN;
+ 		}
+-		spin_unlock(&log->tree_lock);
+ 
+ 		/*
+ 		 * set STRIPE_R5C_PARTIAL_STRIPE, this shows the stripe is
+-		 * counted in the radix tree
++		 * counted in big_stripe
+ 		 */
+ 		set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
+ 		atomic_inc(&conf->r5c_cached_partial_stripes);
+@@ -2812,9 +2786,6 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 	struct r5l_log *log = conf->log;
+ 	int i;
+ 	int do_wakeup = 0;
+-	sector_t tree_index;
+-	void **pslot;
+-	uintptr_t refcount;
+ 
+ 	if (!log || !test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags))
+ 		return;
+@@ -2852,24 +2823,21 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 	atomic_dec(&log->stripe_in_journal_count);
+ 	r5c_update_log_state(log);
+ 
+-	/* stop counting this stripe in big_stripe_tree */
++	/* stop counting this stripe in big_stripe */
+ 	if (test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) ||
+ 	    test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
+-		tree_index = r5c_tree_index(conf, sh->sector);
+-		spin_lock(&log->tree_lock);
+-		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
+-					       tree_index);
+-		BUG_ON(pslot == NULL);
+-		refcount = (uintptr_t)radix_tree_deref_slot_protected(
+-			pslot, &log->tree_lock) >>
+-			R5C_RADIX_COUNT_SHIFT;
+-		if (refcount == 1)
+-			radix_tree_delete(&log->big_stripe_tree, tree_index);
++		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
++		void *entry;
 +
-+	return xas_result(&xas, curr);
-+}
-+EXPORT_SYMBOL(xa_cmpxchg);
-+
-+/*
-+ * ___xa_cmpxchg() - Store this entry in the XArray.
-+ * @xa: XArray.
-+ * @index: Index into array.
-+ * @entry: New entry.
-+ * @gfp: Allocation flags.
-+ * @lock_type: Lock acquisition type.
-+ *
-+ * Internal implementation detail.
-+ *
-+ * Return: The old entry at this index or xa_err() if an error happened.
-+ */
-+void *___xa_cmpxchg(struct xarray *xa, unsigned long index,
-+			void *old, void *entry, gfp_t gfp, enum xa_ctx ctx)
-+{
-+	XA_STATE(xas, xa, index);
-+	void *curr;
-+
-+	if (WARN_ON_ONCE(xa_is_internal(entry)))
-+		return XA_ERROR(-EINVAL);
-+
-+	do {
-+		curr = xas_create(&xas);
-+		if (curr == old)
-+			xas_store(&xas, entry);
-+	} while (__xas_nomem(&xas, gfp, ctx));
-+
-+	return xas_result(&xas, curr);
-+}
-+EXPORT_SYMBOL(___xa_cmpxchg);
-+
- /**
-  * __xa_set_tag() - Set this tag on this entry while locked.
-  * @xa: XArray.
++		xas_lock(&xas);
++		entry = xas_load(&xas);
++		BUG_ON(!entry);
++		if (entry == xa_mk_value(1))
++			entry = NULL;
+ 		else
+-			radix_tree_replace_slot(
+-				&log->big_stripe_tree, pslot,
+-				(void *)((refcount - 1) << R5C_RADIX_COUNT_SHIFT));
+-		spin_unlock(&log->tree_lock);
++			entry = xa_mk_value(xa_to_value(entry) - 1);
++		xas_store(&xas, entry);
++		xas_unlock(&xas);
+ 	}
+ 
+ 	if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
+@@ -2949,16 +2917,10 @@ int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
+ bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect)
+ {
+ 	struct r5l_log *log = conf->log;
+-	sector_t tree_index;
+-	void *slot;
+ 
+ 	if (!log)
+ 		return false;
+-
+-	WARN_ON_ONCE(!rcu_read_lock_held());
+-	tree_index = r5c_tree_index(conf, sect);
+-	slot = radix_tree_lookup(&log->big_stripe_tree, tree_index);
+-	return slot != NULL;
++	return xa_load(&log->big_stripe, r5c_index(conf, sect)) != NULL;
+ }
+ 
+ static int r5l_load_log(struct r5l_log *log)
+@@ -3112,8 +3074,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	if (!log->meta_pool)
+ 		goto out_mempool;
+ 
+-	spin_lock_init(&log->tree_lock);
+-	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT | __GFP_NOWARN);
++	xa_init(&log->big_stripe);
+ 
+ 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
+ 						 log->rdev->mddev, "reclaim");
 -- 
 2.15.1
 
