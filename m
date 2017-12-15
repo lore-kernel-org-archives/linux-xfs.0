@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52004 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43330 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756582AbdLOWFW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:22 -0500
+        with ESMTP id S1755864AbdLOWFV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:21 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 59/78] dax: Convert lock_slot to XArray
-Date: Fri, 15 Dec 2017 14:04:31 -0800
-Message-Id: <20171215220450.7899-60-willy@infradead.org>
+Subject: [PATCH v5 25/78] page cache: Add page_cache_range_empty function
+Date: Fri, 15 Dec 2017 14:03:57 -0800
+Message-Id: <20171215220450.7899-26-willy@infradead.org>
 In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,103 +17,166 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.in
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+btrfs has its own custom function for determining whether the page cache
+has any pages in a particular range.  Move this functionality to the
+page cache, and call it from btrfs.
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ fs/btrfs/btrfs_inode.h  |  7 ++++-
+ fs/btrfs/inode.c        | 70 -------------------------------------------------
+ include/linux/pagemap.h |  2 ++
+ mm/filemap.c            | 26 ++++++++++++++++++
+ 4 files changed, 34 insertions(+), 71 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index dd4674ce48f5..46a4d83b1b46 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -188,12 +188,11 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
- /*
-  * Mark the given slot as locked.  Must be called with xa_lock held.
-  */
--static inline void *lock_slot(struct address_space *mapping, void **slot)
-+static inline void *lock_slot(struct xa_state *xas)
- {
--	unsigned long v = xa_to_value(
--		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
-+	unsigned long v = xa_to_value(xas_load(xas));
- 	void *entry = xa_mk_value(v | DAX_ENTRY_LOCK);
--	radix_tree_replace_slot(&mapping->pages, slot, entry);
-+	xas_store(xas, entry);
- 	return entry;
+diff --git a/fs/btrfs/btrfs_inode.h b/fs/btrfs/btrfs_inode.h
+index 63f0ccc92a71..a48bd6e0a0bb 100644
+--- a/fs/btrfs/btrfs_inode.h
++++ b/fs/btrfs/btrfs_inode.h
+@@ -365,6 +365,11 @@ static inline void btrfs_print_data_csum_error(struct btrfs_inode *inode,
+ 			logical_start, csum, csum_expected, mirror_num);
  }
  
-@@ -244,7 +243,7 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
+-bool btrfs_page_exists_in_range(struct inode *inode, loff_t start, loff_t end);
++static inline bool btrfs_page_exists_in_range(struct inode *inode,
++						loff_t start, loff_t end)
++{
++	return page_cache_range_empty(inode->i_mapping, start >> PAGE_SHIFT,
++							end >> PAGE_SHIFT);
++}
  
- 	xas_lock_irq(&xas);
- 	entry = xas_load(&xas);
--	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) || !dax_locked(entry))) {
-+	if (WARN_ON_ONCE(!xa_is_value(entry) || !dax_locked(entry))) {
- 		xas_unlock_irq(&xas);
- 		return;
- 	}
-@@ -303,6 +302,7 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
- static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		unsigned long size_flag)
+ #endif
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index dbdb5bf6bca1..d7d2c556d5a2 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -7541,76 +7541,6 @@ noinline int can_nocow_extent(struct inode *inode, u64 offset, u64 *len,
+ 	return ret;
+ }
+ 
+-bool btrfs_page_exists_in_range(struct inode *inode, loff_t start, loff_t end)
+-{
+-	struct radix_tree_root *root = &inode->i_mapping->pages;
+-	bool found = false;
+-	void **pagep = NULL;
+-	struct page *page = NULL;
+-	unsigned long start_idx;
+-	unsigned long end_idx;
+-
+-	start_idx = start >> PAGE_SHIFT;
+-
+-	/*
+-	 * end is the last byte in the last page.  end == start is legal
+-	 */
+-	end_idx = end >> PAGE_SHIFT;
+-
+-	rcu_read_lock();
+-
+-	/* Most of the code in this while loop is lifted from
+-	 * find_get_page.  It's been modified to begin searching from a
+-	 * page and return just the first page found in that range.  If the
+-	 * found idx is less than or equal to the end idx then we know that
+-	 * a page exists.  If no pages are found or if those pages are
+-	 * outside of the range then we're fine (yay!) */
+-	while (page == NULL &&
+-	       radix_tree_gang_lookup_slot(root, &pagep, NULL, start_idx, 1)) {
+-		page = radix_tree_deref_slot(pagep);
+-		if (unlikely(!page))
+-			break;
+-
+-		if (radix_tree_exception(page)) {
+-			if (radix_tree_deref_retry(page)) {
+-				page = NULL;
+-				continue;
+-			}
+-			/*
+-			 * Otherwise, shmem/tmpfs must be storing a swap entry
+-			 * here so return it without attempting to raise page
+-			 * count.
+-			 */
+-			page = NULL;
+-			break; /* TODO: Is this relevant for this use case? */
+-		}
+-
+-		if (!page_cache_get_speculative(page)) {
+-			page = NULL;
+-			continue;
+-		}
+-
+-		/*
+-		 * Has the page moved?
+-		 * This is part of the lockless pagecache protocol. See
+-		 * include/linux/pagemap.h for details.
+-		 */
+-		if (unlikely(page != *pagep)) {
+-			put_page(page);
+-			page = NULL;
+-		}
+-	}
+-
+-	if (page) {
+-		if (page->index <= end_idx)
+-			found = true;
+-		put_page(page);
+-	}
+-
+-	rcu_read_unlock();
+-	return found;
+-}
+-
+ static int lock_extent_direct(struct inode *inode, u64 lockstart, u64 lockend,
+ 			      struct extent_state **cached_state, int writing)
  {
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 0db127c3ccac..34d4fa3ad1c5 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -245,6 +245,8 @@ pgoff_t page_cache_next_gap(struct address_space *mapping,
+ 			     pgoff_t index, unsigned long max_scan);
+ pgoff_t page_cache_prev_gap(struct address_space *mapping,
+ 			     pgoff_t index, unsigned long max_scan);
++bool page_cache_range_empty(struct address_space *mapping,
++				pgoff_t index, pgoff_t max);
+ 
+ #define FGP_ACCESSED		0x00000001
+ #define FGP_LOCK		0x00000002
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 146e8ec16ec0..f1b4480723dd 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1398,6 +1398,32 @@ pgoff_t page_cache_prev_gap(struct address_space *mapping,
+ }
+ EXPORT_SYMBOL(page_cache_prev_gap);
+ 
++bool page_cache_range_empty(struct address_space *mapping, pgoff_t index,
++				pgoff_t max)
++{
++	struct page *page;
 +	XA_STATE(xas, &mapping->pages, index);
- 	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
- 	void *entry, **slot;
- 
-@@ -341,7 +341,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 			 * Make sure 'entry' remains valid while we drop
- 			 * xa_lock.
- 			 */
--			entry = lock_slot(mapping, slot);
-+			entry = lock_slot(&xas);
- 		}
- 
- 		xa_unlock_irq(&mapping->pages);
-@@ -408,7 +408,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		xa_unlock_irq(&mapping->pages);
- 		return entry;
- 	}
--	entry = lock_slot(mapping, slot);
-+	entry = lock_slot(&xas);
-  out_unlock:
- 	xa_unlock_irq(&mapping->pages);
- 	return entry;
-@@ -640,6 +640,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 		pgoff_t index, void *entry)
- {
- 	struct radix_tree_root *pages = &mapping->pages;
-+	XA_STATE(xas, pages, index);
- 	void *entry2, **slot, *kaddr;
- 	long ret = 0, id;
- 	sector_t sector;
-@@ -676,7 +677,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	if (!radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE))
- 		goto put_unlocked;
- 	/* Lock the entry to serialize with page faults */
--	entry = lock_slot(mapping, slot);
-+	entry = lock_slot(&xas);
- 	/*
- 	 * We can clear the tag now but we have to be careful so that concurrent
- 	 * dax_writeback_one() calls for the same index cannot finish before we
-@@ -1501,8 +1502,9 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
- 				  pfn_t pfn)
- {
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
--	void *entry, **slot;
- 	pgoff_t index = vmf->pgoff;
-+	XA_STATE(xas, &mapping->pages, index);
-+	void *entry, **slot;
- 	int vmf_ret, error;
- 
- 	xa_lock_irq(&mapping->pages);
-@@ -1518,7 +1520,7 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
- 		return VM_FAULT_NOPAGE;
- 	}
- 	radix_tree_tag_set(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
--	entry = lock_slot(mapping, slot);
-+	entry = lock_slot(&xas);
- 	xa_unlock_irq(&mapping->pages);
- 	switch (pe_size) {
- 	case PE_SIZE_PTE:
++
++	rcu_read_lock();
++	do {
++		page = xas_find(&xas, max);
++		if (xas_retry(&xas, page))
++			continue;
++		/* Shadow entries don't count */
++		if (xa_is_value(page))
++			continue;
++		/*
++		 * We don't need to try to pin this page; we're about to
++		 * release the RCU lock anyway.  It is enough to know that
++		 * there was a page here recently.
++		 */
++	} while (0);
++	rcu_read_unlock();
++
++	return page != NULL;
++}
++EXPORT_SYMBOL_GPL(page_cache_range_empty);
++
+ /**
+  * find_get_entry - find and get a page cache entry
+  * @mapping: the address_space to search
 -- 
 2.15.1
 
