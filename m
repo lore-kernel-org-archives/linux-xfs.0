@@ -1,26 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55044 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755406AbdLORQl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 12:16:41 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBFHGeSA177760
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:16:40 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2evje0r2fy-1
+Received: from aserp2130.oracle.com ([141.146.126.79]:49896 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755504AbdLORVf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 12:21:35 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBFHKaAJ177663
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:21:34 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2evjq7807j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:16:40 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBE3o014552
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:21:34 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBXdX023968
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:15 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBEce029517
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:14 GMT
-Subject: [PATCH 0/4] xfs: more reflink fixes
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:33 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBFHBW2O000571
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2017 17:11:33 GMT
+Subject: [PATCH 3/4] xfs: remove leftover CoW reservations when remounting ro
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 15 Dec 2017 09:11:07 -0800
-Message-ID: <151335786780.26575.15542999972223359181.stgit@magnolia>
+Date: Fri, 15 Dec 2017 09:11:31 -0800
+Message-ID: <151335789173.26575.16460983789473064032.stgit@magnolia>
+In-Reply-To: <151335786780.26575.15542999972223359181.stgit@magnolia>
+References: <151335786780.26575.15542999972223359181.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -30,34 +32,39 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here are more reflink fixes that I've accumulated over the past week.
-I added CLONERANGE support to fsstress and reran xfstests, which very
-rapidly found problems.  This series fixes a number of problems dug up
-by xfs/017.
+When we're remounting the filesystem readonly, remove all CoW
+preallocations prior to going ro.  If the fs goes down after the ro
+remount, we never clean up the staging extents, which means xfs_check
+will trip over them on a subsequent run.  Practically speaking, the
+next mount will clean them up too, so this is unlikely to be seen.
 
-The first two patches disentangle a mess between the incore inode radix
-tree tags and the corresponding inode flags.  We use the inode eofblocks
-flags as a proxy for whether or not the same eofblocks tag is set for
-the radix tree, which means that we can't use that single iflag to
-represent the cowblocks radix tree tag, so give the cowblocks tag a
-corresponding inode flag.  This fixes a bug where the cowblocks tag
-silently isn't set if the inode already had the eofblocks tag set.
+Found by adding clonerange to fsstress and running xfs/017.
 
-The second patch then fixes the clearing of the cow tag & reflink flag
-when truncating the file -- we only want to clear the reflink flag if
-both data & cow forks are empty, and we can only clear the cow tag if
-the cow fork is totally empty; i_cnextents only tracks real extents.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_super.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-The third patch flushes all the cow reservations when we remount the
-filesystem ro, to put the fs in a clean quiesced state (i.e. no orphaned
-cow staging extents) so that we can reduce mount times later.
 
-The fourth patch sets the cow tag when we do direct allocations into the
-cow fork so that any hint-aligned remnants are cleaned out at remount-ro
-time.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f663022..7b6d150 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1369,6 +1369,14 @@ xfs_fs_remount(
+ 
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
++		/* Get rid of any leftover CoW reservations... */
++		cancel_delayed_work_sync(&mp->m_cowblocks_work);
++		error = xfs_icache_free_cowblocks(mp, NULL);
++		if (error) {
++			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++			return error;
++		}
++
+ 		/* Free the per-AG metadata reservation pool. */
+ 		error = xfs_fs_unreserve_ag_blocks(mp);
+ 		if (error) {
 
-These patches apply directly to the end of 'xfs: reflink fixes'.
-
---D
