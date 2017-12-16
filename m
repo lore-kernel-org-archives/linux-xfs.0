@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42382 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42238 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757038AbdLPNre (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:34 -0500
+        id S1757008AbdLPNrb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:31 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 14/19] xfs: convert to new i_version API
-Date: Sat, 16 Dec 2017 08:46:51 -0500
-Message-Id: <20171216134656.15561-15-jlayton@kernel.org>
+Subject: [PATCH v2 13/19] ufs: use new i_version API
+Date: Sat, 16 Dec 2017 08:46:50 -0500
+Message-Id: <20171216134656.15561-14-jlayton@kernel.org>
 In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
 References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -19,96 +19,70 @@ From: Jeff Layton <jlayton@redhat.com>
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c | 5 +++--
- fs/xfs/xfs_icache.c           | 4 ++--
- fs/xfs/xfs_inode.c            | 2 +-
- fs/xfs/xfs_inode_item.c       | 2 +-
- fs/xfs/xfs_trans_inode.c      | 2 +-
- 5 files changed, 8 insertions(+), 7 deletions(-)
+ fs/ufs/dir.c   | 8 ++++----
+ fs/ufs/inode.c | 2 +-
+ fs/ufs/super.c | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 6b7989038d75..207db10d78d5 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -264,7 +264,8 @@ xfs_inode_from_disk(
- 	to->di_flags	= be16_to_cpu(from->di_flags);
+diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
+index 2edc1755b7c5..547c4d4c4db8 100644
+--- a/fs/ufs/dir.c
++++ b/fs/ufs/dir.c
+@@ -47,7 +47,7 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 	struct inode *dir = mapping->host;
+ 	int err = 0;
  
- 	if (to->di_version == 3) {
--		inode->i_version = be64_to_cpu(from->di_changecount);
-+		inode_set_iversion_queried(inode,
-+					   be64_to_cpu(from->di_changecount));
- 		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
- 		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
- 		to->di_flags2 = be64_to_cpu(from->di_flags2);
-@@ -314,7 +315,7 @@ xfs_inode_to_disk(
- 	to->di_flags = cpu_to_be16(from->di_flags);
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 	block_write_end(NULL, mapping, pos, len, len, page, NULL);
+ 	if (pos+len > dir->i_size) {
+ 		i_size_write(dir, pos+len);
+@@ -428,7 +428,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+ 	unsigned long n = pos >> PAGE_SHIFT;
+ 	unsigned long npages = dir_pages(inode);
+ 	unsigned chunk_mask = ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
+-	int need_revalidate = file->f_version != inode->i_version;
++	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
+ 	unsigned flags = UFS_SB(sb)->s_flags;
  
- 	if (from->di_version == 3) {
--		to->di_changecount = cpu_to_be64(inode->i_version);
-+		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
- 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
- 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 43005fbe8b1e..11ac85a75dc2 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -293,14 +293,14 @@ xfs_reinit_inode(
- 	int		error;
- 	uint32_t	nlink = inode->i_nlink;
- 	uint32_t	generation = inode->i_generation;
--	uint64_t	version = inode->i_version;
-+	uint64_t	version = inode_peek_iversion(inode);
- 	umode_t		mode = inode->i_mode;
+ 	UFSD("BEGIN\n");
+@@ -455,8 +455,8 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+ 				offset = ufs_validate_entry(sb, kaddr, offset, chunk_mask);
+ 				ctx->pos = (n<<PAGE_SHIFT) + offset;
+ 			}
+-			file->f_version = inode->i_version;
+-			need_revalidate = 0;
++			file->f_version = inode_query_iversion(inode);
++			need_revalidate = false;
+ 		}
+ 		de = (struct ufs_dir_entry *)(kaddr+offset);
+ 		limit = kaddr + ufs_last_byte(inode, n) - UFS_DIR_REC_LEN(1);
+diff --git a/fs/ufs/inode.c b/fs/ufs/inode.c
+index afb601c0dda0..58cb6dfb116d 100644
+--- a/fs/ufs/inode.c
++++ b/fs/ufs/inode.c
+@@ -693,7 +693,7 @@ struct inode *ufs_iget(struct super_block *sb, unsigned long ino)
+ 	if (err)
+ 		goto bad_inode;
  
- 	error = inode_init_always(mp->m_super, inode);
+-	inode->i_version++;
++	inode_inc_iversion(inode);
+ 	ufsi->i_lastfrag =
+ 		(inode->i_size + uspi->s_fsize - 1) >> uspi->s_fshift;
+ 	ufsi->i_dir_start_lookup = 0;
+diff --git a/fs/ufs/super.c b/fs/ufs/super.c
+index 4d497e9c6883..7dee0b07a571 100644
+--- a/fs/ufs/super.c
++++ b/fs/ufs/super.c
+@@ -1440,7 +1440,7 @@ static struct inode *ufs_alloc_inode(struct super_block *sb)
+ 	if (!ei)
+ 		return NULL;
  
- 	set_nlink(inode, nlink);
- 	inode->i_generation = generation;
--	inode->i_version = version;
-+	inode_set_iversion_queried(inode, version);
- 	inode->i_mode = mode;
- 	return error;
- }
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 801274126648..be6d87980dd5 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -833,7 +833,7 @@ xfs_ialloc(
- 	ip->i_d.di_flags = 0;
- 
- 	if (ip->i_d.di_version == 3) {
--		inode->i_version = 1;
-+		inode_set_iversion(inode, 1);
- 		ip->i_d.di_flags2 = 0;
- 		ip->i_d.di_cowextsize = 0;
- 		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 6ee5c3bf19ad..2ca02e7b3966 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -354,7 +354,7 @@ xfs_inode_to_log_dinode(
- 	to->di_next_unlinked = NULLAGINO;
- 
- 	if (from->di_version == 3) {
--		to->di_changecount = inode->i_version;
-+		to->di_changecount = inode_peek_iversion(inode);
- 		to->di_crtime.t_sec = from->di_crtime.t_sec;
- 		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
- 		to->di_flags2 = from->di_flags2;
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index daa7615497f9..b41a92d18140 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -117,7 +117,7 @@ xfs_trans_log_inode(
- 	 */
- 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
- 	    IS_I_VERSION(VFS_I(ip))) {
--		VFS_I(ip)->i_version++;
-+		inode_inc_iversion(VFS_I(ip));
- 		flags |= XFS_ILOG_CORE;
- 	}
- 
+-	ei->vfs_inode.i_version = 1;
++	inode_set_iversion(&ei->vfs_inode, 1);
+ 	seqlock_init(&ei->meta_lock);
+ 	mutex_init(&ei->truncate_mutex);
+ 	return &ei->vfs_inode;
 -- 
 2.14.3
 
