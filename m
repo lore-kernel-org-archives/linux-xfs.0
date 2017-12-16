@@ -1,100 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55872 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756368AbdLPQkY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 11:40:24 -0500
-Message-ID: <1513442419.3428.13.camel@kernel.org>
-Subject: Re: [PATCH v2 05/19] afs: convert to new i_version API
-From: Jeff Layton <jlayton@kernel.org>
-Date: Sat, 16 Dec 2017 11:40:19 -0500
-In-Reply-To: <82157aa3-ec0b-25e6-517b-704a3f81ec61@auristor.com>
-References: <20171216134656.15561-1-jlayton@kernel.org>
-         <20171216134656.15561-6-jlayton@kernel.org>
-         <1513432186.3428.6.camel@kernel.org>
-         <82157aa3-ec0b-25e6-517b-704a3f81ec61@auristor.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from shells.gnugeneration.com ([66.240.222.126]:56192 "EHLO
+        shells.gnugeneration.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757203AbdLPSBl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Dec 2017 13:01:41 -0500
+Date: Sat, 16 Dec 2017 10:03:38 -0800
+From: vcaputo@pengaru.com
+Subject: Re: Detecting RWF_NOWAIT support
+Message-ID: <20171216180338.w3aujakzh4frepko@shells.gnugeneration.com>
+References: <b45afd09-5fa8-74ac-4ba4-9dc9074e30cf@scylladb.com>
+ <4ae3426d-8104-c243-72e4-671e89401b23@suse.de>
+ <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeffrey Altman <jaltman@auristor.com>, linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com
+To: Avi Kivity <avi@scylladb.com>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Sat, 2017-12-16 at 11:18 -0500, Jeffrey Altman wrote:
-> Hi Jeff,
+On Sat, Dec 16, 2017 at 04:49:08PM +0200, Avi Kivity wrote:
 > 
-> A few thoughts on AFS usage below which might impact a future revision
-> of the API.  I hope they are useful.
 > 
-> On 12/16/2017 8:49 AM, Jeff Layton wrote:
-> > On Sat, 2017-12-16 at 08:46 -0500, Jeff Layton wrote:
-> > > From: Jeff Layton <jlayton@redhat.com>
+> On 12/14/2017 09:15 PM, Goldwyn Rodrigues wrote:
+> > 
+> > On 12/14/2017 11:38 AM, Avi Kivity wrote:
+> > > I'm looking to add support for RWF_NOWAIT within a linux-aio iocb.
+> > > Naturally, I need to detect at runtime whether the kernel support
+> > > RWF_NOWAIT or not.
 > > > 
-> > > For AFS, it's generally treated as an opaque value, so we use the
-> > > *_raw variants of the API here.
 > > > 
-> > > Note that AFS has quite a different definition for this counter. AFS
-> > > only increments it on changes to the data, not for the metadata. We'll
-> > > need to reconcile that somehow if we ever want to present this to
-> > > userspace via statx.
+> > > The only method I could find was to issue an I/O with RWF_NOWAIT set,
+> > > and look for errors. This is somewhat less than perfect:
 > > > 
+> > >   - from the error, I can't tell whether RWF_NOWAIT was the problem, or
+> > > something else. If I enable a number of new features, I have to run
+> > > through all combinations to figure out which ones are supported and
+> > > which are not.
+> > Here is the return codes for RWF_NOWAIT
+> > EINVAL - not supported (older kernel)
+> > EOPNOTSUPP - not supported
+> > EAGAIN - supported but could not complete because I/O will be delayed
 > 
-> From the patch series notes:
+> Which of these are returned from io_submit() and which are returned in the
+> iocb?
 > 
-> "The inode->i_version field is supposed to be a value that changes
-> whenever there is any data or metadata change to the inode. Some
-> filesystems use it internally to detect directory changes during
-> readdir. knfsd will use it if the filesystem has MS_I_VERSION set. IMA
-> will also use it to optimize away some remeasurement if it's available.
-> NFS and AFS just use it to store an opaque change attribute from the
-> server.
+> > 0 - supported and I/O completed (success).
+> > 
+> > >   - RWF_NOWAIT support is per-filesystem, so I can't just remember not to
+> > > enable RWF_NOWAIT globally, I have to track it per file.
+> > Yes, the support is per filesystem. So, the application must know if the
+> > filesystem supports it, possibly by performing a small I/O.
 > 
-> "Only btrfs, ext4, and xfs increment it for data changes. Because of
-> this, these filesystems must log the inode to disk whenever the
-> i_version counter changes. That has a non-zero performance impact,
-> especially on write-heavy workloads, because we end up dirtying the
-> inode metadata on every write, not just when the times change. [1]"
-> 
-> 
-> The AFS/AuriStorFS data version is an unsigned 64-bit value that is
-> incremented by the file server as part of a data changing operation. For
-> files, a StoreData and for directories entry manipulations such as
-> create, rename, delete.  This data version is used to tag the version of
-> any subset of the data stream for caching and replication purposes.
-> 
-> As Jeff notes, the AFS data version is not incremented for metadata
-> changes.  Metadata cannot be trusted by clients without acquiring a
-> callback promise from a fileserver.  The callback promise will either be
-> satisfied by the issuing fileserver sending a CallBack notification that
-> the metadata is no longer valid OR the callback promise will expire.
-> 
-> Something else that is important to note that it is assumed that local
-> data changes that occur under a valid callback promise is newer than the
-> data on the fileserver.  It might be useful if the new i_version API
-> supported major and minor version numbers.  AFS implementations would
-> store the fileserver provided data version number as the major version
-> and would increment the minor version when local changes have been made
-> which have yet to be stored back to the fileserver.  This functionality
-> would be especially useful if disconnected operations were implemented
-> for the AFS implementation.
-> 
-> It might also be useful to separate metadata version and data version
-> although some filesystems would set the same value to both.  For AFS,
-> the metadata major version would the timestamp at which the callback was
-> issued.
-> 
-> Jeffrey Altman
+> So the application must know about filesystem mount points, and be prepared
+> to create a file and try to write it (in case the filesystem is empty) or
+> alter its behavior during runtime depending on the errors it sees.
 
-Thanks. That seems like rather specialized use case.
+Can't the application simply add a "nowait" flag to its open file
+descriptor encapsulation struct, then in the constructor perform a
+zero-length RWF_NOWAIT write immediately after opening the fd to set the
+flag?  Then all writes branch according to the flag.
 
-If we did want to go that route, we'd probably need to give filesystems
-a way to overload how i_version is handled and queried (maybe some new
-inode ops?).
+According to write(2):
 
-Given that nothing ever looks at the the i_version in kAFS now, I don't
-have a lot of incentive to do anything along those lines in this set. I
-think this patchset will probably make it simpler to do something like
-that in the future, if you were motivated to do so though.
--- 
-Jeff Layton <jlayton@kernel.org>
+       If  count is zero and fd refers to a regular file, then write()
+       may return a failure status if one of the errors below is
+       detected.  If no errors are detected,  or error detection is not
+       performed, 0 will be returned without causing any other effect.
+       If count is zero and fd refers to a file  other than a regular
+       file, the results are not specified.
+
+So the zero-length RWF_NOWAIT write should return zero, unless it's not
+supported.
+
+Regards,
+Vito Caputo
