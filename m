@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42522 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42490 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757079AbdLPNrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:43 -0500
+        id S1757074AbdLPNrl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:41 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 18/19] btrfs: only dirty the inode in btrfs_update_time if something was changed
-Date: Sat, 16 Dec 2017 08:46:55 -0500
-Message-Id: <20171216134656.15561-19-jlayton@kernel.org>
+Subject: [PATCH v2 17/19] xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need incrementing
+Date: Sat, 16 Dec 2017 08:46:54 -0500
+Message-Id: <20171216134656.15561-18-jlayton@kernel.org>
 In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
 References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,43 +17,41 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
-At this point, we know that "now" and the file times may differ, and we
-suspect that the i_version has been flagged to be bumped. Attempt to
-bump the i_version, and only mark the inode dirty if that actually
-occurred or if one of the times was updated.
+If XFS_ILOG_CORE is already set then go ahead and increment it.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/btrfs/inode.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_trans_inode.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 1dfa299a31a9..5d1956ad6d39 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -6106,19 +6106,20 @@ static int btrfs_update_time(struct inode *inode, struct timespec *now,
- 			     int flags)
- {
- 	struct btrfs_root *root = BTRFS_I(inode)->root;
-+	bool dirty = flags & ~S_VERSION;
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index b41a92d18140..18635c5b5dc6 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -110,15 +110,17 @@ xfs_trans_log_inode(
  
- 	if (btrfs_root_readonly(root))
- 		return -EROFS;
+ 	/*
+ 	 * First time we log the inode in a transaction, bump the inode change
+-	 * counter if it is configured for this to occur. We don't use
+-	 * inode_inc_version() because there is no need for extra locking around
+-	 * i_version as we already hold the inode locked exclusively for
+-	 * metadata modification.
++	 * counter if it is configured for this to occur. While we have the
++	 * inode locked exclusively for metadata modification, we can usually
++	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
++	 * the last time it was incremented. If we have XFS_ILOG_CORE already
++	 * set however, then go ahead and bump the i_version counter
++	 * unconditionally.
+ 	 */
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		inode_inc_iversion(VFS_I(ip));
+-		flags |= XFS_ILOG_CORE;
++		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
++			flags |= XFS_ILOG_CORE;
+ 	}
  
- 	if (flags & S_VERSION)
--		inode_inc_iversion(inode);
-+		dirty |= inode_maybe_inc_iversion(inode, dirty);
- 	if (flags & S_CTIME)
- 		inode->i_ctime = *now;
- 	if (flags & S_MTIME)
- 		inode->i_mtime = *now;
- 	if (flags & S_ATIME)
- 		inode->i_atime = *now;
--	return btrfs_dirty_inode(inode);
-+	return dirty ? btrfs_dirty_inode(inode) : 0;
- }
- 
- /*
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
 -- 
 2.14.3
 
