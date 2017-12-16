@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41878 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:41802 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756833AbdLPNrK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:10 -0500
+        id S1756814AbdLPNrF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:05 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 04/19] affs: convert to new i_version API
-Date: Sat, 16 Dec 2017 08:46:41 -0500
-Message-Id: <20171216134656.15561-5-jlayton@kernel.org>
+Subject: [PATCH v2 02/19] fs: don't take the i_lock in inode_inc_iversion
+Date: Sat, 16 Dec 2017 08:46:39 -0500
+Message-Id: <20171216134656.15561-3-jlayton@kernel.org>
 In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
 References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,70 +17,47 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
+The rationale for taking the i_lock when incrementing this value is
+lost in antiquity. The readers of the field don't take it (at least
+not universally), so my assumption is that it was only done here to
+serialize incrementors.
+
+If that is indeed the case, then we can drop the i_lock from this
+codepath and treat it as a atomic64_t for the purposes of
+incrementing it. This allows us to use inode_inc_iversion without
+any danger of lock inversion.
+
+Note that the read side is not fetched atomically with this change.
+The assumption here is that that is not a critical issue since the
+i_version is not fully synchronized with anything else anyway.
+
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/affs/amigaffs.c | 4 ++--
- fs/affs/dir.c      | 4 ++--
- fs/affs/super.c    | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ include/linux/fs.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
-index 0f0e6925e97d..085a93bea1e2 100644
---- a/fs/affs/amigaffs.c
-+++ b/fs/affs/amigaffs.c
-@@ -60,7 +60,7 @@ affs_insert_hash(struct inode *dir, struct buffer_head *bh)
- 	affs_brelse(dir_bh);
+I'm not dead-set on this patch, but I was a little leery of adding
+the i_lock into all of the places that do inode->i_version++ today,
+even as an interim step. We can probably drop this patch if it's too
+ugly to live...
+
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 5001e77342fd..c234fac4bb77 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2136,9 +2136,9 @@ inode_set_iversion_queried(struct inode *inode, const u64 new)
+ static inline bool
+ inode_maybe_inc_iversion(struct inode *inode, bool force)
+ {
+-	spin_lock(&inode->i_lock);
+-	inode->i_version++;
+-	spin_unlock(&inode->i_lock);
++	atomic64_t *ivp = (atomic64_t *)&inode->i_version;
++
++	atomic64_inc(ivp);
+ 	return true;
+ }
  
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	mark_inode_dirty(dir);
- 
- 	return 0;
-@@ -114,7 +114,7 @@ affs_remove_hash(struct inode *dir, struct buffer_head *rem_bh)
- 	affs_brelse(bh);
- 
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	mark_inode_dirty(dir);
- 
- 	return retval;
-diff --git a/fs/affs/dir.c b/fs/affs/dir.c
-index a105e77df2c1..1a8c7b067c44 100644
---- a/fs/affs/dir.c
-+++ b/fs/affs/dir.c
-@@ -80,7 +80,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 	 * we can jump directly to where we left off.
- 	 */
- 	ino = (u32)(long)file->private_data;
--	if (ino && file->f_version == inode->i_version) {
-+	if (ino && inode_cmp_iversion(inode, file->f_version) == 0) {
- 		pr_debug("readdir() left off=%d\n", ino);
- 		goto inside;
- 	}
-@@ -130,7 +130,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 		} while (ino);
- 	}
- done:
--	file->f_version = inode->i_version;
-+	file->f_version = inode_query_iversion(inode);
- 	file->private_data = (void *)(long)ino;
- 	affs_brelse(fh_bh);
- 
-diff --git a/fs/affs/super.c b/fs/affs/super.c
-index 1117e36134cc..70596d4084de 100644
---- a/fs/affs/super.c
-+++ b/fs/affs/super.c
-@@ -102,7 +102,7 @@ static struct inode *affs_alloc_inode(struct super_block *sb)
- 	if (!i)
- 		return NULL;
- 
--	i->vfs_inode.i_version = 1;
-+	inode_set_iversion(&i->vfs_inode, 1);
- 	i->i_lc = NULL;
- 	i->i_ext_bh = NULL;
- 	i->i_pa_cnt = 0;
 -- 
 2.14.3
 
