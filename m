@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41838 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:41764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754229AbdLPNrH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:07 -0500
+        id S1756394AbdLPNrD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:03 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 03/19] fat: convert to new i_version API
-Date: Sat, 16 Dec 2017 08:46:40 -0500
-Message-Id: <20171216134656.15561-4-jlayton@kernel.org>
+Subject: [PATCH v2 01/19] fs: new API for handling inode->i_version
+Date: Sat, 16 Dec 2017 08:46:38 -0500
+Message-Id: <20171216134656.15561-2-jlayton@kernel.org>
 In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
 References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,192 +17,240 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
+Add a documentation blob that explains what the i_version field is, how
+it is expected to work, and how it is currently implemented by various
+filesystems.
+
+We already have inode_inc_iversion. Add several other functions for
+manipulating and accessing the i_version counter. For now, the
+implementation is trivial and basically works the way that all of the
+open-coded i_version accesses work today.
+
+Future patches will convert existing users of i_version to use the new
+API, and then convert the backend implementation to do things more
+efficiently.
+
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/fat/dir.c         |  2 +-
- fs/fat/inode.c       |  8 ++++----
- fs/fat/namei_msdos.c |  6 +++---
- fs/fat/namei_vfat.c  | 20 ++++++++++----------
- 4 files changed, 18 insertions(+), 18 deletions(-)
+ include/linux/fs.h | 200 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 192 insertions(+), 8 deletions(-)
 
-diff --git a/fs/fat/dir.c b/fs/fat/dir.c
-index b833ffeee1e1..221d85529c5f 100644
---- a/fs/fat/dir.c
-+++ b/fs/fat/dir.c
-@@ -1055,7 +1055,7 @@ int fat_remove_entries(struct inode *dir, struct fat_slot_info *sinfo)
- 	brelse(bh);
- 	if (err)
- 		return err;
--	dir->i_version++;
-+	inode_inc_iversion(dir);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 511fbaabf624..5001e77342fd 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2036,19 +2036,203 @@ static inline void inode_dec_link_count(struct inode *inode)
+ 	mark_inode_dirty(inode);
+ }
  
- 	if (nr_slots) {
- 		/*
-diff --git a/fs/fat/inode.c b/fs/fat/inode.c
-index 20a0a89eaca5..a444336c1eed 100644
---- a/fs/fat/inode.c
-+++ b/fs/fat/inode.c
-@@ -507,7 +507,7 @@ int fat_fill_inode(struct inode *inode, struct msdos_dir_entry *de)
- 	MSDOS_I(inode)->i_pos = 0;
- 	inode->i_uid = sbi->options.fs_uid;
- 	inode->i_gid = sbi->options.fs_gid;
--	inode->i_version++;
-+	inode_inc_iversion(inode);
- 	inode->i_generation = get_seconds();
++/*
++ * The change attribute (i_version) is mandated by NFSv4 and is mostly for
++ * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
++ * appear different to observers if there was a change to the inode's data or
++ * metadata since it was last queried.
++ *
++ * It should be considered an opaque value by observers. If it remains the same
++ * since it was last checked, then nothing has changed in the inode. If it's
++ * different then something has changed. Observers cannot infer anything about
++ * the nature or magnitude of the changes from the value, only that the inode
++ * has changed in some fashion.
++ *
++ * Not all filesystems properly implement the i_version counter. Subsystems that
++ * want to use i_version field on an inode should first check whether the
++ * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION macro).
++ *
++ * Those that set SB_I_VERSION will automatically have their i_version counter
++ * incremented on writes to normal files. If the SB_I_VERSION is not set, then
++ * the VFS will not touch it on writes, and the filesystem can use it how it
++ * wishes. Note that the filesystem is always responsible for updating the
++ * i_version on namespace changes in directories (mkdir, rmdir, unlink, etc.).
++ * We consider these sorts of filesystems to have a kernel-managed i_version.
++ *
++ * Note that some filesystems (e.g. NFS and AFS) just use the field to store
++ * a server-provided value (for the most part). For that reason, those
++ * filesystems do not set SB_I_VERSION. These filesystems are considered to
++ * have a self-managed i_version.
++ */
++
++/**
++ * inode_set_iversion_raw - set i_version to the specified raw value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for use by
++ * filesystems that self-manage the i_version.
++ *
++ * For example, the NFS client stores its NFSv4 change attribute in this way,
++ * and the AFS client stores the data_version from the server here.
++ */
++static inline void
++inode_set_iversion_raw(struct inode *inode, const u64 new)
++{
++	inode->i_version = new;
++}
++
++/**
++ * inode_set_iversion - set i_version to a particular value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for filesystems with
++ * a kernel-managed i_version.
++ *
++ * For now, this just does the same thing as the _raw variant.
++ */
++static inline void
++inode_set_iversion(struct inode *inode, const u64 new)
++{
++	inode_set_iversion_raw(inode, new);
++}
++
++/**
++ * inode_set_iversion_queried - set i_version to a particular value and set
++ *                              flag to indicate that it has been viewed
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * When loading in an i_version value from a backing store, we typically don't
++ * know whether it was previously viewed before being stored or not. Thus, we
++ * must assume that it was, to ensure that any changes will result in the
++ * value changing.
++ *
++ * This function will set the inode's i_version, and possibly flag the value
++ * as if it has already been viewed at least once.
++ *
++ * For now, this just does what inode_set_iversion does.
++ */
++static inline void
++inode_set_iversion_queried(struct inode *inode, const u64 new)
++{
++	inode_set_iversion(inode, new);
++}
++
++/**
++ * inode_maybe_inc_iversion - increments i_version
++ * @inode: inode with the i_version that should be updated
++ * @force: increment the counter even if it's not necessary
++ *
++ * Every time the inode is modified, the i_version field must be seen to have
++ * changed by any observer.
++ *
++ * In this implementation, we always increment it after taking the i_lock to
++ * ensure that we don't race with other incrementors.
++ *
++ * Returns true if counter was bumped, and false if it wasn't.
++ */
++static inline bool
++inode_maybe_inc_iversion(struct inode *inode, bool force)
++{
++	spin_lock(&inode->i_lock);
++	inode->i_version++;
++	spin_unlock(&inode->i_lock);
++	return true;
++}
++
++/**
++ * inode_inc_iversion - forcibly increment i_version
++ * @inode: inode that needs to be updated
++ *
++ * Forcbily increment the i_version field. This always results in a change to
++ * the observable value.
++ */
++static inline void
++inode_inc_iversion(struct inode *inode)
++{
++	inode_maybe_inc_iversion(inode, true);
++}
++
+ /**
+- * inode_inc_iversion - increments i_version
+- * @inode: inode that need to be updated
++ * inode_iversion_need_inc - is the i_version in need of being incremented?
++ * @inode: inode to check
+  *
+- * Every time the inode is modified, the i_version field will be incremented.
+- * The filesystem has to be mounted with i_version flag
++ * Returns whether the inode->i_version counter needs incrementing on the next
++ * change.
++ *
++ * For now, we assume that it always does.
+  */
++static inline bool
++inode_iversion_need_inc(struct inode *inode)
++{
++	return true;
++}
  
- 	if ((de->attr & ATTR_DIR) && !IS_FREE(de->name)) {
-@@ -590,7 +590,7 @@ struct inode *fat_build_inode(struct super_block *sb,
- 		goto out;
- 	}
- 	inode->i_ino = iunique(sb, MSDOS_ROOT_INO);
--	inode->i_version = 1;
-+	inode_set_iversion(inode, 1);
- 	err = fat_fill_inode(inode, de);
- 	if (err) {
- 		iput(inode);
-@@ -1377,7 +1377,7 @@ static int fat_read_root(struct inode *inode)
- 	MSDOS_I(inode)->i_pos = MSDOS_ROOT_INO;
- 	inode->i_uid = sbi->options.fs_uid;
- 	inode->i_gid = sbi->options.fs_gid;
--	inode->i_version++;
-+	inode_inc_iversion(inode);
- 	inode->i_generation = 0;
- 	inode->i_mode = fat_make_mode(sbi, ATTR_DIR, S_IRWXUGO);
- 	inode->i_op = sbi->dir_ops;
-@@ -1828,7 +1828,7 @@ int fat_fill_super(struct super_block *sb, void *data, int silent, int isvfat,
- 	if (!root_inode)
- 		goto out_fail;
- 	root_inode->i_ino = MSDOS_ROOT_INO;
--	root_inode->i_version = 1;
-+	inode_set_iversion(root_inode, 1);
- 	error = fat_read_root(root_inode);
- 	if (error < 0) {
- 		iput(root_inode);
-diff --git a/fs/fat/namei_msdos.c b/fs/fat/namei_msdos.c
-index d24d2758a363..7b71c1b242ce 100644
---- a/fs/fat/namei_msdos.c
-+++ b/fs/fat/namei_msdos.c
-@@ -480,7 +480,7 @@ static int do_msdos_rename(struct inode *old_dir, unsigned char *old_name,
- 			} else
- 				mark_inode_dirty(old_inode);
- 
--			old_dir->i_version++;
-+			inode_inc_iversion(old_dir);
- 			old_dir->i_ctime = old_dir->i_mtime = current_time(old_dir);
- 			if (IS_DIRSYNC(old_dir))
- 				(void)fat_sync_inode(old_dir);
-@@ -508,7 +508,7 @@ static int do_msdos_rename(struct inode *old_dir, unsigned char *old_name,
- 			goto out;
- 		new_i_pos = sinfo.i_pos;
- 	}
--	new_dir->i_version++;
-+	inode_inc_iversion(new_dir);
- 
- 	fat_detach(old_inode);
- 	fat_attach(old_inode, new_i_pos);
-@@ -540,7 +540,7 @@ static int do_msdos_rename(struct inode *old_dir, unsigned char *old_name,
- 	old_sinfo.bh = NULL;
- 	if (err)
- 		goto error_dotdot;
--	old_dir->i_version++;
-+	inode_inc_iversion(old_dir);
- 	old_dir->i_ctime = old_dir->i_mtime = ts;
- 	if (IS_DIRSYNC(old_dir))
- 		(void)fat_sync_inode(old_dir);
-diff --git a/fs/fat/namei_vfat.c b/fs/fat/namei_vfat.c
-index 02c066663a3a..fe1bb65149c8 100644
---- a/fs/fat/namei_vfat.c
-+++ b/fs/fat/namei_vfat.c
-@@ -46,7 +46,7 @@ static int vfat_revalidate_shortname(struct dentry *dentry)
+-static inline void inode_inc_iversion(struct inode *inode)
++/**
++ * inode_peek_iversion_raw - grab a "raw" iversion value
++ * @inode: inode from which i_version should be read
++ *
++ * Grab a "raw" inode->i_version value and return it. The i_version is not
++ * flagged or converted in any way. This is mostly used to access a self-managed
++ * i_version.
++ *
++ * With those filesystems, we want to treat the i_version as an entirely
++ * opaque value.
++ */
++static inline u64
++inode_peek_iversion_raw(const struct inode *inode)
++{
++	return inode->i_version;
++}
++
++/**
++ * inode_peek_iversion - read i_version without flagging it to be incremented
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter for an inode without registering it as a
++ * query.
++ *
++ * This is typically used by local filesystems that need to store an i_version
++ * on disk. In that situation, it's not necessary to flag it as having been
++ * viewed, as the result won't be used to gauge changes from that point.
++ */
++static inline u64
++inode_peek_iversion(const struct inode *inode)
++{
++	return inode_peek_iversion_raw(inode);
++}
++
++/**
++ * inode_query_iversion - read i_version for later use
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter. This should be used by callers that wish
++ * to store the returned i_version for later comparison. This will guarantee
++ * that a later query of the i_version will result in a different value if
++ * anything has changed.
++ *
++ * This implementation just does a peek.
++ */
++static inline u64
++inode_query_iversion(struct inode *inode)
++{
++	return inode_peek_iversion(inode);
++}
++
++/**
++ * inode_cmp_iversion - check whether the i_version counter has changed
++ * @inode: inode to check
++ * @old: old value to check against its i_version
++ *
++ * Compare an i_version counter with a previous one. Returns 0 if they are
++ * the same or non-zero if they are different.
++ */
++static inline s64
++inode_cmp_iversion(const struct inode *inode, const u64 old)
  {
- 	int ret = 1;
- 	spin_lock(&dentry->d_lock);
--	if (vfat_d_version(dentry) != d_inode(dentry->d_parent)->i_version)
-+	if (inode_cmp_iversion(d_inode(dentry->d_parent), vfat_d_version(dentry)))
- 		ret = 0;
- 	spin_unlock(&dentry->d_lock);
- 	return ret;
-@@ -759,7 +759,7 @@ static struct dentry *vfat_lookup(struct inode *dir, struct dentry *dentry,
- out:
- 	mutex_unlock(&MSDOS_SB(sb)->s_lock);
- 	if (!inode)
--		vfat_d_version_set(dentry, dir->i_version);
-+		vfat_d_version_set(dentry, inode_query_iversion(dir));
- 	return d_splice_alias(inode, dentry);
- error:
- 	mutex_unlock(&MSDOS_SB(sb)->s_lock);
-@@ -781,7 +781,7 @@ static int vfat_create(struct inode *dir, struct dentry *dentry, umode_t mode,
- 	err = vfat_add_entry(dir, &dentry->d_name, 0, 0, &ts, &sinfo);
- 	if (err)
- 		goto out;
--	dir->i_version++;
-+	inode_inc_iversion(dir);
+-       spin_lock(&inode->i_lock);
+-       inode->i_version++;
+-       spin_unlock(&inode->i_lock);
++	return (s64)inode_peek_iversion(inode) - (s64)old;
+ }
  
- 	inode = fat_build_inode(sb, sinfo.de, sinfo.i_pos);
- 	brelse(sinfo.bh);
-@@ -789,7 +789,7 @@ static int vfat_create(struct inode *dir, struct dentry *dentry, umode_t mode,
- 		err = PTR_ERR(inode);
- 		goto out;
- 	}
--	inode->i_version++;
-+	inode_inc_iversion(inode);
- 	inode->i_mtime = inode->i_atime = inode->i_ctime = ts;
- 	/* timestamp is already written, so mark_inode_dirty() is unneeded. */
- 
-@@ -823,7 +823,7 @@ static int vfat_rmdir(struct inode *dir, struct dentry *dentry)
- 	clear_nlink(inode);
- 	inode->i_mtime = inode->i_atime = current_time(inode);
- 	fat_detach(inode);
--	vfat_d_version_set(dentry, dir->i_version);
-+	vfat_d_version_set(dentry, inode_query_iversion(dir));
- out:
- 	mutex_unlock(&MSDOS_SB(sb)->s_lock);
- 
-@@ -849,7 +849,7 @@ static int vfat_unlink(struct inode *dir, struct dentry *dentry)
- 	clear_nlink(inode);
- 	inode->i_mtime = inode->i_atime = current_time(inode);
- 	fat_detach(inode);
--	vfat_d_version_set(dentry, dir->i_version);
-+	vfat_d_version_set(dentry, inode_query_iversion(dir));
- out:
- 	mutex_unlock(&MSDOS_SB(sb)->s_lock);
- 
-@@ -875,7 +875,7 @@ static int vfat_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
- 	err = vfat_add_entry(dir, &dentry->d_name, 1, cluster, &ts, &sinfo);
- 	if (err)
- 		goto out_free;
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	inc_nlink(dir);
- 
- 	inode = fat_build_inode(sb, sinfo.de, sinfo.i_pos);
-@@ -885,7 +885,7 @@ static int vfat_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
- 		/* the directory was completed, just return a error */
- 		goto out;
- 	}
--	inode->i_version++;
-+	inode_inc_iversion(inode);
- 	set_nlink(inode, 2);
- 	inode->i_mtime = inode->i_atime = inode->i_ctime = ts;
- 	/* timestamp is already written, so mark_inode_dirty() is unneeded. */
-@@ -951,7 +951,7 @@ static int vfat_rename(struct inode *old_dir, struct dentry *old_dentry,
- 			goto out;
- 		new_i_pos = sinfo.i_pos;
- 	}
--	new_dir->i_version++;
-+	inode_inc_iversion(new_dir);
- 
- 	fat_detach(old_inode);
- 	fat_attach(old_inode, new_i_pos);
-@@ -979,7 +979,7 @@ static int vfat_rename(struct inode *old_dir, struct dentry *old_dentry,
- 	old_sinfo.bh = NULL;
- 	if (err)
- 		goto error_dotdot;
--	old_dir->i_version++;
-+	inode_inc_iversion(old_dir);
- 	old_dir->i_ctime = old_dir->i_mtime = ts;
- 	if (IS_DIRSYNC(old_dir))
- 		(void)fat_sync_inode(old_dir);
+ enum file_time_flags {
 -- 
 2.14.3
 
