@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41978 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756912AbdLPNrR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:17 -0500
+        id S1757079AbdLPNrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:43 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 07/19] exofs: switch to new i_version API
-Date: Sat, 16 Dec 2017 08:46:44 -0500
-Message-Id: <20171216134656.15561-8-jlayton@kernel.org>
+Subject: [PATCH v2 18/19] btrfs: only dirty the inode in btrfs_update_time if something was changed
+Date: Sat, 16 Dec 2017 08:46:55 -0500
+Message-Id: <20171216134656.15561-19-jlayton@kernel.org>
 In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
 References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,58 +17,43 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
+At this point, we know that "now" and the file times may differ, and we
+suspect that the i_version has been flagged to be bumped. Attempt to
+bump the i_version, and only mark the inode dirty if that actually
+occurred or if one of the times was updated.
+
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/exofs/dir.c   | 8 ++++----
- fs/exofs/super.c | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ fs/btrfs/inode.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
-index 98233a97b7b8..36e314083b80 100644
---- a/fs/exofs/dir.c
-+++ b/fs/exofs/dir.c
-@@ -60,7 +60,7 @@ static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 	struct inode *dir = mapping->host;
- 	int err = 0;
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 1dfa299a31a9..5d1956ad6d39 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -6106,19 +6106,20 @@ static int btrfs_update_time(struct inode *inode, struct timespec *now,
+ 			     int flags)
+ {
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
++	bool dirty = flags & ~S_VERSION;
  
--	dir->i_version++;
-+	inode_inc_iversion(dir);
+ 	if (btrfs_root_readonly(root))
+ 		return -EROFS;
  
- 	if (!PageUptodate(page))
- 		SetPageUptodate(page);
-@@ -241,7 +241,7 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
- 	unsigned long n = pos >> PAGE_SHIFT;
- 	unsigned long npages = dir_pages(inode);
- 	unsigned chunk_mask = ~(exofs_chunk_size(inode)-1);
--	int need_revalidate = (file->f_version != inode->i_version);
-+	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
- 
- 	if (pos > inode->i_size - EXOFS_DIR_REC_LEN(1))
- 		return 0;
-@@ -264,8 +264,8 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
- 								chunk_mask);
- 				ctx->pos = (n<<PAGE_SHIFT) + offset;
- 			}
--			file->f_version = inode->i_version;
--			need_revalidate = 0;
-+			file->f_version = inode_query_iversion(inode);
-+			need_revalidate = false;
- 		}
- 		de = (struct exofs_dir_entry *)(kaddr + offset);
- 		limit = kaddr + exofs_last_byte(inode, n) -
-diff --git a/fs/exofs/super.c b/fs/exofs/super.c
-index 819624cfc8da..6746999137df 100644
---- a/fs/exofs/super.c
-+++ b/fs/exofs/super.c
-@@ -159,7 +159,7 @@ static struct inode *exofs_alloc_inode(struct super_block *sb)
- 	if (!oi)
- 		return NULL;
- 
--	oi->vfs_inode.i_version = 1;
-+	inode_set_iversion(&oi->vfs_inode, 1);
- 	return &oi->vfs_inode;
+ 	if (flags & S_VERSION)
+-		inode_inc_iversion(inode);
++		dirty |= inode_maybe_inc_iversion(inode, dirty);
+ 	if (flags & S_CTIME)
+ 		inode->i_ctime = *now;
+ 	if (flags & S_MTIME)
+ 		inode->i_mtime = *now;
+ 	if (flags & S_ATIME)
+ 		inode->i_atime = *now;
+-	return btrfs_dirty_inode(inode);
++	return dirty ? btrfs_dirty_inode(inode) : 0;
  }
  
+ /*
 -- 
 2.14.3
 
