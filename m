@@ -1,156 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41724 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754229AbdLPNrA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:00 -0500
-From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 00/19] fs: rework and optimize i_version handling in filesystems
-Date: Sat, 16 Dec 2017 08:46:37 -0500
-Message-Id: <20171216134656.15561-1-jlayton@kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34240 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751593AbdLPOtN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Dec 2017 09:49:13 -0500
+Received: by mail-wm0-f68.google.com with SMTP id y82so1754230wmg.1
+        for <linux-xfs@vger.kernel.org>; Sat, 16 Dec 2017 06:49:13 -0800 (PST)
+Subject: Re: Detecting RWF_NOWAIT support
+References: <b45afd09-5fa8-74ac-4ba4-9dc9074e30cf@scylladb.com>
+ <4ae3426d-8104-c243-72e4-671e89401b23@suse.de>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
+Date: Sat, 16 Dec 2017 16:49:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <4ae3426d-8104-c243-72e4-671e89401b23@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-From: Jeff Layton <jlayton@redhat.com>
 
-v2:
-- xfs should use inode_peek_iversion instead of inode_peek_iversion_raw
-- rework file_update_time patch
-- don't dirty inode when only S_ATIME is set and SB_LAZYTIME is enabled
-- better comments and documentation
 
-tl;dr: I think we can greatly reduce the cost of the inode->i_version
-counter, by exploiting the fact that we don't need to increment it if no
-one is looking at it. We can also clean up the code to prepare to
-eventually expose this value via statx().
+On 12/14/2017 09:15 PM, Goldwyn Rodrigues wrote:
+>
+> On 12/14/2017 11:38 AM, Avi Kivity wrote:
+>> I'm looking to add support for RWF_NOWAIT within a linux-aio iocb.
+>> Naturally, I need to detect at runtime whether the kernel support
+>> RWF_NOWAIT or not.
+>>
+>>
+>> The only method I could find was to issue an I/O with RWF_NOWAIT set,
+>> and look for errors. This is somewhat less than perfect:
+>>
+>>   - from the error, I can't tell whether RWF_NOWAIT was the problem, or
+>> something else. If I enable a number of new features, I have to run
+>> through all combinations to figure out which ones are supported and
+>> which are not.
+> Here is the return codes for RWF_NOWAIT
+> EINVAL - not supported (older kernel)
+> EOPNOTSUPP - not supported
+> EAGAIN - supported but could not complete because I/O will be delayed
 
-Note that this set relies on a few patches that are in other trees. The
-full stack that I've been testing with is here:
+Which of these are returned from io_submit() and which are returned in 
+the iocb?
 
-    https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git/log/?h=iversion
+> 0 - supported and I/O completed (success).
+>
+>>   - RWF_NOWAIT support is per-filesystem, so I can't just remember not to
+>> enable RWF_NOWAIT globally, I have to track it per file.
+> Yes, the support is per filesystem. So, the application must know if the
+> filesystem supports it, possibly by performing a small I/O.
 
-The inode->i_version field is supposed to be a value that changes
-whenever there is any data or metadata change to the inode. Some
-filesystems use it internally to detect directory changes during
-readdir. knfsd will use it if the filesystem has MS_I_VERSION set. IMA
-will also use it to optimize away some remeasurement if it's available.
-NFS and AFS just use it to store an opaque change attribute from the
-server.
-
-Only btrfs, ext4, and xfs increment it for data changes. Because of
-this, these filesystems must log the inode to disk whenever the
-i_version counter changes. That has a non-zero performance impact,
-especially on write-heavy workloads, because we end up dirtying the
-inode metadata on every write, not just when the times change. [1]
-
-It turns out though that none of these users of i_version require that
-it change on every change to the file. The only real requirement is that
-it be different if something changed since the last time we queried for
-it.
-
-If we keep track of when something queries the value, we can avoid
-bumping the counter and an on-disk update when nothing else has changed
-if no one has queried it since it was last incremented.
-
-This patchset changes the code to only bump the i_version counter when
-it's strictly necessary, or when we're updating the inode metadata
-anyway (e.g. when times change).
-
-It takes the approach of converting the existing accessors of i_version
-to use a new API, while leaving the underlying implementation mostly the
-same.  The last patch then converts the existing implementation to keep
-track of whether the value has been queried since it was last
-incremented. It then uses that to avoid incrementing the counter when
-it can.
-
-With this, we reduce inode metadata updates across all 3 filesystems
-down to roughly the frequency of the timestamp granularity, particularly
-when it's not being queried (the vastly common case).
-
-I can see measurable performance gains on xfs and ext4 with iversion
-enabled, when streaming small (4k) I/Os. 
-
-btrfs shows some slight gain in testing, but not quite the magnitude
-that xfs and ext4 show. I'm not sure why yet and would appreciate some
-input from btrfs folks.
-
-My goal is to get this into -next fairly soon. If it shows no problems
-then we can look at merging it for 4.16, or 4.17 if all of the
-prequisite patches are not yet merged.
-
-Jeff Layton (19):
-  fs: new API for handling inode->i_version
-  fs: don't take the i_lock in inode_inc_iversion
-  fat: convert to new i_version API
-  affs: convert to new i_version API
-  afs: convert to new i_version API
-  btrfs: convert to new i_version API
-  exofs: switch to new i_version API
-  ext2: convert to new i_version API
-  ext4: convert to new i_version API
-  nfs: convert to new i_version API
-  nfsd: convert to new i_version API
-  ocfs2: convert to new i_version API
-  ufs: use new i_version API
-  xfs: convert to new i_version API
-  IMA: switch IMA over to new i_version API
-  fs: only set S_VERSION when updating times if necessary
-  xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need
-    incrementing
-  btrfs: only dirty the inode in btrfs_update_time if something was
-    changed
-  fs: handle inode->i_version more efficiently
-
- fs/affs/amigaffs.c                |   4 +-
- fs/affs/dir.c                     |   4 +-
- fs/affs/super.c                   |   2 +-
- fs/afs/fsclient.c                 |   2 +-
- fs/afs/inode.c                    |   4 +-
- fs/btrfs/delayed-inode.c          |   6 +-
- fs/btrfs/inode.c                  |  11 +-
- fs/btrfs/tree-log.c               |   3 +-
- fs/exofs/dir.c                    |   8 +-
- fs/exofs/super.c                  |   2 +-
- fs/ext2/dir.c                     |   8 +-
- fs/ext2/super.c                   |   4 +-
- fs/ext4/dir.c                     |   8 +-
- fs/ext4/inline.c                  |   6 +-
- fs/ext4/inode.c                   |  12 +-
- fs/ext4/ioctl.c                   |   2 +-
- fs/ext4/namei.c                   |   4 +-
- fs/ext4/super.c                   |   2 +-
- fs/ext4/xattr.c                   |   4 +-
- fs/fat/dir.c                      |   2 +-
- fs/fat/inode.c                    |   8 +-
- fs/fat/namei_msdos.c              |   6 +-
- fs/fat/namei_vfat.c               |  20 +--
- fs/inode.c                        |  19 ++-
- fs/nfs/delegation.c               |   2 +-
- fs/nfs/fscache-index.c            |   4 +-
- fs/nfs/inode.c                    |  16 +--
- fs/nfs/nfs4proc.c                 |   9 +-
- fs/nfs/nfstrace.h                 |   4 +-
- fs/nfs/write.c                    |   7 +-
- fs/nfsd/nfsfh.h                   |   2 +-
- fs/ocfs2/dir.c                    |  14 +-
- fs/ocfs2/inode.c                  |   2 +-
- fs/ocfs2/namei.c                  |   2 +-
- fs/ocfs2/quota_global.c           |   2 +-
- fs/ufs/dir.c                      |   8 +-
- fs/ufs/inode.c                    |   2 +-
- fs/ufs/super.c                    |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c     |   5 +-
- fs/xfs/xfs_icache.c               |   4 +-
- fs/xfs/xfs_inode.c                |   2 +-
- fs/xfs/xfs_inode_item.c           |   2 +-
- fs/xfs/xfs_trans_inode.c          |  14 +-
- include/linux/fs.h                | 275 ++++++++++++++++++++++++++++++++++++--
- security/integrity/ima/ima_api.c  |   2 +-
- security/integrity/ima/ima_main.c |   2 +-
- 46 files changed, 404 insertions(+), 129 deletions(-)
-
--- 
-2.14.3
-
+So the application must know about filesystem mount points, and be 
+prepared to create a file and try to write it (in case the filesystem is 
+empty) or alter its behavior during runtime depending on the errors it sees.
