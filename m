@@ -1,463 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45765 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756561AbdLOWFV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Dec 2017 17:05:21 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 18/78] xarray: Add xas_next and xas_prev
-Date: Fri, 15 Dec 2017 14:03:50 -0800
-Message-Id: <20171215220450.7899-19-willy@infradead.org>
-In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
-References: <20171215220450.7899-1-willy@infradead.org>
+Received: from mail.kernel.org ([198.145.29.99]:42202 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756995AbdLPNr3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:29 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v2 12/19] ocfs2: convert to new i_version API
+Date: Sat, 16 Dec 2017 08:46:49 -0500
+Message-Id: <20171216134656.15561-13-jlayton@kernel.org>
+In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
+References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+From: Jeff Layton <jlayton@redhat.com>
 
-These two functions move the xas index by one position, and adjust the
-rest of the iterator state to match it.  This is more efficient than
-calling xas_set() as it keeps the iterator at the leaves of the tree
-instead of walking the iterator from the root each time.
-
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- include/linux/xarray.h                 |  71 ++++++++++-
- lib/xarray.c                           |  74 ++++++++++++
- tools/testing/radix-tree/xarray-test.c | 213 +++++++++++++++++++++++++++++++++
- 3 files changed, 356 insertions(+), 2 deletions(-)
+ fs/ocfs2/dir.c          | 14 +++++++-------
+ fs/ocfs2/inode.c        |  2 +-
+ fs/ocfs2/namei.c        |  2 +-
+ fs/ocfs2/quota_global.c |  2 +-
+ 4 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index fea81383a301..2d889208b68d 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -640,6 +640,12 @@ static inline bool xas_not_node(struct xa_node *node)
- 	return ((unsigned long)node & 3) || !node;
- }
+diff --git a/fs/ocfs2/dir.c b/fs/ocfs2/dir.c
+index febe6312ceff..fe2c430a7809 100644
+--- a/fs/ocfs2/dir.c
++++ b/fs/ocfs2/dir.c
+@@ -1174,7 +1174,7 @@ static int __ocfs2_delete_entry(handle_t *handle, struct inode *dir,
+ 				le16_add_cpu(&pde->rec_len,
+ 						le16_to_cpu(de->rec_len));
+ 			de->inode = 0;
+-			dir->i_version++;
++			inode_inc_iversion(dir);
+ 			ocfs2_journal_dirty(handle, bh);
+ 			goto bail;
+ 		}
+@@ -1729,7 +1729,7 @@ int __ocfs2_add_entry(handle_t *handle,
+ 			if (ocfs2_dir_indexed(dir))
+ 				ocfs2_recalc_free_list(dir, handle, lookup);
  
-+/* True if the node represents RESTART or an error */
-+static inline bool xas_frozen(struct xa_node *node)
-+{
-+	return (unsigned long)node & 2;
-+}
-+
- /* True if the node represents head-of-tree, RESTART or BOUNDS */
- static inline bool xas_top(struct xa_node *node)
- {
-@@ -758,8 +764,8 @@ static inline bool xa_iter_skip(const void *entry)
- }
+-			dir->i_version++;
++			inode_inc_iversion(dir);
+ 			ocfs2_journal_dirty(handle, insert_bh);
+ 			retval = 0;
+ 			goto bail;
+@@ -1775,7 +1775,7 @@ static int ocfs2_dir_foreach_blk_id(struct inode *inode,
+ 		 * readdir(2), then we might be pointing to an invalid
+ 		 * dirent right now.  Scan from the start of the block
+ 		 * to make sure. */
+-		if (*f_version != inode->i_version) {
++		if (inode_cmp_iversion(inode, *f_version)) {
+ 			for (i = 0; i < i_size_read(inode) && i < offset; ) {
+ 				de = (struct ocfs2_dir_entry *)
+ 					(data->id_data + i);
+@@ -1791,7 +1791,7 @@ static int ocfs2_dir_foreach_blk_id(struct inode *inode,
+ 				i += le16_to_cpu(de->rec_len);
+ 			}
+ 			ctx->pos = offset = i;
+-			*f_version = inode->i_version;
++			*f_version = inode_query_iversion(inode);
+ 		}
  
- /*
-- * node->shift is always 0 for the inline iterators unless we're processing
-- * a multi-index entry.
-+ * node->shift is always 0 for next_entry and next_tag unless we're processing
-+ * a multi-index entry.  It can be non-0 for next/prev, so it's not used there.
+ 		de = (struct ocfs2_dir_entry *) (data->id_data + ctx->pos);
+@@ -1869,7 +1869,7 @@ static int ocfs2_dir_foreach_blk_el(struct inode *inode,
+ 		 * readdir(2), then we might be pointing to an invalid
+ 		 * dirent right now.  Scan from the start of the block
+ 		 * to make sure. */
+-		if (*f_version != inode->i_version) {
++		if (inode_cmp_iversion(inode, *f_version)) {
+ 			for (i = 0; i < sb->s_blocksize && i < offset; ) {
+ 				de = (struct ocfs2_dir_entry *) (bh->b_data + i);
+ 				/* It's too expensive to do a full
+@@ -1886,7 +1886,7 @@ static int ocfs2_dir_foreach_blk_el(struct inode *inode,
+ 			offset = i;
+ 			ctx->pos = (ctx->pos & ~(sb->s_blocksize - 1))
+ 				| offset;
+-			*f_version = inode->i_version;
++			*f_version = inode_query_iversion(inode);
+ 		}
+ 
+ 		while (ctx->pos < i_size_read(inode)
+@@ -1940,7 +1940,7 @@ static int ocfs2_dir_foreach_blk(struct inode *inode, u64 *f_version,
   */
- #ifdef CONFIG_RADIX_TREE_MULTIORDER
- #define xa_node_shift(node)	node->shift
-@@ -767,6 +773,67 @@ static inline bool xa_iter_skip(const void *entry)
- #define xa_node_shift(node)	0
- #endif
- 
-+void *__xas_next(struct xa_state *);
-+void *__xas_prev(struct xa_state *);
-+
-+/**
-+ * xas_prev() - Move iterator to previous index.
-+ * @xas: XArray operation state.
-+ *
-+ * If the @xas was in an error state, it will remain in an error state
-+ * and this function will return %NULL.  If the @xas has never been walked,
-+ * it will have the effect of calling xas_load().  Otherwise one will be
-+ * subtracted from the index and the state will be walked to the correct
-+ * location in the array for the next operation.
-+ *
-+ * If the iterator was referencing index 0, this function wraps
-+ * around to %ULONG_MAX.
-+ *
-+ * Return: The entry at the new index.  This may be %NULL or an internal
-+ * entry, although it should never be a node entry.
-+ */
-+static inline void *xas_prev(struct xa_state *xas)
-+{
-+	struct xa_node *node = xas->xa_node;
-+
-+	if (unlikely(xas_not_node(node) || node->shift ||
-+				xas->xa_offset == 0))
-+		return __xas_prev(xas);
-+
-+	xas->xa_index--;
-+	xas->xa_offset--;
-+	return xa_entry(xas->xa, node, xas->xa_offset);
-+}
-+
-+/**
-+ * xas_next() - Move state to next index.
-+ * @xas: XArray operation state.
-+ *
-+ * If the @xas was in an error state, it will remain in an error state
-+ * and this function will return %NULL.  If the @xas has never been walked,
-+ * it will have the effect of calling xas_load().  Otherwise one will be
-+ * added to the index and the state will be walked to the correct
-+ * location in the array for the next operation.
-+ *
-+ * If the iterator was referencing index %ULONG_MAX, this function wraps
-+ * around to 0.
-+ *
-+ * Return: The entry at the new index.  This may be %NULL or an internal
-+ * entry, although it should never be a node entry.
-+ */
-+static inline void *xas_next(struct xa_state *xas)
-+{
-+	struct xa_node *node = xas->xa_node;
-+
-+	if (unlikely(xas_not_node(node) || node->shift ||
-+				xas->xa_offset == XA_CHUNK_MASK))
-+		return __xas_next(xas);
-+
-+	xas->xa_index++;
-+	xas->xa_offset++;
-+	return xa_entry(xas->xa, node, xas->xa_offset);
-+}
-+
- /**
-  * xas_next_entry() - Advance iterator to next present entry.
-  * @xas: XArray operation state.
-diff --git a/lib/xarray.c b/lib/xarray.c
-index a51fa1e1f74f..a4975aeedf6b 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -838,6 +838,80 @@ void xas_pause(struct xa_state *xas)
- }
- EXPORT_SYMBOL_GPL(xas_pause);
- 
-+/*
-+ * __xas_prev() - Find the previous entry in the XArray.
-+ * @xas: XArray operation state.
-+ *
-+ * Helper function for xas_prev() which handles all the complex cases
-+ * out of line.
-+ */
-+void *__xas_prev(struct xa_state *xas)
-+{
-+	void *entry;
-+
-+	if (!xas_frozen(xas->xa_node))
-+		xas->xa_index--;
-+	if (xas_not_node(xas->xa_node))
-+		return xas_load(xas);
-+
-+	if (xas->xa_offset != get_offset(xas->xa_index, xas->xa_node))
-+		xas->xa_offset--;
-+
-+	while (xas->xa_offset == 255) {
-+		xas->xa_offset = xas->xa_node->offset - 1;
-+		xas->xa_node = xa_parent(xas->xa, xas->xa_node);
-+		if (!xas->xa_node)
-+			return set_bounds(xas);
-+	}
-+
-+	for (;;) {
-+		entry = xa_entry(xas->xa, xas->xa_node, xas->xa_offset);
-+		if (!xa_is_node(entry))
-+			return entry;
-+
-+		xas->xa_node = xa_to_node(entry);
-+		xas->xa_offset = get_offset(xas->xa_index, xas->xa_node);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(__xas_prev);
-+
-+/*
-+ * __xas_next() - Find the next entry in the XArray.
-+ * @xas: XArray operation state.
-+ *
-+ * Helper function for xas_next() which handles all the complex cases
-+ * out of line.
-+ */
-+void *__xas_next(struct xa_state *xas)
-+{
-+	void *entry;
-+
-+	if (!xas_frozen(xas->xa_node))
-+		xas->xa_index++;
-+	if (xas_not_node(xas->xa_node))
-+		return xas_load(xas);
-+
-+	if (xas->xa_offset != get_offset(xas->xa_index, xas->xa_node))
-+		xas->xa_offset++;
-+
-+	while (xas->xa_offset == XA_CHUNK_SIZE) {
-+		xas->xa_offset = xas->xa_node->offset + 1;
-+		xas->xa_node = xa_parent(xas->xa, xas->xa_node);
-+		if (!xas->xa_node)
-+			return set_bounds(xas);
-+	}
-+
-+	for (;;) {
-+		entry = xa_entry(xas->xa, xas->xa_node, xas->xa_offset);
-+		if (!xa_is_node(entry))
-+			return entry;
-+
-+		xas->xa_node = xa_to_node(entry);
-+		xas->xa_offset = get_offset(xas->xa_index, xas->xa_node);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(__xas_next);
-+
- /**
-  * xas_find() - Find the next present entry in the XArray.
-  * @xas: XArray operation state.
-diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
-index 10de5d3d977a..43111786ebdd 100644
---- a/tools/testing/radix-tree/xarray-test.c
-+++ b/tools/testing/radix-tree/xarray-test.c
-@@ -92,6 +92,104 @@ void check_xas_error(struct xarray *xa)
- 	assert(xas.xa_node == XAS_BOUNDS);
- }
- 
-+void check_xas_pause(struct xarray *xa)
-+{
-+	XA_STATE(xas, xa, 0);
-+	void *entry;
-+	unsigned int seen;
-+
-+	xa_store(xa, 0, xa_mk_value(0), GFP_KERNEL);
-+	xa_set_tag(xa, 0, XA_TAG_0);
-+
-+	seen = 0;
-+	rcu_read_lock();
-+	xas_for_each_tag(&xas, entry, ULONG_MAX, XA_TAG_0) {
-+		if (!seen++) {
-+			xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
-+			xa_set_tag(xa, 1, XA_TAG_0);
-+		}
-+	}
-+	rcu_read_unlock();
-+	/* We don't see an entry that was added after we started */
-+	assert(seen == 1);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	rcu_read_lock();
-+	xas_for_each_tag(&xas, entry, ULONG_MAX, XA_TAG_0) {
-+		if (!seen++)
-+			xa_erase(xa, 1);
-+	}
-+	rcu_read_unlock();
-+	assert(seen == 1);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	rcu_read_lock();
-+	xas_for_each(&xas, entry, ULONG_MAX) {
-+		if (!seen++)
-+			xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
-+	}
-+	rcu_read_unlock();
-+	assert(seen == 1);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	rcu_read_lock();
-+	xas_for_each(&xas, entry, ULONG_MAX) {
-+		if (!seen++)
-+			xa_erase(xa, 1);
-+	}
-+	rcu_read_unlock();
-+	assert(seen == 1);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	rcu_read_lock();
-+	for (entry = xas_load(&xas); entry; entry = xas_next(&xas)) {
-+		if (!seen++)
-+			xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
-+	}
-+	rcu_read_unlock();
-+	assert(seen == 2);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	rcu_read_lock();
-+	for (entry = xas_load(&xas); entry; entry = xas_next(&xas)) {
-+		if (!seen++)
-+			xa_erase(xa, 1);
-+	}
-+	rcu_read_unlock();
-+	assert(seen == 1);
-+
-+	xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	xas_for_each(&xas, entry, ULONG_MAX) {
-+		if (!seen++)
-+			xas_pause(&xas);
-+	}
-+	assert(seen == 2);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	for (entry = xas_load(&xas); entry; entry = xas_next(&xas)) {
-+		if (!seen++)
-+			xas_pause(&xas);
-+	}
-+	assert(seen == 2);
-+
-+	seen = 0;
-+	xas_set(&xas, 0);
-+	xa_set_tag(xa, 1, XA_TAG_0);
-+	xas_for_each_tag(&xas, entry, ULONG_MAX, XA_TAG_0) {
-+		if (!seen++)
-+			xas_pause(&xas);
-+	}
-+	assert(seen == 2);
-+}
-+
- void check_xas_retry(struct xarray *xa)
+ int ocfs2_dir_foreach(struct inode *inode, struct dir_context *ctx)
  {
- 	XA_STATE(xas, xa, 0);
-@@ -249,9 +347,108 @@ void check_xas_delete(struct xarray *xa)
+-	u64 version = inode->i_version;
++	u64 version = inode_query_iversion(inode);
+ 	ocfs2_dir_foreach_blk(inode, &version, ctx, true);
+ 	return 0;
+ }
+diff --git a/fs/ocfs2/inode.c b/fs/ocfs2/inode.c
+index 1a1e0078ab38..71ce64665a18 100644
+--- a/fs/ocfs2/inode.c
++++ b/fs/ocfs2/inode.c
+@@ -302,7 +302,7 @@ void ocfs2_populate_inode(struct inode *inode, struct ocfs2_dinode *fe,
+ 	OCFS2_I(inode)->ip_attr = le32_to_cpu(fe->i_attr);
+ 	OCFS2_I(inode)->ip_dyn_features = le16_to_cpu(fe->i_dyn_features);
+ 
+-	inode->i_version = 1;
++	inode_set_iversion(inode, 1);
+ 	inode->i_generation = le32_to_cpu(fe->i_generation);
+ 	inode->i_rdev = huge_decode_dev(le64_to_cpu(fe->id1.dev1.i_rdev));
+ 	inode->i_mode = le16_to_cpu(fe->i_mode);
+diff --git a/fs/ocfs2/namei.c b/fs/ocfs2/namei.c
+index 3b0a10d9b36f..c045826b716a 100644
+--- a/fs/ocfs2/namei.c
++++ b/fs/ocfs2/namei.c
+@@ -1520,7 +1520,7 @@ static int ocfs2_rename(struct inode *old_dir,
+ 			mlog_errno(status);
+ 			goto bail;
+ 		}
+-		new_dir->i_version++;
++		inode_inc_iversion(new_dir);
+ 
+ 		if (S_ISDIR(new_inode->i_mode))
+ 			ocfs2_set_links_count(newfe, 0);
+diff --git a/fs/ocfs2/quota_global.c b/fs/ocfs2/quota_global.c
+index b39d14cbfa34..e7595a63da43 100644
+--- a/fs/ocfs2/quota_global.c
++++ b/fs/ocfs2/quota_global.c
+@@ -289,7 +289,7 @@ ssize_t ocfs2_quota_write(struct super_block *sb, int type,
+ 		mlog_errno(err);
+ 		return err;
  	}
+-	gqinode->i_version++;
++	inode_query_iversion(gqinode);
+ 	ocfs2_mark_inode_dirty(handle, gqinode, oinfo->dqi_gqi_bh);
+ 	return len;
  }
- 
-+void check_move_small(struct xarray *xa, unsigned long idx)
-+{
-+	XA_STATE(xas, xa, 0);
-+	unsigned long i;
-+
-+	xa_store(xa, 0, xa_mk_value(0), GFP_KERNEL);
-+	xa_store(xa, idx, xa_mk_value(idx), GFP_KERNEL);
-+
-+	for (i = 0; i < idx * 4; i++) {
-+		void *entry = xas_next(&xas);
-+		if (i <= idx)
-+			assert(xas.xa_node != XAS_RESTART);
-+		assert(xas.xa_index == i);
-+		if (i == 0 || i == idx)
-+			assert(entry == xa_mk_value(i));
-+		else
-+			assert(entry == NULL);
-+	}
-+	xas_next(&xas);
-+	assert(xas.xa_index == i);
-+
-+	do {
-+		void *entry = xas_prev(&xas);
-+		i--;
-+		if (i <= idx)
-+			assert(xas.xa_node != XAS_RESTART);
-+		assert(xas.xa_index == i);
-+		if (i == 0 || i == idx)
-+			assert(entry == xa_mk_value(i));
-+		else
-+			assert(entry == NULL);
-+	} while (i > 0);
-+
-+	xas_set(&xas, ULONG_MAX);
-+	assert(xas_next(&xas) == NULL);
-+	assert(xas.xa_index == ULONG_MAX);
-+	assert(xas_next(&xas) == xa_mk_value(0));
-+	assert(xas.xa_index == 0);
-+	assert(xas_prev(&xas) == NULL);
-+	assert(xas.xa_index == ULONG_MAX);
-+}
-+
-+void check_move(struct xarray *xa)
-+{
-+	XA_STATE(xas, xa, (1 << 16) - 1);
-+	unsigned long i;
-+
-+	for (i = 0; i < (1 << 16); i++) {
-+		xa_store(xa, i, xa_mk_value(i), GFP_KERNEL);
-+	}
-+
-+	do {
-+		void *entry = xas_prev(&xas);
-+		i--;
-+		assert(entry == xa_mk_value(i));
-+		assert(i == xas.xa_index);
-+	} while (i != 0);
-+
-+	assert(xas_prev(&xas) == NULL);
-+	assert(xas.xa_index == ULONG_MAX);
-+
-+	do {
-+		void *entry = xas_next(&xas);
-+		assert(entry == xa_mk_value(i));
-+		assert(i == xas.xa_index);
-+		i++;
-+	} while (i < (1 << 16));
-+
-+	for (i = (1 << 8); i < (1 << 15); i++) {
-+		xa_erase(xa, i);
-+	}
-+
-+	i = xas.xa_index;
-+
-+	do {
-+		void *entry = xas_prev(&xas);
-+		i--;
-+		if ((i < (1 << 8)) || (i >= (1 << 15)))
-+			assert(entry == xa_mk_value(i));
-+		else
-+			assert(entry == NULL);
-+		assert(i == xas.xa_index);
-+	} while (i != 0);
-+
-+	assert(xas_prev(&xas) == NULL);
-+	assert(xas.xa_index == ULONG_MAX);
-+
-+	do {
-+		void *entry = xas_next(&xas);
-+		if ((i < (1 << 8)) || (i >= (1 << 15)))
-+			assert(entry == xa_mk_value(i));
-+		else
-+			assert(entry == NULL);
-+		assert(i == xas.xa_index);
-+		i++;
-+	} while (i < (1 << 16));
-+}
-+
- void xarray_checks(void)
- {
- 	DEFINE_XARRAY(array);
-+	unsigned long i;
- 
- 	check_xa_err(&array);
- 	item_kill_tree(&array);
-@@ -265,6 +462,9 @@ void xarray_checks(void)
- 	check_xas_retry(&array);
- 	item_kill_tree(&array);
- 
-+	check_xas_pause(&array);
-+	item_kill_tree(&array);
-+
- 	check_xa_load(&array);
- 	item_kill_tree(&array);
- 
-@@ -279,6 +479,19 @@ void xarray_checks(void)
- 
- 	check_xas_delete(&array);
- 	item_kill_tree(&array);
-+
-+	for (i = 0; i < 16; i++) {
-+		check_move_small(&array, 1UL << i);
-+		item_kill_tree(&array);
-+	}
-+
-+	for (i = 2; i < 16; i++) {
-+		check_move_small(&array, (1UL << i) - 1);
-+		item_kill_tree(&array);
-+	}
-+
-+	check_move(&array);
-+	item_kill_tree(&array);
- }
- 
- int __weak main(void)
 -- 
-2.15.1
+2.14.3
 
