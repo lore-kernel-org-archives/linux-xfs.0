@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42122 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42066 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756953AbdLPNrY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:24 -0500
+        id S1756922AbdLPNrW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Dec 2017 08:47:22 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 10/19] nfs: convert to new i_version API
-Date: Sat, 16 Dec 2017 08:46:47 -0500
-Message-Id: <20171216134656.15561-11-jlayton@kernel.org>
+Subject: [PATCH v2 09/19] ext4: convert to new i_version API
+Date: Sat, 16 Dec 2017 08:46:46 -0500
+Message-Id: <20171216134656.15561-10-jlayton@kernel.org>
 In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
 References: <20171216134656.15561-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,199 +17,189 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
-For NFS, we just use the "raw" API since the i_version is mostly
-managed by the server. The exception there is when the client
-holds a write delegation, but we only need to bump it once
-there anyway to handle CB_GETATTR.
-
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Acked-by: Theodore Ts'o <tytso@mit.edu>
 ---
- fs/nfs/delegation.c    |  2 +-
- fs/nfs/fscache-index.c |  4 ++--
- fs/nfs/inode.c         | 16 ++++++++--------
- fs/nfs/nfs4proc.c      |  9 +++++----
- fs/nfs/nfstrace.h      |  4 ++--
- fs/nfs/write.c         |  7 ++-----
- 6 files changed, 20 insertions(+), 22 deletions(-)
+ fs/ext4/dir.c    |  8 ++++----
+ fs/ext4/inline.c |  6 +++---
+ fs/ext4/inode.c  | 12 ++++++++----
+ fs/ext4/ioctl.c  |  2 +-
+ fs/ext4/namei.c  |  4 ++--
+ fs/ext4/super.c  |  2 +-
+ fs/ext4/xattr.c  |  4 ++--
+ 7 files changed, 21 insertions(+), 17 deletions(-)
 
-diff --git a/fs/nfs/delegation.c b/fs/nfs/delegation.c
-index ade44ca0c66c..89b22b2a111c 100644
---- a/fs/nfs/delegation.c
-+++ b/fs/nfs/delegation.c
-@@ -347,7 +347,7 @@ int nfs_inode_set_delegation(struct inode *inode, struct rpc_cred *cred, struct
- 	nfs4_stateid_copy(&delegation->stateid, &res->delegation);
- 	delegation->type = res->delegation_type;
- 	delegation->pagemod_limit = res->pagemod_limit;
--	delegation->change_attr = inode->i_version;
-+	delegation->change_attr = inode_peek_iversion_raw(inode);
- 	delegation->cred = get_rpccred(cred);
- 	delegation->inode = inode;
- 	delegation->flags = 1<<NFS_DELEGATION_REFERENCED;
-diff --git a/fs/nfs/fscache-index.c b/fs/nfs/fscache-index.c
-index 3025fe8584a0..8bf080ce4984 100644
---- a/fs/nfs/fscache-index.c
-+++ b/fs/nfs/fscache-index.c
-@@ -211,7 +211,7 @@ static uint16_t nfs_fscache_inode_get_aux(const void *cookie_netfs_data,
- 	auxdata.ctime = nfsi->vfs_inode.i_ctime;
- 
- 	if (NFS_SERVER(&nfsi->vfs_inode)->nfs_client->rpc_ops->version == 4)
--		auxdata.change_attr = nfsi->vfs_inode.i_version;
-+		auxdata.change_attr = inode_peek_iversion_raw(&nfsi->vfs_inode);
- 
- 	if (bufmax > sizeof(auxdata))
- 		bufmax = sizeof(auxdata);
-@@ -243,7 +243,7 @@ enum fscache_checkaux nfs_fscache_inode_check_aux(void *cookie_netfs_data,
- 	auxdata.ctime = nfsi->vfs_inode.i_ctime;
- 
- 	if (NFS_SERVER(&nfsi->vfs_inode)->nfs_client->rpc_ops->version == 4)
--		auxdata.change_attr = nfsi->vfs_inode.i_version;
-+		auxdata.change_attr = inode_peek_iversion_raw(&nfsi->vfs_inode);
- 
- 	if (memcmp(data, &auxdata, datalen) != 0)
- 		return FSCACHE_CHECKAUX_OBSOLETE;
-diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
-index b992d2382ffa..c55b86c87bce 100644
---- a/fs/nfs/inode.c
-+++ b/fs/nfs/inode.c
-@@ -483,7 +483,7 @@ nfs_fhget(struct super_block *sb, struct nfs_fh *fh, struct nfs_fattr *fattr, st
- 		memset(&inode->i_atime, 0, sizeof(inode->i_atime));
- 		memset(&inode->i_mtime, 0, sizeof(inode->i_mtime));
- 		memset(&inode->i_ctime, 0, sizeof(inode->i_ctime));
--		inode->i_version = 0;
-+		inode_set_iversion_raw(inode, 0);
- 		inode->i_size = 0;
- 		clear_nlink(inode);
- 		inode->i_uid = make_kuid(&init_user_ns, -2);
-@@ -508,7 +508,7 @@ nfs_fhget(struct super_block *sb, struct nfs_fh *fh, struct nfs_fattr *fattr, st
- 		else if (nfs_server_capable(inode, NFS_CAP_CTIME))
- 			nfs_set_cache_invalid(inode, NFS_INO_INVALID_ATTR);
- 		if (fattr->valid & NFS_ATTR_FATTR_CHANGE)
--			inode->i_version = fattr->change_attr;
-+			inode_set_iversion_raw(inode, fattr->change_attr);
- 		else
- 			nfs_set_cache_invalid(inode, NFS_INO_INVALID_ATTR
- 				| NFS_INO_REVAL_PAGECACHE);
-@@ -1289,8 +1289,8 @@ static unsigned long nfs_wcc_update_inode(struct inode *inode, struct nfs_fattr
- 
- 	if ((fattr->valid & NFS_ATTR_FATTR_PRECHANGE)
- 			&& (fattr->valid & NFS_ATTR_FATTR_CHANGE)
--			&& inode->i_version == fattr->pre_change_attr) {
--		inode->i_version = fattr->change_attr;
-+			&& !inode_cmp_iversion(inode, fattr->pre_change_attr)) {
-+		inode_set_iversion_raw(inode, fattr->change_attr);
- 		if (S_ISDIR(inode->i_mode))
- 			nfs_set_cache_invalid(inode, NFS_INO_INVALID_DATA);
- 		ret |= NFS_INO_INVALID_ATTR;
-@@ -1348,7 +1348,7 @@ static int nfs_check_inode_attributes(struct inode *inode, struct nfs_fattr *fat
- 
- 	if (!nfs_file_has_buffered_writers(nfsi)) {
- 		/* Verify a few of the more important attributes */
--		if ((fattr->valid & NFS_ATTR_FATTR_CHANGE) != 0 && inode->i_version != fattr->change_attr)
-+		if ((fattr->valid & NFS_ATTR_FATTR_CHANGE) != 0 && inode_cmp_iversion(inode, fattr->change_attr))
- 			invalid |= NFS_INO_INVALID_ATTR | NFS_INO_REVAL_PAGECACHE;
- 
- 		if ((fattr->valid & NFS_ATTR_FATTR_MTIME) && !timespec_equal(&inode->i_mtime, &fattr->mtime))
-@@ -1642,7 +1642,7 @@ int nfs_post_op_update_inode_force_wcc_locked(struct inode *inode, struct nfs_fa
- 	}
- 	if ((fattr->valid & NFS_ATTR_FATTR_CHANGE) != 0 &&
- 			(fattr->valid & NFS_ATTR_FATTR_PRECHANGE) == 0) {
--		fattr->pre_change_attr = inode->i_version;
-+		fattr->pre_change_attr = inode_peek_iversion_raw(inode);
- 		fattr->valid |= NFS_ATTR_FATTR_PRECHANGE;
- 	}
- 	if ((fattr->valid & NFS_ATTR_FATTR_CTIME) != 0 &&
-@@ -1778,7 +1778,7 @@ static int nfs_update_inode(struct inode *inode, struct nfs_fattr *fattr)
- 
- 	/* More cache consistency checks */
- 	if (fattr->valid & NFS_ATTR_FATTR_CHANGE) {
--		if (inode->i_version != fattr->change_attr) {
-+		if (inode_cmp_iversion(inode, fattr->change_attr)) {
- 			dprintk("NFS: change_attr change on server for file %s/%ld\n",
- 					inode->i_sb->s_id, inode->i_ino);
- 			/* Could it be a race with writeback? */
-@@ -1790,7 +1790,7 @@ static int nfs_update_inode(struct inode *inode, struct nfs_fattr *fattr)
- 				if (S_ISDIR(inode->i_mode))
- 					nfs_force_lookup_revalidate(inode);
- 			}
--			inode->i_version = fattr->change_attr;
-+			inode_set_iversion_raw(inode, fattr->change_attr);
+diff --git a/fs/ext4/dir.c b/fs/ext4/dir.c
+index d5babc9f222b..18eb37395a45 100644
+--- a/fs/ext4/dir.c
++++ b/fs/ext4/dir.c
+@@ -208,7 +208,7 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
+ 		 * readdir(2), then we might be pointing to an invalid
+ 		 * dirent right now.  Scan from the start of the block
+ 		 * to make sure. */
+-		if (file->f_version != inode->i_version) {
++		if (inode_cmp_iversion(inode, file->f_version)) {
+ 			for (i = 0; i < sb->s_blocksize && i < offset; ) {
+ 				de = (struct ext4_dir_entry_2 *)
+ 					(bh->b_data + i);
+@@ -227,7 +227,7 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
+ 			offset = i;
+ 			ctx->pos = (ctx->pos & ~(sb->s_blocksize - 1))
+ 				| offset;
+-			file->f_version = inode->i_version;
++			file->f_version = inode_query_iversion(inode);
  		}
- 	} else {
- 		nfsi->cache_validity |= save_cache_validity;
-diff --git a/fs/nfs/nfs4proc.c b/fs/nfs/nfs4proc.c
-index 56fa5a16e097..67ce69bce04e 100644
---- a/fs/nfs/nfs4proc.c
-+++ b/fs/nfs/nfs4proc.c
-@@ -1045,16 +1045,16 @@ static void update_changeattr(struct inode *dir, struct nfs4_change_info *cinfo,
  
- 	spin_lock(&dir->i_lock);
- 	nfsi->cache_validity |= NFS_INO_INVALID_ATTR|NFS_INO_INVALID_DATA;
--	if (cinfo->atomic && cinfo->before == dir->i_version) {
-+	if (cinfo->atomic && cinfo->before == inode_peek_iversion_raw(dir)) {
- 		nfsi->cache_validity &= ~NFS_INO_REVAL_PAGECACHE;
- 		nfsi->attrtimeo_timestamp = jiffies;
- 	} else {
- 		nfs_force_lookup_revalidate(dir);
--		if (cinfo->before != dir->i_version)
-+		if (cinfo->before != inode_peek_iversion_raw(dir))
- 			nfsi->cache_validity |= NFS_INO_INVALID_ACCESS |
- 				NFS_INO_INVALID_ACL;
- 	}
--	dir->i_version = cinfo->after;
-+	inode_set_iversion_raw(dir, cinfo->after);
- 	nfsi->read_cache_jiffies = timestamp;
- 	nfsi->attr_gencount = nfs_inc_attr_generation_counter();
- 	nfs_fscache_invalidate(dir);
-@@ -2454,7 +2454,8 @@ static int _nfs4_proc_open(struct nfs4_opendata *data)
- 			data->file_created = true;
- 		else if (o_res->cinfo.before != o_res->cinfo.after)
- 			data->file_created = true;
--		if (data->file_created || dir->i_version != o_res->cinfo.after)
-+		if (data->file_created ||
-+		    inode_peek_iversion_raw(dir) != o_res->cinfo.after)
- 			update_changeattr(dir, &o_res->cinfo,
- 					o_res->f_attr->time_start);
- 	}
-diff --git a/fs/nfs/nfstrace.h b/fs/nfs/nfstrace.h
-index 093290c42d7c..3e4b20d8994a 100644
---- a/fs/nfs/nfstrace.h
-+++ b/fs/nfs/nfstrace.h
-@@ -61,7 +61,7 @@ DECLARE_EVENT_CLASS(nfs_inode_event,
- 			__entry->dev = inode->i_sb->s_dev;
- 			__entry->fileid = nfsi->fileid;
- 			__entry->fhandle = nfs_fhandle_hash(&nfsi->fh);
--			__entry->version = inode->i_version;
-+			__entry->version = inode_peek_iversion_raw(inode);
- 		),
- 
- 		TP_printk(
-@@ -100,7 +100,7 @@ DECLARE_EVENT_CLASS(nfs_inode_event_done,
- 			__entry->fileid = nfsi->fileid;
- 			__entry->fhandle = nfs_fhandle_hash(&nfsi->fh);
- 			__entry->type = nfs_umode_to_dtype(inode->i_mode);
--			__entry->version = inode->i_version;
-+			__entry->version = inode_peek_iversion_raw(inode);
- 			__entry->size = i_size_read(inode);
- 			__entry->nfsi_flags = nfsi->flags;
- 			__entry->cache_validity = nfsi->cache_validity;
-diff --git a/fs/nfs/write.c b/fs/nfs/write.c
-index 5b5f464f6f2a..258f2c85b921 100644
---- a/fs/nfs/write.c
-+++ b/fs/nfs/write.c
-@@ -753,11 +753,8 @@ static void nfs_inode_add_request(struct inode *inode, struct nfs_page *req)
+ 		while (ctx->pos < inode->i_size
+@@ -568,10 +568,10 @@ static int ext4_dx_readdir(struct file *file, struct dir_context *ctx)
+ 		 * cached entries.
+ 		 */
+ 		if ((!info->curr_node) ||
+-		    (file->f_version != inode->i_version)) {
++		    inode_cmp_iversion(inode, file->f_version)) {
+ 			info->curr_node = NULL;
+ 			free_rb_tree_fname(&info->root);
+-			file->f_version = inode->i_version;
++			file->f_version = inode_query_iversion(inode);
+ 			ret = ext4_htree_fill_tree(file, info->curr_hash,
+ 						   info->curr_minor_hash,
+ 						   &info->next_hash);
+diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
+index 1367553c43bb..a4a621eb80c1 100644
+--- a/fs/ext4/inline.c
++++ b/fs/ext4/inline.c
+@@ -1042,7 +1042,7 @@ static int ext4_add_dirent_to_inline(handle_t *handle,
  	 */
- 	spin_lock(&mapping->private_lock);
- 	if (!nfs_have_writebacks(inode) &&
--	    NFS_PROTO(inode)->have_delegation(inode, FMODE_WRITE)) {
--		spin_lock(&inode->i_lock);
--		inode->i_version++;
--		spin_unlock(&inode->i_lock);
--	}
-+	    NFS_PROTO(inode)->have_delegation(inode, FMODE_WRITE))
-+		inode_inc_iversion(inode);
- 	if (likely(!PageSwapCache(req->wb_page))) {
- 		set_bit(PG_MAPPED, &req->wb_flags);
- 		SetPagePrivate(req->wb_page);
+ 	dir->i_mtime = dir->i_ctime = current_time(dir);
+ 	ext4_update_dx_flag(dir);
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 	return 1;
+ }
+ 
+@@ -1494,7 +1494,7 @@ int ext4_read_inline_dir(struct file *file,
+ 	 * dirent right now.  Scan from the start of the inline
+ 	 * dir to make sure.
+ 	 */
+-	if (file->f_version != inode->i_version) {
++	if (inode_cmp_iversion(inode, file->f_version)) {
+ 		for (i = 0; i < extra_size && i < offset;) {
+ 			/*
+ 			 * "." is with offset 0 and
+@@ -1526,7 +1526,7 @@ int ext4_read_inline_dir(struct file *file,
+ 		}
+ 		offset = i;
+ 		ctx->pos = offset;
+-		file->f_version = inode->i_version;
++		file->f_version = inode_query_iversion(inode);
+ 	}
+ 
+ 	while (ctx->pos < extra_size) {
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 7df2c5644e59..1f8ec9cd042c 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -4873,12 +4873,14 @@ struct inode *ext4_iget(struct super_block *sb, unsigned long ino)
+ 	EXT4_EINODE_GET_XTIME(i_crtime, ei, raw_inode);
+ 
+ 	if (likely(!test_opt2(inode->i_sb, HURD_COMPAT))) {
+-		inode->i_version = le32_to_cpu(raw_inode->i_disk_version);
++		u64 ivers = le32_to_cpu(raw_inode->i_disk_version);
++
+ 		if (EXT4_INODE_SIZE(inode->i_sb) > EXT4_GOOD_OLD_INODE_SIZE) {
+ 			if (EXT4_FITS_IN_INODE(raw_inode, ei, i_version_hi))
+-				inode->i_version |=
++				ivers |=
+ 		    (__u64)(le32_to_cpu(raw_inode->i_version_hi)) << 32;
+ 		}
++		inode_set_iversion_queried(inode, ivers);
+ 	}
+ 
+ 	ret = 0;
+@@ -5164,11 +5166,13 @@ static int ext4_do_update_inode(handle_t *handle,
+ 	}
+ 
+ 	if (likely(!test_opt2(inode->i_sb, HURD_COMPAT))) {
+-		raw_inode->i_disk_version = cpu_to_le32(inode->i_version);
++		u64 ivers = inode_peek_iversion(inode);
++
++		raw_inode->i_disk_version = cpu_to_le32(ivers);
+ 		if (ei->i_extra_isize) {
+ 			if (EXT4_FITS_IN_INODE(raw_inode, ei, i_version_hi))
+ 				raw_inode->i_version_hi =
+-					cpu_to_le32(inode->i_version >> 32);
++					cpu_to_le32(ivers >> 32);
+ 			raw_inode->i_extra_isize =
+ 				cpu_to_le16(ei->i_extra_isize);
+ 		}
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index 1eec25014f62..f2bed34869cd 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -144,7 +144,7 @@ static long swap_inode_boot_loader(struct super_block *sb,
+ 		i_gid_write(inode_bl, 0);
+ 		inode_bl->i_flags = 0;
+ 		ei_bl->i_flags = 0;
+-		inode_bl->i_version = 1;
++		inode_set_iversion(inode_bl, 1);
+ 		i_size_write(inode_bl, 0);
+ 		inode_bl->i_mode = S_IFREG;
+ 		if (ext4_has_feature_extents(sb)) {
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index 798b3ac680db..fe91d6a8c98d 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -2955,7 +2955,7 @@ static int ext4_rmdir(struct inode *dir, struct dentry *dentry)
+ 			     "empty directory '%.*s' has too many links (%u)",
+ 			     dentry->d_name.len, dentry->d_name.name,
+ 			     inode->i_nlink);
+-	inode->i_version++;
++	inode_inc_iversion(inode);
+ 	clear_nlink(inode);
+ 	/* There's no need to set i_disksize: the fact that i_nlink is
+ 	 * zero will ensure that the right thing happens during any
+@@ -3361,7 +3361,7 @@ static int ext4_setent(handle_t *handle, struct ext4_renament *ent,
+ 	ent->de->inode = cpu_to_le32(ino);
+ 	if (ext4_has_feature_filetype(ent->dir->i_sb))
+ 		ent->de->file_type = file_type;
+-	ent->dir->i_version++;
++	inode_inc_iversion(ent->dir);
+ 	ent->dir->i_ctime = ent->dir->i_mtime =
+ 		current_time(ent->dir);
+ 	ext4_mark_inode_dirty(handle, ent->dir);
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 7c46693a14d7..5663547e97f8 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -967,7 +967,7 @@ static struct inode *ext4_alloc_inode(struct super_block *sb)
+ 	if (!ei)
+ 		return NULL;
+ 
+-	ei->vfs_inode.i_version = 1;
++	inode_set_iversion(&ei->vfs_inode, 1);
+ 	spin_lock_init(&ei->i_raw_lock);
+ 	INIT_LIST_HEAD(&ei->i_prealloc_list);
+ 	spin_lock_init(&ei->i_prealloc_lock);
+diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
+index 218a7ba57819..d8e7baa681b5 100644
+--- a/fs/ext4/xattr.c
++++ b/fs/ext4/xattr.c
+@@ -294,13 +294,13 @@ ext4_xattr_inode_hash(struct ext4_sb_info *sbi, const void *buffer, size_t size)
+ static u64 ext4_xattr_inode_get_ref(struct inode *ea_inode)
+ {
+ 	return ((u64)ea_inode->i_ctime.tv_sec << 32) |
+-	       ((u32)ea_inode->i_version);
++		(u32) inode_peek_iversion(ea_inode);
+ }
+ 
+ static void ext4_xattr_inode_set_ref(struct inode *ea_inode, u64 ref_count)
+ {
+ 	ea_inode->i_ctime.tv_sec = (u32)(ref_count >> 32);
+-	ea_inode->i_version = (u32)ref_count;
++	inode_set_iversion(ea_inode, ref_count & 0xffffffff);
+ }
+ 
+ static u32 ext4_xattr_inode_get_hash(struct inode *ea_inode)
 -- 
 2.14.3
 
