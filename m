@@ -1,57 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42490 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757074AbdLPNrl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Dec 2017 08:47:41 -0500
-From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v2 17/19] xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need incrementing
-Date: Sat, 16 Dec 2017 08:46:54 -0500
-Message-Id: <20171216134656.15561-18-jlayton@kernel.org>
-In-Reply-To: <20171216134656.15561-1-jlayton@kernel.org>
-References: <20171216134656.15561-1-jlayton@kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56061 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750916AbdLRJMG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 04:12:06 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eQrSr-0002st-Ne
+        for linux-xfs@vger.kernel.org; Mon, 18 Dec 2017 20:12:01 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1eQrSr-0003qO-MX
+        for linux-xfs@vger.kernel.org; Mon, 18 Dec 2017 20:12:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 3/7] mkfs: protofile only needs to be set up once
+Date: Mon, 18 Dec 2017 20:11:54 +1100
+Message-Id: <20171218091158.14537-4-david@fromorbit.com>
+In-Reply-To: <20171218091158.14537-1-david@fromorbit.com>
+References: <20171218091158.14537-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com
+To: linux-xfs@vger.kernel.org
 
-From: Jeff Layton <jlayton@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-If XFS_ILOG_CORE is already set then go ahead and increment it.
-
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_trans_inode.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ mkfs/xfs_mkfs.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index b41a92d18140..18635c5b5dc6 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -110,15 +110,17 @@ xfs_trans_log_inode(
- 
- 	/*
- 	 * First time we log the inode in a transaction, bump the inode change
--	 * counter if it is configured for this to occur. We don't use
--	 * inode_inc_version() because there is no need for extra locking around
--	 * i_version as we already hold the inode locked exclusively for
--	 * metadata modification.
-+	 * counter if it is configured for this to occur. While we have the
-+	 * inode locked exclusively for metadata modification, we can usually
-+	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
-+	 * the last time it was incremented. If we have XFS_ILOG_CORE already
-+	 * set however, then go ahead and bump the i_version counter
-+	 * unconditionally.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 4a9c457ce603..7cc5ee2ddb9d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -4024,8 +4024,6 @@ main(
  	 */
- 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
- 	    IS_I_VERSION(VFS_I(ip))) {
--		inode_inc_iversion(VFS_I(ip));
--		flags |= XFS_ILOG_CORE;
-+		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
-+			flags |= XFS_ILOG_CORE;
- 	}
+ 	calculate_log_size(&cfg, &cli, mp);
  
- 	tp->t_flags |= XFS_TRANS_DIRTY;
+-	protostring = setup_proto(protofile);
+-
+ 	if (!quiet || dry_run) {
+ 		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
+ 		if (dry_run)
 -- 
-2.14.3
+2.15.0
 
