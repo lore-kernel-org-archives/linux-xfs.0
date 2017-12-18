@@ -1,74 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from m50-138.163.com ([123.125.50.138]:56640 "EHLO m50-138.163.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49828 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757801AbdLRLby (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 06:31:54 -0500
-From: "Vaughan" <cxt9401@163.com>
-Subject: How to get disk-location from "metadata I/O error"?
-Date: Mon, 18 Dec 2017 19:16:33 +0800
-Message-ID: <002e01d377f1$a986be00$fc943a00$@163.com>
+        id S1752841AbdLROrf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Dec 2017 09:47:35 -0500
+Date: Mon, 18 Dec 2017 08:47:32 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] tests/xfs/040: document purpose
+Message-ID: <20171218144732.GA11237@redhat.com>
+References: <20171215204118.17740-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Language: zh-cn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171215204118.17740-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi All,
+On Fri, Dec 15, 2017 at 12:41:18PM -0800, Luis R. Rodriguez wrote:
+> Getting xfs/040 to "pass" takes a bit of effort, however the effort
+> to require updating xfsprogs is purely an xfsprogs maintainer task
+> only. There no functional gain by users of xfs or a QA team to get
+> this test to pass. This is not trivial from the current description
+> so document this.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 
+Looks good...
 
-I encounter the following output from time to time. Since xfs is built on
-our own virtual disk, it's more likely that our vdisk is buggy.
-Can anyone tell me how to figure out the on-disk location given the block
-number? Does it follow the following formula?
-On-disk location = <block number from metadata I/O error> * <bsize of data
-section of xfs_info>
-However, the result from the above formula suggests the metadata is out of
-range of my disk, confused...
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-Another question is the corrupted metadata buffer always start with 8 bytes
-of '8' character. Does xfs use '8' as any magic label?
-I'm using centos-7.2, kernel 3.10.0-327.el7.
-
-
-XFS (md_d27): Metadata corruption detected at xfs_agf_read_verify+0x70/0x120
-[xfs], block 0x1e8ffa08
-XFS (md_d27): Unmount and run xfs_repair
-XFS (md_d27): First 64 bytes of corrupted metadata buffer:
-ffff88042fc69000: 38 38 38 38 38 38 38 38 00 00 00 00 00 00 00 00
-88888888........
-ffff88042fc69010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-................
-ffff88042fc69020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-................
-ffff88042fc69030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-................
-XFS (md_d27): metadata I/O error: block 0x1e8ffa08
-("xfs_trans_read_buf_map") error 117 numblks 8
-XFS (md_d27): page discard on page ffffea000b34f900, inode 0x23e, offset
-362840064.
-XFS (md_d27): Metadata corruption detected at xfs_agf_read_verify+0x70/0x120
-[xfs], block 0x1e8ffa08
-XFS (md_d27): Unmount and run xfs_repair
-
-# xfs_info /mnt/md/27
-meta-data=/dev/md_d27            isize=256    agcount=32, agsize=10682336
-blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=0        finobt=0
-data     =                       bsize=4096   blocks=341834752, imaxpct=5
-         =                       sunit=32     swidth=64 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal               bsize=4096   blocks=166911, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-#cat /proc/partition
-253     1728 1367342592 md_d27
-
-
--Vaughan
-
+> ---
+>  tests/xfs/040 | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/tests/xfs/040 b/tests/xfs/040
+> index fadb888cbfaf..a0abc42f3720 100755
+> --- a/tests/xfs/040
+> +++ b/tests/xfs/040
+> @@ -3,6 +3,11 @@
+>  #
+>  # compare-libxfs test
+>  #
+> +# The purpose of this test is only to nag the maintainer of xfsprogs to try to
+> +# keep xfsprogs's libxfs files in sync with the latest kernel's libxfs. There
+> +# is no functional need for anyone to actually run this test to confirm
+> +# proper XFS functionalilty, this is an xfsprogs maintainer test.
+> +#
+>  #-----------------------------------------------------------------------
+>  # Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+>  #
+> -- 
+> 2.15.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
