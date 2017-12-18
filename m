@@ -1,113 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58398 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:34961 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934234AbdLRRWY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 12:22:24 -0500
-Message-ID: <1513617740.3422.30.camel@kernel.org>
-Subject: Re: [PATCH v3 19/19] fs: handle inode->i_version more efficiently
-From: Jeff Layton <jlayton@kernel.org>
-Date: Mon, 18 Dec 2017 12:22:20 -0500
-In-Reply-To: <20171218163418.GF30350@quack2.suse.cz>
-References: <20171218151156.14565-1-jlayton@kernel.org>
-         <20171218151156.14565-20-jlayton@kernel.org>
-         <20171218163418.GF30350@quack2.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1757810AbdLRD2I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 17 Dec 2017 22:28:08 -0500
+Subject: Re: Detecting RWF_NOWAIT support
+References: <b45afd09-5fa8-74ac-4ba4-9dc9074e30cf@scylladb.com>
+ <4ae3426d-8104-c243-72e4-671e89401b23@suse.de>
+ <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <c4b15d8a-e868-5b31-f499-28151ba36116@suse.de>
+Date: Sun, 17 Dec 2017 21:28:03 -0600
+MIME-Version: 1.0
+In-Reply-To: <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: Avi Kivity <avi@scylladb.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Mon, 2017-12-18 at 17:34 +0100, Jan Kara wrote:
-> On Mon 18-12-17 10:11:56, Jeff Layton wrote:
-> >  static inline bool
-> >  inode_maybe_inc_iversion(struct inode *inode, bool force)
-> >  {
-> > -	atomic64_t *ivp = (atomic64_t *)&inode->i_version;
-> > +	u64 cur, old, new;
-> >  
-> > -	atomic64_inc(ivp);
-> > +	cur = (u64)atomic64_read(&inode->i_version);
-> > +	for (;;) {
-> > +		/* If flag is clear then we needn't do anything */
-> > +		if (!force && !(cur & I_VERSION_QUERIED))
-> > +			return false;
+
+
+On 12/16/2017 08:49 AM, Avi Kivity wrote:
 > 
-> The fast path here misses any memory barrier. Thus it seems this query
-> could be in theory reordered before any store that happened to modify the
-> inode? Or maybe we could race and miss the fact that in fact this i_version
-> has already been queried? But maybe there's some higher level locking that
-> makes sure this is all a non-issue... But in that case it would deserve
-> some comment I guess.
 > 
-
-There's no higher-level locking. Getting locking out of this codepath is
-a good thing IMO. The larger question here is whether we really care
-about ordering this with anything else.
-
-The i_version, as implemented today, is not ordered with actual changes
-to the inode. We only take the i_lock today when modifying it, not when
-querying it. It's possible today that you could see the results of a
-change and then do a fetch of the i_version that doesn't show an
-increment vs. a previous change.
-
-It'd be nice if this were atomic with the actual changes that it
-represents, but I think that would be prohibitively expensive. That may
-be something we need to address. I'm not sure we really want to do it as
-part of this patchset though.
-
-> > +
-> > +		/* Since lowest bit is flag, add 2 to avoid it */
-> > +		new = (cur & ~I_VERSION_QUERIED) + I_VERSION_INCREMENT;
-> > +
-> > +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
-> > +		if (likely(old == cur))
-> > +			break;
-> > +		cur = old;
-> > +	}
-> >  	return true;
-> >  }
-> >  
+> On 12/14/2017 09:15 PM, Goldwyn Rodrigues wrote:
+>>
+>> On 12/14/2017 11:38 AM, Avi Kivity wrote:
+>>> I'm looking to add support for RWF_NOWAIT within a linux-aio iocb.
+>>> Naturally, I need to detect at runtime whether the kernel support
+>>> RWF_NOWAIT or not.
+>>>
+>>>
+>>> The only method I could find was to issue an I/O with RWF_NOWAIT set,
+>>> and look for errors. This is somewhat less than perfect:
+>>>
+>>>   - from the error, I can't tell whether RWF_NOWAIT was the problem, or
+>>> something else. If I enable a number of new features, I have to run
+>>> through all combinations to figure out which ones are supported and
+>>> which are not.
+>> Here is the return codes for RWF_NOWAIT
+>> EINVAL - not supported (older kernel)
+>> EOPNOTSUPP - not supported
+>> EAGAIN - supported but could not complete because I/O will be delayed
 > 
-> ...
+> Which of these are returned from io_submit() and which are returned in
+> the iocb?
+
+These are returned in iocb.
+
 > 
-> >  static inline u64
-> >  inode_query_iversion(struct inode *inode)
-> >  {
-> > -	return inode_peek_iversion(inode);
-> > +	u64 cur, old, new;
-> > +
-> > +	cur = atomic64_read(&inode->i_version);
-> > +	for (;;) {
-> > +		/* If flag is already set, then no need to swap */
-> > +		if (cur & I_VERSION_QUERIED)
-> > +			break;
-> > +
-> > +		new = cur | I_VERSION_QUERIED;
-> > +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
-> > +		if (old == cur)
-> > +			break;
-> > +		cur = old;
-> > +	}
+>> 0 - supported and I/O completed (success).
+>>
+>>>   - RWF_NOWAIT support is per-filesystem, so I can't just remember
+>>> not to
+>>> enable RWF_NOWAIT globally, I have to track it per file.
+>> Yes, the support is per filesystem. So, the application must know if the
+>> filesystem supports it, possibly by performing a small I/O.
 > 
-> Why not just use atomic64_or() here?
-> 
+> So the application must know about filesystem mount points, and be
+> prepared to create a file and try to write it (in case the filesystem is
+> empty) or alter its behavior during runtime depending on the errors it
+> sees.
 
-If the cmpxchg fails, then either:
+Well yes. Hopefully, the application knows what it is doing when it
+performs RWF_NOWAIT.
 
-1) it was incremented
-2) someone flagged it QUERIED
-
-If an increment happened then we don't need to flag it as QUERIED if
-we're returning an older value. If we use atomic64_or, then we can't
-tell if an increment happened so we'd end up potentially flagging it
-more than necessary.
-
-In principle, either outcome is technically OK and we don't have to loop
-if the cmpxchg doesn't work. That said, if we think there might be a
-later i_version available, then I think we probably want to try to query
-it again so we can return as late a one as possible.
 -- 
-Jeff Layton <jlayton@kernel.org>
+Goldwyn
