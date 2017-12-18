@@ -1,14 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55040 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:54742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758723AbdLRPMN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 10:12:13 -0500
+        id S1752720AbdLRPMB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Dec 2017 10:12:01 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v3 05/19] afs: convert to new i_version API
-Date: Mon, 18 Dec 2017 10:11:42 -0500
-Message-Id: <20171218151156.14565-6-jlayton@kernel.org>
-In-Reply-To: <20171218151156.14565-1-jlayton@kernel.org>
-References: <20171218151156.14565-1-jlayton@kernel.org>
+Subject: [PATCH v3 00/19] fs: rework and optimize i_version handling in filesystems
+Date: Mon, 18 Dec 2017 10:11:37 -0500
+Message-Id: <20171218151156.14565-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -17,71 +15,153 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
-For AFS, it's generally treated as an opaque value, so we use the
-*_raw variants of the API here.
+v3:
+- move i_version handling functions to new header file
+- document that the kernel-managed i_version implementation will appear to
+  increase over time
+- fix inode_cmp_iversion to handle wraparound correctly
 
-Note that AFS has quite a different definition for this counter. AFS
-only increments it on changes to the data, not for the metadata. We'll
-need to reconcile that somehow if we ever want to present this to
-userspace via statx.
+v2:
+- xfs should use inode_peek_iversion instead of inode_peek_iversion_raw
+- rework file_update_time patch
+- don't dirty inode when only S_ATIME is set and SB_LAZYTIME is enabled
+- better comments and documentation
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/afs/fsclient.c | 3 ++-
- fs/afs/inode.c    | 5 +++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
+tl;dr: I think we can greatly reduce the cost of the inode->i_version
+counter, by exploiting the fact that we don't need to increment it if no
+one is looking at it. We can also clean up the code to prepare to
+eventually expose this value via statx().
 
-diff --git a/fs/afs/fsclient.c b/fs/afs/fsclient.c
-index b90ef39ae914..88ec38c2d83c 100644
---- a/fs/afs/fsclient.c
-+++ b/fs/afs/fsclient.c
-@@ -13,6 +13,7 @@
- #include <linux/slab.h>
- #include <linux/sched.h>
- #include <linux/circ_buf.h>
-+#include <linux/iversion.h>
- #include "internal.h"
- #include "afs_fs.h"
- 
-@@ -124,7 +125,7 @@ static void xdr_decode_AFSFetchStatus(const __be32 **_bp,
- 		vnode->vfs_inode.i_ctime.tv_sec	= status->mtime_client;
- 		vnode->vfs_inode.i_mtime	= vnode->vfs_inode.i_ctime;
- 		vnode->vfs_inode.i_atime	= vnode->vfs_inode.i_ctime;
--		vnode->vfs_inode.i_version	= data_version;
-+		inode_set_iversion_raw(&vnode->vfs_inode, data_version);
- 	}
- 
- 	expected_version = status->data_version;
-diff --git a/fs/afs/inode.c b/fs/afs/inode.c
-index 3415eb7484f6..dcd2e08d6cdb 100644
---- a/fs/afs/inode.c
-+++ b/fs/afs/inode.c
-@@ -21,6 +21,7 @@
- #include <linux/sched.h>
- #include <linux/mount.h>
- #include <linux/namei.h>
-+#include <linux/iversion.h>
- #include "internal.h"
- 
- static const struct inode_operations afs_symlink_inode_operations = {
-@@ -89,7 +90,7 @@ static int afs_inode_map_status(struct afs_vnode *vnode, struct key *key)
- 	inode->i_atime		= inode->i_mtime = inode->i_ctime;
- 	inode->i_blocks		= 0;
- 	inode->i_generation	= vnode->fid.unique;
--	inode->i_version	= vnode->status.data_version;
-+	inode_set_iversion_raw(inode, vnode->status.data_version);
- 	inode->i_mapping->a_ops	= &afs_fs_aops;
- 
- 	read_sequnlock_excl(&vnode->cb_lock);
-@@ -218,7 +219,7 @@ struct inode *afs_iget_autocell(struct inode *dir, const char *dev_name,
- 	inode->i_ctime.tv_nsec	= 0;
- 	inode->i_atime		= inode->i_mtime = inode->i_ctime;
- 	inode->i_blocks		= 0;
--	inode->i_version	= 0;
-+	inode_set_iversion_raw(inode, 0);
- 	inode->i_generation	= 0;
- 
- 	set_bit(AFS_VNODE_PSEUDODIR, &vnode->flags);
+Note that this set relies on a few patches that are in other trees. The
+full stack that I've been testing with is here:
+
+    https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git/log/?h=iversion
+
+The inode->i_version field is supposed to be a value that changes
+whenever there is any data or metadata change to the inode. Some
+filesystems use it internally to detect directory changes during
+readdir. knfsd will use it if the filesystem has MS_I_VERSION set. IMA
+will also use it to optimize away some remeasurement if it's available.
+NFS and AFS just use it to store an opaque change attribute from the
+server.
+
+Only btrfs, ext4, and xfs increment it for data changes. Because of
+this, these filesystems must log the inode to disk whenever the
+i_version counter changes. That has a non-zero performance impact,
+especially on write-heavy workloads, because we end up dirtying the
+inode metadata on every write, not just when the times change.
+
+It turns out though that none of these users of i_version require that
+it change on every change to the file. The only real requirement is that
+it be different if something changed since the last time we queried for
+it.
+
+If we keep track of when something queries the value, we can avoid
+bumping the counter and an on-disk update when nothing else has changed
+if no one has queried it since it was last incremented.
+
+This patchset changes the code to only bump the i_version counter when
+it's strictly necessary, or when we're updating the inode metadata
+anyway (e.g. when times change).
+
+It takes the approach of converting the existing accessors of i_version
+to use a new API, while leaving the underlying implementation mostly the
+same.  The last patch then converts the existing implementation to keep
+track of whether the value has been queried since it was last
+incremented. It then uses that to avoid incrementing the counter when
+it can.
+
+With this, we reduce inode metadata updates across all 3 filesystems
+down to roughly the frequency of the timestamp granularity, particularly
+when it's not being queried (the vastly common case).
+
+I can see measurable performance gains on xfs and ext4 with iversion
+enabled, when streaming small (4k) I/Os. 
+
+btrfs shows some slight gain in testing, but not quite the magnitude
+that xfs and ext4 show. I'm not sure why yet and would appreciate some
+input from btrfs folks.
+
+My goal is to get this into linux-next fairly soon. If it shows no
+problems then we can look at merging it for 4.16, or 4.17 if all of the
+prequisite patches are not yet merged.
+
+Jeff Layton (19):
+  fs: new API for handling inode->i_version
+  fs: don't take the i_lock in inode_inc_iversion
+  fat: convert to new i_version API
+  affs: convert to new i_version API
+  afs: convert to new i_version API
+  btrfs: convert to new i_version API
+  exofs: switch to new i_version API
+  ext2: convert to new i_version API
+  ext4: convert to new i_version API
+  nfs: convert to new i_version API
+  nfsd: convert to new i_version API
+  ocfs2: convert to new i_version API
+  ufs: use new i_version API
+  xfs: convert to new i_version API
+  IMA: switch IMA over to new i_version API
+  fs: only set S_VERSION when updating times if necessary
+  xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need
+    incrementing
+  btrfs: only dirty the inode in btrfs_update_time if something was
+    changed
+  fs: handle inode->i_version more efficiently
+
+ fs/affs/amigaffs.c                |   5 +-
+ fs/affs/dir.c                     |   5 +-
+ fs/affs/super.c                   |   3 +-
+ fs/afs/fsclient.c                 |   3 +-
+ fs/afs/inode.c                    |   5 +-
+ fs/btrfs/delayed-inode.c          |   7 +-
+ fs/btrfs/file.c                   |   1 +
+ fs/btrfs/inode.c                  |  12 +-
+ fs/btrfs/ioctl.c                  |   1 +
+ fs/btrfs/tree-log.c               |   4 +-
+ fs/btrfs/xattr.c                  |   1 +
+ fs/exofs/dir.c                    |   9 +-
+ fs/exofs/super.c                  |   3 +-
+ fs/ext2/dir.c                     |   9 +-
+ fs/ext2/super.c                   |   5 +-
+ fs/ext4/dir.c                     |   9 +-
+ fs/ext4/inline.c                  |   7 +-
+ fs/ext4/inode.c                   |  13 +-
+ fs/ext4/ioctl.c                   |   3 +-
+ fs/ext4/namei.c                   |   5 +-
+ fs/ext4/super.c                   |   3 +-
+ fs/ext4/xattr.c                   |   5 +-
+ fs/fat/dir.c                      |   3 +-
+ fs/fat/inode.c                    |   9 +-
+ fs/fat/namei_msdos.c              |   7 +-
+ fs/fat/namei_vfat.c               |  22 +--
+ fs/inode.c                        |  20 ++-
+ fs/nfs/delegation.c               |   3 +-
+ fs/nfs/fscache-index.c            |   5 +-
+ fs/nfs/inode.c                    |  18 +--
+ fs/nfs/nfs4proc.c                 |  10 +-
+ fs/nfs/nfstrace.h                 |   5 +-
+ fs/nfs/write.c                    |   8 +-
+ fs/nfsd/nfsfh.h                   |   3 +-
+ fs/ocfs2/dir.c                    |  15 +-
+ fs/ocfs2/inode.c                  |   3 +-
+ fs/ocfs2/namei.c                  |   3 +-
+ fs/ocfs2/quota_global.c           |   3 +-
+ fs/ufs/dir.c                      |   9 +-
+ fs/ufs/inode.c                    |   3 +-
+ fs/ufs/super.c                    |   3 +-
+ fs/xfs/libxfs/xfs_inode_buf.c     |   7 +-
+ fs/xfs/xfs_icache.c               |   5 +-
+ fs/xfs/xfs_inode.c                |   3 +-
+ fs/xfs/xfs_inode_item.c           |   3 +-
+ fs/xfs/xfs_trans_inode.c          |  16 ++-
+ include/linux/fs.h                |  17 +--
+ include/linux/iversion.h          | 286 ++++++++++++++++++++++++++++++++++++++
+ security/integrity/ima/ima_api.c  |   3 +-
+ security/integrity/ima/ima_main.c |   3 +-
+ 50 files changed, 475 insertions(+), 138 deletions(-)
+ create mode 100644 include/linux/iversion.h
+
 -- 
 2.14.3
 
