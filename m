@@ -1,71 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34961 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757810AbdLRD2I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 17 Dec 2017 22:28:08 -0500
-Subject: Re: Detecting RWF_NOWAIT support
-References: <b45afd09-5fa8-74ac-4ba4-9dc9074e30cf@scylladb.com>
- <4ae3426d-8104-c243-72e4-671e89401b23@suse.de>
- <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <c4b15d8a-e868-5b31-f499-28151ba36116@suse.de>
-Date: Sun, 17 Dec 2017 21:28:03 -0600
-MIME-Version: 1.0
-In-Reply-To: <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56061 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1758219AbdLRJMI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 04:12:08 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eQrSr-0002sr-M3
+        for linux-xfs@vger.kernel.org; Mon, 18 Dec 2017 20:12:01 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1eQrSr-0003qI-Kk
+        for linux-xfs@vger.kernel.org; Mon, 18 Dec 2017 20:12:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/7] mkfs: use opts parameter during option parsing
+Date: Mon, 18 Dec 2017 20:11:52 +1100
+Message-Id: <20171218091158.14537-2-david@fromorbit.com>
+In-Reply-To: <20171218091158.14537-1-david@fromorbit.com>
+References: <20171218091158.14537-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+From: Dave Chinner <dchinner@redhat.com>
 
+Rather than hard coding the global table variable into the
+parsing functions.
 
-On 12/16/2017 08:49 AM, Avi Kivity wrote:
-> 
-> 
-> On 12/14/2017 09:15 PM, Goldwyn Rodrigues wrote:
->>
->> On 12/14/2017 11:38 AM, Avi Kivity wrote:
->>> I'm looking to add support for RWF_NOWAIT within a linux-aio iocb.
->>> Naturally, I need to detect at runtime whether the kernel support
->>> RWF_NOWAIT or not.
->>>
->>>
->>> The only method I could find was to issue an I/O with RWF_NOWAIT set,
->>> and look for errors. This is somewhat less than perfect:
->>>
->>>   - from the error, I can't tell whether RWF_NOWAIT was the problem, or
->>> something else. If I enable a number of new features, I have to run
->>> through all combinations to figure out which ones are supported and
->>> which are not.
->> Here is the return codes for RWF_NOWAIT
->> EINVAL - not supported (older kernel)
->> EOPNOTSUPP - not supported
->> EAGAIN - supported but could not complete because I/O will be delayed
-> 
-> Which of these are returned from io_submit() and which are returned in
-> the iocb?
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 60 ++++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 30 insertions(+), 30 deletions(-)
 
-These are returned in iocb.
-
-> 
->> 0 - supported and I/O completed (success).
->>
->>>   - RWF_NOWAIT support is per-filesystem, so I can't just remember
->>> not to
->>> enable RWF_NOWAIT globally, I have to track it per file.
->> Yes, the support is per filesystem. So, the application must know if the
->> filesystem supports it, possibly by performing a small I/O.
-> 
-> So the application must know about filesystem mount points, and be
-> prepared to create a file and try to write it (in case the filesystem is
-> empty) or alter its behavior during runtime depending on the errors it
-> sees.
-
-Well yes. Hopefully, the application knows what it is doing when it
-performs RWF_NOWAIT.
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index e38810f53386..f79062da4ff4 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1533,29 +1533,29 @@ inode_opts_parser(
+ 
+ 	switch (subopt) {
+ 	case I_ALIGN:
+-		cli->sb_feat.inode_align = getnum(value, &iopts, I_ALIGN);
++		cli->sb_feat.inode_align = getnum(value, opts, I_ALIGN);
+ 		break;
+ 	case I_LOG:
+-		inodelog = getnum(value, &iopts, I_LOG);
++		inodelog = getnum(value, opts, I_LOG);
+ 		cli->inodesize = 1 << inodelog;
+ 		break;
+ 	case I_MAXPCT:
+-		cli->imaxpct = getnum(value, &iopts, I_MAXPCT);
++		cli->imaxpct = getnum(value, opts, I_MAXPCT);
+ 		break;
+ 	case I_PERBLOCK:
+-		cli->inopblock = getnum(value, &iopts, I_PERBLOCK);
++		cli->inopblock = getnum(value, opts, I_PERBLOCK);
+ 		break;
+ 	case I_SIZE:
+-		cli->inodesize = getnum(value, &iopts, I_SIZE);
++		cli->inodesize = getnum(value, opts, I_SIZE);
+ 		break;
+ 	case I_ATTR:
+-		cli->sb_feat.attr_version = getnum(value, &iopts, I_ATTR);
++		cli->sb_feat.attr_version = getnum(value, opts, I_ATTR);
+ 		break;
+ 	case I_PROJID32BIT:
+-		cli->sb_feat.projid16bit = !getnum(value, &iopts, I_PROJID32BIT);
++		cli->sb_feat.projid16bit = !getnum(value, opts, I_PROJID32BIT);
+ 		break;
+ 	case I_SPINODES:
+-		cli->sb_feat.spinodes = getnum(value, &iopts, I_SPINODES);
++		cli->sb_feat.spinodes = getnum(value, opts, I_SPINODES);
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -1574,40 +1574,40 @@ log_opts_parser(
+ 
+ 	switch (subopt) {
+ 	case L_AGNUM:
+-		cli->logagno = getnum(value, &lopts, L_AGNUM);
++		cli->logagno = getnum(value, opts, L_AGNUM);
+ 		break;
+ 	case L_FILE:
+-		cli->xi->lisfile = getnum(value, &lopts, L_FILE);
++		cli->xi->lisfile = getnum(value, opts, L_FILE);
+ 		break;
+ 	case L_INTERNAL:
+-		cli->loginternal = getnum(value, &lopts, L_INTERNAL);
++		cli->loginternal = getnum(value, opts, L_INTERNAL);
+ 		break;
+ 	case L_SU:
+-		cli->lsu = getstr(value, &lopts, L_SU);
++		cli->lsu = getstr(value, opts, L_SU);
+ 		break;
+ 	case L_SUNIT:
+-		cli->lsunit = getnum(value, &lopts, L_SUNIT);
++		cli->lsunit = getnum(value, opts, L_SUNIT);
+ 		break;
+ 	case L_NAME:
+ 	case L_DEV:
+-		cli->xi->logname = getstr(value, &lopts, L_NAME);
++		cli->xi->logname = getstr(value, opts, L_NAME);
+ 		cli->loginternal = 0;
+ 		break;
+ 	case L_VERSION:
+-		cli->sb_feat.log_version = getnum(value, &lopts, L_VERSION);
++		cli->sb_feat.log_version = getnum(value, opts, L_VERSION);
+ 		break;
+ 	case L_SIZE:
+-		cli->logsize = getstr(value, &lopts, L_SIZE);
++		cli->logsize = getstr(value, opts, L_SIZE);
+ 		break;
+ 	case L_SECTLOG:
+-		lsectorlog = getnum(value, &lopts, L_SECTLOG);
++		lsectorlog = getnum(value, opts, L_SECTLOG);
+ 		cli->lsectorsize = 1 << lsectorlog;
+ 		break;
+ 	case L_SECTSIZE:
+-		cli->lsectorsize = getnum(value, &lopts, L_SECTSIZE);
++		cli->lsectorsize = getnum(value, opts, L_SECTSIZE);
+ 		break;
+ 	case L_LAZYSBCNTR:
+-		cli->sb_feat.lazy_sb_counters = getnum(value, &lopts, L_LAZYSBCNTR);
++		cli->sb_feat.lazy_sb_counters = getnum(value, opts, L_LAZYSBCNTR);
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -1624,12 +1624,12 @@ meta_opts_parser(
+ {
+ 	switch (subopt) {
+ 	case M_CRC:
+-		cli->sb_feat.crcs_enabled = getnum(value, &mopts, M_CRC);
++		cli->sb_feat.crcs_enabled = getnum(value, opts, M_CRC);
+ 		if (cli->sb_feat.crcs_enabled)
+ 			cli->sb_feat.dirftype = true;
+ 		break;
+ 	case M_FINOBT:
+-		cli->sb_feat.finobt = getnum(value, &mopts, M_FINOBT);
++		cli->sb_feat.finobt = getnum(value, opts, M_FINOBT);
+ 		break;
+ 	case M_UUID:
+ 		if (!value || *value == '\0')
+@@ -1638,10 +1638,10 @@ meta_opts_parser(
+ 			illegal(value, "m uuid");
+ 		break;
+ 	case M_RMAPBT:
+-		cli->sb_feat.rmapbt = getnum(value, &mopts, M_RMAPBT);
++		cli->sb_feat.rmapbt = getnum(value, opts, M_RMAPBT);
+ 		break;
+ 	case M_REFLINK:
+-		cli->sb_feat.reflink = getnum(value, &mopts, M_REFLINK);
++		cli->sb_feat.reflink = getnum(value, opts, M_REFLINK);
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -1690,20 +1690,20 @@ rtdev_opts_parser(
+ {
+ 	switch (subopt) {
+ 	case R_EXTSIZE:
+-		cli->rtextsize = getstr(value, &ropts, R_EXTSIZE);
++		cli->rtextsize = getstr(value, opts, R_EXTSIZE);
+ 		break;
+ 	case R_FILE:
+-		cli->xi->risfile = getnum(value, &ropts, R_FILE);
++		cli->xi->risfile = getnum(value, opts, R_FILE);
+ 		break;
+ 	case R_NAME:
+ 	case R_DEV:
+-		cli->xi->rtname = getstr(value, &ropts, R_NAME);
++		cli->xi->rtname = getstr(value, opts, R_NAME);
+ 		break;
+ 	case R_SIZE:
+-		cli->rtsize = getstr(value, &ropts, R_SIZE);
++		cli->rtsize = getstr(value, opts, R_SIZE);
+ 		break;
+ 	case R_NOALIGN:
+-		cli->sb_feat.nortalign = getnum(value, &ropts, R_NOALIGN);
++		cli->sb_feat.nortalign = getnum(value, opts, R_NOALIGN);
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -1725,7 +1725,7 @@ sector_opts_parser(
+ 	case S_SECTLOG:
+ 		if (cli->sectorsize)
+ 			conflict('s', opts->subopts, S_SECTSIZE, S_SECTLOG);
+-		sectorlog = getnum(value, &sopts, S_SECTLOG);
++		sectorlog = getnum(value, opts, S_SECTLOG);
+ 		cli->sectorsize = 1 << sectorlog;
+ 		cli->lsectorsize = cli->sectorsize;
+ 		break;
+@@ -1733,7 +1733,7 @@ sector_opts_parser(
+ 	case S_SECTSIZE:
+ 		if (cli->sectorsize)
+ 			conflict('s', opts->subopts, S_SECTLOG, S_SECTSIZE);
+-		cli->sectorsize = getnum(value, &sopts, S_SECTSIZE);
++		cli->sectorsize = getnum(value, opts, S_SECTSIZE);
+ 		cli->lsectorsize = cli->sectorsize;
+ 		break;
+ 	default:
 -- 
-Goldwyn
+2.15.0
+
