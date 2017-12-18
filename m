@@ -1,128 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:54826 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:6896 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S964920AbdLRWIF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 17:08:05 -0500
-Date: Tue, 19 Dec 2017 09:07:59 +1100
+        by vger.kernel.org with ESMTP id S933873AbdLRWKq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 17:10:46 -0500
+Date: Tue, 19 Dec 2017 09:10:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 19/19] fs: handle inode->i_version more efficiently
-Message-ID: <20171218220759.GF4094@dastard>
-References: <20171218151156.14565-1-jlayton@kernel.org>
- <20171218151156.14565-20-jlayton@kernel.org>
- <20171218163418.GF30350@quack2.suse.cz>
- <1513617740.3422.30.camel@kernel.org>
- <20171218173651.GB12454@fieldses.org>
- <1513625720.3422.68.camel@kernel.org>
+Subject: Re: [trivial PATCH] treewide: Align function definition open/close
+ braces
+Message-ID: <20171218221040.GG4094@dastard>
+References: <1513556924.31581.51.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1513625720.3422.68.camel@kernel.org>
+In-Reply-To: <1513556924.31581.51.camel@perches.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: Joe Perches <joe@perches.com>
+Cc: Jiri Kosina <trivial@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, platform-driver-x86@vger.kernel.org, linux-rtc@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org, linux-audit@redhat.com, alsa-devel@alsa-project.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 
-On Mon, Dec 18, 2017 at 02:35:20PM -0500, Jeff Layton wrote:
-> [PATCH] SQUASH: add memory barriers around i_version accesses
+On Sun, Dec 17, 2017 at 04:28:44PM -0800, Joe Perches wrote:
+> Some functions definitions have either the initial open brace and/or
+> the closing brace outside of column 1.
+> 
+> Move those braces to column 1.
+> 
+> This allows various function analyzers like gnu complexity to work
+> properly for these modified functions.
+> 
+> Miscellanea:
+> 
+> o Remove extra trailing ; and blank line from xfs_agf_verify
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+....
 
-Why explicit memory barriers rather than annotating the operations
-with the required semantics and getting the barriers the arch
-requires automatically?  I suspect this should be using
-atomic_read_acquire() and atomic_cmpxchg_release(), because AFAICT
-the atomic_cmpxchg needs to have release semantics to match the
-acquire semantics needed for the load of the current value.
+XFS bits look fine.
 
->From include/linux/atomics.h:
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
- * For compound atomics performing both a load and a store, ACQUIRE
- * semantics apply only to the load and RELEASE semantics only to the
- * store portion of the operation. Note that a failed cmpxchg_acquire
- * does -not- imply any memory ordering constraints.
-
-Memory barriers hurt my brain. :/
-
-At minimum, shouldn't the atomic op specific barriers be used rather
-than full memory barriers? i.e:
-
-> diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-> index a9fbf99709df..39ec9aa9e08e 100644
-> --- a/include/linux/iversion.h
-> +++ b/include/linux/iversion.h
-> @@ -87,6 +87,25 @@ static inline void
->  inode_set_iversion_raw(struct inode *inode, const u64 val)
->  {
->  	atomic64_set(&inode->i_version, val);
-> +	smp_wmb();
-
-	smp_mb__after_atomic();
-.....
-> +static inline u64
-> +inode_peek_iversion_raw(const struct inode *inode)
-> +{
-> +	smp_rmb();
-
-	smp_mb__before_atomic();
-
-> +	return atomic64_read(&inode->i_version);
->  }
-
-And, of course, these will require comments explaining what they
-match with and what they are ordering.
-
-> @@ -152,7 +171,7 @@ inode_maybe_inc_iversion(struct inode *inode, bool force)
->  {
->  	u64 cur, old, new;
->  
-> -	cur = (u64)atomic64_read(&inode->i_version);
-> +	cur = inode_peek_iversion_raw(inode);
->  	for (;;) {
->  		/* If flag is clear then we needn't do anything */
->  		if (!force && !(cur & I_VERSION_QUERIED))
-
-cmpxchg in this loop needs a release barrier so everyone will
-see the change?
-
-> @@ -183,23 +202,6 @@ inode_inc_iversion(struct inode *inode)
->  	inode_maybe_inc_iversion(inode, true);
->  }
->  
-> -/**
-> - * inode_peek_iversion_raw - grab a "raw" iversion value
-> - * @inode: inode from which i_version should be read
-> - *
-> - * Grab a "raw" inode->i_version value and return it. The i_version is not
-> - * flagged or converted in any way. This is mostly used to access a self-managed
-> - * i_version.
-> - *
-> - * With those filesystems, we want to treat the i_version as an entirely
-> - * opaque value.
-> - */
-> -static inline u64
-> -inode_peek_iversion_raw(const struct inode *inode)
-> -{
-> -	return atomic64_read(&inode->i_version);
-> -}
-> -
->  /**
->   * inode_iversion_need_inc - is the i_version in need of being incremented?
->   * @inode: inode to check
-> @@ -248,7 +250,7 @@ inode_query_iversion(struct inode *inode)
->  {
->  	u64 cur, old, new;
->  
-> -	cur = atomic64_read(&inode->i_version);
-> +	cur = inode_peek_iversion_raw(inode);
->  	for (;;) {
->  		/* If flag is already set, then no need to swap */
->  		if (cur & I_VERSION_QUERIED)
-
-cmpxchg in this loop needs a release barrier so everyone will
-see the change on load?
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
