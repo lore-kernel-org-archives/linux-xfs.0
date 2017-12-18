@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55582 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:55526 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932804AbdLRPMi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 10:12:38 -0500
+        id S1758829AbdLRPMg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Dec 2017 10:12:36 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v3 15/19] IMA: switch IMA over to new i_version API
-Date: Mon, 18 Dec 2017 10:11:52 -0500
-Message-Id: <20171218151156.14565-16-jlayton@kernel.org>
+Subject: [PATCH v3 14/19] xfs: convert to new i_version API
+Date: Mon, 18 Dec 2017 10:11:51 -0500
+Message-Id: <20171218151156.14565-15-jlayton@kernel.org>
 In-Reply-To: <20171218151156.14565-1-jlayton@kernel.org>
 References: <20171218151156.14565-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -19,52 +19,138 @@ From: Jeff Layton <jlayton@redhat.com>
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- security/integrity/ima/ima_api.c  | 3 ++-
- security/integrity/ima/ima_main.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
+ fs/xfs/xfs_icache.c           | 5 +++--
+ fs/xfs/xfs_inode.c            | 3 ++-
+ fs/xfs/xfs_inode_item.c       | 3 ++-
+ fs/xfs/xfs_trans_inode.c      | 4 +++-
+ 5 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/security/integrity/ima/ima_api.c b/security/integrity/ima/ima_api.c
-index c7e8db0ea4c0..c6ae42266270 100644
---- a/security/integrity/ima/ima_api.c
-+++ b/security/integrity/ima/ima_api.c
-@@ -18,6 +18,7 @@
- #include <linux/fs.h>
- #include <linux/xattr.h>
- #include <linux/evm.h>
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 6b7989038d75..b9c0bf80669c 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -32,6 +32,8 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_dir2.h"
+ 
++#include <linux/iversion.h>
++
+ /*
+  * Check that none of the inode's in the buffer have a next
+  * unlinked field of 0.
+@@ -264,7 +266,8 @@ xfs_inode_from_disk(
+ 	to->di_flags	= be16_to_cpu(from->di_flags);
+ 
+ 	if (to->di_version == 3) {
+-		inode->i_version = be64_to_cpu(from->di_changecount);
++		inode_set_iversion_queried(inode,
++					   be64_to_cpu(from->di_changecount));
+ 		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+ 		to->di_flags2 = be64_to_cpu(from->di_flags2);
+@@ -314,7 +317,7 @@ xfs_inode_to_disk(
+ 	to->di_flags = cpu_to_be16(from->di_flags);
+ 
+ 	if (from->di_version == 3) {
+-		to->di_changecount = cpu_to_be64(inode->i_version);
++		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
+ 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+ 		to->di_flags2 = cpu_to_be64(from->di_flags2);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 43005fbe8b1e..4c315adb05e6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -37,6 +37,7 @@
+ 
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
 +#include <linux/iversion.h>
  
- #include "ima.h"
+ /*
+  * Allocate and initialise an xfs_inode.
+@@ -293,14 +294,14 @@ xfs_reinit_inode(
+ 	int		error;
+ 	uint32_t	nlink = inode->i_nlink;
+ 	uint32_t	generation = inode->i_generation;
+-	uint64_t	version = inode->i_version;
++	uint64_t	version = inode_peek_iversion(inode);
+ 	umode_t		mode = inode->i_mode;
  
-@@ -215,7 +216,7 @@ int ima_collect_measurement(struct integrity_iint_cache *iint,
- 	 * which do not support i_version, support is limited to an initial
- 	 * measurement/appraisal/audit.
+ 	error = inode_init_always(mp->m_super, inode);
+ 
+ 	set_nlink(inode, nlink);
+ 	inode->i_generation = generation;
+-	inode->i_version = version;
++	inode_set_iversion_queried(inode, version);
+ 	inode->i_mode = mode;
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 801274126648..dfc5e60d8af3 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ #include <linux/log2.h>
++#include <linux/iversion.h>
+ 
+ #include "xfs.h"
+ #include "xfs_fs.h"
+@@ -833,7 +834,7 @@ xfs_ialloc(
+ 	ip->i_d.di_flags = 0;
+ 
+ 	if (ip->i_d.di_version == 3) {
+-		inode->i_version = 1;
++		inode_set_iversion(inode, 1);
+ 		ip->i_d.di_flags2 = 0;
+ 		ip->i_d.di_cowextsize = 0;
+ 		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 6ee5c3bf19ad..7571abf5dfb3 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -30,6 +30,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
+ 
++#include <linux/iversion.h>
+ 
+ kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
+ 
+@@ -354,7 +355,7 @@ xfs_inode_to_log_dinode(
+ 	to->di_next_unlinked = NULLAGINO;
+ 
+ 	if (from->di_version == 3) {
+-		to->di_changecount = inode->i_version;
++		to->di_changecount = inode_peek_iversion(inode);
+ 		to->di_crtime.t_sec = from->di_crtime.t_sec;
+ 		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
+ 		to->di_flags2 = from->di_flags2;
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index daa7615497f9..225544327c4f 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -28,6 +28,8 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_trace.h"
+ 
++#include <linux/iversion.h>
++
+ /*
+  * Add a locked inode to the transaction.
+  *
+@@ -117,7 +119,7 @@ xfs_trans_log_inode(
  	 */
--	i_version = file_inode(file)->i_version;
-+	i_version = inode_query_iversion(inode);
- 	hash.hdr.algo = algo;
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		VFS_I(ip)->i_version++;
++		inode_inc_iversion(VFS_I(ip));
+ 		flags |= XFS_ILOG_CORE;
+ 	}
  
- 	/* Initialize hash digest to 0's in case of failure */
-diff --git a/security/integrity/ima/ima_main.c b/security/integrity/ima/ima_main.c
-index 50b82599994d..06a70c5a2329 100644
---- a/security/integrity/ima/ima_main.c
-+++ b/security/integrity/ima/ima_main.c
-@@ -24,6 +24,7 @@
- #include <linux/slab.h>
- #include <linux/xattr.h>
- #include <linux/ima.h>
-+#include <linux/iversion.h>
- 
- #include "ima.h"
- 
-@@ -128,7 +129,7 @@ static void ima_check_last_writer(struct integrity_iint_cache *iint,
- 	inode_lock(inode);
- 	if (atomic_read(&inode->i_writecount) == 1) {
- 		if (!IS_I_VERSION(inode) ||
--		    (iint->version != inode->i_version) ||
-+		    inode_cmp_iversion(inode, iint->version) ||
- 		    (iint->flags & IMA_NEW_FILE)) {
- 			iint->flags &= ~(IMA_DONE_MASK | IMA_NEW_FILE);
- 			iint->measured_pcrs = 0;
 -- 
 2.14.3
 
