@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54742 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:54786 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752720AbdLRPMB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 10:12:01 -0500
+        id S1753109AbdLRPMD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Dec 2017 10:12:03 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v3 00/19] fs: rework and optimize i_version handling in filesystems
-Date: Mon, 18 Dec 2017 10:11:37 -0500
-Message-Id: <20171218151156.14565-1-jlayton@kernel.org>
+Subject: [PATCH v3 01/19] fs: new API for handling inode->i_version
+Date: Mon, 18 Dec 2017 10:11:38 -0500
+Message-Id: <20171218151156.14565-2-jlayton@kernel.org>
+In-Reply-To: <20171218151156.14565-1-jlayton@kernel.org>
+References: <20171218151156.14565-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -15,153 +17,263 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
-v3:
-- move i_version handling functions to new header file
-- document that the kernel-managed i_version implementation will appear to
-  increase over time
-- fix inode_cmp_iversion to handle wraparound correctly
+Add a documentation blob that explains what the i_version field is, how
+it is expected to work, and how it is currently implemented by various
+filesystems.
 
-v2:
-- xfs should use inode_peek_iversion instead of inode_peek_iversion_raw
-- rework file_update_time patch
-- don't dirty inode when only S_ATIME is set and SB_LAZYTIME is enabled
-- better comments and documentation
+We already have inode_inc_iversion. Add several other functions for
+manipulating and accessing the i_version counter. For now, the
+implementation is trivial and basically works the way that all of the
+open-coded i_version accesses work today.
 
-tl;dr: I think we can greatly reduce the cost of the inode->i_version
-counter, by exploiting the fact that we don't need to increment it if no
-one is looking at it. We can also clean up the code to prepare to
-eventually expose this value via statx().
+Future patches will convert existing users of i_version to use the new
+API, and then convert the backend implementation to do things more
+efficiently.
 
-Note that this set relies on a few patches that are in other trees. The
-full stack that I've been testing with is here:
-
-    https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git/log/?h=iversion
-
-The inode->i_version field is supposed to be a value that changes
-whenever there is any data or metadata change to the inode. Some
-filesystems use it internally to detect directory changes during
-readdir. knfsd will use it if the filesystem has MS_I_VERSION set. IMA
-will also use it to optimize away some remeasurement if it's available.
-NFS and AFS just use it to store an opaque change attribute from the
-server.
-
-Only btrfs, ext4, and xfs increment it for data changes. Because of
-this, these filesystems must log the inode to disk whenever the
-i_version counter changes. That has a non-zero performance impact,
-especially on write-heavy workloads, because we end up dirtying the
-inode metadata on every write, not just when the times change.
-
-It turns out though that none of these users of i_version require that
-it change on every change to the file. The only real requirement is that
-it be different if something changed since the last time we queried for
-it.
-
-If we keep track of when something queries the value, we can avoid
-bumping the counter and an on-disk update when nothing else has changed
-if no one has queried it since it was last incremented.
-
-This patchset changes the code to only bump the i_version counter when
-it's strictly necessary, or when we're updating the inode metadata
-anyway (e.g. when times change).
-
-It takes the approach of converting the existing accessors of i_version
-to use a new API, while leaving the underlying implementation mostly the
-same.  The last patch then converts the existing implementation to keep
-track of whether the value has been queried since it was last
-incremented. It then uses that to avoid incrementing the counter when
-it can.
-
-With this, we reduce inode metadata updates across all 3 filesystems
-down to roughly the frequency of the timestamp granularity, particularly
-when it's not being queried (the vastly common case).
-
-I can see measurable performance gains on xfs and ext4 with iversion
-enabled, when streaming small (4k) I/Os. 
-
-btrfs shows some slight gain in testing, but not quite the magnitude
-that xfs and ext4 show. I'm not sure why yet and would appreciate some
-input from btrfs folks.
-
-My goal is to get this into linux-next fairly soon. If it shows no
-problems then we can look at merging it for 4.16, or 4.17 if all of the
-prequisite patches are not yet merged.
-
-Jeff Layton (19):
-  fs: new API for handling inode->i_version
-  fs: don't take the i_lock in inode_inc_iversion
-  fat: convert to new i_version API
-  affs: convert to new i_version API
-  afs: convert to new i_version API
-  btrfs: convert to new i_version API
-  exofs: switch to new i_version API
-  ext2: convert to new i_version API
-  ext4: convert to new i_version API
-  nfs: convert to new i_version API
-  nfsd: convert to new i_version API
-  ocfs2: convert to new i_version API
-  ufs: use new i_version API
-  xfs: convert to new i_version API
-  IMA: switch IMA over to new i_version API
-  fs: only set S_VERSION when updating times if necessary
-  xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need
-    incrementing
-  btrfs: only dirty the inode in btrfs_update_time if something was
-    changed
-  fs: handle inode->i_version more efficiently
-
- fs/affs/amigaffs.c                |   5 +-
- fs/affs/dir.c                     |   5 +-
- fs/affs/super.c                   |   3 +-
- fs/afs/fsclient.c                 |   3 +-
- fs/afs/inode.c                    |   5 +-
- fs/btrfs/delayed-inode.c          |   7 +-
- fs/btrfs/file.c                   |   1 +
- fs/btrfs/inode.c                  |  12 +-
- fs/btrfs/ioctl.c                  |   1 +
- fs/btrfs/tree-log.c               |   4 +-
- fs/btrfs/xattr.c                  |   1 +
- fs/exofs/dir.c                    |   9 +-
- fs/exofs/super.c                  |   3 +-
- fs/ext2/dir.c                     |   9 +-
- fs/ext2/super.c                   |   5 +-
- fs/ext4/dir.c                     |   9 +-
- fs/ext4/inline.c                  |   7 +-
- fs/ext4/inode.c                   |  13 +-
- fs/ext4/ioctl.c                   |   3 +-
- fs/ext4/namei.c                   |   5 +-
- fs/ext4/super.c                   |   3 +-
- fs/ext4/xattr.c                   |   5 +-
- fs/fat/dir.c                      |   3 +-
- fs/fat/inode.c                    |   9 +-
- fs/fat/namei_msdos.c              |   7 +-
- fs/fat/namei_vfat.c               |  22 +--
- fs/inode.c                        |  20 ++-
- fs/nfs/delegation.c               |   3 +-
- fs/nfs/fscache-index.c            |   5 +-
- fs/nfs/inode.c                    |  18 +--
- fs/nfs/nfs4proc.c                 |  10 +-
- fs/nfs/nfstrace.h                 |   5 +-
- fs/nfs/write.c                    |   8 +-
- fs/nfsd/nfsfh.h                   |   3 +-
- fs/ocfs2/dir.c                    |  15 +-
- fs/ocfs2/inode.c                  |   3 +-
- fs/ocfs2/namei.c                  |   3 +-
- fs/ocfs2/quota_global.c           |   3 +-
- fs/ufs/dir.c                      |   9 +-
- fs/ufs/inode.c                    |   3 +-
- fs/ufs/super.c                    |   3 +-
- fs/xfs/libxfs/xfs_inode_buf.c     |   7 +-
- fs/xfs/xfs_icache.c               |   5 +-
- fs/xfs/xfs_inode.c                |   3 +-
- fs/xfs/xfs_inode_item.c           |   3 +-
- fs/xfs/xfs_trans_inode.c          |  16 ++-
- include/linux/fs.h                |  17 +--
- include/linux/iversion.h          | 286 ++++++++++++++++++++++++++++++++++++++
- security/integrity/ima/ima_api.c  |   3 +-
- security/integrity/ima/ima_main.c |   3 +-
- 50 files changed, 475 insertions(+), 138 deletions(-)
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ include/linux/fs.h       |  15 ----
+ include/linux/iversion.h | 205 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 205 insertions(+), 15 deletions(-)
  create mode 100644 include/linux/iversion.h
 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 511fbaabf624..76382c24e9d0 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2036,21 +2036,6 @@ static inline void inode_dec_link_count(struct inode *inode)
+ 	mark_inode_dirty(inode);
+ }
+ 
+-/**
+- * inode_inc_iversion - increments i_version
+- * @inode: inode that need to be updated
+- *
+- * Every time the inode is modified, the i_version field will be incremented.
+- * The filesystem has to be mounted with i_version flag
+- */
+-
+-static inline void inode_inc_iversion(struct inode *inode)
+-{
+-       spin_lock(&inode->i_lock);
+-       inode->i_version++;
+-       spin_unlock(&inode->i_lock);
+-}
+-
+ enum file_time_flags {
+ 	S_ATIME = 1,
+ 	S_MTIME = 2,
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+new file mode 100644
+index 000000000000..bb50d27c71f9
+--- /dev/null
++++ b/include/linux/iversion.h
+@@ -0,0 +1,205 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_IVERSION_H
++#define _LINUX_IVERSION_H
++
++#include <linux/fs.h>
++
++/*
++ * The change attribute (i_version) is mandated by NFSv4 and is mostly for
++ * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
++ * appear different to observers if there was a change to the inode's data or
++ * metadata since it was last queried.
++ *
++ * It should be considered an opaque value by observers. If it remains the same
++ * since it was last checked, then nothing has changed in the inode. If it's
++ * different then something has changed. Observers cannot infer anything about
++ * the nature or magnitude of the changes from the value, only that the inode
++ * has changed in some fashion.
++ *
++ * Not all filesystems properly implement the i_version counter. Subsystems that
++ * want to use i_version field on an inode should first check whether the
++ * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION macro).
++ *
++ * Those that set SB_I_VERSION will automatically have their i_version counter
++ * incremented on writes to normal files. If the SB_I_VERSION is not set, then
++ * the VFS will not touch it on writes, and the filesystem can use it how it
++ * wishes. Note that the filesystem is always responsible for updating the
++ * i_version on namespace changes in directories (mkdir, rmdir, unlink, etc.).
++ * We consider these sorts of filesystems to have a kernel-managed i_version.
++ *
++ * Note that some filesystems (e.g. NFS and AFS) just use the field to store
++ * a server-provided value (for the most part). For that reason, those
++ * filesystems do not set SB_I_VERSION. These filesystems are considered to
++ * have a self-managed i_version.
++ */
++
++/**
++ * inode_set_iversion_raw - set i_version to the specified raw value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for use by
++ * filesystems that self-manage the i_version.
++ *
++ * For example, the NFS client stores its NFSv4 change attribute in this way,
++ * and the AFS client stores the data_version from the server here.
++ */
++static inline void
++inode_set_iversion_raw(struct inode *inode, const u64 new)
++{
++	inode->i_version = new;
++}
++
++/**
++ * inode_set_iversion - set i_version to a particular value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for filesystems with
++ * a kernel-managed i_version.
++ *
++ * For now, this just does the same thing as the _raw variant.
++ */
++static inline void
++inode_set_iversion(struct inode *inode, const u64 new)
++{
++	inode_set_iversion_raw(inode, new);
++}
++
++/**
++ * inode_set_iversion_queried - set i_version to a particular value and set
++ *                              flag to indicate that it has been viewed
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * When loading in an i_version value from a backing store, we typically don't
++ * know whether it was previously viewed before being stored or not. Thus, we
++ * must assume that it was, to ensure that any changes will result in the
++ * value changing.
++ *
++ * This function will set the inode's i_version, and possibly flag the value
++ * as if it has already been viewed at least once.
++ *
++ * For now, this just does what inode_set_iversion does.
++ */
++static inline void
++inode_set_iversion_queried(struct inode *inode, const u64 new)
++{
++	inode_set_iversion(inode, new);
++}
++
++/**
++ * inode_maybe_inc_iversion - increments i_version
++ * @inode: inode with the i_version that should be updated
++ * @force: increment the counter even if it's not necessary
++ *
++ * Every time the inode is modified, the i_version field must be seen to have
++ * changed by any observer.
++ *
++ * In this implementation, we always increment it after taking the i_lock to
++ * ensure that we don't race with other incrementors.
++ *
++ * Returns true if counter was bumped, and false if it wasn't.
++ */
++static inline bool
++inode_maybe_inc_iversion(struct inode *inode, bool force)
++{
++	spin_lock(&inode->i_lock);
++	inode->i_version++;
++	spin_unlock(&inode->i_lock);
++	return true;
++}
++
++/**
++ * inode_inc_iversion - forcibly increment i_version
++ * @inode: inode that needs to be updated
++ *
++ * Forcbily increment the i_version field. This always results in a change to
++ * the observable value.
++ */
++static inline void
++inode_inc_iversion(struct inode *inode)
++{
++	inode_maybe_inc_iversion(inode, true);
++}
++
++/**
++ * inode_iversion_need_inc - is the i_version in need of being incremented?
++ * @inode: inode to check
++ *
++ * Returns whether the inode->i_version counter needs incrementing on the next
++ * change.
++ *
++ * For now, we assume that it always does.
++ */
++static inline bool
++inode_iversion_need_inc(struct inode *inode)
++{
++	return true;
++}
++
++/**
++ * inode_peek_iversion_raw - grab a "raw" iversion value
++ * @inode: inode from which i_version should be read
++ *
++ * Grab a "raw" inode->i_version value and return it. The i_version is not
++ * flagged or converted in any way. This is mostly used to access a self-managed
++ * i_version.
++ *
++ * With those filesystems, we want to treat the i_version as an entirely
++ * opaque value.
++ */
++static inline u64
++inode_peek_iversion_raw(const struct inode *inode)
++{
++	return inode->i_version;
++}
++
++/**
++ * inode_peek_iversion - read i_version without flagging it to be incremented
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter for an inode without registering it as a
++ * query.
++ *
++ * This is typically used by local filesystems that need to store an i_version
++ * on disk. In that situation, it's not necessary to flag it as having been
++ * viewed, as the result won't be used to gauge changes from that point.
++ */
++static inline u64
++inode_peek_iversion(const struct inode *inode)
++{
++	return inode_peek_iversion_raw(inode);
++}
++
++/**
++ * inode_query_iversion - read i_version for later use
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter. This should be used by callers that wish
++ * to store the returned i_version for later comparison. This will guarantee
++ * that a later query of the i_version will result in a different value if
++ * anything has changed.
++ *
++ * This implementation just does a peek.
++ */
++static inline u64
++inode_query_iversion(struct inode *inode)
++{
++	return inode_peek_iversion(inode);
++}
++
++/**
++ * inode_cmp_iversion - check whether the i_version counter has changed
++ * @inode: inode to check
++ * @old: old value to check against its i_version
++ *
++ * Compare an i_version counter with a previous one. Returns 0 if they are
++ * the same or non-zero if they are different.
++ */
++static inline s64
++inode_cmp_iversion(const struct inode *inode, const u64 old)
++{
++	return (s64)inode_peek_iversion(inode) - (s64)old;
++}
++#endif
 -- 
 2.14.3
 
