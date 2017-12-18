@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55082 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:55226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758829AbdLRPMQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Dec 2017 10:12:16 -0500
+        id S932613AbdLRPMX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Dec 2017 10:12:23 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v3 06/19] btrfs: convert to new i_version API
-Date: Mon, 18 Dec 2017 10:11:43 -0500
-Message-Id: <20171218151156.14565-7-jlayton@kernel.org>
+Subject: [PATCH v3 09/19] ext4: convert to new i_version API
+Date: Mon, 18 Dec 2017 10:11:46 -0500
+Message-Id: <20171218151156.14565-10-jlayton@kernel.org>
 In-Reply-To: <20171218151156.14565-1-jlayton@kernel.org>
 References: <20171218151156.14565-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,137 +18,244 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 From: Jeff Layton <jlayton@redhat.com>
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Acked-by: Theodore Ts'o <tytso@mit.edu>
 ---
- fs/btrfs/delayed-inode.c | 7 +++++--
- fs/btrfs/file.c          | 1 +
- fs/btrfs/inode.c         | 7 +++++--
- fs/btrfs/ioctl.c         | 1 +
- fs/btrfs/tree-log.c      | 4 +++-
- fs/btrfs/xattr.c         | 1 +
- 6 files changed, 16 insertions(+), 5 deletions(-)
+ fs/ext4/dir.c    |  9 +++++----
+ fs/ext4/inline.c |  7 ++++---
+ fs/ext4/inode.c  | 13 +++++++++----
+ fs/ext4/ioctl.c  |  3 ++-
+ fs/ext4/namei.c  |  5 +++--
+ fs/ext4/super.c  |  3 ++-
+ fs/ext4/xattr.c  |  5 +++--
+ 7 files changed, 28 insertions(+), 17 deletions(-)
 
-diff --git a/fs/btrfs/delayed-inode.c b/fs/btrfs/delayed-inode.c
-index 5d73f79ded8b..6a246ae2bcb2 100644
---- a/fs/btrfs/delayed-inode.c
-+++ b/fs/btrfs/delayed-inode.c
-@@ -18,6 +18,7 @@
-  */
- 
+diff --git a/fs/ext4/dir.c b/fs/ext4/dir.c
+index d5babc9f222b..afda0a0499ce 100644
+--- a/fs/ext4/dir.c
++++ b/fs/ext4/dir.c
+@@ -25,6 +25,7 @@
+ #include <linux/fs.h>
+ #include <linux/buffer_head.h>
  #include <linux/slab.h>
 +#include <linux/iversion.h>
- #include "delayed-inode.h"
- #include "disk-io.h"
- #include "transaction.h"
-@@ -1700,7 +1701,8 @@ static void fill_stack_inode_item(struct btrfs_trans_handle *trans,
- 	btrfs_set_stack_inode_nbytes(inode_item, inode_get_bytes(inode));
- 	btrfs_set_stack_inode_generation(inode_item,
- 					 BTRFS_I(inode)->generation);
--	btrfs_set_stack_inode_sequence(inode_item, inode->i_version);
-+	btrfs_set_stack_inode_sequence(inode_item,
-+				       inode_peek_iversion(inode));
- 	btrfs_set_stack_inode_transid(inode_item, trans->transid);
- 	btrfs_set_stack_inode_rdev(inode_item, inode->i_rdev);
- 	btrfs_set_stack_inode_flags(inode_item, BTRFS_I(inode)->flags);
-@@ -1754,7 +1756,8 @@ int btrfs_fill_inode(struct inode *inode, u32 *rdev)
- 	BTRFS_I(inode)->generation = btrfs_stack_inode_generation(inode_item);
-         BTRFS_I(inode)->last_trans = btrfs_stack_inode_transid(inode_item);
+ #include "ext4.h"
+ #include "xattr.h"
  
--	inode->i_version = btrfs_stack_inode_sequence(inode_item);
-+	inode_set_iversion_queried(inode,
-+				   btrfs_stack_inode_sequence(inode_item));
- 	inode->i_rdev = 0;
- 	*rdev = btrfs_stack_inode_rdev(inode_item);
- 	BTRFS_I(inode)->flags = btrfs_stack_inode_flags(inode_item);
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index eb1bac7c8553..c95d7b2efefb 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -31,6 +31,7 @@
+@@ -208,7 +209,7 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
+ 		 * readdir(2), then we might be pointing to an invalid
+ 		 * dirent right now.  Scan from the start of the block
+ 		 * to make sure. */
+-		if (file->f_version != inode->i_version) {
++		if (inode_cmp_iversion(inode, file->f_version)) {
+ 			for (i = 0; i < sb->s_blocksize && i < offset; ) {
+ 				de = (struct ext4_dir_entry_2 *)
+ 					(bh->b_data + i);
+@@ -227,7 +228,7 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
+ 			offset = i;
+ 			ctx->pos = (ctx->pos & ~(sb->s_blocksize - 1))
+ 				| offset;
+-			file->f_version = inode->i_version;
++			file->f_version = inode_query_iversion(inode);
+ 		}
+ 
+ 		while (ctx->pos < inode->i_size
+@@ -568,10 +569,10 @@ static int ext4_dx_readdir(struct file *file, struct dir_context *ctx)
+ 		 * cached entries.
+ 		 */
+ 		if ((!info->curr_node) ||
+-		    (file->f_version != inode->i_version)) {
++		    inode_cmp_iversion(inode, file->f_version)) {
+ 			info->curr_node = NULL;
+ 			free_rb_tree_fname(&info->root);
+-			file->f_version = inode->i_version;
++			file->f_version = inode_query_iversion(inode);
+ 			ret = ext4_htree_fill_tree(file, info->curr_hash,
+ 						   info->curr_minor_hash,
+ 						   &info->next_hash);
+diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
+index 1367553c43bb..a8b987b71173 100644
+--- a/fs/ext4/inline.c
++++ b/fs/ext4/inline.c
+@@ -14,6 +14,7 @@
+ 
+ #include <linux/iomap.h>
+ #include <linux/fiemap.h>
++#include <linux/iversion.h>
+ 
+ #include "ext4_jbd2.h"
+ #include "ext4.h"
+@@ -1042,7 +1043,7 @@ static int ext4_add_dirent_to_inline(handle_t *handle,
+ 	 */
+ 	dir->i_mtime = dir->i_ctime = current_time(dir);
+ 	ext4_update_dx_flag(dir);
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 	return 1;
+ }
+ 
+@@ -1494,7 +1495,7 @@ int ext4_read_inline_dir(struct file *file,
+ 	 * dirent right now.  Scan from the start of the inline
+ 	 * dir to make sure.
+ 	 */
+-	if (file->f_version != inode->i_version) {
++	if (inode_cmp_iversion(inode, file->f_version)) {
+ 		for (i = 0; i < extra_size && i < offset;) {
+ 			/*
+ 			 * "." is with offset 0 and
+@@ -1526,7 +1527,7 @@ int ext4_read_inline_dir(struct file *file,
+ 		}
+ 		offset = i;
+ 		ctx->pos = offset;
+-		file->f_version = inode->i_version;
++		file->f_version = inode_query_iversion(inode);
+ 	}
+ 
+ 	while (ctx->pos < extra_size) {
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 7df2c5644e59..1b0d54b372f2 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -39,6 +39,7 @@
  #include <linux/slab.h>
- #include <linux/btrfs.h>
- #include <linux/uio.h>
+ #include <linux/bitops.h>
+ #include <linux/iomap.h>
 +#include <linux/iversion.h>
- #include "ctree.h"
- #include "disk-io.h"
- #include "transaction.h"
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index e1a7f3cb5be9..ac8692849a81 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -43,6 +43,7 @@
- #include <linux/posix_acl_xattr.h>
- #include <linux/uio.h>
- #include <linux/magic.h>
-+#include <linux/iversion.h>
- #include "ctree.h"
- #include "disk-io.h"
- #include "transaction.h"
-@@ -3777,7 +3778,8 @@ static int btrfs_read_locked_inode(struct inode *inode)
- 	BTRFS_I(inode)->generation = btrfs_inode_generation(leaf, inode_item);
- 	BTRFS_I(inode)->last_trans = btrfs_inode_transid(leaf, inode_item);
  
--	inode->i_version = btrfs_inode_sequence(leaf, inode_item);
-+	inode_set_iversion_queried(inode,
-+				   btrfs_inode_sequence(leaf, inode_item));
- 	inode->i_generation = BTRFS_I(inode)->generation;
- 	inode->i_rdev = 0;
- 	rdev = btrfs_inode_rdev(leaf, inode_item);
-@@ -3945,7 +3947,8 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
- 				     &token);
- 	btrfs_set_token_inode_generation(leaf, item, BTRFS_I(inode)->generation,
- 					 &token);
--	btrfs_set_token_inode_sequence(leaf, item, inode->i_version, &token);
-+	btrfs_set_token_inode_sequence(leaf, item, inode_peek_iversion(inode),
-+				       &token);
- 	btrfs_set_token_inode_transid(leaf, item, trans->transid, &token);
- 	btrfs_set_token_inode_rdev(leaf, item, inode->i_rdev, &token);
- 	btrfs_set_token_inode_flags(leaf, item, BTRFS_I(inode)->flags, &token);
-diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-index 2ef8acaac688..aa452c9e2eff 100644
---- a/fs/btrfs/ioctl.c
-+++ b/fs/btrfs/ioctl.c
-@@ -43,6 +43,7 @@
+ #include "ext4_jbd2.h"
+ #include "xattr.h"
+@@ -4873,12 +4874,14 @@ struct inode *ext4_iget(struct super_block *sb, unsigned long ino)
+ 	EXT4_EINODE_GET_XTIME(i_crtime, ei, raw_inode);
+ 
+ 	if (likely(!test_opt2(inode->i_sb, HURD_COMPAT))) {
+-		inode->i_version = le32_to_cpu(raw_inode->i_disk_version);
++		u64 ivers = le32_to_cpu(raw_inode->i_disk_version);
++
+ 		if (EXT4_INODE_SIZE(inode->i_sb) > EXT4_GOOD_OLD_INODE_SIZE) {
+ 			if (EXT4_FITS_IN_INODE(raw_inode, ei, i_version_hi))
+-				inode->i_version |=
++				ivers |=
+ 		    (__u64)(le32_to_cpu(raw_inode->i_version_hi)) << 32;
+ 		}
++		inode_set_iversion_queried(inode, ivers);
+ 	}
+ 
+ 	ret = 0;
+@@ -5164,11 +5167,13 @@ static int ext4_do_update_inode(handle_t *handle,
+ 	}
+ 
+ 	if (likely(!test_opt2(inode->i_sb, HURD_COMPAT))) {
+-		raw_inode->i_disk_version = cpu_to_le32(inode->i_version);
++		u64 ivers = inode_peek_iversion(inode);
++
++		raw_inode->i_disk_version = cpu_to_le32(ivers);
+ 		if (ei->i_extra_isize) {
+ 			if (EXT4_FITS_IN_INODE(raw_inode, ei, i_version_hi))
+ 				raw_inode->i_version_hi =
+-					cpu_to_le32(inode->i_version >> 32);
++					cpu_to_le32(ivers >> 32);
+ 			raw_inode->i_extra_isize =
+ 				cpu_to_le16(ei->i_extra_isize);
+ 		}
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index 1eec25014f62..7e99ad02f1ba 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -19,6 +19,7 @@
  #include <linux/uuid.h>
- #include <linux/btrfs.h>
+ #include <linux/uaccess.h>
+ #include <linux/delay.h>
++#include <linux/iversion.h>
+ #include "ext4_jbd2.h"
+ #include "ext4.h"
+ #include <linux/fsmap.h>
+@@ -144,7 +145,7 @@ static long swap_inode_boot_loader(struct super_block *sb,
+ 		i_gid_write(inode_bl, 0);
+ 		inode_bl->i_flags = 0;
+ 		ei_bl->i_flags = 0;
+-		inode_bl->i_version = 1;
++		inode_set_iversion(inode_bl, 1);
+ 		i_size_write(inode_bl, 0);
+ 		inode_bl->i_mode = S_IFREG;
+ 		if (ext4_has_feature_extents(sb)) {
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index 798b3ac680db..55f6e38de5ba 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -34,6 +34,7 @@
+ #include <linux/quotaops.h>
+ #include <linux/buffer_head.h>
+ #include <linux/bio.h>
++#include <linux/iversion.h>
+ #include "ext4.h"
+ #include "ext4_jbd2.h"
+ 
+@@ -2955,7 +2956,7 @@ static int ext4_rmdir(struct inode *dir, struct dentry *dentry)
+ 			     "empty directory '%.*s' has too many links (%u)",
+ 			     dentry->d_name.len, dentry->d_name.name,
+ 			     inode->i_nlink);
+-	inode->i_version++;
++	inode_inc_iversion(inode);
+ 	clear_nlink(inode);
+ 	/* There's no need to set i_disksize: the fact that i_nlink is
+ 	 * zero will ensure that the right thing happens during any
+@@ -3361,7 +3362,7 @@ static int ext4_setent(handle_t *handle, struct ext4_renament *ent,
+ 	ent->de->inode = cpu_to_le32(ino);
+ 	if (ext4_has_feature_filetype(ent->dir->i_sb))
+ 		ent->de->file_type = file_type;
+-	ent->dir->i_version++;
++	inode_inc_iversion(ent->dir);
+ 	ent->dir->i_ctime = ent->dir->i_mtime =
+ 		current_time(ent->dir);
+ 	ext4_mark_inode_dirty(handle, ent->dir);
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 7c46693a14d7..5de959fb0244 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -40,6 +40,7 @@
+ #include <linux/dax.h>
+ #include <linux/cleancache.h>
  #include <linux/uaccess.h>
 +#include <linux/iversion.h>
- #include "ctree.h"
- #include "disk-io.h"
- #include "transaction.h"
-diff --git a/fs/btrfs/tree-log.c b/fs/btrfs/tree-log.c
-index 7bf9b31561db..1b7d92075c1f 100644
---- a/fs/btrfs/tree-log.c
-+++ b/fs/btrfs/tree-log.c
-@@ -20,6 +20,7 @@
- #include <linux/slab.h>
- #include <linux/blkdev.h>
- #include <linux/list_sort.h>
-+#include <linux/iversion.h>
- #include "tree-log.h"
- #include "disk-io.h"
- #include "locking.h"
-@@ -3609,7 +3610,8 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
- 	btrfs_set_token_inode_nbytes(leaf, item, inode_get_bytes(inode),
- 				     &token);
  
--	btrfs_set_token_inode_sequence(leaf, item, inode->i_version, &token);
-+	btrfs_set_token_inode_sequence(leaf, item,
-+				       inode_peek_iversion(inode), &token);
- 	btrfs_set_token_inode_transid(leaf, item, trans->transid, &token);
- 	btrfs_set_token_inode_rdev(leaf, item, inode->i_rdev, &token);
- 	btrfs_set_token_inode_flags(leaf, item, BTRFS_I(inode)->flags, &token);
-diff --git a/fs/btrfs/xattr.c b/fs/btrfs/xattr.c
-index 2c7e53f9ff1b..5258c1714830 100644
---- a/fs/btrfs/xattr.c
-+++ b/fs/btrfs/xattr.c
-@@ -23,6 +23,7 @@
- #include <linux/xattr.h>
- #include <linux/security.h>
- #include <linux/posix_acl_xattr.h>
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
+@@ -967,7 +968,7 @@ static struct inode *ext4_alloc_inode(struct super_block *sb)
+ 	if (!ei)
+ 		return NULL;
+ 
+-	ei->vfs_inode.i_version = 1;
++	inode_set_iversion(&ei->vfs_inode, 1);
+ 	spin_lock_init(&ei->i_raw_lock);
+ 	INIT_LIST_HEAD(&ei->i_prealloc_list);
+ 	spin_lock_init(&ei->i_prealloc_lock);
+diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
+index 218a7ba57819..ba6fd5439aa4 100644
+--- a/fs/ext4/xattr.c
++++ b/fs/ext4/xattr.c
+@@ -56,6 +56,7 @@
+ #include <linux/slab.h>
+ #include <linux/mbcache.h>
+ #include <linux/quotaops.h>
 +#include <linux/iversion.h>
- #include "ctree.h"
- #include "btrfs_inode.h"
- #include "transaction.h"
+ #include "ext4_jbd2.h"
+ #include "ext4.h"
+ #include "xattr.h"
+@@ -294,13 +295,13 @@ ext4_xattr_inode_hash(struct ext4_sb_info *sbi, const void *buffer, size_t size)
+ static u64 ext4_xattr_inode_get_ref(struct inode *ea_inode)
+ {
+ 	return ((u64)ea_inode->i_ctime.tv_sec << 32) |
+-	       ((u32)ea_inode->i_version);
++		(u32) inode_peek_iversion(ea_inode);
+ }
+ 
+ static void ext4_xattr_inode_set_ref(struct inode *ea_inode, u64 ref_count)
+ {
+ 	ea_inode->i_ctime.tv_sec = (u32)(ref_count >> 32);
+-	ea_inode->i_version = (u32)ref_count;
++	inode_set_iversion(ea_inode, ref_count & 0xffffffff);
+ }
+ 
+ static u32 ext4_xattr_inode_get_hash(struct inode *ea_inode)
 -- 
 2.14.3
 
