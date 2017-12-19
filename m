@@ -1,110 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40524 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:41886 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751305AbdLSUkD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:40:03 -0500
-Date: Tue, 19 Dec 2017 12:34:59 -0800
+        with ESMTP id S1750737AbdLSUlt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:41:49 -0500
+Date: Tue, 19 Dec 2017 12:41:47 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/13] xfs: move inode fork verifiers to xfs_dinode_verify
-Message-ID: <20171219203459.GB12613@magnolia>
+Subject: Re: [PATCH 07/13] xfs: create structure verifier function for
+ shortform xattrs
+Message-ID: <20171219204147.GC12613@magnolia>
 References: <151320949282.30654.14805160700975182459.stgit@magnolia>
- <151320952955.30654.5858027812526222455.stgit@magnolia>
- <20171219051619.GP4094@dastard>
+ <151320953564.30654.16063573622569255317.stgit@magnolia>
+ <20171219052329.GQ4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171219051619.GP4094@dastard>
+In-Reply-To: <20171219052329.GQ4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 04:16:19PM +1100, Dave Chinner wrote:
-> On Wed, Dec 13, 2017 at 03:58:49PM -0800, Darrick J. Wong wrote:
+On Tue, Dec 19, 2017 at 04:23:29PM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:58:55PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Consolidate the fork size and format verifiers to xfs_dinode_verify so
-> > that we can reject bad inodes earlier and in a single place.
+> > Create a function to perform structure verification for short form
+> > extended attributes.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_inode_buf.c  |   72 ++++++++++++++++++++++++++++++++-
-> >  fs/xfs/libxfs/xfs_inode_fork.c |   86 ----------------------------------------
-> >  2 files changed, 69 insertions(+), 89 deletions(-)
+> >  fs/xfs/libxfs/xfs_attr_leaf.c |   70 +++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/libxfs/xfs_attr_leaf.h |    1 +
+> >  2 files changed, 71 insertions(+)
 > > 
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index 0e4c720..1392fe9 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -390,6 +390,7 @@ xfs_dinode_verify(
-> >  	uint16_t		mode;
-> >  	uint16_t		flags;
-> >  	uint64_t		flags2;
-> > +	uint64_t		di_size;
+> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > index 1274872..a5033f0 100644
+> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > @@ -873,6 +873,76 @@ xfs_attr_shortform_allfit(
+> >  	return xfs_attr_shortform_bytesfit(dp, bytes);
+> >  }
 > >  
-> >  	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
-> >  		return __this_address;
-> > @@ -408,7 +409,8 @@ xfs_dinode_verify(
-> >  	}
-> >  
-> >  	/* don't allow invalid i_size */
-> > -	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
-> > +	di_size = be64_to_cpu(dip->di_size);
-> > +	if (di_size & (1ULL << 63))
-> >  		return __this_address;
-> >  
-> >  	mode = be16_to_cpu(dip->di_mode);
-> > @@ -416,14 +418,74 @@ xfs_dinode_verify(
-> >  		return __this_address;
-> >  
-> >  	/* No zero-length symlinks/dirs. */
-> > -	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
-> > +	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
-> >  		return __this_address;
-> >  
-> > +	/* Fork checks carried over from xfs_iformat_fork */
-> > +	if (mode &&
-> > +	    be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
-> > +	    be64_to_cpu(dip->di_nblocks))
-> 
-> Can you indent this last line so it doesn't look like a spearate
-> logic check?
-
-Done.
-
-> 	if (mode &&
-> 	    be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
-> 				be64_to_cpu(dip->di_nblocks))
+> > +/* Verify the consistency of an inline attribute fork. */
+> > +xfs_failaddr_t
+> > +xfs_attr_shortform_verify(
+> > +	struct xfs_inode		*ip)
+> > +{
+> > +	struct xfs_attr_shortform	*sfp;
+> > +	struct xfs_attr_sf_entry	*sfep;
+> > +	struct xfs_attr_sf_entry	*next_sfep;
+> > +	char				*endp;
+> > +	struct xfs_ifork		*ifp;
+> > +	int				i;
+> > +	int				size;
+> > +
+> > +	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
+> > +	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+> > +	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
+> > +	size = ifp->if_bytes;
+> > +
+> > +	/*
+> > +	 * Give up if the attribute is way too short.
+> > +	 */
+> > +	if (size < sizeof(struct xfs_attr_sf_hdr))
 > > +		return __this_address;
 > > +
-> > +	if (mode && dip->di_forkoff > mp->m_sb.sb_inodesize)
-> > +		return __this_address;
+> > +	endp = (char *)sfp + size;
+> > +
+> > +	/* Check all reported entries */
+> > +	sfep = &sfp->list[0];
+> > +	for (i = 0; i < sfp->hdr.count; i++) {
+> > +		/*
+> > +		 * struct xfs_attr_sf_entry has a variable length.
+> > +		 * Check the fixed-offset parts of the structure are
+> > +		 * within the data buffer.
+> > +		 */
+> > +		if (((char *)sfep + sizeof(*sfep)) >= endp)
+> > +			return __this_address;
+> > +
+> > +		/* Don't allow names with known bad length. */
+> > +		if (sfep->namelen == 0)
+> > +			return __this_address;
+> > +
+> > +		/*
+> > +		 * Check that the variable-length part of the structure is
+> > +		 * within the data buffer.  The next entry starts after the
+> > +		 * name component, so nextentry is an acceptable test.
+> > +		 */
+> > +		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
+> > +		if ((char *)next_sfep > endp)
+> > +			return __this_address;
+> > +
+> > +		/*
+> > +		 * Check for unknown flags.  Short form doesn't support
+> > +		 * the incomplete or local bits.
+> > +		 */
+> > +		if (sfep->flags & ~(XFS_ATTR_ROOT | XFS_ATTR_SECURE))
+> > +			return __this_address;
+> > +
+> > +		/* Check for invalid namespace combinations. */
+> > +		if ((sfep->flags & XFS_ATTR_ROOT) &&
+> > +		    (sfep->flags & XFS_ATTR_SECURE))
+> > +			return __this_address;
 > 
-> Hold on, this check is completely bogus. di_forkoff is in units of 8 bytes,
-> which inode size is in bytes. Also, di_forkoff is a u8, so it can't
-> /ever/ be larger than the inode size which are >= 256 bytes. Yeah,
-> though so:
-> 
-> #define XFS_DFORK_BOFF(dip)             ((int)((dip)->di_forkoff << 3))
-> 
-> This check needs to be:
-> 
-> 	if (mode && XFS_DFORK_BOFF(dip) > mp->m_sb.sb_inodesize)
-> 		return __this_address;
-> 
-> Otherwise looks good.
+> #define ATTR_SF_FLAGS	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
 
-Oops, thank you for catching that!
+XFS_ATTR_NSP_ONDISK_MASK?
+
+> 
+> 		if (sfep->flags & ~ATTR_SF_FLAGS)
+> 			return __this_address;
+> 		if ((sfep->flags & ATTR_SF_FLAGS) == ATTR_SF_FLAGS)
+> 			return __this_address;
+
+Also, can we just use hweight8() > 1 here?  We only allow one namespace
+bit per attr.
 
 --D
 
+> 
+> Otherwise looks ok.
+> 
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Cheers,
-> 
-> Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
