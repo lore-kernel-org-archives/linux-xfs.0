@@ -1,34 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46892 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:53855 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932876AbdLSDbv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 22:31:51 -0500
-Subject: Re: [trivial PATCH] treewide: Align function definition open/close braces
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <1513556924.31581.51.camel@perches.com>
-Date: Mon, 18 Dec 2017 22:31:06 -0500
-In-Reply-To: <1513556924.31581.51.camel@perches.com> (Joe Perches's message of
-        "Sun, 17 Dec 2017 16:28:44 -0800")
-Message-ID: <yq1shc7jsw5.fsf@oracle.com>
+        with ESMTP id S1758161AbdLSDtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 22:49:16 -0500
+Date: Mon, 18 Dec 2017 19:49:11 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/4] xfs: remove leftover CoW reservations when
+ remounting ro
+Message-ID: <20171219034911.GB11975@magnolia>
+References: <151335786780.26575.15542999972223359181.stgit@magnolia>
+ <151335789173.26575.16460983789473064032.stgit@magnolia>
+ <20171219001755.GJ4094@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171219001755.GJ4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joe Perches <joe@perches.com>
-Cc: Jiri Kosina <trivial@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, platform-driver-x86@vger.kernel.org, linux-rtc@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org, linux-audit@redhat.com, alsa-devel@alsa-project.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
+On Tue, Dec 19, 2017 at 11:17:55AM +1100, Dave Chinner wrote:
+> On Fri, Dec 15, 2017 at 09:11:31AM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When we're remounting the filesystem readonly, remove all CoW
+> > preallocations prior to going ro.  If the fs goes down after the ro
+> > remount, we never clean up the staging extents, which means xfs_check
+> > will trip over them on a subsequent run.  Practically speaking, the
+> > next mount will clean them up too, so this is unlikely to be seen.
+> > 
+> > Found by adding clonerange to fsstress and running xfs/017.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_super.c |    8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index f663022..7b6d150 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1369,6 +1369,14 @@ xfs_fs_remount(
+> >  
+> >  	/* rw -> ro */
+> >  	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+> > +		/* Get rid of any leftover CoW reservations... */
+> > +		cancel_delayed_work_sync(&mp->m_cowblocks_work);
+> > +		error = xfs_icache_free_cowblocks(mp, NULL);
+> > +		if (error) {
+> > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > +			return error;
+> > +		}
+> 
+> On rw->ro do we start the m_cowblocks_work back up?
 
-Joe,
+Assuming you meant to ask about ro->rw, then yes it should get started
+back up the next time something sets the cowblocks tag.  I'm not opposed
+to starting it back up directly from the ro->rw handler.
 
-> Some functions definitions have either the initial open brace and/or
-> the closing brace outside of column 1.
->
-> Move those braces to column 1.
+> What about when we freeze the filesystem - shouldn't we clean
+> up the cow blocks there, too? We've tried hard in the past to make
+> freeze and rw->ro exactly the same so that if the system is powered
+> down while frozen it comes up almost entirely clean just like a
+> ro-remount in shutdown....
 
-SCSI bits look OK.
+I don't see a hard requirement to clean them up at freeze time, though
+we certainly can do it for consistency's sake.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+> And, FWIW, this makes ro->rw and thaw essentially the same, too.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Noted.
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
