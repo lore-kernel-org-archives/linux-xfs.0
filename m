@@ -1,129 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44413 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750916AbdLSJ3w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Dec 2017 04:29:52 -0500
-Date: Tue, 19 Dec 2017 10:29:47 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 19/19] fs: handle inode->i_version more efficiently
-Message-ID: <20171219092947.GC2277@quack2.suse.cz>
-References: <20171218151156.14565-1-jlayton@kernel.org>
- <20171218151156.14565-20-jlayton@kernel.org>
- <20171218163418.GF30350@quack2.suse.cz>
- <1513617740.3422.30.camel@kernel.org>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:38531 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762587AbdLSMLV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 07:11:21 -0500
+Received: by mail-wm0-f44.google.com with SMTP id 64so3220648wme.3
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 04:11:20 -0800 (PST)
+Date: Tue, 19 Dec 2017 13:11:17 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: fallocate behavior on -ENOSPC for blocks past EOF
+Message-ID: <20171219121117.72yd4iio3iaeaq3b@odin.usersys.redhat.com>
+References: <20171213161611.53oavmzhnsum2fqc@odin.usersys.redhat.com>
+ <20171213212906.GA5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1513617740.3422.30.camel@kernel.org>
+In-Reply-To: <20171213212906.GA5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon 18-12-17 12:22:20, Jeff Layton wrote:
-> On Mon, 2017-12-18 at 17:34 +0100, Jan Kara wrote:
-> > On Mon 18-12-17 10:11:56, Jeff Layton wrote:
-> > >  static inline bool
-> > >  inode_maybe_inc_iversion(struct inode *inode, bool force)
-> > >  {
-> > > -	atomic64_t *ivp = (atomic64_t *)&inode->i_version;
-> > > +	u64 cur, old, new;
-> > >  
-> > > -	atomic64_inc(ivp);
-> > > +	cur = (u64)atomic64_read(&inode->i_version);
-> > > +	for (;;) {
-> > > +		/* If flag is clear then we needn't do anything */
-> > > +		if (!force && !(cur & I_VERSION_QUERIED))
-> > > +			return false;
-> > 
-> > The fast path here misses any memory barrier. Thus it seems this query
-> > could be in theory reordered before any store that happened to modify the
-> > inode? Or maybe we could race and miss the fact that in fact this i_version
-> > has already been queried? But maybe there's some higher level locking that
-> > makes sure this is all a non-issue... But in that case it would deserve
-> > some comment I guess.
-> > 
-> 
-> There's no higher-level locking. Getting locking out of this codepath is
-> a good thing IMO. The larger question here is whether we really care
-> about ordering this with anything else.
-> 
-> The i_version, as implemented today, is not ordered with actual changes
-> to the inode. We only take the i_lock today when modifying it, not when
-> querying it. It's possible today that you could see the results of a
-> change and then do a fetch of the i_version that doesn't show an
-> increment vs. a previous change.
+Hi Dave,
 
-Yeah, so I don't suggest that you should fix unrelated issues but original
-i_lock protection did actually provide memory barriers (although
-semi-permeable, but in practice they are very often enough) and your patch
-removing those could have changed a theoretical issue to a practical
-problem. So at least preserving that original acquire-release semantics
-of i_version handling would be IMHO good.
+On Thu, Dec 14, 2017 at 08:29:06AM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 05:16:11PM +0100, Carlos Maiolino wrote:
+> > We have talked a bit about it on irc before but iirc we didn't end on any
+> > conclusion about it.
+> > 
+> > Current fallocate behavior on XFS in case it hits -ENOSPC in the middle of the
+> > reservation is kind of weird now when these new blocks are allocated past EOF.
+> > 
+> > We end up not changing the i_size to match the partial blocks allocated even if
+> > fallocate is not called with KEEP_SIZE.
+> > 
+> > Such behavior is confusing some users of fallocate, and I've been talking to
+> > Eric if wouldn't be better to update the i_size to match the partially allocated
+> > blocks IF KEEP_SIZE has not been used.
+> 
+> What's the confusion? fallocate is supposed to provide the backing
+> for posix_fallocate(), which either succeeds completely or returns
+> an error. posix_fallocate() specifically states that:
+> 
+> 	If the offset+ len is beyond the current file size, then
+> 	posix_fallocate() shall adjust the file size to offset+ len.
+> 	Otherwise, the file size shall not be changed.
+> 
+> (http://pubs.opengroup.org/onlinepubs/009695399/functions/posix_fallocate.html)
+> 
+> IOWs, setting the file size to anything other than offset+len
+> is not allowed (it's a "shall" definition which means we must follow
+> that exact behaviour), and hence on failure we have only two choices:
+> 
+> 	a) lie to the user and extend the file even though we didn't
+> 	preallocate all the space; or
+> 
+> 	b) don't change the file size so there's no visible change
+> 	to the file on failure.
+> 
+> We've chosen b) when fallocate fails for *any reason*. IOWs, the
+> file appears unchanged to the user on failure so they don't have to
+> handle undoing a failed partial operation.
+> 
+> > I know though that fallocate behavior is kind of undefined in this case, but I
+> 
+> Seems pretty clearly defined to me :/
 
-> It'd be nice if this were atomic with the actual changes that it
-> represents, but I think that would be prohibitively expensive. That may
-> be something we need to address. I'm not sure we really want to do it as
-> part of this patchset though.
-> 
-> > > +
-> > > +		/* Since lowest bit is flag, add 2 to avoid it */
-> > > +		new = (cur & ~I_VERSION_QUERIED) + I_VERSION_INCREMENT;
-> > > +
-> > > +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
-> > > +		if (likely(old == cur))
-> > > +			break;
-> > > +		cur = old;
-> > > +	}
-> > >  	return true;
-> > >  }
-> > >  
-> > 
-> > ...
-> > 
-> > >  static inline u64
-> > >  inode_query_iversion(struct inode *inode)
-> > >  {
-> > > -	return inode_peek_iversion(inode);
-> > > +	u64 cur, old, new;
-> > > +
-> > > +	cur = atomic64_read(&inode->i_version);
-> > > +	for (;;) {
-> > > +		/* If flag is already set, then no need to swap */
-> > > +		if (cur & I_VERSION_QUERIED)
-> > > +			break;
-> > > +
-> > > +		new = cur | I_VERSION_QUERIED;
-> > > +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
-> > > +		if (old == cur)
-> > > +			break;
-> > > +		cur = old;
-> > > +	}
-> > 
-> > Why not just use atomic64_or() here?
-> > 
-> 
-> If the cmpxchg fails, then either:
-> 
-> 1) it was incremented
-> 2) someone flagged it QUERIED
-> 
-> If an increment happened then we don't need to flag it as QUERIED if
-> we're returning an older value. If we use atomic64_or, then we can't
-> tell if an increment happened so we'd end up potentially flagging it
-> more than necessary.
-> 
-> In principle, either outcome is technically OK and we don't have to loop
-> if the cmpxchg doesn't work. That said, if we think there might be a
-> later i_version available, then I think we probably want to try to query
-> it again so we can return as late a one as possible.
+I'm still not 100% convinced this behavior can be said as defined. Might be me
+overlooking too much into it or just stupidity from my part, but as you said
+above, we have 2 options: Lie to the user and partially extend the file or don't
+change the file size. Which still looks like to me as an undefined behavior,
+once, fallocate users must know how the underlying filesystem is handling
+fallocate failures.
 
-OK, makes sense. I'm just a bit vary of cmpxchg loops as they tend to
-behave pretty badly in contended cases but I guess i_version won't be
-hammered *that* hard.
+I shouldn't but :) Ext4 uses the 'a' option, while xfs uses 'b' option. Not
+saying any of them are wrong, although I am more inclined to not change the file
+size at all as you mentioned. I'm just trying to look if is there anything I am
+missing that could be improved to make it a bit less confusing for users.
 
-								Honza
+> 
+> > wonder if is there anything we could agree to improve to make it less confusing
+> > for fallocate users, or at least agree if this is the behavior we want in XFS.
+> > 
+> > Maybe is worth to mention though, that by now, we release any unwritten extent
+> > past EOF at certain points in the code (/me don't remember exactly where by
+> > now).
+> 
+> In general, that does not happen with preallocated files. Successful
+> preallocation sets the inode flag XFS_DIFLAG_PREALLOC, which turns
+> off the post-EOF extent removal code for that inode. Preallocation
+> is persistent, speculative allocation beyond EOF (such as done by
+> delayed allocation) is not.
+> 
+> However, if fallocate fails with ENOSPC, then we don't set that
+> flag, so if there hasn't been any other preallocation we will clean
+> up the blocks beyond EOF eventually without the user needing to do
+> anything. That's not a guarantee, though, because previous
+> preallocations could have set that flag....
+>
+
+Yup, I've read some parts of the code again and I can see it. Thanks to these
+details.
+
+> I think, though, this is a side issue and really doesn't matter when
+> it comes to how fallocate should behave on failure.
+
+I think it does. The user fallocate X bytes beyond EOF and at some point it
+fails with ENOSPC. In one filesystem the file size is extended by Y bytes
+related to the partially fallocate'd blocks. In another the file size isn't
+extended at all, but the blocks are still there, consuming space on the
+filesystem, which, depending on the size of the fallocate, it can be a large
+part of the filesystem that will be occupied by pre-allocated blocks during a
+failure in the middle of fallocate(), which can certainly make users confused.
+
+I am starting to thing that the best approach after a failed fallocate() is to
+truncate the file to the original size, deallocating any possible space
+partially pre-allocated during fallocate. At least that's how I'd use this :)
+
+Cheers.
+
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
