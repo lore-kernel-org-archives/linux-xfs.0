@@ -1,134 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41886 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750737AbdLSUlt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:41:49 -0500
-Date: Tue, 19 Dec 2017 12:41:47 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/13] xfs: create structure verifier function for
- shortform xattrs
-Message-ID: <20171219204147.GC12613@magnolia>
-References: <151320949282.30654.14805160700975182459.stgit@magnolia>
- <151320953564.30654.16063573622569255317.stgit@magnolia>
- <20171219052329.GQ4094@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:22148 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751013AbdLSUoy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:44:54 -0500
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eROks-00058S-7e
+        for linux-xfs@vger.kernel.org; Wed, 20 Dec 2017 07:44:50 +1100
+Date: Wed, 20 Dec 2017 07:44:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: fallocate behavior on -ENOSPC for blocks past EOF
+Message-ID: <20171219204450.GY4094@dastard>
+References: <20171213161611.53oavmzhnsum2fqc@odin.usersys.redhat.com>
+ <20171213212906.GA5858@dastard>
+ <20171219121117.72yd4iio3iaeaq3b@odin.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171219052329.GQ4094@dastard>
+In-Reply-To: <20171219121117.72yd4iio3iaeaq3b@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 04:23:29PM +1100, Dave Chinner wrote:
-> On Wed, Dec 13, 2017 at 03:58:55PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 19, 2017 at 01:11:17PM +0100, Carlos Maiolino wrote:
+> Hi Dave,
+> 
+> On Thu, Dec 14, 2017 at 08:29:06AM +1100, Dave Chinner wrote:
+> > On Wed, Dec 13, 2017 at 05:16:11PM +0100, Carlos Maiolino wrote:
+> > > We have talked a bit about it on irc before but iirc we didn't end on any
+> > > conclusion about it.
+> > > 
+> > > Current fallocate behavior on XFS in case it hits -ENOSPC in the middle of the
+> > > reservation is kind of weird now when these new blocks are allocated past EOF.
+> > > 
+> > > We end up not changing the i_size to match the partial blocks allocated even if
+> > > fallocate is not called with KEEP_SIZE.
+> > > 
+> > > Such behavior is confusing some users of fallocate, and I've been talking to
+> > > Eric if wouldn't be better to update the i_size to match the partially allocated
+> > > blocks IF KEEP_SIZE has not been used.
 > > 
-> > Create a function to perform structure verification for short form
-> > extended attributes.
+> > What's the confusion? fallocate is supposed to provide the backing
+> > for posix_fallocate(), which either succeeds completely or returns
+> > an error. posix_fallocate() specifically states that:
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr_leaf.c |   70 +++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_attr_leaf.h |    1 +
-> >  2 files changed, 71 insertions(+)
+> > 	If the offset+ len is beyond the current file size, then
+> > 	posix_fallocate() shall adjust the file size to offset+ len.
+> > 	Otherwise, the file size shall not be changed.
 > > 
+> > (http://pubs.opengroup.org/onlinepubs/009695399/functions/posix_fallocate.html)
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index 1274872..a5033f0 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -873,6 +873,76 @@ xfs_attr_shortform_allfit(
-> >  	return xfs_attr_shortform_bytesfit(dp, bytes);
-> >  }
-> >  
-> > +/* Verify the consistency of an inline attribute fork. */
-> > +xfs_failaddr_t
-> > +xfs_attr_shortform_verify(
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	struct xfs_attr_shortform	*sfp;
-> > +	struct xfs_attr_sf_entry	*sfep;
-> > +	struct xfs_attr_sf_entry	*next_sfep;
-> > +	char				*endp;
-> > +	struct xfs_ifork		*ifp;
-> > +	int				i;
-> > +	int				size;
-> > +
-> > +	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
-> > +	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
-> > +	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
-> > +	size = ifp->if_bytes;
-> > +
-> > +	/*
-> > +	 * Give up if the attribute is way too short.
-> > +	 */
-> > +	if (size < sizeof(struct xfs_attr_sf_hdr))
-> > +		return __this_address;
-> > +
-> > +	endp = (char *)sfp + size;
-> > +
-> > +	/* Check all reported entries */
-> > +	sfep = &sfp->list[0];
-> > +	for (i = 0; i < sfp->hdr.count; i++) {
-> > +		/*
-> > +		 * struct xfs_attr_sf_entry has a variable length.
-> > +		 * Check the fixed-offset parts of the structure are
-> > +		 * within the data buffer.
-> > +		 */
-> > +		if (((char *)sfep + sizeof(*sfep)) >= endp)
-> > +			return __this_address;
-> > +
-> > +		/* Don't allow names with known bad length. */
-> > +		if (sfep->namelen == 0)
-> > +			return __this_address;
-> > +
-> > +		/*
-> > +		 * Check that the variable-length part of the structure is
-> > +		 * within the data buffer.  The next entry starts after the
-> > +		 * name component, so nextentry is an acceptable test.
-> > +		 */
-> > +		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
-> > +		if ((char *)next_sfep > endp)
-> > +			return __this_address;
-> > +
-> > +		/*
-> > +		 * Check for unknown flags.  Short form doesn't support
-> > +		 * the incomplete or local bits.
-> > +		 */
-> > +		if (sfep->flags & ~(XFS_ATTR_ROOT | XFS_ATTR_SECURE))
-> > +			return __this_address;
-> > +
-> > +		/* Check for invalid namespace combinations. */
-> > +		if ((sfep->flags & XFS_ATTR_ROOT) &&
-> > +		    (sfep->flags & XFS_ATTR_SECURE))
-> > +			return __this_address;
+> > IOWs, setting the file size to anything other than offset+len
+> > is not allowed (it's a "shall" definition which means we must follow
+> > that exact behaviour), and hence on failure we have only two choices:
+> > 
+> > 	a) lie to the user and extend the file even though we didn't
+> > 	preallocate all the space; or
+> > 
+> > 	b) don't change the file size so there's no visible change
+> > 	to the file on failure.
+> > 
+> > We've chosen b) when fallocate fails for *any reason*. IOWs, the
+> > file appears unchanged to the user on failure so they don't have to
+> > handle undoing a failed partial operation.
+> > 
+> > > I know though that fallocate behavior is kind of undefined in this case, but I
+> > 
+> > Seems pretty clearly defined to me :/
 > 
-> #define ATTR_SF_FLAGS	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
+> I'm still not 100% convinced this behavior can be said as defined. Might be me
+> overlooking too much into it or just stupidity from my part, but as you said
+> above, we have 2 options: Lie to the user and partially extend the file
 
-XFS_ATTR_NSP_ONDISK_MASK?
+No, I didn't say "partially extend the file". I mean we *fully
+extend* the file and lie about it all being preallocated. We have to
+match the specified success or failure conditions exactly, not make
+up our own.
 
+> or don't
+> change the file size. Which still looks like to me as an undefined behavior,
+> once, fallocate users must know how the underlying filesystem is handling
+> fallocate failures.
 > 
-> 		if (sfep->flags & ~ATTR_SF_FLAGS)
-> 			return __this_address;
-> 		if ((sfep->flags & ATTR_SF_FLAGS) == ATTR_SF_FLAGS)
-> 			return __this_address;
+> I shouldn't but :) Ext4 uses the 'a' option, while xfs uses 'b' option.
 
-Also, can we just use hweight8() > 1 here?  We only allow one namespace
-bit per attr.
+Ext4 violates the specification of posix_fallocate() on failure,
+and so really needs to be fixed.
 
---D
+> Not
+> saying any of them are wrong,
 
+I am.
+
+> > I think, though, this is a side issue and really doesn't matter when
+> > it comes to how fallocate should behave on failure.
 > 
-> Otherwise looks ok.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think it does. The user fallocate X bytes beyond EOF and at some point it
+> fails with ENOSPC. In one filesystem the file size is extended by Y bytes
+> related to the partially fallocate'd blocks. In another the file size isn't
+> extended at all, but the blocks are still there, consuming space on the
+> filesystem, which, depending on the size of the fallocate, it can be a large
+> part of the filesystem that will be occupied by pre-allocated blocks during a
+> failure in the middle of fallocate(), which can certainly make users confused.
+>
+> I am starting to thing that the best approach after a failed fallocate() is to
+> truncate the file to the original size, deallocating any possible space
+> partially pre-allocated during fallocate. At least that's how I'd use this :)
+
+That's not side-effect free, either - it will remove other
+*successful* preallocation beyond EOF that has already been made,
+and so writes into a range of a previous preallocation could now
+fail with ENOSPC.... Also, without careful implementation of the
+failure case, the truncate could race with other concurrent
+operations that extend the file size and that would be bad...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
