@@ -1,36 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:16766 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935074AbdLSAST (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 19:18:19 -0500
-Date: Tue, 19 Dec 2017 11:18:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: set cowblocks tag for direct cow writes too
-Message-ID: <20171219001816.GK4094@dastard>
-References: <151335786780.26575.15542999972223359181.stgit@magnolia>
- <151335789785.26575.9168288718937543398.stgit@magnolia>
+Received: from merlin.infradead.org ([205.233.59.134]:46012 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759667AbdLSA1m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 19:27:42 -0500
+Subject: Re: Storing errors in the XArray
+References: <20171206004159.3755-1-willy@infradead.org>
+ <20171206004159.3755-9-willy@infradead.org>
+ <66ad068b-1973-ca41-7bbf-8a0634cc488d@infradead.org>
+ <20171215171012.GA11918@bombadil.infradead.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <d8390a61-9fd9-79a7-63e9-c5f343e0f339@infradead.org>
+Date: Mon, 18 Dec 2017 16:27:39 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151335789785.26575.9168288718937543398.stgit@magnolia>
+In-Reply-To: <20171215171012.GA11918@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Dec 15, 2017 at 09:11:37AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 12/15/2017 09:10 AM, Matthew Wilcox wrote:
+> On Mon, Dec 11, 2017 at 03:10:22PM -0800, Randy Dunlap wrote:
+>>> +The XArray does not support storing :c:func:`IS_ERR` pointers; some
+>>> +conflict with data values and others conflict with entries the XArray
+>>> +uses for its own purposes.  If you need to store special values which
+>>> +cannot be confused with real kernel pointers, the values 4, 8, ... 4092
+>>> +are available.
+>>
+>> or if I know that they values are errno-range values, I can just shift them
+>> left by 2 to store them and then shift them right by 2 to use them?
 > 
-> If a user performs a direct CoW write, we end up loading the CoW fork
-> with preallocated extents.  Therefore, we must set the cowblocks tag so
-> that they can be cleared out if we run low on space.
+> On further thought, I like this idea so much, it's worth writing helpers
+> for this usage.  And test-suite (also doubles as a demonstration of how
+> to use it).
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+> index c616e9319c7c..53aa251df57a 100644
+> --- a/include/linux/xarray.h
+> +++ b/include/linux/xarray.h
+> @@ -232,6 +232,39 @@ static inline bool xa_is_value(const void *entry)
+>  	return (unsigned long)entry & 1;
+>  }
+>  
+> +/**
+> + * xa_mk_errno() - Create an XArray entry from an error number.
+> + * @error: Error number to store in XArray.
+> + *
+> + * Return: An entry suitable for storing in the XArray.
+> + */
+> +static inline void *xa_mk_errno(long error)
+> +{
+> +	return (void *)(error << 2);
+> +}
+> +
+> +/**
+> + * xa_to_errno() - Get error number stored in an XArray entry.
+> + * @entry: XArray entry.
+> + *
+> + * Return: The error number stored in the XArray entry.
+> + */
+> +static inline unsigned long xa_to_errno(const void *entry)
+> +{
+> +	return (long)entry >> 2;
+> +}
+> +
+> +/**
+> + * xa_is_errno() - Determine if an entry is an errno.
+> + * @entry: XArray entry.
+> + *
+> + * Return: True if the entry is an errno, false if it is a pointer.
+> + */
+> +static inline bool xa_is_errno(const void *entry)
+> +{
+> +	return (((unsigned long)entry & 3) == 0) && (entry > (void *)-4096);
 
-Looks good.
+	Some named mask bits would be ^^^ preferable there.
+#define MAX_ERRNO	4095 // from err.h
+	                                         && (entry >= (void *)-MAX_ERRNO);
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> +}
+> +
+>  /**
+>   * xa_is_internal() - Is the entry an internal entry?
+>   * @entry: Entry retrieved from the XArray
+> diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
+> index 43111786ebdd..b843cedf3988 100644
+> --- a/tools/testing/radix-tree/xarray-test.c
+> +++ b/tools/testing/radix-tree/xarray-test.c
+> @@ -29,7 +29,13 @@ void check_xa_err(struct xarray *xa)
+>  	assert(xa_err(xa_store(xa, 1, xa_mk_value(0), GFP_KERNEL)) == 0);
+>  	assert(xa_err(xa_store(xa, 1, NULL, 0)) == 0);
+>  // kills the test-suite :-(
+> -//     assert(xa_err(xa_store(xa, 0, xa_mk_internal(0), 0)) == -EINVAL);
+> +//	assert(xa_err(xa_store(xa, 0, xa_mk_internal(0), 0)) == -EINVAL);
+> +
+> +	assert(xa_err(xa_store(xa, 0, xa_mk_errno(-ENOMEM), GFP_KERNEL)) == 0);
+> +	assert(xa_err(xa_load(xa, 0)) == 0);
+> +	assert(xa_is_errno(xa_load(xa, 0)) == true);
+> +	assert(xa_to_errno(xa_load(xa, 0)) == -ENOMEM);
+> +	xa_erase(xa, 0);
+>  }
+>  
+>  void check_xa_tag(struct xarray *xa)
+> 
+
+Thanks,
 -- 
-Dave Chinner
-david@fromorbit.com
+~Randy
