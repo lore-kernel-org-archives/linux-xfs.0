@@ -1,93 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:45896 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935074AbdLSAQQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 19:16:16 -0500
-Subject: Re: Naming of tag operations in the XArray
-References: <20171206004159.3755-1-willy@infradead.org>
- <20171206004159.3755-9-willy@infradead.org>
- <66ad068b-1973-ca41-7bbf-8a0634cc488d@infradead.org>
- <20171215042214.GA17444@bombadil.infradead.org>
- <20171215123417.GA10348@bombadil.infradead.org>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <b337fe8a-ca53-5e00-cf85-a8c385b494cc@infradead.org>
-Date: Mon, 18 Dec 2017 16:16:11 -0800
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:16831 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935074AbdLSAR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 19:17:58 -0500
+Date: Tue, 19 Dec 2017 11:17:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] xfs: remove leftover CoW reservations when
+ remounting ro
+Message-ID: <20171219001755.GJ4094@dastard>
+References: <151335786780.26575.15542999972223359181.stgit@magnolia>
+ <151335789173.26575.16460983789473064032.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171215123417.GA10348@bombadil.infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151335789173.26575.16460983789473064032.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 12/15/2017 04:34 AM, Matthew Wilcox wrote:
-> On Thu, Dec 14, 2017 at 08:22:14PM -0800, Matthew Wilcox wrote:
->> On Mon, Dec 11, 2017 at 03:10:22PM -0800, Randy Dunlap wrote:
->>>> +A freshly-initialised XArray contains a ``NULL`` pointer at every index.
->>>> +Each non-``NULL`` entry in the array has three bits associated with
->>>> +it called tags.  Each tag may be flipped on or off independently of
->>>> +the others.  You can search for entries with a given tag set.
->>>
->>> Only tags that are set, or search for entries with some tag(s) cleared?
->>> Or is that like a mathematical set?
->>
->> hmm ...
->>
->> "Each tag may be set or cleared independently of the others.  You can
->> search for entries which have a particular tag set."
->>
->> Doesn't completely remove the ambiguity, but I can't think of how to phrase
->> that better ...
+On Fri, Dec 15, 2017 at 09:11:31AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Thinking about this some more ...
+> When we're remounting the filesystem readonly, remove all CoW
+> preallocations prior to going ro.  If the fs goes down after the ro
+> remount, we never clean up the staging extents, which means xfs_check
+> will trip over them on a subsequent run.  Practically speaking, the
+> next mount will clean them up too, so this is unlikely to be seen.
 > 
-> At the moment, the pieces of the API which deal with tags look like this:
+> Found by adding clonerange to fsstress and running xfs/017.
 > 
-> bool xa_tagged(const struct xarray *, xa_tag_t)
-> bool xa_get_tag(struct xarray *, unsigned long index, xa_tag_t);
-> void xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
-> void xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
-> int xa_get_tagged(struct xarray *, void **dst, unsigned long start,
->                         unsigned long max, unsigned int n, xa_tag_t);
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_super.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> bool xas_get_tag(const struct xa_state *, xa_tag_t);
-> void xas_set_tag(const struct xa_state *, xa_tag_t);
-> void xas_clear_tag(const struct xa_state *, xa_tag_t);
-> void *xas_find_tag(struct xa_state *, unsigned long max, xa_tag_t);
-> xas_for_each_tag(xas, entry, max, tag) { }
 > 
-> (at some point there will be an xa_for_each_tag too, there just hasn't
-> been a user yet).
-> 
-> I'm always ambivalent about using the word 'get' in an API because it has
-> two common meanings; (increment a refcount) and (return the state).  How
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f663022..7b6d150 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1369,6 +1369,14 @@ xfs_fs_remount(
+>  
+>  	/* rw -> ro */
+>  	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+> +		/* Get rid of any leftover CoW reservations... */
+> +		cancel_delayed_work_sync(&mp->m_cowblocks_work);
+> +		error = xfs_icache_free_cowblocks(mp, NULL);
+> +		if (error) {
+> +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> +			return error;
+> +		}
 
-Yes, I get that.  But you usually wouldn't lock a tag AFAIK.
+On rw->ro do we start the m_cowblocks_work back up?
 
-> would people feel about these names instead:
+What about when we freeze the filesystem - shouldn't we clean
+up the cow blocks there, too? We've tried hard in the past to make
+freeze and rw->ro exactly the same so that if the system is powered
+down while frozen it comes up almost entirely clean just like a
+ro-remount in shutdown....
 
-I think that the original names are mostly better, except I do like
-xa_select() instead of xa_get_tagged().  But even that doesn't have
-to change.
+And, FWIW, this makes ro->rw and thaw essentially the same, too.
 
-> bool xa_any_tagged(xa, tag);
-> bool xa_is_tagged(xa, index, tag);
-> void xa_tag(xa, index, tag);
-> void xa_untag(xa, index, tag);
-> int xa_select(xa, dst, start, max, n, tag);
-> 
-> bool xas_is_tagged(xas, tag);
-> void xas_tag(xas, tag);
-> void xas_untag(xas, tag);
-> void *xas_find_tag(xas, max, tag);
-> xas_for_each_tag(xas, entry, max, tag) { }
-> 
-> (the last two are unchanged)
-> 
+Cheers,
 
-
+Dave.
 -- 
-~Randy
+Dave Chinner
+david@fromorbit.com
