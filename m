@@ -1,54 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17897 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750737AbdLSUsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:48:45 -0500
-Date: Wed, 20 Dec 2017 07:48:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/13] xfs: move inode fork verifiers to xfs_dinode_verify
-Message-ID: <20171219204843.GZ4094@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:43402 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752004AbdLSUuH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:50:07 -0500
+Date: Tue, 19 Dec 2017 12:50:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/13] xfs: provide a centralized method for verifying
+ inline fork data
+Message-ID: <20171219205004.GE12613@magnolia>
 References: <151320949282.30654.14805160700975182459.stgit@magnolia>
- <151320952955.30654.5858027812526222455.stgit@magnolia>
- <20171219051619.GP4094@dastard>
- <20171219203459.GB12613@magnolia>
+ <151320955376.30654.3972078644450529725.stgit@magnolia>
+ <20171219060640.GT4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171219203459.GB12613@magnolia>
+In-Reply-To: <20171219060640.GT4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 12:34:59PM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 19, 2017 at 04:16:19PM +1100, Dave Chinner wrote:
-> > On Wed, Dec 13, 2017 at 03:58:49PM -0800, Darrick J. Wong wrote:
-> > > +	if (mode && dip->di_forkoff > mp->m_sb.sb_inodesize)
-> > > +		return __this_address;
+On Tue, Dec 19, 2017 at 05:06:40PM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:59:13PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Hold on, this check is completely bogus. di_forkoff is in units of 8 bytes,
-> > which inode size is in bytes. Also, di_forkoff is a u8, so it can't
-> > /ever/ be larger than the inode size which are >= 256 bytes. Yeah,
-> > though so:
+> > Replace the current haphazard dir2 shortform verifier callsites with a
+> > centralized verifier function that can be called either with the default
+> > verifier functions or with a custom set.  This helps us strengthen
+> > integrity checking while providing us with flexibility for repair tools.
 > > 
-> > #define XFS_DFORK_BOFF(dip)             ((int)((dip)->di_forkoff << 3))
-> > 
-> > This check needs to be:
-> > 
-> > 	if (mode && XFS_DFORK_BOFF(dip) > mp->m_sb.sb_inodesize)
-> > 		return __this_address;
-> > 
-> > Otherwise looks good.
+> > xfs_repair wants this to be able to supply its own verifier functions
+> > when trying to fix possibly corrupt metadata.
 > 
-> Oops, thank you for catching that!
+> I was about to say "this looks a little over-engineered" then I read
+> the commit message.... :P
+> 
+> Ok, so it pulls the fork verication out of the libxfs inode read code,
+> and instead slots it into the kernel inode cache miss path just
+> after the inode has been read. Same effect - newly read inodes get
+> their forks verified before use. ANd they same thing happens in
+> xfs_iflush_int(), which is private to the kernel anyway....
 
-Wasn't your bug - the existing code has had this check for a long
-time and nobody has noticed it was bogus until now :/
+<nod> It's a little over-engineered for the kernel; the real point of
+all this is to check local format forks by default while enabling
+xfs_repair to skip those checks if, say, it wants to fix an inode with
+broken xattrs by zapping the attr fork.
 
-Cheers,
+> > +
+> > +/* Default fork content verifiers. */
+> > +struct xfs_ifork_ops xfs_default_ifork_ops = {
+> > +	.verify_attr	= xfs_attr_shortform_verify,
+> > +	.verify_dir	= xfs_dir2_sf_verify,
+> > +	.verify_symlink	= xfs_symlink_shortform_verify,
+> > +};
+> > +
+> > +/* Verify the inline contents of the data fork of an inode. */
+> > +xfs_failaddr_t
+> > +xfs_ifork_verify_data(
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_ifork_ops	*ops)
+> > +{
+> > +	xfs_ifork_verifier_t	fn = NULL;
+> > +
+> > +	/* Non-local data fork, we're done. */
+> > +	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+> > +		return NULL;
+> > +
+> > +	/* Check the inline data fork if there is one. */
+> > +	if (S_ISDIR(VFS_I(ip)->i_mode))
+> > +		fn = ops->verify_dir;
+> > +	else if (S_ISLNK(VFS_I(ip)->i_mode))
+> > +		fn = ops->verify_symlink;
+> > +
+> > +	if (fn)
+> > +		return fn(ip);
+> > +	return NULL;
+> > +}
+> 
+> Seems a little convoluted, especially if we grow more cases. This
+> seems simpler already:
+> 
+> 	switch(VFS_I(ip)->i_mode & S_IFMT) {
+> 	case S_IFDIR:
+> 		return ops->verify_dir(ip);
+> 	case S_IFLNK:
+> 		return ops->verify_symlink(ip);
+> 	default:
+> 		break;
+> 	}
+> 	return NULL;
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Fixed.
+
+> > +
+> > +/* Verify the inline contents of the attr fork of an inode. */
+> > +xfs_failaddr_t
+> > +xfs_ifork_verify_attr(
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_ifork_ops	*ops)
+> > +{
+> > +	xfs_ifork_verifier_t	fn = NULL;
+> > +
+> > +	/* There has to be an attr fork allocated if aformat is local. */
+> > +	if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> > +		if (XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
+> > +			fn = ops->verify_attr;
+> > +		else
+> > +			return __this_address;
+> > +	}
+> > +
+> > +	if (fn)
+> > +		return fn(ip);
+> > +	return NULL;
+> 
+> And this could be stright lined as:
+> 
+> 	if (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
+> 		return NULL;
+> 	if (!XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
+> 		return __this_address;
+> 
+> 	return ops->verify_attr(ip);
+
+Fixed.
+
+--D
+
+> -Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
