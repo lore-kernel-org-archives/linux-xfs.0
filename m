@@ -1,79 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56636 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:60764 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751298AbdLSVEN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 16:04:13 -0500
-Date: Tue, 19 Dec 2017 13:04:09 -0800
+        with ESMTP id S1753072AbdLSVI7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 16:08:59 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBJL6vn3066042
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:08:58 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2ey9gbgnkj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:08:58 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBJL8v69016819
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:08:57 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBJL8vWq011507
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:08:57 GMT
+Date: Tue, 19 Dec 2017 13:08:56 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/13] xfs: create structure verifier function for
- shortform xattrs
-Message-ID: <20171219210409.GF12613@magnolia>
-References: <151320949282.30654.14805160700975182459.stgit@magnolia>
- <151320953564.30654.16063573622569255317.stgit@magnolia>
- <20171219052329.GQ4094@dastard>
- <20171219204147.GC12613@magnolia>
- <20171219205129.GA4094@dastard>
+Subject: [PATCH v2 3/4] xfs: remove leftover CoW reservations when remounting
+ ro
+Message-ID: <20171219210856.GG12613@magnolia>
+References: <151335786780.26575.15542999972223359181.stgit@magnolia>
+ <151335789173.26575.16460983789473064032.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171219205129.GA4094@dastard>
+In-Reply-To: <151335789173.26575.16460983789473064032.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Dec 20, 2017 at 07:51:29AM +1100, Dave Chinner wrote:
-> On Tue, Dec 19, 2017 at 12:41:47PM -0800, Darrick J. Wong wrote:
-> > On Tue, Dec 19, 2017 at 04:23:29PM +1100, Dave Chinner wrote:
-> > > On Wed, Dec 13, 2017 at 03:58:55PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Create a function to perform structure verification for short form
-> > > > extended attributes.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > > +		/* Check for invalid namespace combinations. */
-> > > > +		if ((sfep->flags & XFS_ATTR_ROOT) &&
-> > > > +		    (sfep->flags & XFS_ATTR_SECURE))
-> > > > +			return __this_address;
-> > > 
-> > > #define ATTR_SF_FLAGS	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-> > 
-> > XFS_ATTR_NSP_ONDISK_MASK?
-> 
-> Yeah, that works. I didn't go looking for an existing definition :/
-> 
-> > > 
-> > > 		if (sfep->flags & ~ATTR_SF_FLAGS)
-> > > 			return __this_address;
-> > > 		if ((sfep->flags & ATTR_SF_FLAGS) == ATTR_SF_FLAGS)
-> > > 			return __this_address;
-> > 
-> > Also, can we just use hweight8() > 1 here?  We only allow one namespace
-> > bit per attr.
-> 
-> With a comment, yes, otherwise someone unfamiliar with what
-> hweight() does will have to go do lots of extra work to understand
-> the code.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-/*
- * Check for invalid namespace combinations.  We only allow
- * one namespace flag per xattr, so we can just count the
- * bits (i.e. hweight) here.
- */
+When we're remounting the filesystem readonly, remove all CoW
+preallocations prior to going ro.  If the fs goes down after the ro
+remount, we never clean up the staging extents, which means xfs_check
+will trip over them on a subsequent run.  Practically speaking, the next
+mount will clean them up too, so this is unlikely to be seen.  Since we
+shut down the cowblocks cleaner on remount-ro, we also have to make sure
+we start it back up if/when we remount-rw.
 
---D
+Found by adding clonerange to fsstress and running xfs/017.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_icache.c |    2 +-
+ fs/xfs/xfs_icache.h |    1 +
+ fs/xfs/xfs_super.c  |    9 +++++++++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 58d2d42..3861d61 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -870,7 +870,7 @@ xfs_eofblocks_worker(
+  * based on the 'speculative_cow_prealloc_lifetime' tunable (5m by default).
+  * (We'll just piggyback on the post-EOF prealloc space workqueue.)
+  */
+-STATIC void
++void
+ xfs_queue_cowblocks(
+ 	struct xfs_mount *mp)
+ {
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index bff4d85..d4a7758 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -81,6 +81,7 @@ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
+ int xfs_icache_free_cowblocks(struct xfs_mount *, struct xfs_eofblocks *);
+ int xfs_inode_free_quota_cowblocks(struct xfs_inode *ip);
+ void xfs_cowblocks_worker(struct work_struct *);
++void xfs_queue_cowblocks(struct xfs_mount *);
+ 
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f663022..2db6a40 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1360,6 +1360,7 @@ xfs_fs_remount(
+ 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 			return error;
+ 		}
++		xfs_queue_cowblocks(mp);
+ 
+ 		/* Create the per-AG metadata reservation pool .*/
+ 		error = xfs_fs_reserve_ag_blocks(mp);
+@@ -1369,6 +1370,14 @@ xfs_fs_remount(
+ 
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
++		/* Get rid of any leftover CoW reservations... */
++		cancel_delayed_work_sync(&mp->m_cowblocks_work);
++		error = xfs_icache_free_cowblocks(mp, NULL);
++		if (error) {
++			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++			return error;
++		}
++
+ 		/* Free the per-AG metadata reservation pool. */
+ 		error = xfs_fs_unreserve_ag_blocks(mp);
+ 		if (error) {
