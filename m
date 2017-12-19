@@ -1,149 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44135 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751072AbdLSTA3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 14:00:29 -0500
-Date: Tue, 19 Dec 2017 11:00:26 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:49612 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751072AbdLSU0U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:26:20 -0500
+Date: Tue, 19 Dec 2017 12:26:15 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] xfs: remove leftover CoW reservations when
- remounting ro
-Message-ID: <20171219190026.GC11969@magnolia>
-References: <151335786780.26575.15542999972223359181.stgit@magnolia>
- <151335789173.26575.16460983789473064032.stgit@magnolia>
- <20171219001755.GJ4094@dastard>
- <20171219034911.GB11975@magnolia>
- <20171219043701.GO4094@dastard>
- <20171219045301.GC11975@magnolia>
- <20171219064655.GX4094@dastard>
+Subject: Re: [PATCH 03/13] xfs: have buffer verifier functions report failing
+ address
+Message-ID: <20171219202615.GD11969@magnolia>
+References: <151320949282.30654.14805160700975182459.stgit@magnolia>
+ <151320951104.30654.17605262300441313090.stgit@magnolia>
+ <20171219041238.GM4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171219064655.GX4094@dastard>
+In-Reply-To: <20171219041238.GM4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 05:46:55PM +1100, Dave Chinner wrote:
-> On Mon, Dec 18, 2017 at 08:53:01PM -0800, Darrick J. Wong wrote:
-> > On Tue, Dec 19, 2017 at 03:37:02PM +1100, Dave Chinner wrote:
-> > > On Mon, Dec 18, 2017 at 07:49:11PM -0800, Darrick J. Wong wrote:
-> > > > On Tue, Dec 19, 2017 at 11:17:55AM +1100, Dave Chinner wrote:
-> > > > > On Fri, Dec 15, 2017 at 09:11:31AM -0800, Darrick J. Wong wrote:
-> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > 
-> > > > > > When we're remounting the filesystem readonly, remove all CoW
-> > > > > > preallocations prior to going ro.  If the fs goes down after the ro
-> > > > > > remount, we never clean up the staging extents, which means xfs_check
-> > > > > > will trip over them on a subsequent run.  Practically speaking, the
-> > > > > > next mount will clean them up too, so this is unlikely to be seen.
-> > > > > > 
-> > > > > > Found by adding clonerange to fsstress and running xfs/017.
-> > > > > > 
-> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_super.c |    8 ++++++++
-> > > > > >  1 file changed, 8 insertions(+)
-> > > > > > 
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > > > index f663022..7b6d150 100644
-> > > > > > --- a/fs/xfs/xfs_super.c
-> > > > > > +++ b/fs/xfs/xfs_super.c
-> > > > > > @@ -1369,6 +1369,14 @@ xfs_fs_remount(
-> > > > > >  
-> > > > > >  	/* rw -> ro */
-> > > > > >  	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
-> > > > > > +		/* Get rid of any leftover CoW reservations... */
-> > > > > > +		cancel_delayed_work_sync(&mp->m_cowblocks_work);
-> > > > > > +		error = xfs_icache_free_cowblocks(mp, NULL);
-> > > > > > +		if (error) {
-> > > > > > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > > > > > +			return error;
-> > > > > > +		}
-> > > > > 
-> > > > > On rw->ro do we start the m_cowblocks_work back up?
-> > > > 
-> > > > Assuming you meant to ask about ro->rw, then yes it should get started
-> > > > back up the next time something sets the cowblocks tag.  I'm not opposed
-> > > > to starting it back up directly from the ro->rw handler.
-> > > > 
-> > > > > What about when we freeze the filesystem - shouldn't we clean
-> > > > > up the cow blocks there, too? We've tried hard in the past to make
-> > > > > freeze and rw->ro exactly the same so that if the system is powered
-> > > > > down while frozen it comes up almost entirely clean just like a
-> > > > > ro-remount in shutdown....
-> > > > 
-> > > > I don't see a hard requirement to clean them up at freeze time, though
-> > > > we certainly can do it for consistency's sake.
-> > > 
-> > > can't the background worker come around and attempt to do cleanup
-> > > while the fs is frozen? We've had vectors like that in the past that
-> > > have written to frozen filesystems (e.g. inode reclaim writing
-> > > inodes, memory reclaim shrinkers triggering AIL pushes) so leaving
-> > > potentially dirty objects in memory when the filesystem is frozen
-> > > is kinda dangerous. That's the reason behind trying to make
-> > > freeze/ro states identical - it makes sure we don't accidentally
-> > > leave writable objects in memory when frozen...
+On Tue, Dec 19, 2017 at 03:12:38PM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:58:31PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Hmmm, so /me tried making fsfreeze clear out the cow reservations, but
-> > doing so requires allocating a transaction, which blows the assert in
-> > sb_start_write because the fs is already frozen...
+> > Modify each function that checks the contents of a metadata buffer to
+> > return the instruction address of the failing test so that we can report
+> > more precise failure errors to the log.
 > 
-> Ah, didn't we solve that problem years ago? Ah, yeah,
-> XFS_TRANS_NO_WRITECOUNT. That'd be a bit of a hack, but the
-> problem here is we need to run this between freezing data writes and
-> freezing transactions and we have no hook in the generic freeze
-> code to do that...
 > 
-> > I could just kill
-> > the thread without cleaning out the cow reservations and let the
-> > post-crash mount clean things up, since we already have the
-> > infrastructure to do that anyway?
+> > @@ -331,29 +332,29 @@ xfs_allocbt_verify(
+> >  	level = be16_to_cpu(block->bb_level);
+> >  	switch (block->bb_magic) {
+> >  	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
+> > -		if (!xfs_btree_sblock_v5hdr_verify(bp))
+> > -			return false;
+> > +		if ((fa = xfs_btree_sblock_v5hdr_verify(bp)))
+> > +			return fa;
 > 
-> Well, we do leave the log dirty on freeze so that we cleanup
-> unlinked inodes if we crash while frozen, so there is precedence
-> there. However, we need to balance that with the fairly common
-> problem of having to run recovery on read-only snapshots on the
-> first mount because a freeze leaves the log dirty. I don't
-> think we want to make that problem worse so I'd like to avoid this
-> solution if at all possible.
+> I see a few of these.
 > 
-> > (Or create a ->freeze_super and do it there...)
-> 
-> A ->freeze_data callout from the generic freezing code would be more
-> appropriate than completely reimplementing our own freeze code.
-> Right now the generic code just calls sync_filesystem(sb) to do this
-> before setting SB_FREEZE_FS - we need to do more than just sync data
-> if we are going to remove cow mappings on freeze....
+> 		fa = xfs_btree_sblock_v5hdr_verify(bp);
+> 		if (fa)
+> 			return fa;
 
-<nod>
+Fixed.
 
-I was thinking of replacing the sync_filesystem() call in freeze_super
-with:
+> > @@ -4609,7 +4609,7 @@ xfs_btree_sblock_v5hdr_verify(
+> >   * @bp: buffer containing the btree block
+> >   * @max_recs: maximum records allowed in this btree node
+> >   */
+> > -bool
+> > +xfs_failaddr_t
+> >  xfs_btree_sblock_verify(
+> >  	struct xfs_buf		*bp,
+> >  	unsigned int		max_recs)
+> > @@ -4619,19 +4619,19 @@ xfs_btree_sblock_verify(
+> >  
+> >  	/* numrecs verification */
+> >  	if (be16_to_cpu(block->bb_numrecs) > max_recs)
+> > -		return false;
+> > +		return __this_address;
+> >  
+> >  	/* sibling pointer verification */
+> >  	if (!block->bb_u.s.bb_leftsib ||
+> >  	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
+> >  	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
+> > -		return false;
+> > +		return __this_address;
+> >  	if (!block->bb_u.s.bb_rightsib ||
+> >  	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
+> >  	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
+> > -		return false;
+> > +		return __this_address;
+> 
+> Out if scope for this patch, but like th e lblock verifying, I think
+> these are candidates for xfs_verify_agbno()?
 
-if (sb->s_op->freeze_data) {
-	ret = sb->s_op->freeze_data(sb);
-	if (ret) {
-		printk(KERN_ERR
-			"VFS:Filesystem dta freeze failed\n");
-		sb->s_writers.frozen = SB_UNFROZEN;
-		sb_freeze_unlock(sb);
-		wake_up(&sb->s_writers.wait_unfrozen);
-		deactivate_locked_super(sb);
-		return ret;
-	}
-} else {
-	sync_filesystem(sb);
-}
+Yep.  Added another patch to fix this.
 
-Though at this point I feel that the freeze fix should be a totally
-separate patch from the ro<->rw patch.
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > index 27297a6..87565b6 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > @@ -73,13 +73,13 @@ xfs_dir3_leaf1_check(
+> >  	} else if (leafhdr.magic != XFS_DIR2_LEAF1_MAGIC)
+> >  		return false;
+> >  
+> > -	return xfs_dir3_leaf_check_int(dp->i_mount, dp, &leafhdr, leaf);
+> > +	return xfs_dir3_leaf_check_int(dp->i_mount, dp, &leafhdr, leaf) == NULL;
+> >  }
+> 
+> Hmmmm - shouldn't we make xfs_dir3_leaf_check() dump the failaddr
+> so we know what debug check failed? This would improve the debug
+> failure reporting in this code, and seeing as we now have the info it
+> doesn't really make sense to throw it away without reporting it...
+
+Fixed.
+
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> > index 682e2bf..00ded0a 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> > @@ -76,13 +76,13 @@ xfs_dir3_leafn_check(
+> >  	} else if (leafhdr.magic != XFS_DIR2_LEAFN_MAGIC)
+> >  		return false;
+> >  
+> > -	return xfs_dir3_leaf_check_int(dp->i_mount, dp, &leafhdr, leaf);
+> > +	return xfs_dir3_leaf_check_int(dp->i_mount, dp, &leafhdr, leaf) == NULL;
+> >  }
+> >  #else
+> >  #define	xfs_dir3_leaf_check(dp, bp)
+> >  #endif
+> 
+> Same here.
+
+Fixed.
+
+> > @@ -93,21 +93,21 @@ xfs_dir3_free_verify(
+> >  		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
+> >  
+> >  		if (hdr3->magic != cpu_to_be32(XFS_DIR3_FREE_MAGIC))
+> > -			return false;
+> > +			return __this_address;
+> >  		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
+> > -			return false;
+> > +			return __this_address;
+> >  		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+> > -			return false;
+> > +			return __this_address;
+> >  		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
+> > -			return false;
+> > +			return __this_address;
+> >  	} else {
+> >  		if (hdr->magic != cpu_to_be32(XFS_DIR2_FREE_MAGIC))
+> > -			return false;
+> > +			return __this_address;
+> >  	}
+> 
+> /me wonders if there is opportunity for factoring this header check
+> seeing as it's repeated a few times, just with different magic
+> numbers...
+> 
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > index 45c68d0..c441efb 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > @@ -41,7 +41,7 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+> >  #ifdef DEBUG
+> >  #define	xfs_dir3_data_check(dp, bp) \
+> >  do { \
+> > -	if (!__xfs_dir3_data_check((dp), (bp))) { \
+> > +	if (__xfs_dir3_data_check((dp), (bp))) { \
+> >  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, \
+> >  				(bp)->b_target->bt_mount, (bp)->b_addr); \
+> >  	} \
+> 
+> This should capture the failaddr and dump it as part of the
+> corruption error, I think. Otherwise we lose what part of the
+> structure was considered corrupt from the error report.
+
+Ok.
+
+> > @@ -507,7 +507,7 @@ xfs_iread(
+> >  		return error;
+> >  
+> >  	/* even unallocated inodes are verified */
+> > -	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
+> > +	if (xfs_dinode_verify(mp, ip->i_ino, dip)) {
+> >  		xfs_alert(mp, "%s: validation failed for inode %lld",
+> >  				__func__, ip->i_ino);
+> 
+> Capture the failaddr in the error message?
+
+Ok.
+
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> > index a9c97a3..2317511 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> > @@ -82,7 +82,7 @@ void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+> >  #define	xfs_inobp_check(mp, bp)
+> >  #endif /* DEBUG */
+> >  
+> > -bool	xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
+> > -			  struct xfs_dinode *dip);
+> > +void	*xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
+> > +			   struct xfs_dinode *dip);
+> 
+> xfs_failaddr_t?
+
+Fixed.
 
 --D
 
-> -Dave.
+> Cheers,
+> 
+> Dave.
+> 
 > -- 
 > Dave Chinner
 > david@fromorbit.com
