@@ -1,123 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:22148 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751013AbdLSUoy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:44:54 -0500
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eROks-00058S-7e
-        for linux-xfs@vger.kernel.org; Wed, 20 Dec 2017 07:44:50 +1100
-Date: Wed, 20 Dec 2017 07:44:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fallocate behavior on -ENOSPC for blocks past EOF
-Message-ID: <20171219204450.GY4094@dastard>
-References: <20171213161611.53oavmzhnsum2fqc@odin.usersys.redhat.com>
- <20171213212906.GA5858@dastard>
- <20171219121117.72yd4iio3iaeaq3b@odin.usersys.redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:39336 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751013AbdLSUpI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:45:08 -0500
+Date: Tue, 19 Dec 2017 12:45:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 08/13] xfs: create structure verifier function for short
+ form symlinks
+Message-ID: <20171219204504.GD12613@magnolia>
+References: <151320949282.30654.14805160700975182459.stgit@magnolia>
+ <151320954167.30654.14171605803183811747.stgit@magnolia>
+ <20171219052758.GR4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171219121117.72yd4iio3iaeaq3b@odin.usersys.redhat.com>
+In-Reply-To: <20171219052758.GR4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 01:11:17PM +0100, Carlos Maiolino wrote:
-> Hi Dave,
+On Tue, Dec 19, 2017 at 04:27:58PM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:59:01PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a function to check the structure of short form symlink targets.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_shared.h         |    1 +
+> >  fs/xfs/libxfs/xfs_symlink_remote.c |   36 ++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 37 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> > index c6f4eb4..67ccb1a 100644
+> > --- a/fs/xfs/libxfs/xfs_shared.h
+> > +++ b/fs/xfs/libxfs/xfs_shared.h
+> > @@ -143,5 +143,6 @@ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
+> >  			uint32_t size, struct xfs_buf *bp);
+> >  void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+> >  				 struct xfs_inode *ip, struct xfs_ifork *ifp);
+> > +xfs_failaddr_t xfs_symlink_shortform_verify(struct xfs_inode *ip);
+> >  
+> >  #endif /* __XFS_SHARED_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> > index b6ef6cb..5d9642e 100644
+> > --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> > +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> > @@ -210,3 +210,39 @@ xfs_symlink_local_to_remote(
+> >  	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsymlink_hdr) +
+> >  					ifp->if_bytes - 1);
+> >  }
+> > +
+> > +/* Verify the consistency of an inline symlink. */
+> > +xfs_failaddr_t
+> > +xfs_symlink_shortform_verify(
+> > +	struct xfs_inode	*ip)
+> > +{
+> > +	char			*sfp;
+> > +	char			*endp;
+> > +	struct xfs_ifork	*ifp;
+> > +	int			size;
+> > +
+> > +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
+> > +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> > +	sfp = (char *)ifp->if_u1.if_data;
+> > +	size = ifp->if_bytes;
+> > +	endp = sfp + size;
+> > +
+> > +	/* Zero length symlinks can exist while we're deleting a remote one. */
+> > +	if (size == 0)
+> > +		return NULL;
+> > +
+> > +	/* No negative sizes or overly long symlink targets. */
+> > +	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
+> > +		return __this_address;
+> > +
+> > +	/* No NULLs in the target either. */
+> > +	for (; sfp < endp; sfp++) {
+> > +		if (*sfp == 0)
+> > +			return __this_address;
+> > +	}
 > 
-> On Thu, Dec 14, 2017 at 08:29:06AM +1100, Dave Chinner wrote:
-> > On Wed, Dec 13, 2017 at 05:16:11PM +0100, Carlos Maiolino wrote:
-> > > We have talked a bit about it on irc before but iirc we didn't end on any
-> > > conclusion about it.
-> > > 
-> > > Current fallocate behavior on XFS in case it hits -ENOSPC in the middle of the
-> > > reservation is kind of weird now when these new blocks are allocated past EOF.
-> > > 
-> > > We end up not changing the i_size to match the partial blocks allocated even if
-> > > fallocate is not called with KEEP_SIZE.
-> > > 
-> > > Such behavior is confusing some users of fallocate, and I've been talking to
-> > > Eric if wouldn't be better to update the i_size to match the partially allocated
-> > > blocks IF KEEP_SIZE has not been used.
-> > 
-> > What's the confusion? fallocate is supposed to provide the backing
-> > for posix_fallocate(), which either succeeds completely or returns
-> > an error. posix_fallocate() specifically states that:
-> > 
-> > 	If the offset+ len is beyond the current file size, then
-> > 	posix_fallocate() shall adjust the file size to offset+ len.
-> > 	Otherwise, the file size shall not be changed.
-> > 
-> > (http://pubs.opengroup.org/onlinepubs/009695399/functions/posix_fallocate.html)
-> > 
-> > IOWs, setting the file size to anything other than offset+len
-> > is not allowed (it's a "shall" definition which means we must follow
-> > that exact behaviour), and hence on failure we have only two choices:
-> > 
-> > 	a) lie to the user and extend the file even though we didn't
-> > 	preallocate all the space; or
-> > 
-> > 	b) don't change the file size so there's no visible change
-> > 	to the file on failure.
-> > 
-> > We've chosen b) when fallocate fails for *any reason*. IOWs, the
-> > file appears unchanged to the user on failure so they don't have to
-> > handle undoing a failed partial operation.
-> > 
-> > > I know though that fallocate behavior is kind of undefined in this case, but I
-> > 
-> > Seems pretty clearly defined to me :/
+> 	if (memchr(sfp, 0, size - 1))
+> 		return __this_address;
+
+Fixed.
+
+--D
+
+> Otherwise looks ok.
 > 
-> I'm still not 100% convinced this behavior can be said as defined. Might be me
-> overlooking too much into it or just stupidity from my part, but as you said
-> above, we have 2 options: Lie to the user and partially extend the file
-
-No, I didn't say "partially extend the file". I mean we *fully
-extend* the file and lie about it all being preallocated. We have to
-match the specified success or failure conditions exactly, not make
-up our own.
-
-> or don't
-> change the file size. Which still looks like to me as an undefined behavior,
-> once, fallocate users must know how the underlying filesystem is handling
-> fallocate failures.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> I shouldn't but :) Ext4 uses the 'a' option, while xfs uses 'b' option.
-
-Ext4 violates the specification of posix_fallocate() on failure,
-and so really needs to be fixed.
-
-> Not
-> saying any of them are wrong,
-
-I am.
-
-> > I think, though, this is a side issue and really doesn't matter when
-> > it comes to how fallocate should behave on failure.
-> 
-> I think it does. The user fallocate X bytes beyond EOF and at some point it
-> fails with ENOSPC. In one filesystem the file size is extended by Y bytes
-> related to the partially fallocate'd blocks. In another the file size isn't
-> extended at all, but the blocks are still there, consuming space on the
-> filesystem, which, depending on the size of the fallocate, it can be a large
-> part of the filesystem that will be occupied by pre-allocated blocks during a
-> failure in the middle of fallocate(), which can certainly make users confused.
->
-> I am starting to thing that the best approach after a failed fallocate() is to
-> truncate the file to the original size, deallocating any possible space
-> partially pre-allocated during fallocate. At least that's how I'd use this :)
-
-That's not side-effect free, either - it will remove other
-*successful* preallocation beyond EOF that has already been made,
-and so writes into a range of a previous preallocation could now
-fail with ENOSPC.... Also, without careful implementation of the
-failure case, the truncate could race with other concurrent
-operations that extend the file size and that would be bad...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
