@@ -1,148 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34578 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751128AbdLSROf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Dec 2017 12:14:35 -0500
-Message-ID: <1513703670.20392.21.camel@kernel.org>
-Subject: Re: [PATCH v3 19/19] fs: handle inode->i_version more efficiently
-From: Jeff Layton <jlayton@kernel.org>
-Date: Tue, 19 Dec 2017 12:14:30 -0500
-In-Reply-To: <20171219092947.GC2277@quack2.suse.cz>
-References: <20171218151156.14565-1-jlayton@kernel.org>
-         <20171218151156.14565-20-jlayton@kernel.org>
-         <20171218163418.GF30350@quack2.suse.cz>
-         <1513617740.3422.30.camel@kernel.org>
-         <20171219092947.GC2277@quack2.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from aserp2130.oracle.com ([141.146.126.79]:34208 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752076AbdLSSPd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 13:15:33 -0500
+Date: Tue, 19 Dec 2017 10:15:29 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 12/13] xfs: create a new buf_ops pointer to verify
+ structure metadata
+Message-ID: <20171219181529.GB11969@magnolia>
+References: <151320949282.30654.14805160700975182459.stgit@magnolia>
+ <151320956591.30654.3796756077270484760.stgit@magnolia>
+ <20171219062205.GV4094@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171219062205.GV4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, 2017-12-19 at 10:29 +0100, Jan Kara wrote:
-> On Mon 18-12-17 12:22:20, Jeff Layton wrote:
-> > On Mon, 2017-12-18 at 17:34 +0100, Jan Kara wrote:
-> > > On Mon 18-12-17 10:11:56, Jeff Layton wrote:
-> > > >  static inline bool
-> > > >  inode_maybe_inc_iversion(struct inode *inode, bool force)
-> > > >  {
-> > > > -	atomic64_t *ivp = (atomic64_t *)&inode->i_version;
-> > > > +	u64 cur, old, new;
-> > > >  
-> > > > -	atomic64_inc(ivp);
-> > > > +	cur = (u64)atomic64_read(&inode->i_version);
-> > > > +	for (;;) {
-> > > > +		/* If flag is clear then we needn't do anything */
-> > > > +		if (!force && !(cur & I_VERSION_QUERIED))
-> > > > +			return false;
-> > > 
-> > > The fast path here misses any memory barrier. Thus it seems this query
-> > > could be in theory reordered before any store that happened to modify the
-> > > inode? Or maybe we could race and miss the fact that in fact this i_version
-> > > has already been queried? But maybe there's some higher level locking that
-> > > makes sure this is all a non-issue... But in that case it would deserve
-> > > some comment I guess.
-> > > 
+On Tue, Dec 19, 2017 at 05:22:05PM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:59:25PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > There's no higher-level locking. Getting locking out of this codepath is
-> > a good thing IMO. The larger question here is whether we really care
-> > about ordering this with anything else.
+> > Expose all metadata structure buffer verifier functions via buf_ops.
+> > These will be used by the online scrub mechanism to look for problems
+> > with buffers that are already sitting around in memory.
 > > 
-> > The i_version, as implemented today, is not ordered with actual changes
-> > to the inode. We only take the i_lock today when modifying it, not when
-> > querying it. It's possible today that you could see the results of a
-> > change and then do a fetch of the i_version that doesn't show an
-> > increment vs. a previous change.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> ....
+> > @@ -2468,7 +2478,7 @@ xfs_agf_read_verify(
+> >  	.verify_write = xfs_attr3_leaf_write_verify,
+> > +	.verify_struct = xfs_attr3_leaf_verify,
+> >  };
+> >  
+> >  int
+> > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> > index d4d2902..1be995b 100644
+> > --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> > @@ -204,10 +204,42 @@ xfs_attr3_rmt_write_verify(
+> >  	ASSERT(len == 0);
+> >  }
+> >  
+> > +static xfs_failaddr_t
+> > +xfs_attr3_rmt_verify_struct(
+> > +	struct xfs_buf	*bp)
+> > +{
+> > +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> > +	char		*ptr;
+> > +	void		*failed_at;
+> > +	int		len;
+> > +	xfs_daddr_t	bno;
+> > +	int		blksize = mp->m_attr_geo->blksize;
+> > +
+> > +	/* no verification of non-crc buffers */
+> > +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> > +		return NULL;
+> > +
+> > +	ptr = bp->b_addr;
+> > +	bno = bp->b_bn;
+> > +	len = BBTOB(bp->b_length);
+> > +	ASSERT(len >= blksize);
+> > +
+> > +	while (len > 0) {
+> > +		if ((failed_at = xfs_attr3_rmt_verify(mp, ptr, blksize, bno)))
+> > +			return failed_at;
+> > +		len -= blksize;
+> > +		ptr += blksize;
+> > +		bno += BTOBB(blksize);
+> > +	}
+> > +
+> > +	return NULL;
+> > +}
 > 
-> Yeah, so I don't suggest that you should fix unrelated issues but original
-> i_lock protection did actually provide memory barriers (although
-> semi-permeable, but in practice they are very often enough) and your patch
-> removing those could have changed a theoretical issue to a practical
-> problem. So at least preserving that original acquire-release semantics
-> of i_version handling would be IMHO good.
+> I'd much prefer to see this combined with
+> xfs_attr3_rmt_read_verify() rather than having another copy of this
+> iteration code. They really only vary by whether the CRC is checked
+> in the loop....
 > 
-
-Agreed. I've no objection to memory barriers here and I'm looking at
-that, I just need to go over Dave's comments and memory-barriers.txt
-(again!) to make sure I get them right.
-
-> > It'd be nice if this were atomic with the actual changes that it
-> > represents, but I think that would be prohibitively expensive. That may
-> > be something we need to address. I'm not sure we really want to do it as
-> > part of this patchset though.
-> > 
-> > > > +
-> > > > +		/* Since lowest bit is flag, add 2 to avoid it */
-> > > > +		new = (cur & ~I_VERSION_QUERIED) + I_VERSION_INCREMENT;
-> > > > +
-> > > > +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
-> > > > +		if (likely(old == cur))
-> > > > +			break;
-> > > > +		cur = old;
-> > > > +	}
-> > > >  	return true;
-> > > >  }
-> > > >  
-> > > 
-> > > ...
-> > > 
-> > > >  static inline u64
-> > > >  inode_query_iversion(struct inode *inode)
-> > > >  {
-> > > > -	return inode_peek_iversion(inode);
-> > > > +	u64 cur, old, new;
-> > > > +
-> > > > +	cur = atomic64_read(&inode->i_version);
-> > > > +	for (;;) {
-> > > > +		/* If flag is already set, then no need to swap */
-> > > > +		if (cur & I_VERSION_QUERIED)
-> > > > +			break;
-> > > > +
-> > > > +		new = cur | I_VERSION_QUERIED;
-> > > > +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
-> > > > +		if (old == cur)
-> > > > +			break;
-> > > > +		cur = old;
-> > > > +	}
-> > > 
-> > > Why not just use atomic64_or() here?
-> > > 
-> > 
-> > If the cmpxchg fails, then either:
-> > 
-> > 1) it was incremented
-> > 2) someone flagged it QUERIED
-> > 
-> > If an increment happened then we don't need to flag it as QUERIED if
-> > we're returning an older value. If we use atomic64_or, then we can't
-> > tell if an increment happened so we'd end up potentially flagging it
-> > more than necessary.
-> > 
-> > In principle, either outcome is technically OK and we don't have to loop
-> > if the cmpxchg doesn't work. That said, if we think there might be a
-> > later i_version available, then I think we probably want to try to query
-> > it again so we can return as late a one as possible.
+> ....
 > 
-> OK, makes sense. I'm just a bit vary of cmpxchg loops as they tend to
-> behave pretty badly in contended cases but I guess i_version won't be
-> hammered *that* hard.
+> > +static xfs_failaddr_t
+> > +xfs_dquot_buf_verify_struct(
+> > +	struct xfs_buf	*bp)
+> > +{
+> > +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> > +
+> > +	if (!xfs_dquot_buf_verify(mp, bp, 0))
+> > +		return __this_address;
+> > +	return NULL;
+> > +}
 > 
+> I can't remember what happened exactly with dquot buffers earlire in
+> the patchset, but why isn't it returning a failaddr like all the
+> other structure verifiers?
 
-That's the principle I'm operating under here, and I think it's valid
-for almost all workloads. Incrementing the i_version on parallel writes
-should be mostly uncontended now, whereas they at had to serialize on
-the i_lock before.
+The dquot verifiers are sufficiently different from everything else
+(verbose error reporting, some ability to zap garbage data) that I was
+going to send that as a separate cleanup series.
 
-The pessimal case here, I think is parallel increments and queries. We
-may see that sort of workload under knfsd, but I'm fine with giving
-knfsd a small performance hit to help performance on other workloads.
+I /think/ the solution is to disentangle xfs_dqcheck into a separate
+check routine that returns xfs_failaddr_t like everything else (at a
+cost of the removal of all the xfs_alert calls) so that the error
+reports become "xfs: quota buffer XXX error at xfs_dqcheck+0x74" like
+everything else.  The caller becomes directly responsible for printing a
+warning message (instead of XFS_QMOPT_DOWARN).
 
-While we're on the subject of looping here, should I add a cpu_relax()
-into these loops?
+Then, the quota repair piece becomes a separate function which the
+XFS_QMOPT_DQREPAIR callers can call directly.
 
-Thanks for the review so far!
--- 
-Jeff Layton <jlayton@kernel.org>
+Sound good?
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
