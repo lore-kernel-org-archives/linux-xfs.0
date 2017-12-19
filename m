@@ -1,78 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53273 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751024AbdLSU3j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:29:39 -0500
-Date: Tue, 19 Dec 2017 12:29:35 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:40524 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751305AbdLSUkD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 15:40:03 -0500
+Date: Tue, 19 Dec 2017 12:34:59 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/13] xfs: refactor verifier callers to print address of
- failing check
-Message-ID: <20171219202935.GA12613@magnolia>
+Subject: Re: [PATCH 06/13] xfs: move inode fork verifiers to xfs_dinode_verify
+Message-ID: <20171219203459.GB12613@magnolia>
 References: <151320949282.30654.14805160700975182459.stgit@magnolia>
- <151320951732.30654.12381419566973424218.stgit@magnolia>
- <20171214220326.GI5858@dastard>
- <20171215000409.GM13436@magnolia>
- <20171215030909.GK5858@dastard>
+ <151320952955.30654.5858027812526222455.stgit@magnolia>
+ <20171219051619.GP4094@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171215030909.GK5858@dastard>
+In-Reply-To: <20171219051619.GP4094@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 15, 2017 at 02:09:10PM +1100, Dave Chinner wrote:
-> On Thu, Dec 14, 2017 at 04:04:09PM -0800, Darrick J. Wong wrote:
-> > On Fri, Dec 15, 2017 at 09:03:26AM +1100, Dave Chinner wrote:
-> > > On Wed, Dec 13, 2017 at 03:58:37PM -0800, Darrick J. Wong wrote:
-> > > >   */
-> > > >  void
-> > > >  xfs_verifier_error(
-> > > > -	struct xfs_buf		*bp)
-> > > > +	struct xfs_buf		*bp,
-> > > > +	xfs_failaddr_t		fa)
-> > > >  {
-> > > >  	struct xfs_mount *mp = bp->b_target->bt_mount;
-> > > >  
-> > > >  	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx",
-> > > >  		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
-> > > > -		  __return_address, bp->b_ops->name, bp->b_bn);
-> > > > +		  fa ? fa : __return_address, bp->b_ops->name,
-> > > > +		  bp->b_bn);
-> > > >  
-> > > >  	xfs_alert(mp, "Unmount and run xfs_repair");
-> > > 
-> > > I'm also wondering if we should move the xfs_buf_ioerror() call
-> > > inside this function, too, rather than coding multiple calls in the
-> > > verifiers to set bp->b_error in each branch of the verifier that
-> > > has an error...
+On Tue, Dec 19, 2017 at 04:16:19PM +1100, Dave Chinner wrote:
+> On Wed, Dec 13, 2017 at 03:58:49PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > What, something like:
+> > Consolidate the fork size and format verifiers to xfs_dinode_verify so
+> > that we can reject bad inodes earlier and in a single place.
 > > 
-> > 	if (!xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF)) {
-> > 		fa = __this_address;
-> > 		error = -EFSBADCRC;
-> > 	} else {
-> > 		fa = xfs_agfl_verify(bp);
-> > 		if (fa)
-> > 			error = -EFSCORRUPTED;
-> > 	}
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_inode_buf.c  |   72 ++++++++++++++++++++++++++++++++-
+> >  fs/xfs/libxfs/xfs_inode_fork.c |   86 ----------------------------------------
+> >  2 files changed, 69 insertions(+), 89 deletions(-)
 > > 
-> > 	if (error)
-> > 		xfs_verifier_error(bp, fa, error);
 > > 
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index 0e4c720..1392fe9 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -390,6 +390,7 @@ xfs_dinode_verify(
+> >  	uint16_t		mode;
+> >  	uint16_t		flags;
+> >  	uint64_t		flags2;
+> > +	uint64_t		di_size;
+> >  
+> >  	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+> >  		return __this_address;
+> > @@ -408,7 +409,8 @@ xfs_dinode_verify(
+> >  	}
+> >  
+> >  	/* don't allow invalid i_size */
+> > -	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
+> > +	di_size = be64_to_cpu(dip->di_size);
+> > +	if (di_size & (1ULL << 63))
+> >  		return __this_address;
+> >  
+> >  	mode = be16_to_cpu(dip->di_mode);
+> > @@ -416,14 +418,74 @@ xfs_dinode_verify(
+> >  		return __this_address;
+> >  
+> >  	/* No zero-length symlinks/dirs. */
+> > -	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
+> > +	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
+> >  		return __this_address;
+> >  
+> > +	/* Fork checks carried over from xfs_iformat_fork */
+> > +	if (mode &&
+> > +	    be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
+> > +	    be64_to_cpu(dip->di_nblocks))
 > 
-> Yeah, seems like a better approach because we don't have to
-> put the error on the buffer before calling xfs_verifier_error(). fa
-> tells us exactly where the error wasdetected, so we don't need
-> xfs_buf_ioerror() to tell us that...
+> Can you indent this last line so it doesn't look like a spearate
+> logic check?
 
-Ok, but I'll do this as a separate patch.
+Done.
+
+> 	if (mode &&
+> 	    be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
+> 				be64_to_cpu(dip->di_nblocks))
+> > +		return __this_address;
+> > +
+> > +	if (mode && dip->di_forkoff > mp->m_sb.sb_inodesize)
+> > +		return __this_address;
+> 
+> Hold on, this check is completely bogus. di_forkoff is in units of 8 bytes,
+> which inode size is in bytes. Also, di_forkoff is a u8, so it can't
+> /ever/ be larger than the inode size which are >= 256 bytes. Yeah,
+> though so:
+> 
+> #define XFS_DFORK_BOFF(dip)             ((int)((dip)->di_forkoff << 3))
+> 
+> This check needs to be:
+> 
+> 	if (mode && XFS_DFORK_BOFF(dip) > mp->m_sb.sb_inodesize)
+> 		return __this_address;
+> 
+> Otherwise looks good.
+
+Oops, thank you for catching that!
 
 --D
 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
 > Cheers,
 > 
 > Dave.
