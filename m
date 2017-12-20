@@ -1,83 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f171.google.com ([74.125.82.171]:44472 "EHLO
-        mail-ot0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752630AbdLTBLl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 20:11:41 -0500
-Received: by mail-ot0-f171.google.com with SMTP id d27so18377798ote.11
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 17:11:41 -0800 (PST)
+Received: from userp2120.oracle.com ([156.151.31.85]:34844 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752880AbdLTCnb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 21:43:31 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBK2gWQR079373
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2017 02:43:31 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2eyes3g256-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2017 02:43:30 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBK2hUBc008811
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2017 02:43:30 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBK2hTj4013078
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2017 02:43:30 GMT
+Date: Tue, 19 Dec 2017 18:43:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: ignore agfl read errors when not scrubbing agfl
+Message-ID: <20171220024328.GI12613@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171110090818.GE4895@lst.de>
-References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150949217152.24061.9869502311102659784.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171110090818.GE4895@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 19 Dec 2017 17:11:38 -0800
-Message-ID: <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
-Subject: Re: [PATCH 14/15] dax: associate mappings with inodes, and warn if
- dma collides with truncate
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 1:08 AM, Christoph Hellwig <hch@lst.de> wrote:
->> +             struct {
->> +                     /*
->> +                      * ZONE_DEVICE pages are never on an lru or handled by
->> +                      * a slab allocator, this points to the hosting device
->> +                      * page map.
->> +                      */
->> +                     struct dev_pagemap *pgmap;
->> +                     /*
->> +                      * inode association for MEMORY_DEVICE_FS_DAX page-idle
->> +                      * callbacks. Note that we don't use ->mapping since
->> +                      * that has hard coded page-cache assumptions in
->> +                      * several paths.
->> +                      */
->
-> What assumptions?  I'd much rather fix those up than having two fields
-> that have the same functionality.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-[ Reviving this old thread where you asked why I introduce page->inode
-instead of reusing page->mapping ]
+In xfs_scrub_ag_read_headers, if we're not scrubbing the AGFL but
+hit a read error reading the AGFL, we should reset the error code
+so that it doesn't propagate up into the caller.
 
-For example, xfs_vm_set_page_dirty() assumes that page->mapping being
-non-NULL indicates a typical page cache page, this is a false
-assumption for DAX. My guess at a fix for this is to add
-pagecache_page() checks to locations like this, but I worry about how
-to find them all. Where pagecache_page() is:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/common.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-bool pagecache_page(struct page *page)
-{
-        if (!page->mapping)
-                return false;
-        if (!IS_DAX(page->mapping->host))
-                return false;
-        return true;
-}
-
-Otherwise we go off the rails:
-
- WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
-xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
- [..]
- CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O
-4.15.0-rc2+ #984
- [..]
- Call Trace:
-  set_page_dirty_lock+0x40/0x60
-  bio_set_pages_dirty+0x37/0x50
-  iomap_dio_actor+0x2b7/0x3b0
-  ? iomap_dio_zero+0x110/0x110
-  iomap_apply+0xa4/0x110
-  iomap_dio_rw+0x29e/0x3b0
-  ? iomap_dio_zero+0x110/0x110
-  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
-  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
-  xfs_file_read_iter+0xa0/0xc0 [xfs]
-  __vfs_read+0xf9/0x170
-  vfs_read+0xa6/0x150
-  SyS_pread64+0x93/0xb0
-  entry_SYSCALL_64_fastpath+0x1f/0x96
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 98452ad..6ec4e10 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -302,7 +302,7 @@ xfs_scrub_ag_read_headers(
+ 	error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
+ 	if (error && want_ag_read_header_failure(sc, XFS_SCRUB_TYPE_AGFL))
+ 		goto out;
+-
++	error = 0;
+ out:
+ 	return error;
+ }
