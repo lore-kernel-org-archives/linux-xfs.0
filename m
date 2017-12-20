@@ -1,48 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51454 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755704AbdLTUVK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Dec 2017 15:21:10 -0500
-Date: Wed, 20 Dec 2017 12:21:05 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_db: fix crash when field list selector string has
- trailing slash
-Message-ID: <20171220202105.GR12613@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:43764 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754428AbdLTWPG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Dec 2017 17:15:06 -0500
+Date: Thu, 21 Dec 2017 09:14:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 14/15] dax: associate mappings with inodes, and warn if
+ dma collides with truncate
+Message-ID: <20171220221447.GG4094@dastard>
+References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150949217152.24061.9869502311102659784.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171110090818.GE4895@lst.de>
+ <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 19, 2017 at 05:11:38PM -0800, Dan Williams wrote:
+> On Fri, Nov 10, 2017 at 1:08 AM, Christoph Hellwig <hch@lst.de> wrote:
+> >> +             struct {
+> >> +                     /*
+> >> +                      * ZONE_DEVICE pages are never on an lru or handled by
+> >> +                      * a slab allocator, this points to the hosting device
+> >> +                      * page map.
+> >> +                      */
+> >> +                     struct dev_pagemap *pgmap;
+> >> +                     /*
+> >> +                      * inode association for MEMORY_DEVICE_FS_DAX page-idle
+> >> +                      * callbacks. Note that we don't use ->mapping since
+> >> +                      * that has hard coded page-cache assumptions in
+> >> +                      * several paths.
+> >> +                      */
+> >
+> > What assumptions?  I'd much rather fix those up than having two fields
+> > that have the same functionality.
+> 
+> [ Reviving this old thread where you asked why I introduce page->inode
+> instead of reusing page->mapping ]
+> 
+> For example, xfs_vm_set_page_dirty() assumes that page->mapping being
+> non-NULL indicates a typical page cache page, this is a false
+> assumption for DAX.
 
-If I run the following command:
+That means every single filesystem has an incorrect assumption for
+DAX pages. xfs_vm_set_page_dirty() is derived directly from
+__set_page_dirty_buffers(), which is the default function that
+set_page_dirty() calls to do it's work. Indeed, ext4 also calls
+__set_page_dirty_buffers(), so whatever problem XFS has here with
+DAX and racing truncates is going to manifest in ext4 as well.
 
-xfs_db /dev/sdf -x -c 'agf 0' -c 'addr refcntroot' -c 'addr ptrs[1]\'
+> My guess at a fix for this is to add
+> pagecache_page() checks to locations like this, but I worry about how
+> to find them all. Where pagecache_page() is:
+> 
+> bool pagecache_page(struct page *page)
+> {
+>         if (!page->mapping)
+>                 return false;
+>         if (!IS_DAX(page->mapping->host))
+>                 return false;
+>         return true;
+> }
 
-then ftok_free crashes on an invalid free() because picking up the
-previous token (the closing bracket) xrealloc'd the token array to be 5
-elements long but never set the last element's tok pointer.
-Consequently the ftok_free tries to free whatever garbage pointer is in
-that last element and kaboom.
+This is likely to be a problem in lots more places if we have to
+treat "has page been truncated away" race checks on dax mappings
+differently to page cache mappings. This smells of a whack-a-mole
+style bandaid to me....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/flist.c |    1 +
- 1 file changed, 1 insertion(+)
+Cheers,
 
-diff --git a/db/flist.c b/db/flist.c
-index e11acbf..b207354 100644
---- a/db/flist.c
-+++ b/db/flist.c
-@@ -400,6 +400,7 @@ flist_split(
- 		strncpy(a, s, l);
- 		a[l] = '\0';
- 		v = xrealloc(v, (nv + 2) * sizeof(*v));
-+		v[nv + 1].tok = NULL;
- 		v[nv].tok = a;
- 		v[nv].tokty = t;
- 		nv++;
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
