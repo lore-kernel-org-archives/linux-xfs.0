@@ -1,151 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36021 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751298AbdLSVJs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 16:09:48 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBJL6hBP029227
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:09:48 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2eyaa604wp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:09:47 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBJL9lcs016621
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:09:47 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBJL9lmJ012688
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 21:09:47 GMT
-Date: Tue, 19 Dec 2017 13:09:46 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 5/4] xfs: clean up cow mappings during fs data freeze
-Message-ID: <20171219210946.GH12613@magnolia>
-References: <151335786780.26575.15542999972223359181.stgit@magnolia>
+Received: from mail-ot0-f171.google.com ([74.125.82.171]:44472 "EHLO
+        mail-ot0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752630AbdLTBLl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Dec 2017 20:11:41 -0500
+Received: by mail-ot0-f171.google.com with SMTP id d27so18377798ote.11
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2017 17:11:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151335786780.26575.15542999972223359181.stgit@magnolia>
+In-Reply-To: <20171110090818.GE4895@lst.de>
+References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150949217152.24061.9869502311102659784.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171110090818.GE4895@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 19 Dec 2017 17:11:38 -0800
+Message-ID: <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
+Subject: Re: [PATCH 14/15] dax: associate mappings with inodes, and warn if
+ dma collides with truncate
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 10, 2017 at 1:08 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> +             struct {
+>> +                     /*
+>> +                      * ZONE_DEVICE pages are never on an lru or handled by
+>> +                      * a slab allocator, this points to the hosting device
+>> +                      * page map.
+>> +                      */
+>> +                     struct dev_pagemap *pgmap;
+>> +                     /*
+>> +                      * inode association for MEMORY_DEVICE_FS_DAX page-idle
+>> +                      * callbacks. Note that we don't use ->mapping since
+>> +                      * that has hard coded page-cache assumptions in
+>> +                      * several paths.
+>> +                      */
+>
+> What assumptions?  I'd much rather fix those up than having two fields
+> that have the same functionality.
 
-As part of the fs freezing process, we want to free the copy-on-write
-reservations after all the dirty data has been written to disk but prior
-to freezing the filesystem.  Currently, only a sync_filesystem call is
-hardwired into the VFS code, so provide a new callout, ->freeze_data, so
-that filesystems can override with whatever behavior they want.
+[ Reviving this old thread where you asked why I introduce page->inode
+instead of reusing page->mapping ]
 
-In the case of XFS, that behavior is sync and then clean the cow
-mappings.  This reduces the amount of recovery that must happen if the
-system goes down while the fs is frozen.
+For example, xfs_vm_set_page_dirty() assumes that page->mapping being
+non-NULL indicates a typical page cache page, this is a false
+assumption for DAX. My guess at a fix for this is to add
+pagecache_page() checks to locations like this, but I worry about how
+to find them all. Where pagecache_page() is:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/super.c         |   23 +++++++++++++++++------
- fs/xfs/xfs_super.c |   21 +++++++++++++++++++++
- include/linux/fs.h |    1 +
- 3 files changed, 39 insertions(+), 6 deletions(-)
+bool pagecache_page(struct page *page)
+{
+        if (!page->mapping)
+                return false;
+        if (!IS_DAX(page->mapping->host))
+                return false;
+        return true;
+}
 
-diff --git a/fs/super.c b/fs/super.c
-index d4e33e8..f0ee186 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1454,7 +1454,16 @@ int freeze_super(struct super_block *sb)
- 	sb_wait_write(sb, SB_FREEZE_PAGEFAULT);
- 
- 	/* All writers are done so after syncing there won't be dirty data */
--	sync_filesystem(sb);
-+	if (sb->s_op->freeze_data) {
-+		ret = sb->s_op->freeze_data(sb);
-+		if (ret) {
-+			printk(KERN_ERR
-+				"VFS:Filesystem data freeze failed\n");
-+			goto freeze_fail;
-+		}
-+	} else {
-+		sync_filesystem(sb);
-+	}
- 
- 	/* Now wait for internal filesystem counter */
- 	sb->s_writers.frozen = SB_FREEZE_FS;
-@@ -1465,11 +1474,7 @@ int freeze_super(struct super_block *sb)
- 		if (ret) {
- 			printk(KERN_ERR
- 				"VFS:Filesystem freeze failed\n");
--			sb->s_writers.frozen = SB_UNFROZEN;
--			sb_freeze_unlock(sb);
--			wake_up(&sb->s_writers.wait_unfrozen);
--			deactivate_locked_super(sb);
--			return ret;
-+			goto freeze_fail;
- 		}
- 	}
- 	/*
-@@ -1480,6 +1485,12 @@ int freeze_super(struct super_block *sb)
- 	lockdep_sb_freeze_release(sb);
- 	up_write(&sb->s_umount);
- 	return 0;
-+freeze_fail:
-+	sb->s_writers.frozen = SB_UNFROZEN;
-+	sb_freeze_unlock(sb);
-+	wake_up(&sb->s_writers.wait_unfrozen);
-+	deactivate_locked_super(sb);
-+	return ret;
- }
- EXPORT_SYMBOL(freeze_super);
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2db6a40..2817bce 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1408,6 +1408,26 @@ xfs_fs_remount(
- }
- 
- /*
-+ * First stage of a freeze.  We need to sync all the dirty data and clean up
-+ * all the leftover CoW mappings to make the filesystem as tidy as possible.
-+ */
-+STATIC int
-+xfs_fs_freeze_data(
-+	struct super_block	*sb)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	int			error;
-+
-+	error = sync_filesystem(sb);
-+	if (error)
-+		return error;
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return 0;
-+	return xfs_icache_free_cowblocks(mp, NULL);
-+}
-+
-+/*
-  * Second stage of a freeze. The data is already frozen so we only
-  * need to take care of the metadata. Once that's done sync the superblock
-  * to the log to dirty it in case of a crash while frozen. This ensures that we
-@@ -1780,6 +1800,7 @@ static const struct super_operations xfs_super_operations = {
- 	.drop_inode		= xfs_fs_drop_inode,
- 	.put_super		= xfs_fs_put_super,
- 	.sync_fs		= xfs_fs_sync_fs,
-+	.freeze_data		= xfs_fs_freeze_data,
- 	.freeze_fs		= xfs_fs_freeze,
- 	.unfreeze_fs		= xfs_fs_unfreeze,
- 	.statfs			= xfs_fs_statfs,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2995a27..d53d55f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1811,6 +1811,7 @@ struct super_operations {
- 	void (*put_super) (struct super_block *);
- 	int (*sync_fs)(struct super_block *sb, int wait);
- 	int (*freeze_super) (struct super_block *);
-+	int (*freeze_data) (struct super_block *);
- 	int (*freeze_fs) (struct super_block *);
- 	int (*thaw_super) (struct super_block *);
- 	int (*unfreeze_fs) (struct super_block *);
+Otherwise we go off the rails:
+
+ WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
+xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
+ [..]
+ CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O
+4.15.0-rc2+ #984
+ [..]
+ Call Trace:
+  set_page_dirty_lock+0x40/0x60
+  bio_set_pages_dirty+0x37/0x50
+  iomap_dio_actor+0x2b7/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  iomap_apply+0xa4/0x110
+  iomap_dio_rw+0x29e/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_read_iter+0xa0/0xc0 [xfs]
+  __vfs_read+0xf9/0x170
+  vfs_read+0xa6/0x150
+  SyS_pread64+0x93/0xb0
+  entry_SYSCALL_64_fastpath+0x1f/0x96
