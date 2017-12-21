@@ -1,113 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f182.google.com ([74.125.82.182]:37212 "EHLO
-        mail-ot0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753872AbdLURbw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 12:31:52 -0500
-Received: by mail-ot0-f182.google.com with SMTP id p31so16450695ota.4
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Dec 2017 09:31:51 -0800 (PST)
+Received: from mga09.intel.com ([134.134.136.24]:14196 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752351AbdLURlM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:41:12 -0500
+Date: Thu, 21 Dec 2017 10:41:10 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [xfsprogs PATCH v2 2/3] xfs_io: add MAP_SYNC support to mmap()
+Message-ID: <20171221174110.GD2158@linux.intel.com>
+References: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
+ <20171205235651.17102-3-ross.zwisler@linux.intel.com>
+ <20171221170908.GT12613@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171221121414.GI31584@quack2.suse.cz>
-References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150949217152.24061.9869502311102659784.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171110090818.GE4895@lst.de> <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
- <20171220143822.GB31584@quack2.suse.cz> <CAPcyv4jfvkSSMvruQSFqa5N2zmPmnkDbxCzwvgQAqMQOkT8Xgg@mail.gmail.com>
- <20171221121414.GI31584@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 21 Dec 2017 09:31:50 -0800
-Message-ID: <CAPcyv4ifiiD3iOR6nFV=JyQ+tb8B=mWF=Vzm497WYnpypjgn7A@mail.gmail.com>
-Subject: Re: [PATCH 14/15] dax: associate mappings with inodes, and warn if
- dma collides with truncate
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171221170908.GT12613@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On Thu, Dec 21, 2017 at 4:14 AM, Jan Kara <jack@suse.cz> wrote:
-> On Wed 20-12-17 14:41:14, Dan Williams wrote:
->> On Wed, Dec 20, 2017 at 6:38 AM, Jan Kara <jack@suse.cz> wrote:
->> > On Tue 19-12-17 17:11:38, Dan Williams wrote:
->> >> On Fri, Nov 10, 2017 at 1:08 AM, Christoph Hellwig <hch@lst.de> wrote:
->> >> >> +             struct {
->> >> >> +                     /*
->> >> >> +                      * ZONE_DEVICE pages are never on an lru or handled by
->> >> >> +                      * a slab allocator, this points to the hosting device
->> >> >> +                      * page map.
->> >> >> +                      */
->> >> >> +                     struct dev_pagemap *pgmap;
->> >> >> +                     /*
->> >> >> +                      * inode association for MEMORY_DEVICE_FS_DAX page-idle
->> >> >> +                      * callbacks. Note that we don't use ->mapping since
->> >> >> +                      * that has hard coded page-cache assumptions in
->> >> >> +                      * several paths.
->> >> >> +                      */
->> >> >
->> >> > What assumptions?  I'd much rather fix those up than having two fields
->> >> > that have the same functionality.
->> >>
->> >> [ Reviving this old thread where you asked why I introduce page->inode
->> >> instead of reusing page->mapping ]
->> >>
->> >> For example, xfs_vm_set_page_dirty() assumes that page->mapping being
->> >> non-NULL indicates a typical page cache page, this is a false
->> >> assumption for DAX. My guess at a fix for this is to add
->> >> pagecache_page() checks to locations like this, but I worry about how
->> >> to find them all. Where pagecache_page() is:
->> >>
->> >> bool pagecache_page(struct page *page)
->> >> {
->> >>         if (!page->mapping)
->> >>                 return false;
->> >>         if (!IS_DAX(page->mapping->host))
->> >>                 return false;
->> >>         return true;
->> >> }
->> >>
->> >> Otherwise we go off the rails:
->> >>
->> >>  WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
->> >> xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
->> >
->> > But this just shows that mapping->a_ops are wrong for this mapping, doesn't
->> > it? ->set_page_dirty handler for DAX mapping should just properly handle
->> > DAX pages... (and only those)
->>
->> Ah, yes. Now that I change ->mapping to be non-NULL for DAX pages I
->> enable all the address_space_operations to start firing. However,
->> instead of adding DAX specific address_space_operations it appears
->> ->mapping should never be set for DAX pages, because DAX pages are
->> disconnected from the page-writeback machinery.
->
-> page->mapping is not only about page-writeback machinery. It is generally
-> about page <-> inode relation and that still exists for DAX pages. We even
-> reuse the mapping->page_tree to store DAX pages. Also requiring proper
-> address_space_operations for DAX inodes is IMO not a bad thing as such.
->
-> That being said I'm not 100% convinced we should really set page->mapping
-> for DAX pages. After all they are not page cache pages but rather a
-> physical storage for the data, don't ever get to LRU, etc. But if you need
-> page->inode relation somewhere, that is a good indication to me that it
-> might be just easier to set page->mapping and provide aops that do the
-> right thing (i.e. usually not much) for them.
->
-> BTW: the ->set_page_dirty() in particular actually *does* need to do
-> something for DAX pages - corresponding radix tree entries should be
-> marked dirty so that caches can get flushed when needed.
+On Thu, Dec 21, 2017 at 09:09:08AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 05, 2017 at 04:56:50PM -0700, Ross Zwisler wrote:
 
-For this specific concern, the get_user_pages() path will have
-triggered mkwrite, so the dax dirty tracking in the radix will have
-already happened by the time we call ->set_page_dirty(). So, it's not
-yet clear to me that we need that particular op.
+> > @@ -195,6 +200,13 @@ mmap_f(
+> >  		case 'x':
+> >  			prot |= PROT_EXEC;
+> >  			break;
+> > +		case 'S':
+> > +			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+> > +			if (!flags) {
+> 
+> Heh, subtle. :)
+> 
+> /me wonders if it'd be better to do this explicitly:
+> 
+> #ifdef HAVE_MAP_SYNC
+> 	flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+> #else
+> 	printf("MAP_SYNC not supported\n");
+> 	return 1;
+> #endif
+> 
+> ...though it's ugly.
 
->> In other words never
->> setting ->mapping bypasses all the possible broken assumptions and
->> code paths that take page-cache specific actions before calling an
->> address_space_operation.
->
-> If there are any assumptions left after aops are set properly, then we can
-> reconsider this but for now setting ->mapping and proper aops looks cleaner
-> to me...
+Yea, I was trying to avoid #ifdefery.  If you prefer this, though, I'm happy
+to change it.  Or maybe a comment would be enough?
 
-I'll try an address_space_operation with a nop ->set_page_dirty() and
-see if anything else falls out.
+/*
+ * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined in the system headers we
+ * will have defined them both as 0.
+ */
+
+?
+
+> > +				printf("MAP_SYNC not supported\n");
+> > +				return 0;
+> 
+> Are we supposed to be returning nonzero values for failing commands?
+
+I don't think so.  All the other error conditions in this function also return
+0.  I think the important thing is that 'exitcode' is set to 1 at the
+beginning of the function per Dave's patch,
+
+https://www.spinics.net/lists/linux-xfs/msg13605.html
+
+which I pulled into my baseline:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/zwisler/xfsprogs-dev.git/refs/?h=map_sync_v3
+
+So, I likewise leave 'exitcode' as 1, bail out with a return code of 0, and
+then you get the overall failure return of 1 from xfs_io at the shell.
+
+> > @@ -764,7 +764,7 @@ Each (sec, nsec) pair constitutes a single timestamp value.
+> >  
+> >  .SH MEMORY MAPPED I/O COMMANDS
+> >  .TP
+> > -.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
+> > +.BI "mmap [ " N " | [[ \-rwxS ] [\-s " size " ] " "offset length " ]]
+> >  With no arguments,
+> >  .B mmap
+> >  shows the current mappings. Specifying a single numeric argument
+> > @@ -780,6 +780,10 @@ PROT_WRITE
+> >  .RB ( \-w ),
+> >  and PROT_EXEC
+> >  .RB ( \-x ).
+> > +The mapping will be created with the MAP_SHARED flag by default, or with the
+> > +Linux specific (MAP_SYNC | MAP_SHARED_VALIDATE) flags if
+> 
+> I assume I'll be able to look up exactly what MAP_SYNC provides in the mmap
+> manpage, right?
+
+Yep, Jan updated the man page for both MAP_SYNC and MAP_SHARED_VALIDATE:
+https://lists.01.org/pipermail/linux-nvdimm/2017-November/013158.html
+
+Thank you for the review.
