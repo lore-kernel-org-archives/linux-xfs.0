@@ -1,86 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34332 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752509AbdLURsZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:48:25 -0500
-Date: Thu, 21 Dec 2017 18:48:23 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] generic/381: enable on systems which allows usernames
- that begin with digits
-Message-ID: <20171221174823.GG729@wotan.suse.de>
-References: <20171215204107.17690-1-mcgrof@kernel.org>
- <20171221082342.GG5123@eguan.usersys.redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:37300 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752165AbdLURtV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 12:49:21 -0500
+Date: Thu, 21 Dec 2017 09:46:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [xfsprogs PATCH v2 2/3] xfs_io: add MAP_SYNC support to mmap()
+Message-ID: <20171221174602.GV12613@magnolia>
+References: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
+ <20171205235651.17102-3-ross.zwisler@linux.intel.com>
+ <20171221170908.GT12613@magnolia>
+ <20171221174110.GD2158@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171221082342.GG5123@eguan.usersys.redhat.com>
+In-Reply-To: <20171221174110.GD2158@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On Thu, Dec 21, 2017 at 04:23:42PM +0800, Eryu Guan wrote:
-> On Fri, Dec 15, 2017 at 12:41:07PM -0800, Luis R. Rodriguez wrote:
-> > Some systems are not allowing usernames prefixed with a number now, this
-> > test however relies on the assumption that you can end up with usernames
-> > of such type, given the purpose of the test is to ensure that xfs_quota
-> > can differentiate between UIDs and names beginning with numbers.
-> > 
-> > systemd >= 232 (circa 2017) no longer allows usernames starting with digits
-> > [0], there is a systemd exploit (CVE-2017-1000082 [1]) for why that was done,
-> > however even upstream shadow useradd also does not allow similar user types
-> > since shadow version v4.0.1 (circa 2007) [2] but there no easy way to check
-> > shadow's useradd's version.
-> > 
-> > You can still shoehorn in these types of users by manually editing files,
-> > but that's just shooting yourself on the foot given all the precautions
-> > taken now by userspace, so just check for the systemd version for now as
-> > requirement for running this test.
-> > 
-> > [0] https://github.com/systemd/systemd/issues/6237
-> > [1] https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-1000082
-> > [2] https://github.com/shadow-maint/shadow/commit/9db6abfa42c946b4046f4b2fe67dc43ba862eb0e
-> > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> > ---
-> >  README            |  7 +++++--
-> >  common/config     |  1 +
-> >  common/rc         | 42 ++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/381 |  1 +
-> >  4 files changed, 49 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/README b/README
-> > index ed69332e774e..aff7bdae7cb4 100644
-> > --- a/README
-> > +++ b/README
-> > @@ -20,8 +20,11 @@ _______________________
-> >  - run make
-> >  - run make install
-> >  - create fsgqa test user ("sudo useradd fsgqa")
-> > -- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
-> > -	
-> > +- Only on systems which allow usernames that start with a digit (older
-> > +  than  systemd 232 and/or has shadow older than v4.0.1), create the
-> > +  123456-fsgqa test user:
-> > +    sudo useradd 123456-fsgqa
-> > +
+On Thu, Dec 21, 2017 at 10:41:10AM -0700, Ross Zwisler wrote:
+> On Thu, Dec 21, 2017 at 09:09:08AM -0800, Darrick J. Wong wrote:
+> > On Tue, Dec 05, 2017 at 04:56:50PM -0700, Ross Zwisler wrote:
 > 
-> IMHO, this doc update is sufficient, generic/381 already _notrun if
-> there's no 123456-fsgqa user present because of
+> > > @@ -195,6 +200,13 @@ mmap_f(
+> > >  		case 'x':
+> > >  			prot |= PROT_EXEC;
+> > >  			break;
+> > > +		case 'S':
+> > > +			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+> > > +			if (!flags) {
+> > 
+> > Heh, subtle. :)
+> > 
+> > /me wonders if it'd be better to do this explicitly:
+> > 
+> > #ifdef HAVE_MAP_SYNC
+> > 	flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+> > #else
+> > 	printf("MAP_SYNC not supported\n");
+> > 	return 1;
+> > #endif
+> > 
+> > ...though it's ugly.
 > 
-> _require_user 123456-fsgqa
+> Yea, I was trying to avoid #ifdefery.  If you prefer this, though, I'm happy
+> to change it.  Or maybe a comment would be enough?
+> 
+> /*
+>  * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined in the system headers we
+>  * will have defined them both as 0.
+>  */
+> 
+> ?
 
-I think the output with the patch is *much* clearer and to the point,
-it requires less work on the folks analyzing results. Otherwise the
-results are not clear and only if the user read the README or the
-brief of the test would be very clear why the test could not run.
+Works for me.
 
-> And we don't rely on any version check in fstests, usually we check on
-> the actual behavior, e.g. actually mkfs & mount the fs to see if the
-> current kernel and userspace support a given feature.
+> 
+> > > +				printf("MAP_SYNC not supported\n");
+> > > +				return 0;
+> > 
+> > Are we supposed to be returning nonzero values for failing commands?
+> 
+> I don't think so.  All the other error conditions in this function also return
+> 0.  I think the important thing is that 'exitcode' is set to 1 at the
+> beginning of the function per Dave's patch,
+> 
+> https://www.spinics.net/lists/linux-xfs/msg13605.html
+> 
+> which I pulled into my baseline:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/zwisler/xfsprogs-dev.git/refs/?h=map_sync_v3
+> 
+> So, I likewise leave 'exitcode' as 1, bail out with a return code of 0, and
+> then you get the overall failure return of 1 from xfs_io at the shell.
 
-We do check for a version check for mkfs, one test only runs on older
-mkfs versions.
+Ok.
 
-  Luis
+> > > @@ -764,7 +764,7 @@ Each (sec, nsec) pair constitutes a single timestamp value.
+> > >  
+> > >  .SH MEMORY MAPPED I/O COMMANDS
+> > >  .TP
+> > > -.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
+> > > +.BI "mmap [ " N " | [[ \-rwxS ] [\-s " size " ] " "offset length " ]]
+> > >  With no arguments,
+> > >  .B mmap
+> > >  shows the current mappings. Specifying a single numeric argument
+> > > @@ -780,6 +780,10 @@ PROT_WRITE
+> > >  .RB ( \-w ),
+> > >  and PROT_EXEC
+> > >  .RB ( \-x ).
+> > > +The mapping will be created with the MAP_SHARED flag by default, or with the
+> > > +Linux specific (MAP_SYNC | MAP_SHARED_VALIDATE) flags if
+> > 
+> > I assume I'll be able to look up exactly what MAP_SYNC provides in the mmap
+> > manpage, right?
+> 
+> Yep, Jan updated the man page for both MAP_SYNC and MAP_SHARED_VALIDATE:
+> https://lists.01.org/pipermail/linux-nvdimm/2017-November/013158.html
+
+Will have a look.
+
+> Thank you for the review.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
