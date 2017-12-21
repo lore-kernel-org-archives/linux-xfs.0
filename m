@@ -1,113 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37300 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752165AbdLURtV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 12:49:21 -0500
-Date: Thu, 21 Dec 2017 09:46:02 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [xfsprogs PATCH v2 2/3] xfs_io: add MAP_SYNC support to mmap()
-Message-ID: <20171221174602.GV12613@magnolia>
-References: <20171205235651.17102-1-ross.zwisler@linux.intel.com>
- <20171205235651.17102-3-ross.zwisler@linux.intel.com>
- <20171221170908.GT12613@magnolia>
- <20171221174110.GD2158@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171221174110.GD2158@linux.intel.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:39519 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755389AbdLUURu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 15:17:50 -0500
+Received: by mail-lf0-f68.google.com with SMTP id m20so16126316lfi.6
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Dec 2017 12:17:50 -0800 (PST)
+From: Aliaksei Karaliou <akaraliou.dev@gmail.com>
+Subject: [PATCH 1/2] xfs: quota: fix missed destroy of qi_tree_lock
+Date: Thu, 21 Dec 2017 23:17:42 +0300
+Message-Id: <20171221201743.18016-1-akaraliou.dev@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
+To: darrick.wong@oracle.com
+Cc: Aliaksei Karaliou <akaraliou.dev@gmail.com>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 21, 2017 at 10:41:10AM -0700, Ross Zwisler wrote:
-> On Thu, Dec 21, 2017 at 09:09:08AM -0800, Darrick J. Wong wrote:
-> > On Tue, Dec 05, 2017 at 04:56:50PM -0700, Ross Zwisler wrote:
-> 
-> > > @@ -195,6 +200,13 @@ mmap_f(
-> > >  		case 'x':
-> > >  			prot |= PROT_EXEC;
-> > >  			break;
-> > > +		case 'S':
-> > > +			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> > > +			if (!flags) {
-> > 
-> > Heh, subtle. :)
-> > 
-> > /me wonders if it'd be better to do this explicitly:
-> > 
-> > #ifdef HAVE_MAP_SYNC
-> > 	flags = MAP_SYNC | MAP_SHARED_VALIDATE;
-> > #else
-> > 	printf("MAP_SYNC not supported\n");
-> > 	return 1;
-> > #endif
-> > 
-> > ...though it's ugly.
-> 
-> Yea, I was trying to avoid #ifdefery.  If you prefer this, though, I'm happy
-> to change it.  Or maybe a comment would be enough?
-> 
-> /*
->  * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined in the system headers we
->  * will have defined them both as 0.
->  */
-> 
-> ?
+xfs_qm_destroy_quotainfo() does not destroy quotainfo->qi_tree_lock
+while destroys quotainfo->qi_quotaofflock.
 
-Works for me.
+Signed-off-by: Aliaksei Karaliou <akaraliou.dev@gmail.com>
+---
+ fs/xfs/xfs_qm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> 
-> > > +				printf("MAP_SYNC not supported\n");
-> > > +				return 0;
-> > 
-> > Are we supposed to be returning nonzero values for failing commands?
-> 
-> I don't think so.  All the other error conditions in this function also return
-> 0.  I think the important thing is that 'exitcode' is set to 1 at the
-> beginning of the function per Dave's patch,
-> 
-> https://www.spinics.net/lists/linux-xfs/msg13605.html
-> 
-> which I pulled into my baseline:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/zwisler/xfsprogs-dev.git/refs/?h=map_sync_v3
-> 
-> So, I likewise leave 'exitcode' as 1, bail out with a return code of 0, and
-> then you get the overall failure return of 1 from xfs_io at the shell.
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ec952dfad359..d0053115427f 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -736,6 +736,7 @@ xfs_qm_destroy_quotainfo(
+ 		IRELE(qi->qi_pquotaip);
+ 		qi->qi_pquotaip = NULL;
+ 	}
++	mutex_destroy(&qi->qi_tree_lock);
+ 	mutex_destroy(&qi->qi_quotaofflock);
+ 	kmem_free(qi);
+ 	mp->m_quotainfo = NULL;
+-- 
+2.11.0
 
-Ok.
-
-> > > @@ -764,7 +764,7 @@ Each (sec, nsec) pair constitutes a single timestamp value.
-> > >  
-> > >  .SH MEMORY MAPPED I/O COMMANDS
-> > >  .TP
-> > > -.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
-> > > +.BI "mmap [ " N " | [[ \-rwxS ] [\-s " size " ] " "offset length " ]]
-> > >  With no arguments,
-> > >  .B mmap
-> > >  shows the current mappings. Specifying a single numeric argument
-> > > @@ -780,6 +780,10 @@ PROT_WRITE
-> > >  .RB ( \-w ),
-> > >  and PROT_EXEC
-> > >  .RB ( \-x ).
-> > > +The mapping will be created with the MAP_SHARED flag by default, or with the
-> > > +Linux specific (MAP_SYNC | MAP_SHARED_VALIDATE) flags if
-> > 
-> > I assume I'll be able to look up exactly what MAP_SYNC provides in the mmap
-> > manpage, right?
-> 
-> Yep, Jan updated the man page for both MAP_SYNC and MAP_SHARED_VALIDATE:
-> https://lists.01.org/pipermail/linux-nvdimm/2017-November/013158.html
-
-Will have a look.
-
-> Thank you for the review.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
