@@ -1,267 +1,262 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:38730 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757141AbdLWBMd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:12:33 -0500
-Subject: [PATCH 04/20] xfs: remove XFS_WANT_CORRUPTED_RETURN from dir3 data
- verifiers
+Received: from userp2120.oracle.com ([156.151.31.85]:44944 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752066AbdLUWUm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 17:20:42 -0500
+Date: Thu, 21 Dec 2017 14:18:18 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 17:07:28 -0800
-Message-ID: <151399124810.23543.6008645416214150631.stgit@magnolia>
-In-Reply-To: <151399122361.23543.15718507168231759645.stgit@magnolia>
-References: <151399122361.23543.15718507168231759645.stgit@magnolia>
+Subject: Re: [xfsprogs PATCH v4 1/2] xfs_io: add MAP_SYNC support to mmap()
+Message-ID: <20171221221818.GA12613@magnolia>
+References: <20171221220800.14382-1-ross.zwisler@linux.intel.com>
+ <20171221220800.14382-2-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171221220800.14382-2-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Dec 21, 2017 at 03:07:59PM -0700, Ross Zwisler wrote:
+> Add support for a new -S flag to xfs_io's mmap command.  This opens the
+> mapping with the (MAP_SYNC | MAP_SHARED_VALIDATE) flags instead of the
+> standard MAP_SHARED flag.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
 
-Since __xfs_dir3_data_check verifies on-disk metadata, we can't have it
-noisily blowing asserts and hanging the system on corrupt data coming in
-off the disk.  Instead, have it return a boolean like all the other
-checker functions, and only have it noisily fail if we fail in debug
-mode.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_dir2_block.c |    4 --
- fs/xfs/libxfs/xfs_dir2_data.c  |  100 +++++++++++++++++++++-------------------
- fs/xfs/libxfs/xfs_dir2_priv.h  |   10 +++-
- 3 files changed, 61 insertions(+), 53 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 43c902f..e427249 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -78,9 +78,7 @@ xfs_dir3_block_verify(
- 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
- 			return false;
- 	}
--	if (__xfs_dir3_data_check(NULL, bp))
--		return false;
--	return true;
-+	return __xfs_dir3_data_check(NULL, bp);
- }
- 
- static void
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 8727a43..af15f705 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -36,9 +36,9 @@
- /*
-  * Check the consistency of the data block.
-  * The input can also be a block-format directory.
-- * Return 0 is the buffer is good, otherwise an error.
-+ * Return true if the buffer is good.
-  */
--int
-+bool
- __xfs_dir3_data_check(
- 	struct xfs_inode	*dp,		/* incore inode pointer */
- 	struct xfs_buf		*bp)		/* data block's buffer */
-@@ -90,16 +90,16 @@ __xfs_dir3_data_check(
- 		 * so just ensure that the count falls somewhere inside the
- 		 * block right now.
- 		 */
--		XFS_WANT_CORRUPTED_RETURN(mp, be32_to_cpu(btp->count) <
--			((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry));
-+		if (be32_to_cpu(btp->count) >=
-+		    ((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry))
-+			return false;
- 		break;
- 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 		endp = (char *)hdr + geo->blksize;
- 		break;
- 	default:
--		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
--		return -EFSCORRUPTED;
-+		return false;
- 	}
- 
- 	/*
-@@ -108,22 +108,25 @@ __xfs_dir3_data_check(
- 	bf = ops->data_bestfree_p(hdr);
- 	count = lastfree = freeseen = 0;
- 	if (!bf[0].length) {
--		XFS_WANT_CORRUPTED_RETURN(mp, !bf[0].offset);
-+		if (bf[0].offset)
-+			return false;
- 		freeseen |= 1 << 0;
- 	}
- 	if (!bf[1].length) {
--		XFS_WANT_CORRUPTED_RETURN(mp, !bf[1].offset);
-+		if (bf[1].offset)
-+			return false;
- 		freeseen |= 1 << 1;
- 	}
- 	if (!bf[2].length) {
--		XFS_WANT_CORRUPTED_RETURN(mp, !bf[2].offset);
-+		if (bf[2].offset)
-+			return false;
- 		freeseen |= 1 << 2;
- 	}
- 
--	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[0].length) >=
--						be16_to_cpu(bf[1].length));
--	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[1].length) >=
--						be16_to_cpu(bf[2].length));
-+	if (be16_to_cpu(bf[0].length) < be16_to_cpu(bf[1].length))
-+		return false;
-+	if (be16_to_cpu(bf[1].length) < be16_to_cpu(bf[2].length))
-+		return false;
- 	/*
- 	 * Loop over the data/unused entries.
- 	 */
-@@ -135,22 +138,23 @@ __xfs_dir3_data_check(
- 		 * doesn't need to be there.
- 		 */
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			XFS_WANT_CORRUPTED_RETURN(mp, lastfree == 0);
--			XFS_WANT_CORRUPTED_RETURN(mp, endp >=
--					p + be16_to_cpu(dup->length));
--			XFS_WANT_CORRUPTED_RETURN(mp,
--				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
--					       (char *)dup - (char *)hdr);
-+			if (lastfree != 0)
-+				return false;
-+			if (endp < p + be16_to_cpu(dup->length))
-+				return false;
-+			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
-+			    (char *)dup - (char *)hdr)
-+				return false;
- 			dfp = xfs_dir2_data_freefind(hdr, bf, dup);
- 			if (dfp) {
- 				i = (int)(dfp - bf);
--				XFS_WANT_CORRUPTED_RETURN(mp,
--					(freeseen & (1 << i)) == 0);
-+				if ((freeseen & (1 << i)) != 0)
-+					return false;
- 				freeseen |= 1 << i;
- 			} else {
--				XFS_WANT_CORRUPTED_RETURN(mp,
--					be16_to_cpu(dup->length) <=
--						be16_to_cpu(bf[2].length));
-+				if (be16_to_cpu(dup->length) >
-+				    be16_to_cpu(bf[2].length))
-+					return false;
- 			}
- 			p += be16_to_cpu(dup->length);
- 			lastfree = 1;
-@@ -163,16 +167,17 @@ __xfs_dir3_data_check(
- 		 * The linear search is crude but this is DEBUG code.
- 		 */
- 		dep = (xfs_dir2_data_entry_t *)p;
--		XFS_WANT_CORRUPTED_RETURN(mp, dep->namelen != 0);
--		XFS_WANT_CORRUPTED_RETURN(mp,
--			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
--		XFS_WANT_CORRUPTED_RETURN(mp, endp >=
--				p + ops->data_entsize(dep->namelen));
--		XFS_WANT_CORRUPTED_RETURN(mp,
--			be16_to_cpu(*ops->data_entry_tag_p(dep)) ==
--					       (char *)dep - (char *)hdr);
--		XFS_WANT_CORRUPTED_RETURN(mp,
--				ops->data_get_ftype(dep) < XFS_DIR3_FT_MAX);
-+		if (dep->namelen == 0)
-+			return false;
-+		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
-+			return false;
-+		if (endp < p + ops->data_entsize(dep->namelen))
-+			return false;
-+		if (be16_to_cpu(*ops->data_entry_tag_p(dep)) !=
-+		    (char *)dep - (char *)hdr)
-+			return false;
-+		if (ops->data_get_ftype(dep) >= XFS_DIR3_FT_MAX)
-+			return false;
- 		count++;
- 		lastfree = 0;
- 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-@@ -188,31 +193,32 @@ __xfs_dir3_data_check(
- 				    be32_to_cpu(lep[i].hashval) == hash)
- 					break;
- 			}
--			XFS_WANT_CORRUPTED_RETURN(mp,
--						  i < be32_to_cpu(btp->count));
-+			if (i >= be32_to_cpu(btp->count))
-+				return false;
- 		}
- 		p += ops->data_entsize(dep->namelen);
- 	}
- 	/*
- 	 * Need to have seen all the entries and all the bestfree slots.
- 	 */
--	XFS_WANT_CORRUPTED_RETURN(mp, freeseen == 7);
-+	if (freeseen != 7)
-+		return false;
- 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
- 			if (lep[i].address ==
- 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
- 				stale++;
--			if (i > 0)
--				XFS_WANT_CORRUPTED_RETURN(mp,
--					be32_to_cpu(lep[i].hashval) >=
--						be32_to_cpu(lep[i - 1].hashval));
-+			if (i > 0 && be32_to_cpu(lep[i].hashval) <
-+				     be32_to_cpu(lep[i - 1].hashval))
-+				return false;
- 		}
--		XFS_WANT_CORRUPTED_RETURN(mp, count ==
--			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
--		XFS_WANT_CORRUPTED_RETURN(mp, stale == be32_to_cpu(btp->stale));
-+		if (count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale))
-+			return false;
-+		if (stale != be32_to_cpu(btp->stale))
-+			return false;
- 	}
--	return 0;
-+	return true;
- }
- 
- static bool
-@@ -235,9 +241,7 @@ xfs_dir3_data_verify(
- 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC))
- 			return false;
- 	}
--	if (__xfs_dir3_data_check(NULL, bp))
--		return false;
--	return true;
-+	return __xfs_dir3_data_check(NULL, bp);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 4badd26..45c68d0 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -39,12 +39,18 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
- 
- /* xfs_dir2_data.c */
- #ifdef DEBUG
--#define	xfs_dir3_data_check(dp,bp) __xfs_dir3_data_check(dp, bp);
-+#define	xfs_dir3_data_check(dp, bp) \
-+do { \
-+	if (!__xfs_dir3_data_check((dp), (bp))) { \
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, \
-+				(bp)->b_target->bt_mount, (bp)->b_addr); \
-+	} \
-+} while (0)
- #else
- #define	xfs_dir3_data_check(dp,bp)
- #endif
- 
--extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-+extern bool __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
- extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
- extern int xfs_dir3_data_readahead(struct xfs_inode *dp, xfs_dablk_t bno,
-
+> ---
+>  configure.ac          |  1 +
+>  include/builddefs.in  |  1 +
+>  include/linux.h       |  8 ++++++++
+>  io/Makefile           |  4 ++++
+>  io/io.h               |  1 +
+>  io/mmap.c             | 29 ++++++++++++++++++++++++-----
+>  m4/package_libcdev.m4 | 16 ++++++++++++++++
+>  man/man8/xfs_io.8     |  6 +++++-
+>  8 files changed, 60 insertions(+), 6 deletions(-)
+> 
+> diff --git a/configure.ac b/configure.ac
+> index e5d0309f..f3325aa0 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -163,6 +163,7 @@ AC_HAVE_MREMAP
+>  AC_NEED_INTERNAL_FSXATTR
+>  AC_HAVE_GETFSMAP
+>  AC_HAVE_STATFS_FLAGS
+> +AC_HAVE_MAP_SYNC
+>  
+>  if test "$enable_blkid" = yes; then
+>  AC_HAVE_BLKID_TOPO
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index fd274ddc..126f7e95 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -115,6 +115,7 @@ HAVE_MREMAP = @have_mremap@
+>  NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+>  HAVE_GETFSMAP = @have_getfsmap@
+>  HAVE_STATFS_FLAGS = @have_statfs_flags@
+> +HAVE_MAP_SYNC = @have_map_sync@
+>  
+>  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+>  #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+> diff --git a/include/linux.h b/include/linux.h
+> index 6ce344c5..1998941a 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -327,4 +327,12 @@ fsmap_advance(
+>  #define HAVE_GETFSMAP
+>  #endif /* HAVE_GETFSMAP */
+>  
+> +#ifndef HAVE_MAP_SYNC
+> +#define MAP_SYNC 0
+> +#define MAP_SHARED_VALIDATE 0
+> +#else
+> +#include <asm-generic/mman.h>
+> +#include <asm-generic/mman-common.h>
+> +#endif /* HAVE_MAP_SYNC */
+> +
+>  #endif	/* __XFS_LINUX_H__ */
+> diff --git a/io/Makefile b/io/Makefile
+> index 6725936d..2987ee11 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -103,6 +103,10 @@ ifeq ($(HAVE_MREMAP),yes)
+>  LCFLAGS += -DHAVE_MREMAP
+>  endif
+>  
+> +ifeq ($(HAVE_MAP_SYNC),yes)
+> +LCFLAGS += -DHAVE_MAP_SYNC
+> +endif
+> +
+>  # On linux we get fsmap from the system or define it ourselves
+>  # so include this based on platform type.  If this reverts to only
+>  # the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
+> diff --git a/io/io.h b/io/io.h
+> index 3862985f..8b2753b3 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -65,6 +65,7 @@ typedef struct mmap_region {
+>  	size_t		length;		/* length of mapping */
+>  	off64_t		offset;		/* start offset into backing file */
+>  	int		prot;		/* protection mode of the mapping */
+> +	bool		map_sync;	/* is this a MAP_SYNC mapping? */
+>  	char		*name;		/* name of backing file */
+>  } mmap_region_t;
+>  
+> diff --git a/io/mmap.c b/io/mmap.c
+> index b0c1f764..04a828a4 100644
+> --- a/io/mmap.c
+> +++ b/io/mmap.c
+> @@ -42,7 +42,7 @@ print_mapping(
+>  	int		index,
+>  	int		braces)
+>  {
+> -	unsigned char	buffer[8] = { 0 };
+> +	char		buffer[8] = { 0 };
+>  	int		i;
+>  
+>  	static struct {
+> @@ -57,6 +57,10 @@ print_mapping(
+>  
+>  	for (i = 0, p = pflags; p->prot != PROT_NONE; i++, p++)
+>  		buffer[i] = (map->prot & p->prot) ? p->mode : '-';
+> +
+> +	if (map->map_sync)
+> +		sprintf(&buffer[i], " S");
+> +
+>  	printf("%c%03d%c 0x%lx - 0x%lx %s  %14s (%lld : %ld)\n",
+>  		braces? '[' : ' ', index, braces? ']' : ' ',
+>  		(unsigned long)map->addr,
+> @@ -147,6 +151,7 @@ mmap_help(void)
+>  " -r -- map with PROT_READ protection\n"
+>  " -w -- map with PROT_WRITE protection\n"
+>  " -x -- map with PROT_EXEC protection\n"
+> +" -S -- map with MAP_SYNC and MAP_SHARED_VALIDATE flags\n"
+>  " -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
+>  " If no protection mode is specified, all are used by default.\n"
+>  "\n"));
+> @@ -162,7 +167,7 @@ mmap_f(
+>  	void		*address = NULL;
+>  	char		*filename;
+>  	size_t		blocksize, sectsize;
+> -	int		c, prot = 0;
+> +	int		c, prot = 0, flags = MAP_SHARED;
+>  
+>  	exitcode = 1;
+>  	if (argc == 1) {
+> @@ -186,7 +191,7 @@ mmap_f(
+>  
+>  	init_cvtnum(&blocksize, &sectsize);
+>  
+> -	while ((c = getopt(argc, argv, "rwxs:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "rwxSs:")) != EOF) {
+>  		switch (c) {
+>  		case 'r':
+>  			prot |= PROT_READ;
+> @@ -197,6 +202,19 @@ mmap_f(
+>  		case 'x':
+>  			prot |= PROT_EXEC;
+>  			break;
+> +		case 'S':
+> +			flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+> +
+> +			/*
+> +			 * If MAP_SYNC and MAP_SHARED_VALIDATE aren't defined
+> +			 * in the system headers we will have defined them
+> +			 * both as 0.
+> +			 */
+> +			if (!flags) {
+> +				printf("MAP_SYNC not supported\n");
+> +				return 0;
+> +			}
+> +			break;
+>  		case 's':
+>  			length2 = cvtnum(blocksize, sectsize, optarg);
+>  			break;
+> @@ -240,7 +258,7 @@ mmap_f(
+>  		               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+>  		munmap(address, length2);
+>  	}
+> -	address = mmap(address, length, prot, MAP_SHARED, file->fd, offset);
+> +	address = mmap(address, length, prot, flags, file->fd, offset);
+>  	if (address == MAP_FAILED) {
+>  		perror("mmap");
+>  		free(filename);
+> @@ -265,6 +283,7 @@ mmap_f(
+>  	mapping->offset = offset;
+>  	mapping->name = filename;
+>  	mapping->prot = prot;
+> +	mapping->map_sync = (flags == (MAP_SYNC | MAP_SHARED_VALIDATE));
+>  	exitcode = 0;
+>  	return 0;
+>  }
+> @@ -691,7 +710,7 @@ mmap_init(void)
+>  	mmap_cmd.argmax = -1;
+>  	mmap_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK |
+>  			 CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
+> -	mmap_cmd.args = _("[N] | [-rwx] [-s size] [off len]");
+> +	mmap_cmd.args = _("[N] | [-rwxS] [-s size] [off len]");
+>  	mmap_cmd.oneline =
+>  		_("mmap a range in the current file, show mappings");
+>  	mmap_cmd.help = mmap_help;
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index 7b4dfc85..71cedc5c 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -328,3 +328,19 @@ AC_DEFUN([AC_HAVE_STATFS_FLAGS],
+>      )
+>      AC_SUBST(have_statfs_flags)
+>    ])
+> +
+> +#
+> +# Check if we have MAP_SYNC defines (Linux)
+> +#
+> +AC_DEFUN([AC_HAVE_MAP_SYNC],
+> +  [ AC_MSG_CHECKING([for MAP_SYNC])
+> +    AC_TRY_COMPILE([
+> +#include <asm-generic/mman.h>
+> +#include <asm-generic/mman-common.h>
+> +    ], [
+> +        int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+> +    ], have_map_sync=yes
+> +	AC_MSG_RESULT(yes),
+> +	AC_MSG_RESULT(no))
+> +    AC_SUBST(have_map_sync)
+> +  ])
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 9bf1a478..1693f7f1 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -764,7 +764,7 @@ Each (sec, nsec) pair constitutes a single timestamp value.
+>  
+>  .SH MEMORY MAPPED I/O COMMANDS
+>  .TP
+> -.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
+> +.BI "mmap [ " N " | [[ \-rwxS ] [\-s " size " ] " "offset length " ]]
+>  With no arguments,
+>  .B mmap
+>  shows the current mappings. Specifying a single numeric argument
+> @@ -780,6 +780,10 @@ PROT_WRITE
+>  .RB ( \-w ),
+>  and PROT_EXEC
+>  .RB ( \-x ).
+> +The mapping will be created with the MAP_SHARED flag by default, or with the
+> +Linux specific (MAP_SYNC | MAP_SHARED_VALIDATE) flags if
+> +.B -S
+> +is given.
+>  .BI \-s " size"
+>  is used to do a mmap(size) && munmap(size) operation at first, try to reserve some
+>  extendible free memory space, if
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
