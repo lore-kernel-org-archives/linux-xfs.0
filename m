@@ -1,106 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f177.google.com ([74.125.82.177]:34619 "EHLO
-        mail-ot0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756604AbdLTWlQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Dec 2017 17:41:16 -0500
-Received: by mail-ot0-f177.google.com with SMTP id n18so11674461otd.1
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2017 14:41:15 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:42494 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751539AbdLUIXo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Dec 2017 03:23:44 -0500
+Date: Thu, 21 Dec 2017 16:23:42 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] generic/381: enable on systems which allows usernames
+ that begin with digits
+Message-ID: <20171221082342.GG5123@eguan.usersys.redhat.com>
+References: <20171215204107.17690-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20171220143822.GB31584@quack2.suse.cz>
-References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150949217152.24061.9869502311102659784.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171110090818.GE4895@lst.de> <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
- <20171220143822.GB31584@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 20 Dec 2017 14:41:14 -0800
-Message-ID: <CAPcyv4jfvkSSMvruQSFqa5N2zmPmnkDbxCzwvgQAqMQOkT8Xgg@mail.gmail.com>
-Subject: Re: [PATCH 14/15] dax: associate mappings with inodes, and warn if
- dma collides with truncate
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171215204107.17690-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Dec 20, 2017 at 6:38 AM, Jan Kara <jack@suse.cz> wrote:
-> On Tue 19-12-17 17:11:38, Dan Williams wrote:
->> On Fri, Nov 10, 2017 at 1:08 AM, Christoph Hellwig <hch@lst.de> wrote:
->> >> +             struct {
->> >> +                     /*
->> >> +                      * ZONE_DEVICE pages are never on an lru or handled by
->> >> +                      * a slab allocator, this points to the hosting device
->> >> +                      * page map.
->> >> +                      */
->> >> +                     struct dev_pagemap *pgmap;
->> >> +                     /*
->> >> +                      * inode association for MEMORY_DEVICE_FS_DAX page-idle
->> >> +                      * callbacks. Note that we don't use ->mapping since
->> >> +                      * that has hard coded page-cache assumptions in
->> >> +                      * several paths.
->> >> +                      */
->> >
->> > What assumptions?  I'd much rather fix those up than having two fields
->> > that have the same functionality.
->>
->> [ Reviving this old thread where you asked why I introduce page->inode
->> instead of reusing page->mapping ]
->>
->> For example, xfs_vm_set_page_dirty() assumes that page->mapping being
->> non-NULL indicates a typical page cache page, this is a false
->> assumption for DAX. My guess at a fix for this is to add
->> pagecache_page() checks to locations like this, but I worry about how
->> to find them all. Where pagecache_page() is:
->>
->> bool pagecache_page(struct page *page)
->> {
->>         if (!page->mapping)
->>                 return false;
->>         if (!IS_DAX(page->mapping->host))
->>                 return false;
->>         return true;
->> }
->>
->> Otherwise we go off the rails:
->>
->>  WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
->> xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
->
-> But this just shows that mapping->a_ops are wrong for this mapping, doesn't
-> it? ->set_page_dirty handler for DAX mapping should just properly handle
-> DAX pages... (and only those)
+On Fri, Dec 15, 2017 at 12:41:07PM -0800, Luis R. Rodriguez wrote:
+> Some systems are not allowing usernames prefixed with a number now, this
+> test however relies on the assumption that you can end up with usernames
+> of such type, given the purpose of the test is to ensure that xfs_quota
+> can differentiate between UIDs and names beginning with numbers.
+> 
+> systemd >= 232 (circa 2017) no longer allows usernames starting with digits
+> [0], there is a systemd exploit (CVE-2017-1000082 [1]) for why that was done,
+> however even upstream shadow useradd also does not allow similar user types
+> since shadow version v4.0.1 (circa 2007) [2] but there no easy way to check
+> shadow's useradd's version.
+> 
+> You can still shoehorn in these types of users by manually editing files,
+> but that's just shooting yourself on the foot given all the precautions
+> taken now by userspace, so just check for the systemd version for now as
+> requirement for running this test.
+> 
+> [0] https://github.com/systemd/systemd/issues/6237
+> [1] https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-1000082
+> [2] https://github.com/shadow-maint/shadow/commit/9db6abfa42c946b4046f4b2fe67dc43ba862eb0e
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  README            |  7 +++++--
+>  common/config     |  1 +
+>  common/rc         | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/381 |  1 +
+>  4 files changed, 49 insertions(+), 2 deletions(-)
+> 
+> diff --git a/README b/README
+> index ed69332e774e..aff7bdae7cb4 100644
+> --- a/README
+> +++ b/README
+> @@ -20,8 +20,11 @@ _______________________
+>  - run make
+>  - run make install
+>  - create fsgqa test user ("sudo useradd fsgqa")
+> -- create 123456-fsgqa test user ("sudo useradd 123456-fsgqa")
+> -	
+> +- Only on systems which allow usernames that start with a digit (older
+> +  than  systemd 232 and/or has shadow older than v4.0.1), create the
+> +  123456-fsgqa test user:
+> +    sudo useradd 123456-fsgqa
+> +
 
-Ah, yes. Now that I change ->mapping to be non-NULL for DAX pages I
-enable all the address_space_operations to start firing. However,
-instead of adding DAX specific address_space_operations it appears
-->mapping should never be set for DAX pages, because DAX pages are
-disconnected from the page-writeback machinery. In other words never
-setting ->mapping bypasses all the possible broken assumptions and
-code paths that take page-cache specific actions before calling an
-address_space_operation.
+IMHO, this doc update is sufficient, generic/381 already _notrun if
+there's no 123456-fsgqa user present because of
 
->
->>  [..]
->>  CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O
->> 4.15.0-rc2+ #984
->>  [..]
->>  Call Trace:
->>   set_page_dirty_lock+0x40/0x60
->>   bio_set_pages_dirty+0x37/0x50
->>   iomap_dio_actor+0x2b7/0x3b0
->>   ? iomap_dio_zero+0x110/0x110
->>   iomap_apply+0xa4/0x110
->>   iomap_dio_rw+0x29e/0x3b0
->>   ? iomap_dio_zero+0x110/0x110
->>   ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
->>   xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
->>   xfs_file_read_iter+0xa0/0xc0 [xfs]
->>   __vfs_read+0xf9/0x170
->>   vfs_read+0xa6/0x150
->>   SyS_pread64+0x93/0xb0
->>   entry_SYSCALL_64_fastpath+0x1f/0x96
->
->                                                                 Honza
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+_require_user 123456-fsgqa
+
+And we don't rely on any version check in fstests, usually we check on
+the actual behavior, e.g. actually mkfs & mount the fs to see if the
+current kernel and userspace support a given feature.
+
+Thanks,
+Eryu
