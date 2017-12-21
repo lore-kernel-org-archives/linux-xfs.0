@@ -1,78 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35527 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751376AbdLRHiq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 02:38:46 -0500
-Received: by mail-wm0-f68.google.com with SMTP id f9so27562906wmh.0
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Dec 2017 23:38:46 -0800 (PST)
-Subject: Re: Detecting RWF_NOWAIT support
-References: <b45afd09-5fa8-74ac-4ba4-9dc9074e30cf@scylladb.com>
- <4ae3426d-8104-c243-72e4-671e89401b23@suse.de>
- <0ae3b9d3-0e57-5562-5a8d-62496a261521@scylladb.com>
- <c4b15d8a-e868-5b31-f499-28151ba36116@suse.de>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <f2fa5635-eafe-59d5-05c0-9f915cc5506b@scylladb.com>
-Date: Mon, 18 Dec 2017 09:38:42 +0200
+Received: from userp2120.oracle.com ([156.151.31.85]:32806 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753934AbdLUQqL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 11:46:11 -0500
+Date: Thu, 21 Dec 2017 08:45:35 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ZOMG RFCRAP PATCH 0/2] xfs: horrifying eBPF hacks
+Message-ID: <20171221164535.GS12613@magnolia>
+References: <20171213061825.GO19219@magnolia>
+ <20171221133338.GD1567@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <c4b15d8a-e868-5b31-f499-28151ba36116@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171221133338.GD1567@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, Richard Wareing <rwareing@fb.com>, david@fromorbit.com
 
+On Thu, Dec 21, 2017 at 05:33:38AM -0800, Christoph Hellwig wrote:
+> Eek.  Whie eBPF is a really nice debug tool we should never use
+> it for actual required kernel I/O functionality.
 
+Certainly not in its current hacky form.  I'm curious if Richard has had
+a chance to try out these patches to see if it affects performance in a
+noticeable way?
 
-On 12/18/2017 05:28 AM, Goldwyn Rodrigues wrote:
->
-> On 12/16/2017 08:49 AM, Avi Kivity wrote:
->>
->> On 12/14/2017 09:15 PM, Goldwyn Rodrigues wrote:
->>> On 12/14/2017 11:38 AM, Avi Kivity wrote:
->>>> I'm looking to add support for RWF_NOWAIT within a linux-aio iocb.
->>>> Naturally, I need to detect at runtime whether the kernel support
->>>> RWF_NOWAIT or not.
->>>>
->>>>
->>>> The only method I could find was to issue an I/O with RWF_NOWAIT set,
->>>> and look for errors. This is somewhat less than perfect:
->>>>
->>>>    - from the error, I can't tell whether RWF_NOWAIT was the problem, or
->>>> something else. If I enable a number of new features, I have to run
->>>> through all combinations to figure out which ones are supported and
->>>> which are not.
->>> Here is the return codes for RWF_NOWAIT
->>> EINVAL - not supported (older kernel)
->>> EOPNOTSUPP - not supported
->>> EAGAIN - supported but could not complete because I/O will be delayed
->> Which of these are returned from io_submit() and which are returned in
->> the iocb?
-> These are returned in iocb.
+I /think/ bpf has enough safety mechanisms (no loops, no direct writing
+to kernel memory, bytecode verifiers, opcode count limits) that such a
+beast could be hidden behind a kconfig option that isn't turned for the
+general public.  For people who have these particularly specific use
+cases I think it better to have a general mechanism to accomodate them
+vs. scattering code all over xfs vs. "no sorry go away", though this
+ebpf thing isn't necessarily the final answer.  We do validate that the
+proposed iflags are allowed for the fs geometry, though I acknowledge
+that the prospect of running ebpf with ilock_excl does give me pause.
 
-Thanks.
+I'm curious, though, what are your (and everyone else's) concerns about
+this?
 
->
->>> 0 - supported and I/O completed (success).
->>>
->>>>    - RWF_NOWAIT support is per-filesystem, so I can't just remember
->>>> not to
->>>> enable RWF_NOWAIT globally, I have to track it per file.
->>> Yes, the support is per filesystem. So, the application must know if the
->>> filesystem supports it, possibly by performing a small I/O.
->> So the application must know about filesystem mount points, and be
->> prepared to create a file and try to write it (in case the filesystem is
->> empty) or alter its behavior during runtime depending on the errors it
->> sees.
-> Well yes. Hopefully, the application knows what it is doing when it
-> performs RWF_NOWAIT.
+--D
 
-This type of interface makes it very hard to consume new kernel 
-facilities in a backward compatible way. The kernel should advertise 
-what support it provides; for example this support could be advertised 
-via statx(2).
-
-For examples of facilities that advertise their capabilities, see 
-membarrier(2) and KVM.
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
