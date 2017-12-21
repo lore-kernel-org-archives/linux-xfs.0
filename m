@@ -1,42 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41850 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751980AbdLDXoD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Dec 2017 18:44:03 -0500
-Subject: Re: [PATCH 00/12] xfsprogs-4.15: common library for misc. routines
-References: <151094960522.29763.11622891165765932168.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f36a3258-600d-cc29-a944-f1ab8432de4f@sandeen.net>
-Date: Mon, 4 Dec 2017 17:44:01 -0600
-MIME-Version: 1.0
-In-Reply-To: <151094960522.29763.11622891165765932168.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34686 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754712AbdLUUSW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 15:18:22 -0500
+Received: by mail-lf0-f67.google.com with SMTP id y78so23597299lfd.1
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Dec 2017 12:18:21 -0800 (PST)
+From: Aliaksei Karaliou <akaraliou.dev@gmail.com>
+Subject: [PATCH 2/2] xfs: quota: check result of register_shrinker()
+Date: Thu, 21 Dec 2017 23:17:43 +0300
+Message-Id: <20171221201743.18016-2-akaraliou.dev@gmail.com>
+In-Reply-To: <20171221201743.18016-1-akaraliou.dev@gmail.com>
+References: <20171221201743.18016-1-akaraliou.dev@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: Aliaksei Karaliou <akaraliou.dev@gmail.com>, linux-xfs@vger.kernel.org
 
-Ok, for latest versions of all this:
+xfs_qm_init_quotainfo() does not check result of register_shrinker()
+which was tagged as __must_check recently, reported by sparse.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Aliaksei Karaliou <akaraliou.dev@gmail.com>
+---
+ fs/xfs/xfs_qm.c | 43 ++++++++++++++++++++++++++++---------------
+ 1 file changed, 28 insertions(+), 15 deletions(-)
 
-On 11/17/17 2:13 PM, Darrick J. Wong wrote:
-> Hi all,
-> 
-> This patch series refactors miscellaneous data structures and runtime
-> support code out of libxfs and libxcmd into a new library to contain all
-> of the funny random other gunk ("libfrog") that doesn't fit anywhere
-> else.  Initially, libfrog will contain routines for bit manipulation,
-> device topology, threaded workqueues, an avl tree, and file path
-> detection.  Existing programs are modified to pull from libfrog; the
-> future xfs_scrub program will also take advantage of it.
-> 
-> This whole mess sits atop the libxfs-4.15-sync branch; see the
-> djwong-devel branch in my repo[1] for something pullable.
-> 
-> --D
-> 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index d0053115427f..b27a019a844d 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -48,7 +48,7 @@
+ STATIC int	xfs_qm_init_quotainos(xfs_mount_t *);
+ STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
+ 
+-
++STATIC void	xfs_qm_destroy_quotainos(xfs_quotainfo_t *qi);
+ STATIC void	xfs_qm_dqfree_one(struct xfs_dquot *dqp);
+ /*
+  * We use the batch lookup interface to iterate over the dquots as it
+@@ -695,9 +695,17 @@ xfs_qm_init_quotainfo(
+ 	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+ 	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
+ 	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
+-	register_shrinker(&qinf->qi_shrinker);
++
++	error = register_shrinker(&qinf->qi_shrinker);
++	if (error)
++		goto out_free_inos;
++
+ 	return 0;
+ 
++out_free_inos:
++	mutex_destroy(&qinf->qi_quotaofflock);
++	mutex_destroy(&qinf->qi_tree_lock);
++	xfs_qm_destroy_quotainos(qinf);
+ out_free_lru:
+ 	list_lru_destroy(&qinf->qi_lru);
+ out_free_qinf:
+@@ -706,6 +714,23 @@ xfs_qm_init_quotainfo(
+ 	return error;
+ }
+ 
++STATIC void
++xfs_qm_destroy_quotainos(
++	xfs_quotainfo_t	*qi)
++{
++	if (qi->qi_uquotaip) {
++		IRELE(qi->qi_uquotaip);
++		qi->qi_uquotaip = NULL; /* paranoia */
++	}
++	if (qi->qi_gquotaip) {
++		IRELE(qi->qi_gquotaip);
++		qi->qi_gquotaip = NULL;
++	}
++	if (qi->qi_pquotaip) {
++		IRELE(qi->qi_pquotaip);
++		qi->qi_pquotaip = NULL;
++	}
++}
+ 
+ /*
+  * Gets called when unmounting a filesystem or when all quotas get
+@@ -723,19 +748,7 @@ xfs_qm_destroy_quotainfo(
+ 
+ 	unregister_shrinker(&qi->qi_shrinker);
+ 	list_lru_destroy(&qi->qi_lru);
+-
+-	if (qi->qi_uquotaip) {
+-		IRELE(qi->qi_uquotaip);
+-		qi->qi_uquotaip = NULL; /* paranoia */
+-	}
+-	if (qi->qi_gquotaip) {
+-		IRELE(qi->qi_gquotaip);
+-		qi->qi_gquotaip = NULL;
+-	}
+-	if (qi->qi_pquotaip) {
+-		IRELE(qi->qi_pquotaip);
+-		qi->qi_pquotaip = NULL;
+-	}
++	xfs_qm_destroy_quotainos(qi);
+ 	mutex_destroy(&qi->qi_tree_lock);
+ 	mutex_destroy(&qi->qi_quotaofflock);
+ 	kmem_free(qi);
+-- 
+2.11.0
+
