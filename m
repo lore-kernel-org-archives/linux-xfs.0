@@ -1,86 +1,344 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59676 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750846AbdLXTvw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 24 Dec 2017 14:51:52 -0500
-Subject: Re: [PATCH] xfs_io: fix exitcode handling (was Re: generic/399 and
- xfs_io pwrite command)
-References: <7235f31f-5427-ff12-11f9-cba98431e71c@tuxera.com>
- <20171204222842.GX4094@dastard>
- <35d2712c-b036-d017-2d42-f74bbc4444a9@tuxera.com>
- <20171205211850.GA5858@dastard> <20171206002638.GB5858@dastard>
- <20171207140519.GB3486@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9b5928ec-cb2d-52b3-fb4f-cab39c7e0830@sandeen.net>
-Date: Sun, 24 Dec 2017 11:51:49 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:33570 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754495AbdLURPf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 12:15:35 -0500
+Date: Thu, 21 Dec 2017 09:14:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [xfsprogs PATCH v3 3/3] xfs_io: add a new 'log_writes' command
+Message-ID: <20171221171402.GU12613@magnolia>
+References: <20171205235651.17102-4-ross.zwisler@linux.intel.com>
+ <20171206181323.16989-1-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20171207140519.GB3486@bfoster.bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171206181323.16989-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: Ari Sundholm <ari@tuxera.com>, fstests@vger.kernel.org, Emil Karlson <jkarlson@tuxera.com>, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
 
-On 12/7/17 6:05 AM, Brian Foster wrote:
-> On Wed, Dec 06, 2017 at 11:26:38AM +1100, Dave Chinner wrote:
-
-...
-
->> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
->> index d1dfc5a5e33a..9b737eff4c02 100644
->> --- a/io/copy_file_range.c
->> +++ b/io/copy_file_range.c
->> @@ -92,6 +92,7 @@ copy_range_f(int argc, char **argv)
->>  	int ret;
->>  	int fd;
->>  
->> +	exitcode = 1;
->>  	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
->>  		switch (opt) {
->>  		case 's':
->> @@ -132,6 +133,8 @@ copy_range_f(int argc, char **argv)
->>  
->>  	ret = copy_file_range(fd, &src, &dst, len);
->>  	close(fd);
->> +	if (ret >= 0)
->> +		exitcode = 0;
-> I don't think it's appropriate to blindly overwrite the global exitcode
-> value like this. What about the case where multiple commands are chained
-> together? Should we expect an error code if any of the commands failed
-> or only the last?
+On Wed, Dec 06, 2017 at 11:13:23AM -0700, Ross Zwisler wrote:
+> Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
+> log marks.  It's helpful to allow users of xfs_io to adds these marks from
+> within xfs_io instead of waiting until after xfs_io exits because then they
+> are able to replay the dm-log-writes log up to immediately after another
+> xfs_io operation such as mwrite.  This isolates the log replay from other
+> operations that happen as part of xfs_io exiting (file handles being
+> closed, mmaps being torn down, etc.).  This also allows users to insert
+> multiple marks between different xfs_io commands.
 > 
-> For example:
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> ---
 > 
->   xfs_io -c "pwrite ..." <file>
+> Changes from v2:
+>  - Use 'exitcode' to have the xfs_io shell command error out with status
+>    1 if we hit any of our many error condtions during execution. (Dave)
 > 
-> ... returns an error if the write fails, while:
+> ---
+>  configure.ac            |   1 +
+>  debian/control          |   2 +-
+>  include/builddefs.in    |   2 +
+>  io/Makefile             |   6 +++
+>  io/init.c               |   1 +
+>  io/io.h                 |   6 +++
+>  io/log_writes.c         | 106 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  m4/Makefile             |   1 +
+>  m4/package_devmapper.m4 |  11 +++++
+>  man/man8/xfs_io.8       |  23 ++++++++++-
+>  10 files changed, 157 insertions(+), 2 deletions(-)
+>  create mode 100644 io/log_writes.c
+>  create mode 100644 m4/package_devmapper.m4
 > 
->   xfs_io -c "pwrite ..." -c "fadvise ..." <file>
+> diff --git a/configure.ac b/configure.ac
+> index f3325aa0..f83d5817 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -164,6 +164,7 @@ AC_NEED_INTERNAL_FSXATTR
+>  AC_HAVE_GETFSMAP
+>  AC_HAVE_STATFS_FLAGS
+>  AC_HAVE_MAP_SYNC
+> +AC_HAVE_DEVMAPPER
+>  
+>  if test "$enable_blkid" = yes; then
+>  AC_HAVE_BLKID_TOPO
+> diff --git a/debian/control b/debian/control
+> index ad816622..5c26e3d7 100644
+> --- a/debian/control
+> +++ b/debian/control
+> @@ -3,7 +3,7 @@ Section: admin
+>  Priority: optional
+>  Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+>  Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+> -Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
+> +Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev
+>  Standards-Version: 3.9.1
+>  Homepage: http://xfs.org/
+>  
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 126f7e95..66bdbfa2 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -35,6 +35,7 @@ LIBTERMCAP = @libtermcap@
+>  LIBEDITLINE = @libeditline@
+>  LIBREADLINE = @libreadline@
+>  LIBBLKID = @libblkid@
+> +LIBDEVMAPPER = @libdevmapper@
+>  LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+>  LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
+>  LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
+> @@ -116,6 +117,7 @@ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+>  HAVE_GETFSMAP = @have_getfsmap@
+>  HAVE_STATFS_FLAGS = @have_statfs_flags@
+>  HAVE_MAP_SYNC = @have_map_sync@
+> +HAVE_DEVMAPPER = @have_devmapper@
+>  
+>  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+>  #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+> diff --git a/io/Makefile b/io/Makefile
+> index 2987ee11..b7585a1b 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -107,6 +107,12 @@ ifeq ($(HAVE_MAP_SYNC),yes)
+>  LCFLAGS += -DHAVE_MAP_SYNC
+>  endif
+>  
+> +ifeq ($(HAVE_DEVMAPPER),yes)
+> +CFILES += log_writes.c
+> +LLDLIBS += $(LIBDEVMAPPER)
+> +LCFLAGS += -DHAVE_DEVMAPPER
+> +endif
+> +
+>  # On linux we get fsmap from the system or define it ourselves
+>  # so include this based on platform type.  If this reverts to only
+>  # the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
+> diff --git a/io/init.c b/io/init.c
+> index 20d5f80d..34d87b5f 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -72,6 +72,7 @@ init_commands(void)
+>  	help_init();
+>  	imap_init();
+>  	inject_init();
+> +	log_writes_init();
+>  	madvise_init();
+>  	mincore_init();
+>  	mmap_init();
+> diff --git a/io/io.h b/io/io.h
+> index 8b2753b3..9349cc75 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -186,3 +186,9 @@ extern void		fsmap_init(void);
+>  #else
+>  # define fsmap_init()	do { } while (0)
+>  #endif
+> +
+> +#ifdef HAVE_DEVMAPPER
+> +extern void		log_writes_init(void);
+> +#else
+> +#define log_writes_init()	do { } while (0)
+> +#endif
+> diff --git a/io/log_writes.c b/io/log_writes.c
+> new file mode 100644
+> index 00000000..c7b7392e
+> --- /dev/null
+> +++ b/io/log_writes.c
+> @@ -0,0 +1,106 @@
+> +/*
+> + * Copyright (c) 2017 Intel Corporation.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "platform_defs.h"
+> +#include <libdevmapper.h>
+> +#include "command.h"
+> +#include "init.h"
+> +
+> +static cmdinfo_t log_writes_cmd;
+> +
+> +static int
+> +mark_log(const char *device, const char *mark)
+> +{
+> +	struct dm_task *dmt;
+> +	const int size = 80;
+> +	char message[size];
+> +	int len, ret = 0;
+
+Indentation?
+
+> +
+> +	len = snprintf(message, size, "mark %s", mark);
+> +	if (len >= size) {
+> +		printf("mark '%s' is too long\n", mark);
+> +		return ret;
+> +	}
+> +
+> +	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
+> +		return ret;
+> +
+> +	if (!dm_task_set_name(dmt, device))
+> +		goto out;
+> +
+> +	if (!dm_task_set_sector(dmt, 0))
+> +		goto out;
+> +
+> +	if (!dm_task_set_message(dmt, message))
+> +		goto out;
+> +
+> +	if (dm_task_run(dmt))
+> +		ret = 1;
+> +out:
+> +	dm_task_destroy(dmt);
+> +	return ret;
+> +}
+> +
+> +static int
+> +log_writes_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	const char *device = NULL;
+> +	const char *mark = NULL;
+
+	const char		*device = NULL;
+	const char		*mark = NULL;
+
+Yeah, variable declaration indentation in the functions was the only
+thing I found to complain about...
+
+Otherwise looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> +	int c;
+> +
+> +	exitcode = 1;
+> +	while ((c = getopt(argc, argv, "d:m:")) != EOF) {
+> +		switch (c) {
+> +		case 'd':
+> +			device = optarg;
+> +			break;
+> +		case 'm':
+> +			mark = optarg;
+> +			break;
+> +		default:
+> +			return command_usage(&log_writes_cmd);
+> +		}
+> +	}
+> +
+> +	if (device == NULL || mark == NULL)
+> +		return command_usage(&log_writes_cmd);
+> +
+> +	if (mark_log(device, mark))
+> +		exitcode = 0;
+> +
+> +	return 0;
+> +}
+> +
+> +void
+> +log_writes_init(void)
+> +{
+> +	log_writes_cmd.name = "log_writes";
+> +	log_writes_cmd.altname = "lw";
+> +	log_writes_cmd.cfunc = log_writes_f;
+> +	log_writes_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK
+> +				| CMD_FLAG_ONESHOT;
+> +	log_writes_cmd.argmin = 0;
+> +	log_writes_cmd.argmax = -1;
+> +	log_writes_cmd.args = _("-d device -m mark");
+> +	log_writes_cmd.oneline =
+> +		_("create mark <mark> in the dm-log-writes log specified by <device>");
+> +
+> +	add_command(&log_writes_cmd);
+> +}
+> diff --git a/m4/Makefile b/m4/Makefile
+> index 4706121b..77f2edda 100644
+> --- a/m4/Makefile
+> +++ b/m4/Makefile
+> @@ -15,6 +15,7 @@ CONFIGURE = \
+>  LSRCFILES = \
+>  	manual_format.m4 \
+>  	package_blkid.m4 \
+> +	package_devmapper.m4 \
+>  	package_globals.m4 \
+>  	package_libcdev.m4 \
+>  	package_pthread.m4 \
+> diff --git a/m4/package_devmapper.m4 b/m4/package_devmapper.m4
+> new file mode 100644
+> index 00000000..821f283c
+> --- /dev/null
+> +++ b/m4/package_devmapper.m4
+> @@ -0,0 +1,11 @@
+> +#
+> +# See if libdevmapper is available on the system.
+> +#
+> +AC_DEFUN([AC_HAVE_DEVMAPPER],
+> +[ AC_SEARCH_LIBS([dm_task_create], [devmapper],
+> +        libdevmapper="-ldevmapper"
+> +        have_devmapper=yes,
+> +        have_devmapper=no,)
+> +    AC_SUBST(have_devmapper)
+> +    AC_SUBST(libdevmapper)
+> +])
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 1693f7f1..4fce6d39 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -1123,7 +1123,27 @@ version of policy structure (numeric)
+>  .BR get_encpolicy
+>  On filesystems that support encryption, display the encryption policy of the
+>  current file.
+> +.RE
+> +.PD
+> +.TP
+> +.BI "log_writes \-d " device " \-m "  mark
+> +Create a mark named
+> +.I mark
+> +in the dm-log-writes log specified by
+> +.I device.
+> +This is intended to be equivalent to the shell command:
+>  
+> +.B dmsetup message
+> +.I device
+> +.B 0 mark
+> +.I mark
+> +.PD
+> +.RE
+> +.TP
+> +.B lw
+> +See the
+> +.B log_writes
+> +command.
+>  .SH SEE ALSO
+>  .BR mkfs.xfs (8),
+>  .BR xfsctl (3),
+> @@ -1141,4 +1161,5 @@ current file.
+>  .BR open (2),
+>  .BR pread (2),
+>  .BR pwrite (2),
+> -.BR readdir (3).
+> +.BR readdir (3),
+> +.BR dmsetup (8).
+> -- 
+> 2.14.3
 > 
-> ... would never so long as the fadvise succeeds.
-> 
-> Brian
-
-<late to the party>
-
-Seems we need to start by defining the expected behavior, which so far
-has been pretty ad-hoc.
-
-AFAICT this is the expected/desired behavior:
-
-exitcode is the global xfs_io exit code and indicates that any error
-has occurred during processing.  It should never get reset to 0.
-Using something like do_error to print the failure & set the exitcode
-would seem to make sense.
-
-Chained commands continue until some ->cfunc (foo_f()) returns nonzero,
-but a nonzero return does /not/ affect exitcode, it simply stops chained
-command processing.
-
-It's not clear to me when a cfunc-> /should/ return non-zero and stop
-the processing.
-
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
