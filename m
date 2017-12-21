@@ -1,48 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:32806 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753934AbdLUQqL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 11:46:11 -0500
-Date: Thu, 21 Dec 2017 08:45:35 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [ZOMG RFCRAP PATCH 0/2] xfs: horrifying eBPF hacks
-Message-ID: <20171221164535.GS12613@magnolia>
-References: <20171213061825.GO19219@magnolia>
- <20171221133338.GD1567@infradead.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:41772 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752641AbdLUNhA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 08:37:00 -0500
+Date: Thu, 21 Dec 2017 05:36:59 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] xfs: track cowblocks separately in i_flags
+Message-ID: <20171221133659.GA10079@infradead.org>
+References: <151335786780.26575.15542999972223359181.stgit@magnolia>
+ <151335787965.26575.17711793213679430025.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171221133338.GD1567@infradead.org>
+In-Reply-To: <151335787965.26575.17711793213679430025.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Richard Wareing <rwareing@fb.com>, david@fromorbit.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 21, 2017 at 05:33:38AM -0800, Christoph Hellwig wrote:
-> Eek.  Whie eBPF is a really nice debug tool we should never use
-> it for actual required kernel I/O functionality.
+> +static inline unsigned long
+> +xfs_iflag_for_tag(
+> +	int		tag)
+> +{
+> +	switch (tag) {
+> +	case XFS_ICI_EOFBLOCKS_TAG:
+> +		return XFS_IEOFBLOCKS;
+> +	case XFS_ICI_COWBLOCKS_TAG:
+> +		return XFS_ICOWBLOCKS;
+> +	default:
+> +		ASSERT(0);
+> +		return 0;
+> +	}
+> +}
 
-Certainly not in its current hacky form.  I'm curious if Richard has had
-a chance to try out these patches to see if it affects performance in a
-noticeable way?
+I'd rather pass the flag explicitly to the functions that already
+take the tag value.
 
-I /think/ bpf has enough safety mechanisms (no loops, no direct writing
-to kernel memory, bytecode verifiers, opcode count limits) that such a
-beast could be hidden behind a kconfig option that isn't turned for the
-general public.  For people who have these particularly specific use
-cases I think it better to have a general mechanism to accomodate them
-vs. scattering code all over xfs vs. "no sorry go away", though this
-ebpf thing isn't necessarily the final answer.  We do validate that the
-proposed iflags are allowed for the fs geometry, though I acknowledge
-that the prospect of running ebpf with ilock_excl does give me pause.
+Except for that the patch looks fine:
 
-I'm curious, though, what are your (and everyone else's) concerns about
-this?
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Christoph Hellwig <hch@lst.de>
