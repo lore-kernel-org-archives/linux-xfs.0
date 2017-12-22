@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45440 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45570 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753466AbdLVMG2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Dec 2017 07:06:28 -0500
+        id S1756254AbdLVMGi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Dec 2017 07:06:38 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v4 11/19] nfsd: convert to new i_version API
-Date: Fri, 22 Dec 2017 07:05:48 -0500
-Message-Id: <20171222120556.7435-12-jlayton@kernel.org>
+Subject: [PATCH v4 15/19] IMA: switch IMA over to new i_version API
+Date: Fri, 22 Dec 2017 07:05:52 -0500
+Message-Id: <20171222120556.7435-16-jlayton@kernel.org>
 In-Reply-To: <20171222120556.7435-1-jlayton@kernel.org>
 References: <20171222120556.7435-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,35 +17,54 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
-Mostly just making sure we use the "get" wrappers so we know when
-it is being fetched for later use.
-
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/nfsd/nfsfh.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ security/integrity/ima/ima_api.c  | 3 ++-
+ security/integrity/ima/ima_main.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
-index 43f31cf49bae..b8444189223b 100644
---- a/fs/nfsd/nfsfh.h
-+++ b/fs/nfsd/nfsfh.h
-@@ -11,6 +11,7 @@
- #include <linux/crc32.h>
- #include <linux/sunrpc/svc.h>
- #include <uapi/linux/nfsd/nfsfh.h>
+diff --git a/security/integrity/ima/ima_api.c b/security/integrity/ima/ima_api.c
+index c7e8db0ea4c0..c6ae42266270 100644
+--- a/security/integrity/ima/ima_api.c
++++ b/security/integrity/ima/ima_api.c
+@@ -18,6 +18,7 @@
+ #include <linux/fs.h>
+ #include <linux/xattr.h>
+ #include <linux/evm.h>
 +#include <linux/iversion.h>
  
- static inline __u32 ino_t_to_u32(ino_t ino)
- {
-@@ -259,7 +260,7 @@ static inline u64 nfsd4_change_attribute(struct inode *inode)
- 	chattr =  inode->i_ctime.tv_sec;
- 	chattr <<= 30;
- 	chattr += inode->i_ctime.tv_nsec;
--	chattr += inode->i_version;
-+	chattr += inode_query_iversion(inode);
- 	return chattr;
- }
+ #include "ima.h"
  
+@@ -215,7 +216,7 @@ int ima_collect_measurement(struct integrity_iint_cache *iint,
+ 	 * which do not support i_version, support is limited to an initial
+ 	 * measurement/appraisal/audit.
+ 	 */
+-	i_version = file_inode(file)->i_version;
++	i_version = inode_query_iversion(inode);
+ 	hash.hdr.algo = algo;
+ 
+ 	/* Initialize hash digest to 0's in case of failure */
+diff --git a/security/integrity/ima/ima_main.c b/security/integrity/ima/ima_main.c
+index 50b82599994d..06a70c5a2329 100644
+--- a/security/integrity/ima/ima_main.c
++++ b/security/integrity/ima/ima_main.c
+@@ -24,6 +24,7 @@
+ #include <linux/slab.h>
+ #include <linux/xattr.h>
+ #include <linux/ima.h>
++#include <linux/iversion.h>
+ 
+ #include "ima.h"
+ 
+@@ -128,7 +129,7 @@ static void ima_check_last_writer(struct integrity_iint_cache *iint,
+ 	inode_lock(inode);
+ 	if (atomic_read(&inode->i_writecount) == 1) {
+ 		if (!IS_I_VERSION(inode) ||
+-		    (iint->version != inode->i_version) ||
++		    inode_cmp_iversion(inode, iint->version) ||
+ 		    (iint->flags & IMA_NEW_FILE)) {
+ 			iint->flags &= ~(IMA_DONE_MASK | IMA_NEW_FILE);
+ 			iint->measured_pcrs = 0;
 -- 
 2.14.3
 
