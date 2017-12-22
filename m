@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45126 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45710 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756017AbdLVMGL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Dec 2017 07:06:11 -0500
+        id S1756017AbdLVMGn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Dec 2017 07:06:43 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v4 04/19] affs: convert to new i_version API
-Date: Fri, 22 Dec 2017 07:05:41 -0500
-Message-Id: <20171222120556.7435-5-jlayton@kernel.org>
+Subject: [PATCH v4 17/19] xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need incrementing
+Date: Fri, 22 Dec 2017 07:05:54 -0500
+Message-Id: <20171222120556.7435-18-jlayton@kernel.org>
 In-Reply-To: <20171222120556.7435-1-jlayton@kernel.org>
 References: <20171222120556.7435-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,94 +17,41 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
+If XFS_ILOG_CORE is already set then go ahead and increment it.
+
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/affs/amigaffs.c | 5 +++--
- fs/affs/dir.c      | 5 +++--
- fs/affs/super.c    | 3 ++-
- 3 files changed, 8 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_trans_inode.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
-index 0f0e6925e97d..14a6c1b90c9f 100644
---- a/fs/affs/amigaffs.c
-+++ b/fs/affs/amigaffs.c
-@@ -10,6 +10,7 @@
-  */
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 225544327c4f..4a89da4b6fe7 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -112,15 +112,17 @@ xfs_trans_log_inode(
  
- #include <linux/math64.h>
-+#include <linux/iversion.h>
- #include "affs.h"
- 
- /*
-@@ -60,7 +61,7 @@ affs_insert_hash(struct inode *dir, struct buffer_head *bh)
- 	affs_brelse(dir_bh);
- 
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	mark_inode_dirty(dir);
- 
- 	return 0;
-@@ -114,7 +115,7 @@ affs_remove_hash(struct inode *dir, struct buffer_head *rem_bh)
- 	affs_brelse(bh);
- 
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	mark_inode_dirty(dir);
- 
- 	return retval;
-diff --git a/fs/affs/dir.c b/fs/affs/dir.c
-index a105e77df2c1..d180b46453cf 100644
---- a/fs/affs/dir.c
-+++ b/fs/affs/dir.c
-@@ -14,6 +14,7 @@
-  *
-  */
- 
-+#include <linux/iversion.h>
- #include "affs.h"
- 
- static int affs_readdir(struct file *, struct dir_context *);
-@@ -80,7 +81,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 	 * we can jump directly to where we left off.
+ 	/*
+ 	 * First time we log the inode in a transaction, bump the inode change
+-	 * counter if it is configured for this to occur. We don't use
+-	 * inode_inc_version() because there is no need for extra locking around
+-	 * i_version as we already hold the inode locked exclusively for
+-	 * metadata modification.
++	 * counter if it is configured for this to occur. While we have the
++	 * inode locked exclusively for metadata modification, we can usually
++	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
++	 * the last time it was incremented. If we have XFS_ILOG_CORE already
++	 * set however, then go ahead and bump the i_version counter
++	 * unconditionally.
  	 */
- 	ino = (u32)(long)file->private_data;
--	if (ino && file->f_version == inode->i_version) {
-+	if (ino && inode_cmp_iversion(inode, file->f_version) == 0) {
- 		pr_debug("readdir() left off=%d\n", ino);
- 		goto inside;
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		inode_inc_iversion(VFS_I(ip));
+-		flags |= XFS_ILOG_CORE;
++		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
++			flags |= XFS_ILOG_CORE;
  	}
-@@ -130,7 +131,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 		} while (ino);
- 	}
- done:
--	file->f_version = inode->i_version;
-+	file->f_version = inode_query_iversion(inode);
- 	file->private_data = (void *)(long)ino;
- 	affs_brelse(fh_bh);
  
-diff --git a/fs/affs/super.c b/fs/affs/super.c
-index 1117e36134cc..e602619aed9d 100644
---- a/fs/affs/super.c
-+++ b/fs/affs/super.c
-@@ -21,6 +21,7 @@
- #include <linux/writeback.h>
- #include <linux/blkdev.h>
- #include <linux/seq_file.h>
-+#include <linux/iversion.h>
- #include "affs.h"
- 
- static int affs_statfs(struct dentry *dentry, struct kstatfs *buf);
-@@ -102,7 +103,7 @@ static struct inode *affs_alloc_inode(struct super_block *sb)
- 	if (!i)
- 		return NULL;
- 
--	i->vfs_inode.i_version = 1;
-+	inode_set_iversion(&i->vfs_inode, 1);
- 	i->i_lc = NULL;
- 	i->i_ext_bh = NULL;
- 	i->i_pa_cnt = 0;
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
 -- 
 2.14.3
 
