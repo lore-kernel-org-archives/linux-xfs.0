@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mail.kernel.org ([198.145.29.99]:45570 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756254AbdLVMGi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Dec 2017 07:06:38 -0500
+        id S1756200AbdLVMGd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Dec 2017 07:06:33 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v4 15/19] IMA: switch IMA over to new i_version API
-Date: Fri, 22 Dec 2017 07:05:52 -0500
-Message-Id: <20171222120556.7435-16-jlayton@kernel.org>
+Subject: [PATCH v4 13/19] ufs: use new i_version API
+Date: Fri, 22 Dec 2017 07:05:50 -0500
+Message-Id: <20171222120556.7435-14-jlayton@kernel.org>
 In-Reply-To: <20171222120556.7435-1-jlayton@kernel.org>
 References: <20171222120556.7435-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -19,52 +19,94 @@ From: Jeff Layton <jlayton@redhat.com>
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- security/integrity/ima/ima_api.c  | 3 ++-
- security/integrity/ima/ima_main.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ fs/ufs/dir.c   | 9 +++++----
+ fs/ufs/inode.c | 3 ++-
+ fs/ufs/super.c | 3 ++-
+ 3 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/security/integrity/ima/ima_api.c b/security/integrity/ima/ima_api.c
-index c7e8db0ea4c0..c6ae42266270 100644
---- a/security/integrity/ima/ima_api.c
-+++ b/security/integrity/ima/ima_api.c
-@@ -18,6 +18,7 @@
+diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
+index 2edc1755b7c5..50dfce000864 100644
+--- a/fs/ufs/dir.c
++++ b/fs/ufs/dir.c
+@@ -20,6 +20,7 @@
+ #include <linux/time.h>
  #include <linux/fs.h>
- #include <linux/xattr.h>
- #include <linux/evm.h>
+ #include <linux/swap.h>
 +#include <linux/iversion.h>
  
- #include "ima.h"
+ #include "ufs_fs.h"
+ #include "ufs.h"
+@@ -47,7 +48,7 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 	struct inode *dir = mapping->host;
+ 	int err = 0;
  
-@@ -215,7 +216,7 @@ int ima_collect_measurement(struct integrity_iint_cache *iint,
- 	 * which do not support i_version, support is limited to an initial
- 	 * measurement/appraisal/audit.
- 	 */
--	i_version = file_inode(file)->i_version;
-+	i_version = inode_query_iversion(inode);
- 	hash.hdr.algo = algo;
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 	block_write_end(NULL, mapping, pos, len, len, page, NULL);
+ 	if (pos+len > dir->i_size) {
+ 		i_size_write(dir, pos+len);
+@@ -428,7 +429,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+ 	unsigned long n = pos >> PAGE_SHIFT;
+ 	unsigned long npages = dir_pages(inode);
+ 	unsigned chunk_mask = ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
+-	int need_revalidate = file->f_version != inode->i_version;
++	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
+ 	unsigned flags = UFS_SB(sb)->s_flags;
  
- 	/* Initialize hash digest to 0's in case of failure */
-diff --git a/security/integrity/ima/ima_main.c b/security/integrity/ima/ima_main.c
-index 50b82599994d..06a70c5a2329 100644
---- a/security/integrity/ima/ima_main.c
-+++ b/security/integrity/ima/ima_main.c
-@@ -24,6 +24,7 @@
- #include <linux/slab.h>
- #include <linux/xattr.h>
- #include <linux/ima.h>
+ 	UFSD("BEGIN\n");
+@@ -455,8 +456,8 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
+ 				offset = ufs_validate_entry(sb, kaddr, offset, chunk_mask);
+ 				ctx->pos = (n<<PAGE_SHIFT) + offset;
+ 			}
+-			file->f_version = inode->i_version;
+-			need_revalidate = 0;
++			file->f_version = inode_query_iversion(inode);
++			need_revalidate = false;
+ 		}
+ 		de = (struct ufs_dir_entry *)(kaddr+offset);
+ 		limit = kaddr + ufs_last_byte(inode, n) - UFS_DIR_REC_LEN(1);
+diff --git a/fs/ufs/inode.c b/fs/ufs/inode.c
+index afb601c0dda0..c843ec858cf7 100644
+--- a/fs/ufs/inode.c
++++ b/fs/ufs/inode.c
+@@ -36,6 +36,7 @@
+ #include <linux/mm.h>
+ #include <linux/buffer_head.h>
+ #include <linux/writeback.h>
 +#include <linux/iversion.h>
  
- #include "ima.h"
+ #include "ufs_fs.h"
+ #include "ufs.h"
+@@ -693,7 +694,7 @@ struct inode *ufs_iget(struct super_block *sb, unsigned long ino)
+ 	if (err)
+ 		goto bad_inode;
  
-@@ -128,7 +129,7 @@ static void ima_check_last_writer(struct integrity_iint_cache *iint,
- 	inode_lock(inode);
- 	if (atomic_read(&inode->i_writecount) == 1) {
- 		if (!IS_I_VERSION(inode) ||
--		    (iint->version != inode->i_version) ||
-+		    inode_cmp_iversion(inode, iint->version) ||
- 		    (iint->flags & IMA_NEW_FILE)) {
- 			iint->flags &= ~(IMA_DONE_MASK | IMA_NEW_FILE);
- 			iint->measured_pcrs = 0;
+-	inode->i_version++;
++	inode_inc_iversion(inode);
+ 	ufsi->i_lastfrag =
+ 		(inode->i_size + uspi->s_fsize - 1) >> uspi->s_fshift;
+ 	ufsi->i_dir_start_lookup = 0;
+diff --git a/fs/ufs/super.c b/fs/ufs/super.c
+index 4d497e9c6883..b6ba80e05bff 100644
+--- a/fs/ufs/super.c
++++ b/fs/ufs/super.c
+@@ -88,6 +88,7 @@
+ #include <linux/log2.h>
+ #include <linux/mount.h>
+ #include <linux/seq_file.h>
++#include <linux/iversion.h>
+ 
+ #include "ufs_fs.h"
+ #include "ufs.h"
+@@ -1440,7 +1441,7 @@ static struct inode *ufs_alloc_inode(struct super_block *sb)
+ 	if (!ei)
+ 		return NULL;
+ 
+-	ei->vfs_inode.i_version = 1;
++	inode_set_iversion(&ei->vfs_inode, 1);
+ 	seqlock_init(&ei->meta_lock);
+ 	mutex_init(&ei->truncate_mutex);
+ 	return &ei->vfs_inode;
 -- 
 2.14.3
 
