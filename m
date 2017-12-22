@@ -1,315 +1,370 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:57506 "EHLO mga05.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:44974 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753797AbdLUWIL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Dec 2017 17:08:11 -0500
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [xfsprogs PATCH v4 2/2] xfs_io: add a new 'log_writes' command
-Date: Thu, 21 Dec 2017 15:08:00 -0700
-Message-Id: <20171221220800.14382-3-ross.zwisler@linux.intel.com>
-In-Reply-To: <20171221220800.14382-1-ross.zwisler@linux.intel.com>
-References: <20171221220800.14382-1-ross.zwisler@linux.intel.com>
+        id S1752236AbdLVMGE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Dec 2017 07:06:04 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v4 01/19] fs: new API for handling inode->i_version
+Date: Fri, 22 Dec 2017 07:05:38 -0500
+Message-Id: <20171222120556.7435-2-jlayton@kernel.org>
+In-Reply-To: <20171222120556.7435-1-jlayton@kernel.org>
+References: <20171222120556.7435-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, fstests <fstests@vger.kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
 
-Add a new 'log_writes' command to xfs_io so that we can add dm-log-writes
-log marks.  It's helpful to allow users of xfs_io to adds these marks from
-within xfs_io instead of waiting until after xfs_io exits because then they
-are able to replay the dm-log-writes log up to immediately after another
-xfs_io operation such as mwrite.  This isolates the log replay from other
-operations that happen as part of xfs_io exiting (file handles being
-closed, mmaps being torn down, etc.).  This also allows users to insert
-multiple marks between different xfs_io commands.
+From: Jeff Layton <jlayton@redhat.com>
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Add a documentation blob that explains what the i_version field is, how
+it is expected to work, and how it is currently implemented by various
+filesystems.
+
+We already have inode_inc_iversion. Add several other functions for
+manipulating and accessing the i_version counter. For now, the
+implementation is trivial and basically works the way that all of the
+open-coded i_version accesses work today.
+
+Future patches will convert existing users of i_version to use the new
+API, and then convert the backend implementation to do things more
+efficiently.
+
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- configure.ac            |   1 +
- debian/control          |   2 +-
- include/builddefs.in    |   2 +
- io/Makefile             |   6 +++
- io/init.c               |   1 +
- io/io.h                 |   6 +++
- io/log_writes.c         | 106 ++++++++++++++++++++++++++++++++++++++++++++++++
- m4/Makefile             |   1 +
- m4/package_devmapper.m4 |  11 +++++
- man/man8/xfs_io.8       |  23 ++++++++++-
- 10 files changed, 157 insertions(+), 2 deletions(-)
- create mode 100644 io/log_writes.c
- create mode 100644 m4/package_devmapper.m4
+ fs/btrfs/file.c          |   1 +
+ fs/btrfs/inode.c         |   1 +
+ fs/btrfs/ioctl.c         |   1 +
+ fs/btrfs/xattr.c         |   1 +
+ fs/ext4/inode.c          |   1 +
+ fs/ext4/namei.c          |   1 +
+ fs/inode.c               |   1 +
+ include/linux/fs.h       |  15 ----
+ include/linux/iversion.h | 205 +++++++++++++++++++++++++++++++++++++++++++++++
+ 9 files changed, 212 insertions(+), 15 deletions(-)
+ create mode 100644 include/linux/iversion.h
 
-diff --git a/configure.ac b/configure.ac
-index f3325aa0..f83d5817 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -164,6 +164,7 @@ AC_NEED_INTERNAL_FSXATTR
- AC_HAVE_GETFSMAP
- AC_HAVE_STATFS_FLAGS
- AC_HAVE_MAP_SYNC
-+AC_HAVE_DEVMAPPER
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index eb1bac7c8553..c95d7b2efefb 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -31,6 +31,7 @@
+ #include <linux/slab.h>
+ #include <linux/btrfs.h>
+ #include <linux/uio.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "disk-io.h"
+ #include "transaction.h"
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index e1a7f3cb5be9..27f008b33fc1 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -43,6 +43,7 @@
+ #include <linux/posix_acl_xattr.h>
+ #include <linux/uio.h>
+ #include <linux/magic.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "disk-io.h"
+ #include "transaction.h"
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index 2ef8acaac688..aa452c9e2eff 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -43,6 +43,7 @@
+ #include <linux/uuid.h>
+ #include <linux/btrfs.h>
+ #include <linux/uaccess.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "disk-io.h"
+ #include "transaction.h"
+diff --git a/fs/btrfs/xattr.c b/fs/btrfs/xattr.c
+index 2c7e53f9ff1b..5258c1714830 100644
+--- a/fs/btrfs/xattr.c
++++ b/fs/btrfs/xattr.c
+@@ -23,6 +23,7 @@
+ #include <linux/xattr.h>
+ #include <linux/security.h>
+ #include <linux/posix_acl_xattr.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "btrfs_inode.h"
+ #include "transaction.h"
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 7df2c5644e59..fa5d8bc52d2d 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -39,6 +39,7 @@
+ #include <linux/slab.h>
+ #include <linux/bitops.h>
+ #include <linux/iomap.h>
++#include <linux/iversion.h>
  
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/debian/control b/debian/control
-index ad816622..5c26e3d7 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev
- Standards-Version: 3.9.1
- Homepage: http://xfs.org/
+ #include "ext4_jbd2.h"
+ #include "xattr.h"
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index 798b3ac680db..bcf0dff517be 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -34,6 +34,7 @@
+ #include <linux/quotaops.h>
+ #include <linux/buffer_head.h>
+ #include <linux/bio.h>
++#include <linux/iversion.h>
+ #include "ext4.h"
+ #include "ext4_jbd2.h"
  
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 126f7e95..66bdbfa2 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -35,6 +35,7 @@ LIBTERMCAP = @libtermcap@
- LIBEDITLINE = @libeditline@
- LIBREADLINE = @libreadline@
- LIBBLKID = @libblkid@
-+LIBDEVMAPPER = @libdevmapper@
- LIBXFS = $(TOPDIR)/libxfs/libxfs.la
- LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
- LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
-@@ -116,6 +117,7 @@ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
- HAVE_GETFSMAP = @have_getfsmap@
- HAVE_STATFS_FLAGS = @have_statfs_flags@
- HAVE_MAP_SYNC = @have_map_sync@
-+HAVE_DEVMAPPER = @have_devmapper@
+diff --git a/fs/inode.c b/fs/inode.c
+index 03102d6ef044..19e72f500f71 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -18,6 +18,7 @@
+ #include <linux/buffer_head.h> /* for inode_has_buffers */
+ #include <linux/ratelimit.h>
+ #include <linux/list_lru.h>
++#include <linux/iversion.h>
+ #include <trace/events/writeback.h>
+ #include "internal.h"
  
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/io/Makefile b/io/Makefile
-index 2987ee11..b7585a1b 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -107,6 +107,12 @@ ifeq ($(HAVE_MAP_SYNC),yes)
- LCFLAGS += -DHAVE_MAP_SYNC
- endif
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 511fbaabf624..76382c24e9d0 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2036,21 +2036,6 @@ static inline void inode_dec_link_count(struct inode *inode)
+ 	mark_inode_dirty(inode);
+ }
  
-+ifeq ($(HAVE_DEVMAPPER),yes)
-+CFILES += log_writes.c
-+LLDLIBS += $(LIBDEVMAPPER)
-+LCFLAGS += -DHAVE_DEVMAPPER
-+endif
-+
- # On linux we get fsmap from the system or define it ourselves
- # so include this based on platform type.  If this reverts to only
- # the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
-diff --git a/io/init.c b/io/init.c
-index 20d5f80d..34d87b5f 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -72,6 +72,7 @@ init_commands(void)
- 	help_init();
- 	imap_init();
- 	inject_init();
-+	log_writes_init();
- 	madvise_init();
- 	mincore_init();
- 	mmap_init();
-diff --git a/io/io.h b/io/io.h
-index 8b2753b3..9349cc75 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -186,3 +186,9 @@ extern void		fsmap_init(void);
- #else
- # define fsmap_init()	do { } while (0)
- #endif
-+
-+#ifdef HAVE_DEVMAPPER
-+extern void		log_writes_init(void);
-+#else
-+#define log_writes_init()	do { } while (0)
-+#endif
-diff --git a/io/log_writes.c b/io/log_writes.c
+-/**
+- * inode_inc_iversion - increments i_version
+- * @inode: inode that need to be updated
+- *
+- * Every time the inode is modified, the i_version field will be incremented.
+- * The filesystem has to be mounted with i_version flag
+- */
+-
+-static inline void inode_inc_iversion(struct inode *inode)
+-{
+-       spin_lock(&inode->i_lock);
+-       inode->i_version++;
+-       spin_unlock(&inode->i_lock);
+-}
+-
+ enum file_time_flags {
+ 	S_ATIME = 1,
+ 	S_MTIME = 2,
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
 new file mode 100644
-index 00000000..46ea1c26
+index 000000000000..bb50d27c71f9
 --- /dev/null
-+++ b/io/log_writes.c
-@@ -0,0 +1,106 @@
++++ b/include/linux/iversion.h
+@@ -0,0 +1,205 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_IVERSION_H
++#define _LINUX_IVERSION_H
++
++#include <linux/fs.h>
++
 +/*
-+ * Copyright (c) 2017 Intel Corporation.
-+ * All Rights Reserved.
++ * The change attribute (i_version) is mandated by NFSv4 and is mostly for
++ * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
++ * appear different to observers if there was a change to the inode's data or
++ * metadata since it was last queried.
 + *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
++ * It should be considered an opaque value by observers. If it remains the same
++ * since it was last checked, then nothing has changed in the inode. If it's
++ * different then something has changed. Observers cannot infer anything about
++ * the nature or magnitude of the changes from the value, only that the inode
++ * has changed in some fashion.
 + *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
++ * Not all filesystems properly implement the i_version counter. Subsystems that
++ * want to use i_version field on an inode should first check whether the
++ * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION macro).
 + *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ * Those that set SB_I_VERSION will automatically have their i_version counter
++ * incremented on writes to normal files. If the SB_I_VERSION is not set, then
++ * the VFS will not touch it on writes, and the filesystem can use it how it
++ * wishes. Note that the filesystem is always responsible for updating the
++ * i_version on namespace changes in directories (mkdir, rmdir, unlink, etc.).
++ * We consider these sorts of filesystems to have a kernel-managed i_version.
++ *
++ * Note that some filesystems (e.g. NFS and AFS) just use the field to store
++ * a server-provided value (for the most part). For that reason, those
++ * filesystems do not set SB_I_VERSION. These filesystems are considered to
++ * have a self-managed i_version.
 + */
 +
-+#include "platform_defs.h"
-+#include <libdevmapper.h>
-+#include "command.h"
-+#include "init.h"
-+
-+static cmdinfo_t log_writes_cmd;
-+
-+static int
-+mark_log(const char *device, const char *mark)
++/**
++ * inode_set_iversion_raw - set i_version to the specified raw value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for use by
++ * filesystems that self-manage the i_version.
++ *
++ * For example, the NFS client stores its NFSv4 change attribute in this way,
++ * and the AFS client stores the data_version from the server here.
++ */
++static inline void
++inode_set_iversion_raw(struct inode *inode, const u64 new)
 +{
-+	struct dm_task 	*dmt;
-+	const int 	size = 80;
-+	char 		message[size];
-+	int 		len, ret = 0;
-+
-+	len = snprintf(message, size, "mark %s", mark);
-+	if (len >= size) {
-+		printf("mark '%s' is too long\n", mark);
-+		return ret;
-+	}
-+
-+	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
-+		return ret;
-+
-+	if (!dm_task_set_name(dmt, device))
-+		goto out;
-+
-+	if (!dm_task_set_sector(dmt, 0))
-+		goto out;
-+
-+	if (!dm_task_set_message(dmt, message))
-+		goto out;
-+
-+	if (dm_task_run(dmt))
-+		ret = 1;
-+out:
-+	dm_task_destroy(dmt);
-+	return ret;
++	inode->i_version = new;
 +}
 +
-+static int
-+log_writes_f(
-+	int			argc,
-+	char			**argv)
++/**
++ * inode_set_iversion - set i_version to a particular value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for filesystems with
++ * a kernel-managed i_version.
++ *
++ * For now, this just does the same thing as the _raw variant.
++ */
++static inline void
++inode_set_iversion(struct inode *inode, const u64 new)
 +{
-+	const char 	*device = NULL;
-+	const char 	*mark = NULL;
-+	int 		c;
-+
-+	exitcode = 1;
-+	while ((c = getopt(argc, argv, "d:m:")) != EOF) {
-+		switch (c) {
-+		case 'd':
-+			device = optarg;
-+			break;
-+		case 'm':
-+			mark = optarg;
-+			break;
-+		default:
-+			return command_usage(&log_writes_cmd);
-+		}
-+	}
-+
-+	if (device == NULL || mark == NULL)
-+		return command_usage(&log_writes_cmd);
-+
-+	if (mark_log(device, mark))
-+		exitcode = 0;
-+
-+	return 0;
++	inode_set_iversion_raw(inode, new);
 +}
 +
-+void
-+log_writes_init(void)
++/**
++ * inode_set_iversion_queried - set i_version to a particular value and set
++ *                              flag to indicate that it has been viewed
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * When loading in an i_version value from a backing store, we typically don't
++ * know whether it was previously viewed before being stored or not. Thus, we
++ * must assume that it was, to ensure that any changes will result in the
++ * value changing.
++ *
++ * This function will set the inode's i_version, and possibly flag the value
++ * as if it has already been viewed at least once.
++ *
++ * For now, this just does what inode_set_iversion does.
++ */
++static inline void
++inode_set_iversion_queried(struct inode *inode, const u64 new)
 +{
-+	log_writes_cmd.name = "log_writes";
-+	log_writes_cmd.altname = "lw";
-+	log_writes_cmd.cfunc = log_writes_f;
-+	log_writes_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK
-+				| CMD_FLAG_ONESHOT;
-+	log_writes_cmd.argmin = 0;
-+	log_writes_cmd.argmax = -1;
-+	log_writes_cmd.args = _("-d device -m mark");
-+	log_writes_cmd.oneline =
-+		_("create mark <mark> in the dm-log-writes log specified by <device>");
-+
-+	add_command(&log_writes_cmd);
++	inode_set_iversion(inode, new);
 +}
-diff --git a/m4/Makefile b/m4/Makefile
-index 4706121b..77f2edda 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -15,6 +15,7 @@ CONFIGURE = \
- LSRCFILES = \
- 	manual_format.m4 \
- 	package_blkid.m4 \
-+	package_devmapper.m4 \
- 	package_globals.m4 \
- 	package_libcdev.m4 \
- 	package_pthread.m4 \
-diff --git a/m4/package_devmapper.m4 b/m4/package_devmapper.m4
-new file mode 100644
-index 00000000..821f283c
---- /dev/null
-+++ b/m4/package_devmapper.m4
-@@ -0,0 +1,11 @@
-+#
-+# See if libdevmapper is available on the system.
-+#
-+AC_DEFUN([AC_HAVE_DEVMAPPER],
-+[ AC_SEARCH_LIBS([dm_task_create], [devmapper],
-+        libdevmapper="-ldevmapper"
-+        have_devmapper=yes,
-+        have_devmapper=no,)
-+    AC_SUBST(have_devmapper)
-+    AC_SUBST(libdevmapper)
-+])
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 1693f7f1..4fce6d39 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1123,7 +1123,27 @@ version of policy structure (numeric)
- .BR get_encpolicy
- On filesystems that support encryption, display the encryption policy of the
- current file.
-+.RE
-+.PD
-+.TP
-+.BI "log_writes \-d " device " \-m "  mark
-+Create a mark named
-+.I mark
-+in the dm-log-writes log specified by
-+.I device.
-+This is intended to be equivalent to the shell command:
- 
-+.B dmsetup message
-+.I device
-+.B 0 mark
-+.I mark
-+.PD
-+.RE
-+.TP
-+.B lw
-+See the
-+.B log_writes
-+command.
- .SH SEE ALSO
- .BR mkfs.xfs (8),
- .BR xfsctl (3),
-@@ -1141,4 +1161,5 @@ current file.
- .BR open (2),
- .BR pread (2),
- .BR pwrite (2),
--.BR readdir (3).
-+.BR readdir (3),
-+.BR dmsetup (8).
++
++/**
++ * inode_maybe_inc_iversion - increments i_version
++ * @inode: inode with the i_version that should be updated
++ * @force: increment the counter even if it's not necessary
++ *
++ * Every time the inode is modified, the i_version field must be seen to have
++ * changed by any observer.
++ *
++ * In this implementation, we always increment it after taking the i_lock to
++ * ensure that we don't race with other incrementors.
++ *
++ * Returns true if counter was bumped, and false if it wasn't.
++ */
++static inline bool
++inode_maybe_inc_iversion(struct inode *inode, bool force)
++{
++	spin_lock(&inode->i_lock);
++	inode->i_version++;
++	spin_unlock(&inode->i_lock);
++	return true;
++}
++
++/**
++ * inode_inc_iversion - forcibly increment i_version
++ * @inode: inode that needs to be updated
++ *
++ * Forcbily increment the i_version field. This always results in a change to
++ * the observable value.
++ */
++static inline void
++inode_inc_iversion(struct inode *inode)
++{
++	inode_maybe_inc_iversion(inode, true);
++}
++
++/**
++ * inode_iversion_need_inc - is the i_version in need of being incremented?
++ * @inode: inode to check
++ *
++ * Returns whether the inode->i_version counter needs incrementing on the next
++ * change.
++ *
++ * For now, we assume that it always does.
++ */
++static inline bool
++inode_iversion_need_inc(struct inode *inode)
++{
++	return true;
++}
++
++/**
++ * inode_peek_iversion_raw - grab a "raw" iversion value
++ * @inode: inode from which i_version should be read
++ *
++ * Grab a "raw" inode->i_version value and return it. The i_version is not
++ * flagged or converted in any way. This is mostly used to access a self-managed
++ * i_version.
++ *
++ * With those filesystems, we want to treat the i_version as an entirely
++ * opaque value.
++ */
++static inline u64
++inode_peek_iversion_raw(const struct inode *inode)
++{
++	return inode->i_version;
++}
++
++/**
++ * inode_peek_iversion - read i_version without flagging it to be incremented
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter for an inode without registering it as a
++ * query.
++ *
++ * This is typically used by local filesystems that need to store an i_version
++ * on disk. In that situation, it's not necessary to flag it as having been
++ * viewed, as the result won't be used to gauge changes from that point.
++ */
++static inline u64
++inode_peek_iversion(const struct inode *inode)
++{
++	return inode_peek_iversion_raw(inode);
++}
++
++/**
++ * inode_query_iversion - read i_version for later use
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter. This should be used by callers that wish
++ * to store the returned i_version for later comparison. This will guarantee
++ * that a later query of the i_version will result in a different value if
++ * anything has changed.
++ *
++ * This implementation just does a peek.
++ */
++static inline u64
++inode_query_iversion(struct inode *inode)
++{
++	return inode_peek_iversion(inode);
++}
++
++/**
++ * inode_cmp_iversion - check whether the i_version counter has changed
++ * @inode: inode to check
++ * @old: old value to check against its i_version
++ *
++ * Compare an i_version counter with a previous one. Returns 0 if they are
++ * the same or non-zero if they are different.
++ */
++static inline s64
++inode_cmp_iversion(const struct inode *inode, const u64 old)
++{
++	return (s64)inode_peek_iversion(inode) - (s64)old;
++}
++#endif
 -- 
 2.14.3
 
